@@ -348,6 +348,12 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "annotation.content" => "İçerik",
         "annotation.model" => "Model",
         "property.resetOverride" => "Geçersiz kılmayı sıfırla",
+        "componentBrowser.libraries" => "Kütüphaneler",
+        "componentBrowser.libraryNotLoaded" => "Yüklenmedi",
+        "componentBrowser.libraryMissing" => "Bulunamadı",
+        "componentBrowser.libraryInvalid" => "Okunamıyor",
+        "componentBrowser.linkLibrary" => "Kütüphane dosyası bağla",
+        "componentBrowser.libraryNeedsDesktop" => "Kütüphane dosyası bağlamak için masaüstü uygulaması gerekir",
         _ => return None,
     })
 }

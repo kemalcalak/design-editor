@@ -71,6 +71,7 @@ mod keyboard_shader_editor;
 mod kit_io;
 mod kit_persistence;
 mod kit_persistence_error;
+mod library_io;
 mod macos_app;
 mod mcp_config_error;
 mod mcp_config_io;
@@ -164,6 +165,8 @@ enum DesktopEvent {
     /// font snapshots and missing-font rows and repaints, so the document
     /// reflows with the real face.
     FontsRegistered,
+    /// A linked component library file changed on disk (#15).
+    LibraryChanged,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -338,6 +341,8 @@ struct DesktopApp {
     /// Paths forwarded by second-launch processes (`single_instance`),
     /// drained on the UI thread by `drain_forwarded_files`.
     forwarded_files: single_instance::ForwardQueue,
+    /// Polls the open document's linked library files (#15).
+    library_watcher: library_io::LibraryWatcher,
     iconify_job: Option<iconify_host::IconifyJob>,
     /// Google Fonts downloads the user asked for (missing-fonts modal or
     /// Settings Fonts tab), drained by the redraw pump.
@@ -653,6 +658,13 @@ fn main() {
     font_host_desktop::set_fonts_changed_notifier(move || {
         if let Ok(proxy) = fonts_proxy.lock() {
             let _ = proxy.send_event(DesktopEvent::FontsRegistered);
+        }
+    });
+    // A linked library file changed on disk: wake the loop to re-sync it.
+    let library_proxy = std::sync::Mutex::new(mcp_wake_proxy.clone());
+    app.library_watcher.start(move || {
+        if let Ok(proxy) = library_proxy.lock() {
+            let _ = proxy.send_event(DesktopEvent::LibraryChanged);
         }
     });
     app.mcp_wake_proxy = Some(mcp_wake_proxy);

@@ -155,7 +155,7 @@ pub fn framework_ext(fw: de_editor_core::codegen::Framework) -> &'static str {
         Framework::React | Framework::ReactNative => "tsx",
         Framework::Vue => "vue",
         Framework::Svelte => "svelte",
-        Framework::Html => "html",
+        Framework::Html | Framework::HtmlTailwind => "html",
         Framework::Flutter => "dart",
         Framework::SwiftUi => "swift",
         Framework::Compose => "kt",

@@ -348,6 +348,12 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "annotation.content" => "เนื้อหา",
         "annotation.model" => "โมเดล",
         "property.resetOverride" => "รีเซ็ตการแทนที่",
+        "componentBrowser.libraries" => "ไลบรารี",
+        "componentBrowser.libraryNotLoaded" => "ยังไม่โหลด",
+        "componentBrowser.libraryMissing" => "ไม่พบ",
+        "componentBrowser.libraryInvalid" => "อ่านไม่ได้",
+        "componentBrowser.linkLibrary" => "ลิงก์ไฟล์ไลบรารี",
+        "componentBrowser.libraryNeedsDesktop" => "การลิงก์ไฟล์ไลบรารีต้องใช้แอปเดสก์ท็อป",
         _ => return None,
     })
 }

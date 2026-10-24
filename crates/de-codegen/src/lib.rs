@@ -20,11 +20,14 @@
 pub mod ai;
 
 mod codegen_targets;
+mod flex;
 #[cfg(test)]
 mod tests;
 
-pub use crate::codegen_targets::{
-    Compose, Flutter, Html, React, ReactNative, Svelte, SwiftUi, Vue,
+pub use crate::codegen_targets::{Compose, Flutter, React, ReactNative, Svelte, SwiftUi, Vue};
+pub use crate::flex::{
+    export_editor_html, export_html, export_html_roots, html_target_for, Html, HtmlAsset,
+    HtmlExport, HtmlExportOptions, HtmlTailwind, HtmlTarget,
 };
 
 use de_editor_core::pen_node_ext::PenNodeExt;
@@ -282,7 +285,7 @@ pub(crate) fn node_fill_css(node: &PenNode) -> Option<String> {
 }
 
 /// Borrow the node's fill list, when its variant carries fills.
-fn node_fills(node: &PenNode) -> Option<&Vec<PenFill>> {
+pub(crate) fn node_fills(node: &PenNode) -> Option<&Vec<PenFill>> {
     match node {
         PenNode::Frame(n) => n.container.fill.as_ref(),
         PenNode::Group(n) => n.container.fill.as_ref(),
@@ -324,7 +327,23 @@ fn first_solid_color(fills: &[PenFill]) -> Option<String> {
 /// thickness. Per-side thickness collapses to its first value.
 pub(crate) fn node_stroke_css(node: &PenNode) -> Option<(String, f32)> {
     use jian_ops_schema::style::StrokeThickness;
-    let stroke = match node {
+    let stroke = node_stroke(node)?;
+    let width = match &stroke.thickness {
+        StrokeThickness::Uniform(w) => *w,
+        StrokeThickness::PerSide(arr) => arr.first().copied().unwrap_or(0.0),
+        StrokeThickness::Sided(s) => s.top.or(s.right).or(s.bottom).or(s.left).unwrap_or(0.0),
+    };
+    let color = stroke
+        .fill
+        .as_ref()
+        .and_then(|fills| first_solid_color(fills))
+        .unwrap_or_else(|| "#000000".to_string());
+    Some((color, width))
+}
+
+/// The node's stroke, when its variant carries one.
+pub(crate) fn node_stroke(node: &PenNode) -> Option<&jian_ops_schema::style::PenStroke> {
+    match node {
         PenNode::Frame(n) => n.container.stroke.as_ref(),
         PenNode::Group(n) => n.container.stroke.as_ref(),
         PenNode::Rectangle(n) => n.container.stroke.as_ref(),
@@ -349,18 +368,7 @@ pub(crate) fn node_stroke_css(node: &PenNode) -> Option<(String, f32)> {
         | PenNode::Note(_)
         | PenNode::Context(_)
         | PenNode::Prompt(_) => None,
-    }?;
-    let width = match &stroke.thickness {
-        StrokeThickness::Uniform(w) => *w,
-        StrokeThickness::PerSide(arr) => arr.first().copied().unwrap_or(0.0),
-        StrokeThickness::Sided(s) => s.top.or(s.right).or(s.bottom).or(s.left).unwrap_or(0.0),
-    };
-    let color = stroke
-        .fill
-        .as_ref()
-        .and_then(|fills| first_solid_color(fills))
-        .unwrap_or_else(|| "#000000".to_string());
-    Some((color, width))
+    }
 }
 
 // --- CSS scalar / colour helpers -----------------------------------
@@ -454,6 +462,6 @@ fn css_ident(name: &str) -> String {
 /// dashes. shadcn-vocabulary names already carry the `--` prefix
 /// (`--primary`) and must emit verbatim, never triple-dash; legacy
 /// names (`primary`) get the prefix prepended.
-fn css_custom_property(name: &str) -> String {
+pub(crate) fn css_custom_property(name: &str) -> String {
     format!("--{}", css_ident(name.trim_start_matches('-')))
 }

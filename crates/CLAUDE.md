@@ -140,7 +140,7 @@ Mutators on `Document`:
 | LayerContextMenu  | Right-click overlay on layer rows + page tabs (Rename / Duplicate / Delete / Group / Ungroup / Lock / Hide; subset on page tabs)     | `layer_context_menu.rs`                                                                                                                 |
 | AgentSettings     | Cmd+, modal — up to 960×760, sidebar nav (Agents / MCP / Images / Fonts / System) + scrollable body; Agents is list + detail      | `agent_settings_panel.rs` + `agent_settings_{agents,i18n,images,mcp,system}*.rs`                                                         |
 | theme             | shadcn-dark palette tokens (incl. `canvas_surface`)                                                                                  | `theme.rs`                                                                                                                              |
-| i18n              | 15 canonical locale catalogs, 1,828 direct keys each, sharded main → `_git` → `_panel` → `_collab` in the `de-i18n` crate                       | `de-i18n/src/i18n/{en,zh_cn,zh_tw,ja,ko,fr,es,de,pt,ru,hi,tr,th,vi,id}{,_git,_panel,_collab}.rs`                                                 |
+| i18n              | 15 canonical locale catalogs, 1,834 direct keys each, sharded main → `_git` → `_panel` → `_collab` in the `de-i18n` crate                       | `de-i18n/src/i18n/{en,zh_cn,zh_tw,ja,ko,fr,es,de,pt,ru,hi,tr,th,vi,id}{,_git,_panel,_collab}.rs`                                                 |
 
 ## Theme + i18n
 
@@ -151,7 +151,7 @@ Mutators on `Document`:
 - 15 supported locales (matches TS dropdown order): EnUs / ZhCn / ZhTw / Ja / Ko / Fr / Es / De / Pt / Ru / Hi / Tr / Th / Vi / Id. Each carries a `display_name()` (English / 简体中文 / 繁體中文 / 日本語 / 한국어 / Français / Español / Deutsch / Português / Русский / हिन्दी / Türkçe / ไทย / Tiếng Việt / Bahasa Indonesia).
 - File ▸ Language (the menu's footer globe) opens a `LocalePicker` dropdown under the file pill. Native applies a clicked locale immediately; web closes the picker but keeps the old locale while an uninstalled runtime catalog is pending, then mutates `Document.ui.locale` once the JSON is ready. Clicking outside (or the Globe again) closes silently. The picker paints as the top-most overlay so it covers chat / status / canvas.
 - Multi-script chrome strings (한국어 / हिन्दी / ไทย / Tiếng Việt) render against per-codepoint typeface lookups (`FontMgr::match_family_style_character` cached per `i32` in `NativeBackend`), with each string broken into contiguous-typeface segments before draw.
-- Locale tables are hand-maintained in Rust, and each locale is **four files, chained by fall-through**: the main table `<locale>.rs` ends its `match` with `_ => return super::<locale>_git::lookup(key)`, the Git shard ends with `_ => return super::<locale>_panel::lookup(key)`, the `_panel` shard ends with `_ => return super::<locale>_collab::lookup(key)`, and the `_collab` overflow shard ends with `_ => return None`. The catalog is 1,828 direct keys per locale (`catalog_integrity_tests.rs` asserts the exact number). Native builds compile all 15 tables. On wasm32, `de-host-web` enables `de-editor-ui`'s forwarding `runtime-locale-catalog` feature; `de-i18n`'s source-side feature + target double gate then keeps only en-US + zh-CN embedded. `tools/export-i18n-catalogs.py` validates the same 1,828-key equality and generates the other 13 BCP-47 JSON files for `tools/stage-web-assets.sh` to place under `/pkg/assets/i18n/`.
+- Locale tables are hand-maintained in Rust, and each locale is **four files, chained by fall-through**: the main table `<locale>.rs` ends its `match` with `_ => return super::<locale>_git::lookup(key)`, the Git shard ends with `_ => return super::<locale>_panel::lookup(key)`, the `_panel` shard ends with `_ => return super::<locale>_collab::lookup(key)`, and the `_collab` overflow shard ends with `_ => return None`. The catalog is 1,834 direct keys per locale (`catalog_integrity_tests.rs` asserts the exact number). Native builds compile all 15 tables. On wasm32, `de-host-web` enables `de-editor-ui`'s forwarding `runtime-locale-catalog` feature; `de-i18n`'s source-side feature + target double gate then keeps only en-US + zh-CN embedded. `tools/export-i18n-catalogs.py` validates the same 1,834-key equality and generates the other 13 BCP-47 JSON files for `tools/stage-web-assets.sh` to place under `/pkg/assets/i18n/`.
 
   **Adding a new key: put it in `<locale>_collab.rs` (the terminal overflow shard), in all 15 locales.** The main tables sit close to the repo's 800-line ceiling (`zh_cn.rs` and `en.rs` are 775 lines), so new entries do not belong there — the `_panel` shards exist precisely to absorb overflow and have room. Only edit a main or `_git` table when you are changing the wording of a key that already lives there. Then bump the expected count in `catalog_integrity_tests.rs` and run:
 
@@ -534,6 +534,15 @@ The document extension is `.de`; `.op` and the old `.pen` alias no longer open. 
 
 `pen_doc_path_bounds.rs` ports `pen-core/src/path-anchors.ts::getPathBoundsFromAnchors` — cubic Bezier derivative roots + extrema sweep — so authored paths with handles/curves scale into their `width` / `height` box the same way the canonical renderer paints.
 
+### Linked component libraries (#15)
+
+A document links other `.de` / pen.dev `.pen` files as live component libraries. Links persist in `editorMeta.libraries` (`{path, alias?, masters[], variables[]}`; paths relative to the document folder, absolute only before the first save). Types: `de-editor-core/src/library_link.rs`; sync (pure): `library_sync.rs`; files: `de-pen-loader/src/library_files.rs`.
+
+- Library masters are cached on the hidden `Components` page with ids verbatim, so `ref` instances resolve through the normal cross-page resolver and keep rendering when a library goes missing. `masters` records ownership: a re-sync replaces exactly those nodes; a master whose ids a local node already uses is skipped (status `conflicts`). Owned variables follow the library, local names win; theme axes are add-only.
+- `doc_io::load_editor_state_with_report` re-reads every link on open (pen.dev `imports` become links, `alias:` prefixes are dropped); `set_file_name_display` rebases links on Save As. Desktop `library_io.rs` polls link stamps once a second on a thread and re-syncs on `DesktopEvent::LibraryChanged`.
+- Sync is not an undo step; `undo` / `redo` call `reconcile_library_masters` so history cannot roll a library back. Unlink keeps masters an instance still uses as local components.
+- Surfaces: the Components tab's Libraries section (`component_browser_libraries.rs`; Link / Reload queue `LibraryRequest`, the web host answers with a toast), MCP `list_libraries` / `add_library` / `remove_library` (`de-mcp/src/library_tools.rs`, `EditorCommand::Library`).
+
 ## Font weight + text wrapping
 
 - **Numeric-string `fontWeight`** — `.de` files emit weights as JSON strings (`"700"`, `"600"`, `"normal"`). Both `vendor/jian/.../layout/mod.rs::resolve_weight` and `pen_doc_adapter::resolve_font_weight` parse numeric strings first, then fall back to lucide-style named weights (`bold`/`semibold`/`medium`/`light`/`thin`/`normal`/`regular`/`extralight`/`extrabold`/`black`/`heavy`/`demibold`/`ultralight`/`ultrabold`/`hairline`).
@@ -584,7 +593,7 @@ The **`de-mcp`** crate carries the MCP wire layer that mirrors the retired TS `p
 
 ### Tool catalog
 
-**145 static-schema tools** registered today. The authoritative list
+**148 static-schema tools** registered today. The authoritative list
 is `de-host-services/src/mcp_serve/schemas.rs` — `TOOL_SCHEMAS`
 (JSON inputSchemas; `DEBUG_TOOL_SCHEMAS` is gated out of the
 production catalog) — plus the `register_tool!` calls in

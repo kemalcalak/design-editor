@@ -348,6 +348,12 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "annotation.content" => "Content",
         "annotation.model" => "Model",
         "property.resetOverride" => "Reset override",
+        "componentBrowser.libraries" => "Libraries",
+        "componentBrowser.libraryNotLoaded" => "Not loaded",
+        "componentBrowser.libraryMissing" => "Missing",
+        "componentBrowser.libraryInvalid" => "Can't read",
+        "componentBrowser.linkLibrary" => "Link library file",
+        "componentBrowser.libraryNeedsDesktop" => "Linking library files needs the desktop app",
         _ => return None,
     })
 }

@@ -1,7 +1,8 @@
 //! Floating export dialog — opens on File → Export image (or
 //! Cmd/Ctrl+Shift+P). Mirrors the TS Electron `ExportDialog`
 //! (`apps/web/src/components/shared/export-dialog.tsx`):
-//!   - Format radio group: PNG / JPEG / WEBP / SVG / PDF
+//!   - Format radio group: PNG / JPEG / WEBP / SVG / PDF, plus the
+//!     HTML + CSS and HTML + Tailwind code exports (#170)
 //!   - Scale radio group: 1× / 2× / 3×
 //!   - Cancel / Export buttons
 //!
@@ -15,7 +16,7 @@ use crate::widgets::text_metrics;
 use crate::{Color, Point2D, Rect, RenderBackend, TextLayout};
 use de_editor_core::editor_ui_state::EditorUiState;
 
-pub const DIALOG_WIDTH: f32 = 392.0;
+pub const DIALOG_WIDTH: f32 = 480.0;
 pub const DIALOG_HEIGHT: f32 = 236.0;
 const PAD: f32 = 20.0;
 const ROW_GAP: f32 = 20.0;
@@ -36,6 +37,8 @@ pub enum ExportFormat {
     Webp,
     Svg,
     Pdf,
+    Html,
+    HtmlTailwind,
 }
 
 impl ExportFormat {
@@ -46,6 +49,8 @@ impl ExportFormat {
             ExportFormat::Webp => "WEBP",
             ExportFormat::Svg => "SVG",
             ExportFormat::Pdf => "PDF",
+            ExportFormat::Html => "HTML",
+            ExportFormat::HtmlTailwind => "Tailwind",
         }
     }
     pub fn extension(self) -> &'static str {
@@ -55,14 +60,17 @@ impl ExportFormat {
             ExportFormat::Webp => "webp",
             ExportFormat::Svg => "svg",
             ExportFormat::Pdf => "pdf",
+            ExportFormat::Html | ExportFormat::HtmlTailwind => "html",
         }
     }
-    pub const ALL: [ExportFormat; 5] = [
+    pub const ALL: [ExportFormat; 7] = [
         ExportFormat::Png,
         ExportFormat::Jpeg,
         ExportFormat::Webp,
         ExportFormat::Svg,
         ExportFormat::Pdf,
+        ExportFormat::Html,
+        ExportFormat::HtmlTailwind,
     ];
 }
 
@@ -259,7 +267,8 @@ impl ExportDialog {
         let body_y = self.rect.origin.y + HEADER_HEIGHT;
         let pills_y = body_y + 16.0;
         let total_w = self.rect.size.x - PAD * 2.0;
-        let pill_w = (total_w - PILL_GAP * 4.0) / 5.0;
+        let count = ExportFormat::ALL.len() as f32;
+        let pill_w = (total_w - PILL_GAP * (count - 1.0)) / count;
         let x = self.rect.origin.x + PAD + (pill_w + PILL_GAP) * i as f32;
         Rect::xywh(x, pills_y, pill_w, PILL_HEIGHT)
     }
@@ -398,7 +407,8 @@ mod tests {
             .find(|(text, point)| text == "Export" && point.x < export.origin.x)
             .expect("dialog should paint a title");
 
-        assert!(rect.size.x <= 400.0, "dialog should not feel oversized");
+        // Seven format pills (#170) need the extra width; still compact.
+        assert!(rect.size.x <= 480.0, "dialog should not feel oversized");
         assert!(
             (232.0..=244.0).contains(&rect.size.y),
             "dialog should have enough vertical padding without becoming tall"

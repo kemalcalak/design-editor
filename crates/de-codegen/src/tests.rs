@@ -235,13 +235,14 @@ fn html_emits_doctype_and_body() {
 }
 
 #[test]
-fn html_emits_div_per_node_with_position_and_fill() {
+fn html_emits_div_per_node_with_size_and_fill() {
     let doc = doc_with_nodes(vec![rect("n10", 20.0, 30.0, 100.0, 50.0, Some("#ff0000"))]);
     let html = Html.generate(&doc);
-    assert!(html.contains("left:20px"));
-    assert!(html.contains("top:30px"));
-    assert!(html.contains("width:100px"));
-    assert!(html.contains("rgb(255,0,0)"));
+    // A page root sits in the document flow (#170): no canvas offset.
+    assert!(!html.contains("left:"), "{html}");
+    assert!(html.contains("width: 100px;"), "{html}");
+    assert!(html.contains("height: 50px;"), "{html}");
+    assert!(html.contains("background: rgb(255,0,0);"), "{html}");
 }
 
 fn html_style_block(html: &str) -> &str {
@@ -307,8 +308,8 @@ fn html_motion_export_matches_the_golden_css() {
     );
     assert_eq!(html_style_block(&html), expected);
     assert!(html.contains("data-de-motion-node=\"hero\""));
-    assert!(html.contains("transition:opacity 150ms cubic-bezier(0.2,0,0,1)"));
-    assert!(html.contains("animation-timeline:view();animation-range:entry 0% entry 40%"));
+    assert!(html.contains("transition: opacity 150ms cubic-bezier(0.2,0,0,1);"));
+    assert!(html.contains("animation-timeline: view();\n  animation-range: entry 0% entry 40%;"));
 }
 
 /// #155: hover / tap animations play on `:hover` / `:active`, not on load.
@@ -338,8 +339,10 @@ fn html_motion_export_plays_pointer_animations_on_hover_and_active() {
         css.contains("[data-de-motion-node=\"btn\"]:active {\n  animation: de-btn-1 100ms linear 0ms 1 both;\n}"),
         "{css}"
     );
+    let rule_start = html.find(".rect {").expect("element rule");
+    let rule = &html[rule_start..rule_start + html[rule_start..].find('}').unwrap()];
     assert!(
-        !html.contains(";animation:"),
+        !rule.contains("animation"),
         "pointer animations must not run on load: {html}"
     );
 }
@@ -367,16 +370,20 @@ fn html_motion_export_honours_authored_reduced_preference() {
 #[test]
 fn html_without_motion_has_no_extra_css() {
     let html = Html.generate(&empty_doc());
-    assert!(!html.contains("<style>"));
+    assert_eq!(
+        html.matches("<style>").count(),
+        1,
+        "only the layout block: {html}"
+    );
     assert!(!html.contains("data-de-motion-node"));
     assert!(!html.contains("@keyframes"));
 }
 
 #[test]
-fn html_emits_span_for_text_and_escapes_body() {
+fn html_emits_paragraph_for_text_and_escapes_body() {
     let doc = doc_with_nodes(vec![text("n10", 0.0, 0.0, 100.0, 24.0, "Hello & <world>")]);
     let html = Html.generate(&doc);
-    assert!(html.contains("<span"));
+    assert!(html.contains("<p"));
     assert!(html.contains("Hello &amp; &lt;world&gt;"));
 }
 
@@ -492,8 +499,7 @@ fn falls_back_to_bare_children_when_unpaged() {
     let mut doc = empty_doc();
     doc.children = vec![rect("n10", 1.0, 2.0, 30.0, 40.0, None)];
     let html = Html.generate(&doc);
-    assert!(html.contains("left:1px"));
-    assert!(html.contains("width:30px"));
+    assert!(html.contains("width: 30px;"), "{html}");
 }
 
 // --- First-class widget node builders ------------------------------
@@ -661,8 +667,8 @@ fn html_emits_tabs_tablist_and_panels() {
     assert!(html.contains("<button role=\"tab\" value=\"one\">One</button>"));
     // The active tab carries aria-selected.
     assert!(html.contains("<button role=\"tab\" value=\"two\" aria-selected=\"true\">Two</button>"));
-    // Panel child still recurses (rect → positioned div).
-    assert!(html.contains("width:10px"));
+    // Panel child still recurses (rect → sized div).
+    assert!(html.contains("width: 10px;"), "{html}");
 }
 
 #[test]

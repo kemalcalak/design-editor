@@ -53,6 +53,13 @@ impl CanonicalSaveSnapshot {
         &self.document
     }
 
+    /// Embed `editor_meta` instead of the live state's (a Save As writes
+    /// library links relative to its target folder).
+    pub fn with_editor_meta(mut self, editor_meta: EditorMeta) -> Self {
+        self.editor_meta = editor_meta;
+        self
+    }
+
     /// The view state this snapshot will embed under `editorMeta`.
     pub fn editor_meta(&self) -> EditorMeta {
         self.editor_meta.clone()

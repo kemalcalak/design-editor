@@ -348,6 +348,12 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "annotation.content" => "内容",
         "annotation.model" => "模型",
         "property.resetOverride" => "重置覆盖",
+        "componentBrowser.libraries" => "组件库",
+        "componentBrowser.libraryNotLoaded" => "未加载",
+        "componentBrowser.libraryMissing" => "缺失",
+        "componentBrowser.libraryInvalid" => "无法读取",
+        "componentBrowser.linkLibrary" => "链接组件库文件",
+        "componentBrowser.libraryNeedsDesktop" => "链接组件库文件需要桌面应用",
         _ => return None,
     })
 }

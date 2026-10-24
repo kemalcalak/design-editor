@@ -109,6 +109,7 @@ mod tests {
                 preserve_authored_geometry: true,
                 scenario: None,
                 pinned_style_guide: None,
+                libraries: Vec::new(),
             },
         )
         .expect("clean copy save");
@@ -135,6 +136,7 @@ mod tests {
                 preserve_authored_geometry: false,
                 scenario: None,
                 pinned_style_guide: None,
+                libraries: Vec::new(),
             },
         )
         .expect("clean copy appends metadata");

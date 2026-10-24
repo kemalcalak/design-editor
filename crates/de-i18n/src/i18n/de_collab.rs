@@ -348,6 +348,12 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "annotation.content" => "Inhalt",
         "annotation.model" => "Modell",
         "property.resetOverride" => "Überschreibung zurücksetzen",
+        "componentBrowser.libraries" => "Bibliotheken",
+        "componentBrowser.libraryNotLoaded" => "Nicht geladen",
+        "componentBrowser.libraryMissing" => "Fehlt",
+        "componentBrowser.libraryInvalid" => "Nicht lesbar",
+        "componentBrowser.linkLibrary" => "Bibliotheksdatei verknüpfen",
+        "componentBrowser.libraryNeedsDesktop" => "Bibliotheksdateien lassen sich nur in der Desktop-App verknüpfen",
         _ => return None,
     })
 }

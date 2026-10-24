@@ -64,6 +64,10 @@ pub mod drag_mutators;
 pub mod editor_toast;
 pub mod home_mcp_setup;
 pub mod home_thumbnail;
+pub mod library_link;
+mod library_sync;
+#[cfg(test)]
+mod library_sync_tests;
 // Runtime-fetched product assets for the browser bundle (native embeds them).
 pub mod editor_ui_state;
 pub mod export_batch;
@@ -383,6 +387,10 @@ pub use instance_override::{
 pub use jian_ops_schema::node::MaskType;
 pub use jian_ops_schema::style::BlendMode;
 pub use jian_ops_schema::{DesignMdColor, DesignMdSpec, DesignMdTypography, PenDocument};
+pub use library_link::{
+    LibraryCommand, LibraryContent, LibraryLink, LibraryLinks, LibraryPanelAction, LibraryRequest,
+    LibraryStatus, LinkedLibrary,
+};
 pub use mesh_lattice::{MeshAxis, MeshLatticeEdit};
 pub use mutators::EditorStateInvariant;
 pub use node_defaults::{

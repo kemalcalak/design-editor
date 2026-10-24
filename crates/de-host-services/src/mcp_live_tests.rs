@@ -346,6 +346,7 @@ fn pump_flags_document_replaced_only_for_replace_document_requests() {
                 preserve_authored_geometry: true,
                 scenario: None,
                 pinned_style_guide: None,
+                libraries: Vec::new(),
             },
             ack: ack_tx,
         })
@@ -369,6 +370,7 @@ fn pump_flags_document_replaced_only_for_replace_document_requests() {
                 preserve_authored_geometry: false,
                 scenario: None,
                 pinned_style_guide: None,
+                libraries: Vec::new(),
             },
             ack: ack_tx,
         })
@@ -463,6 +465,7 @@ fn pump_flags_document_edited_only_when_the_document_changes() {
                 preserve_authored_geometry: false,
                 scenario: None,
                 pinned_style_guide: None,
+                libraries: Vec::new(),
             },
             ack: replace_ack_tx,
         })
