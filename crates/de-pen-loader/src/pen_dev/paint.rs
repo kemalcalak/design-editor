@@ -75,7 +75,7 @@ fn convert_fill(
         // the legacy repair (`normalize_gradient_fill`), which reads
         // `rotation` as a clockwise CSS angle.
         Some("gradient") => clockwise_rotation(&mut obj),
-        Some("image") => return images::convert_image_fill(obj, ctx),
+        Some("image") => return images::convert_image_fill(obj, size, ctx),
         Some("shader") => return shader::convert(obj, Stage::Fill, size, theme, ctx),
         Some("mesh_gradient") => return mesh::convert(obj, theme, ctx),
         _ => {}

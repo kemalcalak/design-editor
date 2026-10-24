@@ -8,9 +8,16 @@
 use base64::Engine as _;
 use serde_json::{Map, Value};
 
+use super::image_crop::{self, CropLoss, Fit};
 use super::nodes::Ctx;
 
-pub(super) fn convert_image_fill(mut obj: Map<String, Value>, ctx: &mut Ctx<'_>) -> Option<Value> {
+/// `node` is the filled node's `[width, height]` when both are numbers;
+/// a crop fitted with cover / contain needs it.
+pub(super) fn convert_image_fill(
+    mut obj: Map<String, Value>,
+    node: Option<[f64; 2]>,
+    ctx: &mut Ctx<'_>,
+) -> Option<Value> {
     let Some(Value::String(url)) = obj.remove("url") else {
         ctx.report.note("image fill without a file");
         return None;
@@ -18,14 +25,32 @@ pub(super) fn convert_image_fill(mut obj: Map<String, Value>, ctx: &mut Ctx<'_>)
     let source = resolve(&url, ctx)?;
     obj.insert("url".to_owned(), Value::String(source));
     // pen.dev defaults to `cover`, which the canonical schema calls `fill`.
-    let mode = match obj.remove("mode").as_ref().and_then(Value::as_str) {
-        Some("contain") => "fit",
-        Some("stretch") => "stretch",
-        _ => "fill",
+    let (mode, fit) = match obj.remove("mode").as_ref().and_then(Value::as_str) {
+        Some("contain") => ("fit", Fit::Contain),
+        Some("stretch") => ("stretch", Fit::Stretch),
+        _ => ("fill", Fit::Cover),
     };
     obj.insert("mode".to_owned(), Value::String(mode.to_owned()));
-    if obj.remove("transform").is_some() {
-        ctx.report.note("image crop");
+    if let Some(crop) = obj.remove("transform") {
+        let image = ctx.image_sizes.get(&url).copied();
+        match image_crop::canonical_transform(&crop, fit, node, image) {
+            Ok((transform, loss)) => {
+                // A transformed fill is drawn as a crop: the fit is in
+                // the matrix.
+                obj.insert("mode".to_owned(), Value::String("crop".to_owned()));
+                obj.insert("transform".to_owned(), transform);
+                match loss {
+                    Some(CropLoss::Approximated) => {
+                        ctx.report.note("image crop (fitted as stretch)")
+                    }
+                    Some(CropLoss::Letterbox) => ctx
+                        .report
+                        .note("image crop (contain shows the rest of the image)"),
+                    _ => {}
+                }
+            }
+            Err(_) => ctx.report.note("image crop (invalid transform)"),
+        }
     }
     Some(Value::Object(obj))
 }
@@ -41,9 +66,13 @@ fn resolve(url: &str, ctx: &mut Ctx<'_>) -> Option<String> {
     if let Some(cached) = ctx.images.get(url) {
         return cached.clone();
     }
-    let reference = file_data_url(url, ctx.assets).map(|data_url| {
+    let reference = file_bytes(url, ctx.assets).map(|(mime, bytes)| {
+        if let Some(size) = de_util::encoded_image_dimensions(&bytes) {
+            ctx.image_sizes.insert(url.to_owned(), size);
+        }
         let id = format!("pen-dev-{}", ctx.image_table.len());
-        ctx.image_table.insert(id.clone(), Value::String(data_url));
+        ctx.image_table
+            .insert(id.clone(), Value::String(data_url(mime, &bytes)));
         format!("{IMAGE_REF_PREFIX}{id}")
     });
     if reference.is_none() {
@@ -63,12 +92,18 @@ pub(super) fn relative_path(url: &str) -> &str {
 /// The image file `url` names as a `data:` URL, or `None` when it is not a
 /// readable image inside the document's folder.
 pub(super) fn file_data_url(url: &str, assets: super::AssetReader<'_>) -> Option<String> {
+    file_bytes(url, assets).map(|(mime, bytes)| data_url(mime, &bytes))
+}
+
+/// The image file `url` names and its mime type, or `None` when it is not a
+/// readable image inside the document's folder.
+fn file_bytes(url: &str, assets: super::AssetReader<'_>) -> Option<(&'static str, Vec<u8>)> {
     let relative = relative_path(url);
     if !is_inside_document_folder(relative) {
         return None;
     }
     let mime = mime_type(relative)?;
-    Some(data_url(mime, &assets(relative)?))
+    Some((mime, assets(relative)?))
 }
 
 pub(crate) fn data_url(mime: &str, bytes: &[u8]) -> String {
