@@ -8,6 +8,9 @@
 //! - **Windows**: a hidden PowerShell waits for this process to exit, runs
 //!   the NSIS setup with `/S` elevated (one UAC prompt — the installer is
 //!   per-machine), then starts the installed exe again.
+//! - **Linux** (#51): unpack the bare `design-editor` binary from the release
+//!   tarball next to the running one, then a detached `sh` waits for this
+//!   process to exit, renames it over the old binary and starts it.
 
 use std::path::{Path, PathBuf};
 
@@ -22,12 +25,19 @@ pub enum StagedUpdate {
     /// Windows: run `setup` silently after quit, then start `exe`.
     #[cfg_attr(not(target_os = "windows"), allow(dead_code))]
     Installer { setup: PathBuf, exe: PathBuf },
+    /// Linux: rename `staged` over `target` after quit, then start it.
+    #[cfg_attr(not(target_os = "linux"), allow(dead_code))]
+    Binary { staged: PathBuf, target: PathBuf },
 }
 
-/// What the update replaces: the `.app` bundle on macOS, the exe on Windows.
-// Read only by the macOS / Windows `stage`; elsewhere `install_target`
-// never succeeds, so the field is never read.
-#[cfg_attr(not(any(target_os = "macos", target_os = "windows")), allow(dead_code))]
+/// What the update replaces: the `.app` bundle on macOS, the exe on Windows
+/// and Linux.
+// Read only by the macOS / Windows / Linux `stage`; elsewhere
+// `install_target` never succeeds, so the field is never read.
+#[cfg_attr(
+    not(any(target_os = "macos", target_os = "windows", target_os = "linux")),
+    allow(dead_code)
+)]
 #[derive(Debug, Clone)]
 pub struct InstallTarget(PathBuf);
 
@@ -68,9 +78,52 @@ fn platform_target(exe: &Path) -> Result<PathBuf, UpdateFailure> {
         .ok_or(UpdateFailure::Unsupported)
 }
 
-#[cfg(not(any(target_os = "macos", target_os = "windows")))]
+/// The release ships a bare binary, so any copy can update itself, except a
+/// `cargo` build (whose binary the next build would overwrite anyway) and a
+/// binary in a folder this user cannot write to (`/usr/bin` from a distro
+/// package).
+#[cfg(target_os = "linux")]
+fn platform_target(exe: &Path) -> Result<PathBuf, UpdateFailure> {
+    let dir = exe.parent().ok_or(UpdateFailure::Unsupported)?;
+    if is_cargo_build_dir(dir) {
+        return Err(UpdateFailure::Unsupported);
+    }
+    let probe = dir.join(format!(
+        ".design-editor-update-probe-{}",
+        std::process::id()
+    ));
+    std::fs::create_dir(&probe).map_err(|_| UpdateFailure::Unsupported)?;
+    let _ = std::fs::remove_dir(&probe);
+    Ok(exe.to_path_buf())
+}
+
+#[cfg(not(any(target_os = "macos", target_os = "windows", target_os = "linux")))]
 fn platform_target(_exe: &Path) -> Result<PathBuf, UpdateFailure> {
     Err(UpdateFailure::Unsupported)
+}
+
+/// `target/debug`, `target/release` or `target/<triple>/release`.
+#[cfg_attr(not(target_os = "linux"), allow(dead_code))]
+fn is_cargo_build_dir(dir: &Path) -> bool {
+    let profile = dir.file_name().and_then(|n| n.to_str());
+    if !matches!(profile, Some("debug" | "release")) {
+        return false;
+    }
+    dir.ancestors()
+        .skip(1)
+        .take(2)
+        .any(|p| p.file_name().is_some_and(|n| n == "target"))
+}
+
+/// Where the new binary waits next to `target`: hidden, same folder, so the
+/// swap is a rename.
+#[cfg_attr(not(target_os = "linux"), allow(dead_code))]
+fn staged_binary_path(target: &Path) -> PathBuf {
+    let name = target
+        .file_name()
+        .map(|s| s.to_string_lossy().into_owned())
+        .unwrap_or_else(|| "design-editor".into());
+    target.with_file_name(format!(".{name}.update"))
 }
 
 /// The `.app` directory an executable lives in, if any.
@@ -159,10 +212,61 @@ pub fn stage(setup: &Path, target: InstallTarget) -> Result<StagedUpdate, Update
     })
 }
 
-#[cfg(not(any(target_os = "macos", target_os = "windows")))]
+/// Unpack `design-editor` from the verified tarball into the job folder, then
+/// copy it next to the installed binary (the job folder sits in the temp
+/// dir, often another filesystem, so a rename could fail there).
+#[cfg(target_os = "linux")]
+pub fn stage(archive: &Path, target: InstallTarget) -> Result<StagedUpdate, UpdateFailure> {
+    use std::os::unix::fs::PermissionsExt;
+    use std::process::Command;
+    let target = target.0;
+    let job_dir = archive
+        .parent()
+        .ok_or(UpdateFailure::Install)?
+        .to_path_buf();
+    let unpack = job_dir.join("unpack");
+    let staged = staged_binary_path(&target);
+    let result = (|| {
+        std::fs::create_dir_all(&unpack).ok()?;
+        Command::new("tar")
+            .arg("-xzf")
+            .arg(archive)
+            .arg("-C")
+            .arg(&unpack)
+            .arg(LINUX_BINARY)
+            .status()
+            .ok()?
+            .success()
+            .then_some(())?;
+        let _ = std::fs::remove_file(&staged);
+        std::fs::copy(unpack.join(LINUX_BINARY), &staged).ok()?;
+        std::fs::set_permissions(&staged, std::fs::Permissions::from_mode(0o755)).ok()
+    })();
+    let _ = std::fs::remove_dir_all(&job_dir);
+    if result.is_none() {
+        let _ = std::fs::remove_file(&staged);
+        return Err(UpdateFailure::Install);
+    }
+    Ok(StagedUpdate::Binary { staged, target })
+}
+
+#[cfg(not(any(target_os = "macos", target_os = "windows", target_os = "linux")))]
 pub fn stage(_asset: &Path, _target: InstallTarget) -> Result<StagedUpdate, UpdateFailure> {
     Err(UpdateFailure::Unsupported)
 }
+
+/// The binary at the root of `design-editor-linux-x86_64.tar.gz`.
+#[cfg_attr(not(target_os = "linux"), allow(dead_code))]
+const LINUX_BINARY: &str = "design-editor";
+
+/// Waits for `$1` (our pid) to exit, renames `$3` (staged) over `$2`
+/// (target) and starts whichever binary ended up at `$2`. A rename replaces
+/// the path atomically, so a failed one leaves the old binary in place.
+#[cfg_attr(not(target_os = "linux"), allow(dead_code))]
+const LINUX_SWAP_SCRIPT: &str = r#"pid="$1"; target="$2"; staged="$3"
+while kill -0 "$pid" 2>/dev/null; do sleep 0.2; done
+mv -f "$staged" "$target" || rm -f "$staged"
+exec "$target""#;
 
 /// Waits for `$1` (our pid) to exit, swaps `$3` (staged) into `$2`
 /// (target) keeping the old bundle until the new one is in place, and
@@ -255,7 +359,30 @@ fn spawn_helper(staged: &StagedUpdate, pid: u32) -> std::io::Result<()> {
         .or_else(|_| spawn(CREATE_NO_WINDOW | DETACHED_PROCESS))
 }
 
-#[cfg(not(any(target_os = "macos", target_os = "windows")))]
+#[cfg(target_os = "linux")]
+fn spawn_helper(staged: &StagedUpdate, pid: u32) -> std::io::Result<()> {
+    use std::os::unix::process::CommandExt;
+    use std::process::{Command, Stdio};
+    let StagedUpdate::Binary { staged, target } = staged else {
+        return Err(std::io::ErrorKind::Unsupported.into());
+    };
+    Command::new("/bin/sh")
+        .arg("-c")
+        .arg(LINUX_SWAP_SCRIPT)
+        .arg("sh")
+        .arg(pid.to_string())
+        .arg(target)
+        .arg(staged)
+        .stdin(Stdio::null())
+        .stdout(Stdio::null())
+        .stderr(Stdio::null())
+        // Own process group, so quitting the app does not take it along.
+        .process_group(0)
+        .spawn()
+        .map(drop)
+}
+
+#[cfg(not(any(target_os = "macos", target_os = "windows", target_os = "linux")))]
 fn spawn_helper(_staged: &StagedUpdate, _pid: u32) -> std::io::Result<()> {
     Err(std::io::ErrorKind::Unsupported.into())
 }
@@ -297,6 +424,32 @@ mod tests {
         assert!(cmd.ends_with(
             r"Start-Process -FilePath 'C:\Program Files\Design Editor\design-editor.exe'"
         ));
+    }
+
+    #[test]
+    fn cargo_build_dirs_cannot_self_update() {
+        assert!(is_cargo_build_dir(Path::new("/repo/target/release")));
+        assert!(is_cargo_build_dir(Path::new("/repo/target/debug")));
+        assert!(is_cargo_build_dir(Path::new(
+            "/repo/target/x86_64-unknown-linux-gnu/release"
+        )));
+        assert!(!is_cargo_build_dir(Path::new("/home/me/.local/bin")));
+        assert!(!is_cargo_build_dir(Path::new("/opt/release")));
+    }
+
+    #[test]
+    fn staged_binary_sits_hidden_next_to_the_target() {
+        assert_eq!(
+            staged_binary_path(Path::new("/home/me/.local/bin/design-editor")),
+            Path::new("/home/me/.local/bin/.design-editor.update")
+        );
+    }
+
+    #[test]
+    fn linux_swap_script_waits_renames_and_restarts() {
+        assert!(LINUX_SWAP_SCRIPT.contains(r#"kill -0 "$pid""#));
+        assert!(LINUX_SWAP_SCRIPT.contains(r#"mv -f "$staged" "$target""#));
+        assert!(LINUX_SWAP_SCRIPT.ends_with(r#"exec "$target""#));
     }
 
     #[test]

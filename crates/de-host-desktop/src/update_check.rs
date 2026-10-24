@@ -223,11 +223,14 @@ pub(crate) fn installer_asset_name(version: &str) -> Option<String> {
 
 /// Pure name table — split from [`installer_asset_name`] so tests
 /// cover every platform from any host.
-/// Only macOS arm64 and Windows x64 installers are published.
+/// Published: macOS arm64 (DMG), Windows x64 (NSIS installer) and Linux
+/// x86_64 (a tarball holding the bare binary, #51). The Linux name carries no
+/// version; the download base already names the release.
 fn asset_name_for(os: &str, arch: &str, version: &str) -> Option<String> {
     match (os, arch) {
         ("macos", "aarch64") => Some(format!("Design-Editor-{version}-arm64-mac.dmg")),
         ("windows", "x86_64") => Some(format!("Design-Editor-{version}-x64-win-setup.exe")),
+        ("linux", "x86_64") => Some("design-editor-linux-x86_64.tar.gz".to_string()),
         _ => None,
     }
 }
@@ -462,8 +465,12 @@ mod installer_asset_tests {
             asset_name_for("windows", "x86_64", "0.9.0").as_deref(),
             Some("Design-Editor-0.9.0-x64-win-setup.exe")
         );
+        assert_eq!(
+            asset_name_for("linux", "x86_64", "0.9.0").as_deref(),
+            Some("design-editor-linux-x86_64.tar.gz")
+        );
         // Unpublished platforms fall back to the releases page.
-        assert_eq!(asset_name_for("linux", "x86_64", "0.9.0"), None);
+        assert_eq!(asset_name_for("linux", "aarch64", "0.9.0"), None);
         assert_eq!(asset_name_for("macos", "x86_64", "0.9.0"), None);
         assert_eq!(asset_name_for("windows", "aarch64", "0.9.0"), None);
         assert_eq!(asset_name_for("freebsd", "x86_64", "0.9.0"), None);
