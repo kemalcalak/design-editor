@@ -1,3 +1,4 @@
+use super::canvas_viewport_stroke_paint::with_stroke_paint;
 use crate::layout_scene::{stable_image_source_id, SceneNode};
 use crate::widgets::canvas_viewport_overlay::scaled_non_uniform_corner_radii;
 use crate::widgets::PaintCx;
@@ -545,15 +546,16 @@ fn paint_image_node_with_stroke(
     }
     if let Some(stroke) = node.stroke.filter(|_| paint_stroke) {
         let width = stroke.width * zoom;
-        if let Some(radii) = per_corner {
-            cx.backend
-                .stroke_round_rect_per_corner(world_rect, radii, stroke.color, width);
-        } else if use_round {
-            cx.backend
-                .stroke_round_rect(world_rect, r, stroke.color, width);
-        } else {
-            cx.backend.stroke_rect(world_rect, stroke.color, width);
-        }
+        with_stroke_paint(cx, node, world_rect, zoom, |cx, color| {
+            if let Some(radii) = per_corner {
+                cx.backend
+                    .stroke_round_rect_per_corner(world_rect, radii, color, width);
+            } else if use_round {
+                cx.backend.stroke_round_rect(world_rect, r, color, width);
+            } else {
+                cx.backend.stroke_rect(world_rect, color, width);
+            }
+        });
     }
 }
 
