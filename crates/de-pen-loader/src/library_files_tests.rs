@@ -1,6 +1,7 @@
 //! Tests for `library_files.rs`.
 
 use super::*;
+use de_editor_core::LibraryStatus;
 use de_editor_core::page_mutators::COMPONENTS_PAGE_NAME;
 use de_editor_core::pen_node_ext::PenNodeExt;
 

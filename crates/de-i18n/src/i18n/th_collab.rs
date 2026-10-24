@@ -342,6 +342,12 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "shader.sourceTitle" => "โค้ดเชดเดอร์",
         "shader.close" => "ปิด",
         "shader.apply" => "ใช้",
+        "componentBrowser.libraries" => "ไลบรารี",
+        "componentBrowser.libraryNotLoaded" => "ยังไม่โหลด",
+        "componentBrowser.libraryMissing" => "ไม่พบ",
+        "componentBrowser.libraryInvalid" => "อ่านไม่ได้",
+        "componentBrowser.linkLibrary" => "ลิงก์ไฟล์ไลบรารี",
+        "componentBrowser.libraryNeedsDesktop" => "การลิงก์ไฟล์ไลบรารีต้องใช้แอปเดสก์ท็อป",
         _ => return None,
     })
 }

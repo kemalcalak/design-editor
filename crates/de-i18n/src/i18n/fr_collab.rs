@@ -342,6 +342,12 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "shader.sourceTitle" => "Code du shader",
         "shader.close" => "Fermer",
         "shader.apply" => "Appliquer",
+        "componentBrowser.libraries" => "Bibliothèques",
+        "componentBrowser.libraryNotLoaded" => "Non chargée",
+        "componentBrowser.libraryMissing" => "Introuvable",
+        "componentBrowser.libraryInvalid" => "Illisible",
+        "componentBrowser.linkLibrary" => "Lier un fichier de bibliothèque",
+        "componentBrowser.libraryNeedsDesktop" => "Lier des bibliothèques nécessite l'app de bureau",
         _ => return None,
     })
 }

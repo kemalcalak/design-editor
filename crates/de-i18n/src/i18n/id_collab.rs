@@ -342,6 +342,12 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "shader.sourceTitle" => "Kode shader",
         "shader.close" => "Tutup",
         "shader.apply" => "Terapkan",
+        "componentBrowser.libraries" => "Pustaka",
+        "componentBrowser.libraryNotLoaded" => "Belum dimuat",
+        "componentBrowser.libraryMissing" => "Tidak ada",
+        "componentBrowser.libraryInvalid" => "Tidak terbaca",
+        "componentBrowser.linkLibrary" => "Tautkan file pustaka",
+        "componentBrowser.libraryNeedsDesktop" => "Menautkan file pustaka memerlukan aplikasi desktop",
         _ => return None,
     })
 }

@@ -344,6 +344,12 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "shader.sourceTitle" => "셰이더 코드",
         "shader.close" => "닫기",
         "shader.apply" => "적용",
+        "componentBrowser.libraries" => "라이브러리",
+        "componentBrowser.libraryNotLoaded" => "로드 안 됨",
+        "componentBrowser.libraryMissing" => "없음",
+        "componentBrowser.libraryInvalid" => "읽을 수 없음",
+        "componentBrowser.linkLibrary" => "라이브러리 파일 연결",
+        "componentBrowser.libraryNeedsDesktop" => "라이브러리 파일 연결은 데스크톱 앱에서만 가능합니다",
         _ => return None,
     })
 }
