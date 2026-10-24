@@ -347,6 +347,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "annotation.prompt" => "प्रॉम्प्ट",
         "annotation.content" => "सामग्री",
         "annotation.model" => "मॉडल",
+        "property.resetOverride" => "ओवरराइड रीसेट करें",
         _ => return None,
     })
 }

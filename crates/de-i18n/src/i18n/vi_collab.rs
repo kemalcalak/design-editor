@@ -347,6 +347,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "annotation.prompt" => "Lời nhắc",
         "annotation.content" => "Nội dung",
         "annotation.model" => "Mô hình",
+        "property.resetOverride" => "Đặt lại ghi đè",
         _ => return None,
     })
 }

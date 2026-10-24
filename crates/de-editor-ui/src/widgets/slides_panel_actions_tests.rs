@@ -26,6 +26,7 @@ fn open_menu(selected: usize, supported: bool) -> SlidesActionLayout {
         selected_slides: selected,
         selected_export_supported: supported,
         transition: None,
+        transition_duration_ms: None,
     })
 }
 
@@ -136,6 +137,7 @@ fn a_short_rail_clamps_the_menu_to_the_list_top_rather_than_over_the_tabs() {
             selected_slides: 1,
             selected_export_supported: true,
             transition: None,
+            transition_duration_ms: None,
         },
     );
     let menu = l.menu.expect("still laid out");
@@ -317,4 +319,33 @@ fn the_transition_row_is_four_cells_above_the_buttons() {
         l.button_at(centre(l.present)),
         Some(SlidesPanelTarget::Present)
     );
+    assert!(l.duration_stepper.is_none(), "no duration, no stepper");
+}
+
+/// #190: with a shared duration the label line carries `− 400 ms +`, inside
+/// the bar and clear of the kind cells.
+#[test]
+fn the_duration_stepper_sits_on_the_label_line() {
+    let l = bar(SlidesActionState {
+        transition: Some(SlideTransitionKind::Fade),
+        transition_duration_ms: Some(400),
+        ..SlidesActionState::default()
+    });
+    let [minus, value, plus] = l.duration_stepper.expect("stepper shown");
+    let cells_top = l.transition_cells[0].origin.y;
+    for rect in [minus, value, plus] {
+        assert!(rect.origin.y >= l.bar.origin.y);
+        assert!(rect.origin.y + rect.size.y <= cells_top);
+    }
+    assert!(minus.origin.x + minus.size.x <= value.origin.x);
+    assert!(value.origin.x + value.size.x <= plus.origin.x);
+    assert_eq!(
+        l.button_at(centre(minus)),
+        Some(SlidesPanelTarget::TransitionDuration { longer: false })
+    );
+    assert_eq!(
+        l.button_at(centre(plus)),
+        Some(SlidesPanelTarget::TransitionDuration { longer: true })
+    );
+    assert_eq!(l.button_at(centre(value)), None);
 }

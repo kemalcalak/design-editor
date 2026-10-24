@@ -347,6 +347,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "annotation.prompt" => "提示詞",
         "annotation.content" => "內容",
         "annotation.model" => "模型",
+        "property.resetOverride" => "重設覆寫",
         _ => return None,
     })
 }

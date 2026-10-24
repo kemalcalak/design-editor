@@ -334,15 +334,70 @@ fn node_textures_become_effect_children() {
     )
     .unwrap();
     assert!(backdrop.sksl.contains("uniform shader background;"));
-    // A fill cannot sample the node itself.
-    let label = translate(
+    // A backdrop-only effect still replaces the node: it declares `object`.
+    assert!(
+        backdrop.sksl.contains("uniform shader object;"),
+        "{}",
+        backdrop.sksl
+    );
+    // A fill samples the fills under it through the same child (#165).
+    let fill = translate(
         PIXELATE,
         Stage::Fill,
         &values(json!({ "u_content": "pencil:object" })),
     )
-    .unwrap_err()
-    .label(Stage::Fill);
-    assert_eq!(label, "shader fill (unsupported texture)");
+    .unwrap();
+    assert!(
+        fill.sksl.contains("uniform shader object;"),
+        "{}",
+        fill.sksl
+    );
+    assert!(!fill.sksl.contains("uniform shader background;"));
+}
+
+const GLASS: &str = "/** @resolution */ uniform vec2 r;
+/** @mipmap */ uniform sampler2D u_back;
+uniform sampler2D u_node;
+/** @sdf */ uniform sampler2D u_shape;
+uniform sampler2D u_noise;
+void main() {
+  vec2 uv = gl_FragCoord.xy / r;
+  vec4 s = texture2D(u_shape, uv);
+  vec2 bend = s.gb * 0.02 * float(textureSize(u_noise, 0).x);
+  vec4 node = texture2D(u_node, uv + bend);
+  gl_FragColor = s.r > 0.0 ? texture2D(u_back, uv + bend) * (1.0 - node.a) + node : node * texture2D(u_noise, uv);
+}";
+
+#[test]
+fn node_backdrop_sdf_and_images_sample_together() {
+    let vals = values(
+        json!({ "u_back": "pencil:background", "u_node": "pencil:object", "u_noise": "noise.png" }),
+    );
+    for stage in [Stage::Fill, Stage::Effect] {
+        let out = translate(GLASS, stage, &vals).unwrap();
+        let sksl = &out.sksl;
+        assert!(
+            sksl.contains("/** @mipmap */ uniform shader background;"),
+            "{sksl}"
+        );
+        assert!(sksl.contains("uniform shader object;"), "{sksl}");
+        assert!(
+            sksl.contains("/** @sdf */ uniform shader u_shape;"),
+            "{sksl}"
+        );
+        assert!(
+            sksl.contains("pen_sdf(u_shape.eval(pen_texel(uv)))"),
+            "{sksl}"
+        );
+        assert!(sksl.contains("float4 pen_sdf(half4 s)"), "{sksl}");
+        assert!(
+            sksl.contains("/** @internal */ uniform float2 pen_size_u_noise;"),
+            "{sksl}"
+        );
+        assert!(sksl.contains("int2(pen_size_u_noise).x"), "{sksl}");
+        assert_eq!(out.sized_images, ["u_noise"]);
+        assert_eq!(out.uniforms[2].slot, Slot::Texture(Texture::Sdf));
+    }
 }
 
 #[test]
@@ -383,6 +438,18 @@ fn translated_fixtures_compile_in_skia() {
         (PIXELATE, Stage::Effect, json!({ "u_content": "pencil:object" })),
         (PIXELATE, Stage::Effect, json!({ "u_content": "pencil:background" })),
         (PIXELATE, Stage::Fill, json!({ "u_content": "images/a.png" })),
+        (PIXELATE, Stage::Fill, json!({ "u_content": "pencil:object" })),
+        (PIXELATE, Stage::Effect, json!({ "u_content": "images/a.png" })),
+        (
+            GLASS,
+            Stage::Fill,
+            json!({ "u_back": "pencil:background", "u_node": "pencil:object", "u_noise": "n.png" }),
+        ),
+        (
+            GLASS,
+            Stage::Effect,
+            json!({ "u_back": "pencil:background", "u_node": "pencil:object", "u_noise": "n.png" }),
+        ),
         (
             "/** @mouse */ uniform vec2 m; float glow() { return length(gl_FragCoord.xy - m); } void main() { gl_FragColor = vec4(vec3(1.0 / glow()), 1.0); }",
             Stage::Fill,

@@ -226,6 +226,9 @@ pub enum ComponentButtonState {
         /// nested scroll surface.
         picker_open: bool,
     },
+    /// A node inside an instance whose override the user can reset to the
+    /// master (#166): one "Reset override" row.
+    InstanceOverride,
 }
 
 /// Whether each section currently paints.

@@ -13,12 +13,15 @@ name: Release
 #   Design-Editor-<v>-x64-win-setup.exe   Windows x64 NSIS installer (unsigned)
 #   de-cli-macos-aarch64.tar.gz           standalone `de` CLI
 #   de-cli-windows-x86_64.zip             standalone `de.exe` CLI
-#   design-editor-linux-x86_64.tar.gz     Linux x86_64 `design-editor` binary
+#   design-editor-linux-x86_64.tar.gz     Linux x86_64 `design-editor` binary (also the in-app update asset)
 #   de-cli-linux-x86_64.tar.gz            standalone Linux `de` CLI
 #   SHA256SUMS.txt
 #
-# The two Linux archives hold the bare binary at the archive root. The in-app
-# update check has no Linux asset.
+# The two Linux archives hold the bare binary at the archive root. The
+# in-app update on Linux unpacks `design-editor` from the first one and
+# renames it over the running binary (update_install_platform.rs). Before
+# publishing, `linux-smoke` unpacks it on a fresh runner and asks the
+# headless MCP server for its tool list.
 #
 # `workflow_dispatch` (on main) re-runs the same pipeline, e.g. after a
 # failed build: it still publishes only when the tag does not exist yet.
@@ -310,9 +313,57 @@ jobs:
           if-no-files-found: error
           retention-days: ${{ github.event_name == 'pull_request' && 7 || 90 }}
 
+  # The Linux tarball on a stock runner that did not build it (none of
+  # rust-check's apt packages installed): every shared library resolves and the headless MCP
+  # server answers `tools/list`. Runs on PR dry runs too.
+  linux-smoke:
+    name: Smoke-test the Linux binary
+    needs: [version, build]
+    if: >-
+      !cancelled() && needs.version.outputs.build == 'true' &&
+      needs.build.result == 'success'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: release-linux-x86_64
+          path: release-files
+      - name: Unpack the archive and resolve its libraries
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p smoke
+          tar xzf release-files/design-editor-linux-x86_64.tar.gz -C smoke
+          [[ -x smoke/design-editor ]] || {
+            echo "::error::design-editor is missing from the archive root or not executable"
+            exit 1
+          }
+          if ldd smoke/design-editor | grep 'not found'; then
+            echo "::error::design-editor needs libraries a stock Ubuntu 24.04 lacks"
+            exit 1
+          fi
+      - name: Ask the headless MCP server for its tools
+        shell: bash
+        run: |
+          set -euo pipefail
+          printf '%s\n' '{"version":"1.0.0","children":[]}' > "$RUNNER_TEMP/smoke.de"
+          printf '%s\n' \
+            '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"release-smoke","version":"0"}}}' \
+            '{"jsonrpc":"2.0","id":2,"method":"tools/list"}' \
+            | timeout 120 smoke/design-editor --mcp "$RUNNER_TEMP/smoke.de" > mcp-out.jsonl \
+            || { status=$?; echo "::error::design-editor --mcp exited with $status"; head -c 2000 mcp-out.jsonl; exit 1; }
+          if ! grep -q '"id":2' mcp-out.jsonl || ! grep -q '"name":"read_nodes"' mcp-out.jsonl; then
+            echo "::error::the MCP server did not answer tools/list"
+            head -c 2000 mcp-out.jsonl
+            exit 1
+          fi
+          echo "MCP answered: $(grep -o '"name":"[a-z_]*"' mcp-out.jsonl | wc -l) tool names listed"
+
   publish:
     name: Tag and publish v${{ needs.version.outputs.version }}
-    needs: [version, build]
+    needs: [version, build, linux-smoke]
     if: needs.version.outputs.release == 'true' && github.event_name != 'pull_request'
     runs-on: ubuntu-24.04
     permissions:
@@ -354,7 +405,9 @@ jobs:
           - **macOS (Apple Silicon):** open `Design-Editor-<v>-arm64-mac.dmg` and drag Design Editor to Applications.
           - **Windows x64:** run `Design-Editor-<v>-x64-win-setup.exe`.
           - **Linux x86_64:** `design-editor-linux-x86_64.tar.gz` holds the bare `design-editor` binary
-            (needs glibc 2.39+, GL/EGL and X11 or Wayland).
+            (needs glibc 2.39+, GL/EGL and X11 or Wayland). Unpack it into a folder you can write to,
+            e.g. `tar xzf design-editor-linux-x86_64.tar.gz -C ~/.local/bin`; the in-app update then
+            replaces it in place.
           - **CLI only:** `de-cli-macos-aarch64.tar.gz` / `de-cli-windows-x86_64.zip` / `de-cli-linux-x86_64.tar.gz`.
 
           These builds are **not code-signed** yet:

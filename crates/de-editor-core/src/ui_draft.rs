@@ -131,6 +131,12 @@ pub enum PropertyFocus {
         index: usize,
         field: crate::motion_edit::MotionField,
     },
+    /// From or To (`field`) of a colour animation (`fill`) at `index` in
+    /// the Motion section (#190). A hex input.
+    MotionColor {
+        index: usize,
+        field: crate::motion_edit::MotionField,
+    },
     /// The node-level `transition` duration (ms) in the Motion section
     /// (#176).
     TransitionDuration,
@@ -153,7 +159,9 @@ impl PropertyFocus {
     /// the paint body's separate opacity field.
     pub fn hex_max_len(self) -> Option<usize> {
         match self {
-            PropertyFocus::PageBackgroundHex | PropertyFocus::FillHex(_) => Some(9),
+            PropertyFocus::PageBackgroundHex
+            | PropertyFocus::FillHex(_)
+            | PropertyFocus::MotionColor { .. } => Some(9),
             PropertyFocus::StrokeHex | PropertyFocus::GradientStopHex(_) => Some(7),
             _ => None,
         }

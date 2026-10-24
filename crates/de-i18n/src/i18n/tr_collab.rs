@@ -347,6 +347,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "annotation.prompt" => "İstem",
         "annotation.content" => "İçerik",
         "annotation.model" => "Model",
+        "property.resetOverride" => "Geçersiz kılmayı sıfırla",
         _ => return None,
     })
 }

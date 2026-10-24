@@ -22,6 +22,9 @@ pub struct BatchGet {
     /// active theme (name → value), for `resolveRefs=true`. Mirrors the
     /// inputs TS `resolveNodeForCanvas` resolves against.
     resolved_vars: BTreeMap<String, VariableScalar>,
+    /// The document, kept only when it has instances: `instanceId/childId`
+    /// node ids resolve against it (#166).
+    instance_doc: Option<jian_ops_schema::PenDocument>,
 }
 
 struct SearchPattern {
@@ -62,12 +65,13 @@ impl McpTool for BatchGet {
         };
         let parent_id = arg_alias(args, &["parentId", "parent_id", "parent"]);
         let search_roots = search_roots(&page.roots, parent_id);
-        let mut nodes: Vec<&PenNode> = Vec::new();
+        let mut nodes: Vec<std::borrow::Cow<'_, PenNode>> = Vec::new();
         let mut seen = BTreeSet::new();
 
         if patterns.is_empty() && node_ids.is_empty() {
-            nodes.extend(search_roots.iter());
+            nodes.extend(search_roots.iter().map(std::borrow::Cow::Borrowed));
         } else {
+            let mut matched: Vec<&PenNode> = Vec::new();
             for pattern in &patterns {
                 match collect_matches(
                     search_roots,
@@ -75,12 +79,13 @@ impl McpTool for BatchGet {
                     search_depth,
                     0,
                     &mut seen,
-                    &mut nodes,
+                    &mut matched,
                 ) {
                     Ok(()) => {}
                     Err((code, msg)) => return ToolOutcome::Err(code, msg),
                 }
             }
+            nodes.extend(matched.into_iter().map(std::borrow::Cow::Borrowed));
             for id in &node_ids {
                 if seen.contains(id) {
                     continue;
@@ -88,7 +93,10 @@ impl McpTool for BatchGet {
                 if let Some(nid) = NodeId::new_opt(id) {
                     if let Some(node) = find_node(&page.roots, &nid) {
                         seen.insert(id.clone());
-                        nodes.push(node);
+                        nodes.push(std::borrow::Cow::Borrowed(node));
+                    } else if let Some(node) = self.instance_node(&page.roots, id) {
+                        seen.insert(id.clone());
+                        nodes.push(std::borrow::Cow::Owned(node));
                     }
                 }
             }
@@ -228,14 +236,30 @@ pub fn batch_get_snapshot(state: &EditorState) -> BatchGet {
                 .collect()
         })
         .unwrap_or_default();
+    let instance_doc =
+        de_editor_core::ref_resolve::document_has_refs(&state.doc).then(|| state.doc.clone());
     BatchGet {
         pages,
         active_page_id,
         resolved_vars,
+        instance_doc,
     }
 }
 
 impl BatchGet {
+    /// The effective node behind an `instanceId/childId` id (any nesting
+    /// depth), answering to that id.
+    fn instance_node(&self, roots: &[PenNode], path: &str) -> Option<PenNode> {
+        if !path.contains('/') {
+            return None;
+        }
+        let doc = self.instance_doc.as_ref()?;
+        let hit = de_editor_core::instance_anchor::locate_document_path(roots, doc, path)?;
+        let mut node = hit.display;
+        node.base_mut().id = path.to_string();
+        Some(node)
+    }
+
     fn page_nodes(&self, args: &BTreeMap<String, String>) -> Result<&PageNodes, ToolCallError> {
         let target =
             arg_alias(args, &["pageId", "page_id", "page"]).unwrap_or(&self.active_page_id);

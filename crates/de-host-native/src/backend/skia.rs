@@ -79,6 +79,7 @@ mod path;
 mod shader_children;
 mod shader_effect;
 mod shader_effect_source;
+pub(crate) mod shader_textures;
 mod shaped_text;
 mod stroke_style;
 mod text;
@@ -144,6 +145,8 @@ pub struct NativeBackend {
     effect_layer_marks: std::cell::RefCell<Vec<shader_effect::EffectLayerMark>>,
     /// Device-space wrappers of effect programs, keyed by source hash.
     effect_sources: std::collections::HashMap<u64, String>,
+    /// Shader textures of the frame (#165); see `shader_textures.rs`.
+    frame_textures: std::collections::HashMap<u64, shader_textures::FrameTexture>,
 }
 
 /// One resident raster image and its LRU accounting. `covers_edge_px`
@@ -279,6 +282,7 @@ impl NativeBackend {
             shader_cache: jian_skia::ShaderCache::new(),
             effect_layer_marks: std::cell::RefCell::default(),
             effect_sources: std::collections::HashMap::new(),
+            frame_textures: std::collections::HashMap::new(),
         };
         // Pre-warm the per-codepoint typeface cache with every CJK
         // glyph that appears in the chrome (top bar, layer panel,

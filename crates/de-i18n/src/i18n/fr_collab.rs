@@ -347,6 +347,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "annotation.prompt" => "Prompt",
         "annotation.content" => "Contenu",
         "annotation.model" => "Modèle",
+        "property.resetOverride" => "Réinitialiser la modification",
         _ => return None,
     })
 }

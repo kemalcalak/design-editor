@@ -169,6 +169,36 @@ impl EditorState {
         kinds.all(|kind| kind == first).then_some(first)
     }
 
+    /// The duration the Slides panel's stepper shows: the first target
+    /// slide's, while every target shares one transition kind other than
+    /// none (the stepper is hidden otherwise).
+    pub fn slides_transition_duration(&self) -> Option<u64> {
+        match self.slides_transition_kind()? {
+            SlideTransitionKind::None => None,
+            _ => self
+                .slide_transition_targets()
+                .first()
+                .and_then(|id| board_slide_transition(self, id))
+                .map(|t| t.duration_ms),
+        }
+    }
+
+    /// Step the target slides' transition duration one
+    /// [`SLIDE_TRANSITION_STEP_MS`] longer or shorter, snapped to the step
+    /// and kept within [`SLIDE_TRANSITION_MIN_MS`]..=[`SLIDE_TRANSITION_MAX_MS`].
+    /// Every target slide gets the same new value (one undo step). False
+    /// when the stepper is hidden or the value would not change.
+    pub fn step_slides_transition_duration(&mut self, longer: bool) -> bool {
+        let (Some(kind), Some(current)) = (
+            self.slides_transition_kind(),
+            self.slides_transition_duration(),
+        ) else {
+            return false;
+        };
+        let next = step_duration(current, longer);
+        self.set_slides_transition(None, kind, Some(next))
+    }
+
     /// Set `kind` (and `duration_ms` when given; otherwise each slide
     /// keeps its own, defaulting to [`DEFAULT_SLIDE_TRANSITION_MS`]) on
     /// the target slides — `ids`, or [`Self::slide_transition_targets`].
@@ -196,6 +226,32 @@ impl EditorState {
             return false;
         }
         self.apply(EditorCommand::Batch { commands })
+    }
+}
+
+/// One step of the Slides panel's duration stepper.
+pub const SLIDE_TRANSITION_STEP_MS: u64 = 100;
+/// Shortest duration the stepper goes down to.
+pub const SLIDE_TRANSITION_MIN_MS: u64 = 100;
+/// Longest duration the stepper goes up to (MCP may author longer).
+pub const SLIDE_TRANSITION_MAX_MS: u64 = 5_000;
+
+/// `current` one step longer or shorter: an off-grid value snaps to the
+/// next step in that direction, and the result stays within the
+/// stepper's range. A value already past the end it moves towards stays.
+pub(crate) fn step_duration(current: u64, longer: bool) -> u64 {
+    let step = SLIDE_TRANSITION_STEP_MS;
+    if longer {
+        if current >= SLIDE_TRANSITION_MAX_MS {
+            return current;
+        }
+        ((current / step + 1) * step).clamp(SLIDE_TRANSITION_MIN_MS, SLIDE_TRANSITION_MAX_MS)
+    } else {
+        if current <= SLIDE_TRANSITION_MIN_MS {
+            return current;
+        }
+        (current.div_ceil(step).saturating_sub(1) * step)
+            .clamp(SLIDE_TRANSITION_MIN_MS, SLIDE_TRANSITION_MAX_MS)
     }
 }
 

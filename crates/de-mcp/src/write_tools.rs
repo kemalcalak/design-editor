@@ -221,6 +221,9 @@ impl McpTool for UpdateNode {
             Ok(v) => v,
             Err(e) => return e,
         };
+        if let Some((instance, path)) = node_id.as_str().split_once('/') {
+            return update_instance_descendant(args, instance, path);
+        }
         match ts_update_patch_json(args) {
             Ok(Some(patch_json)) => {
                 let page_id = args
@@ -310,6 +313,91 @@ impl McpTool for UpdateNode {
 
 pub fn update_node_snapshot() -> UpdateNode {
     UpdateNode
+}
+
+/// `update_node` on `instanceId/childPath` (#166): the node exists only in
+/// the expanded instance, so the patch goes to the instance's
+/// `descendants`. `data` is the patch; the flat x / y / width / height /
+/// name / fill_hex arguments are folded into one.
+fn update_instance_descendant(
+    args: &BTreeMap<String, String>,
+    instance: &str,
+    path: &str,
+) -> ToolOutcome {
+    let Some(instance_id) = NodeId::new_opt(instance).filter(|_| !path.is_empty()) else {
+        return ToolOutcome::Err(
+            ToolErrorCode::InvalidArgument,
+            "node_id must be instanceId/childPath".into(),
+        );
+    };
+    let mut patch = match args
+        .get("data")
+        .map(|raw| serde_json::from_str::<Value>(raw))
+    {
+        Some(Ok(Value::Object(map))) => map,
+        Some(_) => {
+            return ToolOutcome::Err(
+                ToolErrorCode::InvalidArgument,
+                "data must be a JSON object".into(),
+            )
+        }
+        None => serde_json::Map::new(),
+    };
+    for key in ["x", "y", "width", "height"] {
+        // Same parse and message as the plain-id branch.
+        match parse_opt_i32(args, key) {
+            Ok(Some(number)) => {
+                patch.insert(key.into(), serde_json::json!(number));
+            }
+            Ok(None) => {}
+            Err(e) => {
+                return ToolOutcome::Err(ToolErrorCode::InvalidArgument, format!("{key}: {e}"))
+            }
+        }
+    }
+    if let Some(name) = args.get("name") {
+        patch.insert("name".into(), Value::String(name.clone()));
+    }
+    if let Some(hex) = args.get("fill_hex") {
+        if !validate_hex(hex) {
+            return ToolOutcome::Err(
+                ToolErrorCode::InvalidArgument,
+                format!("fill_hex must be #rgb/#rrggbb/#rrggbbaa, got {hex:?}"),
+            );
+        }
+        patch.insert(
+            "fill".into(),
+            serde_json::json!([{ "type": "solid", "color": hex }]),
+        );
+    }
+    if patch.is_empty() {
+        return ToolOutcome::Err(
+            ToolErrorCode::MissingArgument,
+            "data or one of x / y / width / height / name / fill_hex must be set".into(),
+        );
+    }
+    let mut value = Value::Object(patch);
+    super::batch_design::normalize_node_shape(&mut value);
+    let page_id = args
+        .get("pageId")
+        .or_else(|| args.get("page_id"))
+        .or_else(|| args.get("page"))
+        .map(|s| s.trim())
+        .filter(|s| !s.is_empty())
+        .map(str::to_string);
+    let mut out = BTreeMap::new();
+    out.insert("wrote".into(), "true".into());
+    ToolOutcome::OkWithCommand(
+        out,
+        EditorCommand::EditInstanceDescendant {
+            instance_id,
+            path: path.to_string(),
+            edit: de_editor_core::InstanceEdit::Patch {
+                patch_json: value.to_string(),
+            },
+            page_id,
+        },
+    )
 }
 
 #[allow(clippy::result_large_err)]

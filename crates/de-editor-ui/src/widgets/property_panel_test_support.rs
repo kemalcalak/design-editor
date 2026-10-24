@@ -24,8 +24,11 @@ pub(super) fn visible_for(panel: &PropertyPanel) -> sections::VisibleSections {
     let caps = SectionCapabilities::for_kind(&panel.snapshot.kind_variant);
     sections::VisibleSections {
         create_component: panel.snapshot.is_instance
+            || panel.snapshot.instance_override
             || (caps.create_component && panel.snapshot.can_create_component),
-        component_button: if panel.snapshot.is_instance {
+        component_button: if panel.snapshot.instance_override {
+            crate::widgets::property_panel_visibility::ComponentButtonState::InstanceOverride
+        } else if panel.snapshot.is_instance {
             crate::widgets::property_panel_visibility::ComponentButtonState::Instance {
                 component_count: panel.instance_component_options.len(),
                 picker_open: panel.instance_component_picker_open,

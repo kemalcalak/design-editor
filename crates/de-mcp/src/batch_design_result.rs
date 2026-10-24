@@ -74,6 +74,11 @@ impl McpTool for BatchDesign {
                 "operations argument is missing".into(),
             );
         };
+        // A one-line write into an instance (`U("inst/child", …)`) needs the
+        // snapshot to resolve its path (#166): run it as a program.
+        if super::batch_program_instance::single_line_targets_instance(&self.state, operations) {
+            return super::batch_program::run_batch_design_program(&self.state, operations, args);
+        }
         match parse_operations(operations) {
             Ok(ParsedOperations::Insert {
                 parent_id,

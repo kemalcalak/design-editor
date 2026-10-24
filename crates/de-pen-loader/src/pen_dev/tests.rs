@@ -286,12 +286,14 @@ fn instance_overrides_the_canonical_merge_cannot_express_are_reported() {
     );
     assert!(overrides["width-only"].get("strokeWidth").is_none());
     assert_eq!(overrides["both"]["stroke"]["thickness"], 2);
-    assert_eq!(
-        report
-            .unsupported
-            .get("component child replacement (merged)"),
-        Some(&1)
-    );
+    // A typed override is a replacement the canonical resolver honours
+    // (#166): kept whole, converted as a node, not reported.
+    assert_eq!(overrides["swap"]["type"], "text");
+    assert_eq!(overrides["swap"]["content"], "new");
+    assert!(!report
+        .unsupported
+        .keys()
+        .any(|feature| feature.contains("replacement")));
     assert_eq!(report.unsupported.get("partial stroke override"), Some(&2));
     assert_eq!(report.unsupported.get("browser node"), Some(&1));
 }

@@ -347,6 +347,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "annotation.prompt" => "พรอมต์",
         "annotation.content" => "เนื้อหา",
         "annotation.model" => "โมเดล",
+        "property.resetOverride" => "รีเซ็ตการแทนที่",
         _ => return None,
     })
 }

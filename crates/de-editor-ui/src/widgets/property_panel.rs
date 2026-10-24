@@ -340,7 +340,9 @@ impl PropertyPanel {
 
     pub(crate) fn visible_sections(&self) -> sections::VisibleSections {
         let caps = self.capabilities();
-        let component_button = if self.snapshot.is_instance {
+        let component_button = if self.snapshot.instance_override {
+            crate::widgets::property_panel_visibility::ComponentButtonState::InstanceOverride
+        } else if self.snapshot.is_instance {
             crate::widgets::property_panel_visibility::ComponentButtonState::Instance {
                 component_count: self.instance_component_options.len(),
                 picker_open: self.instance_component_picker_open,
@@ -352,6 +354,7 @@ impl PropertyPanel {
         };
         sections::VisibleSections {
             create_component: self.snapshot.is_instance
+                || self.snapshot.instance_override
                 || (caps.create_component && self.snapshot.can_create_component),
             component_button,
             flex_layout: caps.flex_layout,

@@ -647,7 +647,7 @@ fn paint_node_body<'a>(
                 if blur_sigma.is_some() {
                     cx.backend.restore();
                 }
-                shader_effects::restore_shader_effects(cx, object_shader_layers);
+                shader_effects::restore_object_shader_effects(cx, &object_shader_layers);
                 if node_composite_pushed {
                     cx.backend.restore();
                 }
@@ -748,7 +748,7 @@ fn paint_node_body<'a>(
     if blur_sigma.is_some() {
         cx.backend.restore();
     }
-    shader_effects::restore_shader_effects(cx, object_shader_layers);
+    shader_effects::restore_object_shader_effects(cx, &object_shader_layers);
     if node_composite_pushed {
         cx.backend.restore();
     }

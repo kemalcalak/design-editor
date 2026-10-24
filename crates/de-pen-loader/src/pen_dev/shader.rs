@@ -98,6 +98,20 @@ pub(super) fn convert(
         if let Some(value) = canonical {
             uniforms.insert(user.sksl_name.clone(), value);
         }
+        if let Slot::Texture(Texture::Image(url)) = &user.slot {
+            if translation.sized_images.contains(&user.sksl_name) {
+                // `textureSize` of the image; 1 x 1 (reported) when it
+                // cannot be read, as for a remote image.
+                let [w, h] = image_size(url, ctx).unwrap_or_else(|| {
+                    ctx.report.note("shader texture size unknown");
+                    [1, 1]
+                });
+                uniforms.insert(
+                    glsl::image_size_uniform(&user.sksl_name),
+                    json!([w as f64, h as f64]),
+                );
+            }
+        }
     }
     let mut out = Map::new();
     out.insert("type".to_owned(), Value::String("shader".to_owned()));
@@ -245,7 +259,7 @@ fn uniform_value(user: &UserUniform, value: Option<&Value>, ctx: &mut Ctx<'_>) -
             Some(Value::String(colour))
         }
         Slot::Texture(Texture::Image(url)) => image_source(url, ctx).map(Value::String),
-        Slot::Texture(Texture::Object | Texture::Background) => None,
+        Slot::Texture(Texture::Object | Texture::Background | Texture::Sdf) => None,
     }
 }
 
@@ -333,6 +347,26 @@ fn image_source(url: &str, ctx: &mut Ctx<'_>) -> Option<String> {
     }
     ctx.shaders.images.insert(url.to_owned(), source.clone());
     source
+}
+
+/// The pixel size of the image at `url`: a `data:` URL or a file next to
+/// the document (a remote image's size is unknown at import).
+fn image_size(url: &str, ctx: &mut Ctx<'_>) -> Option<[u32; 2]> {
+    let bytes = if let Some(data) = url.strip_prefix("data:") {
+        let (_, encoded) = data.split_once(";base64,")?;
+        use base64::Engine as _;
+        base64::engine::general_purpose::STANDARD
+            .decode(encoded.trim())
+            .ok()?
+    } else {
+        let relative = images::relative_path(url);
+        if !images::is_inside_document_folder(relative) {
+            return None;
+        }
+        (ctx.assets)(relative)?
+    };
+    let (w, h) = de_util::image_dimensions::encoded_image_dimensions(&bytes)?;
+    Some([w, h])
 }
 
 #[cfg(test)]

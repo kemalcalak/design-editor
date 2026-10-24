@@ -347,6 +347,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "annotation.prompt" => "プロンプト",
         "annotation.content" => "内容",
         "annotation.model" => "モデル",
+        "property.resetOverride" => "オーバーライドをリセット",
         _ => return None,
     })
 }
