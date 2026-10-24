@@ -12,6 +12,39 @@ fn find<'a>(nodes: &'a [NodePayload], id: &str) -> Option<&'a NodePayload> {
     })
 }
 
+/// Box widths of two wrapping `fill_container` texts sharing a row of
+/// `row` px.
+fn split_row(row: u32) -> [f32; 2] {
+    let src = format!(
+        r##"{{
+      "version":"1.0",
+      "children":[{{
+        "type":"frame","id":"row","x":0,"y":0,"width":{row},"height":200,"layout":"horizontal",
+        "children":[
+          {{"type":"text","id":"a","width":"fill_container","textGrowth":"fixed-width",
+           "content":"Kerned label","fontSize":16}},
+          {{"type":"text","id":"b","width":"fill_container","textGrowth":"fixed-width",
+           "content":"Second label","fontSize":16}}
+        ]
+      }}]
+    }}"##
+    );
+    let doc = jian_ops_schema::load_str(&src).expect("parse").value;
+    let loaded = pen_document_to_payload(&doc);
+    let roots = &loaded.payload.pages[0].children;
+    ["a", "b"].map(|id| find(roots, id).expect("text").w)
+}
+
+#[test]
+fn fractional_fill_shares_reach_the_painter_at_every_width() {
+    // Odd row widths give each text a .5 px share; taffy rounds one box
+    // down and the other up. Both wrapping texts must keep the share.
+    for row in (241..=641).step_by(2) {
+        let share = row as f32 / 2.0;
+        assert_eq!(split_row(row), [share, share], "row {row}");
+    }
+}
+
 #[test]
 fn wrapping_text_keeps_its_fractional_measured_width() {
     // Two `fill_container` texts split a 301 px row: 150.5 px each before

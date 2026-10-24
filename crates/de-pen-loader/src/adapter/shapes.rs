@@ -250,12 +250,19 @@ pub(super) fn text_to_payload(n: &TextNode) -> NodePayload {
     // authored against the TS app's measureText for a font we
     // may not have bundled; wrapping it would mis-break lines
     // the TS app shows on one line.
+    p.text_wrap = text_wraps(n);
+    p
+}
+
+/// Whether the canvas wraps this text: `textGrowth` fixed-width or
+/// fixed-width-and-height. The layout pass keeps these boxes' unrounded
+/// widths (`pages.rs`), so the test lives in one place.
+pub(super) fn text_wraps(n: &TextNode) -> bool {
     use jian_ops_schema::node::TextGrowth;
-    p.text_wrap = matches!(
+    matches!(
         n.text_growth,
         Some(TextGrowth::FixedWidth) | Some(TextGrowth::FixedWidthHeight)
-    );
-    p
+    )
 }
 
 /// CSS-style numeric weight from the schema's `FontWeight` union.
