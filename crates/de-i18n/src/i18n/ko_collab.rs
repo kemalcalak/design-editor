@@ -334,6 +334,8 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "motion.width" => "너비",
         "motion.height" => "높이",
         "motion.cornerRadius" => "모서리 반경",
+        "slidesPanel.transitionNone" => "없음",
+        "slidesPanel.transitionPush" => "밀어내기",
         _ => return None,
     })
 }

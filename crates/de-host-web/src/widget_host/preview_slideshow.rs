@@ -249,6 +249,18 @@ impl WidgetHost {
         &mut self,
         canvas_size: (f32, f32),
     ) -> bool {
+        // A slide transition (#158) repaints every frame until it ends,
+        // and once more to settle on the arriving slide.
+        if self
+            .editor_state
+            .editor_ui
+            .preview
+            .slide_transition
+            .is_some()
+        {
+            let _ = self.editor_state.slide_transition_at(self.now_ms);
+            self.mark_dirty();
+        }
         let Some(board) = self.slideshow_board_scene_rect() else {
             return false;
         };
@@ -279,12 +291,22 @@ impl WidgetHost {
         if !self.preview_slideshow_active() {
             return false;
         }
+        let from = self
+            .editor_state
+            .preview_slideshow()
+            .and_then(|slideshow| slideshow.current_board())
+            .map(str::to_string);
         if !self.editor_state.step_preview_slideshow(delta) {
             // At either end of the deck the board holds. The press was still
             // ours — the caller swallows it either way, which is what keeps
             // the last slide on screen instead of letting the key fall
             // through to the editor underneath.
             return false;
+        }
+        // The step plays the slide transition, if the deck has one (#158).
+        if let Some(from) = from {
+            self.editor_state
+                .begin_slide_transition(&from, delta > 0, self.now_ms);
         }
         // The camera follows in `frame_slideshow_board`, which paint runs
         // against the authoritative canvas size on the next frame.
@@ -309,7 +331,25 @@ impl WidgetHost {
         let Some(slideshow) = self.editor_state.preview_slideshow() else {
             return;
         };
-        if let Some(board) = self.slideshow_board_scene_rect() {
+        let transition = self
+            .editor_state
+            .editor_ui
+            .preview
+            .slide_transition
+            .as_ref()
+            .and_then(|run| run.progress(self.now_ms).map(|progress| (run, progress)));
+        if let (Some((run, progress)), Some(to)) = (transition, slideshow.current_board()) {
+            // Mid-transition both slides paint, each fitted like the
+            // camera would fit it (#158).
+            session.paint_slide_transition(
+                frame_backend,
+                canvas_rect,
+                run,
+                to,
+                progress,
+                self.now_ms,
+            );
+        } else if let Some(board) = self.slideshow_board_scene_rect() {
             let screen = board_screen_rect(canvas_rect, &self.editor_state.viewport, board);
             frame_backend.save();
             frame_backend.clip_rect(screen);

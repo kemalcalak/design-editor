@@ -332,6 +332,8 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "motion.width" => "चौड़ाई",
         "motion.height" => "ऊंचाई",
         "motion.cornerRadius" => "कोने की त्रिज्या",
+        "slidesPanel.transitionNone" => "कोई नहीं",
+        "slidesPanel.transitionPush" => "धकेलें",
         _ => return None,
     })
 }

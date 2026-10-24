@@ -86,6 +86,7 @@ mod present;
 mod scene_helpers;
 mod session;
 mod session_paint;
+mod slide_paint;
 mod test_helpers;
 mod transition;
 mod ui_actions;
@@ -136,6 +137,8 @@ pub use present::PinnedPaint;
 /// [`PreviewSession::enter`] from a snapshot of the editor document.
 pub use session::PreviewSession;
 pub use session_paint::PreviewVideoOverlay;
+/// Present's slide-transition painter and its easing (#158).
+pub use slide_paint::eased_progress;
 
 /// Internal re-export: `input` overlays live widget state through the
 /// shared scene formatter helper.

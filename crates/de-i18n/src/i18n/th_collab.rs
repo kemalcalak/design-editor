@@ -332,6 +332,8 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "motion.width" => "ความกว้าง",
         "motion.height" => "ความสูง",
         "motion.cornerRadius" => "รัศมีมุม",
+        "slidesPanel.transitionNone" => "ไม่มี",
+        "slidesPanel.transitionPush" => "ดัน",
         _ => return None,
     })
 }

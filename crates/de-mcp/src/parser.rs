@@ -533,6 +533,7 @@ fn structured_arg_allowed(tool: &str, key: &str) -> bool {
             | ("finalize_design", "root_ids")
             | ("enrich_images", "root_ids")
             | ("capture_preview", "actions")
+            | ("set_slide_transition", "nodeIds")
     )
 }
 

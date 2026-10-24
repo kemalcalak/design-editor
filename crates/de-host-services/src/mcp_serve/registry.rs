@@ -119,6 +119,10 @@ pub(super) fn rebuild_registry(doc: &EditorState, requested_tool: Option<&str>) 
     register_tool!("set_selection", set_selection_snapshot());
     register_tool!("set_viewport", set_viewport_snapshot());
     register_tool!("set_node_hidden", set_node_hidden_snapshot());
+    register_tool!(
+        "set_slide_transition",
+        de_mcp::slide_transition_tool::set_slide_transition_snapshot(doc)
+    );
     register_tool!("set_node_locked", set_node_locked_snapshot());
     register_tool!("set_node_collapsed", set_node_collapsed_snapshot());
     register_tool!("set_active_tool", set_active_tool_snapshot());

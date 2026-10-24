@@ -4,6 +4,7 @@
 
 use super::super::WidgetHostNative;
 use de_editor_core::EditorState;
+use de_editor_ui::{Color, ImageBlendMode, Point2D, Rect, RenderBackend, TextLayout};
 use std::sync::{LazyLock, Mutex, MutexGuard};
 
 static TEST_LOCK: LazyLock<Mutex<()>> = LazyLock::new(|| Mutex::new(()));
@@ -90,4 +91,78 @@ fn a_page_without_frames_does_not_present() {
     assert!(!host.toggle_present((1200.0, 800.0)));
     assert!(!host.preview_active());
     assert!(!host.editor_state.editor_ui.preview.present);
+}
+
+/// Records the opacity of every composite layer a paint opens.
+#[derive(Default)]
+struct FadeCaptureBackend {
+    composite_alphas: Vec<f32>,
+}
+
+impl RenderBackend for FadeCaptureBackend {
+    fn begin_frame(&mut self) {}
+    fn end_frame(&mut self) {}
+    fn fill_rect(&mut self, _: Rect, _: Color) {}
+    fn stroke_rect(&mut self, _: Rect, _: Color, _: f32) {}
+    fn draw_text(&mut self, _: &TextLayout, _: Point2D) {}
+    fn clip_rect(&mut self, _: Rect) {}
+    fn save(&mut self) {}
+    fn push_composite_layer(&mut self, _: Rect, opacity: f32, _: ImageBlendMode) {
+        self.composite_alphas.push(opacity);
+    }
+    fn restore(&mut self) {}
+    fn translate(&mut self, _: Point2D) {}
+    fn stroke_line(&mut self, _: Point2D, _: Point2D, _: Color, _: f32) {}
+    fn fill_round_rect(&mut self, _: Rect, _: f32, _: Color) {}
+    fn stroke_round_rect(&mut self, _: Rect, _: f32, _: Color, _: f32) {}
+    fn stroke_svg_path(&mut self, _: &str, _: Point2D, _: f32, _: Color, _: f32) {}
+    fn resize(&mut self, _: u32, _: u32) {}
+    fn dpi_scale(&self) -> f32 {
+        1.0
+    }
+}
+
+/// #158: next plays the arriving slide's fade — both slides paint, the
+/// arriving one at the eased opacity — and the run clears once it ends.
+#[test]
+fn a_fade_transition_paints_both_slides_until_it_ends() {
+    let _guard = test_lock();
+    let mut host = host_with(&TWO_SCREENS.replace(
+        r#""id": "detail","#,
+        r#""id": "detail", "slideTransition": {"kind":"fade","durationMs":400,"easing":"linear"},"#,
+    ));
+    host.set_now_ms(10_000);
+    assert!(host.toggle_present((1200.0, 800.0)));
+    assert!(host.preview_slideshow_step(1));
+    let run = host
+        .editor_state
+        .editor_ui
+        .preview
+        .slide_transition
+        .clone()
+        .expect("the fade runs");
+    assert_eq!(run.from_board, "home");
+    assert!(run.forward);
+
+    host.set_now_ms(10_200);
+    let canvas = Rect::xywh(0.0, 0.0, 1200.0, 800.0);
+    let mut backend = FadeCaptureBackend::default();
+    host.paint_slideshow(&mut backend, canvas);
+    assert!(
+        backend
+            .composite_alphas
+            .iter()
+            .any(|alpha| (alpha - 0.5).abs() < 0.01),
+        "the arriving slide is half faded in: {:?}",
+        backend.composite_alphas
+    );
+
+    host.set_now_ms(10_500);
+    host.frame_slideshow_board((1200.0, 800.0));
+    assert!(host
+        .editor_state
+        .editor_ui
+        .preview
+        .slide_transition
+        .is_none());
 }

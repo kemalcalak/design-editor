@@ -65,6 +65,9 @@ pub enum SlidesRelease {
     /// [`selected_slides_export_supported`] is true**, which no host
     /// enables today — see that function for what has to land first.
     ExportSelectedSlides,
+    /// A slide transition was set on the targeted slides (#158). The flow
+    /// has already written it, as one undo step; the host repaints.
+    SetTransition,
 }
 
 /// What the navigator tab is called for this document.
@@ -244,6 +247,7 @@ pub fn action_state(state: &EditorState, chips: &[BoardChip]) -> SlidesActionSta
         export_menu_open: state.editor_ui.slides_panel.export_menu_open,
         selected_slides: selected_slide_count(state, chips),
         selected_export_supported: selected_slides_export_supported(),
+        transition: state.slides_transition_kind(),
     }
 }
 
@@ -281,6 +285,8 @@ pub struct SlidesActionText {
     pub export: &'static str,
     pub export_all: &'static str,
     pub export_selected: String,
+    pub transition: &'static str,
+    pub transition_kinds: [&'static str; 4],
 }
 
 impl SlidesActionText {
@@ -291,6 +297,8 @@ impl SlidesActionText {
             export: self.export,
             export_all: self.export_all,
             export_selected: &self.export_selected,
+            transition: self.transition,
+            transition_kinds: self.transition_kinds,
         }
     }
 }
@@ -308,6 +316,13 @@ pub fn action_labels(state: &EditorState, selected: usize) -> SlidesActionText {
         export_all: translate(ui, "slidesPanel.exportAllSlides"),
         export_selected: translate(ui, "slidesPanel.exportSelectedSlides")
             .replace("{{count}}", &selected.to_string()),
+        transition: translate(ui, "interactions.transition"),
+        transition_kinds: [
+            translate(ui, "slidesPanel.transitionNone"),
+            translate(ui, "interactions.fade"),
+            translate(ui, "interactions.slide"),
+            translate(ui, "slidesPanel.transitionPush"),
+        ],
     }
 }
 
@@ -460,6 +475,13 @@ pub fn release(state: &mut EditorState, layout: &SlidesPanelLayout) -> SlidesRel
             state.editor_ui.slides_panel.close_export_menu();
             queue_selected_slides_pdf_export(state);
             SlidesRelease::ExportSelectedSlides
+        }
+        SlidesPanelTarget::Transition(kind) => {
+            let before = state.snapshot_for_history();
+            if state.set_slides_transition(None, kind, None) {
+                state.history_push_past(before);
+            }
+            SlidesRelease::SetTransition
         }
     }
 }

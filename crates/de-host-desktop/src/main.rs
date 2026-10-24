@@ -704,6 +704,10 @@ mod keyboard_shortcut_tests;
 #[path = "settings_proof_sheet_tests.rs"]
 mod settings_proof_sheet_tests;
 
+#[cfg(test)]
+#[path = "preview_batch_proof_tests.rs"]
+mod preview_batch_proof_tests;
+
 // Serializes tests that touch the process-global `agent_indicators`
 // registry against tests that assert an exact animation deadline. The
 // registry is shared across every test in this binary running in

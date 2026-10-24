@@ -332,6 +332,8 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "motion.width" => "宽度",
         "motion.height" => "高度",
         "motion.cornerRadius" => "圆角",
+        "slidesPanel.transitionNone" => "无",
+        "slidesPanel.transitionPush" => "推入",
         _ => return None,
     })
 }

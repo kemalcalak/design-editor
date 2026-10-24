@@ -127,3 +127,45 @@ fn bad_actions_and_unknown_pages_are_invalid_arguments() {
         }
     }
 }
+
+/// Proof PNGs (#156 + #155): a button that grows and turns green on
+/// hover, captured at rest and hovered, and the screen a tap opens.
+/// Ignored by default because it writes files; run with
+///
+///   DE_PROOF_DIR=/tmp/proof cargo test -p de-host-services capture_preview_proof -- --ignored
+#[test]
+#[ignore]
+fn capture_preview_proof_pngs() {
+    let source = TWO_SCREENS.replace(
+        r##""events": { "onTap": [ { "push": "\"/detail\"" } ] } } ] },"##,
+        r##""events": { "onTap": [ { "push": "\"/detail\"" } ] },
+              "animations": [ { "trigger": "hover", "durationMs": 200, "easing": "linear",
+                "keyframes": { "from": { "width": 120, "fill": "#2255ff" },
+                               "to": { "width": 170, "fill": "#22aa66" } } } ] } ] },"##,
+    );
+    assert_ne!(
+        source, TWO_SCREENS,
+        "the fixture gained the hover animation"
+    );
+    let document = jian_ops_schema::load_str(&source).expect("parses").value;
+    let tool = capture_preview_snapshot(&EditorState::from_document(document));
+    let dir = std::env::var_os("DE_PROOF_DIR")
+        .map(std::path::PathBuf::from)
+        .unwrap_or_else(std::env::temp_dir);
+    std::fs::create_dir_all(&dir).expect("proof dir");
+    for (name, args) in [
+        ("156-01-capture-at-rest", vec![]),
+        (
+            "156-02-capture-hovered",
+            vec![("actions", r#"[{"hover":"go"}]"#)],
+        ),
+        (
+            "156-03-capture-after-tap",
+            vec![("actions", r#"[{"tap":"go"}]"#)],
+        ),
+    ] {
+        let (png, meta) = image_and_meta(call(&tool, &args));
+        std::fs::write(dir.join(format!("{name}.png")), &png).expect("write png");
+        println!("{name}: {meta}");
+    }
+}

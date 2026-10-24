@@ -149,6 +149,7 @@ pub mod selected_ops_tools;
 mod selected_ops_tools_tests;
 #[cfg(test)]
 mod selection_tools_tests;
+pub mod slide_transition_tool;
 pub mod style_guide_tools;
 #[cfg(test)]
 mod style_guide_tools_tests;
