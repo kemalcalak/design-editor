@@ -518,6 +518,16 @@ pub fn resolve_shader_uniforms(
     if !shader_uniforms::has_tokens(Some(uniforms)) {
         return None;
     }
+    let theme = node_theme(doc, roots, node_id, active);
+    let mut resolved = uniforms.clone();
+    shader_uniforms::resolve(Some(&mut resolved), doc.variables.as_ref(), &theme);
+    Some(resolved)
+}
+
+/// The theme node `node_id` on `roots` resolves against on the canvas:
+/// the document's effective `active` theme overlaid by the `theme` of each
+/// ancestor and of the node itself.
+pub fn node_theme(doc: &PenDocument, roots: &[PenNode], node_id: &str, active: &Theme) -> Theme {
     let mut theme = effective_theme(doc, active);
     fn scope(nodes: &[PenNode], id: &str, theme: &mut Theme) -> bool {
         for node in nodes {
@@ -536,7 +546,5 @@ pub fn resolve_shader_uniforms(
         false
     }
     scope(roots, node_id, &mut theme);
-    let mut resolved = uniforms.clone();
-    shader_uniforms::resolve(Some(&mut resolved), doc.variables.as_ref(), &theme);
-    Some(resolved)
+    theme
 }

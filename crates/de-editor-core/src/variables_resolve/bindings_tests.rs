@@ -133,3 +133,36 @@ fn a_bound_padding_side_and_mesh_colours_resolve() {
         "#112233"
     );
 }
+
+#[test]
+fn an_integer_field_binds_and_an_override_follows_a_rename() {
+    let mut source = doc(json!([
+        { "type": "text", "id": "t", "content": "a", "fontWeight": 400, "fontSize": 32,
+          "variableBindings": {
+              "fontWeight": { "variable": "weight", "value": 400 },
+              "fontSize": { "variable": "title", "value": 32 }
+          } },
+        { "type": "frame", "id": "card", "reusable": true, "children": [] },
+        { "type": "ref", "id": "copy", "ref": "card", "descendants": { "card": {
+            "gap": 12, "variableBindings": { "gap": { "variable": "gap", "value": 12 } } } } }
+    ]));
+    let mut vars = source.variables.clone().unwrap();
+    vars.insert(
+        "weight".to_owned(),
+        serde_json::from_value(json!({ "type": "number", "value": 700 })).unwrap(),
+    );
+    source.variables = Some(vars);
+    let resolved = resolve_document_for_canvas(&source, &theme("mobile"));
+    assert_eq!(field(&resolved, 0, "fontWeight"), json!(700));
+    assert_eq!(field(&resolved, 0, "fontSize"), json!(22.0));
+    let vars = source.variables.clone();
+    replace_variable_refs_in_tree(
+        &mut source.children,
+        "gap",
+        Some("spacing"),
+        vars.as_ref(),
+        &theme("mobile"),
+    );
+    let patch = &field(&source, 2, "descendants")["card"];
+    assert_eq!(patch["variableBindings"]["gap"]["variable"], "spacing");
+}

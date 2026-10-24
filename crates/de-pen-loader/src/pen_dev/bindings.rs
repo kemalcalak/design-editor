@@ -48,6 +48,15 @@ pub(super) fn finish(map: &mut Map<String, Value>, report: &mut PenDevReport) {
     if !kept.is_empty() {
         map.insert(BINDINGS_KEY.to_owned(), Value::Object(kept));
     }
+    // An instance patch has no `type`, so the loader's icon-node rename never
+    // reaches it: move its icon keys to the canonical names here.
+    if !map.contains_key("type") {
+        for (from, to) in [("icon", "iconFontName"), ("library", "iconFontFamily")] {
+            if let Some(value) = map.remove(from) {
+                map.insert(to.to_owned(), value);
+            }
+        }
+    }
 }
 
 /// The value at `root/rest` (root may itself be a `a/b` path).

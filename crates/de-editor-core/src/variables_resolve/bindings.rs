@@ -50,7 +50,9 @@ fn apply_matching(
         .filter(|(_, binding)| only.is_none_or(|name| binding.variable == name))
         .filter_map(|(path, binding)| {
             let scalar = resolve_variable_ref(&format!("${}", binding.variable), vars, theme)?;
-            Some((pointer(path), scalar_json(scalar)?, binding.value.clone()))
+            let value = scalar_json(scalar)?;
+            // Same as bound: the field already shows it (or was edited).
+            (!same(&value, &binding.value)).then(|| (pointer(path), value, binding.value.clone()))
         })
         .collect();
     if updates.is_empty() {
@@ -124,6 +126,31 @@ pub(super) fn rename(
     }
 }
 
+/// [`rename`] for the bindings inside an instance's `descendants` patches,
+/// which are plain JSON. A delete drops the patch's binding and leaves its
+/// field at the bound value.
+pub(super) fn rename_in_overrides(
+    descendants: &mut std::collections::BTreeMap<String, Value>,
+    old: &str,
+    new: Option<&str>,
+) {
+    for patch in descendants.values_mut() {
+        let Some(Value::Object(bindings)) = patch.get_mut("variableBindings") else {
+            continue;
+        };
+        match new {
+            Some(new) => {
+                for binding in bindings.values_mut() {
+                    if binding.get("variable").and_then(Value::as_str) == Some(old) {
+                        binding["variable"] = Value::String(new.to_owned());
+                    }
+                }
+            }
+            None => bindings.retain(|_, b| b.get("variable").and_then(Value::as_str) != Some(old)),
+        }
+    }
+}
+
 /// A binding path (`padding/1`) as a JSON pointer (`/padding/1`).
 fn pointer(path: &str) -> String {
     if path.starts_with('/') {
@@ -136,6 +163,11 @@ fn pointer(path: &str) -> String {
 fn scalar_json(scalar: VariableScalar) -> Option<Value> {
     Some(match scalar {
         VariableScalar::Bool(value) => Value::Bool(value),
+        // Whole numbers as integers: `u32` fields (`fontWeight`,
+        // `polygonCount`) reject a float.
+        VariableScalar::Num(value) if value.fract() == 0.0 && value.abs() < 9.0e15 => {
+            Value::from(value as i64)
+        }
         VariableScalar::Num(value) => serde_json::Number::from_f64(value).map(Value::Number)?,
         VariableScalar::Str(value) => Value::String(value),
     })

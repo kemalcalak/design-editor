@@ -66,6 +66,13 @@ fn replace_in_node(
         replace_expr(opacity);
     }
     super::bindings::rename(node, token, new, vars, theme);
+    if let PenNode::Ref(reference) = node {
+        if let (Some(descendants), Some(old)) =
+            (reference.descendants.as_mut(), token.strip_prefix('$'))
+        {
+            super::bindings::rename_in_overrides(descendants, old, new);
+        }
+    }
     if let Some(container) = node_container_mut(node) {
         if let Some(gap) = container.gap.as_mut() {
             replace_expr(gap);

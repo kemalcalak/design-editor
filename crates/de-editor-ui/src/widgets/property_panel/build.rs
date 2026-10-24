@@ -161,8 +161,10 @@ impl PropertyPanel {
             let is_instance = matches!(authored_node, Some(jian_ops_schema::node::PenNode::Ref(_)));
             let mut display_node = display.or_else(|| authored_node.cloned())?;
             // Show variable-bound fields with the variable's current value.
-            let theme = de_editor_core::variables_resolve::effective_theme(
+            let theme = de_editor_core::variables_resolve::node_theme(
                 &state.doc,
+                state.active_children(),
+                state.selection.anchor.as_str(),
                 &state.ui.variables.active_theme,
             );
             de_editor_core::variables_resolve::apply_variable_bindings(

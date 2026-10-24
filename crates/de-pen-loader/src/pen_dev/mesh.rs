@@ -66,12 +66,11 @@ pub(super) fn convert(
 
 fn resolve_color(color: &Value, theme: &Theme, ctx: &mut Ctx<'_>) -> Option<String> {
     let text = color.as_str()?;
-    if variables::reference(text).is_none() {
-        return Some(text.to_owned());
-    }
     // Only a reference the document defines stays bound; a missing one
     // falls back to transparent like a missing colour.
-    ctx.variables.value(variables::reference(text)?, theme)?;
+    if let Some(name) = variables::reference(text) {
+        ctx.variables.value(name, theme)?;
+    }
     Some(text.to_owned())
 }
 
@@ -159,7 +158,7 @@ mod tests {
 
     #[test]
     fn a_mesh_colour_variable_stays_bound_and_follows_the_instance_theme() {
-        let mut doc = json!({
+        let doc = json!({
             "version": "2.21",
             "themes": { "mode": ["light", "dark"] },
             "variables": { "sea": { "type": "color", "value": [
@@ -194,7 +193,6 @@ mod tests {
             resolved["children"][1]["fill"][0]["stops"][0]["color"],
             "#001122"
         );
-        let _ = &mut doc;
     }
 
     #[test]
