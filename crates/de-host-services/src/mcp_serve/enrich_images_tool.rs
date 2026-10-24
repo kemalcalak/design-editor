@@ -8,12 +8,14 @@
 //! thread through the `web_image_search` backend instead of the desktop's
 //! background job session. One search + one write-back per target.
 //!
-//! ## Search-only contract
+//! ## Search and generate contract
 //!
-//! A slot whose acquisition mode is explicitly `Generate` is counted as
-//! failed and NEVER silently converted into a stock search — the same
-//! contract the CLI mode enforces. `Auto` and `Search` slots are resolved
-//! through stock search.
+//! A slot whose acquisition mode is explicitly `Generate` goes to the image
+//! provider the user configured (#10, `generate_jobs::resolve_image_profile`)
+//! and is NEVER silently converted into a stock search — with no provider it
+//! fails with a "configure a provider" reason. `Auto` and `Search` slots are
+//! resolved through stock search. Generations and searches run side by side
+//! under the same deadline, and the result reports every slot.
 //!
 //! ## Blocking + timeout
 //!
@@ -35,12 +37,16 @@ use std::collections::BTreeMap;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 
+use de_editor_core::agent_settings::ImageGenProfile;
 use de_editor_core::{walkers, EditorCommand, EditorState, NodeId, PenNodeExt as _};
 use de_image_enrich::{
     apply_result, collect_targets, is_failed_image_slot_for_host, ImageRequestMode,
     ImageSearchTarget, SEARCH_FAILED_PLACEHOLDER_SRC,
 };
 use de_mcp::{McpTool, ToolErrorCode, ToolOutcome};
+
+pub(crate) use super::enrich_images_generate::{SlotReport, SlotStatus};
+use crate::generate_jobs::{resolve_image_profile, GenerateJobError};
 
 use jian_ops_schema::node::PenNode;
 
@@ -67,6 +73,17 @@ pub(crate) trait ImageSearchBackend: Send + Sync {
     /// production overrides it to bound the complete async provider ladder.
     fn search_before(&self, target: &ImageSearchTarget, _deadline: Instant) -> Option<String> {
         self.search(target)
+    }
+
+    /// Generate an image for an explicit `Generate` slot through the
+    /// configured image provider. Test backends without a generator report
+    /// "not configured", which is also production's answer without a key.
+    fn generate_before(
+        &self,
+        _target: &ImageSearchTarget,
+        _deadline: Instant,
+    ) -> Result<String, GenerateJobError> {
+        Err(GenerateJobError::NotConfigured)
     }
 
     /// Resolve a target list under one absolute deadline. Test backends keep
@@ -134,31 +151,39 @@ pub(crate) fn search_parallel_before(
 /// Wikimedia ladder, first hit wins. The first hit is the full `data:` URL.
 struct WebSearchBackend {
     credentials: Option<crate::web_image_search::WebOpenverseCredentials>,
+    /// The image provider for `Generate` slots, or why there is none.
+    image_profile: Result<ImageGenProfile, GenerateJobError>,
 }
 
 impl WebSearchBackend {
     fn from_state(state: &EditorState) -> Self {
-        let settings = &state.editor_ui.agent_settings;
-        let (client_id, client_secret) = if settings.openverse_client_id.trim().is_empty()
-            && settings.openverse_client_secret.trim().is_empty()
-        {
-            (
-                std::env::var("DESIGN_EDITOR_OPENVERSE_CLIENT_ID").unwrap_or_default(),
-                std::env::var("DESIGN_EDITOR_OPENVERSE_CLIENT_SECRET").unwrap_or_default(),
-            )
-        } else {
-            (
-                settings.openverse_client_id.clone(),
-                settings.openverse_client_secret.clone(),
-            )
-        };
         Self {
-            credentials: crate::web_image_search::WebOpenverseCredentials::from_parts(
-                &client_id,
-                &client_secret,
-            ),
+            credentials: openverse_credentials(state),
+            image_profile: resolve_image_profile(&state.editor_ui.agent_settings),
         }
     }
+}
+
+/// The Openverse credentials saved in Settings, else the
+/// `DESIGN_EDITOR_OPENVERSE_CLIENT_*` environment pair.
+pub(crate) fn openverse_credentials(
+    state: &EditorState,
+) -> Option<crate::web_image_search::WebOpenverseCredentials> {
+    let settings = &state.editor_ui.agent_settings;
+    let (client_id, client_secret) = if settings.openverse_client_id.trim().is_empty()
+        && settings.openverse_client_secret.trim().is_empty()
+    {
+        (
+            std::env::var("DESIGN_EDITOR_OPENVERSE_CLIENT_ID").unwrap_or_default(),
+            std::env::var("DESIGN_EDITOR_OPENVERSE_CLIENT_SECRET").unwrap_or_default(),
+        )
+    } else {
+        (
+            settings.openverse_client_id.clone(),
+            settings.openverse_client_secret.clone(),
+        )
+    };
+    crate::web_image_search::WebOpenverseCredentials::from_parts(&client_id, &client_secret)
 }
 
 impl ImageSearchBackend for WebSearchBackend {
@@ -194,6 +219,15 @@ impl ImageSearchBackend for WebSearchBackend {
         deadline: Instant,
     ) -> Vec<ImageSearchAttempt> {
         search_parallel_before(self, targets, deadline)
+    }
+
+    fn generate_before(
+        &self,
+        target: &ImageSearchTarget,
+        deadline: Instant,
+    ) -> Result<String, GenerateJobError> {
+        let profile = self.image_profile.clone()?;
+        super::enrich_images_generate::generate_slot_before(profile, target, deadline)
     }
 }
 
@@ -253,6 +287,7 @@ impl McpTool for EnrichImagesTool {
             "resolved": run.summary.resolved,
             "failed": run.summary.failed,
             "unresolved": run.summary.unresolved,
+            "slots": run.slots.iter().map(SlotReport::to_json).collect::<Vec<_>>(),
         })
         .to_string();
         if run.commands.is_empty() {
@@ -337,10 +372,12 @@ pub(crate) struct EnrichSummary {
     pub unresolved: usize,
 }
 
-/// The run's outcome: the summary plus the replayable writes.
+/// The run's outcome: the summary, one report per slot, and the replayable
+/// writes.
 #[derive(Debug, Default)]
 pub(crate) struct EnrichRun {
     pub summary: EnrichSummary,
+    pub slots: Vec<SlotReport>,
     pub commands: Vec<EditorCommand>,
 }
 
@@ -377,35 +414,55 @@ pub(crate) fn run_enrich_sync(
     };
     run.summary.targets = targets.len();
 
-    // Explicit Generate slots fail immediately: they are a local write-back,
-    // not provider work, so the wall-clock budget never gates them.
-    // `acted` tracks exactly which targets this run touched so the end-state
-    // accounting below can judge them against the mutated tree.
+    // Explicit Generate slots go to the image provider, the rest to stock
+    // search; both run under one deadline. `acted` tracks exactly which
+    // targets this run touched so the end-state accounting below can judge
+    // them against the mutated tree.
     let mut acted: Vec<NodeId> = Vec::new();
-    let mut searchable = Vec::new();
-    for target in targets {
-        if target.mode == ImageRequestMode::Generate {
-            record_apply(
-                state,
-                &target.node_id,
-                SEARCH_FAILED_PLACEHOLDER_SRC,
-                &mut run.commands,
-            );
-            acted.push(target.node_id);
-            continue;
-        }
-        searchable.push(target);
-    }
+    let mut errors: BTreeMap<String, String> = BTreeMap::new();
+    let (generated, searchable): (Vec<_>, Vec<_>) = targets
+        .iter()
+        .cloned()
+        .partition(|target| target.mode == ImageRequestMode::Generate);
 
-    // The budget clock starts HERE, at the search phase. Target collection
+    // The budget clock starts HERE, at the provider phase. Target collection
     // resolves the page layout scene (a cold text-measure/font init can cost
     // ~1s in a fresh process); charging that local work against the provider
     // budget silently starved short-budget runs before any search began.
     let deadline = Instant::now() + budget;
-    let attempts = backend.search_many_before(&searchable, deadline);
+    let (generations, attempts) = std::thread::scope(|scope| {
+        let generations = scope.spawn(|| {
+            super::enrich_images_generate::generate_many_before(backend, &generated, deadline)
+        });
+        let attempts = backend.search_many_before(&searchable, deadline);
+        (
+            generations
+                .join()
+                .expect("image generation worker panicked"),
+            attempts,
+        )
+    });
+    for (target, attempt) in generated.into_iter().zip(generations) {
+        let Some(result) = attempt else { continue };
+        let url = match result {
+            Ok(url) => url,
+            Err(error) => {
+                errors.insert(target.node_id.as_str().to_string(), error.to_string());
+                SEARCH_FAILED_PLACEHOLDER_SRC.to_string()
+            }
+        };
+        record_apply(state, &target.node_id, &url, &mut run.commands);
+        acted.push(target.node_id);
+    }
     for (target, attempt) in searchable.into_iter().zip(attempts) {
         if let ImageSearchAttempt::Completed(url) = attempt {
-            let url = url.unwrap_or_else(|| SEARCH_FAILED_PLACEHOLDER_SRC.to_string());
+            let url = url.unwrap_or_else(|| {
+                errors.insert(
+                    target.node_id.as_str().to_string(),
+                    GenerateJobError::NoStockResult.to_string(),
+                );
+                SEARCH_FAILED_PLACEHOLDER_SRC.to_string()
+            });
             record_apply(state, &target.node_id, &url, &mut run.commands);
             acted.push(target.node_id);
         }
@@ -418,12 +475,32 @@ pub(crate) fn run_enrich_sync(
         .into_iter()
         .map(|target| target.node_id)
         .collect();
-    for node_id in &acted {
-        if node_has_failure_sentinel(state, node_id) {
+    for target in &targets {
+        let node_id = &target.node_id;
+        let status = if !acted.contains(node_id) {
+            SlotStatus::Unresolved
+        } else if node_has_failure_sentinel(state, node_id) {
             run.summary.failed += 1;
+            SlotStatus::Failed
         } else if remaining.contains(node_id) {
             run.summary.unresolved += 1;
-        }
+            SlotStatus::Unresolved
+        } else {
+            SlotStatus::Resolved
+        };
+        let error = match status {
+            SlotStatus::Resolved => None,
+            SlotStatus::Unresolved if !acted.contains(node_id) => {
+                Some("not started before the timeout".to_string())
+            }
+            _ => errors.get(node_id.as_str()).cloned(),
+        };
+        run.slots.push(SlotReport {
+            node_id: node_id.as_str().to_string(),
+            mode: target.mode,
+            status,
+            error,
+        });
     }
     // Targets the deadline prevented us from starting were never touched, so
     // they are still empty slots and count as unresolved.

@@ -13,8 +13,9 @@ use jian_ops_schema::style::PenFill;
 
 use super::enrich_images_tool::{
     run_enrich_sync, search_parallel_before, EnrichImagesTool, EnrichSummary, ImageSearchAttempt,
-    ImageSearchBackend,
+    ImageSearchBackend, SlotStatus,
 };
+use crate::generate_jobs::GenerateJobError;
 
 /// A scripted backend: `query -> url`, with a call log so tests can prove a
 /// Generate prompt never reached a search.
@@ -300,10 +301,9 @@ fn production_parallel_search_is_bounded_to_three_workers() {
 
 #[test]
 fn enrich_expired_deadline_marks_every_target_unresolved() {
-    // Drive the core loop directly with a zero budget: the search-phase
-    // deadline is already due, so no search may start and the Search slot
-    // counts unresolved. The Generate slot is a local write-back the budget
-    // never gates, so it still lands its failed-search sentinel.
+    // Drive the core loop directly with a zero budget: the provider-phase
+    // deadline is already due, so no search or generation may start and
+    // both slots count unresolved.
     let mut state = load(MIXED_FIXTURE);
     let backend = StubBackend::default();
     let run = run_enrich_sync(&mut state, None, Duration::ZERO, &backend);
@@ -312,10 +312,14 @@ fn enrich_expired_deadline_marks_every_target_unresolved() {
         EnrichSummary {
             targets: 2,
             resolved: 0,
-            failed: 1,
-            unresolved: 1,
+            failed: 0,
+            unresolved: 2,
         }
     );
+    assert!(run
+        .slots
+        .iter()
+        .all(|slot| slot.status == SlotStatus::Unresolved));
     assert!(
         backend.calls.lock().unwrap().is_empty(),
         "an expired deadline must not start any search"
@@ -415,4 +419,105 @@ fn enrich_scopes_to_requested_roots() {
         panic!("img_a must stay an image node");
     };
     assert_eq!(img_a.src, "", "the out-of-scope slot must stay untouched");
+}
+
+/// A backend that also generates: `Generate` slots get `generated`, and the
+/// prompts it saw are logged.
+struct GeneratingBackend {
+    search: StubBackend,
+    generated: Option<String>,
+    prompts: Mutex<Vec<String>>,
+}
+
+impl ImageSearchBackend for GeneratingBackend {
+    fn search(&self, target: &ImageSearchTarget) -> Option<String> {
+        self.search.search(target)
+    }
+
+    fn generate_before(
+        &self,
+        target: &ImageSearchTarget,
+        _deadline: Instant,
+    ) -> Result<String, GenerateJobError> {
+        self.prompts
+            .lock()
+            .unwrap()
+            .push(target.prompt.clone().unwrap_or_default());
+        self.generated
+            .clone()
+            .ok_or_else(|| GenerateJobError::Failed("provider quota exceeded".into()))
+    }
+}
+
+#[test]
+fn enrich_generates_generate_slots_through_the_image_provider() {
+    let mut state = load(MIXED_FIXTURE);
+    let backend = GeneratingBackend {
+        search: StubBackend::with("mountain lake", "data:image/png;base64,AA=="),
+        generated: Some("data:image/png;base64,Ag==".into()),
+        prompts: Mutex::new(Vec::new()),
+    };
+    let run = run_enrich_sync(&mut state, None, Duration::from_secs(5), &backend);
+    assert_eq!(run.summary.resolved, 2, "{:?}", run.slots);
+    assert_eq!(
+        backend.prompts.lock().unwrap().as_slice(),
+        ["paint a moonlit forest".to_string()]
+    );
+    assert_eq!(
+        backend.search.calls.lock().unwrap().as_slice(),
+        ["mountain lake".to_string()],
+        "the Generate slot never reaches stock search"
+    );
+    let PenNode::Image(art) = find(state.active_children(), "art").unwrap() else {
+        panic!("art stays an image node");
+    };
+    assert_eq!(art.src, "data:image/png;base64,Ag==");
+}
+
+#[test]
+fn enrich_reports_each_failed_slot_with_its_reason() {
+    let live = load(MIXED_FIXTURE);
+    let backend = Arc::new(GeneratingBackend {
+        search: StubBackend::default(),
+        generated: None,
+        prompts: Mutex::new(Vec::new()),
+    });
+    let tool = EnrichImagesTool::for_test(&live, backend);
+    let ToolOutcome::OkJsonWithCommand(json, _) = tool.call(&BTreeMap::new()) else {
+        panic!("expected writes");
+    };
+    let value: serde_json::Value = serde_json::from_str(&json).unwrap();
+    let slots = value["slots"].as_array().expect("slots array");
+    let by_id = |id: &str| {
+        slots
+            .iter()
+            .find(|slot| slot["nodeId"] == id)
+            .unwrap_or_else(|| panic!("slot {id} missing: {slots:?}"))
+    };
+    assert_eq!(by_id("art")["mode"], "generate");
+    assert_eq!(by_id("art")["status"], "failed");
+    assert_eq!(by_id("art")["error"], "provider quota exceeded");
+    assert_eq!(by_id("photo")["mode"], "search");
+    assert_eq!(by_id("photo")["status"], "failed");
+    assert_eq!(by_id("photo")["error"], "no stock photo matched the query");
+}
+
+#[test]
+fn enrich_without_a_provider_says_how_to_configure_one() {
+    let mut state = load(MIXED_FIXTURE);
+    let backend = StubBackend::default();
+    let run = run_enrich_sync(&mut state, None, Duration::from_secs(5), &backend);
+    let art = run
+        .slots
+        .iter()
+        .find(|slot| slot.node_id == "art")
+        .expect("art slot");
+    assert_eq!(art.status, SlotStatus::Failed);
+    assert!(
+        art.error
+            .as_deref()
+            .unwrap_or("")
+            .contains("Settings > Images"),
+        "{art:?}"
+    );
 }

@@ -70,6 +70,15 @@ pub fn run_web_canvas(options: ServeWebOptions) -> Result<()> {
         credential_persistence,
     )));
     let hub = Arc::new(SseHub::default());
+    {
+        // A finished `generate` job lands at once and reaches the browser
+        // through the same version bump + SSE tick as an MCP write.
+        let state = Arc::clone(&state);
+        let hub = Arc::clone(&hub);
+        crate::generate_jobs::GenerateJobs::global().set_listener(Some(Arc::new(move || {
+            super::connection::land_generations(&state, &hub)
+        })));
+    }
     let conn_count = Arc::new(AtomicUsize::new(0));
     // Raised by a connection thread that accepted a token-authenticated
     // `design-editor/shutdown`; the accept loop checks it per iteration. The

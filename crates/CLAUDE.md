@@ -578,7 +578,7 @@ The **`de-mcp`** crate carries the MCP wire layer that mirrors the retired TS `p
 
 ### Tool catalog
 
-**144 static-schema tools** registered today. The authoritative list
+**146 static-schema tools** registered today. The authoritative list
 is `de-host-services/src/mcp_serve/schemas.rs` — `TOOL_SCHEMAS`
 (JSON inputSchemas; `DEBUG_TOOL_SCHEMAS` is gated out of the
 production catalog) — plus the `register_tool!` calls in

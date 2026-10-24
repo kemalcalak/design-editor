@@ -302,6 +302,47 @@ fn openai_size(width: Option<f64>, height: Option<f64>) -> &'static str {
     }
 }
 
+/// Whether `model` is one of OpenAI's GPT image models, which always answer
+/// with base64, reject `response_format`, and take their own size set.
+pub(crate) fn is_gpt_image_model(model: &str) -> bool {
+    model.trim().to_ascii_lowercase().starts_with("gpt-image")
+}
+
+/// `images/generations` body. DALL-E keeps the TS shape (`url` responses,
+/// 1792 px sizes); GPT image models get their own sizes and no
+/// `response_format`.
+pub(crate) fn openai_generation_body(
+    model: &str,
+    prompt: &str,
+    width: Option<f64>,
+    height: Option<f64>,
+) -> serde_json::Value {
+    if is_gpt_image_model(model) {
+        return serde_json::json!({
+            "model": model,
+            "prompt": prompt,
+            "n": 1,
+            "size": gpt_image_size(width, height),
+        });
+    }
+    serde_json::json!({
+        "model": model,
+        "prompt": prompt,
+        "n": 1,
+        "size": openai_size(width, height),
+        "response_format": "url",
+    })
+}
+
+/// GPT image models' size set (landscape / portrait / square).
+pub(crate) fn gpt_image_size(width: Option<f64>, height: Option<f64>) -> &'static str {
+    match openai_size(width, height) {
+        "1792x1024" => "1536x1024",
+        "1024x1792" => "1024x1536",
+        _ => "1024x1024",
+    }
+}
+
 /// TS `mapToGeminiAspectRatio`.
 fn gemini_aspect_ratio(width: Option<f64>, height: Option<f64>) -> Option<&'static str> {
     let (Some(w), Some(h)) = (width, height) else {
@@ -361,13 +402,12 @@ pub async fn generate_openai(
     let resp = client
         .post(endpoint)
         .bearer_auth(profile.api_key.trim())
-        .json(&serde_json::json!({
-            "model": profile.model,
-            "prompt": prompt,
-            "n": 1,
-            "size": openai_size(width, height),
-            "response_format": "url",
-        }))
+        .json(&openai_generation_body(
+            &profile.model,
+            prompt,
+            width,
+            height,
+        ))
         .send()
         .await
         .map_err(|e| ImageGenerateError::Request {

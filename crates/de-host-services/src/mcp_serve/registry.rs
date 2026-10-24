@@ -184,6 +184,8 @@ pub(super) fn rebuild_registry(doc: &EditorState, requested_tool: Option<&str>) 
     register_tool!("design_refine", design_refine_snapshot(doc));
     register_tool!("finalize_design", finalize_design_snapshot(doc));
     register_tool!("enrich_images", enrich_images_snapshot(doc));
+    register_tool!("generate", generate_snapshot(doc));
+    register_tool!("get_generation_status", generation_status_snapshot());
     register_tool!("run_design_agent", run_design_agent_snapshot(doc));
     register_tool!("set_variable_number", set_variable_number_snapshot(doc));
     register_tool!("set_variable_string", set_variable_string_snapshot(doc));
