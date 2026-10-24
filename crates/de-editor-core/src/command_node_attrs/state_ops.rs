@@ -101,6 +101,37 @@ impl EditorState {
         }
     }
 
+    /// Set the star inner radius on a Polygon node (#87). `Some` makes it
+    /// a star (clamped by [`crate::star_shape::clamp_star_inner_radius`]),
+    /// `None` turns it back into a regular polygon. Non-finite values and
+    /// non-Polygon kinds are rejected.
+    pub(crate) fn cmd_set_polygon_inner_radius(
+        &mut self,
+        node_id: &NodeId,
+        inner_radius: Option<f64>,
+    ) -> bool {
+        let inner_radius = match inner_radius {
+            Some(value) => match crate::star_shape::clamp_star_inner_radius(value) {
+                Some(clamped) => Some(clamped),
+                None => return false,
+            },
+            None => None,
+        };
+        if !node_id.is_real() || !self.is_editable(node_id) {
+            return false;
+        }
+        let Some(node) = find_node_mut(self.active_children_mut(), node_id) else {
+            return false;
+        };
+        match node {
+            PenNode::Polygon(p) => {
+                p.inner_radius = inner_radius;
+                true
+            }
+            _ => false,
+        }
+    }
+
     /// `SetNodeFontSize` — set the font size on a Text node. Rejects
     /// non-Text kinds + non-positive sizes.
     pub(crate) fn cmd_set_node_font_size(&mut self, node_id: &NodeId, font_size: f32) -> bool {

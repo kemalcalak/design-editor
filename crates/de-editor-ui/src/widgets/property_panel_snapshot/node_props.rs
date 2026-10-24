@@ -33,6 +33,18 @@ pub(super) fn polygon_sides_of(node: &PenNode) -> Option<u32> {
     }
 }
 
+/// A star polygon's inner radius in percent; `None` for a regular
+/// polygon and every other kind.
+pub(super) fn star_inner_percent_of(node: &PenNode) -> Option<f32> {
+    match node {
+        PenNode::Polygon(n) => n
+            .inner_radius
+            .and_then(de_editor_core::star_shape::clamp_star_inner_radius)
+            .map(|r| (r * 100.0) as f32),
+        _ => None,
+    }
+}
+
 pub(super) fn video_summary_of(node: &PenNode) -> Option<VideoSummary> {
     let PenNode::Image(image) = node else {
         return None;

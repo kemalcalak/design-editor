@@ -95,17 +95,24 @@ pub fn fill_body_height_with_stops(fill_type: FillType, stop_count: usize) -> f3
     }
 }
 
+/// The Layer section's optional second row: the ellipse arc controls or
+/// the star inner radius (the two kinds never coincide).
+fn layer_second_row_height(visible: VisibleSections) -> f32 {
+    if visible.ellipse_arc || visible.star_inner {
+        INPUT_HEIGHT + 6.0
+    } else {
+        0.0
+    }
+}
+
 /// Height consumed by the Layer section. Polygon adds a same-row
-/// side-count field; ellipse adds a second row for arc controls.
+/// side-count field; ellipse adds a second row for arc controls and a
+/// star one for its inner radius.
 pub fn layer_section_height(visible: VisibleSections) -> f32 {
     if !visible.opacity {
         return 0.0;
     }
-    let extra_arc_row = if visible.ellipse_arc {
-        INPUT_HEIGHT + 6.0
-    } else {
-        0.0
-    };
+    let extra_arc_row = layer_second_row_height(visible);
     let extra_compositing_row = if visible.compositing {
         crate::widgets::property_panel_compositing::COMPOSITING_ROW_HEIGHT
     } else {
@@ -362,9 +369,7 @@ pub fn action_button_rects_with_fill_picker(
 
     if visible.opacity && visible.compositing {
         let mut compositing_y = tops.layer + SECTION_HEADER_HEIGHT + INPUT_HEIGHT;
-        if visible.ellipse_arc {
-            compositing_y += INPUT_HEIGHT + 6.0;
-        }
+        compositing_y += layer_second_row_height(visible);
         compositing_y += crate::widgets::property_panel_compositing::COMPOSITING_ROW_GAP;
         for (target, rect) in
             crate::widgets::property_panel_compositing::node_trigger_rects(x0, compositing_y, w)

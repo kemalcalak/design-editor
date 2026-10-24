@@ -260,6 +260,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "updateModal.releases" => "Trang phát hành",
         "dialog.loadErrorUnsupportedExtension" => "{{name}} không phải tài liệu Design Editor. Chỉ mở được tệp .de; tệp .pen của pen.dev sẽ mở dưới dạng nhập.",
         "dialog.loadErrorNotPenDev" => "{{name}} không phải tệp pen.dev nên không thể nhập.",
+        "shapes.star" => "Ngôi sao",
+        "star.points" => "Số cánh",
+        "star.innerRadius" => "Bán kính trong",
         _ => return None,
     })
 }

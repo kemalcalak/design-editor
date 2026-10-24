@@ -31,6 +31,7 @@ pub(super) fn parse_tool(s: &str) -> Option<Tool> {
         "rect" => Some(Tool::Rect),
         "ellipse" => Some(Tool::Ellipse),
         "polygon" => Some(Tool::Polygon),
+        "star" => Some(Tool::Star),
         "line" => Some(Tool::Line),
         "pen" => Some(Tool::Pen),
         "text" => Some(Tool::Text),

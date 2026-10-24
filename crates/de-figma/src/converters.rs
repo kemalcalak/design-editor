@@ -16,8 +16,8 @@ use crate::layout_positioning::{
     apply_layout_positioning, order_children, sizing_parent_stack_mode,
 };
 use crate::mappers::{
-    fig_fill_color, map_figma_effects, map_figma_fills, map_figma_layout, map_figma_stroke,
-    LayoutProps,
+    apply_layout, fig_fill_color, map_figma_effects, map_figma_fills, map_figma_layout,
+    map_figma_stroke, LayoutProps,
 };
 use crate::mask::{any_visible, figma_path_mask};
 use crate::node_build::{
@@ -27,32 +27,9 @@ use crate::text_mapper::map_figma_text_props;
 use crate::tree::{guid_to_string, TreeNode};
 use crate::vector_decoder::{compute_svg_path_bounds, decode_figma_vector_path, DecodedVectorPath};
 use crate::vector_fallback::decode_single_child_boolean;
-use jian_ops_schema::node::base::NumberOrExpression;
 use jian_ops_schema::node::container::ContainerProps;
 use jian_ops_schema::node::PenNode;
 use jian_ops_schema::sizing::SizingBehavior;
-
-/// Spread mapped [`LayoutProps`] onto a `ContainerProps`.
-fn apply_layout(l: LayoutProps, c: &mut ContainerProps) {
-    if l.layout.is_some() {
-        c.layout = l.layout;
-    }
-    if let Some(g) = l.gap {
-        c.gap = Some(NumberOrExpression::Number(g));
-    }
-    if l.padding.is_some() {
-        c.padding = l.padding;
-    }
-    if l.justify_content.is_some() {
-        c.justify_content = l.justify_content;
-    }
-    if l.align_items.is_some() {
-        c.align_items = l.align_items;
-    }
-    if l.clip_content.is_some() {
-        c.clip_content = l.clip_content;
-    }
-}
 
 fn is_string_sizing(s: &SizingBehavior) -> bool {
     matches!(
@@ -98,6 +75,9 @@ pub fn convert_node(
         "RECTANGLE" | "ROUNDED_RECTANGLE" => convert_rectangle(tree, sizing_parent, ctx),
         "ELLIPSE" => convert_ellipse(tree, sizing_parent, ctx),
         "LINE" => convert_line(tree, ctx),
+        "STAR" if crate::star_converter::is_parametric_star(&tree.figma) => {
+            crate::star_converter::convert_star(tree, sizing_parent, ctx)
+        }
         "VECTOR" | "STAR" | "REGULAR_POLYGON" | "BOOLEAN_OPERATION" => {
             convert_vector(tree, sizing_parent, ctx)
         }

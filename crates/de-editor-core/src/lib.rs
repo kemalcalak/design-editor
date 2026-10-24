@@ -135,6 +135,7 @@ pub mod scene_template_prompt;
 pub mod scene_vars;
 pub mod selection;
 pub mod selection_resolve;
+pub mod star_shape;
 pub mod state;
 pub mod statusbar_state;
 pub mod svg_import;

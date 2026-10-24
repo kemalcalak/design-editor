@@ -76,7 +76,7 @@ Document
 ├── pages: Vec<Page>          (id + name + nodes)
 ├── active_page_index
 ├── selected: NodeId          (NONE = no selection)
-├── tool: Tool                (Select / Rect / Ellipse / Polygon / Line / Pen / Text / Frame / Hand)
+├── tool: Tool                (Select / Rect / Ellipse / Polygon / Star / Line / Pen / Text / Frame / Hand)
 ├── viewport: Viewport        (pan_x / pan_y / zoom + zoom_at + pan)
 ├── chat: ChatState           (messages, input, focused, anchor, collapsed)
 └── ui: UiState               (sidebar_open, layer_panel_width, property_panel_width,
@@ -128,7 +128,7 @@ Mutators on `Document`:
 | Floating cards    | Editor v3 (#86): left card (Agent / Layers / Components / Images) and properties card over a full-bleed canvas, the panel motion (`panel_reveal`, 220 ms) and `paint_card` | `floating_panels.rs`; core motion in `editor_ui_state/panel_motion.rs` |
 | LayerPanel        | Left rail — Pages + Layers sections                                                                                                  | `layer_panel.rs`                                                                                                                        |
 | Toolbar           | Vertical floating column — Select / shape slot / Text / Frame / Hand                                                                 | `toolbar.rs`                                                                                                                            |
-| ShapePicker       | Toolbar shape-slot dropdown (Rect / Ellipse / Polygon / Line / Pen / Icon / Import)                                                  | `shape_picker.rs`                                                                                                                       |
+| ShapePicker       | Toolbar shape-slot dropdown (Rect / Polygon / Star / Line / Icon; a star is a polygon with `innerRadius`, geometry in `de-editor-ui/src/polygon_geometry.rs`) | `shape_picker.rs`                                                                                                                       |
 | CanvasViewport    | Center — node tree + grid + viewport transform                                                                                       | `canvas_viewport.rs`                                                                                                                    |
 | PropertyPanel     | Right rail (272) — pinned header (selection glyph + name + kind, or the Code view with ✕, `property_panel_header.rs`) + sections + interactive inputs (Position X/Y/W/H/Rot/R, hex, stroke width) + Auto layout with the fill/hug/clip boxes + fill-type picker + closing Code chips (`property_panel_code_chips.rs`) | `property_panel.rs` + the `property_panel_*.rs` family + `property_panel/`, `property_panel_snapshot/`, `property_panel_tests/` |
 | AIChatPlaceholder | Floating — chat with drag + 4-corner snap + collapse pill                                                                            | `ai_chat_panel.rs`                                                                                                                      |

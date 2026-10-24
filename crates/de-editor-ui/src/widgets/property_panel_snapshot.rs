@@ -102,8 +102,12 @@ pub struct NodeSnapshot {
     /// Canonical TL/TR/BR/BL radii for the per-corner editor.
     pub corner_radii: [f32; 4],
     pub supports_per_corner: bool,
-    /// Polygon side count, only present for Polygon selections.
+    /// Polygon side count, only present for Polygon selections (a
+    /// star's point count).
     pub polygon_sides: Option<u32>,
+    /// Star inner radius as a percentage of the outer radius, only
+    /// present for a Polygon that is a star (#87).
+    pub star_inner_percent: Option<f32>,
     /// Ellipse arc controls, only present for Ellipse selections.
     pub ellipse_arc: Option<EllipseArcSummary>,
     pub flex_layout: de_editor_core::FlexLayout,

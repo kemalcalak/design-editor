@@ -8,7 +8,8 @@
 //! ABSOLUTE doc coordinates so the geometry the scene already resolved
 //! (which is absolute) drops in without a second coordinate change.
 
-use de_editor_ui::layout_scene::{regular_polygon_points, SceneNode};
+use de_editor_ui::layout_scene::SceneNode;
+use de_editor_ui::polygon_geometry::polygon_node_points;
 use de_editor_ui::widgets::icon_catalog::{lookup_icon, IconRenderStyle};
 use de_editor_ui::widgets::icons::Icon;
 use de_editor_ui::{Color, Point2D, Rect};
@@ -156,7 +157,7 @@ pub fn emit_line(out: &mut String, n: &SceneNode, origin: Point2D) {
 }
 
 /// Emit a Polygon node as an inline SVG polygon over its regular-N-gon
-/// vertices — the same `regular_polygon_points` the canvas paints.
+/// or star vertices — the same `polygon_node_points` the canvas paints.
 pub fn emit_polygon(out: &mut String, n: &SceneNode, origin: Point2D) {
     let rect = normalize(n.bounds);
     if rect.size.x <= 0.0 || rect.size.y <= 0.0 {
@@ -165,10 +166,7 @@ pub fn emit_polygon(out: &mut String, n: &SceneNode, origin: Point2D) {
     let stroke_pad = n.stroke.map_or(0.0, |s| s.width * 0.5);
     open_svg(out, padded_box(rect, stroke_pad), origin);
     let mut points = String::new();
-    for (i, p) in regular_polygon_points(rect, n.polygon_sides)
-        .iter()
-        .enumerate()
-    {
+    for (i, p) in polygon_node_points(n, rect).iter().enumerate() {
         if i > 0 {
             points.push(' ');
         }
