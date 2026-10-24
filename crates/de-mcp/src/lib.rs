@@ -64,6 +64,7 @@ mod batch_program_update_tests;
 pub mod bulk_vars;
 #[cfg(test)]
 mod bulk_vars_tests;
+pub mod capture_time;
 pub mod codegen_export_tool;
 #[cfg(test)]
 mod codegen_export_tool_tests;
@@ -199,6 +200,7 @@ pub use bulk_vars::{
     apply_design_system_snapshot, get_variables_snapshot, set_themes_snapshot,
     set_variables_snapshot, GetVariables, SetThemes, SetVariables,
 };
+pub use capture_time::{parse_time_ms_arg, MAX_CAPTURE_TIME_MS, TIME_MS_ARG};
 pub use codegen_tools::{
     codegen_assemble_snapshot, codegen_clean_snapshot, codegen_plan_snapshot,
     codegen_submit_chunk_snapshot, CodegenAssemble, CodegenClean, CodegenPlan, CodegenSubmitChunk,

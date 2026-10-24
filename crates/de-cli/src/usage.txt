@@ -21,16 +21,18 @@ COMMON COMMANDS:
   de skill:export <skill> [--out DIR]       export embedded skill as DIR/<skill>/SKILL.md
   de status                               check whether MCP HTTP is reachable
   de export [--item ID|--selection] --output PATH [--format png] [--scale N]
-                                          export a page, arbitrary node, or the
+            [--time-ms MS]                export a page, arbitrary node, or the
                                           current Live Canvas selection; omitting
-                                          --item is equivalent to --selection
+                                          --item is equivalent to --selection;
+                                          --time-ms renders animated shaders at
+                                          that moment (0-3600000, default 0)
   de export-deck --output PATH [--format pptx|html|pdf|hyperframes]
                                           export the active page's boards as a
                                           presentation deck: PowerPoint, self-
                                           contained HTML, or slide-per-page PDF;
                                           hyperframes writes a video composition
                                           into the --output directory
-  de export-frames --output-dir DIR [--format png|jpeg|webp]
+  de export-frames --output-dir DIR [--format png|jpeg|webp] [--time-ms MS]
                                           export every top-level frame on the
                                           active page, one image per frame
   de templates [--scene S] [--tag T]        list scene templates: the shipped

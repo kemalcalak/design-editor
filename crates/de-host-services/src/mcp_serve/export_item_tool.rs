@@ -19,6 +19,12 @@ impl McpTool for ExportItem {
     }
 
     fn call(&self, args: &BTreeMap<String, String>) -> ToolOutcome {
+        super::capture_time::at_requested_time(args, |_| self.export(args))
+    }
+}
+
+impl ExportItem {
+    fn export(&self, args: &BTreeMap<String, String>) -> ToolOutcome {
         let format = match args.get("format").map(|value| value.trim()) {
             Some(format) if !format.is_empty() => format,
             _ => {
@@ -261,6 +267,32 @@ mod tests {
             }
             other => panic!("expected InvalidArgument, got {other:?}"),
         }
+    }
+
+    /// `timeMs` (#8) reaches the export's shader clock; an invalid one fails
+    /// the call before anything renders.
+    #[test]
+    fn time_ms_pins_the_shader_clock_for_the_export() {
+        let scene = crate::export::test_support::scene_with(vec![
+            crate::export::test_support::time_shader_rect("s"),
+        ]);
+        let tool = tool_from_scene(scene, None);
+        let export_at = |time_ms: &str| {
+            let mut args = BTreeMap::new();
+            args.insert("itemId".into(), "s".into());
+            args.insert("format".into(), "png".into());
+            args.insert("timeMs".into(), time_ms.into());
+            tool.call(&args)
+        };
+        let zero = decoded_bytes(&expect_ok_json(export_at("0")));
+        let default = decoded_bytes(&expect_ok_json(call(&tool, Some("s"), Some("png"), None)));
+        let mid = decoded_bytes(&expect_ok_json(export_at("1500")));
+        assert_eq!(zero, default);
+        assert_ne!(zero, mid, "timeMs must reach the shader clock");
+        assert!(matches!(
+            export_at("3600001"),
+            ToolOutcome::Err(ToolErrorCode::InvalidArgument, _)
+        ));
     }
 
     #[test]

@@ -26,9 +26,12 @@ use de_editor_ui::widgets::{canvas_viewport_paint, PaintCx};
 use de_editor_ui::{Point2D, Rect};
 use de_host_native::{NativeBackend, NativeFrameBackend};
 use skia_safe::Canvas;
-use std::cell::RefCell;
+use std::cell::{Cell, RefCell};
 
 thread_local! {
+    /// Shader clock (seconds) the export paints at; see [`with_capture_time_ms`].
+    static CAPTURE_SECONDS: Cell<f32> = const { Cell::new(0.0) };
+
     /// Per-thread `NativeBackend` so repeated exports / screenshots
     /// don't re-pay the constructor's CJK font prewarm and keep the
     /// decoded-image + typeface caches warm across captures. The
@@ -59,13 +62,47 @@ pub fn paint_node(canvas: &Canvas, node: &SceneNode) {
 /// are ordered topmost-first (layer-panel order), so the painter walks
 /// them in reverse — same as `canvas_viewport.rs`'s paint loop.
 ///
-/// Time-driven shader fills are pinned to `time = 0`: a live screenshot runs
-/// on the UI thread between canvas frames, and its pixels must not depend on
+/// Time-driven shader fills are pinned to the capture time — `0` unless the
+/// caller scoped one with [`with_capture_time_ms`]: a live screenshot runs on
+/// the UI thread between canvas frames, and its pixels must not depend on
 /// when it was taken.
 pub fn paint_nodes(canvas: &Canvas, nodes: &[SceneNode]) {
-    de_editor_ui::widgets::canvas_shader_clock::with_fixed_clock(0.0, || {
+    let seconds = CAPTURE_SECONDS.with(Cell::get);
+    de_editor_ui::widgets::canvas_shader_clock::with_fixed_clock(seconds, || {
         paint_nodes_unpinned(canvas, nodes)
     });
+}
+
+/// Longest capture time accepted, in milliseconds: one hour, the period the
+/// canvas shader clock wraps at (`canvas_shader_clock`'s private `WRAP_MS`),
+/// so every time the live canvas can show is reachable. The bound itself is
+/// inclusive; past it, callers get an error instead of a wrapped clock.
+pub const MAX_CAPTURE_TIME_MS: f64 = 60.0 * 60.0 * 1000.0;
+
+/// Run `render` with every export / screenshot paint inside it pinned to
+/// `time_ms` instead of `0` — the "screenshot at a given time" seam (#8).
+/// Scoped rather than threaded through each render signature, the same way
+/// the canvas clock itself is; the previous capture time is restored after.
+///
+/// `time_ms` must already be validated (finite, `0..=MAX_CAPTURE_TIME_MS`);
+/// anything else is clamped into that range so a raw caller cannot feed the
+/// shader a NaN.
+pub fn with_capture_time_ms<R>(time_ms: f64, render: impl FnOnce() -> R) -> R {
+    let time_ms = if time_ms.is_finite() {
+        time_ms.clamp(0.0, MAX_CAPTURE_TIME_MS)
+    } else {
+        0.0
+    };
+    // Restored on drop so a render that panics under a caller's `catch_unwind`
+    // cannot leave later captures on this thread pinned to a stale time.
+    struct Restore(f32);
+    impl Drop for Restore {
+        fn drop(&mut self) {
+            CAPTURE_SECONDS.with(|clock| clock.set(self.0));
+        }
+    }
+    let _restore = Restore(CAPTURE_SECONDS.with(|clock| clock.replace((time_ms / 1000.0) as f32)));
+    render()
 }
 
 fn paint_nodes_unpinned(canvas: &Canvas, nodes: &[SceneNode]) {

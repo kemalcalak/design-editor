@@ -33,4 +33,21 @@ pub mod test_support {
         node.fill = Some(fill);
         node
     }
+
+    /// An 8x8 rect whose shader paints `fract(time)` into red, so captures at
+    /// different shader times differ (#8 `timeMs` tests).
+    pub fn time_shader_rect(id: &str) -> SceneNode {
+        use de_editor_ui::layout_scene::{SceneFillType, SceneShader};
+        let mut node = filled_rect(id, 0.0, 0.0, 8.0, 8.0, Color::WHITE);
+        node.fill_type = SceneFillType::Shader;
+        node.shader = Some(SceneShader {
+            sksl:
+                "uniform float time; half4 main(float2 p){ return half4(fract(time), 0.0, 0.0, 1.0); }"
+                    .to_string(),
+            uniforms: Vec::new(),
+            opacity: 1.0,
+            fallback: Color::WHITE,
+        });
+        node
+    }
 }
