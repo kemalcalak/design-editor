@@ -376,6 +376,10 @@ pub(crate) fn with_canvas_uniforms<R>(
         bound.push((TIME_UNIFORM, time.as_slice()));
     }
     let mouse = mouse_uniform_value(sksl, rect, &bound);
+    if time.is_some() || mouse.is_some() {
+        // Only these pixels change from frame to frame (#208).
+        super::canvas_animation_regions::record(rect);
+    }
     if let Some(mouse) = mouse.as_ref() {
         bound.retain(|(name, _)| *name != MOUSE_UNIFORM);
         bound.push((MOUSE_UNIFORM, mouse.as_slice()));

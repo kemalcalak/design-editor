@@ -82,7 +82,12 @@ impl WidgetHostNative {
             // SCALED blit (soft zoom); the gesture-end repaint restores
             // sharpness. Only zoom gestures take this path — a pan
             // whose cache mismatches must rebuild sharp content.
-            if self.last_gesture_was_zoom {
+            // A layer with animated content would freeze it mid-zoom.
+            let animated = self
+                .pan_cache
+                .as_ref()
+                .is_some_and(|cache| !cache.animated.is_empty());
+            if self.last_gesture_was_zoom && !animated {
                 if let Some(dst) = self.pan_cache_zoom_dst(canvas_rect, dpi) {
                     self.blit_pan_cache_scaled(frame, canvas_rect, dst);
                     return true;
@@ -98,6 +103,7 @@ impl WidgetHostNative {
         } else {
             offset
         };
+        self.refresh_animated_regions(frame, canvas_rect, offset);
         self.blit_pan_cache(frame, canvas_rect, offset);
         true
     }
@@ -141,6 +147,7 @@ impl WidgetHostNative {
             offscreen.restore_to_count(save);
         }
         cache.pan = Point2D::new(cache.pan.x + sdx, cache.pan.y + sdy);
+        super::paint_animated_regions::shift_animated(&mut cache.animated, Point2D::new(sdx, sdy));
         // The layer stays anchored at `cache.pan`, which the snap and
         // the dominant-axis-only refresh leave BEHIND the live viewport
         // pan: sub-device-pixel on the refreshed axis, but the whole
@@ -159,6 +166,7 @@ impl WidgetHostNative {
             size: Point2D::new(canvas_rect.size.x + M * 2.0, canvas_rect.size.y + M * 2.0),
         };
         let strips = exposed_strips(expanded, Point2D::new(sdx, sdy), dpi);
+        let mut recorded = Vec::new();
         if !strips.is_empty() {
             let mut canvas = CanvasViewport::from_editor(&self.editor_state, &self.layout_scene);
             canvas.now_ms = self.now_ms;
@@ -177,7 +185,11 @@ impl WidgetHostNative {
                         canvas.paint(&mut cx, expanded);
                     },
                 );
+                recorded.push(de_editor_ui::widgets::canvas_animation_regions::snapshot());
             }
+        }
+        for strip in recorded {
+            self.absorb_partial_paint(&mut cache, strip);
         }
         self.pan_cache_scrolls = self.pan_cache_scrolls.wrapping_add(1);
         // Strips paint in degrade mode — the layer needs a fresh
@@ -197,18 +209,9 @@ impl WidgetHostNative {
         canvas_rect: Rect,
     ) -> bool {
         use super::canvas_pan_cache::{PAN_CACHE_MARGIN as M, PAN_CACHE_RESTORE_TILES};
-        // Rest blits must never freeze time-driven canvas visuals.
-        let rest_usable = self.preview.is_none()
-            && self
-                .layout_transition
-                .as_ref()
-                .is_none_or(|transition| !transition.is_active(self.now_ms))
-            && de_editor_core::agent_indicators::snapshot_at_if_active(self.now_ms).is_none()
-            && self.node_drag.is_none()
-            && self.marquee_drag.is_none()
-            && self.editor_state.editor_ui.starter_ghost.is_none()
-            && self.editor_state.ui.text_editing.is_none()
-            && !de_editor_ui::widgets::canvas_shader_pointer::pointer_shader_painted();
+        // Rest blits must never freeze time-driven canvas visuals: animated
+        // content is served only when its regions are repainted (#208).
+        let rest_usable = self.rest_layer_conditions() && self.animation_allows_cache();
         if !rest_usable {
             self.pan_cache_restore = None;
             return false;
@@ -249,6 +252,7 @@ impl WidgetHostNative {
         if self.pan_cache.as_ref().is_some_and(|cache| cache.sharp)
             && self.pan_cache_restore.is_none()
         {
+            self.refresh_animated_regions(frame, canvas_rect, offset);
             self.blit_pan_cache(frame, canvas_rect, offset);
             return true;
         }
@@ -270,6 +274,7 @@ impl WidgetHostNative {
                         self.editor_state.viewport.pan_x,
                         self.editor_state.viewport.pan_y,
                     );
+                    super::paint_animated_regions::shift_animated(&mut cache.animated, offset);
                 }
             }
             let tile_h = (canvas_rect.size.y / PAN_CACHE_RESTORE_TILES as f32).ceil();
@@ -326,6 +331,8 @@ impl WidgetHostNative {
                         },
                     );
                 }
+                let recorded = de_editor_ui::widgets::canvas_animation_regions::snapshot();
+                self.absorb_partial_paint(&mut cache, recorded);
                 restore.next += 1;
                 if restore.next >= restore.tiles.len() {
                     cache.sharp = true;
@@ -336,6 +343,7 @@ impl WidgetHostNative {
                 }
             }
         }
+        self.refresh_animated_regions(frame, canvas_rect, Point2D::new(0.0, 0.0));
         self.blit_pan_cache(frame, canvas_rect, Point2D::new(0.0, 0.0));
         true
     }

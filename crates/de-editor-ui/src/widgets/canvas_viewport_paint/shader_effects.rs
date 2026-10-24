@@ -60,6 +60,9 @@ fn push_pass(
         crate::widgets::canvas_shader_images::prepare_shader_images(
             cx, &pass.sksl, uniforms, world_rect,
         );
+        if backdrop {
+            crate::widgets::canvas_animation_regions::mark_backdrop();
+        }
         cx.backend
             .push_shader_effect_layer(world_rect, &pass.sksl, uniforms, backdrop);
     });

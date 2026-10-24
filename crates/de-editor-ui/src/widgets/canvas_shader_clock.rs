@@ -66,10 +66,12 @@ pub(crate) fn declares_uniform(sksl: &str, types: &[&str], name: &str) -> bool {
 /// shader does not declare it. A declaring shader marks the current frame as
 /// animated so the host schedules the next one.
 pub fn time_uniform_value(sksl: &str) -> Option<f32> {
-    if !declares_time_uniform(sksl) {
+    if !super::canvas_shader_decls::shader_decls(sksl).time {
         return None;
     }
-    mark_animated(FRAME_INTERVAL_MS);
+    // Located: the caller records the shader's box
+    // (`canvas_viewport_overlay::with_canvas_uniforms`).
+    mark_interval(FRAME_INTERVAL_MS);
     Some(FRAME_SECONDS.with(Cell::get))
 }
 
@@ -87,8 +89,15 @@ pub fn with_fixed_clock<R>(seconds: f32, paint: impl FnOnce() -> R) -> R {
 }
 
 /// Mark the current frame as animated: something painted in it changes
-/// without input and wants the next frame within `interval_ms`.
+/// without input and wants the next frame within `interval_ms`. The
+/// content's box is not recorded, so a host cannot repaint just its region
+/// (see [`super::canvas_animation_regions`]).
 pub(crate) fn mark_animated(interval_ms: u64) {
+    super::canvas_animation_regions::mark_unlocated();
+    mark_interval(interval_ms);
+}
+
+fn mark_interval(interval_ms: u64) {
     let interval_ms = interval_ms.max(1);
     ANIMATION_INTERVAL_MS.with(|interval| {
         let current = interval.get();

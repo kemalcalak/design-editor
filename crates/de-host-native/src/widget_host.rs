@@ -153,6 +153,9 @@ mod page_switch_center_tests;
 mod paint;
 mod paint_chrome_menus;
 mod paint_floating_panels;
+mod paint_animated_regions;
+#[cfg(test)]
+mod animated_regions_tests;
 mod paint_pan_cache;
 mod paint_rail;
 mod paint_topmost_overlays;
@@ -466,6 +469,13 @@ pub struct WidgetHostNative {
     pub(in crate::widget_host) pan_cache_scrolls: u64,
     /// Full expanded-layer builds performed (test observability).
     pub(in crate::widget_host) pan_cache_builds: u64,
+    /// Frames that repainted the layer's animated regions (#208).
+    pub(in crate::widget_host) pan_cache_animation_refreshes: u64,
+    /// Animated regions the last full canvas paint recorded (#208): while
+    /// they are `located`, the pan cache may hold animated content and
+    /// repaints only these regions per frame.
+    pub(in crate::widget_host) canvas_animation:
+        de_editor_ui::widgets::canvas_animation_regions::AnimationRegions,
     /// Whether the most recent gesture tick was a zoom — zoom frames
     /// never build the pan cache (each tick would invalidate it).
     pub(in crate::widget_host) last_gesture_was_zoom: bool,

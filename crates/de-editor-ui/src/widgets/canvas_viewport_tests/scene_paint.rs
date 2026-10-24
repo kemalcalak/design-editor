@@ -122,6 +122,13 @@ fn grid_dot_count_matches_painted_dot_batch() {
         crate::widgets::canvas_viewport_grid::grid_dot_count(rect, &viewport.viewport),
         "panned and zoomed grid count should still match the painted batch"
     );
+
+    // A partial repaint (pan strip, restore tile, animated region, #208)
+    // emits only the dots around its cull rect.
+    let full = paint_dots(&viewport);
+    viewport.cull_override = Some(Rect::xywh(100.0, 80.0, 30.0, 20.0));
+    let partial = paint_dots(&viewport);
+    assert!(partial > 0 && partial * 10 < full, "{partial} of {full}");
 }
 
 #[test]

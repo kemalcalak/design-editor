@@ -170,6 +170,7 @@ impl<'a> Widget for CanvasViewport<'a> {
         }
         // Time-driven shader fills read this frame's clock while painting.
         super::canvas_shader_clock::begin_frame(self.now_ms);
+        super::canvas_animation_regions::begin_frame();
         super::canvas_generation_visibility::begin_frame(self.cull_override.is_some());
         // A culled partial repaint (pan-cache strips / tiles) adds to the
         // frame's pointer-shader flag instead of resetting it.
@@ -183,7 +184,13 @@ impl<'a> Widget for CanvasViewport<'a> {
         // 2. Dotted grid — canvas-local, scales with pan/zoom.
         let viewport = &self.viewport;
         if self.show_grid {
-            super::canvas_viewport_grid::paint_grid(cx, rect, viewport, &self.theme);
+            super::canvas_viewport_grid::paint_grid_within(
+                cx,
+                rect,
+                viewport,
+                &self.theme,
+                self.cull_override,
+            );
         }
         let indicators = de_editor_core::agent_indicators::snapshot_at_if_active(self.now_ms);
         let selection_chrome_visible = !self.node_drag_active;

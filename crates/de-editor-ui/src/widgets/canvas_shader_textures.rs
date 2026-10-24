@@ -105,6 +105,7 @@ pub(crate) fn capture_fill_backdrop(
         return None;
     }
     let id = texture_id(&node.id, FILL_BACKDROP_SLOT, TextureKind::Background);
+    super::canvas_animation_regions::mark_backdrop();
     cx.backend.capture_shader_backdrop(id, world_rect);
     Some(id)
 }
@@ -206,6 +207,7 @@ pub(crate) fn bind_effect_textures(
         let id = match child.source {
             ChildSource::Background => {
                 let id = texture_id(&node.id, pass_index, TextureKind::Background);
+                super::canvas_animation_regions::mark_backdrop();
                 cx.backend.capture_shader_backdrop(id, world_rect);
                 captured = Some(id);
                 id

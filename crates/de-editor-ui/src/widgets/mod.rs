@@ -198,12 +198,15 @@ mod canvas_generation_scan;
 #[cfg(test)]
 mod canvas_generation_scan_tests;
 pub mod canvas_generation_visibility;
+// `pub` so the native host can repaint just the animated regions (#208).
+pub mod canvas_animation_regions;
 pub mod canvas_layout_transition;
 pub mod canvas_overlay_transform;
 mod canvas_path_overlay;
 mod canvas_selection_overlay;
 // `pub` so both hosts can read the animated-shader flag after paint.
 pub mod canvas_shader_clock;
+mod canvas_shader_decls;
 mod canvas_shader_images;
 mod canvas_shader_textures;
 // `pub` so both hosts can track the pointer for pointer-reactive shaders.
