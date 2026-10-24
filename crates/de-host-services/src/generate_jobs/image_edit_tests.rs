@@ -131,7 +131,7 @@ fn chroma_key_clears_green_and_keeps_the_subject() {
 fn replicate_profiles_are_refused_for_transforms() {
     let source = super::super::source::SourceImage::from_bytes(png(300, 300, [9, 9, 9, 255]), 256)
         .expect("source");
-    let client = reqwest::Client::new();
+    let client = super::super::backend::provider_client().expect("rustls client");
     let result = crate::chat_runtime::block_on_anywhere(edit_image(
         &client,
         &source,
