@@ -158,7 +158,7 @@ fn midpoint_hex(a: &str, b: &str) -> String {
             .unwrap_or([0; 4])
     };
     let (a, b) = (parse(a), parse(b));
-    let mid: [u8; 4] = std::array::from_fn(|i| ((a[i] as u16 + b[i] as u16 + 1) / 2) as u8);
+    let mid: [u8; 4] = std::array::from_fn(|i| (a[i] as u16 + b[i] as u16).div_ceil(2) as u8);
     if mid[3] == 255 {
         format!("#{:02x}{:02x}{:02x}", mid[0], mid[1], mid[2])
     } else {
