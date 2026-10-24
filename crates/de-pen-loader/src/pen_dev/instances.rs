@@ -122,8 +122,8 @@ fn descendants_mut(map: &mut Map<String, Value>) -> &mut Map<String, Value> {
     }
 }
 
-/// Paint keys: their colour references stay bound, only shader uniforms
-/// inside them are resolved at import.
+/// Paint keys: their colour references stay bound; only shader uniforms
+/// and mesh colours inside them are resolved at import.
 const PAINT_KEYS: &[&str] = &["fill", "stroke", "effect"];
 
 /// One field in a component whose value reads variables, as written.
@@ -277,7 +277,8 @@ impl InstanceBases {
 
 /// The fields in a component's own subtree whose value the import resolves
 /// from variables: any reference outside a paint, except those the
-/// canonical document keeps live, and shader uniforms inside a paint.
+/// canonical document keeps live, and shader uniforms and mesh colours
+/// inside a paint.
 /// Nested instances and nodes with a `theme` of their own are skipped: the
 /// first resolve their own component's fields, the second pin the axes
 /// they set, which an instance-wide patch would override.
@@ -308,7 +309,7 @@ fn themed_fields(component: &Value, variables: &Variables) -> Vec<ThemedField> {
                 }
                 let mut names = Vec::new();
                 if PAINT_KEYS.contains(&key.as_str()) {
-                    collect_uniform_references(value, &mut names);
+                    collect_resolved_paint_references(value, &mut names);
                 } else {
                     collect_references(value, &mut names);
                 }
@@ -347,18 +348,21 @@ fn collect_references(value: &Value, names: &mut Vec<String>) {
     }
 }
 
-/// The `$variable`s named in the uniforms of a paint's shaders (one paint
-/// or a list). Colour references elsewhere in a paint stay bound.
-fn collect_uniform_references(paint: &Value, names: &mut Vec<String>) {
+/// The `$variable`s a paint (one or a list) reads that the import resolves:
+/// shader uniforms and mesh colours. Other colour references stay bound.
+fn collect_resolved_paint_references(paint: &Value, names: &mut Vec<String>) {
     let paints: Vec<&Value> = match paint {
         Value::Array(items) => items.iter().collect(),
         single => vec![single],
     };
     for paint in paints {
-        if paint.get("type").and_then(Value::as_str) == Some("shader") {
-            if let Some(uniforms) = paint.get("uniforms") {
-                collect_references(uniforms, names);
-            }
+        let resolved = match paint.get("type").and_then(Value::as_str) {
+            Some("shader") => paint.get("uniforms"),
+            Some("mesh_gradient") => paint.get("colors"),
+            _ => None,
+        };
+        if let Some(resolved) = resolved {
+            collect_references(resolved, names);
         }
     }
 }

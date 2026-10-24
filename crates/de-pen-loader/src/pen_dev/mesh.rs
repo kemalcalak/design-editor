@@ -157,6 +157,31 @@ mod tests {
     }
 
     #[test]
+    fn a_themed_instance_resolves_mesh_colours_under_its_theme() {
+        let mut doc = json!({
+            "version": "2.21",
+            "themes": { "mode": ["light", "dark"] },
+            "variables": { "sea": { "type": "color", "value": [
+                { "value": "#2266AA" },
+                { "value": "#001122", "theme": { "mode": "dark" } }
+            ] } },
+            "children": [
+                { "type": "rectangle", "id": "tile", "reusable": true, "width": 10, "height": 10,
+                  "fill": { "type": "mesh_gradient", "columns": 2, "rows": 2,
+                              "colors": ["$sea", "$sea", "$sea", "$sea"] } },
+                { "type": "ref", "id": "dark-tile", "ref": "tile", "theme": { "mode": "dark" } }
+            ]
+        });
+        convert(&mut doc, &no_assets);
+        assert_eq!(
+            doc["children"][0]["fill"][0]["stops"][0]["color"],
+            "#2266AA"
+        );
+        let patch = &doc["children"][1]["descendants"]["tile"];
+        assert_eq!(patch["fill"][0]["stops"][0]["color"], "#001122");
+    }
+
+    #[test]
     fn a_mesh_gradient_loads_into_the_typed_schema() {
         let src = json!({ "version": "2.21", "children": [
             { "type": "rectangle", "id": "r", "width": 10, "height": 10, "fill": {
