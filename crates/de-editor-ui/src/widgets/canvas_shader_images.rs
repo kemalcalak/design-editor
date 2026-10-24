@@ -30,6 +30,8 @@ pub(crate) fn shader_image_ids(sksl: &str, uniforms: &[(&str, &[f32])]) -> Vec<u
                 .find(|(name, _)| *name == child)
                 .and_then(|(_, values)| decode_image_id(values))
         })
+        // Frame textures (#165) are the backend's, not images to decode.
+        .filter(|id| de_editor_core::shader_textures::texture_kind(*id).is_none())
         .collect()
 }
 
