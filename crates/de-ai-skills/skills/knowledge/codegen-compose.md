@@ -56,6 +56,7 @@ Generate Kotlin composable functions using Jetpack Compose UI toolkit.
 - Text color → `color = Color(0xFFhex)` parameter on `Text()`
 - Linear gradient → `Brush.linearGradient(listOf(Color(...), Color(...)))` as background
 - Radial gradient → `Brush.radialGradient(listOf(Color(...), Color(...)))` as background
+- Angular gradient → `Brush.sweepGradient(colorStops, center)` as background, rotated by `rotation - 90` degrees (sweep starts at 3 o'clock)
 
 ## Border & Stroke Mapping
 

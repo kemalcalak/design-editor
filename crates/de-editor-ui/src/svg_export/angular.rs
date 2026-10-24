@@ -44,19 +44,35 @@ pub(super) fn emit_angular_pattern(out: &mut String, id: &str, spec: &AngularSpe
         (cx + reach * a.sin(), cy - reach * a.cos())
     };
     let opacity = spec.opacity.clamp(0.0, 1.0);
-    let mut sorted = spec.stops.to_vec();
-    sorted.sort_by(|a, b| a.offset.total_cmp(&b.offset));
+    // Skia, CanvasKit and CSS keep authored stop order and treat a stop
+    // that goes backwards as sitting on its predecessor; do the same.
+    let mut floor = 0.0f32;
+    let stops: Vec<SceneGradientStop> = spec
+        .stops
+        .iter()
+        .map(|stop| {
+            floor = stop.offset.clamp(0.0, 1.0).max(floor);
+            SceneGradientStop {
+                offset: floor,
+                color: stop.color,
+            }
+        })
+        .collect();
+    let alpha_at = |i: usize| {
+        let mid = (i as f32 + 0.5) / WEDGES as f32;
+        let color = sample_stops(&stops, mid);
+        (color, color.a * opacity)
+    };
     for i in 0..WEDGES {
         let t0 = i as f32 / WEDGES as f32;
-        let mid = (i as f32 + 0.5) / WEDGES as f32;
-        let color = sample_stops(&sorted, mid);
-        let alpha = color.a * opacity;
+        let (color, alpha) = alpha_at(i);
         if alpha <= 0.0 {
             continue;
         }
-        // Overlap only opaque wedges: a translucent overlap would
-        // darken the seam instead of hiding it.
-        let overlap = if alpha >= 1.0 && i + 1 < WEDGES {
+        // Overlap only where this wedge and the next (wrapping to the
+        // first) are opaque: over a translucent neighbour the overlap
+        // would show instead of hiding the seam.
+        let overlap = if alpha >= 1.0 && alpha_at((i + 1) % WEDGES).1 >= 1.0 {
             SEAM_OVERLAP
         } else {
             0.0
@@ -79,15 +95,10 @@ pub(super) fn emit_angular_pattern(out: &mut String, id: &str, spec: &AngularSpe
 
 /// Colour of a stop list at `t` (0..=1): linear interpolation between
 /// the neighbouring stops, clamped to the end stops outside them.
-/// `sorted` must be ordered by offset.
+/// `sorted` must be ordered by offset (non-decreasing).
 pub(super) fn sample_stops(sorted: &[SceneGradientStop], t: f32) -> Color {
     let (Some(first), Some(last)) = (sorted.first(), sorted.last()) else {
-        return Color {
-            r: 0.0,
-            g: 0.0,
-            b: 0.0,
-            a: 0.0,
-        };
+        return Color::TRANSPARENT;
     };
     if t <= first.offset {
         return first.color;

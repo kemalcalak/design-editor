@@ -145,6 +145,12 @@ pub(super) fn sample_at_text(
             rotation_deg,
         } => {
             let center = (owner.x + owner.w * cx, owner.y + owner.h * cy);
+            // Text that covers a wide arc of the sweep (or its centre) sits
+            // over many stops; one sample would prove nothing, so let the
+            // caller check every stop.
+            if angular_span_deg(text, center) > MAX_SAMPLED_ARC_DEG {
+                return None;
+            }
             let (dx, dy) = (text_center.0 - center.0, text_center.1 - center.1);
             let angle = dx.atan2(-dy).to_degrees();
             ((angle - rotation_deg) / 360.0).rem_euclid(1.0)
@@ -153,6 +159,30 @@ pub(super) fn sample_at_text(
     t.is_finite()
         .then(|| sample_stops(&gradient.stops, t.clamp(0.0, 1.0)))
         .flatten()
+}
+
+/// Widest arc of an angular sweep a single sample may stand for.
+const MAX_SAMPLED_ARC_DEG: f64 = 30.0;
+
+/// Arc (degrees) of an angular sweep around `center` that `rect`
+/// covers; 360 when the rect contains the centre.
+fn angular_span_deg(rect: ResolvedRect, center: (f64, f64)) -> f64 {
+    let (x0, y0, x1, y1) = (rect.x, rect.y, rect.x + rect.w, rect.y + rect.h);
+    if (x0..=x1).contains(&center.0) && (y0..=y1).contains(&center.1) {
+        return 360.0;
+    }
+    let mut angles: Vec<f64> = [(x0, y0), (x1, y0), (x0, y1), (x1, y1)]
+        .iter()
+        .map(|(x, y)| (x - center.0).atan2(-(y - center.1)).to_degrees())
+        .collect();
+    angles.sort_by(f64::total_cmp);
+    // The covered arc is the turn minus the widest gap between corners.
+    let wrap_gap = angles[0] + 360.0 - angles[angles.len() - 1];
+    let widest_gap = angles
+        .windows(2)
+        .map(|pair| pair[1] - pair[0])
+        .fold(wrap_gap, f64::max);
+    360.0 - widest_gap
 }
 
 fn valid_rect(rect: ResolvedRect) -> bool {

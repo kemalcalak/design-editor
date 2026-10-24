@@ -579,8 +579,7 @@ fn paint_fill_swatch(
             cx.backend.fill_round_rect(swatch, 3.0, color);
         }
         FillType::LinearGradient => {
-            // Two halves stand in for a black→white gradient (skia
-            // gradients are not on RenderBackend yet).
+            // Two halves stand in for a black→white gradient.
             let half_w = swatch.size.x / 2.0;
             cx.backend.fill_round_rect(
                 Rect::xywh(swatch.origin.x, swatch.origin.y, half_w, swatch.size.y),

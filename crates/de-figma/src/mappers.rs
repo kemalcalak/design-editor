@@ -106,16 +106,25 @@ fn map_single_fill(paint: &FigValue) -> Option<PenFill> {
         }
         "GRADIENT_ANGULAR" => {
             paint.get("stops")?;
-            let (cx, cy, rotation) = paint
+            let (cx, cy, rotation, mirrored) = paint
                 .get("transform")
                 .and_then(FigMatrix::from_value)
                 .and_then(|m| angular_from_transform(&m))
-                .unwrap_or((0.5, 0.5, 90.0));
+                .unwrap_or((0.5, 0.5, 90.0, false));
+            let mut stops = gradient_stops(paint);
+            if mirrored {
+                // A reflected transform sweeps counter-clockwise; the same
+                // colours run clockwise with the stop list turned around.
+                stops.reverse();
+                for stop in &mut stops {
+                    stop.offset = 1.0 - stop.offset;
+                }
+            }
             Some(PenFill::AngularGradient(AngularGradientBody {
                 cx: Some(cx),
                 cy: Some(cy),
                 rotation: Some(rotation),
-                stops: gradient_stops(paint),
+                stops,
                 explain: None,
                 opacity,
                 blend_mode,
@@ -254,8 +263,9 @@ fn gradient_angle_from_transform(m: &FigMatrix) -> i32 {
 /// so an identity transform starts at 3 o'clock (90°) like Figma.
 /// The direction is measured in normalized space, so a non-square node
 /// with a skewed handle lands slightly off (same as linear angles).
-/// `None` for a singular transform.
-fn angular_from_transform(m: &FigMatrix) -> Option<(f32, f32, f32)> {
+/// The last value is `true` for a reflected (mirrored) transform, whose
+/// sweep runs counter-clockwise. `None` for a singular transform.
+fn angular_from_transform(m: &FigMatrix) -> Option<(f32, f32, f32, bool)> {
     let det = m.m00 * m.m11 - m.m01 * m.m10;
     if !det.is_finite() || det.abs() < 1e-9 {
         return None;
@@ -275,6 +285,7 @@ fn angular_from_transform(m: &FigMatrix) -> Option<(f32, f32, f32)> {
         round2(cx.clamp(0.0, 1.0)),
         round2(cy.clamp(0.0, 1.0)),
         round2(rotation),
+        det < 0.0,
     ))
 }
 

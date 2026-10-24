@@ -27,15 +27,6 @@ pub enum FillType {
 }
 
 impl FillType {
-    /// Linear / Radial / Angular: an ordered colour-stop list the
-    /// panel's stops block edits.
-    pub fn has_color_stops(self) -> bool {
-        matches!(
-            self,
-            Self::LinearGradient | Self::RadialGradient | Self::AngularGradient
-        )
-    }
-
     /// Linear (direction) and Angular (start rotation) carry the angle
     /// the panel's Angle row edits.
     pub fn has_angle(self) -> bool {

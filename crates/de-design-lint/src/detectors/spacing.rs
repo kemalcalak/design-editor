@@ -208,7 +208,12 @@ fn is_coloured_media(node: &PenNode) -> bool {
                     fills.iter().any(|fill| {
                         matches!(
                             fill.get("type").and_then(Value::as_str),
-                            Some("solid" | "linear_gradient" | "radial_gradient")
+                            Some(
+                                "solid"
+                                    | "linear_gradient"
+                                    | "radial_gradient"
+                                    | "angular_gradient"
+                            )
                         )
                     })
                 })

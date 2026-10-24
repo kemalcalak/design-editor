@@ -26,6 +26,16 @@ fn normalize_fill_item(value: &mut serde_json::Value) {
     // `"linear_gradient"`. Map all seven variants uniformly; leave unrecognized
     // values untouched so the schema still rejects genuinely wrong types.
     normalize_fill_type_name(obj);
+    // A conic gradient written with CSS / linear habits names its start
+    // angle `angle` or `from`; the body only knows `rotation`, and serde
+    // would drop the others silently.
+    if obj.get("type").and_then(serde_json::Value::as_str) == Some("angular_gradient")
+        && !obj.contains_key("rotation")
+    {
+        if let Some(angle) = obj.remove("angle").or_else(|| obj.remove("from")) {
+            obj.insert("rotation".into(), angle);
+        }
+    }
     // Bare "gradient" is ambiguous and unmappable — the model's ONLY way to
     // communicate a linear gradient without a type name is an angle + stops.
     // Map it ONLY when it has the linear gradient shape, leaving lone bare

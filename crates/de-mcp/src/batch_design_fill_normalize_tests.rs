@@ -18,17 +18,18 @@ fn normalize_bare_gradient_with_stops_to_linear_gradient() {
 
 #[test]
 fn conic_and_sweep_spellings_normalize_to_angular_gradient() {
-    for spelling in [
-        "conic-gradient",
-        "angularGradient",
-        "sweep_gradient",
-        "angular_gradient",
+    // Each spelling also uses a different name for the start angle.
+    for (spelling, angle_key) in [
+        ("conic-gradient", "from"),
+        ("angularGradient", "angle"),
+        ("sweep_gradient", "rotation"),
+        ("angular_gradient", "rotation"),
     ] {
         let mut fill = serde_json::json!({
             "type": spelling,
-            "rotation": 90,
             "stops": [{ "color": "#FF0000", "offset": 0.0 }]
         });
+        fill[angle_key] = serde_json::json!(90);
         super::normalize_fill(&mut fill);
         let items = fill.as_array().expect("fill is an array");
         assert_eq!(items[0]["type"], "angular_gradient", "{spelling}");

@@ -209,6 +209,20 @@ fn angular_gradient_rotation_follows_the_start_handle() {
 }
 
 #[test]
+fn mirrored_angular_gradient_turns_its_stops_around() {
+    // u = 1 - x: the handle maps back to the left edge and the sweep
+    // runs counter-clockwise, so the stop list is reversed.
+    let mirrored = obj(vec![
+        ("m00", FigValue::Float(-1.0)),
+        ("m02", FigValue::Float(1.0)),
+        ("m11", FigValue::Float(1.0)),
+    ]);
+    let body = angular_body(angular_paint(Some(mirrored)));
+    assert_eq!(body.rotation, Some(270.0));
+    assert_eq!(body.stops[0].offset, 1.0);
+}
+
+#[test]
 fn image_fill_hash_url() {
     let paints = [obj(vec![
         ("type", FigValue::Str("IMAGE".into())),
