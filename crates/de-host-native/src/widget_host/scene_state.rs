@@ -167,8 +167,8 @@ impl WidgetHostNative {
         self.drop_preview_runtime();
         // What this host can do (font download, batch export, …) belongs to
         // the host, not to the incoming state, whose flags default to off;
-        // without this the missing-font Download action vanished after
-        // every Open / New / template (#161).
+        // otherwise host-backed controls such as the missing-font Download
+        // action disappear after Open / New / template (#161).
         let capabilities =
             de_editor_core::editor_ui_state::HostCapabilities::of(&self.editor_state.editor_ui);
         self.editor_state = state;

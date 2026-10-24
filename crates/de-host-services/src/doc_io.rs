@@ -229,6 +229,8 @@ pub fn preserve_app_preferences(previous: &EditorState, next: &mut EditorState) 
     next.editor_ui.home.mcp_client = previous.editor_ui.home.mcp_client.clone();
     // Every host capability flag (font import / download, batch export,
     // …) as one list, so a newly added flag cannot be forgotten here (#161).
+    // `replace_editor_state` carries them again; this copy covers callers
+    // that build a state without going through that seam.
     next.editor_ui
         .carry_host_capabilities_from(&previous.editor_ui);
     next.editor_ui.system_fonts_loaded = previous.editor_ui.system_fonts_loaded;

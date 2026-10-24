@@ -6,8 +6,9 @@
 //! defaults are all `false`, so a swap seam that does not carry them back
 //! silently hides host-backed controls, for example the missing-font
 //! Download action (#161). [`HostCapabilities`] is the one list of these
-//! flags; the hosts' swap seams and `preserve_app_preferences` copy it, so a
-//! new flag added here survives every swap without touching a caller.
+//! flags; the hosts' swap seams and `preserve_app_preferences` copy it.
+//! A new host capability flag on [`EditorUiState`] must be added here; it
+//! then survives every swap without touching a caller.
 
 use super::EditorUiState;
 
