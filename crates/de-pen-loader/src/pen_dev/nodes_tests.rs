@@ -5,10 +5,11 @@ use de_editor_core::{ref_resolve, ComponentLibrary, NodeId};
 use jian_ops_schema::node::container::LayoutMode;
 use jian_ops_schema::node::PenNode;
 use jian_ops_schema::sizing::SizingBehavior;
+use jian_ops_schema::PenDocument;
 use serde_json::{json, Value};
 
-use super::super::no_assets;
 use crate::payload::load_canonical_with_assets;
+use crate::pen_dev::{no_assets, PenDevReport};
 
 fn leaf() -> Value {
     json!({
@@ -21,7 +22,7 @@ fn leaf() -> Value {
     })
 }
 
-fn load(children: Value) -> (jian_ops_schema::PenDocument, super::super::PenDevReport) {
+fn load(children: Value) -> (PenDocument, PenDevReport) {
     let src = json!({ "version": "2.21", "children": children }).to_string();
     let loaded = load_canonical_with_assets(&src, &no_assets).expect("pen.dev document loads");
     let report = loaded

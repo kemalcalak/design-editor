@@ -134,7 +134,7 @@ fn convert_node(
     let absolute = map.get("layoutPosition").and_then(Value::as_str) == Some("absolute");
     // Before the per-kind defaults, so a promoted rectangle takes the
     // frame path.
-    keep_reusable_component(map, ctx.report);
+    promote_reusable_shape(map, ctx.report);
     match map.get("type").and_then(Value::as_str) {
         Some("frame") => apply_frame_defaults(map),
         Some("path") => apply_path_view_box(map, in_flow && !absolute, ctx.report),
@@ -154,15 +154,11 @@ fn convert_node(
     paint::convert_effects(map, ctx.report);
 }
 
-/// pen.dev marks a component with `reusable: true` on any node kind; the
-/// canonical schema keeps the flag on frames only (the component registry,
-/// `ComponentLibrary::from_document`, reads it there), so on any other kind
-/// it would be dropped silently. A rectangle becomes a free-form frame with
-/// the same box and paint: both carry the same container props and paint
-/// alike, and `ref` overrides on the root keep applying. Other kinds keep
-/// their type and lose the flag, reported: wrapping them in a frame would
-/// send an instance's root overrides (`fill`, `stroke`) to the wrapper.
-fn keep_reusable_component(map: &mut Map<String, Value>, report: &mut PenDevReport) {
+/// pen.dev allows `reusable: true` on any node kind; the canonical schema
+/// keeps it on frames only. A rectangle becomes a free-form frame, which
+/// carries the same props and paints alike. Other kinds lose the flag,
+/// reported (a wrapper frame would take the instance's root overrides).
+fn promote_reusable_shape(map: &mut Map<String, Value>, report: &mut PenDevReport) {
     if map.get("reusable").and_then(Value::as_bool) != Some(true) {
         return;
     }
