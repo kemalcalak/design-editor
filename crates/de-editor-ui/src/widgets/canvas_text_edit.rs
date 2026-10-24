@@ -17,6 +17,7 @@
 use super::canvas_text_wrap::TextFace;
 use crate::layout_scene::{SceneNode, SceneTextAlign};
 use crate::{Point2D, Rect, RenderBackend};
+use de_editor_core::text_defaults;
 use jian_core::text_input::prev_char_boundary;
 
 /// Resolved line layout of a Text node's content.
@@ -47,8 +48,8 @@ pub struct TextEditLayout {
     pub text_align: SceneTextAlign,
 }
 
-/// Resolve the painted line layout for `node` — paint-parity
-/// defaults (13 px font, weight 400, 1.2 line height) and the same
+/// Resolve the painted line layout for `node` — the shared
+/// `de_editor_core::text_defaults` for unset styles and the same
 /// wrap decision (`canvas_text_wrap::wrap_width`: the box width, exactly)
 /// as `paint_text_node`.
 pub fn text_edit_layout(backend: &mut dyn RenderBackend, node: &SceneNode) -> TextEditLayout {
@@ -56,17 +57,17 @@ pub fn text_edit_layout(backend: &mut dyn RenderBackend, node: &SceneNode) -> Te
     let mut font_size = if node.font_size > 0.0 {
         node.font_size
     } else {
-        13.0
+        text_defaults::FONT_SIZE
     };
     let weight = if node.font_weight > 0 {
         node.font_weight
     } else {
-        400
+        text_defaults::FONT_WEIGHT
     };
     let line_height = if node.line_height > 0.0 {
         node.line_height
     } else {
-        1.2
+        text_defaults::LINE_HEIGHT
     };
     let wrap_width_doc = super::canvas_text_wrap::wrap_width(node);
     let mut letter_spacing = if node.letter_spacing.is_finite() {
@@ -75,7 +76,7 @@ pub fn text_edit_layout(backend: &mut dyn RenderBackend, node: &SceneNode) -> Te
         0.0
     };
     let family = if node.font_family.trim().is_empty() {
-        "system-ui"
+        text_defaults::FONT_FAMILY
     } else {
         node.font_family.as_str()
     };

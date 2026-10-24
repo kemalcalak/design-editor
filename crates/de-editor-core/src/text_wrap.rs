@@ -93,8 +93,10 @@ fn build_probe(probe: &mut String, current: &str, suffix: &str) {
 
 /// Codepoints that wrap per character (no inter-word spaces): CJK
 /// ideographs, kana, Hangul syllables, CJK punctuation and full-width
-/// forms.
-fn is_cjk(ch: char) -> bool {
+/// forms. The word shapers split text at the same characters; copies that
+/// must stay equal: jian-skia `shaped_words::is_cjk` and `isShapeCjk` in
+/// `de-host-web/src/op_ck_bridge.js`.
+pub fn is_cjk(ch: char) -> bool {
     let c = ch as u32;
     (0x4e00..=0x9fff).contains(&c)
         || (0x3400..=0x4dbf).contains(&c)

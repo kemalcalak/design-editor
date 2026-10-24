@@ -272,34 +272,57 @@ fn draw_slice(
         return (x + advance, x + advance);
     }
     // Per-char path — letter spacing after every glyph (legacy painter
-    // model) plus the justify share after each space.
+    // model) plus the justify share after each space. Each glyph sits at
+    // the kerned advance of the text before it, so the line spans what
+    // the wrap measured (#197). Advances are measured from the start of
+    // the current shaping token (a word, a space or a CJK character, where
+    // the backend's word shaper splits too), so each glyph costs one short
+    // measure.
+    let mut token_base = 0.0;
+    let mut token_start = 0;
+    let mut advance = 0.0;
+    let mut spacing = 0.0;
     let mut cursor = x;
     let mut glyph_end = x;
-    for ch in slice.chars() {
-        let mut buf = [0u8; 4];
-        let s = ch.encode_utf8(&mut buf);
+    for (i, ch) in slice.char_indices() {
+        let end = i + ch.len_utf8();
+        let own_token = ch == ' ' || de_editor_core::text_wrap::is_cjk(ch);
+        if own_token {
+            token_base = advance;
+            token_start = i;
+        }
+        let at = x + advance + spacing;
+        advance = token_base + measure_styled(backend, &slice[token_start..end], style, family);
+        if own_token {
+            token_base = advance;
+            token_start = end;
+        }
         if draw {
             backend.draw_text(
-                &TextLayout::single_run(s, family, style.font_size, jc, Point2D::ZERO)
+                &TextLayout::single_run(&slice[i..end], family, style.font_size, jc, Point2D::ZERO)
                     .with_font_weight(style.weight)
                     .with_italic(style.italic),
-                Point2D::new(cursor, baseline_y),
+                Point2D::new(at, baseline_y),
             );
         }
-        let adv = backend.measure_text_family_styled(
-            s,
-            style.font_size,
-            family,
-            style.weight,
-            style.italic,
-        );
-        glyph_end = cursor + adv;
-        cursor = glyph_end + letter_spacing;
+        glyph_end = x + advance + spacing;
+        spacing += letter_spacing;
         if ch == ' ' {
-            cursor += justify_extra;
+            spacing += justify_extra;
         }
+        cursor = x + advance + spacing;
     }
     (cursor, glyph_end)
+}
+
+/// Advance of `text` in the slice's face.
+fn measure_styled(
+    backend: &mut dyn RenderBackend,
+    text: &str,
+    style: SliceStyle,
+    family: &str,
+) -> f32 {
+    backend.measure_text_family_styled(text, style.font_size, family, style.weight, style.italic)
 }
 
 /// Underline / strikethrough decoration for one painted slice.
@@ -345,7 +368,7 @@ pub(crate) fn text_is_greeked(backend: &dyn RenderBackend, node: &SceneNode, zoo
     let font_size_doc = if node.font_size > 0.0 {
         node.font_size
     } else {
-        13.0
+        de_editor_core::text_defaults::FONT_SIZE
     };
     font_size_doc * zoom * backend.dpi_scale() < GREEK_TEXT_MAX_DEVICE_PX
 }

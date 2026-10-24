@@ -1,6 +1,7 @@
 //! Sibling test file for `text_script.rs` (800-line cap convention) —
 //! complex-script detection and UAX#9 base-direction resolution, the fork
-//! that decides whether a run is painted by the cmap fast path or a shaper.
+//! that decides whether a run is painted by the word-shaped fast path or the
+//! paragraph shaper.
 
 #![cfg(test)]
 
@@ -13,8 +14,8 @@ fn ascii_text_stays_on_the_simple_paint_path() {
 
 #[test]
 fn cjk_text_stays_on_the_simple_paint_path() {
-    // CJK is a 1:1 cmap lookup — no joining, no reordering. Sending it to
-    // the shaper would spend frame time for an identical result.
+    // CJK needs no joining and no reordering, so the word-shaped fast path
+    // paints it; the paragraph shaper would spend frame time for nothing.
     assert!(!needs_complex_shaping("设计系统"));
 }
 

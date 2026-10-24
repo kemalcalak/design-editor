@@ -110,7 +110,7 @@ pub struct NativeBackend {
     /// Cached Paragraph shaper used only for authored line-box baselines.
     paragraph_baseline: jian_skia::ParagraphBaseline,
     /// Cached Paragraph shaper for complex scripts (Arabic and friends),
-    /// which the `draw_str` fast path cannot reorder or join. Shares the
+    /// which the word-shaped fast path cannot reorder or join. Shares the
     /// same generation-guarded `FontCollection` discipline so the shaper
     /// stays affordable on the paint path.
     shaped_text: shaped_text::ShapedText,
