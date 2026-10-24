@@ -459,6 +459,8 @@ fn paint_node_body<'a>(
                         .queued_shell_ids
                         .is_some_and(|ids| ids.contains(&node.id));
                     if on_deck {
+                        // Live scan in the culled walk: on screen (#17).
+                        super::canvas_generation_visibility::mark_animating();
                         unstyled(cx, own_style, |cx| {
                             super::canvas_generation_scan::paint_generation_scan(
                                 cx,

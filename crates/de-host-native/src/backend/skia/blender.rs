@@ -115,6 +115,20 @@ mod tests {
             .all(|(a, e)| (*a as i32 - e as i32).abs() <= 2)
     }
 
+    /// The web host's `op_ck_bridge.js` must run the same two programs.
+    #[test]
+    fn web_bridge_carries_the_same_programs() {
+        let squash = |s: &str| -> String {
+            s.chars()
+                .filter(|c| !c.is_whitespace() && !matches!(c, '\'' | '+'))
+                .collect()
+        };
+        let bridge = squash(include_str!("../../../../de-host-web/src/op_ck_bridge.js"));
+        for program in [LINEAR_BURN_SKSL, LINEAR_DODGE_SKSL] {
+            assert!(bridge.contains(&squash(program)), "{program}");
+        }
+    }
+
     #[test]
     fn both_linear_programs_compile() {
         assert!(compile(LINEAR_BURN_SKSL).is_some());

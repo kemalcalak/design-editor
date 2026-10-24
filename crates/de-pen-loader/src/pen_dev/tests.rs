@@ -101,6 +101,12 @@ fn absolute_position_and_disabled_nodes_map_to_canonical_fields() {
 }
 
 #[test]
+fn a_frame_keeps_its_placeholder_flag() {
+    let (doc, _) = converted(json!([{ "type": "frame", "id": "f", "placeholder": true }]));
+    assert_eq!(doc["children"][0]["placeholder"], true);
+}
+
+#[test]
 fn unsupported_nodes_are_removed_and_reported() {
     let (doc, report) = converted(json!([
         { "type": "note", "id": "n", "content": "todo" },

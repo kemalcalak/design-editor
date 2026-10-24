@@ -8,9 +8,11 @@
 //!
 //! Painting such a shader marks the frame as animated. Both hosts repaint only
 //! on demand, so the shared deadline chain folds in [`next_deadline_ms`] and the
-//! browser host (which has no deadline scheduler) checks
-//! [`animated_shader_painted`] directly; without that the shader would freeze
-//! on the first frame it was painted in.
+//! browser host (which has no deadline scheduler) asks for its next frame
+//! from the same deadline after each paint; without that the shader would
+//! freeze on the first frame it was painted in. [`animated_shader_painted`]
+//! (also read by the native pan cache) covers every kind of animated
+//! content, not only shaders.
 //!
 //! Other self-animating canvas content (the in-progress sweep on placeholder
 //! frames, #16) marks the frame through [`mark_animated`] with its own
@@ -34,7 +36,7 @@ thread_local! {
 }
 
 /// Start a canvas frame: set the shader clock from the host clock and clear
-/// the animated flag the previous frame left behind.
+/// the animation interval the previous frame left behind.
 pub fn begin_frame(now_ms: u64) {
     FRAME_SECONDS.with(|seconds| seconds.set((now_ms % WRAP_MS) as f32 / 1000.0));
     ANIMATION_INTERVAL_MS.with(|interval| interval.set(0));
@@ -72,15 +74,15 @@ pub fn time_uniform_value(sksl: &str) -> Option<f32> {
 }
 
 /// Run `paint` with the clock pinned to `seconds`, then restore the canvas
-/// frame's clock and animated flag. Exports and screenshots can run on the
+/// frame's clock and animation interval. Exports and screenshots can run on the
 /// UI thread between canvas frames; pinning keeps their pixels independent
 /// of when they were taken and keeps them from touching the canvas loop.
 pub fn with_fixed_clock<R>(seconds: f32, paint: impl FnOnce() -> R) -> R {
     let saved_seconds = FRAME_SECONDS.with(|clock| clock.replace(seconds));
-    let saved_animated = ANIMATION_INTERVAL_MS.with(Cell::get);
+    let saved_interval = ANIMATION_INTERVAL_MS.with(Cell::get);
     let result = paint();
     FRAME_SECONDS.with(|clock| clock.set(saved_seconds));
-    ANIMATION_INTERVAL_MS.with(|interval| interval.set(saved_animated));
+    ANIMATION_INTERVAL_MS.with(|interval| interval.set(saved_interval));
     result
 }
 

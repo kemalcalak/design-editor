@@ -83,10 +83,11 @@ pub fn reveal_stagger_ms(count: u64) -> u64 {
         .max(crate::agent_indicators::REVEAL_FRAME_MS)
 }
 
-/// The beat a burst-recovery reschedule keeps: the queue's own spacing
-/// (smallest positive gap between its starts), clamped to the regular
-/// beat, so recovering a capped batch does not stretch it back out.
-pub(crate) fn recovery_stagger_ms(ordered_starts: impl Iterator<Item = u64>) -> u64 {
+/// The beat a batch of reveal starts already has: the smallest positive gap
+/// between them, clamped to one frame .. the regular beat. Burst recovery
+/// and clock rebasing re-space a queue with it, so a capped batch (#17) is
+/// not stretched back out to the full beat.
+pub(crate) fn batch_beat_ms(ordered_starts: impl Iterator<Item = u64>) -> u64 {
     let mut previous = None;
     let mut gap = crate::agent_indicators::REVEAL_BURST_RECOVERY_STAGGER_MS;
     for start in ordered_starts {

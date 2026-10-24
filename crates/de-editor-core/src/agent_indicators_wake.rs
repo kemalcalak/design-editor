@@ -7,28 +7,32 @@
 //! off screen kept the whole canvas repainting for most of a minute).
 //! [`next_reveal_deadline_ms`] is the ungated combination.
 
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::cell::Cell;
 
 use super::{
     drain_finished_run, rebase_external_clock_reveals, REGISTRY, REVEAL_DURATION_MS,
     REVEAL_FRAME_MS,
 };
 
-/// Whether a burst of reveals that became due together is spread out again
-/// (`smooth_overdue_reveal_burst`). The smoother assumes ~60 fps snapshots;
-/// while the overlay is off screen the host wakes slowly, and at one start
-/// per snapshot it would stretch the queue to minutes. Nobody sees those
-/// starts, so the canvas turns it off while the last frame showed no part
-/// of the overlay.
-static BURST_SMOOTHING: AtomicBool = AtomicBool::new(true);
+// Whether a burst of reveals that became due together is spread out again
+// (`smooth_overdue_reveal_burst`). The smoother assumes ~60 fps snapshots;
+// while the overlay is off screen the host wakes slowly, and at one start
+// per snapshot it would stretch the queue to minutes. Nobody sees those
+// starts, so the canvas turns it off while the last frame showed no part
+// of the overlay. Per thread: the canvas paint thread both sets it and takes
+// the snapshots it governs.
+thread_local! {
+    static BURST_SMOOTHING: Cell<bool> = const { Cell::new(true) };
+}
 
-/// Enable or disable burst smoothing (see [`BURST_SMOOTHING`]).
+/// Enable or disable burst smoothing on this thread (see the comment on its
+/// thread-local).
 pub fn set_burst_smoothing(enabled: bool) {
-    BURST_SMOOTHING.store(enabled, Ordering::Relaxed);
+    BURST_SMOOTHING.with(|smoothing| smoothing.set(enabled));
 }
 
 pub(super) fn burst_smoothing() -> bool {
-    BURST_SMOOTHING.load(Ordering::Relaxed)
+    BURST_SMOOTHING.with(Cell::get)
 }
 
 /// The overlay's wake-up needs at one instant (host-clock ms).

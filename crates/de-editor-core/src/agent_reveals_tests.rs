@@ -1,4 +1,4 @@
-use super::{recovery_stagger_ms, reveal_stagger_ms, REVEAL_QUEUE_CAP_MS};
+use super::{batch_beat_ms, reveal_stagger_ms, REVEAL_QUEUE_CAP_MS};
 use crate::agent_indicators::{REVEAL_FRAME_MS, REVEAL_STAGGER_MS};
 
 #[test]
@@ -23,14 +23,8 @@ fn a_huge_batch_never_goes_below_one_frame() {
 
 #[test]
 fn burst_recovery_keeps_the_queue_spacing() {
-    assert_eq!(recovery_stagger_ms([100, 120, 140].into_iter()), 20);
-    assert_eq!(
-        recovery_stagger_ms([100, 100, 105].into_iter()),
-        REVEAL_FRAME_MS
-    );
-    assert_eq!(recovery_stagger_ms([100].into_iter()), REVEAL_STAGGER_MS);
-    assert_eq!(
-        recovery_stagger_ms([0, 1_000].into_iter()),
-        REVEAL_STAGGER_MS
-    );
+    assert_eq!(batch_beat_ms([100, 120, 140].into_iter()), 20);
+    assert_eq!(batch_beat_ms([100, 100, 105].into_iter()), REVEAL_FRAME_MS);
+    assert_eq!(batch_beat_ms([100].into_iter()), REVEAL_STAGGER_MS);
+    assert_eq!(batch_beat_ms([0, 1_000].into_iter()), REVEAL_STAGGER_MS);
 }

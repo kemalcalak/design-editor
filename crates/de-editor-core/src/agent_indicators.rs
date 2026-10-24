@@ -29,9 +29,10 @@ pub use wake::{
 /// window (they anchor the cursor + current-element border); they are
 /// only dropped wholesale when the run ends.
 pub const REVEAL_DURATION_MS: u64 = 1_000;
-/// Delay between generated nodes in the placement queue. Deliberately
-/// slow (user-tuned): each element gets a readable fly-in → pop beat
-/// instead of a burst.
+/// Full delay between generated nodes in the placement queue for small
+/// batches. Deliberately slow (user-tuned): each element gets a readable
+/// fly-in → pop beat instead of a burst. Large batches share
+/// `agent_reveals::REVEAL_QUEUE_CAP_MS` instead (#17).
 pub const REVEAL_STAGGER_MS: u64 = 160;
 /// Minimum runway between "batch lands" and its first reveal — matches the
 /// cursor's `MAX_FLIGHT_MS` so the pencil always gets a full eased flight
@@ -263,9 +264,9 @@ pub fn add_reveal(epoch: u64, node_id: &str, started_at_ms: u64) {
 ///
 /// The queue follows the visual traversal order of the newly applied
 /// subtree rather than a per-parent sibling index. It is a UNIFORM
-/// queue: every placement gets the same [`REVEAL_STAGGER_MS`] beat, so
-/// dense batches stream out one readable element at a time instead of
-/// compressing into a burst.
+/// queue at the regular [`REVEAL_STAGGER_MS`] beat. Registration
+/// (`agent_reveals`) uses the same shape with the batch's own beat, which a
+/// large batch shrinks to fit `REVEAL_QUEUE_CAP_MS`.
 pub fn reveal_offset_ms(depth: u64, stream_index: u64) -> u64 {
     depth
         .saturating_mul(REVEAL_DEPTH_STAGGER_MS)
@@ -388,7 +389,7 @@ pub fn finish_if_epoch(epoch: u64) {
 }
 
 /// Called from the paint-path maintenance (`snapshot_at_if_active` /
-/// `next_reveal_deadline_ms`): once a finishing run's reveal queue has
+/// `agent_indicators_wake::reveal_wake`): once a finishing run's reveal queue has
 /// played out, clear the whole overlay and retire the epoch. Arms one
 /// erase frame so the host repaints the now-empty overlay instead of
 /// leaving the last-painted cursor on screen — reaching here means a
@@ -502,7 +503,7 @@ fn rebase_external_clock_reveals(r: &mut AgentIndicators, now_ms: u64) {
         .max(now_ms.saturating_add(CURSOR_FLIGHT_LEAD_MS));
     // Keep the batch's own beat (capped batches run faster than the
     // regular stagger, #17) instead of re-spacing it at the full beat.
-    let beat = crate::agent_reveals::recovery_stagger_ms(external.iter().map(|(_, at)| *at));
+    let beat = crate::agent_reveals::batch_beat_ms(external.iter().map(|(_, at)| *at));
     for (id, raw_started) in external {
         let offset_start = now_ms.saturating_add(raw_started.saturating_sub(batch_start));
         let started_at = offset_start.max(next_slot);
@@ -531,7 +532,19 @@ fn smooth_overdue_reveal_burst(r: &mut AgentIndicators, now_ms: u64) {
     if newly_due <= REVEAL_MAX_NEW_STARTS_PER_SNAPSHOT {
         return;
     }
-    let recovery = crate::agent_reveals::recovery_stagger_ms(ordered.iter().map(|(_, at)| *at));
+    // The beat of the entries being re-spaced (the burst and the tail behind
+    // it), not of reveals parked from earlier batches.
+    let burst_start = ordered
+        .iter()
+        .map(|(_, at)| *at)
+        .find(|at| reveal_became_due(prev_ms, *at, now_ms))
+        .unwrap_or(now_ms);
+    let recovery = crate::agent_reveals::batch_beat_ms(
+        ordered
+            .iter()
+            .map(|(_, at)| *at)
+            .filter(|at| *at >= burst_start),
+    );
     let mut newly_due_seen = 0;
     let mut reschedule_tail = false;
     let mut next_slot = now_ms;

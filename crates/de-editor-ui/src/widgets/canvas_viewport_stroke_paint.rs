@@ -48,14 +48,17 @@ pub(crate) fn with_stroke_paint_or(
     solid: Color,
     draw: impl FnOnce(&mut PaintCx<'_>, Color),
 ) {
-    let Some(stroke) = node.stroke else {
-        draw(cx, solid);
-        return;
+    let stroke = match node.stroke {
+        Some(stroke)
+            if !node.stroke_fill_layers.is_empty() && cx.backend.supports_pixel_masks() =>
+        {
+            stroke
+        }
+        _ => {
+            draw(cx, solid);
+            return;
+        }
     };
-    if node.stroke_fill_layers.is_empty() || !cx.backend.supports_pixel_masks() {
-        draw(cx, solid);
-        return;
-    }
     let paint_rect = stroke_paint_rect(world_rect, &stroke, zoom);
     // Miter joins and square caps of open paths can reach past the band;
     // the layer bounds only limit the offscreen allocation.
@@ -86,13 +89,14 @@ pub(crate) fn with_stroke_paint_or(
 }
 
 /// The box a rich stroke paint is laid out over: the node box grown by the
-/// part of the band that lies outside it (none inside, half centred, all of
-/// it outside), so an image or gradient spans the whole visible stroke.
+/// part of the band that can lie outside it, so an image or gradient spans
+/// the whole visible stroke. At least half the width even for an inside
+/// stroke: lines, polygons, paths and arcs stroke centred whatever the
+/// alignment, and a zero-height line box would mask its stroke away.
 pub(crate) fn stroke_paint_rect(world_rect: Rect, stroke: &SceneStroke, zoom: f32) -> Rect {
     let width = stroke.width * zoom;
     let outward = match stroke.align {
-        SceneStrokeAlign::Inside => 0.0,
-        SceneStrokeAlign::Center => width / 2.0,
+        SceneStrokeAlign::Inside | SceneStrokeAlign::Center => width / 2.0,
         SceneStrokeAlign::Outside => width,
     };
     inflate(world_rect, outward)
@@ -167,10 +171,10 @@ pub(crate) fn paint_node_stroke(
     let r = node.corner_radius * zoom;
     let use_round = r > 0.5;
     let per_corner = scaled_non_uniform_corner_radii(node, zoom);
+    let Some(stroke) = node.stroke else {
+        return;
+    };
     with_stroke_paint(cx, node, world_rect, zoom, |cx, color| {
-        let Some(stroke) = node.stroke else {
-            return;
-        };
         if let Some(sides) = stroke
             .sides
             .filter(|sides| !stroke_sides_are_uniform(*sides))

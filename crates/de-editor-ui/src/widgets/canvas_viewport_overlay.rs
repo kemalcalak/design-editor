@@ -1,6 +1,7 @@
-//! Selection overlay + fill/stroke node-paint helpers split out
-//! of `canvas_viewport.rs` to keep that file under the 800-line
-//! ceiling.
+//! Selection overlay + fill node-paint helpers split out of
+//! `canvas_viewport.rs` to keep that file under the 800-line ceiling. The
+//! stroke helpers live in `canvas_viewport_stroke_paint.rs`; the
+//! `paint_node_stroke` re-export keeps their old path.
 
 use crate::layout_scene::{SceneGradient, SceneNode, SceneShader, SceneStrokeAlign};
 use crate::theme::Theme;

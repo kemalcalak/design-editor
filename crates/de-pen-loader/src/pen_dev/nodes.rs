@@ -21,6 +21,7 @@ const DROPPED_KINDS: &[(&str, &str)] = &[
 ];
 
 /// Entity keys pen.dev uses for its own editor and AI tooling only.
+/// `placeholder` survives on frames, which carry the in-progress flag (#16).
 const EDITOR_ONLY_KEYS: &[&str] = &["placeholder", "context", "metadata"];
 
 /// Shared state for one conversion.
@@ -143,8 +144,11 @@ fn convert_node(
         Some("path") => apply_path_view_box(map, in_flow && !absolute, ctx.report),
         _ => {}
     }
+    let is_frame = map.get("type").and_then(Value::as_str) == Some("frame");
     for key in EDITOR_ONLY_KEYS {
-        map.remove(*key);
+        if !(is_frame && *key == "placeholder") {
+            map.remove(*key);
+        }
     }
     for axis in ["width", "height"] {
         strip_sizing_fallback(map, axis);

@@ -162,7 +162,8 @@ fn stacked_stroke_paints_run_back_to_front_with_their_blend() {
         gradient_layer(),
     ];
     let ops = paint(&node, true);
-    let paint_rect = node.bounds;
+    // Inside still lays the paint over half a band outward (2 px here).
+    let paint_rect = Rect::xywh(8.0, 8.0, 104.0, 54.0);
     assert_eq!(ops[1], Op::Gradient(paint_rect));
     assert!(matches!(
         ops[2],
@@ -207,10 +208,22 @@ fn an_implicit_outline_draws_without_an_authored_stroke() {
 }
 
 #[test]
+fn an_inside_rich_stroke_on_a_flat_line_keeps_its_band() {
+    let mut line = stroked_rect(SceneStrokeAlign::Inside);
+    line.bounds = Rect::xywh(0.0, 10.0, 100.0, 0.0);
+    let rect = stroke_paint_rect(line.bounds, &line.stroke.unwrap(), 1.0);
+    assert_eq!(rect.size.y, 4.0);
+}
+
+#[test]
 fn the_paint_box_covers_the_visible_band_for_every_alignment() {
     let rect = Rect::xywh(0.0, 0.0, 10.0, 10.0);
     let mut stroke = stroked_rect(SceneStrokeAlign::Inside).stroke.unwrap();
-    assert_eq!(stroke_paint_rect(rect, &stroke, 2.0), rect);
+    assert_eq!(
+        stroke_paint_rect(rect, &stroke, 2.0),
+        Rect::xywh(-4.0, -4.0, 18.0, 18.0),
+        "centred primitives ignore the alignment"
+    );
     stroke.align = SceneStrokeAlign::Center;
     assert_eq!(
         stroke_paint_rect(rect, &stroke, 2.0),
