@@ -75,6 +75,8 @@ fn rounded_gradient_methods_use_real_canvaskit_shaders_and_vertices() {
         "fillRoundRectLinearGradientPerCorner(",
         "fillRoundRectRadialGradient(",
         "fillRoundRectRadialGradientPerCorner(",
+        "fillRoundRectAngularGradient(",
+        "fillRoundRectAngularGradientPerCorner(",
         "fillRoundRectMeshGradient(",
         "fillRoundRectMeshGradientPerCorner(",
     ] {
@@ -91,6 +93,7 @@ fn rounded_gradient_methods_use_real_canvaskit_shaders_and_vertices() {
     for marker in [
         "CK.Shader.MakeLinearGradient(",
         "CK.Shader.MakeRadialGradient(",
+        "CK.Shader.MakeSweepGradient(",
         "CK.MakeVertices(",
         "mesh.rgba,\n        mesh.indices,\n        true,",
         "canvas.drawVertices(vertices, CK.BlendMode.Modulate, paint)",
@@ -123,6 +126,37 @@ fn rounded_gradient_methods_use_real_canvaskit_shaders_and_vertices() {
         radial_helper.contains("CK.TileMode.Clamp,\n        null,\n        1,"),
         "radial transparency must interpolate in premultiplied colour space"
     );
+    let angular = bridge
+        .find("const makeAngularGradient =")
+        .expect("angular gradient helper");
+    assert!(radial < angular && angular < mesh);
+    let angular_helper = &bridge[angular..mesh];
+    assert!(
+        angular_helper.contains("CK.TileMode.Clamp,\n        local,\n        1,"),
+        "angular transparency must interpolate in premultiplied colour space"
+    );
+    assert!(
+        angular_helper.contains("(rotation - 90)"),
+        "the sweep must start at 12 o'clock like the native host"
+    );
+}
+
+#[test]
+fn angular_svg_paths_use_the_sweep_shader_instead_of_the_fallback() {
+    let bridge = bridge_source();
+    assert!(bridge.contains("fillSvgPathInRectAngularGradient("));
+    let rust = canvaskit_source();
+    for marker in [
+        "js_name = fillSvgPathInRectAngularGradient",
+        "fn fill_svg_path_in_rect_angular_gradient_with_fill_rule(",
+        "fn fill_round_rect_angular_gradient(",
+        "fn fill_round_rect_angular_gradient_per_corner(",
+    ] {
+        assert!(
+            rust.contains(marker),
+            "CanvasKit backend must override `{marker}` instead of using the solid fallback"
+        );
+    }
 }
 
 /// The CanvasKit host source: the `canvaskit.rs` spine plus every sibling

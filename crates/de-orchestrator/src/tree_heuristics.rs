@@ -88,7 +88,7 @@ fn has_renderable_fill(node: &Value) -> bool {
             .and_then(Value::as_str)
             .map(|c| !c.is_empty())
             .unwrap_or(false),
-        Some("linear_gradient") | Some("radial_gradient") => first
+        Some("linear_gradient") | Some("radial_gradient") | Some("angular_gradient") => first
             .get("stops")
             .and_then(Value::as_array)
             .map(|s| !s.is_empty())

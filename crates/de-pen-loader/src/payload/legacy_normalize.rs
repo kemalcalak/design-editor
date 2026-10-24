@@ -379,31 +379,33 @@ fn normalize_fill_entry(
 }
 
 /// Rewrite Pencil's generic `type: "gradient"` fill into the canonical
-/// `linear_gradient` / `radial_gradient` PenFill. Source shape:
-/// `{ type: "gradient", gradientType: "linear"|"radial", rotation, colors: [{ color, position }], size }`.
+/// `linear_gradient` / `radial_gradient` / `angular_gradient` PenFill. Source shape:
+/// `{ type: "gradient", gradientType: "linear"|"radial"|"angular", rotation, colors: [{ color, position }], size }`.
 /// Canonical shape: `{ type: "linear_gradient", angle, stops: [{ offset, color }] }`.
 fn normalize_gradient_fill(
     obj: &mut serde_json::Map<String, serde_json::Value>,
     changed: &mut bool,
 ) {
     use serde_json::Value;
-    let radial = obj.get("gradientType").and_then(Value::as_str) == Some("radial");
-    obj.insert(
-        "type".to_string(),
-        Value::String(
-            if radial {
-                "radial_gradient"
-            } else {
-                "linear_gradient"
-            }
-            .to_string(),
-        ),
-    );
+    let kind = obj.get("gradientType").and_then(Value::as_str);
+    let canonical = match kind {
+        Some("radial") => "radial_gradient",
+        Some("angular") => "angular_gradient",
+        _ => "linear_gradient",
+    };
+    obj.insert("type".to_string(), Value::String(canonical.to_string()));
     obj.remove("gradientType");
-    // `rotation` (degrees) → `angle`; only for the linear arm (radial ignores it).
+    // `rotation` (degrees): linear `angle`, angular start `rotation`
+    // (both CSS-convention angles); radial has none.
     if let Some(rot) = obj.remove("rotation") {
-        if !radial {
-            obj.insert("angle".to_string(), rot);
+        match canonical {
+            "linear_gradient" => {
+                obj.insert("angle".to_string(), rot);
+            }
+            "angular_gradient" => {
+                obj.insert("rotation".to_string(), rot);
+            }
+            _ => {}
         }
     }
     obj.remove("size");
@@ -504,5 +506,27 @@ fn normalize_corner_radius(
             }
         }
         _ => {}
+    }
+}
+
+#[cfg(test)]
+mod gradient_tests {
+    use super::normalize_gradient_fill;
+
+    #[test]
+    fn angular_legacy_gradient_keeps_its_kind_and_rotation() {
+        let mut fill = serde_json::json!({
+            "type": "gradient",
+            "gradientType": "angular",
+            "rotation": 45,
+            "colors": [{ "color": "#ff0000", "position": 0 }]
+        });
+        let mut changed = false;
+        normalize_gradient_fill(fill.as_object_mut().unwrap(), &mut changed);
+        assert!(changed);
+        assert_eq!(fill["type"], "angular_gradient");
+        assert_eq!(fill["rotation"], 45);
+        assert!(fill.get("angle").is_none());
+        assert_eq!(fill["stops"][0]["color"], "#ff0000");
     }
 }

@@ -14,6 +14,7 @@ pub fn fill_type_of(fill: &PenFill) -> FillType {
         PenFill::Solid(_) => FillType::Solid,
         PenFill::LinearGradient(_) => FillType::LinearGradient,
         PenFill::RadialGradient(_) => FillType::RadialGradient,
+        PenFill::AngularGradient(_) => FillType::AngularGradient,
         PenFill::MeshGradient(_) => FillType::MeshGradient,
         PenFill::Shader(_) => FillType::Shader,
         PenFill::Image(_) => FillType::Image,
@@ -44,6 +45,15 @@ pub(super) fn default_fill_of_type(kind: FillType, hex: &str) -> PenFill {
             cx: None,
             cy: None,
             radius: None,
+            stops: default_stops(hex),
+            explain: None,
+            opacity: None,
+            blend_mode: None,
+        }),
+        FillType::AngularGradient => PenFill::AngularGradient(AngularGradientBody {
+            cx: None,
+            cy: None,
+            rotation: None,
             stops: default_stops(hex),
             explain: None,
             opacity: None,
@@ -154,6 +164,7 @@ fn fill_hex(fill: &PenFill) -> Option<&str> {
         PenFill::Solid(body) => Some(body.color.as_str()),
         PenFill::LinearGradient(body) => body.stops.first().map(|s| s.color.as_str()),
         PenFill::RadialGradient(body) => body.stops.first().map(|s| s.color.as_str()),
+        PenFill::AngularGradient(body) => body.stops.first().map(|s| s.color.as_str()),
         PenFill::MeshGradient(body) => body.stops.first().map(|s| s.color.as_str()),
         // An image source bound to a shader child is not a colour.
         PenFill::Shader(body) => crate::shader_presets::first_color_uniform(body),
@@ -171,47 +182,100 @@ fn fill_hex(fill: &PenFill) -> Option<&str> {
 /// port carries the body across the variant flip by hand:
 ///
 ///   - already the target variant → returned unchanged (no-op).
-///   - LinearGradient ⇄ RadialGradient → carry `stops`, `opacity`,
-///     `blend_mode`, `explain`; only the angle / centre fields that
-///     have no counterpart are dropped.
+///   - Linear ⇄ Radial ⇄ Angular → carry `stops`, `opacity`,
+///     `blend_mode`, `explain`; Radial ⇄ Angular also keep the centre.
+///     Only the angle / radius / rotation fields that have no
+///     counterpart are dropped.
 ///   - Solid → gradient → seed stops from the solid colour.
 ///   - gradient → Solid → carry the first stop's colour.
 ///   - anything → Image → fresh image body (no shared structure to
 ///     carry; the previous body cannot become a URL).
-pub(super) fn convert_fill(existing: PenFill, kind: FillType) -> PenFill {
-    match (kind, existing) {
+pub(super) fn convert_fill(mut existing: PenFill, kind: FillType) -> PenFill {
+    if fill_type_of(&existing) == kind {
         // Already the requested variant — keep the body verbatim.
-        (FillType::Solid, f @ PenFill::Solid(_)) => f,
-        (FillType::LinearGradient, f @ PenFill::LinearGradient(_)) => f,
-        (FillType::RadialGradient, f @ PenFill::RadialGradient(_)) => f,
-        (FillType::Shader, f @ PenFill::Shader(_)) => f,
-        (FillType::Image, f @ PenFill::Image(_)) => f,
-        // Linear → Radial — carry every shared field.
-        (FillType::RadialGradient, PenFill::LinearGradient(body)) => {
-            PenFill::RadialGradient(RadialGradientBody {
+        return existing;
+    }
+    let Some(parts) = StopGradientParts::take(&mut existing) else {
+        // Cross-family flips — carry the representative colour only.
+        let hex = fill_hex(&existing).unwrap_or("#000000").to_string();
+        return default_fill_of_type(kind, &hex);
+    };
+    match kind {
+        FillType::LinearGradient => PenFill::LinearGradient(LinearGradientBody {
+            angle: None,
+            stops: parts.stops,
+            explain: parts.explain,
+            opacity: parts.opacity,
+            blend_mode: parts.blend_mode,
+        }),
+        FillType::RadialGradient => PenFill::RadialGradient(RadialGradientBody {
+            cx: parts.cx,
+            cy: parts.cy,
+            radius: None,
+            stops: parts.stops,
+            explain: parts.explain,
+            opacity: parts.opacity,
+            blend_mode: parts.blend_mode,
+        }),
+        FillType::AngularGradient => PenFill::AngularGradient(AngularGradientBody {
+            cx: parts.cx,
+            cy: parts.cy,
+            rotation: None,
+            stops: parts.stops,
+            explain: parts.explain,
+            opacity: parts.opacity,
+            blend_mode: parts.blend_mode,
+        }),
+        _ => {
+            let hex = parts.stops.first().map_or("#000000", |s| s.color.as_str());
+            default_fill_of_type(kind, hex)
+        }
+    }
+}
+
+/// The fields Linear / Radial / Angular gradients share, pulled out of
+/// a fill so a type flip between them keeps the authored stops.
+struct StopGradientParts {
+    stops: Vec<GradientStop>,
+    cx: Option<f32>,
+    cy: Option<f32>,
+    explain: Option<String>,
+    opacity: Option<f32>,
+    blend_mode: Option<jian_ops_schema::style::BlendMode>,
+}
+
+impl StopGradientParts {
+    /// Move a stop gradient's shared parts out (the drained body is
+    /// discarded by the caller); `None`, leaving `fill` untouched, for
+    /// any other fill.
+    fn take(fill: &mut PenFill) -> Option<Self> {
+        use std::mem::take;
+        Some(match fill {
+            PenFill::LinearGradient(b) => Self {
+                stops: take(&mut b.stops),
                 cx: None,
                 cy: None,
-                radius: None,
-                stops: body.stops,
-                explain: body.explain,
-                opacity: body.opacity,
-                blend_mode: body.blend_mode,
-            })
-        }
-        // Radial → Linear — carry every shared field.
-        (FillType::LinearGradient, PenFill::RadialGradient(body)) => {
-            PenFill::LinearGradient(LinearGradientBody {
-                angle: None,
-                stops: body.stops,
-                explain: body.explain,
-                opacity: body.opacity,
-                blend_mode: body.blend_mode,
-            })
-        }
-        // Cross-family flips — carry the representative colour only.
-        (kind, other) => {
-            let hex = fill_hex(&other).unwrap_or("#000000").to_string();
-            default_fill_of_type(kind, &hex)
-        }
+                explain: b.explain.take(),
+                opacity: b.opacity,
+                blend_mode: b.blend_mode.take(),
+            },
+            PenFill::RadialGradient(b) => Self {
+                stops: take(&mut b.stops),
+                cx: b.cx,
+                cy: b.cy,
+                explain: b.explain.take(),
+                opacity: b.opacity,
+                blend_mode: b.blend_mode.take(),
+            },
+            PenFill::AngularGradient(b) => Self {
+                stops: take(&mut b.stops),
+                cx: b.cx,
+                cy: b.cy,
+                explain: b.explain.take(),
+                opacity: b.opacity,
+                blend_mode: b.blend_mode.take(),
+            },
+            _ => return None,
+        })
     }
 }

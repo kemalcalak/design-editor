@@ -564,3 +564,108 @@ pub(super) fn fill_inner_shadow_svg_path_with_fill_rule(
         color.a,
     );
 }
+
+/// Angular (conic) gradient arms. The bridge builds a CanvasKit sweep
+/// shader turned to the canonical 12 o'clock start (see
+/// `makeAngularGradient` in `op_ck_bridge.js`).
+///
+/// The sweep geometry rides in one value so the `RenderBackend` forwards
+/// in `backend.rs` (one impl block, close to the 800-line cap) stay short.
+#[derive(Clone, Copy)]
+pub(super) struct Sweep {
+    cx_frac: f32,
+    cy_frac: f32,
+    rotation_deg: f32,
+    opacity: f32,
+}
+
+impl Sweep {
+    pub(super) fn new(cx_frac: f32, cy_frac: f32, rotation_deg: f32, opacity: f32) -> Self {
+        Self {
+            cx_frac,
+            cy_frac,
+            rotation_deg,
+            opacity,
+        }
+    }
+}
+
+pub(super) fn fill_round_rect_angular_gradient(
+    ck: &OpCk,
+    rect: Rect,
+    radius: f32,
+    stops: &[(f32, Color)],
+    sweep: Sweep,
+) {
+    if stops.is_empty() {
+        return;
+    }
+    let stops = flatten_gradient_stops(stops);
+    ck.fill_round_rect_angular_gradient(
+        rect.origin.x,
+        rect.origin.y,
+        rect.size.x,
+        rect.size.y,
+        radius,
+        &stops,
+        sweep.cx_frac,
+        sweep.cy_frac,
+        sweep.rotation_deg,
+        sweep.opacity,
+    );
+}
+
+pub(super) fn fill_round_rect_angular_gradient_per_corner(
+    ck: &OpCk,
+    rect: Rect,
+    radii: [f32; 4],
+    stops: &[(f32, Color)],
+    sweep: Sweep,
+) {
+    if stops.is_empty() {
+        return;
+    }
+    let stops = flatten_gradient_stops(stops);
+    ck.fill_round_rect_angular_gradient_per_corner(
+        rect.origin.x,
+        rect.origin.y,
+        rect.size.x,
+        rect.size.y,
+        radii[0],
+        radii[1],
+        radii[2],
+        radii[3],
+        &stops,
+        sweep.cx_frac,
+        sweep.cy_frac,
+        sweep.rotation_deg,
+        sweep.opacity,
+    );
+}
+
+pub(super) fn fill_svg_path_in_rect_angular_gradient_with_fill_rule(
+    ck: &OpCk,
+    d: &str,
+    rect: Rect,
+    stops: &[(f32, Color)],
+    sweep: Sweep,
+    even_odd: bool,
+) {
+    if stops.is_empty() {
+        return;
+    }
+    let flat = flatten_gradient_stops(stops);
+    ck.fill_svg_path_in_rect_angular_gradient(
+        d,
+        rect.origin.x,
+        rect.origin.y,
+        rect.size.x,
+        rect.size.y,
+        even_odd,
+        &flat,
+        sweep.cx_frac,
+        sweep.cy_frac,
+        sweep.rotation_deg,
+        sweep.opacity,
+    );
+}

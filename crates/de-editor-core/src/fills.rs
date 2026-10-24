@@ -41,9 +41,9 @@ use crate::editor_ui_state::{FillType, ImageAdjustmentField, ImageFillMode};
 use crate::PenNodeExt;
 use jian_ops_schema::node::PenNode;
 use jian_ops_schema::style::{
-    GradientStop, ImageFillBody, LinearGradientBody, MeshGradientBody, MeshVertexStop, PenEffect,
-    PenFill, PenStroke, RadialGradientBody, ShaderFillBody, ShadowBody, SolidFillBody,
-    StrokeThickness,
+    AngularGradientBody, GradientStop, ImageFillBody, LinearGradientBody, MeshGradientBody,
+    MeshVertexStop, PenEffect, PenFill, PenStroke, RadialGradientBody, ShaderFillBody, ShadowBody,
+    SolidFillBody, StrokeThickness,
 };
 
 /// Display/edit summary of the primary image fill.

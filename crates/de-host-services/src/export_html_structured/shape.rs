@@ -91,8 +91,12 @@ fn write_background(style: &mut String, n: &SceneNode, rect: Rect) {
     if let Some(fill) = n.fill {
         css::decl(style, "background-color", &css::color(fill));
     }
-    if let (SceneFillType::LinearGradient | SceneFillType::RadialGradient, Some(gradient)) =
-        (n.fill_type, n.gradient.as_ref())
+    if let (
+        SceneFillType::LinearGradient
+        | SceneFillType::RadialGradient
+        | SceneFillType::AngularGradient,
+        Some(gradient),
+    ) = (n.fill_type, n.gradient.as_ref())
     {
         if let Some(value) = css::gradient(gradient, rect) {
             css::decl(style, "background-image", &value);

@@ -52,13 +52,9 @@ fn convert_fill(fill: Value, ctx: &mut Ctx<'_>) -> Option<Value> {
         Some("color") => {
             obj.insert("type".to_owned(), Value::String("solid".to_owned()));
         }
-        Some("gradient") => {
-            // Canonical gradients are linear or radial; the legacy repair
-            // turns anything that is not radial into a linear one.
-            if obj.get("gradientType").and_then(Value::as_str) == Some("angular") {
-                ctx.report.note("angular gradient (drawn linear)");
-            }
-        }
+        // Linear, radial and angular all map onto canonical gradients in
+        // the legacy repair (`normalize_gradient_fill`).
+        Some("gradient") => {}
         Some("image") => return images::convert_image_fill(obj, ctx),
         Some("shader") => {
             ctx.report.note("shader fill");

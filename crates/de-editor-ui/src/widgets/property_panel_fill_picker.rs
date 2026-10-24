@@ -6,12 +6,13 @@ use jian_widgets::components::select::{Select, SelectHit, SelectState};
 use jian_widgets::Tokens;
 
 pub const FILL_TYPE_ROW_HEIGHT: f32 = 30.0;
-pub const FILL_TYPE_COUNT: usize = 6;
+pub const FILL_TYPE_COUNT: usize = 7;
 const FILL_TYPE_PICKER_GAP: f32 = 4.0;
 pub const FILL_TYPES: [FillType; FILL_TYPE_COUNT] = [
     FillType::Solid,
     FillType::LinearGradient,
     FillType::RadialGradient,
+    FillType::AngularGradient,
     FillType::MeshGradient,
     FillType::Shader,
     FillType::Image,

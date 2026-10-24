@@ -15,6 +15,15 @@ export type Action = { [key in string]?: JsonValue };
 
 export type AlignItems = "start" | "center" | "end" | "stretch";
 
+/**
+ * Angular (conic / sweep) gradient. Stops run clockwise around the
+ * centre (`cx`, `cy` as 0.0..=1.0 fractions of the node bounds,
+ * default 0.5). `rotation` is in degrees with CSS `conic-gradient`
+ * semantics: 0Â° puts the first stop at 12 o'clock, positive turns
+ * clockwise (Figma `GRADIENT_ANGULAR`).
+ */
+export type AngularGradientBody = { cx: number | null, cy: number | null, rotation: number | null, stops: Array<GradientStop>, explain: string | null, opacity: number | null, blendMode: BlendMode | null, };
+
 export type AppConfig = { name: string, version: string, id: string, entry: string | null, capabilities: Array<Capability> | null, theme: string | null, orientation: Orientation | null, backgroundColor: string | null, icon: string | null,
 /**
  * C19 splash-frame config.
@@ -574,7 +583,7 @@ conversion: ConversionSpec | null, };
 
 export type PenEffect = { "type": "blur" } & BlurBody | { "type": "background_blur" } & BlurBody | { "type": "shadow" } & ShadowBody;
 
-export type PenFill = { "type": "solid" } & SolidFillBody | { "type": "linear_gradient" } & LinearGradientBody | { "type": "radial_gradient" } & RadialGradientBody | { "type": "mesh_gradient" } & MeshGradientBody | { "type": "shader" } & ShaderFillBody | { "type": "image" } & ImageFillBody;
+export type PenFill = { "type": "solid" } & SolidFillBody | { "type": "linear_gradient" } & LinearGradientBody | { "type": "radial_gradient" } & RadialGradientBody | { "type": "angular_gradient" } & AngularGradientBody | { "type": "mesh_gradient" } & MeshGradientBody | { "type": "shader" } & ShaderFillBody | { "type": "image" } & ImageFillBody;
 
 /**
  * Union of all concrete node types.

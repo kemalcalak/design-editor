@@ -551,7 +551,7 @@ fn acts_as_hero_scrim(
             fills
                 .iter()
                 .any(|fill| match fill.get("type").and_then(Value::as_str) {
-                    Some("linear_gradient" | "radial_gradient") => fill
+                    Some("linear_gradient" | "radial_gradient" | "angular_gradient") => fill
                         .get("opacity")
                         .and_then(Value::as_f64)
                         .is_none_or(|opacity| opacity > 0.0),
@@ -598,7 +598,7 @@ fn has_solid_or_gradient_fill(value: &Value) -> bool {
             fills.iter().any(|fill| {
                 matches!(
                     fill.get("type").and_then(Value::as_str),
-                    Some("solid" | "linear_gradient" | "radial_gradient")
+                    Some("solid" | "linear_gradient" | "radial_gradient" | "angular_gradient")
                 )
             })
         })

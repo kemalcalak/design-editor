@@ -249,7 +249,9 @@ fn unexpressible(n: &SceneNode) -> Option<&'static str> {
     match n.fill_type {
         SceneFillType::Shader => return Some("sksl shader fill"),
         SceneFillType::MeshGradient => return Some("mesh gradient fill"),
-        SceneFillType::LinearGradient | SceneFillType::RadialGradient => {
+        SceneFillType::LinearGradient
+        | SceneFillType::RadialGradient
+        | SceneFillType::AngularGradient => {
             if n.gradient.is_none() {
                 return Some("gradient fill without a resolved body");
             }

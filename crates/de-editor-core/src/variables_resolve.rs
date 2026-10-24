@@ -209,6 +209,11 @@ fn resolve_fill(fill: &mut PenFill, vars: Option<&Vars>, theme: &Theme) -> bool 
                 changed |= fix(&mut stop.color);
             }
         }
+        PenFill::AngularGradient(body) => {
+            for stop in &mut body.stops {
+                changed |= fix(&mut stop.color);
+            }
+        }
         _ => {}
     }
     changed
@@ -361,6 +366,7 @@ pub fn roots_have_tokens(nodes: &[PenNode]) -> bool {
             PenFill::Solid(body) => is_variable_ref(&body.color),
             PenFill::LinearGradient(body) => body.stops.iter().any(|s| is_variable_ref(&s.color)),
             PenFill::RadialGradient(body) => body.stops.iter().any(|s| is_variable_ref(&s.color)),
+            PenFill::AngularGradient(body) => body.stops.iter().any(|s| is_variable_ref(&s.color)),
             _ => false,
         }
     }

@@ -9,14 +9,15 @@ use super::{color_from_hex, FillSummary, GradientStopSummary};
 use crate::Color;
 use jian_ops_schema::node::PenNode;
 
-/// LinearGradient `angle` for the node's first fill, when it has
-/// one. Falls back to `0.0` (canonical default, bottom→top) when
-/// the body omits an explicit angle. `None` for non-linear primary
-/// fills — the Fill section uses that to hide the angle row.
+/// LinearGradient `angle` (or AngularGradient `rotation`) for the
+/// node's first fill, when it has one. Falls back to `0.0` (canonical
+/// default) when the body omits it. `None` for other primary fills —
+/// the Fill section uses that to hide the angle row.
 pub(super) fn gradient_angle_of(node: &PenNode) -> Option<f32> {
     use jian_ops_schema::style::PenFill;
     match de_editor_core::fills::node_fills(node).and_then(|f| f.first())? {
         PenFill::LinearGradient(body) => Some(body.angle.unwrap_or(0.0)),
+        PenFill::AngularGradient(body) => Some(body.rotation.unwrap_or(0.0)),
         _ => None,
     }
 }
@@ -43,6 +44,11 @@ pub(super) fn gradient_stops_of(node: &PenNode) -> Vec<GradientStopSummary> {
             .map(|s| summary(s.offset, &s.color))
             .collect(),
         PenFill::RadialGradient(b) => b
+            .stops
+            .iter()
+            .map(|s| summary(s.offset, &s.color))
+            .collect(),
+        PenFill::AngularGradient(b) => b
             .stops
             .iter()
             .map(|s| summary(s.offset, &s.color))
@@ -75,6 +81,10 @@ pub(super) fn fills_of(node: &PenNode) -> Vec<FillSummary> {
                     b.opacity.unwrap_or(1.0),
                 ),
                 PenFill::RadialGradient(b) => (
+                    b.stops.first().map(|s| s.color.as_str()),
+                    b.opacity.unwrap_or(1.0),
+                ),
+                PenFill::AngularGradient(b) => (
                     b.stops.first().map(|s| s.color.as_str()),
                     b.opacity.unwrap_or(1.0),
                 ),
