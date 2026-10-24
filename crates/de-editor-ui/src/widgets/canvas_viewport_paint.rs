@@ -221,6 +221,8 @@ fn paint_node_inner<'a>(
     // Flip/rotation (not the transient reveal pop) also joins the
     // overlay transform chain so the hover outline replays it.
     let overlay_transformed = flipped || rotated;
+    // Pointer-reactive shaders read the pointer in this node's space.
+    let mut outer_pointer = None;
     if transformed {
         let pivot_doc = node.aggregate_bounds();
         let pivot = Point2D::new(
@@ -243,6 +245,15 @@ fn paint_node_inner<'a>(
         if rotated {
             cx.backend.rotate(node.rotation, pivot);
         }
+        outer_pointer = super::canvas_shader_pointer::enter_node_transform(
+            super::canvas_shader_pointer::NodeTransform {
+                pop_scale,
+                flip_x: node.flip_x,
+                flip_y: node.flip_y,
+                rotation: node.rotation,
+                pivot,
+            },
+        );
         if overlay_transformed {
             transforms.push(OverlayTransform {
                 rotation: node.rotation,
@@ -610,6 +621,7 @@ fn paint_node_inner<'a>(
                 }
                 if transformed {
                     cx.backend.restore();
+                    super::canvas_shader_pointer::leave_node_transform(outer_pointer);
                 }
                 if overlay_transformed {
                     transforms.pop();
@@ -702,6 +714,7 @@ fn paint_node_inner<'a>(
     }
     if transformed {
         cx.backend.restore();
+        super::canvas_shader_pointer::leave_node_transform(outer_pointer);
     }
     if overlay_transformed {
         transforms.pop();

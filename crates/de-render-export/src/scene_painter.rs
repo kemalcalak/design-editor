@@ -63,13 +63,15 @@ pub fn paint_node(canvas: &Canvas, node: &SceneNode) {
 /// them in reverse — same as `canvas_viewport.rs`'s paint loop.
 ///
 /// Time-driven shader fills are pinned to the capture time — `0` unless the
-/// caller scoped one with [`with_capture_time_ms`]: a live screenshot runs on
-/// the UI thread between canvas frames, and its pixels must not depend on
-/// when it was taken.
+/// caller scoped one with [`with_capture_time_ms`] — and pointer-reactive ones
+/// to the idle `mouse` value: a live screenshot runs on the UI thread between
+/// canvas frames, and its pixels must not depend on when it was taken or where
+/// the pointer was.
 pub fn paint_nodes(canvas: &Canvas, nodes: &[SceneNode]) {
+    use de_editor_ui::widgets::{canvas_shader_clock, canvas_shader_pointer};
     let seconds = CAPTURE_SECONDS.with(Cell::get);
-    de_editor_ui::widgets::canvas_shader_clock::with_fixed_clock(seconds, || {
-        paint_nodes_unpinned(canvas, nodes)
+    canvas_shader_pointer::with_fixed_pointer(None, || {
+        canvas_shader_clock::with_fixed_clock(seconds, || paint_nodes_unpinned(canvas, nodes))
     });
 }
 

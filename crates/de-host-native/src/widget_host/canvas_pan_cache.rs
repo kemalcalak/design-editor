@@ -71,8 +71,9 @@ pub(in crate::widget_host) const PAN_CACHE_RESTORE_TILES: usize = 6;
 
 impl WidgetHostNative {
     /// Whether the current frame may serve or build the pan cache.
-    /// Conservative: any time-driven canvas animation opts out so a
-    /// blitted frame can never freeze it visibly.
+    /// Conservative: any time-driven canvas animation, and any shader
+    /// reading the pointer (which moves relative to the panned content),
+    /// opts out so a blitted frame can never freeze it visibly.
     pub(in crate::widget_host) fn pan_cache_usable(&self) -> bool {
         self.fast_interaction_active()
             && self.preview.is_none()
@@ -82,6 +83,7 @@ impl WidgetHostNative {
                 .is_none_or(|transition| !transition.is_active(self.now_ms))
             && de_editor_core::agent_indicators::snapshot_at_if_active(self.now_ms).is_none()
             && !de_editor_ui::widgets::canvas_shader_clock::animated_shader_painted()
+            && !de_editor_ui::widgets::canvas_shader_pointer::pointer_shader_painted()
             && self.node_drag.is_none()
             && self.marquee_drag.is_none()
             && self.editor_state.editor_ui.starter_ghost.is_none()

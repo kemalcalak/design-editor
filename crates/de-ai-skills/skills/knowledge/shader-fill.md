@@ -5,7 +5,7 @@ phase: [generation]
 trigger:
   keywords: [shader, glsl, sksl, generative, noise, grain, turbulence, feTurbulence, aurora]
 priority: 28
-budget: 750
+budget: 820
 category: knowledge
 ---
 
@@ -76,3 +76,6 @@ RULES:
 - To animate, declare `uniform float time;` — the canvas binds elapsed
   seconds every frame (exports render at `time = 0`). Never put `time` in
   `uniforms`; keep motion slow, e.g. `sin(time * 0.5)`.
+- For hover effects, declare `uniform float2 mouse;` — the pointer in
+  `fragCoord` space; with no pointer (and in exports) it is far outside the
+  node, so fade by `distance(p, mouse)`. Never put `mouse` in `uniforms`.

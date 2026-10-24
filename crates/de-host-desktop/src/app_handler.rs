@@ -496,6 +496,7 @@ impl ApplicationHandler<DesktopEvent> for DesktopApp {
                     return;
                 }
             }
+            WindowEvent::CursorLeft { .. } => self.on_cursor_left(),
             WindowEvent::MouseInput {
                 state: ElementState::Pressed,
                 button: MouseButton::Left,
