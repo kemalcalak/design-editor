@@ -233,6 +233,8 @@ pub struct GradientStopSummary {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum EffectKind {
     Shadow,
+    /// `ShadowBody.inner == Some(true)`.
+    InnerShadow,
     LayerBlur,
     BackgroundBlur,
 }
@@ -242,6 +244,7 @@ impl EffectKind {
     pub fn label(self) -> &'static str {
         match self {
             EffectKind::Shadow => "Shadow",
+            EffectKind::InnerShadow => "Inner Shadow",
             EffectKind::LayerBlur => "Layer Blur",
             EffectKind::BackgroundBlur => "Background Blur",
         }
@@ -283,7 +286,11 @@ impl EffectSummary {
         use jian_ops_schema::style::PenEffect;
         match e {
             PenEffect::Shadow(s) => EffectSummary {
-                kind: EffectKind::Shadow,
+                kind: if s.inner == Some(true) {
+                    EffectKind::InnerShadow
+                } else {
+                    EffectKind::Shadow
+                },
                 visible: s.visible != Some(false),
                 offset_x: s.offset_x,
                 offset_y: s.offset_y,

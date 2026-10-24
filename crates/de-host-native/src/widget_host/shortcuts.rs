@@ -571,4 +571,17 @@ impl WidgetHostNative {
         }
         ok
     }
+
+    /// Shift+H / Shift+V — flip the selection (one undo step). Ignored
+    /// while an input owns the keyboard, like the single-key tools.
+    pub fn apply_flip(&mut self, axis: de_editor_core::FlipAxis) -> bool {
+        if self.input_active() {
+            return false;
+        }
+        let ok = de_editor_core::flip_selection(&mut self.editor_state, axis);
+        if ok {
+            self.mark_dirty();
+        }
+        ok
+    }
 }

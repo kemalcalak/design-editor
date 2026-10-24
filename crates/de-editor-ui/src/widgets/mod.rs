@@ -79,6 +79,7 @@ pub mod property_panel_commit;
 pub mod property_panel_compositing;
 pub mod property_panel_corner;
 pub mod property_panel_dispatch;
+mod property_panel_dispatch_paint;
 pub mod property_panel_dispatch_support;
 pub mod property_panel_effects;
 pub mod property_panel_export;
@@ -88,10 +89,12 @@ pub mod property_panel_fill;
 mod property_panel_fill_body;
 mod property_panel_fill_image_body;
 pub mod property_panel_fill_menu;
+mod property_panel_fill_mesh_shader;
 mod property_panel_fill_picker;
 #[cfg(test)]
 mod property_panel_fill_tests;
 pub mod property_panel_flex;
+mod property_panel_flip;
 pub mod property_panel_header;
 pub mod property_panel_icon;
 #[cfg(test)]
@@ -123,11 +126,15 @@ mod property_panel_multi_select_tests;
 mod property_panel_overlay_hit;
 mod property_panel_page;
 #[cfg(test)]
+mod property_panel_paint_options_tests;
+#[cfg(test)]
 mod property_panel_press_tests;
 pub mod property_panel_section_tops;
 pub mod property_panel_sections;
+pub(crate) mod property_panel_segments;
 pub mod property_panel_snapshot;
 pub mod property_panel_stroke;
+pub(crate) mod property_panel_stroke_style;
 #[cfg(test)]
 mod property_panel_stroke_tests;
 #[cfg(test)]
@@ -242,6 +249,7 @@ pub mod icon_catalog_extended;
 pub mod icon_family;
 pub mod icons;
 mod icons_font_node;
+mod icons_import;
 mod icons_lookup;
 #[cfg(test)]
 mod icons_tests;

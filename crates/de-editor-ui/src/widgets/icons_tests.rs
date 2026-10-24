@@ -101,6 +101,8 @@ fn every_variant_paints_at_least_one_primitive() {
         Icon::Rows3,
         Icon::Columns3,
         Icon::RotateCw,
+        Icon::FlipHorizontal,
+        Icon::FlipVertical,
         Icon::Diamond,
         Icon::Component,
         Icon::Unlink,

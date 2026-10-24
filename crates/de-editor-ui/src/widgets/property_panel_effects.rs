@@ -86,10 +86,14 @@ pub fn paint_effects_section(
     row_y + SECTION_GAP
 }
 
-pub(crate) const EFFECT_ADD_MENU_ROWS: [(PropertyPanelAction, EffectKind); 3] = [
+pub(crate) const EFFECT_ADD_MENU_ROWS: [(PropertyPanelAction, EffectKind); 4] = [
     (
         PropertyPanelAction::AddEffect(EffectKind::Shadow),
         EffectKind::Shadow,
+    ),
+    (
+        PropertyPanelAction::AddEffect(EffectKind::InnerShadow),
+        EffectKind::InnerShadow,
     ),
     (
         PropertyPanelAction::AddEffect(EffectKind::LayerBlur),
@@ -173,6 +177,7 @@ pub(crate) fn paint_effect_add_menu(
 fn effect_label(labels: &PropertyLabels, kind: EffectKind) -> &'static str {
     match kind {
         EffectKind::Shadow => labels.effects_add_shadow,
+        EffectKind::InnerShadow => labels.effects_add_inner_shadow,
         EffectKind::LayerBlur => labels.effects_add_layer_blur,
         EffectKind::BackgroundBlur => labels.effects_add_background_blur,
     }
@@ -181,6 +186,8 @@ fn effect_label(labels: &PropertyLabels, kind: EffectKind) -> &'static str {
 fn effect_icon(kind: EffectKind) -> Icon {
     match kind {
         EffectKind::Shadow => Icon::Square,
+        // An inset frame reads as the shadow falling inside the shape.
+        EffectKind::InnerShadow => Icon::Frame,
         EffectKind::LayerBlur => Icon::Focus,
         EffectKind::BackgroundBlur => Icon::SquareRoundCorner,
     }

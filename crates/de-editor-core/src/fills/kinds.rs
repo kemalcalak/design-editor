@@ -96,8 +96,7 @@ fn default_stops(hex: &str) -> Vec<GradientStop> {
 /// Default 2×2 corner mesh — the picked colour at the top-left vertex
 /// and three muted variants at the other corners, so a freshly-flipped
 /// mesh fill renders a visible four-corner Gouraud blend instead of a
-/// flat patch. Per-vertex editing is deferred (v1 ships a non-editable
-/// default), so this is what the panel produces today.
+/// flat patch. The panel's vertex grid recolours it afterwards (#90).
 fn default_mesh_stops(hex: &str) -> Vec<MeshVertexStop> {
     vec![
         MeshVertexStop {
@@ -128,8 +127,8 @@ fn default_mesh_stops(hex: &str) -> Vec<MeshVertexStop> {
 /// at the top to transparent at the bottom — valid SkSL that compiles on
 /// the native host, and whose `tint` uniform doubles as the visible
 /// solid fallback colour on backends that can't run it (web / capture /
-/// frame). v1 is render-only, so the panel produces this fixed default;
-/// per-fragment authoring is deferred.
+/// frame). The panel starts every new shader fill here; its preset row
+/// swaps in `crate::shader_presets` bodies (raw SkSL stays MCP / file only).
 fn default_shader_body(hex: &str) -> ShaderFillBody {
     let mut uniforms = std::collections::BTreeMap::new();
     uniforms.insert(
@@ -156,19 +155,8 @@ fn fill_hex(fill: &PenFill) -> Option<&str> {
         PenFill::LinearGradient(body) => body.stops.first().map(|s| s.color.as_str()),
         PenFill::RadialGradient(body) => body.stops.first().map(|s| s.color.as_str()),
         PenFill::MeshGradient(body) => body.stops.first().map(|s| s.color.as_str()),
-        PenFill::Shader(body) => body.uniforms.as_ref().and_then(|u| {
-            let children =
-                crate::shader_images::shader_children(body.sksl.as_deref().unwrap_or_default());
-            u.iter().find_map(|(name, v)| match v {
-                // An image source bound to a shader child is not a colour.
-                jian_ops_schema::style::ShaderUniformValue::Color(c)
-                    if !children.contains(&name.as_str()) =>
-                {
-                    Some(c.as_str())
-                }
-                _ => None,
-            })
-        }),
+        // An image source bound to a shader child is not a colour.
+        PenFill::Shader(body) => crate::shader_presets::first_color_uniform(body),
         PenFill::Image(_) => None,
     }
 }

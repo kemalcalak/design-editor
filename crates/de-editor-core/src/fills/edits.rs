@@ -168,11 +168,21 @@ pub fn set_primary_stroke_hex(node: &mut PenNode, hex: &str) -> bool {
 /// shadow (`0 4px 8px rgba(0,0,0,0.25)`). `false` for variants that
 /// carry no `effects` field.
 pub fn push_drop_shadow(node: &mut PenNode) -> bool {
+    push_shadow(node, None)
+}
+
+/// Append a default inner shadow (Figma "Inner shadow") with the drop
+/// shadow's geometry and colour; only `inner` differs.
+pub fn push_inner_shadow(node: &mut PenNode) -> bool {
+    push_shadow(node, Some(true))
+}
+
+fn push_shadow(node: &mut PenNode, inner: Option<bool>) -> bool {
     let Some(effects) = node_effects_mut(node) else {
         return false;
     };
     effects.push(PenEffect::Shadow(ShadowBody {
-        inner: None,
+        inner,
         visible: None,
         offset_x: 0.0,
         offset_y: 4.0,
