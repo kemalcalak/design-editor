@@ -1,7 +1,7 @@
 //! Complex-script paint + measure routing.
 //!
 //! Arabic must reach the Skia paragraph shaper (bidi reordering + contextual
-//! joining) instead of the 1:1 cmap fast path, while Latin must stay on the
+//! joining) instead of the word-shaped fast path, while Latin must stay on the
 //! fast path so the documented chrome frame budget is unaffected.
 //!
 //! macOS-gated for the same reason the sibling font-fallback tests are: they
@@ -20,8 +20,8 @@ use de_editor_ui::TextLayout;
 const SIZE: f32 = 40.0;
 
 /// Raw unshaped width — skia's default per-codepoint advances with no
-/// joining applied. This is exactly what the cmap fast path produces, so it
-/// is the oracle a genuinely shaped measurement has to diverge from.
+/// joining or kerning applied: the oracle a shaped measurement has to
+/// diverge from.
 #[cfg(target_os = "macos")]
 fn isolated_width(be: &mut NativeBackend, text: &str) -> f32 {
     let tf = be
@@ -87,18 +87,18 @@ fn arabic_measures_with_joining_applied() {
 
 #[cfg(target_os = "macos")]
 #[test]
-fn latin_measurement_stays_on_the_unshaped_fast_path() {
+fn latin_measurement_is_kerned_on_the_word_shaped_fast_path() {
     let mut be = NativeBackend::with_dpi(1.0);
 
-    // Guard on the perf fork, not a driver: routing *all* text through the
-    // shaper (the alternative design) would change Latin advances via
-    // kerning and break this. Latin must keep matching raw cmap advances.
-    let measured = be.measure_text_family_styled("Design System", SIZE, "", 400, false);
-    let raw = isolated_width(&mut be, "Design System");
+    // Latin stays off the paragraph shaper but is shaped word by word
+    // (#197): kerning pulls "AV" pairs closer than the raw cmap advances,
+    // the way browsers and pen.dev lay the text out.
+    let measured = be.measure_text_family_styled("AVAVAV", SIZE, "", 400, false);
+    let raw = isolated_width(&mut be, "AVAVAV");
 
     assert!(
-        (measured - raw).abs() < 0.01,
-        "Latin must stay unshaped: measured {measured}, raw {raw}"
+        measured < raw - 1.0,
+        "Latin must be kerned: measured {measured}, raw {raw}"
     );
 }
 

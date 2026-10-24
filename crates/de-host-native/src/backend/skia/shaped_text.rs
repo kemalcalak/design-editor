@@ -1,8 +1,9 @@
 //! Shaped paint + measure for complex scripts.
 //!
-//! The surrounding fast path (`text.rs`) maps codepoints straight to glyphs
-//! via `Canvas::draw_str`, which does no bidi reordering and no contextual
-//! glyph selection — correct and cheap for Latin and CJK, wrong for Arabic.
+//! The surrounding fast path (`text.rs`) shapes word by word, left to right
+//! (`jian_skia::FontResolver::shape_run`): kerned and cached, right for
+//! Latin and CJK, but with no bidi reordering or joining across a run, which
+//! Arabic needs.
 //! Runs that `de_editor_core::text_script::needs_complex_shaping` flags come
 //! here instead and go through Skia's Paragraph shaper (ICU bidi +
 //! HarfBuzz).
@@ -80,7 +81,7 @@ impl ShapedText {
     }
 
     /// Paint the run with `baseline_y` on its alphabetic baseline, matching
-    /// the `draw_str` convention the unshaped path uses, so shaped and
+    /// the baseline convention the word-shaped path uses, so shaped and
     /// unshaped text sit on one line.
     pub(crate) fn paint(
         &mut self,

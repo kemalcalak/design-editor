@@ -272,30 +272,59 @@ fn draw_slice(
         return (x + advance, x + advance);
     }
     // Per-char path — letter spacing after every glyph (legacy painter
-    // model) plus the justify share after each space.
+    // model) plus the justify share after each space. Each glyph sits at
+    // the kerned advance of the text before it, so the line spans what
+    // the wrap measured (#197). The prefix is measured from the last
+    // space, where the backend's word shaping starts a new word anyway.
+    let mut measure = |text: &str| {
+        if text.is_empty() {
+            0.0
+        } else {
+            backend.measure_text_family_styled(
+                text,
+                style.font_size,
+                family,
+                style.weight,
+                style.italic,
+            )
+        }
+    };
+    let mut word_base = 0.0;
+    let mut word_start = 0;
+    let mut spacing = 0.0;
+    let mut glyph_ends = Vec::new();
+    for (i, ch) in slice.char_indices() {
+        let end = i + ch.len_utf8();
+        let before = word_base + measure(&slice[word_start..i]);
+        let after = word_base + measure(&slice[word_start..end]);
+        glyph_ends.push((i, end, x + before + spacing, x + after + spacing));
+        spacing += letter_spacing;
+        if ch == ' ' {
+            spacing += justify_extra;
+            word_base = after;
+            word_start = end;
+        }
+    }
     let mut cursor = x;
     let mut glyph_end = x;
-    for ch in slice.chars() {
-        let mut buf = [0u8; 4];
-        let s = ch.encode_utf8(&mut buf);
+    for (start, end, at, ink_end) in glyph_ends {
         if draw {
             backend.draw_text(
-                &TextLayout::single_run(s, family, style.font_size, jc, Point2D::ZERO)
-                    .with_font_weight(style.weight)
-                    .with_italic(style.italic),
-                Point2D::new(cursor, baseline_y),
+                &TextLayout::single_run(
+                    &slice[start..end],
+                    family,
+                    style.font_size,
+                    jc,
+                    Point2D::ZERO,
+                )
+                .with_font_weight(style.weight)
+                .with_italic(style.italic),
+                Point2D::new(at, baseline_y),
             );
         }
-        let adv = backend.measure_text_family_styled(
-            s,
-            style.font_size,
-            family,
-            style.weight,
-            style.italic,
-        );
-        glyph_end = cursor + adv;
-        cursor = glyph_end + letter_spacing;
-        if ch == ' ' {
+        glyph_end = ink_end;
+        cursor = ink_end + letter_spacing;
+        if &slice[start..end] == " " {
             cursor += justify_extra;
         }
     }
@@ -345,7 +374,7 @@ pub(crate) fn text_is_greeked(backend: &dyn RenderBackend, node: &SceneNode, zoo
     let font_size_doc = if node.font_size > 0.0 {
         node.font_size
     } else {
-        13.0
+        de_editor_core::text_defaults::FONT_SIZE
     };
     font_size_doc * zoom * backend.dpi_scale() < GREEK_TEXT_MAX_DEVICE_PX
 }

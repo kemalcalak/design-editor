@@ -38,9 +38,11 @@ fn wraps_where_the_painter_does_at_the_exact_width() {
     let backend = PainterWrapMeasure::new();
     for weight in [400, 600] {
         // The painter's advance for the line (synthetic bold included).
-        let natural = backend
-            .resolver
-            .measure_text(TEXT, 40.0, Some(FAMILY), weight, false);
+        let natural =
+            backend
+                .paragraph
+                .font_resolver()
+                .measure_text(TEXT, 40.0, Some(FAMILY), weight, false);
         let fits = measure(&backend, &[run(TEXT, weight)], natural, 1.5);
         assert_eq!(fits.line_count, 1, "weight {weight} at its own width");
         let short = measure(&backend, &[run(TEXT, weight)], natural - 0.5, 1.5);
@@ -57,9 +59,11 @@ fn wraps_where_the_painter_does_at_the_exact_width() {
 #[test]
 fn runs_in_one_style_wrap_as_one_text() {
     let backend = PainterWrapMeasure::new();
-    let natural = backend
-        .resolver
-        .measure_text(TEXT, 40.0, Some(FAMILY), 400, false);
+    let natural =
+        backend
+            .paragraph
+            .font_resolver()
+            .measure_text(TEXT, 40.0, Some(FAMILY), 400, false);
     let split = [run("Where margin", 400), run(" goes", 400)];
     assert_eq!(measure(&backend, &split, natural, 0.0).line_count, 1);
     assert_eq!(measure(&backend, &split, natural - 0.5, 0.0).line_count, 2);
@@ -92,4 +96,24 @@ fn mixed_styles_and_natural_extent_keep_the_shaper() {
         backend.measure(&request).width,
         backend.paragraph.measure(&request).width
     );
+}
+
+#[cfg_attr(
+    target_os = "windows",
+    ignore = "WINDOWS_SKIA_DIRECTWRITE_TEXT_MEASURE_ABORT: SkiaMeasure paragraph layout aborts in Windows CI"
+)]
+#[test]
+fn wrapped_lines_at_the_default_line_height_advance_like_the_painter() {
+    let backend = PainterWrapMeasure::new();
+    let natural =
+        backend
+            .paragraph
+            .font_resolver()
+            .measure_text(TEXT, 40.0, Some(FAMILY), 400, false);
+    let one = measure(&backend, &[run(TEXT, 400)], natural, 0.0);
+    assert_eq!(one.line_count, 1);
+    // Two wrapped lines: the painter advances each by 1.2 × the size.
+    let two = measure(&backend, &[run(TEXT, 400)], natural - 0.5, 0.0);
+    assert_eq!(two.line_count, 2);
+    assert_eq!(two.height, 2.0 * 40.0 * text_defaults::LINE_HEIGHT);
 }
