@@ -126,18 +126,6 @@ fn descendants_mut(map: &mut Map<String, Value>) -> &mut Map<String, Value> {
 /// inside them are resolved at import.
 const PAINT_KEYS: &[&str] = &["fill", "stroke", "effect"];
 
-/// Node keys that are identity or structure, never a themed value.
-const STRUCTURE_KEYS: &[&str] = &[
-    "type",
-    "id",
-    "name",
-    "ref",
-    "theme",
-    "children",
-    "descendants",
-    "reusable",
-];
-
 /// One field in a component whose value reads variables, as written.
 struct ThemedField {
     id: String,
@@ -202,7 +190,7 @@ impl InstanceBases {
                         .or_insert_with(|| target.to_owned());
                 }
                 if reusable {
-                    let fields = themed_fields(node);
+                    let fields = themed_fields(node, variables);
                     if !fields.is_empty() {
                         let component = ThemedComponent {
                             theme: Rc::clone(&theme),
@@ -287,26 +275,40 @@ impl InstanceBases {
     }
 }
 
-/// The fields in a component's own subtree (not inside nested instances)
-/// whose value the import resolves from variables: any reference outside a
-/// paint, and shader uniforms inside one.
-fn themed_fields(component: &Value) -> Vec<ThemedField> {
+/// The fields in a component's own subtree whose value the import resolves
+/// from variables: any reference outside a paint, except those the
+/// canonical document keeps live, and shader uniforms inside a paint.
+/// Nested instances and nodes with a `theme` of their own are skipped: the
+/// first resolve their own component's fields, the second pin the axes
+/// they set, which an instance-wide patch would override.
+fn themed_fields(component: &Value, variables: &Variables) -> Vec<ThemedField> {
     let mut out = Vec::new();
     let mut stack = vec![component];
     while let Some(node) = stack.pop() {
         let Value::Object(map) = node else {
             continue;
         };
+        let is_root = std::ptr::eq(node, component);
+        let own_theme = map
+            .get("theme")
+            .and_then(Value::as_object)
+            .is_some_and(|theme| !theme.is_empty());
+        let kind = map.get("type").and_then(Value::as_str);
+        if !is_root && (own_theme || kind == Some("ref")) {
+            continue;
+        }
         if let Some(id) = map.get("id").and_then(Value::as_str) {
+            let is_text = kind == Some("text");
             for (key, value) in map {
-                if STRUCTURE_KEYS.contains(&key.as_str()) {
+                if variables::SKIPPED_KEYS.contains(&key.as_str())
+                    || key == "reusable"
+                    || variables.binds_in_place(key, value, is_text)
+                {
                     continue;
                 }
                 let mut names = Vec::new();
                 if PAINT_KEYS.contains(&key.as_str()) {
-                    if reads_variable_uniform(value) {
-                        collect_uniform_references(value, &mut names);
-                    }
+                    collect_uniform_references(value, &mut names);
                 } else {
                     collect_references(value, &mut names);
                 }
@@ -319,9 +321,6 @@ fn themed_fields(component: &Value) -> Vec<ThemedField> {
                     });
                 }
             }
-        }
-        if map.get("type").and_then(Value::as_str) == Some("ref") {
-            continue;
         }
         if let Some(Value::Array(kids)) = map.get("children") {
             stack.extend(kids);
@@ -348,36 +347,19 @@ fn collect_references(value: &Value, names: &mut Vec<String>) {
     }
 }
 
-/// The `$variable`s named in a paint's shader uniforms.
+/// The `$variable`s named in the uniforms of a paint's shaders (one paint
+/// or a list). Colour references elsewhere in a paint stay bound.
 fn collect_uniform_references(paint: &Value, names: &mut Vec<String>) {
-    let shaders: Vec<&Value> = match paint {
+    let paints: Vec<&Value> = match paint {
         Value::Array(items) => items.iter().collect(),
         single => vec![single],
     };
-    for shader in shaders {
-        if let Some(uniforms) = shader.get("uniforms") {
-            collect_references(uniforms, names);
+    for paint in paints {
+        if paint.get("type").and_then(Value::as_str) == Some("shader") {
+            if let Some(uniforms) = paint.get("uniforms") {
+                collect_references(uniforms, names);
+            }
         }
-    }
-}
-
-/// Whether a paint (one or a list) holds a shader whose uniforms name a
-/// `$variable`.
-fn reads_variable_uniform(paint: &Value) -> bool {
-    let shader_reads = |paint: &Value| {
-        paint.get("type").and_then(Value::as_str) == Some("shader")
-            && paint
-                .get("uniforms")
-                .and_then(Value::as_object)
-                .is_some_and(|uniforms| {
-                    uniforms
-                        .values()
-                        .any(|value| value.as_str().and_then(variables::reference).is_some())
-                })
-    };
-    match paint {
-        Value::Array(items) => items.iter().any(shader_reads),
-        single => shader_reads(single),
     }
 }
 

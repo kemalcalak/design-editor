@@ -140,7 +140,10 @@ fn an_instance_under_another_theme_resolves_the_component_values_there() {
         "children": [
             { "type": "frame", "id": "card", "reusable": true, "children": [
                 { "type": "text", "id": "heading", "content": "a", "fontSize": "$title" },
-                { "type": "text", "id": "copy", "content": "b", "fontSize": "$body" }
+                { "type": "text", "id": "copy", "content": "b", "fontSize": "$body" },
+                { "type": "frame", "id": "row", "gap": "$title" },
+                { "type": "text", "id": "pinned", "content": "c", "fontSize": "$title",
+                  "theme": { "device": "desktop" } }
             ]},
             { "type": "frame", "id": "phone", "theme": { "device": "mobile" }, "children": [
                 { "type": "ref", "id": "card-on-phone", "ref": "card",
@@ -168,5 +171,9 @@ fn an_instance_under_another_theme_resolves_the_component_values_there() {
     let plain = &find("plain-card-on-phone")["descendants"];
     assert_eq!(plain["heading"]["fontSize"], 22);
     assert!(plain.get("copy").is_none());
+    // A live gap binding follows the theme by itself; a node pinned to a
+    // theme of its own keeps it.
+    assert!(plain.get("row").is_none());
+    assert!(plain.get("pinned").is_none());
     assert!(doc["children"][2].get("descendants").is_none());
 }
