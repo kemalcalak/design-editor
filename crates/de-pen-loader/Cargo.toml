@@ -32,8 +32,10 @@ de-editor-core = { path = "../de-editor-core" }
 de-util = { path = "../de-util" }
 # pen.dev image files are inlined as `data:` URLs on import.
 base64 = "0.22"
-# Compile-checks the SkSL translated from pen.dev GLSL shaders on import.
-# Optional like jian-skia: the CanvasKit web build links no skia-safe.
+# Compile-checks the SkSL translated from pen.dev GLSL shaders on import
+# (`sksl-check`), and builds the painter-parity font resolver of the layout
+# measure (`skia-measure`). Optional like jian-skia: the CanvasKit web build
+# links no skia-safe.
 skia-safe = { version = "0.97.0", default-features = false, optional = true }
 # Payload DTOs round-trip through serde JSON.
 serde = { workspace = true }
@@ -47,6 +49,6 @@ de-html = { path = "../de-html" }
 # Real skia text measurement (native + web-skia). Off → jian-core estimate
 # backend, so the CanvasKit web build links no skia-safe.
 default = ["skia-measure", "sksl-check"]
-skia-measure = ["dep:jian-skia"]
+skia-measure = ["dep:jian-skia", "dep:skia-safe"]
 # Drop pen.dev shader paints whose translated SkSL does not compile.
 sksl-check = ["dep:skia-safe"]

@@ -593,12 +593,28 @@ fn execute_update(args: &str, ctx: &mut ProgramCtx) -> Result<()> {
     let path = resolve_path_expr(args[..comma].trim(), &ctx.bindings);
     let mut value = parse_json_arg(&args[comma + 1..])?;
     normalize_node_shape(&mut value);
-    let Some(target) = find_node_by_path(ctx.sim.active_children(), &path, &ctx.alias) else {
-        return Err(ProgramError::NotFound(format!(
-            "Update target not found: {path}"
-        )));
+    let node_id = match find_node_by_path(ctx.sim.active_children(), &path, &ctx.alias) {
+        Some(target) => NodeId::new(target.id_str()),
+        // `instance/child` (#169): a node inside a component instance, as
+        // `read_nodes` with `resolveInstances` names it. The command keeps
+        // the path and core routes it as an instance override.
+        None if de_editor_core::instance_path::instance_path_anchor(&ctx.sim.doc, &path)
+            .is_some() =>
+        {
+            NodeId::new(path.as_str())
+        }
+        None if path.contains('/') => {
+            return Err(ProgramError::NotFound(format!(
+                "Update target not found: {path} (an instance path is exactly \
+                 instanceId/childId; children of nested instances are read-only)"
+            )));
+        }
+        None => {
+            return Err(ProgramError::NotFound(format!(
+                "Update target not found: {path}"
+            )));
+        }
     };
-    let node_id = NodeId::new(target.id_str());
     // `batch_direct_ops` is shared with the non-program write paths and is
     // outside this conversion's scope; adapt its `String` at the boundary
     // rather than rippling the change into it.

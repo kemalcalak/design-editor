@@ -364,7 +364,7 @@ fn negative_letter_spacing_offsets_glyphs_and_line_alignment() {
 
 #[test]
 fn segment_boundary_maps_onto_wrapped_lines() {
-    // 11-char content wraps at ~6 chars (60 px + tolerance);
+    // 11-char content wraps at 6 chars (exactly 60 px);
     // runs split at byte 8 — the SECOND wrapped line must split
     // into two styled slices at the run boundary.
     let mut node = text_node("hello world");

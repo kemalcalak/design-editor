@@ -439,6 +439,7 @@ impl Widget for PropertyPanel {
                     cx,
                     &self.theme,
                     anchor,
+                    crate::widgets::property_panel_interactions::interaction_menu_viewport(rect),
                     &rows,
                     self.interaction_menu_hover,
                 );

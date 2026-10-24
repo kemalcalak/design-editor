@@ -24,106 +24,34 @@ impl TextFace<'_> {
     }
 }
 
-/// Greedy line-wrap for canvas text nodes with explicit width.
-/// Splits on `\n` first (mirrors `pen-renderer/text-renderer.ts`
-/// which pre-splits before calling `wrapLine`), then wraps each
-/// segment via the per-character-CJK / word-Latin algorithm from
-/// `pen-renderer/paint-utils.ts::wrapLine`. Empty segments survive
-/// as blank lines so authored paragraph breaks paint as gaps.
+/// Width a text node's lines break at: its box width exactly, or `None`
+/// for auto-width text, which never wraps. The one wrap decision for
+/// painting, inline editing and caret geometry (all through
+/// `canvas_text_edit::text_edit_layout`). Layout sizes `fit_content` heights
+/// at the same width with the same wrap (`de-pen-loader`'s layout measure),
+/// and pen.dev, Figma and browsers break at the exact width too. The old
+/// `min(5%, fontSize / 2)` slack from the retired TS renderer kept words on
+/// lines they did not fit (#186).
+pub(crate) fn wrap_width(node: &crate::layout_scene::SceneNode) -> Option<f32> {
+    node.text_wrap.then_some(node.bounds.size.x)
+}
+
+/// Greedy line-wrap for canvas text nodes with explicit width, measured
+/// in `face` with `letter_spacing` between glyphs. The algorithm is the
+/// shared `de_editor_core::text_wrap::wrap_text_measured`, which the
+/// layout measure (`de-pen-loader`) runs too, so the box height layout
+/// computes holds exactly the lines painted here (#186).
 pub(crate) fn wrap_text(
     backend: &mut dyn crate::RenderBackend,
     text: &str,
     font_size: f32,
-    max_w: f32,
+    max_width: f32,
     face: TextFace<'_>,
     letter_spacing: f32,
 ) -> Vec<String> {
-    let mut out: Vec<String> = Vec::new();
-    for segment in text.split('\n') {
-        if max_w <= 0.0
-            || measure_text_with_letter_spacing(backend, segment, font_size, face, letter_spacing)
-                <= max_w
-        {
-            out.push(segment.to_string());
-            continue;
-        }
-        wrap_segment(
-            backend,
-            segment,
-            font_size,
-            max_w,
-            face,
-            letter_spacing,
-            &mut out,
-        );
-    }
-    if out.is_empty() {
-        out.push(String::new());
-    }
-    out
-}
-
-/// Wrap a single newline-free segment.
-fn wrap_segment(
-    backend: &mut dyn crate::RenderBackend,
-    segment: &str,
-    font_size: f32,
-    max_w: f32,
-    face: TextFace<'_>,
-    letter_spacing: f32,
-    out: &mut Vec<String>,
-) {
-    let chars: Vec<char> = segment.chars().collect();
-    let mut current = String::new();
-    let mut probe = String::with_capacity(segment.len());
-    let mut i = 0;
-    while i < chars.len() {
-        let ch = chars[i];
-        if is_cjk(ch) {
-            let mut ch_buf = [0; 4];
-            build_probe(&mut probe, &current, ch.encode_utf8(&mut ch_buf));
-            if measure_text_with_letter_spacing(backend, &probe, font_size, face, letter_spacing)
-                > max_w
-                && !current.is_empty()
-            {
-                out.push(std::mem::take(&mut current));
-                current.push(ch);
-            } else {
-                std::mem::swap(&mut current, &mut probe);
-            }
-            i += 1;
-        } else if ch == ' ' {
-            build_probe(&mut probe, &current, " ");
-            if measure_text_with_letter_spacing(backend, &probe, font_size, face, letter_spacing)
-                > max_w
-                && !current.is_empty()
-            {
-                out.push(std::mem::take(&mut current));
-            } else {
-                std::mem::swap(&mut current, &mut probe);
-            }
-            i += 1;
-        } else {
-            let mut word = String::new();
-            while i < chars.len() && chars[i] != ' ' && !is_cjk(chars[i]) {
-                word.push(chars[i]);
-                i += 1;
-            }
-            build_probe(&mut probe, &current, &word);
-            if measure_text_with_letter_spacing(backend, &probe, font_size, face, letter_spacing)
-                > max_w
-                && !current.is_empty()
-            {
-                out.push(std::mem::take(&mut current));
-                current.push_str(&word);
-            } else {
-                std::mem::swap(&mut current, &mut probe);
-            }
-        }
-    }
-    if !current.is_empty() {
-        out.push(current);
-    }
+    de_editor_core::text_wrap::wrap_text_measured(text, max_width, &mut |line: &str| {
+        measure_text_with_letter_spacing(backend, line, font_size, face, letter_spacing)
+    })
 }
 
 fn measure_text_with_letter_spacing(
@@ -136,24 +64,6 @@ fn measure_text_with_letter_spacing(
     let base = face.measure(backend, text, font_size);
     let gaps = text.chars().count().saturating_sub(1) as f32;
     (base + gaps * letter_spacing).max(0.0)
-}
-
-fn build_probe(probe: &mut String, current: &str, suffix: &str) {
-    probe.clear();
-    probe.push_str(current);
-    probe.push_str(suffix);
-}
-
-/// Codepoints that wrap per-character (no inter-word spaces).
-/// Mirrors `pen-core/layout/text-measure.ts::isCjkCodePoint`.
-fn is_cjk(ch: char) -> bool {
-    let c = ch as u32;
-    (0x4e00..=0x9fff).contains(&c)
-        || (0x3400..=0x4dbf).contains(&c)
-        || (0x3040..=0x30ff).contains(&c)
-        || (0xac00..=0xd7af).contains(&c)
-        || (0x3000..=0x303f).contains(&c)
-        || (0xff00..=0xffef).contains(&c)
 }
 
 #[cfg(test)]
@@ -331,20 +241,5 @@ mod wrap_tests {
         // Base width is 110 px; ten -1 px gaps bring it to exactly 100 px.
         let lines = wrap_text(&mut b, "hello world", 13.0, 100.0, face(400), -1.0);
         assert_eq!(lines, vec!["hello world"]);
-    }
-
-    #[test]
-    fn probe_builder_reuses_existing_string_allocation() {
-        let mut probe = String::with_capacity(64);
-        let ptr = probe.as_ptr();
-
-        build_probe(&mut probe, "hello", " world");
-
-        assert_eq!(probe, "hello world");
-        assert_eq!(
-            probe.as_ptr(),
-            ptr,
-            "probe construction should reuse the existing String allocation"
-        );
     }
 }

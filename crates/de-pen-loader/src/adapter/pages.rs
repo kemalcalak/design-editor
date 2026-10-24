@@ -131,6 +131,9 @@ pub(super) fn compute_layout(root: &PenNode, out: &mut BTreeMap<String, [f32; 4]
     crate::layout_repair::repair_fit_content_layout(root, out);
 }
 
-fn layout_measure_backend() -> Rc<dyn MeasureBackend> {
+/// This thread's layout text measure (shared, memoized). Hosts that run
+/// their own layout pass over the document (Preview) take it too, so their
+/// text boxes match the canvas.
+pub fn layout_measure_backend() -> Rc<dyn MeasureBackend> {
     LAYOUT_MEASURE_BACKEND.with(Rc::clone)
 }

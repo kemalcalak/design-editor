@@ -116,6 +116,7 @@ mod import_snapshot_tool_tests;
 mod insert_node_args;
 mod insert_node_data;
 pub mod json_serializer;
+mod layout_problems;
 pub mod lint_tools;
 #[cfg(test)]
 mod lint_tools_tests;
@@ -129,6 +130,8 @@ mod open_document_tests;
 pub mod page_tools;
 pub mod parser;
 pub mod read_nodes;
+#[cfg(test)]
+mod read_nodes_resolve_tests;
 #[cfg(test)]
 mod read_nodes_tests;
 pub mod read_tools;
