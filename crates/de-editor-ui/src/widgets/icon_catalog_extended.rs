@@ -12,8 +12,6 @@
 //! - **Web** (`runtime-icon-catalog`, i.e. `de-host-web`) asks for the family's
 //!   `/pkg/assets/` route on the first miss; the host installs the fetched bytes
 //!   through [`install_extended_icon_catalog`] and the next paint resolves.
-//! - **Other wasm consumers** (the `de-web-sdk` viewer) have no daemon to fetch
-//!   from, so these families stay unavailable there and paint nothing.
 
 use std::collections::HashMap;
 use std::sync::OnceLock;

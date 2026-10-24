@@ -1,6 +1,6 @@
 # Packages
 
-The web SDK packages that remain after the TypeScript retirement. This directory is the **npm/Bun workspace root** (`packages/package.json`); the repository root is a **pure Cargo workspace** with no `package.json`.
+The JS packages that remain after the TypeScript retirement and the #48 cleanup (the web viewer SDK and the VS Code extension are gone). This directory is the **Bun project root** (`packages/package.json`); the repository root is a **pure Cargo workspace** with no `package.json`.
 
 > The `pen-*` packages (pen-types, pen-core, pen-engine, pen-renderer, pen-figma, pen-mcp, pen-ai-skills, pen-sdk, pen-react, pen-acp) and pen-codegen were **retired** along with `apps/*`. Their functionality now lives in the Rust `crates/` (see `crates/CLAUDE.md`). Nothing here depends on them. The `agent-native` Zig runtime was also **removed** — the built-in agent runtime is now the Rust `agent` crate (`vendor/agent`, shared with Zode).
 
@@ -8,30 +8,14 @@ The web SDK packages that remain after the TypeScript retirement. This directory
 
 Run these from `packages/`:
 
-- **Lint / format the SDK:** `bun run lint` (oxlint, plus the extension's extractor drift check) / `bun run format` (oxfmt).
+- **Lint / format:** `bun run lint` (oxlint, plus the extension's extractor drift check) / `bun run format` (oxfmt).
 - **Iconify catalog (Rust assets):** `bun run generate-iconify-catalog` — `scripts/generate-iconify-catalog.mjs` reads `@iconify-json/*` and writes `crates/de-editor-ui/assets/iconify-catalog-{core,brands}.json` (the icon catalog embedded in / served by the Rust web target) plus the gzipped extended families `iconify-catalog-{material-symbols,phosphor}.json.gz`. Regenerating also rewrites core/brands from whatever `@iconify-json` versions are installed; commit only the files you meant to change.
-- **Versions:** no `package.json` carries a version. SDK `VERSION` is the `__DE_VERSION__` define that `tsup`/`vitest` fill from root `Cargo.toml` (`scripts/workspace-version.mjs`); the Chrome manifest keeps a `0.0.0` placeholder that `package-extension.sh` stamps. Bump with `scripts/bump-version.sh` at the repo root (its header lists every artifact that reads the version).
-
-## de-web-sdk (`de-web-sdk/`)
-
-Read-only Design Editor `.de` **viewer** SDK for the web, wasm-backed. Wraps the `de-host-web` CanvasKit wasm bundle behind a small JS/TS embedding API (mount / load `.de` / viewport control / zoom-to-fit). Replaces the public role of the retired `pen-react` (viewing only — editing is not a goal of the public SDK).
-
-- Zero runtime dependencies; ships its own wasm under `wasm/`.
-- Build: `tsup` (`bun run build` inside the package). Tests: `vitest`.
-
-## de-web-sdk-react (`de-web-sdk-react/`)
-
-React 19 adapter for `de-web-sdk` (component + hooks wrapper). Depends only on `@kemalcalak/de-web-sdk` (+ peer `react` / `react-dom`).
-
-## de-web-sdk-vue (`de-web-sdk-vue/`)
-
-Vue 3 adapter for `de-web-sdk`. Depends only on `@kemalcalak/de-web-sdk` (+ peer `vue`).
+- **Versions:** no `package.json` carries a version. The Chrome manifest keeps a `0.0.0` placeholder that `package-extension.sh` stamps. Bump with `scripts/bump-version.sh` at the repo root (its header lists every artifact that reads the version).
 
 ## de-chrome-extension (`de-chrome-extension/`)
 
 Manifest V3 Chrome extension that captures the **rendered** active tab and
-imports it into a running Design Editor. No dependencies, not a Bun workspace
-member — load it unpacked from `chrome://extensions`.
+imports it into a running Design Editor. No dependencies — load it unpacked from `chrome://extensions`.
 
 - **The logic is Rust.** `crates/de-chrome-extension-core` (endpoint rules,
   chunked-transfer integrity, `/mcp` envelope + reply classification, download-name

@@ -241,8 +241,7 @@ assert_file_contains "$workflow" 'run: rg --version' 'version sync pinned ripgre
 assert_file_not_matches "$workflow" \
     'uses:[[:space:]]+[^@[:space:]]+@(v[0-9]+|stable|main|master|latest)|setup-bun|apt-get' \
     'version sync immutable tools policy'
-assert_file_not_matches "$workflow" 'bun ' 'version sync needs no SDK toolchain'
-assert_file_contains "$workflow" 'packages/scripts/workspace-version.mjs' 'version sync SDK reader path'
+assert_file_not_matches "$workflow" 'bun ' 'version sync needs no JS toolchain'
 assert_file_not_matches "$workflow" 'packages/\*\*' 'version sync focused path filters'
 for trigger in pull_request push; do
     trigger_block=$(awk -v trigger="$trigger" '

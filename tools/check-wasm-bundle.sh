@@ -29,7 +29,7 @@ CRATE_DIR="crates/de-host-web"
 PKG_DIR="${CRATE_DIR}/pkg"
 # The bundle keeps its pre-rebrand `op_host_web*` file names (wasm-bindgen
 # `--out-name`) so the committed pkg-ck/ + pkg-webgl/ bundles and every
-# consumer (daemon, vscode extension, figma worker) agree on one name until
+# consumer (daemon, figma worker) agree on one name until
 # the committed bundles are rebuilt under the new crate name.
 WASM_RAW="${PKG_DIR}/op_host_web_bg.wasm"
 WASM_OPT="${PKG_DIR}/op_host_web_bg.opt.wasm"
