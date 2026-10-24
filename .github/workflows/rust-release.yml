@@ -313,8 +313,8 @@ jobs:
           if-no-files-found: error
           retention-days: ${{ github.event_name == 'pull_request' && 7 || 90 }}
 
-  # The Linux tarball on a runner that did not build it (no -dev packages,
-  # no Rust toolchain): every shared library resolves and the headless MCP
+  # The Linux tarball on a stock runner that did not build it (none of
+  # rust-check's apt packages installed): every shared library resolves and the headless MCP
   # server answers `tools/list`. Runs on PR dry runs too.
   linux-smoke:
     name: Smoke-test the Linux binary
@@ -352,7 +352,8 @@ jobs:
           printf '%s\n' \
             '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"release-smoke","version":"0"}}}' \
             '{"jsonrpc":"2.0","id":2,"method":"tools/list"}' \
-            | timeout 120 smoke/design-editor --mcp "$RUNNER_TEMP/smoke.de" > mcp-out.jsonl
+            | timeout 120 smoke/design-editor --mcp "$RUNNER_TEMP/smoke.de" > mcp-out.jsonl \
+            || { status=$?; echo "::error::design-editor --mcp exited with $status"; head -c 2000 mcp-out.jsonl; exit 1; }
           if ! grep -q '"id":2' mcp-out.jsonl || ! grep -q '"name":"read_nodes"' mcp-out.jsonl; then
             echo "::error::the MCP server did not answer tools/list"
             head -c 2000 mcp-out.jsonl

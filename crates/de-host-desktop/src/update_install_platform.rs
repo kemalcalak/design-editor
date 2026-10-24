@@ -53,15 +53,22 @@ pub fn install_target() -> Result<InstallTarget, UpdateFailure> {
 fn platform_target(exe: &Path) -> Result<PathBuf, UpdateFailure> {
     let bundle = app_bundle_of(exe).ok_or(UpdateFailure::Unsupported)?;
     let parent = bundle.parent().ok_or(UpdateFailure::Unsupported)?;
-    // Probe write access with a throwaway dir: `/Applications` is writable
-    // for admin users only, and finding out after a 40 MB download is worse.
-    let probe = parent.join(format!(
+    // `/Applications` is writable for admin users only.
+    probe_writable(parent)?;
+    Ok(bundle)
+}
+
+/// Probe write access with a throwaway dir: finding out after a 40 MB
+/// download is worse.
+#[cfg(any(target_os = "macos", target_os = "linux"))]
+fn probe_writable(dir: &Path) -> Result<(), UpdateFailure> {
+    let probe = dir.join(format!(
         ".design-editor-update-probe-{}",
         std::process::id()
     ));
     std::fs::create_dir(&probe).map_err(|_| UpdateFailure::Unsupported)?;
     let _ = std::fs::remove_dir(&probe);
-    Ok(bundle)
+    Ok(())
 }
 
 /// Only an NSIS install can take the silent setup: the installer writes
@@ -84,17 +91,23 @@ fn platform_target(exe: &Path) -> Result<PathBuf, UpdateFailure> {
 /// package).
 #[cfg(target_os = "linux")]
 fn platform_target(exe: &Path) -> Result<PathBuf, UpdateFailure> {
+    let exe = without_deleted_suffix(exe);
     let dir = exe.parent().ok_or(UpdateFailure::Unsupported)?;
     if is_cargo_build_dir(dir) {
         return Err(UpdateFailure::Unsupported);
     }
-    let probe = dir.join(format!(
-        ".design-editor-update-probe-{}",
-        std::process::id()
-    ));
-    std::fs::create_dir(&probe).map_err(|_| UpdateFailure::Unsupported)?;
-    let _ = std::fs::remove_dir(&probe);
-    Ok(exe.to_path_buf())
+    probe_writable(dir)?;
+    Ok(exe)
+}
+
+/// `/proc/self/exe` of a binary replaced while it runs (a new tarball
+/// unpacked over it) reads `<path> (deleted)`; the install lives at
+/// `<path>`.
+#[cfg_attr(not(target_os = "linux"), allow(dead_code))]
+fn without_deleted_suffix(exe: &Path) -> PathBuf {
+    exe.to_str()
+        .and_then(|s| s.strip_suffix(" (deleted)"))
+        .map_or_else(|| exe.to_path_buf(), PathBuf::from)
 }
 
 #[cfg(not(any(target_os = "macos", target_os = "windows", target_os = "linux")))]
@@ -435,6 +448,57 @@ mod tests {
         )));
         assert!(!is_cargo_build_dir(Path::new("/home/me/.local/bin")));
         assert!(!is_cargo_build_dir(Path::new("/opt/release")));
+    }
+
+    #[test]
+    fn a_replaced_running_binary_maps_back_to_its_path() {
+        assert_eq!(
+            without_deleted_suffix(Path::new("/home/me/bin/design-editor (deleted)")),
+            Path::new("/home/me/bin/design-editor")
+        );
+        assert_eq!(
+            without_deleted_suffix(Path::new("/home/me/bin/design-editor")),
+            Path::new("/home/me/bin/design-editor")
+        );
+    }
+
+    /// The real tarball shape (bare binary at the root) unpacks into a
+    /// hidden, executable file next to the target, and the job folder goes.
+    #[cfg(target_os = "linux")]
+    #[test]
+    fn linux_stage_unpacks_the_release_tarball_next_to_the_binary() {
+        use std::os::unix::fs::PermissionsExt;
+        let root = std::env::temp_dir().join(format!("de-stage-test-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&root);
+        let (src, job, install) = (root.join("src"), root.join("job"), root.join("bin"));
+        for dir in [&src, &job, &install] {
+            std::fs::create_dir_all(dir).unwrap();
+        }
+        std::fs::write(src.join(LINUX_BINARY), b"#!/bin/sh\necho new\n").unwrap();
+        let archive = job.join("design-editor-linux-x86_64.tar.gz");
+        assert!(std::process::Command::new("tar")
+            .arg("czf")
+            .arg(&archive)
+            .arg("-C")
+            .arg(&src)
+            .arg(LINUX_BINARY)
+            .status()
+            .unwrap()
+            .success());
+        let target = install.join(LINUX_BINARY);
+        std::fs::write(&target, b"old").unwrap();
+
+        let staged = stage(&archive, InstallTarget(target.clone())).expect("stages");
+        let StagedUpdate::Binary { staged, target: t } = staged else {
+            panic!("Linux stages a binary");
+        };
+        assert_eq!(t, target);
+        assert_eq!(staged, install.join(".design-editor.update"));
+        assert_eq!(std::fs::read(&staged).unwrap(), b"#!/bin/sh\necho new\n");
+        let mode = std::fs::metadata(&staged).unwrap().permissions().mode();
+        assert_eq!(mode & 0o111, 0o111, "staged binary is executable");
+        assert!(!job.exists(), "the job folder is removed");
+        let _ = std::fs::remove_dir_all(&root);
     }
 
     #[test]
