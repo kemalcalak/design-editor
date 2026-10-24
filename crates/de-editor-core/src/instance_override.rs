@@ -52,8 +52,7 @@ use serde_json::{Map, Value};
 
 use crate::instance_anchor::DescendantTarget;
 pub use crate::instance_child_override::{
-    instance_descendant_for_anchor, resolve_instance_display_node_for_anchor,
-    split_instance_child_anchor,
+    resolve_instance_display_node_for_anchor, split_instance_child_anchor,
 };
 
 /// Properties stored directly on the `RefNode` (instance-level), not
@@ -193,7 +192,7 @@ impl EditorState {
     /// [`EditorState::finish_instance_write`].
     pub fn begin_instance_write(&mut self, anchor: &NodeId) -> Option<InstanceWriteScope> {
         let (ref_id, target, mut display, route_direct_props) =
-            if let Some(hit) = instance_descendant_for_anchor(&self.doc, anchor) {
+            if let Some(hit) = crate::instance_anchor::locate_anchor(&self.doc, anchor) {
                 let ref_node = find_node(self.active_children(), &hit.ref_id)?;
                 let base = ref_node.base();
                 if !matches!(ref_node, PenNode::Ref(_))

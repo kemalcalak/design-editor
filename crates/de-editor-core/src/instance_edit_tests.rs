@@ -242,3 +242,22 @@ fn reset_of_the_selected_descendant_is_one_undo_step() {
     assert!(state.undo());
     assert_eq!(rendered_text(&state, "inst__big").as_deref(), Some("Big"));
 }
+
+#[test]
+fn a_patch_never_turns_into_a_sparse_replacement() {
+    let mut state = state();
+    assert!(edit(
+        &mut state,
+        "inst",
+        "title",
+        InstanceEdit::Patch {
+            patch_json: r#"{"type":"rectangle","content":"Typed"}"#.into()
+        }
+    ));
+    let entries = descendants(&state, "inst").unwrap();
+    assert!(entries["title"].get("type").is_none());
+    assert_eq!(
+        rendered_text(&state, "inst__title").as_deref(),
+        Some("Typed")
+    );
+}

@@ -119,7 +119,7 @@ pub(super) fn convert_children(children: &mut Vec<Value>, parent_flow: bool, ctx
                         // An override with `type` replaces the descendant with
                         // a whole node tree (#166, canonical
                         // `instance_descendants`): convert it as a node.
-                        let role = if value.get("type").is_some() {
+                        let role = if de_editor_core::instance_descendants::is_replacement(value) {
                             Role::Node
                         } else {
                             Role::Patch(path.clone())

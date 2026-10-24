@@ -7,7 +7,7 @@
 //! effective node without teaching generic document walkers about virtual
 //! nodes.
 
-use crate::instance_anchor::{locate_anchor, InstanceDescendant};
+use crate::instance_anchor::{locate_anchor, locate_anchor_target};
 use crate::instance_override::resolve_instance_display_node;
 use crate::node_id::NodeId;
 use crate::pen_node_ext::PenNodeExt;
@@ -15,22 +15,14 @@ use jian_ops_schema::node::PenNode;
 use jian_ops_schema::PenDocument;
 
 /// Split a canvas instance-child anchor into its authored Ref id and the
-/// descendant's id path relative to that Ref (`child`, `nested/leaf`, or
-/// the id of a node in instance-owned content). A delimiter match is not
-/// enough: the candidate must correspond to a resolvable Ref and a node the
-/// instance really renders.
+/// descendant's id PATH relative to that Ref (`child`, `nested/leaf`, or
+/// the id of a node in instance-owned content) — a path, not always a
+/// node id. A delimiter match is not enough: the candidate must correspond
+/// to a resolvable Ref and a node the instance really renders. Runs on hot
+/// paths, so it skips building the display node.
 pub fn split_instance_child_anchor(anchor: &NodeId, doc: &PenDocument) -> Option<(NodeId, NodeId)> {
-    let hit = locate_anchor(doc, anchor)?;
-    Some((hit.ref_id, NodeId::new_opt(hit.target.path())?))
-}
-
-/// The located instance descendant behind a canvas anchor, with the
-/// override target an edit writes to.
-pub fn instance_descendant_for_anchor(
-    doc: &PenDocument,
-    anchor: &NodeId,
-) -> Option<InstanceDescendant> {
-    locate_anchor(doc, anchor)
+    let (ref_id, target) = locate_anchor_target(doc, anchor)?;
+    Some((ref_id, NodeId::new_opt(target.path())?))
 }
 
 /// Resolve an authored Ref root or one of its canvas-only virtual

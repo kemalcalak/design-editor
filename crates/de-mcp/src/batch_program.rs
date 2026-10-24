@@ -511,7 +511,10 @@ fn execute_insert(binding: &str, args: &str, ctx: &mut ProgramCtx) -> Result<()>
     let mut node = parse_node_json(&args[comma + 1..], ctx.post_process, parent.is_none())?;
     if let Some(hit) = parent
         .as_deref()
-        .filter(|path| find_node_by_path(ctx.sim.active_children(), path, &ctx.alias).is_none())
+        .filter(|path| {
+            path.contains('/')
+                && find_node_by_path(ctx.sim.active_children(), path, &ctx.alias).is_none()
+        })
         .and_then(|path| find_instance_descendant(&ctx.sim, path, &ctx.alias))
     {
         return execute_instance_insert(binding, node, &hit, ctx);

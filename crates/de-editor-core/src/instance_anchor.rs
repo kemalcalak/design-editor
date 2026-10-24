@@ -43,8 +43,14 @@ impl DescendantTarget {
     /// Store a patch for this node: merged into `descendants[key]` for a
     /// master node, written in place for a node of instance-owned content
     /// (falling back to a patch keyed by its path when the entry no longer
-    /// holds it). A `null` value clears the key.
-    pub fn write_patch(&self, descendants: &mut Map<String, Value>, patch: Map<String, Value>) {
+    /// holds it). A `null` value clears the key. `id` and `type` are never
+    /// patched: a `type` would turn the entry into a sparse replacement.
+    pub fn write_patch(&self, descendants: &mut Map<String, Value>, mut patch: Map<String, Value>) {
+        patch.remove("id");
+        patch.remove("type");
+        if patch.is_empty() {
+            return;
+        }
         if let Self::Owned { entry_key, node_id } = self {
             if let Some(entry) = descendants.get_mut(entry_key) {
                 if desc::patch_owned_node(entry, entry_key, node_id, &patch) {
@@ -97,6 +103,15 @@ enum Wanted<'a> {
     Path(&'a str),
 }
 
+/// What the walk found. `display` is built only when asked for: the
+/// per-frame callers (editability, panel visibility) need the target alone.
+struct Hit {
+    target: DescendantTarget,
+    anchor: String,
+    display: Option<PenNode>,
+    is_instance: bool,
+}
+
 /// Walk state for one instance scope (the outer instance or a nested one).
 struct Scope<'a> {
     doc: &'a PenDocument,
@@ -107,6 +122,8 @@ struct Scope<'a> {
     key_prefix: String,
     /// Owned entry the current subtree belongs to, if any.
     owned_by: Option<String>,
+    /// Build the matched node's display node.
+    with_display: bool,
 }
 
 /// Resolve a canvas anchor (`inst__child`) to the node it names. Authored
@@ -129,13 +146,47 @@ pub fn locate_anchor(doc: &PenDocument, anchor: &NodeId) -> Option<InstanceDesce
         let Some(ref_node @ PenNode::Ref(_)) = find_authored(doc, &raw[..separator]) else {
             continue;
         };
-        let Some(hit) = locate_in(doc, ref_node, &Wanted::Anchor(raw)) else {
+        let Some(hit) = locate_in(doc, ref_node, &Wanted::Anchor(raw), true) else {
             continue;
         };
         if found.as_ref().is_some_and(|f| f.ref_id != hit.ref_id) {
             return None;
         }
         found = Some(hit);
+    }
+    found
+}
+
+/// [`locate_anchor`] without building the display node: the instance and
+/// the override target only, for hot paths (editability, panel visibility).
+pub fn locate_anchor_target(
+    doc: &PenDocument,
+    anchor: &NodeId,
+) -> Option<(NodeId, DescendantTarget)> {
+    let raw = anchor.as_str();
+    if !anchor.is_real() || !raw.contains("__") || find_authored(doc, raw).is_some() {
+        return None;
+    }
+    let mut found: Option<(NodeId, DescendantTarget)> = None;
+    for separator in raw
+        .as_bytes()
+        .windows(2)
+        .enumerate()
+        .filter_map(|(index, pair)| (pair == b"__").then_some(index))
+    {
+        let Some(ref_node @ PenNode::Ref(_)) = find_authored(doc, &raw[..separator]) else {
+            continue;
+        };
+        let Some(hit) = locate_in(doc, ref_node, &Wanted::Anchor(raw), false) else {
+            continue;
+        };
+        if found
+            .as_ref()
+            .is_some_and(|(ref_id, _)| *ref_id != hit.ref_id)
+        {
+            return None;
+        }
+        found = Some((hit.ref_id, hit.target));
     }
     found
 }
@@ -147,7 +198,7 @@ pub fn locate_path(
     ref_node: &PenNode,
     path: &str,
 ) -> Option<InstanceDescendant> {
-    locate_in(doc, ref_node, &Wanted::Path(path))
+    locate_in(doc, ref_node, &Wanted::Path(path), true)
 }
 
 /// Resolve an MCP id path whose first segment is an authored node and whose
@@ -166,17 +217,22 @@ pub fn locate_document_path(
     let rest: Vec<&str> = parts.collect();
     for (index, part) in rest.iter().enumerate() {
         if matches!(current, PenNode::Ref(_)) {
-            return locate_path(doc, current, &rest[index..].join("/"));
+            let separator = PATH_SEPARATOR.to_string();
+            return locate_path(doc, current, &rest[index..].join(&separator));
         }
         current = current.children()?.iter().find(|c| c.id_str() == *part)?;
     }
     None
 }
 
+/// Shared walk behind every `locate_*`: the hit and, unless
+/// `with_display` is false, its display node (a placeholder copy of the
+/// instance otherwise, never read by the target-only callers).
 fn locate_in(
     doc: &PenDocument,
     ref_node: &PenNode,
     wanted: &Wanted<'_>,
+    with_display: bool,
 ) -> Option<InstanceDescendant> {
     let PenNode::Ref(reference) = ref_node else {
         return None;
@@ -193,20 +249,18 @@ fn locate_in(
         virtual_prefix: reference.base.id.clone(),
         key_prefix: String::new(),
         owned_by: None,
+        with_display,
     };
     let mut visited = BTreeSet::from([reference.target.clone()]);
-    let (target, anchor, display, is_instance) =
-        walk_instance(&scope, &ref_value, wanted, &mut visited)?;
+    let hit = walk_instance(&scope, &ref_value, wanted, &mut visited)?;
     Some(InstanceDescendant {
         ref_id: NodeId::new_opt(&reference.base.id)?,
-        target,
-        anchor: NodeId::new_opt(&anchor)?,
-        display,
-        is_instance,
+        target: hit.target,
+        anchor: NodeId::new_opt(&hit.anchor)?,
+        display: hit.display.unwrap_or_else(|| ref_node.clone()),
+        is_instance: hit.is_instance,
     })
 }
-
-type Hit = (DescendantTarget, String, PenNode, bool);
 
 /// Walk the children an instance renders: its component's children, or its
 /// own inline children when the master is an empty shell.
@@ -252,8 +306,15 @@ fn walk_node(
 ) -> Option<Hit> {
     let original_id = raw.get("id").and_then(Value::as_str)?;
     // This node's own entry only: the entries below it are applied for the
-    // node that matches (a whole-subtree merge per node is quadratic).
-    let effective = desc::apply_entry(raw, overrides);
+    // node that matches (a whole-subtree merge per node is quadratic). A node
+    // with no entry that is not an instance is walked as it is, without a clone.
+    let needs_entry = overrides.is_some_and(|o| o.contains_key(original_id))
+        || raw.get("type").and_then(Value::as_str) == Some("ref");
+    let effective = if needs_entry {
+        std::borrow::Cow::Owned(desc::apply_entry(raw, overrides))
+    } else {
+        std::borrow::Cow::Borrowed(raw)
+    };
     let id = effective.get("id").and_then(Value::as_str)?.to_string();
     let key = desc::join_key(&scope.key_prefix, original_id);
     let entry = scope.outer.get(&key).filter(|_| scope.owned_by.is_none());
@@ -278,9 +339,18 @@ fn walk_node(
         Wanted::Path(path) => *path == target.path() || (replaced_here && *path == key),
     };
     if matched {
-        let full = desc::apply_descendants(raw, overrides, None);
-        let display = display_node(scope.doc, &full, is_instance)?;
-        return Some((target, virtual_id, display, is_instance));
+        let display = if scope.with_display {
+            let full = desc::apply_descendants(raw, overrides, None);
+            Some(display_node(scope.doc, &full, is_instance)?)
+        } else {
+            None
+        };
+        return Some(Hit {
+            target,
+            anchor: virtual_id,
+            display,
+            is_instance,
+        });
     }
     if is_instance {
         let nested_target = effective.get("ref").and_then(Value::as_str)?.to_string();
@@ -292,9 +362,11 @@ fn walk_node(
             outer: scope.outer,
             virtual_prefix: virtual_id,
             key_prefix: format!("{}{id}{PATH_SEPARATOR}", scope.key_prefix),
-            // Owned content stays owned below a nested instance only through
-            // path keys, which the outer map stores separately.
+            // A nested instance renders its own component, so nothing below
+            // it lives inside the owning entry: edits there are outer path
+            // keys (`nested/leaf`), which the resolver forwards.
             owned_by: None,
+            with_display: scope.with_display,
         };
         let hit = walk_instance(&nested, &effective, wanted, visited);
         visited.remove(&nested_target);
@@ -308,7 +380,7 @@ fn walk_node(
     let kids = effective
         .get("children")
         .and_then(Value::as_array)
-        .cloned()
+        .map(Vec::as_slice)
         .unwrap_or_default();
     let child_scope = Scope {
         doc: scope.doc,
@@ -316,8 +388,9 @@ fn walk_node(
         virtual_prefix: scope.virtual_prefix.clone(),
         key_prefix: scope.key_prefix.clone(),
         owned_by,
+        with_display: scope.with_display,
     };
-    walk_children(&child_scope, &kids, overrides, wanted, visited)
+    walk_children(&child_scope, kids, overrides, wanted, visited)
 }
 
 fn display_node(doc: &PenDocument, effective: &Value, is_instance: bool) -> Option<PenNode> {

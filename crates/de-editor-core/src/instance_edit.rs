@@ -66,16 +66,16 @@ impl EditorState {
     /// node behind a canvas anchor, `None` when the node shows the master
     /// as it is (nothing to reset).
     pub fn instance_override_at_anchor(&self, anchor: &NodeId) -> Option<(NodeId, String)> {
-        let hit = crate::instance_anchor::locate_anchor(&self.doc, anchor)?;
-        let PenNode::Ref(reference) = find_node(self.active_children(), &hit.ref_id)? else {
+        let (ref_id, target) = crate::instance_anchor::locate_anchor_target(&self.doc, anchor)?;
+        let PenNode::Ref(reference) = find_node(self.active_children(), &ref_id)? else {
             return None;
         };
-        let key = hit.target.entry_key();
+        let key = target.entry_key();
         reference
             .descendants
             .as_ref()?
             .contains_key(key)
-            .then(|| (hit.ref_id.clone(), key.to_string()))
+            .then(|| (ref_id.clone(), key.to_string()))
     }
 
     /// Reset the override of the selected instance descendant (one undo
@@ -97,7 +97,7 @@ impl EditorState {
             return false;
         }
         self.history_push_past(before);
-        if crate::instance_anchor::locate_anchor(&self.doc, &anchor).is_none() {
+        if crate::instance_anchor::locate_anchor_target(&self.doc, &anchor).is_none() {
             self.set_single_selection(instance_id);
         }
         true

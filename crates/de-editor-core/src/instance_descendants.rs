@@ -134,9 +134,11 @@ fn is_ref(map: &Map<String, Value>) -> bool {
     map.get("type").and_then(Value::as_str) == Some("ref")
 }
 
-/// A patch on a nested instance's own node targets its component root:
-/// the canonical `RefNode` holds no paint or size fields, so the keys go to
-/// `descendants[<its ref>]`, the instance's top-level override slot.
+/// A patch on a nested instance's own node: the instance-level props
+/// (position, name, visibility, …, `INSTANCE_DIRECT_PROPS`) land on the
+/// `ref` itself, where they win over the component; everything else goes to
+/// `descendants[<its ref>]`, the instance's top-level override slot, because
+/// the canonical `RefNode` holds no paint or size fields.
 fn patch_nested_instance_root(ref_map: &mut Map<String, Value>, patch: &Map<String, Value>) {
     let Some(target) = ref_map
         .get("ref")
@@ -145,15 +147,29 @@ fn patch_nested_instance_root(ref_map: &mut Map<String, Value>, patch: &Map<Stri
     else {
         return;
     };
+    let mut rest = Map::new();
+    for (key, value) in patch {
+        if matches!(key.as_str(), "id" | "type" | "children") {
+            continue;
+        }
+        if crate::instance_override::INSTANCE_DIRECT_PROPS.contains(&key.as_str()) {
+            if value.is_null() {
+                ref_map.remove(key);
+            } else {
+                ref_map.insert(key.clone(), value.clone());
+            }
+        } else {
+            rest.insert(key.clone(), value.clone());
+        }
+    }
+    if rest.is_empty() {
+        return;
+    }
     let top = descendants_mut(ref_map)
         .entry(target)
         .or_insert_with(|| Value::Object(Map::new()));
     if let Value::Object(top) = top {
-        for (key, value) in patch {
-            if !matches!(key.as_str(), "id" | "type" | "children") {
-                top.insert(key.clone(), value.clone());
-            }
-        }
+        top.extend(rest);
     }
 }
 
@@ -171,12 +187,10 @@ fn forward_into_nested_instance(
     }
     let descendants = descendants_mut(ref_map);
     for (key, value) in forwarded {
-        // Two patches merge key by key; a replacement on either side wins
-        // whole.
-        let merge = !is_replacement(&value)
-            && descendants
-                .get(&key)
-                .is_some_and(|existing| existing.is_object() && !is_replacement(existing));
+        // An outer patch merges key by key onto the inner entry, also onto a
+        // replacement the nested instance's master made (it styles that
+        // replacement); an outer replacement wins whole.
+        let merge = !is_replacement(&value) && descendants.get(&key).is_some_and(Value::is_object);
         match (descendants.get_mut(&key), value) {
             (Some(Value::Object(existing)), Value::Object(patch)) if merge => {
                 existing.extend(patch);
@@ -229,15 +243,8 @@ pub fn find_owned_node_mut<'a>(
             .iter_mut()
             .find_map(|child| walk(child, node_id))
     }
-    if is_replacement(entry) {
-        if replacement_root_id(entry, entry_key) == node_id {
-            return Some(entry);
-        }
-        return entry
-            .get_mut("children")?
-            .as_array_mut()?
-            .iter_mut()
-            .find_map(|child| walk(child, node_id));
+    if is_replacement(entry) && replacement_root_id(entry, entry_key) == node_id {
+        return Some(entry);
     }
     entry
         .get_mut("children")?

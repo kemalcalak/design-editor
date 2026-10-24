@@ -223,3 +223,28 @@ fn owned_nodes_patch_in_place_and_reset_clears_paths() {
     assert_eq!(keys, ["slotted", "title"]);
     assert!(!reset_entry(&mut descendants, "slot"));
 }
+
+#[test]
+fn instance_props_on_a_nested_instance_win_over_its_authored_ones() {
+    let document = doc(json!({"version":"1.0.0","children":[
+        library()[1].clone(),
+        {"type":"frame","id":"bar","reusable":true,"width":300,"height":48,"children":[
+            {"type":"ref","id":"save","ref":"button","x":10,"y":4,"name":"Save",
+             "descendants":{"label":{"type":"icon_font","id":"glyph","iconFontName":"check",
+                                     "width":16,"height":16}}}]},
+        {"type":"ref","id":"top","ref":"bar","descendants":{
+            "save":{"x":50,"name":"Moved"},
+            "save/label":{"fill":[{"type":"solid","color":"#ff0000"}]}}}
+    ]}));
+    let resolved = resolve_refs_for_canvas(&document);
+    let inst = resolved.children.last().expect("instance");
+    let save = find(inst, "top__save");
+    assert_eq!(save.base().x, Some(50.0));
+    assert_eq!(save.base().name.as_deref(), Some("Moved"));
+    let glyph = find(inst, "top__save__glyph");
+    assert!(
+        matches!(glyph, PenNode::IconFont(_)),
+        "an outer patch styles the master's replacement instead of undoing it"
+    );
+    assert_eq!(crate::fills::first_solid_fill_hex(glyph), Some("#ff0000"));
+}

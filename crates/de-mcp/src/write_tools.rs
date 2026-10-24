@@ -339,17 +339,14 @@ fn update_instance_descendant(
         None => serde_json::Map::new(),
     };
     for key in ["x", "y", "width", "height"] {
-        if let Some(raw) = args.get(key) {
-            match raw.trim().parse::<f64>() {
-                Ok(number) => {
-                    patch.insert(key.into(), serde_json::json!(number));
-                }
-                Err(_) => {
-                    return ToolOutcome::Err(
-                        ToolErrorCode::InvalidArgument,
-                        format!("{key} must be a number, got {raw:?}"),
-                    )
-                }
+        // Same parse and message as the plain-id branch.
+        match parse_opt_i32(args, key) {
+            Ok(Some(number)) => {
+                patch.insert(key.into(), serde_json::json!(number));
+            }
+            Ok(None) => {}
+            Err(e) => {
+                return ToolOutcome::Err(ToolErrorCode::InvalidArgument, format!("{key}: {e}"))
             }
         }
     }

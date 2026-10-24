@@ -5,15 +5,19 @@
 //! A `PenNode::Ref` renders as its target component's subtree:
 //! instance-level props override the component's (position, size,
 //! name, …), every descendant id is remapped to the virtual
-//! `refId__childId` space, and `descendants` overrides are spread
-//! onto the matching children. The scene builder runs this pass
-//! BEFORE `$variable` resolution so expanded subtrees resolve their
-//! tokens too.
+//! `refId__childId` space, and `descendants` overrides apply to the
+//! matching children ([`crate::instance_descendants`]). The scene builder
+//! runs this pass BEFORE `$variable` resolution so expanded subtrees
+//! resolve their tokens too.
 //!
 //! The instance/component prop merge uses `serde_json::Value` object
-//! spreads — byte-for-byte the TS semantics (`{ ...component,
-//! ...definedRefProps }` and `{ ...child, ...override }`), with no
-//! per-field porting drift.
+//! spreads — the TS semantics (`{ ...component, ...definedRefProps }`).
+//!
+//! DELIBERATE DIVERGENCE from TS (#166, pen.dev's contract): a
+//! `descendants` entry with `type` replaces the whole descendant subtree,
+//! a patch with `children` fills a slot, and `nested/leaf` keys are
+//! forwarded into nested instances; TS only spread `{ ...child,
+//! ...override }`.
 //!
 //! DELIBERATE DIVERGENCE from TS: nested instances inside an
 //! expanded component expand recursively here (TS stops after one

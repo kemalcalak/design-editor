@@ -85,3 +85,28 @@ fn owned_rows_collapse_with_the_instance_and_resolve_in_the_inspector() {
         .iter()
         .any(|(id, _, _)| id.starts_with("inst__")));
 }
+
+#[test]
+fn eye_on_an_owned_row_hides_it_and_stale_entries_get_no_row() {
+    let mut state = state();
+    assert!(state.toggle_node_hidden(&NodeId::new("inst__mine")));
+    let panel = LayerPanel::from_editor(&state);
+    let mine = panel
+        .items
+        .iter()
+        .find(|item| item.node_id.as_str() == "inst__mine")
+        .expect("row");
+    assert!(mine.hidden, "the flag is stored in the slot's entry");
+
+    if let Some(jian_ops_schema::node::PenNode::Ref(reference)) =
+        de_editor_core::walkers::find_node_mut(state.active_children_mut(), &NodeId::new("plain"))
+    {
+        reference.descendants = Some(std::collections::BTreeMap::from([(
+            "gone".to_string(),
+            serde_json::json!({"children":[{"type":"text","id":"orphan","content":"x"}]}),
+        )]));
+    }
+    assert!(!rows(&state)
+        .iter()
+        .any(|(id, _, _)| id.starts_with("plain__")));
+}

@@ -36,55 +36,71 @@ pub(super) fn push_owned_rows(
         return;
     };
     for (key, entry) in descendants {
-        let prefix = virtual_prefix(&reference.base.id, key);
-        if is_replacement(entry) {
+        let replaced = is_replacement(entry);
+        if !replaced && !owns_children(entry) {
+            continue;
+        }
+        // An entry for a node the master no longer has renders nothing, so
+        // it gets no row either. The hit's anchor is the canvas's own.
+        let Some(hit) = de_editor_core::instance_anchor::locate_path(cx.doc, ref_node, key) else {
+            continue;
+        };
+        let own_id = if replaced {
+            replacement_root_id(entry, key)
+        } else {
+            key.rsplit_once(PATH_SEPARATOR)
+                .map_or(key.as_str(), |(_, last)| last)
+        };
+        let Some(prefix) = hit
+            .anchor
+            .as_str()
+            .strip_suffix(own_id)
+            .and_then(|rest| rest.strip_suffix("__"))
+        else {
+            continue;
+        };
+        if replaced {
             let mut root = entry.clone();
             if root.get("id").and_then(Value::as_str).is_none() {
-                root["id"] = Value::String(replacement_root_id(entry, key).to_string());
+                root["id"] = Value::String(own_id.to_string());
             }
             if let Ok(node) = serde_json::from_value::<PenNode>(root) {
-                push_subtree(&node, &prefix, cx, depth, out);
+                push_subtree(&node, prefix, cx, depth, out);
             }
-        } else if owns_children(entry) {
-            push_slot(ref_node, key, entry, &prefix, cx, depth, out);
+        } else {
+            push_slot(
+                &hit.display,
+                hit.anchor.as_str(),
+                own_id,
+                entry,
+                prefix,
+                cx,
+                depth,
+                out,
+            );
         }
     }
-}
-
-/// The anchor prefix of the nodes an entry at `key` holds: the instance id,
-/// plus one `__segment` per nested instance the key passes through.
-fn virtual_prefix(ref_id: &str, key: &str) -> String {
-    let mut prefix = ref_id.to_string();
-    if let Some((nested, _)) = key.rsplit_once(PATH_SEPARATOR) {
-        for segment in nested.split(PATH_SEPARATOR) {
-            prefix = de_editor_core::ref_resolve::instance_child_virtual_id(&prefix, segment);
-        }
-    }
-    prefix
 }
 
 /// A filled slot: the master's slot frame as a row, the instance's own
 /// children under it.
+#[allow(clippy::too_many_arguments)]
 fn push_slot(
-    ref_node: &PenNode,
-    key: &str,
+    display: &PenNode,
+    anchor: &str,
+    slot_id: &str,
     entry: &Value,
     prefix: &str,
     cx: &WalkCx<'_>,
     depth: usize,
     out: &mut Vec<LayerItem>,
 ) {
-    let slot_id = key
-        .rsplit_once(PATH_SEPARATOR)
-        .map_or(key, |(_, last)| last);
-    let anchor = de_editor_core::ref_resolve::instance_child_virtual_id(prefix, slot_id);
-    let display =
-        de_editor_core::instance_anchor::locate_path(cx.doc, ref_node, key).map(|hit| hit.display);
     let label = display
-        .as_ref()
-        .and_then(|node| node.base().name.clone())
+        .base()
+        .name
+        .clone()
         .unwrap_or_else(|| slot_id.to_string());
-    let mut item = owned_item(display.as_ref(), anchor, label, cx, depth);
+    let mut item = owned_item(display, anchor.to_string(), label, cx, depth);
     item.has_children = true;
     let collapsed = item.collapsed;
     out.push(item);
@@ -112,7 +128,7 @@ fn push_subtree(
         .name
         .clone()
         .unwrap_or_else(|| kind_label(node).to_string());
-    let item = owned_item(Some(node), anchor, label, cx, depth);
+    let item = owned_item(node, anchor, label, cx, depth);
     let collapsed = item.collapsed;
     out.push(item);
     if collapsed {
@@ -123,31 +139,33 @@ fn push_subtree(
     }
 }
 
+/// One row for a node an instance renders. Eye / lock clicks reach the
+/// node through `toggle_node_hidden` / `toggle_node_locked`, which store the
+/// flag as the instance's override.
 fn owned_item(
-    node: Option<&PenNode>,
+    node: &PenNode,
     anchor: String,
     label: String,
     cx: &WalkCx<'_>,
     depth: usize,
 ) -> LayerItem {
     let id = NodeId::new(anchor);
+    let base = node.base();
     LayerItem {
         collapsed: cx.ui.collapsed_layers.contains(&id),
         node_id: id,
         label,
-        kind_label: node.map_or("Frame", kind_label).to_string(),
-        icon: node.map_or(super::icons::Icon::Hash, icon_for_node),
+        kind_label: kind_label(node).to_string(),
+        icon: icon_for_node(node),
         depth,
-        has_children: node
-            .and_then(PenNodeExt::children)
-            .is_some_and(|c| !c.is_empty()),
-        hidden: node.is_some_and(|n| n.base().visible == Some(false)),
-        locked: false,
+        has_children: node.children().is_some_and(|c| !c.is_empty()),
+        hidden: base.visible == Some(false),
+        locked: base.locked.unwrap_or(false),
         renaming: false,
         // Instance content moves only through the instance's overrides.
         is_container: false,
         is_reusable: false,
-        is_instance: node.is_some_and(|n| matches!(n, PenNode::Ref(_))),
+        is_instance: matches!(node, PenNode::Ref(_)),
     }
 }
 
