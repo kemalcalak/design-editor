@@ -6,6 +6,7 @@ use super::*;
 pub(super) fn frame_to_payload(n: &FrameNode, _rects: &BTreeMap<String, [f32; 4]>) -> NodePayload {
     let mut p = base_payload(&n.base, "frame");
     p.clip_content = n.container.clip_content == Some(true);
+    p.placeholder = n.placeholder == Some(true);
     apply_container_style(
         &mut p,
         n.container.fill.as_deref(),
@@ -154,6 +155,7 @@ pub(super) fn line_to_payload(n: &LineNode) -> NodePayload {
             join: None,
             dash_pattern: None,
             dash_offset: None,
+            fill_layers: Vec::new(),
         });
     }
     p

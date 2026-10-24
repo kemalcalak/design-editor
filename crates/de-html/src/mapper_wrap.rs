@@ -323,6 +323,7 @@ fn build_rows(
             route: None,
             screen: None,
             breakpoint: None,
+            placeholder: None,
         }));
         context.node_count += 1;
     }

@@ -424,6 +424,7 @@ fn inline_row(id: String, children: Vec<PenNode>) -> PenNode {
         route: None,
         screen: None,
         breakpoint: None,
+        placeholder: None,
     })
 }
 
@@ -491,6 +492,7 @@ fn empty_strut(id: String, height: f64) -> PenNode {
         route: None,
         screen: None,
         breakpoint: None,
+        placeholder: None,
     })
 }
 
@@ -525,6 +527,7 @@ fn anonymous_line_box(id: String, definite_width: bool, children: Vec<PenNode>) 
         route: None,
         screen: None,
         breakpoint: None,
+        placeholder: None,
     })
 }
 

@@ -141,6 +141,7 @@ pub fn frame(
         gestures: None,
         route: None,
         breakpoint: None,
+        placeholder: None,
     })
 }
 
@@ -184,6 +185,7 @@ pub fn flex_frame(
         gestures: None,
         route: None,
         breakpoint: None,
+        placeholder: None,
     })
 }
 
