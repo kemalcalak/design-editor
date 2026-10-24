@@ -80,7 +80,7 @@ fn is_strong_rtl(c: char) -> bool {
 }
 
 /// Whether `text` needs a real shaping engine (bidi reordering and/or
-/// contextual glyph selection) rather than the 1:1 cmap fast path.
+/// contextual glyph selection) rather than the word-shaped fast path.
 pub fn needs_complex_shaping(text: &str) -> bool {
     text.chars().any(|c| {
         let cp = c as u32;

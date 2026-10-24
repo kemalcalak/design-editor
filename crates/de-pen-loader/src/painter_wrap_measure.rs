@@ -12,13 +12,12 @@
 //! extent) keeps `SkiaMeasure`'s answer. Both go through one resolver, the
 //! one `SkiaMeasure` measures natural widths with.
 
+use de_editor_core::text_defaults;
 use jian_core::layout::measure::{FontStyleKind, MeasureBackend, MeasureRequest, MeasureResult};
 
 /// Bundled last-resort face of the native painter (`NativeBackend`), so a
 /// family nothing resolves measures in the face the canvas paints.
 const ROBOTO_TTF: &[u8] = include_bytes!("../../de-host-native/assets/Roboto-Regular.ttf");
-
-use de_editor_core::text_defaults;
 
 pub(crate) struct PainterWrapMeasure {
     paragraph: jian_skia::SkiaMeasure,

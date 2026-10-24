@@ -116,7 +116,7 @@ Mutators on `Document`:
 
 `Node::aggregate_bounds` returns child-union bounds for container nodes (Group / unbounded Frame) so the property panel reports meaningful W/H.
 
-`NodeKind` now spans Frame / Group / Rect / Ellipse / Polygon / Line / Text / Path / Other; each has its own canvas paint (oval, triangle polygon, diagonal line, fill+stroke rect, polyline through `node.points`, draw_str). The `RenderBackend` trait grew `fill_oval` / `stroke_oval` / `fill_polygon` / `stroke_polygon` / `rotate` / `fill_svg_path` so both native + web backends can paint them; `fill_svg_path` covers brand logos that ship as filled SVG paths in a non-24×24 viewBox.
+`NodeKind` now spans Frame / Group / Rect / Ellipse / Polygon / Line / Text / Path / Other; each has its own canvas paint (oval, triangle polygon, diagonal line, fill+stroke rect, polyline through `node.points`, shaped text). The `RenderBackend` trait grew `fill_oval` / `stroke_oval` / `fill_polygon` / `stroke_polygon` / `rotate` / `fill_svg_path` so both native + web backends can paint them; `fill_svg_path` covers brand logos that ship as filled SVG paths in a non-24×24 viewBox.
 
 `FillType { Solid, LinearGradient, RadialGradient, Image }` + `FlexLayout { Free, Vertical, Horizontal }` drive the property panel's dropdowns / button groups; both live on `Document.ui` so toggles persist across selection changes.
 
@@ -337,7 +337,7 @@ A routed (APP MODE) preview browses like a website. `de-preview-core/src/browse.
 - Cursor flips to `EwResize` when over a panel-resize gutter (`host.panel_resize_hover`)
 - `WaitUntil(host.next_animation_deadline_ms())` pumps the caret-blink redraw
 
-Native font path bypasses jian-skia's `textlayout` (which builds a fresh `FontCollection` per call → 605ms chrome frame): `NativeBackend` caches a Roboto Typeface + per-codepoint system fonts (resolved via `FontMgr::match_family_style_character`, cached per `i32`) so multi-script chrome (한국어 / हिन्दी / ไทย / Tiếng Việt) renders against the right font. `draw_text` segments each run by typeface and dispatches each segment via `Canvas::draw_str`.
+Native font path bypasses jian-skia's `textlayout` (which builds a fresh `FontCollection` per call → 605ms chrome frame): `NativeBackend` caches a Roboto Typeface + per-codepoint system fonts (resolved via `FontMgr::match_family_style_character`, cached per `i32`) so multi-script chrome (한국어 / हिन्दी / ไทย / Tiếng Việt) renders against the right font. `draw_text` paints each run as the per-segment glyph blobs `FontResolver::shape_run` caches (kerned, #197).
 
 Run: `cargo run -p design-editor --release`.
 

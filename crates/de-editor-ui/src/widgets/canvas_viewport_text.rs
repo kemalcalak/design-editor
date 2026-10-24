@@ -274,61 +274,55 @@ fn draw_slice(
     // Per-char path — letter spacing after every glyph (legacy painter
     // model) plus the justify share after each space. Each glyph sits at
     // the kerned advance of the text before it, so the line spans what
-    // the wrap measured (#197). The prefix is measured from the last
-    // space, where the backend's word shaping starts a new word anyway.
-    let mut measure = |text: &str| {
-        if text.is_empty() {
-            0.0
-        } else {
-            backend.measure_text_family_styled(
-                text,
-                style.font_size,
-                family,
-                style.weight,
-                style.italic,
-            )
-        }
-    };
-    let mut word_base = 0.0;
-    let mut word_start = 0;
+    // the wrap measured (#197). Advances are measured from the start of
+    // the current shaping token (a word, a space or a CJK character, where
+    // the backend's word shaper splits too), so each glyph costs one short
+    // measure.
+    let mut token_base = 0.0;
+    let mut token_start = 0;
+    let mut advance = 0.0;
     let mut spacing = 0.0;
-    let mut glyph_ends = Vec::new();
-    for (i, ch) in slice.char_indices() {
-        let end = i + ch.len_utf8();
-        let before = word_base + measure(&slice[word_start..i]);
-        let after = word_base + measure(&slice[word_start..end]);
-        glyph_ends.push((i, end, x + before + spacing, x + after + spacing));
-        spacing += letter_spacing;
-        if ch == ' ' {
-            spacing += justify_extra;
-            word_base = after;
-            word_start = end;
-        }
-    }
     let mut cursor = x;
     let mut glyph_end = x;
-    for (start, end, at, ink_end) in glyph_ends {
+    for (i, ch) in slice.char_indices() {
+        let end = i + ch.len_utf8();
+        let own_token = ch == ' ' || de_editor_core::text_wrap::is_cjk(ch);
+        if own_token {
+            token_base = advance;
+            token_start = i;
+        }
+        let at = x + advance + spacing;
+        advance = token_base + measure_styled(backend, &slice[token_start..end], style, family);
+        if own_token {
+            token_base = advance;
+            token_start = end;
+        }
         if draw {
             backend.draw_text(
-                &TextLayout::single_run(
-                    &slice[start..end],
-                    family,
-                    style.font_size,
-                    jc,
-                    Point2D::ZERO,
-                )
-                .with_font_weight(style.weight)
-                .with_italic(style.italic),
+                &TextLayout::single_run(&slice[i..end], family, style.font_size, jc, Point2D::ZERO)
+                    .with_font_weight(style.weight)
+                    .with_italic(style.italic),
                 Point2D::new(at, baseline_y),
             );
         }
-        glyph_end = ink_end;
-        cursor = ink_end + letter_spacing;
-        if &slice[start..end] == " " {
-            cursor += justify_extra;
+        glyph_end = x + advance + spacing;
+        spacing += letter_spacing;
+        if ch == ' ' {
+            spacing += justify_extra;
         }
+        cursor = x + advance + spacing;
     }
     (cursor, glyph_end)
+}
+
+/// Advance of `text` in the slice's face.
+fn measure_styled(
+    backend: &mut dyn RenderBackend,
+    text: &str,
+    style: SliceStyle,
+    family: &str,
+) -> f32 {
+    backend.measure_text_family_styled(text, style.font_size, family, style.weight, style.italic)
 }
 
 /// Underline / strikethrough decoration for one painted slice.

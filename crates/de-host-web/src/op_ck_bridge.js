@@ -598,6 +598,8 @@ export async function opCkInit(canvasId) {
   // These caches key off the selected registry identity. Any imported or
   // system registry change invalidates them so later exact-name matches use
   // the newly registered face.
+  // Assigned with the word shaper below (`shapeWord`); a no-op until then.
+  let clearShapedCaches = () => {};
   const clearRegisteredFontCaches = () => {
     clearShapedCaches();
     registeredCoverageCache.clear();
@@ -1169,33 +1171,62 @@ export async function opCkInit(canvasId) {
   // glyphs and offsets. A run measures as the sum of its tokens and paints
   // those same glyphs, so wrapping, carets and paint agree and kern the way
   // browsers and pen.dev do. Faces registered without bytes (the CanvasKit
-  // default) keep the plain advances on both sides.
-  const shapeProvider = CK.TypefaceFontProvider && CK.ParagraphBuilder && CK.ParagraphBuilder.MakeFromFontProvider
-    ? CK.TypefaceFontProvider.Make()
-    : null;
-  const shapeAliases = new WeakMap();
+  // default) keep the plain advances on both sides. CanvasKit has no
+  // variation API, so a variable face shapes at its default instance (bold
+  // stays synthetic here, unlike native's `wght` instancing). Caps match
+  // native `shaped_words` (16384 words over all faces, 4096 runs).
+  const shapingAvailable = Boolean(
+    CK.TypefaceFontProvider && CK.ParagraphBuilder && CK.ParagraphBuilder.MakeFromFontProvider,
+  );
+  // Each face's bytes wait here and enter the shaping provider the first
+  // time the face is shaped. The provider cannot unregister a face, so a
+  // registry change (`clearShapedCaches`) drops the whole provider rather
+  // than piling up the bytes of replaced faces.
+  const shapeBytes = new WeakMap();
+  let shapeProvider = null;
+  let shapeAliases = new WeakMap();
   let shapeAliasSeq = 0;
   const registerShapeFace = (tf, bytes) => {
-    if (!shapeProvider || !tf) return;
-    const alias = '__de_shape_' + shapeAliasSeq++;
-    try {
-      shapeProvider.registerFont(copyBytes(bytes), alias);
-      shapeAliases.set(tf, alias);
-    } catch (e) {
-      // Unparseable for the shaper: this face keeps the plain advances.
+    if (shapingAvailable && tf) shapeBytes.set(tf, copyBytes(bytes));
+  };
+  const shapeAlias = (tf) => {
+    if (!tf) return undefined;
+    const known = shapeAliases.get(tf);
+    if (known !== undefined) return known;
+    const bytes = shapeBytes.get(tf);
+    let alias = null;
+    if (bytes) {
+      try {
+        if (!shapeProvider) shapeProvider = CK.TypefaceFontProvider.Make();
+        alias = '__de_shape_' + shapeAliasSeq++;
+        shapeProvider.registerFont(bytes, alias);
+      } catch (e) {
+        // Unparseable for the shaper: this face keeps the plain advances.
+        alias = null;
+      }
     }
+    shapeAliases.set(tf, alias);
+    return alias;
   };
   const SHAPED_WORD_CACHE_CAP = 16384;
   const shapedWordCache = new Map();
   const SHAPED_BLOB_CACHE_CAP = 4096;
   const shapedBlobCache = new Map();
-  const clearShapedCaches = () => {
-    shapedWordCache.clear();
+  const dropShapedBlobs = () => {
     for (const entry of shapedBlobCache.values()) {
       if (entry.blob && entry.blob.delete) entry.blob.delete();
     }
     shapedBlobCache.clear();
   };
+  clearShapedCaches = () => {
+    shapedWordCache.clear();
+    dropShapedBlobs();
+    if (shapeProvider && shapeProvider.delete) shapeProvider.delete();
+    shapeProvider = null;
+    shapeAliases = new WeakMap();
+  };
+  // Same ranges as `de_editor_core::text_wrap::is_cjk` and jian-skia
+  // `shaped_words::is_cjk` (kerned_text_bridge.rs keeps them equal).
   const isShapeCjk = (c) => {
     const n = c.codePointAt(0);
     return (n >= 0x4e00 && n <= 0x9fff) || (n >= 0x3400 && n <= 0x4dbf) || (n >= 0x3040 && n <= 0x30ff)
@@ -1229,19 +1260,25 @@ export async function opCkInit(canvasId) {
       const para = builder.build();
       builder.delete();
       para.layout(1e6);
-      const glyphs = [];
-      const xs = [];
-      const ys = [];
-      for (const line of para.getShapedLines()) {
-        for (const run of line.runs) {
-          for (let i = 0; i < run.glyphs.length; i++) {
-            glyphs.push(run.glyphs[i]);
-            xs.push(run.positions[2 * i]);
-            ys.push(run.positions[2 * i + 1] - line.baseline);
-          }
+      const lines = para.getShapedLines();
+      // One line, one run: anything else means the shaper fell back to
+      // another registered face, whose glyph ids the caller's font cannot
+      // draw. Such tokens keep the plain advances.
+      const run = lines.length === 1 && lines[0].runs.length === 1 ? lines[0].runs[0] : null;
+      if (run && run.glyphs.length) {
+        const n = run.glyphs.length;
+        const glyphs = Array.from(run.glyphs);
+        const xs = [];
+        const ys = [];
+        for (let i = 0; i < n; i++) {
+          xs.push(run.positions[2 * i]);
+          ys.push(run.positions[2 * i + 1] - lines[0].baseline);
         }
+        // The run's end point is the exact advance; the paragraph width can
+        // be rounded to whole pixels.
+        const width = run.positions.length > 2 * n ? run.positions[2 * n] : para.getMaxIntrinsicWidth();
+        word = { width, glyphs, xs, ys };
       }
-      if (glyphs.length) word = { width: para.getMaxIntrinsicWidth(), glyphs, xs, ys };
       para.delete();
     } catch (e) {
       word = null;
@@ -1252,7 +1289,7 @@ export async function opCkInit(canvasId) {
   };
   // Kerned advance of `s` in face `tf` (the font `f` at size `sz`).
   const kernedWidth = (tf, f, sz, s) => {
-    const alias = tf ? shapeAliases.get(tf) : undefined;
+    const alias = shapeAlias(tf);
     if (!alias) return runWidth(f, s);
     let w = 0;
     for (const token of shapeTokens(s)) {
@@ -1263,7 +1300,7 @@ export async function opCkInit(canvasId) {
   };
   // Paint `s` with the advances `kernedWidth` reports; returns the advance.
   const drawKerned = (tf, f, sz, italic, s, x, y, p) => {
-    const alias = tf ? shapeAliases.get(tf) : undefined;
+    const alias = shapeAlias(tf);
     if (!alias) {
       canvas.drawText(s, x, y, p, f);
       return runWidth(f, s);
@@ -1296,12 +1333,7 @@ export async function opCkInit(canvasId) {
         ? CK.TextBlob.MakeFromRSXformGlyphs(Uint16Array.from(glyphs), Float32Array.from(xforms), f)
         : null;
       entry = { blob, width: advance };
-      if (shapedBlobCache.size >= SHAPED_BLOB_CACHE_CAP) {
-        for (const old of shapedBlobCache.values()) {
-          if (old.blob && old.blob.delete) old.blob.delete();
-        }
-        shapedBlobCache.clear();
-      }
+      if (shapedBlobCache.size >= SHAPED_BLOB_CACHE_CAP) dropShapedBlobs();
       shapedBlobCache.set(key, entry);
     }
     if (entry.blob) canvas.drawTextBlob(entry.blob, x, y, p);

@@ -44,6 +44,25 @@ fn registered_faces_measure_and_paint_through_the_word_shaper() {
 }
 
 #[test]
+fn the_bridge_splits_words_at_the_cjk_set_native_uses() {
+    let source = bridge_source();
+    // `de_editor_core::text_wrap::is_cjk` (and jian-skia's copy) ranges.
+    for (lo, hi) in [
+        (0x4e00, 0x9fff),
+        (0x3400, 0x4dbf),
+        (0x3040, 0x30ff),
+        (0xac00, 0xd7af),
+        (0x3000, 0x303f),
+        (0xff00, 0xffef),
+    ] {
+        let range = format!("(n >= {lo:#06x} && n <= {hi:#06x})");
+        assert!(source.contains(&range), "isShapeCjk must cover {range}");
+        let ch = char::from_u32(lo).expect("valid codepoint");
+        assert!(de_editor_core::text_wrap::is_cjk(ch), "{lo:#06x}");
+    }
+}
+
+#[test]
 fn only_the_unshaped_fallback_draws_plain_text() {
     let source = bridge_source();
     // `drawKerned` keeps one plain `drawText` for faces without bytes (the

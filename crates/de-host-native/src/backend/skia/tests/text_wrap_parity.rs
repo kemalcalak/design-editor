@@ -94,7 +94,7 @@ fn a_line_one_px_wider_than_the_box_wraps() {
     assert_eq!(layout_line_count(line, natural.ceil() - 1.0, 400), 2);
 }
 
-/// Rightmost inked column of `text` painted at x = 0, 40 px Inter.
+/// Rightmost inked column of `text` painted at x = 0, `size` px in `FAMILY`.
 fn painted_ink_right(native: &mut NativeBackend, text: &str, size: f32) -> i32 {
     let (w, h) = (900, 80);
     let mut surface = skia_safe::surfaces::raster_n32_premul((w, h)).expect("surface");
