@@ -204,7 +204,9 @@ fn normalize_blur_body(obj: &mut Map<String, Value>) {
 }
 
 /// Move a shader effect's source to `sksl` from the names models borrow
-/// from shader fills and GLSL tooling. A body with no source at all is left
+/// from shader fills and GLSL tooling. Only an effect typed `shader` (or
+/// already carrying `sksl`) reaches here; a bare `code` key is too generic
+/// to infer a shader from. A body with no source at all is left
 /// to fail loudly: there is no identity program to invent.
 fn normalize_shader_body(obj: &mut Map<String, Value>) {
     for alias in ["source", "code", "shader", "glsl"] {

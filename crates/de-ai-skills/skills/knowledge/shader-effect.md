@@ -31,8 +31,12 @@ effects: [{ type: "shader", sksl: "<SkSL source>", uniforms: { name: value } }]
   (0..width, 0..height). `uniform float2 size;` is bound to the node size.
 - `uniforms` work like a shader fill's (number, `[a,b]` vector, `"#hex"`
   colour). `uniform float time;` / `uniform float2 mouse;` are bound by the
-  canvas; never put `size`, `time` or `mouse` in `uniforms`.
-- Several effects run in list order; output is cropped to the node box.
+  canvas (exports: `time = 0`, `mouse` far outside the node); never put
+  `size`, `time` or `mouse` in `uniforms`. No images: any other
+  `uniform shader` child reads transparent.
+- Order: `background` passes run first (before the node paints), in list
+  order; `object` passes then run in list order over the node. Output is
+  cropped to the node box.
 
 KNOWN-GOOD SNIPPETS:
 

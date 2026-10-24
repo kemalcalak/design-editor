@@ -296,8 +296,11 @@ fn paint_node_inner<'a>(
     };
     // Shader effects (#6): backdrop passes see the (blurred) backdrop;
     // object passes open after the composite layer so opacity and blend
-    // apply to their output. Gestures skip them like the blur layers.
-    let backdrop_shader_layers = if options.fast_interaction {
+    // apply to their output. Gestures and sub-pixel nodes skip them like
+    // the blur layers.
+    let shader_effects_visible = !options.fast_interaction
+        && world_rect.size.x.max(world_rect.size.y) * dpi_scale >= MIN_VISIBLE_EFFECT_DEVICE_PX;
+    let backdrop_shader_layers = if !shader_effects_visible {
         0
     } else {
         shader_effects::push_backdrop_shader_effects(cx, node, world_rect, zoom)
@@ -332,9 +335,9 @@ fn paint_node_inner<'a>(
         cx.backend
             .push_composite_layer(bounds, node_composite_opacity, node_composite_mode);
     }
-    // Popped after the composite layer's content, before it: the backdrop
-    // layers (opened earlier) close last.
-    let object_shader_layers = if options.fast_interaction {
+    // Object passes open inside the composite layer and close before it;
+    // backdrop passes, opened earlier, close after it.
+    let object_shader_layers = if !shader_effects_visible {
         0
     } else {
         shader_effects::push_object_shader_effects(cx, node, world_rect)

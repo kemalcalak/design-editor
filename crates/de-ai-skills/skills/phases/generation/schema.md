@@ -43,7 +43,7 @@ Fill = [{ type: "solid", color: "#hex" }] or [{ type: "linear_gradient", angle, 
 - turbulence preset example: `fill: [{ type: "shader", preset: "turbulence", uniforms: { baseFrequency: 0.08, seed: 0, numOctaves: 3 } }]`
 - Gradient stops use `offset` (0..1 position) and `color` (hex). Never write `pos`.
 - text nodes' `content` is ALWAYS a string — never a number, boolean, or null.
-Stroke = { thickness, fill: [...] } — thickness accepts number (uniform) | [T, R, B, L] | { top, right, bottom, left } (per-side, e.g. { bottom: 1 } for an underline). Effects = [{ type: "shadow", offsetX, offsetY, blur, spread, color }]; advanced: `{ type: "shader", sksl, uniforms }` post-processes the node (`uniform shader object;`) or its backdrop (`uniform shader background;`), see `shader-effect`.
+Stroke = { thickness, fill: [...] } — thickness accepts number (uniform) | [T, R, B, L] | { top, right, bottom, left } (per-side, e.g. { bottom: 1 } for an underline). Effects = [{ type: "shadow", offsetX, offsetY, blur, spread, color }]; `{ type: "shader", sksl }` post-processes the node, see `shader-effect`.
 SIZING: width/height accept number (px), "fill_container", or "fit_content".
 NUMERIC FIELDS (x, y, width, height, cornerRadius, gap, fontSize, fontWeight, opacity): bare numbers only — never quoted, never with units like "158px" or "50%".
 Fill variant types use snake_case: "linear_gradient", "radial_gradient", "mesh_gradient", not CSS hyphens or camelCase.

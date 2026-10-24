@@ -27,28 +27,40 @@ pub fn shader_effects_from_canonical(node: &PenNode) -> Vec<ShaderEffectPayload>
     let Some(effects) = crate::effects::canonical_node_effects(node) else {
         return Vec::new();
     };
-    effects
-        .iter()
-        .filter_map(|effect| match effect {
-            PenEffect::Shader(body) if body.visible != Some(false) => {
-                let fill = PenFill::Shader(ShaderFillBody {
-                    preset: None,
-                    sksl: Some(body.sksl.clone()),
-                    uniforms: body.uniforms.clone(),
-                    explain: None,
-                    opacity: None,
-                    blend_mode: None,
-                });
-                let resolved = crate::style_payload::shader_payload(&fill)?;
-                Some(ShaderEffectPayload {
-                    background: de_editor_core::shader_effects::samples_background(&resolved.sksl),
-                    sksl: resolved.sksl,
-                    uniforms: resolved.uniforms,
-                })
-            }
-            _ => None,
-        })
-        .collect()
+    effects.iter().filter_map(shader_effect_payload).collect()
+}
+
+/// `effect` as a payload when it is a visible shader effect with a
+/// non-empty program. Uniforms named like the `object` / `background`
+/// children are dropped: the host binds those, so they are never images.
+pub fn shader_effect_payload(effect: &PenEffect) -> Option<ShaderEffectPayload> {
+    let PenEffect::Shader(body) = effect else {
+        return None;
+    };
+    if body.visible == Some(false) {
+        return None;
+    }
+    use de_editor_core::shader_effects::{BACKGROUND_CHILD, OBJECT_CHILD};
+    let uniforms = body.uniforms.as_ref().map(|map| {
+        map.iter()
+            .filter(|(name, _)| *name != OBJECT_CHILD && *name != BACKGROUND_CHILD)
+            .map(|(name, value)| (name.clone(), value.clone()))
+            .collect()
+    });
+    let fill = PenFill::Shader(ShaderFillBody {
+        preset: None,
+        sksl: Some(body.sksl.clone()),
+        uniforms,
+        explain: None,
+        opacity: None,
+        blend_mode: None,
+    });
+    let resolved = crate::style_payload::shader_payload(&fill)?;
+    Some(ShaderEffectPayload {
+        background: de_editor_core::shader_effects::samples_background(&resolved.sksl),
+        sksl: resolved.sksl,
+        uniforms: resolved.uniforms,
+    })
 }
 
 /// The scene pass for `payload` on a node of document `size`. `size` is

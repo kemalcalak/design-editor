@@ -410,6 +410,11 @@ export function opCkShaderEffectChildMatrix(total, local, dl, dt) {
   return opCkMat3Multiply(inverse, [1, 0, dl, 0, 1, dt, 0, 0, 1]);
 }
 
+// Shader-effect child names (#6); mirror `OBJECT_CHILD` / `BACKGROUND_CHILD`
+// in `de_editor_core::shader_effects`; keep the two in step.
+export const OP_CK_EFFECT_OBJECT_CHILD = 'object';
+export const OP_CK_EFFECT_BACKGROUND_CHILD = 'background';
+
 // Draw one shader-effect pass (#6) over the node box on `canvas` with
 // `childName` bound to `image` (device pixels starting at `dl, dt`); the
 // program's other children read transparent. `pass` carries the cache
@@ -505,6 +510,32 @@ export async function opCkInit(canvasId) {
   // one an object shader-effect pass redirects into (#6).
   let drawSurface = surface;
   const effectRedirects = [];
+  // Offscreen surfaces for object passes, one per nesting depth, reused
+  // across frames and grown on demand (an animated effect would otherwise
+  // allocate a GPU surface every frame).
+  const effectScratch = [];
+  const scratchSurface = (depth, w, h) => {
+    const held = effectScratch[depth];
+    if (held && held.w >= w && held.h >= h) return held.surface;
+    if (held) held.surface.delete();
+    const made = drawSurface.makeSurface({
+      width: w,
+      height: h,
+      colorType: CK.ColorType.RGBA_8888,
+      alphaType: CK.AlphaType.Premul,
+      colorSpace: CK.ColorSpace.SRGB,
+    });
+    effectScratch[depth] = made ? { surface: made, w, h } : undefined;
+    return made;
+  };
+  // Point drawing back at the window surface, dropping any object pass a
+  // broken paint left open.
+  const dropEffectRedirects = () => {
+    if (effectRedirects.length === 0) return;
+    effectRedirects.length = 0;
+    canvas = surface.getCanvas();
+    drawSurface = surface;
+  };
   const el = document.getElementById(canvasId);
   const runtimeEffects = opCkCreateRuntimeEffectCache(CK);
   const drawShaderEffectPass = (pass, image, childName, dl, dt) =>
@@ -514,10 +545,11 @@ export async function opCkInit(canvasId) {
   const finishObjectShaderEffect = () => {
     const pass = effectRedirects.pop();
     const image = pass.surface.makeImageSnapshot();
+    pass.canvas.restoreToCount(1);
     canvas = pass.parentCanvas;
     drawSurface = pass.parentSurface;
     try {
-      if (image && !drawShaderEffectPass(pass, image, 'object', pass.dl, pass.dt)) {
+      if (image && !drawShaderEffectPass(pass, image, pass.childName, pass.dl, pass.dt)) {
         // Keep the node visible when the program can't be built.
         canvas.save();
         canvas.resetMatrix();
@@ -526,9 +558,9 @@ export async function opCkInit(canvasId) {
       }
     } finally {
       if (image && image.delete) image.delete();
-      pass.surface.delete();
     }
   };
+
 
   const systemTypefaces = [];
   const systemTypefaceKeys = new Set();
@@ -1354,10 +1386,12 @@ export async function opCkInit(canvasId) {
       // unbalanced save/clip in the widget composition would accumulate across
       // repaints and corrupt z-order / clipping (e.g. a frame fill bleeding
       // over later layers).
+      dropEffectRedirects();
       while (canvas.getSaveCount() > 1) canvas.restore();
       canvas.save();
     },
     endFrame() {
+      dropEffectRedirects();
       while (canvas.getSaveCount() > 1) canvas.restore();
       surface.flush();
     },
@@ -2140,7 +2174,7 @@ export async function opCkInit(canvasId) {
     // snapshot (known gap). Anything CanvasKit refuses is a plain save.
     pushShaderEffectLayer(x, y, w, h, sksl, uniformNames, uniforms, uniformArities, backdrop) {
       const entry = runtimeEffects.get(sksl);
-      const childName = backdrop ? 'background' : 'object';
+      const childName = backdrop ? OP_CK_EFFECT_BACKGROUND_CHILD : OP_CK_EFFECT_OBJECT_CHILD;
       const box = entry && entry.children.includes(childName)
         ? opCkDeviceBounds(
           canvas.getTotalMatrix(), x, y, w, h, drawSurface.width(), drawSurface.height(),
@@ -2151,7 +2185,14 @@ export async function opCkInit(canvasId) {
         return;
       }
       const [dl, dt, dr, db] = box;
-      const pass = { entry, x, y, w, h, names: uniformNames, values: uniforms, arities: uniformArities };
+      // The uniform slices are views into wasm memory that only live for
+      // this call; an object pass reads them at its restore, so copy.
+      const pass = {
+        entry, x, y, w, h, childName,
+        names: uniformNames,
+        values: Float32Array.from(uniforms),
+        arities: Uint32Array.from(uniformArities),
+      };
       if (backdrop) {
         const image = drawSurface.makeImageSnapshot(Int32Array.of(dl, dt, dr, db));
         canvas.save();
@@ -2161,19 +2202,16 @@ export async function opCkInit(canvasId) {
         }
         return;
       }
-      const offscreen = drawSurface.makeSurface({
-        width: dr - dl,
-        height: db - dt,
-        colorType: CK.ColorType.RGBA_8888,
-        alphaType: CK.AlphaType.Premul,
-        colorSpace: CK.ColorSpace.SRGB,
-      });
+      const offscreen = scratchSurface(effectRedirects.length, dr - dl, db - dt);
       if (!offscreen) {
         canvas.save();
         return;
       }
       const offscreenCanvas = offscreen.getCanvas();
+      offscreenCanvas.restoreToCount(1);
+      offscreenCanvas.resetMatrix();
       offscreenCanvas.clear(CK.TRANSPARENT);
+      offscreenCanvas.save();
       offscreenCanvas.translate(-dl, -dt);
       offscreenCanvas.concat(canvas.getTotalMatrix());
       effectRedirects.push({
@@ -2205,7 +2243,8 @@ export async function opCkInit(canvasId) {
       el.width = w; el.height = h;
       try { surface.delete(); } catch (e) {}
       // A resize mid-pass drops the open shader-effect redirects.
-      for (const pass of effectRedirects.splice(0)) pass.surface.delete();
+      effectRedirects.length = 0;
+      for (const held of effectScratch.splice(0)) if (held) held.surface.delete();
       surface = CK.MakeWebGLCanvasSurface(canvasId);
       canvas = surface.getCanvas();
       drawSurface = surface;

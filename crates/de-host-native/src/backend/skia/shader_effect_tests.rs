@@ -93,6 +93,53 @@ fn a_program_without_its_child_degrades_to_a_plain_save() {
 }
 
 #[test]
+fn object_pass_keeps_device_resolution_under_a_scaled_node() {
+    let mut backend = NativeBackend::with_dpi(1.0);
+    let mut surface = surface(skia_safe::Color::TRANSPARENT);
+    // 5x5 document px over 20x20 paint px: a 4x node-local scale.
+    let size = [5.0_f32, 5.0];
+    let uniforms: [(&str, &[f32]); 1] = [("size", &size)];
+    let identity = "uniform shader object; half4 main(float2 p) { return object.eval(p); }";
+    backend.push_shader_effect_layer(surface.canvas(), node_box(), identity, &uniforms, false);
+    let red = skia_safe::Paint::new(skia_safe::Color4f::from(skia_safe::Color::RED), None);
+    // An edge at paint x = 9: between document pixels 2 and 3.
+    surface
+        .canvas()
+        .draw_rect(skia_safe::Rect::from_wh(9.0, 20.0), &red);
+    backend.restore(surface.canvas());
+    let inside = pixel(&mut surface, 8, 10);
+    let outside = pixel(&mut surface, 9, 10);
+    assert!(inside.a() > 240, "inside the edge stays opaque: {inside:?}");
+    assert!(
+        outside.a() < 16,
+        "the edge stays one device pixel sharp: {outside:?}"
+    );
+}
+
+#[test]
+fn object_pass_maps_document_space_under_a_hidpi_canvas_matrix() {
+    let mut backend = NativeBackend::with_dpi(2.0);
+    let mut surface = surface(skia_safe::Color::TRANSPARENT);
+    surface.canvas().scale((2.0, 2.0));
+    let rect = Rect::xywh(0.0, 0.0, 10.0, 10.0);
+    let size = [10.0_f32, 10.0];
+    let uniforms: [(&str, &[f32]); 1] = [("size", &size)];
+    backend.push_shader_effect_layer(surface.canvas(), rect, SPLIT, &uniforms, false);
+    fill(surface.canvas(), skia_safe::Color::RED);
+    backend.restore(surface.canvas());
+    assert_eq!(
+        surface.canvas().local_to_device_as_3x3().scale_x(),
+        2.0,
+        "matrix restored"
+    );
+    // Document x < 5 is device x < 10 at 2x.
+    assert!(pixel(&mut surface, 8, 10).g() > 240);
+    assert!(pixel(&mut surface, 11, 10).r() > 240);
+    // The crop keeps the output inside the node box (device 20x20 here).
+    assert!(pixel(&mut surface, 19, 19).r() > 240);
+}
+
+#[test]
 fn nested_passes_restore_in_order() {
     let mut backend = NativeBackend::with_dpi(1.0);
     let mut surface = surface(skia_safe::Color::TRANSPARENT);

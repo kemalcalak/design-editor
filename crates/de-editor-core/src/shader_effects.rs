@@ -5,7 +5,8 @@
 //! node's own rendered output or `uniform shader background;` for what is
 //! already painted behind it. The entrypoint is `half4 main(float2 p)` with
 //! `p` in node-local document pixels, the same space a shader fill runs in,
-//! so `size`, `time` and `mouse` bind exactly as they do for fills.
+//! so `time` and `mouse` bind as they do for fills; `size` is always the
+//! node size (an authored value is ignored).
 //!
 //! v1 samples one texture per effect: a program that declares `background`
 //! is a backdrop pass (its `object` child, if any, reads transparent), every

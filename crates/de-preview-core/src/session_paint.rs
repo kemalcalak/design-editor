@@ -387,7 +387,8 @@ impl PreviewSession {
         }
 
         if let Some(effects) = style.effects.as_deref() {
-            node.effects = state_effects(effects, state_variables, target_opacity);
+            let size = [node.bounds.size.x, node.bounds.size.y];
+            node.effects = state_effects(effects, state_variables, target_opacity, size);
         } else if style.opacity.is_some() {
             node.effects = node
                 .effects
@@ -569,6 +570,7 @@ fn state_effects(
     effects: &[PenEffect],
     state_variables: Option<&de_editor_core::scene_vars::VariableTable>,
     opacity: f32,
+    size: [f32; 2],
 ) -> Vec<Effect> {
     effects
         .iter()
@@ -593,6 +595,11 @@ fn state_effects(
                     inner: body.inner.unwrap_or(false),
                 }))
             }
+            // A state that keeps a shader effect resolves it like the loader.
+            PenEffect::Shader(_) => de_pen_loader::effects_shader::shader_effect_payload(effect)
+                .map(|payload| {
+                    de_pen_loader::effects_shader::shader_effect_to_scene(&payload, size)
+                }),
             _ => None,
         })
         .collect()

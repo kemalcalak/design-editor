@@ -89,7 +89,7 @@ fn paint(node: &SceneNode) -> Vec<String> {
 }
 
 #[test]
-fn shader_passes_chain_in_list_order_around_the_node_paint() {
+fn shader_passes_chain_in_list_order_per_input() {
     let mut node = SceneNode::leaf("fx", NodeKind::Rect);
     node.bounds = Rect::xywh(0.0, 0.0, 100.0, 60.0);
     node.fill = Some(Color::BLACK);
