@@ -52,6 +52,8 @@ COMMON COMMANDS:
                                           patch node data
   de delete <id> [--page PAGE]            delete a node
   de read-nodes [ids] [--depth N] [--vars] [--page P] [--file F]
+          [--resolve-vars] [--resolve-instances] [--path-geometry]
+                                          computed values, expanded instances, path outlines
   de move <id> [--parent P] [--index N] [--page PAGE]
                                           reparent a node (empty parent = page root)
   de copy <id> [--parent P] [--page PAGE] deep-copy a node

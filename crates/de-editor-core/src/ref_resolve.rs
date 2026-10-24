@@ -39,8 +39,12 @@ use serde_json::{Map, Value};
 /// Keep every producer and parser on this helper so the virtual-id
 /// convention cannot drift between canvas expansion and editing.
 pub fn instance_child_virtual_id(ref_id: &str, child_id: &str) -> String {
-    format!("{ref_id}__{child_id}")
+    format!("{ref_id}{INSTANCE_CHILD_SEPARATOR}{child_id}")
 }
+
+/// Joins an instance id and a component child id in a virtual id; the one
+/// spelling [`instance_child_virtual_id`] and every parser share.
+pub(crate) const INSTANCE_CHILD_SEPARATOR: &str = "__";
 
 /// Borrowed document-wide id index used during one render-resolution pass.
 /// Building it once changes component target lookup from O(refs × nodes) to

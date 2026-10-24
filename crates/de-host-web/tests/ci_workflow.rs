@@ -179,6 +179,25 @@ fn release_workflow_publishes_the_linux_archives() {
     }
 }
 
+/// The Linux tarball is the in-app update asset there (#51), so no release
+/// publishes before a fresh runner has unpacked it and the binary answered.
+#[test]
+fn release_workflow_smoke_tests_the_linux_binary_before_publishing() {
+    let workflow = std::fs::read_to_string(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../.github/workflows/rust-release.yml"
+    ))
+    .expect("rust-release workflow is readable");
+    for needle in [
+        "  linux-smoke:\n",
+        "tar xzf release-files/design-editor-linux-x86_64.tar.gz -C smoke",
+        "smoke/design-editor --mcp",
+        "needs: [version, build, linux-smoke]",
+    ] {
+        assert!(workflow.contains(needle), "release workflow lost {needle}");
+    }
+}
+
 #[test]
 fn windows_nsis_installer_services_vc_runtime_fail_closed() {
     let installer = std::fs::read_to_string(concat!(
