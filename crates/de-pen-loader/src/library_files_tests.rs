@@ -46,22 +46,32 @@ fn master_label(state: &EditorState) -> String {
     serde_json::to_string(&master.children().unwrap()[0]).unwrap()
 }
 
+/// An absolute path under a fixed root on every OS (`/work/…` is not
+/// absolute on Windows). Nothing is created on disk.
+fn w(relative: &str) -> PathBuf {
+    std::env::temp_dir().join("de-lib-paths").join(relative)
+}
+
+fn s(path: PathBuf) -> String {
+    path.to_string_lossy().into_owned()
+}
+
 #[test]
 fn relative_links_round_trip_through_the_document_folder() {
-    let base = Path::new("/work/designs");
+    let base = w("designs");
     assert_eq!(
-        library_link_path(Some(base), Path::new("/work/kits/ui.de")),
+        library_link_path(Some(&base), &w("kits/ui.de")),
         "../kits/ui.de"
     );
     assert_eq!(
-        library_link_path(Some(base), Path::new("/work/designs/lib/a.de")),
+        library_link_path(Some(&base), &w("designs/lib/a.de")),
         "lib/a.de"
     );
     assert_eq!(
-        resolve_library_path(Some(base), "../kits/ui.de"),
-        PathBuf::from("/work/designs/../kits/ui.de")
+        resolve_library_path(Some(&base), "../kits/ui.de"),
+        base.join("../kits/ui.de")
     );
-    assert_eq!(library_link_path(None, Path::new("/x/y.de")), "/x/y.de");
+    assert_eq!(library_link_path(None, &w("y.de")), s(w("y.de")));
 }
 
 #[test]
@@ -130,17 +140,14 @@ fn a_broken_library_reports_why() {
 #[test]
 fn save_as_rebases_relative_links() {
     let mut state = EditorState::new();
-    rebase_library_links(&mut state, Some(Path::new("/work/a/doc.de")));
+    rebase_library_links(&mut state, Some(&w("a/doc.de")));
     state
         .editor_ui
         .libraries
         .set_links(vec![de_editor_core::LibraryLink::new("kit.de", None)]);
-    rebase_library_links(&mut state, Some(Path::new("/work/b/c/doc.de")));
+    rebase_library_links(&mut state, Some(&w("b/c/doc.de")));
     assert_eq!(state.editor_ui.libraries.links()[0].path, "../../a/kit.de");
-    assert_eq!(
-        state.editor_ui.libraries.base_dir.as_deref(),
-        Some("/work/b/c")
-    );
+    assert_eq!(state.editor_ui.libraries.base_dir, Some(s(w("b/c"))));
 }
 
 #[test]
@@ -150,10 +157,10 @@ fn links_made_before_the_first_save_become_relative() {
         .editor_ui
         .libraries
         .set_links(vec![de_editor_core::LibraryLink::new(
-            "/work/kits/ui.de",
+            s(w("kits/ui.de")),
             None,
         )]);
-    rebase_library_links(&mut state, Some(Path::new("/work/designs/doc.de")));
+    rebase_library_links(&mut state, Some(&w("designs/doc.de")));
     assert_eq!(state.editor_ui.libraries.links()[0].path, "../kits/ui.de");
 }
 
@@ -179,18 +186,18 @@ fn links_persist_in_editor_meta() {
 #[test]
 fn a_save_as_writes_links_relative_to_its_target() {
     let mut state = EditorState::new();
-    rebase_library_links(&mut state, Some(Path::new("/work/a/doc.de")));
+    rebase_library_links(&mut state, Some(&w("a/doc.de")));
     state
         .editor_ui
         .libraries
         .set_links(vec![de_editor_core::LibraryLink::new("kit.de", None)]);
-    let meta = crate::EditorMeta::for_document(&state, Path::new("/work/b/copy.de"));
+    let meta = crate::EditorMeta::for_document(&state, &w("b/copy.de"));
     assert_eq!(meta.libraries[0].path, "../a/kit.de");
     // The live state still points at the folder it was opened from.
     assert_eq!(state.editor_ui.libraries.links()[0].path, "kit.de");
     assert_eq!(
         links_for_document(&state, None)[0].path,
-        "/work/a/kit.de",
+        s(w("a/kit.de")),
         "no target folder: absolute"
     );
 }
