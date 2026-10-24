@@ -398,6 +398,7 @@ pub fn action_button_rects_with_fill_picker(
             w,
             visible.stroke_edit_mode,
             visible.stroke_mode_popover_open,
+            visible.stroke_style_rows,
         );
         y += SECTION_HEADER_HEIGHT;
         // The stroke hex row's leading colour swatch opens the picker.

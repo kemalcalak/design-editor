@@ -305,12 +305,7 @@ fn a_stroke_is_an_overlay_so_it_cannot_shift_the_children_it_covers() {
     let mut node = SceneNode::leaf("panel", NodeKind::Frame);
     node.bounds = Rect::xywh(10.0, 10.0, 100.0, 60.0);
     node.fill = Some(Color::WHITE);
-    node.stroke = Some(SceneStroke {
-        color: Color::BLACK,
-        width: 4.0,
-        sides: None,
-        align: SceneStrokeAlign::Inside,
-    });
+    node.stroke = Some(black_stroke(4.0, None, SceneStrokeAlign::Inside));
     node.children = vec![child];
 
     let body = body_of(board(vec![node]));
@@ -333,12 +328,11 @@ fn a_stroke_is_an_overlay_so_it_cannot_shift_the_children_it_covers() {
 fn per_side_stroke_widths_map_onto_the_matching_border_sides() {
     let mut node = SceneNode::leaf("divider", NodeKind::Rect);
     node.bounds = Rect::xywh(0.0, 0.0, 100.0, 10.0);
-    node.stroke = Some(SceneStroke {
-        color: Color::BLACK,
-        width: 0.0,
-        sides: Some([0.0, 0.0, 2.0, 0.0]),
-        align: SceneStrokeAlign::Inside,
-    });
+    node.stroke = Some(black_stroke(
+        0.0,
+        Some([0.0, 0.0, 2.0, 0.0]),
+        SceneStrokeAlign::Inside,
+    ));
 
     let body = body_of(board(vec![node]));
 
@@ -349,12 +343,7 @@ fn per_side_stroke_widths_map_onto_the_matching_border_sides() {
 fn an_outside_stroke_outsets_its_overlay_by_the_full_width() {
     let mut node = SceneNode::leaf("ring", NodeKind::Rect);
     node.bounds = Rect::xywh(0.0, 0.0, 40.0, 40.0);
-    node.stroke = Some(SceneStroke {
-        color: Color::BLACK,
-        width: 3.0,
-        sides: None,
-        align: SceneStrokeAlign::Outside,
-    });
+    node.stroke = Some(black_stroke(3.0, None, SceneStrokeAlign::Outside));
 
     let body = body_of(board(vec![node]));
 
@@ -484,12 +473,7 @@ fn an_icon_is_centred_in_a_square_inside_a_non_square_box() {
 fn a_line_node_becomes_an_svg_segment_in_absolute_doc_coordinates() {
     let mut node = SceneNode::leaf("l", NodeKind::Line);
     node.bounds = Rect::xywh(10.0, 10.0, 80.0, 40.0);
-    node.stroke = Some(SceneStroke {
-        color: Color::BLACK,
-        width: 2.0,
-        sides: None,
-        align: SceneStrokeAlign::Center,
-    });
+    node.stroke = Some(black_stroke(2.0, None, SceneStrokeAlign::Center));
 
     let body = body_of(board(vec![node]));
 
@@ -504,12 +488,7 @@ fn a_line_node_becomes_an_svg_segment_in_absolute_doc_coordinates() {
 fn a_horizontal_line_still_gets_a_renderable_svg_viewport() {
     let mut node = SceneNode::leaf("l", NodeKind::Line);
     node.bounds = Rect::xywh(0.0, 20.0, 100.0, 0.0);
-    node.stroke = Some(SceneStroke {
-        color: Color::BLACK,
-        width: 1.0,
-        sides: None,
-        align: SceneStrokeAlign::Center,
-    });
+    node.stroke = Some(black_stroke(1.0, None, SceneStrokeAlign::Center));
 
     let body = body_of(board(vec![node]));
 
@@ -796,4 +775,14 @@ fn a_missing_board_names_itself_in_the_error() {
     let err = board_slide_markup(&page, "nope", "Slide".into()).expect_err("unknown board");
 
     assert!(err.to_string().contains("nope"), "{err}");
+}
+
+fn black_stroke(width: f32, sides: Option<[f32; 4]>, align: SceneStrokeAlign) -> SceneStroke {
+    SceneStroke {
+        color: Color::BLACK,
+        width,
+        sides,
+        align,
+        style: Default::default(),
+    }
 }

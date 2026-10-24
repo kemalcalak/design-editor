@@ -333,6 +333,28 @@ impl EditorState {
         true
     }
 
+    /// `SetNodeStrokeStyle` — write cap / join / dash on a node's
+    /// existing stroke (#89). Returns `false` on a missing node, a node
+    /// without a stroke, an empty or invalid write; an unchanged value is
+    /// still a successful no-op.
+    pub(crate) fn cmd_set_node_stroke_style(
+        &mut self,
+        node_id: &NodeId,
+        style: &crate::fills::StrokeStyleWrite,
+    ) -> bool {
+        if !node_id.is_real() || style.is_empty() || !style.is_valid() {
+            return false;
+        }
+        let Some(node) = find_node_mut(self.active_children_mut(), node_id) else {
+            return false;
+        };
+        if crate::fills::node_stroke_style(node).is_none() {
+            return false;
+        }
+        crate::fills::set_stroke_style(node, style);
+        true
+    }
+
     /// `SetNodeFlip` — write the horizontal / vertical mirror flags on
     /// a node. Either axis `None` leaves that flag untouched. Returns
     /// `false` only on a missing node or when nothing was supplied.

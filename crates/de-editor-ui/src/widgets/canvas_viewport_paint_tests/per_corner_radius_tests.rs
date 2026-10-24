@@ -80,6 +80,7 @@ fn painted(radii: [f32; 4]) -> RadiusCaptureBackend {
         width: 2.0,
         sides: None,
         align: SceneStrokeAlign::Center,
+        style: Default::default(),
     });
     let mut backend = RadiusCaptureBackend::default();
     paint_fill_then_stroke(

@@ -85,6 +85,40 @@ pub(crate) fn stroke_align_for_scene(node: &PenNode) -> crate::layout_scene::Sce
     }
 }
 
+/// The Stroke section's Cap / Join / Dash row state (#89). An absent
+/// cap / join reads as what the renderer draws for that node kind; a
+/// custom dash pattern no preset reproduces reads `dash: None`.
+#[derive(Debug, Clone, PartialEq)]
+pub struct StrokeStyleSummary {
+    pub cap: jian_ops_schema::style::StrokeCap,
+    pub join: jian_ops_schema::style::StrokeJoin,
+    pub dash: Option<de_editor_core::fills::StrokeDashPreset>,
+}
+
+pub(crate) fn stroke_style_summary(node: &PenNode) -> Option<StrokeStyleSummary> {
+    use jian_ops_schema::style::{StrokeCap, StrokeJoin};
+    let fields = de_editor_core::fills::node_stroke_style(node)?;
+    let width = de_editor_core::fills::node_stroke_width(node).unwrap_or(1.0) as f32;
+    // What both backends draw for an unset cap / join while a style is
+    // active (`canvaskit::stroke_style` sends the same per-primitive
+    // defaults): lines, paths and polygons stroke round, rects and ovals
+    // butt + miter.
+    let (default_cap, default_join) = match node {
+        PenNode::Line(_) | PenNode::Path(_) | PenNode::Polygon(_) => {
+            (StrokeCap::Round, StrokeJoin::Round)
+        }
+        _ => (StrokeCap::None, StrokeJoin::Miter),
+    };
+    Some(StrokeStyleSummary {
+        cap: fields.cap.unwrap_or(default_cap),
+        join: fields.join.unwrap_or(default_join),
+        dash: de_editor_core::fills::StrokeDashPreset::matching(
+            fields.dash_pattern.as_deref(),
+            width,
+        ),
+    })
+}
+
 /// Snapshot of the selected node's editable fields, formatted for
 /// display. Built once per `for_selection` call so all paint
 /// helpers can read pre-computed strings instead of re-formatting.
@@ -159,6 +193,8 @@ pub struct NodeSnapshot {
     /// Path's absent schema value is surfaced as `Some(Nonzero)`.
     pub path_fill_rule: Option<jian_ops_schema::node::path::PathFillRule>,
     pub stroke: Option<SceneStroke>,
+    /// Cap / Join / Dash row state, `None` without a stroke.
+    pub stroke_style: Option<StrokeStyleSummary>,
     /// LinearGradient angle in degrees (canonical `.de` convention,
     /// 0° = bottom→top). `None` when the primary fill isn't a
     /// linear gradient — the Fill section hides the angle row in

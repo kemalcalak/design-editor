@@ -128,6 +128,7 @@ fn batchable(cmd: &EditorCommand) -> bool {
         | C::SetNodeStrokeHex { .. }
         | C::SetNodeStrokeWidth { .. }
         | C::SetNodeStrokeSideWidth { .. }
+        | C::SetNodeStrokeStyle { .. }
         | C::AlignSelected { .. }
         | C::CommitBooleanResult { .. }
         | C::SetNodeFillHex { .. }

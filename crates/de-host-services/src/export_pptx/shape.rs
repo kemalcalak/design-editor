@@ -193,6 +193,7 @@ pub fn emit_line(
         width,
         sides: None,
         align: SceneStrokeAlign::Center,
+        style: Default::default(),
     };
     let _ = write!(
         out,
@@ -261,6 +262,7 @@ mod tests {
             width: 2.0,
             sides: None,
             align: SceneStrokeAlign::Inside,
+            style: Default::default(),
         });
         let mut out = String::new();
         let mut id = 2;
@@ -277,6 +279,7 @@ mod tests {
             width: 1.0,
             sides: Some([0.0, 0.0, 1.0, 0.0]),
             align: SceneStrokeAlign::Inside,
+            style: Default::default(),
         });
         let mut out = String::new();
         let mut id = 2;
@@ -298,6 +301,7 @@ mod tests {
             width: 0.0,
             sides: Some([2.0, 2.0, 2.0, 2.0]),
             align: SceneStrokeAlign::Inside,
+            style: Default::default(),
         });
         let mut out = String::new();
         let mut id = 2;
@@ -315,6 +319,7 @@ mod tests {
             width: 2.0,
             sides: None,
             align: SceneStrokeAlign::Center,
+            style: Default::default(),
         });
         let mut out = String::new();
         let mut id = 2;

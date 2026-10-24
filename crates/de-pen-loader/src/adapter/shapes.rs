@@ -150,6 +150,10 @@ pub(super) fn line_to_payload(n: &LineNode) -> NodePayload {
             width: 1.0,
             sides: None,
             align: 0,
+            cap: None,
+            join: None,
+            dash_pattern: None,
+            dash_offset: None,
         });
     }
     p

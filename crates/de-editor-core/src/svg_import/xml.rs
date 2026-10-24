@@ -84,6 +84,7 @@ pub(super) fn compute_root_scale(root_attrs: &[(String, String)]) -> (f64, Style
         fill_rule: extract_style_or_attr(root_attrs, "fill-rule")
             .as_deref()
             .and_then(parse_svg_fill_rule),
+        stroke_style: merge_stroke_style(&Default::default(), root_attrs),
     };
     (scale, ctx)
 }

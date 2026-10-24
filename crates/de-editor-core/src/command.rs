@@ -502,6 +502,12 @@ pub enum EditorCommand {
         side: StrokeSide,
         width: f32,
     },
+    /// Set cap / join / dash on a node's existing stroke; `None` fields
+    /// are left untouched, an empty dash pattern makes it solid.
+    SetNodeStrokeStyle {
+        node_id: NodeId,
+        style: crate::fills::StrokeStyleWrite,
+    },
     /// Apply alignment / distribution to the selection.
     AlignSelected { action: String },
     /// Replace the active-page shapes `source_ids` with one compound

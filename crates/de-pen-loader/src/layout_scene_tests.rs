@@ -19,6 +19,8 @@ mod masks_blend;
 mod opacity;
 #[path = "layout_scene_tests/shader_preset.rs"]
 mod shader_preset;
+#[path = "layout_scene_tests/stroke_style.rs"]
+mod stroke_style;
 #[path = "layout_scene_tests/text.rs"]
 mod text;
 #[path = "layout_scene_tests/tokens_refs.rs"]

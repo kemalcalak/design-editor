@@ -388,6 +388,16 @@ pub(super) fn fill_polygon(ck: &OpCk, points: &[Point2D], color: Color) {
     ck.fill_polygon(&flat, color.r, color.g, color.b, color.a);
 }
 
+/// Stroke a closed polygon as one path, so joins and dashes run around
+/// its corners (the trait default strokes each edge on its own).
+pub(super) fn stroke_polygon(ck: &OpCk, points: &[Point2D], color: Color, width: f32) {
+    if points.len() < 2 {
+        return;
+    }
+    let flat: Vec<f32> = points.iter().flat_map(|p| [p.x, p.y]).collect();
+    ck.stroke_polygon(&flat, color.r, color.g, color.b, color.a, width);
+}
+
 pub(super) fn stroke_svg_path(
     ck: &OpCk,
     d: &str,
