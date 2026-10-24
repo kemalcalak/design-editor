@@ -25,6 +25,10 @@ struct Track {
     request: AnimationRequest,
     from: serde_json::Value,
     base: Option<serde_json::Value>,
+    /// A motion size tween (#155): `width` / `height` interpolate every
+    /// frame and resize the painted box only (`PaintOnly`), instead of the
+    /// action layer's discrete, relayouting step.
+    paint_size: bool,
 }
 
 #[derive(Default)]
@@ -106,15 +110,43 @@ impl PreviewAnimationState {
             request,
             from,
             base,
+            paint_size: false,
         });
     }
 
     pub(crate) fn start_immediate(
         &self,
+        request: AnimationRequest,
+        from: serde_json::Value,
+        base: Option<serde_json::Value>,
+        now_ms: u64,
+    ) -> bool {
+        self.start_track(request, from, base, now_ms, false)
+    }
+
+    /// [`Self::start_immediate`] for a node motion declaration: a `width`
+    /// / `height` track tweens continuously and paint-only (#155).
+    pub(crate) fn start_motion(
+        &self,
+        request: AnimationRequest,
+        from: serde_json::Value,
+        base: Option<serde_json::Value>,
+        now_ms: u64,
+    ) -> bool {
+        let paint_size = matches!(
+            request.property,
+            AnimationProperty::Width | AnimationProperty::Height
+        );
+        self.start_track(request, from, base, now_ms, paint_size)
+    }
+
+    fn start_track(
+        &self,
         mut request: AnimationRequest,
         from: serde_json::Value,
         base: Option<serde_json::Value>,
         now_ms: u64,
+        paint_size: bool,
     ) -> bool {
         let key = request_key(&request);
         let mut inner = self.inner.borrow_mut();
@@ -137,6 +169,7 @@ impl PreviewAnimationState {
             request,
             from,
             base,
+            paint_size,
         });
         drop(inner);
         self.tick(now_ms);
@@ -178,11 +211,10 @@ impl PreviewAnimationState {
             let key = track_key(&track);
             let before = inner.overrides.get(&key).cloned();
             let sample = sample_track(&track, now_ms);
+            let kind = track_invalidation(&track);
             match sample.value {
                 Some(value) if track.base.as_ref() != Some(&value) => {
                     inner.overrides.insert(key.clone(), value);
-                    let kind =
-                        crate::invalidation::from_animation_property(&track.request.property);
                     inner.override_invalidation.insert(key.clone(), kind);
                 }
                 _ => {
@@ -192,9 +224,7 @@ impl PreviewAnimationState {
             }
             let after = inner.overrides.get(&key);
             if before.as_ref() != after {
-                invalidation = invalidation.merge(crate::invalidation::from_animation_property(
-                    &track.request.property,
-                ));
+                invalidation = invalidation.merge(kind);
             }
             if !sample.finished {
                 retained.push(track);
@@ -374,7 +404,7 @@ fn directed_progress(track: &Track, iteration: u32, local: f32) -> f32 {
     ease(track.request.easing, directed.clamp(0.0, 1.0))
 }
 
-fn ease(easing: Easing, progress: f32) -> f32 {
+pub(crate) fn ease(easing: Easing, progress: f32) -> f32 {
     match easing {
         Easing::Linear => progress,
         Easing::Ease => progress * progress * (3.0 - 2.0 * progress),
@@ -421,8 +451,26 @@ fn interpolate_kind(property: &AnimationProperty) -> AnimationInterpolate {
     }
 }
 
+/// How `track` interpolates: a motion size tween is continuous.
+fn track_interpolation(track: &Track) -> AnimationInterpolate {
+    if track.paint_size {
+        AnimationInterpolate::Linear
+    } else {
+        interpolate_kind(&track.request.property)
+    }
+}
+
+/// What a frame of `track` invalidates: a motion size tween only repaints.
+fn track_invalidation(track: &Track) -> InvalidationKind {
+    if track.paint_size {
+        InvalidationKind::PaintOnly
+    } else {
+        crate::invalidation::from_animation_property(&track.request.property)
+    }
+}
+
 fn interpolate_track(track: &Track, progress: f32) -> serde_json::Value {
-    let interpolate = interpolate_kind(&track.request.property);
+    let interpolate = track_interpolation(track);
     if let Some(stops) = &track.request.stops {
         return interpolate_stops(stops, interpolate, progress);
     }
@@ -547,7 +595,7 @@ fn track_deadline(track: &Track, now_ms: u64) -> Option<u64> {
             (elapsed / track.request.duration_ms + 1).saturating_mul(track.request.duration_ms),
         )
         .min(end);
-    let interpolate = interpolate_kind(&track.request.property);
+    let interpolate = track_interpolation(track);
     if interpolate == AnimationInterpolate::Discrete {
         Some(next_iteration)
     } else {

@@ -172,6 +172,7 @@ mod press_surface_tiers;
 mod preview_browser;
 mod preview_frame;
 mod preview_frame_teardown;
+mod preview_present;
 mod preview_slideshow;
 #[cfg(feature = "canvaskit")]
 mod preview_video;

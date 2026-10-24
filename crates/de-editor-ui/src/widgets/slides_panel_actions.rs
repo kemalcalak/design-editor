@@ -1,5 +1,6 @@
-//! The slides rail's bottom action bar — `▷ Present` and
-//! `Export PDF ⌄` — and the dropdown the second one opens.
+//! The slides rail's bottom action bar — the Transition row (#158), then
+//! `▷ Present` and `Export PDF ⌄` — and the dropdown the second one
+//! opens.
 //!
 //! Split out of `slides_panel.rs` at the 800-line ceiling. The bar is
 //! the panel's only permanently-visible control surface, so it is
@@ -22,6 +23,7 @@
 //! time instead of moving the button.
 
 use de_editor_core::SlidesPanelTarget;
+use jian_ops_schema::motion::SlideTransitionKind;
 use jian_widgets::centered_text_baseline_y;
 
 use crate::widgets::icons::{draw_icon, Icon};
@@ -30,8 +32,21 @@ use crate::widgets::text_metrics;
 use crate::widgets::PaintCx;
 use crate::{Color, Point2D, Rect, TextLayout, Theme};
 
+/// Height of the Transition row at the top of the bar (#158).
+const TRANSITION_ROW_H: f32 = 50.0;
+/// Height of the Transition label line above its cells.
+const TRANSITION_LABEL_H: f32 = 18.0;
+/// Height of the bar's button row.
+const BUTTON_ROW_H: f32 = 48.0;
 /// Height of the bar pinned to the rail's bottom edge.
-pub const ACTION_BAR_HEIGHT: f32 = 48.0;
+pub const ACTION_BAR_HEIGHT: f32 = TRANSITION_ROW_H + BUTTON_ROW_H;
+/// The Transition row's cells, left to right.
+pub const TRANSITION_KINDS: [SlideTransitionKind; 4] = [
+    SlideTransitionKind::None,
+    SlideTransitionKind::Fade,
+    SlideTransitionKind::Slide,
+    SlideTransitionKind::Push,
+];
 /// Height of the two buttons inside it.
 const BUTTON_H: f32 = 30.0;
 /// Gap between the two buttons.
@@ -91,6 +106,10 @@ pub struct SlidesActionLayout {
     pub present: Rect,
     /// The `Export PDF ⌄` button.
     pub export: Rect,
+    /// The Transition row's cells, in [`TRANSITION_KINDS`] order.
+    pub transition_cells: Vec<Rect>,
+    /// The kind every targeted slide shares (`None` = mixed): the lit cell.
+    pub transition: Option<SlideTransitionKind>,
     /// The dropdown's surface, when it is open.
     pub menu: Option<Rect>,
     /// How many of the listed slides the selection covers. Drives the
@@ -114,6 +133,9 @@ pub struct SlidesActionState {
     /// directly so tests can exercise the enabled path that no host
     /// enables yet.
     pub selected_export_supported: bool,
+    /// The slide transition the Transition row shows as set — see
+    /// `EditorState::slides_transition_kind`.
+    pub transition: Option<SlideTransitionKind>,
 }
 
 impl SlidesActionLayout {
@@ -140,7 +162,17 @@ impl SlidesActionLayout {
         // from under the cursor.
         let half = ((inner_w - BUTTON_GAP) / 2.0).max(0.0);
         let x = panel.origin.x + super::slides_panel::ROW_PAD_X;
-        let y = bar.origin.y + (ACTION_BAR_HEIGHT - BUTTON_H) / 2.0;
+        let y = bar.origin.y + TRANSITION_ROW_H + (BUTTON_ROW_H - BUTTON_H) / 2.0;
+        let transition_row = Rect {
+            // The label sits on its own line above, so the four cells get
+            // the rail's whole inner width in every locale.
+            origin: Point2D::new(x, bar.origin.y + 6.0 + TRANSITION_LABEL_H),
+            size: Point2D::new(inner_w, TRANSITION_ROW_H - 6.0 - TRANSITION_LABEL_H),
+        };
+        let transition_cells = crate::widgets::property_panel_segments::segment_rects(
+            transition_row,
+            TRANSITION_KINDS.len(),
+        );
         let present = Rect {
             origin: Point2D::new(x, y),
             size: Point2D::new(half, BUTTON_H),
@@ -170,6 +202,8 @@ impl SlidesActionLayout {
             bar,
             present,
             export,
+            transition_cells,
+            transition: actions.transition,
             menu,
             selected_slides: actions.selected_slides,
             selected_enabled,
@@ -214,6 +248,13 @@ impl SlidesActionLayout {
 
     /// Which of the bar's own controls `point` lands on.
     pub fn button_at(&self, point: Point2D) -> Option<SlidesPanelTarget> {
+        if let Some(kind) = TRANSITION_KINDS
+            .iter()
+            .zip(&self.transition_cells)
+            .find_map(|(kind, cell)| contains(*cell, point).then_some(*kind))
+        {
+            return Some(SlidesPanelTarget::Transition(kind));
+        }
         if contains(self.present, point) {
             return Some(SlidesPanelTarget::Present);
         }
@@ -237,6 +278,10 @@ pub struct SlidesActionLabels<'a> {
     pub export_all: &'a str,
     /// Already has its `{{count}}` substituted.
     pub export_selected: &'a str,
+    /// The Transition row's label and its cells, in [`TRANSITION_KINDS`]
+    /// order.
+    pub transition: &'a str,
+    pub transition_kinds: [&'a str; 4],
 }
 
 /// Paint the bar. The dropdown is NOT painted here — it is an overlay
@@ -256,8 +301,63 @@ pub fn paint_bar(
         },
         theme.border,
     );
+    paint_transition_row(cx, theme, layout, labels);
     paint_present_button(cx, theme, layout, labels.present, hover);
     paint_export_button(cx, theme, layout, labels.export, hover);
+}
+
+/// `Transition  None | Fade | Slide | Push` — what Present plays when it
+/// arrives on the targeted slides.
+fn paint_transition_row(
+    cx: &mut PaintCx<'_>,
+    theme: &Theme,
+    layout: &SlidesActionLayout,
+    labels: SlidesActionLabels<'_>,
+) {
+    let (Some(first), Some(last)) = (
+        layout.transition_cells.first(),
+        layout.transition_cells.last(),
+    ) else {
+        return;
+    };
+    let row = Rect {
+        origin: first.origin,
+        size: Point2D::new(last.origin.x + last.size.x - first.origin.x, first.size.y),
+    };
+    let label_rect = Rect {
+        origin: Point2D::new(row.origin.x, row.origin.y - TRANSITION_LABEL_H),
+        size: Point2D::new(row.size.x, TRANSITION_LABEL_H - 2.0),
+    };
+    let label = crate::widgets::file_menu::truncate_to_width(
+        cx,
+        labels.transition,
+        LABEL_FONT,
+        label_rect.size.x.max(0.0),
+    );
+    cx.backend.draw_text(
+        &TextLayout::single_run(
+            &label,
+            "system-ui",
+            LABEL_FONT,
+            theme.muted_foreground.to_jian(),
+            Point2D::ZERO,
+        ),
+        Point2D::new(
+            label_rect.origin.x,
+            centered_text_baseline_y(label_rect, LABEL_FONT),
+        ),
+    );
+    let active = layout
+        .transition
+        .and_then(|kind| TRANSITION_KINDS.iter().position(|k| *k == kind));
+    crate::widgets::property_panel_segments::paint_segment_row(
+        cx,
+        theme,
+        row,
+        &labels.transition_kinds,
+        active,
+        11.0,
+    );
 }
 
 /// Paint the open dropdown, over everything else in the rail.
