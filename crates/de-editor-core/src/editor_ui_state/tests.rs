@@ -392,3 +392,66 @@ fn host_locale_override_changes_only_the_effective_locale() {
     ui.set_host_locale_override(None);
     assert_eq!(ui.effective_locale(), Locale::ZhCn);
 }
+
+fn recents(paths: &[&str]) -> Vec<RecentFile> {
+    paths
+        .iter()
+        .enumerate()
+        .map(|(i, path)| RecentFile {
+            path: (*path).to_string(),
+            modified_at: i as u64,
+        })
+        .collect()
+}
+
+fn recent_paths(ui: &EditorUiState) -> Vec<&str> {
+    ui.recent_files.iter().map(|r| r.path.as_str()).collect()
+}
+
+#[test]
+fn reconcile_recent_files_drops_missing_and_moves_op_to_de_sibling() {
+    let on_disk = ["/d/a.de", "/d/b.de", "/d/c.pen", "/d/old.op"];
+    let mut ui = EditorUiState {
+        recent_files: recents(&[
+            "/d/a.de",
+            "/d/gone.de",
+            "/d/b.op",
+            "/d/old.op",
+            "/d/c.pen",
+            "/tmp/scratch/pricing.op",
+        ]),
+        ..Default::default()
+    };
+
+    let changed = ui.reconcile_recent_files(|p| on_disk.contains(&p.to_string_lossy().as_ref()));
+
+    assert!(changed);
+    // `b.op` follows its `.de` sibling; `old.op` exists but cannot open and
+    // has no sibling; `gone.de` and the scratch `.op` are gone.
+    assert_eq!(recent_paths(&ui), ["/d/a.de", "/d/b.de", "/d/c.pen"]);
+    assert_eq!(ui.recent_files[1].modified_at, 2);
+}
+
+#[test]
+fn reconcile_recent_files_keeps_the_newest_of_duplicates() {
+    let mut ui = EditorUiState {
+        recent_files: recents(&["/d/x.op", "/d/y.de", "/d/x.de"]),
+        ..Default::default()
+    };
+
+    assert!(ui.reconcile_recent_files(|_| true));
+
+    assert_eq!(recent_paths(&ui), ["/d/x.de", "/d/y.de"]);
+    assert_eq!(ui.recent_files[0].modified_at, 0);
+}
+
+#[test]
+fn reconcile_recent_files_reports_no_change_when_all_open() {
+    let mut ui = EditorUiState {
+        recent_files: recents(&["/d/a.de", "/d/b.pen"]),
+        ..Default::default()
+    };
+
+    assert!(!ui.reconcile_recent_files(|_| true));
+    assert_eq!(recent_paths(&ui), ["/d/a.de", "/d/b.pen"]);
+}
