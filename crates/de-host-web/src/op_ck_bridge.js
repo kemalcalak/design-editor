@@ -267,13 +267,18 @@ export function opCkMakeRuntimeShader(
       const info = entry.reflected.get(String(uniformNames[index]));
       const expected = info ? Number(info.columns) * Number(info.rows) : 0;
       const slot = info ? Number(info.slot) : -1;
-      if (!info || info.isInteger || expected !== arity
+      // Integer uniforms (#165) travel as floats too: CanvasKit's
+      // makeShader casts each `int*` slot from float before binding, so
+      // the value only needs to be whole.
+      if (!info || expected !== arity
           || !Number.isSafeInteger(slot) || slot < 0
           || slot + arity > data.length || valuesStart + arity > uniforms.length) {
         continue;
       }
       for (let value = 0; value < arity; value++) {
-        data[slot + value] = uniforms[valuesStart + value];
+        const raw = uniforms[valuesStart + value];
+        // Half away from zero, like Rust's `f32::round` on native.
+        data[slot + value] = info.isInteger ? Math.sign(raw) * Math.round(Math.abs(raw)) : raw;
       }
     }
     if (entry.children && entry.children.length > 0) {
