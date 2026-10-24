@@ -87,11 +87,11 @@ fn styled_text_field_distinguishes_absent_and_explicit_zero_radius() {
     let mut absent = widget_node(NodeKind::Text, widget.clone(), rect);
     absent.fill = Some(DARK_PURPLE);
     absent.stroke = Some(SceneStroke {
-        style: Default::default(),
         color: PURPLE_BORDER,
         width: 2.0,
         sides: None,
         align: SceneStrokeAlign::Center,
+        style: Default::default(),
     });
     let explicit_zero = authored_widget_node(NodeKind::Text, widget, rect, 0.0);
 

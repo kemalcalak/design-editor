@@ -117,6 +117,7 @@ fn purple_glow_share(
     let is_wash = fills.iter().any(|fill| match fill {
         PenFill::LinearGradient(body) => stops_all_purple(&body.stops, variables, theme),
         PenFill::RadialGradient(body) => stops_all_purple(&body.stops, variables, theme),
+        PenFill::AngularGradient(body) => stops_all_purple(&body.stops, variables, theme),
         _ => false,
     });
     is_wash.then_some(share)

@@ -26,22 +26,25 @@ use de_editor_core::scene_vars::VariableTable;
 use jian_scene::layout_scene::NodeKind;
 use jian_scene::layout_scene::{
     stable_image_source_id, DropShadow, Effect, LayoutScene, SceneFillLayer, SceneFillType,
-    SceneGradient, SceneGradientStop, SceneImageFit, SceneNode, ScenePage, SceneShader,
-    SceneShaderUniform, SceneTextAlign, SceneTextRun, SceneTextVerticalAlign, SceneVideo,
-    SceneWidget, SceneWidgetOption,
+    SceneImageFit, SceneNode, ScenePage, SceneShader, SceneShaderUniform, SceneTextAlign,
+    SceneTextRun, SceneTextVerticalAlign, SceneVideo, SceneWidget, SceneWidgetOption,
 };
 use std::sync::Arc;
 
-use crate::payload::{
-    DocPayload, GradientPayload, GradientStopPayload, NodePayload, ShaderPayload,
-};
+use crate::payload::{DocPayload, NodePayload, ShaderPayload};
+
+// The test module reaches the gradient type through `super::*`.
+#[cfg(test)]
+use jian_scene::layout_scene::SceneGradient;
 
 // Keep the legacy test module's historical local name; implementation lives in `editor_scene`.
 #[cfg(test)]
 use crate::editor_scene::editor_state_to_layout_scene;
 
+mod gradient;
 mod stroke;
-use stroke::{is_status_bar_shell_stroke, is_unpainted_widget_stroke, scene_stroke};
+use gradient::{payload_gradient_to_scene, scale_gradient_opacity};
+use stroke::resolve_scene_stroke;
 
 /// Build a [`LayoutScene`] from a bare [`PenDocument`], theme, and active page index.
 ///
@@ -245,30 +248,7 @@ pub(crate) fn node_payload_to_scene(
             .shader
             .as_ref()
             .map(|s| payload_shader_to_scene(s, paint_opacity, [node.w, node.h])),
-        stroke: if is_unpainted_widget_stroke(node, &node_id, var_table) {
-            // A first-class widget's stroke is its *inactive track / border*
-            // role paint, not a literal outline. When the author declared a
-            // stroke with no resolvable colour, handing the painter a
-            // fabricated opaque black turned every such control into a black
-            // track / border; dropping it lets
-            // `resolve_authored_widget_visual` fall back to its role defaults
-            // (derived-from-fill or the legacy #D1D5DB track, and a
-            // borderless select) exactly as an unstroked control does.
-            None
-        } else if is_status_bar_shell_stroke(node) {
-            // The scene path (editor canvas + render-shots) bypasses the
-            // adapter's `legacy_payload_repair`, so an iPhone status-bar
-            // shell ("Time"/"Levels") authored with a no-fill stroke would
-            // paint a phantom black box around the clock / signal cluster —
-            // invisible in Pencil. Drop the stroke the same way here.
-            None
-        } else {
-            node.stroke.as_ref().map(|s| {
-                let mut st = scene_stroke(s, &node_id, var_table);
-                st.color = mul_alpha(st.color, paint_opacity);
-                st
-            })
-        },
+        stroke: resolve_scene_stroke(node, &node_id, var_table, paint_opacity),
         text: node.text.clone(),
         text_runs: text_runs_to_scene(&node.text_runs, paint_opacity),
         font_family: node.font_family.clone(),
@@ -426,22 +406,6 @@ fn mul_alpha(c: Color, k: f32) -> Color {
     }
 }
 
-/// Fold node opacity into a gradient by scaling its alpha multiplier
-/// only. The backend folds `opacity` into every stop colour when it
-/// builds the shader (`gradient_color_arrays`), so scaling the stops
-/// here too would dim the gradient twice. Leave stops at their
-/// authored alpha; the single `opacity` multiplier carries node
-/// opacity.
-fn scale_gradient_opacity(mut g: SceneGradient, k: f32) -> SceneGradient {
-    match &mut g {
-        SceneGradient::Linear { opacity, .. }
-        | SceneGradient::Radial { opacity, .. }
-        | SceneGradient::Angular { opacity, .. }
-        | SceneGradient::Mesh { opacity, .. } => *opacity = (*opacity * k).clamp(0.0, 1.0),
-    }
-    g
-}
-
 fn text_align_to_scene(value: &str) -> SceneTextAlign {
     match value {
         "center" => SceneTextAlign::Center,
@@ -511,10 +475,10 @@ fn fill_layers_to_scene(
                     .map(|color| SceneFillLayer::Solid { color, blend_mode })
             };
             match fill {
-                // The angular payload path is #7's; paint its first stop here.
-                PenFill::Solid(_) | PenFill::AngularGradient(_) => fallback(),
+                PenFill::Solid(_) => fallback(),
                 PenFill::LinearGradient(_)
                 | PenFill::RadialGradient(_)
+                | PenFill::AngularGradient(_)
                 | PenFill::MeshGradient(_) => crate::style_payload::gradient_payload(fill)
                     .map(|gradient| payload_gradient_to_scene(&gradient))
                     .map(|gradient| SceneFillLayer::Gradient {
@@ -678,55 +642,6 @@ fn str_to_kind(s: &str) -> NodeKind {
     }
 }
 
-/// Convert a [`GradientPayload`] into the paint-only
-/// [`SceneGradient`]. Each stop's `[r,g,b,a]` is unpacked into a
-/// [`Color`]; the body's opacity rides through unchanged so the
-/// painter can fold it into the per-stop alpha at draw time.
-fn payload_gradient_to_scene(g: &GradientPayload) -> SceneGradient {
-    match g {
-        GradientPayload::Linear {
-            angle_deg,
-            opacity,
-            stops,
-        } => SceneGradient::Linear {
-            angle_deg: *angle_deg,
-            opacity: *opacity,
-            stops: stops.iter().map(stop_to_scene).collect(),
-        },
-        GradientPayload::Radial {
-            cx,
-            cy,
-            radius,
-            opacity,
-            stops,
-        } => SceneGradient::Radial {
-            cx: *cx,
-            cy: *cy,
-            radius: *radius,
-            opacity: *opacity,
-            stops: stops.iter().map(stop_to_scene).collect(),
-        },
-        GradientPayload::Mesh {
-            rows,
-            cols,
-            colors,
-            opacity,
-        } => SceneGradient::Mesh {
-            rows: *rows,
-            cols: *cols,
-            colors: colors.iter().map(|c| array_to_color(*c)).collect(),
-            opacity: *opacity,
-        },
-    }
-}
-
-fn stop_to_scene(s: &GradientStopPayload) -> SceneGradientStop {
-    SceneGradientStop {
-        offset: s.offset,
-        color: array_to_color(s.color),
-    }
-}
-
 /// Convert a [`ShaderPayload`] into the paint-only [`SceneShader`].
 /// The SkSL source + pre-resolved uniforms ride through unchanged, except an
 /// exact `size` uniform is overwritten with the resolved node dimensions;
@@ -759,6 +674,7 @@ fn str_to_scene_fill_type(s: &str) -> SceneFillType {
     match s {
         "linear" => SceneFillType::LinearGradient,
         "radial" => SceneFillType::RadialGradient,
+        "angular" => SceneFillType::AngularGradient,
         "mesh" => SceneFillType::MeshGradient,
         "shader" => SceneFillType::Shader,
         "image" => SceneFillType::Image,

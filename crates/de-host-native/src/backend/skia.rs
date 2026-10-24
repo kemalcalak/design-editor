@@ -65,8 +65,10 @@ pub(super) fn jian_color_to_color4f(c: Color) -> skia_safe::Color4f {
 
 // Gradient shader paint methods (`fill_round_rect_linear_gradient`
 // / `_radial_gradient`) and their helpers live in the sibling
-// `gradient.rs` so this spine stays under the 800-line cap. The
-// methods are added to `NativeBackend` via a sibling `impl` block.
+// `gradient.rs`, the angular (sweep) ones in `angular_gradient.rs`, so
+// this spine stays under the 800-line cap. The methods are added to
+// `NativeBackend` via sibling `impl` blocks.
+mod angular_gradient;
 mod caches;
 mod gradient;
 mod image;
@@ -77,6 +79,7 @@ mod shader_children;
 mod shader_effect;
 mod shader_effect_source;
 mod shaped_text;
+mod stroke_style;
 mod text;
 #[cfg(test)]
 use image::{cover_rect, figma_image_local_matrix, image_adjustment_matrix};
@@ -100,6 +103,8 @@ pub struct NativeBackend {
     /// jian-skia's `SkiaMeasure`, so geometry sees the same typeface
     /// and synthetic-bold branch the painter uses.
     font_resolver: jian_skia::FontResolver,
+    /// Cap / join / dash for the next strokes (#89, `set_stroke_style`).
+    stroke_style: de_editor_ui::layout_scene::StrokeStyle,
     /// Cached Paragraph shaper used only for authored line-box baselines.
     paragraph_baseline: jian_skia::ParagraphBaseline,
     /// Cached Paragraph shaper for complex scripts (Arabic and friends),
@@ -256,6 +261,7 @@ impl NativeBackend {
             skia,
             dpi,
             font_resolver,
+            stroke_style: Default::default(),
             paragraph_baseline,
             shaped_text,
             image_cache: std::collections::HashMap::new(),
@@ -350,6 +356,17 @@ impl NativeBackend {
         color: Color,
         width: f32,
     ) {
+        // jian's rect op has no cap / join / dash; a styled stroke (#89)
+        // draws straight through skia instead.
+        if self.has_stroke_style() {
+            let mut paint = skia_safe::Paint::new(jian_color_to_color4f(color), None);
+            paint.set_stroke(true);
+            paint.set_stroke_width(width);
+            paint.set_anti_alias(true);
+            self.apply_stroke_style(&mut paint);
+            canvas.draw_rect(to_sk_rect(rect), &paint);
+            return;
+        }
         let paint = jian_core::render::Paint {
             fill: None,
             stroke: Some(jian_core::render::StrokeOp {
@@ -428,6 +445,7 @@ impl NativeBackend {
         paint.set_stroke_width(width);
         paint.set_anti_alias(true);
         paint.set_stroke_cap(skia_safe::PaintCap::Round);
+        self.apply_stroke_style(&mut paint);
         canvas.draw_line((from.x, from.y), (to.x, to.y), &paint);
     }
 
@@ -503,6 +521,7 @@ impl NativeBackend {
         paint.set_stroke(true);
         paint.set_stroke_width(width);
         paint.set_anti_alias(true);
+        self.apply_stroke_style(&mut paint);
         canvas.draw_round_rect(to_sk_rect(rect), radius, radius, &paint);
     }
 
@@ -520,6 +539,7 @@ impl NativeBackend {
         paint.set_stroke(true);
         paint.set_stroke_width(width);
         paint.set_anti_alias(true);
+        self.apply_stroke_style(&mut paint);
         canvas.draw_rrect(rrect, &paint);
     }
 
@@ -537,6 +557,7 @@ impl NativeBackend {
         paint.set_anti_alias(true);
         paint.set_stroke(true);
         paint.set_stroke_width(width);
+        self.apply_stroke_style(&mut paint);
         canvas.draw_oval(to_sk_rect(bounds), &paint);
     }
 
@@ -589,6 +610,7 @@ impl NativeBackend {
         paint.set_stroke_width(width);
         paint.set_stroke_join(skia_safe::PaintJoin::Round);
         paint.set_stroke_cap(skia_safe::PaintCap::Round);
+        self.apply_stroke_style(&mut paint);
         canvas.draw_path(&path, &paint);
     }
 

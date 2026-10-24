@@ -271,11 +271,11 @@ fn sample_scene() -> LayoutScene {
         a: 1.0,
     });
     frame.stroke = Some(SceneStroke {
-        style: Default::default(),
         color: Color::WHITE,
         width: 1.0,
         sides: None,
         align: SceneStrokeAlign::Center,
+        style: Default::default(),
     });
     frame.fill_type = SceneFillType::Solid;
     let mut button = leaf(

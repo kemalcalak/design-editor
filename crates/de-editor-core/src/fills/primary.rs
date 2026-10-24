@@ -54,6 +54,12 @@ pub fn set_primary_gradient_angle(node: &mut PenNode, angle_deg: f32) -> bool {
             b.angle = Some(angle_deg);
             true
         }
+        // The panel's Angle row doubles as an angular gradient's start
+        // rotation (degrees from 12 o'clock, clockwise).
+        PenFill::AngularGradient(b) => {
+            b.rotation = Some(angle_deg);
+            true
+        }
         _ => false,
     }
 }
@@ -76,6 +82,7 @@ pub fn set_primary_gradient_stop_hex(node: &mut PenNode, index: usize, hex: &str
     let color = match first {
         PenFill::LinearGradient(b) => b.stops.get_mut(index).map(|s| &mut s.color),
         PenFill::RadialGradient(b) => b.stops.get_mut(index).map(|s| &mut s.color),
+        PenFill::AngularGradient(b) => b.stops.get_mut(index).map(|s| &mut s.color),
         PenFill::MeshGradient(b) => b.stops.get_mut(index).map(|s| &mut s.color),
         _ => return false,
     };
@@ -103,6 +110,7 @@ pub fn set_primary_gradient_stop_offset(node: &mut PenNode, index: usize, frac: 
     let stops = match first {
         PenFill::LinearGradient(b) => &mut b.stops,
         PenFill::RadialGradient(b) => &mut b.stops,
+        PenFill::AngularGradient(b) => &mut b.stops,
         _ => return false,
     };
     let Some(stop) = stops.get_mut(index) else {
@@ -120,6 +128,7 @@ fn primary_gradient_stops_mut(node: &mut PenNode) -> Option<&mut Vec<GradientSto
     match fills.first_mut()? {
         PenFill::LinearGradient(b) => Some(&mut b.stops),
         PenFill::RadialGradient(b) => Some(&mut b.stops),
+        PenFill::AngularGradient(b) => Some(&mut b.stops),
         _ => None,
     }
 }

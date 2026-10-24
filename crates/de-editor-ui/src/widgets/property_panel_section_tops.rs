@@ -90,7 +90,10 @@ pub fn section_tops(
         )),
         stroke: next(shown(
             visible.stroke,
-            crate::widgets::property_panel_stroke::stroke_section_height(visible.stroke_edit_mode),
+            crate::widgets::property_panel_stroke::stroke_section_height(
+                visible.stroke_edit_mode,
+                visible.stroke_style_rows,
+            ),
         )),
         effects: next(shown(
             visible.effects,

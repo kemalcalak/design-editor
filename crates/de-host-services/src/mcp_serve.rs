@@ -52,14 +52,14 @@ use de_mcp::{
     set_node_fill_hex_snapshot, set_node_flip_snapshot, set_node_font_size_snapshot,
     set_node_font_weight_snapshot, set_node_hidden_snapshot, set_node_locked_snapshot,
     set_node_name_snapshot, set_node_rotation_snapshot, set_node_stroke_hex_snapshot,
-    set_node_stroke_side_width_snapshot, set_node_stroke_width_snapshot, set_node_text_snapshot,
-    set_selection_set_snapshot, set_selection_snapshot, set_themes_snapshot,
-    set_variable_boolean_snapshot, set_variable_color_snapshot, set_variable_number_snapshot,
-    set_variable_string_snapshot, set_variables_snapshot, set_viewport_snapshot,
-    snapshot_layout_snapshot, spawn_agents_snapshot, toggle_node_selection_snapshot,
-    tool_search_snapshot, undo_snapshot, ungroup_selected_snapshot, update_node_snapshot,
-    upsert_component_snapshot, upsert_screen_snapshot, upsert_variables_snapshot, McpTool,
-    ToolRegistry,
+    set_node_stroke_side_width_snapshot, set_node_stroke_style_snapshot,
+    set_node_stroke_width_snapshot, set_node_text_snapshot, set_selection_set_snapshot,
+    set_selection_snapshot, set_themes_snapshot, set_variable_boolean_snapshot,
+    set_variable_color_snapshot, set_variable_number_snapshot, set_variable_string_snapshot,
+    set_variables_snapshot, set_viewport_snapshot, snapshot_layout_snapshot, spawn_agents_snapshot,
+    toggle_node_selection_snapshot, tool_search_snapshot, undo_snapshot, ungroup_selected_snapshot,
+    update_node_snapshot, upsert_component_snapshot, upsert_screen_snapshot,
+    upsert_variables_snapshot, McpTool, ToolRegistry,
 };
 #[cfg(feature = "mcp-debug-tools")]
 use de_mcp::{

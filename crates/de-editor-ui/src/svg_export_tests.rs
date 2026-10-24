@@ -176,11 +176,11 @@ fn fitted_svg_path_keeps_stroke_width_in_document_space() {
     path.bounds = Rect::xywh(100.0, 200.0, 80.0, 40.0);
     path.svg_path = Some("M10 20 L30 60".into());
     path.stroke = Some(SceneStroke {
-        style: Default::default(),
         color: Color::BLACK,
         width: 4.0,
         sides: None,
         align: SceneStrokeAlign::Center,
+        style: Default::default(),
     });
 
     let body = serialize_node_svg(&scene_with(vec![path]), "stroked-scaled-path").expect("svg");
@@ -190,6 +190,31 @@ fn fitted_svg_path_keeps_stroke_width_in_document_space() {
         body.contains(r#"vector-effect="non-scaling-stroke""#),
         "{body}"
     );
+}
+
+/// #89: a recorded cap / join / dash exports as SVG stroke attributes.
+#[test]
+fn stroke_style_exports_as_svg_attributes() {
+    use crate::layout_scene::{StrokeCap, StrokeDash, StrokeStyle};
+    let id = "svg-export-dashed-path";
+    let mut path = SceneNode::leaf(id, NodeKind::Path);
+    path.bounds = Rect::xywh(0.0, 0.0, 80.0, 40.0);
+    path.svg_path = Some("M0 0 L80 40".into());
+    path.stroke = Some(SceneStroke {
+        color: Color::BLACK,
+        width: 2.0,
+        sides: None,
+        align: SceneStrokeAlign::Center,
+        style: StrokeStyle {
+            cap: Some(StrokeCap::Square),
+            join: None,
+            dash: StrokeDash::new(&[4.0, 2.0], 1.0),
+        },
+    });
+    let body = serialize_node_svg(&scene_with(vec![path]), id).expect("svg");
+    assert!(body.contains(r#"stroke-linecap="square""#), "{body}");
+    assert!(body.contains(r#"stroke-dasharray="4 2""#), "{body}");
+    assert!(body.contains(r#"stroke-dashoffset="1""#), "{body}");
 }
 
 #[test]
@@ -236,6 +261,62 @@ fn radial_gradient_uses_document_space_circle_on_tall_bounds() {
 
     assert!(body.contains(r#"gradientUnits="userSpaceOnUse""#), "{body}");
     assert!(body.contains(r#"cx="60" cy="120" r="100""#), "{body}");
+}
+
+#[test]
+fn angular_gradient_exports_as_a_wedge_pattern() {
+    let mut rect = SceneNode::leaf("sweep", NodeKind::Rect);
+    rect.bounds = Rect::xywh(10.0, 20.0, 100.0, 50.0);
+    rect.gradient = Some(SceneGradient::Angular {
+        cx: 0.5,
+        cy: 0.5,
+        rotation_deg: 0.0,
+        opacity: 1.0,
+        stops: vec![
+            SceneGradientStop {
+                offset: 0.0,
+                color: Color::RED,
+            },
+            SceneGradientStop {
+                offset: 1.0,
+                color: Color::BLUE,
+            },
+        ],
+    });
+
+    let body = serialize_node_svg(&scene_with(vec![rect]), "sweep").expect("svg");
+
+    assert!(
+        body.contains(r#"patternUnits="userSpaceOnUse" x="10" y="20" width="100" height="50""#),
+        "{body}"
+    );
+    assert!(body.contains(r#"fill="url(#gradient-"#), "{body}");
+    // The first wedge starts at 12 o'clock from the tile-local centre and
+    // carries (almost) the first stop's colour.
+    assert!(
+        body.contains(r#"<path d="M50.00 25.00L50.00 -31.90"#),
+        "{body}"
+    );
+    assert!(body.contains(r#"fill="rgb(254,0,1)""#), "{body}");
+}
+
+#[test]
+fn angular_stop_sampling_interpolates_and_clamps() {
+    use super::angular::sample_stops;
+    let stops = [
+        SceneGradientStop {
+            offset: 0.25,
+            color: Color::BLACK,
+        },
+        SceneGradientStop {
+            offset: 0.75,
+            color: Color::WHITE,
+        },
+    ];
+    assert_eq!(sample_stops(&stops, 0.0), Color::BLACK);
+    assert_eq!(sample_stops(&stops, 1.0), Color::WHITE);
+    let mid = sample_stops(&stops, 0.5);
+    assert!((mid.r - 0.5).abs() < 1e-6, "{mid:?}");
 }
 
 #[test]
@@ -426,11 +507,11 @@ fn clipped_container_stroke_overlays_children_once() {
     frame.fill = Some(Color::WHITE);
     frame.clip_content = true;
     frame.stroke = Some(SceneStroke {
-        style: Default::default(),
         color: Color::BLACK,
         width: 8.0,
         sides: None,
         align: SceneStrokeAlign::Center,
+        style: Default::default(),
     });
     frame.children.push(filled_rect(
         "clipped-child",
@@ -480,11 +561,11 @@ fn clipped_container_stroke_overlays_children_once() {
 fn leaf_rect_keeps_single_combined_shape() {
     let mut rect = filled_rect("leaf-stroke", 10.0, 20.0, 100.0, 80.0, Color::WHITE);
     rect.stroke = Some(SceneStroke {
-        style: Default::default(),
         color: Color::BLACK,
         width: 8.0,
         sides: None,
         align: SceneStrokeAlign::Center,
+        style: Default::default(),
     });
 
     let body = serialize_node_svg(&scene_with(vec![rect]), "leaf-stroke").expect("svg");
@@ -654,11 +735,11 @@ fn composite_opacity_wraps_gradient_stroke_and_descendants_once() {
         }],
     });
     frame.stroke = Some(SceneStroke {
-        style: Default::default(),
         color: Color::BLACK,
         width: 2.0,
         sides: None,
         align: SceneStrokeAlign::Center,
+        style: Default::default(),
     });
     frame.children.push(filled_rect(
         "opacity-child",

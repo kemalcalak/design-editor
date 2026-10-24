@@ -95,11 +95,11 @@ fn authored_widget_node(kind: NodeKind, mut w: SceneWidget, rect: Rect, radius: 
     let mut node = widget_node(kind, w, rect);
     node.fill = Some(DARK_PURPLE);
     node.stroke = Some(SceneStroke {
-        style: Default::default(),
         color: PURPLE_BORDER,
         width: 2.0,
         sides: None,
         align: SceneStrokeAlign::Center,
+        style: Default::default(),
     });
     node.corner_radius = radius;
     node

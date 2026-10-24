@@ -6,6 +6,7 @@ use crate::layout_scene::{
 use crate::{Color, Rect};
 use std::fmt::Write as _;
 
+mod angular;
 mod image_metadata;
 #[path = "svg_export_rect.rs"]
 mod rect;
@@ -224,17 +225,21 @@ fn emit_gradient(out: &mut String, id: &str, gradient: &SceneGradient, bounds: R
             emit_stops(out, stops, *opacity);
             out.push_str("</radialGradient>");
         }
-        // SVG has no conic gradient; keep the stops as a flat first-stop
-        // fill so the export stays valid (the #7 work owns a better match).
-        SceneGradient::Angular { opacity, stops, .. } => {
-            if let Some(stop) = stops.first() {
-                let _ = write!(
-                    out,
-                    r#"<linearGradient id="{id}"><stop offset="0" stop-color="{}" stop-opacity="{}"/></linearGradient>"#,
-                    color_to_rgb(stop.color),
-                    stop.color.a * opacity,
-                );
-            }
+        SceneGradient::Angular {
+            cx,
+            cy,
+            rotation_deg,
+            opacity,
+            stops,
+        } => {
+            let spec = angular::AngularSpec {
+                cx: *cx,
+                cy: *cy,
+                rotation_deg: *rotation_deg,
+                opacity: *opacity,
+                stops,
+            };
+            angular::emit_angular_pattern(out, id, &spec, bounds);
         }
         SceneGradient::Mesh {
             colors, opacity, ..
@@ -437,7 +442,7 @@ fn emit_line(out: &mut String, n: &SceneNode) {
         xml_escape(&n.id),
         r.origin.x,
         r.origin.y,
-        stroke_attrs(color, width),
+        stroke_attrs(color, width) + &stroke_style_attrs(n),
     );
 }
 
@@ -637,6 +642,42 @@ fn fill_stroke_attrs(n: &SceneNode) -> String {
     let mut s = fill_attrs(n);
     if let Some(stroke) = n.stroke {
         s.push_str(&stroke_attrs(stroke.color, stroke.width));
+        s.push_str(&stroke_style_attrs(n));
+    }
+    s
+}
+
+/// `stroke-linecap` / `stroke-linejoin` / `stroke-dasharray` /
+/// `stroke-dashoffset` for a node's authored stroke style (#89); empty
+/// when it has none.
+pub(crate) fn stroke_style_attrs(n: &SceneNode) -> String {
+    use crate::layout_scene::{StrokeCap as LineCap, StrokeJoin as LineJoin};
+    let mut s = String::new();
+    let Some(style) = n.stroke.map(|stroke| stroke.style) else {
+        return s;
+    };
+    if let Some(cap) = style.cap {
+        let cap = match cap {
+            LineCap::Butt => "butt",
+            LineCap::Round => "round",
+            LineCap::Square => "square",
+        };
+        let _ = write!(s, r#" stroke-linecap="{cap}""#);
+    }
+    if let Some(join) = style.join {
+        let join = match join {
+            LineJoin::Miter => "miter",
+            LineJoin::Round => "round",
+            LineJoin::Bevel => "bevel",
+        };
+        let _ = write!(s, r#" stroke-linejoin="{join}""#);
+    }
+    if let Some(dash) = style.dash {
+        let lengths: Vec<String> = dash.lengths().iter().map(|len| len.to_string()).collect();
+        let _ = write!(s, r#" stroke-dasharray="{}""#, lengths.join(" "));
+        if dash.offset() != 0.0 {
+            let _ = write!(s, r#" stroke-dashoffset="{}""#, dash.offset());
+        }
     }
     s
 }

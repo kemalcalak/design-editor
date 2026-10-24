@@ -211,6 +211,7 @@ impl NativeBackend {
         paint.set_anti_alias(true);
         paint.set_stroke_cap(skia_safe::PaintCap::Round);
         paint.set_stroke_join(skia_safe::PaintJoin::Round);
+        self.apply_stroke_style(&mut paint);
         canvas.draw_path(&path, &paint);
     }
 
@@ -236,6 +237,7 @@ impl NativeBackend {
         paint.set_anti_alias(true);
         paint.set_stroke_cap(skia_safe::PaintCap::Round);
         paint.set_stroke_join(skia_safe::PaintJoin::Round);
+        self.apply_stroke_style(&mut paint);
         canvas.draw_path(&path, &paint);
     }
 
@@ -564,7 +566,7 @@ impl NativeBackend {
 
     /// Draw `path` with `shader`, or degrade to a solid first-stop
     /// fill when skia rejected the (degenerate) gradient.
-    fn draw_path_with_gradient(
+    pub(super) fn draw_path_with_gradient(
         &self,
         canvas: &skia_safe::Canvas,
         path: &skia_safe::Path,

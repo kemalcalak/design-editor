@@ -1,9 +1,7 @@
 //! Frame-scoped `RenderBackend` adapter over `NativeBackend` +
 //! `&Canvas`. Lifetime-bound to the `SharedSkiaContext::with_frame`
 //! closure body so widget code never sees the canvas borrow directly.
-//!
-//! Pulled out of `widget_host.rs` so the spine file stays under the
-//! 800-line ceiling.
+//! Pulled out of `widget_host.rs` for the 800-line ceiling.
 
 use crate::backend::NativeBackend;
 use de_editor_ui::{
@@ -114,6 +112,10 @@ impl<'a> RenderBackend for NativeFrameBackend<'a> {
 
     fn rotate(&mut self, radians: f32, pivot: Point2D) {
         self.inner.rotate(self.canvas, radians, pivot);
+    }
+
+    fn set_stroke_style(&mut self, style: de_editor_ui::layout_scene::StrokeStyle) {
+        self.inner.set_stroke_style(style);
     }
 
     fn stroke_line(&mut self, from: Point2D, to: Point2D, color: Color, width: f32) {
@@ -284,6 +286,32 @@ impl<'a> RenderBackend for NativeFrameBackend<'a> {
                 cx_frac,
                 cy_frac,
                 radius_frac,
+                opacity,
+                even_odd,
+            );
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    fn fill_svg_path_in_rect_angular_gradient_with_fill_rule(
+        &mut self,
+        d: &str,
+        rect: Rect,
+        stops: &[(f32, Color)],
+        cx_frac: f32,
+        cy_frac: f32,
+        rotation_deg: f32,
+        opacity: f32,
+        even_odd: bool,
+    ) {
+        self.inner
+            .fill_svg_path_in_rect_angular_gradient_with_fill_rule(
+                self.canvas,
+                d,
+                rect,
+                stops,
+                cx_frac,
+                cy_frac,
+                rotation_deg,
                 opacity,
                 even_odd,
             );
@@ -573,6 +601,56 @@ impl<'a> RenderBackend for NativeFrameBackend<'a> {
             cx_frac,
             cy_frac,
             radius_frac,
+            opacity,
+        );
+        self.inner.restore(self.canvas);
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    fn fill_round_rect_angular_gradient(
+        &mut self,
+        rect: Rect,
+        radius: f32,
+        stops: &[(f32, Color)],
+        cx_frac: f32,
+        cy_frac: f32,
+        rotation_deg: f32,
+        opacity: f32,
+    ) {
+        self.inner.fill_round_rect_angular_gradient(
+            self.canvas,
+            rect,
+            radius,
+            stops,
+            cx_frac,
+            cy_frac,
+            rotation_deg,
+            opacity,
+        );
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    fn fill_round_rect_angular_gradient_per_corner(
+        &mut self,
+        rect: Rect,
+        radii: [f32; 4],
+        stops: &[(f32, Color)],
+        cx_frac: f32,
+        cy_frac: f32,
+        rotation_deg: f32,
+        opacity: f32,
+    ) {
+        let _ = self.inner.save(self.canvas);
+        self.inner
+            .clip_round_rect_per_corner(self.canvas, rect, radii);
+        self.inner.fill_round_rect_angular_gradient(
+            self.canvas,
+            rect,
+            0.0,
+            stops,
+            cx_frac,
+            cy_frac,
+            rotation_deg,
             opacity,
         );
         self.inner.restore(self.canvas);

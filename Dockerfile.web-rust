@@ -137,6 +137,7 @@ RUN mkdir -p /out/web-bundle && \
     # — the `copy` path is the likely offender, fed a pre-split artifact.
     for required in assets/prompt_center_previews assets/scene_template_previews \
                     assets/scene_templates assets/iconify-catalog-core.json \
+                    assets/iconify-catalog-material-symbols.json.gz assets/iconify-catalog-phosphor.json.gz \
                     assets/i18n; do \
       if [ ! -e "/out/web-bundle/$required" ]; then \
         echo "FAIL: web-bundle is missing $required (stale artifact?)" >&2; exit 1; \

@@ -220,25 +220,22 @@ pub fn editable_input_rects(
             match fill_type {
                 // Gradient / image bodies only paint editable inputs for
                 // the primary fill (they key off `fills[0]`).
-                FillType::LinearGradient if is_primary => {
-                    rects.push((
-                        PropertyFocus::GradientAngle,
-                        Rect {
-                            origin: Point2D::new(x0 + PAD_X, y),
-                            size: Point2D::new(usable_w, INPUT_HEIGHT),
-                        },
-                    ));
-                    let mut stop_y = y + INPUT_HEIGHT + 6.0 + SECTION_HEADER_HEIGHT;
-                    push_gradient_stop_rects(
-                        &mut rects,
-                        x0,
-                        &mut stop_y,
-                        usable_w,
-                        visible.gradient_stop_count,
-                    );
-                }
-                FillType::RadialGradient if is_primary => {
+                // Linear / Angular: the Angle row above the stops; Radial:
+                // the stops alone.
+                FillType::LinearGradient | FillType::RadialGradient | FillType::AngularGradient
+                    if is_primary =>
+                {
                     let mut stop_y = y + SECTION_HEADER_HEIGHT;
+                    if fill_type.has_angle() {
+                        rects.push((
+                            PropertyFocus::GradientAngle,
+                            Rect {
+                                origin: Point2D::new(x0 + PAD_X, y),
+                                size: Point2D::new(usable_w, INPUT_HEIGHT),
+                            },
+                        ));
+                        stop_y += INPUT_HEIGHT + 6.0;
+                    }
                     push_gradient_stop_rects(
                         &mut rects,
                         x0,
@@ -252,6 +249,7 @@ pub fn editable_input_rects(
                 FillType::Solid
                 | FillType::LinearGradient
                 | FillType::RadialGradient
+                | FillType::AngularGradient
                 | FillType::MeshGradient
                 | FillType::Shader
                 | FillType::Image => {}
@@ -375,9 +373,11 @@ pub(crate) fn push_fill_action_rects(
                     },
                 ));
             }
-            FillType::LinearGradient | FillType::RadialGradient if is_primary => {
+            FillType::LinearGradient | FillType::RadialGradient | FillType::AngularGradient
+                if is_primary =>
+            {
                 let mut stop_y = y;
-                if fill_type == FillType::LinearGradient {
+                if fill_type.has_angle() {
                     stop_y += INPUT_HEIGHT + 6.0; // Angle row above the stops header.
                 }
                 out.push((
@@ -424,6 +424,7 @@ pub(crate) fn push_fill_action_rects(
             FillType::Solid
             | FillType::LinearGradient
             | FillType::RadialGradient
+            | FillType::AngularGradient
             | FillType::MeshGradient
             | FillType::Shader
             | FillType::Image => {}

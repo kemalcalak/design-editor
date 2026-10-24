@@ -188,11 +188,11 @@ fn layered_node(kind: NodeKind) -> SceneNode {
     // Canonical order is front-to-back, so red=1 must paint first.
     node.fill_layers = vec![solid(2), solid(1)];
     node.stroke = Some(SceneStroke {
-        style: Default::default(),
         color: Color::BLACK,
         width: 2.0,
         sides: None,
         align: SceneStrokeAlign::Center,
+        style: Default::default(),
     });
     node
 }

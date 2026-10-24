@@ -431,11 +431,11 @@ mod tests {
         let mut node = SceneNode::leaf("layered", NodeKind::Rect);
         node.opacity = 0.5;
         node.stroke = Some(SceneStroke {
-            style: Default::default(),
             color: Color::BLACK,
             width: 1.0,
             sides: None,
             align: SceneStrokeAlign::Center,
+            style: Default::default(),
         });
         node.fill_layers = vec![
             solid(3, ImageBlendMode::Screen),

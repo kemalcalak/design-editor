@@ -241,3 +241,84 @@ fn unknown_node_id_rejects_at_apply_time() {
         width: 2.0,
     }));
 }
+
+fn stroke_style_args(pairs: &[(&str, &str)]) -> BTreeMap<String, String> {
+    let mut args = BTreeMap::new();
+    args.insert("node_id".into(), RECT_ID.into());
+    for (key, value) in pairs {
+        args.insert((*key).into(), (*value).into());
+    }
+    args
+}
+
+fn rect_stroke_style(s: &EditorState) -> de_editor_core::fills::StrokeStyleFields {
+    let node = de_editor_core::walkers::find_node(s.active_children(), &NodeId::new(RECT_ID))
+        .expect("rect");
+    de_editor_core::fills::node_stroke_style(node).expect("stroke")
+}
+
+/// #89: `set_node_stroke_style` writes cap / join / dash onto an
+/// existing stroke, leaves omitted fields alone, and clears the dash.
+#[test]
+fn set_node_stroke_style_writes_and_clears() {
+    use jian_ops_schema::style::{StrokeCap, StrokeJoin};
+    let tool = set_node_stroke_style_snapshot();
+    let mut s = state_with_rect_node();
+    assert!(s.apply(EditorCommand::SetNodeStrokeWidth {
+        node_id: NodeId::new(RECT_ID),
+        width: 2.0,
+    }));
+    let apply = |s: &mut EditorState, args: &BTreeMap<String, String>| match tool.call(args) {
+        ToolOutcome::OkWithCommand(_, command) => assert!(s.apply(command)),
+        other => panic!("expected a command, got {other:?}"),
+    };
+    apply(
+        &mut s,
+        &stroke_style_args(&[
+            ("cap", "butt"),
+            ("join", "bevel"),
+            ("dash_pattern", "[4, 2]"),
+        ]),
+    );
+    apply(&mut s, &stroke_style_args(&[("dash_offset", "1")]));
+    let style = rect_stroke_style(&s);
+    assert_eq!(style.cap, Some(StrokeCap::None));
+    assert_eq!(style.join, Some(StrokeJoin::Bevel));
+    assert_eq!(style.dash_pattern, Some(vec![4.0, 2.0]));
+    assert_eq!(style.dash_offset, Some(1.0));
+
+    apply(&mut s, &stroke_style_args(&[("dash_pattern", "none")]));
+    let style = rect_stroke_style(&s);
+    assert_eq!(style.dash_pattern, None);
+    assert_eq!(style.join, Some(StrokeJoin::Bevel), "untouched field kept");
+}
+
+#[test]
+fn set_node_stroke_style_rejects_bad_input_and_strokeless_nodes() {
+    let tool = set_node_stroke_style_snapshot();
+    match tool.call(&stroke_style_args(&[])) {
+        ToolOutcome::Err(code, _) => assert_eq!(code, ToolErrorCode::MissingArgument),
+        other => panic!("expected MissingArgument, got {other:?}"),
+    }
+    for pairs in [
+        &[("cap", "pointy")][..],
+        &[("join", "sharp")][..],
+        &[("dash_pattern", "4 x")][..],
+        &[("dash_pattern", "-1 2")][..],
+        &[("dash_pattern", "0 0")][..],
+        &[("dash_offset", "inf")][..],
+    ] {
+        match tool.call(&stroke_style_args(pairs)) {
+            ToolOutcome::Err(code, _) => assert_eq!(code, ToolErrorCode::InvalidArgument),
+            other => panic!("{pairs:?}: expected InvalidArgument, got {other:?}"),
+        }
+    }
+    let mut s = state_with_rect_node();
+    assert!(!s.apply(EditorCommand::SetNodeStrokeStyle {
+        node_id: NodeId::new(RECT_ID),
+        style: de_editor_core::fills::StrokeStyleWrite {
+            cap: Some(jian_ops_schema::style::StrokeCap::Round),
+            ..Default::default()
+        },
+    }));
+}

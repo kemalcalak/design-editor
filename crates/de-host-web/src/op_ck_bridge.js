@@ -720,7 +720,23 @@ export async function opCkInit(canvasId) {
   const cachedFillPaint = new CK.Paint();
   const cachedStrokePaint = new CK.Paint();
   const fillPaint = (r, g, b, a) => { const p = cachedFillPaint; p.setColor(col(r, g, b, a)); p.setAntiAlias(true); setPaintStyle(p, CK.PaintStyle.Fill); return p; };
-  const strokePaint = (r, g, b, a, w) => { const p = cachedStrokePaint; p.setColor(col(r, g, b, a)); p.setAntiAlias(true); setPaintStyle(p, CK.PaintStyle.Stroke); p.setStrokeWidth(w); p.setStrokeCap(CK.StrokeCap.Round); p.setStrokeJoin(CK.StrokeJoin.Round); return p; };
+  // A node's authored cap / join / dash (#89), set by `setStrokeStyle`
+  // while the Rust painter is inside that node and cleared after. Cap and
+  // join arrive as indices into the tables below (`canvaskit::stroke_style`).
+  let strokeStyle = null;
+  const STROKE_CAPS = [CK.StrokeCap.Butt, CK.StrokeCap.Round, CK.StrokeCap.Square];
+  const STROKE_JOINS = [CK.StrokeJoin.Miter, CK.StrokeJoin.Round, CK.StrokeJoin.Bevel];
+  const strokePaint = (r, g, b, a, w) => {
+    const p = cachedStrokePaint; p.setColor(col(r, g, b, a)); p.setAntiAlias(true); setPaintStyle(p, CK.PaintStyle.Stroke); p.setStrokeWidth(w); p.setStrokeCap(CK.StrokeCap.Round); p.setStrokeJoin(CK.StrokeJoin.Round);
+    // `clearStrokeStyle` resets the path effect, so unstyled chrome
+    // strokes skip these calls entirely.
+    if (strokeStyle) {
+      p.setPathEffect(strokeStyle.effect);
+      p.setStrokeCap(STROKE_CAPS[strokeStyle.cap]);
+      p.setStrokeJoin(STROKE_JOINS[strokeStyle.join]);
+    }
+    return p;
+  };
   // Dedicated (allocated + `.delete()`d) fill paint for the one call site
   // that needs a SECOND live fill paint while `drawText`'s cached `p` (see
   // above) is already in scope: `drawScriptRun` is invoked both standalone
@@ -1033,6 +1049,32 @@ export async function opCkInit(canvasId) {
         CK.TileMode.Clamp,
         null,
         1,
+      );
+    } catch (_error) {
+      return null;
+    }
+  };
+  // Angular (conic) gradient. Skia's sweep starts at 3 o'clock; the
+  // canonical rotation is CSS conic's (0deg = 12 o'clock, clockwise), so
+  // the local matrix turns the sweep by rotation - 90deg about the centre.
+  const makeAngularGradient = (x, y, w, h, stops, cxFrac, cyFrac, rotationDeg, opacity) => {
+    const gradient = gradientStops(stops, opacity);
+    if (!gradient.colors.length) return null;
+    const cx = x + w * opCkClampUnit(cxFrac);
+    const cy = y + h * opCkClampUnit(cyFrac);
+    const rotation = Number.isFinite(rotationDeg) ? rotationDeg : 0;
+    try {
+      const local = CK.Matrix.rotated(((rotation - 90) * Math.PI) / 180, cx, cy);
+      return CK.Shader.MakeSweepGradient(
+        cx,
+        cy,
+        gradient.colors,
+        gradient.offsets,
+        CK.TileMode.Clamp,
+        local,
+        1,
+        0,
+        360,
       );
     } catch (_error) {
       return null;
@@ -1436,6 +1478,22 @@ export async function opCkInit(canvasId) {
         firstStopColor(stops, opacity),
       );
     },
+    fillRoundRectAngularGradient(x, y, w, h, radius, stops, cxFrac, cyFrac, rotationDeg, opacity) {
+      if (stops.length < 5) return;
+      drawGradientRRect(
+        uniformRRect(x, y, w, h, radius),
+        makeAngularGradient(x, y, w, h, stops, cxFrac, cyFrac, rotationDeg, opacity),
+        firstStopColor(stops, opacity),
+      );
+    },
+    fillRoundRectAngularGradientPerCorner(x, y, w, h, tl, tr, br, bl, stops, cxFrac, cyFrac, rotationDeg, opacity) {
+      if (stops.length < 5) return;
+      drawGradientRRect(
+        perCornerRRect(x, y, w, h, tl, tr, br, bl),
+        makeAngularGradient(x, y, w, h, stops, cxFrac, cyFrac, rotationDeg, opacity),
+        firstStopColor(stops, opacity),
+      );
+    },
     fillRoundRectMeshGradient(x, y, w, h, radius, rows, cols, colors, opacity) {
       if (colors.length < 4) return;
       drawMeshGradientRRect(
@@ -1488,6 +1546,23 @@ export async function opCkInit(canvasId) {
     fillOval(x, y, w, h, r, g, b, a) { const p = fillPaint(r, g, b, a); canvas.drawOval(CK.LTRBRect(x, y, x + w, y + h), p); },
     strokeOval(x, y, w, h, r, g, b, a, sw) { const p = strokePaint(r, g, b, a, sw); canvas.drawOval(CK.LTRBRect(x, y, x + w, y + h), p); },
     strokeLine(x1, y1, x2, y2, r, g, b, a, sw) { const p = strokePaint(r, g, b, a, sw); canvas.drawLine(x1, y1, x2, y2, p); },
+    // One closed path, so joins apply and a dash runs around the corners.
+    strokePolygon(pts, r, g, b, a, sw) {
+      const path = new CK.Path(); path.moveTo(pts[0], pts[1]);
+      for (let i = 2; i < pts.length; i += 2) path.lineTo(pts[i], pts[i + 1]);
+      path.close();
+      const p = strokePaint(r, g, b, a, sw); canvas.drawPath(path, p); path.delete();
+    },
+    setStrokeStyle(cap, join, dash, offset) {
+      if (strokeStyle && strokeStyle.effect) strokeStyle.effect.delete();
+      const effect = dash.length >= 2 ? CK.PathEffect.MakeDash(Array.from(dash), offset) : null;
+      strokeStyle = { cap, join, effect };
+    },
+    clearStrokeStyle() {
+      if (strokeStyle && strokeStyle.effect) strokeStyle.effect.delete();
+      strokeStyle = null;
+      cachedStrokePaint.setPathEffect(null);
+    },
 
     fillPolygon(pts, r, g, b, a) {
       const path = new CK.Path(); path.moveTo(pts[0], pts[1]);
@@ -1548,6 +1623,23 @@ export async function opCkInit(canvasId) {
       if (shader) {
         // shaderPaint always allocates fresh (one-off effect, excluded from
         // the shared cache) — this instance owns its own delete.
+        const p = shaderPaint(shader);
+        canvas.drawPath(path, p);
+        p.delete();
+        if (shader.delete) shader.delete();
+      } else {
+        const p = fillPaint(...firstStopColor(stops, opacity));
+        canvas.drawPath(path, p);
+      }
+      path.delete();
+    },
+    fillSvgPathInRectAngularGradient(d, x, y, w, h, evenOdd, stops, cxFrac, cyFrac, rotationDeg, opacity) {
+      const path = cachedSvgPath(d); if (!path) return;
+      if (evenOdd) path.setFillType(CK.FillType.EvenOdd);
+      fitPathToRect(path, x, y, w, h);
+      if (stops.length < 5) { path.delete(); return; }
+      const shader = makeAngularGradient(x, y, w, h, stops, cxFrac, cyFrac, rotationDeg, opacity);
+      if (shader) {
         const p = shaderPaint(shader);
         canvas.drawPath(path, p);
         p.delete();

@@ -50,15 +50,16 @@ pub(super) fn clip_node_silhouette(
     }
 }
 
-/// Open the backdrop passes. Returns how many `restore`s balance them
+/// Open the backdrop passes (none unless `enabled`). Returns how many `restore`s balance them
 /// (the silhouette clip save plus one per pass; `0` when none ran).
 pub(super) fn push_backdrop_shader_effects(
     cx: &mut PaintCx<'_>,
     node: &SceneNode,
     world_rect: Rect,
     zoom: f32,
+    enabled: bool,
 ) -> usize {
-    if world_rect.size.x <= 0.0 || world_rect.size.y <= 0.0 {
+    if !enabled || world_rect.size.x <= 0.0 || world_rect.size.y <= 0.0 {
         return 0;
     }
     let mut pushed = 0;
@@ -74,14 +75,16 @@ pub(super) fn push_backdrop_shader_effects(
     pushed
 }
 
-/// Open the object passes, last listed outermost. Returns how many
+/// Open the object passes (none unless `enabled`), last listed outermost.
+/// Returns how many
 /// `restore`s balance them.
 pub(super) fn push_object_shader_effects(
     cx: &mut PaintCx<'_>,
     node: &SceneNode,
     world_rect: Rect,
+    enabled: bool,
 ) -> usize {
-    if world_rect.size.x <= 0.0 || world_rect.size.y <= 0.0 {
+    if !enabled || world_rect.size.x <= 0.0 || world_rect.size.y <= 0.0 {
         return 0;
     }
     let object: Vec<&ShaderEffect> = passes(node, ShaderEffectInput::Object).collect();

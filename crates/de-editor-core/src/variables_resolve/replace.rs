@@ -156,6 +156,11 @@ fn replace_in_fill(
                 replace_color(&mut stop.color, token, new, vars, theme);
             }
         }
+        PenFill::AngularGradient(body) => {
+            for stop in &mut body.stops {
+                replace_color(&mut stop.color, token, new, vars, theme);
+            }
+        }
         _ => {}
     }
 }

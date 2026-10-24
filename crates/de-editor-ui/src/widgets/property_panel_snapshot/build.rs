@@ -132,6 +132,7 @@ impl NodeSnapshot {
             flip_x: false,
             flip_y: false,
             shader_preset: None,
+            stroke_style: None,
         }
     }
 
@@ -217,6 +218,7 @@ impl NodeSnapshot {
             flip_x: false,
             flip_y: false,
             shader_preset: None,
+            stroke_style: None,
         })
     }
 
@@ -248,18 +250,18 @@ impl NodeSnapshot {
         let stroke_width = de_editor_core::fills::node_stroke_width(node);
         let stroke = match (stroke_color, stroke_width) {
             (Some(color), _) => Some(SceneStroke {
-                style: Default::default(),
                 color,
                 width: stroke_width.unwrap_or(1.0) as f32,
                 sides: stroke_sides_for_scene(node),
                 align: stroke_align_for_scene(node),
+                style: Default::default(),
             }),
             (None, Some(width)) if width > 0.0 => Some(SceneStroke {
-                style: Default::default(),
                 color: Self::DEFAULT_STROKE_SWATCH,
                 width: width as f32,
                 sides: stroke_sides_for_scene(node),
                 align: stroke_align_for_scene(node),
+                style: Default::default(),
             }),
             _ => None,
         };
@@ -330,6 +332,7 @@ impl NodeSnapshot {
             flip_x: base.flip_x == Some(true),
             flip_y: base.flip_y == Some(true),
             shader_preset: de_editor_core::shader_presets::primary_shader_preset(node),
+            stroke_style: super::stroke_style_summary(node),
         }
     }
 }

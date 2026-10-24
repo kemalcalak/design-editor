@@ -78,11 +78,11 @@ fn tabs_zero_width_stroke_paints_no_bar_outline() {
         0.0,
     );
     node.stroke = Some(SceneStroke {
-        style: Default::default(),
         color: PURPLE_BORDER,
         width: 0.0,
         sides: None,
         align: SceneStrokeAlign::Center,
+        style: Default::default(),
     });
 
     let b = paint(&node, rect);
@@ -95,11 +95,11 @@ fn tabs_zero_width_stroke_paints_no_bar_outline() {
 
     // The gate is on zero, not on strokes in general.
     node.stroke = Some(SceneStroke {
-        style: Default::default(),
         color: PURPLE_BORDER,
         width: 2.0,
         sides: None,
         align: SceneStrokeAlign::Center,
+        style: Default::default(),
     });
     assert_eq!(paint(&node, rect).stroke_round_rects.len(), 1);
 }

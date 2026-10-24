@@ -98,12 +98,9 @@ pub fn gradient(g: &SceneGradient, bounds: Rect) -> Option<String> {
                 stop_list(stops, *opacity)
             ))
         }
-        // A Gouraud lattice has no CSS spelling. Returning `None` sends
-        // the node down the raster path rather than flattening a mesh
-        // to its first stop and calling it a gradient.
-        SceneGradient::Mesh { .. } => None,
-        // CSS `conic-gradient` shares the angular convention (0deg = 12
-        // o'clock, clockwise).
+        // **Angular is exact**: the scene's rotation is CSS's `from`
+        // angle (0° = 12 o'clock, clockwise) and stop offsets are
+        // fractions of the turn, which is what conic stops are.
         SceneGradient::Angular {
             cx,
             cy,
@@ -111,12 +108,16 @@ pub fn gradient(g: &SceneGradient, bounds: Rect) -> Option<String> {
             opacity,
             stops,
         } => Some(format!(
-            "conic-gradient(from {}deg at {}% {}%,{})",
+            "conic-gradient(from {}deg at {}px {}px,{})",
             num(*rotation_deg),
-            num(cx.clamp(0.0, 1.0) * 100.0),
-            num(cy.clamp(0.0, 1.0) * 100.0),
+            num(bounds.size.x * cx.clamp(0.0, 1.0)),
+            num(bounds.size.y * cy.clamp(0.0, 1.0)),
             stop_list(stops, *opacity)
         )),
+        // A Gouraud lattice has no CSS spelling. Returning `None` sends
+        // the node down the raster path rather than flattening a mesh
+        // to its first stop and calling it a gradient.
+        SceneGradient::Mesh { .. } => None,
     }
 }
 

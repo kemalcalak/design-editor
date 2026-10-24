@@ -1,5 +1,6 @@
 //! Shared dispatch for the effect-add menu and the paint options #90
-//! exposed (stroke alignment, flip, shader presets). Split out of
+//! exposed (stroke alignment, flip, shader presets) and the stroke cap /
+//! join / dash rows (#89). Split out of
 //! `property_panel_dispatch.rs` (800-line cap); both hosts reach it
 //! through `apply_property_action`.
 //!
@@ -28,6 +29,9 @@ pub(crate) fn apply_paint_option_action(state: &mut EditorState, action: &Proper
         }
         A::SetStrokeAlign(align) => {
             let _ = state.set_selected_stroke_align(align.clone());
+        }
+        A::SetStrokeStyle(edit) => {
+            let _ = state.set_selected_stroke_style(edit);
         }
         A::FlipSelection(axis) => {
             let _ = state.flip_selected(*axis);

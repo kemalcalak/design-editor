@@ -559,7 +559,6 @@ fn state_stroke(
         .as_deref()
         .and_then(|fills| state_fill_color(fills, state_variables))?;
     Some(SceneStroke {
-        style: Default::default(),
         color: with_scene_opacity(color, opacity),
         width,
         sides,
@@ -568,6 +567,7 @@ fn state_stroke(
             Some(StrokeAlign::Outside) => SceneStrokeAlign::Outside,
             Some(StrokeAlign::Center) | None => SceneStrokeAlign::Center,
         },
+        style: de_editor_core::fills::pen_stroke_render_style(stroke),
     })
 }
 

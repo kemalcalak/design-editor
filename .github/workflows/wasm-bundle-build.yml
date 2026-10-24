@@ -184,6 +184,7 @@ jobs:
           cp -R crates/de-host-web/assets/canvaskit web-bundle/canvaskit
           for required in assets/prompt_center_previews assets/scene_template_previews \
                           assets/scene_templates assets/iconify-catalog-core.json \
+                          assets/iconify-catalog-material-symbols.json.gz assets/iconify-catalog-phosphor.json.gz \
                           assets/i18n; do
             test -e "web-bundle/$required" \
               || { echo "::error::web-bundle is missing $required"; exit 1; }

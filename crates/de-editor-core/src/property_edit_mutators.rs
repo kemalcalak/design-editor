@@ -650,6 +650,18 @@ impl EditorState {
         changed
     }
 
+    /// Apply a cap / join / dash-preset click to the anchor node's
+    /// stroke. A node without a stroke is left alone.
+    pub fn set_selected_stroke_style(&mut self, edit: &crate::fills::StrokeStyleEdit) -> bool {
+        let changed = self
+            .with_selected_node(|node| crate::fills::apply_stroke_style_edit(node, edit))
+            .unwrap_or(false);
+        if changed {
+            self.mark_document_changed();
+        }
+        changed
+    }
+
     /// Set TILE scale on a primary image fill. Unlike mode/adjustments, this
     /// deliberately does not fall back to a standalone Image node because its
     /// schema has no tileScale property.

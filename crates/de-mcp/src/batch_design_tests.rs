@@ -545,24 +545,47 @@ fn batch_design_normalizes_camelcase_fill_type_to_snake_case() {
 }
 
 #[test]
+fn batch_design_maps_css_conic_gradient_to_angular_gradient() {
+    // The CSS spelling and its `from` start angle land as the canonical
+    // angular fill (#7).
+    let tool = batch_design_snapshot(&sample());
+    let mut args = BTreeMap::new();
+    args.insert(
+        "operations".into(),
+        r##"root=I(null, {"type":"rectangle","name":"Sweep","width":100,"height":100,"fill":[{"type":"conic-gradient","from":45,"stops":[{"offset":0,"color":"#ff0000"},{"offset":1,"color":"#0000ff"}]}]})"##
+            .into(),
+    );
+
+    let ToolOutcome::OkJsonWithCommand(_, EditorCommand::InsertAuthoredSubtree { nodes, .. }) =
+        tool.call(&args)
+    else {
+        panic!("expected InsertAuthoredSubtree");
+    };
+    let value = serde_json::to_value(&nodes[0]).expect("node json");
+    assert_eq!(value["fill"][0]["type"], "angular_gradient");
+    assert_eq!(value["fill"][0]["rotation"], 45.0);
+    assert_eq!(value["fill"][0]["stops"].as_array().map(Vec::len), Some(2));
+}
+
+#[test]
 fn batch_design_rejects_unknown_fill_type() {
     // Unrecognized type names are left untouched and rejected by serde.
     let tool = batch_design_snapshot(&sample());
     let mut args = BTreeMap::new();
     args.insert(
         "operations".into(),
-        r##"root=I(null, {"type":"rectangle","name":"Unknown","width":100,"height":100,"fill":[{"type":"conic-gradient","stops":[]}]})"##
+        r##"root=I(null, {"type":"rectangle","name":"Unknown","width":100,"height":100,"fill":[{"type":"plaid-gradient","stops":[]}]})"##
             .into(),
     );
 
     match tool.call(&args) {
         ToolOutcome::OkJson(msg) if msg.contains("applied\":false") => {
             // Transaction rolled back due to invalid fill type.
-            assert!(msg.contains("conic-gradient") || msg.contains("unknown variant"));
+            assert!(msg.contains("plaid-gradient") || msg.contains("unknown variant"));
         }
         ToolOutcome::Err(code, msg) => {
             assert_eq!(code, ToolErrorCode::InvalidArgument);
-            assert!(msg.contains("conic-gradient") || msg.contains("expected one of"));
+            assert!(msg.contains("plaid-gradient") || msg.contains("expected one of"));
         }
         other => panic!("expected rolled-back transaction or error, got {other:?}"),
     }

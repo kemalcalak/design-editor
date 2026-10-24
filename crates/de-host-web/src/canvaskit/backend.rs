@@ -1,10 +1,6 @@
-//! `CanvasKitBackend` — the `RenderBackend` implementation over the CanvasKit
-//! JS bridge, plus the async `init_backend` constructor. Inherent state and
-//! resource methods live in `backend_state` to keep this trait impl under cap.
-//!
-//! Split out of `canvaskit.rs`. A trait impl must be one block, so the flat
-//! `OpCk` call bodies for the shape / gradient / SVG-path ops live in `ops`
-//! and the trait methods here forward to them.
+//! `CanvasKitBackend`: the `RenderBackend` impl over the CanvasKit JS bridge,
+//! plus `init_backend`. Inherent state lives in `backend_state`; a trait impl
+//! must be one block, so the `OpCk` op bodies live in `ops` (800-line cap).
 
 use de_editor_ui::{
     Color, ImageAdjustments, ImageBlendMode, ImageDrawMode, Point2D, Rect, RenderBackend,
@@ -18,6 +14,8 @@ use super::convert::{
     valid_original_size,
 };
 use super::ops;
+use super::stroke_style::StrokeDefaults;
+use de_editor_ui::layout_scene::StrokeStyle;
 
 /// `RenderBackend` over CanvasKit. Paints in logical (CSS) pixels; `begin_frame`
 /// applies the device-pixel-ratio so output matches the native backend.
@@ -27,6 +25,11 @@ pub struct CanvasKitBackend {
     /// Logical (CSS) viewport — what widget layout uses.
     pub(super) logical_w: u32,
     pub(super) logical_h: u32,
+    /// Style for the next strokes (#89, `set_stroke_style`).
+    pub(super) stroke_style: StrokeStyle,
+    /// Last style sent to the bridge, so it only crosses into JS when a
+    /// stroke's style differs from the previous one; `None` = plain.
+    pub(super) sent_stroke_style: Option<(StrokeStyle, StrokeDefaults)>,
 }
 
 impl RenderBackend for CanvasKitBackend {
@@ -44,6 +47,7 @@ impl RenderBackend for CanvasKitBackend {
         ops::fill_rect(&self.ck, rect, color);
     }
     fn stroke_rect(&mut self, rect: Rect, color: Color, width: f32) {
+        self.sync_stroke_style(StrokeDefaults::Sharp);
         ops::stroke_rect(&self.ck, rect, color, width);
     }
     fn fill_round_rect(&mut self, rect: Rect, radius: f32, color: Color) {
@@ -116,6 +120,32 @@ impl RenderBackend for CanvasKitBackend {
             opacity,
         );
     }
+    fn fill_round_rect_angular_gradient(
+        &mut self,
+        rect: Rect,
+        radius: f32,
+        stops: &[(f32, Color)],
+        cx_frac: f32,
+        cy_frac: f32,
+        rotation_deg: f32,
+        opacity: f32,
+    ) {
+        let sweep = ops::Sweep::new(cx_frac, cy_frac, rotation_deg, opacity);
+        ops::fill_round_rect_angular_gradient(&self.ck, rect, radius, stops, sweep);
+    }
+    fn fill_round_rect_angular_gradient_per_corner(
+        &mut self,
+        rect: Rect,
+        radii: [f32; 4],
+        stops: &[(f32, Color)],
+        cx_frac: f32,
+        cy_frac: f32,
+        rotation_deg: f32,
+        opacity: f32,
+    ) {
+        let sweep = ops::Sweep::new(cx_frac, cy_frac, rotation_deg, opacity);
+        ops::fill_round_rect_angular_gradient_per_corner(&self.ck, rect, radii, stops, sweep);
+    }
     fn fill_round_rect_mesh_gradient(
         &mut self,
         rect: Rect,
@@ -167,6 +197,7 @@ impl RenderBackend for CanvasKitBackend {
         );
     }
     fn stroke_round_rect(&mut self, rect: Rect, radius: f32, color: Color, width: f32) {
+        self.sync_stroke_style(StrokeDefaults::Sharp);
         ops::stroke_round_rect(&self.ck, rect, radius, color, width);
     }
     fn stroke_round_rect_per_corner(
@@ -176,15 +207,21 @@ impl RenderBackend for CanvasKitBackend {
         color: Color,
         width: f32,
     ) {
+        self.sync_stroke_style(StrokeDefaults::Sharp);
         ops::stroke_round_rect_per_corner(&self.ck, rect, radii, color, width);
     }
     fn fill_oval(&mut self, bounds: Rect, color: Color) {
         ops::fill_oval(&self.ck, bounds, color);
     }
     fn stroke_oval(&mut self, bounds: Rect, color: Color, width: f32) {
+        self.sync_stroke_style(StrokeDefaults::Sharp);
         ops::stroke_oval(&self.ck, bounds, color, width);
     }
+    fn set_stroke_style(&mut self, style: StrokeStyle) {
+        self.stroke_style = style;
+    }
     fn stroke_line(&mut self, from: Point2D, to: Point2D, color: Color, width: f32) {
+        self.sync_stroke_style(StrokeDefaults::Round);
         self.ck.stroke_line(
             from.x, from.y, to.x, to.y, color.r, color.g, color.b, color.a, width,
         );
@@ -192,7 +229,12 @@ impl RenderBackend for CanvasKitBackend {
     fn fill_polygon(&mut self, points: &[Point2D], color: Color) {
         ops::fill_polygon(&self.ck, points, color);
     }
+    fn stroke_polygon(&mut self, points: &[Point2D], color: Color, width: f32) {
+        self.sync_stroke_style(StrokeDefaults::Round);
+        ops::stroke_polygon(&self.ck, points, color, width);
+    }
     fn stroke_svg_path(&mut self, d: &str, top_left: Point2D, size: f32, color: Color, width: f32) {
+        self.sync_stroke_style(StrokeDefaults::Round);
         ops::stroke_svg_path(&self.ck, d, top_left, size, color, width);
     }
     fn fill_svg_path(&mut self, d: &str, top_left: Point2D, size: f32, viewbox: f32, color: Color) {
@@ -224,6 +266,7 @@ impl RenderBackend for CanvasKitBackend {
         ops::fill_svg_path_in_rect_with_fill_rule(&self.ck, d, rect, color, even_odd);
     }
     fn stroke_svg_path_in_rect(&mut self, d: &str, rect: Rect, color: Color, width: f32) {
+        self.sync_stroke_style(StrokeDefaults::Round);
         ops::stroke_svg_path_in_rect(&self.ck, d, rect, color, width);
     }
     fn fill_svg_path_in_rect_linear_gradient(
@@ -298,6 +341,22 @@ impl RenderBackend for CanvasKitBackend {
             radius_frac,
             opacity,
             even_odd,
+        );
+    }
+    fn fill_svg_path_in_rect_angular_gradient_with_fill_rule(
+        &mut self,
+        d: &str,
+        rect: Rect,
+        stops: &[(f32, Color)],
+        cx_frac: f32,
+        cy_frac: f32,
+        rotation_deg: f32,
+        opacity: f32,
+        even_odd: bool,
+    ) {
+        let sweep = ops::Sweep::new(cx_frac, cy_frac, rotation_deg, opacity);
+        ops::fill_svg_path_in_rect_angular_gradient_with_fill_rule(
+            &self.ck, d, rect, stops, sweep, even_odd,
         );
     }
     fn fill_inner_shadow_svg_path(

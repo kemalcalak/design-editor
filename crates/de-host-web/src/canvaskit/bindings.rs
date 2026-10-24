@@ -280,6 +280,14 @@ extern "C" {
     );
     #[wasm_bindgen(method, js_name = fillPolygon)]
     pub(super) fn fill_polygon(this: &OpCk, pts: &[f32], r: f32, g: f32, b: f32, a: f32);
+    #[wasm_bindgen(method, js_name = strokePolygon)]
+    pub(super) fn stroke_polygon(this: &OpCk, pts: &[f32], r: f32, g: f32, b: f32, a: f32, sw: f32);
+    /// Cap / join index and dash for the following strokes (#89); see
+    /// `canvaskit::stroke_style`.
+    #[wasm_bindgen(method, js_name = setStrokeStyle)]
+    pub(super) fn set_stroke_style(this: &OpCk, cap: i32, join: i32, dash: &[f32], offset: f32);
+    #[wasm_bindgen(method, js_name = clearStrokeStyle)]
+    pub(super) fn clear_stroke_style(this: &OpCk);
     #[wasm_bindgen(method, js_name = strokeSvgPath)]
     pub(super) fn stroke_svg_path(
         this: &OpCk,
@@ -360,6 +368,52 @@ extern "C" {
         cx_frac: f32,
         cy_frac: f32,
         radius_frac: f32,
+        opacity: f32,
+    );
+    #[wasm_bindgen(method, js_name = fillSvgPathInRectAngularGradient)]
+    pub(super) fn fill_svg_path_in_rect_angular_gradient(
+        this: &OpCk,
+        d: &str,
+        x: f32,
+        y: f32,
+        w: f32,
+        h: f32,
+        even_odd: bool,
+        stops: &[f32],
+        cx_frac: f32,
+        cy_frac: f32,
+        rotation_deg: f32,
+        opacity: f32,
+    );
+    #[wasm_bindgen(method, js_name = fillRoundRectAngularGradient)]
+    pub(super) fn fill_round_rect_angular_gradient(
+        this: &OpCk,
+        x: f32,
+        y: f32,
+        w: f32,
+        h: f32,
+        rad: f32,
+        stops: &[f32],
+        cx_frac: f32,
+        cy_frac: f32,
+        rotation_deg: f32,
+        opacity: f32,
+    );
+    #[wasm_bindgen(method, js_name = fillRoundRectAngularGradientPerCorner)]
+    pub(super) fn fill_round_rect_angular_gradient_per_corner(
+        this: &OpCk,
+        x: f32,
+        y: f32,
+        w: f32,
+        h: f32,
+        top_left: f32,
+        top_right: f32,
+        bottom_right: f32,
+        bottom_left: f32,
+        stops: &[f32],
+        cx_frac: f32,
+        cy_frac: f32,
+        rotation_deg: f32,
         opacity: f32,
     );
     #[wasm_bindgen(method, js_name = fillInnerShadowSvgPath)]

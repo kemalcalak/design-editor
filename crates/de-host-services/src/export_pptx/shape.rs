@@ -189,11 +189,11 @@ pub fn emit_line(
         attrs = format!(" rot=\"{rot}\"{attrs}");
     }
     let stroke = SceneStroke {
-        style: Default::default(),
         color,
         width,
         sides: None,
         align: SceneStrokeAlign::Center,
+        style: Default::default(),
     };
     let _ = write!(
         out,
@@ -258,11 +258,11 @@ mod tests {
     fn a_uniform_stroke_rides_on_the_shape_itself() {
         let mut n = rect_node();
         n.stroke = Some(SceneStroke {
-            style: Default::default(),
             color: Color::BLACK,
             width: 2.0,
             sides: None,
             align: SceneStrokeAlign::Inside,
+            style: Default::default(),
         });
         let mut out = String::new();
         let mut id = 2;
@@ -275,11 +275,11 @@ mod tests {
     fn a_bottom_only_border_becomes_a_band_not_a_full_outline() {
         let mut n = rect_node();
         n.stroke = Some(SceneStroke {
-            style: Default::default(),
             color: Color::BLACK,
             width: 1.0,
             sides: Some([0.0, 0.0, 1.0, 0.0]),
             align: SceneStrokeAlign::Inside,
+            style: Default::default(),
         });
         let mut out = String::new();
         let mut id = 2;
@@ -297,11 +297,11 @@ mod tests {
     fn an_evenly_specified_per_side_stroke_is_still_one_outline() {
         let mut n = rect_node();
         n.stroke = Some(SceneStroke {
-            style: Default::default(),
             color: Color::BLACK,
             width: 0.0,
             sides: Some([2.0, 2.0, 2.0, 2.0]),
             align: SceneStrokeAlign::Inside,
+            style: Default::default(),
         });
         let mut out = String::new();
         let mut id = 2;
@@ -315,11 +315,11 @@ mod tests {
         let mut n = SceneNode::leaf("l1", NodeKind::Line);
         n.bounds = Rect::xywh(100.0, 50.0, -60.0, 0.0);
         n.stroke = Some(SceneStroke {
-            style: Default::default(),
             color: Color::BLACK,
             width: 2.0,
             sides: None,
             align: SceneStrokeAlign::Center,
+            style: Default::default(),
         });
         let mut out = String::new();
         let mut id = 2;

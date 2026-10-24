@@ -26,6 +26,16 @@ pub struct StrokePayload {
     /// Stroke placement: -1 inside, 0 center (default), +1 outside.
     #[serde(default, skip_serializing_if = "is_zero_i8")]
     pub align: i8,
+    /// Authored cap / join / dash (#89), passed through verbatim; the
+    /// scene builder carries them on `SceneStroke::style`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub cap: Option<jian_ops_schema::style::StrokeCap>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub join: Option<jian_ops_schema::style::StrokeJoin>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub dash_pattern: Option<Vec<f32>>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub dash_offset: Option<f32>,
 }
 
 fn is_zero_i8(v: &i8) -> bool {
@@ -108,6 +118,17 @@ pub enum GradientPayload {
         /// matches the TS renderer, so the same `.de` file paints at
         /// the same radial size on native + web + export.
         radius: f32,
+        opacity: f32,
+        stops: Vec<GradientStopPayload>,
+    },
+    /// Angular (conic / sweep) gradient. Stops run clockwise from
+    /// `rotation_deg` (CSS `conic-gradient` convention: 0° = 12 o'clock).
+    Angular {
+        /// Centre x as a 0.0..=1.0 fraction of bounds width.
+        cx: f32,
+        /// Centre y as a 0.0..=1.0 fraction of bounds height.
+        cy: f32,
+        rotation_deg: f32,
         opacity: f32,
         stops: Vec<GradientStopPayload>,
     },

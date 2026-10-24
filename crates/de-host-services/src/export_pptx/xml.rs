@@ -175,6 +175,8 @@ pub fn grad_fill(gradient: &SceneGradient, alpha: f32) -> Option<String> {
         }
         // A Gouraud lattice has no DrawingML spelling; the caller sends
         // the node to the raster path instead of flattening it.
+        // Neither a lattice nor a conic sweep has a DrawingML spelling;
+        // `export_pptx` rasters both before reaching this point.
         SceneGradient::Mesh { .. } | SceneGradient::Angular { .. } => return None,
     };
     if stops.len() < 2 {

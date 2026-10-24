@@ -52,6 +52,7 @@ Generate Flutter widget trees using Material Design widgets.
 - Text fill → `color: Color(0xFFhex)` in `TextStyle`
 - Linear gradient → `gradient: LinearGradient(colors: [Color(...), Color(...)])`
 - Radial gradient → `gradient: RadialGradient(colors: [Color(...), Color(...)])`
+- Angular gradient → `gradient: SweepGradient(center: Alignment(cx * 2 - 1, cy * 2 - 1), transform: GradientRotation((rotation - 90) * pi / 180), colors: [...], stops: [...])`
 
 ## Border & Stroke Mapping
 

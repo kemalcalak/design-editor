@@ -58,6 +58,7 @@ Generate SwiftUI views with modifier chains.
 - Shape fill → `.fill(Color(...))` modifier
 - Linear gradient → `LinearGradient(stops: [.init(color:, location:)], startPoint:, endPoint:)`
 - Radial gradient → `RadialGradient(stops: [...], center: .center, startRadius: 0, endRadius: 100)`
+- Angular gradient → `AngularGradient(stops: [...], center: UnitPoint(x: cx, y: cy), angle: .degrees(rotation - 90))`
 - Text color → `.foregroundColor(Color(...))`
 - Gradient direction angles map to UnitPoints: 0->bottom/top, 90->leading/trailing, 180->top/bottom, 270->trailing/leading
 

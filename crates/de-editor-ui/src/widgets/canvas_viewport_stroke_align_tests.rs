@@ -39,11 +39,11 @@ fn stroked_rect(align: SceneStrokeAlign) -> SceneNode {
     let mut n = SceneNode::leaf("s", NodeKind::Rect);
     n.bounds = Rect::xywh(0.0, 0.0, 100.0, 50.0);
     n.stroke = Some(SceneStroke {
-        style: Default::default(),
         color: Color::BLACK,
         width: 4.0,
         sides: None,
         align,
+        style: Default::default(),
     });
     n
 }
