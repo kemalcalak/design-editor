@@ -257,6 +257,8 @@ pub struct VisibleSections {
     pub corner_expand: bool,
     pub path_fill_rule: Option<jian_ops_schema::node::path::PathFillRule>,
     pub polygon_sides: bool,
+    /// The star inner-radius row under a star polygon's point count.
+    pub star_inner: bool,
     pub ellipse_arc: bool,
     pub fill: bool,
     pub stroke: bool,
@@ -393,6 +395,7 @@ impl VisibleSections {
         corner_expand: false,
         path_fill_rule: None,
         polygon_sides: false,
+        star_inner: false,
         ellipse_arc: false,
         fill: true,
         stroke: true,

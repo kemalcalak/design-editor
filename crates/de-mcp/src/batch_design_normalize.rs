@@ -16,10 +16,26 @@ pub(crate) fn normalize_node_shape(value: &mut serde_json::Value) {
     normalize_node_shape_inner(value);
 }
 
+/// `{"type":"star"}` is not a schema variant: a star is a polygon with an
+/// inner radius (#87). Rewrite it and fill the Star tool's defaults for
+/// whichever of `polygonCount` / `innerRadius` the caller left out.
+pub(crate) fn normalize_star_alias(obj: &mut serde_json::Map<String, serde_json::Value>) {
+    use de_editor_core::star_shape::{STAR_DEFAULT_INNER_RADIUS, STAR_DEFAULT_POINTS};
+    if obj.get("type").and_then(serde_json::Value::as_str) != Some("star") {
+        return;
+    }
+    obj.insert("type".into(), "polygon".into());
+    obj.entry("polygonCount")
+        .or_insert(STAR_DEFAULT_POINTS.into());
+    obj.entry("innerRadius")
+        .or_insert(STAR_DEFAULT_INNER_RADIUS.into());
+}
+
 fn normalize_node_shape_inner(value: &mut serde_json::Value) {
     let serde_json::Value::Object(obj) = value else {
         return;
     };
+    normalize_star_alias(obj);
     // Map Figma/Pencil auto-layout field names onto our schema FIRST — MiniMax-M3
     // (trained on Pencil's schema) emits `layoutMode`/`itemSpacing`/`strokeWeight`/
     // `primaryAxisAlignItems`/`counterAxisAlignItems`, which serde would silently

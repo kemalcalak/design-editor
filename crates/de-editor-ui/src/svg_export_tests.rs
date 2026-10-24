@@ -58,6 +58,22 @@ fn active_page_svg_contains_vector_markup() {
 }
 
 #[test]
+fn a_star_polygon_exports_its_star_vertices() {
+    let mut star = SceneNode::leaf("s1", NodeKind::Polygon);
+    star.bounds = Rect::xywh(0.0, 0.0, 100.0, 100.0);
+    star.polygon_sides = 5;
+    star.arc_inner_radius = Some(0.4);
+    star.fill = Some(Color::BLACK);
+    let body = serialize_active_page_svg(&scene_with(vec![star])).expect("svg");
+    let points = body
+        .split_once(r#"points=""#)
+        .and_then(|(_, rest)| rest.split_once('"'))
+        .map(|(points, _)| points)
+        .expect("polygon points");
+    assert_eq!(points.split(' ').count(), 10, "5-point star: {body}");
+}
+
+#[test]
 fn active_page_svg_fails_on_empty_scene() {
     assert_eq!(
         serialize_active_page_svg(&scene_with(Vec::new()))

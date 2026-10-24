@@ -71,6 +71,9 @@ pub struct PropertyLabels {
     pub layer: &'static str,
     pub opacity: &'static str,
     pub polygon_sides: &'static str,
+    /// A star's point-count label (in place of Sides).
+    pub star_points: &'static str,
+    pub star_inner_radius: &'static str,
     pub ellipse_start: &'static str,
     pub ellipse_sweep: &'static str,
     pub ellipse_inner_radius: &'static str,
@@ -126,6 +129,8 @@ impl PropertyLabels {
             layer: pick("appearance.layer", "Layer"),
             opacity: pick("appearance.opacity", "Opacity"),
             polygon_sides: pick("polygon.sides", "Sides"),
+            star_points: pick("star.points", "Points"),
+            star_inner_radius: pick("star.innerRadius", "Inner radius"),
             ellipse_start: pick("ellipse.start", "Start"),
             ellipse_sweep: pick("ellipse.sweep", "Sweep"),
             ellipse_inner_radius: pick("ellipse.innerRadius", "Inner"),

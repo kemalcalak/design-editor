@@ -72,8 +72,11 @@ pub enum PropertyFocus {
     /// (stored as 0.0..=1.0 in the canonical schema). Same indexing
     /// + scope rules as [`GradientStopHex`].
     GradientStopOffset(usize),
-    /// Polygon side count input. UI clamps to `3..=100`.
+    /// Polygon side count input (a star's point count). UI clamps to
+    /// `3..=100`.
     PolygonSides,
+    /// Star inner radius, shown as a percentage of the outer radius.
+    StarInnerRadius,
     /// Ellipse arc start angle, in degrees.
     EllipseStart,
     /// Ellipse arc sweep angle, in degrees.
@@ -180,6 +183,7 @@ impl PropertyFocus {
                 | PropertyFocus::EllipseStart
                 | PropertyFocus::EllipseSweep
                 | PropertyFocus::EllipseInnerRadius
+                | PropertyFocus::StarInnerRadius
                 | PropertyFocus::FontSize
                 | PropertyFocus::LineHeight
                 | PropertyFocus::LetterSpacing

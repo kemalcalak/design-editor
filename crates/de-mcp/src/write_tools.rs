@@ -141,6 +141,8 @@ pub(super) const ALLOWED_KINDS: &[&str] = &[
     "rect",
     "ellipse",
     "polygon",
+    // A star is a polygon with an inner radius (#87).
+    "star",
     "line",
     "text",
     "path",

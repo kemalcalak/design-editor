@@ -381,6 +381,7 @@ impl PropertyPanel {
             corner_expand: self.corner_expand_open,
             path_fill_rule: self.snapshot.path_fill_rule,
             polygon_sides: self.snapshot.polygon_sides.is_some(),
+            star_inner: self.snapshot.star_inner_percent.is_some(),
             ellipse_arc: self.snapshot.ellipse_arc.is_some(),
             fill: caps.fill,
             stroke: caps.stroke,

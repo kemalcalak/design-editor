@@ -1,8 +1,7 @@
 //! Platform-neutral active-page SVG serializer for native and wasm hosts.
 
 use crate::layout_scene::{
-    regular_polygon_points, LayoutScene, NodeKind, SceneGradient, SceneImageFit, SceneNode,
-    ScenePage,
+    LayoutScene, NodeKind, SceneGradient, SceneImageFit, SceneNode, ScenePage,
 };
 use crate::{Color, Rect};
 use std::fmt::Write as _;
@@ -396,7 +395,7 @@ fn emit_polygon(out: &mut String, n: &SceneNode) {
     if r.size.x == 0.0 || r.size.y == 0.0 {
         return;
     }
-    let points = regular_polygon_points(r, n.polygon_sides);
+    let points = crate::polygon_geometry::polygon_node_points(n, r);
     let mut point_attr = String::new();
     for (i, p) in points.iter().enumerate() {
         if i > 0 {
