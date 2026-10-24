@@ -208,6 +208,8 @@ pub struct ScreenshotRequest {
     pub dpr: Option<f64>,
     /// Render budget — TS `Math.min(timeoutMs ?? 15000, 60000)`.
     pub timeout_ms: u64,
+    /// Shader clock for this capture, in ms (#8); `None` = `time = 0`.
+    pub time_ms: Option<f64>,
 }
 
 /// Parse + validate `debug_screenshot` args (TS `debug-screenshot.ts`
@@ -257,11 +259,13 @@ pub fn parse_screenshot_args(
                 )
             })?,
     };
+    let time_ms = crate::capture_time::parse_time_ms_arg(args)?;
     Ok(ScreenshotRequest {
         target,
         padding,
         dpr,
         timeout_ms,
+        time_ms,
     })
 }
 
@@ -708,6 +712,18 @@ mod tests {
         let err = parse_screenshot_args(&root).unwrap_err();
         assert_eq!(err.0, ToolErrorCode::InvalidArgument);
         assert!(err.1.contains("dpr must be a number"), "{}", err.1);
+        // `timeMs` (#8): absent = time 0, valid passes through, out of range rejects.
+        root.remove("dpr");
+        assert_eq!(parse_screenshot_args(&root).expect("root").time_ms, None);
+        root.insert("timeMs".into(), "1250".into());
+        assert_eq!(
+            parse_screenshot_args(&root).expect("timed").time_ms,
+            Some(1250.0)
+        );
+        root.insert("timeMs".into(), "-5".into());
+        let err = parse_screenshot_args(&root).unwrap_err();
+        assert_eq!(err.0, ToolErrorCode::InvalidArgument);
+        assert!(err.1.starts_with("timeMs must be"), "{}", err.1);
     }
 
     fn temp_dir(label: &str) -> std::path::PathBuf {

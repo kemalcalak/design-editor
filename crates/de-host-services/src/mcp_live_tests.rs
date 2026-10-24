@@ -229,6 +229,7 @@ fn pump_fulfills_screenshot_requests_off_the_live_state() {
                 node_id: None,
                 padding: 0.0,
                 scale: 1.0,
+                time_ms: None,
             },
             ack: ack_tx,
         })

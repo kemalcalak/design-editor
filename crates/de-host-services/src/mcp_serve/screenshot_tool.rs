@@ -70,28 +70,38 @@ impl McpTool for GetScreenshot {
             raw_id
         };
 
-        // Render to PNG bytes via the shared raster pipeline.
-        let bytes = match render_node_raster_bytes(&self.scene, node_id, RasterFormat::Png, 1.0) {
-            Ok(b) => b,
-            Err(e) => return ToolOutcome::Err(ToolErrorCode::ToolFailed, e.to_string()),
-        };
+        super::capture_time::at_requested_time(args, |time_ms| {
+            render_png(&self.scene, node_id, time_ms)
+        })
+    }
+}
 
-        // Base64-encode using the same engine used elsewhere in this crate
-        // (see `export/screenshot.rs` and `export/tests.rs`).
-        let image_base64 = base64::engine::general_purpose::STANDARD.encode(&bytes);
+/// Render `node_id` to PNG bytes via the shared raster pipeline (the caller
+/// has pinned the shader clock to `time_ms`) and build the tool result.
+fn render_png(scene: &LayoutScene, node_id: &str, time_ms: Option<f64>) -> ToolOutcome {
+    let bytes = match render_node_raster_bytes(scene, node_id, RasterFormat::Png, 1.0) {
+        Ok(b) => b,
+        Err(e) => return ToolOutcome::Err(ToolErrorCode::ToolFailed, e.to_string()),
+    };
 
-        let metadata = serde_json::json!({
-            "nodeId": node_id,
-            "format": "png",
-            // include image_base64 in metadata for the in-app chat agent path —
-            // the MCP path uses the `image` field on ToolResponse::Ok separately
-            "image_base64": image_base64,
-        });
-        ToolOutcome::OkImageContent {
-            image_base64,
-            mime_type: "image/png".into(),
-            metadata_json: Some(metadata.to_string()),
-        }
+    // Base64-encode using the same engine used elsewhere in this crate
+    // (see `export/screenshot.rs` and `export/tests.rs`).
+    let image_base64 = base64::engine::general_purpose::STANDARD.encode(&bytes);
+
+    let mut metadata = serde_json::json!({
+        "nodeId": node_id,
+        "format": "png",
+        // include image_base64 in metadata for the in-app chat agent path —
+        // the MCP path uses the `image` field on ToolResponse::Ok separately
+        "image_base64": image_base64,
+    });
+    if let Some(time_ms) = time_ms {
+        metadata["timeMs"] = serde_json::json!(time_ms);
+    }
+    ToolOutcome::OkImageContent {
+        image_base64,
+        mime_type: "image/png".into(),
+        metadata_json: Some(metadata.to_string()),
     }
 }
 
@@ -278,6 +288,55 @@ mod tests {
                 assert!(msg.contains("empty"), "{msg}");
             }
             other => panic!("expected Err, got {other:?}"),
+        }
+    }
+
+    fn time_shader_scene() -> LayoutScene {
+        scene_with(vec![crate::export::test_support::time_shader_rect("s")])
+    }
+
+    fn call_at(tool: &GetScreenshot, time_ms: Option<&str>) -> ToolOutcome {
+        let mut args = BTreeMap::new();
+        args.insert("nodeId".into(), "s".into());
+        if let Some(time_ms) = time_ms {
+            args.insert("timeMs".into(), time_ms.into());
+        }
+        tool.call(&args)
+    }
+
+    /// `timeMs` (#8) drives the shader clock for the capture and is echoed
+    /// in the metadata; without it the capture stays at `time = 0`.
+    #[test]
+    fn time_ms_captures_a_time_driven_shader_mid_animation() {
+        let tool = tool_from_scene(time_shader_scene());
+        let image = |outcome: ToolOutcome| match outcome {
+            ToolOutcome::OkImageContent {
+                image_base64,
+                metadata_json,
+                ..
+            } => (image_base64, metadata_json.expect("metadata")),
+            other => panic!("expected OkImageContent, got {other:?}"),
+        };
+        let (default_png, default_meta) = image(call_at(&tool, None));
+        let (zero_png, _) = image(call_at(&tool, Some("0")));
+        let (mid_png, mid_meta) = image(call_at(&tool, Some("1500")));
+        assert_eq!(default_png, zero_png);
+        assert_ne!(default_png, mid_png, "timeMs must reach the shader clock");
+        let default_meta: serde_json::Value = serde_json::from_str(&default_meta).unwrap();
+        assert!(default_meta.get("timeMs").is_none(), "{default_meta}");
+        let mid_meta: serde_json::Value = serde_json::from_str(&mid_meta).unwrap();
+        assert_eq!(mid_meta["timeMs"], 1500.0);
+    }
+
+    #[test]
+    fn an_invalid_time_ms_is_rejected_before_rendering() {
+        let tool = tool_from_scene(time_shader_scene());
+        match call_at(&tool, Some("-1")) {
+            ToolOutcome::Err(code, msg) => {
+                assert_eq!(code, ToolErrorCode::InvalidArgument);
+                assert!(msg.starts_with("timeMs must be"), "{msg}");
+            }
+            other => panic!("expected InvalidArgument, got {other:?}"),
         }
     }
 
