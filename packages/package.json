@@ -1,16 +1,10 @@
 {
   "name": "@kemalcalak/design-editor-packages",
   "private": true,
-  "description": "Web SDK workspace for Design Editor (the Rust product lives in ../crates). Hosts the wasm-backed de-web-sdk viewer family plus the JS build glue that feeds the Rust web target.",
+  "description": "JS tooling for Design Editor (the Rust product lives in ../crates): the Chrome extension's lint and packaging scripts and the Iconify catalog generator.",
   "author": {
     "name": "kemalcalak"
   },
-  "workspaces": [
-    "de-vscode",
-    "de-web-sdk",
-    "de-web-sdk-react",
-    "de-web-sdk-vue"
-  ],
   "type": "module",
   "scripts": {
     "lint": "oxlint . && bun run check-extractor-sync && bun run check-sw-imports && bun run check-locales && bun run check-design-evidence",

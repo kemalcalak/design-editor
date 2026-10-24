@@ -355,20 +355,6 @@ validate_package_manifests_carry_no_version() {
     done
 }
 
-validate_sdk_version_sources() {
-    for sdk_dir in packages/de-web-sdk*/; do
-        sdk=${sdk_dir#packages/}
-        sdk=${sdk%/}
-        require_statement "packages/$sdk/src/index.ts" \
-            'export const VERSION: string = __DE_VERSION__;' \
-            'SDK VERSION must come from the build-time __DE_VERSION__ define, not a literal'
-        for config in tsup.config.ts vitest.config.ts; do
-            require_regex "packages/$sdk/$config" 'define: versionDefine\(\)' \
-                "${config} must define __DE_VERSION__ from packages/scripts/workspace-version.mjs"
-        done
-    done
-}
-
 validate_chrome_extension_manifest_version() {
     manifest=packages/de-chrome-extension/manifest.json
     if [[ ! -f "$manifest" ]]; then
@@ -384,12 +370,6 @@ validate_chrome_extension_manifest_version() {
     require_regex packages/de-chrome-extension/scripts/package-extension.sh \
         'scripts/workspace-version[.]sh' \
         'Chrome extension packaging must stamp the Cargo workspace version'
-}
-
-validate_vscode_extension_version_stamp() {
-    require_regex .github/workflows/vscode-extension.yml \
-        'scripts/workspace-version[.]sh' \
-        'VS Code packaging must stamp the Cargo workspace version before vsce package'
 }
 
 validate_release_tag() {
@@ -459,9 +439,7 @@ validate_rust_product_version_producers() {
 
 validate_workspace_package_versions
 validate_package_manifests_carry_no_version
-validate_sdk_version_sources
 validate_chrome_extension_manifest_version
-validate_vscode_extension_version_stamp
 validate_release_tag
 validate_cli_bundle_version_template
 validate_rust_product_version_producers

@@ -180,23 +180,6 @@ if [ -n "${core_ref_hits}" ]; then
 fi
 
 # ---------------------------------------------------------------------
-# SDK-F4: only viewer_host.rs may import `de_editor_ui::widgets` in
-# any form inside `crates/de-web-sdk/src/`. Mirrors the de-host-web
-# F4 rule with the allowed module changed to `viewer_host`.
-# ---------------------------------------------------------------------
-SDK_SRC="crates/de-web-sdk/src"
-sdk_ref_hits="$(grep -RIn 'de_editor_ui' "${SDK_SRC}" 2>/dev/null || true)"
-if [ -n "${sdk_ref_hits}" ]; then
-  sdk_illegal_imports="$(printf '%s\n' "${sdk_ref_hits}" \
-    | grep 'widgets' \
-    | grep -vE '^crates/de-web-sdk/src/viewer_host(\.rs|/[^/]+\.rs):' \
-    || true)"
-  if [ -n "${sdk_illegal_imports}" ]; then
-    fail_lines+=("SDK-F4: de_editor_ui::widgets reference outside viewer_host.rs in de-web-sdk:" "${sdk_illegal_imports}")
-  fi
-fi
-
-# ---------------------------------------------------------------------
 # Reverse R1: each expected widget impl file exists AND
 # carries a real `impl Widget for X` line that is NOT a Rust
 # line-comment.

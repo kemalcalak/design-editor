@@ -2,11 +2,10 @@
 # Build the extension's Rust logic core and install it into the extension
 # directory.
 #
-# Mirrors the workspace's other wasm gates (`tools/check-wasm-bundle.sh` for
-# de-host-web, `crates/de-web-sdk/tools/build-wasm.sh` for the web SDK):
-# cargo build → wasm-bindgen → wasm-opt, no wasm-pack (0.13.1 is broken on
-# stable Rust, and pinning the CLI from Cargo.lock is the only version story
-# that holds).
+# Mirrors the workspace's other wasm gate (`tools/check-wasm-bundle.sh` for
+# de-host-web): cargo build → wasm-bindgen → wasm-opt, no wasm-pack (0.13.1
+# is broken on stable Rust, and pinning the CLI from Cargo.lock is the only
+# version story that holds).
 #
 # Steps:
 #   1. Verify prerequisites: cargo, wasm-bindgen. wasm-opt and node are
@@ -29,9 +28,9 @@
 #      the graph includes the shim installed by step 6.
 #
 # The extension loads the copy in `wasm/`, which is a build product and is
-# gitignored (same policy as `crates/de-host-web/pkg/` and
-# `packages/de-web-sdk/wasm/`). Run this before "Load unpacked", and again
-# after changing anything under `crates/de-chrome-extension-core/`.
+# gitignored (same policy as `crates/de-host-web/pkg/`). Run this before
+# "Load unpacked", and again after changing anything under
+# `crates/de-chrome-extension-core/`.
 #
 # Exit semantics:
 #   0   build succeeded.
