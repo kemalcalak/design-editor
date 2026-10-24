@@ -142,6 +142,7 @@ fn tools_list_response_includes_all_registered_tools() {
         "set_node_stroke_hex",
         "set_node_stroke_width",
         "set_node_stroke_side_width",
+        "set_node_stroke_style",
         "align_selected",
         "boolean_op",
         "set_node_fill_hex",

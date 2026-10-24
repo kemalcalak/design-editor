@@ -60,7 +60,9 @@ use crate::state::EditorState;
 use jian_ops_schema::node::path::{PathFillRule, PenPathHandle};
 use jian_ops_schema::node::{PathNode, PenNode, PenNodeBase, PenPathAnchor};
 use jian_ops_schema::sizing::SizingBehavior;
-use jian_ops_schema::style::{PenFill, PenStroke, SolidFillBody, StrokeThickness};
+use jian_ops_schema::style::{
+    PenFill, PenStroke, SolidFillBody, StrokeCap, StrokeJoin, StrokeThickness,
+};
 
 /// One parsed SVG element — tag name + raw attribute pairs.
 struct SvgElement {
@@ -95,6 +97,17 @@ struct StyleCtx {
     stroke: Option<String>,
     stroke_width: f64,
     fill_rule: Option<PathFillRule>,
+    /// Raw inherited `stroke-linecap` / `stroke-linejoin` /
+    /// `stroke-dasharray` / `stroke-dashoffset` (#89).
+    stroke_style: SvgStrokeStyle,
+}
+
+#[derive(Debug, Clone, Default)]
+struct SvgStrokeStyle {
+    linecap: Option<String>,
+    linejoin: Option<String>,
+    dasharray: Option<String>,
+    dashoffset: Option<String>,
 }
 
 impl Default for StyleCtx {
@@ -104,6 +117,7 @@ impl Default for StyleCtx {
             stroke: None,
             stroke_width: 1.0,
             fill_rule: None,
+            stroke_style: SvgStrokeStyle::default(),
         }
     }
 }

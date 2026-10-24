@@ -378,6 +378,9 @@ impl EditorState {
                 side,
                 width,
             } => self.cmd_set_node_stroke_side_width(&node_id, side, width),
+            EditorCommand::SetNodeStrokeStyle { node_id, style } => {
+                self.cmd_set_node_stroke_style(&node_id, &style)
+            }
             EditorCommand::SetNodeFillHex { node_id, hex } => {
                 self.cmd_set_node_fill_hex(&node_id, &hex)
             }

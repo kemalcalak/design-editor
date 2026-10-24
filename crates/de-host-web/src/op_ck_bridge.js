@@ -570,7 +570,19 @@ export async function opCkInit(canvasId) {
   const cachedFillPaint = new CK.Paint();
   const cachedStrokePaint = new CK.Paint();
   const fillPaint = (r, g, b, a) => { const p = cachedFillPaint; p.setColor(col(r, g, b, a)); p.setAntiAlias(true); setPaintStyle(p, CK.PaintStyle.Fill); return p; };
-  const strokePaint = (r, g, b, a, w) => { const p = cachedStrokePaint; p.setColor(col(r, g, b, a)); p.setAntiAlias(true); setPaintStyle(p, CK.PaintStyle.Stroke); p.setStrokeWidth(w); p.setStrokeCap(CK.StrokeCap.Round); p.setStrokeJoin(CK.StrokeJoin.Round); return p; };
+  // A node's authored cap / join / dash (#89), set by `setStrokeStyle`
+  // while the Rust painter is inside that node and cleared after. `-1`
+  // keeps the default round cap / join below.
+  let strokeStyle = null;
+  const STROKE_CAPS = [CK.StrokeCap.Butt, CK.StrokeCap.Round, CK.StrokeCap.Square];
+  const STROKE_JOINS = [CK.StrokeJoin.Miter, CK.StrokeJoin.Round, CK.StrokeJoin.Bevel];
+  const strokePaint = (r, g, b, a, w) => {
+    const p = cachedStrokePaint; p.setColor(col(r, g, b, a)); p.setAntiAlias(true); setPaintStyle(p, CK.PaintStyle.Stroke); p.setStrokeWidth(w); p.setStrokeCap(CK.StrokeCap.Round); p.setStrokeJoin(CK.StrokeJoin.Round);
+    p.setPathEffect(strokeStyle ? strokeStyle.effect : null);
+    if (strokeStyle && strokeStyle.cap >= 0) p.setStrokeCap(STROKE_CAPS[strokeStyle.cap]);
+    if (strokeStyle && strokeStyle.join >= 0) p.setStrokeJoin(STROKE_JOINS[strokeStyle.join]);
+    return p;
+  };
   // Dedicated (allocated + `.delete()`d) fill paint for the one call site
   // that needs a SECOND live fill paint while `drawText`'s cached `p` (see
   // above) is already in scope: `drawScriptRun` is invoked both standalone
@@ -1336,6 +1348,23 @@ export async function opCkInit(canvasId) {
     fillOval(x, y, w, h, r, g, b, a) { const p = fillPaint(r, g, b, a); canvas.drawOval(CK.LTRBRect(x, y, x + w, y + h), p); },
     strokeOval(x, y, w, h, r, g, b, a, sw) { const p = strokePaint(r, g, b, a, sw); canvas.drawOval(CK.LTRBRect(x, y, x + w, y + h), p); },
     strokeLine(x1, y1, x2, y2, r, g, b, a, sw) { const p = strokePaint(r, g, b, a, sw); canvas.drawLine(x1, y1, x2, y2, p); },
+    // One closed path, so joins apply and a dash runs around the corners.
+    strokePolygon(pts, r, g, b, a, sw) {
+      const path = new CK.Path(); path.moveTo(pts[0], pts[1]);
+      for (let i = 2; i < pts.length; i += 2) path.lineTo(pts[i], pts[i + 1]);
+      path.close();
+      const p = strokePaint(r, g, b, a, sw); canvas.drawPath(path, p); path.delete();
+    },
+    setStrokeStyle(cap, join, dash, offset) {
+      if (strokeStyle && strokeStyle.effect) strokeStyle.effect.delete();
+      const effect = dash.length >= 2 ? CK.PathEffect.MakeDash(Array.from(dash), offset) : null;
+      strokeStyle = { cap, join, effect };
+    },
+    clearStrokeStyle() {
+      if (strokeStyle && strokeStyle.effect) strokeStyle.effect.delete();
+      strokeStyle = null;
+      cachedStrokePaint.setPathEffect(null);
+    },
 
     fillPolygon(pts, r, g, b, a) {
       const path = new CK.Path(); path.moveTo(pts[0], pts[1]);

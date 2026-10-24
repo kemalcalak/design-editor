@@ -515,6 +515,10 @@ pub(crate) fn stroke_to_payload(s: Option<&PenStroke>) -> Option<StrokePayload> 
         width,
         sides,
         align,
+        cap: s.cap.clone(),
+        join: s.join.clone(),
+        dash_pattern: s.dash_pattern.clone(),
+        dash_offset: s.dash_offset,
     })
 }
 

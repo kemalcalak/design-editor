@@ -17,7 +17,75 @@ pub(super) fn merge_style_ctx(parent: &StyleCtx, attrs: &[(String, String)]) -> 
             .as_deref()
             .and_then(parse_svg_fill_rule)
             .or(parent.fill_rule),
+        stroke_style: merge_stroke_style(&parent.stroke_style, attrs),
     }
+}
+
+pub(super) fn merge_stroke_style(
+    parent: &SvgStrokeStyle,
+    attrs: &[(String, String)],
+) -> SvgStrokeStyle {
+    let pick = |name: &str, inherited: &Option<String>| {
+        extract_style_or_attr(attrs, name).or_else(|| inherited.clone())
+    };
+    SvgStrokeStyle {
+        linecap: pick("stroke-linecap", &parent.linecap),
+        linejoin: pick("stroke-linejoin", &parent.linejoin),
+        dasharray: pick("stroke-dasharray", &parent.dasharray),
+        dashoffset: pick("stroke-dashoffset", &parent.dashoffset),
+    }
+}
+
+/// The schema cap / join / dash of an SVG stroke style, lengths scaled
+/// into document px. Unknown keywords and unusable dash lists (`none`,
+/// percentages, negatives) are dropped, leaving the renderer default.
+fn svg_stroke_style_fields(
+    style: &SvgStrokeStyle,
+    scale: f64,
+) -> (
+    Option<StrokeCap>,
+    Option<StrokeJoin>,
+    Option<Vec<f32>>,
+    Option<f32>,
+) {
+    let cap = match style.linecap.as_deref().map(str::trim) {
+        Some("butt") => Some(StrokeCap::None),
+        Some("round") => Some(StrokeCap::Round),
+        Some("square") => Some(StrokeCap::Square),
+        _ => None,
+    };
+    let join = match style.linejoin.as_deref().map(str::trim) {
+        Some("miter") | Some("miter-clip") | Some("arcs") => Some(StrokeJoin::Miter),
+        Some("round") => Some(StrokeJoin::Round),
+        Some("bevel") => Some(StrokeJoin::Bevel),
+        _ => None,
+    };
+    let dash = style.dasharray.as_deref().and_then(|raw| {
+        let lengths: Option<Vec<f32>> = raw
+            .split(|c: char| c == ',' || c.is_whitespace())
+            .filter(|part| !part.is_empty())
+            .map(|part| {
+                part.trim_end_matches("px")
+                    .parse::<f64>()
+                    .ok()
+                    .filter(|v| v.is_finite() && *v >= 0.0)
+                    .map(|v| (v * scale) as f32)
+            })
+            .collect();
+        lengths.filter(|l| !l.is_empty() && l.iter().sum::<f32>() > 0.0)
+    });
+    let offset = dash
+        .as_ref()
+        .and(style.dashoffset.as_deref())
+        .and_then(|raw| {
+            raw.trim()
+                .trim_end_matches("px")
+                .parse::<f64>()
+                .ok()
+                .filter(|v| v.is_finite() && *v != 0.0)
+                .map(|v| (v * scale) as f32)
+        });
+    (cap, join, dash, offset)
 }
 
 pub(super) fn parse_svg_fill_rule(raw: &str) -> Option<PathFillRule> {
@@ -75,13 +143,14 @@ pub(super) fn resolve_svg_stroke(
     if width <= 0.0 {
         return None;
     }
+    let (cap, join, dash_pattern, dash_offset) = svg_stroke_style_fields(&ctx.stroke_style, scale);
     Some(PenStroke {
         thickness: StrokeThickness::Uniform(width),
         align: None,
-        join: None,
-        cap: None,
-        dash_pattern: None,
-        dash_offset: None,
+        join,
+        cap,
+        dash_pattern,
+        dash_offset,
         fill: Some(vec![solid_fill(&hex)]),
     })
 }

@@ -211,6 +211,7 @@ impl NativeBackend {
         paint.set_anti_alias(true);
         paint.set_stroke_cap(skia_safe::PaintCap::Round);
         paint.set_stroke_join(skia_safe::PaintJoin::Round);
+        super::apply_active_stroke_style(&mut paint);
         canvas.draw_path(&path, &paint);
     }
 
@@ -236,6 +237,7 @@ impl NativeBackend {
         paint.set_anti_alias(true);
         paint.set_stroke_cap(skia_safe::PaintCap::Round);
         paint.set_stroke_join(skia_safe::PaintJoin::Round);
+        super::apply_active_stroke_style(&mut paint);
         canvas.draw_path(&path, &paint);
     }
 

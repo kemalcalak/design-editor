@@ -280,6 +280,14 @@ extern "C" {
     );
     #[wasm_bindgen(method, js_name = fillPolygon)]
     pub(super) fn fill_polygon(this: &OpCk, pts: &[f32], r: f32, g: f32, b: f32, a: f32);
+    #[wasm_bindgen(method, js_name = strokePolygon)]
+    pub(super) fn stroke_polygon(this: &OpCk, pts: &[f32], r: f32, g: f32, b: f32, a: f32, sw: f32);
+    /// Cap / join index (`-1` = keep the default) and dash for the
+    /// following strokes (#89); see `canvaskit::stroke_style`.
+    #[wasm_bindgen(method, js_name = setStrokeStyle)]
+    pub(super) fn set_stroke_style(this: &OpCk, cap: i32, join: i32, dash: &[f32], offset: f32);
+    #[wasm_bindgen(method, js_name = clearStrokeStyle)]
+    pub(super) fn clear_stroke_style(this: &OpCk);
     #[wasm_bindgen(method, js_name = strokeSvgPath)]
     pub(super) fn stroke_svg_path(
         this: &OpCk,

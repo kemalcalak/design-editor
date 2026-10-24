@@ -26,6 +26,16 @@ pub struct StrokePayload {
     /// Stroke placement: -1 inside, 0 center (default), +1 outside.
     #[serde(default, skip_serializing_if = "is_zero_i8")]
     pub align: i8,
+    /// Authored cap / join / dash (#89), passed through verbatim; the
+    /// scene builder resolves them into a `StrokeRenderStyle`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub cap: Option<jian_ops_schema::style::StrokeCap>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub join: Option<jian_ops_schema::style::StrokeJoin>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub dash_pattern: Option<Vec<f32>>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub dash_offset: Option<f32>,
 }
 
 fn is_zero_i8(v: &i8) -> bool {

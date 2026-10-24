@@ -12,6 +12,7 @@ impl CanvasKitBackend {
             dpr,
             logical_w,
             logical_h,
+            sent_stroke_style: None,
         }
     }
 

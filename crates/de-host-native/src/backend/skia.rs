@@ -75,6 +75,7 @@ mod layer;
 mod path;
 mod shader_children;
 mod shaped_text;
+mod stroke_style;
 mod text;
 #[cfg(test)]
 use image::{cover_rect, figma_image_local_matrix, image_adjustment_matrix};
@@ -82,6 +83,7 @@ pub use image_diagnostics::{
     begin_image_paint_diagnostics, end_image_paint_diagnostics, image_paint_diagnostics_snapshot,
     ImagePaintDiagnostics,
 };
+use stroke_style::apply_active_stroke_style;
 // Only `boolean_ops` and the tests reach the fit from outside `path.rs`.
 pub(crate) use path::fit_path_to_rect;
 
@@ -342,6 +344,17 @@ impl NativeBackend {
         color: Color,
         width: f32,
     ) {
+        // jian's rect op has no cap / join / dash; a styled stroke (#89)
+        // draws straight through skia instead.
+        if stroke_style::is_active() {
+            let mut paint = skia_safe::Paint::new(jian_color_to_color4f(color), None);
+            paint.set_stroke(true);
+            paint.set_stroke_width(width);
+            paint.set_anti_alias(true);
+            apply_active_stroke_style(&mut paint);
+            canvas.draw_rect(to_sk_rect(rect), &paint);
+            return;
+        }
         let paint = jian_core::render::Paint {
             fill: None,
             stroke: Some(jian_core::render::StrokeOp {
@@ -420,6 +433,7 @@ impl NativeBackend {
         paint.set_stroke_width(width);
         paint.set_anti_alias(true);
         paint.set_stroke_cap(skia_safe::PaintCap::Round);
+        apply_active_stroke_style(&mut paint);
         canvas.draw_line((from.x, from.y), (to.x, to.y), &paint);
     }
 
@@ -495,6 +509,7 @@ impl NativeBackend {
         paint.set_stroke(true);
         paint.set_stroke_width(width);
         paint.set_anti_alias(true);
+        apply_active_stroke_style(&mut paint);
         canvas.draw_round_rect(to_sk_rect(rect), radius, radius, &paint);
     }
 
@@ -512,6 +527,7 @@ impl NativeBackend {
         paint.set_stroke(true);
         paint.set_stroke_width(width);
         paint.set_anti_alias(true);
+        apply_active_stroke_style(&mut paint);
         canvas.draw_rrect(rrect, &paint);
     }
 
@@ -529,6 +545,7 @@ impl NativeBackend {
         paint.set_anti_alias(true);
         paint.set_stroke(true);
         paint.set_stroke_width(width);
+        apply_active_stroke_style(&mut paint);
         canvas.draw_oval(to_sk_rect(bounds), &paint);
     }
 
@@ -581,6 +598,7 @@ impl NativeBackend {
         paint.set_stroke_width(width);
         paint.set_stroke_join(skia_safe::PaintJoin::Round);
         paint.set_stroke_cap(skia_safe::PaintCap::Round);
+        apply_active_stroke_style(&mut paint);
         canvas.draw_path(&path, &paint);
     }
 

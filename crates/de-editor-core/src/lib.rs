@@ -142,6 +142,7 @@ pub mod shader_images;
 pub mod shader_presets;
 pub mod state;
 pub mod statusbar_state;
+pub mod stroke_render_style;
 pub mod svg_import;
 pub mod svg_path_bounds;
 mod svg_path_data;

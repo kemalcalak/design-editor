@@ -41,7 +41,7 @@ use crate::payload::{
 use crate::editor_scene::editor_state_to_layout_scene;
 
 mod stroke;
-use stroke::{is_status_bar_shell_stroke, is_unpainted_widget_stroke, scene_stroke};
+use stroke::resolve_scene_stroke;
 
 /// Build a [`LayoutScene`] from a bare [`PenDocument`], theme, and active page index.
 ///
@@ -245,30 +245,7 @@ pub(crate) fn node_payload_to_scene(
             .shader
             .as_ref()
             .map(|s| payload_shader_to_scene(s, paint_opacity, [node.w, node.h])),
-        stroke: if is_unpainted_widget_stroke(node, &node_id, var_table) {
-            // A first-class widget's stroke is its *inactive track / border*
-            // role paint, not a literal outline. When the author declared a
-            // stroke with no resolvable colour, handing the painter a
-            // fabricated opaque black turned every such control into a black
-            // track / border; dropping it lets
-            // `resolve_authored_widget_visual` fall back to its role defaults
-            // (derived-from-fill or the legacy #D1D5DB track, and a
-            // borderless select) exactly as an unstroked control does.
-            None
-        } else if is_status_bar_shell_stroke(node) {
-            // The scene path (editor canvas + render-shots) bypasses the
-            // adapter's `legacy_payload_repair`, so an iPhone status-bar
-            // shell ("Time"/"Levels") authored with a no-fill stroke would
-            // paint a phantom black box around the clock / signal cluster —
-            // invisible in Pencil. Drop the stroke the same way here.
-            None
-        } else {
-            node.stroke.as_ref().map(|s| {
-                let mut st = scene_stroke(s, &node_id, var_table);
-                st.color = mul_alpha(st.color, paint_opacity);
-                st
-            })
-        },
+        stroke: resolve_scene_stroke(node, &node_id, var_table, paint_opacity),
         text: node.text.clone(),
         text_runs: text_runs_to_scene(&node.text_runs, paint_opacity),
         font_family: node.font_family.clone(),

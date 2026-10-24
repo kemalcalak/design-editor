@@ -180,6 +180,10 @@ fn paint_node_inner<'a>(
             return PaintNodeHits::default();
         }
     }
+    // This node's cap / join / dash for every stroke it paints (#89); a
+    // child scopes its own, and the guard restores ours for the
+    // container stroke painted after the children.
+    let _stroke_style = de_editor_core::stroke_render_style::enter_node(&node.id, zoom);
     let pop_scale = match reveal_state {
         RevealPaintState::Active { elapsed_ms } => {
             reveal_pop_scale(elapsed_ms.saturating_sub(REVEAL_WIREFRAME_MS))
@@ -733,6 +737,10 @@ mod reveal_tests;
 #[cfg(test)]
 #[path = "canvas_viewport_stroke_align_tests.rs"]
 mod stroke_align_tests;
+
+#[cfg(test)]
+#[path = "canvas_viewport_stroke_style_tests.rs"]
+mod stroke_style_tests;
 
 #[cfg(test)]
 #[path = "canvas_viewport_layered_shape_tests.rs"]

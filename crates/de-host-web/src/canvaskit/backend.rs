@@ -18,6 +18,7 @@ use super::convert::{
     valid_original_size,
 };
 use super::ops;
+use de_editor_core::stroke_render_style::StrokeRenderStyle;
 
 /// `RenderBackend` over CanvasKit. Paints in logical (CSS) pixels; `begin_frame`
 /// applies the device-pixel-ratio so output matches the native backend.
@@ -27,6 +28,9 @@ pub struct CanvasKitBackend {
     /// Logical (CSS) viewport — what widget layout uses.
     pub(super) logical_w: u32,
     pub(super) logical_h: u32,
+    /// Last stroke style sent to the bridge (#89), so it only crosses
+    /// into JS when a node's style differs from the previous one.
+    pub(super) sent_stroke_style: Option<std::rc::Rc<StrokeRenderStyle>>,
 }
 
 impl RenderBackend for CanvasKitBackend {
@@ -44,6 +48,7 @@ impl RenderBackend for CanvasKitBackend {
         ops::fill_rect(&self.ck, rect, color);
     }
     fn stroke_rect(&mut self, rect: Rect, color: Color, width: f32) {
+        self.sync_stroke_style();
         ops::stroke_rect(&self.ck, rect, color, width);
     }
     fn fill_round_rect(&mut self, rect: Rect, radius: f32, color: Color) {
@@ -167,6 +172,7 @@ impl RenderBackend for CanvasKitBackend {
         );
     }
     fn stroke_round_rect(&mut self, rect: Rect, radius: f32, color: Color, width: f32) {
+        self.sync_stroke_style();
         ops::stroke_round_rect(&self.ck, rect, radius, color, width);
     }
     fn stroke_round_rect_per_corner(
@@ -176,15 +182,18 @@ impl RenderBackend for CanvasKitBackend {
         color: Color,
         width: f32,
     ) {
+        self.sync_stroke_style();
         ops::stroke_round_rect_per_corner(&self.ck, rect, radii, color, width);
     }
     fn fill_oval(&mut self, bounds: Rect, color: Color) {
         ops::fill_oval(&self.ck, bounds, color);
     }
     fn stroke_oval(&mut self, bounds: Rect, color: Color, width: f32) {
+        self.sync_stroke_style();
         ops::stroke_oval(&self.ck, bounds, color, width);
     }
     fn stroke_line(&mut self, from: Point2D, to: Point2D, color: Color, width: f32) {
+        self.sync_stroke_style();
         self.ck.stroke_line(
             from.x, from.y, to.x, to.y, color.r, color.g, color.b, color.a, width,
         );
@@ -192,7 +201,12 @@ impl RenderBackend for CanvasKitBackend {
     fn fill_polygon(&mut self, points: &[Point2D], color: Color) {
         ops::fill_polygon(&self.ck, points, color);
     }
+    fn stroke_polygon(&mut self, points: &[Point2D], color: Color, width: f32) {
+        self.sync_stroke_style();
+        ops::stroke_polygon(&self.ck, points, color, width);
+    }
     fn stroke_svg_path(&mut self, d: &str, top_left: Point2D, size: f32, color: Color, width: f32) {
+        self.sync_stroke_style();
         ops::stroke_svg_path(&self.ck, d, top_left, size, color, width);
     }
     fn fill_svg_path(&mut self, d: &str, top_left: Point2D, size: f32, viewbox: f32, color: Color) {
@@ -224,6 +238,7 @@ impl RenderBackend for CanvasKitBackend {
         ops::fill_svg_path_in_rect_with_fill_rule(&self.ck, d, rect, color, even_odd);
     }
     fn stroke_svg_path_in_rect(&mut self, d: &str, rect: Rect, color: Color, width: f32) {
+        self.sync_stroke_style();
         ops::stroke_svg_path_in_rect(&self.ck, d, rect, color, width);
     }
     fn fill_svg_path_in_rect_linear_gradient(

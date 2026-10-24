@@ -400,3 +400,25 @@ fn path_fill_rule_imports_from_attribute_style_and_group_inheritance() {
         assert_eq!(path.fill_rule, Some(expected));
     }
 }
+
+/// #89: `stroke-dasharray` / `-dashoffset` / `-linecap` / `-linejoin`
+/// (attribute, inline style or inherited from a `<g>`) reach the schema
+/// stroke, dash lengths scaled with the document like the stroke width.
+#[test]
+fn imports_stroke_dash_cap_and_join() {
+    let svg = r##"<svg viewBox="0 0 100 100" width="200" height="200">
+        <g stroke-linejoin="bevel">
+          <line x1="0" y1="0" x2="100" y2="0" stroke="#000" stroke-width="2"
+                stroke-dasharray="4 2" stroke-dashoffset="1" style="stroke-linecap: square"/>
+        </g>
+    </svg>"##;
+    let mut s = state_with(vec![]);
+    let mut next = 1u64;
+    assert_eq!(s.import_svg(&mut next, svg, (0.0, 0.0)), 1);
+    let node = imported_nodes(&s)[0];
+    let style = crate::fills::node_stroke_style(node).expect("imported stroke");
+    assert_eq!(style.cap, Some(jian_ops_schema::style::StrokeCap::Square));
+    assert_eq!(style.join, Some(jian_ops_schema::style::StrokeJoin::Bevel));
+    assert_eq!(style.dash_pattern, Some(vec![8.0, 4.0]));
+    assert_eq!(style.dash_offset, Some(2.0));
+}

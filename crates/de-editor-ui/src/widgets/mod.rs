@@ -136,6 +136,8 @@ pub mod property_panel_snapshot;
 pub mod property_panel_stroke;
 pub(crate) mod property_panel_stroke_style;
 #[cfg(test)]
+mod property_panel_stroke_style_tests;
+#[cfg(test)]
 mod property_panel_stroke_tests;
 #[cfg(test)]
 mod property_panel_test_support;

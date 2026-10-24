@@ -242,10 +242,10 @@ pub use node_attr_tools::{
     set_node_corner_radius_snapshot, set_node_fill_hex_snapshot, set_node_flip_snapshot,
     set_node_font_size_snapshot, set_node_font_weight_snapshot, set_node_name_snapshot,
     set_node_rotation_snapshot, set_node_stroke_hex_snapshot, set_node_stroke_side_width_snapshot,
-    set_node_stroke_width_snapshot, set_node_text_snapshot, AddNodeEffect, RemoveNodeEffect,
-    SetEllipseArc, SetNodeCornerRadius, SetNodeFillHex, SetNodeFlip, SetNodeFontSize,
-    SetNodeFontWeight, SetNodeName, SetNodeRotation, SetNodeStrokeHex, SetNodeStrokeSideWidth,
-    SetNodeStrokeWidth, SetNodeText,
+    set_node_stroke_style_snapshot, set_node_stroke_width_snapshot, set_node_text_snapshot,
+    AddNodeEffect, RemoveNodeEffect, SetEllipseArc, SetNodeCornerRadius, SetNodeFillHex,
+    SetNodeFlip, SetNodeFontSize, SetNodeFontWeight, SetNodeName, SetNodeRotation,
+    SetNodeStrokeHex, SetNodeStrokeSideWidth, SetNodeStrokeStyle, SetNodeStrokeWidth, SetNodeText,
 };
 pub use open_document::{open_document_snapshot, OpenDocument};
 pub use page_tools::{

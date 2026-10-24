@@ -426,7 +426,7 @@ fn emit_line(out: &mut String, n: &SceneNode) {
         xml_escape(&n.id),
         r.origin.x,
         r.origin.y,
-        stroke_attrs(color, width),
+        stroke_attrs(color, width) + &stroke_style_attrs(n),
     );
 }
 
@@ -626,6 +626,42 @@ fn fill_stroke_attrs(n: &SceneNode) -> String {
     let mut s = fill_attrs(n);
     if let Some(stroke) = n.stroke {
         s.push_str(&stroke_attrs(stroke.color, stroke.width));
+        s.push_str(&stroke_style_attrs(n));
+    }
+    s
+}
+
+/// `stroke-linecap` / `stroke-linejoin` / `stroke-dasharray` /
+/// `stroke-dashoffset` for a node's authored stroke style (#89), which
+/// the scene builder records beside the scene; empty when it has none.
+pub(crate) fn stroke_style_attrs(n: &SceneNode) -> String {
+    use de_editor_core::stroke_render_style::{registered, LineCap, LineJoin};
+    let mut s = String::new();
+    let Some(style) = n.stroke.and_then(|_| registered(&n.id)) else {
+        return s;
+    };
+    if let Some(cap) = style.cap {
+        let cap = match cap {
+            LineCap::Butt => "butt",
+            LineCap::Round => "round",
+            LineCap::Square => "square",
+        };
+        let _ = write!(s, r#" stroke-linecap="{cap}""#);
+    }
+    if let Some(join) = style.join {
+        let join = match join {
+            LineJoin::Miter => "miter",
+            LineJoin::Round => "round",
+            LineJoin::Bevel => "bevel",
+        };
+        let _ = write!(s, r#" stroke-linejoin="{join}""#);
+    }
+    if let Some(dash) = style.dash.as_deref() {
+        let lengths: Vec<String> = dash.iter().map(|len| len.to_string()).collect();
+        let _ = write!(s, r#" stroke-dasharray="{}""#, lengths.join(" "));
+        if style.dash_offset != 0.0 {
+            let _ = write!(s, r#" stroke-dashoffset="{}""#, style.dash_offset);
+        }
     }
     s
 }

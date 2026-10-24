@@ -334,6 +334,106 @@ pub fn set_node_stroke_side_width_snapshot() -> SetNodeStrokeSideWidth {
     SetNodeStrokeSideWidth
 }
 
+/// First-party `set_node_stroke_style` tool (#89) — set cap / join /
+/// dash on a node's existing stroke. Every field is optional (at least
+/// one is required); omitted fields are left untouched.
+pub struct SetNodeStrokeStyle;
+
+impl McpTool for SetNodeStrokeStyle {
+    fn name(&self) -> &str {
+        "set_node_stroke_style"
+    }
+    fn call(&self, args: &BTreeMap<String, String>) -> ToolOutcome {
+        let node_id = match parse_node_id(args, "node_id") {
+            Ok(v) => v,
+            Err(e) => return e,
+        };
+        match parse_stroke_style_args(args) {
+            Ok(style) => {
+                let mut out = BTreeMap::new();
+                out.insert("wrote".into(), "true".into());
+                ToolOutcome::OkWithCommand(
+                    out,
+                    EditorCommand::SetNodeStrokeStyle { node_id, style },
+                )
+            }
+            Err(message) => ToolOutcome::Err(ToolErrorCode::InvalidArgument, message),
+        }
+    }
+}
+
+pub fn set_node_stroke_style_snapshot() -> SetNodeStrokeStyle {
+    SetNodeStrokeStyle
+}
+
+fn parse_stroke_style_args(
+    args: &BTreeMap<String, String>,
+) -> Result<de_editor_core::fills::StrokeStyleWrite, String> {
+    use jian_ops_schema::style::{StrokeCap, StrokeJoin};
+    let mut style = de_editor_core::fills::StrokeStyleWrite::default();
+    if let Some(raw) = args.get("cap") {
+        style.cap = Some(match raw.trim().to_ascii_lowercase().as_str() {
+            // `butt` is the SVG / CSS spelling of the schema's `none`.
+            "none" | "butt" => StrokeCap::None,
+            "round" => StrokeCap::Round,
+            "square" => StrokeCap::Square,
+            _ => {
+                return Err(format!(
+                    "cap must be one of none / round / square, got {raw:?}"
+                ))
+            }
+        });
+    }
+    if let Some(raw) = args.get("join") {
+        style.join = Some(match raw.trim().to_ascii_lowercase().as_str() {
+            "miter" => StrokeJoin::Miter,
+            "round" => StrokeJoin::Round,
+            "bevel" => StrokeJoin::Bevel,
+            _ => {
+                return Err(format!(
+                    "join must be one of miter / round / bevel, got {raw:?}"
+                ))
+            }
+        });
+    }
+    if let Some(raw) = args.get("dash_pattern") {
+        style.dash_pattern = Some(parse_dash_pattern(raw)?);
+    }
+    if let Some(raw) = args.get("dash_offset") {
+        match raw.trim().parse::<f32>() {
+            Ok(v) if v.is_finite() => style.dash_offset = Some(v),
+            _ => return Err(format!("dash_offset must be a finite number, got {raw:?}")),
+        }
+    }
+    if style.is_empty() {
+        return Err("set at least one of cap / join / dash_pattern / dash_offset".into());
+    }
+    if !style.is_valid() {
+        return Err("dash_pattern lengths must be finite, non-negative and not all zero".into());
+    }
+    Ok(style)
+}
+
+/// `"4 2"`, `"4,2"` or `"[4, 2]"`; `""`, `"none"` or `"solid"` clears.
+fn parse_dash_pattern(raw: &str) -> Result<Vec<f32>, String> {
+    let trimmed = raw
+        .trim()
+        .trim_start_matches('[')
+        .trim_end_matches(']')
+        .trim();
+    if trimmed.is_empty() || matches!(trimmed.to_ascii_lowercase().as_str(), "none" | "solid") {
+        return Ok(Vec::new());
+    }
+    trimmed
+        .split(|c: char| c == ',' || c.is_whitespace())
+        .filter(|part| !part.is_empty())
+        .map(|part| {
+            part.parse::<f32>()
+                .map_err(|_| format!("dash_pattern must be a list of numbers, got {raw:?}"))
+        })
+        .collect()
+}
+
 /// First-party `set_node_fill_hex` tool — set the fill color.
 pub struct SetNodeFillHex;
 

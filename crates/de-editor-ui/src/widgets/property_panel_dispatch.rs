@@ -97,6 +97,7 @@ pub fn updates_document(action: &PropertyPanelAction) -> bool {
             | PropertyPanelAction::SetImageFillMode(_)
             | PropertyPanelAction::ClearPageBackground
             | PropertyPanelAction::SetStrokeAlign(_)
+            | PropertyPanelAction::SetStrokeStyle(_)
             | PropertyPanelAction::FlipSelection(_)
             | PropertyPanelAction::SetShaderPreset(_)
     )
@@ -643,7 +644,11 @@ pub fn apply_property_action(
         }
         // Effect adds and the #90 paint options (stroke alignment, flip,
         // shader presets) live in a sibling (800-line cap).
-        A::AddEffect(_) | A::SetStrokeAlign(_) | A::FlipSelection(_) | A::SetShaderPreset(_) => {
+        A::AddEffect(_)
+        | A::SetStrokeAlign(_)
+        | A::SetStrokeStyle(_)
+        | A::FlipSelection(_)
+        | A::SetShaderPreset(_) => {
             crate::widgets::property_panel_dispatch_paint::apply_paint_option_action(state, action);
             Handled
         }
