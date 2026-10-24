@@ -301,8 +301,8 @@ fn resolve_value(
             true
         }
         Value::Object(obj) => {
-            // Mesh paints are dropped with their references; shader paints
-            // resolve their uniforms in `shader.rs`.
+            // Mesh paints resolve their colours in `mesh.rs`, shader paints
+            // their uniforms in `shader.rs`.
             if matches!(
                 obj.get("type").and_then(Value::as_str),
                 Some("shader" | "mesh_gradient")

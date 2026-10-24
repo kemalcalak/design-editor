@@ -10,7 +10,7 @@ use serde_json::{json, Map, Value};
 use super::glsl::Stage;
 use super::nodes::{Ctx, Role};
 use super::variables::{self, Theme};
-use super::{images, shader, PenDevReport};
+use super::{images, mesh, shader, PenDevReport};
 
 /// Replace a node's pen.dev `fill` (one fill or a list, colours as strings)
 /// with a canonical fill list; drop the key when nothing survives.
@@ -77,10 +77,7 @@ fn convert_fill(
         Some("gradient") => clockwise_rotation(&mut obj),
         Some("image") => return images::convert_image_fill(obj, ctx),
         Some("shader") => return shader::convert(obj, Stage::Fill, size, theme, ctx),
-        Some("mesh_gradient") => {
-            ctx.report.note("mesh gradient");
-            return None;
-        }
+        Some("mesh_gradient") => return mesh::convert(obj, theme, ctx),
         _ => {}
     }
     Some(Value::Object(obj))
