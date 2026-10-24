@@ -342,6 +342,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "shader.sourceTitle" => "着色器代码",
         "shader.close" => "关闭",
         "shader.apply" => "应用",
+        "property.resetOverride" => "重置覆盖",
         _ => return None,
     })
 }

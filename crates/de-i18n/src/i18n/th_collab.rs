@@ -342,6 +342,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "shader.sourceTitle" => "โค้ดเชดเดอร์",
         "shader.close" => "ปิด",
         "shader.apply" => "ใช้",
+        "property.resetOverride" => "รีเซ็ตการแทนที่",
         _ => return None,
     })
 }
