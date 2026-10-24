@@ -36,9 +36,8 @@ PROPERTY NAMES are camelCase and are ALWAYS one unbroken identifier. Never split
 All nodes share: id, type, name, role, x, y, rotation, opacity
 NODE NAMING: every node carries a meaningful `name` saying what it is (e.g. "cta-button", "hero-image"); an anonymous box is a defect — never emit `name: ""`.
 Interactivity (multi-screen apps only): frame accepts `screen` (a top-level frame's route path — `"/"` for the entry screen, `"/slug"` for every other screen, unique across the document) and `events` (`{ onTap: [ {"replace": "\"/path\""} | {"push": "\"/path\""} | {"pop": null} ] }` — the action body is the literal JSON STRING `"\"/path\""`, quote characters included, since it compiles as an expression; a bare `/path` fails). Never write `route` — it is schema-only metadata the tap dispatcher ignores.
-Fill = [{ type: "solid", color: "#hex" }] or [{ type: "linear_gradient", angle, stops: [{ offset, color }] }] or [{ type: "radial_gradient", stops: [{ offset, color }] }] or [{ type: "mesh_gradient", rows, cols, stops: [{ row, col, color }] }]
+Fill = [{ type: "solid", color: "#hex" }] or [{ type: "linear_gradient", angle, stops: [{ offset, color }] }] or [{ type: "radial_gradient", stops: [{ offset, color }] }] or [{ type: "mesh_gradient", rows, cols, stops: [{ row, col, color }] }] or [{ type: "angular_gradient", rotation, stops }]
 - radial_gradient example (concentric glow): `fill: [{ type: "radial_gradient", cx: 0.5, cy: 0.5, radius: 0.7, stops: [{ offset: 0, color: "#6d28d9" }, { offset: 1, color: "#0b0614" }] }]` — cx/cy are 0..1 fractions of the box (0.5 = centre); radius is a 0..1 fraction of max(w,h).
-- angular_gradient (conic): { cx, cy, rotation (deg, 0 = top, clockwise), stops }
 - mesh_gradient example (smooth four-corner blend): `fill: [{ type: "mesh_gradient", rows: 2, cols: 2, stops: [{ row: 0, col: 0, color: "#ec4899" }, { row: 0, col: 1, color: "#8b5cf6" }, { row: 1, col: 0, color: "#3b82f6" }, { row: 1, col: 1, color: "#06b6d4" }] }]` — a rows×cols vertex grid Gouraud-interpolated across the box; each stop pins one vertex colour at (row, col). Use it for rich multi-hue hero/background panels instead of stacking layers.
 - shader fill (advanced, generative surfaces): raw `sksl` or a built-in `preset`, render-only; see `shader-fill`. PREFER mesh/linear gradients unless intent is explicitly generative; failed raw shaders degrade to a flat solid. Declare `uniform float time;` to animate (bound to elapsed seconds). Declare `uniform shader image0;` + `uniforms: { image0: "<image url>" }` to sample an image.
 - turbulence preset example: `fill: [{ type: "shader", preset: "turbulence", uniforms: { baseFrequency: 0.08, seed: 0, numOctaves: 3 } }]`
@@ -47,7 +46,7 @@ Fill = [{ type: "solid", color: "#hex" }] or [{ type: "linear_gradient", angle, 
 Stroke = { thickness, fill: [...] } — thickness accepts number (uniform) | [T, R, B, L] | { top, right, bottom, left } (per-side, e.g. { bottom: 1 } for an underline). Effects = [{ type: "shadow", offsetX, offsetY, blur, spread, color }]
 SIZING: width/height accept number (px), "fill_container", or "fit_content".
 NUMERIC FIELDS (x, y, width, height, cornerRadius, gap, fontSize, fontWeight, opacity): bare numbers only — never quoted, never with units like "158px" or "50%".
-Fill variant types use snake_case: "linear_gradient", "radial_gradient", "angular_gradient", "mesh_gradient", not CSS hyphens or camelCase.
+Fill variant types use snake_case: "linear_gradient", "radial_gradient", "mesh_gradient", not CSS hyphens or camelCase.
 RAIL CARDS: cards in a horizontal scroll row must ALL share the same fixed pixel width — never "fill_container" (it crushes them to a sliver beside a fixed sibling).
 PADDING: number (uniform), [v, h], or [top, right, bottom, left].
 cornerRadius is a number. fill is ALWAYS an array. Do NOT set x/y on children inside layout frames.
