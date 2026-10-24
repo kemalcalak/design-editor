@@ -659,6 +659,18 @@ By category:
   saved provider settings), and the `--serve-web` daemon per request and from the listener (custom
   endpoints SSRF-screened there). Failure removes the pending fill. `enrich_images` sends explicit
   `Generate` slots to the same provider and reports every slot (`slots`).
+  #11 adds the frame types — `svg` (the first ready built-in chat agent writes SVG,
+  `generate_jobs/svg_llm.rs`) and `vectorize-image` (local `vtracer`, `generate_jobs/vectorize.rs`):
+  the call marks the frame `placeholder: true`, the landing imports the SVG through
+  `de_editor_core::svg_import::svg_nodes_fitted` (fitted to the frame, no 400 px cap) as one
+  `InsertSubtree` + flag clear — and the background transforms (`remove-background` /
+  `replace-background`, `generate_jobs/image_edit.rs`): provider image edits (OpenAI `images/edits`
+  with `background: transparent`; Gemini edit + local green chroma key, since Gemini has no alpha;
+  Replicate / Atlas refused at call time) returning a pending url; a failed edit rewrites it back to
+  the source (`LandingTarget::Edit`). Sources (`imageUrl` already in the document, or
+  `sourceNodeId`) are checked against pen.dev's JPEG/PNG/WEBP, 16 MB, 256-4096 px limits (vectorize
+  from 16 px). Artwork is checked on the worker (`svg_llm::check_artwork`: at least one, at most
+  5,000 nodes). The web daemon refuses remote source urls and custom endpoints for transforms.
 - **Pages + components** — `add_page` / `rename_page` /
   `delete_page` / `duplicate_page` / `reorder_page` /
   `set_active_page` / `instantiate_component` / `create_component`

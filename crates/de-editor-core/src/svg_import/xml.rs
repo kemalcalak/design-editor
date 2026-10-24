@@ -232,3 +232,36 @@ fn skip_until_closing(body: &str, from: usize, tag: &str) -> Option<usize> {
     let close = find_matching_close(body, from, tag)?;
     body[close..].find('>').map(|rel| close + rel + 1)
 }
+
+/// The root's viewBox as `(min_x, min_y, width, height)`; without one, the
+/// `width` / `height` attributes at the origin; else a 100-unit square.
+pub(super) fn view_box_of(root_attrs: &[(String, String)]) -> (f64, f64, f64, f64) {
+    let attr = |key: &str| -> Option<&str> {
+        root_attrs
+            .iter()
+            .find(|(k, _)| k == key)
+            .map(|(_, v)| v.as_str())
+    };
+    if let Some(vb) = attr("viewBox").or_else(|| attr("viewbox")) {
+        let nums: Vec<f64> = vb
+            .split(|c: char| c.is_whitespace() || c == ',')
+            .filter(|s| !s.is_empty())
+            .filter_map(|s| s.parse::<f64>().ok())
+            .collect();
+        if nums.len() >= 4 && nums[2] > 0.0 && nums[3] > 0.0 {
+            return (nums[0], nums[1], nums[2], nums[3]);
+        }
+    }
+    let dim = |key: &str| {
+        attr(key)
+            .map(|raw| raw.trim().trim_end_matches("px"))
+            .and_then(|raw| raw.parse::<f64>().ok())
+            .filter(|v| *v > 0.0)
+    };
+    (
+        0.0,
+        0.0,
+        dim("width").unwrap_or(100.0),
+        dim("height").unwrap_or(100.0),
+    )
+}
