@@ -26,6 +26,43 @@ impl WidgetHostNative {
         }
     }
 
+    /// Preview's cursor (#153): a pointer over the browser bar's buttons
+    /// and over the clickable the session last saw hovered, an I-beam
+    /// over a text field. `None` outside Preview, so the editor ladder
+    /// below runs unchanged. The session's hover is updated by the
+    /// coalesced cursor move, so it can trail the pointer by one frame.
+    fn preview_cursor_hint(
+        &self,
+        x: f32,
+        y: f32,
+        viewport_w: f32,
+        viewport_h: f32,
+    ) -> Option<CursorHint> {
+        let session = self.preview.as_ref()?;
+        if self.preview_slideshow_active() {
+            return None;
+        }
+        if self.over_preview_browser_bar(x, y, viewport_w, viewport_h) {
+            let canvas = self.preview_canvas_rect(viewport_w, viewport_h);
+            let over_button =
+                de_editor_ui::widgets::PreviewBrowserBar::hit_test(canvas, Point2D::new(x, y))
+                    .is_some();
+            return Some(if over_button {
+                CursorHint::Pointer
+            } else {
+                CursorHint::Default
+            });
+        }
+        if !self.over_canvas(x, y, viewport_w, viewport_h) {
+            return None;
+        }
+        Some(match session.preview_cursor() {
+            de_preview_core::PreviewCursor::Pointer => CursorHint::Pointer,
+            de_preview_core::PreviewCursor::Text => CursorHint::Text,
+            de_preview_core::PreviewCursor::Default => CursorHint::Default,
+        })
+    }
+
     pub fn cursor_hint(&self, x: f32, y: f32, viewport_w: f32, viewport_h: f32) -> CursorHint {
         use de_editor_core::Tool;
         // Modal overlays — keep the pointer the OS default.
@@ -184,6 +221,9 @@ impl WidgetHostNative {
         }
         if let Some(handle) = self.handle_drag.map(|d| d.handle) {
             return cursor_for_handle(handle);
+        }
+        if let Some(hint) = self.preview_cursor_hint(x, y, viewport_w, viewport_h) {
+            return hint;
         }
         if !self.over_canvas(x, y, viewport_w, viewport_h) {
             return CursorHint::Default;

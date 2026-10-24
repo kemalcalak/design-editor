@@ -100,6 +100,8 @@ features = [
   "ClipboardEvent",
   "CompositionEvent",
   "console",
+  # Preview sets the canvas's CSS `cursor` over links / buttons (#153).
+  "CssStyleDeclaration",
   "DataTransfer",
   "DataTransferItem",
   "DataTransferItemList",

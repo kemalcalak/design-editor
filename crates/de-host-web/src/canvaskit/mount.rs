@@ -414,6 +414,10 @@ pub(super) async fn mount_ck(canvas_id: String) -> Result<(), JsValue> {
     // mousemove → cursor move / drag
     {
         let inner = inner.clone();
+        let cursor_canvas = canvas.clone();
+        // The CSS cursor last written, so a move only touches the DOM when
+        // the shape changes (#153: pointer over Preview links / buttons).
+        let shown_cursor = std::cell::Cell::new("");
         add_listener::<MouseEvent, _, _>(
             &canvas_target,
             "mousemove",
@@ -431,6 +435,11 @@ pub(super) async fn mount_ck(canvas_id: String) -> Result<(), JsValue> {
                     if b.host.apply_cursor_move(x, y) {
                         crate::repaint_coalescer::request();
                     }
+                    let cursor = b.host.preview_css_cursor().unwrap_or("");
+                    if shown_cursor.get() != cursor {
+                        shown_cursor.set(cursor);
+                        let _ = cursor_canvas.style().set_property("cursor", cursor);
+                    }
                 }
                 // Landing on a chrome button owes a repaint once its
                 // tooltip's dwell expires, and no further DOM event is
@@ -439,6 +448,29 @@ pub(super) async fn mount_ck(canvas_id: String) -> Result<(), JsValue> {
                 crate::tooltip_pump::ensure(&inner);
             },
         )?;
+    }
+    // Mouse back / forward buttons (3 / 4) browse the Preview's history
+    // (#153). The browser navigates its own history on these buttons'
+    // mouseup, so the default is prevented only while previewing.
+    {
+        let inner = inner.clone();
+        add_listener::<MouseEvent, _, _>(&canvas_target, "mouseup", &mut listeners, move |evt| {
+            let forward = match evt.button() {
+                3 => false,
+                4 => true,
+                _ => return,
+            };
+            let Ok(mut b) = inner.try_borrow_mut() else {
+                return;
+            };
+            if !b.host.is_preview_active() {
+                return;
+            }
+            evt.prevent_default();
+            if b.host.preview_history_step(forward) {
+                crate::repaint_coalescer::request();
+            }
+        })?;
     }
     // mouseleave → pointer-reactive shaders fall back to their idle value.
     {

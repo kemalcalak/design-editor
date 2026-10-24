@@ -175,6 +175,9 @@ mod press_helpers;
 mod press_overlay_tiers;
 mod press_property_tiers;
 mod press_surface_tiers;
+mod preview_browser;
+#[cfg(all(test, feature = "gl-host", not(target_os = "windows")))]
+mod preview_browser_tests;
 mod preview_edge_swipe;
 #[cfg(all(test, not(target_os = "windows")))]
 mod preview_edge_swipe_tests;

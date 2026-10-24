@@ -124,6 +124,8 @@ impl WidgetHost {
                     self.center_canvas_on_preview_root(viewport_width, viewport_height);
                 }
             }
+            // #153: a section link scrolls the page after any switch above.
+            self.apply_preview_page_scroll_request(viewport_width, viewport_height);
         }
         backend.fill_rect(
             Rect {
@@ -220,6 +222,7 @@ impl WidgetHost {
                 }
                 // Chrome paints over the presentation in every segment.
                 self.paint_preview_switcher(backend, canvas_rect);
+                self.paint_preview_browser_bar(backend, canvas_rect);
                 self.paint_screen_switcher(backend, canvas_rect);
             } else {
                 // NORMAL PAINT path — the canvas reads editor state + the

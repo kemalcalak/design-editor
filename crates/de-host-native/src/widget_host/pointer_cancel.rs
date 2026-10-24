@@ -51,6 +51,13 @@ impl WidgetHostNative {
             .editor_state
             .editor_ui
             .preview
+            .browser_pressed
+            .take()
+            .is_some();
+        cancelled |= self
+            .editor_state
+            .editor_ui
+            .preview
             .toolbar_pressed
             .take()
             .is_some();

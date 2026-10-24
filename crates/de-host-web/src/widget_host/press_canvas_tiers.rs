@@ -32,6 +32,7 @@ impl WidgetHost {
             // press first — otherwise a tap on a switcher pill would fall
             // through into the previewed screen underneath it.
             if self.preview_switcher_press(x, y, viewport_width, viewport_height)
+                || self.preview_browser_press(x, y, viewport_width, viewport_height)
                 || self.screen_switcher_press(x, y, viewport_width, viewport_height)
             {
                 self.mark_dirty();

@@ -169,6 +169,7 @@ mod press_ctx;
 mod press_overlay_tiers;
 mod press_property_tiers;
 mod press_surface_tiers;
+mod preview_browser;
 mod preview_frame;
 mod preview_frame_teardown;
 mod preview_slideshow;
