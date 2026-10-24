@@ -3,17 +3,17 @@
     "agent": {
       "flake": false,
       "locked": {
-        "lastModified": 1783431758,
-        "narHash": "sha256-kh5XrS8ZZOhwk52nIvXGdyqn8F5nSlL2qGbUel+eJhw=",
-        "owner": "ZSeven-W",
+        "lastModified": 1792615719,
+        "narHash": "sha256-Bj+RM0yeE0FFdVAOBbAgUZ3oLtwm8o6ccNb6jhuw4Kw=",
+        "owner": "kemalcalak",
         "repo": "agent-rs",
-        "rev": "5c0f9506e27be5b4f29cd2c1093e2858ad0fa20c",
+        "rev": "6a15f48c2901fb000ea58c1c28a8bd14a3f750ae",
         "type": "github"
       },
       "original": {
-        "owner": "ZSeven-W",
+        "owner": "kemalcalak",
         "repo": "agent-rs",
-        "rev": "5c0f9506e27be5b4f29cd2c1093e2858ad0fa20c",
+        "rev": "6a15f48c2901fb000ea58c1c28a8bd14a3f750ae",
         "type": "github"
       }
     },
@@ -43,17 +43,17 @@
     "casement": {
       "flake": false,
       "locked": {
-        "lastModified": 1786038644,
+        "lastModified": 1792615716,
         "narHash": "sha256-UpKrhfc7/UnIl+cX3nGyEOUsSA554H79MnNxrpilINI=",
-        "owner": "ZSeven-W",
+        "owner": "kemalcalak",
         "repo": "casement",
-        "rev": "ffdd672cbda3abe5cd78d056fb75683f2a74f7fe",
+        "rev": "3dc5a7ef5d8f0de491b1027467ebe52b4c51f6c0",
         "type": "github"
       },
       "original": {
-        "owner": "ZSeven-W",
+        "owner": "kemalcalak",
         "repo": "casement",
-        "rev": "ffdd672cbda3abe5cd78d056fb75683f2a74f7fe",
+        "rev": "3dc5a7ef5d8f0de491b1027467ebe52b4c51f6c0",
         "type": "github"
       }
     },
@@ -353,17 +353,17 @@
     "jian": {
       "flake": false,
       "locked": {
-        "lastModified": 1786287246,
-        "narHash": "sha256-oBXn3aKTmjbX1rQ/BMhibDtQWQVhRYepuq3CrhSTX1A=",
-        "owner": "ZSeven-W",
+        "lastModified": 1792699944,
+        "narHash": "sha256-DAqPTURYQAteImk575vTBVaWhh4cruyrtvBvSeoDGMc=",
+        "owner": "kemalcalak",
         "repo": "jian",
-        "rev": "2edfc361cff3f6f33174746c048002607d691d1c",
+        "rev": "3c1c18cc0b025478d6f39b3f52d94fdd6a860a21",
         "type": "github"
       },
       "original": {
-        "owner": "ZSeven-W",
+        "owner": "kemalcalak",
         "repo": "jian",
-        "rev": "2edfc361cff3f6f33174746c048002607d691d1c",
+        "rev": "3c1c18cc0b025478d6f39b3f52d94fdd6a860a21",
         "type": "github"
       }
     },

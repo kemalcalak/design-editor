@@ -169,6 +169,15 @@ impl EditorState {
                 }
                 return self.cmd_set_polygon_count(&sel, value.round().clamp(3.0, 100.0) as u32);
             }
+            PropertyFocus::StarInnerRadius => {
+                if !value.is_finite() {
+                    return false;
+                }
+                return self.cmd_set_polygon_inner_radius(
+                    &sel,
+                    Some(crate::star_shape::percent_to_inner_radius(value)),
+                );
+            }
             PropertyFocus::EllipseStart => {
                 if !value.is_finite() {
                     return false;
@@ -300,6 +309,7 @@ impl EditorState {
                 unreachable!("corner radius / stroke width handled before node borrow")
             }
             PropertyFocus::PolygonSides
+            | PropertyFocus::StarInnerRadius
             | PropertyFocus::EllipseStart
             | PropertyFocus::EllipseSweep
             | PropertyFocus::EllipseInnerRadius

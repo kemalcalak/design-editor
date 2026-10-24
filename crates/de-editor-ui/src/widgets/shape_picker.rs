@@ -1,5 +1,5 @@
 //! `ShapePicker` — the shape menu a right-click on the tool rail's
-//! Rectangle slot opens (#30): Rectangle, Polygon, Line, Icon.
+//! Rectangle slot opens (#30): Rectangle, Polygon, Star, Line, Icon.
 //!
 //! Ellipse, Pen and image import have their own rail buttons, so the
 //! menu carries only what the rail does not. Anchored to the right of
@@ -22,7 +22,7 @@ pub const SHAPE_PICKER_WIDTH: f32 = 220.0;
 const ROW_HEIGHT: f32 = 36.0;
 const ROW_PAD_X: f32 = 12.0;
 const ICON_SIZE: f32 = 16.0;
-const ROW_COUNT: usize = 4;
+const ROW_COUNT: usize = 5;
 /// Top + bottom padding inside the panel, so the first / last rows don't sit
 /// flush against the rounded panel edge. Hit-testing accounts for it (see
 /// `hit_popup`), so paint + hit stay aligned.
@@ -34,7 +34,7 @@ const ROW_HL_INSET_Y: f32 = 4.0;
 /// What the user picked from the dropdown.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ShapeChoice {
-    /// Pick a shape tool (Rect / Polygon / Line).
+    /// Pick a shape tool (Rect / Polygon / Star / Line).
     Tool(Tool),
     /// Open the icon picker (host concern; this widget only
     /// reports the intent).
@@ -48,6 +48,7 @@ pub enum ShapeChoice {
 struct PickerLabels {
     rectangle: String,
     polygon: String,
+    star: String,
     line: String,
     icon: String,
 }
@@ -65,6 +66,7 @@ impl PickerLabels {
         Self {
             rectangle: pick("shapes.rectangle", "Rectangle"),
             polygon: pick("shapes.polygon", "Polygon"),
+            star: pick("shapes.star", "Star"),
             line: pick("shapes.line", "Line"),
             icon: pick("shapes.icon", "Icon"),
         }
@@ -98,6 +100,11 @@ impl ShapePicker {
                 icon: Icon::Triangle,
                 label: labels.polygon,
                 choice: ShapeChoice::Tool(Tool::Polygon),
+            },
+            PickerRow {
+                icon: Icon::Star,
+                label: labels.star,
+                choice: ShapeChoice::Tool(Tool::Star),
             },
             PickerRow {
                 icon: Icon::Minus,
@@ -326,6 +333,20 @@ mod tests {
         };
         let hit = picker.hit_test(panel_rect, Point2D::new(150.0, 50.0 + 10.0));
         assert_eq!(hit, Some(ShapeChoice::Tool(Tool::Rect)));
+    }
+
+    #[test]
+    fn the_row_after_polygon_picks_the_star_tool() {
+        let mut ui = de_editor_core::editor_ui_state::EditorUiState::new();
+        ui.shape_picker.open = true;
+        let picker = ShapePicker::for_editor_ui(&ui);
+        let panel_rect = Rect {
+            origin: Point2D::new(0.0, 0.0),
+            size: Point2D::new(SHAPE_PICKER_WIDTH, ShapePicker::panel_height()),
+        };
+        let star_y = PANEL_PAD_Y + 2.5 * ROW_HEIGHT;
+        let hit = picker.hit_test(panel_rect, Point2D::new(50.0, star_y));
+        assert_eq!(hit, Some(ShapeChoice::Tool(Tool::Star)));
     }
 
     #[test]

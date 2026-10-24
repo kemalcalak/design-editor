@@ -140,6 +140,7 @@ pub mod selection_flip;
 pub mod selection_resolve;
 pub mod shader_images;
 pub mod shader_presets;
+pub mod star_shape;
 pub mod state;
 pub mod statusbar_state;
 pub mod stroke_render_style;

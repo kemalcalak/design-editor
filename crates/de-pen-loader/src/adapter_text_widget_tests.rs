@@ -186,6 +186,29 @@ fn shape_nodes_keep_authored_size() {
 }
 
 #[test]
+fn a_star_polygon_carries_its_inner_radius_to_the_payload() {
+    // #87: the star ratio rides the ellipse inner-radius slot, clamped.
+    let src = r##"{
+      "version":"1.0.0","pages":[{"id":"p","name":"P","children":[
+        {"type":"polygon","id":"star","width":60,"height":60,
+         "polygonCount":7,"innerRadius":0.45},
+        {"type":"polygon","id":"spike","width":60,"height":60,
+         "polygonCount":5,"innerRadius":-2},
+        {"type":"polygon","id":"hex","width":60,"height":60,"polygonCount":6}
+      ]}],"children":[]
+    }"##;
+    let r = load(src);
+    let kids = &r.payload.pages[0].children;
+    assert_eq!(kids[0].polygon_sides, 7);
+    assert_eq!(kids[0].arc_inner_radius, Some(0.45));
+    assert_eq!(kids[1].arc_inner_radius, Some(0.01));
+    assert_eq!(
+        kids[2].arc_inner_radius, None,
+        "a regular polygon stays a polygon"
+    );
+}
+
+#[test]
 fn line_uses_signed_bounds() {
     // Vertical line: x2=0, y2=100. Encoded as bounds size
     // (0, 100); pure-axis lines pass `aggregate_bounds`' size>0

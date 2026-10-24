@@ -16,7 +16,8 @@
 
 use crate::backend::skia::fit_path_to_rect;
 use de_editor_core::BooleanOp;
-use de_editor_ui::layout_scene::{regular_polygon_points, LayoutScene, NodeKind, SceneNode};
+use de_editor_ui::layout_scene::{LayoutScene, NodeKind, SceneNode};
+use de_editor_ui::polygon_geometry::polygon_node_points;
 use de_editor_ui::{Point2D, Rect};
 use skia_safe::{ContourMeasureIter, Matrix, Path as SkPath, PathBuilder, PathOp, Rect as SkRect};
 
@@ -80,9 +81,7 @@ fn build_node_path(node: &SceneNode) -> Option<SkPath> {
     let path = match node.kind {
         NodeKind::Frame | NodeKind::Rect => build_rect_path(node.bounds),
         NodeKind::Ellipse => build_oval_path(node.bounds),
-        NodeKind::Polygon => {
-            build_polyline_path(&regular_polygon_points(node.bounds, node.polygon_sides))
-        }
+        NodeKind::Polygon => build_polyline_path(&polygon_node_points(node, node.bounds)),
         // A Path may carry geometry either as a compound SVG `d`
         // (boolean results, SVG imports) or as flat anchor points (pen
         // tool). Prefer the `d` so a boolean op chained onto a previous
