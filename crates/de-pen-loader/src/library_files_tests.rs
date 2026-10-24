@@ -49,7 +49,11 @@ fn master_label(state: &EditorState) -> String {
 /// An absolute path under a fixed root on every OS (`/work/…` is not
 /// absolute on Windows). Nothing is created on disk.
 fn w(relative: &str) -> PathBuf {
-    std::env::temp_dir().join("de-lib-paths").join(relative)
+    // One component per segment, so Windows paths use its own separator
+    // like the paths the code under test builds.
+    let mut path = std::env::temp_dir().join("de-lib-paths");
+    path.extend(relative.split('/'));
+    path
 }
 
 fn s(path: PathBuf) -> String {
