@@ -239,3 +239,49 @@ fn link_and_reload_queue_a_host_request() {
         Some(LibraryRequest::Reload)
     );
 }
+
+#[test]
+fn relinking_after_unlink_adopts_the_kept_copies() {
+    let mut state = doc_with(serde_json::json!([
+        { "id": "inst", "type": "ref", "ref": "a", "x": 0, "y": 0 }
+    ]));
+    sync(&mut state, "kit.de", content(vec![master("a", "One")], &[]));
+    state.unlink_library("kit.de");
+    sync(&mut state, "kit.de", content(vec![master("a", "Two")], &[]));
+    assert_eq!(
+        state.editor_ui.libraries.entries[0].status,
+        LibraryStatus::Synced {
+            components: 1,
+            conflicts: 0
+        }
+    );
+    assert!(label_of(&state, "a").contains("Two"));
+}
+
+#[test]
+fn a_master_the_library_dropped_stays_while_used() {
+    let mut state = doc_with(serde_json::json!([
+        { "id": "inst", "type": "ref", "ref": "a", "x": 0, "y": 0 }
+    ]));
+    sync(
+        &mut state,
+        "kit.de",
+        content(vec![master("a", "x"), master("b", "y")], &[]),
+    );
+    sync(&mut state, "kit.de", content(vec![master("b", "y")], &[]));
+    let mut ids = components_page(&state);
+    ids.sort();
+    assert_eq!(ids, vec!["a", "b"]);
+    assert_eq!(state.editor_ui.libraries.entries[0].link.masters, vec!["b"]);
+}
+
+#[test]
+fn linking_and_unlinking_mark_the_document_dirty() {
+    let mut state = doc_with(serde_json::json!([]));
+    state.mark_saved_revision();
+    sync(&mut state, "kit.de", content(vec![], &[]));
+    assert!(state.is_dirty());
+    state.mark_saved_revision();
+    state.unlink_library("kit.de");
+    assert!(state.is_dirty());
+}

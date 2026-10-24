@@ -44,13 +44,19 @@ struct SaveSnapshot {
 }
 
 impl SaveSnapshot {
-    fn capture(state: &EditorState, document_epoch: u64, previous: Option<&SaveSnapshot>) -> Self {
+    fn capture(
+        state: &EditorState,
+        document_epoch: u64,
+        previous: Option<&SaveSnapshot>,
+        target: &Path,
+    ) -> Self {
         Self {
             payload: SavePayload::Canonical(Box::new(
                 de_host_services::doc_io::CanonicalSaveSnapshot::capture_reusing(
                     state,
                     previous.and_then(SaveSnapshot::canonical),
-                ),
+                )
+                .with_editor_meta(de_pen_loader::EditorMeta::for_document(state, target)),
             )),
             document_epoch,
             generation: state.document_generation(),
@@ -62,11 +68,12 @@ impl SaveSnapshot {
         state: &EditorState,
         document_epoch: u64,
         source_path: PathBuf,
+        target: &Path,
     ) -> Self {
         Self {
             payload: SavePayload::CleanBoundOp {
                 source_path,
-                editor_meta: de_pen_loader::EditorMeta::from_state(state),
+                editor_meta: de_pen_loader::EditorMeta::for_document(state, target),
             },
             document_epoch,
             generation: state.document_generation(),
@@ -207,9 +214,9 @@ impl SaveSession {
         let previous = self.capture_anchor(document_epoch, generation);
         let snapshot = match clean_source {
             Some(source_path) => {
-                SaveSnapshot::capture_clean_bound_op(state, document_epoch, source_path)
+                SaveSnapshot::capture_clean_bound_op(state, document_epoch, source_path, &path)
             }
-            None => SaveSnapshot::capture(state, document_epoch, previous),
+            None => SaveSnapshot::capture(state, document_epoch, previous, &path),
         };
         let request = SaveRequest {
             snapshot: Arc::new(snapshot),

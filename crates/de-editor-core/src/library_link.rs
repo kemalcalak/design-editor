@@ -29,7 +29,8 @@ pub struct LibraryLink {
     /// The library file, relative to the document's folder (absolute only
     /// while the document has never been saved).
     pub path: String,
-    /// Short name (pen.dev's `imports` key). Defaults to the file stem.
+    /// Short name (pen.dev's `imports` key). Optional: `display_name` falls
+    /// back to the file stem.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub alias: Option<String>,
     /// Ids of the masters this library put on the `Components` page.

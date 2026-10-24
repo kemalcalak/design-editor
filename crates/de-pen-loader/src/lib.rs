@@ -121,8 +121,9 @@ pub use library::{
     merge_library_into_state, merge_library_src_into_state, LibraryMergeError, LibraryMergeReport,
 };
 pub use library_files::{
-    library_command, library_content_from_document, library_link_path, read_library_content,
-    rebase_library_links, resolve_library_path, sync_libraries, LibraryReadError,
+    absolute_library_path, library_command, library_content_from_document, library_link_path,
+    links_for_document, read_library_content, rebase_library_links, resolve_library_path,
+    sync_libraries, LibraryReadError,
 };
 pub use payload::{
     load_canonical, normalize_video_alias, write_normalized_source_with_current_schema, DocPayload,

@@ -77,7 +77,7 @@ pub fn save_to_path(state: &EditorState, path: &std::path::Path) -> Result<(), D
     let thumbnails = jian_ops_schema::image_thumbs::capture_snapshot();
     save_document_with_thumbnails_to_path(
         &state.doc,
-        de_pen_loader::EditorMeta::from_state(state),
+        de_pen_loader::EditorMeta::for_document(state, path),
         &thumbnails,
         path,
     )
@@ -97,7 +97,7 @@ pub fn save_single_file_to_path(
     canonical_save::write_serializable_document_with_thumbnails(
         &mut source,
         &state.doc,
-        de_pen_loader::EditorMeta::from_state(state),
+        de_pen_loader::EditorMeta::for_document(state, path),
         &thumbnails,
     )?;
     write_document_bytes(&source, path)

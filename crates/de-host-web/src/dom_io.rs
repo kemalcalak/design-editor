@@ -133,8 +133,13 @@ pub(crate) fn drain_pending_kit_io<C: RepaintContext + 'static>(inner: &InnerRc<
         Some(KitIoRequest::Export) => export_kit_file(inner),
         None => {}
     }
-    // Libraries section Link / Reload (#15): a browser tab cannot read the
-    // linked files beside the document, so say where it works instead.
+}
+
+/// Consume a Libraries-section Link / Reload request (#15). Browser
+/// counterpart of desktop `DesktopApp::drain_library_request`: a browser
+/// tab cannot read the linked files beside the document, so it says where
+/// linking works instead.
+pub(crate) fn drain_pending_library_request<C: RepaintContext + 'static>(inner: &InnerRc<C>) {
     let mut b = inner.borrow_mut();
     let ui = &mut b.host_mut().editor_state_mut().editor_ui;
     if ui.libraries.request.take().is_some() {

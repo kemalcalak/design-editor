@@ -20,8 +20,10 @@ use crate::pen_node_ext::PenNodeExt;
 use crate::{ComponentLibrary, EditorState};
 
 impl EditorState {
-    /// Apply one [`LibraryCommand`]. Returns whether the document changed
-    /// (a status-only update returns `true` too, so the panel repaints).
+    /// Apply one [`LibraryCommand`]. Returns whether the command named a
+    /// link it could act on (`false` only for an unknown path), so a caller
+    /// knows to repaint; the document's own dirty state is tracked through
+    /// `mark_document_changed`.
     pub fn apply_library_command(&mut self, command: LibraryCommand) -> bool {
         match command {
             LibraryCommand::Sync {
@@ -48,22 +50,28 @@ impl EditorState {
         content: Arc<LibraryContent>,
     ) -> bool {
         let libraries = &mut self.editor_ui.libraries;
-        let idx = match libraries.position(path) {
-            Some(idx) => idx,
+        let (idx, new_link) = match libraries.position(path) {
+            Some(idx) => (idx, false),
             None => {
                 libraries.entries.push(LinkedLibrary {
                     link: LibraryLink::new(path, alias.clone()),
                     ..LinkedLibrary::default()
                 });
-                libraries.entries.len() - 1
+                (libraries.entries.len() - 1, true)
             }
         };
         let entry = &mut libraries.entries[idx];
+        let renamed = alias.is_some() && entry.link.alias != alias;
         if alias.is_some() {
             entry.link.alias = alias;
         }
         entry.content = Some(content);
-        self.apply_library_content(idx);
+        let changed = self.apply_library_content(idx);
+        // The link itself is saved with the file, so adding or renaming one
+        // is an edit even when no master moved.
+        if (new_link || renamed) && !changed {
+            self.mark_document_changed();
+        }
         true
     }
 
@@ -88,18 +96,15 @@ impl EditorState {
         let entry = self.editor_ui.libraries.entries.remove(idx);
         let owned: HashSet<String> = entry.link.masters.into_iter().collect();
         let keep = masters_still_used(self, &owned);
-        let doomed: HashSet<&String> = owned.iter().filter(|id| !keep.contains(*id)).collect();
-        let mut removed = false;
         if let Some(page) = components_page_mut(self) {
-            let before = page.children.len();
-            page.children
-                .retain(|node| !doomed.contains(&node.id_str().to_string()));
-            removed = page.children.len() != before;
+            page.children.retain(|node| {
+                let id = node.id_str();
+                !owned.contains(id) || keep.contains(id)
+            });
         }
-        if removed {
-            self.components = ComponentLibrary::from_document(&self.doc);
-            self.mark_document_changed();
-        }
+        self.components = ComponentLibrary::from_document(&self.doc);
+        // The link list is saved with the file: removing one is an edit.
+        self.mark_document_changed();
         true
     }
 
@@ -125,12 +130,42 @@ impl EditorState {
         let Some(content) = self.editor_ui.libraries.entries[idx].content.clone() else {
             return false;
         };
-        let owned: HashSet<String> = self.editor_ui.libraries.entries[idx]
+        if library_already_applied(self, idx, &content) {
+            // The common undo / redo case: nothing to rebuild.
+            let entry = &mut self.editor_ui.libraries.entries[idx];
+            entry.status = LibraryStatus::Synced {
+                components: entry.link.masters.len(),
+                conflicts: 0,
+            };
+            return false;
+        }
+        let mut owned: HashSet<String> = self.editor_ui.libraries.entries[idx]
             .link
             .masters
             .iter()
             .cloned()
             .collect();
+        // A Components-page master with a library master's root id that no
+        // other link owns is this library's earlier copy (left behind by an
+        // unlink, say): adopt it instead of reporting a conflict forever.
+        let other_links: HashSet<&str> = self
+            .editor_ui
+            .libraries
+            .entries
+            .iter()
+            .enumerate()
+            .filter(|(i, _)| *i != idx)
+            .flat_map(|(_, e)| e.link.masters.iter().map(String::as_str))
+            .collect();
+        if let Some(page) = components_page(self) {
+            let roots: HashSet<&str> = content.masters.iter().map(|m| m.id_str()).collect();
+            for node in &page.children {
+                let id = node.id_str();
+                if roots.contains(id) && !other_links.contains(id) {
+                    owned.insert(id.to_string());
+                }
+            }
+        }
 
         // Ids the library may not take: everything in the document except
         // the subtrees this link already owns on the Components page.
@@ -189,7 +224,11 @@ fn place_masters(state: &mut EditorState, owned: &HashSet<String>, accepted: Vec
         // single-page document into `pages`) without moving the user.
         return state.append_components_page_masters(accepted) > 0;
     }
-    let keep: HashSet<String> = accepted.iter().map(|m| m.id_str().to_string()).collect();
+    let mut keep: HashSet<String> = accepted.iter().map(|m| m.id_str().to_string()).collect();
+    // A master the library dropped stays while an instance still uses it,
+    // as a local component, the way unlink treats it.
+    let dropped: HashSet<String> = owned.difference(&keep).cloned().collect();
+    keep.extend(masters_still_used(state, &dropped));
     let Some(page) = components_page_mut(state) else {
         return false;
     };
@@ -215,6 +254,46 @@ fn place_masters(state: &mut EditorState, owned: &HashSet<String>, accepted: Vec
         }
     }
     changed
+}
+
+/// Whether entry `idx`'s masters and variables are already exactly what
+/// `content` holds, checked without allocating.
+fn library_already_applied(state: &EditorState, idx: usize, content: &LibraryContent) -> bool {
+    let link = &state.editor_ui.libraries.entries[idx].link;
+    // Owned variables must be exactly the library's (a dropped one still
+    // has to be removed).
+    if link.masters.len() != content.masters.len()
+        || link.variables.len() != content.variables.len()
+        || !link
+            .variables
+            .iter()
+            .all(|name| content.variables.contains_key(name))
+    {
+        return false;
+    }
+    let Some(page) = components_page(state) else {
+        return content.masters.is_empty() && variables_applied(state, content);
+    };
+    content
+        .masters
+        .iter()
+        .zip(&link.masters)
+        .all(|(master, owned)| {
+            master.id_str() == owned
+                && page
+                    .children
+                    .iter()
+                    .any(|node| node.id_str() == owned && node == master)
+        })
+        && variables_applied(state, content)
+}
+
+fn variables_applied(state: &EditorState, content: &LibraryContent) -> bool {
+    let vars = state.doc.variables.as_ref();
+    content
+        .variables
+        .iter()
+        .all(|(name, def)| vars.and_then(|v| v.get(name)) == Some(def))
 }
 
 /// Library variables the link owns follow the library; a name the document

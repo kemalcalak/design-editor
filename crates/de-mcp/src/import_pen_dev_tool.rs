@@ -127,6 +127,17 @@ impl McpTool for ImportPenDev {
         if report.has_losses() {
             output.insert("notCarriedOver".into(), report.summary());
         }
+        if !report.imports.is_empty() {
+            // Inserting into an open document links nothing by itself: name
+            // the files so the caller can `add_library` them (paths are
+            // relative to the .pen file).
+            let imports: Vec<String> = report
+                .imports
+                .iter()
+                .map(|import| format!("{}={}", import.alias, import.path))
+                .collect();
+            output.insert("libraryImports".into(), imports.join(", "));
+        }
         if !conflicts.is_empty() {
             output.insert("keptExistingVariables".into(), conflicts.join(", "));
         }

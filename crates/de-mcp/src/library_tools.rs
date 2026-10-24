@@ -73,7 +73,12 @@ impl McpTool for LibraryTool {
         match self.name {
             "add_library" => self.add(args),
             "remove_library" => self.remove(args),
-            _ => self.list(),
+            // The only other name the snapshots are built with.
+            "list_libraries" => self.list(),
+            other => ToolOutcome::Err(
+                ToolErrorCode::InvalidArgument,
+                format!("unknown library tool {other}"),
+            ),
         }
     }
 }
@@ -111,21 +116,28 @@ impl LibraryTool {
     }
 
     fn add(&self, args: &BTreeMap<String, String>) -> ToolOutcome {
-        let Some(raw) = arg(args, &["path", "libraryPath", "filePath"]) else {
+        let Some(raw) = arg(args, &["path"]) else {
             return ToolOutcome::Err(ToolErrorCode::MissingArgument, "path is required".into());
         };
         let file = self.resolve_input(raw);
-        let content = match de_pen_loader::read_library_content(&file) {
-            Ok(content) => content,
-            Err(error) => {
+        let path = de_pen_loader::library_link_path(self.base_dir.as_deref(), &file);
+        let alias = arg(args, &["alias"]).map(str::to_string);
+        // The same read the panel's Link runs, so both create the same link.
+        let command = de_pen_loader::library_command(self.base_dir.as_deref(), &path, alias);
+        let content = match &command {
+            LibraryCommand::Sync { content, .. } => Arc::clone(content),
+            LibraryCommand::Unavailable { status, .. } => {
+                let reason = match status {
+                    LibraryStatus::Invalid(error) => error.clone(),
+                    _ => "library file not found".to_string(),
+                };
                 return ToolOutcome::Err(
                     ToolErrorCode::ToolFailed,
-                    format!("{}: {error}", file.display()),
+                    format!("{}: {reason}", file.display()),
                 );
             }
+            LibraryCommand::Unlink { .. } => unreachable!("library_command never unlinks"),
         };
-        let path = de_pen_loader::library_link_path(self.base_dir.as_deref(), &file);
-        let alias = arg(args, &["alias", "name"]).map(str::to_string);
         let ids: Vec<&str> = content
             .masters
             .iter()
@@ -134,22 +146,17 @@ impl LibraryTool {
         let result = json!({
             "path": path,
             "file": file.to_string_lossy(),
-            "components": ids.len(),
-            "componentIds": ids,
-            "note": "Instances are `ref` nodes whose `ref` is one of componentIds.",
+            "libraryComponents": ids.len(),
+            "libraryComponentIds": ids,
+            "note": "Instances are `ref` nodes pointing at a component id. \
+                     A component whose id the document already uses is skipped; \
+                     list_libraries shows the linked ones.",
         });
-        ToolOutcome::OkJsonWithCommand(
-            result.to_string(),
-            EditorCommand::Library(LibraryCommand::Sync {
-                path,
-                alias,
-                content: Arc::new(content),
-            }),
-        )
+        ToolOutcome::OkJsonWithCommand(result.to_string(), EditorCommand::Library(command))
     }
 
     fn remove(&self, args: &BTreeMap<String, String>) -> ToolOutcome {
-        let Some(raw) = arg(args, &["path", "alias", "name"]) else {
+        let Some(raw) = arg(args, &["path"]) else {
             return ToolOutcome::Err(ToolErrorCode::MissingArgument, "path is required".into());
         };
         let file = self.resolve_input(raw);
@@ -178,15 +185,9 @@ impl LibraryTool {
     /// A user-supplied path: relative to the document folder when there is
     /// one, else to the working directory.
     fn resolve_input(&self, raw: &str) -> PathBuf {
-        let path = Path::new(raw);
-        if path.is_absolute() {
-            return path.to_path_buf();
-        }
         match &self.base_dir {
-            Some(base) => base.join(path),
-            None => std::env::current_dir()
-                .unwrap_or_else(|_| PathBuf::from("."))
-                .join(path),
+            Some(base) => de_pen_loader::resolve_library_path(Some(base), raw),
+            None => PathBuf::from(de_pen_loader::absolute_library_path(Path::new(raw))),
         }
     }
 }

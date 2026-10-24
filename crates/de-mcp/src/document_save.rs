@@ -78,7 +78,12 @@ pub fn save_document_snapshot(state: &EditorState) -> SaveDocument {
         "editorMeta",
         // The same metadata desktop Save writes, so an MCP save keeps the
         // scenario, pinned style guide and library links too.
-        &de_pen_loader::EditorMeta::from_state(state),
+        // The target is only known at call time, so library links are
+        // written absolute; the next open makes them relative again.
+        &de_pen_loader::EditorMeta {
+            libraries: de_pen_loader::links_for_document(state, None),
+            ..de_pen_loader::EditorMeta::from_state(state)
+        },
     )
     .is_err()
     {

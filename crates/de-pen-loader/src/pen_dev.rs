@@ -207,8 +207,10 @@ pub fn convert(root: &mut Value, assets: AssetReader<'_>) -> PenDevReport {
     // pen.dev's sync token means nothing here; its imports become links.
     doc.remove("fileToken");
     report.imports = imports::take_imports(doc);
-    if let Some(children) = doc.get_mut("children") {
-        imports::strip_alias_prefixes(children, &report.imports);
+    for key in ["children", "variables"] {
+        if let Some(value) = doc.get_mut(key) {
+            imports::strip_alias_prefixes(value, &report.imports);
+        }
     }
     let variables = variables::Variables::from_document(doc);
     let instance_bases = match doc.get("children") {

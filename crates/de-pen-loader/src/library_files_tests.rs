@@ -1,9 +1,9 @@
 //! Tests for `library_files.rs`.
 
 use super::*;
-use de_editor_core::LibraryStatus;
 use de_editor_core::page_mutators::COMPONENTS_PAGE_NAME;
 use de_editor_core::pen_node_ext::PenNodeExt;
+use de_editor_core::LibraryStatus;
 
 /// A fresh, empty folder under the system temp dir.
 fn temp_dir(tag: &str) -> PathBuf {
@@ -174,4 +174,34 @@ fn links_persist_in_editor_meta() {
         serde_json::json!({ "version": "1.0", "children": [], "editorMeta": json }).to_string();
     let back = crate::extract_editor_meta(&src).unwrap();
     assert_eq!(back.libraries, meta.libraries);
+}
+
+#[test]
+fn a_save_as_writes_links_relative_to_its_target() {
+    let mut state = EditorState::new();
+    rebase_library_links(&mut state, Some(Path::new("/work/a/doc.de")));
+    state
+        .editor_ui
+        .libraries
+        .set_links(vec![de_editor_core::LibraryLink::new("kit.de", None)]);
+    let meta = crate::EditorMeta::for_document(&state, Path::new("/work/b/copy.de"));
+    assert_eq!(meta.libraries[0].path, "../a/kit.de");
+    // The live state still points at the folder it was opened from.
+    assert_eq!(state.editor_ui.libraries.links()[0].path, "kit.de");
+    assert_eq!(
+        links_for_document(&state, None)[0].path,
+        "/work/a/kit.de",
+        "no target folder: absolute"
+    );
+}
+
+#[test]
+fn metadata_without_links_keeps_the_current_ones() {
+    let mut state = EditorState::new();
+    state
+        .editor_ui
+        .libraries
+        .set_links(vec![de_editor_core::LibraryLink::new("kit.de", None)]);
+    crate::apply_editor_meta(&mut state, crate::EditorMeta::default());
+    assert_eq!(state.editor_ui.libraries.entries.len(), 1);
 }

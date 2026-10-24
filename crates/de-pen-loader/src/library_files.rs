@@ -12,7 +12,7 @@
 use std::path::{Component, Path, PathBuf};
 use std::sync::Arc;
 
-use de_editor_core::{ComponentLibrary, EditorState, LibraryCommand, LibraryContent};
+use de_editor_core::{ComponentLibrary, EditorState, LibraryCommand, LibraryContent, LibraryLink};
 use jian_ops_schema::PenDocument;
 
 pub use crate::library_files_error::LibraryReadError;
@@ -111,28 +111,47 @@ pub fn sync_libraries(state: &mut EditorState) -> Vec<String> {
     problems
 }
 
-/// Point the document at `document` (opened or saved there): relative
-/// links are rewritten so they still name the same files from the new
-/// folder.
-pub fn rebase_library_links(state: &mut EditorState, document: Option<&Path>) {
+/// The document's links as they must be written into a file at
+/// `document`: each still names the same library file, relative to the new
+/// folder (absolute when `document` is `None`). A relative link of a
+/// document with no folder yet has nothing to resolve against and is kept.
+pub fn links_for_document(state: &EditorState, document: Option<&Path>) -> Vec<LibraryLink> {
     let new_dir = document.and_then(Path::parent).map(absolutize);
-    let libraries = &mut state.editor_ui.libraries;
-    let old_dir = libraries.base_dir.clone().map(PathBuf::from);
-    if old_dir.is_some() && new_dir.as_deref() != old_dir.as_deref() {
-        for entry in &mut libraries.entries {
-            let file = resolve_library_path(old_dir.as_deref(), &entry.link.path);
-            entry.link.path = library_link_path(new_dir.as_deref(), &file);
-        }
-    } else if old_dir.is_none() {
-        // Links added before the first save are absolute; make them relative.
-        for entry in &mut libraries.entries {
-            if Path::new(&entry.link.path).is_absolute() {
-                entry.link.path =
-                    library_link_path(new_dir.as_deref(), Path::new(&entry.link.path));
+    let old_dir = state.editor_ui.libraries.base_dir.as_deref().map(Path::new);
+    state
+        .editor_ui
+        .libraries
+        .entries
+        .iter()
+        .map(|entry| {
+            let mut link = entry.link.clone();
+            let stored = Path::new(&link.path);
+            if old_dir.is_some() || stored.is_absolute() {
+                let file = resolve_library_path(old_dir, &link.path);
+                link.path = library_link_path(new_dir.as_deref(), &file);
             }
-        }
+            link
+        })
+        .collect()
+}
+
+/// Point the document at `document` (opened or saved there): links are
+/// rewritten with [`links_for_document`] and later ones resolve against the
+/// new folder.
+pub fn rebase_library_links(state: &mut EditorState, document: Option<&Path>) {
+    let links = links_for_document(state, document);
+    let libraries = &mut state.editor_ui.libraries;
+    for (entry, link) in libraries.entries.iter_mut().zip(links) {
+        entry.link.path = link.path;
     }
-    libraries.base_dir = new_dir.map(|dir| dir.to_string_lossy().into_owned());
+    libraries.base_dir = document
+        .and_then(Path::parent)
+        .map(|dir| absolutize(dir).to_string_lossy().into_owned());
+}
+
+/// `file` as an absolute, lexically cleaned link path.
+pub fn absolute_library_path(file: &Path) -> String {
+    absolutize(file).to_string_lossy().into_owned()
 }
 
 fn absolutize(path: &Path) -> PathBuf {

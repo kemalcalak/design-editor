@@ -62,6 +62,16 @@ impl EditorMeta {
             libraries: state.editor_ui.libraries.links(),
         }
     }
+
+    /// [`Self::from_state`] for a file written to `document`: library links
+    /// are made relative to that file's folder, so Save As into another
+    /// folder still names the same library files.
+    pub fn for_document(state: &de_editor_core::EditorState, document: &std::path::Path) -> Self {
+        Self {
+            libraries: crate::library_files::links_for_document(state, Some(document)),
+            ..Self::from_state(state)
+        }
+    }
 }
 
 /// Wire adapter for [`EditorMeta::scenario`].
@@ -327,7 +337,12 @@ pub fn apply_editor_meta(state: &mut de_editor_core::EditorState, meta: EditorMe
     state.editor_ui.preserve_authored_geometry = meta.preserve_authored_geometry;
     state.editor_ui.scenario = meta.scenario;
     state.editor_ui.pinned_style_guide = meta.pinned_style_guide;
-    state.editor_ui.libraries.set_links(meta.libraries);
+    // Links are only ever added by their commands, so metadata without any
+    // (a browser push, a writer that never saw them) keeps the current ones
+    // instead of erasing them. A fresh state starts with none anyway.
+    if !meta.libraries.is_empty() {
+        state.editor_ui.libraries.set_links(meta.libraries);
+    }
 }
 
 /// Apply saved metadata, or use the legacy reopen policy when it is absent.

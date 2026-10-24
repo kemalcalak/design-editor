@@ -104,7 +104,7 @@ fn attach_libraries(loaded: &mut LoadedEditorState, path: &std::path::Path) {
                 .map(|import| {
                     let file = de_pen_loader::resolve_library_path(folder, &import.path);
                     de_editor_core::LibraryLink::new(
-                        de_pen_loader::library_link_path(None, &file),
+                        de_pen_loader::absolute_library_path(&file),
                         Some(import.alias.clone()),
                     )
                 })

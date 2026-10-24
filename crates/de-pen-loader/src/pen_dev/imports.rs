@@ -56,7 +56,9 @@ pub(super) fn strip_alias_prefixes(value: &mut Value, imports: &[PenDevImport]) 
                 strip_alias_prefixes(item, imports);
             }
         }
-        Value::String(text) => {
+        // Only a whole binding (`$kit:brand`), never prose that happens
+        // to start with a dollar sign.
+        Value::String(text) if !text.contains(char::is_whitespace) => {
             if let Some(name) = text.strip_prefix('$') {
                 if let Some(rest) = strip_alias(name, imports) {
                     *text = format!("${rest}");
