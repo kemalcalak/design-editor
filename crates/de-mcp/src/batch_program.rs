@@ -101,31 +101,9 @@ pub(crate) fn run_batch_design_program(
         .map(|raw| matches!(raw.trim(), "true" | "1"))
         .unwrap_or(false);
     let lines = split_operations(operations);
-    let mut ctx = ProgramCtx {
-        sim: snapshot.clone(),
-        page_id: page_id.clone(),
-        bindings: BTreeMap::new(),
-        alias: BTreeMap::new(),
-        results: Vec::new(),
-        commands: Vec::new(),
-        post_process,
-        auto_seq: 0,
-        current_line: 0,
-        explicitly_sized_append_lines: explicitly_sized_append_lines(&lines),
-        replaceable_empty_root_ids: Vec::new(),
-        id_high_water: 0,
-    };
-    // Pin the sim's active page to the requested page so sim READS
-    // (path lookups, node counts) see the same children every emitted
-    // command targets via its `page_id` field. An unknown page id is
-    // left to per-command apply rejection (consistent per-line errors).
-    if let Some(raw) = page_id.as_deref() {
-        if let Some(index) = resolve_page_index(&ctx.sim, raw) {
-            let _ = ctx.sim.apply(EditorCommand::SetActivePage {
-                index: index as u32,
-            });
-        }
-    }
+    let mut ctx = ProgramCtx::new(snapshot, page_id);
+    ctx.post_process = post_process;
+    ctx.explicitly_sized_append_lines = explicitly_sized_append_lines(&lines);
     // Only roots that were empty BEFORE this program began are starter
     // placeholders. An empty root inserted by an earlier line is a real
     // sibling screen, not a new placeholder for the next I(null, ...) line.
@@ -276,6 +254,37 @@ pub(crate) struct ProgramCtx {
 }
 
 impl ProgramCtx {
+    /// A context simulating on a clone of `snapshot`, its active page pinned
+    /// to `page_id` so sim READS (path lookups, node counts) see the same
+    /// children every emitted command targets via its `page_id` field. An
+    /// unknown page id is left to per-command apply rejection (consistent
+    /// per-line errors).
+    pub(crate) fn new(snapshot: &EditorState, page_id: Option<String>) -> Self {
+        let mut sim = snapshot.clone();
+        if let Some(index) = page_id
+            .as_deref()
+            .and_then(|raw| resolve_page_index(&sim, raw))
+        {
+            let _ = sim.apply(EditorCommand::SetActivePage {
+                index: index as u32,
+            });
+        }
+        Self {
+            sim,
+            page_id,
+            bindings: BTreeMap::new(),
+            alias: BTreeMap::new(),
+            results: Vec::new(),
+            commands: Vec::new(),
+            post_process: false,
+            auto_seq: 0,
+            current_line: 0,
+            explicitly_sized_append_lines: BTreeSet::new(),
+            replaceable_empty_root_ids: Vec::new(),
+            id_high_water: 0,
+        }
+    }
+
     /// Emit `cmd` AND apply it to the sim. The sim apply is the line's
     /// final validation gate — the host will run the same code.
     pub(crate) fn emit(&mut self, cmd: EditorCommand, failure: &str) -> Result<()> {
@@ -326,8 +335,9 @@ impl ProgramCtx {
     }
 }
 
-/// TS `executeLine` — one DSL operation.
-fn execute_line(line: &str, ctx: &mut ProgramCtx) -> Result<()> {
+/// TS `executeLine` — one DSL operation. Also the write path of the
+/// `execute` script tool (`script_execute.rs`), one call per operation.
+pub(crate) fn execute_line(line: &str, ctx: &mut ProgramCtx) -> Result<()> {
     // Strip a trailing statement/list separator before the grammar sees the
     // line: the patterns below all anchor on `\)$`, so one stray `,` makes
     // the operation unparsable. A model that reaches for a separator writes
