@@ -94,7 +94,8 @@ fn composite_layer_bridge_is_bounded_and_never_degrades_to_plain_save() {
         + start;
     let method = &bridge[start..end];
     assert!(method.contains("paint.setAlphaf("));
-    assert!(method.contains("paint.setBlendMode("));
+    // `applyBlend` sets a built-in blend mode or a linear runtime blender.
+    assert!(method.contains("applyBlend(paint, blendMode)"));
     assert!(method.contains("canvas.saveLayer(paint, CK.LTRBRect("));
     assert!(method.contains("paint.delete()"));
     assert!(!method.contains("canvas.save();"));
