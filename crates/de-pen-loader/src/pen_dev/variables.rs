@@ -120,7 +120,7 @@ impl Variables {
     /// The variable's value under `theme`, matched with the canonical
     /// resolver's rule (`variables_resolve::resolve_themed_value`): the most
     /// specific entry whose axes all hold the active values, else the first.
-    fn value(&self, name: &str, theme: &Theme) -> Option<Value> {
+    pub(super) fn value(&self, name: &str, theme: &Theme) -> Option<Value> {
         let value = self.table.get(name)?.get("value")?;
         let Value::Array(entries) = value else {
             return Some(value.clone());
@@ -294,7 +294,8 @@ fn resolve_value(
             true
         }
         Value::Object(obj) => {
-            // Shader and mesh paints are dropped with their references.
+            // Mesh paints are dropped with their references; shader paints
+            // resolve their uniforms in `shader.rs`.
             if matches!(
                 obj.get("type").and_then(Value::as_str),
                 Some("shader" | "mesh_gradient")

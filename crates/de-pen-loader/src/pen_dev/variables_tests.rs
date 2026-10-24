@@ -85,7 +85,7 @@ fn fixed_values_are_counted_per_field_and_shader_uniforms_are_not() {
     assert_eq!(count("spacing variable (fixed value)"), Some(5));
     assert_eq!(count("corner radius variable (fixed value)"), Some(1));
     assert_eq!(count("icon variable (fixed value)"), Some(2));
-    assert_eq!(count("shader fill"), Some(1));
+    assert_eq!(count("shader fill (GLSL file missing)"), Some(1));
     assert_eq!(count("paint variable (fixed value)"), None);
 }
 

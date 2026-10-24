@@ -9,7 +9,7 @@ use std::rc::Rc;
 use serde_json::{Map, Value};
 
 use super::variables::{self, Theme, Variables};
-use super::{paint, AssetReader, PenDevReport};
+use super::{paint, shader, AssetReader, PenDevReport};
 
 /// pen.dev node kinds with no canonical equivalent. They are removed with
 /// their subtree and counted in the report.
@@ -33,6 +33,8 @@ pub(super) struct Ctx<'a> {
     /// Table id → data URL, written to the document's `images` table.
     pub(super) image_table: Map<String, Value>,
     pub(super) variables: Variables,
+    /// GLSL files and SkSL compile results of the shader paints.
+    pub(super) shaders: shader::ShaderCache,
 }
 
 impl<'a> Ctx<'a> {
@@ -47,6 +49,7 @@ impl<'a> Ctx<'a> {
             images: HashMap::new(),
             image_table: Map::new(),
             variables,
+            shaders: shader::ShaderCache::default(),
         }
     }
 }
@@ -149,9 +152,9 @@ fn convert_node(
     convert_visibility(map, ctx.report);
     convert_layout_position(map);
     paint::convert_blend_mode(map, ctx.report);
-    paint::convert_fill_key(map, ctx);
-    paint::convert_stroke(map, role, ctx);
-    paint::convert_effects(map, ctx.report);
+    paint::convert_fill_key(map, theme, ctx);
+    paint::convert_stroke(map, role, theme, ctx);
+    paint::convert_effects(map, theme, ctx);
 }
 
 /// pen.dev allows `reusable: true` on any node kind; the canonical schema

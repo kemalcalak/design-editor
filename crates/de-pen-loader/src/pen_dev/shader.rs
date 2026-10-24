@@ -1,0 +1,273 @@
+//! pen.dev `shader` fills and effects → canonical SkSL shader paints.
+//!
+//! A pen.dev shader paint names a GLSL file next to the document
+//! (`"url": "shaders/scene.glsl?v=6"`) and its uniform values. The file is
+//! read once per document, translated per paint ([`super::glsl`]: the
+//! uniform values decide which vectors are colours and what a texture
+//! reads), and the SkSL is compile-checked where Skia is linked. A shader
+//! that cannot be read, translated or compiled is dropped and reported, as
+//! before this conversion existed.
+//!
+//! Uniform values: numbers and arrays as written, colours as hex strings,
+//! `$variable` references resolved for the node's theme (canonical shader
+//! uniforms cannot hold a reference, so the binding is not kept live), a
+//! missing value from the GLSL `@default`, else zero / black.
+
+use std::collections::HashMap;
+use std::rc::Rc;
+
+use serde_json::{json, Map, Value};
+
+use super::glsl::{self, Slot, Stage, Texture, UserUniform};
+use super::images;
+use super::nodes::Ctx;
+use super::variables::Theme;
+
+/// GLSL sources and compile results already seen in this conversion.
+#[derive(Default)]
+pub(super) struct ShaderCache {
+    /// Relative path → source text (`None` once known missing).
+    sources: HashMap<String, Option<Rc<str>>>,
+    /// Image texture URL → `data:` URL (`None` once known missing).
+    images: HashMap<String, Option<String>>,
+    /// SkSL → whether it compiled.
+    #[cfg(feature = "sksl-check")]
+    compiled: HashMap<String, bool>,
+}
+
+/// Convert one enabled pen.dev shader paint, or `None` (reported) when it
+/// cannot be carried over. `size` is the node's numeric box, if known.
+pub(super) fn convert(
+    mut obj: Map<String, Value>,
+    stage: Stage,
+    size: Option<[f64; 2]>,
+    theme: &Theme,
+    ctx: &mut Ctx<'_>,
+) -> Option<Value> {
+    let (missing, compile_failed) = match stage {
+        Stage::Fill => (
+            "shader fill (GLSL file missing)",
+            "shader fill (SkSL compile failed)",
+        ),
+        Stage::Effect => (
+            "shader effect (GLSL file missing)",
+            "shader effect (SkSL compile failed)",
+        ),
+    };
+    let Some(source) = obj
+        .remove("url")
+        .and_then(|url| url.as_str().and_then(|url| read_source(url, ctx)))
+    else {
+        ctx.report.note(missing);
+        return None;
+    };
+    let values = resolve_values(obj.remove("uniforms"), theme, ctx);
+    let translation = match glsl::translate(&source, stage, &values) {
+        Ok(translation) => translation,
+        Err(error) => {
+            ctx.report.note(error.label(stage));
+            return None;
+        }
+    };
+    if !compiles(&translation.sksl, ctx) {
+        ctx.report.note(compile_failed);
+        return None;
+    }
+    let mut uniforms = Map::new();
+    let [width, height] = size.unwrap_or([1.0, 1.0]);
+    // Bound to the node box at render time; written so `fragCoord` maps
+    // onto it (`runtime_shader_local_matrix`).
+    uniforms.insert("size".to_owned(), json!([width, height]));
+    for user in &translation.uniforms {
+        if let Some(value) = uniform_value(user, values.get(&user.glsl_name), ctx) {
+            uniforms.insert(user.sksl_name.clone(), value);
+        }
+    }
+    let mut out = Map::new();
+    out.insert("type".to_owned(), Value::String("shader".to_owned()));
+    out.insert("sksl".to_owned(), Value::String(translation.sksl));
+    out.insert("uniforms".to_owned(), Value::Object(uniforms));
+    if stage == Stage::Fill {
+        for key in ["opacity", "blendMode"] {
+            if let Some(value) = obj.remove(key) {
+                out.insert(key.to_owned(), value);
+            }
+        }
+    }
+    Some(Value::Object(out))
+}
+
+/// The GLSL text at `url` (query and fragment ignored), read once.
+fn read_source(url: &str, ctx: &mut Ctx<'_>) -> Option<Rc<str>> {
+    let relative = images::relative_path(url);
+    if let Some(cached) = ctx.shaders.sources.get(relative) {
+        return cached.clone();
+    }
+    let source: Option<Rc<str>> = images::is_inside_document_folder(relative)
+        .then(|| (ctx.assets)(relative))
+        .flatten()
+        .and_then(|bytes| String::from_utf8(bytes).ok())
+        .map(Rc::from);
+    ctx.shaders
+        .sources
+        .insert(relative.to_owned(), source.clone());
+    source
+}
+
+/// The pen.dev `uniforms` map with every `$variable` replaced by its value
+/// for `theme`; an unknown variable is removed so the `@default` applies.
+fn resolve_values(uniforms: Option<Value>, theme: &Theme, ctx: &mut Ctx<'_>) -> Map<String, Value> {
+    let Some(Value::Object(mut uniforms)) = uniforms else {
+        return Map::new();
+    };
+    let mut unresolved = Vec::new();
+    for (name, value) in uniforms.iter_mut() {
+        // A variable may name another one; follow a short chain.
+        let mut hops = 0;
+        while let Some(reference) = value.as_str().and_then(|s| s.strip_prefix('$')) {
+            match ctx.variables.value(reference, theme).filter(|_| hops < 8) {
+                Some(resolved) => {
+                    *value = resolved;
+                    hops += 1;
+                }
+                None => {
+                    unresolved.push(name.clone());
+                    break;
+                }
+            }
+        }
+        if hops > 0 && !unresolved.contains(name) {
+            ctx.report.note("shader uniform variable (fixed value)");
+        }
+    }
+    for name in unresolved {
+        uniforms.remove(&name);
+        ctx.report.note("unresolved variable");
+    }
+    uniforms
+}
+
+#[cfg(feature = "sksl-check")]
+fn compiles(sksl: &str, ctx: &mut Ctx<'_>) -> bool {
+    if let Some(&compiled) = ctx.shaders.compiled.get(sksl) {
+        return compiled;
+    }
+    let compiled = skia_safe::RuntimeEffect::make_for_shader(sksl, None).is_ok();
+    ctx.shaders.compiled.insert(sksl.to_owned(), compiled);
+    compiled
+}
+
+/// Without Skia (the CanvasKit web build, the CLI) the translation is
+/// trusted; a program the renderer then rejects paints its fallback colour.
+#[cfg(not(feature = "sksl-check"))]
+fn compiles(_sksl: &str, _ctx: &mut Ctx<'_>) -> bool {
+    true
+}
+
+/// The canonical value for `user`: the paint's value, else the GLSL
+/// `@default`, else zero / black. `None` leaves the uniform unbound (an
+/// image texture that cannot be read, a node / backdrop texture).
+fn uniform_value(user: &UserUniform, value: Option<&Value>, ctx: &mut Ctx<'_>) -> Option<Value> {
+    let default = user.default.as_deref();
+    match &user.slot {
+        Slot::Float => {
+            let n = value
+                .and_then(number)
+                .or_else(|| default.and_then(|d| d.trim().parse::<f64>().ok()))
+                .unwrap_or(0.0);
+            Some(json!(n))
+        }
+        Slot::Vector(len) => {
+            let numbers = value
+                .and_then(numbers)
+                .or_else(|| default.map(default_numbers))
+                .unwrap_or_default();
+            let mut numbers: Vec<f64> = match numbers.as_slice() {
+                [single] => vec![*single; *len],
+                _ => numbers,
+            };
+            numbers.resize(*len, 0.0);
+            Some(json!(numbers))
+        }
+        Slot::Colour => {
+            let colour = value
+                .and_then(colour)
+                .or_else(|| default.and_then(|d| colour(&Value::String(d.trim().to_owned()))))
+                .unwrap_or_else(|| "#000000".to_owned());
+            Some(Value::String(colour))
+        }
+        Slot::Texture(Texture::Image(url)) => image_source(url, ctx).map(Value::String),
+        Slot::Texture(Texture::Object | Texture::Background) => None,
+    }
+}
+
+fn number(value: &Value) -> Option<f64> {
+    match value {
+        Value::Number(n) => n.as_f64(),
+        Value::Bool(b) => Some(f64::from(u8::from(*b))),
+        Value::String(s) => s.trim().parse().ok(),
+        _ => None,
+    }
+}
+
+fn numbers(value: &Value) -> Option<Vec<f64>> {
+    match value {
+        Value::Array(items) => items.iter().map(number).collect(),
+        Value::String(s) => Some(default_numbers(s)),
+        other => number(other).map(|n| vec![n]),
+    }
+}
+
+/// `@default 0.5, 1` → `[0.5, 1.0]`; unparsable parts read as 0.
+fn default_numbers(text: &str) -> Vec<f64> {
+    text.trim()
+        .trim_start_matches(['[', '('])
+        .trim_end_matches([']', ')'])
+        .split([',', ' '])
+        .filter(|part| !part.trim().is_empty())
+        .map(|part| part.trim().parse().unwrap_or(0.0))
+        .collect()
+}
+
+/// A colour uniform value as a hex string: a colour string as written
+/// when the loader can parse it, a `[r, g, b(, a)]` array in 0..1 as hex.
+fn colour(value: &Value) -> Option<String> {
+    match value {
+        Value::String(s) => crate::style_payload::parse_color(s).map(|_| s.trim().to_owned()),
+        Value::Array(_) => {
+            let parts = numbers(value)?;
+            if !(3..=4).contains(&parts.len()) {
+                return None;
+            }
+            let byte = |v: f64| (v.clamp(0.0, 1.0) * 255.0).round() as u8;
+            let mut hex = String::from("#");
+            for part in &parts {
+                hex.push_str(&format!("{:02x}", byte(*part)));
+            }
+            Some(hex)
+        }
+        _ => None,
+    }
+}
+
+/// An image texture's source for a shader image child: URLs as written, a
+/// relative file inlined as a `data:` URL (shader image uniforms take no
+/// `op-image:` table reference).
+fn image_source(url: &str, ctx: &mut Ctx<'_>) -> Option<String> {
+    if url.starts_with("data:") || url.starts_with("http://") || url.starts_with("https://") {
+        return Some(url.to_owned());
+    }
+    if let Some(cached) = ctx.shaders.images.get(url) {
+        return cached.clone();
+    }
+    let source = images::file_data_url(url, ctx.assets);
+    if source.is_none() {
+        ctx.report.note_missing_image(url);
+    }
+    ctx.shaders.images.insert(url.to_owned(), source.clone());
+    source
+}
+
+#[cfg(test)]
+#[path = "shader_tests.rs"]
+mod tests;
