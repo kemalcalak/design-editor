@@ -6,13 +6,14 @@
 //! painter uses (`canvas_viewport_paint::paint_text_node` calls it
 //! too), so caret xy, selection rects, and click-to-caret hit-testing
 //! all agree with the painted glyphs: same CJK-aware wrap
-//! (`canvas_viewport_overlay::wrap_text`), same wrap-width tolerance,
+//! (`canvas_text_wrap::wrap_text`, in the node's own face), same wrap-width tolerance,
 //! same per-line alignment, same letter-spacing advance model.
 //!
 //! All geometry is in DOCUMENT space (the painter applies the
 //! viewport transform as a canvas transform); the host converts
 //! screen presses to doc points before calling [`TextEditLayout::offset_at_point`].
 
+use super::canvas_text_wrap::TextFace;
 use crate::layout_scene::{SceneNode, SceneTextAlign};
 use crate::{Point2D, Rect, RenderBackend};
 use jian_core::text_input::prev_char_boundary;
@@ -30,6 +31,10 @@ pub struct TextEditLayout {
     pub font_size: f32,
     /// Resolved CSS-style weight (painter default applied).
     pub weight: u16,
+    /// Font family the lines are measured in (painter default applied).
+    pub family: String,
+    /// Whether the node is set in italics.
+    pub italic: bool,
     /// Line advance in doc px (`font_size × line-height factor`).
     pub line_h: f32,
     /// Extra tracking between glyphs (doc px).
@@ -77,13 +82,23 @@ pub fn text_edit_layout(backend: &mut dyn RenderBackend, node: &SceneNode) -> Te
     } else {
         0.0
     };
+    let family = if node.font_family.trim().is_empty() {
+        "system-ui"
+    } else {
+        node.font_family.as_str()
+    };
+    let face = TextFace {
+        family,
+        weight,
+        italic: node.italic,
+    };
     let lines: Vec<String> = if let Some(doc_wrap_width) = wrap_width_doc {
-        super::canvas_viewport_overlay::wrap_text(
+        super::canvas_text_wrap::wrap_text(
             backend,
             text,
             font_size,
             doc_wrap_width,
-            weight,
+            face,
             letter_spacing,
         )
     } else {
@@ -99,7 +114,7 @@ pub fn text_edit_layout(backend: &mut dyn RenderBackend, node: &SceneNode) -> Te
     if !node.text_wrap && box_w > 0.0 {
         let widest = lines
             .iter()
-            .map(|l| measure_line_width(backend, l, font_size, weight, letter_spacing))
+            .map(|l| measure_line_width(backend, l, font_size, face, letter_spacing))
             .fold(0.0_f32, f32::max);
         if widest > box_w {
             // Floor the scale so the text never becomes unreadable.
@@ -113,6 +128,8 @@ pub fn text_edit_layout(backend: &mut dyn RenderBackend, node: &SceneNode) -> Te
         line_starts,
         font_size,
         weight,
+        family: family.to_owned(),
+        italic: node.italic,
         line_h: font_size * line_height,
         letter_spacing,
         align_width: wrap_width_doc.unwrap_or(node.bounds.size.x),
@@ -129,19 +146,28 @@ const MIN_SHRINK_SCALE: f32 = 0.35;
 
 /// Measure a painted line's full width — substring advance plus
 /// letter-spacing BETWEEN glyphs (mirrors the painter).
-pub fn measure_line_width(
+pub(crate) fn measure_line_width(
     backend: &mut dyn RenderBackend,
     line: &str,
     font_size: f32,
-    weight: u16,
+    face: TextFace<'_>,
     letter_spacing: f32,
 ) -> f32 {
-    let base = backend.measure_text_weighted(line, font_size, weight);
+    let base = face.measure(backend, line, font_size);
     let extra = line.chars().count().saturating_sub(1) as f32 * letter_spacing;
     base + extra
 }
 
 impl TextEditLayout {
+    /// The face the lines were laid out in.
+    fn face(&self) -> TextFace<'_> {
+        TextFace {
+            family: &self.family,
+            weight: self.weight,
+            italic: self.italic,
+        }
+    }
+
     /// Byte `(start, end)` range of each painted line within the
     /// content — the contract `text_edit_caret_vertical` consumes.
     pub fn line_ranges(&self) -> Vec<(usize, usize)> {
@@ -177,7 +203,7 @@ impl TextEditLayout {
                     backend,
                     line,
                     self.font_size,
-                    self.weight,
+                    self.face(),
                     self.letter_spacing,
                 );
                 self.origin.x + (self.align_width - line_w).max(0.0) / 2.0
@@ -187,7 +213,7 @@ impl TextEditLayout {
                     backend,
                     line,
                     self.font_size,
-                    self.weight,
+                    self.face(),
                     self.letter_spacing,
                 );
                 self.origin.x + (self.align_width - line_w).max(0.0)
@@ -207,16 +233,15 @@ impl TextEditLayout {
         }
         let prefix = &line[..offset];
         if self.letter_spacing.abs() < f32::EPSILON {
-            backend.measure_text_weighted(prefix, self.font_size, self.weight)
+            self.face().measure(backend, prefix, self.font_size)
         } else {
             let mut w = 0.0;
             for ch in prefix.chars() {
                 let mut buf = [0u8; 4];
-                w += backend.measure_text_weighted(
-                    ch.encode_utf8(&mut buf),
-                    self.font_size,
-                    self.weight,
-                ) + self.letter_spacing;
+                w += self
+                    .face()
+                    .measure(backend, ch.encode_utf8(&mut buf), self.font_size)
+                    + self.letter_spacing;
             }
             // Tracking belongs between glyphs. Internal caret boundaries
             // include the following gap; the end boundary stops at the
@@ -600,5 +625,20 @@ mod tests {
         let layout = text_edit_layout(&mut b, &text_node("", 200.0));
         assert_eq!(layout.lines, vec![String::new()]);
         assert_eq!(layout.caret_position(&mut b, 0), (100.0, 50.0));
+    }
+
+    #[test]
+    fn wrap_and_caret_measure_in_the_node_family() {
+        // The named family measures 40% wider than the default face: the
+        // line fits blind (121 px) but not in its own family (169 px).
+        let mut b = crate::widgets::test_family_gap_backend::FamilyGapBackend::default();
+        let mut node = text_node("hello world", 130.0);
+        node.font_family = "Wide Sans".to_owned();
+        node.text_wrap = true;
+        let layout = text_edit_layout(&mut b, &node);
+        assert_eq!(layout.lines, vec!["hello ", "world"]);
+        let (end_x, _) = layout.caret_position(&mut b, 5);
+        let family_width = b.measure_text_family("hello", 20.0, "Wide Sans");
+        assert!((end_x - 100.0 - family_width).abs() < 0.01, "{end_x}");
     }
 }
