@@ -89,6 +89,17 @@ impl<'a> RenderBackend for NativeFrameBackend<'a> {
         self.inner.push_backdrop_blur_layer(self.canvas, sigma);
     }
 
+    fn push_shader_effect_layer(
+        &mut self,
+        rect: Rect,
+        sksl: &str,
+        uniforms: &[(&str, &[f32])],
+        backdrop: bool,
+    ) {
+        self.inner
+            .push_shader_effect_layer(self.canvas, rect, sksl, uniforms, backdrop);
+    }
+
     fn restore(&mut self) {
         self.inner.restore(self.canvas);
     }

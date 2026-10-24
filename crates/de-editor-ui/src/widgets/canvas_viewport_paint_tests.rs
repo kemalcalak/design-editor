@@ -29,3 +29,6 @@ mod background_blur_tests;
 
 #[path = "canvas_viewport_paint_tests/effect_lod_tests.rs"]
 mod effect_lod_tests;
+
+#[path = "canvas_viewport_paint_tests/shader_effect_tests.rs"]
+mod shader_effect_tests;

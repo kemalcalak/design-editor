@@ -22,6 +22,7 @@ pub(crate) fn apply_paint_option_action(state: &mut EditorState, action: &Proper
                 EffectKind::InnerShadow => state.add_inner_shadow_to_selected(),
                 EffectKind::LayerBlur => state.add_layer_blur_to_selected(),
                 EffectKind::BackgroundBlur => state.add_background_blur_to_selected(),
+                EffectKind::Shader => state.add_shader_effect_to_selected(),
             };
             state.editor_ui.close_effect_add_picker();
         }

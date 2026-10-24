@@ -31,6 +31,8 @@ enum EffectKind {
     },
     Blur,
     BackgroundBlur,
+    /// SkSL post-process (#6); its only required field is `sksl`.
+    Shader,
 }
 
 /// Normalize the `effects` field of a node object in place.
@@ -90,6 +92,7 @@ fn normalize_effect(value: &mut Value) {
         EffectKind::Shadow { .. } => "shadow",
         EffectKind::Blur => "blur",
         EffectKind::BackgroundBlur => "background_blur",
+        EffectKind::Shader => "shader",
     };
     obj.insert("type".into(), Value::String(tag.into()));
     match kind {
@@ -100,6 +103,7 @@ fn normalize_effect(value: &mut Value) {
             normalize_shadow_body(obj);
         }
         EffectKind::Blur | EffectKind::BackgroundBlur => normalize_blur_body(obj),
+        EffectKind::Shader => normalize_shader_body(obj),
     }
 }
 
@@ -114,6 +118,11 @@ fn canonical_kind(obj: &Map<String, Value>) -> Option<EffectKind> {
         .filter(|c| c.is_ascii_alphanumeric())
         .map(|c| c.to_ascii_lowercase())
         .collect();
+    // A shader effect is named outright; test it before `background`, which
+    // a "background shader" spelling also contains.
+    if canon.contains("shader") {
+        return Some(EffectKind::Shader);
+    }
     // Background/backdrop blur must be tested before the plain `blur`
     // substring, which it also contains.
     if canon.contains("background") || canon.contains("backdrop") {
@@ -147,6 +156,11 @@ fn infer_kind(obj: &Map<String, Value>) -> Option<EffectKind> {
         "dy",
         "color",
     ];
+    // Only a shader carries a program; test it before the shadow keys so a
+    // stray `color` uniform name never turns it into a shadow.
+    if obj.contains_key("sksl") {
+        return Some(EffectKind::Shader);
+    }
     if SHADOW_ONLY.iter().any(|key| obj.contains_key(*key)) {
         return Some(EffectKind::Shadow { inner: false });
     }
@@ -186,6 +200,21 @@ fn normalize_blur_body(obj: &mut Map<String, Value>) {
         &["blur", "blurRadius", "amount", "size"],
         0.0,
     );
+    normalize_flag(obj, "visible");
+}
+
+/// Move a shader effect's source to `sksl` from the names models borrow
+/// from shader fills and GLSL tooling. A body with no source at all is left
+/// to fail loudly: there is no identity program to invent.
+fn normalize_shader_body(obj: &mut Map<String, Value>) {
+    for alias in ["source", "code", "shader", "glsl"] {
+        let candidate = obj.remove(alias);
+        if !obj.contains_key("sksl") {
+            if let Some(Value::String(source)) = candidate {
+                obj.insert("sksl".into(), Value::String(source));
+            }
+        }
+    }
     normalize_flag(obj, "visible");
 }
 

@@ -477,6 +477,17 @@ impl RenderBackend for BaselineAdjustingBackend<'_> {
         self.inner.push_backdrop_blur_layer(sigma);
     }
 
+    fn push_shader_effect_layer(
+        &mut self,
+        rect: Rect,
+        sksl: &str,
+        uniforms: &[(&str, &[f32])],
+        backdrop: bool,
+    ) {
+        self.inner
+            .push_shader_effect_layer(rect, sksl, uniforms, backdrop);
+    }
+
     fn restore(&mut self) {
         self.inner.restore();
     }

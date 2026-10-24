@@ -264,6 +264,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "stroke.center" => "मध्य",
         "stroke.outside" => "बाहर",
         "effects.addInnerShadow" => "आंतरिक छाया",
+        "effects.addShader" => "शेडर",
         "image.stretch" => "खींचें",
         "fill.presetNoise" => "नॉइज़",
         "fill.presetFade" => "फ़ेड",

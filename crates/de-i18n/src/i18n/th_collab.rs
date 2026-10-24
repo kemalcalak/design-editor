@@ -264,6 +264,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "stroke.center" => "กึ่งกลาง",
         "stroke.outside" => "ด้านนอก",
         "effects.addInnerShadow" => "เงาด้านใน",
+        "effects.addShader" => "เชดเดอร์",
         "image.stretch" => "ยืด",
         "fill.presetNoise" => "นอยส์",
         "fill.presetFade" => "จางหาย",

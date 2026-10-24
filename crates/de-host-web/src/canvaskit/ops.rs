@@ -310,6 +310,29 @@ pub(super) fn fill_round_rect_shader_per_corner(
     );
 }
 
+/// Shader-effect layer (#6); the bridge's `pushShaderEffectLayer` pairs
+/// with the next balancing `restore`.
+pub(super) fn push_shader_effect_layer(
+    ck: &OpCk,
+    rect: Rect,
+    sksl: &str,
+    uniforms: &[(&str, &[f32])],
+    backdrop: bool,
+) {
+    let (names, values, arities) = flatten_shader_uniforms(uniforms);
+    ck.push_shader_effect_layer(
+        rect.origin.x,
+        rect.origin.y,
+        rect.size.x,
+        rect.size.y,
+        sksl,
+        &names,
+        &values,
+        &arities,
+        backdrop,
+    );
+}
+
 pub(super) fn stroke_round_rect(ck: &OpCk, rect: Rect, radius: f32, color: Color, width: f32) {
     ck.stroke_round_rect(
         rect.origin.x,

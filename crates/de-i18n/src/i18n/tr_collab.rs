@@ -264,6 +264,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "stroke.center" => "Ortada",
         "stroke.outside" => "Dışarıda",
         "effects.addInnerShadow" => "İç gölge",
+        "effects.addShader" => "Gölgelendirici",
         "image.stretch" => "Uzat",
         "fill.presetNoise" => "Gürültü",
         "fill.presetFade" => "Solma",

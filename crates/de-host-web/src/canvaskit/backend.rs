@@ -688,6 +688,15 @@ impl RenderBackend for CanvasKitBackend {
     fn push_backdrop_blur_layer(&mut self, sigma: f32) {
         self.ck.push_backdrop_blur_layer(sigma);
     }
+    fn push_shader_effect_layer(
+        &mut self,
+        rect: Rect,
+        sksl: &str,
+        uniforms: &[(&str, &[f32])],
+        backdrop: bool,
+    ) {
+        ops::push_shader_effect_layer(&self.ck, rect, sksl, uniforms, backdrop);
+    }
     fn restore(&mut self) {
         self.ck.restore();
     }

@@ -138,6 +138,7 @@ pub mod scene_vars;
 pub mod selection;
 pub mod selection_flip;
 pub mod selection_resolve;
+pub mod shader_effects;
 pub mod shader_images;
 pub mod shader_presets;
 pub mod state;

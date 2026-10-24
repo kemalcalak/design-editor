@@ -264,6 +264,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "stroke.center" => "Giữa",
         "stroke.outside" => "Bên ngoài",
         "effects.addInnerShadow" => "Bóng trong",
+        "effects.addShader" => "Shader",
         "image.stretch" => "Kéo giãn",
         "fill.presetNoise" => "Nhiễu",
         "fill.presetFade" => "Mờ dần",

@@ -126,7 +126,8 @@ impl EditorState {
                         jian_ops_schema::style::PenEffect::Blur(_)
                         | jian_ops_schema::style::PenEffect::BackgroundBlur(_),
                     ) => crate::EffectField::Radius,
-                    None => return false,
+                    // A shader effect has no radius row.
+                    Some(jian_ops_schema::style::PenEffect::Shader(_)) | None => return false,
                 };
                 return self.cmd_set_effect_param(
                     &sel,

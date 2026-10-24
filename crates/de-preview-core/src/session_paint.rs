@@ -392,7 +392,7 @@ impl PreviewSession {
             node.effects = node
                 .effects
                 .iter()
-                .copied()
+                .cloned()
                 .map(|effect| scale_effect_color(effect, existing_factor))
                 .collect();
         }

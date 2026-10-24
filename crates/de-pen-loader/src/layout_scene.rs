@@ -323,6 +323,11 @@ pub(crate) fn node_payload_to_scene(
             .chain(crate::effects::background_blur_effect_from_payload(
                 node.background_blur,
             ))
+            .chain(
+                node.shader_effects
+                    .iter()
+                    .map(|e| crate::effects_shader::shader_effect_to_scene(e, [node.w, node.h])),
+            )
             .map(|e| scale_effect_opacity(e, paint_opacity))
             .collect(),
         hidden: node.hidden,
@@ -408,6 +413,8 @@ fn scale_effect_opacity(e: Effect, k: f32) -> Effect {
         // Blur (layer or backdrop) has no colour to fold node opacity into.
         Effect::Blur(b) => Effect::Blur(b),
         Effect::BackgroundBlur { radius } => Effect::BackgroundBlur { radius },
+        // A shader pass reads the node's (already dimmed) output.
+        Effect::Shader(pass) => Effect::Shader(pass),
     }
 }
 

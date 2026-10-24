@@ -266,6 +266,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "stroke.center" => "가운데",
         "stroke.outside" => "바깥쪽",
         "effects.addInnerShadow" => "내부 그림자",
+        "effects.addShader" => "셰이더",
         "image.stretch" => "늘이기",
         "fill.presetNoise" => "노이즈",
         "fill.presetFade" => "페이드",

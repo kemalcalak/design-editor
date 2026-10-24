@@ -264,6 +264,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "stroke.center" => "По центру",
         "stroke.outside" => "Снаружи",
         "effects.addInnerShadow" => "Внутренняя тень",
+        "effects.addShader" => "Шейдер",
         "image.stretch" => "Растянуть",
         "fill.presetNoise" => "Шум",
         "fill.presetFade" => "Затухание",

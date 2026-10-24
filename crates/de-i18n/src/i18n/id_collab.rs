@@ -264,6 +264,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "stroke.center" => "Tengah",
         "stroke.outside" => "Luar",
         "effects.addInnerShadow" => "Bayangan dalam",
+        "effects.addShader" => "Shader",
         "image.stretch" => "Regangkan",
         "fill.presetNoise" => "Derau",
         "fill.presetFade" => "Pudar",

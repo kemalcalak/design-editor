@@ -351,6 +351,98 @@ export function opCkMakeRuntimeShaderForRect(
   }
 }
 
+// Row-major 3x3 matrix product `a * b`.
+export function opCkMat3Multiply(a, b) {
+  const out = new Array(9);
+  for (let r = 0; r < 3; r++) {
+    for (let c = 0; c < 3; c++) {
+      out[r * 3 + c] = a[r * 3] * b[c] + a[r * 3 + 1] * b[3 + c] + a[r * 3 + 2] * b[6 + c];
+    }
+  }
+  return out;
+}
+
+// Inverse of a row-major 3x3 matrix, or null when it is singular.
+export function opCkMat3Invert(m) {
+  const [a, b, c, d, e, f, g, h, i] = Array.from(m, Number);
+  const A = e * i - f * h;
+  const B = -(d * i - f * g);
+  const C = d * h - e * g;
+  const det = a * A + b * B + c * C;
+  if (!Number.isFinite(det) || Math.abs(det) < 1e-12) return null;
+  return [
+    A / det, -(b * i - c * h) / det, (b * f - c * e) / det,
+    B / det, (a * i - c * g) / det, -(a * f - c * d) / det,
+    C / det, -(a * h - b * g) / det, (a * e - b * d) / det,
+  ];
+}
+
+// Integer device-pixel box `[l, t, r, b]` covering the rect `x, y, w, h`
+// under the total matrix `m`, clamped to a `maxW` x `maxH` surface; null
+// when nothing is left.
+export function opCkDeviceBounds(m, x, y, w, h, maxW, maxH) {
+  let l = Infinity;
+  let t = Infinity;
+  let r = -Infinity;
+  let b = -Infinity;
+  for (const [px, py] of [[x, y], [x + w, y], [x, y + h], [x + w, y + h]]) {
+    const z = m[6] * px + m[7] * py + m[8];
+    if (!(Math.abs(z) > 1e-12)) return null;
+    const dx = (m[0] * px + m[1] * py + m[2]) / z;
+    const dy = (m[3] * px + m[4] * py + m[5]) / z;
+    l = Math.min(l, dx); t = Math.min(t, dy); r = Math.max(r, dx); b = Math.max(b, dy);
+  }
+  const box = [
+    Math.max(0, Math.floor(l)), Math.max(0, Math.floor(t)),
+    Math.min(maxW, Math.ceil(r)), Math.min(maxH, Math.ceil(b)),
+  ];
+  if (!box.every(Number.isFinite) || box[2] <= box[0] || box[3] <= box[1]) return null;
+  return box;
+}
+
+// Shader effects (#6): the local matrix of a texture captured in device
+// pixels whose top-left is device `(dl, dt)`, as a child of a program with
+// local matrix `local` drawn under total matrix `total`. Maps image pixels
+// into the program's node-local space: local^-1 * total^-1 * T(dl, dt).
+export function opCkShaderEffectChildMatrix(total, local, dl, dt) {
+  const inverse = opCkMat3Invert(opCkMat3Multiply(total, local));
+  if (!inverse) return null;
+  return opCkMat3Multiply(inverse, [1, 0, dl, 0, 1, dt, 0, 0, 1]);
+}
+
+// Draw one shader-effect pass (#6) over the node box on `canvas` with
+// `childName` bound to `image` (device pixels starting at `dl, dt`); the
+// program's other children read transparent. `pass` carries the cache
+// `entry`, the rect and the flattened uniforms. Returns false when
+// CanvasKit refuses the program.
+export function opCkDrawShaderEffectPass(CK, canvas, pass, image, childName, dl, dt) {
+  const { entry, x, y, w, h, names, values, arities } = pass;
+  const local = opCkRuntimeEffectLocalMatrix(names, values, arities, x, y, w, h);
+  const childMatrix = opCkShaderEffectChildMatrix(canvas.getTotalMatrix(), local, dl, dt);
+  if (!childMatrix) return false;
+  const children = entry.children.map((name) => (name === childName
+    ? image.makeShaderOptions(
+      CK.TileMode.Decal, CK.TileMode.Decal, CK.FilterMode.Linear, CK.MipmapMode.None, childMatrix,
+    )
+    : CK.Shader.MakeColor(CK.TRANSPARENT, CK.ColorSpace.SRGB)));
+  let shader = null;
+  try {
+    shader = opCkMakeRuntimeShader(entry, names, values, arities, local, children);
+  } finally {
+    for (const child of children) if (child && child.delete) child.delete();
+  }
+  if (!shader) return false;
+  const paint = new CK.Paint();
+  paint.setShader(shader);
+  try {
+    canvas.drawRect(CK.XYWHRect(x, y, w, h), paint);
+  } finally {
+    paint.delete();
+    if (shader.delete) shader.delete();
+  }
+  return true;
+}
+
 // Build the row-major vertex lattice consumed by CanvasKit.MakeVertices.
 // Kept pure + exported so the geometry/index contract can run under Node
 // without booting a WebGL surface. CanvasKit indices are u16, so grids larger
@@ -409,8 +501,34 @@ export async function opCkInit(canvasId) {
   let surface = CK.MakeWebGLCanvasSurface(canvasId);
   if (!surface) throw new Error('CanvasKit: MakeWebGLCanvasSurface returned null');
   let canvas = surface.getCanvas();
+  // The surface `canvas` draws into: the window surface, or the offscreen
+  // one an object shader-effect pass redirects into (#6).
+  let drawSurface = surface;
+  const effectRedirects = [];
   const el = document.getElementById(canvasId);
   const runtimeEffects = opCkCreateRuntimeEffectCache(CK);
+  const drawShaderEffectPass = (pass, image, childName, dl, dt) =>
+    opCkDrawShaderEffectPass(CK, canvas, pass, image, childName, dl, dt);
+  // Close the object pass on top of `effectRedirects`: snapshot what the
+  // node painted offscreen and draw the program over it on the parent.
+  const finishObjectShaderEffect = () => {
+    const pass = effectRedirects.pop();
+    const image = pass.surface.makeImageSnapshot();
+    canvas = pass.parentCanvas;
+    drawSurface = pass.parentSurface;
+    try {
+      if (image && !drawShaderEffectPass(pass, image, 'object', pass.dl, pass.dt)) {
+        // Keep the node visible when the program can't be built.
+        canvas.save();
+        canvas.resetMatrix();
+        canvas.drawImage(image, pass.dl, pass.dt, null);
+        canvas.restore();
+      }
+    } finally {
+      if (image && image.delete) image.delete();
+      pass.surface.delete();
+    }
+  };
 
   const systemTypefaces = [];
   const systemTypefaceKeys = new Set();
@@ -2012,7 +2130,73 @@ export async function opCkInit(canvasId) {
       canvas.saveLayer(null, null, filter, 0, CK.TileMode.Clamp);
       if (filter.delete) filter.delete();
     },
-    restore() { canvas.restore(); },
+    // Shader effects (#6). CanvasKit exposes no runtime-shader image
+    // filter, so an object pass redirects the node's draws into an
+    // offscreen surface until the balancing restore() and then draws the
+    // program over the node box with `object` bound to that capture. A
+    // backdrop pass snapshots the current surface under the node box and
+    // draws the program with `background` bound to it before the node
+    // paints; content still inside an open saveLayer is not in that
+    // snapshot (known gap). Anything CanvasKit refuses is a plain save.
+    pushShaderEffectLayer(x, y, w, h, sksl, uniformNames, uniforms, uniformArities, backdrop) {
+      const entry = runtimeEffects.get(sksl);
+      const childName = backdrop ? 'background' : 'object';
+      const box = entry && entry.children.includes(childName)
+        ? opCkDeviceBounds(
+          canvas.getTotalMatrix(), x, y, w, h, drawSurface.width(), drawSurface.height(),
+        )
+        : null;
+      if (!box) {
+        canvas.save();
+        return;
+      }
+      const [dl, dt, dr, db] = box;
+      const pass = { entry, x, y, w, h, names: uniformNames, values: uniforms, arities: uniformArities };
+      if (backdrop) {
+        const image = drawSurface.makeImageSnapshot(Int32Array.of(dl, dt, dr, db));
+        canvas.save();
+        if (image) {
+          drawShaderEffectPass(pass, image, childName, dl, dt);
+          if (image.delete) image.delete();
+        }
+        return;
+      }
+      const offscreen = drawSurface.makeSurface({
+        width: dr - dl,
+        height: db - dt,
+        colorType: CK.ColorType.RGBA_8888,
+        alphaType: CK.AlphaType.Premul,
+        colorSpace: CK.ColorSpace.SRGB,
+      });
+      if (!offscreen) {
+        canvas.save();
+        return;
+      }
+      const offscreenCanvas = offscreen.getCanvas();
+      offscreenCanvas.clear(CK.TRANSPARENT);
+      offscreenCanvas.translate(-dl, -dt);
+      offscreenCanvas.concat(canvas.getTotalMatrix());
+      effectRedirects.push({
+        ...pass,
+        dl,
+        dt,
+        surface: offscreen,
+        canvas: offscreenCanvas,
+        depth: offscreenCanvas.getSaveCount(),
+        parentCanvas: canvas,
+        parentSurface: drawSurface,
+      });
+      canvas = offscreenCanvas;
+      drawSurface = offscreen;
+    },
+    restore() {
+      const top = effectRedirects[effectRedirects.length - 1];
+      if (top && canvas === top.canvas && canvas.getSaveCount() === top.depth) {
+        finishObjectShaderEffect();
+        return;
+      }
+      canvas.restore();
+    },
     translate(x, y) { canvas.translate(x, y); },
     scale(sx, sy) { canvas.scale(sx, sy); },
     rotate(deg, px, py) { canvas.rotate(deg, px, py); },
@@ -2020,8 +2204,11 @@ export async function opCkInit(canvasId) {
     resize(w, h) {
       el.width = w; el.height = h;
       try { surface.delete(); } catch (e) {}
+      // A resize mid-pass drops the open shader-effect redirects.
+      for (const pass of effectRedirects.splice(0)) pass.surface.delete();
       surface = CK.MakeWebGLCanvasSurface(canvasId);
       canvas = surface.getCanvas();
+      drawSurface = surface;
     },
     // Set the device-pixel-ratio used to supersample the offscreen text raster.
     // Called from Rust on mount + every display resize so glyph bitmaps stay

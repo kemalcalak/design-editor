@@ -592,6 +592,20 @@ extern "C" {
     pub(super) fn push_blend_layer(this: &OpCk, blend_mode: u8);
     #[wasm_bindgen(method, js_name = pushBackdropBlurLayer)]
     pub(super) fn push_backdrop_blur_layer(this: &OpCk, sigma: f32);
+    #[wasm_bindgen(method, js_name = pushShaderEffectLayer)]
+    #[allow(clippy::too_many_arguments)]
+    pub(super) fn push_shader_effect_layer(
+        this: &OpCk,
+        x: f32,
+        y: f32,
+        w: f32,
+        h: f32,
+        sksl: &str,
+        uniform_names: &js_sys::Array,
+        uniforms: &[f32],
+        uniform_arities: &[u32],
+        backdrop: bool,
+    );
     #[wasm_bindgen(method)]
     pub(super) fn restore(this: &OpCk);
     #[wasm_bindgen(method)]
