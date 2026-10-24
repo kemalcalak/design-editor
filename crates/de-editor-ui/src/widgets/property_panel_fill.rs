@@ -253,7 +253,8 @@ pub fn paint_fill_section(
     if let Some(rule) = snapshot.path_fill_rule {
         paint_fill_rule_control(cx, theme, labels, rule, x, header_y, width);
     }
-    let primary_stop_count = snapshot.gradient_stops.len();
+    let primary_stop_count =
+        crate::widgets::property_panel_shader_body::primary_body_items(snapshot);
     for (index, fill, row_y) in fill_row_tops(&snapshot.fills, y, primary_stop_count) {
         y = paint_one_fill(
             cx,

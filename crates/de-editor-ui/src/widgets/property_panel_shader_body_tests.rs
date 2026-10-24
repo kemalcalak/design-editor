@@ -93,3 +93,51 @@ fn the_slider_maps_its_track_onto_the_range() {
     assert_eq!(slider_value(slider, (0.0, 2.0), 500.0), 2.0);
     assert_eq!(slider_value(slider, (-1.0, 1.0), 35.0), -0.5);
 }
+
+/// The whole panel with a shader fill and a shader effect: paint ends
+/// every section at its shared top (the debug assert in paint), and the
+/// walkers reach the bodies of both.
+#[test]
+fn a_panel_with_shader_fill_and_effect_paints_and_hits_both_bodies() {
+    use crate::widgets::property_panel_test_support::{state_from, CountingBackend};
+    use crate::widgets::{PaintCx, PropertyPanel, Widget};
+    let mut state = state_from(
+        r##"{ "version": "1.0.0", "children": [
+          {"type":"rectangle","id":"r","name":"R","x":0,"y":0,"width":120,"height":80,
+           "fill":[{"type":"shader","sksl":"/** @label Speed @range 0, 2 */ uniform float speed; uniform float2 size; half4 main(float2 p) { return half4(speed); }"}],
+           "effects":[{"type":"shader","sksl":"uniform shader object; /** @label Cell */ uniform float cell; half4 main(float2 p) { return object.eval(p); }","uniforms":{"cell":8}}]}
+        ]}"##,
+    );
+    state.set_single_selection(de_editor_core::NodeId::new("r"));
+    let panel = PropertyPanel::for_selection(&state).expect("panel");
+    let rect = Rect::xywh(0.0, 0.0, 280.0, 1600.0);
+    let mut backend = CountingBackend::default();
+    {
+        let mut cx = PaintCx {
+            backend: &mut backend,
+        };
+        panel.paint(&mut cx, rect);
+    }
+    assert!(backend.texts.iter().any(|t| t == "Speed"));
+    assert!(backend.texts.iter().any(|t| t == "Cell"));
+    let mut found = (false, false);
+    let mut y = 0.0;
+    while y < 1600.0 {
+        let mut x = 0.0;
+        while x < 280.0 {
+            match panel.hit_test_action(rect, crate::Point2D::new(x, y)) {
+                Some(PropertyPanelAction::DragShaderUniform {
+                    target: ShaderTarget::Fill(0),
+                    ..
+                }) => found.0 = true,
+                Some(PropertyPanelAction::OpenShaderSource(ShaderTarget::Effect(0))) => {
+                    found.1 = true
+                }
+                _ => {}
+            }
+            x += 4.0;
+        }
+        y += 4.0;
+    }
+    assert_eq!(found, (true, true));
+}

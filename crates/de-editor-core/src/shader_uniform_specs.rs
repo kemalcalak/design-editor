@@ -255,6 +255,14 @@ pub fn uniform_specs(
     out
 }
 
+/// Whether `sksl` declares a `uniform float2 size;` (or `half2`): the
+/// layout scene binds the node size only into an existing `size` entry.
+pub fn declares_size(sksl: &str) -> bool {
+    uniform_statements(sksl)
+        .iter()
+        .any(|s| matches!(s.ty, "float2" | "half2") && s.names.contains(&"size"))
+}
+
 /// Rows for a body with no source (the loader-expanded `turbulence`
 /// preset): one per stored value, its kind read off the value.
 pub fn stored_value_specs(values: &BTreeMap<String, ShaderUniformValue>) -> Vec<ShaderUniformSpec> {

@@ -160,12 +160,24 @@ pub fn set_shader_source(node: &mut PenNode, target: ShaderTarget, sksl: &str) -
     if unchanged {
         return false;
     }
+    let is_fill = matches!(program.sksl, SourceSlot::Fill(_));
     match program.sksl {
         SourceSlot::Fill(slot) => *slot = Some(sksl.to_owned()),
         SourceSlot::Effect(slot) => *slot = sksl.to_owned(),
     }
     if let Some(preset) = program.preset {
         *preset = None;
+    }
+    // The layout scene writes the node size only into an existing `size`
+    // entry (`de-pen-loader` `payload_shader_to_scene`), so a fill program
+    // that reads `size` needs one, as the presets and the `.pen` import
+    // store it. Effects always bind it.
+    if is_fill && crate::shader_uniform_specs::declares_size(sksl) {
+        program
+            .uniforms
+            .get_or_insert_with(BTreeMap::new)
+            .entry("size".to_owned())
+            .or_insert_with(|| ShaderUniformValue::Vec(vec![0.0, 0.0]));
     }
     let specs = uniform_specs(sksl, program.uniforms.as_ref());
     for spec in specs {

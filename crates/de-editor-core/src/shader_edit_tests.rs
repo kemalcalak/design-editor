@@ -123,6 +123,8 @@ fn a_source_write_drops_the_preset_and_seeds_defaults() {
     assert_eq!(map["speed"], ShaderUniformValue::Float(0.5));
     assert_eq!(map["tint"], ShaderUniformValue::Color("#ff0000".into()));
     assert!(!map.contains_key("offset"), "no default, left unbound");
+    // The program reads `size`: the scene binds the node size into it.
+    assert_eq!(map["size"], ShaderUniformValue::Vec(vec![0.0, 0.0]));
     assert!(
         !s.apply(EditorCommand::SetShaderSource {
             node_id: NodeId::new("a"),
