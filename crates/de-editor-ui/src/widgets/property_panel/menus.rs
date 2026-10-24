@@ -179,28 +179,13 @@ impl PropertyPanel {
             })
         };
         let target = self.interaction_menu_target;
-        let anchor = find(target).or_else(|| match target {
+        find(target).or_else(|| match target {
             // Only a trigger with no action yet has no row of its own; one
             // with several actions has no popover (only "Remove all").
             T::Trigger(t) if self.snapshot.interactions.actions(t).is_empty() => {
                 find(T::AddTrigger)
             }
             _ => None,
-        })?;
-        // Dropdowns that sit in the right part of a row open right-aligned
-        // to their own right edge (a narrow anchor does, see
-        // `interaction_menu_rect`), so the 200 px list never hangs off the
-        // panel's right side.
-        Some(match target {
-            T::MotionTrigger(_) | T::TransitionEasing => {
-                let narrow = crate::widgets::property_panel_interactions_menu::NARROW_ANCHOR_W
-                    .min(anchor.size.x);
-                Rect {
-                    origin: Point2D::new(anchor.origin.x + anchor.size.x - narrow, anchor.origin.y),
-                    size: Point2D::new(narrow, anchor.size.y),
-                }
-            }
-            _ => anchor,
         })
     }
 }

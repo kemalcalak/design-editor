@@ -267,8 +267,6 @@ enum Row<'a> {
 }
 
 const ROW_STEP: f32 = INPUT_HEIGHT + 6.0;
-/// Width of the Transition row's label column.
-const TRANSITION_LABEL_W: f32 = 76.0;
 
 fn rows(summary: &InteractionSummary) -> Vec<Row<'_>> {
     let mut out = Vec::new();
@@ -307,15 +305,11 @@ fn row_rect(x: f32, y: f32, width: f32) -> Rect {
     Rect::xywh(x + PAD_X, y, width - PAD_X * 2.0, INPUT_HEIGHT)
 }
 
-/// The Slide | Fade cells of a Transition row at `row`.
+/// The Slide | Fade cells of a Transition row at `row`. The cells take
+/// the whole row (#190): a "Transition" label column beside them left
+/// too little room for the longer translations of both.
 fn transition_cells(row: Rect) -> Vec<Rect> {
-    let segments = Rect::xywh(
-        row.origin.x + TRANSITION_LABEL_W,
-        row.origin.y,
-        row.size.x - TRANSITION_LABEL_W,
-        row.size.y,
-    );
-    crate::widgets::property_panel_segments::segment_rects(segments, 2)
+    crate::widgets::property_panel_segments::segment_rects(row, 2)
 }
 
 const TRANSITION_VERBS: [NavigateVerb; 2] = [NavigateVerb::Push, NavigateVerb::Replace];
@@ -465,31 +459,13 @@ fn paint_transition_row(
     rect: Rect,
     verb: NavigateVerb,
 ) {
-    let label_rect = Rect::xywh(
-        rect.origin.x,
-        rect.origin.y,
-        TRANSITION_LABEL_W - 4.0,
-        rect.size.y,
-    );
-    paint_plain_row(
-        cx,
-        theme,
-        label_rect,
-        translate(locale, "interactions.transition", "Transition"),
-    );
-    let segments = Rect::xywh(
-        rect.origin.x + TRANSITION_LABEL_W,
-        rect.origin.y,
-        rect.size.x - TRANSITION_LABEL_W,
-        rect.size.y,
-    );
     let labels = [
         translate(locale, "interactions.slide", "Slide"),
         translate(locale, "interactions.fade", "Fade"),
     ];
     let active = TRANSITION_VERBS.iter().position(|v| *v == verb);
     crate::widgets::property_panel_segments::paint_segment_row(
-        cx, theme, segments, &labels, active, 11.0,
+        cx, theme, rect, &labels, active, 11.0,
     );
 }
 
@@ -540,9 +516,17 @@ fn action_label(
 }
 
 /// A dropdown whose label is ellipsized to stay clear of the chevron.
+/// Width a dropdown keeps for its padding and chevron; the label gets the
+/// rest.
+pub(crate) const DROPDOWN_CHROME_W: f32 = 40.0;
+
 pub(crate) fn paint_fitted_dropdown(cx: &mut PaintCx<'_>, theme: &Theme, rect: Rect, text: &str) {
-    let fitted =
-        crate::widgets::text_metrics::fit_chrome(cx.backend, text, rect.size.x - 40.0, 12.0);
+    let fitted = crate::widgets::text_metrics::fit_chrome(
+        cx.backend,
+        text,
+        rect.size.x - DROPDOWN_CHROME_W,
+        12.0,
+    );
     paint_dropdown(cx, theme, rect, &fitted);
 }
 

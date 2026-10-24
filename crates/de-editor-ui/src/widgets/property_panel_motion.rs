@@ -1,15 +1,16 @@
 //! Motion section (#154): the node's `transition` and `animations`,
 //! painted right below the Interactions section in the same slot.
 //!
-//! A node-level `transition` (#176) is two rows at the top: "Transition"
-//! with its easing dropdown and remove, then its duration.
+//! A node-level `transition` (#176) is three rows at the top: "Transition"
+//! with remove, its easing dropdown, then its duration.
 //!
 //! Each animation the panel can express (one property, two stops) is
-//! three rows: the property dropdown + the trigger dropdown (On load /
-//! In view / On hover / On tap, #155) + remove, then From | To, then
-//! Duration | Delay (ms). Any other shape is one row — "Custom animation"
-//! with its trigger dropdown and remove — so a hand-written or
-//! MCP-written declaration is never rewritten by accident.
+//! five rows: the property dropdown + remove, the trigger dropdown (On
+//! load / In view / On hover / On tap, #155), From | To, Duration, Delay
+//! (ms). Any other shape is two rows — "Custom animation" with remove,
+//! then its trigger dropdown — so a hand-written or MCP-written
+//! declaration is never rewritten by accident. A localized label never
+//! shares its row with another one (#190): the longest translation fits.
 //!
 //! The section shows once the node has an animation or a transition
 //! (both are added from the Interactions "+"); its header "+" adds
@@ -30,7 +31,7 @@ use crate::widgets::property_panel_sections::EditContext;
 use crate::widgets::PaintCx;
 use crate::{Point2D, Rect};
 use de_editor_core::motion_edit::{simple_motion, MotionField, MotionProperty, SimpleMotion};
-use de_editor_core::transition_edit::{MotionEasing, TransitionSummary};
+use de_editor_core::transition_edit::MotionEasing;
 use de_editor_core::PropertyFocus;
 use jian_ops_schema::motion::MotionTrigger;
 use jian_ops_schema::node::PenNode;
@@ -52,13 +53,6 @@ impl MotionSummary {
             MotionSummary::Custom { trigger } => *trigger,
         }
     }
-
-    fn row_count(&self) -> usize {
-        match self {
-            MotionSummary::Simple(_) => 3,
-            MotionSummary::Custom { .. } => 1,
-        }
-    }
 }
 
 pub(crate) fn motion_of(node: &PenNode) -> Vec<MotionSummary> {
@@ -78,7 +72,6 @@ pub(crate) fn motion_of(node: &PenNode) -> Vec<MotionSummary> {
 }
 
 const ROW_STEP: f32 = INPUT_HEIGHT + 6.0;
-const TRIGGER_DROPDOWN_W: f32 = 116.0;
 const REMOVE_SIZE: f32 = 22.0;
 /// The triggers the trigger dropdown lists, in order.
 pub const MOTION_TRIGGERS: [MotionTrigger; 4] = [
@@ -88,17 +81,60 @@ pub const MOTION_TRIGGERS: [MotionTrigger; 4] = [
     MotionTrigger::Tap,
 ];
 
-/// Rows the node-level transition takes (label + easing, then duration).
-const TRANSITION_ROWS: usize = 2;
-/// Width of the Transition row's label column.
-const TRANSITION_LABEL_W: f32 = 76.0;
+/// One painted line of the section (#190). Every control that carries a
+/// localized label gets a full-width line of its own (the remove "×"
+/// excepted), so no label shares a row with another label and the longest
+/// translation in each of the 15 locales fits without an ellipsis.
+#[derive(Debug, Clone, Copy, PartialEq)]
+enum Line {
+    /// "Transition" + remove.
+    TransitionHead,
+    /// The transition's easing dropdown.
+    TransitionEasing,
+    /// The transition's duration input.
+    TransitionDuration,
+    /// Animation `index`: the property dropdown (or the read-only
+    /// "Custom animation" label) + remove.
+    Head(usize),
+    /// Animation `index`: its trigger dropdown.
+    Trigger(usize),
+    /// Animation `index`: two half-width number inputs.
+    Pair(usize, [MotionField; 2]),
+    /// Animation `index`: one full-width input.
+    Field(usize, MotionField),
+}
 
-fn transition_rows(summary: &InteractionSummary) -> usize {
+/// The section's lines, top to bottom — the one walk height, hit rects,
+/// inputs and paint share.
+fn lines(summary: &InteractionSummary) -> Vec<Line> {
+    let mut out = Vec::new();
     if summary.transition.is_some() {
-        TRANSITION_ROWS
-    } else {
-        0
+        out.extend([
+            Line::TransitionHead,
+            Line::TransitionEasing,
+            Line::TransitionDuration,
+        ]);
     }
+    for (index, motion) in summary.motion.iter().enumerate() {
+        out.extend([Line::Head(index), Line::Trigger(index)]);
+        if let MotionSummary::Simple(_) = motion {
+            out.extend([
+                Line::Pair(index, [MotionField::From, MotionField::To]),
+                Line::Field(index, MotionField::DurationMs),
+                Line::Field(index, MotionField::DelayMs),
+            ]);
+        }
+    }
+    out
+}
+
+/// Each line with the top of its row.
+fn line_tops(summary: &InteractionSummary, y: f32) -> impl Iterator<Item = (Line, f32)> {
+    let top = y + SECTION_HEADER_HEIGHT;
+    lines(summary)
+        .into_iter()
+        .enumerate()
+        .map(move |(i, line)| (line, top + i as f32 * ROW_STEP))
 }
 
 /// Whether the section shows at all: an animation or a transition.
@@ -114,59 +150,30 @@ pub fn motion_section_height(summary: &InteractionSummary) -> f32 {
     if !shown(summary) {
         return 0.0;
     }
-    let rows: usize = summary
-        .motion
-        .iter()
-        .map(MotionSummary::row_count)
-        .sum::<usize>()
-        + transition_rows(summary);
-    SECTION_HEADER_HEIGHT + rows as f32 * ROW_STEP + 6.0 + SECTION_GAP
+    SECTION_HEADER_HEIGHT + lines(summary).len() as f32 * ROW_STEP + 6.0 + SECTION_GAP
 }
 
-/// The Transition head row's parts: easing dropdown and remove.
-fn transition_head(x: f32, y: f32, width: f32) -> (Rect, Rect) {
-    let head = head_row(x, y, width);
-    let dropdown = Rect::xywh(
-        head.dropdown.origin.x + TRANSITION_LABEL_W,
-        y,
-        (head.remove.origin.x - 6.0 - head.dropdown.origin.x - TRANSITION_LABEL_W).max(0.0),
-        INPUT_HEIGHT,
-    );
-    (dropdown, head.remove)
+/// A full-width row of the section.
+fn full_row(x: f32, y: f32, width: f32) -> Rect {
+    Rect::xywh(x + PAD_X, y, width - PAD_X * 2.0, INPUT_HEIGHT)
 }
 
-/// The first row's parts: property dropdown, trigger dropdown, remove.
-struct HeadRow {
-    dropdown: Rect,
-    triggers: Rect,
-    remove: Rect,
-}
-
-fn head_row(x: f32, y: f32, width: f32) -> HeadRow {
-    let row = Rect::xywh(x + PAD_X, y, width - PAD_X * 2.0, INPUT_HEIGHT);
+/// A head row's parts: the body (dropdown or label) and the remove "×".
+fn head_parts(x: f32, y: f32, width: f32) -> (Rect, Rect) {
+    let row = full_row(x, y, width);
     let remove = Rect::xywh(
         row.origin.x + row.size.x - REMOVE_SIZE,
         y + (INPUT_HEIGHT - REMOVE_SIZE) / 2.0,
         REMOVE_SIZE,
         REMOVE_SIZE,
     );
-    let triggers = Rect::xywh(
-        remove.origin.x - 4.0 - TRIGGER_DROPDOWN_W,
-        y,
-        TRIGGER_DROPDOWN_W,
-        INPUT_HEIGHT,
-    );
-    let dropdown = Rect::xywh(
+    let body = Rect::xywh(
         row.origin.x,
         y,
-        (triggers.origin.x - 6.0 - row.origin.x).max(0.0),
+        (remove.origin.x - 6.0 - row.origin.x).max(0.0),
         INPUT_HEIGHT,
     );
-    HeadRow {
-        dropdown,
-        triggers,
-        remove,
-    }
+    (body, remove)
 }
 
 /// The two half-width inputs of a value row.
@@ -176,24 +183,6 @@ fn value_pair(x: f32, y: f32, width: f32) -> [Rect; 2] {
         Rect::xywh(x + PAD_X, y, half, INPUT_HEIGHT),
         Rect::xywh(x + PAD_X + half + 8.0, y, half, INPUT_HEIGHT),
     ]
-}
-
-/// Walk the animation rows: `(index, summary, top of its first row)`.
-/// They start below the transition rows.
-fn row_tops(
-    summary: &InteractionSummary,
-    y: f32,
-) -> impl Iterator<Item = (usize, &MotionSummary, f32)> {
-    let mut row_y = y + SECTION_HEADER_HEIGHT + transition_rows(summary) as f32 * ROW_STEP;
-    summary
-        .motion
-        .iter()
-        .enumerate()
-        .map(move |(index, summary)| {
-            let at = row_y;
-            row_y += summary.row_count() as f32 * ROW_STEP;
-            (index, summary, at)
-        })
 }
 
 pub(crate) fn push_motion_action_rects(
@@ -210,29 +199,39 @@ pub(crate) fn push_motion_action_rects(
         PropertyPanelAction::AddAnimation,
         section_add_target(x, y, width),
     ));
-    if interactions.transition.is_some() {
-        let (dropdown, remove) = transition_head(x, y + SECTION_HEADER_HEIGHT, width);
-        out.push((
-            PropertyPanelAction::ToggleInteractionMenu(InteractionMenuTarget::TransitionEasing),
-            dropdown,
-        ));
-        out.push((PropertyPanelAction::RemoveTransition, remove));
-    }
-    for (index, summary, row_y) in row_tops(interactions, y) {
-        let head = head_row(x, row_y, width);
-        if matches!(summary, MotionSummary::Simple(_)) {
-            out.push((
-                PropertyPanelAction::ToggleInteractionMenu(InteractionMenuTarget::MotionProperty(
+    for (line, row_y) in line_tops(interactions, y) {
+        match line {
+            Line::TransitionHead => {
+                let (_, remove) = head_parts(x, row_y, width);
+                out.push((PropertyPanelAction::RemoveTransition, remove));
+            }
+            Line::TransitionEasing => out.push((
+                PropertyPanelAction::ToggleInteractionMenu(InteractionMenuTarget::TransitionEasing),
+                full_row(x, row_y, width),
+            )),
+            Line::Head(index) => {
+                let (body, remove) = head_parts(x, row_y, width);
+                if matches!(
+                    interactions.motion.get(index),
+                    Some(MotionSummary::Simple(_))
+                ) {
+                    out.push((
+                        PropertyPanelAction::ToggleInteractionMenu(
+                            InteractionMenuTarget::MotionProperty(index),
+                        ),
+                        body,
+                    ));
+                }
+                out.push((PropertyPanelAction::RemoveAnimation(index), remove));
+            }
+            Line::Trigger(index) => out.push((
+                PropertyPanelAction::ToggleInteractionMenu(InteractionMenuTarget::MotionTrigger(
                     index,
                 )),
-                head.dropdown,
-            ));
+                full_row(x, row_y, width),
+            )),
+            Line::TransitionDuration | Line::Pair(..) | Line::Field(..) => {}
         }
-        out.push((
-            PropertyPanelAction::ToggleInteractionMenu(InteractionMenuTarget::MotionTrigger(index)),
-            head.triggers,
-        ));
-        out.push((PropertyPanelAction::RemoveAnimation(index), head.remove));
     }
 }
 
@@ -245,23 +244,21 @@ pub fn motion_input_rects(
     width: f32,
 ) -> Vec<(PropertyFocus, Rect)> {
     let mut out = Vec::new();
-    if interactions.transition.is_some() {
-        let [duration, _] = value_pair(x, y + SECTION_HEADER_HEIGHT + ROW_STEP, width);
-        out.push((PropertyFocus::TransitionDuration, duration));
-    }
-    for (index, summary, row_y) in row_tops(interactions, y) {
-        if !matches!(summary, MotionSummary::Simple(_)) {
-            continue;
-        }
-        let fields = [
-            [MotionField::From, MotionField::To],
-            [MotionField::DurationMs, MotionField::DelayMs],
-        ];
-        for (line, pair) in fields.into_iter().enumerate() {
-            let rects = value_pair(x, row_y + (line + 1) as f32 * ROW_STEP, width);
-            for (field, rect) in pair.into_iter().zip(rects) {
-                out.push((PropertyFocus::MotionValue { index, field }, rect));
+    for (line, row_y) in line_tops(interactions, y) {
+        match line {
+            Line::TransitionDuration => {
+                out.push((PropertyFocus::TransitionDuration, full_row(x, row_y, width)));
             }
+            Line::Pair(index, fields) => {
+                for (field, rect) in fields.into_iter().zip(value_pair(x, row_y, width)) {
+                    out.push((PropertyFocus::MotionValue { index, field }, rect));
+                }
+            }
+            Line::Field(index, field) => out.push((
+                PropertyFocus::MotionValue { index, field },
+                full_row(x, row_y, width),
+            )),
+            Line::TransitionHead | Line::TransitionEasing | Line::Head(_) | Line::Trigger(_) => {}
         }
     }
     out
@@ -338,25 +335,22 @@ fn paint_remove(cx: &mut PaintCx<'_>, theme: &Theme, remove: Rect) {
     );
 }
 
-/// The Transition head row: label, easing dropdown, remove.
+/// The Transition head row: its label and remove.
 fn paint_transition_head(
     cx: &mut PaintCx<'_>,
     theme: &Theme,
     locale: de_editor_core::Locale,
-    transition: TransitionSummary,
     x: f32,
     y: f32,
     width: f32,
 ) {
-    let (dropdown, remove) = transition_head(x, y, width);
-    let label = Rect::xywh(x + PAD_X, y, TRANSITION_LABEL_W - 4.0, INPUT_HEIGHT);
+    let (label, remove) = head_parts(x, y, width);
     paint_plain_row(
         cx,
         theme,
         label,
         translate(locale, "interactions.transition", "Transition"),
     );
-    paint_fitted_dropdown(cx, theme, dropdown, easing_label(locale, transition.easing));
     paint_remove(cx, theme, remove);
 }
 
@@ -421,76 +415,71 @@ pub(crate) fn paint_motion_section(
     let motion = interactions.motion.as_slice();
     let title = translate(locale, "motion.title", "Motion");
     paint_section_label_with_add(cx, theme, title, x, y, width);
-    if let Some(transition) = interactions.transition {
-        paint_transition_head(
-            cx,
-            theme,
-            locale,
-            transition,
-            x,
-            y + SECTION_HEADER_HEIGHT,
-            width,
-        );
-    }
-    for (_, summary, row_y) in row_tops(interactions, y) {
-        let head = head_row(x, row_y, width);
-        match summary {
-            MotionSummary::Simple(simple) => {
+    for (line, row_y) in line_tops(interactions, y) {
+        match line {
+            Line::TransitionHead => paint_transition_head(cx, theme, locale, x, row_y, width),
+            Line::TransitionEasing => {
+                let easing = interactions.transition.and_then(|t| t.easing);
                 paint_fitted_dropdown(
                     cx,
                     theme,
-                    head.dropdown,
-                    property_label(locale, simple.property),
+                    full_row(x, row_y, width),
+                    easing_label(locale, easing),
                 );
             }
-            MotionSummary::Custom { .. } => paint_plain_row(
-                cx,
-                theme,
-                head.dropdown,
-                translate(locale, "motion.custom", "Custom animation"),
-            ),
+            Line::Head(index) => {
+                let (body, remove) = head_parts(x, row_y, width);
+                match motion.get(index) {
+                    Some(MotionSummary::Simple(simple)) => paint_fitted_dropdown(
+                        cx,
+                        theme,
+                        body,
+                        property_label(locale, simple.property),
+                    ),
+                    _ => paint_plain_row(
+                        cx,
+                        theme,
+                        body,
+                        translate(locale, "motion.custom", "Custom animation"),
+                    ),
+                }
+                paint_remove(cx, theme, remove);
+            }
+            Line::Trigger(index) => {
+                if let Some(summary) = motion.get(index) {
+                    paint_fitted_dropdown(
+                        cx,
+                        theme,
+                        full_row(x, row_y, width),
+                        trigger_label(locale, summary.trigger()),
+                    );
+                }
+            }
+            Line::TransitionDuration | Line::Pair(..) | Line::Field(..) => {}
         }
-        paint_fitted_dropdown(
-            cx,
-            theme,
-            head.triggers,
-            trigger_label(locale, summary.trigger()),
-        );
-        paint_remove(cx, theme, head.remove);
     }
-    let values: Vec<(PropertyFocus, Rect)> = motion_input_rects(interactions, x, y, width);
-    for (focus, rect) in values {
-        if focus == PropertyFocus::TransitionDuration {
-            let value = interactions
-                .transition
-                .map(|transition| transition.duration_ms.to_string())
-                .unwrap_or_default();
-            paint_input_with_prefix_focused_state(
-                cx,
-                theme,
-                rect,
+    for (focus, rect) in motion_input_rects(interactions, x, y, width) {
+        let (prefix, value) = match focus {
+            PropertyFocus::TransitionDuration => (
                 field_prefix(locale, MotionField::DurationMs),
-                edit.value_for(focus, &value),
-                edit.focus == Some(focus),
-                edit.caret_at(focus),
-                edit.select_all_at(focus),
-                edit.input_at(focus),
-                edit.now_ms,
-            );
-            continue;
-        }
-        let PropertyFocus::MotionValue { index, field } = focus else {
-            continue;
+                interactions
+                    .transition
+                    .map(|transition| transition.duration_ms.to_string())
+                    .unwrap_or_default(),
+            ),
+            PropertyFocus::MotionValue { index, field } => {
+                let Some(MotionSummary::Simple(simple)) = motion.get(index) else {
+                    continue;
+                };
+                (field_prefix(locale, field), field_value(simple, field))
+            }
+            _ => continue,
         };
-        let Some(MotionSummary::Simple(simple)) = motion.get(index) else {
-            continue;
-        };
-        let value = field_value(simple, field);
         paint_input_with_prefix_focused_state(
             cx,
             theme,
             rect,
-            field_prefix(locale, field),
+            prefix,
             edit.value_for(focus, &value),
             edit.focus == Some(focus),
             edit.caret_at(focus),
