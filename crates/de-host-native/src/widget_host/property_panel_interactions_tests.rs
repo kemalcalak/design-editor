@@ -6,6 +6,7 @@
 //! mutation + history).
 
 use super::WidgetHostNative;
+use de_editor_core::interaction_edit::{InteractionMenuTarget, InteractionTrigger, NavigateVerb};
 use de_editor_core::NodeId;
 use de_editor_ui::widgets::{PropertyPanel, PropertyPanelAction};
 use de_editor_ui::Point2D;
@@ -98,10 +99,11 @@ fn toggle_interaction_menu_opens_and_closes() {
         .set_single_selection(NodeId::new("f1"));
     assert!(!host.editor_state().editor_ui.interaction_menu_open);
 
-    host.apply_property_action(PropertyPanelAction::ToggleInteractionMenu);
+    let add = PropertyPanelAction::ToggleInteractionMenu(InteractionMenuTarget::AddTrigger);
+    host.apply_property_action(add.clone());
     assert!(host.editor_state().editor_ui.interaction_menu_open);
 
-    host.apply_property_action(PropertyPanelAction::ToggleInteractionMenu);
+    host.apply_property_action(add);
     assert!(!host.editor_state().editor_ui.interaction_menu_open);
 }
 
@@ -118,6 +120,7 @@ fn set_interaction_navigate_writes_the_double_encoded_patch() {
         .set_single_selection(NodeId::new("f1"));
 
     host.apply_property_action(PropertyPanelAction::SetInteractionNavigate {
+        trigger: InteractionTrigger::Tap,
         path: "/profile".to_string(),
     });
 
@@ -141,6 +144,7 @@ fn set_interaction_navigate_then_undo_restores_no_events() {
         .set_single_selection(NodeId::new("f1"));
 
     host.apply_property_action(PropertyPanelAction::SetInteractionNavigate {
+        trigger: InteractionTrigger::Tap,
         path: "/profile".to_string(),
     });
     assert!(node_events_json(&host, "f1").get("events").is_some());
@@ -166,7 +170,9 @@ fn remove_interaction_clears_on_tap_without_leaving_an_empty_events_shell() {
     host.editor_state_mut()
         .set_single_selection(NodeId::new("f1"));
 
-    host.apply_property_action(PropertyPanelAction::RemoveInteraction);
+    host.apply_property_action(PropertyPanelAction::RemoveInteraction(
+        InteractionTrigger::Tap,
+    ));
 
     let value = node_events_json(&host, "f1");
     assert!(
@@ -188,7 +194,9 @@ fn remove_interaction_preserves_a_sibling_event_handler() {
     host.editor_state_mut()
         .set_single_selection(NodeId::new("in1"));
 
-    host.apply_property_action(PropertyPanelAction::RemoveInteraction);
+    host.apply_property_action(PropertyPanelAction::RemoveInteraction(
+        InteractionTrigger::Tap,
+    ));
 
     let value = node_events_json(&host, "in1");
     assert!(
@@ -213,7 +221,9 @@ fn set_interaction_pop_writes_the_pop_action() {
     host.editor_state_mut()
         .set_single_selection(NodeId::new("f1"));
 
-    host.apply_property_action(PropertyPanelAction::SetInteractionPop);
+    host.apply_property_action(PropertyPanelAction::SetInteractionPop(
+        InteractionTrigger::Tap,
+    ));
 
     let value = node_events_json(&host, "f1");
     assert!(value["events"]["onTap"][0]["pop"].is_null());
@@ -238,7 +248,9 @@ fn interaction_menu_hover_tracks_the_row_under_the_cursor() {
         VIEWPORT_W,
         VIEWPORT_H,
     ));
-    host.apply_property_action(PropertyPanelAction::ToggleInteractionMenu);
+    host.apply_property_action(PropertyPanelAction::ToggleInteractionMenu(
+        InteractionMenuTarget::Trigger(InteractionTrigger::Tap),
+    ));
     assert!(host.editor_state().editor_ui.interaction_menu_open);
     assert_eq!(host.editor_state().editor_ui.interaction_menu_hover, None);
 
@@ -314,4 +326,155 @@ fn effect_popover_hover_clears_the_covered_inspector_action_hover() {
     host.editor_state_mut().editor_ui.property_action_hover = Some(covered_action);
     assert!(host.apply_cursor_move(point.x, point.y));
     assert_eq!(host.editor_state().editor_ui.property_action_hover, None);
+}
+
+fn seeded_frame() -> WidgetHostNative {
+    let mut host = WidgetHostNative::new();
+    seed(
+        &mut host,
+        r#"{ "version": "1.0.0", "children": [
+            {"type":"frame","id":"f1","name":"Frame","width":200,"height":120}
+        ]}"#,
+    );
+    host.editor_state_mut()
+        .set_single_selection(NodeId::new("f1"));
+    host
+}
+
+#[test]
+fn picking_a_trigger_keeps_the_popover_open_on_its_actions() {
+    let mut host = seeded_frame();
+    host.apply_property_action(PropertyPanelAction::ToggleInteractionMenu(
+        InteractionMenuTarget::AddTrigger,
+    ));
+    host.apply_property_action(PropertyPanelAction::PickInteractionTrigger(
+        InteractionTrigger::Hover,
+    ));
+    let ui = &host.editor_state().editor_ui;
+    assert!(ui.interaction_menu_open);
+    assert_eq!(
+        ui.interaction_menu_target,
+        InteractionMenuTarget::Trigger(InteractionTrigger::Hover)
+    );
+    assert!(
+        node_events_json(&host, "f1").get("events").is_none(),
+        "picking a trigger writes nothing yet"
+    );
+    // The pending trigger's popover still has a place to drop from.
+    let panel = PropertyPanel::for_selection(host.editor_state()).expect("panel");
+    let rect = host.property_rect(VIEWPORT_W, VIEWPORT_H);
+    assert!(panel.interaction_menu_anchor_rect(rect).is_some());
+
+    host.apply_property_action(PropertyPanelAction::SetInteractionPop(
+        InteractionTrigger::Hover,
+    ));
+    assert!(!host.editor_state().editor_ui.interaction_menu_open);
+    assert!(node_events_json(&host, "f1")["events"]["onHoverEnter"][0]["pop"].is_null());
+}
+
+#[test]
+fn long_press_navigate_and_transition_are_one_undo_step_each() {
+    let mut host = seeded_frame();
+    let trigger = InteractionTrigger::LongPress;
+    host.apply_property_action(PropertyPanelAction::SetInteractionNavigate {
+        trigger,
+        path: "/next".to_string(),
+    });
+    host.apply_property_action(PropertyPanelAction::SetInteractionTransition {
+        trigger,
+        verb: NavigateVerb::Push,
+    });
+    let value = node_events_json(&host, "f1");
+    assert_eq!(
+        value["events"]["onLongPress"][0]["push"],
+        serde_json::Value::String("\"/next\"".to_string())
+    );
+    assert!(host.editor_state_mut().undo());
+    assert!(node_events_json(&host, "f1")["events"]["onLongPress"][0]["replace"].is_string());
+    assert!(host.editor_state_mut().undo());
+    assert!(node_events_json(&host, "f1").get("events").is_none());
+}
+
+#[test]
+fn a_tap_edit_keeps_a_sibling_handler() {
+    let mut host = WidgetHostNative::new();
+    seed(
+        &mut host,
+        r#"{ "version": "1.0.0", "children": [
+            {"type":"frame","id":"f1","name":"Frame",
+             "events":{"onSwipe":[{"pop":null}]}}
+        ]}"#,
+    );
+    host.editor_state_mut()
+        .set_single_selection(NodeId::new("f1"));
+    host.apply_property_action(PropertyPanelAction::SetInteractionPop(
+        InteractionTrigger::Tap,
+    ));
+    let value = node_events_json(&host, "f1");
+    assert!(value["events"]["onTap"].is_array());
+    assert!(
+        value["events"]["onSwipe"].is_array(),
+        "the old onTap patch replaced the whole events block"
+    );
+}
+
+#[test]
+fn motion_add_trigger_property_and_remove_round_trip_with_undo() {
+    let mut host = seeded_frame();
+    host.apply_property_action(PropertyPanelAction::AddAnimation);
+    host.apply_property_action(PropertyPanelAction::SetAnimationTrigger {
+        index: 0,
+        trigger: jian_ops_schema::motion::MotionTrigger::InView,
+    });
+    host.apply_property_action(PropertyPanelAction::SetAnimationProperty {
+        index: 0,
+        property: de_editor_core::motion_edit::MotionProperty::TranslateY,
+    });
+    let value = node_events_json(&host, "f1");
+    assert_eq!(value["animations"][0]["trigger"], "inView");
+    assert!(value["animations"][0]["keyframes"][0]["values"]["translateY"].is_number());
+
+    host.apply_property_action(PropertyPanelAction::RemoveAnimation(0));
+    assert!(node_events_json(&host, "f1").get("animations").is_none());
+    assert!(host.editor_state_mut().undo());
+    assert!(node_events_json(&host, "f1")["animations"].is_array());
+}
+
+#[test]
+fn a_motion_value_focus_hits_and_commits() {
+    let mut host = seeded_frame();
+    host.apply_property_action(PropertyPanelAction::AddAnimation);
+    let panel = PropertyPanel::for_selection(host.editor_state()).expect("panel");
+    let rect = host.property_rect(VIEWPORT_W, VIEWPORT_H);
+    let rects = panel.motion_input_rects(rect);
+    assert_eq!(rects.len(), 4);
+    let focus = de_editor_core::PropertyFocus::MotionValue {
+        index: 0,
+        field: de_editor_core::motion_edit::MotionField::DurationMs,
+    };
+    let (_, duration) = rects.iter().find(|(f, _)| *f == focus).expect("duration");
+    let centre = Point2D::new(
+        duration.origin.x + duration.size.x / 2.0,
+        duration.origin.y + duration.size.y / 2.0,
+    );
+    if rect.contains(centre) {
+        assert_eq!(panel.hit_test(rect, centre), Some(focus));
+    }
+    assert_eq!(
+        de_editor_ui::widgets::property_panel_commit::property_focus_initial(focus, &panel),
+        "300"
+    );
+    let state = host.editor_state_mut();
+    state.ui.property_focus = Some(focus);
+    state.ui.property_input.set_text("750");
+    assert!(de_editor_ui::widgets::property_panel_commit::commit_property_focus(state));
+    assert_eq!(
+        node_events_json(&host, "f1")["animations"][0]["durationMs"],
+        750
+    );
+    assert!(host.editor_state_mut().undo());
+    assert_eq!(
+        node_events_json(&host, "f1")["animations"][0]["durationMs"],
+        300
+    );
 }

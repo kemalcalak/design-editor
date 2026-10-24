@@ -7,16 +7,19 @@
 
 use serde_json::{json, Map, Value};
 
+use super::glsl::Stage;
 use super::nodes::{Ctx, Role};
-use super::{images, PenDevReport};
+use super::variables::Theme;
+use super::{images, shader, PenDevReport};
 
 /// Replace a node's pen.dev `fill` (one fill or a list, colours as strings)
 /// with a canonical fill list; drop the key when nothing survives.
-pub(super) fn convert_fill_key(map: &mut Map<String, Value>, ctx: &mut Ctx<'_>) {
+pub(super) fn convert_fill_key(map: &mut Map<String, Value>, theme: &Theme, ctx: &mut Ctx<'_>) {
     let Some(fills) = map.remove("fill") else {
         return;
     };
-    let fills = convert_fills(fills, ctx);
+    let size = node_size(map);
+    let fills = convert_fills(fills, size, theme, ctx);
     if !fills.is_empty() {
         map.insert("fill".to_owned(), Value::Array(fills));
     }
@@ -25,20 +28,36 @@ pub(super) fn convert_fill_key(map: &mut Map<String, Value>, ctx: &mut Ctx<'_>) 
 /// pen.dev stacks fills bottom-up (the last one paints on top); the canonical
 /// stack is top-down like CSS backgrounds (`canvas_viewport_fill_layers.rs`
 /// paints it in reverse), so the order flips here.
-fn convert_fills(fills: Value, ctx: &mut Ctx<'_>) -> Vec<Value> {
+fn convert_fills(
+    fills: Value,
+    size: Option<[f64; 2]>,
+    theme: &Theme,
+    ctx: &mut Ctx<'_>,
+) -> Vec<Value> {
     let items = match fills {
         Value::Array(items) => items,
         single => vec![single],
     };
     let mut fills: Vec<Value> = items
         .into_iter()
-        .filter_map(|fill| convert_fill(fill, ctx))
+        .filter_map(|fill| convert_fill(fill, size, theme, ctx))
         .collect();
     fills.reverse();
     fills
 }
 
-fn convert_fill(fill: Value, ctx: &mut Ctx<'_>) -> Option<Value> {
+/// The node's box when both sides are plain numbers (shader `size`).
+fn node_size(map: &Map<String, Value>) -> Option<[f64; 2]> {
+    let side = |key| map.get(key).and_then(Value::as_f64).filter(|v| *v > 0.0);
+    Some([side("width")?, side("height")?])
+}
+
+fn convert_fill(
+    fill: Value,
+    size: Option<[f64; 2]>,
+    theme: &Theme,
+    ctx: &mut Ctx<'_>,
+) -> Option<Value> {
     let mut obj = match fill {
         Value::String(color) => return Some(json!({ "type": "solid", "color": color })),
         Value::Object(obj) => obj,
@@ -56,10 +75,7 @@ fn convert_fill(fill: Value, ctx: &mut Ctx<'_>) -> Option<Value> {
         // the legacy repair (`normalize_gradient_fill`).
         Some("gradient") => {}
         Some("image") => return images::convert_image_fill(obj, ctx),
-        Some("shader") => {
-            ctx.report.note("shader fill");
-            return None;
-        }
+        Some("shader") => return shader::convert(obj, Stage::Fill, size, theme, ctx),
         Some("mesh_gradient") => {
             ctx.report.note("mesh gradient");
             return None;
@@ -76,7 +92,12 @@ fn convert_fill(fill: Value, ctx: &mut Ctx<'_>) -> Option<Value> {
 /// An instance patch merges key by key, so the canonical `stroke` object
 /// replaces the component's whole stroke: a patch of only the width (or
 /// only the paint) cannot be expressed and is reported.
-pub(super) fn convert_stroke(map: &mut Map<String, Value>, role: Role, ctx: &mut Ctx<'_>) {
+pub(super) fn convert_stroke(
+    map: &mut Map<String, Value>,
+    role: Role,
+    theme: &Theme,
+    ctx: &mut Ctx<'_>,
+) {
     let width = map.remove("strokeWidth");
     let cap = map.remove("strokeLinecap");
     let join = map.remove("strokeLinejoin");
@@ -94,7 +115,8 @@ pub(super) fn convert_stroke(map: &mut Map<String, Value>, role: Role, ctx: &mut
     let Some(stroke) = map.remove("stroke") else {
         return;
     };
-    let fills = convert_fills(stroke, ctx);
+    let size = node_size(map);
+    let fills = convert_fills(stroke, size, theme, ctx);
     if fills.is_empty() {
         return;
     }
@@ -148,27 +170,34 @@ fn thickness(width: Option<Value>, report: &mut PenDevReport) -> Value {
 }
 
 /// pen.dev `effect` (one or a list) → canonical `effects`.
-pub(super) fn convert_effects(map: &mut Map<String, Value>, report: &mut PenDevReport) {
+pub(super) fn convert_effects(map: &mut Map<String, Value>, theme: &Theme, ctx: &mut Ctx<'_>) {
     let Some(effect) = map.remove("effect") else {
         return;
     };
+    let size = node_size(map);
     let items = match effect {
         Value::Array(items) => items,
         single => vec![single],
     };
     let effects: Vec<Value> = items
         .into_iter()
-        .filter_map(|effect| convert_effect(effect, report))
+        .filter_map(|effect| convert_effect(effect, size, theme, ctx))
         .collect();
     if !effects.is_empty() {
         map.insert("effects".to_owned(), Value::Array(effects));
     }
 }
 
-fn convert_effect(effect: Value, report: &mut PenDevReport) -> Option<Value> {
+fn convert_effect(
+    effect: Value,
+    size: Option<[f64; 2]>,
+    theme: &Theme,
+    ctx: &mut Ctx<'_>,
+) -> Option<Value> {
     let Value::Object(mut obj) = effect else {
         return None;
     };
+    let report = &mut *ctx.report;
     if !take_enabled(&mut obj, report) {
         return None;
     }
@@ -199,10 +228,7 @@ fn convert_effect(effect: Value, report: &mut PenDevReport) -> Option<Value> {
             "type": kind,
             "radius": number(obj.get("radius"), 0.0, report),
         })),
-        Some("shader") => {
-            report.note("shader effect");
-            None
-        }
+        Some("shader") => shader::convert(obj, Stage::Effect, size, theme, ctx),
         _ => {
             report.note("unknown effect");
             None

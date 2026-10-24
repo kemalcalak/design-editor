@@ -41,15 +41,7 @@ fn resolve(url: &str, ctx: &mut Ctx<'_>) -> Option<String> {
     if let Some(cached) = ctx.images.get(url) {
         return cached.clone();
     }
-    // A cache-busting query (`a.jpg?v=2`) or a fragment names the same file.
-    let path = url.split(['?', '#']).next().unwrap_or_default();
-    let relative = path.trim_start_matches("./");
-    let data_url = if is_inside_document_folder(relative) {
-        mime_type(relative).and_then(|mime| Some(data_url(mime, &(ctx.assets)(relative)?)))
-    } else {
-        None
-    };
-    let reference = data_url.map(|data_url| {
+    let reference = file_data_url(url, ctx.assets).map(|data_url| {
         let id = format!("pen-dev-{}", ctx.image_table.len());
         ctx.image_table.insert(id.clone(), Value::String(data_url));
         format!("{IMAGE_REF_PREFIX}{id}")
@@ -59,6 +51,24 @@ fn resolve(url: &str, ctx: &mut Ctx<'_>) -> Option<String> {
     }
     ctx.images.insert(url.to_owned(), reference.clone());
     reference
+}
+
+/// The document-relative file a pen.dev `url` names: a cache-busting query
+/// (`a.jpg?v=2`) or a fragment names the same file, `./` is implied.
+pub(super) fn relative_path(url: &str) -> &str {
+    let path = url.split(['?', '#']).next().unwrap_or_default();
+    path.trim_start_matches("./")
+}
+
+/// The image file `url` names as a `data:` URL, or `None` when it is not a
+/// readable image inside the document's folder.
+pub(super) fn file_data_url(url: &str, assets: super::AssetReader<'_>) -> Option<String> {
+    let relative = relative_path(url);
+    if !is_inside_document_folder(relative) {
+        return None;
+    }
+    let mime = mime_type(relative)?;
+    Some(data_url(mime, &assets(relative)?))
 }
 
 pub(crate) fn data_url(mime: &str, bytes: &[u8]) -> String {

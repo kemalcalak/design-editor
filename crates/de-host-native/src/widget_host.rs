@@ -106,6 +106,8 @@ mod history_guard;
 mod home;
 mod home_overlays;
 mod home_scroll;
+#[cfg(test)]
+mod host_capabilities_swap_tests;
 mod host_lifecycle;
 mod host_requests;
 mod html_import_diagnostics_dispatch;

@@ -128,6 +128,7 @@ impl Default for EditorUiState {
             effect_add_picker_open: false,
             effect_add_menu_hover: None,
             interaction_menu_open: false,
+            interaction_menu_target: Default::default(),
             interaction_menu_hover: None,
             property_color_variable_picker_open: None,
             image_fill_popover_open: false,

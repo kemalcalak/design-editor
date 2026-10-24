@@ -407,7 +407,7 @@ impl WidgetHostNative {
         }
     }
 
-    /// Track the Interactions section's Navigate/Back/Remove popover
+    /// Track the shared Interactions / Motion popover
     /// row under the cursor so it paints a hover wash. No-op when the
     /// popover is closed. Mirrors [`Self::update_effect_add_menu_hover`].
     pub(in crate::widget_host) fn update_interaction_menu_hover(

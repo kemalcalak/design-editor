@@ -339,6 +339,7 @@ impl PropertyPanel {
             corner_expand_open,
             effect_add_picker_open: ui.effect_add_picker_open,
             interaction_menu_open: ui.interaction_menu_open,
+            interaction_menu_target: ui.interaction_menu_target,
             interaction_menu_hover: ui.interaction_menu_hover,
             screen_paths: crate::widgets::property_panel_interactions::document_screen_paths(state),
             color_variable_picker_open: ui.property_color_variable_picker_open,

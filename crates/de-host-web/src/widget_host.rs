@@ -544,7 +544,12 @@ impl WidgetHost {
     #[cfg(feature = "canvaskit")]
     pub(crate) fn replace_editor_state(&mut self, state: de_editor_core::EditorState) {
         self.finish_exit_teardown();
+        // Host capability flags belong to the host, not the incoming state
+        // (same seam rule as the native host, #161).
+        let capabilities =
+            de_editor_core::editor_ui_state::HostCapabilities::of(&self.editor_state.editor_ui);
         self.editor_state = state;
+        capabilities.apply_to(&mut self.editor_state.editor_ui);
         self.editor_state.editor_ui.exit_preview();
         self.document_epoch = self.document_epoch.wrapping_add(1).max(1);
         self.force_rotate_layer_panel_owner();

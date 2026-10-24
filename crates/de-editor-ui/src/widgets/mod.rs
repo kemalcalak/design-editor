@@ -79,6 +79,7 @@ pub mod property_panel_commit;
 pub mod property_panel_compositing;
 pub mod property_panel_corner;
 pub mod property_panel_dispatch;
+mod property_panel_dispatch_interactions;
 mod property_panel_dispatch_paint;
 pub mod property_panel_dispatch_support;
 pub mod property_panel_effects;
@@ -117,12 +118,14 @@ pub mod property_panel_instance;
 #[cfg(test)]
 mod property_panel_instance_tests;
 pub mod property_panel_interactions;
+pub mod property_panel_interactions_menu;
 pub mod property_panel_layer;
 pub mod property_panel_layout;
 pub mod property_panel_layout_ops;
 #[cfg(test)]
 mod property_panel_mesh_lattice_tests;
 pub(crate) mod property_panel_mode_popover;
+pub mod property_panel_motion;
 #[cfg(test)]
 mod property_panel_multi_select_tests;
 mod property_panel_overlay_hit;

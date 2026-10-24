@@ -61,7 +61,7 @@ impl WidgetHostNative {
             return Some(self.finish_property_overlay_press(press));
         }
 
-        // 0c1a. Interactions Navigate/Back/Remove popover — outside-click
+        // 0c1a. Shared Interactions / Motion popover — outside-click
         // dismiss.
         if self.editor_state.editor_ui.interaction_menu_open && !in_git_panel {
             self.refresh_layout_scene();

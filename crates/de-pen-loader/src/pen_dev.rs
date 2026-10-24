@@ -17,9 +17,14 @@ use std::collections::BTreeMap;
 
 use serde_json::Value;
 
+mod glsl;
+mod glsl_bindings;
+mod glsl_error;
+mod glsl_lex;
 pub(crate) mod images;
 mod nodes;
 mod paint;
+mod shader;
 #[cfg(test)]
 mod tests;
 mod variables;

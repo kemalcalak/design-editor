@@ -212,7 +212,7 @@ pub struct NodeSnapshot {
     /// The node's visual effects, in paint order — drives the
     /// Effects section's rows + param inputs.
     pub effects: Vec<EffectSummary>,
-    /// Screen marker + `events.onTap` rows — drives the Interactions
+    /// Screen marker, trigger rows (`events`) and Motion rows (`animations`) — drive the Interactions
     /// section. Empty (no screen, no actions) is the common case;
     /// `screen` is only ever populated for a top-level Frame (set by
     /// the caller, which alone knows whether the selection is a

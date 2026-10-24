@@ -18,6 +18,7 @@ mod exports;
 pub mod git_panel;
 pub mod groups;
 pub mod home;
+pub mod host_capabilities;
 mod methods;
 mod modal_pointer;
 pub mod panel_motion;
@@ -29,6 +30,7 @@ pub mod update_state;
 pub mod workspace;
 
 pub use exports::*;
+pub use host_capabilities::HostCapabilities;
 pub use panel_motion::{PanelMotion, PANEL_MOTION_MS};
 
 use crate::node_id::NodeId;
@@ -407,9 +409,11 @@ pub struct EditorUiState {
     /// popover highlights the row under the cursor like the other
     /// property-panel dropdowns.
     pub effect_add_menu_hover: Option<usize>,
-    /// Whether the Interactions section's Navigate/Back/Remove popover
+    /// Whether the shared Interactions / Motion popover
     /// is open. `false` = closed.
     pub interaction_menu_open: bool,
+    /// What the open Interactions popover lists (#154).
+    pub interaction_menu_target: crate::interaction_edit::InteractionMenuTarget,
     /// Row index hovered in the open Interactions popover (`None` =
     /// none).
     pub interaction_menu_hover: Option<usize>,
