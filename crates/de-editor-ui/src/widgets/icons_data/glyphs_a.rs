@@ -220,6 +220,26 @@ pub(crate) const ROTATE_CW: &[&str] = &[
     "M21 3v5h-5",
 ];
 
+// Lucide `flip-horizontal-2.svg`.
+pub(crate) const FLIP_HORIZONTAL: &[&str] = &[
+    "m3 7 5 5-5 5V7",
+    "m21 7-5 5 5 5V7",
+    "M12 20v2",
+    "M12 14v2",
+    "M12 8v2",
+    "M12 2v2",
+];
+
+// Lucide `flip-vertical-2.svg`.
+pub(crate) const FLIP_VERTICAL: &[&str] = &[
+    "m17 3-5 5-5-5h10",
+    "m17 21-5-5-5 5h10",
+    "M4 12H2",
+    "M10 12H8",
+    "M16 12h-2",
+    "M22 12h-2",
+];
+
 // Lucide `diamond.svg`.
 pub(crate) const DIAMOND: &[&str] = &[
     "M2.7 10.3a2.41 2.41 0 0 0 0 3.41l7.59 7.59a2.41 2.41 0 0 0 3.41 0l7.59-7.59a2.41 2.41 0 0 0 0-3.41l-7.59-7.59a2.41 2.41 0 0 0-3.41 0Z",

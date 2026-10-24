@@ -9,7 +9,7 @@ use crate::widgets::property_panel_color_variables::paint_color_variable_button;
 use crate::widgets::property_panel_inputs::{
     format_color_hex, paint_input_with_prefix_focused_state, paint_section_divider,
     paint_section_label, COLOR_VARIABLE_BUTTON_W, COLOR_VARIABLE_GAP, INPUT_HEIGHT, INPUT_RADIUS,
-    PAD_X, SECTION_GAP,
+    PAD_X, SECTION_GAP, SECTION_HEADER_HEIGHT,
 };
 use crate::widgets::property_panel_mode_popover as mode_popover;
 use crate::widgets::property_panel_sections::{EditContext, PropertyLabels};
@@ -30,20 +30,27 @@ struct StrokeSideGridRefs<'a, 'b> {
     edit: &'a EditContext<'b>,
 }
 
-pub(crate) fn stroke_section_body_height(mode: PaddingEditMode) -> f32 {
-    // Single mode shows just the inline main row — no per-side grid below.
-    if mode == PaddingEditMode::Single {
-        return INPUT_HEIGHT + SECTION_TRAILING_GAP;
-    }
-    let rows = if mode == PaddingEditMode::Individual {
-        2.0
-    } else {
-        1.0
+/// Height of the per-side width grid under the main row (none in
+/// Single mode, which keeps the width inline).
+fn side_grid_height(mode: PaddingEditMode) -> f32 {
+    let rows = match mode {
+        PaddingEditMode::Single => return 0.0,
+        PaddingEditMode::Axis => 1.0,
+        PaddingEditMode::Individual => 2.0,
     };
+    SIDE_GRID_TOP_GAP + INPUT_HEIGHT * rows + SIDE_GRID_GAP * (rows - 1.0)
+}
+
+/// Where the style rows (alignment, …) start: under the main row and
+/// the per-side grid. `row_y` is the main row's top.
+pub(crate) fn stroke_style_top(row_y: f32, mode: PaddingEditMode) -> f32 {
+    row_y + INPUT_HEIGHT + side_grid_height(mode)
+}
+
+pub(crate) fn stroke_section_body_height(mode: PaddingEditMode) -> f32 {
     INPUT_HEIGHT
-        + SIDE_GRID_TOP_GAP
-        + INPUT_HEIGHT * rows
-        + SIDE_GRID_GAP * (rows - 1.0)
+        + side_grid_height(mode)
+        + crate::widgets::property_panel_stroke_style::stroke_style_rows_height()
         + SECTION_TRAILING_GAP
 }
 
@@ -116,10 +123,17 @@ pub(crate) fn push_stroke_action_rects(
     x0: f32,
     y: f32,
     width: f32,
+    mode: PaddingEditMode,
     popover_open: bool,
 ) {
     let (gear, _box, rows) = stroke_mode_popover_layout(x0, y, width);
     out.push((PropertyPanelAction::ToggleStrokeModePopover, gear));
+    crate::widgets::property_panel_stroke_style::push_stroke_style_action_rects(
+        out,
+        x0,
+        stroke_style_top(y + SECTION_HEADER_HEIGHT, mode),
+        width,
+    );
     if popover_open {
         for (i, rect) in rows.into_iter().enumerate() {
             out.push((
@@ -210,6 +224,15 @@ pub fn paint_stroke_section(
             mode,
         );
     }
+    crate::widgets::property_panel_stroke_style::paint_stroke_style_rows(
+        cx,
+        theme,
+        labels,
+        snapshot,
+        x,
+        stroke_style_top(y, mode),
+        width,
+    );
     y += stroke_section_body_height(mode);
     paint_section_divider(cx, theme, x, y, width);
     y + SECTION_GAP
