@@ -432,42 +432,14 @@ fn mul_alpha(c: Color, k: f32) -> Color {
 /// here too would dim the gradient twice. Leave stops at their
 /// authored alpha; the single `opacity` multiplier carries node
 /// opacity.
-fn scale_gradient_opacity(g: SceneGradient, k: f32) -> SceneGradient {
-    match g {
-        SceneGradient::Linear {
-            angle_deg,
-            opacity,
-            stops,
-        } => SceneGradient::Linear {
-            angle_deg,
-            opacity: (opacity * k).clamp(0.0, 1.0),
-            stops,
-        },
-        SceneGradient::Radial {
-            cx,
-            cy,
-            radius,
-            opacity,
-            stops,
-        } => SceneGradient::Radial {
-            cx,
-            cy,
-            radius,
-            opacity: (opacity * k).clamp(0.0, 1.0),
-            stops,
-        },
-        SceneGradient::Mesh {
-            rows,
-            cols,
-            colors,
-            opacity,
-        } => SceneGradient::Mesh {
-            rows,
-            cols,
-            colors,
-            opacity: (opacity * k).clamp(0.0, 1.0),
-        },
+fn scale_gradient_opacity(mut g: SceneGradient, k: f32) -> SceneGradient {
+    match &mut g {
+        SceneGradient::Linear { opacity, .. }
+        | SceneGradient::Radial { opacity, .. }
+        | SceneGradient::Angular { opacity, .. }
+        | SceneGradient::Mesh { opacity, .. } => *opacity = (*opacity * k).clamp(0.0, 1.0),
     }
+    g
 }
 
 fn text_align_to_scene(value: &str) -> SceneTextAlign {
@@ -539,7 +511,8 @@ fn fill_layers_to_scene(
                     .map(|color| SceneFillLayer::Solid { color, blend_mode })
             };
             match fill {
-                PenFill::Solid(_) => fallback(),
+                // The angular payload path is #7's; paint its first stop here.
+                PenFill::Solid(_) | PenFill::AngularGradient(_) => fallback(),
                 PenFill::LinearGradient(_)
                 | PenFill::RadialGradient(_)
                 | PenFill::MeshGradient(_) => crate::style_payload::gradient_payload(fill)
@@ -600,6 +573,7 @@ fn fill_opacity(fill: &jian_ops_schema::style::PenFill) -> f32 {
         PenFill::Solid(body) => body.opacity,
         PenFill::LinearGradient(body) => body.opacity,
         PenFill::RadialGradient(body) => body.opacity,
+        PenFill::AngularGradient(body) => body.opacity,
         PenFill::MeshGradient(body) => body.opacity,
         PenFill::Shader(body) => body.opacity,
         PenFill::Image(body) => body.opacity,
@@ -613,6 +587,7 @@ fn fill_blend_mode_to_scene(fill: &jian_ops_schema::style::PenFill) -> ImageBlen
         PenFill::Solid(body) => body.blend_mode.as_ref(),
         PenFill::LinearGradient(body) => body.blend_mode.as_ref(),
         PenFill::RadialGradient(body) => body.blend_mode.as_ref(),
+        PenFill::AngularGradient(body) => body.blend_mode.as_ref(),
         PenFill::MeshGradient(body) => body.blend_mode.as_ref(),
         PenFill::Shader(body) => body.blend_mode.as_ref(),
         PenFill::Image(body) => body.blend_mode.as_ref(),

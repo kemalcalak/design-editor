@@ -271,6 +271,7 @@ fn sample_scene() -> LayoutScene {
         a: 1.0,
     });
     frame.stroke = Some(SceneStroke {
+        style: Default::default(),
         color: Color::WHITE,
         width: 1.0,
         sides: None,

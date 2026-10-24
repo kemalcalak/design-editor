@@ -129,6 +129,7 @@ fn paint(node: &SceneNode) -> Vec<String> {
 
 fn add_center_stroke(node: &mut SceneNode) {
     node.stroke = Some(SceneStroke {
+        style: Default::default(),
         color: Color::BLACK,
         width: 2.0,
         sides: None,

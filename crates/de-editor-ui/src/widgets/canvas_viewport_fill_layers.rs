@@ -218,7 +218,8 @@ pub(super) fn fill_layer_fallback_color(layer: &SceneFillLayer) -> Option<crate:
         SceneFillLayer::Solid { color, .. } => Some(*color),
         SceneFillLayer::Gradient { gradient, .. } => match gradient {
             SceneGradient::Linear { opacity, stops, .. }
-            | SceneGradient::Radial { opacity, stops, .. } => {
+            | SceneGradient::Radial { opacity, stops, .. }
+            | SceneGradient::Angular { opacity, stops, .. } => {
                 stops.first().map(|stop| fold_opacity(stop.color, *opacity))
             }
             SceneGradient::Mesh {
@@ -319,6 +320,27 @@ pub(super) fn paint_svg_path_gradient(
                     node.even_odd_fill,
                 );
         }
+        SceneGradient::Angular {
+            cx: gx,
+            cy,
+            rotation_deg,
+            opacity,
+            stops,
+        } => {
+            let flat: Vec<(f32, crate::Color)> =
+                stops.iter().map(|s| (s.offset, s.color)).collect();
+            cx.backend
+                .fill_svg_path_in_rect_angular_gradient_with_fill_rule(
+                    d,
+                    world_rect,
+                    &flat,
+                    *gx,
+                    *cy,
+                    *rotation_deg,
+                    *opacity,
+                    node.even_odd_fill,
+                );
+        }
         // There is no per-vertex SVG-path mesh primitive. Preserve the
         // documented first-vertex fallback for this individual layer.
         SceneGradient::Mesh {
@@ -409,6 +431,7 @@ mod tests {
         let mut node = SceneNode::leaf("layered", NodeKind::Rect);
         node.opacity = 0.5;
         node.stroke = Some(SceneStroke {
+            style: Default::default(),
             color: Color::BLACK,
             width: 1.0,
             sides: None,

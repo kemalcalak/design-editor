@@ -356,6 +356,7 @@ fn export_node_raster_paints_svg_path_d_stroke() {
     path.bounds = Rect::xywh(0.0, 0.0, 120.0, 60.0);
     path.svg_path = Some("M 0,50 L 40,20 L 80,35 L 120,5".into());
     path.stroke = Some(SceneStroke {
+        style: Default::default(),
         color: Color {
             r: 0.0,
             g: 0.2,
@@ -392,6 +393,7 @@ fn export_raster_paints_only_authored_stroke_sides() {
     let mut node = SceneNode::leaf("bottom-border", NodeKind::Frame);
     node.bounds = Rect::xywh(0.0, 0.0, 40.0, 20.0);
     node.stroke = Some(SceneStroke {
+        style: Default::default(),
         color: Color {
             r: 0.0,
             g: 0.0,

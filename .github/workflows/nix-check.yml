@@ -20,6 +20,10 @@ on:
       - "packages/scripts/workspace-version.mjs"
       - "scripts/workspace-version.sh"
       - "crates/de-host-desktop/assets/icon.png"
+      - ".gitmodules"
+      - "vendor/agent"
+      - "vendor/casement"
+      - "vendor/jian"
       - ".github/workflows/nix-check.yml"
   push:
     branches: [main]
@@ -41,6 +45,10 @@ on:
       - "packages/scripts/workspace-version.mjs"
       - "scripts/workspace-version.sh"
       - "crates/de-host-desktop/assets/icon.png"
+      - ".gitmodules"
+      - "vendor/agent"
+      - "vendor/casement"
+      - "vendor/jian"
       - ".github/workflows/nix-check.yml"
   workflow_dispatch:
 
@@ -72,25 +80,68 @@ jobs:
       # The flake pins its vendor inputs as github revs while the repository
       # pins the same code as submodules; the two drift the moment a submodule
       # bump forgets the flake (this broke the whole workflow when jian gained
-      # the widget-style fields). Deriving the overrides from the checked-out
-      # submodule HEADs makes the workflow follow the gitlinks by construction.
+      # the widget-style fields). Taking the repo from .gitmodules and the rev
+      # from the checked-out submodule HEADs makes the workflow follow the
+      # gitlinks by construction (a hardcoded owner broke it again when the
+      # submodules moved to forks).
       - name: Derive flake input overrides from the submodule pins
+        shell: bash
         run: |
-          {
-            printf 'NIX_VENDOR_OVERRIDES=--no-write-lock-file'
-            printf ' --override-input jian github:ZSeven-W/jian/%s' \
-              "$(git -C vendor/jian rev-parse HEAD)"
-            printf ' --override-input casement github:ZSeven-W/casement/%s' \
-              "$(git -C vendor/casement rev-parse HEAD)"
-            printf ' --override-input agent github:ZSeven-W/agent-rs/%s' \
-              "$(git -C vendor/agent rev-parse HEAD)"
-            printf '\n'
-          } >> "$GITHUB_ENV"
+          set -euo pipefail
+          override() {
+            local input=$1 path=$2 url repo rev
+            url="$(git config -f .gitmodules --get "submodule.$path.url")"
+            repo="${url#https://github.com/}"
+            repo="${repo%.git}"
+            [[ "$repo" =~ ^[A-Za-z0-9._-]+/[A-Za-z0-9._-]+$ ]] || {
+              echo "::error::$path is not a github.com submodule: $url" >&2
+              return 1
+            }
+            rev="$(git -C "$path" rev-parse HEAD)"
+            printf ' --override-input %s github:%s/%s' "$input" "$repo" "$rev"
+          }
+          overrides="--no-write-lock-file"
+          overrides+="$(override jian vendor/jian)"
+          overrides+="$(override casement vendor/casement)"
+          overrides+="$(override agent vendor/agent)"
+          echo "NIX_VENDOR_OVERRIDES=$overrides" | tee -a "$GITHUB_ENV"
 
       - name: Evaluate flake checks
         run: nix flake check --no-build --show-trace $NIX_VENDOR_OVERRIDES
 
+      # The prebuilt outputs download the Linux archives of the release named
+      # in nix/release-manifest.json. That file lags Cargo.toml on purpose (the
+      # hashes exist only once the release is out), and until a release has
+      # published the Linux archives there is nothing to download: skip the
+      # prebuilt steps with a warning instead of failing on a 404. Any other
+      # HTTP answer still fails the job.
+      - name: Check the manifest release publishes the Linux archives
+        id: prebuilt
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="$(jq -er .version nix/release-manifest.json)"
+          # Same URL flake.nix fetches (prebuiltDesktopPackage / prebuiltCliPackage).
+          base="https://github.com/kemalcalak/design-editor/releases/download/v${version}"
+          available=true
+          for asset in design-editor-linux-x86_64.tar.gz de-cli-linux-x86_64.tar.gz; do
+            code="$(curl -sSL --retry 3 --range 0-0 -o /dev/null -w '%{http_code}' "$base/$asset")"
+            case "$code" in
+              200 | 206) ;;
+              404)
+                echo "::warning::v${version} has no ${asset}; skipping the prebuilt checks until nix/release-manifest.json names a release that has it (scripts/update-nix-release-manifest.sh)"
+                available=false
+                ;;
+              *)
+                echo "::error::unexpected HTTP $code for $base/$asset"
+                exit 1
+                ;;
+            esac
+          done
+          echo "available=$available" >> "$GITHUB_OUTPUT"
+
       - name: Build prebuilt packages
+        if: steps.prebuilt.outputs.available == 'true'
         run: nix build .#prebuilt .#prebuilt-cli --no-link $NIX_VENDOR_OVERRIDES
 
       - name: Build representative source outputs
@@ -108,6 +159,7 @@ jobs:
         run: nix build .#checks.x86_64-linux.integration-sidecar --no-link $NIX_VENDOR_OVERRIDES
 
       - name: Install headless display server
+        if: steps.prebuilt.outputs.available == 'true'
         run: |
           set -euo pipefail
           # Runner images ship third-party apt sources (Google Chrome, Microsoft) this job never installs
@@ -136,12 +188,14 @@ jobs:
           done
 
       - name: Smoke-test prebuilt CLI
+        if: steps.prebuilt.outputs.available == 'true'
         run: |
           output="$(nix run .#prebuilt-cli $NIX_VENDOR_OVERRIDES -- --version)"
           printf '%s\n' "$output"
           printf '%s\n' "$output" | grep -Eq '^\{"version":"[0-9]+\.[0-9]+\.[0-9]+"\}$'
 
       - name: Smoke-test prebuilt desktop
+        if: steps.prebuilt.outputs.available == 'true'
         shell: bash
         run: |
           set +e
@@ -166,4 +220,5 @@ jobs:
           fi
 
       - name: Run the clean NixOS runtime test
+        if: steps.prebuilt.outputs.available == 'true'
         run: nix build .#checks.x86_64-linux.prebuilt-runtime --no-link $NIX_VENDOR_OVERRIDES

@@ -27,6 +27,7 @@ pub fn set_primary_fill_opacity(node: &mut PenNode, opacity: f32) -> bool {
         PenFill::Solid(b) => b.opacity = Some(opacity),
         PenFill::LinearGradient(b) => b.opacity = Some(opacity),
         PenFill::RadialGradient(b) => b.opacity = Some(opacity),
+        PenFill::AngularGradient(b) => b.opacity = Some(opacity),
         PenFill::MeshGradient(b) => b.opacity = Some(opacity),
         PenFill::Shader(b) => b.opacity = Some(opacity),
         PenFill::Image(b) => b.opacity = Some(opacity),

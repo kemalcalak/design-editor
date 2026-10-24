@@ -76,6 +76,7 @@ fn painted(radii: [f32; 4]) -> RadiusCaptureBackend {
     node.corner_radii = Some(radii);
     node.fill = Some(Color::BLACK);
     node.stroke = Some(SceneStroke {
+        style: Default::default(),
         color: Color::RED,
         width: 2.0,
         sides: None,

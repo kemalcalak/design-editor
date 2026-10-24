@@ -315,6 +315,7 @@ fn is_painted(node: &PenNode) -> bool {
             }
             PenFill::LinearGradient(body) => body.opacity.unwrap_or(1.0) > 0.0,
             PenFill::RadialGradient(body) => body.opacity.unwrap_or(1.0) > 0.0,
+            PenFill::AngularGradient(body) => body.opacity.unwrap_or(1.0) > 0.0,
             PenFill::MeshGradient(body) => body.opacity.unwrap_or(1.0) > 0.0,
             PenFill::Shader(body) => body.opacity.unwrap_or(1.0) > 0.0,
             PenFill::Image(body) => body.opacity.unwrap_or(1.0) > 0.0,

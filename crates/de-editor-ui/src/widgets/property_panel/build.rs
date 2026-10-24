@@ -58,6 +58,7 @@ fn apply_resolved_variable_colors(
     {
         let width = de_editor_core::fills::node_stroke_width(node).unwrap_or(1.0) as f32;
         snapshot.stroke = Some(SceneStroke {
+            style: Default::default(),
             color,
             width,
             sides: crate::widgets::property_panel_snapshot::stroke_sides_for_scene(node),

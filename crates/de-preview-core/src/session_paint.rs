@@ -504,6 +504,10 @@ fn state_fill_color(
                 parse_state_color(&body.stops.first()?.color, state_variables)?,
                 body.opacity,
             ),
+            PenFill::AngularGradient(body) => (
+                parse_state_color(&body.stops.first()?.color, state_variables)?,
+                body.opacity,
+            ),
             PenFill::MeshGradient(body) => (
                 parse_state_color(&body.stops.first()?.color, state_variables)?,
                 body.opacity,
@@ -555,6 +559,7 @@ fn state_stroke(
         .as_deref()
         .and_then(|fills| state_fill_color(fills, state_variables))?;
     Some(SceneStroke {
+        style: Default::default(),
         color: with_scene_opacity(color, opacity),
         width,
         sides,

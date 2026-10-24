@@ -141,6 +141,7 @@ pub mod selection_resolve;
 pub mod shader_effects;
 pub mod shader_images;
 pub mod shader_presets;
+pub mod star_shape;
 pub mod state;
 pub mod statusbar_state;
 pub mod svg_import;

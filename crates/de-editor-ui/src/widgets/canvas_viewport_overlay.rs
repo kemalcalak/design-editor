@@ -336,6 +336,30 @@ pub(crate) fn paint_gradient_rect(
                 );
             }
         }
+        SceneGradient::Angular {
+            cx: gx,
+            cy,
+            rotation_deg,
+            opacity,
+            stops,
+        } => {
+            let flat: Vec<(f32, Color)> = stops.iter().map(|s| (s.offset, s.color)).collect();
+            let (gx, cy, rot, op) = (*gx, *cy, *rotation_deg, *opacity);
+            match corner_radii {
+                Some(radii) => cx.backend.fill_round_rect_angular_gradient_per_corner(
+                    rect, radii, &flat, gx, cy, rot, op,
+                ),
+                None => cx.backend.fill_round_rect_angular_gradient(
+                    rect,
+                    corner_radius,
+                    &flat,
+                    gx,
+                    cy,
+                    rot,
+                    op,
+                ),
+            }
+        }
         SceneGradient::Radial {
             cx: gx,
             cy,

@@ -53,6 +53,7 @@ pub(crate) fn apply_value(node: &mut SceneNode, target: BindingTarget, value: &R
                     stroke.color = color;
                 } else {
                     node.stroke = Some(SceneStroke {
+                        style: Default::default(),
                         color,
                         width: 1.0,
                         sides: None,

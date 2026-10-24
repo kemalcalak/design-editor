@@ -14,6 +14,8 @@ pub fn fill_type_of(fill: &PenFill) -> FillType {
         PenFill::Solid(_) => FillType::Solid,
         PenFill::LinearGradient(_) => FillType::LinearGradient,
         PenFill::RadialGradient(_) => FillType::RadialGradient,
+        // No angular `FillType` on this branch yet (#7 adds it).
+        PenFill::AngularGradient(_) => FillType::RadialGradient,
         PenFill::MeshGradient(_) => FillType::MeshGradient,
         PenFill::Shader(_) => FillType::Shader,
         PenFill::Image(_) => FillType::Image,
@@ -154,6 +156,7 @@ fn fill_hex(fill: &PenFill) -> Option<&str> {
         PenFill::Solid(body) => Some(body.color.as_str()),
         PenFill::LinearGradient(body) => body.stops.first().map(|s| s.color.as_str()),
         PenFill::RadialGradient(body) => body.stops.first().map(|s| s.color.as_str()),
+        PenFill::AngularGradient(body) => body.stops.first().map(|s| s.color.as_str()),
         PenFill::MeshGradient(body) => body.stops.first().map(|s| s.color.as_str()),
         // An image source bound to a shader child is not a colour.
         PenFill::Shader(body) => crate::shader_presets::first_color_uniform(body),

@@ -17,6 +17,7 @@ pub(super) fn scene_stroke(
     var_table: &VariableTable,
 ) -> SceneStroke {
     SceneStroke {
+        style: Default::default(),
         // A stroke with no resolvable paint keeps painting the historical
         // opaque black for ordinary shapes; only widget nodes drop it (see
         // `is_unpainted_widget_stroke`), because for them the stroke carries

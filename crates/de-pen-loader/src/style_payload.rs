@@ -433,6 +433,13 @@ pub(crate) fn fill_fallback_color(fill: &PenFill) -> Option<[f32; 4]> {
                 }
             }
         }
+        PenFill::AngularGradient(body) => {
+            if let Some(stop) = body.stops.first() {
+                if let Some(rgba) = parse_color(&stop.color) {
+                    return Some(apply_alpha(rgba, body.opacity));
+                }
+            }
+        }
         PenFill::MeshGradient(body) => {
             // First-vertex colour is the documented solid fallback
             // baked into `node.fill` (backends without per-vertex

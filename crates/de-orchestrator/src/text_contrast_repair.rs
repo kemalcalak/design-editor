@@ -271,6 +271,20 @@ fn first_usable_fill_kind(fills: Option<&Vec<PenFill>>) -> FillKind {
                         .collect(),
                 ));
             }
+            // Contrast sampling treats a sweep like a radial around its centre.
+            PenFill::AngularGradient(body) => {
+                if body.opacity == Some(0.0) {
+                    continue;
+                }
+                return FillKind::Gradient(GradientSource::radial(
+                    f64::from(body.cx.unwrap_or(0.5)),
+                    f64::from(body.cy.unwrap_or(0.5)),
+                    body.stops
+                        .iter()
+                        .map(|stop| (f64::from(stop.offset), stop.color.clone()))
+                        .collect(),
+                ));
+            }
             PenFill::MeshGradient(body) => {
                 if body.opacity == Some(0.0) {
                     continue;

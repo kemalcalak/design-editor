@@ -7,10 +7,11 @@
 
 /// Editor tool — what primary mouse drag does on the canvas.
 ///
-/// The first nine variants are the original shape / frame / text /
-/// navigation set, then the freehand Pencil (#88). The trailing ten are
-/// the form-widget tools (Phase D2): selecting one and clicking the
-/// canvas drops a default widget node of the matching kind.
+/// The variants up to `Hand` are the original shape / frame / text /
+/// navigation set (Star #87 among the shapes), then the freehand Pencil
+/// (#88). The trailing ten are the form-widget tools (Phase D2):
+/// selecting one and clicking the canvas drops a default widget node of
+/// the matching kind.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum Tool {
     #[default]
@@ -18,6 +19,8 @@ pub enum Tool {
     Rect,
     Ellipse,
     Polygon,
+    /// Star: a polygon node with an inner radius (#87).
+    Star,
     Line,
     Pen,
     Text,
@@ -42,11 +45,12 @@ pub enum Tool {
 impl Tool {
     /// All tools, in toolbar display order. Single source of truth for
     /// the toolbar build path.
-    pub const ALL: [Tool; 20] = [
+    pub const ALL: [Tool; 21] = [
         Tool::Select,
         Tool::Rect,
         Tool::Ellipse,
         Tool::Polygon,
+        Tool::Star,
         Tool::Line,
         Tool::Pen,
         Tool::Text,
@@ -89,6 +93,7 @@ impl Tool {
             Tool::Rect => "rect",
             Tool::Ellipse => "ellipse",
             Tool::Polygon => "polygon",
+            Tool::Star => "star",
             Tool::Line => "line",
             Tool::Pen => "pen",
             Tool::Text => "text",
@@ -113,7 +118,7 @@ impl Tool {
     pub fn is_shape(self) -> bool {
         matches!(
             self,
-            Tool::Rect | Tool::Ellipse | Tool::Polygon | Tool::Line | Tool::Pen
+            Tool::Rect | Tool::Ellipse | Tool::Polygon | Tool::Star | Tool::Line | Tool::Pen
         )
     }
 

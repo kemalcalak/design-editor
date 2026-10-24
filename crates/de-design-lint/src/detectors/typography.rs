@@ -294,6 +294,14 @@ fn first_solid_color(fills: Option<&Vec<PenFill>>) -> Option<String> {
                     return Some(stop.color.clone());
                 }
             }
+            PenFill::AngularGradient(body) => {
+                if body.opacity == Some(0.0) {
+                    continue;
+                }
+                if let Some(stop) = body.stops.first() {
+                    return Some(stop.color.clone());
+                }
+            }
             PenFill::MeshGradient(body) => {
                 if body.opacity == Some(0.0) {
                     continue;

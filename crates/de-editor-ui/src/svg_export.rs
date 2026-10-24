@@ -1,8 +1,7 @@
 //! Platform-neutral active-page SVG serializer for native and wasm hosts.
 
 use crate::layout_scene::{
-    regular_polygon_points, LayoutScene, NodeKind, SceneGradient, SceneImageFit, SceneNode,
-    ScenePage,
+    LayoutScene, NodeKind, SceneGradient, SceneImageFit, SceneNode, ScenePage,
 };
 use crate::{Color, Rect};
 use std::fmt::Write as _;
@@ -225,6 +224,18 @@ fn emit_gradient(out: &mut String, id: &str, gradient: &SceneGradient, bounds: R
             emit_stops(out, stops, *opacity);
             out.push_str("</radialGradient>");
         }
+        // SVG has no conic gradient; keep the stops as a flat first-stop
+        // fill so the export stays valid (the #7 work owns a better match).
+        SceneGradient::Angular { opacity, stops, .. } => {
+            if let Some(stop) = stops.first() {
+                let _ = write!(
+                    out,
+                    r#"<linearGradient id="{id}"><stop offset="0" stop-color="{}" stop-opacity="{}"/></linearGradient>"#,
+                    color_to_rgb(stop.color),
+                    stop.color.a * opacity,
+                );
+            }
+        }
         SceneGradient::Mesh {
             colors, opacity, ..
         } => {
@@ -396,7 +407,7 @@ fn emit_polygon(out: &mut String, n: &SceneNode) {
     if r.size.x == 0.0 || r.size.y == 0.0 {
         return;
     }
-    let points = regular_polygon_points(r, n.polygon_sides);
+    let points = crate::polygon_geometry::polygon_node_points(n, r);
     let mut point_attr = String::new();
     for (i, p) in points.iter().enumerate() {
         if i > 0 {

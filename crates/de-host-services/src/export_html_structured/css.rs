@@ -102,6 +102,21 @@ pub fn gradient(g: &SceneGradient, bounds: Rect) -> Option<String> {
         // the node down the raster path rather than flattening a mesh
         // to its first stop and calling it a gradient.
         SceneGradient::Mesh { .. } => None,
+        // CSS `conic-gradient` shares the angular convention (0deg = 12
+        // o'clock, clockwise).
+        SceneGradient::Angular {
+            cx,
+            cy,
+            rotation_deg,
+            opacity,
+            stops,
+        } => Some(format!(
+            "conic-gradient(from {}deg at {}% {}%,{})",
+            num(*rotation_deg),
+            num(cx.clamp(0.0, 1.0) * 100.0),
+            num(cy.clamp(0.0, 1.0) * 100.0),
+            stop_list(stops, *opacity)
+        )),
     }
 }
 

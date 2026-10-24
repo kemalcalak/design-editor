@@ -718,7 +718,7 @@ pub fn set_active_tool(state: &mut EditorState, tool: Tool) {
     state.tool = tool;
     if matches!(
         tool,
-        Tool::Rect | Tool::Ellipse | Tool::Polygon | Tool::Line | Tool::Pen
+        Tool::Rect | Tool::Ellipse | Tool::Polygon | Tool::Star | Tool::Line | Tool::Pen
     ) {
         state.editor_ui.shape_tool = tool;
     }

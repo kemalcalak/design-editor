@@ -55,7 +55,11 @@ pub fn paint_layer_section(
             theme,
             edit,
             sides_rect,
-            labels.polygon_sides,
+            if snapshot.star_inner_percent.is_some() {
+                labels.star_points
+            } else {
+                labels.polygon_sides
+            },
             PropertyFocus::PolygonSides,
             &value,
             None,
@@ -63,6 +67,24 @@ pub fn paint_layer_section(
     }
 
     y += INPUT_HEIGHT;
+    if let Some(inner) = snapshot.star_inner_percent {
+        y += 6.0;
+        let inner_rect = Rect {
+            origin: Point2D::new(x + PAD_X, y),
+            size: Point2D::new(half_w, INPUT_HEIGHT),
+        };
+        paint_labeled_input(
+            cx,
+            theme,
+            edit,
+            inner_rect,
+            labels.star_inner_radius,
+            PropertyFocus::StarInnerRadius,
+            &format_number(inner),
+            Some("%"),
+        );
+        y += INPUT_HEIGHT;
+    }
     if let Some(arc) = snapshot.ellipse_arc {
         y += 6.0;
         paint_ellipse_arc_row(cx, theme, edit, labels, arc, x + PAD_X, y, usable_w);

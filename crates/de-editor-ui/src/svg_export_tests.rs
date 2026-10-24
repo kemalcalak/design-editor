@@ -58,6 +58,22 @@ fn active_page_svg_contains_vector_markup() {
 }
 
 #[test]
+fn a_star_polygon_exports_its_star_vertices() {
+    let mut star = SceneNode::leaf("s1", NodeKind::Polygon);
+    star.bounds = Rect::xywh(0.0, 0.0, 100.0, 100.0);
+    star.polygon_sides = 5;
+    star.arc_inner_radius = Some(0.4);
+    star.fill = Some(Color::BLACK);
+    let body = serialize_active_page_svg(&scene_with(vec![star])).expect("svg");
+    let points = body
+        .split_once(r#"points=""#)
+        .and_then(|(_, rest)| rest.split_once('"'))
+        .map(|(points, _)| points)
+        .expect("polygon points");
+    assert_eq!(points.split(' ').count(), 10, "5-point star: {body}");
+}
+
+#[test]
 fn active_page_svg_fails_on_empty_scene() {
     assert_eq!(
         serialize_active_page_svg(&scene_with(Vec::new()))
@@ -160,6 +176,7 @@ fn fitted_svg_path_keeps_stroke_width_in_document_space() {
     path.bounds = Rect::xywh(100.0, 200.0, 80.0, 40.0);
     path.svg_path = Some("M10 20 L30 60".into());
     path.stroke = Some(SceneStroke {
+        style: Default::default(),
         color: Color::BLACK,
         width: 4.0,
         sides: None,
@@ -409,6 +426,7 @@ fn clipped_container_stroke_overlays_children_once() {
     frame.fill = Some(Color::WHITE);
     frame.clip_content = true;
     frame.stroke = Some(SceneStroke {
+        style: Default::default(),
         color: Color::BLACK,
         width: 8.0,
         sides: None,
@@ -462,6 +480,7 @@ fn clipped_container_stroke_overlays_children_once() {
 fn leaf_rect_keeps_single_combined_shape() {
     let mut rect = filled_rect("leaf-stroke", 10.0, 20.0, 100.0, 80.0, Color::WHITE);
     rect.stroke = Some(SceneStroke {
+        style: Default::default(),
         color: Color::BLACK,
         width: 8.0,
         sides: None,
@@ -635,6 +654,7 @@ fn composite_opacity_wraps_gradient_stroke_and_descendants_once() {
         }],
     });
     frame.stroke = Some(SceneStroke {
+        style: Default::default(),
         color: Color::BLACK,
         width: 2.0,
         sides: None,

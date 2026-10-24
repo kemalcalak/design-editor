@@ -123,7 +123,8 @@ pub struct NodePayload {
     /// Ellipse arc sweep angle in degrees (`None` = full ellipse).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub arc_sweep_angle: Option<f32>,
-    /// Ellipse donut-hole radius, 0.0..=1.0 fraction of the radius.
+    /// Ellipse donut-hole radius, 0.0..=1.0 fraction of the radius. On a
+    /// polygon it is the star inner radius; `None` = regular polygon.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub arc_inner_radius: Option<f32>,
     /// Polygon side count. Defaults to the triangle parity value.

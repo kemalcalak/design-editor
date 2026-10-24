@@ -59,6 +59,7 @@ pub(super) fn visible_for(panel: &PropertyPanel) -> sections::VisibleSections {
         corner_expand: panel.corner_expand_open,
         path_fill_rule: panel.snapshot.path_fill_rule,
         polygon_sides: panel.snapshot.polygon_sides.is_some(),
+        star_inner: panel.snapshot.star_inner_percent.is_some(),
         ellipse_arc: panel.snapshot.ellipse_arc.is_some(),
         fill: caps.fill,
         stroke: caps.stroke,

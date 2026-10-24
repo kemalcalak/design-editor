@@ -175,7 +175,7 @@ pub fn grad_fill(gradient: &SceneGradient, alpha: f32) -> Option<String> {
         }
         // A Gouraud lattice has no DrawingML spelling; the caller sends
         // the node to the raster path instead of flattening it.
-        SceneGradient::Mesh { .. } => return None,
+        SceneGradient::Mesh { .. } | SceneGradient::Angular { .. } => return None,
     };
     if stops.len() < 2 {
         return None;

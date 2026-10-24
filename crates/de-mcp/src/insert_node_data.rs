@@ -9,7 +9,7 @@ use super::batch_design::normalize_node_shape;
 use super::{ToolErrorCode, ToolOutcome};
 
 const FLAT_INSERT_NODE_KINDS: &[&str] = &[
-    "frame", "group", "rect", "ellipse", "polygon", "line", "text", "path",
+    "frame", "group", "rect", "ellipse", "polygon", "star", "line", "text", "path",
 ];
 
 #[allow(clippy::result_large_err)]
@@ -116,6 +116,9 @@ fn normalize_ts_data_node_type_aliases(value: &mut Value) {
             *type_name = "rectangle".into();
         }
     }
+    // A `kind: "star"` alias only becomes `type` here, after the shape
+    // normalizer already ran, so expand it into a polygon now.
+    super::batch_design_normalize::normalize_star_alias(obj);
     if let Some(Value::Array(children)) = obj.get_mut("children") {
         for child in children {
             normalize_ts_data_node_type_aliases(child);
@@ -167,6 +170,23 @@ mod tests {
             value,
             Some(SizingBehavior::Keyword(SizingKeyword::FitContent))
         )
+    }
+
+    #[test]
+    fn star_data_becomes_a_star_polygon() {
+        for data in [
+            r#"{"type":"star","name":"S","innerRadius":0.5,"width":40,"height":40}"#,
+            r#"{"kind":"star","name":"S","innerRadius":0.5,"width":40,"height":40}"#,
+        ] {
+            let node = ts_data_node(&args_with_data(data))
+                .expect("star data parses")
+                .expect("star data with innerRadius preserves the node");
+            let PenNode::Polygon(star) = node else {
+                panic!("expected a star polygon for {data}");
+            };
+            assert_eq!(star.polygon_count, 5);
+            assert_eq!(star.inner_radius, Some(0.5));
+        }
     }
 
     #[test]

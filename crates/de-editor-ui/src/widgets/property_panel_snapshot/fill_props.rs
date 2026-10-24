@@ -78,6 +78,10 @@ pub(super) fn fills_of(node: &PenNode) -> Vec<FillSummary> {
                     b.stops.first().map(|s| s.color.as_str()),
                     b.opacity.unwrap_or(1.0),
                 ),
+                PenFill::AngularGradient(b) => (
+                    b.stops.first().map(|s| s.color.as_str()),
+                    b.opacity.unwrap_or(1.0),
+                ),
                 PenFill::MeshGradient(b) => (
                     b.stops.first().map(|s| s.color.as_str()),
                     b.opacity.unwrap_or(1.0),
