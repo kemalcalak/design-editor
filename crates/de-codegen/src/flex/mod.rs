@@ -11,6 +11,7 @@
 //! write them next to the HTML; the [`Codegen`] impls keep images inline.
 
 mod assets;
+mod editor;
 mod ir;
 mod layout;
 mod markup;
@@ -27,6 +28,7 @@ mod tests;
 mod tests_tailwind;
 
 pub use assets::HtmlAsset;
+pub use editor::{export_editor_html, html_target_for};
 
 use crate::codegen_targets::codegen_motion_css;
 use crate::{html_escape, root_nodes, Codegen, CssVariables};

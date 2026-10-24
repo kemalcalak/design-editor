@@ -36,8 +36,8 @@ mod scene_painter;
 mod svg;
 
 pub use editor::{
-    default_export_file_name, export_editor_state, export_editor_state_to_path, EditorExportScope,
-    ExportArtifact,
+    default_export_file_name, export_editor_state, export_editor_state_to_path, write_html_export,
+    EditorExportScope, ExportArtifact,
 };
 pub use error::ExportError;
 pub use scene_painter::{paint_node, paint_nodes, with_capture_time_ms, MAX_CAPTURE_TIME_MS};
