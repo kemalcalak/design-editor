@@ -70,7 +70,7 @@ fn raster_rect(node: &SceneNode) -> Option<Rect> {
             }
             Effect::DropShadow(_) => 0.0,
             Effect::Blur(b) => b.radius.max(0.0),
-            Effect::BackgroundBlur { .. } => 0.0,
+            Effect::BackgroundBlur { .. } | Effect::Shader(_) => 0.0,
         });
     }
     let padded = Rect {

@@ -86,7 +86,7 @@ pub fn paint_effects_section(
     row_y + SECTION_GAP
 }
 
-pub(crate) const EFFECT_ADD_MENU_ROWS: [(PropertyPanelAction, EffectKind); 4] = [
+pub(crate) const EFFECT_ADD_MENU_ROWS: [(PropertyPanelAction, EffectKind); 5] = [
     (
         PropertyPanelAction::AddEffect(EffectKind::Shadow),
         EffectKind::Shadow,
@@ -102,6 +102,10 @@ pub(crate) const EFFECT_ADD_MENU_ROWS: [(PropertyPanelAction, EffectKind); 4] = 
     (
         PropertyPanelAction::AddEffect(EffectKind::BackgroundBlur),
         EffectKind::BackgroundBlur,
+    ),
+    (
+        PropertyPanelAction::AddEffect(EffectKind::Shader),
+        EffectKind::Shader,
     ),
 ];
 
@@ -180,6 +184,7 @@ fn effect_label(labels: &PropertyLabels, kind: EffectKind) -> &'static str {
         EffectKind::InnerShadow => labels.effects_add_inner_shadow,
         EffectKind::LayerBlur => labels.effects_add_layer_blur,
         EffectKind::BackgroundBlur => labels.effects_add_background_blur,
+        EffectKind::Shader => labels.effects_add_shader,
     }
 }
 
@@ -190,6 +195,8 @@ fn effect_icon(kind: EffectKind) -> Icon {
         EffectKind::InnerShadow => Icon::Frame,
         EffectKind::LayerBlur => Icon::Focus,
         EffectKind::BackgroundBlur => Icon::SquareRoundCorner,
+        // A wand reads as a programmed effect.
+        EffectKind::Shader => Icon::Wand2,
     }
 }
 
@@ -225,7 +232,13 @@ fn paint_effect_row(
         1.3,
     );
     let label = effect_label(labels, effect.kind);
-    let max_label_w = (rects.slider.origin.x - (rects.row.origin.x + 27.0) - 4.0).max(1.0);
+    // A shader row has no amount controls, so its label runs to the eye.
+    let label_end = if effect.kind.has_amount() {
+        rects.slider.origin.x
+    } else {
+        rects.eye.origin.x
+    };
+    let max_label_w = (label_end - (rects.row.origin.x + 27.0) - 4.0).max(1.0);
     let measured = text_metrics::measure_chrome(cx.backend, label, 10.0).max(1.0);
     let label_size = (10.0 * max_label_w / measured).clamp(8.0, 10.0);
     // Below the minimum size the label still overflows into the slider,
@@ -243,6 +256,22 @@ fn paint_effect_row(
         Point2D::new(rects.row.origin.x + 27.0, y + EFFECT_ROW_HEIGHT / 2.0 + 4.0),
     );
 
+    if effect.kind.has_amount() {
+        paint_effect_amount(cx, theme, effect, index, edit, &rects, foreground);
+    }
+    paint_effect_actions(cx, theme, effect, &rects, foreground);
+}
+
+/// The amount slider and value input of a blur / shadow row.
+fn paint_effect_amount(
+    cx: &mut PaintCx<'_>,
+    theme: &Theme,
+    effect: &EffectSummary,
+    index: usize,
+    edit: &EditContext<'_>,
+    rects: &EffectRowRects,
+    foreground: crate::Color,
+) {
     let value = effect.blur.clamp(0.0, 100.0);
     let track = Rect::xywh(
         rects.slider.origin.x,
@@ -310,7 +339,16 @@ fn paint_effect_row(
             ),
         );
     }
+}
 
+/// The eye toggle and remove button every row ends with.
+fn paint_effect_actions(
+    cx: &mut PaintCx<'_>,
+    theme: &Theme,
+    effect: &EffectSummary,
+    rects: &EffectRowRects,
+    foreground: crate::Color,
+) {
     draw_icon(
         cx.backend,
         if effect.visible {

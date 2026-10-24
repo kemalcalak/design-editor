@@ -123,6 +123,11 @@ impl EditorState {
         self.add_effect_to_selected(crate::fills::push_background_blur)
     }
 
+    /// Append the default SkSL shader effect (#6) to the anchor node.
+    pub fn add_shader_effect_to_selected(&mut self) -> bool {
+        self.add_effect_to_selected(crate::fills::push_shader_effect)
+    }
+
     /// Shared effect-add path: history is snapshotted ONLY when the
     /// anchor node exists and actually carries an effects list, so a
     /// Ref / IconFont / missing target never leaves an empty undo +

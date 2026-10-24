@@ -278,6 +278,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "stroke.dashDashed" => "Gạch",
         "stroke.dashDotted" => "Chấm",
         "effects.addInnerShadow" => "Bóng trong",
+        "effects.addShader" => "Shader",
         "image.stretch" => "Kéo giãn",
         "fill.presetNoise" => "Nhiễu",
         "fill.presetFade" => "Mờ dần",

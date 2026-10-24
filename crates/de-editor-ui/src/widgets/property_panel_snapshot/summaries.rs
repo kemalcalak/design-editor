@@ -237,6 +237,8 @@ pub enum EffectKind {
     InnerShadow,
     LayerBlur,
     BackgroundBlur,
+    /// SkSL shader effect (#6); its program is edited over MCP / code.
+    Shader,
 }
 
 impl EffectKind {
@@ -247,7 +249,14 @@ impl EffectKind {
             EffectKind::InnerShadow => "Inner Shadow",
             EffectKind::LayerBlur => "Layer Blur",
             EffectKind::BackgroundBlur => "Background Blur",
+            EffectKind::Shader => "Shader",
         }
+    }
+
+    /// Whether the row carries the amount slider + value input (blur or
+    /// radius). A shader row has neither: only visibility and remove.
+    pub fn has_amount(self) -> bool {
+        !matches!(self, EffectKind::Shader)
     }
 }
 
@@ -318,6 +327,15 @@ impl EffectSummary {
                 offset_x: 0.0,
                 offset_y: 0.0,
                 blur: b.radius,
+                spread: 0.0,
+                color: Color::TRANSPARENT,
+            },
+            PenEffect::Shader(s) => EffectSummary {
+                kind: EffectKind::Shader,
+                visible: s.visible != Some(false),
+                offset_x: 0.0,
+                offset_y: 0.0,
+                blur: 0.0,
                 spread: 0.0,
                 color: Color::TRANSPARENT,
             },

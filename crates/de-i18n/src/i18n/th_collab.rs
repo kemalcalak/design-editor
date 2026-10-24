@@ -278,6 +278,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "stroke.dashDashed" => "ประ",
         "stroke.dashDotted" => "จุด",
         "effects.addInnerShadow" => "เงาด้านใน",
+        "effects.addShader" => "เชดเดอร์",
         "image.stretch" => "ยืด",
         "fill.presetNoise" => "นอยส์",
         "fill.presetFade" => "จางหาย",
