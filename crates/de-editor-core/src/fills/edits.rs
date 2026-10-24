@@ -210,6 +210,17 @@ pub fn push_layer_blur(node: &mut PenNode) -> bool {
     true
 }
 
+/// Append the default SkSL shader effect (#6, a pixelate pass; see
+/// [`crate::shader_effects`]). `false` for variants that carry no
+/// `effects` field.
+pub fn push_shader_effect(node: &mut PenNode) -> bool {
+    let Some(effects) = node_effects_mut(node) else {
+        return false;
+    };
+    effects.push(crate::shader_effects::default_shader_effect());
+    true
+}
+
 /// Append a default Gaussian background blur. The optional visibility
 /// field stays absent because absence is the schema's semantic "visible".
 pub fn push_background_blur(node: &mut PenNode) -> bool {

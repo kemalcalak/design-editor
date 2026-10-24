@@ -1,10 +1,6 @@
-//! `CanvasKitBackend` — the `RenderBackend` implementation over the CanvasKit
-//! JS bridge, plus the async `init_backend` constructor. Inherent state and
-//! resource methods live in `backend_state` to keep this trait impl under cap.
-//!
-//! Split out of `canvaskit.rs`. A trait impl must be one block, so the flat
-//! `OpCk` call bodies for the shape / gradient / SVG-path ops live in `ops`
-//! and the trait methods here forward to them.
+//! `CanvasKitBackend`: the `RenderBackend` impl over the CanvasKit JS bridge,
+//! plus `init_backend`. Inherent state lives in `backend_state`; a trait impl
+//! must be one block, so the `OpCk` op bodies live in `ops` (800-line cap).
 
 use de_editor_ui::{
     Color, ImageAdjustments, ImageBlendMode, ImageDrawMode, Point2D, Rect, RenderBackend,
@@ -750,6 +746,15 @@ impl RenderBackend for CanvasKitBackend {
     }
     fn push_backdrop_blur_layer(&mut self, sigma: f32) {
         self.ck.push_backdrop_blur_layer(sigma);
+    }
+    fn push_shader_effect_layer(
+        &mut self,
+        rect: Rect,
+        sksl: &str,
+        uniforms: &[(&str, &[f32])],
+        backdrop: bool,
+    ) {
+        ops::push_shader_effect_layer(&self.ck, rect, sksl, uniforms, backdrop);
     }
     fn restore(&mut self) {
         self.ck.restore();

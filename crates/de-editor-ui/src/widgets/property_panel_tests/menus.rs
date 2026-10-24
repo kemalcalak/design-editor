@@ -36,8 +36,8 @@ fn effects_add_menu_hits_every_effect_kind() {
     let rows = crate::widgets::property_panel_effects::effect_add_menu_row_rects(menu);
     assert_eq!(
         rows.len(),
-        4,
-        "menu has Shadow + Inner shadow + Layer Blur + Background Blur rows"
+        5,
+        "menu has Shadow + Inner shadow + Layer Blur + Background Blur + Shader rows"
     );
     // Hit-testing each row centre resolves to the matching add action.
     for (expected, row) in rows {

@@ -663,7 +663,7 @@ pub fn set_ellipse_arc_snapshot() -> SetEllipseArc {
 }
 
 /// First-party `add_node_effect` tool — append a visual effect
-/// (`shadow` / `blur` / `background_blur`) to a node with default
+/// (`shadow` / `blur` / `background_blur` / `shader`) to a node with default
 /// parameters.
 pub struct AddNodeEffect;
 
@@ -679,13 +679,16 @@ impl McpTool for AddNodeEffect {
         let Some(kind) = args.get("kind") else {
             return ToolOutcome::Err(
                 ToolErrorCode::MissingArgument,
-                "kind is required (shadow / blur / background_blur)".into(),
+                "kind is required (shadow / blur / background_blur / shader)".into(),
             );
         };
-        if !matches!(kind.as_str(), "shadow" | "blur" | "background_blur") {
+        if !matches!(
+            kind.as_str(),
+            "shadow" | "blur" | "background_blur" | "shader"
+        ) {
             return ToolOutcome::Err(
                 ToolErrorCode::InvalidArgument,
-                format!("kind must be shadow / blur / background_blur, got {kind:?}"),
+                format!("kind must be shadow / blur / background_blur / shader, got {kind:?}"),
             );
         }
         let mut out = BTreeMap::new();

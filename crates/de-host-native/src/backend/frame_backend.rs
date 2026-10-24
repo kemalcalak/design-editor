@@ -1,9 +1,7 @@
 //! Frame-scoped `RenderBackend` adapter over `NativeBackend` +
 //! `&Canvas`. Lifetime-bound to the `SharedSkiaContext::with_frame`
 //! closure body so widget code never sees the canvas borrow directly.
-//!
-//! Pulled out of `widget_host.rs` so the spine file stays under the
-//! 800-line ceiling.
+//! Pulled out of `widget_host.rs` for the 800-line ceiling.
 
 use crate::backend::NativeBackend;
 use de_editor_ui::{
@@ -87,6 +85,17 @@ impl<'a> RenderBackend for NativeFrameBackend<'a> {
 
     fn push_backdrop_blur_layer(&mut self, sigma: f32) {
         self.inner.push_backdrop_blur_layer(self.canvas, sigma);
+    }
+
+    fn push_shader_effect_layer(
+        &mut self,
+        rect: Rect,
+        sksl: &str,
+        uniforms: &[(&str, &[f32])],
+        backdrop: bool,
+    ) {
+        self.inner
+            .push_shader_effect_layer(self.canvas, rect, sksl, uniforms, backdrop);
     }
 
     fn restore(&mut self) {

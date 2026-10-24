@@ -460,6 +460,10 @@ pub fn action_button_rects_with_fill_picker(
                 PropertyPanelAction::SetEffectVisible(ei, !eff.visible),
                 rects.eye,
             ));
+            if !eff.kind.has_amount() {
+                y += EFFECT_ROW_HEIGHT + EFFECT_ROW_GAP;
+                continue;
+            }
             let field = if matches!(
                 eff.kind,
                 crate::widgets::property_panel::EffectKind::Shadow

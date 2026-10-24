@@ -70,6 +70,7 @@ pub(super) fn node_to_payload_with_text_context(
     p.effects = crate::effects::shadows_from_canonical(node);
     p.layer_blur = crate::effects::blur_from_canonical(node);
     p.background_blur = crate::effects::background_blur_from_canonical(node);
+    p.shader_effects = crate::effects_shader::shader_effects_from_canonical(node);
     p
 }
 

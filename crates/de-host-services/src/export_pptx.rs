@@ -403,6 +403,7 @@ fn unexpressible(n: &SceneNode, is_board: bool) -> Option<&'static str> {
             // whatsoever.
             Effect::Blur(b) if b.radius > 0.0 => return Some("layer blur"),
             Effect::BackgroundBlur { radius } if *radius > 0.0 => return Some("background blur"),
+            Effect::Shader(_) => return Some("sksl shader effect"),
             _ => {}
         }
     }
