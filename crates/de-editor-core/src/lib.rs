@@ -107,6 +107,7 @@ pub mod image_panel_state;
 pub mod ime_state;
 mod instance_child_override;
 pub mod instance_override;
+pub mod instance_path;
 pub mod interaction_edit;
 pub mod mesh_lattice;
 pub mod missing_fonts;

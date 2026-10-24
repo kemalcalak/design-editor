@@ -209,7 +209,9 @@ const LAYOUT_VERIFY_STEP: &str = "### Step 8 — Verify with `snapshot_layout`\n
 This host cannot render screenshots — `get_screenshot` does not exist here and its absence is \
 never a reason to stop or skip building. Verify with `snapshot_layout` and each `batch_design` \
 result's `layoutIssues` list instead: those are the REAL resolved layout's measured facts \
-(collapsed containers, overflowing rows, clipped text). Iterate until no layout issue remains \
+(collapsed containers, overflowing rows, clipped text). A `snapshot_layout` entry with \
+`problems` (\"partially clipped\" / \"fully clipped\") is cut off by a clipping ancestor and \
+counts as a layout issue. Iterate until no layout issue remains \
 and every section shell is filled. Do not declare the design done while a known defect stands.";
 
 const LAYOUT_FINISH_CONDITION: &str = "End the turn when `snapshot_layout` confirms every \
