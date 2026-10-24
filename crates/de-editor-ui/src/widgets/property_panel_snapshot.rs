@@ -237,4 +237,7 @@ pub struct NodeSnapshot {
     /// Built-in preset of the primary shader fill, `None` for a custom
     /// program or a non-shader fill — highlights the preset row.
     pub shader_preset: Option<de_editor_core::ShaderPreset>,
+    /// `(rows, cols)` of the primary mesh gradient, `None` for any other
+    /// primary fill — the mesh body's Rows / Columns steppers (#142).
+    pub mesh_lattice: Option<(u32, u32)>,
 }

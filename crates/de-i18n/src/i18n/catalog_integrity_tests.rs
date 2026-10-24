@@ -251,7 +251,7 @@ fn placeholders(value: &str) -> BTreeSet<String> {
 fn every_locale_has_exactly_the_english_key_set() {
     let all_tables = tables();
     let expected = table_keys(all_tables[0].0, all_tables[0].1, all_tables[0].2);
-    assert_eq!(expected.len(), 1768, "update the intentional catalog size");
+    assert_eq!(expected.len(), 1770, "update the intentional catalog size");
 
     for (name, main, git, lookup) in all_tables {
         let actual = table_keys(name, main, git);
@@ -363,7 +363,14 @@ fn every_translation_preserves_the_english_placeholder_set() {
 
 #[test]
 fn previously_missing_callsite_keys_are_catalogued() {
-    for key in ["widget.title", "widget.checked", "fill.mesh", "fill.shader"] {
+    for key in [
+        "widget.title",
+        "widget.checked",
+        "fill.mesh",
+        "fill.shader",
+        "fill.meshRows",
+        "fill.meshColumns",
+    ] {
         for (name, _, _, lookup) in tables() {
             assert!(
                 lookup(key).is_some(),

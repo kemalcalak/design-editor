@@ -287,6 +287,8 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "settings.system.pencilSmoothingPrecise" => "Preciso",
         "settings.system.pencilSmoothingBalanced" => "Equilibrado",
         "settings.system.pencilSmoothingSmooth" => "Suave",
+        "fill.meshRows" => "Filas",
+        "fill.meshColumns" => "Columnas",
         "fill.angular" => "Angular",
         _ => return None,
     })

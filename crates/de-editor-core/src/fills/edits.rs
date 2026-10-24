@@ -185,7 +185,15 @@ fn push_shadow(node: &mut PenNode, inner: Option<bool>) -> bool {
     let Some(effects) = node_effects_mut(node) else {
         return false;
     };
-    effects.push(PenEffect::Shadow(ShadowBody {
+    effects.push(PenEffect::Shadow(panel_shadow_body(inner)));
+    true
+}
+
+/// The Effects add menu's shadow, `0 4px 8px #00000040`, inset when
+/// `inner` is `Some(true)`. MCP `add_node_effect` `inner_shadow` lands
+/// the same body (#142).
+pub fn panel_shadow_body(inner: Option<bool>) -> ShadowBody {
+    ShadowBody {
         inner,
         visible: None,
         offset_x: 0.0,
@@ -193,8 +201,7 @@ fn push_shadow(node: &mut PenNode, inner: Option<bool>) -> bool {
         blur: 8.0,
         spread: 0.0,
         color: "#00000040".to_string(),
-    }));
-    true
+    }
 }
 
 /// Append a default Gaussian layer-blur effect (Figma "Layer blur").
