@@ -23,6 +23,7 @@ mod glsl_error;
 mod glsl_lex;
 pub(crate) mod images;
 mod instances;
+mod mesh;
 mod nodes;
 mod paint;
 mod shader;
