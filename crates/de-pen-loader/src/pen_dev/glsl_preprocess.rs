@@ -21,6 +21,10 @@ use super::glsl_lex::{lex, text, Kind, Token};
 /// Expansion depth after which a macro is assumed to recurse forever.
 const MAX_EXPANSION_DEPTH: usize = 64;
 
+/// Tokens the whole expansion may produce: the input is an untrusted file,
+/// and nested macros can multiply (`#define B A A`, `#define C B B`, …).
+const MAX_EXPANDED_TOKENS: usize = 1 << 20;
+
 #[derive(Clone, Debug)]
 struct Macro {
     /// `Some` for a function-like macro.
@@ -60,16 +64,25 @@ pub(super) fn preprocess(tokens: Vec<Token>) -> Result<Vec<Token>, GlslError> {
     let mut out = Vec::with_capacity(tokens.len());
     let mut pending: Vec<Token> = Vec::new();
     let mut conds: Vec<Cond> = Vec::new();
+    let mut budget = MAX_EXPANDED_TOKENS;
     for token in tokens {
         let active = conds.last().is_none_or(|cond| cond.active);
         if token.kind != Kind::Directive {
             if active {
                 pending.push(token);
+            } else if token.text.contains('\n') {
+                // Keep the lines of a dropped branch.
+                let lines = token.text.matches('\n').count();
+                pending.push(Token::new(Kind::Space, "\n".repeat(lines)));
             }
             continue;
         }
         // Macros expand with the definitions in force at this point.
-        out.extend(expand(&std::mem::take(&mut pending), &defines, 0)?);
+        out.extend(expand(
+            &std::mem::take(&mut pending),
+            &defines,
+            &mut budget,
+        )?);
         let line = directive_text(&token.text);
         let (name, rest) = split_directive(&line);
         match name {
@@ -77,7 +90,8 @@ pub(super) fn preprocess(tokens: Vec<Token>) -> Result<Vec<Token>, GlslError> {
                 let value = if !active {
                     false
                 } else if name == "if" {
-                    evaluate(rest, &defines).ok_or_else(|| GlslError::Directive(line.clone()))?
+                    evaluate(rest, &defines, &mut budget)
+                        .ok_or_else(|| GlslError::Directive(line.clone()))?
                 } else {
                     let defined = defines.contains_key(rest.trim());
                     defined == (name == "ifdef")
@@ -95,7 +109,7 @@ pub(super) fn preprocess(tokens: Vec<Token>) -> Result<Vec<Token>, GlslError> {
                     .filter(|cond| !cond.in_else)
                     .ok_or_else(|| GlslError::Directive(line.clone()))?;
                 if cond.parent && !cond.taken {
-                    let value = evaluate(rest, &defines)
+                    let value = evaluate(rest, &defines, &mut budget)
                         .ok_or_else(|| GlslError::Directive(line.clone()))?;
                     cond.active = value;
                     cond.taken = value;
@@ -137,18 +151,31 @@ pub(super) fn preprocess(tokens: Vec<Token>) -> Result<Vec<Token>, GlslError> {
     if !conds.is_empty() {
         return Err(GlslError::Directive("#if without #endif".to_owned()));
     }
-    out.extend(expand(&pending, &defines, 0)?);
+    out.extend(expand(&pending, &defines, &mut budget)?);
     Ok(out)
 }
 
 /// A directive line without its comments and continuations
 /// (`#endif // GL_ES` → `#endif`).
 fn directive_text(raw: &str) -> String {
-    let joined = raw.replace("\\\r\n", " ").replace("\\\n", " ");
+    // A `\` ending a line (trailing spaces allowed, as the lexer reads it)
+    // joins the next one.
+    let joined: String = raw
+        .split('\n')
+        .map(|line| {
+            let line = line.trim_end();
+            line.strip_suffix('\\').unwrap_or(line)
+        })
+        .collect::<Vec<_>>()
+        .join(" ");
     let body = joined.trim().trim_start_matches('#');
+    // A comment separates tokens, as in C (`A/**/B` is two words).
     let kept: Vec<Token> = lex(body)
         .into_iter()
-        .filter(|token| token.kind != Kind::Comment)
+        .map(|token| match token.kind {
+            Kind::Comment => Token::new(Kind::Space, " "),
+            _ => token,
+        })
         .collect();
     format!("#{}", text(&kept).trim())
 }
@@ -199,24 +226,31 @@ fn define(rest: &str) -> Option<(String, Macro)> {
 }
 
 /// `tokens` with every macro expanded; a macro is not expanded again
-/// inside its own expansion (C's rescanning rule, approximated by depth).
+/// inside its own expansion (C's rescanning rule). `budget` is the number
+/// of tokens the expansion may still produce.
 fn expand(
     tokens: &[Token],
     defines: &HashMap<String, Macro>,
-    depth: usize,
+    budget: &mut usize,
 ) -> Result<Vec<Token>, GlslError> {
-    expand_hiding(tokens, defines, depth, &HashSet::new())
+    expand_hiding(tokens, defines, 0, &HashSet::new(), budget)
 }
 
+/// [`expand`] at nesting `depth`, with the macros being expanded around
+/// this point in `hidden`.
 fn expand_hiding(
     tokens: &[Token],
     defines: &HashMap<String, Macro>,
     depth: usize,
     hidden: &HashSet<String>,
+    budget: &mut usize,
 ) -> Result<Vec<Token>, GlslError> {
     if depth > MAX_EXPANSION_DEPTH {
         return Err(GlslError::Unsupported("recursive macro"));
     }
+    *budget = budget
+        .checked_sub(tokens.len())
+        .ok_or(GlslError::Unsupported("macro expansion too large"))?;
     let mut out = Vec::with_capacity(tokens.len());
     let mut i = 0;
     while i < tokens.len() {
@@ -233,7 +267,13 @@ fn expand_hiding(
         inner.insert(token.text.clone());
         match &found.params {
             None => {
-                out.extend(expand_hiding(&found.body, defines, depth + 1, &inner)?);
+                out.extend(expand_hiding(
+                    &found.body,
+                    defines,
+                    depth + 1,
+                    &inner,
+                    budget,
+                )?);
                 i += 1;
             }
             Some(params) => {
@@ -254,7 +294,7 @@ fn expand_hiding(
                 // Arguments expand fully before substitution.
                 let mut expanded_args = Vec::with_capacity(args.len());
                 for arg in &args {
-                    expanded_args.push(expand_hiding(arg, defines, depth + 1, hidden)?);
+                    expanded_args.push(expand_hiding(arg, defines, depth + 1, hidden, budget)?);
                 }
                 let mut body = Vec::with_capacity(found.body.len());
                 for part in &found.body {
@@ -266,7 +306,7 @@ fn expand_hiding(
                         None => body.push(part.clone()),
                     }
                 }
-                out.extend(expand_hiding(&body, defines, depth + 1, &inner)?);
+                out.extend(expand_hiding(&body, defines, depth + 1, &inner, budget)?);
                 i = after;
             }
         }
@@ -308,7 +348,7 @@ fn call_arguments(tokens: &[Token], from: usize) -> Option<(Vec<Vec<Token>>, usi
 
 /// The value of an `#if` / `#elif` condition, or `None` when it is not a
 /// constant integer expression.
-fn evaluate(condition: &str, defines: &HashMap<String, Macro>) -> Option<bool> {
+fn evaluate(condition: &str, defines: &HashMap<String, Macro>, budget: &mut usize) -> Option<bool> {
     // `defined NAME` / `defined(NAME)` resolve before macro expansion.
     let tokens = lex(condition);
     let mut resolved = Vec::with_capacity(tokens.len());
@@ -342,7 +382,7 @@ fn evaluate(condition: &str, defines: &HashMap<String, Macro>) -> Option<bool> {
         resolved.push(tokens[i].clone());
         i += 1;
     }
-    let expanded = expand(&resolved, defines, 0).ok()?;
+    let expanded = expand(&resolved, defines, budget).ok()?;
     let mut parser = Expr::new(&expanded);
     let value = parser.ternary()?;
     parser.at_end().then_some(value != 0)

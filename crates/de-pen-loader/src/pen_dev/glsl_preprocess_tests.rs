@@ -88,8 +88,29 @@ fn expression_evaluator_handles_operators() {
         ("-1 < 0 || 0", true),
         ("UNKNOWN", false),
     ] {
-        assert_eq!(evaluate(expr, &defines), Some(want), "{expr}");
+        assert_eq!(evaluate(expr, &defines, &mut 1000), Some(want), "{expr}");
     }
-    assert_eq!(evaluate("1 / 0", &defines), None);
-    assert_eq!(evaluate("(1", &defines), None);
+    assert_eq!(evaluate("1 / 0", &defines, &mut 1000), None);
+    assert_eq!(evaluate("(1", &defines, &mut 1000), None);
+}
+
+#[test]
+fn runaway_expansion_fails_instead_of_hanging() {
+    let mut src = String::from("#define M0 x x\n");
+    for level in 1..40 {
+        src.push_str(&format!("#define M{level} M{p} M{p}\n", p = level - 1));
+    }
+    src.push_str("M39");
+    assert_eq!(
+        run(&src),
+        Err(GlslError::Unsupported("macro expansion too large"))
+    );
+}
+
+#[test]
+fn dropped_branches_keep_their_lines_and_comments_split_words() {
+    let out = run("#if 0\na\nb\n#endif\nx").unwrap();
+    assert_eq!(out.matches('\n').count(), 4, "{out:?}");
+    assert_eq!(squash(&run("#define A/**/B\nA").unwrap()), "B");
+    assert_eq!(squash(&run("#define C 1 + \\  \n 2\nC").unwrap()), "1 + 2");
 }

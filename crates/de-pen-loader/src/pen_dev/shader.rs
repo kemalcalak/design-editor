@@ -188,7 +188,7 @@ fn binds_live(slot: &Slot, value: Option<&Value>) -> bool {
         (Slot::Float | Slot::Int(1) | Slot::Bool(1), Some(Value::Number(_) | Value::Bool(_))) => {
             true
         }
-        (Slot::Colour, Some(Value::String(s))) => colour(&Value::String(s.clone())).is_some(),
+        (Slot::Colour, Some(text @ Value::String(_))) => colour(text).is_some(),
         _ => false,
     }
 }

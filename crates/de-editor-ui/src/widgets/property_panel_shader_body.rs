@@ -90,8 +90,10 @@ impl ShaderBody {
     }
 }
 
-/// Fill in the hosts' compile results, which live on the editor state
-/// (the node-only snapshot builder leaves them pending).
+/// Fill in what lives on the editor state, which the node-only snapshot
+/// builder cannot see: the hosts' compile results, and the current value
+/// of every `$variable`-bound uniform (resolved like the canvas does,
+/// with the variable named in the row label).
 pub fn attach_checks(
     snapshot: &mut crate::widgets::property_panel::NodeSnapshot,
     node: &jian_ops_schema::node::PenNode,
@@ -108,6 +110,8 @@ pub fn attach_checks(
             de_editor_core::variables_resolve::resolve_shader_uniforms(
                 uniforms,
                 &state.doc,
+                state.active_children(),
+                state.selection.anchor.as_str(),
                 &state.ui.variables.active_theme,
             )
         });
@@ -117,6 +121,18 @@ pub fn attach_checks(
                 uniforms: Some(resolved),
             };
             body.rows = ShaderBody::of(shown, None).rows;
+            // Name the variable a row follows: an edit writes a plain
+            // value over it.
+            let specs = program.specs();
+            for (row, spec) in body.rows.iter_mut().zip(specs) {
+                if let Some(jian_ops_schema::style::ShaderUniformValue::Color(reference)) =
+                    program.uniforms.and_then(|map| map.get(&spec.name))
+                {
+                    if de_editor_core::variables_resolve::is_variable_ref(reference) {
+                        row.label = format!("{} ({reference})", row.label);
+                    }
+                }
+            }
         }
         body.check = program
             .sksl

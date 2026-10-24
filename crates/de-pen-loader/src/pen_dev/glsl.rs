@@ -31,7 +31,8 @@
 //! - `discard` returns transparent (from a helper function through a
 //!   flag `main` checks), and the other WebGL 1.0 built-ins read their
 //!   fragment-shader values (`gl_FragData[0]`, `gl_FrontFacing`,
-//!   `gl_PointCoord`, `gl_DepthRange`, the `gl_Max*` minimums).
+//!   `gl_PointCoord`, `gl_DepthRange`, the `gl_Max*` minimums);
+//! - `texture2DProj` divides by the last coordinate first.
 //!
 //! The preprocessor runs first ([`super::glsl_preprocess`]). Anything else
 //! (derivatives, …) is left to the SkSL compiler, which the caller runs to
@@ -362,9 +363,10 @@ fn zero_return(ty: &str) -> Result<String, GlslError> {
     Ok(format!("return {value}"))
 }
 
-/// The value of a WebGL 1.0 built-in constant (the minimums the spec
-/// guarantees, which is what a portable shader can rely on).
-fn builtin_constant(name: &str) -> Option<&'static str> {
+/// The value of a WebGL 1.0 built-in: the `gl_Max*` constants (the
+/// minimums the spec guarantees, which is what a portable shader can rely
+/// on) and the fragment inputs a fill or effect has.
+fn builtin_value(name: &str) -> Option<&'static str> {
     Some(match name {
         "gl_MaxVertexAttribs" => "8",
         "gl_MaxVertexUniformVectors" => "128",
@@ -561,6 +563,14 @@ impl Emitter<'_> {
                     let zero = zero_return(returns)?;
                     self.sksl
                         .push_str(&format!("{{ pen_Discard = true; {zero}; }}"));
+                    // The block replaces the statement: drop its `;` so an
+                    // `else` that follows still pairs with the `if`.
+                    if let Some(semicolon) = next_significant(self.tokens, i + 1)
+                        .filter(|&j| self.tokens[j].is_punct(';'))
+                    {
+                        i = semicolon + 1;
+                        continue;
+                    }
                 }
                 "gl_FragData" => {
                     i = self.frag_data(i)?;
@@ -570,8 +580,8 @@ impl Emitter<'_> {
                     i = self.depth_range(i)?;
                     continue;
                 }
-                name if builtin_constant(name).is_some() => {
-                    self.sksl.push_str(builtin_constant(name).expect("checked"));
+                name if builtin_value(name).is_some() => {
+                    self.sksl.push_str(builtin_value(name).unwrap_or_default());
                 }
                 "sampler2D" | "samplerCube" => {
                     return Err(GlslError::Unsupported("textures passed to functions"))
@@ -677,7 +687,7 @@ impl Emitter<'_> {
             .collect();
         let zero_index = words.len() == 3
             && self.tokens[words[0]].is_punct('[')
-            && matches!(self.tokens[words[1]].text.as_str(), "0")
+            && self.tokens[words[1]].text == "0"
             && self.tokens[words[2]].is_punct(']');
         if !zero_index {
             return Err(GlslError::Unsupported(

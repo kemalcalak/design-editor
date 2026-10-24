@@ -277,7 +277,8 @@ export function opCkMakeRuntimeShader(
       }
       for (let value = 0; value < arity; value++) {
         const raw = uniforms[valuesStart + value];
-        data[slot + value] = info.isInteger ? Math.round(raw) : raw;
+        // Half away from zero, like Rust's `f32::round` on native.
+        data[slot + value] = info.isInteger ? Math.sign(raw) * Math.round(Math.abs(raw)) : raw;
       }
     }
     if (entry.children && entry.children.length > 0) {

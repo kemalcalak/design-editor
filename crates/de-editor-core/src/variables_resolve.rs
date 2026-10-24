@@ -485,19 +485,40 @@ pub fn resolve_document_for_canvas(doc: &PenDocument, active: &Theme) -> PenDocu
     resolved
 }
 
-/// `uniforms` with every `$variable` value resolved under the document's
-/// effective `active` theme, or `None` when none names a variable. The
+/// `uniforms` of node `node_id` on the canvas roots `roots` with every
+/// `$variable` value resolved as the canvas resolves it: the document's
+/// effective `active` theme overlaid by the `theme` of each ancestor and
+/// of the node itself. `None` when no uniform names a variable. The
 /// property panel shows a variable-bound shader uniform's current value
 /// through this (#165).
 pub fn resolve_shader_uniforms(
     uniforms: &BTreeMap<String, jian_ops_schema::style::ShaderUniformValue>,
     doc: &PenDocument,
+    roots: &[PenNode],
+    node_id: &str,
     active: &Theme,
 ) -> Option<BTreeMap<String, jian_ops_schema::style::ShaderUniformValue>> {
     if !shader_uniforms::has_tokens(Some(uniforms)) {
         return None;
     }
-    let theme = effective_theme(doc, active);
+    let mut theme = effective_theme(doc, active);
+    fn scope(nodes: &[PenNode], id: &str, theme: &mut Theme) -> bool {
+        for node in nodes {
+            let saved = theme.clone();
+            if let Some(own) = node.base().theme.as_ref() {
+                theme.extend(
+                    own.iter()
+                        .map(|(axis, value)| (axis.clone(), value.clone())),
+                );
+            }
+            if node.base().id == id || node.children().is_some_and(|kids| scope(kids, id, theme)) {
+                return true;
+            }
+            *theme = saved;
+        }
+        false
+    }
+    scope(roots, node_id, &mut theme);
     let mut resolved = uniforms.clone();
     shader_uniforms::resolve(Some(&mut resolved), doc.variables.as_ref(), &theme);
     Some(resolved)

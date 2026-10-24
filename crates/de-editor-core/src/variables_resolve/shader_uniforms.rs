@@ -7,7 +7,9 @@
 //! theme switch or a variable edit repaints the shader with the new value:
 //! a number becomes a float, a boolean 0 / 1, a string (a colour) the hex.
 //! A reference that does not resolve is dropped, leaving the uniform
-//! unbound (zero), the same as a missing value.
+//! unbound (zero), the same as a missing value. The reference travels in
+//! `ShaderUniformValue::Color`, the schema's only string variant, whatever
+//! the variable's kind.
 
 use std::collections::BTreeMap;
 
@@ -20,10 +22,10 @@ type Uniforms = BTreeMap<String, ShaderUniformValue>;
 
 /// Whether any uniform names a variable.
 pub(super) fn has_tokens(uniforms: Option<&Uniforms>) -> bool {
-    uniforms.is_some_and(|map| map.values().any(reference_of_value))
+    uniforms.is_some_and(|map| map.values().any(is_reference))
 }
 
-fn reference_of_value(value: &ShaderUniformValue) -> bool {
+fn is_reference(value: &ShaderUniformValue) -> bool {
     matches!(value, ShaderUniformValue::Color(text) if is_variable_ref(text))
 }
 
@@ -35,7 +37,7 @@ pub(super) fn resolve(uniforms: Option<&mut Uniforms>, vars: Option<&Vars>, them
     };
     let names: Vec<String> = uniforms
         .iter()
-        .filter(|(_, value)| reference_of_value(value))
+        .filter(|(_, value)| is_reference(value))
         .map(|(name, _)| name.clone())
         .collect();
     for name in &names {

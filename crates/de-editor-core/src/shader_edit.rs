@@ -127,7 +127,17 @@ pub fn set_shader_uniform(
     else {
         return false;
     };
-    let Some(value) = spec.coerce(value) else {
+    // A `$variable` binding is kept as written; the canvas resolver
+    // checks it per theme (#165).
+    let reference = matches!(
+        value,
+        ShaderUniformValue::Color(text) if crate::variables_resolve::is_variable_ref(text)
+    ) && !matches!(spec.kind, crate::UniformKind::Vector(_));
+    let Some(value) = (if reference {
+        Some(value.clone())
+    } else {
+        spec.coerce(value)
+    }) else {
         return false;
     };
     let Some(program) = shader_program_mut(node, target) else {

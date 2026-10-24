@@ -151,9 +151,10 @@ impl ShaderUniformSpec {
                     v.iter().map(|c| c.round()).collect(),
                 ))
             }
-            (UniformKind::Bool, ShaderUniformValue::Float(v)) if v.is_finite() => {
-                Some(ShaderUniformValue::Float(f32::from(u8::from(*v != 0.0))))
-            }
+            // Whole like the backends bind it: 0.3 is false there too.
+            (UniformKind::Bool, ShaderUniformValue::Float(v)) if v.is_finite() => Some(
+                ShaderUniformValue::Float(f32::from(u8::from(v.round() != 0.0))),
+            ),
             _ => None,
         }
     }

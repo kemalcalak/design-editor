@@ -162,7 +162,7 @@ fn discard_in_a_helper_sets_a_flag_main_checks() {
     let sksl = translate(src, Stage::Fill, &Map::new()).unwrap().sksl;
     assert!(sksl.contains("bool pen_Discard;"), "{sksl}");
     assert!(
-        sksl.contains("{ pen_Discard = true; return 0.0; };"),
+        sksl.contains("{ pen_Discard = true; return 0.0; } return x;"),
         "{sksl}"
     );
     assert!(sksl.contains("pen_Discard = false;"), "{sksl}");
@@ -399,7 +399,7 @@ fn translated_fixtures_compile_in_skia() {
             json!({}),
         ),
         (
-            "float edge(float x) { if (x < 0.0) discard; return x; } void main() { if (gl_FragCoord.y < 2.0) discard; gl_FragColor = vec4(edge(gl_FragCoord.x - 2.0)); if (true) return; }",
+            "float edge(float x) { if (x < 0.0) discard; else x = x * 2.0; return x; } void main() { if (gl_FragCoord.y < 2.0) discard; gl_FragColor = vec4(edge(gl_FragCoord.x - 2.0)); if (true) return; }",
             Stage::Fill,
             json!({}),
         ),
