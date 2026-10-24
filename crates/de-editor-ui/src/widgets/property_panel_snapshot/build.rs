@@ -8,8 +8,8 @@
 use super::node_props::*;
 use super::widget_props::{text_summary_of, widget_summary_of};
 use super::{color_from_hex, EffectSummary, LayoutPaddingSummary, NodeSnapshot};
-use super::{fill_props, node_kind_of, stroke_sides_for_scene};
-use crate::layout_scene::{NodeKind, SceneStroke, SceneStrokeAlign};
+use super::{fill_props, node_kind_of, stroke_align_for_scene, stroke_sides_for_scene};
+use crate::layout_scene::{NodeKind, SceneStroke};
 use crate::widgets::property_panel_action::{LayoutAlignValue, LayoutJustifyValue};
 use crate::Color;
 use de_editor_core::pen_node_ext::PenNodeExt;
@@ -129,6 +129,9 @@ impl NodeSnapshot {
             kind_icon: crate::widgets::icons::Icon::Hash,
             is_instance: false,
             is_reusable: false,
+            flip_x: false,
+            flip_y: false,
+            shader_preset: None,
         }
     }
 
@@ -211,6 +214,9 @@ impl NodeSnapshot {
             kind_icon: crate::widgets::icons::Icon::Hash,
             is_instance: false,
             is_reusable: false,
+            flip_x: false,
+            flip_y: false,
+            shader_preset: None,
         })
     }
 
@@ -245,13 +251,13 @@ impl NodeSnapshot {
                 color,
                 width: stroke_width.unwrap_or(1.0) as f32,
                 sides: stroke_sides_for_scene(node),
-                align: SceneStrokeAlign::Center,
+                align: stroke_align_for_scene(node),
             }),
             (None, Some(width)) if width > 0.0 => Some(SceneStroke {
                 color: Self::DEFAULT_STROKE_SWATCH,
                 width: width as f32,
                 sides: stroke_sides_for_scene(node),
-                align: SceneStrokeAlign::Center,
+                align: stroke_align_for_scene(node),
             }),
             _ => None,
         };
@@ -319,6 +325,9 @@ impl NodeSnapshot {
             kind_icon: crate::widgets::layer_panel_walkers::icon_for_node(node),
             is_instance: false,
             is_reusable: matches!(node, PenNode::Frame(f) if f.reusable == Some(true)),
+            flip_x: base.flip_x == Some(true),
+            flip_y: base.flip_y == Some(true),
+            shader_preset: de_editor_core::shader_presets::primary_shader_preset(node),
         }
     }
 }

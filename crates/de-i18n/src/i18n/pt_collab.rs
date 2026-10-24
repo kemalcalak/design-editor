@@ -263,6 +263,18 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "shapes.star" => "Estrela",
         "star.points" => "Pontas",
         "star.innerRadius" => "Raio interno",
+        "stroke.inside" => "Interno",
+        "stroke.center" => "Centro",
+        "stroke.outside" => "Externo",
+        "effects.addInnerShadow" => "Sombra interna",
+        "image.stretch" => "Esticar",
+        "fill.presetNoise" => "Ruído",
+        "fill.presetFade" => "Esmaecer",
+        "fill.presetGlow" => "Brilho",
+        "settings.system.pencilSmoothing" => "Suavização do lápis",
+        "settings.system.pencilSmoothingPrecise" => "Preciso",
+        "settings.system.pencilSmoothingBalanced" => "Equilibrado",
+        "settings.system.pencilSmoothingSmooth" => "Suave",
         _ => return None,
     })
 }

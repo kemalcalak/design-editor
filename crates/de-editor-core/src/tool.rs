@@ -7,10 +7,11 @@
 
 /// Editor tool — what primary mouse drag does on the canvas.
 ///
-/// The variants up to `Hand` are the shape / frame / text / navigation
-/// set. The trailing ones are the form-widget tools (Phase
-/// D2): selecting one and clicking the canvas drops a default widget
-/// node of the matching kind.
+/// The variants up to `Hand` are the original shape / frame / text /
+/// navigation set (Star #87 among the shapes), then the freehand Pencil
+/// (#88). The trailing ten are the form-widget tools (Phase D2):
+/// selecting one and clicking the canvas drops a default widget node of
+/// the matching kind.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum Tool {
     #[default]
@@ -25,6 +26,9 @@ pub enum Tool {
     Text,
     Frame,
     Hand,
+    /// Freehand drawing: a drag records points, the release fits them
+    /// into a smooth path (`pencil.rs`, #88).
+    Pencil,
     // --- Form widgets (Phase D2) -------------------------------------
     TextInput,
     TextArea,
@@ -41,7 +45,7 @@ pub enum Tool {
 impl Tool {
     /// All tools, in toolbar display order. Single source of truth for
     /// the toolbar build path.
-    pub const ALL: [Tool; 20] = [
+    pub const ALL: [Tool; 21] = [
         Tool::Select,
         Tool::Rect,
         Tool::Ellipse,
@@ -52,6 +56,7 @@ impl Tool {
         Tool::Text,
         Tool::Frame,
         Tool::Hand,
+        Tool::Pencil,
         Tool::TextInput,
         Tool::TextArea,
         Tool::NumberInput,
@@ -94,6 +99,7 @@ impl Tool {
             Tool::Text => "text",
             Tool::Frame => "frame",
             Tool::Hand => "hand",
+            Tool::Pencil => "pencil",
             Tool::TextInput => "text_input",
             Tool::TextArea => "text_area",
             Tool::NumberInput => "number_input",

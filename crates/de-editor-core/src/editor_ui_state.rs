@@ -401,7 +401,7 @@ pub struct EditorUiState {
     pub instance_component_picker_anchor: String,
     /// Whether the Position section shows the per-corner 2×2 radius grid.
     pub corner_expand_open: bool,
-    /// Whether the Effects section's three-kind "+" add-menu is open.
+    /// Whether the Effects section's "+" add-menu (one row per effect kind) is open.
     pub effect_add_picker_open: bool,
     /// Row index hovered in the Effects add-menu (`None` = none), so the
     /// popover highlights the row under the cursor like the other
@@ -662,6 +662,9 @@ pub struct EditorUiState {
     /// Which pencil-cursor silhouette the generation overlay draws.
     /// User-selectable in Settings > System; persisted across launches.
     pub pencil_cursor_style: PencilCursorStyle,
+    /// Pencil-tool curve-fit tolerance (Settings > System, #88).
+    /// Persisted across launches on desktop.
+    pub pencil_smoothing: PencilSmoothing,
     /// Ghost of the blank starter frame `(x, y, w, h)` in doc px. Set when a
     /// design prompt clears the pristine starter; the canvas keeps painting
     /// it until the generated design's sized root lands (or the turn ends),

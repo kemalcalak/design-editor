@@ -87,10 +87,12 @@ pub fn fill_body_height_with_stops(fill_type: FillType, stop_count: usize) -> f3
         FillType::Solid => 0.0,
         FillType::LinearGradient => INPUT_HEIGHT + 6.0 + stops_block + 6.0,
         FillType::RadialGradient => stops_block + 6.0,
-        // Mesh + Shader show the row only (per-vertex editing / shader
-        // authoring deferred — shader is render-only in v1) — no body
-        // block, so they contribute nothing past the row.
-        FillType::MeshGradient | FillType::Shader => 0.0,
+        // Mesh: the vertex grid (`stop_count` = vertices); Shader: the
+        // preset row (#90).
+        FillType::MeshGradient => {
+            crate::widgets::property_panel_fill_mesh_shader::mesh_body_height(stop_count)
+        }
+        FillType::Shader => crate::widgets::property_panel_fill_mesh_shader::shader_body_height(),
         FillType::Image => INPUT_HEIGHT + 6.0,
     }
 }
@@ -255,7 +257,9 @@ pub fn action_button_rects_with_fill_picker(
             visible.component_button,
         ));
     }
-    // Position section: X Y, then W H (#30), then rotation / radius.
+    // Position section: the header's flip buttons, X Y, then W H (#30),
+    // then rotation / radius.
+    crate::widgets::property_panel_flip::push_flip_action_rects(&mut out, x0, tops.position, w);
     let radius_row_y =
         tops.position + SECTION_HEADER_HEIGHT + INPUT_HEIGHT + 6.0 + visible.position_size_row_h();
     if visible.corner_per_corner {
@@ -387,7 +391,14 @@ pub fn action_button_rects_with_fill_picker(
         // Mirrors paint_stroke_section: header + hex/width row + side grid.
         let section_y = tops.stroke;
         let mut y = section_y;
-        push_stroke_action_rects(&mut out, x0, section_y, w, visible.stroke_mode_popover_open);
+        push_stroke_action_rects(
+            &mut out,
+            x0,
+            section_y,
+            w,
+            visible.stroke_edit_mode,
+            visible.stroke_mode_popover_open,
+        );
         y += SECTION_HEADER_HEIGHT;
         // The stroke hex row's leading colour swatch opens the picker.
         let show_var = visible.color_variable_count > 0 || visible.stroke_variable_bound;
@@ -429,7 +440,7 @@ pub fn action_button_rects_with_fill_picker(
     if visible.effects {
         let mut y = tops.effects;
         // Mirrors `paint_effects_section`: header + one block per
-        // effect. The header's "+" opens the three-kind add-menu.
+        // effect. The header's "+" opens the effect-kind add-menu.
         let plus = crate::widgets::property_panel_inputs::section_add_target(x0, y, w);
         out.push((PropertyPanelAction::ToggleEffectAddPicker, plus));
         y += SECTION_HEADER_HEIGHT;
@@ -440,7 +451,11 @@ pub fn action_button_rects_with_fill_picker(
                 PropertyPanelAction::SetEffectVisible(ei, !eff.visible),
                 rects.eye,
             ));
-            let field = if matches!(eff.kind, crate::widgets::property_panel::EffectKind::Shadow) {
+            let field = if matches!(
+                eff.kind,
+                crate::widgets::property_panel::EffectKind::Shadow
+                    | crate::widgets::property_panel::EffectKind::InnerShadow
+            ) {
                 de_editor_core::EffectField::Blur
             } else {
                 de_editor_core::EffectField::Radius

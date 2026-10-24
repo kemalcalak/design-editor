@@ -74,6 +74,17 @@ pub(crate) fn stroke_sides_for_scene(node: &PenNode) -> Option<[f32; 4]> {
     }
 }
 
+/// The node's authored stroke alignment in scene form (absent = Center).
+pub(crate) fn stroke_align_for_scene(node: &PenNode) -> crate::layout_scene::SceneStrokeAlign {
+    use crate::layout_scene::SceneStrokeAlign;
+    use jian_ops_schema::style::StrokeAlign;
+    match de_editor_core::fills::node_stroke_align(node) {
+        Some(StrokeAlign::Inside) => SceneStrokeAlign::Inside,
+        Some(StrokeAlign::Outside) => SceneStrokeAlign::Outside,
+        Some(StrokeAlign::Center) | None => SceneStrokeAlign::Center,
+    }
+}
+
 /// Snapshot of the selected node's editable fields, formatted for
 /// display. Built once per `for_selection` call so all paint
 /// helpers can read pre-computed strings instead of re-formatting.
@@ -183,4 +194,11 @@ pub struct NodeSnapshot {
     /// True when the selection is a reusable COMPONENT definition —
     /// drives the purple badge + the Detach-component button.
     pub is_reusable: bool,
+    /// Mirror flags (`flip_x` / `flip_y`) — the Position header paints
+    /// its flip buttons active while set.
+    pub flip_x: bool,
+    pub flip_y: bool,
+    /// Built-in preset of the primary shader fill, `None` for a custom
+    /// program or a non-shader fill — highlights the preset row.
+    pub shader_preset: Option<de_editor_core::ShaderPreset>,
 }

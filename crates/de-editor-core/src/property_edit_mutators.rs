@@ -634,6 +634,21 @@ impl EditorState {
         changed
     }
 
+    /// Set the anchor node's stroke alignment. A node without a stroke
+    /// is left alone (see `fills::set_stroke_align`).
+    pub fn set_selected_stroke_align(
+        &mut self,
+        align: jian_ops_schema::style::StrokeAlign,
+    ) -> bool {
+        let changed = self
+            .with_selected_node(|node| crate::fills::set_stroke_align(node, align))
+            .unwrap_or(false);
+        if changed {
+            self.mark_document_changed();
+        }
+        changed
+    }
+
     /// Set TILE scale on a primary image fill. Unlike mode/adjustments, this
     /// deliberately does not fall back to a standalone Image node because its
     /// schema has no tileScale property.

@@ -263,6 +263,18 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "shapes.star" => "Ngôi sao",
         "star.points" => "Số cánh",
         "star.innerRadius" => "Bán kính trong",
+        "stroke.inside" => "Bên trong",
+        "stroke.center" => "Giữa",
+        "stroke.outside" => "Bên ngoài",
+        "effects.addInnerShadow" => "Bóng trong",
+        "image.stretch" => "Kéo giãn",
+        "fill.presetNoise" => "Nhiễu",
+        "fill.presetFade" => "Mờ dần",
+        "fill.presetGlow" => "Phát sáng",
+        "settings.system.pencilSmoothing" => "Làm mượt bút chì",
+        "settings.system.pencilSmoothingPrecise" => "Chính xác",
+        "settings.system.pencilSmoothingBalanced" => "Cân bằng",
+        "settings.system.pencilSmoothingSmooth" => "Mượt",
         _ => return None,
     })
 }

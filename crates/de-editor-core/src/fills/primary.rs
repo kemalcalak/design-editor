@@ -58,8 +58,10 @@ pub fn set_primary_gradient_angle(node: &mut PenNode, angle_deg: f32) -> bool {
 }
 
 /// Replace gradient stop `index`'s colour with `hex` (already
-/// validated `#RRGGBB`). Linear + Radial both accepted. No-op when
-/// the first fill isn't a gradient or `index` is out of range.
+/// validated `#RRGGBB`). Linear + Radial both accepted, and so is a
+/// mesh gradient, whose colour stops are its lattice vertices in stored
+/// order. No-op when the first fill isn't a gradient or `index` is out
+/// of range.
 pub fn set_primary_gradient_stop_hex(node: &mut PenNode, index: usize, hex: &str) -> bool {
     if node_fills(node).map(|f| f.is_empty()).unwrap_or(true) {
         return false;
@@ -70,15 +72,16 @@ pub fn set_primary_gradient_stop_hex(node: &mut PenNode, index: usize, hex: &str
     let Some(first) = fills.first_mut() else {
         return false;
     };
-    let stops = match first {
-        PenFill::LinearGradient(b) => &mut b.stops,
-        PenFill::RadialGradient(b) => &mut b.stops,
+    let color = match first {
+        PenFill::LinearGradient(b) => b.stops.get_mut(index).map(|s| &mut s.color),
+        PenFill::RadialGradient(b) => b.stops.get_mut(index).map(|s| &mut s.color),
+        PenFill::MeshGradient(b) => b.stops.get_mut(index).map(|s| &mut s.color),
         _ => return false,
     };
-    let Some(stop) = stops.get_mut(index) else {
+    let Some(color) = color else {
         return false;
     };
-    stop.color = hex.to_string();
+    *color = hex.to_string();
     true
 }
 

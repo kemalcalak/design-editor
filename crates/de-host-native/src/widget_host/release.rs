@@ -66,6 +66,10 @@ impl WidgetHostNative {
         if self.apply_pen_release() {
             return true;
         }
+        // A Pencil stroke commits on release (`pencil_press.rs`).
+        if self.apply_pencil_release() {
+            return true;
+        }
         // Drop color-picker drag.
         if self.editor_state.ui.color_picker.is_some() {
             self.editor_state.color_picker_set_drag(None);
@@ -237,6 +241,10 @@ impl WidgetHostNative {
         }
         // Pen owns the release while authoring (TS onMouseUp).
         if self.apply_pen_release() {
+            return true;
+        }
+        // A Pencil stroke commits on release (`pencil_press.rs`).
+        if self.apply_pencil_release() {
             return true;
         }
         if self.panel_resize.take().is_some() {

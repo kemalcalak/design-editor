@@ -263,6 +263,18 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "shapes.star" => "Bintang",
         "star.points" => "Sudut",
         "star.innerRadius" => "Radius dalam",
+        "stroke.inside" => "Dalam",
+        "stroke.center" => "Tengah",
+        "stroke.outside" => "Luar",
+        "effects.addInnerShadow" => "Bayangan dalam",
+        "image.stretch" => "Regangkan",
+        "fill.presetNoise" => "Derau",
+        "fill.presetFade" => "Pudar",
+        "fill.presetGlow" => "Pendar",
+        "settings.system.pencilSmoothing" => "Penghalusan pensil",
+        "settings.system.pencilSmoothingPrecise" => "Presisi",
+        "settings.system.pencilSmoothingBalanced" => "Seimbang",
+        "settings.system.pencilSmoothingSmooth" => "Halus",
         _ => return None,
     })
 }

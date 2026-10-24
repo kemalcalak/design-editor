@@ -355,6 +355,9 @@ impl WidgetHost {
         if self.update_create_drag(x, y) {
             return true;
         }
+        if let Some(consumed) = self.apply_pencil_cursor_move(x, y) {
+            return consumed;
+        }
         if let Some(m) = self.marquee_drag.as_mut() {
             m.current_screen_x = x;
             m.current_screen_y = y;

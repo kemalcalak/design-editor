@@ -163,6 +163,18 @@ impl Widget for PropertyPanel {
             y,
             w,
         );
+        // Multi-select panel presses are inert (`hit.rs`), so the buttons
+        // only show for one node; Shift+H / Shift+V flip a multi-selection.
+        if !self.is_multi {
+            crate::widgets::property_panel_flip::paint_flip_buttons(
+                cx,
+                &self.theme,
+                &self.snapshot,
+                x,
+                tops.position,
+                w,
+            );
+        }
         y = section_start(y, tops.flex, "position");
         let flex_section_y = y;
         if caps.flex_layout {

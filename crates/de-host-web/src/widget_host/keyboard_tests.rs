@@ -401,6 +401,28 @@ fn single_key_tool_shortcut_switches_tool_when_no_input_focused() {
 }
 
 #[test]
+fn shift_h_and_shift_v_flip_the_selection() {
+    use de_editor_core::pen_node_ext::PenNodeExt;
+    let doc = jian_ops_schema::load_str(
+        r##"{"version":"1.0.0","children":[
+          {"type":"rectangle","id":"r1","x":0,"y":0,"width":40,"height":20}
+        ]}"##,
+    )
+    .expect("fixture JSON parses")
+    .value;
+    let mut host = WidgetHost::new();
+    host.editor_state = EditorState::from_document(doc);
+    host.editor_state.set_single_selection(NodeId::new("r1"));
+
+    assert!(host.apply_flip_shortcut("H"));
+    assert!(host.apply_flip_shortcut("V"));
+    let base = host.editor_state.active_children()[0].base();
+    assert_eq!((base.flip_x, base.flip_y), (Some(true), Some(true)));
+    // Other letters stay with the tool router.
+    assert!(!host.apply_flip_shortcut("R"));
+}
+
+#[test]
 fn tool_shortcut_is_suppressed_while_an_input_owns_the_keyboard() {
     use de_editor_core::Tool;
     let mut host = WidgetHost::new();

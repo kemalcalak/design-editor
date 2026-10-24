@@ -710,6 +710,11 @@ pub fn set_active_tool(state: &mut EditorState, tool: Tool) {
     // Leaving Select must drop the hover outline immediately — cursor
     // moves stop updating it for other tools.
     state.editor_ui.canvas_hover_node = None;
+    // A stroke still being drawn belongs to the Pencil; leaving it drops
+    // the samples (nothing was inserted yet).
+    if !matches!(tool, Tool::Pencil) {
+        let _ = state.cancel_pencil_stroke();
+    }
     state.tool = tool;
     if matches!(
         tool,

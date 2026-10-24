@@ -47,7 +47,8 @@ impl EditorState {
             Tool::Slider => ("slider", "Slider"),
             Tool::Progress => ("progress", "Progress"),
             Tool::Tabs => ("tabs", "Tabs"),
-            Tool::Select | Tool::Hand => return Ok(None),
+            // The Pencil builds its path on release (`pencil.rs`), not here.
+            Tool::Select | Tool::Hand | Tool::Pencil => return Ok(None),
         };
         let (width, height) = match crate::widget_default_size(kind) {
             Some(size) => size,

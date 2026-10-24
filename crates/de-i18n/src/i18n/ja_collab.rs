@@ -263,6 +263,18 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "shapes.star" => "星",
         "star.points" => "頂点数",
         "star.innerRadius" => "内側の半径",
+        "stroke.inside" => "内側",
+        "stroke.center" => "中央",
+        "stroke.outside" => "外側",
+        "effects.addInnerShadow" => "インナーシャドウ",
+        "image.stretch" => "引き伸ばし",
+        "fill.presetNoise" => "ノイズ",
+        "fill.presetFade" => "フェード",
+        "fill.presetGlow" => "グロー",
+        "settings.system.pencilSmoothing" => "鉛筆のスムージング",
+        "settings.system.pencilSmoothingPrecise" => "精密",
+        "settings.system.pencilSmoothingBalanced" => "バランス",
+        "settings.system.pencilSmoothingSmooth" => "なめらか",
         _ => return None,
     })
 }

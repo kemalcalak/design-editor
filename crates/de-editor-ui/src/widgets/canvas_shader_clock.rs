@@ -43,12 +43,10 @@ pub fn declares_time_uniform(sksl: &str) -> bool {
 
 /// Whether `sksl` declares `uniform <type> <name>;` for one of `types`
 /// (any whitespace). Shared by the uniforms the canvas binds itself.
+/// Comments are skipped, as for shader image children.
 pub(crate) fn declares_uniform(sksl: &str, types: &[&str], name: &str) -> bool {
     let mut previous: [&str; 2] = ["", ""];
-    for token in sksl
-        .split(|c: char| c.is_whitespace() || c == ';')
-        .filter(|token| !token.is_empty())
-    {
+    for token in de_editor_core::shader_images::sksl_tokens(sksl) {
         if previous[0] == "uniform" && types.contains(&previous[1]) && token == name {
             return true;
         }

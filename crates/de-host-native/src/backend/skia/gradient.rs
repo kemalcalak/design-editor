@@ -215,10 +215,11 @@ impl NativeBackend {
     /// RAW (untrusted) source (entrypoint `half4 main(float2 fragCoord)`);
     /// `uniforms` carries `(name, values)` bindings (length 1 = float,
     /// 2/3/4 = vec*); `fallback` is the visible solid colour painted when
-    /// the program fails to compile / build. The compiled `RuntimeEffect`
-    /// is cached on `self.shader_cache` keyed by source hash, so the
-    /// per-frame editor repaint reuses the program rather than
-    /// recompiling. On ANY failure we paint `fallback` solid — never
+    /// the program fails to compile / build. `uniform shader` children bind
+    /// the image their uniform names (see `shader_children.rs`). The
+    /// compiled `RuntimeEffect` is cached on `self.shader_cache` keyed by
+    /// source hash, so the per-frame editor repaint reuses the program
+    /// rather than recompiling. On ANY failure we paint `fallback` solid — never
     /// panic, since the source is untrusted.
     #[allow(clippy::too_many_arguments)]
     pub fn fill_round_rect_shader(
@@ -231,20 +232,11 @@ impl NativeBackend {
         opacity: f32,
         fallback: Color,
     ) {
-        use skia_safe::runtime_effect::RuntimeShaderBuilder;
-
         let local_matrix = runtime_shader_local_matrix(rect, uniforms);
-        let shader = self.shader_cache.get_or_compile(sksl).and_then(|effect| {
-            // `RuntimeEffect` is an RCHandle — this is a refcount bump,
-            // not a recompile.
-            let mut builder = RuntimeShaderBuilder::new(effect);
-            for (name, values) in uniforms {
-                // Tolerate undeclared-name / arity mismatch so one bad
-                // uniform doesn't sink the whole fill.
-                let _ = builder.set_uniform_float(*name, values);
-            }
-            builder.make_shader(&local_matrix)
-        });
+        let shader = self
+            .shader_cache
+            .get_or_compile(sksl)
+            .and_then(|effect| self.make_runtime_shader(effect, uniforms, rect, &local_matrix));
 
         let mut paint = skia_safe::Paint::default();
         paint.set_anti_alias(true);

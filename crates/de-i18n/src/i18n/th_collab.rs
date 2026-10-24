@@ -263,6 +263,18 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "shapes.star" => "ดาว",
         "star.points" => "แฉก",
         "star.innerRadius" => "รัศมีด้านใน",
+        "stroke.inside" => "ด้านใน",
+        "stroke.center" => "กึ่งกลาง",
+        "stroke.outside" => "ด้านนอก",
+        "effects.addInnerShadow" => "เงาด้านใน",
+        "image.stretch" => "ยืด",
+        "fill.presetNoise" => "นอยส์",
+        "fill.presetFade" => "จางหาย",
+        "fill.presetGlow" => "เรืองแสง",
+        "settings.system.pencilSmoothing" => "ความเรียบของดินสอ",
+        "settings.system.pencilSmoothingPrecise" => "แม่นยำ",
+        "settings.system.pencilSmoothingBalanced" => "สมดุล",
+        "settings.system.pencilSmoothingSmooth" => "เรียบ",
         _ => return None,
     })
 }

@@ -588,11 +588,12 @@ impl McpTool for SetActiveTool {
         let Some(tool) = args.get("tool") else {
             return ToolOutcome::Err(
                 ToolErrorCode::MissingArgument,
-                "tool is required (select / rect / ellipse / polygon / star / line / pen / text / frame / hand)".into(),
+                "tool is required (select / rect / ellipse / polygon / star / line / pen / pencil / text / frame / hand)".into(),
             );
         };
         const ALLOWED_TOOLS: &[&str] = &[
-            "select", "rect", "ellipse", "polygon", "star", "line", "pen", "text", "frame", "hand",
+            "select", "rect", "ellipse", "polygon", "star", "line", "pen", "pencil", "text",
+            "frame", "hand",
         ];
         if !ALLOWED_TOOLS.contains(&tool.as_str()) {
             return ToolOutcome::Err(

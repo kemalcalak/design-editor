@@ -203,8 +203,12 @@ impl ApplicationHandler<DesktopEvent> for DesktopApp {
         // replay probes themselves wait until the user opens the chat
         // model picker or Settings → Agents (`start_cli_probes_on_demand`).
         self.load_remembered_connections();
-        if let Some(style) = crate::ui_prefs::load_pencil_cursor() {
+        let (cursor, smoothing) = crate::ui_prefs::load_ui_prefs();
+        if let Some(style) = cursor {
             self.host.editor_state_mut().editor_ui.pencil_cursor_style = style;
+        }
+        if let Some(level) = smoothing {
+            self.host.editor_state_mut().editor_ui.pencil_smoothing = level;
         }
 
         if let Some(window) = self.window.as_ref() {

@@ -265,6 +265,18 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "shapes.star" => "별",
         "star.points" => "꼭짓점",
         "star.innerRadius" => "안쪽 반경",
+        "stroke.inside" => "안쪽",
+        "stroke.center" => "가운데",
+        "stroke.outside" => "바깥쪽",
+        "effects.addInnerShadow" => "내부 그림자",
+        "image.stretch" => "늘이기",
+        "fill.presetNoise" => "노이즈",
+        "fill.presetFade" => "페이드",
+        "fill.presetGlow" => "글로우",
+        "settings.system.pencilSmoothing" => "연필 스무딩",
+        "settings.system.pencilSmoothingPrecise" => "정밀",
+        "settings.system.pencilSmoothingBalanced" => "균형",
+        "settings.system.pencilSmoothingSmooth" => "부드럽게",
         _ => return None,
     })
 }

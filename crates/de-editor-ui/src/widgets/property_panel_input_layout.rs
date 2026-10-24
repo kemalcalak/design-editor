@@ -247,8 +247,8 @@ pub fn editable_input_rects(
                         visible.gradient_stop_count,
                     );
                 }
-                // Solid edits on the row itself; Mesh has no editable
-                // inputs (per-vertex editing deferred).
+                // Solid edits on the row itself; the mesh vertex grid opens
+                // the colour picker instead of focusing an input.
                 FillType::Solid
                 | FillType::LinearGradient
                 | FillType::RadialGradient
@@ -408,8 +408,17 @@ pub(crate) fn push_fill_action_rects(
                     stop_y += INPUT_HEIGHT + 4.0;
                 }
             }
-            // Solid acts on the row itself; Mesh emits no body action
-            // rects (per-vertex editing deferred).
+            FillType::MeshGradient | FillType::Shader if is_primary => {
+                crate::widgets::property_panel_fill_mesh_shader::push_mesh_shader_action_rects(
+                    out,
+                    fill_type,
+                    x0,
+                    y,
+                    w,
+                    visible.gradient_stop_count,
+                );
+            }
+            // Solid acts on the row itself; a non-primary fill has no body.
             FillType::Solid
             | FillType::LinearGradient
             | FillType::RadialGradient

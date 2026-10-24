@@ -263,6 +263,18 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "shapes.star" => "Звезда",
         "star.points" => "Лучи",
         "star.innerRadius" => "Внутренний радиус",
+        "stroke.inside" => "Внутри",
+        "stroke.center" => "По центру",
+        "stroke.outside" => "Снаружи",
+        "effects.addInnerShadow" => "Внутренняя тень",
+        "image.stretch" => "Растянуть",
+        "fill.presetNoise" => "Шум",
+        "fill.presetFade" => "Затухание",
+        "fill.presetGlow" => "Свечение",
+        "settings.system.pencilSmoothing" => "Сглаживание карандаша",
+        "settings.system.pencilSmoothingPrecise" => "Точно",
+        "settings.system.pencilSmoothingBalanced" => "Баланс",
+        "settings.system.pencilSmoothingSmooth" => "Плавно",
         _ => return None,
     })
 }

@@ -263,6 +263,18 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "shapes.star" => "Yıldız",
         "star.points" => "Köşe",
         "star.innerRadius" => "İç yarıçap",
+        "stroke.inside" => "İçeride",
+        "stroke.center" => "Ortada",
+        "stroke.outside" => "Dışarıda",
+        "effects.addInnerShadow" => "İç gölge",
+        "image.stretch" => "Uzat",
+        "fill.presetNoise" => "Gürültü",
+        "fill.presetFade" => "Solma",
+        "fill.presetGlow" => "Parıltı",
+        "settings.system.pencilSmoothing" => "Kurşun kalem yumuşatma",
+        "settings.system.pencilSmoothingPrecise" => "Hassas",
+        "settings.system.pencilSmoothingBalanced" => "Dengeli",
+        "settings.system.pencilSmoothingSmooth" => "Yumuşak",
         _ => return None,
     })
 }

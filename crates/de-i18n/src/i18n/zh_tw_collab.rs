@@ -263,6 +263,18 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "shapes.star" => "星形",
         "star.points" => "角數",
         "star.innerRadius" => "內徑",
+        "stroke.inside" => "內部",
+        "stroke.center" => "置中",
+        "stroke.outside" => "外部",
+        "effects.addInnerShadow" => "內陰影",
+        "image.stretch" => "拉伸",
+        "fill.presetNoise" => "雜訊",
+        "fill.presetFade" => "漸隱",
+        "fill.presetGlow" => "光暈",
+        "settings.system.pencilSmoothing" => "鉛筆平滑",
+        "settings.system.pencilSmoothingPrecise" => "精確",
+        "settings.system.pencilSmoothingBalanced" => "均衡",
+        "settings.system.pencilSmoothingSmooth" => "平滑",
         _ => return None,
     })
 }
