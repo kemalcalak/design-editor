@@ -15,6 +15,31 @@ impl WidgetHost {
     /// Cursor-move handler — drives canvas pan-drag, marquee /
     /// layer / chat / overlay drags, and the chrome hover washes.
     pub fn apply_cursor_move(&mut self, x: f32, y: f32) -> bool {
+        let changed = self.apply_cursor_move_ladder(x, y);
+        // After the ladder: tracking never consumes a move, it only adds a
+        // repaint while a pointer-reactive shader is on screen.
+        let pointer_changed = self.track_shader_pointer(x, y);
+        changed || pointer_changed
+    }
+
+    /// Record the canvas pointer for `uniform float2 mouse;` shader fills.
+    /// Returns whether a repaint is owed (see
+    /// `canvas_shader_pointer::track_pointer`).
+    fn track_shader_pointer(&mut self, x: f32, y: f32) -> bool {
+        // Play mode covers the editor canvas, so its shaders see no pointer.
+        let over_canvas = !self.editor_state.editor_ui.preview.mode
+            && self.over_canvas(x, y, self.last_viewport_w, self.last_viewport_h);
+        let next = over_canvas.then(|| Point2D::new(x, y));
+        de_editor_ui::widgets::canvas_shader_pointer::track_pointer(&mut self.shader_pointer, next)
+    }
+
+    /// The pointer left the canvas element: pointer-reactive shaders fall
+    /// back to their idle value. Returns whether a repaint is owed.
+    pub fn apply_cursor_left(&mut self) -> bool {
+        de_editor_ui::widgets::canvas_shader_pointer::track_pointer(&mut self.shader_pointer, None)
+    }
+
+    fn apply_cursor_move_ladder(&mut self, x: f32, y: f32) -> bool {
         self.last_cursor_x = x;
         self.last_cursor_y = y;
         // Session-switch owner rotation before the cursor_probe resolve stores

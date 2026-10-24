@@ -225,6 +225,8 @@ mod settings_caret;
 #[cfg(test)]
 mod settings_caret_tests;
 mod settings_dispatch;
+#[cfg(test)]
+mod shader_pointer_tests;
 mod shape_picker_press;
 #[cfg(test)]
 mod shortcut_surface_tests;
@@ -325,6 +327,9 @@ pub struct WidgetHostNative {
     /// Last cursor position the canvas-hover hit-test ran at —
     /// sub-3px moves skip the tree walk (cost guard).
     pub(in crate::widget_host) last_hover_probe: Option<(f32, f32)>,
+    /// Pointer over the canvas (logical px) for `uniform float2 mouse;`
+    /// shader fills; `None` while it is over chrome or outside the window.
+    pub(in crate::widget_host) shader_pointer: Option<de_editor_ui::Point2D>,
     /// Active chat-panel drag state — present while the user
     /// drags the floating AI chat panel by its header. Holds the
     /// transient panel top-left position so paint can place the

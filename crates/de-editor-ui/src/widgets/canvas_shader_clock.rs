@@ -38,15 +38,18 @@ pub fn begin_frame(now_ms: u64) {
 /// Whether `sksl` declares the time uniform as a scalar
 /// (`uniform float time;` / `uniform half time;`, any whitespace).
 pub fn declares_time_uniform(sksl: &str) -> bool {
+    declares_uniform(sksl, &["float", "half"], TIME_UNIFORM)
+}
+
+/// Whether `sksl` declares `uniform <type> <name>;` for one of `types`
+/// (any whitespace). Shared by the uniforms the canvas binds itself.
+pub(crate) fn declares_uniform(sksl: &str, types: &[&str], name: &str) -> bool {
     let mut previous: [&str; 2] = ["", ""];
     for token in sksl
         .split(|c: char| c.is_whitespace() || c == ';')
         .filter(|token| !token.is_empty())
     {
-        if previous[0] == "uniform"
-            && matches!(previous[1], "float" | "half")
-            && token == TIME_UNIFORM
-        {
+        if previous[0] == "uniform" && types.contains(&previous[1]) && token == name {
             return true;
         }
         previous = [previous[1], token];
