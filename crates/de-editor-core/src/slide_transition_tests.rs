@@ -113,3 +113,39 @@ fn deck_wide_edits_write_every_slide_in_one_undo_step() {
         Some((SlideTransitionKind::Fade, 250))
     );
 }
+
+/// #190: the Slides panel's stepper shows the deck's duration while every
+/// slide shares one kind, and a step writes one value to all of them.
+#[test]
+fn the_duration_stepper_steps_every_target_slide() {
+    let mut state = deck();
+    state.selection = Default::default();
+    assert_eq!(state.slides_transition_duration(), None, "mixed kinds");
+    assert!(!state.step_slides_transition_duration(true));
+    assert!(state.set_slides_transition(None, SlideTransitionKind::Push, None));
+    // s1 now leads with the default 400 ms.
+    assert_eq!(state.slides_transition_duration(), Some(400));
+    assert!(state.step_slides_transition_duration(true));
+    for id in ["s1", "s2", "s3"] {
+        let t = board_slide_transition(&state, id).expect("transition");
+        assert_eq!((t.kind, t.duration_ms), (SlideTransitionKind::Push, 500));
+    }
+    assert!(state.step_slides_transition_duration(false));
+    assert_eq!(state.slides_transition_duration(), Some(400));
+    assert!(state.set_slides_transition(None, SlideTransitionKind::None, None));
+    assert_eq!(state.slides_transition_duration(), None, "none hides it");
+}
+
+#[test]
+fn a_step_snaps_to_the_grid_and_stays_in_range() {
+    assert_eq!(step_duration(400, true), 500);
+    assert_eq!(step_duration(400, false), 300);
+    assert_eq!(step_duration(450, true), 500);
+    assert_eq!(step_duration(450, false), 400);
+    assert_eq!(step_duration(100, false), 100);
+    assert_eq!(step_duration(40, false), 40);
+    assert_eq!(step_duration(40, true), 100);
+    assert_eq!(step_duration(5_000, true), 5_000);
+    assert_eq!(step_duration(8_000, true), 8_000);
+    assert_eq!(step_duration(8_000, false), 5_000);
+}

@@ -115,6 +115,9 @@ pub enum FileMenuChoice {
     Import,
     Undo,
     Redo,
+    /// Present the active page (#190) — the row that lists the
+    /// Cmd/Ctrl+Enter chord on every host, not only in the macOS menu.
+    Present,
     /// An icon in the app-level footer.
     Tool(FileMenuTool),
 }
@@ -244,7 +247,7 @@ impl<'a> FileMenu<'a> {
         h += DIVIDER_GAP * 2.0 + 1.0;
         h += ROW_HEIGHT; // Clear history
         h += DIVIDER_GAP * 2.0 + 1.0;
-        h += ROW_HEIGHT * tools::TAIL_ROWS as f32; // Import / Undo / Redo
+        h += ROW_HEIGHT * tools::TAIL_ROWS as f32; // Import / Undo / Redo / Present
         h += DIVIDER_GAP * 2.0 + 1.0;
         h += tools::FOOTER_HEIGHT;
         h += PAD_Y;
@@ -302,6 +305,7 @@ impl<'a> FileMenu<'a> {
             row if row == self.tail_row_start() => Some(FileMenuChoice::Import),
             row if row == self.tail_row_start() + 1 => Some(FileMenuChoice::Undo),
             row if row == self.tail_row_start() + 2 => Some(FileMenuChoice::Redo),
+            row if row == self.tail_row_start() + 3 => Some(FileMenuChoice::Present),
             row if row >= self.footer_row_start() => tools::footer_tools(self.ui)
                 .get(row - self.footer_row_start())
                 .copied()

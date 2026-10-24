@@ -186,6 +186,9 @@ impl WidgetHostNative {
                             self.editor_state.editor_ui.pending_fullscreen_toggle = true;
                         }
                         FileMenuStep::Git => self.toggle_git_panel(),
+                        FileMenuStep::Present => {
+                            self.toggle_present_with_cached_viewport();
+                        }
                     }
                     self.mark_dirty();
                     return;
@@ -228,6 +231,7 @@ impl WidgetHostNative {
                     | FileMenuChoice::Import
                     | FileMenuChoice::Undo
                     | FileMenuChoice::Redo
+                    | FileMenuChoice::Present
                     | FileMenuChoice::Tool(_) => return,
                 });
                 self.editor_state.editor_ui.file_menu_open = false;

@@ -64,12 +64,14 @@ pub fn property_focus_initial(focus: PropertyFocus, panel: &PropertyPanel) -> St
             .interactions
             .open_url(trigger)
             .unwrap_or_default(),
-        F::MotionValue { index, field } => match panel.snapshot.interactions.motion.get(index) {
-            Some(crate::widgets::property_panel_motion::MotionSummary::Simple(simple)) => {
-                crate::widgets::property_panel_motion::field_value(simple, field)
+        F::MotionValue { index, field } | F::MotionColor { index, field } => {
+            match panel.snapshot.interactions.motion.get(index) {
+                Some(crate::widgets::property_panel_motion::MotionSummary::Simple(simple)) => {
+                    crate::widgets::property_panel_motion::field_value(simple, field)
+                }
+                _ => String::new(),
             }
-            _ => String::new(),
-        },
+        }
         F::ShaderUniform {
             target,
             index,
@@ -397,6 +399,9 @@ pub fn commit_property_focus(state: &mut EditorState) -> bool {
             if let Ok(value) = draft.trim().parse::<f64>() {
                 let _ = state.set_selected_animation_value(index, field, value);
             }
+        }
+        PropertyFocus::MotionColor { index, field } => {
+            let _ = state.set_selected_animation_color(index, field, draft.trim());
         }
         PropertyFocus::TransitionDuration => {
             if let Ok(value) = draft.trim().parse::<f64>() {
