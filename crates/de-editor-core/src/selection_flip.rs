@@ -26,7 +26,9 @@ pub fn node_flipped(node: &PenNode, axis: FlipAxis) -> bool {
 }
 
 /// Toggle `axis` on one node. Un-flipping clears the field rather than
-/// writing `false`, so a round trip leaves the document as it was.
+/// writing `false`, so a round trip leaves the document as it was. That
+/// is why this does not go through `EditorCommand::SetNodeFlip`, which
+/// stores `Some(false)`.
 fn toggle_flip(node: &mut PenNode, axis: FlipAxis) {
     let next = (!node_flipped(node, axis)).then_some(true);
     let base = node.base_mut();
@@ -62,13 +64,34 @@ impl EditorState {
     }
 }
 
-/// Shift+H / Shift+V — flip the selection as one undo step.
+impl FlipAxis {
+    /// The axis a Shift+letter shortcut flips (`H` / `V`, any case), so
+    /// both hosts share one mapping.
+    pub fn from_shortcut_key(key: &str) -> Option<Self> {
+        if key.eq_ignore_ascii_case("h") {
+            Some(Self::Horizontal)
+        } else if key.eq_ignore_ascii_case("v") {
+            Some(Self::Vertical)
+        } else {
+            None
+        }
+    }
+}
+
+/// Shift+H / Shift+V — flip the selection as one undo step. Runs inside
+/// the anchor's instance-write scope, like the panel dispatch, so a
+/// selected instance child flips through its Ref's overrides.
 pub fn flip_selection(state: &mut EditorState, axis: FlipAxis) -> bool {
     if state.selection.is_empty() {
         return false;
     }
     let snap = state.snapshot_for_history();
-    if state.flip_selected(axis) {
+    let scope = state.begin_instance_write_for_anchor();
+    state.flip_selected(axis);
+    if let Some(scope) = scope {
+        state.finish_instance_write(scope);
+    }
+    if state.snapshot_for_history() != snap {
         state.history_push_past(snap);
         return true;
     }

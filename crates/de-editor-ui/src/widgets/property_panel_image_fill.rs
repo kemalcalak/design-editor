@@ -128,15 +128,9 @@ pub fn image_fill_popover_action_rects(
     };
     // Stretch is an image-fill mode only; an Image node keeps four.
     let modes = de_editor_core::ImageFillMode::modes_for(visible.image);
-    let chip_w = mode_rect.size.x / modes.len() as f32;
-    for (i, mode) in modes.iter().enumerate() {
-        out.push((
-            PropertyPanelAction::SetImageFillMode(*mode),
-            Rect {
-                origin: Point2D::new(mode_rect.origin.x + i as f32 * chip_w, mode_rect.origin.y),
-                size: Point2D::new(chip_w, mode_rect.size.y),
-            },
-        ));
+    let cells = crate::widgets::property_panel_segments::segment_rects(mode_rect, modes.len());
+    for (mode, cell) in modes.iter().zip(cells) {
+        out.push((PropertyPanelAction::SetImageFillMode(*mode), cell));
     }
 
     let show_tile_scale = tile_scale_visible(snapshot);

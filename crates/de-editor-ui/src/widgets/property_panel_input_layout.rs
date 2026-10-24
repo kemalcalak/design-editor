@@ -237,8 +237,8 @@ pub fn editable_input_rects(
                         visible.gradient_stop_count,
                     );
                 }
-                // Solid edits on the row itself; Mesh has no editable
-                // inputs (per-vertex editing deferred).
+                // Solid edits on the row itself; the mesh vertex grid opens
+                // the colour picker instead of focusing an input.
                 FillType::Solid
                 | FillType::LinearGradient
                 | FillType::RadialGradient

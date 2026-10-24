@@ -555,10 +555,8 @@ impl WidgetHost {
         if self.input_active() {
             return false;
         }
-        let axis = match key.to_ascii_lowercase().as_str() {
-            "h" => de_editor_core::FlipAxis::Horizontal,
-            "v" => de_editor_core::FlipAxis::Vertical,
-            _ => return false,
+        let Some(axis) = de_editor_core::FlipAxis::from_shortcut_key(key) else {
+            return false;
         };
         if de_editor_core::flip_selection(&mut self.editor_state, axis) {
             self.mark_dirty();

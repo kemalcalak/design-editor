@@ -64,10 +64,13 @@ pub(crate) fn paint_stroke_style_rows(
     top: f32,
     width: f32,
 ) {
-    let active = snapshot.stroke.as_ref().map(|stroke| match stroke.align {
-        SceneStrokeAlign::Inside => 0,
-        SceneStrokeAlign::Center => 1,
-        SceneStrokeAlign::Outside => 2,
+    let active = snapshot.stroke.as_ref().and_then(|stroke| {
+        let align = match stroke.align {
+            SceneStrokeAlign::Inside => StrokeAlign::Inside,
+            SceneStrokeAlign::Center => StrokeAlign::Center,
+            SceneStrokeAlign::Outside => StrokeAlign::Outside,
+        };
+        STROKE_ALIGNS.iter().position(|a| *a == align)
     });
     paint_segment_row(
         cx,

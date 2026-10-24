@@ -43,13 +43,26 @@ pub(crate) fn paint_segment_row(
         return;
     }
     let max_w = (rect.size.x / labels.len() as f32 - CELL_INSET * 2.0).max(0.0);
-    let fitted: Vec<String> = labels
+    // Only an overflowing label allocates; the common case borrows.
+    let fitted: Vec<std::borrow::Cow<'_, str>> = labels
         .iter()
         .map(|label| {
-            text_metrics::fit_in_family(cx.backend, label, max_w, font_size, TOGGLE_GROUP_FAMILY)
+            let width =
+                text_metrics::measure_in_family(cx.backend, label, font_size, TOGGLE_GROUP_FAMILY);
+            if width <= max_w {
+                std::borrow::Cow::Borrowed(*label)
+            } else {
+                std::borrow::Cow::Owned(text_metrics::fit_in_family(
+                    cx.backend,
+                    label,
+                    max_w,
+                    font_size,
+                    TOGGLE_GROUP_FAMILY,
+                ))
+            }
         })
         .collect();
-    let options: Vec<&str> = fitted.iter().map(String::as_str).collect();
+    let options: Vec<&str> = fitted.iter().map(|label| label.as_ref()).collect();
     jian_widgets::components::toggle_group::ToggleGroup {
         options: &options,
         icons: None,

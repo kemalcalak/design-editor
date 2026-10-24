@@ -29,6 +29,10 @@ const GLOW_SKSL: &str = "uniform half4 accent; uniform half4 base; uniform float
 /// Dark end colour shared by Fade and Glow.
 const DARK: &str = "#0b0614";
 
+/// Accent for a shader body that carries no colour uniform (an MCP-made
+/// program, say): the violet the shader-fill skill's glow example uses.
+const FALLBACK_ACCENT: &str = "#7c3aed";
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ShaderPreset {
     /// FBM value noise / film grain (`preset: "turbulence"`).
@@ -62,6 +66,10 @@ impl ShaderPreset {
                 );
                 uniforms.insert("seed".to_string(), ShaderUniformValue::Float(0.0));
                 uniforms.insert("numOctaves".to_string(), ShaderUniformValue::Float(3.0));
+                // The turbulence program ignores colour uniforms, but the
+                // fallback colour and the fill-row swatch read the first
+                // one, and it carries the hue to the next preset picked.
+                uniforms.insert("accent".to_string(), color(hex));
                 (Some(TURBULENCE.to_string()), None)
             }
             Self::Fade => {
@@ -130,7 +138,9 @@ pub fn set_primary_shader_preset(node: &mut PenNode, preset: ShaderPreset) -> bo
     if ShaderPreset::detect(body) == Some(preset) {
         return false;
     }
-    let hex = first_color_uniform(body).unwrap_or("#7c3aed").to_string();
+    let hex = first_color_uniform(body)
+        .unwrap_or(FALLBACK_ACCENT)
+        .to_string();
     let mut next = preset.body(&hex);
     next.opacity = body.opacity;
     next.blend_mode = body.blend_mode.clone();

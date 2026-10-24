@@ -56,6 +56,14 @@ fn set_selected_shader_preset_keeps_colour_opacity_and_blend() {
     let noise = shader_body(&s);
     assert_eq!(noise.preset.as_deref(), Some("turbulence"));
     assert_eq!(noise.sksl, None);
+    assert_eq!(
+        first_color_uniform(&noise),
+        Some(hex.as_str()),
+        "Noise keeps the hue"
+    );
+    assert!(s.set_selected_shader_preset(ShaderPreset::Fade));
+    assert_eq!(first_color_uniform(&shader_body(&s)), Some(hex.as_str()));
+    assert!(s.set_selected_shader_preset(ShaderPreset::Noise));
     let node = find_node(s.active_children(), &NodeId::new("a")).unwrap();
     assert_eq!(primary_shader_preset(node), Some(ShaderPreset::Noise));
 }

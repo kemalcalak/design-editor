@@ -401,7 +401,7 @@ pub struct EditorUiState {
     pub instance_component_picker_anchor: String,
     /// Whether the Position section shows the per-corner 2×2 radius grid.
     pub corner_expand_open: bool,
-    /// Whether the Effects section's three-kind "+" add-menu is open.
+    /// Whether the Effects section's "+" add-menu (one row per effect kind) is open.
     pub effect_add_picker_open: bool,
     /// Row index hovered in the Effects add-menu (`None` = none), so the
     /// popover highlights the row under the cursor like the other
