@@ -455,7 +455,7 @@ fn paint_node_inner<'a>(
         }
         NodeKind::Other(tag) if tag == "icon_font" => {
             // `font_weight` carries the icon weight (0 = unset), like a text
-            // node's: `icons_font_node` says what each family does with it.
+            // node's: `icon_family` says what each family does with it.
             crate::widgets::icons::paint_icon_font_node_weighted(
                 cx.backend,
                 node.font_family.as_str(),

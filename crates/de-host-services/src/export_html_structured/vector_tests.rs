@@ -29,7 +29,9 @@ fn a_material_symbol_exports_as_a_filled_24_unit_glyph() {
 fn a_heavy_material_weight_exports_the_canvas_outline() {
     let svg = icon_svg("material-symbols-outlined", "home", 700);
     assert!(
-        svg.contains(r#"fill="rgb(255,0,0)" stroke="rgb(255,0,0)" stroke-width="1""#),
+        svg.contains(
+            r#"fill="rgb(255,0,0)" stroke="rgb(255,0,0)" stroke-width="1" stroke-linejoin="round""#
+        ),
         "{svg}"
     );
 }

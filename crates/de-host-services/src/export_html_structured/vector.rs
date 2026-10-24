@@ -76,7 +76,7 @@ pub fn emit_icon(out: &mut String, n: &SceneNode, rect: Rect) {
             IconRenderStyle::Fill if outline_units > 0.0 => {
                 let _ = write!(
                     out,
-                    r#"<path d="{}" fill="{tint}" stroke="{tint}" stroke-width="{}"/>"#,
+                    r#"<path d="{}" fill="{tint}" stroke="{tint}" stroke-width="{}" stroke-linejoin="round"/>"#,
                     escape_xml(&d),
                     css::num(outline_units * viewbox / 24.0)
                 );

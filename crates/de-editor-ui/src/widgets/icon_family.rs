@@ -78,8 +78,10 @@ const PHOSPHOR_WEIGHT_SUFFIXES: [&str; 4] = ["-thin", "-light", "-bold", "-fill"
 
 /// The phosphor glyph name for `name` at `weight` (already clamped).
 ///
-/// Phosphor ships four weights, so a numeric weight snaps to the nearest band:
-/// up to 150 thin, up to 350 light, up to 550 regular, above that bold. A name
+/// Phosphor ships four weights, read as thin 100, light 300, regular 400 and
+/// bold 700. A numeric weight maps by band: up to 150 thin, up to 350 light,
+/// up to 550 regular, above that bold (the bands lean towards the lighter
+/// neighbour, so 200 reads as light rather than hairline thin). A name
 /// that already carries a weight suffix (`house-bold`, or the `-fill` style)
 /// is explicit and wins over the number.
 pub fn phosphor_weighted_name(name: &str, weight: u16) -> Cow<'_, str> {

@@ -233,7 +233,7 @@ fn search_icons_uncached(query: &str, limit: usize) -> Vec<&'static IconCatalogE
     }
     let mut out = Vec::new();
     for icon in all_icons() {
-        if icon.name == query || format!("{}:{}", icon.collection, icon.name) == query {
+        if icon.name == query || is_qualified_key(icon, query) {
             out.push(icon);
             if out.len() >= limit {
                 return out;
@@ -241,9 +241,7 @@ fn search_icons_uncached(query: &str, limit: usize) -> Vec<&'static IconCatalogE
         }
     }
     for icon in all_icons() {
-        if (icon.name != query && matches_query(icon, query))
-            || format!("{}:{}", icon.collection, icon.name) == query
-        {
+        if (icon.name != query && matches_query(icon, query)) || is_qualified_key(icon, query) {
             out.push(icon);
             if out.len() >= limit {
                 break;
@@ -382,6 +380,14 @@ fn build_core_index() -> HashMap<String, usize> {
         .enumerate()
         .map(|(idx, icon)| (format!("{}:{}", icon.collection, icon.name), idx))
         .collect()
+}
+
+/// `query == "collection:name"` without building the key: the picker scans
+/// ~25k icons per uncached keystroke.
+fn is_qualified_key(icon: &IconCatalogEntry, query: &str) -> bool {
+    query
+        .split_once(':')
+        .is_some_and(|(c, n)| c == icon.collection && n == icon.name)
 }
 
 fn matches_query(icon: &IconCatalogEntry, query: &str) -> bool {

@@ -168,8 +168,9 @@ icons.sort((a, b) => {
   return setDelta || a.name.localeCompare(b.name);
 });
 
-// Resolve an Iconify name (icon or alias) to its body, or `undefined`. The
-// extended sets carry no alias transforms (rotate / flip), which this relies on.
+// Resolve an Iconify name (icon or alias) to its body, or `undefined`. Aliases
+// with a rotate / flip transform are skipped (the catalog has no transform
+// field); the extended sets have none today.
 function iconifyBody(data, name) {
   if (data.icons[name]) return data.icons[name];
   const alias = data.aliases?.[name];
@@ -209,7 +210,13 @@ function materialIcons() {
   const data = require('../node_modules/@iconify-json/material-symbols/icons.json');
   const all = new Set([...Object.keys(data.icons), ...Object.keys(data.aliases ?? {})]);
   const bases = new Set();
-  for (const name of all) bases.add(name.replace(MATERIAL_SUFFIX, ''));
+  // Strip a style suffix only when the bare name is a real icon, so an icon
+  // whose own name ends in a style word (`error-circle-rounded`) stays whole
+  // instead of minting a non-existent `error-circle`.
+  for (const name of all) {
+    const stripped = name.replace(MATERIAL_SUFFIX, '');
+    bases.add(all.has(stripped) ? stripped : name);
+  }
   const out = [];
   for (const [collection, suffixes] of MATERIAL_STYLES) {
     for (const base of [...bases].toSorted((a, b) => a.localeCompare(b))) {
