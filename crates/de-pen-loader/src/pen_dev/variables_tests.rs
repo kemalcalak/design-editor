@@ -79,18 +79,31 @@ fn an_unknown_variable_in_a_number_field_is_dropped_and_reported() {
 }
 
 #[test]
-fn fixed_values_are_counted_per_field_and_shader_uniforms_are_not() {
-    let (_, report) = converted();
-    let count = |feature: &str| report.unsupported.get(feature).copied();
-    // Chip label, desktop text, mobile text, mobile patch.
-    assert_eq!(count("font size variable (fixed value)"), Some(4));
-    assert_eq!(count("font family variable (fixed value)"), Some(3));
-    // Includes the chip's padding, patched onto the mobile instance.
-    assert_eq!(count("spacing variable (fixed value)"), Some(6));
-    assert_eq!(count("corner radius variable (fixed value)"), Some(1));
-    assert_eq!(count("icon variable (fixed value)"), Some(2));
-    assert_eq!(count("shader fill (GLSL file missing)"), Some(1));
-    assert_eq!(count("paint variable (fixed value)"), None);
+fn typed_field_references_stay_bound_and_are_not_reported_fixed() {
+    let (doc, report) = converted();
+    for label in [
+        "font size variable (fixed value)",
+        "font family variable (fixed value)",
+        "spacing variable (fixed value)",
+        "corner radius variable (fixed value)",
+        "icon variable (fixed value)",
+        "paint variable (fixed value)",
+    ] {
+        assert!(
+            !report.unsupported.contains_key(label),
+            "{}",
+            report.summary()
+        );
+    }
+    assert_eq!(
+        report.unsupported.get("shader fill (GLSL file missing)"),
+        Some(&1)
+    );
+    let chip = child(&doc, "chip");
+    assert_eq!(
+        chip["variableBindings"]["cornerRadius"]["value"],
+        json!(999)
+    );
 }
 
 #[test]

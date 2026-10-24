@@ -254,7 +254,7 @@ fn expand_ref(
             continue;
         }
         if !value.is_null() {
-            merged.insert(key.clone(), value.clone());
+            crate::instance_descendants::merge_override_key(&mut merged, key, value);
         }
     }
     // Keep the component's type; the instance cannot change it.
@@ -377,7 +377,7 @@ pub(crate) fn materialize_instance(ref_node: &PenNode, component: &PenNode) -> O
             continue;
         }
         if !value.is_null() {
-            merged.insert(key.clone(), value.clone());
+            crate::instance_descendants::merge_override_key(&mut merged, key, value);
         }
     }
     if let Some(t) = component_map.get("type") {
@@ -417,7 +417,7 @@ fn apply_top_level_overrides(merged: &mut Map<String, Value>, ref_map: &Map<Stri
     };
     for (key, value) in top {
         if !matches!(key.as_str(), "id" | "type" | "children") {
-            merged.insert(key.clone(), value.clone());
+            crate::instance_descendants::merge_override_key(merged, key, value);
         }
     }
 }
