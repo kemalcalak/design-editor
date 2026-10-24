@@ -48,9 +48,12 @@ enum StyleRow {
 
 const STYLE_ROWS: [StyleRow; 3] = [StyleRow::Cap, StyleRow::Join, StyleRow::Dash];
 
-/// Height the style rows add to the Stroke body.
-pub(crate) fn stroke_style_rows_height() -> f32 {
-    STYLE_ROWS_TOP_GAP + INPUT_HEIGHT + STYLE_ROWS.len() as f32 * (STYLE_ROW_GAP + INPUT_HEIGHT)
+/// Height the style rows add to the Stroke body. The Cap / Join / Dash
+/// rows (`styled`) only show once the node has a stroke: they style an
+/// existing stroke and nothing else.
+pub(crate) fn stroke_style_rows_height(styled: bool) -> f32 {
+    let labelled = if styled { STYLE_ROWS.len() as f32 } else { 0.0 };
+    STYLE_ROWS_TOP_GAP + INPUT_HEIGHT + labelled * (STYLE_ROW_GAP + INPUT_HEIGHT)
 }
 
 /// Row `index` (0 = alignment), given the y where the style rows start.
@@ -86,10 +89,14 @@ pub(crate) fn push_stroke_style_action_rects(
     x: f32,
     top: f32,
     width: f32,
+    styled: bool,
 ) {
     let cells = segment_rects(row_rect(x, top, width, 0), STROKE_ALIGNS.len());
     for (align, cell) in STROKE_ALIGNS.iter().zip(cells) {
         out.push((PropertyPanelAction::SetStrokeAlign(align.clone()), cell));
+    }
+    if !styled {
+        return;
     }
     for (i, row) in STYLE_ROWS.into_iter().enumerate() {
         let edits = row_edits(row);
@@ -132,7 +139,11 @@ pub(crate) fn paint_stroke_style_rows(
         active,
         LABEL_FONT_SIZE,
     );
-    let style = snapshot.stroke.as_ref().and(snapshot.stroke_style.as_ref());
+    let Some(style) = snapshot.stroke.as_ref().and(snapshot.stroke_style.as_ref()) else {
+        // No stroke yet: only the alignment row shows.
+        return;
+    };
+    let style = Some(style);
     for (i, row) in STYLE_ROWS.into_iter().enumerate() {
         let (label, cells, active) = match row {
             StyleRow::Cap => (

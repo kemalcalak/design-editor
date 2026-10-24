@@ -47,17 +47,17 @@ pub(crate) fn stroke_style_top(row_y: f32, mode: PaddingEditMode) -> f32 {
     row_y + INPUT_HEIGHT + side_grid_height(mode)
 }
 
-pub(crate) fn stroke_section_body_height(mode: PaddingEditMode) -> f32 {
+pub(crate) fn stroke_section_body_height(mode: PaddingEditMode, styled: bool) -> f32 {
     INPUT_HEIGHT
         + side_grid_height(mode)
-        + crate::widgets::property_panel_stroke_style::stroke_style_rows_height()
+        + crate::widgets::property_panel_stroke_style::stroke_style_rows_height(styled)
         + SECTION_TRAILING_GAP
 }
 
 /// The whole Stroke section — header, row(s) and trailing gap.
-pub(crate) fn stroke_section_height(mode: PaddingEditMode) -> f32 {
+pub(crate) fn stroke_section_height(mode: PaddingEditMode, styled: bool) -> f32 {
     crate::widgets::property_panel_inputs::SECTION_HEADER_HEIGHT
-        + stroke_section_body_height(mode)
+        + stroke_section_body_height(mode, styled)
         + SECTION_GAP
 }
 
@@ -125,6 +125,7 @@ pub(crate) fn push_stroke_action_rects(
     width: f32,
     mode: PaddingEditMode,
     popover_open: bool,
+    styled: bool,
 ) {
     let (gear, _box, rows) = stroke_mode_popover_layout(x0, y, width);
     out.push((PropertyPanelAction::ToggleStrokeModePopover, gear));
@@ -133,6 +134,7 @@ pub(crate) fn push_stroke_action_rects(
         x0,
         stroke_style_top(y + SECTION_HEADER_HEIGHT, mode),
         width,
+        styled,
     );
     if popover_open {
         for (i, rect) in rows.into_iter().enumerate() {
@@ -233,7 +235,7 @@ pub fn paint_stroke_section(
         stroke_style_top(y, mode),
         width,
     );
-    y += stroke_section_body_height(mode);
+    y += stroke_section_body_height(mode, snapshot.stroke.is_some());
     paint_section_divider(cx, theme, x, y, width);
     y + SECTION_GAP
 }

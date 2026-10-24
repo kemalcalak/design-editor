@@ -266,6 +266,9 @@ pub struct VisibleSections {
     pub stroke_edit_mode: de_editor_core::PaddingEditMode,
     /// Whether the stroke-mode gear popover is open.
     pub stroke_mode_popover_open: bool,
+    /// The Cap / Join / Dash rows (#89): only once the selection has a
+    /// stroke, since they style an existing stroke and nothing else.
+    pub stroke_style_rows: bool,
     /// Fill row whose `⋯` menu is open; its rows join the action walker.
     pub fill_menu: Option<usize>,
     /// Export section expanded (else just its header and "+").
@@ -401,6 +404,7 @@ impl VisibleSections {
         stroke: true,
         stroke_edit_mode: de_editor_core::PaddingEditMode::Individual,
         stroke_mode_popover_open: false,
+        stroke_style_rows: true,
         fill_menu: None,
         export_open: true,
         color_variable_count: 0,
