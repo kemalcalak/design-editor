@@ -8,8 +8,9 @@
 
 use crate::widgets::button::paint_button_feedback_wash;
 use crate::widgets::component_browser_panel::{
-    truncate, ComponentBrowserHit, ComponentBrowserPanel, IMPORTED_ROW_H, PAD,
+    ComponentBrowserHit, ComponentBrowserPanel, IMPORTED_ROW_H, PAD,
 };
+use crate::widgets::text_metrics::{fit_chrome, measure_chrome};
 use crate::widgets::{draw_icon, Icon, PaintCx};
 use crate::{Point2D, Rect};
 use de_editor_core::ComponentBrowserButton as Btn;
@@ -172,12 +173,14 @@ impl ComponentBrowserPanel<'_> {
             let problem = entry.status.is_problem();
             let unlink = Self::unlink_rect(panel, row);
             let status = self.library_status_label(&entry.status);
-            let status_w = status.chars().count() as f32 * 5.0;
+            // Measured, not estimated: CJK labels are twice as wide.
+            let status_w = measure_chrome(cx.backend, &status, 10.0);
             let status_x = unlink.origin.x - 8.0 - status_w;
-            let name_room = ((status_x - panel.origin.x - PAD - 8.0) / 6.0).max(4.0) as usize;
+            let name_w = (status_x - panel.origin.x - PAD - 8.0).max(24.0);
+            let name = fit_chrome(cx.backend, &entry.link.display_name(), name_w, 11.0);
             self.text(
                 cx,
-                &truncate(&entry.link.display_name(), name_room),
+                &name,
                 panel.origin.x + PAD,
                 row.origin.y + IMPORTED_ROW_H / 2.0 + 4.0,
                 11.0,
