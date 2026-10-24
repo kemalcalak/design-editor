@@ -1,9 +1,10 @@
 //! Background jobs behind the MCP `generate` tool (pen.dev `Generate`).
 //!
 //! Every generation is asynchronous, as on pen.dev: the tool call only does
-//! the bookkeeping (writes a `de:pending-image-…` fill) and returns; a worker
-//! thread runs the provider with the user's own key, and the result lands in
-//! the document later.
+//! the bookkeeping (writes a `de:pending-image-…` fill, or marks the target
+//! frame `placeholder: true`) and returns; a worker thread runs the provider
+//! with the user's own key (or the local tracer), and the result lands in the
+//! document later: an image fill, or vector children of the frame.
 //!
 //! A job never touches a document itself. It finishes into a completion
 //! queue, and each host drains that queue into ordinary [`EditorCommand`]s at
@@ -28,16 +29,24 @@ use de_editor_core::{EditorCommand, EditorState};
 
 mod backend;
 mod error;
+pub mod image_edit;
 pub(crate) mod landing;
 mod profile;
+pub mod source;
+pub mod svg_llm;
+pub mod vectorize;
 
+pub(crate) use backend::screening as backend_screening;
 pub use backend::{
-    screen_custom_endpoints, GenerateBackend, ImageJobRequest, ProviderBackend, StockJobRequest,
+    screen_custom_endpoints, EditJobRequest, GenerateBackend, ImageJobRequest, ProviderBackend,
+    StockJobRequest, SvgJobRequest,
 };
 pub use error::GenerateJobError;
+pub use image_edit::EditKind;
 pub use profile::{
     resolve_image_profile, GEMINI_FALLBACK_IMAGE_MODEL, OPENAI_FALLBACK_IMAGE_MODEL,
 };
+pub use source::SourceRef;
 
 /// Prefix of the placeholder url a fill carries while its job runs
 /// (pen.dev's `pencil:pending-image-…`, hence a scheme of its own rather than
@@ -62,16 +71,37 @@ const MAX_UNPLACED: usize = 32;
 pub enum GenerateKind {
     Ai,
     Stock,
+    Svg,
+    VectorizeImage,
+    RemoveBackground,
+    ReplaceBackground,
 }
 
 impl GenerateKind {
-    pub const ALL: [GenerateKind; 2] = [GenerateKind::Ai, GenerateKind::Stock];
+    pub const ALL: [GenerateKind; 6] = [
+        GenerateKind::Ai,
+        GenerateKind::Stock,
+        GenerateKind::Svg,
+        GenerateKind::VectorizeImage,
+        GenerateKind::RemoveBackground,
+        GenerateKind::ReplaceBackground,
+    ];
 
     pub fn as_str(self) -> &'static str {
         match self {
             GenerateKind::Ai => "ai",
             GenerateKind::Stock => "stock",
+            GenerateKind::Svg => "svg",
+            GenerateKind::VectorizeImage => "vectorize-image",
+            GenerateKind::RemoveBackground => "remove-background",
+            GenerateKind::ReplaceBackground => "replace-background",
         }
+    }
+
+    /// Whether the result is vector children of a frame rather than an
+    /// image fill.
+    pub fn lands_in_frame(self) -> bool {
+        matches!(self, GenerateKind::Svg | GenerateKind::VectorizeImage)
     }
 
     pub fn parse(raw: &str) -> Option<Self> {
@@ -97,31 +127,49 @@ pub struct JobRecord {
     pub status: JobStatus,
 }
 
-/// The provider work a job runs.
+/// The work a job runs.
 pub enum JobWork {
     Image(ImageJobRequest),
     Stock(StockJobRequest),
+    Svg(SvgJobRequest),
+    Vectorize(SourceRef),
+    Edit(EditJobRequest),
 }
 
-/// A started job's handle: its id and the pending url the caller writes.
+/// Where a finished job lands.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum LandingTarget {
+    /// Rewrite this pending url wherever it sits.
+    PendingUrl(String),
+    /// Draw into this `placeholder` frame and clear the flag.
+    Frame(String),
+    /// A background transform: rewrite the pending url to the edited image,
+    /// or back to the source image when the edit failed, so a failed edit
+    /// never deletes the image it was meant to change.
+    Edit { pending: String, source: String },
+}
+
+/// A started job's handle: its id, the pending url the caller writes (fill
+/// types), and where it lands.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct JobTicket {
     pub id: String,
     pub pending_url: String,
+    pub target: LandingTarget,
 }
 
 type Listener = Arc<dyn Fn() + Send + Sync>;
 
 struct Completion {
-    pending_url: String,
+    target: LandingTarget,
     result: Result<String, GenerateJobError>,
     finished_at: Instant,
 }
 
-/// A finished result on its way into the document, retried while its
-/// pending url is not found.
+/// A finished result on its way into the document, retried while its target
+/// is not found.
 struct Landing {
-    pending_url: String,
+    target: LandingTarget,
     result: Result<String, ()>,
     finished_at: Instant,
 }
@@ -171,8 +219,9 @@ impl GenerateJobs {
         *self.listener.lock().unwrap_or_else(|p| p.into_inner()) = listener;
     }
 
-    /// Reserve a job slot and mint its pending url. Fails when
-    /// [`MAX_RUNNING_JOBS`] are still running.
+    /// Reserve a job slot and mint its pending url. Frame types land in the
+    /// frame named by `node_id`. Fails when [`MAX_RUNNING_JOBS`] are still
+    /// running.
     pub fn reserve(
         &self,
         kind: GenerateKind,
@@ -187,18 +236,53 @@ impl GenerateJobs {
         inner.counter += 1;
         let id = format!("gen-{}-{}", process_nonce(), inner.counter);
         let pending_url = format!("{PENDING_IMAGE_PREFIX}{id}");
+        let target = match (kind.lands_in_frame(), node_id) {
+            (true, Some(frame)) => LandingTarget::Frame(frame.to_string()),
+            _ => LandingTarget::PendingUrl(pending_url.clone()),
+        };
         inner.running += 1;
         inner.records.push_back(JobRecord {
             id: id.clone(),
             kind,
             node_id: node_id.map(str::to_string),
-            pending_url: Some(pending_url.clone()),
+            pending_url: matches!(target, LandingTarget::PendingUrl(_))
+                .then(|| pending_url.clone()),
             status: JobStatus::Pending,
         });
         while inner.records.len() > MAX_RECORDS {
             inner.records.pop_front();
         }
-        Ok(JobTicket { id, pending_url })
+        Ok(JobTicket {
+            id,
+            pending_url,
+            target,
+        })
+    }
+
+    /// [`Self::reserve`] for a background transform of `source_url`.
+    pub fn reserve_edit(
+        &self,
+        kind: GenerateKind,
+        node_id: Option<&str>,
+        source_url: &str,
+    ) -> Result<JobTicket, GenerateJobError> {
+        let mut ticket = self.reserve(kind, node_id)?;
+        ticket.target = LandingTarget::Edit {
+            pending: ticket.pending_url.clone(),
+            source: source_url.to_string(),
+        };
+        Ok(ticket)
+    }
+
+    /// Whether an `svg` / `vectorize-image` job is still drawing into
+    /// `frame_id`; a second one would land on a frame the first already
+    /// finished.
+    pub fn frame_job_running(&self, frame_id: &str) -> bool {
+        self.lock().records.iter().any(|record| {
+            record.status == JobStatus::Pending
+                && record.kind.lands_in_frame()
+                && record.node_id.as_deref() == Some(frame_id)
+        })
     }
 
     /// Run `work` for a reserved ticket on its own worker thread. A panicking
@@ -213,6 +297,20 @@ impl GenerateJobs {
                     std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| match &work {
                         JobWork::Image(request) => jobs.backend.generate_image(request),
                         JobWork::Stock(request) => jobs.backend.stock_image(request),
+                        JobWork::Svg(request) => jobs
+                            .backend
+                            .generate_svg(request)
+                            .and_then(|svg| svg_llm::check_artwork(svg, GenerateJobError::NoSvg)),
+                        JobWork::Vectorize(source) => source
+                            .load(source::MIN_TRACE_SOURCE_PX)
+                            .and_then(|image| vectorize::vectorize(&image))
+                            .and_then(|svg| {
+                                svg_llm::check_artwork(
+                                    svg,
+                                    GenerateJobError::Trace("no shapes found in the image".into()),
+                                )
+                            }),
+                        JobWork::Edit(request) => jobs.backend.edit_image(request),
                     }))
                     .unwrap_or(Err(GenerateJobError::Panicked));
                 jobs.record_result(&worker_ticket, result);
@@ -242,7 +340,7 @@ impl GenerateJobs {
                 };
             }
             inner.completed.push_back(Completion {
-                pending_url: ticket.pending_url.clone(),
+                target: ticket.target.clone(),
                 result,
                 finished_at: Instant::now(),
             });
@@ -297,17 +395,20 @@ impl GenerateJobs {
         let entries = completed
             .into_iter()
             .map(|completion| Landing {
-                pending_url: completion.pending_url,
+                target: completion.target,
                 result: completion.result.map_err(|_| ()),
                 finished_at: completion.finished_at,
             })
             .chain(unplaced);
         for entry in entries {
-            let landed = landing::resolve_pending_url(
-                state,
-                &entry.pending_url,
-                entry.result.as_deref().map_err(|_| ()),
-            );
+            let outcome = entry.result.as_deref().map_err(|_| ());
+            let landed = match &entry.target {
+                LandingTarget::PendingUrl(url) => landing::resolve_pending_url(state, url, outcome),
+                LandingTarget::Frame(frame) => landing::resolve_frame(state, frame, outcome),
+                LandingTarget::Edit { pending, source } => {
+                    landing::resolve_pending_url(state, pending, outcome.or(Ok(source.as_str())))
+                }
+            };
             if landed.is_empty() {
                 if entry.finished_at.elapsed() < UNPLACED_TTL {
                     still_unplaced.push(entry);
