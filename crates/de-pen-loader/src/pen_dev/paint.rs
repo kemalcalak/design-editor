@@ -171,7 +171,7 @@ fn complete_stroke_patch(
     if !STROKE_KEYS.iter().any(|key| map.contains_key(*key)) {
         return;
     }
-    let Some(base) = ctx.stroke_bases.get(path) else {
+    let Some(base) = ctx.instance_bases.stroke(path) else {
         return;
     };
     let mut missing: Map<String, Value> = base

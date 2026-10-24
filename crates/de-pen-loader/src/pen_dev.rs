@@ -202,11 +202,11 @@ pub fn convert(root: &mut Value, assets: AssetReader<'_>) -> PenDevReport {
         report.note("imported .pen libraries");
     }
     let variables = variables::Variables::from_document(doc);
-    let stroke_bases = match doc.get("children") {
-        Some(Value::Array(children)) => instances::StrokeBases::from_children(children),
-        _ => instances::StrokeBases::default(),
+    let instance_bases = match doc.get("children") {
+        Some(Value::Array(children)) => instances::InstanceBases::from_children(children),
+        _ => instances::InstanceBases::default(),
     };
-    let mut ctx = nodes::Ctx::new(assets, &mut report, variables, stroke_bases);
+    let mut ctx = nodes::Ctx::new(assets, &mut report, variables, instance_bases);
     if let Some(Value::Array(children)) = doc.get_mut("children") {
         nodes::convert_children(children, false, &mut ctx);
     }

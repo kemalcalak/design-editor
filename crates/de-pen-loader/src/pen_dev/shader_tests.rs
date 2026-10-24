@@ -196,3 +196,35 @@ fn imported_shader_paints_load_as_canonical_documents() {
         jian_ops_schema::style::PenEffect::Shader(_)
     ));
 }
+
+#[test]
+fn a_themed_instance_resolves_the_component_shader_under_its_own_theme() {
+    let mut doc = document(json!([
+        { "type": "frame", "id": "screen", "reusable": true, "children": [
+            { "type": "frame", "id": "scene", "width": 40, "height": 20, "fill": [
+                { "type": "shader", "url": "shaders/waves.glsl", "uniforms": { "u_base": "$surface" } }
+            ]},
+            { "type": "frame", "id": "plain", "width": 40, "height": 20, "fill": [
+                { "type": "shader", "url": "shaders/waves.glsl", "uniforms": { "u_speed": 1 } }
+            ]}
+        ]},
+        { "type": "ref", "id": "dark-copy", "ref": "screen", "theme": { "mode": "dark" } },
+        { "type": "ref", "id": "light-copy", "ref": "screen" }
+    ]));
+    convert(&mut doc, &reader);
+    let screen = &doc["children"][0];
+    let scene = screen["children"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|child| child["id"] == "scene")
+        .unwrap();
+    assert_eq!(scene["fill"][0]["uniforms"]["u_base"], "#f4f4f4");
+    let dark = &doc["children"][1]["descendants"];
+    assert_eq!(dark["scene"]["fill"][0]["uniforms"]["u_base"], "#101010");
+    assert!(
+        dark.get("plain").is_none(),
+        "a shader without variables needs no patch"
+    );
+    assert!(doc["children"][2].get("descendants").is_none());
+}

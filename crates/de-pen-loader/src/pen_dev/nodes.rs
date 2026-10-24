@@ -8,7 +8,7 @@ use std::rc::Rc;
 
 use serde_json::{Map, Value};
 
-use super::instances::{self, StrokeBases};
+use super::instances::{self, InstanceBases};
 use super::variables::{self, Theme, Variables};
 use super::{paint, shader, AssetReader, PenDevReport};
 
@@ -36,8 +36,9 @@ pub(super) struct Ctx<'a> {
     pub(super) variables: Variables,
     /// GLSL files and SkSL compile results of the shader paints.
     pub(super) shaders: shader::ShaderCache,
-    /// The file's own stroke keys per node, completing partial patches.
-    pub(super) stroke_bases: StrokeBases,
+    /// The file's own stroke keys and themed shader paints, completing
+    /// instance patches.
+    pub(super) instance_bases: InstanceBases,
 }
 
 impl<'a> Ctx<'a> {
@@ -45,7 +46,7 @@ impl<'a> Ctx<'a> {
         assets: AssetReader<'a>,
         report: &'a mut PenDevReport,
         variables: Variables,
-        stroke_bases: StrokeBases,
+        instance_bases: InstanceBases,
     ) -> Self {
         Self {
             assets,
@@ -54,7 +55,7 @@ impl<'a> Ctx<'a> {
             image_table: Map::new(),
             variables,
             shaders: shader::ShaderCache::default(),
-            stroke_bases,
+            instance_bases,
         }
     }
 }
@@ -89,6 +90,7 @@ pub(super) fn convert_children(children: &mut Vec<Value>, parent_flow: bool, ctx
         // Before the conversion, so the moved keys are converted below as
         // the instance patch they become.
         instances::move_root_overrides(map);
+        ctx.instance_bases.add_themed_paints(map);
         convert_node(map, in_flow, &role, &theme, ctx);
         let flow = is_auto_layout(map);
         for (key, value) in map.iter_mut() {
