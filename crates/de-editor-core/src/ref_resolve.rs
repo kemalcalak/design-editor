@@ -5,15 +5,19 @@
 //! A `PenNode::Ref` renders as its target component's subtree:
 //! instance-level props override the component's (position, size,
 //! name, …), every descendant id is remapped to the virtual
-//! `refId__childId` space, and `descendants` overrides are spread
-//! onto the matching children. The scene builder runs this pass
-//! BEFORE `$variable` resolution so expanded subtrees resolve their
-//! tokens too.
+//! `refId__childId` space, and `descendants` overrides apply to the
+//! matching children ([`crate::instance_descendants`]). The scene builder
+//! runs this pass BEFORE `$variable` resolution so expanded subtrees
+//! resolve their tokens too.
 //!
 //! The instance/component prop merge uses `serde_json::Value` object
-//! spreads — byte-for-byte the TS semantics (`{ ...component,
-//! ...definedRefProps }` and `{ ...child, ...override }`), with no
-//! per-field porting drift.
+//! spreads — the TS semantics (`{ ...component, ...definedRefProps }`).
+//!
+//! DELIBERATE DIVERGENCE from TS (#166, pen.dev's contract): a
+//! `descendants` entry with `type` replaces the whole descendant subtree,
+//! a patch with `children` fills a slot, and `nested/leaf` keys are
+//! forwarded into nested instances; TS only spread `{ ...child,
+//! ...override }`.
 //!
 //! DELIBERATE DIVERGENCE from TS: nested instances inside an
 //! expanded component expand recursively here (TS stops after one
@@ -34,7 +38,7 @@ use serde_json::{Map, Value};
 /// Build the render-only id used for a component instance child.
 /// Keep every producer and parser on this helper so the virtual-id
 /// convention cannot drift between canvas expansion and editing.
-pub(crate) fn instance_child_virtual_id(ref_id: &str, child_id: &str) -> String {
+pub fn instance_child_virtual_id(ref_id: &str, child_id: &str) -> String {
     format!("{ref_id}{INSTANCE_CHILD_SEPARATOR}{child_id}")
 }
 
@@ -340,37 +344,10 @@ fn remap_ids_typed(node: &mut PenNode, ref_id: &str) {
 }
 
 /// TS `remapIds`: virtual id `refId__childId`, `descendants`
-/// overrides spread onto the matching ORIGINAL child id, recursing
-/// with the same override map.
+/// overrides applied to the matching ORIGINAL child id (patches,
+/// replacements, nested-instance paths: [`crate::instance_descendants`]).
 fn remap_ids(child: &Value, ref_id: &str, overrides: Option<&Map<String, Value>>) -> Value {
-    let Value::Object(child_map) = child else {
-        return child.clone();
-    };
-    let original_id = child_map
-        .get("id")
-        .and_then(Value::as_str)
-        .unwrap_or_default();
-    let mut mapped = child_map.clone();
-    if let Some(ov) = overrides
-        .and_then(|o| o.get(original_id))
-        .and_then(Value::as_object)
-    {
-        for (key, value) in ov {
-            mapped.insert(key.clone(), value.clone());
-        }
-    }
-    mapped.insert(
-        "id".into(),
-        Value::String(instance_child_virtual_id(ref_id, original_id)),
-    );
-    if let Some(Value::Array(children)) = mapped.clone().get("children") {
-        let remapped: Vec<Value> = children
-            .iter()
-            .map(|c| remap_ids(c, ref_id, overrides))
-            .collect();
-        mapped.insert("children".into(), Value::Array(remapped));
-    }
-    Value::Object(mapped)
+    crate::instance_descendants::apply_descendants(child, overrides, Some(ref_id))
 }
 
 /// Materialize an instance into an independent subtree — the TS
@@ -445,35 +422,12 @@ fn apply_top_level_overrides(merged: &mut Map<String, Value>, ref_map: &Map<Stri
     }
 }
 
-/// Spread `descendants` overrides onto matching children by their
+/// Apply `descendants` overrides onto matching children by their
 /// ORIGINAL ids, recursively — `remap_ids` minus the id rewrite.
 /// `pub(crate)` so the inspector's merged-display resolver
 /// (`instance_override.rs`) reuses the exact same child-merge.
 pub(crate) fn apply_overrides(child: &Value, overrides: Option<&Map<String, Value>>) -> Value {
-    let Value::Object(child_map) = child else {
-        return child.clone();
-    };
-    let original_id = child_map
-        .get("id")
-        .and_then(Value::as_str)
-        .unwrap_or_default();
-    let mut mapped = child_map.clone();
-    if let Some(ov) = overrides
-        .and_then(|o| o.get(original_id))
-        .and_then(Value::as_object)
-    {
-        for (key, value) in ov {
-            mapped.insert(key.clone(), value.clone());
-        }
-    }
-    if let Some(Value::Array(children)) = mapped.clone().get("children") {
-        let walked: Vec<Value> = children
-            .iter()
-            .map(|c| apply_overrides(c, overrides))
-            .collect();
-        mapped.insert("children".into(), Value::Array(walked));
-    }
-    Value::Object(mapped)
+    crate::instance_descendants::apply_descendants(child, overrides, None)
 }
 
 /// Document-wide component lookup for instance flows (detach,

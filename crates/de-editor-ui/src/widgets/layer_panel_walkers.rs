@@ -23,6 +23,7 @@ use de_editor_core::EditorState;
 use jian_ops_schema::node::PenNode;
 
 use super::layer_panel::{LayerItem, PageItem};
+use super::layer_panel_instance_rows::{has_owned_rows, push_owned_rows};
 
 /// Snapshot of the active inline rename (page or layer), pulled off
 /// `EditorState.ui.layer_rename` so the panel builders can apply the
@@ -101,6 +102,8 @@ pub(super) fn apply_layer_rename(items: &mut [LayerItem], rename: &RenameView<'_
 /// set — which changes the flattened row STRUCTURE — is threaded here.
 pub(super) struct WalkCx<'a> {
     pub ui: &'a EditorUiState,
+    /// The document, for the master nodes an instance's own rows name.
+    pub doc: &'a jian_ops_schema::PenDocument,
 }
 
 impl<'a> WalkCx<'a> {
@@ -108,6 +111,7 @@ impl<'a> WalkCx<'a> {
     pub(super) fn from_state(state: &'a EditorState) -> Self {
         Self {
             ui: &state.editor_ui,
+            doc: &state.doc,
         }
     }
 }
@@ -122,7 +126,8 @@ fn to_doc_id(id: &str) -> NodeId {
 fn item_for(node: &PenNode, cx: &WalkCx<'_>, depth: usize) -> LayerItem {
     let base = node.base();
     let canon = de_editor_core::NodeId::new(base.id.clone());
-    let has_children = node.children().map(|c| !c.is_empty()).unwrap_or(false);
+    let has_children = node.children().map(|c| !c.is_empty()).unwrap_or(false)
+        || matches!(node, PenNode::Ref(r) if has_owned_rows(r));
     LayerItem {
         node_id: to_doc_id(&base.id),
         // Fall back to the kind label when a node has no name (TS parity:
@@ -163,6 +168,9 @@ pub(super) fn walk(node: &PenNode, cx: &WalkCx<'_>, depth: usize, out: &mut Vec<
         if collapsed {
             continue;
         }
+        if let PenNode::Ref(reference) = node {
+            push_owned_rows(reference, node, cx, depth.saturating_add(1), out);
+        }
         if let Some(children) = node.children() {
             for child in children.iter().rev() {
                 stack.push((child, depth.saturating_add(1)));
@@ -191,6 +199,9 @@ pub(super) fn walk_excluding(
         out.push(item);
         if collapsed {
             continue;
+        }
+        if let PenNode::Ref(reference) = node {
+            push_owned_rows(reference, node, cx, depth.saturating_add(1), out);
         }
         if let Some(children) = node.children() {
             for child in children.iter().rev() {

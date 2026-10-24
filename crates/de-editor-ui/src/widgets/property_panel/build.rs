@@ -189,6 +189,12 @@ impl PropertyPanel {
                 snapshot.widget = None;
             }
             snapshot.is_instance = is_instance;
+            // A node inside an instance that carries an override offers
+            // "Reset override" (#166).
+            snapshot.instance_override = authored_node.is_none()
+                && state
+                    .instance_override_at_anchor(&state.selection.anchor)
+                    .is_some();
             // The snapshot sees a custom program on the node; one a preset
             // pick stashed lives in UI state.
             crate::widgets::property_panel_shader_body::attach_checks(&mut snapshot, node, state);

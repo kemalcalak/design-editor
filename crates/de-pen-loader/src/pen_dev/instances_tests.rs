@@ -177,3 +177,48 @@ fn an_instance_under_another_theme_resolves_the_component_values_there() {
     assert!(plain.get("pinned").is_none());
     assert!(doc["children"][2].get("descendants").is_none());
 }
+
+/// pen.dev slot pattern (#166): the instance replaces its content slot with
+/// its own frame and reaches a nested button's label by path.
+#[test]
+fn slot_replacements_and_nested_paths_render_as_authored() {
+    let (doc, report) = load(json!([
+        { "type": "frame", "id": "btn", "reusable": true, "width": 80, "height": 32,
+          "children": [{ "type": "text", "id": "label", "content": "OK" }] },
+        { "type": "frame", "id": "card", "reusable": true, "width": 240,
+          "layout": "vertical", "children": [
+            { "type": "frame", "id": "slot", "slot": [], "width": "fill_container",
+              "children": [{ "type": "text", "id": "hint", "content": "Drop here" }] },
+            { "type": "ref", "id": "action", "ref": "btn" }
+        ] },
+        { "type": "ref", "id": "inst", "ref": "card", "x": 400, "y": 0, "descendants": {
+            "slot": { "type": "frame", "id": "mine", "layout": "vertical", "children": [
+                { "type": "text", "id": "first", "content": "First" },
+                { "type": "text", "id": "second", "content": "Second" } ] },
+            "action/label": { "content": "Send" }
+        } }
+    ]));
+    assert!(
+        !report.unsupported.keys().any(|k| k.contains("replacement")),
+        "{report:?}"
+    );
+    let roots = ref_resolve::resolve_refs_for_canvas_roots(&doc.children, &doc);
+    let find = |id: &str| -> Value {
+        let node = de_editor_core::walkers::find_node(&roots, &de_editor_core::NodeId::new(id))
+            .unwrap_or_else(|| panic!("{id} renders"));
+        serde_json::to_value(node).unwrap()
+    };
+    let mine = find("inst__mine");
+    let kids: Vec<&str> = mine["children"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|c| c["content"].as_str().unwrap())
+        .collect();
+    assert_eq!(kids, ["First", "Second"], "flow order kept");
+    assert_eq!(find("inst__action__label")["content"], "Send");
+    assert!(
+        de_editor_core::walkers::find_node(&roots, &de_editor_core::NodeId::new("inst__hint"))
+            .is_none()
+    );
+}
