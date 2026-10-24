@@ -168,6 +168,11 @@ impl PreviewSession {
     /// value is mounted, hover/pressed/focused/disabled visuals can change the
     /// paint-only scene.
     pub(crate) fn has_preview_widget_visuals(&self) -> bool {
+        // A hovered link / button paints its hover state (#153) through
+        // the same cloned overlay.
+        if self.hovered_clickable().is_some() {
+            return true;
+        }
         self.runtime.document.as_ref().is_some_and(|document| {
             document.tree.nodes.values().any(|node| {
                 matches!(
@@ -197,10 +202,14 @@ impl PreviewSession {
         let mut scene = base.clone();
         let focused_id = self.focused_schema_id();
         let state_variables = self.state_variables();
+        let hovered_link = self.hovered_clickable();
         let idx = scene.active_page_index;
         if let Some(page) = scene.pages.get_mut(idx) {
             for node in page.children.iter_mut() {
                 self.overlay_node(node, focused_id.as_deref(), state_variables.as_ref());
+                if let Some(link) = hovered_link.as_deref() {
+                    self.apply_link_hover(node, link);
+                }
             }
         }
         let pointer = self.pointer_binding_value();
@@ -230,6 +239,43 @@ impl PreviewSession {
         }
         for child in node.children.iter_mut() {
             self.overlay_node(child, focused_id, state_variables);
+        }
+    }
+
+    /// Paint the hover (and pressed) state of the hovered clickable
+    /// `link_id` when it is not a widget — widgets resolve their own
+    /// states above. Frames and text carry no authored `states`, so the
+    /// state is derived: a tint over a filled node, or a dim on a
+    /// fill-less one (a text link), the way a website link reacts.
+    fn apply_link_hover(&self, node: &mut SceneNode, link_id: &str) {
+        if node.id != link_id {
+            for child in node.children.iter_mut() {
+                self.apply_link_hover(child, link_id);
+            }
+            return;
+        }
+        if node.widget.is_some() {
+            return;
+        }
+        let pressed = self
+            .interaction
+            .pressed_nodes()
+            .into_iter()
+            .any(|id| self.clickable_ancestor(id).as_deref() == Some(link_id));
+        let interaction = WidgetInteractionState {
+            hovered: true,
+            pressed,
+            focused: false,
+            disabled: false,
+        };
+        match (
+            node.fill,
+            derived_overlay(&WidgetTheme::default(), interaction, false),
+        ) {
+            (Some(fill), Some(overlay)) => {
+                node.fill = Some(composite_over(fill, color_from_jian(overlay)));
+            }
+            _ => node.opacity *= if pressed { 0.6 } else { 0.75 },
         }
     }
 

@@ -63,6 +63,36 @@ pub(crate) struct AppMode {
     /// The active theme `enter` was called with — reused so a screen
     /// switch re-derives the scene against the same theme.
     pub(crate) theme: std::collections::BTreeMap<String, String>,
+    /// Browser-style back / forward history over committed screen
+    /// switches (#153), independent of the router's push/pop stack.
+    pub(crate) history: crate::browse::BrowseHistory,
+}
+
+impl AppMode {
+    /// Install a router at the table's entry screen and start the
+    /// browsing history there.
+    pub(crate) fn new(
+        table: jian_core::screens::ScreenTable,
+        theme: std::collections::BTreeMap<String, String>,
+        promoted_doc: jian_ops_schema::PenDocument,
+    ) -> Self {
+        let router = std::rc::Rc::new(jian_core::screens::ScreenRouter::new(
+            table.entry_path(),
+            table.paths(),
+        ));
+        let mounted_stack = router.current().stack;
+        let history = crate::browse::BrowseHistory::new(table.entry_path(), mounted_stack.len());
+        Self {
+            current_path: table.entry_path().to_owned(),
+            mounted_stack,
+            page_idx: 0,
+            theme,
+            promoted_doc,
+            table,
+            router,
+            history,
+        }
+    }
 }
 
 /// Result of the app-mode per-frame reconcile. `repaint` preserves the
@@ -460,6 +490,9 @@ impl PreviewSession {
         self.motion.reset_screen();
         self.begin_lifecycle(now_ms);
         let route = self.runtime.nav.current();
+        if let Some(app) = self.app.as_mut() {
+            app.history.record(&route.path, route.stack.len());
+        }
         self.debug
             .trace
             .record_route(&route.path, &route.stack, self.last_now_ms);

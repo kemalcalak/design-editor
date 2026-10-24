@@ -136,6 +136,9 @@ pub(crate) fn ensure_screen_routes(sink: &mut dyn DocSink) -> Vec<ScreenCandidat
 
 #[path = "screen_route_inventory.rs"]
 mod screen_route_inventory;
+#[path = "wire_web_nav_links.rs"]
+mod web_nav_links;
+pub use web_nav_links::wire_web_nav_links;
 pub(crate) use screen_route_inventory::{
     ensure_planned_screen_routes, prompt_screen_route_inventory,
 };

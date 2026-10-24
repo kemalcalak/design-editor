@@ -173,6 +173,8 @@ impl EditorUiState {
         self.preview.slideshow = None;
         self.preview.toolbar_hover = None;
         self.preview.toolbar_pressed = None;
+        self.preview.browser_hover = None;
+        self.preview.browser_pressed = None;
     }
 
     /// Flip Preview mode on/off. Returns the new state (`true` =

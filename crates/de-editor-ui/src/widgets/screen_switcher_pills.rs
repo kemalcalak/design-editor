@@ -8,11 +8,12 @@
 //! `on_tap` — the row always lets every screen be reached directly.
 //!
 //! Sibling of `preview_device_switcher.rs` — same paint/hit-test split,
-//! positioned directly BELOW its pill (never the same row) so the two
-//! floating controls can never collide.
+//! positioned BELOW the browser bar (`preview_browser_bar.rs`, #153),
+//! which itself sits below the device switcher, so the three floating
+//! rows can never collide.
 
 use crate::widgets::file_menu::truncate_to_width;
-use crate::widgets::preview_device_switcher::PreviewDeviceSwitcher;
+use crate::widgets::preview_browser_bar::PreviewBrowserBar;
 use crate::widgets::PaintCx;
 use crate::{Point2D, Rect, TextLayout, Theme};
 
@@ -47,14 +48,15 @@ impl ScreenSwitcherPills<'_> {
     }
 
     /// Row bounds: horizontally centered like the device switcher's pill,
-    /// its top edge `ROW_GAP` below that pill's bottom edge.
+    /// its top edge `ROW_GAP` below the browser bar (#153), which sits
+    /// below the device switcher. Both rows paint only in APP MODE.
     pub fn row_rect(canvas: Rect, count: usize) -> Rect {
         let width = Self::row_width(count);
-        let device_pill = PreviewDeviceSwitcher::pill_rect(canvas);
+        let bar = PreviewBrowserBar::bar_rect(canvas);
         Rect {
             origin: Point2D::new(
                 canvas.origin.x + (canvas.size.x - width) / 2.0,
-                device_pill.origin.y + device_pill.size.y + ROW_GAP,
+                bar.origin.y + bar.size.y + ROW_GAP,
             ),
             size: Point2D::new(width, PILL_H),
         }
@@ -138,11 +140,11 @@ mod tests {
     }
 
     #[test]
-    fn row_is_centered_below_device_switcher_pill() {
+    fn row_is_centered_below_the_browser_bar() {
         let row = ScreenSwitcherPills::row_rect(canvas(), 3);
-        let device_pill = PreviewDeviceSwitcher::pill_rect(canvas());
+        let bar = PreviewBrowserBar::bar_rect(canvas());
         assert_eq!(row.size.y, PILL_H);
-        assert!((row.origin.y - (device_pill.origin.y + device_pill.size.y + ROW_GAP)).abs() < 0.5);
+        assert!((row.origin.y - (bar.origin.y + bar.size.y + ROW_GAP)).abs() < 0.5);
         let expected_w = 3.0 * PILL_W + 2.0 * PILL_GAP;
         assert!((row.size.x - expected_w).abs() < 0.5);
         assert!(

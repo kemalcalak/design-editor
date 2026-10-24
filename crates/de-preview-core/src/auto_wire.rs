@@ -51,7 +51,7 @@
 //! `de-pen-loader` in `Cargo.toml`.
 
 use de_editor_core::{EditorCommand, EditorState, NodeId};
-use de_orchestrator::wire_screen_navigation::wire_screen_navigation;
+use de_orchestrator::wire_screen_navigation::{wire_screen_navigation, wire_web_nav_links};
 use de_orchestrator::DocSink;
 use jian_ops_schema::node::PenNode;
 use jian_ops_schema::PenDocument;
@@ -110,6 +110,8 @@ pub(super) fn auto_wire_for_preview(
     }
     let mut sink = PreviewDocSink { state: &mut state };
     wire_screen_navigation(&mut sink);
+    // #153: website header / footer links to pages and same-page sections.
+    wire_web_nav_links(&mut sink);
     Some(state.doc)
 }
 

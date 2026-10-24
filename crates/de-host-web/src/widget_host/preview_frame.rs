@@ -93,6 +93,8 @@ impl super::WidgetHost {
         self.editor_state.editor_ui.preview.device = None;
         self.editor_state.editor_ui.preview.screen_switcher_hover = None;
         self.editor_state.editor_ui.preview.screen_switcher_pressed = None;
+        self.editor_state.editor_ui.preview.browser_hover = None;
+        self.editor_state.editor_ui.preview.browser_pressed = None;
     }
 
     /// Rebuild the cached frame from the current session and viewport.

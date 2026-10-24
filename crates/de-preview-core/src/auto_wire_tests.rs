@@ -76,3 +76,67 @@ fn single_screen_doc_is_untouched() {
         "single-screen doc: pass runs but is a no-op"
     );
 }
+
+/// Two unmarked desktop pages with a website header (#153).
+fn unmarked_site() -> &'static str {
+    r#"{"version":"1.0","children":[
+        {"type":"frame","id":"home","name":"Home","width":1280,"height":1600,
+         "layout":"vertical","children":[
+            {"type":"frame","id":"header","name":"Header","layout":"horizontal","children":[
+                {"type":"text","id":"to-pricing","content":"Pricing"},
+                {"type":"text","id":"to-faq","content":"FAQ"}
+            ]},
+            {"type":"frame","id":"faq","name":"FAQ","height":300,"children":[]}
+         ]},
+        {"type":"frame","id":"pricing","name":"Pricing","width":1280,"height":900,
+         "layout":"vertical","children":[]}
+    ]}"#
+}
+
+fn on_tap(doc: &PenDocument, id: &str) -> Option<serde_json::Value> {
+    use de_editor_core::PenNodeExt;
+    fn find<'a>(nodes: &'a [PenNode], id: &str) -> Option<&'a PenNode> {
+        nodes.iter().find_map(|node| {
+            if node.id_str() == id {
+                return Some(node);
+            }
+            find(node.children()?, id)
+        })
+    }
+    let node = find(&doc.children, id)?;
+    serde_json::to_value(node)
+        .ok()?
+        .get("events")?
+        .get("onTap")
+        .cloned()
+}
+
+#[test]
+fn website_header_links_are_wired_to_pages_and_sections() {
+    let doc = parse(unmarked_site());
+    let wired = auto_wire_for_preview(&doc, 0).expect("no marker -> pass runs");
+    assert_eq!(
+        on_tap(&wired, "to-pricing"),
+        Some(serde_json::json!([{ "replace": "\"/pricing\"" }]))
+    );
+    assert_eq!(
+        on_tap(&wired, "to-faq"),
+        Some(serde_json::json!([
+            { "scroll_to": { "target": "faq", "alignment": "start" } }
+        ]))
+    );
+    assert_eq!(
+        on_tap(&doc, "to-pricing"),
+        None,
+        "the caller's doc is untouched"
+    );
+}
+
+#[test]
+fn an_authored_marker_also_skips_website_links() {
+    let json = unmarked_site().replace(
+        r#""id":"pricing","name":"Pricing","#,
+        r#""id":"pricing","name":"Pricing","screen":"/pricing","#,
+    );
+    assert!(auto_wire_for_preview(&parse(&json), 0).is_none());
+}
