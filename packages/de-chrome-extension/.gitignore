@@ -1,5 +1,5 @@
 # Build product of scripts/build-wasm.sh (the wasm-bindgen shim + module).
-# Same policy as crates/de-host-web/pkg/ and packages/de-web-sdk/wasm/:
+# Same policy as crates/de-host-web/pkg/:
 # regenerated on every build, never checked in.
 /wasm/
 

@@ -2,23 +2,23 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-> **The TypeScript Design Editor has been retired.** `apps/web`, `apps/desktop`, `apps/cli`, and the `pen-*` packages (pen-types/core/engine/renderer/figma/mcp/ai-skills/sdk/react/acp) are gone. The product is now implemented in **Rust** (`crates/`) with a thin **wasm-backed web SDK** (`packages/de-web-sdk*`). Historical `// ported from pen-*` comments in the Rust sources name the retired TS as their origin — that code no longer exists in-tree; consult git history (last TS tag `v0.7.5`) if you need it.
+> **The TypeScript Design Editor has been retired.** `apps/web`, `apps/desktop`, `apps/cli`, and the `pen-*` packages (pen-types/core/engine/renderer/figma/mcp/ai-skills/sdk/react/acp) are gone. The product is now implemented in **Rust** (`crates/`); `packages/` keeps only the Chrome extension and JS build tooling. Historical `// ported from pen-*` comments in the Rust sources name the retired TS as their origin — that code no longer exists in-tree; consult git history (last TS tag `v0.7.5`) if you need it.
 
 Detailed module docs load automatically in subdirectories:
 
 - **`crates/CLAUDE.md`** — Rust shell: crate layout, editor core, widgets, hosts (native/web/desktop), MCP, AI, orchestrator, codegen. **The canonical architecture doc.**
-- **`packages/CLAUDE.md`** — Remaining packages (de-web-sdk web viewer SDK family).
+- **`packages/CLAUDE.md`** — Remaining packages (Chrome extension + JS tooling).
 
 ## Commands
 
-Tooling is **Cargo** (Rust — the product). The root has **no `package.json`**; the JS/**Bun** tooling for the web SDK lives under `packages/` — run SDK/JS scripts from there.
+Tooling is **Cargo** (Rust — the product). The root has **no `package.json`**; the JS/**Bun** tooling (Chrome extension scripts, Iconify catalog) lives under `packages/` — run JS scripts from there.
 
 - **Web dev server (Rust):** `bash scripts/start-web-rust.sh`
 - **Build (Rust):** `cargo build --workspace --release`
 - **Run all tests (Rust):** `cargo test --workspace`; single crate: `cargo test -p <crate>`
 - **Type check:** `cargo check --workspace`; wasm: `cargo check --target wasm32-unknown-unknown -p de-host-web --no-default-features --features web`
 - **Lint / format (Rust):** `cargo clippy --workspace --all-targets -- -D warnings` / `cargo fmt --all`
-- **Lint / format (remaining TS SDK):** from `packages/`: `bun run lint` (oxlint) / `bun run format` (oxfmt)
+- **Lint / format (JS):** from `packages/`: `bun run lint` (oxlint) / `bun run format` (oxfmt)
 - **Desktop app:** `cargo build -p de-host-desktop` → binary `design-editor` (live MCP on `127.0.0.1:<port>/mcp`)
 - **CLI:** `cargo build -p de-cli` → binary `de`
 - **MCP server:** built into the desktop/web host (`--mcp <path>`); crate `de-mcp`
@@ -46,9 +46,8 @@ crates/
    de-smoke / …
 
 packages/
-├── de-web-sdk/           Read-only `.de` web viewer SDK (wraps the de-host-web wasm bundle)
-├── de-web-sdk-react/     React 19 adapter for de-web-sdk
-└── de-web-sdk-vue/       Vue 3 adapter for de-web-sdk
+├── de-chrome-extension/  Chrome extension that captures a tab into the running editor
+└── scripts/              JS build glue (Iconify catalog generator)
 ```
 
 Data flow, canvas engine, Document/EditorCommand model, MCP layered-design workflow, design variables, and the run/debug recipe are all documented in **`crates/CLAUDE.md`**.
@@ -57,7 +56,7 @@ Data flow, canvas engine, Document/EditorCommand model, MCP layered-design workf
 
 - Single files must not exceed **800 lines** — split into smaller modules when they grow beyond this. The workspace currently has **zero violations**; the convention is a spine (public surface + `mod` declarations) plus sibling files, with re-exports keeping import paths stable.
 - One component/widget per file, single responsibility.
-- `.rs` filenames use snake_case; `.ts`/`.tsx` (SDK) use kebab-case.
+- `.rs` filenames use snake_case; `.js`/`.ts` use kebab-case.
 - Source comments (`.rs`/`.ts`/`.toml`) in **English** (spec/plan markdown + test CJK fixtures may keep Chinese).
 - Rust widgets paint against jian's `Painter`; `draw_text` is **baseline-relative** (label components center via `centered_text_baseline_y`, not `(h-fs)/2`).
 

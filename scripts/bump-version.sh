@@ -1,8 +1,8 @@
 #!/bin/sh
 
 # The product version lives only in [workspace.package].version of the root
-# Cargo.toml; every crate inherits it and every other artifact (SDK bundles,
-# Chrome zip, VSIX, macOS plist, Windows installer) reads it at build time.
+# Cargo.toml; every crate inherits it and every other artifact (Chrome zip,
+# macOS plist, Windows installer) reads it at build time.
 #
 #   scripts/bump-version.sh X.Y.Z   write X.Y.Z into Cargo.toml, then refresh
 #   scripts/bump-version.sh         Cargo.toml was edited by hand; refresh only
