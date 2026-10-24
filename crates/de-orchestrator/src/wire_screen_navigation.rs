@@ -46,7 +46,9 @@
 
 use std::collections::{BTreeSet, HashMap};
 
+use de_editor_core::interaction_edit::{events_patch_json, navigate_action, NavigateVerb};
 use de_editor_core::{EditorCommand, EditorState, NodeId, PenNodeExt};
+use jian_ops_schema::events::{Action, EventHandlers};
 use jian_ops_schema::node::{PenNode, TextContent};
 
 use crate::types::DocSink;
@@ -287,7 +289,7 @@ fn wire_nav_tabs(
         .map(|(name, path)| (name.as_str(), path.as_str()))
         .collect();
 
-    let mut patches: Vec<(String, String)> = Vec::new();
+    let mut patches: Vec<(String, Action)> = Vec::new();
     for screen in screens {
         let Some(root) = de_editor_core::walkers::find_node(
             sink.state().active_children(),
@@ -315,16 +317,15 @@ fn wire_nav_tabs(
                 let Some(path) = matched_path else {
                     continue;
                 };
-                patches.push((item.id_str().to_string(), navigate_patch("replace", &path)));
+                patches.push((
+                    item.id_str().to_string(),
+                    navigate_action(NavigateVerb::Replace, &path),
+                ));
             }
         }
     }
-    for (node_id, patch_json) in patches {
-        sink.apply(EditorCommand::PatchNodeData {
-            node_id: NodeId::new(node_id),
-            patch_json,
-            page_id: None,
-        });
+    for (node_id, action) in patches {
+        apply_on_tap(sink, &node_id, action);
     }
 }
 
@@ -674,14 +675,38 @@ pub fn subtree_has_events(node: &PenNode) -> bool {
             .any(subtree_has_events)
 }
 
-/// Build the `events.onTap` navigate patch JSON. `path` must already be a
-/// `/`-rooted route path; the JSON string VALUE is the literal
+/// The patch JSON writing `action` as the node's `onTap`, keeping every
+/// other handler in `existing` (`onSwipe`, `onChange`, …).
+/// `PatchNodeData` is a shallow merge, so a bare `{"events":{"onTap":…}}`
+/// would replace the whole block and drop them (#176) — the same fix the
+/// Interactions panel got in #154. `None` when the block won't serialize.
+///
+/// A navigate `action` comes from
+/// [`de_editor_core::interaction_edit::navigate_action`]: `path` is a
+/// `/`-rooted route path and the JSON string VALUE is the literal
 /// `"<path>"` (quotes included) so it compiles as a Tier-1 string-literal
 /// expression — see the module doc, contract point 1.
-pub(crate) fn navigate_patch(verb: &str, path: &str) -> String {
-    let body = serde_json::to_string(path).unwrap_or_default(); // -> "\"/path\""
-    let escaped_body = serde_json::to_string(&body).unwrap_or_default(); // -> "\"\\\"/path\\\"\""
-    format!(r#"{{"events":{{"onTap":[{{"{verb}":{escaped_body}}}]}}}}"#)
+pub(crate) fn on_tap_patch(existing: Option<&EventHandlers>, action: Action) -> Option<String> {
+    let mut handlers = existing.cloned().unwrap_or_default();
+    handlers.on_tap = Some(vec![action]);
+    events_patch_json(&handlers)
+}
+
+/// Write `action` as `node_id`'s `onTap` on the active page, merging it
+/// into the node's current `events` read at apply time (see
+/// [`on_tap_patch`]).
+pub(crate) fn apply_on_tap(sink: &mut dyn DocSink, node_id: &str, action: Action) {
+    let id = NodeId::new(node_id.to_string());
+    let existing = de_editor_core::walkers::find_node(sink.state().active_children(), &id)
+        .and_then(|node| node.events().cloned());
+    let Some(patch_json) = on_tap_patch(existing.as_ref(), action) else {
+        return;
+    };
+    sink.apply(EditorCommand::PatchNodeData {
+        node_id: id,
+        patch_json,
+        page_id: None,
+    });
 }
 
 fn resolved_y_offsets(state: &EditorState) -> HashMap<String, f64> {
@@ -707,3 +732,7 @@ fn collect_y_offsets(
 #[cfg(test)]
 #[path = "wire_screen_navigation_tests.rs"]
 mod tests;
+
+#[cfg(test)]
+#[path = "wire_screen_navigation_patch_tests.rs"]
+mod patch_tests;

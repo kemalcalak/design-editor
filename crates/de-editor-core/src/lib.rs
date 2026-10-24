@@ -151,6 +151,7 @@ pub mod svg_import;
 pub mod svg_path_bounds;
 mod svg_path_data;
 pub mod sync_gate;
+pub mod transition_edit;
 pub mod user_scene_templates;
 pub mod video_node_props;
 pub mod web_assets;

@@ -112,3 +112,66 @@ fn nothing_is_written_without_a_selection() {
     assert!(!state
         .set_selected_interaction_action(InteractionTrigger::Tap, &InteractionActionEdit::Back));
 }
+
+#[test]
+fn scroll_to_writes_the_section_link_shape() {
+    let mut state = state_with_rect();
+    let edit = InteractionActionEdit::ScrollTo {
+        target: "pricing".into(),
+    };
+    assert!(state.set_selected_interaction_action(InteractionTrigger::Tap, &edit));
+    let tap = events(&state).and_then(|e| e.on_tap).expect("onTap");
+    assert_eq!(
+        key_and_body(&tap[0]),
+        (
+            "scroll_to".into(),
+            serde_json::json!({"target":"pricing","alignment":"start"})
+        )
+    );
+}
+
+#[test]
+fn open_url_stores_a_literal_and_edits_its_address_in_place() {
+    let mut state = state_with_rect();
+    let edit = InteractionActionEdit::OpenUrl { url: String::new() };
+    assert!(state.set_selected_interaction_action(InteractionTrigger::Tap, &edit));
+    let url = "https://a.dev/?q='x'";
+    assert!(state.set_selected_interaction_url(InteractionTrigger::Tap, url));
+    assert!(!state.set_selected_interaction_url(InteractionTrigger::Tap, url));
+    let tap = events(&state).and_then(|e| e.on_tap).expect("onTap");
+    let (key, body) = key_and_body(&tap[0]);
+    assert_eq!(key, "open_url");
+    assert_eq!(body["url"], serde_json::json!("\"https://a.dev/?q='x'\""));
+    assert_eq!(open_url_of(&body).as_deref(), Some(url));
+    // A hand-authored single-quoted literal reads back without its quotes.
+    assert_eq!(
+        open_url_of(&serde_json::json!({"url":"'https://b.dev'"})).as_deref(),
+        Some("https://b.dev")
+    );
+    // Not an open_url any more: the URL edit is refused.
+    let back = InteractionActionEdit::Back;
+    assert!(state.set_selected_interaction_action(InteractionTrigger::Tap, &back));
+    assert!(!state.set_selected_interaction_url(InteractionTrigger::Tap, "https://c.dev"));
+}
+
+#[test]
+fn moving_a_trigger_keeps_its_actions_and_never_overwrites() {
+    let mut state = state_with_rect();
+    let nav = InteractionActionEdit::Navigate {
+        path: "/profile".into(),
+    };
+    assert!(state.set_selected_interaction_action(InteractionTrigger::Tap, &nav));
+    assert!(state.move_selected_interaction(InteractionTrigger::Tap, InteractionTrigger::Hover));
+    let handlers = events(&state).expect("events");
+    assert!(handlers.on_tap.is_none());
+    let hover = handlers.on_hover_enter.expect("moved to hover");
+    assert_eq!(key_and_body(&hover[0]).0, "replace");
+
+    let back = InteractionActionEdit::Back;
+    assert!(state.set_selected_interaction_action(InteractionTrigger::LongPress, &back));
+    assert!(
+        !state.move_selected_interaction(InteractionTrigger::Hover, InteractionTrigger::LongPress),
+        "the target trigger already has an action"
+    );
+    assert!(!state.move_selected_interaction(InteractionTrigger::Tap, InteractionTrigger::Hover));
+}

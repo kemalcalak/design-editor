@@ -53,6 +53,17 @@ pub fn property_focus_initial(focus: PropertyFocus, panel: &PropertyPanel) -> St
                 .map(format_panel_number)
                 .unwrap_or_else(|| "0".to_string())
         }
+        F::TransitionDuration => panel
+            .snapshot
+            .interactions
+            .transition
+            .map(|transition| transition.duration_ms.to_string())
+            .unwrap_or_default(),
+        F::InteractionUrl(trigger) => panel
+            .snapshot
+            .interactions
+            .open_url(trigger)
+            .unwrap_or_default(),
         F::MotionValue { index, field } => match panel.snapshot.interactions.motion.get(index) {
             Some(crate::widgets::property_panel_motion::MotionSummary::Simple(simple)) => {
                 crate::widgets::property_panel_motion::field_value(simple, field)
@@ -377,6 +388,14 @@ pub fn commit_property_focus(state: &mut EditorState) -> bool {
             if let Ok(value) = draft.trim().parse::<f64>() {
                 let _ = state.set_selected_animation_value(index, field, value);
             }
+        }
+        PropertyFocus::TransitionDuration => {
+            if let Ok(value) = draft.trim().parse::<f64>() {
+                let _ = state.set_selected_transition_duration(value);
+            }
+        }
+        PropertyFocus::InteractionUrl(trigger) => {
+            let _ = state.set_selected_interaction_url(trigger, draft.trim());
         }
         _ => {
             if let Ok(value) = draft.trim().parse::<f32>() {

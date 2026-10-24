@@ -1,5 +1,8 @@
-//! Motion section (#154): the node's `animations`, painted right below
-//! the Interactions section in the same slot.
+//! Motion section (#154): the node's `transition` and `animations`,
+//! painted right below the Interactions section in the same slot.
+//!
+//! A node-level `transition` (#176) is two rows at the top: "Transition"
+//! with its easing dropdown and remove, then its duration.
 //!
 //! Each animation the panel can express (one property, two stops) is
 //! three rows: the property dropdown + On load | In view + remove, then
@@ -19,12 +22,13 @@ use crate::widgets::property_panel_inputs::{
     section_add_target, INPUT_HEIGHT, PAD_X, SECTION_GAP, SECTION_HEADER_HEIGHT,
 };
 use crate::widgets::property_panel_interactions::{
-    paint_fitted_dropdown, paint_plain_row, translate, InteractionMenuTarget,
+    paint_fitted_dropdown, paint_plain_row, translate, InteractionMenuTarget, InteractionSummary,
 };
 use crate::widgets::property_panel_sections::EditContext;
 use crate::widgets::PaintCx;
 use crate::{Point2D, Rect};
 use de_editor_core::motion_edit::{simple_motion, MotionField, MotionProperty, SimpleMotion};
+use de_editor_core::transition_edit::{MotionEasing, TransitionSummary};
 use de_editor_core::PropertyFocus;
 use jian_ops_schema::motion::MotionTrigger;
 use jian_ops_schema::node::PenNode;
@@ -76,15 +80,51 @@ const TRIGGER_SEGMENTS_W: f32 = 116.0;
 const REMOVE_SIZE: f32 = 22.0;
 const TRIGGERS: [MotionTrigger; 2] = [MotionTrigger::Mount, MotionTrigger::InView];
 
+/// Rows the node-level transition takes (label + easing, then duration).
+const TRANSITION_ROWS: usize = 2;
+/// Width of the Transition row's label column.
+const TRANSITION_LABEL_W: f32 = 76.0;
+
+fn transition_rows(summary: &InteractionSummary) -> usize {
+    if summary.transition.is_some() {
+        TRANSITION_ROWS
+    } else {
+        0
+    }
+}
+
+/// Whether the section shows at all: an animation or a transition.
+fn shown(summary: &InteractionSummary) -> bool {
+    !summary.motion.is_empty() || summary.transition.is_some()
+}
+
 /// Total vertical space the Motion section consumes.
-/// Zero while the node has no animation: the section then does not
-/// paint at all and is added from the Interactions "+".
-pub fn motion_section_height(motion: &[MotionSummary]) -> f32 {
-    if motion.is_empty() {
+/// Zero while the node has neither an animation nor a transition: the
+/// section then does not paint at all and is added from the
+/// Interactions "+".
+pub fn motion_section_height(summary: &InteractionSummary) -> f32 {
+    if !shown(summary) {
         return 0.0;
     }
-    let rows: usize = motion.iter().map(MotionSummary::row_count).sum();
+    let rows: usize = summary
+        .motion
+        .iter()
+        .map(MotionSummary::row_count)
+        .sum::<usize>()
+        + transition_rows(summary);
     SECTION_HEADER_HEIGHT + rows as f32 * ROW_STEP + 6.0 + SECTION_GAP
+}
+
+/// The Transition head row's parts: easing dropdown and remove.
+fn transition_head(x: f32, y: f32, width: f32) -> (Rect, Rect) {
+    let head = head_row(x, y, width);
+    let dropdown = Rect::xywh(
+        head.dropdown.origin.x + TRANSITION_LABEL_W,
+        y,
+        (head.remove.origin.x - 6.0 - head.dropdown.origin.x - TRANSITION_LABEL_W).max(0.0),
+        INPUT_HEIGHT,
+    );
+    (dropdown, head.remove)
 }
 
 /// The first row's parts: property dropdown, trigger segments, remove.
@@ -130,34 +170,47 @@ fn value_pair(x: f32, y: f32, width: f32) -> [Rect; 2] {
     ]
 }
 
-/// Walk the rows: `(index, summary, top of its first row)`.
+/// Walk the animation rows: `(index, summary, top of its first row)`.
+/// They start below the transition rows.
 fn row_tops(
-    motion: &[MotionSummary],
+    summary: &InteractionSummary,
     y: f32,
 ) -> impl Iterator<Item = (usize, &MotionSummary, f32)> {
-    let mut row_y = y + SECTION_HEADER_HEIGHT;
-    motion.iter().enumerate().map(move |(index, summary)| {
-        let at = row_y;
-        row_y += summary.row_count() as f32 * ROW_STEP;
-        (index, summary, at)
-    })
+    let mut row_y = y + SECTION_HEADER_HEIGHT + transition_rows(summary) as f32 * ROW_STEP;
+    summary
+        .motion
+        .iter()
+        .enumerate()
+        .map(move |(index, summary)| {
+            let at = row_y;
+            row_y += summary.row_count() as f32 * ROW_STEP;
+            (index, summary, at)
+        })
 }
 
 pub(crate) fn push_motion_action_rects(
     out: &mut Vec<(PropertyPanelAction, Rect)>,
-    motion: &[MotionSummary],
+    interactions: &InteractionSummary,
     x: f32,
     y: f32,
     width: f32,
 ) {
-    if motion.is_empty() {
+    if !shown(interactions) {
         return;
     }
     out.push((
         PropertyPanelAction::AddAnimation,
         section_add_target(x, y, width),
     ));
-    for (index, summary, row_y) in row_tops(motion, y) {
+    if interactions.transition.is_some() {
+        let (dropdown, remove) = transition_head(x, y + SECTION_HEADER_HEIGHT, width);
+        out.push((
+            PropertyPanelAction::ToggleInteractionMenu(InteractionMenuTarget::TransitionEasing),
+            dropdown,
+        ));
+        out.push((PropertyPanelAction::RemoveTransition, remove));
+    }
+    for (index, summary, row_y) in row_tops(interactions, y) {
         let head = head_row(x, row_y, width);
         if matches!(summary, MotionSummary::Simple(_)) {
             out.push((
@@ -178,15 +231,20 @@ pub(crate) fn push_motion_action_rects(
     }
 }
 
-/// The From / To / Duration / Delay inputs of every simple row.
+/// The transition's duration input, then the From / To / Duration /
+/// Delay inputs of every simple row.
 pub fn motion_input_rects(
-    motion: &[MotionSummary],
+    interactions: &InteractionSummary,
     x: f32,
     y: f32,
     width: f32,
 ) -> Vec<(PropertyFocus, Rect)> {
     let mut out = Vec::new();
-    for (index, summary, row_y) in row_tops(motion, y) {
+    if interactions.transition.is_some() {
+        let [duration, _] = value_pair(x, y + SECTION_HEADER_HEIGHT + ROW_STEP, width);
+        out.push((PropertyFocus::TransitionDuration, duration));
+    }
+    for (index, summary, row_y) in row_tops(interactions, y) {
         if !matches!(summary, MotionSummary::Simple(_)) {
             continue;
         }
@@ -204,8 +262,9 @@ pub fn motion_input_rects(
     out
 }
 
-/// [`motion_input_rects`] placed in the panel: the Motion section
-/// starts below the Interactions rows at the shared Interactions top.
+/// The Interactions URL inputs and [`motion_input_rects`] placed in the
+/// panel: the Motion section starts below the Interactions rows at the
+/// shared Interactions top.
 pub fn motion_input_rects_in_panel(
     panel_rect: Rect,
     visible: crate::widgets::property_panel_visibility::VisibleSections,
@@ -213,7 +272,7 @@ pub fn motion_input_rects_in_panel(
     fills: &[crate::widgets::property_panel::FillSummary],
     interactions: &crate::widgets::property_panel_interactions::InteractionSummary,
 ) -> Vec<(PropertyFocus, Rect)> {
-    if !visible.interactions || interactions.motion.is_empty() {
+    if !visible.interactions {
         return Vec::new();
     }
     let tops = crate::widgets::property_panel_section_tops::section_tops(
@@ -223,14 +282,77 @@ pub fn motion_input_rects_in_panel(
         fills,
         interactions,
     );
+    let mut out = crate::widgets::property_panel_interactions::interaction_input_rects(
+        interactions,
+        panel_rect.origin.x,
+        tops.interactions,
+        panel_rect.size.x,
+    );
     let top = tops.interactions
         + crate::widgets::property_panel_interactions::interactions_section_height(interactions);
-    motion_input_rects(
-        &interactions.motion,
+    out.extend(motion_input_rects(
+        interactions,
         panel_rect.origin.x,
         top,
         panel_rect.size.x,
-    )
+    ));
+    out
+}
+
+/// Display name of an easing; `None` is a cubic-bezier easing.
+pub fn easing_label(locale: de_editor_core::Locale, easing: Option<MotionEasing>) -> &'static str {
+    match easing {
+        Some(MotionEasing::Standard) => translate(locale, "motion.easeStandard", "Standard"),
+        Some(MotionEasing::Emphasized) => translate(locale, "motion.easeEmphasized", "Emphasized"),
+        Some(MotionEasing::EmphasizedDecelerate) => {
+            translate(locale, "motion.easeEmphasizedDecelerate", "Emphasized out")
+        }
+        Some(MotionEasing::EmphasizedAccelerate) => {
+            translate(locale, "motion.easeEmphasizedAccelerate", "Emphasized in")
+        }
+        Some(MotionEasing::Linear) => translate(locale, "motion.easeLinear", "Linear"),
+        Some(MotionEasing::Ease) => translate(locale, "motion.ease", "Ease"),
+        Some(MotionEasing::EaseIn) => translate(locale, "motion.easeIn", "Ease in"),
+        Some(MotionEasing::EaseOut) => translate(locale, "motion.easeOut", "Ease out"),
+        Some(MotionEasing::EaseInOut) => translate(locale, "motion.easeInOut", "Ease in-out"),
+        None => translate(locale, "motion.easeCustom", "Custom"),
+    }
+}
+
+fn paint_remove(cx: &mut PaintCx<'_>, theme: &Theme, remove: Rect) {
+    draw_icon(
+        cx.backend,
+        Icon::Close,
+        Point2D::new(
+            remove.origin.x + (REMOVE_SIZE - 14.0) / 2.0,
+            remove.origin.y + (REMOVE_SIZE - 14.0) / 2.0,
+        ),
+        14.0,
+        theme.muted_foreground,
+        1.3,
+    );
+}
+
+/// The Transition head row: label, easing dropdown, remove.
+fn paint_transition_head(
+    cx: &mut PaintCx<'_>,
+    theme: &Theme,
+    locale: de_editor_core::Locale,
+    transition: TransitionSummary,
+    x: f32,
+    y: f32,
+    width: f32,
+) {
+    let (dropdown, remove) = transition_head(x, y, width);
+    let label = Rect::xywh(x + PAD_X, y, TRANSITION_LABEL_W - 4.0, INPUT_HEIGHT);
+    paint_plain_row(
+        cx,
+        theme,
+        label,
+        translate(locale, "interactions.transition", "Transition"),
+    );
+    paint_fitted_dropdown(cx, theme, dropdown, easing_label(locale, transition.easing));
+    paint_remove(cx, theme, remove);
 }
 
 /// Display name of an animatable property.
@@ -268,23 +390,35 @@ fn field_prefix(locale: de_editor_core::Locale, field: MotionField) -> &'static 
 pub(crate) fn paint_motion_section(
     cx: &mut PaintCx<'_>,
     theme: &Theme,
-    motion: &[MotionSummary],
+    interactions: &InteractionSummary,
     edit: &EditContext<'_>,
     locale: de_editor_core::Locale,
     x: f32,
     y: f32,
     width: f32,
 ) -> f32 {
-    if motion.is_empty() {
+    if !shown(interactions) {
         return y;
     }
+    let motion = interactions.motion.as_slice();
     let title = translate(locale, "motion.title", "Motion");
     paint_section_label_with_add(cx, theme, title, x, y, width);
     let triggers = [
         translate(locale, "motion.onLoad", "On load"),
         translate(locale, "motion.inView", "In view"),
     ];
-    for (_, summary, row_y) in row_tops(motion, y) {
+    if let Some(transition) = interactions.transition {
+        paint_transition_head(
+            cx,
+            theme,
+            locale,
+            transition,
+            x,
+            y + SECTION_HEADER_HEIGHT,
+            width,
+        );
+    }
+    for (_, summary, row_y) in row_tops(interactions, y) {
         let head = head_row(x, row_y, width);
         match summary {
             MotionSummary::Simple(simple) => {
@@ -311,20 +445,29 @@ pub(crate) fn paint_motion_section(
             active,
             11.0,
         );
-        draw_icon(
-            cx.backend,
-            Icon::Close,
-            Point2D::new(
-                head.remove.origin.x + (REMOVE_SIZE - 14.0) / 2.0,
-                head.remove.origin.y + (REMOVE_SIZE - 14.0) / 2.0,
-            ),
-            14.0,
-            theme.muted_foreground,
-            1.3,
-        );
+        paint_remove(cx, theme, head.remove);
     }
-    let values: Vec<(PropertyFocus, Rect)> = motion_input_rects(motion, x, y, width);
+    let values: Vec<(PropertyFocus, Rect)> = motion_input_rects(interactions, x, y, width);
     for (focus, rect) in values {
+        if focus == PropertyFocus::TransitionDuration {
+            let value = interactions
+                .transition
+                .map(|transition| transition.duration_ms.to_string())
+                .unwrap_or_default();
+            paint_input_with_prefix_focused_state(
+                cx,
+                theme,
+                rect,
+                field_prefix(locale, MotionField::DurationMs),
+                edit.value_for(focus, &value),
+                edit.focus == Some(focus),
+                edit.caret_at(focus),
+                edit.select_all_at(focus),
+                edit.input_at(focus),
+                edit.now_ms,
+            );
+            continue;
+        }
         let PropertyFocus::MotionValue { index, field } = focus else {
             continue;
         };
@@ -345,7 +488,7 @@ pub(crate) fn paint_motion_section(
             edit.now_ms,
         );
     }
-    let y = y + motion_section_height(motion) - SECTION_GAP;
+    let y = y + motion_section_height(interactions) - SECTION_GAP;
     paint_section_divider(cx, theme, x, y, width);
     y + SECTION_GAP
 }

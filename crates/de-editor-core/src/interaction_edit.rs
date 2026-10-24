@@ -99,11 +99,14 @@ pub enum InteractionMenuTarget {
     /// The header "+": the triggers not authored yet, then "Animation".
     #[default]
     AddTrigger,
-    /// One trigger's actions (Navigate to … / Back / Remove). Also used
-    /// for a trigger just picked from `AddTrigger` that has no row yet.
+    /// One trigger's actions (Navigate to … / Scroll to … / Open URL /
+    /// Back / Change to … / Remove). Also used for a trigger just picked
+    /// from `AddTrigger` that has no row yet.
     Trigger(InteractionTrigger),
     /// The animated-property list of the Motion row at this index.
     MotionProperty(usize),
+    /// The easing list of the node-level `transition` row.
+    TransitionEasing,
 }
 
 /// The action an Interactions edit writes.
@@ -113,6 +116,10 @@ pub enum InteractionActionEdit {
     Navigate { path: String },
     /// `pop`: back to the previous screen.
     Back,
+    /// `scroll_to` the section (a node on the same page) with this id.
+    ScrollTo { target: String },
+    /// `open_url` with this address (empty until the URL row is filled).
+    OpenUrl { url: String },
 }
 
 /// A navigate action body: the JSON string VALUE `"\"/path\""`, the
@@ -130,6 +137,53 @@ pub fn pop_action() -> Action {
     let mut map = std::collections::BTreeMap::new();
     map.insert("pop".to_string(), serde_json::Value::Null);
     Action(map)
+}
+
+/// The section-link action: scroll the page so the node `target`
+/// meets the top — the shape `wire_web_nav_links` writes (#153).
+pub fn scroll_to_action(target: &str) -> Action {
+    let mut map = std::collections::BTreeMap::new();
+    map.insert(
+        "scroll_to".to_string(),
+        serde_json::json!({ "target": target, "alignment": "start" }),
+    );
+    Action(map)
+}
+
+/// The open-URL action. `url` is stored as a quoted string-literal
+/// expression (the same encoding as a navigate path), so any text the
+/// user types stays a literal rather than an expression.
+pub fn open_url_action(url: &str) -> Action {
+    let literal = serde_json::to_string(url).unwrap_or_default();
+    let mut map = std::collections::BTreeMap::new();
+    map.insert(
+        "open_url".to_string(),
+        serde_json::json!({ "url": literal }),
+    );
+    Action(map)
+}
+
+/// The address an `open_url` body holds, with a string-literal quote
+/// pair stripped (`"\"https://x\""` → `https://x`). Any other shape
+/// (an expression) shows as written.
+pub fn open_url_of(body: &serde_json::Value) -> Option<String> {
+    let url = body.get("url")?.as_str()?;
+    Some(unquote_literal(url))
+}
+
+/// Strip one matching `"…"` / `'…'` pair, decoding a JSON-quoted
+/// literal. Anything else is returned unchanged.
+pub fn unquote_literal(source: &str) -> String {
+    if source.len() >= 2 && source.starts_with('"') && source.ends_with('"') {
+        if let Ok(decoded) = serde_json::from_str::<String>(source) {
+            return decoded;
+        }
+    }
+    source
+        .strip_prefix('\'')
+        .and_then(|rest| rest.strip_suffix('\''))
+        .unwrap_or(source)
+        .to_string()
 }
 
 /// The verb of a trigger's single navigate action, if that is what it holds.
@@ -171,6 +225,8 @@ impl EditorState {
                     navigate_action(verb, path)
                 }
                 InteractionActionEdit::Back => pop_action(),
+                InteractionActionEdit::ScrollTo { target } => scroll_to_action(target),
+                InteractionActionEdit::OpenUrl { url } => open_url_action(url),
             };
             *trigger.slot(handlers) = Some(vec![action]);
             true
@@ -198,6 +254,49 @@ impl EditorState {
             let mut map = std::collections::BTreeMap::new();
             map.insert(verb.as_str().to_string(), body.clone());
             *slot = Some(vec![Action(map)]);
+            true
+        })
+    }
+
+    /// Set the address of `trigger`'s single `open_url` action. No-op
+    /// (false) when the trigger holds anything else or nothing changes.
+    pub fn set_selected_interaction_url(&mut self, trigger: InteractionTrigger, url: &str) -> bool {
+        self.edit_selected_events(|handlers| {
+            let slot = trigger.slot(handlers);
+            let Some([only]) = slot.as_deref() else {
+                return false;
+            };
+            match only.single() {
+                Some(("open_url", body)) if open_url_of(body).as_deref() != Some(url) => {}
+                _ => return false,
+            }
+            *slot = Some(vec![open_url_action(url)]);
+            true
+        })
+    }
+
+    /// Move `from`'s actions to `to` in place (Tap → Hover keeps the
+    /// action). Refused when `to` already has actions, so nothing is
+    /// overwritten.
+    pub fn move_selected_interaction(
+        &mut self,
+        from: InteractionTrigger,
+        to: InteractionTrigger,
+    ) -> bool {
+        if from == to {
+            return false;
+        }
+        self.edit_selected_events(|handlers| {
+            if to
+                .actions(handlers)
+                .is_some_and(|actions| !actions.is_empty())
+            {
+                return false;
+            }
+            let Some(actions) = from.slot(handlers).take() else {
+                return false;
+            };
+            *to.slot(handlers) = Some(actions);
             true
         })
     }

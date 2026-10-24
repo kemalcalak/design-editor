@@ -127,6 +127,12 @@ pub enum PropertyFocus {
         index: usize,
         field: crate::motion_edit::MotionField,
     },
+    /// The node-level `transition` duration (ms) in the Motion section
+    /// (#176).
+    TransitionDuration,
+    /// The address of `trigger`'s Open URL action in the Interactions
+    /// section (#176). Free text.
+    InteractionUrl(crate::interaction_edit::InteractionTrigger),
 }
 
 impl PropertyFocus {
@@ -163,6 +169,7 @@ impl PropertyFocus {
                 | PropertyFocus::WidgetTrailingIcon
                 | PropertyFocus::WidgetBindKey
                 | PropertyFocus::VideoSrc
+                | PropertyFocus::InteractionUrl(_)
         )
     }
 

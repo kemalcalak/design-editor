@@ -13,6 +13,7 @@ use crate::widgets::property_panel_interactions::{
 use crate::widgets::PaintCx;
 use crate::{Point2D, Rect, TextLayout};
 use de_editor_core::motion_edit::MotionProperty;
+use de_editor_core::transition_edit::MotionEasing;
 
 pub const INTERACTION_MENU_ROW_H: f32 = 30.0;
 pub const INTERACTION_MENU_W: f32 = 200.0;
@@ -37,10 +38,14 @@ fn trigger_label(locale: de_editor_core::Locale, trigger: InteractionTrigger) ->
 }
 
 /// Popover rows for `target`, in paint order.
-/// - `AddTrigger`: the triggers not authored yet, then "Animation".
+/// - `AddTrigger`: the triggers not authored yet, "Animation", then
+///   "Transition" while the node has none.
 /// - `Trigger(t)`: one "Navigate to <path>" row per screen on the page,
-///   "Back (pop)", then "Remove" when `t` has an action.
+///   one "Scroll to <section>" row per section, "Open URL", "Back
+///   (pop)", then — when `t` has an action — "Change to <trigger>" per
+///   unauthored trigger and "Remove".
 /// - `MotionProperty(i)`: every animatable property.
+/// - `TransitionEasing`: every easing the panel names.
 pub fn interaction_menu_rows(
     locale: de_editor_core::Locale,
     target: InteractionMenuTarget,
@@ -63,6 +68,12 @@ pub fn interaction_menu_rows(
                 PropertyPanelAction::AddAnimation,
                 translate(locale, "interactions.addAnimation", "Animation").to_string(),
             ));
+            if summary.transition.is_none() {
+                rows.push((
+                    PropertyPanelAction::AddTransition,
+                    translate(locale, "interactions.transition", "Transition").to_string(),
+                ));
+            }
             rows
         }
         InteractionMenuTarget::Trigger(trigger) => {
@@ -79,11 +90,32 @@ pub fn interaction_menu_rows(
                     )
                 })
                 .collect();
+            let scroll_to = translate(locale, "interactions.scrollTo", "Scroll to");
+            rows.extend(summary.sections.iter().map(|section| {
+                (
+                    PropertyPanelAction::SetInteractionScrollTo {
+                        trigger,
+                        target: section.id.clone(),
+                    },
+                    format!("{scroll_to} {}", section.name),
+                )
+            }));
+            rows.push((
+                PropertyPanelAction::SetInteractionOpenUrl(trigger),
+                translate(locale, "interactions.openUrl", "Open URL").to_string(),
+            ));
             rows.push((
                 PropertyPanelAction::SetInteractionPop(trigger),
                 translate(locale, "interactions.back", "Back (pop)").to_string(),
             ));
             if !summary.actions(trigger).is_empty() {
+                let change_to = translate(locale, "interactions.changeTo", "Change to");
+                rows.extend(summary.unauthored_triggers().into_iter().map(|to| {
+                    (
+                        PropertyPanelAction::MoveInteraction { from: trigger, to },
+                        format!("{change_to} {}", trigger_label(locale, to)),
+                    )
+                }));
                 rows.push((
                     PropertyPanelAction::RemoveInteraction(trigger),
                     translate(locale, "interactions.remove", "Remove").to_string(),
@@ -97,6 +129,16 @@ pub fn interaction_menu_rows(
                 (
                     PropertyPanelAction::SetAnimationProperty { index, property },
                     crate::widgets::property_panel_motion::property_label(locale, property)
+                        .to_string(),
+                )
+            })
+            .collect(),
+        InteractionMenuTarget::TransitionEasing => MotionEasing::ALL
+            .into_iter()
+            .map(|easing| {
+                (
+                    PropertyPanelAction::SetTransitionEasing(easing),
+                    crate::widgets::property_panel_motion::easing_label(locale, Some(easing))
                         .to_string(),
                 )
             })
