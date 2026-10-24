@@ -65,8 +65,10 @@ pub(super) fn jian_color_to_color4f(c: Color) -> skia_safe::Color4f {
 
 // Gradient shader paint methods (`fill_round_rect_linear_gradient`
 // / `_radial_gradient`) and their helpers live in the sibling
-// `gradient.rs` so this spine stays under the 800-line cap. The
-// methods are added to `NativeBackend` via a sibling `impl` block.
+// `gradient.rs`, the angular (sweep) ones in `angular_gradient.rs`, so
+// this spine stays under the 800-line cap. The methods are added to
+// `NativeBackend` via sibling `impl` blocks.
+mod angular_gradient;
 mod caches;
 mod gradient;
 mod image;

@@ -120,6 +120,10 @@ pub fn set_fill_opacity_at(node: &mut PenNode, index: usize, opacity: f32) -> bo
             b.opacity = Some(opacity);
             true
         }
+        Some(PenFill::AngularGradient(b)) => {
+            b.opacity = Some(opacity);
+            true
+        }
         Some(PenFill::MeshGradient(b)) => {
             b.opacity = Some(opacity);
             true

@@ -111,6 +111,7 @@ pub fn fill_type_label(
         FillType::Solid => "fill.solid",
         FillType::LinearGradient => "fill.linear",
         FillType::RadialGradient => "fill.radial",
+        FillType::AngularGradient => "fill.angular",
         FillType::MeshGradient => "fill.mesh",
         FillType::Shader => "fill.shader",
         FillType::Image => "fill.image",
@@ -170,6 +171,7 @@ pub fn fill_row_body_height(
         // bodies all key off the primary fill.
         FillType::LinearGradient
         | FillType::RadialGradient
+        | FillType::AngularGradient
         | FillType::MeshGradient
         | FillType::Shader
         | FillType::Image => {
@@ -456,11 +458,13 @@ fn paint_one_fill(
         FillType::Shader if is_primary => {
             mesh_shader::paint_fill_shader_body(cx, theme, snapshot, locale, x, body_y, width);
         }
-        FillType::LinearGradient if is_primary => {
-            paint_fill_gradient_body(cx, theme, edit, snapshot, locale, x, body_y, width, true);
-        }
-        FillType::RadialGradient if is_primary => {
-            paint_fill_gradient_body(cx, theme, edit, snapshot, locale, x, body_y, width, false);
+        FillType::LinearGradient | FillType::RadialGradient | FillType::AngularGradient
+            if is_primary =>
+        {
+            let show_angle = fill_type.has_angle();
+            paint_fill_gradient_body(
+                cx, theme, edit, snapshot, locale, x, body_y, width, show_angle,
+            );
         }
         FillType::Image if is_primary => {
             paint_fill_image_body(cx, theme, snapshot, locale, x, body_y, width);
@@ -575,8 +579,7 @@ fn paint_fill_swatch(
             cx.backend.fill_round_rect(swatch, 3.0, color);
         }
         FillType::LinearGradient => {
-            // Two halves stand in for a black→white gradient (skia
-            // gradients are not on RenderBackend yet).
+            // Two halves stand in for a black→white gradient.
             let half_w = swatch.size.x / 2.0;
             cx.backend.fill_round_rect(
                 Rect::xywh(swatch.origin.x, swatch.origin.y, half_w, swatch.size.y),
@@ -605,6 +608,18 @@ fn paint_fill_swatch(
                     swatch.size.y - inset * 2.0,
                 ),
                 Color::WHITE,
+            );
+        }
+        FillType::AngularGradient => {
+            // A black→white sweep (solid black on backends without one).
+            cx.backend.fill_round_rect_angular_gradient(
+                swatch,
+                3.0,
+                &[(0.0, Color::BLACK), (1.0, Color::WHITE)],
+                0.5,
+                0.5,
+                0.0,
+                1.0,
             );
         }
         FillType::MeshGradient => {

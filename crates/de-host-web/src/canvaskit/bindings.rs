@@ -370,6 +370,52 @@ extern "C" {
         radius_frac: f32,
         opacity: f32,
     );
+    #[wasm_bindgen(method, js_name = fillSvgPathInRectAngularGradient)]
+    pub(super) fn fill_svg_path_in_rect_angular_gradient(
+        this: &OpCk,
+        d: &str,
+        x: f32,
+        y: f32,
+        w: f32,
+        h: f32,
+        even_odd: bool,
+        stops: &[f32],
+        cx_frac: f32,
+        cy_frac: f32,
+        rotation_deg: f32,
+        opacity: f32,
+    );
+    #[wasm_bindgen(method, js_name = fillRoundRectAngularGradient)]
+    pub(super) fn fill_round_rect_angular_gradient(
+        this: &OpCk,
+        x: f32,
+        y: f32,
+        w: f32,
+        h: f32,
+        rad: f32,
+        stops: &[f32],
+        cx_frac: f32,
+        cy_frac: f32,
+        rotation_deg: f32,
+        opacity: f32,
+    );
+    #[wasm_bindgen(method, js_name = fillRoundRectAngularGradientPerCorner)]
+    pub(super) fn fill_round_rect_angular_gradient_per_corner(
+        this: &OpCk,
+        x: f32,
+        y: f32,
+        w: f32,
+        h: f32,
+        top_left: f32,
+        top_right: f32,
+        bottom_right: f32,
+        bottom_left: f32,
+        stops: &[f32],
+        cx_frac: f32,
+        cy_frac: f32,
+        rotation_deg: f32,
+        opacity: f32,
+    );
     #[wasm_bindgen(method, js_name = fillInnerShadowSvgPath)]
     pub(super) fn fill_inner_shadow_svg_path(
         this: &OpCk,

@@ -214,6 +214,11 @@ fn bind_fills(fills: &mut [PenFill], refs: &ColorRefs, slot: ColorSlot) {
                     bind_color_string(&mut stop.color, refs, slot);
                 }
             }
+            PenFill::AngularGradient(body) => {
+                for stop in &mut body.stops {
+                    bind_color_string(&mut stop.color, refs, slot);
+                }
+            }
             PenFill::MeshGradient(body) => {
                 for stop in &mut body.stops {
                     bind_color_string(&mut stop.color, refs, slot);

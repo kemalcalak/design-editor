@@ -288,6 +288,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "settings.system.pencilSmoothingSmooth" => "Yumuşak",
         "fill.meshRows" => "Satırlar",
         "fill.meshColumns" => "Sütunlar",
+        "fill.angular" => "Açısal",
         _ => return None,
     })
 }

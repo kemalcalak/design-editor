@@ -387,6 +387,8 @@ fn unexpressible(n: &SceneNode, is_board: bool) -> Option<&'static str> {
     match n.fill_type {
         SceneFillType::Shader => return Some("sksl shader fill"),
         SceneFillType::MeshGradient => return Some("mesh gradient fill"),
+        // DrawingML has no conic gradient; the raster path draws it.
+        SceneFillType::AngularGradient => return Some("angular gradient fill"),
         SceneFillType::LinearGradient | SceneFillType::RadialGradient => {
             if n.gradient.is_none() {
                 return Some("gradient fill without a resolved body");

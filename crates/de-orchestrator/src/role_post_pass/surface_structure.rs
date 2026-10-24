@@ -92,7 +92,7 @@ pub(super) fn child_has_colored_fill(node: &Value) -> bool {
         return false;
     };
     match first.get("type").and_then(Value::as_str) {
-        Some("linear_gradient") | Some("radial_gradient") => true,
+        Some("linear_gradient") | Some("radial_gradient") | Some("angular_gradient") => true,
         Some("solid") => first
             .get("color")
             .and_then(Value::as_str)

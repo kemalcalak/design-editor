@@ -290,6 +290,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "settings.system.pencilSmoothingSmooth" => "부드럽게",
         "fill.meshRows" => "행",
         "fill.meshColumns" => "열",
+        "fill.angular" => "각도형",
         _ => return None,
     })
 }

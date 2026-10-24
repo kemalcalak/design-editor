@@ -288,6 +288,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "settings.system.pencilSmoothingSmooth" => "เรียบ",
         "fill.meshRows" => "แถว",
         "fill.meshColumns" => "คอลัมน์",
+        "fill.angular" => "เชิงมุม",
         _ => return None,
     })
 }
