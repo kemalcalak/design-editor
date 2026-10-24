@@ -594,7 +594,7 @@ The **`de-mcp`** crate carries the MCP wire layer that mirrors the retired TS `p
 
 ### Tool catalog
 
-**148 static-schema tools** registered today. The authoritative list
+**150 static-schema tools** registered today. The authoritative list
 is `de-host-services/src/mcp_serve/schemas.rs` — `TOOL_SCHEMAS`
 (JSON inputSchemas; `DEBUG_TOOL_SCHEMAS` is gated out of the
 production catalog) — plus the `register_tool!` calls in
@@ -647,6 +647,18 @@ By category:
   same command via `EditorState::commit_canvas_boolean`, minting the id from the
   host's `next_node_id` counter. On the canvas a source with children is refused
   up front with a Warn toast (`refuse_boolean_on_containers`, #141).
+- **Image generation (#10)** — `generate` (pen.dev `Generate`: `type` `ai` | `stock`, `nodeId`,
+  `prompt` | `query`) and `get_generation_status` (`de-host-services/src/mcp_serve/generate_tool.rs`).
+  Async: the call writes a `de:pending-image-<id>` image fill and returns; a worker in the
+  process-global `de_host_services::generate_jobs::GenerateJobs` runs the user's own provider
+  (`resolve_image_profile`: active Images-tab profile, else an OpenAI / Gemini chat key → `gpt-image-1`
+  / `gemini-2.5-flash-image`, else a "configure a provider" error and no write). Hosts drain finished
+  jobs into ordinary `PatchNodeData` writes computed against the current document: the live editor in
+  `McpLiveServer::pump` (the jobs' listener wakes the UI thread), the file-backed `--mcp` /
+  `--mcp-http` servers per request and after a bounded wait at session end (they load the user's
+  saved provider settings), and the `--serve-web` daemon per request and from the listener (custom
+  endpoints SSRF-screened there). Failure removes the pending fill. `enrich_images` sends explicit
+  `Generate` slots to the same provider and reports every slot (`slots`).
 - **Pages + components** — `add_page` / `rename_page` /
   `delete_page` / `duplicate_page` / `reorder_page` /
   `set_active_page` / `instantiate_component` / `create_component`
