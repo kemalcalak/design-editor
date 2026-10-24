@@ -73,8 +73,9 @@ fn convert_fill(
             obj.insert("type".to_owned(), Value::String("solid".to_owned()));
         }
         // Linear, radial and angular all map onto canonical gradients in
-        // the legacy repair (`normalize_gradient_fill`).
-        Some("gradient") => {}
+        // the legacy repair (`normalize_gradient_fill`), which reads
+        // `rotation` as a clockwise CSS angle.
+        Some("gradient") => clockwise_rotation(&mut obj),
         Some("image") => return images::convert_image_fill(obj, ctx),
         Some("shader") => return shader::convert(obj, Stage::Fill, size, theme, ctx),
         Some("mesh_gradient") => {
@@ -84,6 +85,16 @@ fn convert_fill(
         _ => {}
     }
     Some(Value::Object(obj))
+}
+
+/// pen.dev turns a gradient counter-clockwise (0° up, 90° left); the
+/// canonical linear `angle` and angular `rotation` turn clockwise from up
+/// like CSS, so 90° becomes 270°.
+fn clockwise_rotation(obj: &mut Map<String, Value>) {
+    if let Some(degrees) = obj.get("rotation").and_then(Value::as_f64) {
+        let clockwise = (360.0 - degrees.rem_euclid(360.0)).rem_euclid(360.0);
+        obj.insert("rotation".to_owned(), json!(clockwise));
+    }
 }
 
 /// Fold pen.dev's `stroke` paint and its sibling `strokeWidth` /

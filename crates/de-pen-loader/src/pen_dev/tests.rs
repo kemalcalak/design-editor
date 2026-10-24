@@ -415,3 +415,28 @@ fn the_short_summary_counts_missing_images() {
     );
     assert_eq!(report.short_summary(), "shader fill ×1; 2 missing images");
 }
+
+#[test]
+fn gradient_rotation_turns_clockwise_like_css() {
+    let gradient = |rotation: f64| {
+        json!({ "type": "gradient", "gradientType": "linear", "rotation": rotation,
+                "colors": [{ "color": "#000000", "position": 0 }, { "color": "#FFFFFF", "position": 1 }] })
+    };
+    let src = json!({ "version": "2.21", "children": [
+        { "type": "rectangle", "id": "down", "width": 10, "height": 10, "fill": gradient(180.0) },
+        { "type": "rectangle", "id": "right", "width": 10, "height": 10, "fill": gradient(270.0) },
+        { "type": "rectangle", "id": "left", "width": 10, "height": 10, "fill": gradient(90.0) },
+        { "type": "rectangle", "id": "up", "width": 10, "height": 10, "fill": gradient(0.0) }
+    ]})
+    .to_string();
+    let loaded = load_canonical_with_assets(&src, &no_assets).expect("loads");
+    let doc = serde_json::to_value(&loaded.loaded.value).unwrap();
+    let angles: Vec<f64> = doc["children"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|node| node["fill"][0]["angle"].as_f64().unwrap())
+        .collect();
+    // pen.dev: 0° up, counter-clockwise. Canonical: CSS, clockwise.
+    assert_eq!(angles, vec![180.0, 90.0, 270.0, 0.0]);
+}
