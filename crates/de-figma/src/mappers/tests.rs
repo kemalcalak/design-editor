@@ -145,6 +145,69 @@ fn linear_gradient_angle_from_transform() {
     }
 }
 
+fn angular_paint(transform: Option<FigValue>) -> FigValue {
+    let mut pairs = vec![
+        ("type", FigValue::Str("GRADIENT_ANGULAR".into())),
+        (
+            "stops",
+            FigValue::Array(vec![obj(vec![
+                ("position", FigValue::Float(0.0)),
+                ("color", color_obj(1.0, 0.0, 0.0)),
+            ])]),
+        ),
+    ];
+    if let Some(transform) = transform {
+        pairs.push(("transform", transform));
+    }
+    obj(pairs)
+}
+
+fn angular_body(paint: FigValue) -> AngularGradientBody {
+    match map_figma_fills(Some(&[paint])).unwrap().remove(0) {
+        PenFill::AngularGradient(body) => body,
+        other => panic!("expected angular gradient, got {other:?}"),
+    }
+}
+
+#[test]
+fn angular_gradient_maps_to_its_own_variant() {
+    // No transform: Figma's default sweep starts at 3 o'clock.
+    let body = angular_body(angular_paint(None));
+    assert_eq!(
+        (body.cx, body.cy, body.rotation),
+        (Some(0.5), Some(0.5), Some(90.0))
+    );
+    assert_eq!(body.stops[0].color, "#ff0000");
+
+    // Identity scale, gradient space shifted: the centre moves right.
+    let shifted = obj(vec![
+        ("m00", FigValue::Float(1.0)),
+        ("m02", FigValue::Float(-0.25)),
+        ("m11", FigValue::Float(1.0)),
+    ]);
+    let body = angular_body(angular_paint(Some(shifted)));
+    assert_eq!(
+        (body.cx, body.cy, body.rotation),
+        (Some(0.75), Some(0.5), Some(90.0))
+    );
+}
+
+#[test]
+fn angular_gradient_rotation_follows_the_start_handle() {
+    // u = y, v = 1 - x: the start handle (1, 0.5) maps back to the
+    // bottom centre, so the sweep starts at 6 o'clock.
+    let turned = obj(vec![
+        ("m01", FigValue::Float(1.0)),
+        ("m10", FigValue::Float(-1.0)),
+        ("m12", FigValue::Float(1.0)),
+    ]);
+    let body = angular_body(angular_paint(Some(turned)));
+    assert_eq!(
+        (body.cx, body.cy, body.rotation),
+        (Some(0.5), Some(0.5), Some(180.0))
+    );
+}
+
 #[test]
 fn image_fill_hash_url() {
     let paints = [obj(vec![

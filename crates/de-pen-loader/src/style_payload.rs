@@ -267,6 +267,16 @@ pub(crate) fn gradient_payload(fill: &PenFill) -> Option<GradientPayload> {
                 stops,
             })
         }
+        PenFill::AngularGradient(body) => {
+            let stops = gradient_stops(&body.stops)?;
+            Some(GradientPayload::Angular {
+                cx: body.cx.unwrap_or(0.5).clamp(0.0, 1.0),
+                cy: body.cy.unwrap_or(0.5).clamp(0.0, 1.0),
+                rotation_deg: body.rotation.filter(|r| r.is_finite()).unwrap_or(0.0),
+                opacity: body.opacity.unwrap_or(1.0).clamp(0.0, 1.0),
+                stops,
+            })
+        }
         PenFill::MeshGradient(body) => {
             let colors = mesh_colors(body)?;
             Some(GradientPayload::Mesh {
@@ -432,6 +442,13 @@ pub(crate) fn fill_fallback_color(fill: &PenFill) -> Option<[f32; 4]> {
                 }
             }
         }
+        PenFill::AngularGradient(body) => {
+            if let Some(stop) = body.stops.first() {
+                if let Some(rgba) = parse_color(&stop.color) {
+                    return Some(apply_alpha(rgba, body.opacity));
+                }
+            }
+        }
         PenFill::MeshGradient(body) => {
             // First-vertex colour is the documented solid fallback
             // baked into `node.fill` (backends without per-vertex
@@ -469,6 +486,7 @@ fn first_fill_type(fills: Option<&[PenFill]>) -> String {
     match fills.first() {
         Some(PenFill::LinearGradient(_)) => "linear".into(),
         Some(PenFill::RadialGradient(_)) => "radial".into(),
+        Some(PenFill::AngularGradient(_)) => "angular".into(),
         Some(PenFill::MeshGradient(_)) => "mesh".into(),
         Some(PenFill::Shader(_)) => "shader".into(),
         Some(PenFill::Image(_)) => "image".into(),

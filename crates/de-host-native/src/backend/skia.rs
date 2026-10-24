@@ -67,6 +67,7 @@ pub(super) fn jian_color_to_color4f(c: Color) -> skia_safe::Color4f {
 // / `_radial_gradient`) and their helpers live in the sibling
 // `gradient.rs` so this spine stays under the 800-line cap. The
 // methods are added to `NativeBackend` via a sibling `impl` block.
+mod angular_gradient;
 mod caches;
 mod gradient;
 mod image;

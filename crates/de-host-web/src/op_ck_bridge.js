@@ -888,6 +888,32 @@ export async function opCkInit(canvasId) {
       return null;
     }
   };
+  // Angular (conic) gradient. Skia's sweep starts at 3 o'clock; the
+  // canonical rotation is CSS conic's (0deg = 12 o'clock, clockwise), so
+  // the local matrix turns the sweep by rotation - 90deg about the centre.
+  const makeAngularGradient = (x, y, w, h, stops, cxFrac, cyFrac, rotationDeg, opacity) => {
+    const gradient = gradientStops(stops, opacity);
+    if (!gradient.colors.length) return null;
+    const cx = x + w * opCkClampUnit(cxFrac);
+    const cy = y + h * opCkClampUnit(cyFrac);
+    const rotation = Number.isFinite(rotationDeg) ? rotationDeg : 0;
+    try {
+      const local = CK.Matrix.rotated(((rotation - 90) * Math.PI) / 180, cx, cy);
+      return CK.Shader.MakeSweepGradient(
+        cx,
+        cy,
+        gradient.colors,
+        gradient.offsets,
+        CK.TileMode.Clamp,
+        local,
+        1,
+        0,
+        360,
+      );
+    } catch (_error) {
+      return null;
+    }
+  };
   const drawMeshGradientRRect = (rrect, x, y, w, h, rows, cols, colors, opacity) => {
     const alpha = opCkClampUnit(opacity);
     const fallback = colors.length >= 4
@@ -1284,6 +1310,22 @@ export async function opCkInit(canvasId) {
         firstStopColor(stops, opacity),
       );
     },
+    fillRoundRectAngularGradient(x, y, w, h, radius, stops, cxFrac, cyFrac, rotationDeg, opacity) {
+      if (stops.length < 5) return;
+      drawGradientRRect(
+        uniformRRect(x, y, w, h, radius),
+        makeAngularGradient(x, y, w, h, stops, cxFrac, cyFrac, rotationDeg, opacity),
+        firstStopColor(stops, opacity),
+      );
+    },
+    fillRoundRectAngularGradientPerCorner(x, y, w, h, tl, tr, br, bl, stops, cxFrac, cyFrac, rotationDeg, opacity) {
+      if (stops.length < 5) return;
+      drawGradientRRect(
+        perCornerRRect(x, y, w, h, tl, tr, br, bl),
+        makeAngularGradient(x, y, w, h, stops, cxFrac, cyFrac, rotationDeg, opacity),
+        firstStopColor(stops, opacity),
+      );
+    },
     fillRoundRectMeshGradient(x, y, w, h, radius, rows, cols, colors, opacity) {
       if (colors.length < 4) return;
       drawMeshGradientRRect(
@@ -1396,6 +1438,23 @@ export async function opCkInit(canvasId) {
       if (shader) {
         // shaderPaint always allocates fresh (one-off effect, excluded from
         // the shared cache) — this instance owns its own delete.
+        const p = shaderPaint(shader);
+        canvas.drawPath(path, p);
+        p.delete();
+        if (shader.delete) shader.delete();
+      } else {
+        const p = fillPaint(...firstStopColor(stops, opacity));
+        canvas.drawPath(path, p);
+      }
+      path.delete();
+    },
+    fillSvgPathInRectAngularGradient(d, x, y, w, h, evenOdd, stops, cxFrac, cyFrac, rotationDeg, opacity) {
+      const path = cachedSvgPath(d); if (!path) return;
+      if (evenOdd) path.setFillType(CK.FillType.EvenOdd);
+      fitPathToRect(path, x, y, w, h);
+      if (stops.length < 5) { path.delete(); return; }
+      const shader = makeAngularGradient(x, y, w, h, stops, cxFrac, cyFrac, rotationDeg, opacity);
+      if (shader) {
         const p = shaderPaint(shader);
         canvas.drawPath(path, p);
         p.delete();

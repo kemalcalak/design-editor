@@ -251,6 +251,7 @@ fn fill_is_visible(fill: &PenFill) -> bool {
         PenFill::Solid(body) => body.opacity,
         PenFill::LinearGradient(body) => body.opacity,
         PenFill::RadialGradient(body) => body.opacity,
+        PenFill::AngularGradient(body) => body.opacity,
         PenFill::MeshGradient(body) => body.opacity,
         PenFill::Shader(body) => body.opacity,
         PenFill::Image(body) => body.opacity,

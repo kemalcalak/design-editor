@@ -272,6 +272,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "settings.system.pencilSmoothingPrecise" => "Precise",
         "settings.system.pencilSmoothingBalanced" => "Balanced",
         "settings.system.pencilSmoothingSmooth" => "Smooth",
+        "fill.angular" => "Angular",
         _ => return None,
     })
 }

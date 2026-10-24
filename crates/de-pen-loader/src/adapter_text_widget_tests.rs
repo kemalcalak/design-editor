@@ -140,6 +140,36 @@ fn radial_gradient_payload_uses_authored_centre_and_radius() {
 }
 
 #[test]
+fn angular_gradient_payload_uses_authored_centre_and_rotation() {
+    let src = r##"{
+      "version":"1.0.0","pages":[{"id":"p","name":"P","children":[{
+        "type":"rectangle","id":"r","width":100,"height":50,
+        "fill":[{"type":"angular_gradient","cx":0.25,"rotation":120,
+                 "stops":[{"color":"#FFFFFF","offset":0},
+                          {"color":"#000000","offset":1}]}]
+      }]}],"children":[]
+    }"##;
+    let r = load(src);
+    let n = &r.payload.pages[0].children[0];
+    assert_eq!(n.fill_type, "angular");
+    match n.gradient.as_ref().expect("gradient must populate") {
+        crate::payload::GradientPayload::Angular {
+            cx,
+            cy,
+            rotation_deg,
+            stops,
+            ..
+        } => {
+            assert!((cx - 0.25).abs() < 0.01);
+            assert!((cy - 0.5).abs() < 0.01, "cy defaults to the centre");
+            assert!((rotation_deg - 120.0).abs() < 0.01);
+            assert_eq!(stops.len(), 2);
+        }
+        other => panic!("expected angular gradient, got {other:?}"),
+    }
+}
+
+#[test]
 fn solid_fill_leaves_gradient_payload_unset() {
     let src = r##"{
       "version":"1.0.0","pages":[{"id":"p","name":"P","children":[{

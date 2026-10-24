@@ -243,6 +243,31 @@ impl RenderBackend for BaselineAdjustingBackend<'_> {
             );
     }
 
+    #[allow(clippy::too_many_arguments)]
+    fn fill_svg_path_in_rect_angular_gradient_with_fill_rule(
+        &mut self,
+        d: &str,
+        rect: Rect,
+        stops: &[(f32, Color)],
+        cx_frac: f32,
+        cy_frac: f32,
+        rotation_deg: f32,
+        opacity: f32,
+        even_odd: bool,
+    ) {
+        self.inner
+            .fill_svg_path_in_rect_angular_gradient_with_fill_rule(
+                d,
+                rect,
+                stops,
+                cx_frac,
+                cy_frac,
+                rotation_deg,
+                opacity,
+                even_odd,
+            );
+    }
+
     fn fill_drop_shadow(&mut self, rect: Rect, radius: f32, blur: f32, color: Color) {
         self.inner.fill_drop_shadow(rect, radius, blur, color);
     }
@@ -427,6 +452,28 @@ impl RenderBackend for BaselineAdjustingBackend<'_> {
             cx_frac,
             cy_frac,
             radius_frac,
+            opacity,
+        );
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    fn fill_round_rect_angular_gradient(
+        &mut self,
+        rect: Rect,
+        radius: f32,
+        stops: &[(f32, Color)],
+        cx_frac: f32,
+        cy_frac: f32,
+        rotation_deg: f32,
+        opacity: f32,
+    ) {
+        self.inner.fill_round_rect_angular_gradient(
+            rect,
+            radius,
+            stops,
+            cx_frac,
+            cy_frac,
+            rotation_deg,
             opacity,
         );
     }

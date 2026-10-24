@@ -19,6 +19,7 @@ pub(crate) fn fill_glyph_color(fills: &[PenFill]) -> Option<String> {
         PenFill::Solid(body) => Some(body.color.clone()),
         PenFill::LinearGradient(body) => body.stops.first().map(|stop| stop.color.clone()),
         PenFill::RadialGradient(body) => body.stops.first().map(|stop| stop.color.clone()),
+        PenFill::AngularGradient(body) => body.stops.first().map(|stop| stop.color.clone()),
         PenFill::MeshGradient(_) | PenFill::Shader(_) | PenFill::Image(_) => None,
     })
 }

@@ -111,6 +111,17 @@ pub enum GradientPayload {
         opacity: f32,
         stops: Vec<GradientStopPayload>,
     },
+    /// Angular (conic / sweep) gradient. Stops run clockwise from
+    /// `rotation_deg` (CSS `conic-gradient` convention: 0° = 12 o'clock).
+    Angular {
+        /// Centre x as a 0.0..=1.0 fraction of bounds width.
+        cx: f32,
+        /// Centre y as a 0.0..=1.0 fraction of bounds height.
+        cy: f32,
+        rotation_deg: f32,
+        opacity: f32,
+        stops: Vec<GradientStopPayload>,
+    },
     /// Uniform-grid mesh gradient (v1). `colors` is a row-major
     /// `rows`×`cols` lattice of pre-resolved RGBA values (length ==
     /// `rows * cols`); vertex `(r, c)` lives at `colors[r * cols + c]`.

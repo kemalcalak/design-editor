@@ -26,21 +26,24 @@ use de_editor_core::scene_vars::VariableTable;
 use jian_scene::layout_scene::NodeKind;
 use jian_scene::layout_scene::{
     stable_image_source_id, DropShadow, Effect, LayoutScene, SceneFillLayer, SceneFillType,
-    SceneGradient, SceneGradientStop, SceneImageFit, SceneNode, ScenePage, SceneShader,
-    SceneShaderUniform, SceneTextAlign, SceneTextRun, SceneTextVerticalAlign, SceneVideo,
-    SceneWidget, SceneWidgetOption,
+    SceneImageFit, SceneNode, ScenePage, SceneShader, SceneShaderUniform, SceneTextAlign,
+    SceneTextRun, SceneTextVerticalAlign, SceneVideo, SceneWidget, SceneWidgetOption,
 };
 use std::sync::Arc;
 
-use crate::payload::{
-    DocPayload, GradientPayload, GradientStopPayload, NodePayload, ShaderPayload,
-};
+use crate::payload::{DocPayload, NodePayload, ShaderPayload};
+
+// The test module reaches the gradient type through `super::*`.
+#[cfg(test)]
+use jian_scene::layout_scene::SceneGradient;
 
 // Keep the legacy test module's historical local name; implementation lives in `editor_scene`.
 #[cfg(test)]
 use crate::editor_scene::editor_state_to_layout_scene;
 
+mod gradient;
 mod stroke;
+use gradient::{payload_gradient_to_scene, scale_gradient_opacity};
 use stroke::{is_status_bar_shell_stroke, is_unpainted_widget_stroke, scene_stroke};
 
 /// Build a [`LayoutScene`] from a bare [`PenDocument`], theme, and active page index.
@@ -419,50 +422,6 @@ fn mul_alpha(c: Color, k: f32) -> Color {
     }
 }
 
-/// Fold node opacity into a gradient by scaling its alpha multiplier
-/// only. The backend folds `opacity` into every stop colour when it
-/// builds the shader (`gradient_color_arrays`), so scaling the stops
-/// here too would dim the gradient twice. Leave stops at their
-/// authored alpha; the single `opacity` multiplier carries node
-/// opacity.
-fn scale_gradient_opacity(g: SceneGradient, k: f32) -> SceneGradient {
-    match g {
-        SceneGradient::Linear {
-            angle_deg,
-            opacity,
-            stops,
-        } => SceneGradient::Linear {
-            angle_deg,
-            opacity: (opacity * k).clamp(0.0, 1.0),
-            stops,
-        },
-        SceneGradient::Radial {
-            cx,
-            cy,
-            radius,
-            opacity,
-            stops,
-        } => SceneGradient::Radial {
-            cx,
-            cy,
-            radius,
-            opacity: (opacity * k).clamp(0.0, 1.0),
-            stops,
-        },
-        SceneGradient::Mesh {
-            rows,
-            cols,
-            colors,
-            opacity,
-        } => SceneGradient::Mesh {
-            rows,
-            cols,
-            colors,
-            opacity: (opacity * k).clamp(0.0, 1.0),
-        },
-    }
-}
-
 fn text_align_to_scene(value: &str) -> SceneTextAlign {
     match value {
         "center" => SceneTextAlign::Center,
@@ -535,6 +494,7 @@ fn fill_layers_to_scene(
                 PenFill::Solid(_) => fallback(),
                 PenFill::LinearGradient(_)
                 | PenFill::RadialGradient(_)
+                | PenFill::AngularGradient(_)
                 | PenFill::MeshGradient(_) => crate::style_payload::gradient_payload(fill)
                     .map(|gradient| payload_gradient_to_scene(&gradient))
                     .map(|gradient| SceneFillLayer::Gradient {
@@ -593,6 +553,7 @@ fn fill_opacity(fill: &jian_ops_schema::style::PenFill) -> f32 {
         PenFill::Solid(body) => body.opacity,
         PenFill::LinearGradient(body) => body.opacity,
         PenFill::RadialGradient(body) => body.opacity,
+        PenFill::AngularGradient(body) => body.opacity,
         PenFill::MeshGradient(body) => body.opacity,
         PenFill::Shader(body) => body.opacity,
         PenFill::Image(body) => body.opacity,
@@ -606,6 +567,7 @@ fn fill_blend_mode_to_scene(fill: &jian_ops_schema::style::PenFill) -> ImageBlen
         PenFill::Solid(body) => body.blend_mode.as_ref(),
         PenFill::LinearGradient(body) => body.blend_mode.as_ref(),
         PenFill::RadialGradient(body) => body.blend_mode.as_ref(),
+        PenFill::AngularGradient(body) => body.blend_mode.as_ref(),
         PenFill::MeshGradient(body) => body.blend_mode.as_ref(),
         PenFill::Shader(body) => body.blend_mode.as_ref(),
         PenFill::Image(body) => body.blend_mode.as_ref(),
@@ -696,55 +658,6 @@ fn str_to_kind(s: &str) -> NodeKind {
     }
 }
 
-/// Convert a [`GradientPayload`] into the paint-only
-/// [`SceneGradient`]. Each stop's `[r,g,b,a]` is unpacked into a
-/// [`Color`]; the body's opacity rides through unchanged so the
-/// painter can fold it into the per-stop alpha at draw time.
-fn payload_gradient_to_scene(g: &GradientPayload) -> SceneGradient {
-    match g {
-        GradientPayload::Linear {
-            angle_deg,
-            opacity,
-            stops,
-        } => SceneGradient::Linear {
-            angle_deg: *angle_deg,
-            opacity: *opacity,
-            stops: stops.iter().map(stop_to_scene).collect(),
-        },
-        GradientPayload::Radial {
-            cx,
-            cy,
-            radius,
-            opacity,
-            stops,
-        } => SceneGradient::Radial {
-            cx: *cx,
-            cy: *cy,
-            radius: *radius,
-            opacity: *opacity,
-            stops: stops.iter().map(stop_to_scene).collect(),
-        },
-        GradientPayload::Mesh {
-            rows,
-            cols,
-            colors,
-            opacity,
-        } => SceneGradient::Mesh {
-            rows: *rows,
-            cols: *cols,
-            colors: colors.iter().map(|c| array_to_color(*c)).collect(),
-            opacity: *opacity,
-        },
-    }
-}
-
-fn stop_to_scene(s: &GradientStopPayload) -> SceneGradientStop {
-    SceneGradientStop {
-        offset: s.offset,
-        color: array_to_color(s.color),
-    }
-}
-
 /// Convert a [`ShaderPayload`] into the paint-only [`SceneShader`].
 /// The SkSL source + pre-resolved uniforms ride through unchanged, except an
 /// exact `size` uniform is overwritten with the resolved node dimensions;
@@ -777,6 +690,7 @@ fn str_to_scene_fill_type(s: &str) -> SceneFillType {
     match s {
         "linear" => SceneFillType::LinearGradient,
         "radial" => SceneFillType::RadialGradient,
+        "angular" => SceneFillType::AngularGradient,
         "mesh" => SceneFillType::MeshGradient,
         "shader" => SceneFillType::Shader,
         "image" => SceneFillType::Image,

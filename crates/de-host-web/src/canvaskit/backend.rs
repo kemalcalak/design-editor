@@ -116,6 +116,48 @@ impl RenderBackend for CanvasKitBackend {
             opacity,
         );
     }
+    fn fill_round_rect_angular_gradient(
+        &mut self,
+        rect: Rect,
+        radius: f32,
+        stops: &[(f32, Color)],
+        cx_frac: f32,
+        cy_frac: f32,
+        rotation_deg: f32,
+        opacity: f32,
+    ) {
+        ops::fill_round_rect_angular_gradient(
+            &self.ck,
+            rect,
+            radius,
+            stops,
+            cx_frac,
+            cy_frac,
+            rotation_deg,
+            opacity,
+        );
+    }
+    fn fill_round_rect_angular_gradient_per_corner(
+        &mut self,
+        rect: Rect,
+        radii: [f32; 4],
+        stops: &[(f32, Color)],
+        cx_frac: f32,
+        cy_frac: f32,
+        rotation_deg: f32,
+        opacity: f32,
+    ) {
+        ops::fill_round_rect_angular_gradient_per_corner(
+            &self.ck,
+            rect,
+            radii,
+            stops,
+            cx_frac,
+            cy_frac,
+            rotation_deg,
+            opacity,
+        );
+    }
     fn fill_round_rect_mesh_gradient(
         &mut self,
         rect: Rect,
@@ -296,6 +338,29 @@ impl RenderBackend for CanvasKitBackend {
             cx_frac,
             cy_frac,
             radius_frac,
+            opacity,
+            even_odd,
+        );
+    }
+    fn fill_svg_path_in_rect_angular_gradient_with_fill_rule(
+        &mut self,
+        d: &str,
+        rect: Rect,
+        stops: &[(f32, Color)],
+        cx_frac: f32,
+        cy_frac: f32,
+        rotation_deg: f32,
+        opacity: f32,
+        even_odd: bool,
+    ) {
+        ops::fill_svg_path_in_rect_angular_gradient_with_fill_rule(
+            &self.ck,
+            d,
+            rect,
+            stops,
+            cx_frac,
+            cy_frac,
+            rotation_deg,
             opacity,
             even_odd,
         );

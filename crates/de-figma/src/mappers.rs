@@ -10,9 +10,10 @@ use crate::kiwi::FigValue;
 use jian_ops_schema::node::container::{AlignItems, JustifyContent, LayoutMode, Padding};
 use jian_ops_schema::sizing::{SizingBehavior, SizingKeyword};
 use jian_ops_schema::style::{
-    BlendMode, BlurBody, GradientStop, ImageFillBody, ImageFillMode, ImageOriginalSize,
-    ImageTransform, LinearGradientBody, PenEffect, PenFill, PenStroke, RadialGradientBody,
-    ShadowBody, SolidFillBody, StrokeAlign, StrokeCap, StrokeJoin, StrokeThickness,
+    AngularGradientBody, BlendMode, BlurBody, GradientStop, ImageFillBody, ImageFillMode,
+    ImageOriginalSize, ImageTransform, LinearGradientBody, PenEffect, PenFill, PenStroke,
+    RadialGradientBody, ShadowBody, SolidFillBody, StrokeAlign, StrokeCap, StrokeJoin,
+    StrokeThickness,
 };
 
 /// Identity-matrix epsilon for image-fill transforms.
@@ -103,7 +104,25 @@ fn map_single_fill(paint: &FigValue) -> Option<PenFill> {
                 blend_mode,
             }))
         }
-        "GRADIENT_RADIAL" | "GRADIENT_ANGULAR" | "GRADIENT_DIAMOND" => {
+        "GRADIENT_ANGULAR" => {
+            paint.get("stops")?;
+            let (cx, cy, rotation) = paint
+                .get("transform")
+                .and_then(FigMatrix::from_value)
+                .and_then(|m| angular_from_transform(&m))
+                .unwrap_or((0.5, 0.5, 90.0));
+            Some(PenFill::AngularGradient(AngularGradientBody {
+                cx: Some(cx),
+                cy: Some(cy),
+                rotation: Some(rotation),
+                stops: gradient_stops(paint),
+                explain: None,
+                opacity,
+                blend_mode,
+            }))
+        }
+        // Diamond has no canonical variant yet; radial is the closest.
+        "GRADIENT_RADIAL" | "GRADIENT_DIAMOND" => {
             paint.get("stops")?;
             Some(PenFill::RadialGradient(RadialGradientBody {
                 cx: Some(0.5),
@@ -225,6 +244,38 @@ fn image_adjustment(paint: &FigValue, keys: &[&str]) -> Option<f32> {
 fn gradient_angle_from_transform(m: &FigMatrix) -> i32 {
     let math_angle = m.m10.atan2(m.m00) * (180.0 / std::f64::consts::PI);
     (90.0 - math_angle).round() as i32
+}
+
+/// Centre and start rotation of an angular gradient from its paint
+/// transform, which maps node-normalized space onto gradient space
+/// where the centre sits at (0.5, 0.5) and the start handle at
+/// (1, 0.5). Both are mapped back through the inverse; the rotation is
+/// the CSS-convention angle of the start handle (0° = up, clockwise),
+/// so an identity transform starts at 3 o'clock (90°) like Figma.
+/// The direction is measured in normalized space, so a non-square node
+/// with a skewed handle lands slightly off (same as linear angles).
+/// `None` for a singular transform.
+fn angular_from_transform(m: &FigMatrix) -> Option<(f32, f32, f32)> {
+    let det = m.m00 * m.m11 - m.m01 * m.m10;
+    if !det.is_finite() || det.abs() < 1e-9 {
+        return None;
+    }
+    let inverse = |u: f64, v: f64| {
+        let (du, dv) = (u - m.m02, v - m.m12);
+        (
+            (m.m11 * du - m.m01 * dv) / det,
+            (m.m00 * dv - m.m10 * du) / det,
+        )
+    };
+    let (cx, cy) = inverse(0.5, 0.5);
+    let (hx, hy) = inverse(1.0, 0.5);
+    let rotation = (hx - cx).atan2(-(hy - cy)).to_degrees().rem_euclid(360.0);
+    let round2 = |v: f64| ((v * 100.0).round() / 100.0) as f32;
+    Some((
+        round2(cx.clamp(0.0, 1.0)),
+        round2(cy.clamp(0.0, 1.0)),
+        round2(rotation),
+    ))
 }
 
 fn normalize_original_size(w: Option<f64>, h: Option<f64>) -> Option<ImageOriginalSize> {

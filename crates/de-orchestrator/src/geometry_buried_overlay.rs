@@ -68,7 +68,9 @@ fn paints_opaque(v: &Value) -> bool {
         return false;
     };
     match first.get("type").and_then(Value::as_str) {
-        Some("linear_gradient" | "radial_gradient" | "mesh_gradient" | "image") => true,
+        Some(
+            "linear_gradient" | "radial_gradient" | "angular_gradient" | "mesh_gradient" | "image",
+        ) => true,
         Some("solid") => first
             .get("color")
             .and_then(Value::as_str)

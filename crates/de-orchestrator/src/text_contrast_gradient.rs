@@ -13,6 +13,7 @@ pub(super) struct GradientSource {
 enum GradientKind {
     Linear { angle_deg: f64 },
     Radial { cx: f64, cy: f64 },
+    Angular { cx: f64, cy: f64, rotation_deg: f64 },
 }
 
 impl GradientSource {
@@ -28,6 +29,21 @@ impl GradientSource {
             kind: GradientKind::Radial {
                 cx: cx.clamp(0.0, 1.0),
                 cy: cy.clamp(0.0, 1.0),
+            },
+            stops,
+        }
+    }
+
+    pub(super) fn angular(cx: f64, cy: f64, rotation_deg: f64, stops: Vec<(f64, String)>) -> Self {
+        Self {
+            kind: GradientKind::Angular {
+                cx: cx.clamp(0.0, 1.0),
+                cy: cy.clamp(0.0, 1.0),
+                rotation_deg: if rotation_deg.is_finite() {
+                    rotation_deg
+                } else {
+                    0.0
+                },
             },
             stops,
         }
@@ -89,6 +105,7 @@ pub(super) fn resolve_gradient(
 /// `t = dot(text_center - start, end - start) / |end - start|²`.
 /// Radial gradients use the requested half-diagonal normalization:
 /// `t = distance(text_center, gradient_center) / (sqrt(w² + h²) / 2)`.
+/// Angular gradients use the turn fraction from the start angle.
 pub(super) fn sample_at_text(
     gradient: &ResolvedGradient,
     owner: ResolvedRect,
@@ -119,6 +136,18 @@ pub(super) fn sample_at_text(
                 return None;
             }
             distance / half_diagonal
+        }
+        // Turn fraction of the text centre around the sweep centre, from
+        // the start angle (CSS conic: 0° = up, clockwise in y-down space).
+        GradientKind::Angular {
+            cx,
+            cy,
+            rotation_deg,
+        } => {
+            let center = (owner.x + owner.w * cx, owner.y + owner.h * cy);
+            let (dx, dy) = (text_center.0 - center.0, text_center.1 - center.1);
+            let angle = dx.atan2(-dy).to_degrees();
+            ((angle - rotation_deg) / 360.0).rem_euclid(1.0)
         }
     };
     t.is_finite()

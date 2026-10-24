@@ -15,12 +15,32 @@ pub enum FillType {
     Solid,
     LinearGradient,
     RadialGradient,
+    /// Angular (conic / sweep) gradient: stops run clockwise around a
+    /// centre, starting at `rotation` degrees from 12 o'clock.
+    AngularGradient,
     MeshGradient,
     /// Native SkSL shader fill (v1). The type picker offers it and the
     /// panel swaps its body between the built-in presets
     /// (`crate::shader_presets`); raw SkSL authoring stays MCP / file only.
     Shader,
     Image,
+}
+
+impl FillType {
+    /// Linear / Radial / Angular: an ordered colour-stop list the
+    /// panel's stops block edits.
+    pub fn has_color_stops(self) -> bool {
+        matches!(
+            self,
+            Self::LinearGradient | Self::RadialGradient | Self::AngularGradient
+        )
+    }
+
+    /// Linear (direction) and Angular (start rotation) carry the angle
+    /// the panel's Angle row edits.
+    pub fn has_angle(self) -> bool {
+        matches!(self, Self::LinearGradient | Self::AngularGradient)
+    }
 }
 
 /// Image-fill fit modes exposed by the image-fill popover.

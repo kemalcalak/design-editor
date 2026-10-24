@@ -386,6 +386,7 @@ pub fn current_stop_alpha(node: &PenNode, index: usize) -> Option<f32> {
     let stops = match first {
         PenFill::LinearGradient(b) => &b.stops,
         PenFill::RadialGradient(b) => &b.stops,
+        PenFill::AngularGradient(b) => &b.stops,
         _ => return None,
     };
     let hex = &stops.get(index)?.color;

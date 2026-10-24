@@ -503,6 +503,10 @@ fn state_fill_color(
                 parse_state_color(&body.stops.first()?.color, state_variables)?,
                 body.opacity,
             ),
+            PenFill::AngularGradient(body) => (
+                parse_state_color(&body.stops.first()?.color, state_variables)?,
+                body.opacity,
+            ),
             PenFill::MeshGradient(body) => (
                 parse_state_color(&body.stops.first()?.color, state_variables)?,
                 body.opacity,

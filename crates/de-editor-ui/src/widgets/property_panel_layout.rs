@@ -85,7 +85,10 @@ pub fn fill_body_height_with_stops(fill_type: FillType, stop_count: usize) -> f3
     match fill_type {
         // The hex lives on the fill row itself (#83).
         FillType::Solid => 0.0,
-        FillType::LinearGradient => INPUT_HEIGHT + 6.0 + stops_block + 6.0,
+        // Angle row (Angular: start rotation) above the stops.
+        FillType::LinearGradient | FillType::AngularGradient => {
+            INPUT_HEIGHT + 6.0 + stops_block + 6.0
+        }
         FillType::RadialGradient => stops_block + 6.0,
         // Mesh: the vertex grid (`stop_count` = vertices); Shader: the
         // preset row (#90).

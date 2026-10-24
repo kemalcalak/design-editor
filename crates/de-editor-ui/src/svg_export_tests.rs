@@ -222,6 +222,62 @@ fn radial_gradient_uses_document_space_circle_on_tall_bounds() {
 }
 
 #[test]
+fn angular_gradient_exports_as_a_wedge_pattern() {
+    let mut rect = SceneNode::leaf("sweep", NodeKind::Rect);
+    rect.bounds = Rect::xywh(10.0, 20.0, 100.0, 50.0);
+    rect.gradient = Some(SceneGradient::Angular {
+        cx: 0.5,
+        cy: 0.5,
+        rotation_deg: 0.0,
+        opacity: 1.0,
+        stops: vec![
+            SceneGradientStop {
+                offset: 0.0,
+                color: Color::RED,
+            },
+            SceneGradientStop {
+                offset: 1.0,
+                color: Color::BLUE,
+            },
+        ],
+    });
+
+    let body = serialize_node_svg(&scene_with(vec![rect]), "sweep").expect("svg");
+
+    assert!(
+        body.contains(r#"patternUnits="userSpaceOnUse" x="10" y="20" width="100" height="50""#),
+        "{body}"
+    );
+    assert!(body.contains(r#"fill="url(#gradient-"#), "{body}");
+    // The first wedge starts at 12 o'clock from the tile-local centre and
+    // carries (almost) the first stop's colour.
+    assert!(
+        body.contains(r#"<path d="M50.00 25.00L50.00 -31.90"#),
+        "{body}"
+    );
+    assert!(body.contains(r#"fill="rgb(254,0,1)""#), "{body}");
+}
+
+#[test]
+fn angular_stop_sampling_interpolates_and_clamps() {
+    use super::angular::sample_stops;
+    let stops = [
+        SceneGradientStop {
+            offset: 0.25,
+            color: Color::BLACK,
+        },
+        SceneGradientStop {
+            offset: 0.75,
+            color: Color::WHITE,
+        },
+    ];
+    assert_eq!(sample_stops(&stops, 0.0), Color::BLACK);
+    assert_eq!(sample_stops(&stops, 1.0), Color::WHITE);
+    let mid = sample_stops(&stops, 0.5);
+    assert!((mid.r - 0.5).abs() < 1e-6, "{mid:?}");
+}
+
+#[test]
 fn gradient_only_frame_emits_its_background_rect() {
     let mut frame = SceneNode::leaf("gradient-frame", NodeKind::Frame);
     frame.bounds = Rect::xywh(10.0, 20.0, 100.0, 60.0);

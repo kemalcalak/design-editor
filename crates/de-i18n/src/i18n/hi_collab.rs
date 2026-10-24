@@ -272,6 +272,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "settings.system.pencilSmoothingPrecise" => "सटीक",
         "settings.system.pencilSmoothingBalanced" => "संतुलित",
         "settings.system.pencilSmoothingSmooth" => "स्मूद",
+        "fill.angular" => "कोणीय",
         _ => return None,
     })
 }

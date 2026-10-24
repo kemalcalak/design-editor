@@ -279,6 +279,32 @@ impl<'a> RenderBackend for NativeFrameBackend<'a> {
     }
 
     #[allow(clippy::too_many_arguments)]
+    fn fill_svg_path_in_rect_angular_gradient_with_fill_rule(
+        &mut self,
+        d: &str,
+        rect: Rect,
+        stops: &[(f32, Color)],
+        cx_frac: f32,
+        cy_frac: f32,
+        rotation_deg: f32,
+        opacity: f32,
+        even_odd: bool,
+    ) {
+        self.inner
+            .fill_svg_path_in_rect_angular_gradient_with_fill_rule(
+                self.canvas,
+                d,
+                rect,
+                stops,
+                cx_frac,
+                cy_frac,
+                rotation_deg,
+                opacity,
+                even_odd,
+            );
+    }
+
+    #[allow(clippy::too_many_arguments)]
     fn fill_inner_shadow_svg_path(
         &mut self,
         d: &str,
@@ -562,6 +588,56 @@ impl<'a> RenderBackend for NativeFrameBackend<'a> {
             cx_frac,
             cy_frac,
             radius_frac,
+            opacity,
+        );
+        self.inner.restore(self.canvas);
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    fn fill_round_rect_angular_gradient(
+        &mut self,
+        rect: Rect,
+        radius: f32,
+        stops: &[(f32, Color)],
+        cx_frac: f32,
+        cy_frac: f32,
+        rotation_deg: f32,
+        opacity: f32,
+    ) {
+        self.inner.fill_round_rect_angular_gradient(
+            self.canvas,
+            rect,
+            radius,
+            stops,
+            cx_frac,
+            cy_frac,
+            rotation_deg,
+            opacity,
+        );
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    fn fill_round_rect_angular_gradient_per_corner(
+        &mut self,
+        rect: Rect,
+        radii: [f32; 4],
+        stops: &[(f32, Color)],
+        cx_frac: f32,
+        cy_frac: f32,
+        rotation_deg: f32,
+        opacity: f32,
+    ) {
+        let _ = self.inner.save(self.canvas);
+        self.inner
+            .clip_round_rect_per_corner(self.canvas, rect, radii);
+        self.inner.fill_round_rect_angular_gradient(
+            self.canvas,
+            rect,
+            0.0,
+            stops,
+            cx_frac,
+            cy_frac,
+            rotation_deg,
             opacity,
         );
         self.inner.restore(self.canvas);

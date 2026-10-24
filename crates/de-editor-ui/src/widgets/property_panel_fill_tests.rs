@@ -470,3 +470,27 @@ fn single_fill_node_emits_indexed_hex_and_opacity_inputs() {
     assert!(focuses.contains(&PropertyFocus::FillHex(0)));
     assert!(focuses.contains(&PropertyFocus::FillOpacity(0)));
 }
+
+#[test]
+fn angular_fill_is_offered_and_edits_its_rotation_and_stops() {
+    let offered: Vec<_> = (0..FILL_TYPE_COUNT).filter_map(fill_type_at).collect();
+    assert!(offered.contains(&FillType::AngularGradient));
+
+    let mut state = selected_rect_state();
+    assert!(state.set_selected_fill_type_at(0, FillType::AngularGradient));
+    let panel = panel_for(&state);
+    assert_eq!(panel.snapshot.fills[0].fill_type, FillType::AngularGradient);
+    assert_eq!(panel.snapshot.gradient_angle, Some(0.0));
+    assert_eq!(panel.snapshot.gradient_stops.len(), 2);
+
+    let focuses: Vec<_> = sections::editable_input_rects(
+        panel_rect(),
+        visible_for(&panel),
+        &panel.snapshot.fills,
+        &panel.snapshot.effects,
+    )
+    .into_iter()
+    .map(|(focus, _)| focus)
+    .collect();
+    assert!(focuses.contains(&PropertyFocus::GradientAngle));
+}
