@@ -149,6 +149,40 @@ fn release_workflow_publishes_the_update_check_asset_names() {
     }
 }
 
+/// flake.nix's `prebuilt` / `prebuilt-cli` outputs download two Linux
+/// archives from the release named in nix/release-manifest.json, so the
+/// release must build, package and require exactly those names.
+#[test]
+fn release_workflow_publishes_the_nix_prebuilt_archives() {
+    let repo = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+    let workflow = std::fs::read_to_string(repo.join(".github/workflows/rust-release.yml"))
+        .expect("rust-release workflow is readable");
+    let flake = std::fs::read_to_string(repo.join("flake.nix")).expect("flake.nix is readable");
+    for asset in [
+        "design-editor-linux-x86_64.tar.gz",
+        "de-cli-linux-x86_64.tar.gz",
+    ] {
+        assert!(
+            flake.contains(&format!("/v${{releaseVersion}}/{asset}")),
+            "flake.nix no longer downloads {asset}; update this test and the release"
+        );
+        assert!(
+            workflow.contains(&format!("            {asset} \\\n"))
+                || workflow.contains(&format!("            {asset}; do\n")),
+            "the publish step must require {asset}"
+        );
+    }
+    for needle in [
+        "label: linux-x86_64",
+        "target: x86_64-unknown-linux-gnu",
+        "tar czf design-editor-${{ matrix.label }}.tar.gz -C target/${{ matrix.target }}/release design-editor",
+        "tar czf de-cli-${{ matrix.label }}.tar.gz -C target/${{ matrix.target }}/release de",
+        "            design-editor-${{ matrix.label }}.tar.gz\n",
+    ] {
+        assert!(workflow.contains(needle), "release workflow lost {needle}");
+    }
+}
+
 #[test]
 fn windows_nsis_installer_services_vc_runtime_fail_closed() {
     let installer = std::fs::read_to_string(concat!(
