@@ -65,6 +65,9 @@ fn an_instance_patch_resolves_with_the_instances_theme() {
     let (doc, _) = converted();
     let instance = child(child(&doc, "mobile"), "mobile-chip");
     assert_eq!(instance["descendants"]["chip-label"]["fontSize"], json!(12));
+    // The chip's own padding reads a device variable: the mobile copy gets
+    // the mobile value.
+    assert_eq!(instance["descendants"]["chip"]["padding"], json!([8, 20]));
 }
 
 #[test]
@@ -82,7 +85,8 @@ fn fixed_values_are_counted_per_field_and_shader_uniforms_are_not() {
     // Chip label, desktop text, mobile text, mobile patch.
     assert_eq!(count("font size variable (fixed value)"), Some(4));
     assert_eq!(count("font family variable (fixed value)"), Some(3));
-    assert_eq!(count("spacing variable (fixed value)"), Some(5));
+    // Includes the chip's padding, patched onto the mobile instance.
+    assert_eq!(count("spacing variable (fixed value)"), Some(6));
     assert_eq!(count("corner radius variable (fixed value)"), Some(1));
     assert_eq!(count("icon variable (fixed value)"), Some(2));
     assert_eq!(count("shader fill (GLSL file missing)"), Some(1));

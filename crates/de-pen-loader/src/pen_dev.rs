@@ -203,7 +203,9 @@ pub fn convert(root: &mut Value, assets: AssetReader<'_>) -> PenDevReport {
     }
     let variables = variables::Variables::from_document(doc);
     let instance_bases = match doc.get("children") {
-        Some(Value::Array(children)) => instances::InstanceBases::from_children(children),
+        Some(Value::Array(children)) => {
+            instances::InstanceBases::from_children(children, &variables)
+        }
         _ => instances::InstanceBases::default(),
     };
     let mut ctx = nodes::Ctx::new(assets, &mut report, variables, instance_bases);
