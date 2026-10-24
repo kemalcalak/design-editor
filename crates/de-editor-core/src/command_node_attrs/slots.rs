@@ -81,7 +81,7 @@ pub(super) fn write_corner_radius_at(node: &mut PenNode, index: usize, radius: f
 /// Mutably borrow whatever variant's `effects` field. Frame / Group /
 /// Rectangle keep it on `container`; the leaf kinds carry it directly.
 /// `None` for IconFont / Ref (no effects field in the schema).
-pub(super) fn node_effects_slot(node: &mut PenNode) -> Option<&mut Option<Vec<PenEffect>>> {
+pub(crate) fn node_effects_slot(node: &mut PenNode) -> Option<&mut Option<Vec<PenEffect>>> {
     match node {
         PenNode::Frame(n) => Some(&mut n.container.effects),
         PenNode::Group(n) => Some(&mut n.container.effects),

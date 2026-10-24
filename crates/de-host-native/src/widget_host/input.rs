@@ -74,6 +74,9 @@ impl WidgetHostNative {
             || self.git_branch_create_focus_active()
             || self.git_author_focus_active()
             || self.git_clone_input_active()
+            // The focused shader source editor (#164): tool letters, space-pan,
+            // clipboard chords and IME must reach it, not the canvas.
+            || de_editor_core::shader_source_editor::owns_keyboard(&self.editor_state)
     }
 
     pub fn settings_focus_active(&self) -> bool {
@@ -623,8 +626,14 @@ impl WidgetHostNative {
         // does not repeat the same expensive snapshot/i18n work.
         let property_rect = self.property_rect(self.last_viewport_w, self.last_viewport_h);
         let point = Point2D::new(x, y);
-        let property_drag_active =
-            self.image_adjustment_drag.is_some() || self.effect_radius_drag.is_some();
+        let property_drag_active = self.image_adjustment_drag.is_some()
+            || self.effect_radius_drag.is_some()
+            || self
+                .editor_state
+                .editor_ui
+                .shader_editing
+                .uniform_drag
+                .is_some();
         let mut property_panel_probe =
             property_drag_active.then(|| PropertyPanel::for_selection(&self.editor_state));
         // Tier 3a — a live rail-resize drag. First of the pointer-capture

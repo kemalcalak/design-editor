@@ -157,5 +157,6 @@ pub fn target_label(t: ColorTarget) -> &'static str {
         ColorTarget::Stroke => "Stroke",
         ColorTarget::GradientStop(_) => "Gradient Stop",
         ColorTarget::EffectColor(_) => "Effect Color",
+        ColorTarget::ShaderUniform { .. } => "Shader Color",
     }
 }

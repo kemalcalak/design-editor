@@ -36,6 +36,13 @@ impl WidgetHostNative {
         if self.preview_slideshow_active() {
             return None;
         }
+        // 0a0. Shader source editor (#164): it floats over the canvas left
+        // of the properties card, above every rail surface.
+        if let Some(consumed) =
+            self.press_shader_source_editor(x, y, viewport_width, viewport_height)
+        {
+            return Some(consumed);
+        }
         // 0a1. Image-fill popover. Property overlays are painted after the
         // VariablesPanel, chat, StatusBar, marquee, and rail chrome, so the
         // visible popup must own their overlap before those lower surfaces.

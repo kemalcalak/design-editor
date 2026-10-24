@@ -67,6 +67,7 @@ mod keyboard_input;
 mod keyboard_input_arrows;
 mod keyboard_presenting;
 mod keyboard_scene_template;
+mod keyboard_shader_editor;
 mod kit_io;
 mod kit_persistence;
 mod kit_persistence_error;

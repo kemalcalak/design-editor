@@ -397,7 +397,9 @@ impl PropertyPanel {
             effects: caps.effects,
             export: caps.export,
             fill_type: self.fill_type,
-            gradient_stop_count: self.snapshot.gradient_stops.len(),
+            gradient_stop_count: crate::widgets::property_panel_shader_body::primary_body_items(
+                &self.snapshot,
+            ),
             shader_custom: self.snapshot.shader_custom_available,
             interactions: caps.interactions,
         }

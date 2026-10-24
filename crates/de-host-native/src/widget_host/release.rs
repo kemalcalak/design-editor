@@ -190,6 +190,9 @@ impl WidgetHostNative {
         if self.effect_radius_drag.take().is_some() {
             return true;
         }
+        if self.end_shader_uniform_drag() {
+            return true;
+        }
         if let Some(m) = self.marquee_drag.take() {
             self.commit_marquee_selection(m, viewport_w, viewport_h);
             return true;
@@ -366,6 +369,9 @@ impl WidgetHostNative {
             return true;
         }
         if self.effect_radius_drag.take().is_some() {
+            return true;
+        }
+        if self.end_shader_uniform_drag() {
             return true;
         }
         let was_dragging = self.drag.is_some();

@@ -317,6 +317,12 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "interactions.addAnimation" => "Animación",
         "blendMode.linearBurn" => "Subexponer lineal",
         "blendMode.linearDodge" => "Sobreexponer lineal",
+        "shader.editCode" => "Código",
+        "shader.compiles" => "Compila",
+        "shader.compileError" => "Error de compilación",
+        "shader.sourceTitle" => "Código del shader",
+        "shader.close" => "Cerrar",
+        "shader.apply" => "Aplicar",
         _ => return None,
     })
 }

@@ -317,6 +317,12 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "interactions.addAnimation" => "แอนิเมชัน",
         "blendMode.linearBurn" => "เพิ่มความเข้มเชิงเส้น",
         "blendMode.linearDodge" => "เพิ่มความสว่างเชิงเส้น",
+        "shader.editCode" => "โค้ด",
+        "shader.compiles" => "คอมไพล์ได้",
+        "shader.compileError" => "คอมไพล์ผิดพลาด",
+        "shader.sourceTitle" => "โค้ดเชดเดอร์",
+        "shader.close" => "ปิด",
+        "shader.apply" => "ใช้",
         _ => return None,
     })
 }

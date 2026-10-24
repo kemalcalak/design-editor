@@ -317,6 +317,12 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "interactions.addAnimation" => "Hoạt ảnh",
         "blendMode.linearBurn" => "Đốt tuyến tính",
         "blendMode.linearDodge" => "Né tuyến tính",
+        "shader.editCode" => "Mã",
+        "shader.compiles" => "Biên dịch được",
+        "shader.compileError" => "Lỗi biên dịch",
+        "shader.sourceTitle" => "Mã shader",
+        "shader.close" => "Đóng",
+        "shader.apply" => "Áp dụng",
         _ => return None,
     })
 }

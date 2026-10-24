@@ -317,6 +317,12 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "interactions.addAnimation" => "Animation",
         "blendMode.linearBurn" => "Linear burn",
         "blendMode.linearDodge" => "Linear dodge",
+        "shader.editCode" => "Code",
+        "shader.compiles" => "Compiles",
+        "shader.compileError" => "Compile error",
+        "shader.sourceTitle" => "Shader code",
+        "shader.close" => "Close",
+        "shader.apply" => "Apply",
         _ => return None,
     })
 }

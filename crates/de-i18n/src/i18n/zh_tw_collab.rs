@@ -317,6 +317,12 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "interactions.addAnimation" => "動畫",
         "blendMode.linearBurn" => "線性加深",
         "blendMode.linearDodge" => "線性加亮",
+        "shader.editCode" => "程式碼",
+        "shader.compiles" => "編譯成功",
+        "shader.compileError" => "編譯錯誤",
+        "shader.sourceTitle" => "著色器程式碼",
+        "shader.close" => "關閉",
+        "shader.apply" => "套用",
         _ => return None,
     })
 }

@@ -135,6 +135,7 @@ impl WidgetHost {
         self.image_adjustment_drag = None;
         self.image_crop_drag = None;
         self.effect_radius_drag = None;
+        self.editor_state.editor_ui.shader_editing.uniform_drag = None;
         self.code_selection_drag = None;
         self.chat_input_selection_drag = None;
         self.image_input_selection_drag = None;

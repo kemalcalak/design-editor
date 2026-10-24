@@ -317,6 +317,12 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "interactions.addAnimation" => "Animasyon",
         "blendMode.linearBurn" => "Doğrusal yakma",
         "blendMode.linearDodge" => "Doğrusal soldurma",
+        "shader.editCode" => "Kod",
+        "shader.compiles" => "Derleniyor",
+        "shader.compileError" => "Derleme hatası",
+        "shader.sourceTitle" => "Gölgelendirici kodu",
+        "shader.close" => "Kapat",
+        "shader.apply" => "Uygula",
         _ => return None,
     })
 }

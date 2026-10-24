@@ -37,7 +37,10 @@ pub fn effects_section_height(effects: &[EffectSummary]) -> f32 {
         + if effects.is_empty() {
             8.0
         } else {
-            effects.len() as f32 * (EFFECT_ROW_HEIGHT + EFFECT_ROW_GAP)
+            effects
+                .iter()
+                .map(crate::widgets::property_panel_effects::effect_block_height)
+                .sum::<f32>()
         }
 }
 
@@ -100,7 +103,10 @@ pub fn fill_body_height_with_stops(fill_type: FillType, stop_count: usize) -> f3
         FillType::MeshGradient => {
             crate::widgets::property_panel_fill_mesh_shader::mesh_body_height(stop_count)
         }
-        FillType::Shader => crate::widgets::property_panel_fill_mesh_shader::shader_body_height(),
+        // Shader: `stop_count` = its user uniform rows (#164).
+        FillType::Shader => {
+            crate::widgets::property_panel_fill_mesh_shader::shader_body_height(stop_count)
+        }
         FillType::Image => INPUT_HEIGHT + 6.0,
     }
 }
@@ -469,8 +475,18 @@ pub fn action_button_rects_with_fill_picker(
                 PropertyPanelAction::SetEffectVisible(ei, !eff.visible),
                 rects.eye,
             ));
+            if let Some(body) = eff.shader.as_ref() {
+                crate::widgets::property_panel_shader_body::push_action_rects(
+                    &mut out,
+                    de_editor_core::ShaderTarget::Effect(ei),
+                    body,
+                    x0,
+                    crate::widgets::property_panel_effects::effect_body_y(y),
+                    w,
+                );
+            }
             if !eff.kind.has_amount() {
-                y += EFFECT_ROW_HEIGHT + EFFECT_ROW_GAP;
+                y += crate::widgets::property_panel_effects::effect_block_height(eff);
                 continue;
             }
             let field = if matches!(
@@ -490,7 +506,7 @@ pub fn action_button_rects_with_fill_picker(
                 },
                 rects.slider,
             ));
-            y += EFFECT_ROW_HEIGHT + EFFECT_ROW_GAP;
+            y += crate::widgets::property_panel_effects::effect_block_height(eff);
         }
     }
     if visible.interactions {

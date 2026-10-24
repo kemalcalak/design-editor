@@ -15,7 +15,7 @@ use crate::state::EditorState;
 use crate::walkers::find_node_mut;
 
 /// The `turbulence` preset name the loader expands (`de-pen-loader`).
-const TURBULENCE: &str = "turbulence";
+pub(crate) const TURBULENCE: &str = "turbulence";
 
 /// Vertical fade from `accent` to `base`. `size` is bound to the node's
 /// resolved size by the layout scene. The colour uniforms are named so

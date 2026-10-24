@@ -47,6 +47,15 @@ impl WidgetHostNative {
         if self.apply_image_panel_backspace() {
             return true;
         }
+        // The shader source editor (#164) owns the keyboard while focused.
+        if let Some(changed) =
+            de_editor_core::shader_source_editor::backspace(&mut self.editor_state, self.now_ms)
+        {
+            if changed {
+                self.mark_dirty();
+            }
+            return true;
+        }
         if self.editor_state.color_picker_hex_focused() {
             self.editor_state.color_picker_hex_backspace(self.now_ms);
             self.mark_dirty();
@@ -268,6 +277,16 @@ impl WidgetHostNative {
             return self.preview_dispatch_key("Delete", false);
         }
         if self.apply_image_panel_delete() {
+            return true;
+        }
+        // The shader source editor (#164) owns the keyboard while focused.
+        if let Some(changed) = de_editor_core::shader_source_editor::delete_forward(
+            &mut self.editor_state,
+            self.now_ms,
+        ) {
+            if changed {
+                self.mark_dirty();
+            }
             return true;
         }
         // The open font picker owns Delete. Its search draft handles

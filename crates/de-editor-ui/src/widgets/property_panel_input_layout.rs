@@ -244,6 +244,16 @@ pub fn editable_input_rects(
                         visible.gradient_stop_count,
                     );
                 }
+                // The uniform rows' number fields (#164).
+                FillType::Shader if is_primary => {
+                    crate::widgets::property_panel_fill_mesh_shader::push_shader_input_rects(
+                        &mut rects,
+                        fill.shader.as_ref(),
+                        x0,
+                        y,
+                        w,
+                    );
+                }
                 // Solid edits on the row itself; the mesh vertex grid opens
                 // the colour picker instead of focusing an input.
                 FillType::Solid
@@ -298,8 +308,17 @@ pub fn editable_input_rects(
             if effect.kind.has_amount() {
                 rects.push((PropertyFocus::EffectRadius(index), row.value));
             }
-            y += crate::widgets::property_panel_effects::EFFECT_ROW_HEIGHT
-                + crate::widgets::property_panel_effects::EFFECT_ROW_GAP;
+            if let Some(body) = effect.shader.as_ref() {
+                crate::widgets::property_panel_shader_body::push_input_rects(
+                    &mut rects,
+                    de_editor_core::ShaderTarget::Effect(index),
+                    body,
+                    x0,
+                    crate::widgets::property_panel_effects::effect_body_y(y),
+                    w,
+                );
+            }
+            y += crate::widgets::property_panel_effects::effect_block_height(effect);
         }
     }
     rects
@@ -419,6 +438,7 @@ pub(crate) fn push_fill_action_rects(
                     w,
                     visible.gradient_stop_count,
                     visible.shader_custom,
+                    fill.shader.as_ref(),
                 );
             }
             // Solid acts on the row itself; a non-primary fill has no body.

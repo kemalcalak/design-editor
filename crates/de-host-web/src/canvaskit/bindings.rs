@@ -25,6 +25,9 @@ extern "C" {
     pub type OpCk;
     #[wasm_bindgen(method, js_name = beginFrame)]
     pub(super) fn begin_frame(this: &OpCk);
+    /// The SkSL compiler's message for `sksl`, `None` when it compiles (#164).
+    #[wasm_bindgen(method, js_name = shaderCompileError)]
+    pub(super) fn shader_compile_error(this: &OpCk, sksl: &str) -> Option<String>;
     #[wasm_bindgen(method, js_name = endFrame)]
     pub(super) fn end_frame(this: &OpCk);
     #[wasm_bindgen(method)]

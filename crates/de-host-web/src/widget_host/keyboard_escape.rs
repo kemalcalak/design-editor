@@ -30,6 +30,11 @@ impl WidgetHost {
             self.mark_dirty();
             return true;
         }
+        // A focused shader source editor (#164) closes, dropping its draft.
+        if de_editor_core::shader_source_editor::escape(&mut self.editor_state).is_some() {
+            self.mark_dirty();
+            return true;
+        }
         // The property-panel image popover owns Escape before any stale input
         // underneath. Keep the image selected; only dismiss the top layer.
         if self.editor_state.editor_ui.image_panel.search_open

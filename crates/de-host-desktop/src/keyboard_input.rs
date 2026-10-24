@@ -101,6 +101,9 @@ impl DesktopApp {
             Key::Named(ref arrow) if self.scene_template_owns_arrow(arrow) => {
                 consumed = self.apply_scene_template_arrow(arrow);
             }
+            Key::Named(ref key) if self.shader_editor_owns_key(key) => {
+                consumed = self.apply_shader_editor_key(key);
+            }
             // Preview (Play) mode owns Tab + arrows: Tab advances the
             // widget focus chain (the runner otherwise drops Tab as a
             // control char, so the user could never focus an input

@@ -23,6 +23,13 @@ impl WidgetHost {
         let (x, y) = (ctx.x, ctx.y);
         let viewport_width = ctx.viewport_width;
         let viewport_height = ctx.viewport_height;
+        // 0a0. Shader source editor (#164): it floats over the canvas left
+        // of the properties card, above every rail surface.
+        if let Some(consumed) =
+            self.press_shader_source_editor(x, y, viewport_width, viewport_height)
+        {
+            return Some(consumed);
+        }
         // 0a1. Image-fill popover. It is painted in the late property-overlay
         // pass, above VariablesPanel, chat, StatusBar, marquee, and ordinary
         // rail content. The modal/menu overlays above already had first
