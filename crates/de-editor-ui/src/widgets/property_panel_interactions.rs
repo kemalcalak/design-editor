@@ -214,8 +214,11 @@ pub fn document_screen_paths(state: &de_editor_core::EditorState) -> Vec<String>
     state
         .active_children()
         .iter()
-        .filter(|n| !subtree_contains(n, anchor))
-        .filter_map(|n| n.screen().map(str::to_string))
+        .filter_map(|n| n.screen().map(|screen| (n, screen)))
+        // Only frames that carry a screen are walked, and only when
+        // something is selected.
+        .filter(|(n, _)| anchor.is_empty() || !subtree_contains(n, anchor))
+        .map(|(_, screen)| screen.to_string())
         .collect()
 }
 
@@ -520,11 +523,13 @@ fn action_label(
     }
 }
 
-/// A dropdown whose label is ellipsized to stay clear of the chevron.
 /// Width a dropdown keeps for its padding and chevron; the label gets the
 /// rest.
 pub(crate) const DROPDOWN_CHROME_W: f32 = 40.0;
+/// Width a plain read-only row keeps for its inset.
+pub(crate) const PLAIN_ROW_INSET_W: f32 = 4.0;
 
+/// A dropdown whose label is ellipsized to stay clear of the chevron.
 pub(crate) fn paint_fitted_dropdown(cx: &mut PaintCx<'_>, theme: &Theme, rect: Rect, text: &str) {
     let fitted = crate::widgets::text_metrics::fit_chrome(
         cx.backend,
@@ -537,7 +542,12 @@ pub(crate) fn paint_fitted_dropdown(cx: &mut PaintCx<'_>, theme: &Theme, rect: R
 
 /// A muted read-only row; the text is ellipsized to the row width.
 pub(crate) fn paint_plain_row(cx: &mut PaintCx<'_>, theme: &Theme, rect: Rect, text: &str) {
-    let text = crate::widgets::text_metrics::fit_chrome(cx.backend, text, rect.size.x - 4.0, 12.0);
+    let text = crate::widgets::text_metrics::fit_chrome(
+        cx.backend,
+        text,
+        rect.size.x - PLAIN_ROW_INSET_W,
+        12.0,
+    );
     let layout = TextLayout::single_run(
         &text,
         crate::widgets::text_metrics::CHROME_FONT_FAMILY,

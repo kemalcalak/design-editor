@@ -345,7 +345,13 @@ impl PropertyPanel {
             interaction_menu_open: ui.interaction_menu_open,
             interaction_menu_target: ui.interaction_menu_target,
             interaction_menu_hover: ui.interaction_menu_hover,
-            screen_paths: crate::widgets::property_panel_interactions::document_screen_paths(state),
+            // Read only by the open Interactions popover; the scan walks
+            // the screens' subtrees, so a closed popover skips it.
+            screen_paths: if ui.interaction_menu_open {
+                crate::widgets::property_panel_interactions::document_screen_paths(state)
+            } else {
+                Vec::new()
+            },
             color_variable_picker_open: ui.property_color_variable_picker_open,
             color_variables,
             fill_variable_ref,

@@ -8,9 +8,9 @@
 //! five rows: the property dropdown + remove, the trigger dropdown (On
 //! load / In view / On hover / On tap, #155), From | To, Duration, Delay
 //! (ms). A Fill tween (#190) puts From and To on a row each, as hex
-//! colours (`PropertyFocus::MotionColor`). Any other shape is two rows — "Custom animation" with remove,
-//! then its trigger dropdown — so a hand-written or MCP-written
-//! declaration is never rewritten by accident. A localized label never
+//! colours (`PropertyFocus::MotionColor`). Any other shape is two rows —
+//! "Custom animation" with remove, then its trigger dropdown — so a
+//! hand-written or MCP-written declaration is never rewritten by accident. A localized label never
 //! shares its row with another one (#190): the longest translation fits.
 //!
 //! The section shows once the node has an animation or a transition
@@ -101,8 +101,8 @@ enum Line {
     Head(usize),
     /// Animation `index`: its trigger dropdown.
     Trigger(usize),
-    /// Animation `index`: two half-width number inputs.
-    Pair(usize, [MotionField; 2]),
+    /// Animation `index`: From | To, two half-width number inputs.
+    Pair(usize),
     /// Animation `index`: From or To of a colour tween, full width.
     Color(usize, MotionField),
     /// Animation `index`: one full-width input.
@@ -129,7 +129,7 @@ fn lines(summary: &InteractionSummary) -> Vec<Line> {
                     Line::Color(index, MotionField::To),
                 ]);
             } else {
-                out.push(Line::Pair(index, [MotionField::From, MotionField::To]));
+                out.push(Line::Pair(index));
             }
             out.extend([
                 Line::Field(index, MotionField::DurationMs),
@@ -262,7 +262,8 @@ pub fn motion_input_rects(
             Line::TransitionDuration => {
                 out.push((PropertyFocus::TransitionDuration, full_row(x, row_y, width)));
             }
-            Line::Pair(index, fields) => {
+            Line::Pair(index) => {
+                let fields = [MotionField::From, MotionField::To];
                 for (field, rect) in fields.into_iter().zip(value_pair(x, row_y, width)) {
                     out.push((PropertyFocus::MotionValue { index, field }, rect));
                 }

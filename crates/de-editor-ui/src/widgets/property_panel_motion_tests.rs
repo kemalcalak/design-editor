@@ -40,7 +40,8 @@ fn a_simple_row_is_five_lines_and_a_custom_row_two() {
     let header_only = SECTION_HEADER_HEIGHT + 6.0 + SECTION_GAP;
     assert_eq!(
         motion_section_height(&summary) - header_only,
-        7.0 * (INPUT_HEIGHT + 6.0)
+        // FADE: one simple animation (5 rows) and one custom (2).
+        (5.0 + 2.0) * (INPUT_HEIGHT + 6.0)
     );
     assert_eq!(motion_section_height(&InteractionSummary::default()), 0.0);
 }
@@ -231,13 +232,13 @@ fn chrome_width(text: &str) -> f32 {
 /// easing)`: the rects paint uses, minus what `paint_fitted_dropdown` /
 /// `paint_plain_row` keep for padding and the chevron.
 fn label_budgets(width: f32) -> (f32, f32, f32, f32) {
-    use crate::widgets::property_panel_interactions::DROPDOWN_CHROME_W;
+    use crate::widgets::property_panel_interactions::{DROPDOWN_CHROME_W, PLAIN_ROW_INSET_W};
     let (body, _) = head_parts(0.0, 0.0, width);
     let full = full_row(0.0, 0.0, width);
     (
         body.size.x - DROPDOWN_CHROME_W,
         full.size.x - DROPDOWN_CHROME_W,
-        body.size.x - 4.0,
+        body.size.x - PLAIN_ROW_INSET_W,
         full.size.x - DROPDOWN_CHROME_W,
     )
 }
@@ -278,6 +279,11 @@ fn every_motion_label_fits_in_every_locale() {
         for field in [MotionField::DurationMs, MotionField::DelayMs] {
             checks.push((field_prefix(locale, field), full_room));
         }
+        // The Interactions Slide | Fade cells share one full row; each
+        // keeps 6 px either side (11 px text, measured here at 12 px).
+        let cell_room = full_row(0.0, 0.0, width).size.x / 2.0 - 12.0;
+        checks.push((translate(locale, "interactions.slide", "Slide"), cell_room));
+        checks.push((translate(locale, "interactions.fade", "Fade"), cell_room));
         for (label, room) in checks {
             assert!(
                 chrome_width(label) <= room,
