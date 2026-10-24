@@ -388,17 +388,33 @@ impl PropertyPanel {
         if !self.point_in_section_viewport(panel_rect, point) {
             return None;
         }
+        let motion = self.motion_input_rects(panel_rect);
         for (focus, rect) in sections::editable_input_rects(
             self.scrolled_rect(panel_rect),
             self.visible_sections(),
             &self.snapshot.fills,
             &self.snapshot.effects,
-        ) {
+        )
+        .into_iter()
+        .chain(motion)
+        {
             if (rect).contains(point) {
                 return Some(focus);
             }
         }
         None
+    }
+
+    /// The Motion section's From / To / Duration / Delay input rects
+    /// (#154), scrolled like every other input.
+    pub fn motion_input_rects(&self, panel_rect: Rect) -> Vec<(PropertyFocus, Rect)> {
+        crate::widgets::property_panel_motion::motion_input_rects_in_panel(
+            self.scrolled_rect(panel_rect),
+            self.visible_sections(),
+            &self.snapshot.effects,
+            &self.snapshot.fills,
+            &self.snapshot.interactions,
+        )
     }
 
     /// Index into `action_button_rects_with_fill_picker` of the action

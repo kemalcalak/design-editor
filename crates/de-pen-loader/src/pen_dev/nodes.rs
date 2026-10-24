@@ -135,6 +135,9 @@ fn convert_node(
     variables::resolve_node(map, &ctx.variables, theme, ctx.report);
     // An absolutely positioned child is out of its parent's flow.
     let absolute = map.get("layoutPosition").and_then(Value::as_str) == Some("absolute");
+    // Before the per-kind defaults, so a promoted rectangle takes the
+    // frame path.
+    promote_reusable_shape(map, ctx.report);
     match map.get("type").and_then(Value::as_str) {
         Some("frame") => apply_frame_defaults(map),
         Some("path") => apply_path_view_box(map, in_flow && !absolute, ctx.report),
@@ -152,6 +155,27 @@ fn convert_node(
     paint::convert_fill_key(map, theme, ctx);
     paint::convert_stroke(map, role, theme, ctx);
     paint::convert_effects(map, theme, ctx);
+}
+
+/// pen.dev allows `reusable: true` on any node kind; the canonical schema
+/// keeps it on frames only. A rectangle becomes a free-form frame, which
+/// carries the same props and paints alike. Other kinds lose the flag,
+/// reported (a wrapper frame would take the instance's root overrides).
+fn promote_reusable_shape(map: &mut Map<String, Value>, report: &mut PenDevReport) {
+    if map.get("reusable").and_then(Value::as_bool) != Some(true) {
+        return;
+    }
+    match map.get("type").and_then(Value::as_str) {
+        Some("frame") | None => {}
+        Some("rectangle") => {
+            map.insert("type".to_owned(), Value::String("frame".to_owned()));
+            // Keeps `apply_frame_defaults` from adding pen.dev's
+            // horizontal hug layout to what was a plain box.
+            map.entry("layout")
+                .or_insert_with(|| Value::String("none".to_owned()));
+        }
+        Some(_) => report.note("non-frame reusable component"),
+    }
 }
 
 /// pen.dev frames lay out horizontally and hug their content unless the
@@ -276,3 +300,7 @@ fn numbers4(value: &Value) -> Option<[f64; 4]> {
     }
     Some(out)
 }
+
+#[cfg(test)]
+#[path = "nodes_tests.rs"]
+mod tests;

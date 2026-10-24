@@ -121,6 +121,12 @@ pub enum PropertyFocus {
     WidgetStep,
     /// Image-node video source URL.
     VideoSrc,
+    /// One numeric field (from / to / duration / delay) of the Motion
+    /// section's animation at `index` (#154).
+    MotionValue {
+        index: usize,
+        field: crate::motion_edit::MotionField,
+    },
 }
 
 impl PropertyFocus {
@@ -190,6 +196,7 @@ impl PropertyFocus {
                 | PropertyFocus::WidgetMin
                 | PropertyFocus::WidgetMax
                 | PropertyFocus::WidgetStep
+                | PropertyFocus::MotionValue { .. }
         )
     }
 }

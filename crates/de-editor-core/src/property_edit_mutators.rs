@@ -72,6 +72,9 @@ impl EditorState {
         }
         match focus {
             PropertyFocus::PageBackgroundHex => return false,
+            PropertyFocus::MotionValue { index, field } => {
+                return self.set_selected_animation_value(index, field, f64::from(value));
+            }
             PropertyFocus::ImageTileScale => {
                 return self.set_selected_image_tile_scale(value);
             }
@@ -306,6 +309,7 @@ impl EditorState {
             | PropertyFocus::CornerBL
             | PropertyFocus::CornerBR
             | PropertyFocus::EffectRadius(_)
+            | PropertyFocus::MotionValue { .. }
             | PropertyFocus::StrokeWidth => {
                 unreachable!("corner radius / stroke width handled before node borrow")
             }
