@@ -4,8 +4,8 @@
 //! optional point per vertex: a moved position or bezier handles. The
 //! canonical `MeshGradientBody` is a uniform grid of `{ row, col, color }`
 //! stops, so the colours carry over and moved points or handles are
-//! reported as an approximation. Colour variables resolve to the node
-//! theme's value: a mesh stop cannot hold a reference.
+//! reported as an approximation. A colour `$variable` stays a reference,
+//! which the renderer resolves per theme like any paint colour.
 
 use serde_json::{json, Map, Value};
 
@@ -66,12 +66,13 @@ pub(super) fn convert(
 
 fn resolve_color(color: &Value, theme: &Theme, ctx: &mut Ctx<'_>) -> Option<String> {
     let text = color.as_str()?;
-    let Some(name) = variables::reference(text) else {
+    if variables::reference(text).is_none() {
         return Some(text.to_owned());
-    };
-    let value = ctx.variables.value(name, theme)?;
-    ctx.report.note("paint variable (fixed value)");
-    value.as_str().map(str::to_owned)
+    }
+    // Only a reference the document defines stays bound; a missing one
+    // falls back to transparent like a missing colour.
+    ctx.variables.value(variables::reference(text)?, theme)?;
+    Some(text.to_owned())
 }
 
 /// Whether every point sits at its uniform grid position with no handles.
@@ -139,7 +140,7 @@ mod tests {
         assert_eq!(fill["opacity"], 0.5);
         assert_eq!(
             fill["stops"][1],
-            json!({ "row": 0, "col": 1, "color": "#2266AA" })
+            json!({ "row": 0, "col": 1, "color": "$sea" })
         );
         assert_eq!(fill["stops"][2]["color"], "#00FF00");
         // A missing colour is transparent, as the canvas renders it.
@@ -157,7 +158,7 @@ mod tests {
     }
 
     #[test]
-    fn a_themed_instance_resolves_mesh_colours_under_its_theme() {
+    fn a_mesh_colour_variable_stays_bound_and_follows_the_instance_theme() {
         let mut doc = json!({
             "version": "2.21",
             "themes": { "mode": ["light", "dark"] },
@@ -172,13 +173,28 @@ mod tests {
                 { "type": "ref", "id": "dark-tile", "ref": "tile", "theme": { "mode": "dark" } }
             ]
         });
-        convert(&mut doc, &no_assets);
+        let src = doc.to_string();
+        let loaded = crate::payload::load_canonical_with_assets(&src, &no_assets).expect("loads");
+        let stored = serde_json::to_value(&loaded.loaded.value).unwrap();
         assert_eq!(
-            doc["children"][0]["fill"][0]["stops"][0]["color"],
+            stored["children"][0]["fill"][0]["stops"][0]["color"],
+            "$sea"
+        );
+        let expanded = de_editor_core::ref_resolve::resolve_refs_for_canvas(&loaded.loaded.value);
+        let resolved = de_editor_core::variables_resolve::resolve_document_for_canvas(
+            &expanded,
+            &Default::default(),
+        );
+        let resolved = serde_json::to_value(&resolved).unwrap();
+        assert_eq!(
+            resolved["children"][0]["fill"][0]["stops"][0]["color"],
             "#2266AA"
         );
-        let patch = &doc["children"][1]["descendants"]["tile"];
-        assert_eq!(patch["fill"][0]["stops"][0]["color"], "#001122");
+        assert_eq!(
+            resolved["children"][1]["fill"][0]["stops"][0]["color"],
+            "#001122"
+        );
+        let _ = &mut doc;
     }
 
     #[test]
