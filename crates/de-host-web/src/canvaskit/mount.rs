@@ -450,8 +450,25 @@ pub(super) async fn mount_ck(canvas_id: String) -> Result<(), JsValue> {
         )?;
     }
     // Mouse back / forward buttons (3 / 4) browse the Preview's history
-    // (#153). The browser navigates its own history on these buttons'
-    // mouseup, so the default is prevented only while previewing.
+    // (#153). The browser navigates its own history on these buttons, so
+    // while previewing the default is prevented on both the press (some
+    // browsers act on it) and the release, which steps the history.
+    {
+        let inner = inner.clone();
+        add_listener::<MouseEvent, _, _>(
+            &canvas_target,
+            "mousedown",
+            &mut listeners,
+            move |evt| {
+                if !matches!(evt.button(), 3 | 4) {
+                    return;
+                }
+                if inner.try_borrow().is_ok_and(|b| b.host.is_preview_active()) {
+                    evt.prevent_default();
+                }
+            },
+        )?;
+    }
     {
         let inner = inner.clone();
         add_listener::<MouseEvent, _, _>(&canvas_target, "mouseup", &mut listeners, move |evt| {

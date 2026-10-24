@@ -21,6 +21,11 @@
 //! touched, matching `enter`'s existing "never mutates the saved doc"
 //! invariant (see the module doc on `preview/mod.rs`).
 //!
+//! After that shared pass it runs one preview-only pass generation never
+//! runs: `wire_web_nav_links` (#153), which binds website header / footer
+//! links to their pages and to same-page sections. The same "any authored
+//! marker → skip" gate below covers both passes.
+//!
 //! ## Why "any authored marker → skip entirely", not Track A's own
 //! "fill only the gaps" rule
 //!

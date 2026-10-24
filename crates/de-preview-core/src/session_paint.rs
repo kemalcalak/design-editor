@@ -168,8 +168,8 @@ impl PreviewSession {
     /// value is mounted, hover/pressed/focused/disabled visuals can change the
     /// paint-only scene.
     pub(crate) fn has_preview_widget_visuals(&self) -> bool {
-        // A hovered link / button paints its hover state (#153) through
-        // the same cloned overlay.
+        // Not only widgets: a link / button under the pointer paints its
+        // hover and pressed state (#153) through the same cloned overlay.
         if self.hovered_clickable().is_some() {
             return true;
         }
@@ -202,13 +202,13 @@ impl PreviewSession {
         let mut scene = base.clone();
         let focused_id = self.focused_schema_id();
         let state_variables = self.state_variables();
-        let hovered_link = self.hovered_clickable();
+        let clickable = self.hovered_clickable();
         let idx = scene.active_page_index;
         if let Some(page) = scene.pages.get_mut(idx) {
             for node in page.children.iter_mut() {
                 self.overlay_node(node, focused_id.as_deref(), state_variables.as_ref());
-                if let Some(link) = hovered_link.as_deref() {
-                    self.apply_link_hover(node, link);
+                if let Some(clickable) = clickable.as_deref() {
+                    self.apply_clickable_state(node, clickable);
                 }
             }
         }
@@ -242,15 +242,16 @@ impl PreviewSession {
         }
     }
 
-    /// Paint the hover (and pressed) state of the hovered clickable
-    /// `link_id` when it is not a widget — widgets resolve their own
-    /// states above. Frames and text carry no authored `states`, so the
-    /// state is derived: a tint over a filled node, or a dim on a
-    /// fill-less one (a text link), the way a website link reacts.
-    fn apply_link_hover(&self, node: &mut SceneNode, link_id: &str) {
+    /// Paint the hover (and pressed) state of the clickable `link_id`
+    /// under the pointer (a link or button, #153) when it is not a widget
+    /// — widgets resolve their own states above. Frames and text carry no
+    /// authored `states`, so the state is derived: a tint over a filled
+    /// node, otherwise (a text link, or no derived tint) a dim, the way a
+    /// website link reacts.
+    fn apply_clickable_state(&self, node: &mut SceneNode, link_id: &str) {
         if node.id != link_id {
             for child in node.children.iter_mut() {
-                self.apply_link_hover(child, link_id);
+                self.apply_clickable_state(child, link_id);
             }
             return;
         }

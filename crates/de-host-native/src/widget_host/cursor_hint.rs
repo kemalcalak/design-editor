@@ -42,21 +42,11 @@ impl WidgetHostNative {
         if self.preview_slideshow_active() {
             return None;
         }
-        if self.over_preview_browser_bar(x, y, viewport_w, viewport_h) {
-            let canvas = self.preview_canvas_rect(viewport_w, viewport_h);
-            let over_button =
-                de_editor_ui::widgets::PreviewBrowserBar::hit_test(canvas, Point2D::new(x, y))
-                    .is_some();
-            return Some(if over_button {
-                CursorHint::Pointer
-            } else {
-                CursorHint::Default
-            });
-        }
-        if !self.over_canvas(x, y, viewport_w, viewport_h) {
-            return None;
-        }
-        Some(match session.preview_cursor() {
+        let canvas = self.preview_canvas_rect(viewport_w, viewport_h);
+        let over_page = self.over_canvas(x, y, viewport_w, viewport_h);
+        let cursor =
+            de_preview_core::browse_chrome::cursor(session, canvas, Point2D::new(x, y), over_page)?;
+        Some(match cursor {
             de_preview_core::PreviewCursor::Pointer => CursorHint::Pointer,
             de_preview_core::PreviewCursor::Text => CursorHint::Text,
             de_preview_core::PreviewCursor::Default => CursorHint::Default,

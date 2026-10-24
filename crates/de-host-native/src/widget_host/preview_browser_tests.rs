@@ -120,8 +120,11 @@ fn section_link_pans_the_canvas_viewport() {
     host.apply_preview_page_scroll_request(VIEWPORT.0, VIEWPORT.1);
     let viewport = host.editor_state.viewport;
     let section_top_on_canvas = viewport.pan_y + 700.0 * viewport.zoom;
+    let canvas = host.preview_canvas_rect(VIEWPORT.0, VIEWPORT.1);
+    let pills = de_editor_ui::widgets::ScreenSwitcherPills::row_rect(canvas, 2);
+    let chrome_bottom = pills.origin.y + pills.size.y - canvas.origin.y;
     assert!(
-        (section_top_on_canvas - 24.0).abs() < 0.5,
-        "section top lands near the canvas top, got {section_top_on_canvas}"
+        section_top_on_canvas > chrome_bottom && section_top_on_canvas < chrome_bottom + 24.0,
+        "section top lands just below the floating chrome, got {section_top_on_canvas}"
     );
 }

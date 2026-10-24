@@ -103,7 +103,9 @@ impl super::WidgetHostNative {
 
     /// Apply a section link's page-scroll request (#153). Runs once per
     /// frame after `reconcile`: a framed preview scrolls its page, Canvas
-    /// mode pans the viewport so the section's top meets the canvas top.
+    /// mode pans the viewport so the section's top sits just below the
+    /// floating preview chrome. The math is shared with the web host
+    /// (`browse_chrome`).
     pub(crate) fn apply_preview_page_scroll_request(&mut self, viewport_w: f32, viewport_h: f32) {
         let Some(request) = self
             .preview
@@ -116,18 +118,37 @@ impl super::WidgetHostNative {
             if self.preview_device_frame.is_none() {
                 self.recompute_device_frame(viewport_w, viewport_h);
             }
-            let delta = self.preview_scroll_y - request.offset;
             let fit = self
                 .preview_device_frame
                 .as_ref()
                 .map_or(1.0, |frame| frame.fit);
-            // `apply_device_scroll` takes a screen delta and clamps.
-            self.apply_device_scroll(delta * fit);
-        } else {
-            const TOP_MARGIN: f32 = 24.0;
-            let vp = &mut self.editor_state.viewport;
-            vp.pan_y = TOP_MARGIN - (request.page_rect.origin.y + request.offset) * vp.zoom;
+            let delta = browse_chrome::device_scroll_delta(&request, self.preview_scroll_y, fit);
+            self.apply_device_scroll(delta);
+        } else if let Some(session) = self.preview.as_ref() {
+            let canvas = self.preview_canvas_rect(viewport_w, viewport_h);
+            let zoom = self.editor_state.viewport.zoom;
+            self.editor_state.viewport.pan_y =
+                browse_chrome::canvas_pan_y_for_section(session, &request, canvas, zoom);
         }
+        self.mark_dirty();
+    }
+
+    /// Canvas mode after a page switch: show the new page from its top
+    /// when it is taller than the canvas, centred otherwise (#153).
+    pub(crate) fn frame_canvas_on_switched_page(
+        &mut self,
+        page: de_editor_ui::Rect,
+        viewport_w: f32,
+        viewport_h: f32,
+    ) {
+        let Some(session) = self.preview.as_ref() else {
+            return;
+        };
+        let canvas = self.preview_canvas_rect(viewport_w, viewport_h);
+        let zoom = self.editor_state.viewport.zoom;
+        let (pan_x, pan_y) = browse_chrome::canvas_pan_for_page(session, page, canvas, zoom);
+        self.editor_state.viewport.pan_x = pan_x;
+        self.editor_state.viewport.pan_y = pan_y;
         self.mark_dirty();
     }
 }

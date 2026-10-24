@@ -300,8 +300,13 @@ Native (`design-editor`) + web (`shell-web`) both dispatch the following P1 keyb
 | `Shift+H` / `Shift+V`     | `apply_flip` (web: `apply_flip_shortcut`) | `flip_selection`: toggle `flip_x` / `flip_y` on every editable selected node, one undo step. Matched before the bare-letter tool router. |
 | `Escape`                  | `apply_escape`        | One layer per press, in priority order: property-focus → locale picker → shape picker → fill-type picker → fill `⋯` menu → chat focus → selection. |
 | `Enter`                   | `apply_send`          | Commits property edit or sends chat.                                                                                               |
+| `Cmd/Ctrl+[` / `]` (Preview) | `preview_history_step` | Back / forward through the preview's browsing history (#153); the mouse Back / Forward buttons do the same. Bare `[` / `]` stay z-order reorder. |
 
 The shared implementation of these lives in `de_editor_core::host_keyboard_transitions` + `host_escape_transitions`; the host `keyboard*.rs` files are the platform arms.
+
+### Browsing the preview (#153)
+
+A routed (APP MODE) preview browses like a website. `de-preview-core/src/browse.rs` keeps browser-style history over every committed screen switch (whatever verb caused it), the address (page title + route), the clickable under the pointer (pointer cursor, derived hover / pressed state) and section links: a `scroll_to` aimed at the page itself becomes a `PageScrollRequest` the host applies to its device-frame scroll or Canvas pan. The browser bar widget is `de-editor-ui/src/widgets/preview_browser_bar.rs` (under the device switcher; the screen pills sit below it); its paint / press / hover / release flow, the cursor and the scroll / pan math are host-shared in `de-preview-core/src/browse_chrome.rs`, and the host arms are `widget_host/preview_browser.rs` in both hosts. Preview entry's auto-wire also runs `de_orchestrator::wire_screen_navigation::wire_web_nav_links` (header / footer links → pages or same-page sections), desktop only like the rest of auto-wire.
 
 ## Desktop binary (`design-editor/`)
 

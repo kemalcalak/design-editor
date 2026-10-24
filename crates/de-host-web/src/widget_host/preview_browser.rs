@@ -72,6 +72,8 @@ impl super::WidgetHost {
     /// One history step from `Cmd/Ctrl+[` / `]` or a mouse back /
     /// forward button. Returns whether it navigated.
     pub fn preview_history_step(&mut self, forward: bool) -> bool {
+        // Same gate as `is_preview_active` (session AND mode flag), kept
+        // here because the public entry is reachable from every listener.
         if !self.editor_state.editor_ui.preview.mode {
             return false;
         }
@@ -96,18 +98,36 @@ impl super::WidgetHost {
             return None;
         }
         let (x, y) = (self.last_cursor_x, self.last_cursor_y);
-        let canvas = self.preview_canvas_rect(self.last_viewport_w, self.last_viewport_h);
-        let point = Point2D::new(x, y);
-        if browse_chrome::contains(Some(session), canvas, point) {
-            let over_button =
-                de_editor_ui::widgets::PreviewBrowserBar::hit_test(canvas, point).is_some();
-            return Some(if over_button { "pointer" } else { "" });
-        }
-        Some(match session.preview_cursor() {
-            de_preview_core::PreviewCursor::Pointer => "pointer",
-            de_preview_core::PreviewCursor::Text => "text",
-            de_preview_core::PreviewCursor::Default => "",
+        let (vw, vh) = (self.last_viewport_w, self.last_viewport_h);
+        let canvas = self.preview_canvas_rect(vw, vh);
+        let over_page = self.over_canvas(x, y, vw, vh);
+        let cursor = browse_chrome::cursor(session, canvas, Point2D::new(x, y), over_page);
+        Some(match cursor {
+            Some(de_preview_core::PreviewCursor::Pointer) => "pointer",
+            Some(de_preview_core::PreviewCursor::Text) => "text",
+            Some(de_preview_core::PreviewCursor::Default) | None => "",
         })
+    }
+
+    /// Canvas mode after a page switch: the new page from its top when it
+    /// is taller than the canvas, centred otherwise (#153; native twin).
+    pub(in crate::widget_host) fn frame_canvas_on_switched_page(
+        &mut self,
+        viewport_w: f32,
+        viewport_h: f32,
+    ) {
+        let Some(session) = self.preview.as_ref() else {
+            return;
+        };
+        let Some((_id, page)) = session.framed_root() else {
+            return;
+        };
+        let canvas = self.preview_canvas_rect(viewport_w, viewport_h);
+        let zoom = self.editor_state.viewport.zoom;
+        let (pan_x, pan_y) = browse_chrome::canvas_pan_for_page(session, page, canvas, zoom);
+        self.editor_state.viewport.pan_x = pan_x;
+        self.editor_state.viewport.pan_y = pan_y;
+        self.mark_dirty();
     }
 
     /// Apply a section link's page-scroll request (#153); see the native
@@ -132,12 +152,13 @@ impl super::WidgetHost {
                 .preview_device_frame
                 .as_ref()
                 .map_or(1.0, |frame| frame.fit);
-            let delta = self.preview_scroll_y - request.offset;
-            self.apply_device_scroll(delta * fit);
-        } else {
-            const TOP_MARGIN: f32 = 24.0;
-            let vp = &mut self.editor_state.viewport;
-            vp.pan_y = TOP_MARGIN - (request.page_rect.origin.y + request.offset) * vp.zoom;
+            let delta = browse_chrome::device_scroll_delta(&request, self.preview_scroll_y, fit);
+            self.apply_device_scroll(delta);
+        } else if let Some(session) = self.preview.as_ref() {
+            let canvas = self.preview_canvas_rect(viewport_w, viewport_h);
+            let zoom = self.editor_state.viewport.zoom;
+            self.editor_state.viewport.pan_y =
+                browse_chrome::canvas_pan_y_for_section(session, &request, canvas, zoom);
         }
         self.mark_dirty();
     }

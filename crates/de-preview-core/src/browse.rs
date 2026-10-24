@@ -104,6 +104,19 @@ impl BrowseHistory {
     fn current_depth(&self) -> usize {
         self.entries[self.index].depth
     }
+
+    /// Start a back / forward step: the entry it travels to, or `None` at
+    /// either end and while an earlier step has not committed yet (a
+    /// second step from the same, stale cursor would push the same path
+    /// twice — held `Cmd+]` autorepeat, a double mouse-forward click).
+    fn begin_step(&mut self, forward: bool) -> Option<HistoryEntry> {
+        if self.pending.is_some() {
+            return None;
+        }
+        let target = self.step_target(forward)?;
+        self.pending = Some(target);
+        Some(self.entries[target].clone())
+    }
 }
 
 /// What the preview chrome's address bar shows.
@@ -118,9 +131,9 @@ pub struct BrowseAddress {
 /// A section link's request to scroll the page itself.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct PageScrollRequest {
-    /// The page offset (scene px from the page's top) that puts the
-    /// section's top at the top of the visible page. Unclamped: the host
-    /// clamps it to its own scroll range.
+    /// The page offset (scene px from the page's top, never negative)
+    /// that puts the section's top at the top of the visible page. The
+    /// host clamps it to its own scroll range's upper end.
     pub offset: f32,
     /// The page root's scene rect, for hosts that pan a viewport instead
     /// of scrolling a frame (Canvas mode).
@@ -168,12 +181,11 @@ impl PreviewSession {
         let Some(app) = self.app.as_mut() else {
             return InvalidationKind::None;
         };
-        let Some(target) = app.history.step_target(forward) else {
+        let current_depth = app.history.current_depth();
+        let Some(entry) = app.history.begin_step(forward) else {
             return InvalidationKind::None;
         };
-        let entry = app.history.entries[target].clone();
         let stack = app.router.current().stack;
-        let current_depth = app.history.current_depth();
         // Prefer the verb that keeps the router stack honest, so an
         // authored in-design back button still pops to the right screen
         // after a chrome back / forward.
@@ -185,7 +197,6 @@ impl PreviewSession {
         } else {
             app.router.replace(&entry.path);
         }
-        app.history.pending = Some(target);
         InvalidationKind::Navigation
     }
 
@@ -204,19 +215,31 @@ impl PreviewSession {
         Some(BrowseAddress { route, title })
     }
 
-    /// The schema id of the clickable the mouse hovers: the nearest
-    /// ancestor-or-self of the hovered node that carries a tap handler or
-    /// is an interactive widget. `None` when nothing clickable hovers.
+    /// The schema id of the clickable the mouse is on: the nearest
+    /// ancestor-or-self of the hovered node — or, while a button is held
+    /// (a press clears hover), of the pressed node — that carries a tap
+    /// handler or is an interactive widget. `None` when nothing clickable
+    /// is under the pointer.
     pub fn hovered_clickable(&self) -> Option<String> {
-        let hovered = self.interaction.hovered_node()?;
-        self.clickable_ancestor(hovered)
+        self.pointer_node()
+            .and_then(|node| self.clickable_ancestor(&node))
     }
 
-    /// The pointer shape for the current hover.
+    /// The node under the pointer: the hover sample, else the first
+    /// pressed node.
+    fn pointer_node(&self) -> Option<String> {
+        self.interaction
+            .hovered_node()
+            .or_else(|| self.interaction.pressed_nodes().into_iter().next())
+            .map(str::to_owned)
+    }
+
+    /// The pointer shape for the node under the pointer.
     pub fn preview_cursor(&self) -> PreviewCursor {
-        let Some(hovered) = self.interaction.hovered_node() else {
+        let Some(hovered) = self.pointer_node() else {
             return PreviewCursor::Default;
         };
+        let hovered = hovered.as_str();
         let mut cursor = PreviewCursor::Default;
         self.walk_ancestors(hovered, |node| {
             if matches!(

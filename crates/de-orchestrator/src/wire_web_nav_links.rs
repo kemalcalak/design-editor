@@ -13,46 +13,63 @@
 //!
 //! Preview entry is the only caller (`de_preview_core::auto_wire`, on a
 //! clone, and only when no `screen` marker is authored), so generation
-//! output is unchanged. It inherits the parent pass's contract: additive
-//! only (an item whose subtree already carries `events` is skipped),
-//! label matching through [`labels_match`], ambiguity never binds, and no
-//! new schema fields.
+//! output is unchanged. Like the parent pass it is additive only (an item
+//! whose subtree already carries `events` is skipped), matches labels
+//! through [`labels_match`] and adds no schema fields. Unlike it, an
+//! ambiguous label binds nothing: a wrong website link is worse than a
+//! dead one.
+//!
+//! Surfaces are found only near the page's top (a direct child of the
+//! page, or of an unnamed wrapper directly under it), so a "Card Header"
+//! deep inside a section never turns its title into a link.
 
 use de_editor_core::{EditorCommand, NodeId, PenNodeExt};
 use jian_ops_schema::node::{PenNode, TextContent};
 
-use super::{labels_match, navigate_patch, subtree_has_events};
+use super::{identity_haystack, labels_match, navigate_patch, normalize_label, subtree_has_events};
 use crate::types::DocSink;
 
 /// Roles that mark a website navigation surface.
 const SURFACE_ROLES: [&str; 6] = ["header", "footer", "navbar", "nav", "navigation", "menu"];
 
-/// Name / id fragments that mark one (compared lowercased, separators
-/// kept, so "Site Header", "top-nav" and "Footer links" all count).
-const SURFACE_NAMES: [&str; 10] = [
+/// Whole name / id words that mark one ("Site Header", "top-nav",
+/// "Footer links"); `top nav`, `nav bar` and `menu bar` count as pairs.
+const SURFACE_WORDS: [&str; 6] = [
     "header",
     "footer",
     "navbar",
-    "nav bar",
-    "nav-bar",
-    "top nav",
-    "top-nav",
     "topbar",
-    "top bar",
     "navigation",
+    "menubar",
 ];
+const SURFACE_PAIRS: [(&str, &str); 4] = [
+    ("top", "nav"),
+    ("nav", "bar"),
+    ("top", "bar"),
+    ("menu", "bar"),
+];
+
+/// A link target: what its label is matched against, the patch value
+/// (a route path for a page, a node id for a section), and its depth
+/// under the page (sections only; shallower wins a tie).
+struct Target {
+    name: String,
+    value: String,
+    depth: usize,
+}
 
 /// Bind header / footer link items to their pages or sections.
 pub fn wire_web_nav_links(sink: &mut dyn DocSink) {
     let patches = {
         let roots = sink.state().active_children();
-        let pages: Vec<(String, String)> = roots
+        let pages: Vec<Target> = roots
             .iter()
             .filter_map(|node| match node {
-                PenNode::Frame(frame) => frame
-                    .screen
-                    .as_ref()
-                    .map(|path| (display_name(node), path.clone())),
+                PenNode::Frame(frame) => frame.screen.as_ref().map(|path| Target {
+                    name: display_name(node),
+                    value: path.clone(),
+                    depth: 0,
+                }),
                 _ => None,
             })
             .collect();
@@ -61,14 +78,13 @@ pub fn wire_web_nav_links(sink: &mut dyn DocSink) {
             .iter()
             .filter(|node| matches!(node, PenNode::Frame(_)))
         {
-            let mut surfaces = Vec::new();
-            collect_surfaces(root, &mut surfaces);
+            let surfaces = collect_surfaces(root);
             if surfaces.is_empty() {
                 continue;
             }
             let mut sections = Vec::new();
             for child in root.children().into_iter().flatten() {
-                collect_sections(child, &mut sections);
+                collect_sections(child, 1, &mut sections);
             }
             for surface in surfaces {
                 let mut items = Vec::new();
@@ -95,12 +111,8 @@ pub fn wire_web_nav_links(sink: &mut dyn DocSink) {
 }
 
 /// The patch for a link labelled `label`: a page match wins over a
-/// section match; two matching candidates of the same kind bind nothing.
-fn link_patch(
-    label: &str,
-    pages: &[(String, String)],
-    sections: &[(String, String)],
-) -> Option<String> {
+/// section match; see [`single_match`] for ties.
+fn link_patch(label: &str, pages: &[Target], sections: &[Target]) -> Option<String> {
     if let Some(path) = single_match(label, pages) {
         return Some(navigate_patch("replace", path));
     }
@@ -111,12 +123,28 @@ fn link_patch(
     Some(patch.to_string())
 }
 
-fn single_match<'a>(label: &str, candidates: &'a [(String, String)]) -> Option<&'a str> {
-    let mut found = candidates
+/// The value of the one target `label` names. Exact (normalized) name
+/// matches win over [`labels_match`]'s prefix / word matches, then the
+/// shallowest wins, so a "Pricing" section beats its own "Pricing Card".
+/// A tie that survives both binds nothing.
+fn single_match<'a>(label: &str, targets: &'a [Target]) -> Option<&'a str> {
+    let wanted = normalize_label(label);
+    let exact: Vec<&Target> = targets
         .iter()
-        .filter(|(name, _)| labels_match(label, name));
-    let first = found.next()?;
-    found.next().is_none().then_some(first.1.as_str())
+        .filter(|t| !wanted.is_empty() && normalize_label(&t.name) == wanted)
+        .collect();
+    let matched = if exact.is_empty() {
+        targets
+            .iter()
+            .filter(|t| labels_match(label, &t.name))
+            .collect()
+    } else {
+        exact
+    };
+    let shallowest = matched.iter().map(|t| t.depth).min()?;
+    let mut best = matched.into_iter().filter(|t| t.depth == shallowest);
+    let first = best.next()?;
+    best.next().is_none().then_some(first.value.as_str())
 }
 
 fn display_name(node: &PenNode) -> String {
@@ -136,42 +164,54 @@ fn is_surface(node: &PenNode) -> bool {
     if SURFACE_ROLES.contains(&role.as_str()) {
         return true;
     }
-    let hay = format!(
-        "{} {}",
-        node.id_str().to_ascii_lowercase(),
-        node.base()
-            .name
-            .as_deref()
-            .unwrap_or("")
-            .to_ascii_lowercase()
-    );
-    SURFACE_NAMES.iter().any(|needle| hay.contains(needle))
+    let hay = identity_haystack(node);
+    let words: Vec<&str> = hay
+        .split(|c: char| !c.is_ascii_alphanumeric())
+        .filter(|w| !w.is_empty())
+        .collect();
+    words.iter().any(|w| SURFACE_WORDS.contains(w))
+        || words
+            .windows(2)
+            .any(|pair| SURFACE_PAIRS.contains(&(pair[0], pair[1])))
 }
 
-/// Outermost surfaces under `node`; a surface's own nested surfaces are
-/// part of it.
-fn collect_surfaces<'a>(node: &'a PenNode, out: &mut Vec<&'a PenNode>) {
-    for child in node.children().into_iter().flatten() {
+/// The page's surfaces: direct children of `root` that are one, and the
+/// ones directly inside an unnamed wrapper child (a page's layout column).
+fn collect_surfaces(root: &PenNode) -> Vec<&PenNode> {
+    let mut out = Vec::new();
+    for child in root.children().into_iter().flatten() {
         if is_surface(child) {
             out.push(child);
-        } else {
-            collect_surfaces(child, out);
+        } else if child.base().name.is_none() {
+            out.extend(
+                child
+                    .children()
+                    .into_iter()
+                    .flatten()
+                    .filter(|grandchild| is_surface(grandchild)),
+            );
         }
     }
+    out
 }
 
-/// Named frames outside any surface: the page's sections.
-fn collect_sections(node: &PenNode, out: &mut Vec<(String, String)>) {
+/// Named frames outside any surface, with their depth under the page:
+/// the page's sections.
+fn collect_sections(node: &PenNode, depth: usize, out: &mut Vec<Target>) {
     if is_surface(node) {
         return;
     }
     if let PenNode::Frame(frame) = node {
         if let Some(name) = frame.base.name.as_deref().filter(|n| !n.trim().is_empty()) {
-            out.push((name.to_owned(), frame.base.id.clone()));
+            out.push(Target {
+                name: name.to_owned(),
+                value: frame.base.id.clone(),
+                depth,
+            });
         }
     }
     for child in node.children().into_iter().flatten() {
-        collect_sections(child, out);
+        collect_sections(child, depth + 1, out);
     }
 }
 

@@ -128,3 +128,39 @@ fn single_page_site_still_gets_section_links() {
         ]))
     );
 }
+
+/// Realistic sections: "Pricing" holds "Pricing Card"s, and a section has
+/// its own "Section Header" whose title must not become a link.
+#[test]
+fn sections_with_named_children_and_inner_headers_wire_correctly() {
+    let json = r#"{"version":"1.0","children":[
+        {"type":"frame","id":"landing","name":"Landing","width":1280,"height":3000,"children":[
+            {"type":"frame","id":"top","layout":"vertical","children":[
+                {"type":"frame","id":"bar","name":"Top Nav","children":[
+                    {"type":"text","id":"to-pricing","content":"Pricing"}
+                ]}
+            ]},
+            {"type":"frame","id":"pricing","name":"Pricing","children":[
+                {"type":"frame","id":"pricing-head","name":"Section Header","children":[
+                    {"type":"text","id":"pricing-title","content":"Pricing"}
+                ]},
+                {"type":"frame","id":"card-a","name":"Pricing Card","children":[]},
+                {"type":"frame","id":"card-b","name":"Pricing Card","children":[]}
+            ]}
+        ]}
+    ]}"#;
+    let mut state = state_from_json(json);
+    run(&mut state);
+    assert_eq!(
+        on_tap(&state, "to-pricing"),
+        Some(serde_json::json!([
+            { "scroll_to": { "target": "pricing", "alignment": "start" } }
+        ])),
+        "the shallowest exact match wins; a surface inside an unnamed wrapper counts"
+    );
+    assert_eq!(
+        on_tap(&state, "pricing-title"),
+        None,
+        "a header deep inside a section is not a nav surface"
+    );
+}

@@ -243,6 +243,61 @@ fn hovered_link_paints_a_hover_state_without_touching_the_document() {
     );
 }
 
+#[test]
+fn a_held_link_keeps_its_pointer_and_paints_pressed() {
+    let mut session = enter();
+    let (x, y) = centre(&session, "features-link");
+    hover(&mut session, x, y);
+    let hovered = session.preview_scene_for_test();
+    let hovered_opacity = hovered
+        .active_page()
+        .unwrap()
+        .find("features-link")
+        .unwrap()
+        .opacity;
+    session.dispatch_pointer_for_id_at(1, PointerKind::Mouse, x, y, PointerPhase::Down, 0);
+    assert_eq!(
+        session.hovered_clickable().as_deref(),
+        Some("features-link"),
+        "a press clears hover, but the pressed link still counts"
+    );
+    assert_eq!(session.preview_cursor(), PreviewCursor::Pointer);
+    let pressed = session.preview_scene_for_test();
+    let pressed_opacity = pressed
+        .active_page()
+        .unwrap()
+        .find("features-link")
+        .unwrap()
+        .opacity;
+    assert!(
+        pressed_opacity < hovered_opacity,
+        "pressed dims further than hover"
+    );
+}
+
+#[test]
+fn a_second_step_before_the_first_commits_is_ignored() {
+    let mut session = enter();
+    let mut now = 0;
+    click(&mut session, "to-pricing", &mut now);
+    settle(&mut session, &mut now);
+    click(&mut session, "to-about", &mut now);
+    settle(&mut session, &mut now);
+    session.go_back();
+    settle(&mut session, &mut now);
+    session.go_back();
+    settle(&mut session, &mut now);
+    assert_eq!(session.current_path_for_test(), "/");
+    assert_eq!(session.go_forward(), crate::InvalidationKind::Navigation);
+    assert_eq!(
+        session.go_forward(),
+        crate::InvalidationKind::None,
+        "the first step has not committed yet"
+    );
+    settle(&mut session, &mut now);
+    assert_eq!(session.current_path_for_test(), "/pricing");
+}
+
 /// An unmarked two-page website: preview entry auto-wires its header
 /// link (`gl-host` links the orchestrator pass), and a click browses.
 #[cfg(feature = "gl-host")]
