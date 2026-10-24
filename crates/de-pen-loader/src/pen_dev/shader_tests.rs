@@ -163,7 +163,8 @@ fn shader_effects_sample_the_node_or_its_backdrop() {
     ]));
     let report = convert(&mut doc, &reader);
     let effects = doc["children"][0]["effects"].as_array().unwrap();
-    assert_eq!(effects.len(), 1);
+    // Both carry over: an image texture binds in an effect too (#165).
+    assert_eq!(effects.len(), 2);
     assert!(effects[0]["sksl"]
         .as_str()
         .unwrap()
@@ -172,12 +173,14 @@ fn shader_effects_sample_the_node_or_its_backdrop() {
         effects[0]["uniforms"],
         json!({ "size": [40.0, 20.0], "u_px": 4.0 })
     );
-    assert_eq!(
-        report
-            .unsupported
-            .get("shader effect (unsupported texture)"),
-        Some(&1)
-    );
+    assert!(effects[1]["sksl"]
+        .as_str()
+        .unwrap()
+        .contains("uniform shader u_content;"));
+    assert!(!report
+        .unsupported
+        .keys()
+        .any(|k| k.starts_with("shader effect")));
 }
 
 #[test]

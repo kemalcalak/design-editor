@@ -205,6 +205,7 @@ mod canvas_selection_overlay;
 // `pub` so both hosts can read the animated-shader flag after paint.
 pub mod canvas_shader_clock;
 mod canvas_shader_images;
+mod canvas_shader_textures;
 // `pub` so both hosts can track the pointer for pointer-reactive shaders.
 mod canvas_placeholder;
 pub mod canvas_shader_pointer;
