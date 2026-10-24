@@ -407,7 +407,7 @@ pub struct EditorUiState {
     /// popover highlights the row under the cursor like the other
     /// property-panel dropdowns.
     pub effect_add_menu_hover: Option<usize>,
-    /// Whether the Interactions section's Navigate/Back/Remove popover
+    /// Whether the shared Interactions / Motion popover
     /// is open. `false` = closed.
     pub interaction_menu_open: bool,
     /// What the open Interactions popover lists (#154).

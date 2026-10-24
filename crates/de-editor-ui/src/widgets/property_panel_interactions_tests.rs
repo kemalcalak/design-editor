@@ -435,3 +435,16 @@ fn menu_row_rects_are_stacked() {
         assert!(pair[1].1.origin.y >= pair[0].1.origin.y + pair[0].1.size.y);
     }
 }
+
+#[test]
+fn a_narrow_dropdown_anchor_opens_the_popover_rightward() {
+    // The Motion property dropdown sits at the panel's left edge.
+    let dropdown = Rect::xywh(16.0, 300.0, 92.0, 28.0);
+    let menu = interaction_menu_rect(dropdown, 6);
+    assert_eq!(menu.origin.x, dropdown.origin.x);
+    // The header "+" sits at the right edge: the popover hangs left.
+    let add = section_add_target(0.0, 0.0, 272.0);
+    let menu = interaction_menu_rect(add, 3);
+    assert_eq!(menu.origin.x + menu.size.x, add.origin.x + add.size.x);
+    assert!(menu.origin.x >= 0.0);
+}

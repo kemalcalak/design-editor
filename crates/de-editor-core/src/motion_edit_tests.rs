@@ -140,3 +140,48 @@ fn a_value_commit_through_the_property_focus_writes_the_field() {
     assert!(state.commit_property_edit(focus, 900.0));
     assert_eq!(simple(&state, 0).duration_ms, 900);
 }
+
+#[test]
+fn motion_edits_undo_and_redo() {
+    let mut state = state_with_rect();
+    state.commit_history();
+    assert!(state.add_selected_animation());
+    assert_eq!(state.selected_animations().len(), 1);
+    assert!(state.undo());
+    assert!(state.selected_animations().is_empty());
+    assert!(state.redo());
+    assert_eq!(state.selected_animations().len(), 1);
+}
+
+#[test]
+fn a_shown_value_commits_back_unchanged() {
+    let mut state = state_with_rect();
+    assert!(state.add_selected_animation());
+    assert!(state.set_selected_animation_property(0, MotionProperty::ScaleX));
+    let shown = format_motion_number(simple(&state, 0).from);
+    assert_eq!(shown, "0.8");
+    let parsed: f64 = shown.parse().expect("number");
+    assert!(
+        !state.set_selected_animation_value(0, MotionField::From, parsed),
+        "focus and blur without typing must not write"
+    );
+    assert_eq!(format_motion_number(-24.0), "-24");
+}
+
+#[test]
+fn a_value_edit_keeps_keyframe_level_keys() {
+    let mut state = state_with_rect();
+    let node_id = state.selection.anchor.clone();
+    assert!(state.apply(EditorCommand::PatchNodeData {
+        node_id,
+        patch_json: r#"{"animations":[{"trigger":"mount","durationMs":200,
+            "keyframes":[{"offset":0,"values":{"opacity":0},"easing":"linear"},
+                         {"offset":1,"values":{"opacity":1}}]}]}"#
+            .into(),
+        page_id: None,
+    }));
+    assert!(state.set_selected_animation_value(0, MotionField::From, 0.5));
+    let animation = &state.selected_animations()[0];
+    assert!(animation.keyframes[0].extra.contains_key("easing"));
+    assert_eq!(simple(&state, 0).from, 0.5);
+}

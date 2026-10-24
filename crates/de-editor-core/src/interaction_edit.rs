@@ -8,8 +8,11 @@
 //! and silently drop sibling handlers (`onChange`, `onSwipe`, …); writing
 //! the full block keeps them.
 //!
-//! The callers own the undo step: the panel dispatch runs
-//! `commit_history()` before each of these, like every other panel arm.
+//! Undo: the panel arms are listed in `updates_document`, so the host
+//! snapshots history around each write and drops a no-op.
+//!
+//! [`InteractionMenuTarget`] is popover state, not an edit; it lives here
+//! so `EditorUiState` (core) can hold it next to the trigger vocabulary.
 
 use crate::pen_node_ext::PenNodeExt;
 use crate::state::EditorState;
@@ -93,7 +96,7 @@ impl NavigateVerb {
 /// dismiss routing covers all of them.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum InteractionMenuTarget {
-    /// The header "+": the triggers not authored yet.
+    /// The header "+": the triggers not authored yet, then "Animation".
     #[default]
     AddTrigger,
     /// One trigger's actions (Navigate to … / Back / Remove). Also used
@@ -140,13 +143,15 @@ pub fn single_navigate_verb(actions: Option<&ActionList>) -> Option<NavigateVerb
 }
 
 /// The patch JSON writing `handlers` as the node's whole `events` block,
-/// or removing the block when nothing is left in it.
-pub fn events_patch_json(handlers: &EventHandlers) -> String {
+/// or removing the block when nothing is left in it. `None` when the
+/// block does not serialize: the edit is refused rather than writing
+/// `null` over every handler.
+pub fn events_patch_json(handlers: &EventHandlers) -> Option<String> {
     if *handlers == EventHandlers::default() {
-        return r#"{"events":null}"#.to_string();
+        return Some(r#"{"events":null}"#.to_string());
     }
-    let value = serde_json::to_value(handlers).unwrap_or(serde_json::Value::Null);
-    serde_json::json!({ "events": value }).to_string()
+    let value = serde_json::to_value(handlers).ok()?;
+    Some(serde_json::json!({ "events": value }).to_string())
 }
 
 impl EditorState {
@@ -217,9 +222,12 @@ impl EditorState {
         if !edit(&mut handlers) {
             return false;
         }
+        let Some(patch_json) = events_patch_json(&handlers) else {
+            return false;
+        };
         self.apply(EditorCommand::PatchNodeData {
             node_id,
-            patch_json: events_patch_json(&handlers),
+            patch_json,
             page_id: None,
         })
     }

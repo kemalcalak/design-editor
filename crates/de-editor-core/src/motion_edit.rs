@@ -5,7 +5,8 @@
 //! from a value to a value. Each write clones the node's `animations`,
 //! changes one declaration in place (easing, iterations and unknown keys
 //! survive) and applies the whole list through
-//! `EditorCommand::PatchNodeData`. Callers own the undo step.
+//! `EditorCommand::PatchNodeData`. Undo: the panel arms are listed in
+//! `updates_document`, so the host snapshots history around each write.
 
 use crate::state::EditorState;
 use crate::EditorCommand;
@@ -160,6 +161,17 @@ pub fn default_animation() -> NodeAnimation {
     }
 }
 
+/// How a motion number shows in its input: integral values without a
+/// fraction, the rest with full `f64` precision so a focus-and-blur
+/// writes back exactly what was there.
+pub fn format_motion_number(value: f64) -> String {
+    if value.fract() == 0.0 && value.abs() < 1e15 {
+        format!("{}", value as i64)
+    } else {
+        value.to_string()
+    }
+}
+
 /// Write `value` into the simple animation's `field`. False when the
 /// value is not finite or the animation is not simple.
 fn set_field(animation: &mut NodeAnimation, field: MotionField, value: f64) -> bool {
@@ -171,8 +183,18 @@ fn set_field(animation: &mut NodeAnimation, field: MotionField, value: f64) -> b
     };
     let ms = || value.round().clamp(0.0, MAX_MOTION_MS as f64) as u64;
     match field {
-        MotionField::From => animation.keyframes[0] = keyframe(0.0, simple.property, value),
-        MotionField::To => animation.keyframes[1] = keyframe(1.0, simple.property, value),
+        // Only the value changes: keyframe-level keys (a per-stop easing,
+        // future fields) survive.
+        MotionField::From => {
+            animation.keyframes[0]
+                .values
+                .insert(simple.property.key().to_string(), number(value));
+        }
+        MotionField::To => {
+            animation.keyframes[1]
+                .values
+                .insert(simple.property.key().to_string(), number(value));
+        }
         // A zero-length tween never plays; keep at least one frame.
         MotionField::DurationMs => animation.duration_ms = ms().max(1),
         MotionField::DelayMs => animation.delay_ms = ms(),
@@ -269,7 +291,11 @@ impl EditorState {
         let value = if list.is_empty() {
             Value::Null
         } else {
-            serde_json::to_value(&list).unwrap_or(Value::Null)
+            // Refuse the edit rather than write `null` over every animation.
+            let Ok(value) = serde_json::to_value(&list) else {
+                return false;
+            };
+            value
         };
         self.apply(EditorCommand::PatchNodeData {
             node_id,

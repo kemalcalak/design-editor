@@ -710,6 +710,8 @@ pub fn apply_property_action(
             Handled
         }
         // Interactions + Motion rows (#154) live in a sibling (800-line cap).
+        // Listed out (not a guard) so the match stays exhaustive; the same
+        // list is `is_interaction_action`, which `updates_document` reads.
         A::ToggleInteractionMenu(_)
         | A::PickInteractionTrigger(_)
         | A::SetInteractionNavigate { .. }

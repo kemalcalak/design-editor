@@ -1,5 +1,5 @@
 //! Floating-menu geometry + hit-testing for the `PropertyPanel` —
-//! the Effects "+" add-menu and the Interactions Navigate/Back/Remove
+//! the Effects "+" add-menu and the shared Interactions / Motion
 //! popover.
 //!
 //! Split out of `property_panel.rs` to keep both files under the
@@ -113,6 +113,9 @@ impl PropertyPanel {
         panel_rect: Rect,
         point: Point2D,
     ) -> InteractionMenuHit {
+        if !self.interaction_menu_open {
+            return InteractionMenuHit::Outside;
+        }
         let Some(anchor) = self.interaction_menu_anchor_rect(self.scrolled_rect(panel_rect)) else {
             return InteractionMenuHit::Outside;
         };
@@ -136,6 +139,9 @@ impl PropertyPanel {
     /// Row index under `point` in the open popover — drives the hover
     /// highlight (mirrors [`Self::effect_add_menu_row_at`]).
     pub fn interaction_menu_row_at(&self, panel_rect: Rect, point: Point2D) -> Option<usize> {
+        if !self.interaction_menu_open {
+            return None;
+        }
         let anchor = self.interaction_menu_anchor_rect(self.scrolled_rect(panel_rect))?;
         let rows = self.interaction_menu_rows();
         let menu =
@@ -148,7 +154,8 @@ impl PropertyPanel {
     /// The rect the popover drops from: the row that opened it
     /// (`ToggleInteractionMenu(target)`). A trigger just picked from the
     /// "+" list has no row yet, so it stays on the header "+". `None`
-    /// when neither exists (the selection changed under the popover).
+    /// when neither applies (the selection or document changed under
+    /// the popover), so the host's outside-click closes it.
     pub fn interaction_menu_anchor_rect(&self, scrolled: Rect) -> Option<Rect> {
         use de_editor_core::interaction_edit::InteractionMenuTarget as T;
         let rects = sections::action_button_rects_with_fill_picker(
@@ -172,10 +179,13 @@ impl PropertyPanel {
             })
         };
         let target = self.interaction_menu_target;
-        find(target).or_else(|| {
-            matches!(target, T::Trigger(_))
-                .then(|| find(T::AddTrigger))
-                .flatten()
+        find(target).or_else(|| match target {
+            // Only a trigger with no action yet has no row of its own; one
+            // with several actions has no popover (only "Remove all").
+            T::Trigger(t) if self.snapshot.interactions.actions(t).is_empty() => {
+                find(T::AddTrigger)
+            }
+            _ => None,
         })
     }
 }

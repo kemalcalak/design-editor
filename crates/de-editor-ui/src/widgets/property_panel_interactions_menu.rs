@@ -104,12 +104,22 @@ pub fn interaction_menu_rows(
     }
 }
 
-/// The popover rect, dropping below `anchor`, right-aligned to it.
+/// Anchors at most this wide are the header "+" (right edge of the
+/// panel): the popover right-aligns to them. Wider ones are rows or the
+/// Motion property dropdown (left edge): it left-aligns, so it never
+/// hangs off the panel's left side.
+const NARROW_ANCHOR_W: f32 = 40.0;
+
+/// The popover rect, dropping below `anchor`.
 pub fn interaction_menu_rect(anchor: Rect, row_count: usize) -> Rect {
     let h = row_count as f32 * INTERACTION_MENU_ROW_H + 8.0;
-    let right = anchor.origin.x + anchor.size.x;
+    let x = if anchor.size.x <= NARROW_ANCHOR_W {
+        anchor.origin.x + anchor.size.x - INTERACTION_MENU_W
+    } else {
+        anchor.origin.x
+    };
     Rect {
-        origin: Point2D::new(right - INTERACTION_MENU_W, anchor.origin.y + anchor.size.y),
+        origin: Point2D::new(x, anchor.origin.y + anchor.size.y),
         size: Point2D::new(INTERACTION_MENU_W, h),
     }
 }

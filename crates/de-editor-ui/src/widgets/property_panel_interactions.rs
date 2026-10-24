@@ -289,7 +289,7 @@ pub fn paint_interactions_section(
                 paint_plain_row(cx, theme, rect, &format!("{label}: {screen}"));
             }
             Row::Action(trigger, action) => {
-                paint_dropdown(cx, theme, rect, &action_label(locale, trigger, action));
+                paint_fitted_dropdown(cx, theme, rect, &action_label(locale, trigger, action));
             }
             Row::Transition(_, verb) => paint_transition_row(cx, theme, locale, rect, verb),
             Row::ReadOnly(trigger, action) => {
@@ -325,10 +325,16 @@ fn paint_transition_row(
     rect: Rect,
     verb: NavigateVerb,
 ) {
+    let label_rect = Rect::xywh(
+        rect.origin.x,
+        rect.origin.y,
+        TRANSITION_LABEL_W - 4.0,
+        rect.size.y,
+    );
     paint_plain_row(
         cx,
         theme,
-        rect,
+        label_rect,
         translate(locale, "interactions.transition", "Transition"),
     );
     let segments = Rect::xywh(
@@ -348,10 +354,7 @@ fn paint_transition_row(
 }
 
 /// The trigger's row prefix, e.g. `Tap →`.
-pub(crate) fn trigger_prefix(
-    locale: de_editor_core::Locale,
-    trigger: InteractionTrigger,
-) -> &'static str {
+fn trigger_prefix(locale: de_editor_core::Locale, trigger: InteractionTrigger) -> &'static str {
     match trigger {
         InteractionTrigger::Tap => translate(locale, "interactions.tapPrefix", "Tap →"),
         InteractionTrigger::Hover => translate(locale, "interactions.hoverPrefix", "Hover →"),
@@ -385,9 +388,18 @@ fn action_label(
     }
 }
 
+/// A dropdown whose label is ellipsized to stay clear of the chevron.
+pub(crate) fn paint_fitted_dropdown(cx: &mut PaintCx<'_>, theme: &Theme, rect: Rect, text: &str) {
+    let fitted =
+        crate::widgets::text_metrics::fit_chrome(cx.backend, text, rect.size.x - 40.0, 12.0);
+    paint_dropdown(cx, theme, rect, &fitted);
+}
+
+/// A muted read-only row; the text is ellipsized to the row width.
 pub(crate) fn paint_plain_row(cx: &mut PaintCx<'_>, theme: &Theme, rect: Rect, text: &str) {
+    let text = crate::widgets::text_metrics::fit_chrome(cx.backend, text, rect.size.x - 4.0, 12.0);
     let layout = TextLayout::single_run(
-        text,
+        &text,
         crate::widgets::text_metrics::CHROME_FONT_FAMILY,
         12.0,
         (theme.muted_foreground).to_jian(),

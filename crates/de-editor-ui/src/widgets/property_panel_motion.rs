@@ -15,12 +15,11 @@ use crate::theme::Theme;
 use crate::widgets::icons::{draw_icon, Icon};
 use crate::widgets::property_panel::PropertyPanelAction;
 use crate::widgets::property_panel_inputs::{
-    paint_dropdown, paint_input_with_prefix_focused_state, paint_section_divider,
-    paint_section_label_with_add, section_add_target, INPUT_HEIGHT, PAD_X, SECTION_GAP,
-    SECTION_HEADER_HEIGHT,
+    paint_input_with_prefix_focused_state, paint_section_divider, paint_section_label_with_add,
+    section_add_target, INPUT_HEIGHT, PAD_X, SECTION_GAP, SECTION_HEADER_HEIGHT,
 };
 use crate::widgets::property_panel_interactions::{
-    paint_plain_row, translate, InteractionMenuTarget,
+    paint_fitted_dropdown, paint_plain_row, translate, InteractionMenuTarget,
 };
 use crate::widgets::property_panel_sections::EditContext;
 use crate::widgets::PaintCx;
@@ -249,8 +248,8 @@ pub fn property_label(locale: de_editor_core::Locale, property: MotionProperty) 
 /// The value a field shows when it is not being edited.
 pub fn field_value(simple: &SimpleMotion, field: MotionField) -> String {
     match field {
-        MotionField::From => crate::util::format_panel_number(simple.from as f32),
-        MotionField::To => crate::util::format_panel_number(simple.to as f32),
+        MotionField::From => de_editor_core::motion_edit::format_motion_number(simple.from),
+        MotionField::To => de_editor_core::motion_edit::format_motion_number(simple.to),
         MotionField::DurationMs => simple.duration_ms.to_string(),
         MotionField::DelayMs => simple.delay_ms.to_string(),
     }
@@ -289,7 +288,7 @@ pub(crate) fn paint_motion_section(
         let head = head_row(x, row_y, width);
         match summary {
             MotionSummary::Simple(simple) => {
-                paint_dropdown(
+                paint_fitted_dropdown(
                     cx,
                     theme,
                     head.dropdown,
