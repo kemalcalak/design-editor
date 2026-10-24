@@ -81,7 +81,7 @@ fn plausible_code(framework: Framework, code: &str) -> bool {
                 ])
         }
         Framework::Svelte => markup || has_any(&["<script", "<style", "<svelte:"]),
-        Framework::Html => {
+        Framework::Html | Framework::HtmlTailwind => {
             markup || has_any(&["<!DOCTYPE", "<!doctype", "<head", "<p", "<span", "<img"])
         }
         Framework::Flutter => has_any(&[
@@ -423,6 +423,7 @@ mod tests {
                 "<script>let ready = true;</script><main />",
             ),
             (Framework::Html, "<!doctype html><html></html>"),
+            (Framework::HtmlTailwind, "<div class=\"flex gap-2\"></div>"),
             (Framework::Flutter, "class App extends StatelessWidget {}"),
             (
                 Framework::SwiftUi,

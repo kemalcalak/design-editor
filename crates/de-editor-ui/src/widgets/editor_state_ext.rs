@@ -38,6 +38,8 @@ pub fn doc_export_format(
         O::Webp => D::Webp,
         O::Svg => D::Svg,
         O::Pdf => D::Pdf,
+        O::Html => D::Html,
+        O::HtmlTailwind => D::HtmlTailwind,
     }
 }
 
@@ -265,5 +267,7 @@ pub fn export_format(
         W::Webp => O::Webp,
         W::Svg => O::Svg,
         W::Pdf => O::Pdf,
+        W::Html => O::Html,
+        W::HtmlTailwind => O::HtmlTailwind,
     }
 }

@@ -202,6 +202,7 @@ impl DesktopApp {
             home_previews: crate::home_previews::HomePreviews::default(),
             mcp_wake_proxy: None,
             forwarded_files: single_instance::ForwardQueue::default(),
+            library_watcher: Default::default(),
             iconify_job: None,
             font_downloads: Default::default(),
             provider_connect_job: None,

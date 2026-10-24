@@ -342,7 +342,18 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "shader.sourceTitle" => "Mã shader",
         "shader.close" => "Đóng",
         "shader.apply" => "Áp dụng",
+        "annotation.note" => "Ghi chú",
+        "annotation.context" => "Ngữ cảnh",
+        "annotation.prompt" => "Lời nhắc",
+        "annotation.content" => "Nội dung",
+        "annotation.model" => "Mô hình",
         "property.resetOverride" => "Đặt lại ghi đè",
+        "componentBrowser.libraries" => "Thư viện",
+        "componentBrowser.libraryNotLoaded" => "Chưa tải",
+        "componentBrowser.libraryMissing" => "Không tìm thấy",
+        "componentBrowser.libraryInvalid" => "Không đọc được",
+        "componentBrowser.linkLibrary" => "Liên kết tệp thư viện",
+        "componentBrowser.libraryNeedsDesktop" => "Cần ứng dụng máy tính để liên kết tệp thư viện",
         _ => return None,
     })
 }

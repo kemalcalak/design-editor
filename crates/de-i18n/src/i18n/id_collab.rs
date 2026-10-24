@@ -342,7 +342,18 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "shader.sourceTitle" => "Kode shader",
         "shader.close" => "Tutup",
         "shader.apply" => "Terapkan",
+        "annotation.note" => "Catatan",
+        "annotation.context" => "Konteks",
+        "annotation.prompt" => "Prompt",
+        "annotation.content" => "Konten",
+        "annotation.model" => "Model",
         "property.resetOverride" => "Atur ulang penimpaan",
+        "componentBrowser.libraries" => "Pustaka",
+        "componentBrowser.libraryNotLoaded" => "Belum dimuat",
+        "componentBrowser.libraryMissing" => "Tidak ada",
+        "componentBrowser.libraryInvalid" => "Tidak terbaca",
+        "componentBrowser.linkLibrary" => "Tautkan file pustaka",
+        "componentBrowser.libraryNeedsDesktop" => "Menautkan file pustaka memerlukan aplikasi desktop",
         _ => return None,
     })
 }

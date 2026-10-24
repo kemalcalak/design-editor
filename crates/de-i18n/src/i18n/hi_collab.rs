@@ -342,7 +342,18 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "shader.sourceTitle" => "शेडर कोड",
         "shader.close" => "बंद करें",
         "shader.apply" => "लागू करें",
+        "annotation.note" => "नोट",
+        "annotation.context" => "संदर्भ",
+        "annotation.prompt" => "प्रॉम्प्ट",
+        "annotation.content" => "सामग्री",
+        "annotation.model" => "मॉडल",
         "property.resetOverride" => "ओवरराइड रीसेट करें",
+        "componentBrowser.libraries" => "लाइब्रेरी",
+        "componentBrowser.libraryNotLoaded" => "लोड नहीं हुई",
+        "componentBrowser.libraryMissing" => "नहीं मिली",
+        "componentBrowser.libraryInvalid" => "पढ़ी नहीं जा सकती",
+        "componentBrowser.linkLibrary" => "लाइब्रेरी फ़ाइल लिंक करें",
+        "componentBrowser.libraryNeedsDesktop" => "लाइब्रेरी फ़ाइलें लिंक करने के लिए डेस्कटॉप ऐप चाहिए",
         _ => return None,
     })
 }

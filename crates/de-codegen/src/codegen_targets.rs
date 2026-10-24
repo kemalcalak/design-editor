@@ -20,9 +20,8 @@ use jian_ops_schema::PenDocument;
 #[path = "codegen_html.rs"]
 mod codegen_html;
 #[path = "codegen_motion_css.rs"]
-mod codegen_motion_css;
+pub(crate) mod codegen_motion_css;
 use codegen_html::emit_node_html;
-pub use codegen_html::Html;
 
 // --- First-class widget element mapping ----------------------------
 //
@@ -666,8 +665,8 @@ mod image_tests {
     }
 
     #[test]
-    fn html_image_keeps_asset_geometry_radius_and_crop_fit() {
-        let output = Html.generate(&image_doc("crop"));
+    fn vue_image_keeps_asset_geometry_radius_and_crop_fit() {
+        let output = Vue.generate(&image_doc("crop"));
         assert!(output.contains("<img src=\"./assets/hero.png\""));
         assert!(output.contains("left:12px;top:34px;width:320px;height:180px"));
         assert!(output.contains("border-radius:16px;object-fit:cover"));

@@ -103,7 +103,9 @@ impl CodegenPipeline {
     pub fn new(input: CodegenInput) -> Self {
         // Pull embedded image assets out ONCE so prompts ship paths, not
         // base64 (TS: `extractCodegenAssets` at the top of generateCode).
-        let (sanitized_nodes_json, assets) = extract_codegen_assets(&input.nodes_json);
+        // Notes are canvas-only: the generated code never sees them (#12).
+        let nodes_json = crate::strip_canvas_only_json(&input.nodes_json);
+        let (sanitized_nodes_json, assets) = extract_codegen_assets(&nodes_json);
         let sanitized_nodes_value =
             serde_json::from_str(&sanitized_nodes_json).unwrap_or(Value::Null);
         let mut node_ids = HashSet::new();

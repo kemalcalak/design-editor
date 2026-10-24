@@ -38,6 +38,7 @@ pub use de_editor_core::render_backend;
 
 pub mod accessibility;
 pub mod accessibility_regions;
+pub mod canvas_only;
 pub mod font_catalog;
 pub mod image_runtime;
 pub mod polygon_geometry;

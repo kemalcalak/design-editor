@@ -380,6 +380,7 @@ impl DesktopApp {
                     "p" => self.host.apply_set_tool(de_editor_core::Tool::Pen),
                     "y" => self.host.apply_set_tool(de_editor_core::Tool::Polygon),
                     "h" => self.host.apply_set_tool(de_editor_core::Tool::Hand),
+                    "n" => self.host.apply_set_tool(de_editor_core::Tool::Note),
                     "[" => {
                         consumed = self.host.apply_reorder(ReorderDirection::Down);
                         handled = false;

@@ -342,7 +342,18 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "shader.sourceTitle" => "Shader code",
         "shader.close" => "Close",
         "shader.apply" => "Apply",
+        "annotation.note" => "Note",
+        "annotation.context" => "Context",
+        "annotation.prompt" => "Prompt",
+        "annotation.content" => "Content",
+        "annotation.model" => "Model",
         "property.resetOverride" => "Reset override",
+        "componentBrowser.libraries" => "Libraries",
+        "componentBrowser.libraryNotLoaded" => "Not loaded",
+        "componentBrowser.libraryMissing" => "Missing",
+        "componentBrowser.libraryInvalid" => "Can't read",
+        "componentBrowser.linkLibrary" => "Link library file",
+        "componentBrowser.libraryNeedsDesktop" => "Linking library files needs the desktop app",
         _ => return None,
     })
 }

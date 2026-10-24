@@ -67,6 +67,11 @@ impl WidgetHost {
                 // disappears for this session.
                 let _ = self.editor_state.remove_kit(&kit_id);
             }
+            ComponentBrowserHit::Library(action) => {
+                // Unlink applies here; Link / Reload queue a request the
+                // host drains with file access.
+                self.editor_state.press_library_action(action);
+            }
             ComponentBrowserHit::CancelDeleteKit => {
                 self.editor_state
                     .editor_ui

@@ -342,7 +342,18 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "shader.sourceTitle" => "Код шейдера",
         "shader.close" => "Закрыть",
         "shader.apply" => "Применить",
+        "annotation.note" => "Заметка",
+        "annotation.context" => "Контекст",
+        "annotation.prompt" => "Промпт",
+        "annotation.content" => "Содержимое",
+        "annotation.model" => "Модель",
         "property.resetOverride" => "Сбросить переопределение",
+        "componentBrowser.libraries" => "Библиотеки",
+        "componentBrowser.libraryNotLoaded" => "Не загружена",
+        "componentBrowser.libraryMissing" => "Нет файла",
+        "componentBrowser.libraryInvalid" => "Не читается",
+        "componentBrowser.linkLibrary" => "Связать файл библиотеки",
+        "componentBrowser.libraryNeedsDesktop" => "Связывать библиотеки можно только в настольном приложении",
         _ => return None,
     })
 }

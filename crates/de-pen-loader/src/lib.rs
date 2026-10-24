@@ -33,6 +33,8 @@ mod layout_repair;
 mod layout_scene;
 mod legacy_payload_repair;
 mod library;
+pub mod library_files;
+mod library_files_error;
 // Only the real-shaper (`skia-measure`) build benefits from caching; the
 // estimate backend is already cheap, so the module is gated to avoid dead code
 // under the CanvasKit (no-skia-measure) web build.
@@ -117,6 +119,11 @@ pub use effects::{
 };
 pub use library::{
     merge_library_into_state, merge_library_src_into_state, LibraryMergeError, LibraryMergeReport,
+};
+pub use library_files::{
+    absolute_library_path, library_command, library_content_from_document, library_link_path,
+    links_for_document, read_library_content, rebase_library_links, resolve_library_path,
+    sync_libraries, LibraryReadError,
 };
 pub use payload::{
     load_canonical, normalize_video_alias, write_normalized_source_with_current_schema, DocPayload,

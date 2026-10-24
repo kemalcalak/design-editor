@@ -42,6 +42,9 @@ pub struct EditorMeta {
         skip_serializing_if = "Option::is_none"
     )]
     pub pinned_style_guide: Option<String>,
+    /// Linked component library files (#15), relative to the document.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub libraries: Vec<de_editor_core::LibraryLink>,
 }
 
 impl EditorMeta {
@@ -56,6 +59,17 @@ impl EditorMeta {
             preserve_authored_geometry: state.editor_ui.preserve_authored_geometry,
             scenario: state.editor_ui.scenario,
             pinned_style_guide: state.editor_ui.pinned_style_guide.clone(),
+            libraries: state.editor_ui.libraries.links(),
+        }
+    }
+
+    /// [`Self::from_state`] for a file written to `document`: library links
+    /// are made relative to that file's folder, so Save As into another
+    /// folder still names the same library files.
+    pub fn for_document(state: &de_editor_core::EditorState, document: &std::path::Path) -> Self {
+        Self {
+            libraries: crate::library_files::links_for_document(state, Some(document)),
+            ..Self::from_state(state)
         }
     }
 }
@@ -135,6 +149,9 @@ struct WireEditorMeta {
     scenario: Option<TemplateScene>,
     #[serde(default, with = "pinned_style_guide_serde")]
     pinned_style_guide: Option<String>,
+    /// Kept as raw JSON so one malformed entry drops only itself.
+    #[serde(default)]
+    libraries: Vec<serde_json::Value>,
 }
 
 /// Parsed metadata plus compatibility inference used for migration decisions.
@@ -174,6 +191,11 @@ pub fn extract_editor_meta_with_report(src: &str) -> Option<EditorMetaExtraction
                 .unwrap_or(scan.first_page_has_figma_id),
             scenario: wire.scenario,
             pinned_style_guide: wire.pinned_style_guide,
+            libraries: wire
+                .libraries
+                .into_iter()
+                .filter_map(|entry| serde_json::from_value(entry).ok())
+                .collect(),
         },
         inferred_preserve_authored_geometry,
     })
@@ -315,6 +337,12 @@ pub fn apply_editor_meta(state: &mut de_editor_core::EditorState, meta: EditorMe
     state.editor_ui.preserve_authored_geometry = meta.preserve_authored_geometry;
     state.editor_ui.scenario = meta.scenario;
     state.editor_ui.pinned_style_guide = meta.pinned_style_guide;
+    // Links are only ever added by their commands, so metadata without any
+    // (a browser push, a writer that never saw them) keeps the current ones
+    // instead of erasing them. A fresh state starts with none anyway.
+    if !meta.libraries.is_empty() {
+        state.editor_ui.libraries.set_links(meta.libraries);
+    }
 }
 
 /// Apply saved metadata, or use the legacy reopen policy when it is absent.
@@ -336,6 +364,7 @@ pub fn apply_editor_meta_or_legacy_fallback(
     // the caller's state happened to carry in.
     state.editor_ui.scenario = None;
     state.editor_ui.pinned_style_guide = None;
+    state.editor_ui.libraries.set_links(Vec::new());
     state.ui.active_page_index = state
         .doc
         .pages

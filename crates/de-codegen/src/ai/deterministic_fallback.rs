@@ -8,7 +8,9 @@ use de_editor_core::codegen::Framework;
 use jian_ops_schema::PenDocument;
 use serde_json::{json, Value};
 
-use crate::{Codegen, Compose, Flutter, Html, React, ReactNative, Svelte, SwiftUi, Vue};
+use crate::{
+    Codegen, Compose, Flutter, Html, HtmlTailwind, React, ReactNative, Svelte, SwiftUi, Vue,
+};
 
 /// Why the deterministic last-resort generation could not produce code.
 /// The `Display` text is recorded verbatim in the pipeline's failure
@@ -85,6 +87,7 @@ pub(super) fn generate(
         Framework::Vue => Vue.generate(&document),
         Framework::Svelte => Svelte.generate(&document),
         Framework::Html => Html.generate(&document),
+        Framework::HtmlTailwind => HtmlTailwind.generate(&document),
         Framework::Flutter => Flutter.generate(&document),
         Framework::SwiftUi => SwiftUi.generate(&document),
         Framework::Compose => Compose.generate(&document),
@@ -105,16 +108,7 @@ mod tests {
 
     #[test]
     fn every_framework_has_a_non_empty_deterministic_fallback() {
-        for framework in [
-            Framework::React,
-            Framework::Vue,
-            Framework::Svelte,
-            Framework::Html,
-            Framework::Flutter,
-            Framework::SwiftUi,
-            Framework::Compose,
-            Framework::ReactNative,
-        ] {
+        for framework in Framework::ALL {
             let code = generate(NODE, None, framework)
                 .unwrap_or_else(|error| panic!("{} fallback failed: {error}", framework.as_wire()));
             assert!(!code.trim().is_empty(), "{}", framework.as_wire());

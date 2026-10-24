@@ -13,13 +13,9 @@ use super::variables::{self, Theme, Variables};
 use super::{paint, shader, AssetReader, PenDevReport};
 
 /// pen.dev node kinds with no canonical equivalent. They are removed with
-/// their subtree and counted in the report.
-const DROPPED_KINDS: &[(&str, &str)] = &[
-    ("note", "note"),
-    ("context", "context note"),
-    ("script", "script node"),
-    ("browser", "browser node"),
-];
+/// their subtree and counted in the report. `note`, `context` and `prompt`
+/// map onto the canonical annotation kinds as they are (#12).
+const DROPPED_KINDS: &[(&str, &str)] = &[("script", "script node"), ("browser", "browser node")];
 
 /// Entity keys pen.dev uses for its own editor and AI tooling only.
 /// `placeholder` survives on frames, which carry the in-progress flag (#16).

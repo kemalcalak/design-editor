@@ -371,6 +371,7 @@ impl PropertyPanel {
             icon: self.snapshot.icon.is_some(),
             widget: self.snapshot.widget.as_ref().map(|w| w.kind),
             widget_checked: self.snapshot.widget.as_ref().is_some_and(|w| w.checked),
+            annotation: self.snapshot.annotation.as_ref().map(|a| a.kind),
             image: caps.image && self.snapshot.is_image_node,
             video: caps.image && self.snapshot.video.is_some(),
             image_warning: caps.image

@@ -62,6 +62,15 @@ pub fn export_svg_document(state: &EditorState) -> Result<String, DocumentExport
     }
 }
 
+/// The export dialog's HTML formats (#170): the selection or active page as
+/// one flex-layout `.html`. A browser download is a single file, so images
+/// stay inline as `data:` URIs instead of an asset folder.
+pub fn export_html_document(state: &EditorState) -> Option<String> {
+    let target = de_codegen::html_target_for(state.editor_ui.export_format)?;
+    let options = de_codegen::HtmlExportOptions::default();
+    Some(de_codegen::export_editor_html(state, target, &options).html)
+}
+
 #[derive(Debug)]
 pub struct PdfDownload {
     /// The daemon's generic name. Read only by the deck-selection
@@ -169,7 +178,7 @@ pub fn export_raster_request_body(state: &EditorState) -> Result<String, Documen
         ExportFormat::Png => "png",
         ExportFormat::Jpeg => "jpeg",
         ExportFormat::Webp => "webp",
-        ExportFormat::Svg | ExportFormat::Pdf => {
+        ExportFormat::Svg | ExportFormat::Pdf | ExportFormat::Html | ExportFormat::HtmlTailwind => {
             return Err(DocumentExportError::RasterFormatUnsupported);
         }
     };

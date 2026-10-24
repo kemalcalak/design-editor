@@ -16,6 +16,8 @@ de-editor-core = { path = "../de-editor-core" }
 # Canonical HTML escaping (dependency-free, wasm-clean).
 de-util = { path = "../de-util" }
 serde_json = { workspace = true }
+# Decodes embedded data: images into files beside an HTML export.
+base64 = "0.22"
 
 # AI pipeline deps — optional, pulled in only by the `ai` feature so
 # non-AI consumers (and the deterministic generators) stay lean. de-ai
@@ -23,7 +25,6 @@ serde_json = { workspace = true }
 # de-ai-skills (skill corpus is expanded at the transport edge).
 de-ai = { path = "../de-ai", optional = true }
 serde = { workspace = true, features = ["derive"], optional = true }
-base64 = { version = "0.22", optional = true }
 
 [dev-dependencies]
 # Round-trip validation for the hand-rolled STORED zip encoder
@@ -32,4 +33,4 @@ zip = { version = "9", default-features = false, features = ["deflate-flate2"] }
 
 [features]
 # Gates the AI code-generation pipeline (src/ai/). Off by default.
-ai = ["dep:de-ai", "dep:serde", "dep:base64"]
+ai = ["dep:de-ai", "dep:serde"]

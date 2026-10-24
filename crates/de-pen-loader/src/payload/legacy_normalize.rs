@@ -194,7 +194,6 @@ fn normalize_node_value(
                     let kind = map.get("type").and_then(Value::as_str);
                     let is_image = kind == Some("image");
                     let is_icon = kind == Some("icon");
-                    let is_prompt = kind == Some("prompt");
                     let is_path = kind == Some("path");
                     let reverse_auto_layout_children = repair_legacy_figma_child_order
                         && kind == Some("frame")
@@ -212,15 +211,6 @@ fn normalize_node_value(
                     }
                     if is_image && !map.contains_key("src") {
                         map.insert("src".to_string(), Value::String(String::new()));
-                        *changed = true;
-                    }
-                    // Pencil's `prompt` node is an AI-annotation card with no
-                    // canonical equivalent → degrade to a `text` node. Its
-                    // `content` field already matches `TextNode.content`; just
-                    // drop the editor-only `model` field.
-                    if is_prompt {
-                        map.insert("type".to_string(), Value::String("text".to_string()));
-                        map.remove("model");
                         *changed = true;
                     }
                     // Pencil's legacy `icon` node is jian's `icon_font`: the

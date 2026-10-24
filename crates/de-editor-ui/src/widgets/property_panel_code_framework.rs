@@ -40,6 +40,7 @@ pub(crate) fn framework_tab_label(fw: Framework) -> &'static str {
         Framework::Vue => "Vue",
         Framework::Svelte => "Svelte",
         Framework::Html => "HTML",
+        Framework::HtmlTailwind => "Tailwind",
         Framework::Flutter => "Flutter",
         Framework::SwiftUi => "SwiftUI",
         Framework::Compose => "Compose",
