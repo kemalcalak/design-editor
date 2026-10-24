@@ -121,8 +121,21 @@ impl Printer {
             ("opacity", _) => vec![format!("opacity-[{}]", arb(v))],
             ("font-family", _) => {
                 let family = v.split(',').next().unwrap_or(v).trim().trim_matches('"');
-                let class = format!("font-{}", slug(family));
-                self.fonts.insert(class.clone(), v.to_string());
+                // `font-de-*` cannot collide with Tailwind's own `font-mono` /
+                // `font-sans`; a family with no ASCII slug gets a number.
+                let class = match self.fonts.iter().find(|(_, f)| f.as_str() == v) {
+                    Some((class, _)) => class.clone(),
+                    None => {
+                        let stem = slug(family);
+                        let class = if stem.is_empty() {
+                            format!("font-de-{}", self.fonts.len() + 1)
+                        } else {
+                            format!("font-de-{stem}")
+                        };
+                        self.fonts.insert(class.clone(), v.to_string());
+                        class
+                    }
+                };
                 vec![class]
             }
             _ => vec![arbitrary_property(d)],
@@ -151,7 +164,7 @@ impl Printer {
 
     fn element(&mut self, el: &Element, depth: usize) {
         let indent = "  ".repeat(depth);
-        if el.tag.is_empty() {
+        if el.is_raw() {
             if let Content::Raw(raw) = &el.content {
                 self.markup.push_str(&format!("{indent}{raw}\n"));
             }

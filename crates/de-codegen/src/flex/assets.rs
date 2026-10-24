@@ -7,6 +7,7 @@
 //! bytes to copy.
 
 use base64::Engine as _;
+use std::collections::HashMap;
 
 /// One file to write beside the HTML: `path` is relative to it.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -20,7 +21,10 @@ pub struct HtmlAsset {
 pub(crate) struct Assets {
     dir: Option<String>,
     files: Vec<HtmlAsset>,
-    by_src: Vec<(String, String)>,
+    /// Source → URL already handed out (a repeated image is written once).
+    by_src: HashMap<String, String>,
+    /// Next free counter per file stem.
+    stems: HashMap<String, usize>,
 }
 
 impl Assets {
@@ -29,7 +33,8 @@ impl Assets {
         Self {
             dir: dir.map(|d| d.trim_matches('/').to_string()),
             files: Vec::new(),
-            by_src: Vec::new(),
+            by_src: HashMap::new(),
+            stems: HashMap::new(),
         }
     }
 
@@ -40,27 +45,29 @@ impl Assets {
         let Some(dir) = self.dir.as_deref() else {
             return src.to_string();
         };
-        if let Some((_, path)) = self.by_src.iter().find(|(s, _)| s == src) {
-            return path.clone();
+        if let Some(url) = self.by_src.get(src) {
+            return url.clone();
         }
         let Some((mime, bytes)) = decode_data_uri(src) else {
             return src.to_string();
         };
         let stem = if hint.is_empty() { "image" } else { hint };
         let ext = extension(&mime);
-        let mut path = format!("{dir}/{stem}.{ext}");
-        let mut n = 2;
-        while self.files.iter().any(|f| f.path == path) {
-            path = format!("{dir}/{stem}-{n}.{ext}");
-            n += 1;
-        }
+        let seen = self.stems.entry(format!("{stem}.{ext}")).or_insert(0);
+        *seen += 1;
+        let path = if *seen == 1 {
+            format!("{dir}/{stem}.{ext}")
+        } else {
+            format!("{dir}/{stem}-{seen}.{ext}")
+        };
+        let url = percent_encode_path(&path);
         self.files.push(HtmlAsset {
             path: path.clone(),
             mime_type: mime,
             bytes,
         });
-        self.by_src.push((src.to_string(), path.clone()));
-        path
+        self.by_src.insert(src.to_string(), url.clone());
+        url
     }
 
     pub fn into_files(self) -> Vec<HtmlAsset> {
@@ -83,6 +90,20 @@ fn decode_data_uri(src: &str) -> Option<(String, Vec<u8>)> {
         .decode(payload.trim())
         .ok()?;
     Some((mime.to_ascii_lowercase(), bytes))
+}
+
+/// A relative path as a URL: anything outside the unreserved set and `/`
+/// is percent-encoded, so a folder named after `50% #1.html` still resolves.
+fn percent_encode_path(path: &str) -> String {
+    let mut out = String::new();
+    for b in path.bytes() {
+        if b.is_ascii_alphanumeric() || matches!(b, b'-' | b'_' | b'.' | b'~' | b'/') {
+            out.push(b as char);
+        } else {
+            out.push_str(&format!("%{b:02X}"));
+        }
+    }
+    out
 }
 
 fn extension(mime: &str) -> &'static str {
@@ -126,6 +147,13 @@ mod tests {
         let mut assets = Assets::new(None);
         assert_eq!(assets.url(PNG, "hero"), PNG);
         assert!(assets.into_files().is_empty());
+    }
+
+    #[test]
+    fn urls_are_percent_encoded_but_paths_are_not() {
+        let mut assets = Assets::new(Some("50% #1-assets".into()));
+        assert_eq!(assets.url(PNG, "a"), "50%25%20%231-assets/a.png");
+        assert_eq!(assets.into_files()[0].path, "50% #1-assets/a.png");
     }
 
     #[test]

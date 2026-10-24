@@ -1,19 +1,21 @@
 //! Minimal HTML/CSS export for document-level motion declarations.
 
-use super::{node_children, node_hidden, root_nodes};
+use super::{node_children, node_hidden};
 use crate::{fmt_num, html_escape};
 use de_editor_core::PenNodeExt;
 use jian_ops_schema::motion::{Easing, MotionTrigger, NodeAnimation};
 use jian_ops_schema::node::PenNode;
-use jian_ops_schema::PenDocument;
 use serde_json::Value;
 use std::collections::BTreeMap;
 
-/// Render all motion CSS for the HTML target. An empty string means the
-/// document has no visible node with a transition or animation declaration.
-pub(crate) fn render(doc: &PenDocument) -> String {
+/// Render all motion CSS for the HTML targets over the exported roots. An
+/// empty string means no visible node has a transition or animation.
+pub(crate) fn render_roots(
+    roots: &[PenNode],
+    motion: Option<&jian_ops_schema::motion::MotionPreference>,
+) -> String {
     let mut animated = Vec::new();
-    for node in root_nodes(doc) {
+    for node in roots {
         collect_animated_nodes(node, &mut animated);
     }
     if animated.is_empty() {
@@ -29,7 +31,7 @@ pub(crate) fn render(doc: &PenDocument) -> String {
             render_pointer_rules(&mut out, node.id_str(), animations);
         }
     }
-    if doc.motion == Some(jian_ops_schema::motion::MotionPreference::Reduced) {
+    if motion == Some(&jian_ops_schema::motion::MotionPreference::Reduced) {
         out.push_str("/* Authored motion preference: reduced */\n");
         render_reduced_block(&mut out, &animated, false);
     }

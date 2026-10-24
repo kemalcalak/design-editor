@@ -50,8 +50,8 @@ fn layout_and_sizing_are_utilities_without_inline_styles() {
 #[test]
 fn font_stacks_are_base_layer_classes() {
     let html = tw(&fixture("card"));
-    assert!(html.contains("@layer base {\n  .font-helvetica {\n    font-family: \"Helvetica\", sans-serif;\n  }\n}"), "{html}");
-    assert!(html.contains("class=\"font-helvetica "), "{html}");
+    assert!(html.contains("@layer base {\n  .font-de-helvetica {\n    font-family: \"Helvetica\", sans-serif;\n  }\n}"), "{html}");
+    assert!(html.contains("class=\"font-de-helvetica "), "{html}");
 }
 
 #[test]

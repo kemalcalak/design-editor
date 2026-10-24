@@ -1,7 +1,7 @@
 //! Editor-state entry for the export dialog's HTML formats: the hosts call
 //! this, then write the HTML (and, on desktop, its image files).
 
-use super::{export_html, HtmlExport, HtmlExportOptions, HtmlTarget};
+use super::{export_html_roots, HtmlExport, HtmlExportOptions, HtmlTarget};
 use de_editor_core::walkers::find_node;
 use de_editor_core::{EditorState, ExportFormat};
 use jian_ops_schema::node::PenNode;
@@ -48,12 +48,7 @@ pub fn export_editor_html(
     target: HtmlTarget,
     options: &HtmlExportOptions,
 ) -> HtmlExport {
-    let roots = export_roots(state);
-    let mut scoped = state.doc.clone();
-    scoped.pages = None;
-    scoped.children =
-        de_editor_core::ref_resolve::resolve_refs_for_canvas_roots(&roots, &state.doc);
-    export_html(&scoped, target, options)
+    export_html_roots(&state.doc, &export_roots(state), target, options)
 }
 
 #[cfg(test)]

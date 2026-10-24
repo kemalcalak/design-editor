@@ -86,6 +86,18 @@ impl Element {
         }
     }
 
+    /// Markup printed as-is with no wrapper of its own (a tab bar).
+    pub fn raw(markup: String) -> Self {
+        let mut el = Self::new("", String::new());
+        el.content = Content::Raw(markup);
+        el
+    }
+
+    /// True for [`Element::raw`] markup.
+    pub fn is_raw(&self) -> bool {
+        self.tag.is_empty()
+    }
+
     /// Void elements print without a closing tag.
     pub fn is_void(&self) -> bool {
         matches!(self.tag, "img" | "input" | "br")

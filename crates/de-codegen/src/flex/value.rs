@@ -52,7 +52,7 @@ pub(crate) fn length_expr(expr: &str) -> Option<String> {
     variable_ref(expr).map(|name| format!("calc({} * 1px)", var_css(name)))
 }
 
-/// `gap` / `opacity`-style number-or-expression as a length.
+/// `gap`-style number-or-expression as a length.
 pub(crate) fn number_or_expr_px(value: &NumberOrExpression) -> Option<String> {
     match value {
         NumberOrExpression::Number(n) => Some(px(*n)),
@@ -108,7 +108,16 @@ pub(crate) fn color_alpha(s: &str, alpha: f64) -> String {
                 format!("rgba({},{},{},{})", to_u8(r), to_u8(g), to_u8(b), ratio(a))
             }
         }
-        None => s.trim().to_string(),
+        // A named colour passes through; anything else could break out of
+        // the declaration (`;`, `}`, `</style>`) and is dropped.
+        None => {
+            let t = s.trim();
+            if !t.is_empty() && t.chars().all(|c| c.is_ascii_alphabetic()) {
+                t.to_string()
+            } else {
+                "transparent".into()
+            }
+        }
     }
 }
 
@@ -134,7 +143,13 @@ pub(crate) fn slug(s: &str) -> String {
 /// A font family as a CSS `font-family` value: the authored family quoted,
 /// with a generic fallback.
 pub(crate) fn font_family(family: &str) -> String {
-    let family = family.trim().replace(['"', '\\'], "");
+    // Only characters that cannot end the string, the declaration or the
+    // `<style>` element survive.
+    let family: String = family
+        .trim()
+        .chars()
+        .filter(|c| !matches!(c, '"' | '\\' | '<' | '>' | ';' | '{' | '}') && !c.is_control())
+        .collect();
     let generic = if family.to_ascii_lowercase().contains("mono") {
         "monospace"
     } else if family.to_ascii_lowercase().contains("serif")
@@ -162,6 +177,7 @@ mod tests {
         );
         assert_eq!(color_alpha("#000000", 0.25), "rgba(0,0,0,0.25)");
         assert_eq!(color("tomato"), "tomato");
+        assert_eq!(color("red;}</style><script>"), "transparent");
     }
 
     #[test]
@@ -186,5 +202,6 @@ mod tests {
             "\"JetBrains Mono\", monospace"
         );
         assert_eq!(font_family("Noto Serif"), "\"Noto Serif\", serif");
+        assert_eq!(font_family("A</style>{x}"), "\"A/stylex\", sans-serif");
     }
 }

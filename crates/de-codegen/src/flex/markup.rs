@@ -28,6 +28,8 @@ pub(crate) struct Walker<'a> {
     pub assets: &'a mut Assets,
     /// Write `data-name` / `data-id` on every element.
     pub layer_data: bool,
+    /// Inside an `<a>`: nested links are dropped (`<a>` cannot nest).
+    pub in_link: bool,
 }
 
 fn kind(node: &PenNode) -> &'static str {
@@ -43,7 +45,16 @@ fn kind(node: &PenNode) -> &'static str {
         PenNode::Image(_) => "image",
         PenNode::IconFont(_) => "icon",
         PenNode::Ref(_) => "ref",
-        _ => "field",
+        PenNode::TextInput(_) => "input",
+        PenNode::TextArea(_) => "textarea",
+        PenNode::NumberInput(_) => "number-input",
+        PenNode::Select(_) => "select",
+        PenNode::Switch(_) => "switch",
+        PenNode::Checkbox(_) => "checkbox",
+        PenNode::Slider(_) => "slider",
+        PenNode::RadioGroup(_) => "radio-group",
+        PenNode::Progress(_) => "progress",
+        PenNode::Tabs(_) => "tabs",
     }
 }
 
@@ -134,19 +145,23 @@ impl Walker<'_> {
                 if c.clip_content == Some(true) {
                     el.decls.set("overflow", "hidden");
                 }
+                let link = self.link(link_of(node));
+                if let Some(href) = &link {
+                    el.tag = "a";
+                    el.attrs.push(("href".into(), href.clone()));
+                    el.decls.set("text-decoration", "none");
+                    el.decls.set("color", "inherit");
+                }
                 let children = node_children(node);
                 if !children.is_empty() {
                     apply_container(&mut el.decls, c);
                     if el.decls.get("position").is_none() {
                         el.decls.set("position", "relative");
                     }
+                    let outer = self.in_link;
+                    self.in_link = outer || link.is_some();
                     el.content = Content::Children(self.children(children, child_parent(c)));
-                }
-                if let Some(href) = link_of(node) {
-                    el.tag = "a";
-                    el.attrs.push(("href".into(), href));
-                    el.decls.set("text-decoration", "none");
-                    el.decls.set("color", "inherit");
+                    self.in_link = outer;
                 }
             }
             PenNode::Ellipse(_) => {
@@ -157,14 +172,20 @@ impl Walker<'_> {
             PenNode::Text(t) => {
                 apply_text(&mut el.decls, t, self.assets, &hint);
                 el.tag = "p";
-                if let Some(href) = node_link(t) {
+                if let Some(href) = self.link(node_link(t)) {
                     el.tag = "a";
                     el.attrs.push(("href".into(), href));
                     if el.decls.get("display").is_none() {
                         el.decls.set("display", "block");
                     }
                 }
-                let runs = inlines(t);
+                let mut runs = inlines(t);
+                if self.in_link || el.tag == "a" {
+                    runs.iter_mut().for_each(|r| r.href = None);
+                } else {
+                    runs.iter_mut()
+                        .for_each(|r| r.href = r.href.take().and_then(|h| safe_href(&h)));
+                }
                 el.content = if needs_inner_wrapper(&el.decls) {
                     let mut inner = Element::new("span", format!("{hint}-inner"));
                     inner.content = Content::Text(runs);
@@ -210,7 +231,7 @@ impl Walker<'_> {
                     }
                 }
                 el.decls.set("display", "inline-block");
-                if let Some(PenFillColor(c)) = first_solid(node) {
+                if let Some(c) = first_solid(node) {
                     el.decls.set("color", c);
                 }
             }
@@ -235,17 +256,28 @@ impl Walker<'_> {
                 extra_shadows = apply_stroke(&mut el.decls, node);
                 let mut kids = Vec::new();
                 if let Some(nav) = tabs_nav_markup(node) {
-                    let mut raw = Element::new("", String::new());
-                    raw.content = Content::Raw(nav);
-                    kids.push(raw);
+                    kids.push(Element::raw(nav));
                 }
-                kids.extend(self.children(
+                // The canvas shows only the active tab's panel.
+                let active = t
+                    .tabs
+                    .iter()
+                    .flatten()
+                    .position(|tab| t.value.as_deref() == Some(tab.value.as_str()))
+                    .unwrap_or(0);
+                let mut panels = self.children(
                     t.children.as_deref().unwrap_or(&[]),
                     Parent::Flow {
                         horizontal: false,
                         auto_layout: true,
                     },
-                ));
+                );
+                for (i, panel) in panels.iter_mut().enumerate() {
+                    if i != active {
+                        panel.attrs.push(("hidden".into(), String::new()));
+                    }
+                }
+                kids.extend(panels);
                 el.decls.set("display", "flex");
                 el.decls.set("flex-direction", "column");
                 el.decls.set("align-items", "flex-start");
@@ -281,6 +313,15 @@ impl Walker<'_> {
         Some(el)
     }
 
+    /// A node's link, unless it sits inside another link or uses a scheme
+    /// that should not ship in a published page.
+    fn link(&self, href: Option<String>) -> Option<String> {
+        if self.in_link {
+            return None;
+        }
+        safe_href(&href?)
+    }
+
     fn children(&mut self, children: &[PenNode], parent: Parent) -> Vec<Element> {
         let visible: Vec<&PenNode> = children.iter().filter(|c| !node_hidden(c)).collect();
         let overlap = visible.len() > 1
@@ -297,11 +338,23 @@ impl Walker<'_> {
     }
 }
 
-struct PenFillColor(String);
+/// Links keep web, mail, phone, fragment and relative targets; other schemes
+/// (`javascript:`, `data:`, …) are dropped.
+fn safe_href(href: &str) -> Option<String> {
+    let h = href.trim();
+    let scheme = h
+        .split_once(':')
+        .map(|(s, _)| s)
+        .filter(|s| !s.contains(['/', '?', '#']));
+    match scheme.map(str::to_ascii_lowercase).as_deref() {
+        None | Some("http" | "https" | "mailto" | "tel") => Some(h.to_string()),
+        _ => None,
+    }
+}
 
-fn first_solid(node: &PenNode) -> Option<PenFillColor> {
+fn first_solid(node: &PenNode) -> Option<String> {
     fills_of(node).iter().find_map(|f| match f {
-        jian_ops_schema::style::PenFill::Solid(b) => Some(PenFillColor(color(&b.color))),
+        jian_ops_schema::style::PenFill::Solid(b) => Some(color(&b.color)),
         _ => None,
     })
 }

@@ -88,6 +88,12 @@ fn bad_arguments_return_typed_errors() {
         }
         other => panic!("{other:?}"),
     }
+    match call(&state(), &[("framework", "html"), ("scaffold", "maybe")]) {
+        ToolOutcome::Err(ToolErrorCode::InvalidArgument, message) => {
+            assert!(message.contains("scaffold"), "{message}");
+        }
+        other => panic!("{other:?}"),
+    }
     match call(&state(), &[("nodeIds", "missing")]) {
         ToolOutcome::Err(ToolErrorCode::ToolFailed, message) => {
             assert!(message.contains("node not found: missing"), "{message}");

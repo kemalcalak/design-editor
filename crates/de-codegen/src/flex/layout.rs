@@ -193,6 +193,8 @@ pub(crate) fn apply_size(
                     decls.set("min-width", "0");
                 } else {
                     decls.set("flex-grow", "1");
+                    // The canvas lets a fill-height box shrink below its content.
+                    decls.set("min-height", "0");
                 }
             }
             if cross_fill {

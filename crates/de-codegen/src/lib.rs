@@ -26,8 +26,8 @@ mod tests;
 
 pub use crate::codegen_targets::{Compose, Flutter, React, ReactNative, Svelte, SwiftUi, Vue};
 pub use crate::flex::{
-    export_editor_html, export_html, html_target_for, Html, HtmlAsset, HtmlExport,
-    HtmlExportOptions, HtmlTailwind, HtmlTarget,
+    export_editor_html, export_html, export_html_roots, html_target_for, Html, HtmlAsset,
+    HtmlExport, HtmlExportOptions, HtmlTailwind, HtmlTarget,
 };
 
 use de_editor_core::pen_node_ext::PenNodeExt;

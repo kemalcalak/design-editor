@@ -206,12 +206,20 @@ fn layer(
                 }
             };
             (
-                format!("url(\"{}\") {placement}", url.replace('"', "%22")),
+                format!("url(\"{}\") {placement}", css_url(&url)),
                 b.blend_mode.as_ref(),
             )
         }
     };
     Some((css, blend.and_then(blend_keyword)))
+}
+
+/// A URL safe inside a double-quoted CSS string.
+fn css_url(url: &str) -> String {
+    url.replace('\\', "%5C")
+        .replace('"', "%22")
+        .replace('\n', "%0A")
+        .replace('\r', "%0D")
 }
 
 /// `background` (+ `background-blend-mode`) for a fill stack.

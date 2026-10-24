@@ -3,7 +3,7 @@
 
 use super::ir::{Content, Decls, Element, Inline};
 use crate::html_escape;
-use std::collections::BTreeSet;
+use std::collections::{BTreeSet, HashMap};
 
 /// Markup plus the class rules it uses.
 pub(crate) struct Printed {
@@ -27,6 +27,8 @@ struct Printer {
     markup: String,
     rules: String,
     used: BTreeSet<String>,
+    /// Next suffix to try per stem, so many same-named layers stay linear.
+    next: HashMap<String, usize>,
 }
 
 impl Printer {
@@ -42,10 +44,10 @@ impl Printer {
             stem.to_string()
         };
         let mut name = stem.clone();
-        let mut n = 2;
+        let n = self.next.entry(stem.clone()).or_insert(2);
         while !self.used.insert(name.clone()) {
             name = format!("{stem}-{n}");
-            n += 1;
+            *n += 1;
         }
         self.rules.push_str(&format!(".{name} {{\n"));
         for d in decls.iter() {
@@ -70,7 +72,7 @@ impl Printer {
 
     fn element(&mut self, el: &Element, depth: usize) {
         let indent = "  ".repeat(depth);
-        if el.tag.is_empty() {
+        if el.is_raw() {
             if let Content::Raw(raw) = &el.content {
                 self.markup.push_str(&format!("{indent}{raw}\n"));
             }
