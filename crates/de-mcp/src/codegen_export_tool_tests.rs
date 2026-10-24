@@ -95,3 +95,60 @@ fn bad_arguments_return_typed_errors() {
         other => panic!("{other:?}"),
     }
 }
+
+#[test]
+fn html_targets_export_flex_layout_and_resolve_instances() {
+    let css = json(call(
+        &state(),
+        &[("framework", "html-css"), ("nodeIds", "card")],
+    ));
+    let code = css["files"]["component.html"].as_str().unwrap();
+    assert!(code.contains("flex-direction: column;"), "{code}");
+    assert!(code.contains("background: var(--card);"), "{code}");
+    // The instance on page 1 resolves to its component on page 2.
+    assert!(code.contains(">Buy</p>"), "{code}");
+    assert!(code.contains("data-Mode=\"Light\""), "{code}");
+
+    let tw = json(call(
+        &state(),
+        &[
+            ("framework", "html-tailwind"),
+            ("nodeIds", "card"),
+            ("scaffold", "false"),
+            ("layerData", "true"),
+        ],
+    ));
+    let code = tw["code"].as_str().unwrap();
+    assert!(code.contains("flex flex-col items-start gap-[8px]"), "{code}");
+    assert!(!code.contains("<!DOCTYPE html>"), "{code}");
+    assert!(code.contains("data-name=\"Promo card\""), "{code}");
+    assert!(codegen_export_targets().contains(&"html-tailwind"));
+}
+
+#[test]
+fn html_targets_return_extracted_images_as_assets() {
+    let doc = jian_ops_schema::load_str(
+        r#"{"version":"1.0","children":[{"type":"image","id":"img","name":"Logo",
+            "width":10,"height":10,"src":"data:image/png;base64,iVBORw0KGgo="}]}"#,
+    )
+    .expect("fixture")
+    .value;
+    let state = EditorState::from_document(doc);
+    let out = json(call(&state, &[("framework", "html")]));
+    assert!(out["code"]
+        .as_str()
+        .unwrap()
+        .contains("src=\"assets/logo.png\""));
+    assert_eq!(out["assets"][0]["path"], "assets/logo.png");
+    assert_eq!(out["assets"][0]["mimeType"], "image/png");
+    assert_eq!(out["assets"][0]["base64"], "iVBORw0KGgo=");
+    let inline = json(call(
+        &state,
+        &[("framework", "html"), ("extractAssets", "false")],
+    ));
+    assert!(inline.get("assets").is_none());
+    assert!(inline["code"]
+        .as_str()
+        .unwrap()
+        .contains("src=\"data:image/png"));
+}

@@ -1606,6 +1606,7 @@ dependencies = [
 name = "de-mcp"
 version = "0.3.1"
 dependencies = [
+ "base64",
  "de-ai-skills",
  "de-codegen",
  "de-config-store",

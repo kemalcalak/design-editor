@@ -18,6 +18,8 @@ debug-tools = []
 script = ["dep:rquickjs", "dep:tracing"]
 
 [dependencies]
+# codegen_export returns the HTML targets' extracted images as base64.
+base64 = "0.22"
 de-codegen = { path = "../de-codegen" }
 jian-ops-schema = { path = "../../vendor/jian/crates/jian-ops-schema" }
 jian-scene = { path = "../../vendor/jian/crates/jian-scene" }
