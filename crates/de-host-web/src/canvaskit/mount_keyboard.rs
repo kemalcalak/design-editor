@@ -235,13 +235,10 @@ pub(super) fn register_keyboard_listeners(
                         // before the tool router reads them as H / V, never
                         // in Preview (native gates it via input_active).
                         if !evt.alt_key()
-                            && shift
-                            && !preview_active
-                            && b.host.apply_flip_shortcut(key.as_str())
-                        {
-                            consumed = true;
-                        } else if !evt.alt_key()
-                            && b.host.apply_tool_shortcut_with_shift(key.as_str(), shift)
+                            && ((shift
+                                && !preview_active
+                                && b.host.apply_flip_shortcut(key.as_str()))
+                                || b.host.apply_tool_shortcut_with_shift(key.as_str(), shift))
                         {
                             consumed = true;
                         } else if crate::event::ime::keydown_should_insert_text(
