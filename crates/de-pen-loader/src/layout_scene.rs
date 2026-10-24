@@ -563,9 +563,8 @@ fn fill_blend_mode_to_scene(fill: &jian_ops_schema::style::PenFill) -> ImageBlen
     blend_mode_to_scene(blend)
 }
 
-pub(crate) fn blend_mode_to_scene(
-    value: Option<&jian_ops_schema::style::BlendMode>,
-) -> ImageBlendMode {
+/// The scene blend mode for a canonical (schema) blend mode; `None` is normal.
+pub fn blend_mode_to_scene(value: Option<&jian_ops_schema::style::BlendMode>) -> ImageBlendMode {
     use jian_ops_schema::style::BlendMode;
     match value {
         Some(BlendMode::Darken) => ImageBlendMode::Darken,
