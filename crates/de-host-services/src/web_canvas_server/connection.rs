@@ -14,6 +14,24 @@ pub(super) struct ConnCtx<'a> {
     pub(super) mode: ServeMode,
 }
 
+/// Land finished `generate` jobs on the daemon's document and tell the
+/// browser shells, like any other MCP write. Called before each MCP request
+/// and from the jobs' listener as soon as one finishes.
+pub(super) fn land_generations(state: &Mutex<WebCanvasState>, hub: &SseHub) {
+    let jobs = crate::generate_jobs::GenerateJobs::global();
+    if !jobs.has_landings() {
+        return;
+    }
+    let mut guard = state.lock().unwrap_or_else(|p| p.into_inner());
+    let landed = crate::generate_jobs::land_into(jobs, &mut guard.editor, |editor, command| {
+        editor.apply(command)
+    });
+    if landed {
+        guard.version += 1;
+        hub.broadcast(guard.sse_tick());
+    }
+}
+
 /// Handle one connection against the single-user document authority.
 ///
 /// The `Local`-mode entry point in the two-argument shape the connection
@@ -297,6 +315,7 @@ pub(super) fn dispatch<S: Read + Write>(
     // JSON-RPC `/mcp` dispatch against the in-memory document. A mutating apply
     // bumps the sync version, broadcast to SSE subscribers so the browser shell
     // sees JSON-RPC-driven changes too.
+    land_generations(state, hub);
     let response = {
         let mut guard = state.lock().unwrap_or_else(|p| p.into_inner());
         let before = guard.version;

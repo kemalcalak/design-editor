@@ -32,6 +32,8 @@ pub fn process_message_for_file_path_arg(
         create_empty_document(&target.path)?;
     }
     let mut target_state = super::load_editor_state(&target.path)?;
+    super::generate_tool::load_user_provider_settings(&mut target_state);
+    super::generate_tool::land_generations_and_save(&mut target_state, &target.path);
     let mut applier_failed: Option<String> = None;
     let response =
         super::process_message_with_applier(&mut target_state, line, |tool_name, state, cmd| {
