@@ -31,6 +31,8 @@ pub(super) struct Ctx<'a> {
     /// Relative image URL → `op-image:` reference (`None` once known
     /// missing), so a bitmap used by many fills is read and encoded once.
     pub(super) images: HashMap<String, Option<String>>,
+    /// Relative image URL → the bitmap's pixel size, for image crops.
+    pub(super) image_sizes: HashMap<String, (u32, u32)>,
     /// Table id → data URL, written to the document's `images` table.
     pub(super) image_table: Map<String, Value>,
     pub(super) variables: Variables,
@@ -52,6 +54,7 @@ impl<'a> Ctx<'a> {
             assets,
             report,
             images: HashMap::new(),
+            image_sizes: HashMap::new(),
             image_table: Map::new(),
             variables,
             shaders: shader::ShaderCache::default(),

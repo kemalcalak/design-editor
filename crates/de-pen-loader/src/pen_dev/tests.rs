@@ -448,3 +448,56 @@ fn gradient_rotation_turns_clockwise_like_css() {
     convert(&mut doc, &no_assets);
     assert_eq!(doc["children"][0]["fill"][0]["rotation"], 270.0);
 }
+
+/// A PNG header of `width` × `height` (enough for the size reader).
+fn png_header(width: u32, height: u32) -> Vec<u8> {
+    let mut png = vec![0; 24];
+    png[..8].copy_from_slice(b"\x89PNG\r\n\x1a\n");
+    png[8..12].copy_from_slice(&13_u32.to_be_bytes());
+    png[12..16].copy_from_slice(b"IHDR");
+    png[16..20].copy_from_slice(&width.to_be_bytes());
+    png[20..24].copy_from_slice(&height.to_be_bytes());
+    png
+}
+
+#[test]
+fn an_image_crop_becomes_a_canonical_crop_transform() {
+    let reader = |relative: &str| (relative == "images/wide.png").then(|| png_header(200, 100));
+    let fill = |mode: &str| {
+        json!({ "type": "image", "url": "images/wide.png", "mode": mode,
+                "transform": [2, 0, 0, 1, -1, 0] })
+    };
+    let src = json!({ "version": "2.21", "children": [
+        { "type": "rectangle", "id": "cover", "width": 200, "height": 100, "fill": fill("cover") },
+        { "type": "rectangle", "id": "hug", "width": "fill_container", "height": 100, "fill": fill("cover") },
+        { "type": "rectangle", "id": "broken", "width": 10, "height": 10, "fill": {
+            "type": "image", "url": "images/wide.png", "transform": [0, 0, 0, 0, 0, 0] } }
+    ]})
+    .to_string();
+    let loaded = load_canonical_with_assets(&src, &reader).expect("loads");
+    let report = loaded.compatibility.pen_dev.expect("converted");
+    let doc = serde_json::to_value(&loaded.loaded.value).unwrap();
+    let cover = &doc["children"][0]["fill"][0];
+    assert_eq!(cover["mode"], "crop");
+    // The right half (a 100×100 crop) covering a 200×100 box: its middle
+    // half vertically.
+    let m = &cover["transform"];
+    assert_eq!(
+        (m["m00"].as_f64(), m["m02"].as_f64()),
+        (Some(0.5), Some(0.5))
+    );
+    assert_eq!(
+        (m["m11"].as_f64(), m["m12"].as_f64()),
+        (Some(0.5), Some(0.25))
+    );
+    assert_eq!(
+        report.unsupported.get("image crop (fitted as stretch)"),
+        Some(&1)
+    );
+    assert_eq!(
+        report.unsupported.get("image crop (invalid transform)"),
+        Some(&1)
+    );
+    assert!(doc["children"][2]["fill"][0].get("transform").is_none());
+    assert!(!report.unsupported.contains_key("image crop"));
+}
