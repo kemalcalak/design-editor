@@ -24,10 +24,12 @@ COMMON COMMANDS:
                                           export a page, arbitrary node, or the
                                           current Live Canvas selection; omitting
                                           --item is equivalent to --selection
-  de export-deck --output PATH [--format pptx|html|pdf]
+  de export-deck --output PATH [--format pptx|html|pdf|hyperframes]
                                           export the active page's boards as a
                                           presentation deck: PowerPoint, self-
-                                          contained HTML, or slide-per-page PDF
+                                          contained HTML, or slide-per-page PDF;
+                                          hyperframes writes a video composition
+                                          into the --output directory
   de export-frames --output-dir DIR [--format png|jpeg|webp]
                                           export every top-level frame on the
                                           active page, one image per frame
