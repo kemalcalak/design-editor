@@ -10,9 +10,11 @@ mod angular;
 mod image_metadata;
 #[path = "svg_export_rect.rs"]
 mod rect;
+mod text;
 mod transform;
 
 use rect::{emit_rect, emit_rect_fill, emit_rect_stroke_overlay};
+use text::{emit_text, emit_text_fill_defs};
 use transform::{
     apply_ancestor_clip_bounds, apply_clip_bounds, close_ancestor_clip_groups,
     emit_affine_group_start, emit_ancestor_clip_defs, emit_ancestor_clip_groups_start,
@@ -20,14 +22,6 @@ use transform::{
 };
 
 const MARGIN: f32 = 16.0;
-const TEXT_DEFAULT_FONT_SIZE: f32 = 13.0;
-const TEXT_DEFAULT_FILL: Color = Color {
-    r: 0.08,
-    g: 0.08,
-    b: 0.08,
-    a: 1.0,
-};
-
 /// A failed SVG serialization.
 ///
 /// `Display` reproduces the previous ad-hoc `String` messages byte for byte,
@@ -179,6 +173,9 @@ fn emit_node_defs(out: &mut String, n: &SceneNode) {
         if let Some(src) = n.image_src.as_deref() {
             emit_image_pattern(out, n, src, &id);
         }
+    }
+    if n.kind == NodeKind::Text {
+        emit_text_fill_defs(out, n, &id);
     }
     for child in &n.children {
         emit_node_defs(out, child);
@@ -446,60 +443,6 @@ fn emit_line(out: &mut String, n: &SceneNode) {
     );
 }
 
-fn emit_text(out: &mut String, n: &SceneNode) {
-    let Some(text) = n.text.as_deref() else {
-        return;
-    };
-    if text.is_empty() {
-        return;
-    }
-    let r = normalize_rect(n.bounds);
-    let color = n.fill.unwrap_or(TEXT_DEFAULT_FILL);
-    let base_size = if n.font_size > 0.0 {
-        n.font_size
-    } else {
-        TEXT_DEFAULT_FONT_SIZE
-    };
-    let line_h = base_size * 1.35;
-    let fill_attr = if color.a < 0.999 {
-        format!(
-            r#" fill="{}" fill-opacity="{}""#,
-            color_to_rgb(color),
-            color.a
-        )
-    } else {
-        format!(r#" fill="{}""#, color_to_rgb(color))
-    };
-    let weight_attr = if n.font_weight > 0 {
-        format!(r#" font-weight="{}""#, n.font_weight)
-    } else {
-        String::new()
-    };
-    let _ = write!(out, r#"<g id="{}">"#, xml_escape(&n.id));
-    let mut baseline_y = r.origin.y + base_size + 1.0;
-    for line in text.split('\n') {
-        let _ = write!(
-            out,
-            r#"<text x="{}" y="{baseline_y}" font-family="{}" font-size="{base_size}"{weight_attr}{fill_attr}{}{}>{}</text>"#,
-            r.origin.x,
-            xml_escape(if n.font_family.is_empty() {
-                "system-ui, sans-serif"
-            } else {
-                &n.font_family
-            }),
-            if n.italic {
-                r#" font-style="italic""#
-            } else {
-                ""
-            },
-            text_decoration_attr(n),
-            xml_escape(line),
-        );
-        baseline_y += line_h;
-    }
-    out.push_str("</g>");
-}
-
 fn emit_path(out: &mut String, n: &SceneNode) {
     let (d, transform) = if let Some(d) = &n.svg_path {
         (d.clone(), svg_path_fit_transform(d, n.bounds))
@@ -590,12 +533,7 @@ fn emit_image(out: &mut String, n: &SceneNode) {
         );
         return;
     }
-    let preserve = match n.image_fit {
-        SceneImageFit::Fit => "xMidYMid meet",
-        SceneImageFit::Crop | SceneImageFit::Fill => "xMidYMid slice",
-        SceneImageFit::Stretch => "none",
-        SceneImageFit::Tile => unreachable!("tile images return above"),
-    };
+    let preserve = preserve_aspect_ratio(n.image_fit);
     let _ = write!(
         out,
         r#"<image id="{}" x="{}" y="{}" width="{}" height="{}" href="{}" preserveAspectRatio="{}" opacity="{}"{clip}/>"#,
@@ -608,6 +546,16 @@ fn emit_image(out: &mut String, n: &SceneNode) {
         preserve,
         n.opacity.clamp(0.0, 1.0)
     );
+}
+
+/// `preserveAspectRatio` for an image fit. Tile never reaches it (it writes
+/// a pattern); it maps like Fill only to keep the match total.
+fn preserve_aspect_ratio(fit: SceneImageFit) -> &'static str {
+    match fit {
+        SceneImageFit::Fit => "xMidYMid meet",
+        SceneImageFit::Crop | SceneImageFit::Fill | SceneImageFit::Tile => "xMidYMid slice",
+        SceneImageFit::Stretch => "none",
+    }
 }
 
 fn emit_image_pattern(out: &mut String, n: &SceneNode, src: &str, id: &str) {
@@ -623,15 +571,6 @@ fn emit_image_pattern(out: &mut String, n: &SceneNode, src: &str, id: &str) {
         r#"<pattern id="image-pattern-{id}" patternUnits="userSpaceOnUse" x="{start_x}" y="{start_y}" width="{tile_w}" height="{tile_h}" viewBox="0 0 {tile_w} {tile_h}"><image width="{tile_w}" height="{tile_h}" href="{}" preserveAspectRatio="none"/></pattern>"#,
         xml_escape(src),
     );
-}
-
-fn text_decoration_attr(n: &SceneNode) -> &'static str {
-    match (n.underline, n.strikethrough) {
-        (true, true) => r#" text-decoration="underline line-through""#,
-        (true, false) => r#" text-decoration="underline""#,
-        (false, true) => r#" text-decoration="line-through""#,
-        (false, false) => "",
-    }
 }
 
 fn xml_escape(text: &str) -> String {
