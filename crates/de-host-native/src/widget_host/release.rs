@@ -36,6 +36,9 @@ impl WidgetHostNative {
 
     fn apply_release_with_viewport_inner(&mut self, viewport_w: f32, viewport_h: f32) -> bool {
         let pressed_released = self.release_pressed_feedback();
+        if self.preview_browser_release() {
+            return true;
+        }
         if self.screen_switcher_release() {
             return true;
         }

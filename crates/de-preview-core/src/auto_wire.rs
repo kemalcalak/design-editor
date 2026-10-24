@@ -21,6 +21,11 @@
 //! touched, matching `enter`'s existing "never mutates the saved doc"
 //! invariant (see the module doc on `preview/mod.rs`).
 //!
+//! After that shared pass it runs one preview-only pass generation never
+//! runs: `wire_web_nav_links` (#153), which binds website header / footer
+//! links to their pages and to same-page sections. The same "any authored
+//! marker → skip" gate below covers both passes.
+//!
 //! ## Why "any authored marker → skip entirely", not Track A's own
 //! "fill only the gaps" rule
 //!
@@ -51,7 +56,7 @@
 //! `de-pen-loader` in `Cargo.toml`.
 
 use de_editor_core::{EditorCommand, EditorState, NodeId};
-use de_orchestrator::wire_screen_navigation::wire_screen_navigation;
+use de_orchestrator::wire_screen_navigation::{wire_screen_navigation, wire_web_nav_links};
 use de_orchestrator::DocSink;
 use jian_ops_schema::node::PenNode;
 use jian_ops_schema::PenDocument;
@@ -110,6 +115,8 @@ pub(super) fn auto_wire_for_preview(
     }
     let mut sink = PreviewDocSink { state: &mut state };
     wire_screen_navigation(&mut sink);
+    // #153: website header / footer links to pages and same-page sections.
+    wire_web_nav_links(&mut sink);
     Some(state.doc)
 }
 

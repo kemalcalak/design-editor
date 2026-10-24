@@ -117,6 +117,10 @@ struct OverlayInner {
     /// resolves. `apply_scroll` therefore never translates their
     /// children — doing so would double the host's scroll.
     page_scrollers: BTreeSet<String>,
+    /// `scroll_to` requests whose container is a page scroller (#153
+    /// section links). The host owns that scroll, so they wait here as
+    /// `(root id, desired offset)` until the host takes them.
+    page_scroll_requests: Vec<(String, f32)>,
     authored_runtime_document: Option<jian_ops_schema::PenDocument>,
 }
 
@@ -217,6 +221,21 @@ impl BindingOverlay {
         }
     }
 
+    /// Resolve every queued `scroll_to` now and hand back the latest one
+    /// aimed at a page scroller as `(root id, desired offset)` — the
+    /// host applies it to its own page scroll (#153 section links).
+    pub(crate) fn take_page_scroll_request(
+        &self,
+        scene: &LayoutScene,
+        ui_actions: &PreviewUiActions,
+    ) -> Option<(String, f32)> {
+        self.consume_scroll_requests(scene, ui_actions);
+        let mut inner = self.inner.borrow_mut();
+        let latest = inner.page_scroll_requests.pop();
+        inner.page_scroll_requests.clear();
+        latest
+    }
+
     fn consume_scroll_requests(&self, scene: &LayoutScene, ui_actions: &PreviewUiActions) {
         for (target_id, alignment) in ui_actions.drain_scroll_requests() {
             let container_id = self
@@ -229,10 +248,9 @@ impl BindingOverlay {
                 continue;
             };
             // A page scroller's position is owned by the host; writing
-            // it here would desynchronise `$scroll` from what is painted.
-            if self.inner.borrow().page_scrollers.contains(&container_id) {
-                continue;
-            }
+            // it here would desynchronise `$scroll` from what is painted,
+            // so its request is queued for the host instead (below).
+            let page_scroller = self.inner.borrow().page_scrollers.contains(&container_id);
             let Some(page) = scene.active_page() else {
                 continue;
             };
@@ -272,6 +290,16 @@ impl BindingOverlay {
                 }
             };
             let mut inner = self.inner.borrow_mut();
+            if page_scroller {
+                // The page's bounds are the whole document, not the
+                // visible window, so only the section's top is meaningful
+                // here: every alignment lands the target at the top. The
+                // host clamps against its own scroll range.
+                inner
+                    .page_scroll_requests
+                    .push((container_id, start.max(0.0)));
+                continue;
+            }
             let values = inner.scroll_values.entry(container_id).or_default();
             values.max_offset = max_offset;
             values.offset = desired.clamp(0.0, max_offset);

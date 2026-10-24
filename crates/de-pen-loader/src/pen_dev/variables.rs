@@ -321,7 +321,7 @@ fn resolve_value(
     }
 }
 
-fn reference(text: &str) -> Option<&str> {
+pub(super) fn reference(text: &str) -> Option<&str> {
     text.strip_prefix('$').filter(|name| !name.is_empty())
 }
 

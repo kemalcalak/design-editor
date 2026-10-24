@@ -40,6 +40,7 @@ impl WidgetHost {
         #[cfg(feature = "canvaskit")]
         if self.editor_state.editor_ui.preview.mode && self.preview.is_some() {
             if self.preview_switcher_release(viewport_w, viewport_h)
+                || self.preview_browser_release()
                 || self.screen_switcher_release(viewport_w, viewport_h)
             {
                 self.preview_surface_capture = None;

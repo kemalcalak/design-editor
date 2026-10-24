@@ -9,7 +9,7 @@ use serde_json::{json, Map, Value};
 
 use super::glsl::Stage;
 use super::nodes::{Ctx, Role};
-use super::variables::Theme;
+use super::variables::{self, Theme};
 use super::{images, shader, PenDevReport};
 
 /// Replace a node's pen.dev `fill` (one fill or a list, colours as strings)
@@ -72,8 +72,9 @@ fn convert_fill(
             obj.insert("type".to_owned(), Value::String("solid".to_owned()));
         }
         // Linear, radial and angular all map onto canonical gradients in
-        // the legacy repair (`normalize_gradient_fill`).
-        Some("gradient") => {}
+        // the legacy repair (`normalize_gradient_fill`), which reads
+        // `rotation` as a clockwise CSS angle.
+        Some("gradient") => clockwise_rotation(&mut obj),
         Some("image") => return images::convert_image_fill(obj, ctx),
         Some("shader") => return shader::convert(obj, Stage::Fill, size, theme, ctx),
         Some("mesh_gradient") => {
@@ -85,24 +86,47 @@ fn convert_fill(
     Some(Value::Object(obj))
 }
 
+/// pen.dev turns a gradient counter-clockwise (0° up, 90° left); the
+/// canonical linear `angle` and angular `rotation` turn clockwise from up
+/// like CSS, so 90° becomes 270°.
+fn clockwise_rotation(obj: &mut Map<String, Value>) {
+    if let Some(degrees) = obj.get("rotation").and_then(Value::as_f64) {
+        let clockwise = (360.0 - degrees.rem_euclid(360.0)).rem_euclid(360.0);
+        obj.insert("rotation".to_owned(), json!(clockwise));
+    }
+}
+
+/// pen.dev stroke keys, folded into one canonical `stroke` object.
+pub(super) const STROKE_KEYS: &[&str] = &[
+    "stroke",
+    "strokeWidth",
+    "strokeLinecap",
+    "strokeLinejoin",
+    "strokeAlignment",
+];
+
 /// Fold pen.dev's `stroke` paint and its sibling `strokeWidth` /
 /// `strokeLinecap` / `strokeLinejoin` / `strokeAlignment` into one canonical
 /// `stroke` object.
 ///
 /// An instance patch merges key by key, so the canonical `stroke` object
 /// replaces the component's whole stroke: a patch of only the width (or
-/// only the paint) cannot be expressed and is reported.
+/// only the paint) takes the missing keys from the node it patches. A
+/// partial patch with no source stroke to complete it is reported.
 pub(super) fn convert_stroke(
     map: &mut Map<String, Value>,
-    role: Role,
+    role: &Role,
     theme: &Theme,
     ctx: &mut Ctx<'_>,
 ) {
+    if let Role::Patch(path) = role {
+        complete_stroke_patch(map, path, theme, ctx);
+    }
     let width = map.remove("strokeWidth");
     let cap = map.remove("strokeLinecap");
     let join = map.remove("strokeLinejoin");
     let align = map.remove("strokeAlignment");
-    let partial_patch = role == Role::Patch
+    let partial_patch = matches!(role, Role::Patch(_))
         && (width.is_none() || !map.contains_key("stroke"))
         && (map.contains_key("stroke")
             || width.is_some()
@@ -142,6 +166,29 @@ pub(super) fn convert_stroke(
         }
     }
     map.insert("stroke".to_owned(), Value::Object(out));
+}
+
+/// Fill a patch that names some stroke keys with the patched node's own
+/// values for the others, resolved under the patch's theme.
+fn complete_stroke_patch(
+    map: &mut Map<String, Value>,
+    path: &str,
+    theme: &Theme,
+    ctx: &mut Ctx<'_>,
+) {
+    if !STROKE_KEYS.iter().any(|key| map.contains_key(*key)) {
+        return;
+    }
+    let Some(base) = ctx.instance_bases.stroke(path) else {
+        return;
+    };
+    let mut missing: Map<String, Value> = base
+        .iter()
+        .filter(|(key, _)| !map.contains_key(key.as_str()))
+        .map(|(key, value)| (key.clone(), value.clone()))
+        .collect();
+    variables::resolve_node(&mut missing, &ctx.variables, theme, ctx.report);
+    map.extend(missing);
 }
 
 /// pen.dev `strokeWidth`: a number, a `$variable`, or per-side

@@ -93,6 +93,8 @@ impl super::WidgetHost {
         self.editor_state.editor_ui.preview.device = None;
         self.editor_state.editor_ui.preview.screen_switcher_hover = None;
         self.editor_state.editor_ui.preview.screen_switcher_pressed = None;
+        self.editor_state.editor_ui.preview.browser_hover = None;
+        self.editor_state.editor_ui.preview.browser_pressed = None;
     }
 
     /// Rebuild the cached frame from the current session and viewport.
@@ -111,7 +113,11 @@ impl super::WidgetHost {
             self.preview_device_frame = None;
             return;
         };
-        let canvas = self.preview_canvas_rect(viewport_w, viewport_h);
+        // APP MODE frames start below the browser bar (#153).
+        let canvas = de_preview_core::browse_chrome::frame_canvas(
+            self.preview.as_ref(),
+            self.preview_canvas_rect(viewport_w, viewport_h),
+        );
         if canvas.size.x <= 0.0 || canvas.size.y <= 0.0 {
             self.preview_device_frame = None;
             return;

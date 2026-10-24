@@ -104,3 +104,37 @@ fn other_reusable_kinds_are_reported() {
     assert!(components.find_by_id(&NodeId::new("card")).is_some());
     assert!(components.find_by_id(&NodeId::new("dot")).is_none());
 }
+
+fn child_ids(node: &Value) -> Vec<&str> {
+    node["children"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|child| child["id"].as_str().unwrap())
+        .collect()
+}
+
+#[test]
+fn children_take_the_canonical_first_on_top_paint_order() {
+    let mut doc = json!({ "version": "2.21", "children": [
+        { "type": "frame", "id": "free", "layout": "none", "children": [
+            { "type": "rectangle", "id": "back" },
+            { "type": "text", "id": "middle", "content": "a" },
+            { "type": "rectangle", "id": "front" }
+        ]},
+        { "type": "frame", "id": "flow", "layout": "vertical", "children": [
+            { "type": "rectangle", "id": "shade", "layoutPosition": "absolute" },
+            { "type": "text", "id": "first", "content": "a" },
+            { "type": "text", "id": "second", "content": "b" },
+            { "type": "frame", "id": "badge", "layoutPosition": "absolute" }
+        ]}
+    ]});
+    crate::pen_dev::convert(&mut doc, &no_assets);
+    assert_eq!(child_ids(&doc["children"][0]), ["front", "middle", "back"]);
+    // Flow order stays; the shade pen.dev paints under the text moves
+    // behind it, the badge it paints over stays in front.
+    assert_eq!(
+        child_ids(&doc["children"][1]),
+        ["badge", "first", "second", "shade"]
+    );
+}
