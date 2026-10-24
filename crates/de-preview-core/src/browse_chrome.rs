@@ -138,6 +138,22 @@ fn canvas_top_inset(session: &PreviewSession, canvas: Rect) -> f32 {
     bottom - canvas.origin.y + GAP
 }
 
+/// The canvas a framed (Phone / Desktop) preview fits its device frame
+/// into. In APP MODE the browser bar and screen pills sit above the page
+/// like a browser's toolbar, so the frame starts below them instead of
+/// under them, where they would cover (and swallow clicks on) a site
+/// header's links. Outside APP MODE the canvas is unchanged.
+pub fn frame_canvas(session: Option<&PreviewSession>, canvas: Rect) -> Rect {
+    let Some(session) = session.filter(|s| s.is_app_mode()) else {
+        return canvas;
+    };
+    let inset = canvas_top_inset(session, canvas).min(canvas.size.y);
+    Rect {
+        origin: Point2D::new(canvas.origin.x, canvas.origin.y + inset),
+        size: Point2D::new(canvas.size.x, canvas.size.y - inset),
+    }
+}
+
 /// Canvas-mode viewport pan `(pan_x, pan_y)` for a newly opened page: centred
 /// horizontally; centred vertically when it fits under the chrome, else its
 /// top under the chrome — a website opens at its top.

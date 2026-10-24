@@ -209,6 +209,12 @@ fn hovering_a_link_child_resolves_the_link_and_a_pointer_cursor() {
     assert_eq!(session.preview_cursor(), PreviewCursor::Default);
 }
 
+/// How opaque a node paints: a text link dims its colour, other nodes
+/// their opacity.
+fn visible_alpha(node: &de_editor_ui::layout_scene::SceneNode) -> f32 {
+    node.opacity * node.fill.map_or(1.0, |fill| fill.a)
+}
+
 #[test]
 fn hovered_link_paints_a_hover_state_without_touching_the_document() {
     let mut session = enter();
@@ -219,26 +225,25 @@ fn hovered_link_paints_a_hover_state_without_touching_the_document() {
             .and_then(|page| page.find(id).cloned())
             .expect("node in scene")
     };
-    let filled_before = find(&session, "to-pricing").fill;
-    let text_before = find(&session, "features-link").opacity;
+    let button_before = find(&session, "to-pricing").opacity;
+    let text_before = visible_alpha(&find(&session, "features-link"));
 
     let (x, y) = centre(&session, "to-pricing");
     hover(&mut session, x, y);
-    assert_ne!(
-        find(&session, "to-pricing").fill,
-        filled_before,
-        "a filled link tints on hover"
+    assert!(
+        find(&session, "to-pricing").opacity < button_before,
+        "a filled button dims on hover"
     );
 
     let (x, y) = centre(&session, "features-link");
     hover(&mut session, x, y);
     assert!(
-        find(&session, "features-link").opacity < text_before,
-        "a fill-less text link dims on hover"
+        visible_alpha(&find(&session, "features-link")) < text_before,
+        "a text link dims on hover"
     );
     assert_eq!(
-        find(&session, "to-pricing").fill,
-        filled_before,
+        find(&session, "to-pricing").opacity,
+        button_before,
         "the previous link's hover state is gone"
     );
 }
@@ -249,12 +254,13 @@ fn a_held_link_keeps_its_pointer_and_paints_pressed() {
     let (x, y) = centre(&session, "features-link");
     hover(&mut session, x, y);
     let hovered = session.preview_scene_for_test();
-    let hovered_opacity = hovered
-        .active_page()
-        .unwrap()
-        .find("features-link")
-        .unwrap()
-        .opacity;
+    let hovered_opacity = visible_alpha(
+        hovered
+            .active_page()
+            .unwrap()
+            .find("features-link")
+            .unwrap(),
+    );
     session.dispatch_pointer_for_id_at(1, PointerKind::Mouse, x, y, PointerPhase::Down, 0);
     assert_eq!(
         session.hovered_clickable().as_deref(),
@@ -263,12 +269,13 @@ fn a_held_link_keeps_its_pointer_and_paints_pressed() {
     );
     assert_eq!(session.preview_cursor(), PreviewCursor::Pointer);
     let pressed = session.preview_scene_for_test();
-    let pressed_opacity = pressed
-        .active_page()
-        .unwrap()
-        .find("features-link")
-        .unwrap()
-        .opacity;
+    let pressed_opacity = visible_alpha(
+        pressed
+            .active_page()
+            .unwrap()
+            .find("features-link")
+            .unwrap(),
+    );
     assert!(
         pressed_opacity < hovered_opacity,
         "pressed dims further than hover"

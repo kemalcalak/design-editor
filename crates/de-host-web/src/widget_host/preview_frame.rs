@@ -113,7 +113,11 @@ impl super::WidgetHost {
             self.preview_device_frame = None;
             return;
         };
-        let canvas = self.preview_canvas_rect(viewport_w, viewport_h);
+        // APP MODE frames start below the browser bar (#153).
+        let canvas = de_preview_core::browse_chrome::frame_canvas(
+            self.preview.as_ref(),
+            self.preview_canvas_rect(viewport_w, viewport_h),
+        );
         if canvas.size.x <= 0.0 || canvas.size.y <= 0.0 {
             self.preview_device_frame = None;
             return;

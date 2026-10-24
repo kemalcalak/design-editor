@@ -245,9 +245,10 @@ impl PreviewSession {
     /// Paint the hover (and pressed) state of the clickable `link_id`
     /// under the pointer (a link or button, #153) when it is not a widget
     /// — widgets resolve their own states above. Frames and text carry no
-    /// authored `states`, so the state is derived: a tint over a filled
-    /// node, otherwise (a text link, or no derived tint) a dim, the way a
-    /// website link reacts.
+    /// authored `states`, so the state is derived: the whole link or
+    /// button dims (more while pressed). A dim reads on any background
+    /// and any text colour; the widget tint was too faint to notice on a
+    /// coloured button or a light link (checked on rendered frames).
     fn apply_clickable_state(&self, node: &mut SceneNode, link_id: &str) {
         if node.id != link_id {
             for child in node.children.iter_mut() {
@@ -263,20 +264,19 @@ impl PreviewSession {
             .pressed_nodes()
             .into_iter()
             .any(|id| self.clickable_ancestor(id).as_deref() == Some(link_id));
-        let interaction = WidgetInteractionState {
-            hovered: true,
-            pressed,
-            focused: false,
-            disabled: false,
-        };
-        match (
-            node.fill,
-            derived_overlay(&WidgetTheme::default(), interaction, false),
-        ) {
-            (Some(fill), Some(overlay)) => {
-                node.fill = Some(composite_over(fill, color_from_jian(overlay)));
+        let dim = if pressed { 0.6 } else { 0.75 };
+        let is_text = matches!(node.kind, de_editor_ui::layout_scene::NodeKind::Text);
+        if let (true, Some(fill)) = (is_text, node.fill.as_mut()) {
+            // The text painter draws with the fill colour and does not
+            // read the node's opacity, so a text link dims its colour.
+            fill.a *= dim;
+            for run in node.text_runs.iter_mut() {
+                if let Some(fill) = run.fill.as_mut() {
+                    fill.a *= dim;
+                }
             }
-            _ => node.opacity *= if pressed { 0.6 } else { 0.75 },
+        } else {
+            node.opacity *= dim;
         }
     }
 
