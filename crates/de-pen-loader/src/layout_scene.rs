@@ -563,7 +563,8 @@ fn fill_blend_mode_to_scene(fill: &jian_ops_schema::style::PenFill) -> ImageBlen
     blend_mode_to_scene(blend)
 }
 
-fn blend_mode_to_scene(value: Option<&jian_ops_schema::style::BlendMode>) -> ImageBlendMode {
+/// The scene blend mode for a canonical (schema) blend mode; `None` is normal.
+pub fn blend_mode_to_scene(value: Option<&jian_ops_schema::style::BlendMode>) -> ImageBlendMode {
     use jian_ops_schema::style::BlendMode;
     match value {
         Some(BlendMode::Darken) => ImageBlendMode::Darken,
@@ -585,6 +586,33 @@ fn blend_mode_to_scene(value: Option<&jian_ops_schema::style::BlendMode>) -> Ima
         Some(BlendMode::LinearDodge) => ImageBlendMode::LinearDodge,
         Some(BlendMode::Normal) | None => ImageBlendMode::Normal,
     }
+}
+
+/// The inverse of [`blend_mode_to_scene`]; `Normal` is `None`.
+pub(crate) fn scene_blend_to_schema(
+    mode: ImageBlendMode,
+) -> Option<jian_ops_schema::style::BlendMode> {
+    use jian_ops_schema::style::BlendMode;
+    Some(match mode {
+        ImageBlendMode::Normal => return None,
+        ImageBlendMode::Darken => BlendMode::Darken,
+        ImageBlendMode::Multiply => BlendMode::Multiply,
+        ImageBlendMode::Screen => BlendMode::Screen,
+        ImageBlendMode::Overlay => BlendMode::Overlay,
+        ImageBlendMode::Lighten => BlendMode::Lighten,
+        ImageBlendMode::Difference => BlendMode::Difference,
+        ImageBlendMode::Hue => BlendMode::Hue,
+        ImageBlendMode::Saturation => BlendMode::Saturation,
+        ImageBlendMode::Color => BlendMode::Color,
+        ImageBlendMode::Luminosity => BlendMode::Luminosity,
+        ImageBlendMode::SoftLight => BlendMode::SoftLight,
+        ImageBlendMode::ColorDodge => BlendMode::ColorDodge,
+        ImageBlendMode::ColorBurn => BlendMode::ColorBurn,
+        ImageBlendMode::HardLight => BlendMode::HardLight,
+        ImageBlendMode::Exclusion => BlendMode::Exclusion,
+        ImageBlendMode::LinearBurn => BlendMode::LinearBurn,
+        ImageBlendMode::LinearDodge => BlendMode::LinearDodge,
+    })
 }
 
 fn image_adjustments_to_scene(
