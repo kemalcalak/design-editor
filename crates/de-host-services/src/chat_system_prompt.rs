@@ -191,30 +191,7 @@ fn node_display_name(node: &jian_ops_schema::node::PenNode) -> &str {
 }
 
 fn node_type_label(node: &jian_ops_schema::node::PenNode) -> &'static str {
-    use jian_ops_schema::node::PenNode;
-    match node {
-        PenNode::Frame(_) => "frame",
-        PenNode::Group(_) => "group",
-        PenNode::Rectangle(_) => "rectangle",
-        PenNode::Ellipse(_) => "ellipse",
-        PenNode::Line(_) => "line",
-        PenNode::Polygon(_) => "polygon",
-        PenNode::Path(_) => "path",
-        PenNode::Text(_) => "text",
-        PenNode::TextInput(_) => "text_input",
-        PenNode::TextArea(_) => "text_area",
-        PenNode::Select(_) => "select",
-        PenNode::Switch(_) => "switch",
-        PenNode::Checkbox(_) => "checkbox",
-        PenNode::Slider(_) => "slider",
-        PenNode::RadioGroup(_) => "radio_group",
-        PenNode::NumberInput(_) => "number_input",
-        PenNode::Progress(_) => "progress",
-        PenNode::Tabs(_) => "tabs",
-        PenNode::Image(_) => "image",
-        PenNode::IconFont(_) => "icon_font",
-        PenNode::Ref(_) => "ref",
-    }
+    node.type_tag()
 }
 
 fn variable_kind_label(kind: &jian_ops_schema::variable::VariableKind) -> &'static str {

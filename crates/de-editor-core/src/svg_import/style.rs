@@ -180,7 +180,13 @@ pub(super) fn set_node_stroke(node: &mut PenNode, stroke: PenStroke) {
         PenNode::NumberInput(n) => n.stroke = Some(stroke),
         PenNode::Progress(n) => n.stroke = Some(stroke),
         PenNode::Tabs(n) => n.stroke = Some(stroke),
-        PenNode::Text(_) | PenNode::IconFont(_) | PenNode::Image(_) | PenNode::Ref(_) => {}
+        PenNode::Text(_)
+        | PenNode::IconFont(_)
+        | PenNode::Image(_)
+        | PenNode::Ref(_)
+        | PenNode::Note(_)
+        | PenNode::Context(_)
+        | PenNode::Prompt(_) => {}
     }
 }
 
@@ -204,7 +210,12 @@ pub(super) fn clear_node_fill(node: &mut PenNode) {
         PenNode::NumberInput(n) => n.fill = None,
         PenNode::Progress(n) => n.fill = None,
         PenNode::Tabs(n) => n.fill = None,
-        PenNode::Line(_) | PenNode::Image(_) | PenNode::Ref(_) => {}
+        PenNode::Line(_)
+        | PenNode::Image(_)
+        | PenNode::Ref(_)
+        | PenNode::Note(_)
+        | PenNode::Context(_)
+        | PenNode::Prompt(_) => {}
     }
 }
 

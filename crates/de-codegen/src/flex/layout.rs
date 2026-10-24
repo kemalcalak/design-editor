@@ -154,6 +154,9 @@ pub(crate) fn node_sizing(
         PenNode::NumberInput(n) => (n.width.as_ref(), n.height.as_ref(), Some(&n.limits)),
         PenNode::Progress(n) => (n.width.as_ref(), n.height.as_ref(), Some(&n.limits)),
         PenNode::Tabs(n) => (n.width.as_ref(), n.height.as_ref(), Some(&n.limits)),
+        PenNode::Note(n) | PenNode::Context(n) | PenNode::Prompt(n) => {
+            (n.width.as_ref(), n.height.as_ref(), None)
+        }
         PenNode::Line(_) | PenNode::Ref(_) => (None, None, None),
     }
 }

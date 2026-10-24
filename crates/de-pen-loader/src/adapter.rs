@@ -51,8 +51,8 @@ use jian_ops_schema::{
     node::base::PenNodeBase,
     node::container::{AlignItems, ContainerProps, CornerRadius, LayoutMode, Padding},
     node::{
-        EllipseNode, FontWeight, FrameNode, GroupNode, IconFontNode, ImageNode, LineNode, PathNode,
-        PenNode, PolygonNode, RectangleNode, TextNode,
+        AnnotationKind, EllipseNode, FontWeight, FrameNode, GroupNode, IconFontNode, ImageNode,
+        LineNode, NoteNode, PathNode, PenNode, PolygonNode, RectangleNode, TextNode,
     },
     sizing::SizingBehavior,
     PenDocument,

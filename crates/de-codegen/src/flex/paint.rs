@@ -44,7 +44,11 @@ pub(crate) fn node_effects(node: &PenNode) -> &[PenEffect] {
         PenNode::NumberInput(n) => n.effects.as_ref(),
         PenNode::Progress(n) => n.effects.as_ref(),
         PenNode::Tabs(n) => n.effects.as_ref(),
-        PenNode::IconFont(_) | PenNode::Ref(_) => None,
+        PenNode::IconFont(_)
+        | PenNode::Ref(_)
+        | PenNode::Note(_)
+        | PenNode::Context(_)
+        | PenNode::Prompt(_) => None,
     };
     effects.map(Vec::as_slice).unwrap_or(&[])
 }

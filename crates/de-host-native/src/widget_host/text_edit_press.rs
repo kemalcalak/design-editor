@@ -125,7 +125,12 @@ impl WidgetHostNative {
             .as_str()
             .to_string();
         self.refresh_layout_scene();
-        self.layout_scene.active_page()?.find(&id).cloned()
+        let node = self.layout_scene.active_page()?.find(&id)?;
+        // A note edits in its body box, the text node its painter draws.
+        Some(
+            de_editor_ui::widgets::canvas_annotation::annotation_body(node)
+                .unwrap_or_else(|| node.clone()),
+        )
     }
 
     /// Run `f` against the shared text-edit layout of `node`, lazily

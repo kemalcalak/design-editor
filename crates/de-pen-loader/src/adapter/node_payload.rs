@@ -36,6 +36,9 @@ pub(super) fn node_to_payload_with_text_context(
         PenNode::Image(n) => image_to_payload(n),
         PenNode::IconFont(n) => icon_font_to_payload(n),
         PenNode::Ref(n) => empty_group(&n.base, "ref"),
+        PenNode::Note(n) => annotation_to_payload(AnnotationKind::Note, n),
+        PenNode::Context(n) => annotation_to_payload(AnnotationKind::Context, n),
+        PenNode::Prompt(n) => annotation_to_payload(AnnotationKind::Prompt, n),
     };
     // The line painter is special-cased on signed bounds, so don't
     // overwrite its hand-encoded geometry with the taffy AABB.

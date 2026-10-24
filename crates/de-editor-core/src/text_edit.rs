@@ -46,7 +46,7 @@ impl EditorState {
         let Some(node) = crate::walkers::find_node(self.active_children(), &id) else {
             return false;
         };
-        if !matches!(node, PenNode::Text(_)) {
+        if !matches!(node, PenNode::Text(_)) && node.annotation().is_none() {
             return false;
         }
         let content = text_content(node).unwrap_or("").to_owned();
@@ -404,6 +404,12 @@ fn text_content(node: &PenNode) -> Option<&str> {
             TextContent::Plain(s) => Some(s),
             TextContent::Styled(_) => None,
         },
+        // A note without content edits as empty text (#12).
+        PenNode::Note(n) | PenNode::Context(n) | PenNode::Prompt(n) => match &n.content {
+            None => Some(""),
+            Some(TextContent::Plain(s)) => Some(s),
+            Some(TextContent::Styled(_)) => None,
+        },
         _ => None,
     }
 }
@@ -415,6 +421,15 @@ fn text_content_node_mut(node: &mut PenNode) -> Option<&mut String> {
             TextContent::Plain(s) => Some(s),
             TextContent::Styled(_) => None,
         },
+        PenNode::Note(n) | PenNode::Context(n) | PenNode::Prompt(n) => {
+            match n
+                .content
+                .get_or_insert_with(|| TextContent::Plain(String::new()))
+            {
+                TextContent::Plain(s) => Some(s),
+                TextContent::Styled(_) => None,
+            }
+        }
         _ => None,
     }
 }

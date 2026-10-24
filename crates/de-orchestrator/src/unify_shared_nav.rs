@@ -676,6 +676,7 @@ fn set_events(node: &mut PenNode, events: Option<jian_ops_schema::events::EventH
         PenNode::Progress(n) => n.events = events,
         PenNode::Tabs(n) => n.events = events,
         PenNode::Ref(n) => n.events = events,
+        PenNode::Note(_) | PenNode::Context(_) | PenNode::Prompt(_) => {}
     }
 }
 

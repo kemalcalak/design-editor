@@ -112,6 +112,21 @@ impl SectionCapabilities {
                 export: true,
                 interactions: true,
             },
+            // Notes are canvas-only (#12): no paint, export or prototype
+            // sections, only their box (W / H), opacity and the Annotation section.
+            K::Other(tag) if super::canvas_annotation::is_annotation_tag(tag) => Self {
+                create_component: false,
+                flex_layout: false,
+                size_options: true,
+                text: false,
+                image: false,
+                opacity: true,
+                fill: false,
+                stroke: false,
+                effects: false,
+                export: false,
+                interactions: false,
+            },
             K::Other(_) => Self {
                 create_component: false,
                 flex_layout: false,
@@ -245,6 +260,8 @@ pub struct VisibleSections {
     /// the action-rect walker reads it so the toggle action carries
     /// the NEXT value (`!checked`). Ignored for non-toggle widgets.
     pub widget_checked: bool,
+    /// Annotation section (#12) — `Some(kind)` for a note / context / prompt.
+    pub annotation: Option<jian_ops_schema::node::AnnotationKind>,
     pub image: bool,
     /// Whether the selected image carries optional video metadata.
     pub video: bool,
@@ -396,6 +413,7 @@ impl VisibleSections {
         icon: false,
         widget: None,
         widget_checked: false,
+        annotation: None,
         image: false,
         video: false,
         image_warning: false,

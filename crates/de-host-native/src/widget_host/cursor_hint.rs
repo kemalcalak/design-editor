@@ -246,7 +246,8 @@ impl WidgetHostNative {
             | Tool::Checkbox
             | Tool::Slider
             | Tool::Progress
-            | Tool::Tabs => {
+            | Tool::Tabs
+            | Tool::Note => {
                 if over_canvas_node {
                     CursorHint::Default
                 } else {

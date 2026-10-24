@@ -182,6 +182,9 @@ fn kind_stem(node: &PenNode) -> &'static str {
         PenNode::Image(_) => "image",
         PenNode::IconFont(_) => "icon",
         PenNode::Ref(_) => "component",
+        PenNode::Note(_) => "note",
+        PenNode::Context(_) => "context",
+        PenNode::Prompt(_) => "prompt",
     }
 }
 
