@@ -73,9 +73,26 @@ pub(super) fn paint_drop_shadows(
             ),
             size: world_rect.size,
         };
-        cx.backend
-            .fill_drop_shadow(shadow_rect, radius, s.blur * zoom, s.color);
+        with_shadow_blend(cx, s.blend_mode, |cx| {
+            cx.backend
+                .fill_drop_shadow(shadow_rect, radius, s.blur * zoom, s.color);
+        });
     }
+}
+
+/// Paint one shadow, in a blend layer when it has a blend mode.
+fn with_shadow_blend(
+    cx: &mut PaintCx<'_>,
+    mode: crate::ImageBlendMode,
+    paint: impl FnOnce(&mut PaintCx<'_>),
+) {
+    if mode == crate::ImageBlendMode::Normal {
+        paint(cx);
+        return;
+    }
+    cx.backend.push_blend_layer(mode);
+    paint(cx);
+    cx.backend.restore();
 }
 
 /// Tessellate an ellipse arc / pie / donut-sector into a closed
@@ -270,15 +287,17 @@ pub(crate) fn paint_svg_path_node(
             continue;
         };
         if s.inner {
-            cx.backend.fill_inner_shadow_svg_path_with_fill_rule(
-                d,
-                world_rect,
-                s.offset_x * zoom,
-                s.offset_y * zoom,
-                s.blur * zoom,
-                s.color,
-                node.even_odd_fill,
-            );
+            with_shadow_blend(cx, s.blend_mode, |cx| {
+                cx.backend.fill_inner_shadow_svg_path_with_fill_rule(
+                    d,
+                    world_rect,
+                    s.offset_x * zoom,
+                    s.offset_y * zoom,
+                    s.blur * zoom,
+                    s.color,
+                    node.even_odd_fill,
+                );
+            });
         }
     }
     let width = node.stroke.map_or(0.0, |stroke| stroke.width * zoom);

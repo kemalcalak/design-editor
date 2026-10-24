@@ -645,6 +645,7 @@ fn state_effects(
                     blur: body.blur,
                     color: with_scene_opacity(color, opacity),
                     inner: body.inner.unwrap_or(false),
+                    blend_mode: Default::default(),
                 }))
             }
             // A state that keeps a shader effect resolves it like the loader.

@@ -201,6 +201,7 @@ pub fn panel_shadow_body(inner: Option<bool>) -> ShadowBody {
         blur: 8.0,
         spread: 0.0,
         color: "#00000040".to_string(),
+        blend_mode: None,
     }
 }
 

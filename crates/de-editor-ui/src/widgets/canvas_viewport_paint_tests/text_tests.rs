@@ -518,6 +518,7 @@ fn svg_path_node_with_inner_shadow_paints_inset_shadow() {
         blur: 4.0,
         color: shadow_color,
         inner: true,
+        blend_mode: Default::default(),
     })];
     let rect = Rect::xywh(0.0, 0.0, 20.0, 20.0);
     let mut backend = GradientPathCaptureBackend::default();

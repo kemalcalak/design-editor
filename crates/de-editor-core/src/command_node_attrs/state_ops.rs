@@ -453,6 +453,7 @@ impl EditorState {
                 blur: 8.0,
                 spread: 0.0,
                 color: "#00000040".to_string(),
+                blend_mode: None,
             }),
             "inner_shadow" => PenEffect::Shadow(crate::fills::panel_shadow_body(Some(true))),
             "blur" => PenEffect::Blur(BlurBody {

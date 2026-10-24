@@ -327,6 +327,7 @@ fn effects_split_across_shadow_blur_and_backdrop_channels() {
                 a: 0.25,
             },
             inner: false,
+            blend_mode: Default::default(),
         }),
         Effect::Blur(de_editor_ui::layout_scene::BlurEffect { radius: 8.0 }),
     ];
