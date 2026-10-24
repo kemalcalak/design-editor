@@ -53,6 +53,12 @@ pub fn property_focus_initial(focus: PropertyFocus, panel: &PropertyPanel) -> St
                 .map(format_panel_number)
                 .unwrap_or_else(|| "0".to_string())
         }
+        F::MotionValue { index, field } => match panel.snapshot.interactions.motion.get(index) {
+            Some(crate::widgets::property_panel_motion::MotionSummary::Simple(simple)) => {
+                crate::widgets::property_panel_motion::field_value(simple, field)
+            }
+            _ => String::new(),
+        },
         F::EffectRadius(index) => panel
             .snapshot
             .effects

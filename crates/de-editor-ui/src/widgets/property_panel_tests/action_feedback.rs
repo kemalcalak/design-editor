@@ -41,7 +41,7 @@ fn add_button_wash(mode: ThemeMode, pressed: bool) -> (Color, PropertyPanel) {
     .into_iter()
     .enumerate()
     .find_map(|(i, (action, r))| {
-        matches!(action, PropertyPanelAction::ToggleInteractionMenu).then_some((i, r))
+        matches!(action, PropertyPanelAction::ToggleInteractionMenu(_)).then_some((i, r))
     })
     .expect("frame panel has an Add interaction action");
     panel.action_hover = Some(index);
