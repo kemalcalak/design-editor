@@ -34,16 +34,19 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    # Same repos and revs as the vendor/ submodules (.gitmodules); nix-check
+    # overrides these from the checked-out gitlinks, so a stale pin here only
+    # affects users who build the flake directly.
     agent = {
-      url = "github:ZSeven-W/agent-rs/5c0f9506e27be5b4f29cd2c1093e2858ad0fa20c";
+      url = "github:kemalcalak/agent-rs/6a15f48c2901fb000ea58c1c28a8bd14a3f750ae";
       flake = false;
     };
     casement = {
-      url = "github:ZSeven-W/casement/ffdd672cbda3abe5cd78d056fb75683f2a74f7fe";
+      url = "github:kemalcalak/casement/3dc5a7ef5d8f0de491b1027467ebe52b4c51f6c0";
       flake = false;
     };
     jian = {
-      url = "github:ZSeven-W/jian/2edfc361cff3f6f33174746c048002607d691d1c";
+      url = "github:kemalcalak/jian/3c1c18cc0b025478d6f39b3f52d94fdd6a860a21";
       flake = false;
     };
   };
@@ -388,7 +391,10 @@
           postInstallNormalize = ''
             rm -f packages/node_modules/.bun/node_modules/{string-width,strip-ansi,wrap-ansi}
           '';
-          hash = "sha256-aY3Nr1+a1o7TojefRcozmntbdfrF2JRtOrRY8Hqs8rE=";
+          # Fixed-output hash of the installed node_modules: refresh it whenever
+          # packages/bun.lock or a workspace package.json changes (nix-check
+          # prints the right value on a mismatch).
+          hash = "sha256-nsXKmlpqX0afSx72qYHgQVv+rIY/fRiRXF8euC10bSE=";
         };
         webSdkPackages = pkgs.stdenvNoCC.mkDerivation {
           pname = "design-editor-web-sdk-packages";
