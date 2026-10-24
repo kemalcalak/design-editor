@@ -370,6 +370,7 @@ impl<'a> SnapshotCtx<'a> {
             base,
             container,
             breakpoint: None,
+            placeholder: None,
             children: Some(children),
             image_search_query: None,
             reusable: None,

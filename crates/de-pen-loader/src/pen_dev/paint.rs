@@ -75,7 +75,7 @@ fn convert_fill(
         // the legacy repair (`normalize_gradient_fill`), which reads
         // `rotation` as a clockwise CSS angle.
         Some("gradient") => clockwise_rotation(&mut obj),
-        Some("image") => return images::convert_image_fill(obj, ctx),
+        Some("image") => return images::convert_image_fill(obj, size, ctx),
         Some("shader") => return shader::convert(obj, Stage::Fill, size, theme, ctx),
         Some("mesh_gradient") => return mesh::convert(obj, theme, ctx),
         _ => {}
@@ -266,6 +266,10 @@ fn convert_effect(
             if obj.get("shadowType").and_then(Value::as_str) == Some("inner") {
                 shadow["inner"] = Value::Bool(true);
             }
+            convert_blend_mode(&mut obj, report);
+            if let Some(mode) = obj.remove("blendMode") {
+                shadow["blendMode"] = mode;
+            }
             Some(shadow)
         }
         Some(kind @ ("blur" | "background_blur")) => Some(json!({
@@ -294,6 +298,8 @@ pub(super) fn convert_blend_mode(map: &mut Map<String, Value>, report: &mut PenD
         "colorDodge" => Some("color_dodge"),
         "softLight" => Some("soft_light"),
         "hardLight" => Some("hard_light"),
+        "linearBurn" => Some("linear_burn"),
+        "linearDodge" => Some("linear_dodge"),
         _ => None,
     };
     match canonical.map(str::to_owned) {

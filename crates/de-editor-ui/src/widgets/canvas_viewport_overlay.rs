@@ -1,6 +1,7 @@
-//! Selection overlay + fill/stroke node-paint helpers split out
-//! of `canvas_viewport.rs` to keep that file under the 800-line
-//! ceiling.
+//! Selection overlay + fill node-paint helpers split out of
+//! `canvas_viewport.rs` to keep that file under the 800-line ceiling. The
+//! stroke helpers live in `canvas_viewport_stroke_paint.rs`; the
+//! `paint_node_stroke` re-export keeps their old path.
 
 use crate::layout_scene::{SceneGradient, SceneNode, SceneShader, SceneStrokeAlign};
 use crate::theme::Theme;
@@ -155,43 +156,7 @@ pub(crate) fn paint_node_fill(
     }
 }
 
-/// Paint only a node's stroke. Layered-fill nodes use this after painting all
-/// background layers so the outline lands exactly once above the stack.
-pub(crate) fn paint_node_stroke(
-    cx: &mut PaintCx<'_>,
-    node: &SceneNode,
-    world_rect: Rect,
-    zoom: f32,
-) {
-    let r = node.corner_radius * zoom;
-    let use_round = r > 0.5;
-    let per_corner = scaled_non_uniform_corner_radii(node, zoom);
-    if let Some(stroke) = node.stroke {
-        if let Some(sides) = stroke
-            .sides
-            .filter(|sides| !stroke_sides_are_uniform(*sides))
-        {
-            paint_sided_rect_stroke(cx, world_rect, stroke.color, sides, zoom);
-        } else {
-            let w = stroke.width * zoom;
-            let (rect, r) = align_stroke_rect(world_rect, r, w, stroke.align);
-            if use_round {
-                if let Some(radii) = per_corner {
-                    cx.backend.stroke_round_rect_per_corner(
-                        rect,
-                        align_corner_radii(radii, w, stroke.align),
-                        stroke.color,
-                        w,
-                    );
-                } else {
-                    cx.backend.stroke_round_rect(rect, r, stroke.color, w);
-                }
-            } else {
-                cx.backend.stroke_rect(rect, stroke.color, w);
-            }
-        }
-    }
-}
+pub(crate) use super::canvas_viewport_stroke_paint::paint_node_stroke;
 
 pub(crate) fn scaled_non_uniform_corner_radii(node: &SceneNode, zoom: f32) -> Option<[f32; 4]> {
     node.corner_radii
@@ -202,17 +167,6 @@ pub(crate) fn scaled_non_uniform_corner_radii(node: &SceneNode, zoom: f32) -> Op
                 .skip(1)
                 .any(|radius| (*radius - radii[0]).abs() > f32::EPSILON)
         })
-}
-
-fn align_corner_radii(radii: [f32; 4], width: f32, align: SceneStrokeAlign) -> [f32; 4] {
-    let half = width / 2.0;
-    match align {
-        SceneStrokeAlign::Center => radii,
-        SceneStrokeAlign::Inside => radii.map(|radius| (radius - half).max(0.0)),
-        SceneStrokeAlign::Outside => {
-            radii.map(|radius| if radius > 0.0 { radius + half } else { 0.0 })
-        }
-    }
 }
 
 /// Backends stroke centered on the rect path; INSIDE / OUTSIDE
@@ -246,62 +200,6 @@ pub fn align_stroke_rect(
             ),
             if radius > 0.0 { radius + half } else { 0.0 },
         ),
-    }
-}
-
-fn stroke_sides_are_uniform(sides: [f32; 4]) -> bool {
-    sides
-        .iter()
-        .all(|side| (*side - sides[0]).abs() < f32::EPSILON)
-}
-
-fn paint_sided_rect_stroke(
-    cx: &mut PaintCx<'_>,
-    rect: Rect,
-    color: crate::Color,
-    sides: [f32; 4],
-    zoom: f32,
-) {
-    let x0 = rect.origin.x;
-    let y0 = rect.origin.y;
-    let x1 = rect.origin.x + rect.size.x;
-    let y1 = rect.origin.y + rect.size.y;
-    let [top, right, bottom, left] = sides;
-    if top > 0.0 {
-        let width = top * zoom;
-        cx.backend.stroke_line(
-            Point2D::new(x0, y0 + width / 2.0),
-            Point2D::new(x1, y0 + width / 2.0),
-            color,
-            width,
-        );
-    }
-    if right > 0.0 {
-        let width = right * zoom;
-        cx.backend.stroke_line(
-            Point2D::new(x1 - width / 2.0, y0),
-            Point2D::new(x1 - width / 2.0, y1),
-            color,
-            width,
-        );
-    }
-    if bottom > 0.0 {
-        let width = bottom * zoom;
-        cx.backend.stroke_line(
-            Point2D::new(x0, y1 - width / 2.0),
-            Point2D::new(x1, y1 - width / 2.0),
-            color,
-            width,
-        );
-    }
-    if left > 0.0 {
-        let width = left * zoom;
-        cx.backend.stroke_line(
-            Point2D::new(x0 + width / 2.0, y0),
-            Point2D::new(x0 + width / 2.0, y1),
-            color,
-            width,
-        );
     }
 }
 

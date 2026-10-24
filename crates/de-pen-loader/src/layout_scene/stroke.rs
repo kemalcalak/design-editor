@@ -5,7 +5,7 @@
 //! decide when an authored stroke must NOT reach the scene at all.
 
 use de_editor_core::scene_vars::VariableTable;
-use jian_scene::layout_scene::{SceneStroke, SceneStrokeAlign};
+use jian_scene::layout_scene::{SceneFillLayer, SceneStroke, SceneStrokeAlign};
 
 use crate::payload::{NodePayload, StrokePayload};
 
@@ -42,6 +42,23 @@ pub(super) fn resolve_scene_stroke(
         st.color = super::mul_alpha(st.color, paint_opacity);
         st
     })
+}
+
+/// The rich stroke paint stack of `node` (#13), or empty when it paints a
+/// plain colour: no stroke, a solid stroke, or a `$ref` stroke colour (which
+/// wins over the authored paint, as it does for the colour).
+pub(super) fn resolve_stroke_fill_layers(
+    node: &NodePayload,
+    node_id: &de_editor_core::NodeId,
+    var_table: &VariableTable,
+    stroke: Option<&SceneStroke>,
+) -> Vec<SceneFillLayer> {
+    match (stroke, node.stroke.as_ref()) {
+        (Some(_), Some(s)) if var_table.stroke_color_for(node_id).is_none() => {
+            super::fill_layers_to_scene(&s.fill_layers, None, [node.w, node.h])
+        }
+        _ => Vec::new(),
+    }
 }
 
 /// Resolve a payload stroke into a scene stroke. The `$ref` stroke

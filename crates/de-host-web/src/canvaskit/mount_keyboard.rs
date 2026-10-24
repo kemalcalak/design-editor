@@ -53,6 +53,14 @@ pub(super) fn register_keyboard_listeners(
             match key.as_str() {
                 "Backspace" if !is_mod => consumed = b.host.apply_backspace(),
                 "Delete" if !is_mod => consumed = b.host.apply_delete(),
+                // Cmd/Ctrl+Enter — Present the active page, or leave it
+                // (#157).
+                "Enter" if is_mod && !prompt_center_open => {
+                    consumed = b.host.toggle_present();
+                    if consumed {
+                        evt.prevent_default();
+                    }
+                }
                 "Enter" if !is_mod => consumed = b.host.apply_send(),
                 "Escape" if !is_mod => {
                     if preview_active {

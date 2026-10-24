@@ -102,9 +102,7 @@ pub fn section_tops(
         interactions: next(shown(
             visible.interactions,
             crate::widgets::property_panel_interactions::interactions_section_height(interactions)
-                + crate::widgets::property_panel_motion::motion_section_height(
-                    &interactions.motion,
-                ),
+                + crate::widgets::property_panel_motion::motion_section_height(interactions),
         )),
         export: next(shown(
             visible.export,

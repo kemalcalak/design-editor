@@ -139,6 +139,9 @@ pub struct NodePayload {
     pub locked: bool,
     #[serde(default)]
     pub collapsed: bool,
+    /// A frame's in-progress marker (`placeholder: true`, #16).
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub placeholder: bool,
     #[serde(default)]
     pub fill_type: String,
     /// Resolved gradient body for the first fill when it is a

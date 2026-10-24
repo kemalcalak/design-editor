@@ -107,6 +107,7 @@ fn fast_interaction_skips_every_effect_layer_at_any_zoom() {
             blur: 12.0,
             color: Color::BLACK,
             inner: false,
+            blend_mode: Default::default(),
         }),
         Effect::Blur(crate::layout_scene::BlurEffect { radius: 12.0 }),
         Effect::BackgroundBlur { radius: 12.0 },
@@ -171,6 +172,7 @@ fn subpixel_shadow_skips_the_shadow_draw() {
         blur: 4.0,
         color: Color::BLACK,
         inner: false,
+        blend_mode: Default::default(),
     })]);
     assert!(ops_at_zoom(&node, 1.0).contains(&"shadow"));
     assert!(!ops_at_zoom(&node, 0.05).contains(&"shadow"));
@@ -186,6 +188,7 @@ fn visible_offset_keeps_the_shadow_even_with_tiny_blur() {
         blur: 0.0,
         color: Color::BLACK,
         inner: false,
+        blend_mode: Default::default(),
     })]);
     assert!(ops_at_zoom(&node, 0.05).contains(&"shadow"));
 }

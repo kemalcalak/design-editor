@@ -36,6 +36,11 @@ pub struct StrokePayload {
     pub dash_pattern: Option<Vec<f32>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub dash_offset: Option<f32>,
+    /// The stroke's paint stack when it is more than one plain solid colour
+    /// (#13): gradients, shaders, images, several layers or a blended solid,
+    /// front-to-back. Empty for a plain solid stroke, which `color` carries.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub fill_layers: Vec<jian_ops_schema::style::PenFill>,
 }
 
 fn is_zero_i8(v: &i8) -> bool {

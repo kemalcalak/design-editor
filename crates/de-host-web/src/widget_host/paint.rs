@@ -548,11 +548,14 @@ impl WidgetHost {
             ) {
                 crate::repaint_coalescer::request();
             }
-            // A time-driven shader fill animates without any input, and this
-            // host has no deadline scheduler to carry the next frame, so ask
-            // for it here while one is on screen.
-            if de_editor_ui::widgets::canvas_shader_clock::animated_shader_painted() {
-                crate::repaint_coalescer::request();
+            // Animated canvas content (a time-driven shader fill, a
+            // placeholder sweep) changes without any input, and this host
+            // has no deadline scheduler to carry the next frame, so ask for
+            // it here at the cadence the content asked for.
+            if let Some(due) =
+                de_editor_ui::widgets::canvas_shader_clock::next_deadline_ms(self.now_ms)
+            {
+                crate::repaint_coalescer::request_after(due.saturating_sub(self.now_ms + 16));
             }
         }
     }

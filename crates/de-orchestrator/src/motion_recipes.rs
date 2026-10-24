@@ -173,6 +173,9 @@ fn is_recipe_animation(animation: &NodeAnimation) -> bool {
                     | (DISPLAY_DURATION_MS, Easing::Standard)
             )
         }
+        // The recipes author lifecycle motion only; pointer motion is the
+        // author's own and is never cleared as a recipe.
+        MotionTrigger::Hover | MotionTrigger::Tap => false,
     }
 }
 

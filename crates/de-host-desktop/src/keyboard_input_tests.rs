@@ -620,3 +620,22 @@ fn delete_key_edits_focused_settings_input_and_keeps_nodes() {
     assert_eq!(app.host.editor_state().editor_ui.settings_input.text(), "");
     assert_eq!(app.host.editor_state().active_children().len(), node_count);
 }
+
+/// #157: Cmd/Ctrl+Enter presents an ordinary (untagged) document from the
+/// editor and the same chord leaves Present, rather than advancing a slide.
+#[test]
+fn cmd_enter_starts_and_leaves_present_on_any_page() {
+    let document = jian_ops_schema::load_str(PRESENTING_DECK)
+        .expect("parse deck fixture")
+        .value;
+    let mut app = DesktopApp::new(None);
+    app.host
+        .install_imported_state(de_editor_core::EditorState::from_document(document));
+    app.zoom_modifier = true;
+    press(&mut app, NamedKey::Enter);
+    assert!(app.host.preview_slideshow_active(), "Cmd+Enter presents");
+    assert_eq!(board(&app), "slide-1");
+
+    press(&mut app, NamedKey::Enter);
+    assert!(!app.host.preview_active(), "Cmd+Enter leaves Present");
+}

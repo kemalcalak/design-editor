@@ -719,12 +719,18 @@ pub fn apply_property_action(
         | A::PickInteractionTrigger(_)
         | A::SetInteractionNavigate { .. }
         | A::SetInteractionPop(_)
+        | A::SetInteractionScrollTo { .. }
+        | A::SetInteractionOpenUrl(_)
+        | A::MoveInteraction { .. }
         | A::SetInteractionTransition { .. }
         | A::RemoveInteraction(_)
         | A::AddAnimation
         | A::RemoveAnimation(_)
         | A::SetAnimationTrigger { .. }
-        | A::SetAnimationProperty { .. } => {
+        | A::SetAnimationProperty { .. }
+        | A::AddTransition
+        | A::RemoveTransition
+        | A::SetTransitionEasing(_) => {
             crate::widgets::property_panel_dispatch_interactions::apply_interaction_action(
                 state, action,
             );

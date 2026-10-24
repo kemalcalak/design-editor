@@ -36,6 +36,7 @@ fn frame_node(id: &str) -> PenNode {
         gestures: None,
         route: None,
         breakpoint: None,
+        placeholder: None,
     })
 }
 

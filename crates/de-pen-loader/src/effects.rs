@@ -19,6 +19,9 @@ pub struct ShadowPayload {
     /// outer drop shadows.
     #[serde(default)]
     pub inner: bool,
+    /// How the shadow composites onto what is behind it; `None` is normal.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub blend_mode: Option<jian_ops_schema::style::BlendMode>,
 }
 
 /// Serialize a node's drop-shadow `effects` into payload form. Blur
@@ -33,6 +36,7 @@ pub fn effects_to_payload(effects: &[Effect]) -> Vec<ShadowPayload> {
                 blur: s.blur,
                 color: [s.color.r, s.color.g, s.color.b, s.color.a],
                 inner: s.inner,
+                blend_mode: crate::layout_scene::scene_blend_to_schema(s.blend_mode),
             }),
             // Layer blur, backdrop blur and shader passes are all carried
             // separately (`layer_blur` / `background_blur` /
@@ -107,6 +111,7 @@ fn shadow_payload_to_effect(s: &ShadowPayload) -> Effect {
             a: s.color[3],
         },
         inner: s.inner,
+        blend_mode: crate::layout_scene::blend_mode_to_scene(s.blend_mode.as_ref()),
     })
 }
 
@@ -162,6 +167,7 @@ pub fn shadows_from_canonical(node: &PenNode) -> Vec<ShadowPayload> {
                     blur: s.blur,
                     color,
                     inner: s.inner.unwrap_or(false),
+                    blend_mode: s.blend_mode.clone(),
                 })
             }
             PenEffect::Shadow(_) => None,
@@ -213,6 +219,7 @@ mod tests {
                     a: 0.5,
                 },
                 inner: false,
+                blend_mode: Default::default(),
             }),
             Effect::DropShadow(DropShadow {
                 offset_x: -2.0,
@@ -225,6 +232,7 @@ mod tests {
                     a: 1.0,
                 },
                 inner: true,
+                blend_mode: Default::default(),
             }),
         ];
         // Through the actual serde JSON path the `.de` file uses.
@@ -321,6 +329,7 @@ mod tests {
                     a: 1.0,
                 },
                 inner: false,
+                blend_mode: Default::default(),
             }),
             Effect::Blur(BlurEffect { radius: 10.0 }),
         ];

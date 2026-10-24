@@ -35,6 +35,7 @@ pub fn frame_node(
         route: None,
         // Figma import never authors a responsive breakpoint variant.
         breakpoint: None,
+        placeholder: None,
     })
 }
 

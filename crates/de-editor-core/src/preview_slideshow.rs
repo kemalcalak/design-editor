@@ -181,15 +181,28 @@ pub fn selected_page_boards(state: &EditorState) -> Vec<String> {
 /// ordinary interactive preview.
 ///
 /// Gated on the recorded scenario, never on what the content looks like: the
-/// tag is the only thing that actually knows the document is a deck.
+/// tag is the only thing that actually knows the document is a deck. An
+/// explicit Present request (Cmd/Ctrl+Enter, #157) presents any page: its
+/// top-level frames are the slides, in canvas (child) order.
 pub fn slideshow_for_document(state: &EditorState) -> Option<SlideshowState> {
-    if state.editor_ui.scenario != Some(TemplateScene::Slides) {
+    if state.editor_ui.scenario != Some(TemplateScene::Slides) && !state.editor_ui.preview.present {
         return None;
     }
     SlideshowState::new(active_page_boards(state))
 }
 
 impl EditorState {
+    /// Ask the next preview entry to present the active page (#157).
+    /// Returns false — and asks nothing — when the page has no frame to
+    /// present.
+    pub fn request_present(&mut self) -> bool {
+        if active_page_boards(self).is_empty() {
+            return false;
+        }
+        self.editor_ui.preview.present = true;
+        true
+    }
+
     /// Start the deck slideshow for this document, if it is a deck with
     /// boards. Returns whether a slideshow is now running.
     ///
@@ -340,6 +353,28 @@ mod tests {
             deck.preview_slideshow().map(SlideshowState::current_board),
             Some(Some("slide-1"))
         );
+    }
+
+    #[test]
+    fn present_runs_any_page_as_slides_until_preview_exits() {
+        let mut ordinary = deck_state(THREE_BOARDS);
+        ordinary.editor_ui.scenario = None;
+        assert!(slideshow_for_document(&ordinary).is_none());
+        assert!(ordinary.request_present());
+        ordinary.editor_ui.enter_preview();
+        assert!(ordinary.begin_preview_slideshow());
+        assert_eq!(
+            ordinary.preview_slideshow().map(SlideshowState::len),
+            Some(3)
+        );
+        ordinary.editor_ui.exit_preview();
+        assert!(!ordinary.editor_ui.preview.present);
+        assert!(slideshow_for_document(&ordinary).is_none());
+
+        let mut empty = deck_state(r#"{"version":"1.0.0","children":[]}"#);
+        empty.editor_ui.scenario = None;
+        assert!(!empty.request_present(), "nothing to present");
+        assert!(!empty.editor_ui.preview.present);
     }
 
     #[test]

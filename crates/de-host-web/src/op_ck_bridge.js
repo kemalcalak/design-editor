@@ -1666,6 +1666,51 @@ export async function opCkInit(canvasId) {
     CK.BlendMode.Exclusion,
   ][blendMode] || CK.BlendMode.SrcOver;
 
+  // Linear burn (16) and linear dodge (17) have no CanvasKit built-in; they
+  // run as runtime blenders with the same programs as the native backend
+  // (`de-host-native/src/backend/skia/blender.rs`). Compiled on first use;
+  // `null` records a failed compile, which falls back to the closest
+  // built-in (Multiply / Plus).
+  const LINEAR_BLEND_SKSL = {
+    16: 'half4 main(half4 src, half4 dst) {' +
+      'half3 both = max(src.rgb * dst.a + dst.rgb * src.a - src.a * dst.a, half3(0));' +
+      'return half4(src.rgb * (1 - dst.a) + dst.rgb * (1 - src.a) + both,' +
+      'src.a + dst.a * (1 - src.a));}',
+    17: 'half4 main(half4 src, half4 dst) {' +
+      'half3 both = min(src.rgb * dst.a + dst.rgb * src.a, half3(src.a * dst.a));' +
+      'return half4(src.rgb * (1 - dst.a) + dst.rgb * (1 - src.a) + both,' +
+      'src.a + dst.a * (1 - src.a));}',
+  };
+  const LINEAR_BLEND_FALLBACK = { 16: 'Multiply', 17: 'Plus' };
+  const linearBlenders = {};
+  const linearBlender = (code) => {
+    if (!(code in LINEAR_BLEND_SKSL)) return null;
+    if (!(code in linearBlenders)) {
+      let blender = null;
+      try {
+        const effect = CK.RuntimeEffect && CK.RuntimeEffect.MakeForBlender
+          ? CK.RuntimeEffect.MakeForBlender(LINEAR_BLEND_SKSL[code])
+          : null;
+        blender = effect ? effect.makeBlender([]) : null;
+      } catch (_) {
+        blender = null;
+      }
+      linearBlenders[code] = blender;
+    }
+    return linearBlenders[code];
+  };
+  // Set a scene blend-mode code on `paint`.
+  const applyBlend = (paint, code) => {
+    const blender = linearBlender(code);
+    if (blender && paint.setBlender) {
+      paint.setBlender(blender);
+    } else if (code in LINEAR_BLEND_FALLBACK) {
+      paint.setBlendMode(CK.BlendMode[LINEAR_BLEND_FALLBACK[code]]);
+    } else {
+      paint.setBlendMode(blendModeForCode(code));
+    }
+  };
+
   const drawImageRectLinear = (image, src, dst, paint) => {
     if (canvas.drawImageRectOptions) {
       canvas.drawImageRectOptions(image, src, dst, CK.FilterMode.Linear, CK.MipmapMode.None, paint);
@@ -1981,7 +2026,7 @@ export async function opCkInit(canvasId) {
       const paint = new CK.Paint();
       paint.setAntiAlias(true);
       paint.setAlphaf(Math.max(0, Math.min(1, opacity)));
-      paint.setBlendMode(blendModeForCode(blendMode));
+      applyBlend(paint, blendMode);
       const matrix = imageAdjustmentMatrix(adjustments);
       const colorFilter = matrix && CK.ColorFilter && CK.ColorFilter.MakeMatrix
         ? CK.ColorFilter.MakeMatrix(matrix)
@@ -2489,7 +2534,7 @@ export async function opCkInit(canvasId) {
     pushCompositeLayer(x, y, w, h, opacity, blendMode) {
       const paint = new CK.Paint();
       paint.setAlphaf(Math.max(0, Math.min(1, opacity)));
-      paint.setBlendMode(blendModeForCode(blendMode));
+      applyBlend(paint, blendMode);
       canvas.saveLayer(paint, CK.LTRBRect(x, y, x + w, y + h));
       paint.delete();
     },
@@ -2510,7 +2555,7 @@ export async function opCkInit(canvasId) {
         return;
       }
       const paint = new CK.Paint();
-      paint.setBlendMode(blendModeForCode(blendMode));
+      applyBlend(paint, blendMode);
       canvas.saveLayer(paint);
       paint.delete();
     },
