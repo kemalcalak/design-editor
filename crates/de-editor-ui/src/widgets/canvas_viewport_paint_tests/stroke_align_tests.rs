@@ -44,6 +44,7 @@ fn stroked_rect(align: SceneStrokeAlign) -> SceneNode {
         width: 4.0,
         sides: None,
         align,
+        style: Default::default(),
     });
     n
 }

@@ -62,6 +62,7 @@ fn apply_resolved_variable_colors(
             width,
             sides: crate::widgets::property_panel_snapshot::stroke_sides_for_scene(node),
             align: crate::widgets::property_panel_snapshot::stroke_align_for_scene(node),
+            style: Default::default(),
         });
     }
 }

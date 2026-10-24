@@ -566,6 +566,7 @@ fn state_stroke(
             Some(StrokeAlign::Outside) => SceneStrokeAlign::Outside,
             Some(StrokeAlign::Center) | None => SceneStrokeAlign::Center,
         },
+        style: Default::default(),
     })
 }
 

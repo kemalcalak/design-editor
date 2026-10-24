@@ -244,6 +244,7 @@ fn icon_font_from_path(path: &PathNode, name: &str) -> IconFontNode {
         base: path.base.clone(),
         icon_font_name: name.to_string(),
         icon_font_family: Some("lucide".to_string()),
+        weight: None,
         width: path.width.clone(),
         height: path.height.clone(),
         limits: path.limits,

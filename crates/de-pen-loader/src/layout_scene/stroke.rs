@@ -31,6 +31,9 @@ pub(super) fn scene_stroke(
             a if a > 0 => SceneStrokeAlign::Outside,
             _ => SceneStrokeAlign::Center,
         },
+        // Caps, joins and dashes are not mapped into the scene yet (#89);
+        // the plain style keeps every painter on its defaults.
+        style: Default::default(),
     }
 }
 

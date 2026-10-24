@@ -13,7 +13,14 @@ name: Release
 #   Design-Editor-<v>-x64-win-setup.exe   Windows x64 NSIS installer (unsigned)
 #   de-cli-macos-aarch64.tar.gz           standalone `de` CLI
 #   de-cli-windows-x86_64.zip             standalone `de.exe` CLI
+#   design-editor-linux-x86_64.tar.gz     Linux x86_64 `design-editor` binary
+#   de-cli-linux-x86_64.tar.gz            standalone Linux `de` CLI
 #   SHA256SUMS.txt
+#
+# The two Linux archives are what flake.nix's `prebuilt` / `prebuilt-cli`
+# outputs download (version + hashes in nix/release-manifest.json, refreshed
+# after a release by scripts/update-nix-release-manifest.sh); they hold the
+# bare binary at the archive root. The in-app update check has no Linux asset.
 #
 # `workflow_dispatch` (on main) re-runs the same pipeline, e.g. after a
 # failed build: it still publishes only when the tag does not exist yet.
@@ -22,7 +29,7 @@ name: Release
 # fired for the commit being released.
 #
 # Pull requests that touch release files get a dry run: the same build jobs
-# produce the dmg and the installer as short-lived artifacts, but nothing is
+# produce the dmg, the installer and the Linux tarballs as short-lived artifacts, but nothing is
 # tagged or published. The PR's own Rust check / version-sync workflows cover
 # the checks, so the dry run skips them.
 
@@ -41,6 +48,7 @@ on:
       - 'scripts/package-windows.nsi'
       - 'scripts/workspace-version.sh'
       - 'crates/de-host-desktop/assets/icon.*'
+      - '.github/ci/rust-check-apt-packages.txt'
   workflow_dispatch:
 
 permissions:
@@ -136,6 +144,13 @@ jobs:
             runner: windows-latest
             target: x86_64-pc-windows-msvc
             arch: x64
+          # ubuntu-24.04 rather than -latest: the binaries link against the
+          # runner's glibc, so the floor a Linux user needs moves only when
+          # this pin does.
+          - label: linux-x86_64
+            runner: ubuntu-24.04
+            target: x86_64-unknown-linux-gnu
+            arch: x64
     steps:
       - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
         with:
@@ -154,6 +169,33 @@ jobs:
         run: >-
           tools/pinned-release-tools.sh skia desktop '${{ matrix.target }}'
           "$RUNNER_TEMP/design-editor-skia-${{ matrix.target }}"
+      - name: Install build prerequisites (linux)
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          set -euo pipefail
+          # The package list and third-party-source cleanup of rust-check.yml's
+          # Linux leg, which builds and tests these crates on every PR (no apt
+          # archive cache here: releases are rare).
+          sudo rm -f /etc/apt/sources.list.d/google-chrome*.list /etc/apt/sources.list.d/google-chrome*.sources \
+                     /etc/apt/sources.list.d/microsoft-*.list /etc/apt/sources.list.d/microsoft-*.sources
+          mapfile -t packages < <(grep -Ev '^[[:space:]]*(#|$)' .github/ci/rust-check-apt-packages.txt)
+          [[ ${#packages[@]} -gt 0 ]] || {
+            echo "::error::no packages read from .github/ci/rust-check-apt-packages.txt"
+            exit 1
+          }
+          apt_options=(-o Acquire::ForceIPv4=true -o Acquire::Retries=3 -o Acquire::http::Timeout=30)
+          for attempt in 1 2 3 4; do
+            if sudo DEBIAN_FRONTEND=noninteractive timeout 180s apt-get "${apt_options[@]}" update && \
+              sudo DEBIAN_FRONTEND=noninteractive timeout 600s apt-get "${apt_options[@]}" install --yes "${packages[@]}"; then
+              break
+            fi
+            if [[ "$attempt" == 4 ]]; then
+              echo "::error::apt prerequisites failed after $attempt attempts"
+              exit 1
+            fi
+            sleep $((attempt * 20))
+          done
       - name: Validate pinned VC++ Runtime covers Windows build toolset
         if: runner.os == 'Windows'
         shell: pwsh
@@ -203,6 +245,15 @@ jobs:
             -srcfolder "$STAGE" \
             -fs HFS+ -format UDZO -ov \
             "$DMG"
+
+      # Linux: bare binaries in tarballs, the layout flake.nix unpacks.
+      - name: Package desktop and CLI archives (linux)
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          set -euo pipefail
+          tar czf design-editor-${{ matrix.label }}.tar.gz -C target/${{ matrix.target }}/release design-editor
+          tar czf de-cli-${{ matrix.label }}.tar.gz -C target/${{ matrix.target }}/release de
 
       # Windows: NSIS installer with the ANGLE DLLs and the VC++ runtime.
       - name: Package CLI archive (windows)
@@ -255,6 +306,7 @@ jobs:
           path: |
             Design-Editor-*-mac.dmg
             Design-Editor-*-win-setup.exe
+            design-editor-${{ matrix.label }}.tar.gz
             de-cli-${{ matrix.label }}.tar.gz
             de-cli-${{ matrix.label }}.zip
           if-no-files-found: error
@@ -284,7 +336,9 @@ jobs:
             "Design-Editor-$DE_VERSION-arm64-mac.dmg" \
             "Design-Editor-$DE_VERSION-x64-win-setup.exe" \
             de-cli-macos-aarch64.tar.gz \
-            de-cli-windows-x86_64.zip; do
+            de-cli-windows-x86_64.zip \
+            design-editor-linux-x86_64.tar.gz \
+            de-cli-linux-x86_64.tar.gz; do
             [[ -s "$asset" ]] || { echo "::error::missing release asset $asset"; exit 1; }
           done
           # Hash into the parent first: writing inside release-files while the
@@ -301,7 +355,9 @@ jobs:
 
           - **macOS (Apple Silicon):** open `Design-Editor-<v>-arm64-mac.dmg` and drag Design Editor to Applications.
           - **Windows x64:** run `Design-Editor-<v>-x64-win-setup.exe`.
-          - **CLI only:** `de-cli-macos-aarch64.tar.gz` / `de-cli-windows-x86_64.zip`.
+          - **Linux x86_64:** `design-editor-linux-x86_64.tar.gz` holds the bare `design-editor` binary
+            (needs glibc 2.39+, GL/EGL and X11 or Wayland).
+          - **CLI only:** `de-cli-macos-aarch64.tar.gz` / `de-cli-windows-x86_64.zip` / `de-cli-linux-x86_64.tar.gz`.
 
           These builds are **not code-signed** yet:
 

@@ -133,6 +133,7 @@ fn add_center_stroke(node: &mut SceneNode) {
         width: 2.0,
         sides: None,
         align: SceneStrokeAlign::Center,
+        style: Default::default(),
     });
 }
 

@@ -32,6 +32,7 @@ impl EditorState {
             Tool::Rect => ("rect", "Rectangle"),
             Tool::Ellipse => ("ellipse", "Ellipse"),
             Tool::Polygon => ("polygon", "Polygon"),
+            Tool::Star => ("star", "Star"),
             Tool::Line => ("line", "Line"),
             Tool::Pen => ("path", "Path"),
             Tool::Frame => ("frame", "Frame"),
@@ -70,7 +71,7 @@ impl EditorState {
             return Ok(None);
         };
         match tool {
-            Tool::Rect | Tool::Ellipse | Tool::Polygon => {
+            Tool::Rect | Tool::Ellipse | Tool::Polygon | Tool::Star => {
                 set_primary_fill_hex(&mut node, "#BDC7D9");
             }
             Tool::Line | Tool::Pen => {
@@ -226,6 +227,7 @@ impl EditorState {
             },
             icon_font_name: icon_name.to_string(),
             icon_font_family: Some(family.to_string()),
+            weight: None,
             width: Some(SizingBehavior::Number(SIZE)),
             height: Some(SizingBehavior::Number(SIZE)),
             fill: Some(vec![default_icon_fill()]),

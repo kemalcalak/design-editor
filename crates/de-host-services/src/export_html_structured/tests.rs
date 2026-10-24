@@ -254,6 +254,7 @@ fn a_stroke_is_an_overlay_so_it_cannot_shift_the_children_it_covers() {
         width: 4.0,
         sides: None,
         align: SceneStrokeAlign::Inside,
+        style: Default::default(),
     });
     node.children = vec![child];
 
@@ -282,6 +283,7 @@ fn per_side_stroke_widths_map_onto_the_matching_border_sides() {
         width: 0.0,
         sides: Some([0.0, 0.0, 2.0, 0.0]),
         align: SceneStrokeAlign::Inside,
+        style: Default::default(),
     });
 
     let body = body_of(board(vec![node]));
@@ -298,6 +300,7 @@ fn an_outside_stroke_outsets_its_overlay_by_the_full_width() {
         width: 3.0,
         sides: None,
         align: SceneStrokeAlign::Outside,
+        style: Default::default(),
     });
 
     let body = body_of(board(vec![node]));
@@ -433,6 +436,7 @@ fn a_line_node_becomes_an_svg_segment_in_absolute_doc_coordinates() {
         width: 2.0,
         sides: None,
         align: SceneStrokeAlign::Center,
+        style: Default::default(),
     });
 
     let body = body_of(board(vec![node]));
@@ -453,6 +457,7 @@ fn a_horizontal_line_still_gets_a_renderable_svg_viewport() {
         width: 1.0,
         sides: None,
         align: SceneStrokeAlign::Center,
+        style: Default::default(),
     });
 
     let body = body_of(board(vec![node]));

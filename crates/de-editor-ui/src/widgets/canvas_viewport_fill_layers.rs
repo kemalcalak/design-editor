@@ -435,6 +435,7 @@ mod tests {
             width: 1.0,
             sides: None,
             align: SceneStrokeAlign::Center,
+            style: Default::default(),
         });
         node.fill_layers = vec![
             solid(3, ImageBlendMode::Screen),

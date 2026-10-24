@@ -76,7 +76,7 @@ Document
 ├── pages: Vec<Page>          (id + name + nodes)
 ├── active_page_index
 ├── selected: NodeId          (NONE = no selection)
-├── tool: Tool                (Select / Rect / Ellipse / Polygon / Line / Pen / Text / Frame / Hand)
+├── tool: Tool                (Select / Rect / Ellipse / Polygon / Star / Line / Pen / Text / Frame / Hand)
 ├── viewport: Viewport        (pan_x / pan_y / zoom + zoom_at + pan)
 ├── chat: ChatState           (messages, input, focused, anchor, collapsed)
 └── ui: UiState               (sidebar_open, layer_panel_width, property_panel_width,
@@ -128,7 +128,7 @@ Mutators on `Document`:
 | Floating cards    | Editor v3 (#86): left card (Agent / Layers / Components / Images) and properties card over a full-bleed canvas, the panel motion (`panel_reveal`, 220 ms) and `paint_card` | `floating_panels.rs`; core motion in `editor_ui_state/panel_motion.rs` |
 | LayerPanel        | Left rail — Pages + Layers sections                                                                                                  | `layer_panel.rs`                                                                                                                        |
 | Toolbar           | Vertical floating column — Select / shape slot / Ellipse / Pen / Pencil / Text / Frame / Image / Hand                                                                 | `toolbar.rs`                                                                                                                            |
-| ShapePicker       | Toolbar shape-slot dropdown (Rect / Ellipse / Polygon / Line / Pen / Icon / Import)                                                  | `shape_picker.rs`                                                                                                                       |
+| ShapePicker       | Toolbar shape-slot dropdown (Rect / Polygon / Star / Line / Icon; a star is a polygon with `innerRadius`, geometry in `de-editor-ui/src/polygon_geometry.rs`) | `shape_picker.rs`                                                                                                                       |
 | CanvasViewport    | Center — node tree + grid + viewport transform                                                                                       | `canvas_viewport.rs`                                                                                                                    |
 | PropertyPanel     | Right rail (272) — pinned header (selection glyph + name + kind, or the Code view with ✕, `property_panel_header.rs`) + sections + interactive inputs (Position X/Y/W/H/Rot/R, hex, stroke width) + Auto layout with the fill/hug/clip boxes + fill-type picker + closing Code chips (`property_panel_code_chips.rs`) | `property_panel.rs` + the `property_panel_*.rs` family + `property_panel/`, `property_panel_snapshot/`, `property_panel_tests/` |
 | AIChatPlaceholder | Floating — chat with drag + 4-corner snap + collapse pill                                                                            | `ai_chat_panel.rs`                                                                                                                      |
@@ -140,7 +140,7 @@ Mutators on `Document`:
 | LayerContextMenu  | Right-click overlay on layer rows + page tabs (Rename / Duplicate / Delete / Group / Ungroup / Lock / Hide; subset on page tabs)     | `layer_context_menu.rs`                                                                                                                 |
 | AgentSettings     | Cmd+, modal — up to 960×760, sidebar nav (Agents / MCP / Images / Fonts / System) + scrollable body; Agents is list + detail      | `agent_settings_panel.rs` + `agent_settings_{agents,i18n,images,mcp,system}*.rs`                                                         |
 | theme             | shadcn-dark palette tokens (incl. `canvas_surface`)                                                                                  | `theme.rs`                                                                                                                              |
-| i18n              | 15 canonical locale catalogs, 1,753 direct keys each, sharded main → `_git` → `_panel` → `_collab` in the `de-i18n` crate                       | `de-i18n/src/i18n/{en,zh_cn,zh_tw,ja,ko,fr,es,de,pt,ru,hi,tr,th,vi,id}{,_git,_panel,_collab}.rs`                                                 |
+| i18n              | 15 canonical locale catalogs, 1,756 direct keys each, sharded main → `_git` → `_panel` → `_collab` in the `de-i18n` crate                       | `de-i18n/src/i18n/{en,zh_cn,zh_tw,ja,ko,fr,es,de,pt,ru,hi,tr,th,vi,id}{,_git,_panel,_collab}.rs`                                                 |
 
 ## Theme + i18n
 
@@ -151,7 +151,7 @@ Mutators on `Document`:
 - 15 supported locales (matches TS dropdown order): EnUs / ZhCn / ZhTw / Ja / Ko / Fr / Es / De / Pt / Ru / Hi / Tr / Th / Vi / Id. Each carries a `display_name()` (English / 简体中文 / 繁體中文 / 日本語 / 한국어 / Français / Español / Deutsch / Português / Русский / हिन्दी / Türkçe / ไทย / Tiếng Việt / Bahasa Indonesia).
 - File ▸ Language (the menu's footer globe) opens a `LocalePicker` dropdown under the file pill. Native applies a clicked locale immediately; web closes the picker but keeps the old locale while an uninstalled runtime catalog is pending, then mutates `Document.ui.locale` once the JSON is ready. Clicking outside (or the Globe again) closes silently. The picker paints as the top-most overlay so it covers chat / status / canvas.
 - Multi-script chrome strings (한국어 / हिन्दी / ไทย / Tiếng Việt) render against per-codepoint typeface lookups (`FontMgr::match_family_style_character` cached per `i32` in `NativeBackend`), with each string broken into contiguous-typeface segments before draw.
-- Locale tables are hand-maintained in Rust, and each locale is **four files, chained by fall-through**: the main table `<locale>.rs` ends its `match` with `_ => return super::<locale>_git::lookup(key)`, the Git shard ends with `_ => return super::<locale>_panel::lookup(key)`, the `_panel` shard ends with `_ => return super::<locale>_collab::lookup(key)`, and the `_collab` overflow shard ends with `_ => return None`. The catalog is 1,753 direct keys per locale (`catalog_integrity_tests.rs` asserts the exact number). Native builds compile all 15 tables. On wasm32, `de-host-web` enables `de-editor-ui`'s forwarding `runtime-locale-catalog` feature; `de-i18n`'s source-side feature + target double gate then keeps only en-US + zh-CN embedded. `tools/export-i18n-catalogs.py` validates the same 1,753-key equality and generates the other 13 BCP-47 JSON files for `tools/stage-web-assets.sh` to place under `/pkg/assets/i18n/`.
+- Locale tables are hand-maintained in Rust, and each locale is **four files, chained by fall-through**: the main table `<locale>.rs` ends its `match` with `_ => return super::<locale>_git::lookup(key)`, the Git shard ends with `_ => return super::<locale>_panel::lookup(key)`, the `_panel` shard ends with `_ => return super::<locale>_collab::lookup(key)`, and the `_collab` overflow shard ends with `_ => return None`. The catalog is 1,756 direct keys per locale (`catalog_integrity_tests.rs` asserts the exact number). Native builds compile all 15 tables. On wasm32, `de-host-web` enables `de-editor-ui`'s forwarding `runtime-locale-catalog` feature; `de-i18n`'s source-side feature + target double gate then keeps only en-US + zh-CN embedded. `tools/export-i18n-catalogs.py` validates the same 1,756-key equality and generates the other 13 BCP-47 JSON files for `tools/stage-web-assets.sh` to place under `/pkg/assets/i18n/`.
 
   **Adding a new key: put it in `<locale>_collab.rs` (the terminal overflow shard), in all 15 locales.** The main tables sit close to the repo's 800-line ceiling (`zh_cn.rs` and `en.rs` are 775 lines), so new entries do not belong there — the `_panel` shards exist precisely to absorb overflow and have room. Only edit a main or `_git` table when you are changing the wording of a key that already lives there. Then bump the expected count in `catalog_integrity_tests.rs` and run:
 
@@ -165,13 +165,13 @@ Mutators on `Document`:
 
 The toolbar's compound `ShapeSlot` paints whichever shape variant is current (`ui.shape_tool`, default `Rect`) plus a small chevron-down in the gutter directly below the button (`SHAPE_SLOT_BOTTOM_EXTRA = 10 px`). Click anywhere on the slot — including the chevron — to toggle `ui.shape_picker_open`.
 
-`ShapePicker::for_document(doc)` paints a 220 × 7-row dropdown anchored to the right of the slot. The seven rows mirror the TS shape-tool-dropdown verbatim:
+`ShapePicker::for_editor_ui(ui)` paints a 220 × 5-row dropdown anchored to the right of the slot (Ellipse, Pen and image import have their own rail buttons since #30):
 
-- Rectangle / Ellipse / Polygon / Line / Pen → `ShapeChoice::Tool(Tool::*)` — the host writes `ui.shape_tool` + `doc.tool` and closes the panel.
+- Rectangle / Polygon / Star / Line → `ShapeChoice::Tool(Tool::*)` — the host writes `ui.shape_tool` + `doc.tool` and closes the panel. A star (#87) is a `PolygonNode` with `innerRadius`; the panel shows Points + Inner radius for it.
 - Icon → `ShapeChoice::OpenIconPicker` (host follow-up).
 - Import Image or SVG… → `ShapeChoice::ImportImageOrSvg` (host follow-up).
 
-Click anywhere outside the panel closes it silently. Locale lookups for the row labels (`shapes.rectangle / ellipse / polygon / line / icon / importImageSvg / pen`) come straight from the TS table; missing keys fall back to English literals.
+Click anywhere outside the panel closes it silently. Locale lookups for the row labels (`shapes.rectangle / polygon / star / line / icon`) come from the locale tables; missing keys fall back to English literals.
 
 ## PropertyPanel input editing
 

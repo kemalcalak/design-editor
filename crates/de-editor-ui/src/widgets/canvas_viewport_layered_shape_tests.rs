@@ -192,6 +192,7 @@ fn layered_node(kind: NodeKind) -> SceneNode {
         width: 2.0,
         sides: None,
         align: SceneStrokeAlign::Center,
+        style: Default::default(),
     });
     node
 }

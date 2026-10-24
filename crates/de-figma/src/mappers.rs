@@ -469,6 +469,28 @@ pub struct LayoutProps {
     pub clip_content: Option<bool>,
 }
 
+/// Spread mapped [`LayoutProps`] onto a `ContainerProps`.
+pub fn apply_layout(l: LayoutProps, c: &mut jian_ops_schema::node::container::ContainerProps) {
+    if l.layout.is_some() {
+        c.layout = l.layout;
+    }
+    if let Some(g) = l.gap {
+        c.gap = Some(jian_ops_schema::node::base::NumberOrExpression::Number(g));
+    }
+    if l.padding.is_some() {
+        c.padding = l.padding;
+    }
+    if l.justify_content.is_some() {
+        c.justify_content = l.justify_content;
+    }
+    if l.align_items.is_some() {
+        c.align_items = l.align_items;
+    }
+    if l.clip_content.is_some() {
+        c.clip_content = l.clip_content;
+    }
+}
+
 /// Map Figma stack fields → `LayoutProps`.
 pub fn map_figma_layout(node: &FigValue) -> LayoutProps {
     let mut result = LayoutProps::default();

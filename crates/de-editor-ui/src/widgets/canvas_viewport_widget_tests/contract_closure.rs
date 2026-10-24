@@ -91,6 +91,7 @@ fn styled_text_field_distinguishes_absent_and_explicit_zero_radius() {
         width: 2.0,
         sides: None,
         align: SceneStrokeAlign::Center,
+        style: Default::default(),
     });
     let explicit_zero = authored_widget_node(NodeKind::Text, widget, rect, 0.0);
 
