@@ -363,6 +363,7 @@ pub(crate) mod ai_chat_transcript_tools;
 pub mod align_toolbar;
 pub mod color_picker;
 mod component_browser_kits;
+mod component_browser_libraries;
 pub mod component_browser_panel;
 pub mod deck_boards;
 pub(crate) mod design_md_line_cache;

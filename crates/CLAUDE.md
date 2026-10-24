@@ -532,6 +532,15 @@ The document extension is `.de`; `.op` and the old `.pen` alias no longer open. 
 
 `pen_doc_path_bounds.rs` ports `pen-core/src/path-anchors.ts::getPathBoundsFromAnchors` — cubic Bezier derivative roots + extrema sweep — so authored paths with handles/curves scale into their `width` / `height` box the same way the canonical renderer paints.
 
+### Linked component libraries (#15)
+
+A document links other `.de` / pen.dev `.pen` files as live component libraries. Links persist in `editorMeta.libraries` (`{path, alias?, masters[], variables[]}`; paths relative to the document folder, absolute only before the first save). Types: `de-editor-core/src/library_link.rs`; sync (pure): `library_sync.rs`; files: `de-pen-loader/src/library_files.rs`.
+
+- Library masters are cached on the hidden `Components` page with ids verbatim, so `ref` instances resolve through the normal cross-page resolver and keep rendering when a library goes missing. `masters` records ownership: a re-sync replaces exactly those nodes; a master whose ids a local node already uses is skipped (status `conflicts`). Owned variables follow the library, local names win; theme axes are add-only.
+- `doc_io::load_editor_state_with_report` re-reads every link on open (pen.dev `imports` become links, `alias:` prefixes are dropped); `set_file_name_display` rebases links on Save As. Desktop `library_io.rs` polls link stamps once a second on a thread and re-syncs on `DesktopEvent::LibraryChanged`.
+- Sync is not an undo step; `undo` / `redo` call `reconcile_library_masters` so history cannot roll a library back. Unlink keeps masters an instance still uses as local components.
+- Surfaces: the Components tab's Libraries section (`component_browser_libraries.rs`; Link / Reload queue `LibraryRequest`, the web host answers with a toast), MCP `list_libraries` / `add_library` / `remove_library` (`de-mcp/src/library_tools.rs`, `EditorCommand::Library`).
+
 ## Font weight + text wrapping
 
 - **Numeric-string `fontWeight`** — `.de` files emit weights as JSON strings (`"700"`, `"600"`, `"normal"`). Both `vendor/jian/.../layout/mod.rs::resolve_weight` and `pen_doc_adapter::resolve_font_weight` parse numeric strings first, then fall back to lucide-style named weights (`bold`/`semibold`/`medium`/`light`/`thin`/`normal`/`regular`/`extralight`/`extrabold`/`black`/`heavy`/`demibold`/`ultralight`/`ultrabold`/`hairline`).
@@ -582,7 +591,7 @@ The **`de-mcp`** crate carries the MCP wire layer that mirrors the retired TS `p
 
 ### Tool catalog
 
-**147 static-schema tools** registered today. The authoritative list
+**150 static-schema tools** registered today. The authoritative list
 is `de-host-services/src/mcp_serve/schemas.rs` — `TOOL_SCHEMAS`
 (JSON inputSchemas; `DEBUG_TOOL_SCHEMAS` is gated out of the
 production catalog) — plus the `register_tool!` calls in

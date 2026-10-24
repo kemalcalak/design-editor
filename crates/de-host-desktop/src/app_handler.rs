@@ -97,6 +97,8 @@ impl ApplicationHandler<DesktopEvent> for DesktopApp {
         // list every iteration — cheap (rebuilds only on change) and catches
         // in-canvas File-menu opens/saves that never reach `handle_menu_action`.
         self.refresh_recent_menu();
+        // Opens, MCP `add_library` and unlinks change the linked files.
+        self.refresh_library_watch();
     }
 
     fn resumed(&mut self, event_loop: &ActiveEventLoop) {
@@ -440,6 +442,11 @@ impl ApplicationHandler<DesktopEvent> for DesktopApp {
                     self.request_redraw(true);
                 }
             }
+            DesktopEvent::LibraryChanged => {
+                if self.resync_libraries() {
+                    self.request_redraw(true);
+                }
+            }
             DesktopEvent::HomePreviewReady => {
                 if self.host.editor_state().editor_ui.home.visible {
                     self.request_redraw(true);
@@ -607,6 +614,10 @@ impl ApplicationHandler<DesktopEvent> for DesktopApp {
         }
         // Component-Browser kit Import / Export + uikits.json flush.
         self.drain_kit_io();
+        // Libraries section Link / Reload (#15).
+        if self.drain_library_request() {
+            self.request_redraw(true);
+        }
         crate::prompt_center_store::flush_user_prompts_if_dirty(&mut self.host);
     }
 

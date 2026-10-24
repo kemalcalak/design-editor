@@ -122,9 +122,12 @@ fn exit_preview_clears_device_state() {
 
 #[test]
 fn export_format_metadata() {
-    assert_eq!(ExportFormat::ALL.len(), 5);
+    assert_eq!(ExportFormat::ALL.len(), 7);
     assert_eq!(ExportFormat::Png.extension(), "png");
     assert_eq!(ExportFormat::Jpeg.extension(), "jpg");
+    assert_eq!(ExportFormat::Html.extension(), "html");
+    assert_eq!(ExportFormat::HtmlTailwind.label(), "Tailwind");
+    assert!(ExportFormat::HtmlTailwind.is_html() && !ExportFormat::Svg.is_html());
 }
 
 #[test]

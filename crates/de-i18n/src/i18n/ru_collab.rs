@@ -343,6 +343,12 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "shader.close" => "Закрыть",
         "shader.apply" => "Применить",
         "property.resetOverride" => "Сбросить переопределение",
+        "componentBrowser.libraries" => "Библиотеки",
+        "componentBrowser.libraryNotLoaded" => "Не загружена",
+        "componentBrowser.libraryMissing" => "Нет файла",
+        "componentBrowser.libraryInvalid" => "Не читается",
+        "componentBrowser.linkLibrary" => "Связать файл библиотеки",
+        "componentBrowser.libraryNeedsDesktop" => "Связывать библиотеки можно только в настольном приложении",
         _ => return None,
     })
 }

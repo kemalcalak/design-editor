@@ -343,6 +343,12 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "shader.close" => "Fechar",
         "shader.apply" => "Aplicar",
         "property.resetOverride" => "Redefinir substituição",
+        "componentBrowser.libraries" => "Bibliotecas",
+        "componentBrowser.libraryNotLoaded" => "Não carregada",
+        "componentBrowser.libraryMissing" => "Ausente",
+        "componentBrowser.libraryInvalid" => "Ilegível",
+        "componentBrowser.linkLibrary" => "Vincular arquivo de biblioteca",
+        "componentBrowser.libraryNeedsDesktop" => "Vincular bibliotecas requer o app para desktop",
         _ => return None,
     })
 }

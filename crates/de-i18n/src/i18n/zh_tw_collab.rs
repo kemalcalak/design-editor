@@ -343,6 +343,12 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "shader.close" => "關閉",
         "shader.apply" => "套用",
         "property.resetOverride" => "重設覆寫",
+        "componentBrowser.libraries" => "元件庫",
+        "componentBrowser.libraryNotLoaded" => "未載入",
+        "componentBrowser.libraryMissing" => "遺失",
+        "componentBrowser.libraryInvalid" => "無法讀取",
+        "componentBrowser.linkLibrary" => "連結元件庫檔案",
+        "componentBrowser.libraryNeedsDesktop" => "連結元件庫檔案需要桌面應用程式",
         _ => return None,
     })
 }

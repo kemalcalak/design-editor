@@ -147,9 +147,6 @@ fn merge_library_document(
     state: &mut EditorState,
     lib_doc: jian_ops_schema::PenDocument,
 ) -> Result<LibraryMergeReport, LibraryMergeError> {
-    // Harvest reusable masters from the library document (top-level + pages).
-    let library = ComponentLibrary::from_document(&lib_doc);
-
     let mut report = LibraryMergeReport::default();
 
     // 1. Append the master frames onto a dedicated, hidden `Components`
@@ -158,11 +155,7 @@ fn merge_library_document(
     //    role/cleanup passes are unaffected, preserves the active page index,
     //    keeps master ids verbatim so refs resolve, and dedups by id so a
     //    re-import is idempotent.
-    let masters: Vec<_> = library
-        .components
-        .iter()
-        .filter_map(|component| library.resolved_root(&lib_doc, &component.id).cloned())
-        .collect();
+    let masters = crate::library_files::library_content_from_document(&lib_doc).masters;
     report.masters_added = state.append_components_page_masters(masters);
 
     // 2. Merge the library's variables (only new names) so master `$--token`
