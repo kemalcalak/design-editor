@@ -282,3 +282,36 @@ impl EditorState {
         Ok(count)
     }
 }
+
+/// Parse `svg` into nodes scaled uniformly to fit a `width` x `height` box
+/// and centred in it, in the box's own coordinates: generated or traced
+/// artwork drawn into a frame (pen.dev's `Generate("svg" | "vectorize-image")`,
+/// #11). Unlike the canvas import there is no 400 px cap and no wrapping
+/// group. Ids are placeholders for an id-remapping insert
+/// (`EditorCommand::InsertSubtree`). Empty when the SVG yields nothing.
+pub fn svg_nodes_fitted(svg: &str, width: f64, height: f64) -> Vec<PenNode> {
+    let Some((body, root_attrs)) = extract_svg_root(svg) else {
+        return Vec::new();
+    };
+    if !(width > 0.0 && height > 0.0) {
+        return Vec::new();
+    }
+    let (_, root_ctx) = compute_root_scale(&root_attrs);
+    let (vb_x, vb_y, vb_w, vb_h) = view_box_of(&root_attrs);
+    let scale = (width / vb_w).min(height / vb_h).max(0.001);
+    let offset = (
+        (width - vb_w * scale) / 2.0 - vb_x * scale,
+        (height - vb_h * scale) / 2.0 - vb_y * scale,
+    );
+    let mut allocator = SequentialIdAllocator::new(1);
+    let mut taken = std::collections::HashSet::new();
+    let mut built = Vec::new();
+    for el in &parse_svg_tree(body) {
+        match element_to_node_ctx(el, &root_ctx, scale, offset, &mut allocator, &mut taken) {
+            Ok(Some(node)) => built.push(node),
+            Ok(None) => {}
+            Err(_) => break,
+        }
+    }
+    built
+}

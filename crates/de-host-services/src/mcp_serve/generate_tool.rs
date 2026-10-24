@@ -1,5 +1,8 @@
 //! MCP `generate` (pen.dev `Generate`) and `get_generation_status`.
 //!
+//! This file holds the fill types (`ai`, `stock`); the frame and background
+//! types are in `generate_tool_transforms.rs`.
+//!
 //! `generate` is asynchronous like pen.dev's: the call validates, reserves a
 //! job, writes the job's `de:pending-image-…` url as the target's image fill
 //! (one `PatchNodeData` the host applies as usual) and returns at once. The
@@ -14,7 +17,6 @@ use std::sync::Arc;
 
 use de_editor_core::{EditorCommand, EditorState, NodeId, PenNodeExt as _};
 use de_mcp::{McpTool, ToolErrorCode, ToolOutcome};
-use jian_ops_schema::node::PenNode;
 
 use crate::generate_jobs::{
     landing, resolve_image_profile, GenerateJobError, GenerateJobs, GenerateKind, ImageJobRequest,
@@ -26,8 +28,8 @@ const MAX_PROMPT_CHARS: usize = 4000;
 
 /// The `generate` tool over a snapshot of the document.
 pub struct GenerateTool {
-    state: EditorState,
-    jobs: Arc<GenerateJobs>,
+    pub(super) state: EditorState,
+    pub(super) jobs: Arc<GenerateJobs>,
 }
 
 pub fn generate_snapshot(doc: &EditorState) -> GenerateTool {
@@ -47,31 +49,18 @@ impl GenerateTool {
     }
 }
 
-fn arg<'a>(args: &'a BTreeMap<String, String>, keys: &[&str]) -> Option<&'a str> {
+pub(super) fn arg<'a>(args: &'a BTreeMap<String, String>, keys: &[&str]) -> Option<&'a str> {
     keys.iter()
         .find_map(|key| args.get(*key))
         .map(|value| value.trim())
         .filter(|value| !value.is_empty())
 }
 
-fn invalid(message: impl Into<String>) -> ToolOutcome {
+pub(super) fn invalid(message: impl Into<String>) -> ToolOutcome {
     ToolOutcome::Err(ToolErrorCode::InvalidArgument, message.into())
 }
 
-/// A node anywhere in the document, with the id of the page holding it.
-pub(crate) fn find_node_any_page<'a>(
-    state: &'a EditorState,
-    node_id: &str,
-) -> Option<(&'a PenNode, Option<String>)> {
-    let id = NodeId::new(node_id);
-    match state.doc.pages.as_ref() {
-        Some(pages) if !pages.is_empty() => pages.iter().find_map(|page| {
-            de_editor_core::walkers::find_node(&page.children, &id)
-                .map(|node| (node, Some(page.id.clone())))
-        }),
-        _ => de_editor_core::walkers::find_node(&state.doc.children, &id).map(|node| (node, None)),
-    }
-}
+pub(crate) use crate::generate_jobs::landing::find_node_any_page;
 
 impl McpTool for GenerateTool {
     fn name(&self) -> &str {
@@ -94,12 +83,22 @@ impl McpTool for GenerateTool {
                 return ToolOutcome::Err(ToolErrorCode::MissingArgument, "type is required".into())
             }
         };
+        match kind {
+            GenerateKind::Svg | GenerateKind::VectorizeImage => {
+                return super::generate_tool_transforms::call_frame(self, kind, args);
+            }
+            GenerateKind::RemoveBackground | GenerateKind::ReplaceBackground => {
+                return super::generate_tool_transforms::call_background(self, kind, args);
+            }
+            GenerateKind::Ai | GenerateKind::Stock => {}
+        }
         let Some(node_id) = arg(args, &["nodeId", "node_id"]) else {
             return ToolOutcome::Err(ToolErrorCode::MissingArgument, "nodeId is required".into());
         };
-        let input_keys: &[&str] = match kind {
-            GenerateKind::Ai => &["prompt"],
-            GenerateKind::Stock => &["query", "prompt"],
+        let input_keys: &[&str] = if kind == GenerateKind::Stock {
+            &["query", "prompt"]
+        } else {
+            &["prompt"]
         };
         let Some(input) = arg(args, input_keys) else {
             return ToolOutcome::Err(
@@ -121,26 +120,25 @@ impl McpTool for GenerateTool {
                 "node {node_id} cannot take an image fill: insert a frame or rectangle first"
             ));
         }
-        let work = match kind {
-            GenerateKind::Ai => {
-                let profile = match resolve_image_profile(&self.state.editor_ui.agent_settings) {
-                    Ok(profile) => profile,
-                    Err(error) => {
-                        return ToolOutcome::Err(ToolErrorCode::ToolFailed, error.to_string())
-                    }
-                };
-                JobWork::Image(ImageJobRequest {
-                    prompt: input.to_string(),
-                    width: node.width_px(),
-                    height: node.height_px(),
-                    profile,
-                    timeout: None,
-                })
-            }
-            GenerateKind::Stock => JobWork::Stock(StockJobRequest {
+        let work = if kind == GenerateKind::Ai {
+            let profile = match resolve_image_profile(&self.state.editor_ui.agent_settings) {
+                Ok(profile) => profile,
+                Err(error) => {
+                    return ToolOutcome::Err(ToolErrorCode::ToolFailed, error.to_string())
+                }
+            };
+            JobWork::Image(ImageJobRequest {
+                prompt: input.to_string(),
+                width: node.width_px(),
+                height: node.height_px(),
+                profile,
+                timeout: None,
+            })
+        } else {
+            JobWork::Stock(StockJobRequest {
                 query: input.to_string(),
                 credentials: super::enrich_images_tool::openverse_credentials(&self.state),
-            }),
+            })
         };
         let ticket = match self.jobs.reserve(kind, Some(node_id)) {
             Ok(ticket) => ticket,

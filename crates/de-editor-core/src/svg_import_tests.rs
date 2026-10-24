@@ -422,3 +422,28 @@ fn imports_stroke_dash_cap_and_join() {
     assert_eq!(style.dash_pattern, Some(vec![8.0, 4.0]));
     assert_eq!(style.dash_offset, Some(2.0));
 }
+
+#[test]
+fn fitted_svg_is_scaled_and_centred_in_the_box_without_a_group() {
+    // A 100-unit square viewBox (origin shifted by 10) drawn into a 400x200
+    // box: scale 2, centred horizontally (100 px each side).
+    let svg = r##"<svg viewBox="10 10 100 100"><rect x="10" y="10" width="100" height="100" fill="#ff0000"/></svg>"##;
+    let nodes = crate::svg_import::svg_nodes_fitted(svg, 400.0, 200.0);
+    assert_eq!(nodes.len(), 1);
+    match &nodes[0] {
+        PenNode::Rectangle(r) => {
+            assert_eq!(r.base.x, Some(100.0));
+            assert_eq!(r.base.y, Some(0.0));
+        }
+        other => panic!("expected a rectangle, got {other:?}"),
+    }
+    assert_eq!(nodes[0].width_px(), Some(200.0));
+    assert_eq!(nodes[0].height_px(), Some(200.0));
+}
+
+#[test]
+fn fitted_svg_rejects_junk_and_empty_boxes() {
+    assert!(crate::svg_import::svg_nodes_fitted("not svg", 100.0, 100.0).is_empty());
+    let svg = r#"<svg viewBox="0 0 10 10"><rect width="10" height="10"/></svg>"#;
+    assert!(crate::svg_import::svg_nodes_fitted(svg, 0.0, 100.0).is_empty());
+}

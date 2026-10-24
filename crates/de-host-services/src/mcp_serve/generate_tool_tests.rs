@@ -13,8 +13,8 @@ use jian_ops_schema::style::PenFill;
 
 use super::generate_tool::{GenerateTool, GenerationStatusTool};
 use crate::generate_jobs::{
-    land_into, GenerateBackend, GenerateJobError, GenerateJobs, ImageJobRequest, StockJobRequest,
-    PENDING_IMAGE_PREFIX,
+    land_into, EditJobRequest, GenerateBackend, GenerateJobError, GenerateJobs, ImageJobRequest,
+    StockJobRequest, SvgJobRequest, PENDING_IMAGE_PREFIX,
 };
 
 const PNG: &str = "data:image/png;base64,iVBORw0KGgo=";
@@ -47,6 +47,14 @@ impl GenerateBackend for Scripted {
             .unwrap()
             .push((request.query.clone(), None, None));
         self.answer.clone().ok_or(GenerateJobError::NoStockResult)
+    }
+
+    fn generate_svg(&self, _request: &SvgJobRequest) -> Result<String, GenerateJobError> {
+        Err(GenerateJobError::NoSvg)
+    }
+
+    fn edit_image(&self, _request: &EditJobRequest) -> Result<String, GenerateJobError> {
+        Err(GenerateJobError::NotConfigured)
     }
 }
 

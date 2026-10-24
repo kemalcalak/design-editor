@@ -667,6 +667,7 @@ pub(crate) mod enrich_images_generate;
 pub(crate) mod enrich_images_tool;
 use enrich_images_tool::enrich_images_snapshot;
 pub(crate) mod generate_tool;
+mod generate_tool_transforms;
 use generate_tool::{generate_snapshot, generation_status_snapshot};
 pub(crate) mod design_agent_run_error;
 pub(crate) mod design_agent_run_tool;
@@ -689,6 +690,8 @@ mod finalize_tool_advisory_tests;
 mod finalize_tool_tests;
 #[cfg(test)]
 mod generate_tool_tests;
+#[cfg(test)]
+mod generate_tool_transforms_tests;
 #[cfg(test)]
 mod import_pen_dev_verbatim_tests;
 #[cfg(test)]

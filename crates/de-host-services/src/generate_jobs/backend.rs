@@ -4,13 +4,17 @@
 //! test ever reaches the network. [`ProviderBackend`] is production: the same
 //! provider dispatch as the browser route (`web_image_generate::run_generate`
 //! — OpenAI / Gemini / Replicate / Atlas, result download, endpoint
-//! screening), and the Openverse → Wikimedia stock ladder.
+//! screening), the Openverse → Wikimedia stock ladder, the user's chat model
+//! for SVG artwork, and provider image edits for background transforms.
+//! Vectorize is local and needs no backend (`vectorize.rs`).
 
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Duration;
 
-use de_editor_core::agent_settings::ImageGenProfile;
+use de_editor_core::agent_settings::{BuiltinAgentConfig, ImageGenProfile};
 
+use super::image_edit::{edit_image, EditKind};
+use super::source::SourceRef;
 use super::GenerateJobError;
 use crate::web_image_generate::{run_generate, ImageGenerateError, WebImageGenerateRequest};
 use crate::web_image_search::{run_first_search_blocking_with_timeout, WebOpenverseCredentials};
@@ -27,6 +31,17 @@ static SCREEN_CUSTOM_ENDPOINTS: AtomicBool = AtomicBool::new(false);
 /// Screen custom image endpoints in this process from now on.
 pub fn screen_custom_endpoints() {
     SCREEN_CUSTOM_ENDPOINTS.store(true, Ordering::Release);
+}
+
+fn screening() -> bool {
+    SCREEN_CUSTOM_ENDPOINTS.load(Ordering::Acquire)
+}
+
+fn has_custom_endpoint(profile: &ImageGenProfile) -> bool {
+    profile
+        .base_url
+        .as_deref()
+        .is_some_and(|base| !base.trim().is_empty())
 }
 
 /// One AI image request.
@@ -49,11 +64,32 @@ pub struct StockJobRequest {
     pub credentials: Option<WebOpenverseCredentials>,
 }
 
-/// What a job worker calls. Every method blocks the worker thread and returns
-/// a `data:` URL ready to land as an image fill.
+/// One SVG drawing request.
+#[derive(Clone)]
+pub struct SvgJobRequest {
+    pub prompt: String,
+    /// The target frame's size in document px.
+    pub width: f64,
+    pub height: f64,
+    pub agent: BuiltinAgentConfig,
+}
+
+/// One background transform.
+#[derive(Clone)]
+pub struct EditJobRequest {
+    pub source: SourceRef,
+    pub kind: EditKind,
+    pub profile: ImageGenProfile,
+}
+
+/// What a job worker calls. Every method blocks the worker thread. Image
+/// methods return a `data:` URL ready to land as an image fill;
+/// [`Self::generate_svg`] returns SVG text.
 pub trait GenerateBackend: Send + Sync {
     fn generate_image(&self, request: &ImageJobRequest) -> Result<String, GenerateJobError>;
     fn stock_image(&self, request: &StockJobRequest) -> Result<String, GenerateJobError>;
+    fn generate_svg(&self, request: &SvgJobRequest) -> Result<String, GenerateJobError>;
+    fn edit_image(&self, request: &EditJobRequest) -> Result<String, GenerateJobError>;
 }
 
 /// Production backend: real provider calls with the user's own keys.
@@ -61,18 +97,12 @@ pub struct ProviderBackend;
 
 impl GenerateBackend for ProviderBackend {
     fn generate_image(&self, request: &ImageJobRequest) -> Result<String, GenerateJobError> {
-        let custom_endpoint = SCREEN_CUSTOM_ENDPOINTS.load(Ordering::Acquire)
-            && request
-                .profile
-                .base_url
-                .as_deref()
-                .is_some_and(|base| !base.trim().is_empty());
         let web_request = WebImageGenerateRequest {
             prompt: request.prompt.clone(),
             width: request.width,
             height: request.height,
             profile: request.profile.clone(),
-            custom_endpoint,
+            custom_endpoint: screening() && has_custom_endpoint(&request.profile),
         };
         let url = crate::chat_runtime::block_on_anywhere(async {
             match request.timeout {
@@ -102,6 +132,50 @@ impl GenerateBackend for ProviderBackend {
         .map(|hit| hit.thumb_data_url)
         .ok_or(GenerateJobError::NoStockResult)
     }
+
+    fn generate_svg(&self, request: &SvgJobRequest) -> Result<String, GenerateJobError> {
+        super::svg_llm::generate_svg_blocking(
+            &request.agent,
+            screening(),
+            &request.prompt,
+            request.width,
+            request.height,
+        )
+    }
+
+    fn edit_image(&self, request: &EditJobRequest) -> Result<String, GenerateJobError> {
+        if screening() && has_custom_endpoint(&request.profile) {
+            // The edit calls dial their endpoint directly; the web daemon's
+            // browser-supplied endpoints only go through the screened
+            // generation route.
+            return Err(GenerateJobError::Unsupported {
+                operation: "a custom image endpoint",
+                provider: "web daemon's",
+            });
+        }
+        let source = request.source.load()?;
+        let client = provider_client()?;
+        crate::chat_runtime::block_on_anywhere(edit_image(
+            &client,
+            &source,
+            &request.kind,
+            &request.profile,
+        ))
+    }
+}
+
+/// The plain client for provider hosts named by the user's own settings.
+pub(crate) fn provider_client() -> Result<reqwest::Client, GenerateJobError> {
+    reqwest::Client::builder()
+        .use_rustls_tls()
+        .timeout(Duration::from_secs(240))
+        .user_agent(concat!("design-editor/", env!("CARGO_PKG_VERSION")))
+        .build()
+        .map_err(|e| {
+            GenerateJobError::Image(ImageGenerateError::ClientBuild {
+                message: e.to_string(),
+            })
+        })
 }
 
 impl From<ImageGenerateError> for GenerateJobError {

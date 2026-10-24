@@ -1,4 +1,4 @@
-//! Typed failures of the MCP `generate` jobs (#10).
+//! Typed failures of the MCP `generate` jobs (#10, #11).
 
 use std::fmt;
 
@@ -21,6 +21,22 @@ pub enum GenerateJobError {
     Panicked,
     /// The worker thread could not be started.
     Spawn(String),
+    /// No built-in chat agent with a key for SVG artwork.
+    NoChatProvider,
+    /// The configured image provider cannot do this transform.
+    Unsupported {
+        operation: &'static str,
+        provider: &'static str,
+    },
+    /// The source image is missing, still pending, or outside the accepted
+    /// format / size range.
+    Source(String),
+    /// The chat model's answer held no usable SVG.
+    NoSvg,
+    /// The chat model call failed.
+    Chat(String),
+    /// Tracing the bitmap failed or produced unusable artwork.
+    Trace(String),
 }
 
 impl fmt::Display for GenerateJobError {
@@ -41,6 +57,22 @@ impl fmt::Display for GenerateJobError {
             GenerateJobError::Spawn(message) => {
                 write!(f, "could not start the generation: {message}")
             }
+            GenerateJobError::NoChatProvider => f.write_str(
+                "no chat provider configured for SVG artwork: add a built-in provider with \
+                 an API key and a model in Settings > Agents",
+            ),
+            GenerateJobError::Unsupported {
+                operation,
+                provider,
+            } => write!(
+                f,
+                "{operation} is not supported by the {provider} image provider; configure an \
+                 OpenAI or Gemini image profile in Settings > Images"
+            ),
+            GenerateJobError::Source(message) => write!(f, "source image: {message}"),
+            GenerateJobError::NoSvg => f.write_str("the model answered without an SVG drawing"),
+            GenerateJobError::Chat(message) => write!(f, "chat provider: {message}"),
+            GenerateJobError::Trace(message) => write!(f, "vectorize: {message}"),
         }
     }
 }

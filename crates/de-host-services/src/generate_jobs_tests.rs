@@ -45,6 +45,14 @@ impl GenerateBackend for ScriptedBackend {
             .clone()
             .ok_or(GenerateJobError::NoStockResult)
     }
+
+    fn generate_svg(&self, _request: &SvgJobRequest) -> Result<String, GenerateJobError> {
+        Err(GenerateJobError::NoSvg)
+    }
+
+    fn edit_image(&self, _request: &EditJobRequest) -> Result<String, GenerateJobError> {
+        Err(GenerateJobError::NotConfigured)
+    }
 }
 
 const PNG: &str = "data:image/png;base64,iVBORw0KGgo=";
@@ -235,6 +243,14 @@ impl GenerateBackend for PanickingBackend {
 
     fn stock_image(&self, _request: &StockJobRequest) -> Result<String, GenerateJobError> {
         panic!("provider bug");
+    }
+
+    fn generate_svg(&self, _request: &SvgJobRequest) -> Result<String, GenerateJobError> {
+        Err(GenerateJobError::NoSvg)
+    }
+
+    fn edit_image(&self, _request: &EditJobRequest) -> Result<String, GenerateJobError> {
+        Err(GenerateJobError::NotConfigured)
     }
 }
 
