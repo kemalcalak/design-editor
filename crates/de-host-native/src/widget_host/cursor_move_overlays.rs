@@ -235,7 +235,7 @@ impl WidgetHostNative {
                 return Some(true);
             }
         }
-        // Interactions Navigate/Back/Remove popover row hover (no-op
+        // Shared Interactions / Motion popover row hover (no-op
         // when closed).
         let over_interaction_popup = !over_topmost
             && property_panel.is_some_and(|panel| {

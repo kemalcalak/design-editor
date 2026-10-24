@@ -53,6 +53,12 @@ pub fn property_focus_initial(focus: PropertyFocus, panel: &PropertyPanel) -> St
                 .map(format_panel_number)
                 .unwrap_or_else(|| "0".to_string())
         }
+        F::MotionValue { index, field } => match panel.snapshot.interactions.motion.get(index) {
+            Some(crate::widgets::property_panel_motion::MotionSummary::Simple(simple)) => {
+                crate::widgets::property_panel_motion::field_value(simple, field)
+            }
+            _ => String::new(),
+        },
         F::EffectRadius(index) => panel
             .snapshot
             .effects
@@ -364,6 +370,13 @@ pub fn commit_property_focus(state: &mut EditorState) -> bool {
         }
         PropertyFocus::Padding => {
             let _ = state.commit_padding_shorthand(&draft);
+        }
+        // Parsed as f64 so an untouched value writes back unchanged
+        // (the generic f32 path would turn 0.8 into 0.800000011920929).
+        PropertyFocus::MotionValue { index, field } => {
+            if let Ok(value) = draft.trim().parse::<f64>() {
+                let _ = state.set_selected_animation_value(index, field, value);
+            }
         }
         _ => {
             if let Ok(value) = draft.trim().parse::<f32>() {
