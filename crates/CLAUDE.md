@@ -165,13 +165,13 @@ Mutators on `Document`:
 
 The toolbar's compound `ShapeSlot` paints whichever shape variant is current (`ui.shape_tool`, default `Rect`) plus a small chevron-down in the gutter directly below the button (`SHAPE_SLOT_BOTTOM_EXTRA = 10 px`). Click anywhere on the slot — including the chevron — to toggle `ui.shape_picker_open`.
 
-`ShapePicker::for_document(doc)` paints a 220 × 7-row dropdown anchored to the right of the slot. The seven rows mirror the TS shape-tool-dropdown verbatim:
+`ShapePicker::for_editor_ui(ui)` paints a 220 × 5-row dropdown anchored to the right of the slot (Ellipse, Pen and image import have their own rail buttons since #30):
 
-- Rectangle / Ellipse / Polygon / Line / Pen → `ShapeChoice::Tool(Tool::*)` — the host writes `ui.shape_tool` + `doc.tool` and closes the panel.
+- Rectangle / Polygon / Star / Line → `ShapeChoice::Tool(Tool::*)` — the host writes `ui.shape_tool` + `doc.tool` and closes the panel. A star (#87) is a `PolygonNode` with `innerRadius`; the panel shows Points + Inner radius for it.
 - Icon → `ShapeChoice::OpenIconPicker` (host follow-up).
 - Import Image or SVG… → `ShapeChoice::ImportImageOrSvg` (host follow-up).
 
-Click anywhere outside the panel closes it silently. Locale lookups for the row labels (`shapes.rectangle / ellipse / polygon / line / icon / importImageSvg / pen`) come straight from the TS table; missing keys fall back to English literals.
+Click anywhere outside the panel closes it silently. Locale lookups for the row labels (`shapes.rectangle / polygon / star / line / icon`) come from the locale tables; missing keys fall back to English literals.
 
 ## PropertyPanel input editing
 

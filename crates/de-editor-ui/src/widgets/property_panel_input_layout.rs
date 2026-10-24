@@ -175,10 +175,11 @@ pub fn editable_input_rects(
         }
         y += INPUT_HEIGHT;
         if visible.star_inner {
+            y += 6.0;
             rects.push((
                 PropertyFocus::StarInnerRadius,
                 Rect {
-                    origin: Point2D::new(x0 + PAD_X, y + 6.0),
+                    origin: Point2D::new(x0 + PAD_X, y),
                     size: Point2D::new(half_w, INPUT_HEIGHT),
                 },
             ));

@@ -42,6 +42,7 @@ pub fn build_leaf_node(
     };
     let w = SizingBehavior::Number(width.max(0) as f64);
     let h = SizingBehavior::Number(height.max(0) as f64);
+    let is_star = kind == "star";
     let node = match kind {
         "frame" => PenNode::Frame(FrameNode {
             base,
@@ -118,7 +119,7 @@ pub fn build_leaf_node(
         }),
         "polygon" | "star" => PenNode::Polygon(PolygonNode {
             base,
-            polygon_count: if kind == "star" {
+            polygon_count: if is_star {
                 crate::star_shape::STAR_DEFAULT_POINTS
             } else {
                 3
@@ -127,7 +128,7 @@ pub fn build_leaf_node(
             height: Some(h),
             corner_radius: None,
             // A star is a polygon with an inner radius (#87).
-            inner_radius: (kind == "star").then_some(crate::star_shape::STAR_DEFAULT_INNER_RADIUS),
+            inner_radius: is_star.then_some(crate::star_shape::STAR_DEFAULT_INNER_RADIUS),
             fill: None,
             stroke: None,
             effects: None,

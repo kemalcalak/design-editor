@@ -40,7 +40,7 @@ pub(super) fn star_inner_percent_of(node: &PenNode) -> Option<f32> {
         PenNode::Polygon(n) => n
             .inner_radius
             .and_then(de_editor_core::star_shape::clamp_star_inner_radius)
-            .map(|r| (r * 100.0) as f32),
+            .map(de_editor_core::star_shape::inner_radius_to_percent),
         _ => None,
     }
 }

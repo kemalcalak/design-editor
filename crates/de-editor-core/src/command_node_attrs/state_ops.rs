@@ -110,12 +110,9 @@ impl EditorState {
         node_id: &NodeId,
         inner_radius: Option<f64>,
     ) -> bool {
-        let inner_radius = match inner_radius {
-            Some(value) => match crate::star_shape::clamp_star_inner_radius(value) {
-                Some(clamped) => Some(clamped),
-                None => return false,
-            },
-            None => None,
+        let inner_radius = match inner_radius.map(crate::star_shape::clamp_star_inner_radius) {
+            Some(None) => return false,
+            other => other.flatten(),
         };
         if !node_id.is_real() || !self.is_editable(node_id) {
             return false;

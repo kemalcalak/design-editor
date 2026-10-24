@@ -61,12 +61,11 @@ pub fn property_focus_initial(focus: PropertyFocus, panel: &PropertyPanel) -> St
             .unwrap_or_else(|| "0".to_string()),
         F::Opacity => format_panel_number(panel.snapshot.opacity_percent),
         F::PolygonSides => panel.snapshot.polygon_sides.unwrap_or(3).to_string(),
-        F::StarInnerRadius => format_panel_number(
-            panel
-                .snapshot
-                .star_inner_percent
-                .unwrap_or((de_editor_core::star_shape::STAR_DEFAULT_INNER_RADIUS * 100.0) as f32),
-        ),
+        F::StarInnerRadius => format_panel_number(panel.snapshot.star_inner_percent.unwrap_or(
+            de_editor_core::star_shape::inner_radius_to_percent(
+                de_editor_core::star_shape::STAR_DEFAULT_INNER_RADIUS,
+            ),
+        )),
         F::EllipseStart => format_panel_number(
             panel
                 .snapshot

@@ -98,6 +98,7 @@ pub fn fill_body_height_with_stops(fill_type: FillType, stop_count: usize) -> f3
 /// The Layer section's optional second row: the ellipse arc controls or
 /// the star inner radius (the two kinds never coincide).
 fn layer_second_row_height(visible: VisibleSections) -> f32 {
+    debug_assert!(!(visible.ellipse_arc && visible.star_inner));
     if visible.ellipse_arc || visible.star_inner {
         INPUT_HEIGHT + 6.0
     } else {
@@ -112,13 +113,13 @@ pub fn layer_section_height(visible: VisibleSections) -> f32 {
     if !visible.opacity {
         return 0.0;
     }
-    let extra_arc_row = layer_second_row_height(visible);
+    let extra_second_row = layer_second_row_height(visible);
     let extra_compositing_row = if visible.compositing {
         crate::widgets::property_panel_compositing::COMPOSITING_ROW_HEIGHT
     } else {
         0.0
     };
-    SECTION_HEADER_HEIGHT + INPUT_HEIGHT + extra_arc_row + extra_compositing_row + 12.0
+    SECTION_HEADER_HEIGHT + INPUT_HEIGHT + extra_second_row + extra_compositing_row + 12.0
 }
 
 /// Rects of every clickable button / checkbox in the panel —

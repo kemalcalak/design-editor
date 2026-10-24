@@ -3,8 +3,10 @@
 //! A star is a `PolygonNode` whose `inner_radius` is set: `polygon_count`
 //! is its point count and `inner_radius` the valley radius as a fraction
 //! of the outer radius (Figma `STAR` / `starInnerScale`). `None` keeps the
-//! node a regular polygon. Every writer clamps through this module so the
-//! panel, MCP and Figma import agree on the range.
+//! node a regular polygon. The editor's own writers (Star tool, panel)
+//! clamp through this module; a raw document or MCP data patch may store
+//! any value, so readers (the loader, the panel snapshot, jian-scene's
+//! geometry) clamp again on read.
 
 /// Inner radius a fresh Star tool node starts with — Figma's default
 /// (38.2%, the golden-ratio star).
@@ -29,6 +31,17 @@ pub fn clamp_star_inner_radius(value: f64) -> Option<f64> {
         .then(|| value.clamp(STAR_MIN_INNER_RADIUS, STAR_MAX_INNER_RADIUS))
 }
 
+/// Panel percentage -> stored inner radius, kept to 0.1% so an f32
+/// panel value such as 38.2 saves as `0.382`, not `0.38200000762939453`.
+pub fn percent_to_inner_radius(percent: f32) -> f64 {
+    (percent as f64 * 10.0).round() / 1000.0
+}
+
+/// Stored inner radius -> panel percentage.
+pub fn inner_radius_to_percent(inner_radius: f64) -> f32 {
+    (inner_radius * 100.0) as f32
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -40,6 +53,13 @@ mod tests {
         assert_eq!(clamp_star_inner_radius(7.0), Some(STAR_MAX_INNER_RADIUS));
         assert_eq!(clamp_star_inner_radius(f64::NAN), None);
         assert_eq!(clamp_star_inner_radius(f64::INFINITY), None);
+    }
+
+    #[test]
+    fn panel_percentages_save_without_float_noise() {
+        assert_eq!(percent_to_inner_radius(38.2), 0.382);
+        assert_eq!(percent_to_inner_radius(55.0), 0.55);
+        assert_eq!(inner_radius_to_percent(0.5), 50.0);
     }
 
     fn polygon(state: &crate::EditorState) -> &jian_ops_schema::node::PolygonNode {

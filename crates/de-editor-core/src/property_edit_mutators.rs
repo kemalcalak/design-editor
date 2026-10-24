@@ -173,7 +173,10 @@ impl EditorState {
                 if !value.is_finite() {
                     return false;
                 }
-                return self.cmd_set_polygon_inner_radius(&sel, Some(value as f64 / 100.0));
+                return self.cmd_set_polygon_inner_radius(
+                    &sel,
+                    Some(crate::star_shape::percent_to_inner_radius(value)),
+                );
             }
             PropertyFocus::EllipseStart => {
                 if !value.is_finite() {

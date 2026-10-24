@@ -7,8 +7,8 @@
 
 /// Editor tool — what primary mouse drag does on the canvas.
 ///
-/// The first ten variants are the shape / frame / text / navigation
-/// set. The trailing ten are the form-widget tools (Phase
+/// The variants up to `Hand` are the shape / frame / text / navigation
+/// set. The trailing ones are the form-widget tools (Phase
 /// D2): selecting one and clicking the canvas drops a default widget
 /// node of the matching kind.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
