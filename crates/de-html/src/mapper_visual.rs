@@ -526,6 +526,7 @@ fn map_shadow(
         blur: lengths.get(2).copied().unwrap_or(0.0).max(0.0),
         spread: lengths.get(3).copied().unwrap_or(0.0),
         color,
+        blend_mode: None,
     })
 }
 

@@ -8,8 +8,8 @@ use super::glsl::Stage;
 pub(crate) enum GlslError {
     /// No `void main()` at the top level.
     NoMain,
-    /// A preprocessor directive other than `#version`, `#extension`,
-    /// `#pragma`, `#ifdef GL_ES` / `#endif` or an object-like `#define`.
+    /// A directive the preprocessor rejects or cannot evaluate (`#error`,
+    /// `#include`, an unbalanced `#if`, a non-constant condition, …).
     Directive(String),
     /// A GLSL feature SkSL runtime effects cannot express.
     Unsupported(&'static str),

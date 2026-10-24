@@ -26,6 +26,7 @@
 
 mod palette;
 mod replace;
+mod shader_uniforms;
 #[cfg(test)]
 mod tests;
 
@@ -217,6 +218,9 @@ fn resolve_fill(fill: &mut PenFill, vars: Option<&Vars>, theme: &Theme) -> bool 
                 changed |= fix(&mut stop.color);
             }
         }
+        PenFill::Shader(body) => {
+            changed |= shader_uniforms::resolve(body.uniforms.as_mut(), vars, theme);
+        }
         _ => {}
     }
     changed
@@ -303,12 +307,16 @@ pub fn resolve_node_for_canvas(node: &mut PenNode, vars: Option<&Vars>, theme: &
     // in the schema; numeric effect refs land with the schema bump).
     if let Some(effects) = node_effects_opt_mut(node) {
         for effect in effects {
-            if let PenEffect::Shadow(body) = effect {
-                if is_variable_ref(&body.color) {
+            match effect {
+                PenEffect::Shadow(body) if is_variable_ref(&body.color) => {
                     body.color = resolve_color_ref(&body.color, vars, theme)
                         .unwrap_or_else(|| "#000000".into());
                     changed = true;
                 }
+                PenEffect::Shader(body) => {
+                    changed |= shader_uniforms::resolve(body.uniforms.as_mut(), vars, theme);
+                }
+                _ => {}
             }
         }
     }
@@ -370,6 +378,7 @@ pub fn roots_have_tokens(nodes: &[PenNode]) -> bool {
             PenFill::LinearGradient(body) => body.stops.iter().any(|s| is_variable_ref(&s.color)),
             PenFill::RadialGradient(body) => body.stops.iter().any(|s| is_variable_ref(&s.color)),
             PenFill::AngularGradient(body) => body.stops.iter().any(|s| is_variable_ref(&s.color)),
+            PenFill::Shader(body) => shader_uniforms::has_tokens(body.uniforms.as_ref()),
             _ => false,
         }
     }
@@ -396,10 +405,13 @@ pub fn roots_have_tokens(nodes: &[PenNode]) -> bool {
             return true;
         }
         for effect in crate::fills::node_effects(node) {
-            if let PenEffect::Shadow(body) = effect {
-                if is_variable_ref(&body.color) {
-                    return true;
-                }
+            let token = match effect {
+                PenEffect::Shadow(body) => is_variable_ref(&body.color),
+                PenEffect::Shader(body) => shader_uniforms::has_tokens(body.uniforms.as_ref()),
+                _ => false,
+            };
+            if token {
+                return true;
             }
         }
         let container_token = match node {
@@ -471,4 +483,43 @@ pub fn resolve_document_for_canvas(doc: &PenDocument, active: &Theme) -> PenDocu
         resolve_node_for_canvas(node, vars, &theme);
     }
     resolved
+}
+
+/// `uniforms` of node `node_id` on the canvas roots `roots` with every
+/// `$variable` value resolved as the canvas resolves it: the document's
+/// effective `active` theme overlaid by the `theme` of each ancestor and
+/// of the node itself. `None` when no uniform names a variable. The
+/// property panel shows a variable-bound shader uniform's current value
+/// through this (#165).
+pub fn resolve_shader_uniforms(
+    uniforms: &BTreeMap<String, jian_ops_schema::style::ShaderUniformValue>,
+    doc: &PenDocument,
+    roots: &[PenNode],
+    node_id: &str,
+    active: &Theme,
+) -> Option<BTreeMap<String, jian_ops_schema::style::ShaderUniformValue>> {
+    if !shader_uniforms::has_tokens(Some(uniforms)) {
+        return None;
+    }
+    let mut theme = effective_theme(doc, active);
+    fn scope(nodes: &[PenNode], id: &str, theme: &mut Theme) -> bool {
+        for node in nodes {
+            let saved = theme.clone();
+            if let Some(own) = node.base().theme.as_ref() {
+                theme.extend(
+                    own.iter()
+                        .map(|(axis, value)| (axis.clone(), value.clone())),
+                );
+            }
+            if node.base().id == id || node.children().is_some_and(|kids| scope(kids, id, theme)) {
+                return true;
+            }
+            *theme = saved;
+        }
+        false
+    }
+    scope(roots, node_id, &mut theme);
+    let mut resolved = uniforms.clone();
+    shader_uniforms::resolve(Some(&mut resolved), doc.variables.as_ref(), &theme);
+    Some(resolved)
 }

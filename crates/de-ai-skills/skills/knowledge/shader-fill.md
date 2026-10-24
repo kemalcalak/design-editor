@@ -35,7 +35,8 @@ fill: [{ type: "shader", sksl: "<SkSL source>", uniforms: { name: value, ... } }
   `vec2`/`vec3`/`vec4`; hex string `"#rrggbb"` → `vec4` colour
   (premultiplied RGBA, declare `uniform half4 name;`) — the first colour
   uniform also doubles as the visible fallback if compilation fails, so
-  always include one.
+  always include one. Numbers also bind `int`/`int2..4` (rounded); a
+  `"$name"` value follows a number or colour variable per theme.
 - Optional `opacity` (0..1) folds into the fill alpha.
 
 KNOWN-GOOD SNIPPETS (copy verbatim, tweak colours via uniforms):

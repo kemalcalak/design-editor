@@ -38,11 +38,12 @@ fn parse_target(args: &BTreeMap<String, String>) -> Result<ShaderTarget, ToolOut
     }
 }
 
-/// `0.5` → float, `1, 2` / `[1, 2]` → vector, `#ff0000` → colour.
+/// `0.5` → float, `1, 2` / `[1, 2]` → vector, `#ff0000` → colour,
+/// `$name` → a variable binding (#165).
 #[allow(clippy::result_large_err)]
 fn parse_value(raw: &str) -> Result<ShaderUniformValue, ToolOutcome> {
     let text = raw.trim();
-    if text.starts_with('#') {
+    if text.starts_with('#') || de_editor_core::variables_resolve::is_variable_ref(text) {
         return Ok(ShaderUniformValue::Color(text.to_owned()));
     }
     let inner = text.trim_start_matches('[').trim_end_matches(']');
@@ -57,7 +58,7 @@ fn parse_value(raw: &str) -> Result<ShaderUniformValue, ToolOutcome> {
             Ok(ShaderUniformValue::Vec(values.to_vec()))
         }
         _ => Err(invalid(format!(
-            "value must be a number, 2-4 numbers or a #hex colour, got {raw:?}"
+            "value must be a number, 2-4 numbers, a #hex colour or a $variable, got {raw:?}"
         ))),
     }
 }

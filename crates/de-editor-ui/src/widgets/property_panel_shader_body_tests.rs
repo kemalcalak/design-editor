@@ -141,3 +141,31 @@ fn a_panel_with_shader_fill_and_effect_paints_and_hits_both_bodies() {
     }
     assert_eq!(found, (true, true));
 }
+
+#[test]
+fn int_rows_get_fields_and_bool_rows_a_checkbox() {
+    let sksl = "uniform int2 grid; /** @bool */ uniform int invert; half4 main(float2 p) { return half4(1); }";
+    let mut values = BTreeMap::new();
+    values.insert("invert".to_string(), ShaderUniformValue::Float(1.0));
+    let body = ShaderBody::of(
+        ShaderProgram {
+            sksl: Some(sksl),
+            uniforms: Some(&values),
+        },
+        None,
+    );
+    let target = ShaderTarget::Effect(0);
+    let mut actions = Vec::new();
+    push_action_rects(&mut actions, target, &body, 0.0, 0.0, 272.0);
+    let mut inputs = Vec::new();
+    push_input_rects(&mut inputs, target, &body, 0.0, 0.0, 272.0);
+    assert_eq!(inputs.len(), 2, "two whole-number fields for the int2");
+    assert!(matches!(
+        actions[0].0,
+        PropertyPanelAction::ToggleShaderUniform {
+            index: 1,
+            on: false,
+            ..
+        }
+    ));
+}

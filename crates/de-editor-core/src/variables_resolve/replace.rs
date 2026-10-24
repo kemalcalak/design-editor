@@ -99,8 +99,12 @@ fn replace_in_node(
     }
     if let Some(effects) = node_effects_opt_mut(node) {
         for effect in effects {
-            if let PenEffect::Shadow(body) = effect {
-                replace_color(&mut body.color, token, new, vars, theme);
+            match effect {
+                PenEffect::Shadow(body) => replace_color(&mut body.color, token, new, vars, theme),
+                PenEffect::Shader(body) => {
+                    super::shader_uniforms::replace(body.uniforms.as_mut(), token, new, vars, theme)
+                }
+                _ => {}
             }
         }
     }
@@ -160,6 +164,9 @@ fn replace_in_fill(
             for stop in &mut body.stops {
                 replace_color(&mut stop.color, token, new, vars, theme);
             }
+        }
+        PenFill::Shader(body) => {
+            super::shader_uniforms::replace(body.uniforms.as_mut(), token, new, vars, theme)
         }
         _ => {}
     }

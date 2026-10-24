@@ -266,6 +266,10 @@ fn convert_effect(
             if obj.get("shadowType").and_then(Value::as_str) == Some("inner") {
                 shadow["inner"] = Value::Bool(true);
             }
+            convert_blend_mode(&mut obj, report);
+            if let Some(mode) = obj.remove("blendMode") {
+                shadow["blendMode"] = mode;
+            }
             Some(shadow)
         }
         Some(kind @ ("blur" | "background_blur")) => Some(json!({
