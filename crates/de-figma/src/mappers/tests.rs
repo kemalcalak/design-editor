@@ -46,6 +46,8 @@ fn supported_paint_blend_modes_map_to_canonical_values() {
         ("COLOR_BURN", BlendMode::ColorBurn),
         ("HARD_LIGHT", BlendMode::HardLight),
         ("EXCLUSION", BlendMode::Exclusion),
+        ("LINEAR_BURN", BlendMode::LinearBurn),
+        ("LINEAR_DODGE", BlendMode::LinearDodge),
     ] {
         assert_eq!(map_blend_mode(Some(figma)), Some(expected));
     }
@@ -53,13 +55,7 @@ fn supported_paint_blend_modes_map_to_canonical_values() {
 
 #[test]
 fn normal_and_unsupported_paint_blends_keep_source_over_default() {
-    for figma in [
-        "NORMAL",
-        "PASS_THROUGH",
-        "LINEAR_BURN",
-        "LINEAR_DODGE",
-        "UNKNOWN_FUTURE_MODE",
-    ] {
+    for figma in ["NORMAL", "PASS_THROUGH", "UNKNOWN_FUTURE_MODE"] {
         assert_eq!(map_blend_mode(Some(figma)), None);
     }
 }

@@ -94,7 +94,8 @@ fn composite_layer_bridge_is_bounded_and_never_degrades_to_plain_save() {
         + start;
     let method = &bridge[start..end];
     assert!(method.contains("paint.setAlphaf("));
-    assert!(method.contains("paint.setBlendMode("));
+    // `applyBlend` sets a built-in blend mode or a linear runtime blender.
+    assert!(method.contains("applyBlend(paint, blendMode)"));
     assert!(method.contains("canvas.saveLayer(paint, CK.LTRBRect("));
     assert!(method.contains("paint.delete()"));
     assert!(!method.contains("canvas.save();"));
@@ -119,10 +120,12 @@ fn blend_mode_codes_are_stable_and_extended_modes_match_the_bridge() {
         ImageBlendMode::ColorBurn,
         ImageBlendMode::HardLight,
         ImageBlendMode::Exclusion,
+        ImageBlendMode::LinearBurn,
+        ImageBlendMode::LinearDodge,
     ];
     assert_eq!(
         modes.map(image_blend_mode_code),
-        [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+        [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17]
     );
 
     let bridge = include_str!("../op_ck_bridge.js");

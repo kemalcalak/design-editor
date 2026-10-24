@@ -44,7 +44,7 @@ use crate::editor_scene::editor_state_to_layout_scene;
 mod gradient;
 mod stroke;
 use gradient::{payload_gradient_to_scene, scale_gradient_opacity};
-use stroke::resolve_scene_stroke;
+use stroke::{resolve_scene_stroke, resolve_stroke_fill_layers};
 
 /// Build a [`LayoutScene`] from a bare [`PenDocument`], theme, and active page index.
 ///
@@ -215,6 +215,8 @@ pub(crate) fn node_payload_to_scene(
         .collect();
     let aggregate_bounds_cache = SceneNode::compute_aggregate_bounds(bounds, &children);
     let variable_fill = var_table.fill_for(&node_id);
+    let stroke = resolve_scene_stroke(node, &node_id, var_table, paint_opacity);
+    let stroke_fill_layers = resolve_stroke_fill_layers(node, &node_id, var_table, stroke.as_ref());
     SceneNode {
         id: node.id.clone(),
         kind: str_to_kind(&node.kind),
@@ -248,7 +250,8 @@ pub(crate) fn node_payload_to_scene(
             .shader
             .as_ref()
             .map(|s| payload_shader_to_scene(s, paint_opacity, [node.w, node.h])),
-        stroke: resolve_scene_stroke(node, &node_id, var_table, paint_opacity),
+        stroke,
+        stroke_fill_layers,
         text: node.text.clone(),
         text_runs: text_runs_to_scene(&node.text_runs, paint_opacity),
         font_family: node.font_family.clone(),
@@ -315,6 +318,7 @@ pub(crate) fn node_payload_to_scene(
         // Widget props are already concrete after the adapter harvested them;
         // no `$ref` resolution is needed here.
         widget: node.widget.as_ref().map(widget_payload_to_scene),
+        placeholder: node.placeholder,
         children,
     }
 }
@@ -559,7 +563,8 @@ fn fill_blend_mode_to_scene(fill: &jian_ops_schema::style::PenFill) -> ImageBlen
     blend_mode_to_scene(blend)
 }
 
-fn blend_mode_to_scene(value: Option<&jian_ops_schema::style::BlendMode>) -> ImageBlendMode {
+/// The scene blend mode for a canonical (schema) blend mode; `None` is normal.
+pub fn blend_mode_to_scene(value: Option<&jian_ops_schema::style::BlendMode>) -> ImageBlendMode {
     use jian_ops_schema::style::BlendMode;
     match value {
         Some(BlendMode::Darken) => ImageBlendMode::Darken,
@@ -577,8 +582,37 @@ fn blend_mode_to_scene(value: Option<&jian_ops_schema::style::BlendMode>) -> Ima
         Some(BlendMode::ColorBurn) => ImageBlendMode::ColorBurn,
         Some(BlendMode::HardLight) => ImageBlendMode::HardLight,
         Some(BlendMode::Exclusion) => ImageBlendMode::Exclusion,
+        Some(BlendMode::LinearBurn) => ImageBlendMode::LinearBurn,
+        Some(BlendMode::LinearDodge) => ImageBlendMode::LinearDodge,
         Some(BlendMode::Normal) | None => ImageBlendMode::Normal,
     }
+}
+
+/// The inverse of [`blend_mode_to_scene`]; `Normal` is `None`.
+pub(crate) fn scene_blend_to_schema(
+    mode: ImageBlendMode,
+) -> Option<jian_ops_schema::style::BlendMode> {
+    use jian_ops_schema::style::BlendMode;
+    Some(match mode {
+        ImageBlendMode::Normal => return None,
+        ImageBlendMode::Darken => BlendMode::Darken,
+        ImageBlendMode::Multiply => BlendMode::Multiply,
+        ImageBlendMode::Screen => BlendMode::Screen,
+        ImageBlendMode::Overlay => BlendMode::Overlay,
+        ImageBlendMode::Lighten => BlendMode::Lighten,
+        ImageBlendMode::Difference => BlendMode::Difference,
+        ImageBlendMode::Hue => BlendMode::Hue,
+        ImageBlendMode::Saturation => BlendMode::Saturation,
+        ImageBlendMode::Color => BlendMode::Color,
+        ImageBlendMode::Luminosity => BlendMode::Luminosity,
+        ImageBlendMode::SoftLight => BlendMode::SoftLight,
+        ImageBlendMode::ColorDodge => BlendMode::ColorDodge,
+        ImageBlendMode::ColorBurn => BlendMode::ColorBurn,
+        ImageBlendMode::HardLight => BlendMode::HardLight,
+        ImageBlendMode::Exclusion => BlendMode::Exclusion,
+        ImageBlendMode::LinearBurn => BlendMode::LinearBurn,
+        ImageBlendMode::LinearDodge => BlendMode::LinearDodge,
+    })
 }
 
 fn image_adjustments_to_scene(

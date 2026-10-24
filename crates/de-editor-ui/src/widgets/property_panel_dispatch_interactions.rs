@@ -21,12 +21,18 @@ pub(crate) fn is_interaction_action(action: &PropertyPanelAction) -> bool {
             | A::PickInteractionTrigger(_)
             | A::SetInteractionNavigate { .. }
             | A::SetInteractionPop(_)
+            | A::SetInteractionScrollTo { .. }
+            | A::SetInteractionOpenUrl(_)
+            | A::MoveInteraction { .. }
             | A::SetInteractionTransition { .. }
             | A::RemoveInteraction(_)
             | A::AddAnimation
             | A::RemoveAnimation(_)
             | A::SetAnimationTrigger { .. }
             | A::SetAnimationProperty { .. }
+            | A::AddTransition
+            | A::RemoveTransition
+            | A::SetTransitionEasing(_)
     )
 }
 
@@ -70,6 +76,20 @@ pub(crate) fn apply_interaction_action(state: &mut EditorState, action: &Propert
         A::SetInteractionPop(trigger) => {
             let _ = state.set_selected_interaction_action(*trigger, &InteractionActionEdit::Back);
         }
+        A::SetInteractionScrollTo { trigger, target } => {
+            let edit = InteractionActionEdit::ScrollTo {
+                target: target.clone(),
+            };
+            let _ = state.set_selected_interaction_action(*trigger, &edit);
+        }
+        A::SetInteractionOpenUrl(trigger) => {
+            // The address is typed into the URL row that appears below.
+            let edit = InteractionActionEdit::OpenUrl { url: String::new() };
+            let _ = state.set_selected_interaction_action(*trigger, &edit);
+        }
+        A::MoveInteraction { from, to } => {
+            let _ = state.move_selected_interaction(*from, *to);
+        }
         A::SetInteractionTransition { trigger, verb } => {
             let _ = state.set_selected_interaction_verb(*trigger, *verb);
         }
@@ -87,6 +107,15 @@ pub(crate) fn apply_interaction_action(state: &mut EditorState, action: &Propert
         }
         A::SetAnimationProperty { index, property } => {
             let _ = state.set_selected_animation_property(*index, *property);
+        }
+        A::AddTransition => {
+            let _ = state.add_selected_transition();
+        }
+        A::RemoveTransition => {
+            let _ = state.remove_selected_transition();
+        }
+        A::SetTransitionEasing(easing) => {
+            let _ = state.set_selected_transition_easing(*easing);
         }
         _ => return,
     }

@@ -505,6 +505,7 @@ mod tests {
                 blur: 8.0,
                 color: Color::BLACK,
                 inner: false,
+                blend_mode: Default::default(),
             }),
             Effect::Blur(BlurEffect { radius: 4.0 }),
         ];
@@ -530,6 +531,7 @@ mod tests {
             blur: 0.0,
             color: Color::BLACK,
             inner: false,
+            blend_mode: Default::default(),
         })];
         node
     }

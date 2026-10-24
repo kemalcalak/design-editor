@@ -116,6 +116,9 @@ pub fn fold_preview_deadline(
     earliest(current, deadline.max(now_ms.saturating_add(1)))
 }
 
+/// Frame step of a Present slide transition (#158), ~60 Hz.
+const SLIDE_TRANSITION_FRAME_MS: u64 = 16;
+
 /// The platform-independent part of the next animation wake-up: agent
 /// reveal + generation-scan indicators, the canvas layout transition,
 /// the focused text input's caret blink, and the two hover dwells (the
@@ -128,17 +131,25 @@ pub fn base_animation_deadline_ms(
     transition: Option<&CanvasLayoutTransition>,
     now_ms: u64,
 ) -> Option<u64> {
-    let mut next = de_editor_core::agent_indicators::next_reveal_deadline_ms(now_ms);
-    if let Some(deadline) =
-        de_editor_core::agent_indicators::next_generation_scan_deadline_ms(now_ms)
-    {
-        next = earliest(next, deadline);
-    }
+    // Generation overlay (reveals, agent cursor, scan): 60 fps only for
+    // what the last frame showed on screen (#17).
+    let mut next = crate::widgets::canvas_generation_visibility::generation_deadline_ms(now_ms);
     if let Some(deadline) = transition.and_then(|t| t.next_deadline_ms(now_ms)) {
         next = earliest(next, deadline);
     }
     if let Some(input) = state.active_text_input() {
         next = earliest(next, input.next_blink_flip_ms(now_ms));
+    }
+    // A Present slide transition (#158) animates on its own: one frame
+    // at a time until it has finished.
+    if state
+        .editor_ui
+        .preview
+        .slide_transition
+        .as_ref()
+        .is_some_and(|run| run.progress(now_ms).is_some())
+    {
+        next = earliest(next, now_ms.saturating_add(SLIDE_TRANSITION_FRAME_MS));
     }
     // A dwelling chrome tooltip becomes due without any further input,
     // so its instant has to reach the scheduler or the tooltip would

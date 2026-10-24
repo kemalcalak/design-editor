@@ -6,9 +6,10 @@
 //!
 //! Rows per trigger:
 //! - one action: a dropdown row opening the shared popover (Navigate
-//!   to <screen> / Back / Remove), plus a Slide | Fade row when the
-//!   action navigates — the verb is the screen transition Preview plays
-//!   (`push` slides, `replace` cross-fades);
+//!   to <screen> / Scroll to <section> / Open URL / Back / Change to …
+//!   / Remove), plus a Slide | Fade row when the action navigates — the
+//!   verb is the screen transition Preview plays (`push` slides,
+//!   `replace` cross-fades) — or a URL input row under Open URL (#176);
 //! - several actions (hand-authored or MCP-written): each read-only,
 //!   then a "Remove all" row.
 //!
@@ -41,12 +42,32 @@ pub use de_editor_core::interaction_edit::{
 };
 
 /// One authored action, summarized for display. `Other` covers every
-/// action key besides navigation (`set`, `fetch`, …), shown read-only.
+/// action key the panel does not author (`set`, `fetch`, …), shown
+/// read-only.
 #[derive(Debug, Clone, PartialEq)]
 pub enum TapActionSummary {
-    Navigate { verb: NavigateVerb, path: String },
+    Navigate {
+        verb: NavigateVerb,
+        path: String,
+    },
     Pop,
+    /// `scroll_to` a section, by node id (#153 / #176).
+    ScrollTo {
+        target: String,
+    },
+    /// `open_url`, with its address as typed (#176).
+    OpenUrl {
+        url: String,
+    },
     Other(String),
+}
+
+/// A section a "Scroll to" action can aim at: a named frame directly
+/// under the page root that holds the selection.
+#[derive(Debug, Clone, PartialEq)]
+pub struct SectionTarget {
+    pub id: String,
+    pub name: String,
 }
 
 /// One authored trigger and its actions (never empty).
@@ -66,6 +87,12 @@ pub struct InteractionSummary {
     pub triggers: Vec<TriggerSummary>,
     /// The Motion section's rows (`animations`).
     pub motion: Vec<MotionSummary>,
+    /// The node-level `transition`, shown at the top of the Motion
+    /// section (#176).
+    pub transition: Option<de_editor_core::transition_edit::TransitionSummary>,
+    /// "Scroll to" targets for the popover; filled from the document by
+    /// the panel builder (the node alone can't know its page).
+    pub sections: Vec<SectionTarget>,
 }
 
 impl InteractionSummary {
@@ -75,6 +102,24 @@ impl InteractionSummary {
             .iter()
             .find(|t| t.trigger == trigger)
             .map_or(&[], |t| t.actions.as_slice())
+    }
+
+    /// The address of `trigger`'s single Open URL action, if that is
+    /// what it holds.
+    pub fn open_url(&self, trigger: InteractionTrigger) -> Option<String> {
+        match self.actions(trigger) {
+            [TapActionSummary::OpenUrl { url }] => Some(url.clone()),
+            _ => None,
+        }
+    }
+
+    /// Display name of the section with node id `id` (the id itself when
+    /// it is not one of [`Self::sections`]).
+    pub fn section_name<'a>(&'a self, id: &'a str) -> &'a str {
+        self.sections
+            .iter()
+            .find(|section| section.id == id)
+            .map_or(id, |section| section.name.as_str())
     }
 
     /// Triggers with no action yet, in list order — the "+" menu rows.
@@ -111,6 +156,11 @@ pub(crate) fn interactions_of(node: &PenNode, is_top_level: bool) -> Interaction
             .map(str::to_string),
         triggers,
         motion: crate::widgets::property_panel_motion::motion_of(node),
+        transition: node
+            .motion_declarations()
+            .0
+            .map(de_editor_core::transition_edit::TransitionSummary::of),
+        sections: Vec::new(),
     }
 }
 
@@ -126,6 +176,16 @@ fn parse_action(action: &Action) -> TapActionSummary {
     }
     match key {
         "pop" => TapActionSummary::Pop,
+        "scroll_to" => match body.get("target").and_then(serde_json::Value::as_str) {
+            Some(target) => TapActionSummary::ScrollTo {
+                target: target.to_string(),
+            },
+            None => TapActionSummary::Other(key.to_string()),
+        },
+        "open_url" => match de_editor_core::interaction_edit::open_url_of(body) {
+            Some(url) => TapActionSummary::OpenUrl { url },
+            None => TapActionSummary::Other(key.to_string()),
+        },
         other => TapActionSummary::Other(other.to_string()),
     }
 }
@@ -154,6 +214,41 @@ pub fn document_screen_paths(state: &de_editor_core::EditorState) -> Vec<String>
         .collect()
 }
 
+/// The "Scroll to" targets for the selection: the named frames directly
+/// under the top-level frame that holds it, except the one holding the
+/// selection itself (a header link does not scroll to its own header).
+pub fn document_section_targets(state: &de_editor_core::EditorState) -> Vec<SectionTarget> {
+    let anchor = state.selection.anchor.as_str();
+    let Some(root) = state
+        .active_children()
+        .iter()
+        .find(|node| subtree_contains(node, anchor))
+    else {
+        return Vec::new();
+    };
+    root.children()
+        .into_iter()
+        .flatten()
+        .filter(|child| matches!(child, PenNode::Frame(_)) && !subtree_contains(child, anchor))
+        .filter_map(|child| {
+            let name = child.base().name.as_deref()?.trim();
+            (!name.is_empty()).then(|| SectionTarget {
+                id: child.id_str().to_string(),
+                name: name.to_string(),
+            })
+        })
+        .collect()
+}
+
+fn subtree_contains(node: &PenNode, id: &str) -> bool {
+    node.id_str() == id
+        || node
+            .children()
+            .into_iter()
+            .flatten()
+            .any(|child| subtree_contains(child, id))
+}
+
 // ── Rows: one list drives height, hit rects and paint ───────────────
 
 /// One painted row of the section.
@@ -164,6 +259,8 @@ enum Row<'a> {
     Action(InteractionTrigger, &'a TapActionSummary),
     /// The Slide | Fade row under a single navigate.
     Transition(InteractionTrigger, NavigateVerb),
+    /// The URL input under a single Open URL.
+    Url(InteractionTrigger),
     /// One of several actions, read-only.
     ReadOnly(InteractionTrigger, &'a TapActionSummary),
     RemoveAll(InteractionTrigger),
@@ -183,8 +280,12 @@ fn rows(summary: &InteractionSummary) -> Vec<Row<'_>> {
             [] => {}
             [only] => {
                 out.push(Row::Action(t.trigger, only));
-                if let TapActionSummary::Navigate { verb, .. } = only {
-                    out.push(Row::Transition(t.trigger, *verb));
+                match only {
+                    TapActionSummary::Navigate { verb, .. } => {
+                        out.push(Row::Transition(t.trigger, *verb));
+                    }
+                    TapActionSummary::OpenUrl { .. } => out.push(Row::Url(t.trigger)),
+                    _ => {}
                 }
             }
             many => {
@@ -253,17 +354,38 @@ pub fn push_interaction_action_rects(
             Row::RemoveAll(trigger) => {
                 out.push((PropertyPanelAction::RemoveInteraction(trigger), rect));
             }
-            Row::Screen(_) | Row::ReadOnly(..) => {}
+            Row::Screen(_) | Row::ReadOnly(..) | Row::Url(_) => {}
         }
         row_y += ROW_STEP;
     }
     crate::widgets::property_panel_motion::push_motion_action_rects(
         out,
-        &interactions.motion,
+        interactions,
         x,
         y + interactions_section_height(interactions),
         width,
     );
+}
+
+/// The text inputs of the section: one URL row per single Open URL.
+pub fn interaction_input_rects(
+    interactions: &InteractionSummary,
+    x: f32,
+    y: f32,
+    width: f32,
+) -> Vec<(de_editor_core::PropertyFocus, Rect)> {
+    let mut out = Vec::new();
+    let mut row_y = y + SECTION_HEADER_HEIGHT;
+    for row in rows(interactions) {
+        if let Row::Url(trigger) = row {
+            out.push((
+                de_editor_core::PropertyFocus::InteractionUrl(trigger),
+                row_rect(x, row_y, width),
+            ));
+        }
+        row_y += ROW_STEP;
+    }
+    out
 }
 
 /// Paint the Interactions section, then the Motion section below it.
@@ -289,11 +411,29 @@ pub fn paint_interactions_section(
                 paint_plain_row(cx, theme, rect, &format!("{label}: {screen}"));
             }
             Row::Action(trigger, action) => {
-                paint_fitted_dropdown(cx, theme, rect, &action_label(locale, trigger, action));
+                let label = action_label(locale, interactions, trigger, action);
+                paint_fitted_dropdown(cx, theme, rect, &label);
             }
             Row::Transition(_, verb) => paint_transition_row(cx, theme, locale, rect, verb),
+            Row::Url(trigger) => {
+                let focus = de_editor_core::PropertyFocus::InteractionUrl(trigger);
+                let value = interactions.open_url(trigger).unwrap_or_default();
+                crate::widgets::property_panel_inputs::paint_input_with_prefix_focused_state(
+                    cx,
+                    theme,
+                    rect,
+                    translate(locale, "interactions.url", "URL"),
+                    edit.value_for(focus, &value),
+                    edit.focus == Some(focus),
+                    edit.caret_at(focus),
+                    edit.select_all_at(focus),
+                    edit.input_at(focus),
+                    edit.now_ms,
+                );
+            }
             Row::ReadOnly(trigger, action) => {
-                paint_plain_row(cx, theme, rect, &action_label(locale, trigger, action));
+                let label = action_label(locale, interactions, trigger, action);
+                paint_plain_row(cx, theme, rect, &label);
             }
             Row::RemoveAll(_) => paint_dropdown(
                 cx,
@@ -309,7 +449,7 @@ pub fn paint_interactions_section(
     crate::widgets::property_panel_motion::paint_motion_section(
         cx,
         theme,
-        &interactions.motion,
+        interactions,
         edit,
         locale,
         x,
@@ -365,10 +505,12 @@ fn trigger_prefix(locale: de_editor_core::Locale, trigger: InteractionTrigger) -
 }
 
 /// Row label for one authored action, e.g. `Tap → Navigate /profile`,
-/// `Hover → Back (pop)` or `Long press → set` (unknown key, read-only).
-/// The verb is not repeated here: the Transition row shows it.
+/// `Tap → Scroll to Pricing`, `Hover → Back (pop)` or `Long press → set`
+/// (unknown key, read-only). The verb is not repeated here: the
+/// Transition row shows it.
 fn action_label(
     locale: de_editor_core::Locale,
+    interactions: &InteractionSummary,
     trigger: InteractionTrigger,
     action: &TapActionSummary,
 ) -> String {
@@ -384,6 +526,15 @@ fn action_label(
                 translate(locale, "interactions.back", "Back (pop)")
             )
         }
+        TapActionSummary::ScrollTo { target } => format!(
+            "{prefix} {} {}",
+            translate(locale, "interactions.scrollTo", "Scroll to"),
+            interactions.section_name(target)
+        ),
+        TapActionSummary::OpenUrl { .. } => format!(
+            "{prefix} {}",
+            translate(locale, "interactions.openUrl", "Open URL")
+        ),
         TapActionSummary::Other(key) => format!("{prefix} {key}"),
     }
 }

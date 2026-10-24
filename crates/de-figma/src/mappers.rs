@@ -228,6 +228,8 @@ pub(crate) fn map_blend_mode(value: Option<&str>) -> Option<BlendMode> {
         "COLOR_BURN" => Some(BlendMode::ColorBurn),
         "HARD_LIGHT" => Some(BlendMode::HardLight),
         "EXCLUSION" => Some(BlendMode::Exclusion),
+        "LINEAR_BURN" => Some(BlendMode::LinearBurn),
+        "LINEAR_DODGE" => Some(BlendMode::LinearDodge),
         _ => None,
     }
 }
@@ -442,6 +444,7 @@ fn map_single_effect(effect: &FigValue) -> Option<PenEffect> {
                     .and_then(FigColor::from_value)
                     .map(|c| figma_color_to_hex(&c))
                     .unwrap_or_else(|| "#00000040".to_string()),
+                blend_mode: map_blend_mode(effect.get_str("blendMode")),
             }))
         }
         "FOREGROUND_BLUR" => Some(PenEffect::Blur(BlurBody {

@@ -43,6 +43,8 @@ fn css_extended_blend_modes_map_to_native_compositors() {
         ("color-burn", BlendMode::ColorBurn),
         ("hard-light", BlendMode::HardLight),
         ("exclusion", BlendMode::Exclusion),
+        ("plus-lighter", BlendMode::LinearDodge),
+        ("plus-darker", BlendMode::LinearBurn),
     ] {
         assert_eq!(map_blend_mode(css), Some(expected), "{css}");
     }

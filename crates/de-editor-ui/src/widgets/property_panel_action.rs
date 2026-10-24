@@ -438,6 +438,13 @@ pub enum PropertyPanelAction {
         index: usize,
         value: f32,
     },
+    /// User clicked a boolean shader uniform's checkbox (#165): write
+    /// `on` to row `index`, one undo step.
+    ToggleShaderUniform {
+        target: de_editor_core::ShaderTarget,
+        index: usize,
+        on: bool,
+    },
     /// User clicked a shader body's Code button: open the source
     /// editor on that program (#164).
     OpenShaderSource(de_editor_core::ShaderTarget),
@@ -459,6 +466,18 @@ pub enum PropertyPanelAction {
     },
     /// User picked "Back (pop)" for the trigger.
     SetInteractionPop(de_editor_core::interaction_edit::InteractionTrigger),
+    /// User picked "Scroll to <section>" for `trigger` (#176).
+    SetInteractionScrollTo {
+        trigger: de_editor_core::interaction_edit::InteractionTrigger,
+        target: String,
+    },
+    /// User picked "Open URL" for the trigger; the URL row edits it.
+    SetInteractionOpenUrl(de_editor_core::interaction_edit::InteractionTrigger),
+    /// User picked "Change to <trigger>": the actions move to `to`.
+    MoveInteraction {
+        from: de_editor_core::interaction_edit::InteractionTrigger,
+        to: de_editor_core::interaction_edit::InteractionTrigger,
+    },
     /// User picked Slide (`push`) or Fade (`replace`) under a navigate.
     SetInteractionTransition {
         trigger: de_editor_core::interaction_edit::InteractionTrigger,
@@ -482,6 +501,13 @@ pub enum PropertyPanelAction {
         index: usize,
         property: de_editor_core::motion_edit::MotionProperty,
     },
+    /// "Transition" in the Interactions "+": give the node the default
+    /// node-level `transition` (#176).
+    AddTransition,
+    /// The Transition row's remove button.
+    RemoveTransition,
+    /// User picked an easing in the Transition row's dropdown.
+    SetTransitionEasing(de_editor_core::transition_edit::MotionEasing),
     /// Code panel action — see `CodegenAction`.
     Codegen(CodegenAction),
 }

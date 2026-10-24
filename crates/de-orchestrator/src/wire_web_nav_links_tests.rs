@@ -16,7 +16,10 @@ fn run(state: &mut EditorState) {
 }
 
 fn on_tap(state: &EditorState, id: &str) -> Option<serde_json::Value> {
-    let node = de_editor_core::walkers::find_node(state.active_children(), &NodeId::new(id))?;
+    let node = de_editor_core::walkers::find_node(
+        state.active_children(),
+        &de_editor_core::NodeId::new(id),
+    )?;
     let json = serde_json::to_value(node).ok()?;
     json.get("events")?.get("onTap").cloned()
 }

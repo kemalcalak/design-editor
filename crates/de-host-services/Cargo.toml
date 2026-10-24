@@ -54,6 +54,11 @@ de-i18n = { path = "../de-i18n" }
 # Canonical JSON/HTML string escaping (dependency-free).
 de-util = { path = "../de-util" }
 jian-ops-schema = { path = "../../vendor/jian/crates/jian-ops-schema" }
+# The MCP `capture_preview` tool (#156) runs a headless preview session
+# (with the desktop's auto-wire pass) and measures text with skia, like
+# the desktop preview does.
+de-preview-core = { path = "../de-preview-core", features = ["gl-host"] }
+jian-skia = { path = "../../vendor/jian/crates/jian-skia", features = ["textlayout"] }
 agent = { path = "../../vendor/agent/crates/agent", default-features = false }
 anthropic-agent-sdk = { path = "../../vendor/anthropic-agent-sdk" }
 

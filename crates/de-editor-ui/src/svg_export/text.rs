@@ -211,6 +211,9 @@ fn blend_style(mode: ImageBlendMode) -> String {
         ImageBlendMode::ColorBurn => "color-burn",
         ImageBlendMode::HardLight => "hard-light",
         ImageBlendMode::Exclusion => "exclusion",
+        // Same CSS as the HTML export (#14); `plus-darker` is WebKit-only.
+        ImageBlendMode::LinearBurn => "plus-darker",
+        ImageBlendMode::LinearDodge => "plus-lighter",
     };
     format!(r#" style="mix-blend-mode:{css}""#)
 }

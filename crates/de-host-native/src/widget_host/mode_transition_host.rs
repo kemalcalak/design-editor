@@ -300,7 +300,7 @@ impl WidgetHostNative {
     /// The actual Preview-mode teardown deferred by `exit_preview` —
     /// shared by `settle_mode_transition` (the animation finished on
     /// its own) and `enter_preview` (the user re-opened before it did).
-    fn finish_exit_teardown(&mut self) {
+    pub(in crate::widget_host) fn finish_exit_teardown(&mut self) {
         self.drop_preview_runtime();
     }
 

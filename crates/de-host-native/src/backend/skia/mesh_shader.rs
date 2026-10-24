@@ -118,9 +118,9 @@ impl NativeBackend {
         let shader = self.shader_cache.get_or_compile(sksl).and_then(|effect| {
             // `RuntimeEffect` is an RCHandle — the clone handed to the
             // builder is a refcount bump, not a recompile.
-            let mut builder = RuntimeShaderBuilder::new(effect);
+            let mut builder = RuntimeShaderBuilder::new(effect.clone());
             for (name, values) in uniforms {
-                let _ = builder.set_uniform_float(name, values);
+                super::shader_children::set_uniform(&mut builder, &effect, name, values);
             }
             builder.make_shader(&skia_safe::Matrix::default())
         });

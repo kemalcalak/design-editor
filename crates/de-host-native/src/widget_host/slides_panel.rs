@@ -355,6 +355,7 @@ impl WidgetHostNative {
             // save picker and `export_deck_pdf` live. Nothing platform-
             // specific is left to do but repaint.
             flow::SlidesRelease::ToggleExportMenu
+            | flow::SlidesRelease::SetTransition
             | flow::SlidesRelease::ExportAllSlides
             | flow::SlidesRelease::ExportSelectedSlides => {
                 self.mark_dirty();

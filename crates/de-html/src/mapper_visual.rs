@@ -526,6 +526,7 @@ fn map_shadow(
         blur: lengths.get(2).copied().unwrap_or(0.0).max(0.0),
         spread: lengths.get(3).copied().unwrap_or(0.0),
         color,
+        blend_mode: None,
     })
 }
 
@@ -685,6 +686,8 @@ pub(crate) fn map_blend_mode(value: &str) -> Option<BlendMode> {
         "color-burn" => Some(BlendMode::ColorBurn),
         "hard-light" => Some(BlendMode::HardLight),
         "exclusion" => Some(BlendMode::Exclusion),
+        "plus-lighter" => Some(BlendMode::LinearDodge),
+        "plus-darker" => Some(BlendMode::LinearBurn),
         _ => None,
     }
 }

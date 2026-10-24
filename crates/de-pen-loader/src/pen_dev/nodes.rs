@@ -22,6 +22,7 @@ const DROPPED_KINDS: &[(&str, &str)] = &[
 ];
 
 /// Entity keys pen.dev uses for its own editor and AI tooling only.
+/// `placeholder` survives on frames, which carry the in-progress flag (#16).
 const EDITOR_ONLY_KEYS: &[&str] = &["placeholder", "context", "metadata"];
 
 /// Shared state for one conversion.
@@ -31,6 +32,8 @@ pub(super) struct Ctx<'a> {
     /// Relative image URL → `op-image:` reference (`None` once known
     /// missing), so a bitmap used by many fills is read and encoded once.
     pub(super) images: HashMap<String, Option<String>>,
+    /// Relative image URL → the bitmap's pixel size, for image crops.
+    pub(super) image_sizes: HashMap<String, (u32, u32)>,
     /// Table id → data URL, written to the document's `images` table.
     pub(super) image_table: Map<String, Value>,
     pub(super) variables: Variables,
@@ -52,6 +55,7 @@ impl<'a> Ctx<'a> {
             assets,
             report,
             images: HashMap::new(),
+            image_sizes: HashMap::new(),
             image_table: Map::new(),
             variables,
             shaders: shader::ShaderCache::default(),
@@ -184,17 +188,22 @@ fn convert_node(
         Some("path") => apply_path_view_box(map, in_flow && !absolute, ctx.report),
         _ => {}
     }
+    let is_frame = map.get("type").and_then(Value::as_str) == Some("frame");
     for key in EDITOR_ONLY_KEYS {
-        map.remove(*key);
+        if !(is_frame && *key == "placeholder") {
+            map.remove(*key);
+        }
     }
     for axis in ["width", "height"] {
         strip_sizing_fallback(map, axis);
     }
     convert_visibility(map, ctx.report);
+    convert_link(map);
     convert_layout_position(map);
     paint::convert_blend_mode(map, ctx.report);
     paint::convert_fill_key(map, theme, ctx);
     paint::convert_stroke(map, role, theme, ctx);
+    include_stroke_in_layout(map, matches!(role, Role::Patch(_)), ctx.report);
     paint::convert_effects(map, theme, ctx);
 }
 
@@ -241,6 +250,100 @@ fn strip_sizing_fallback(map: &mut Map<String, Value>, axis: &str) {
         if let Some(open) = size.find('(') {
             size.truncate(open);
         }
+    }
+}
+
+/// pen.dev `layoutIncludeStroke: true` lays an auto-layout frame out like
+/// CSS `box-sizing: border-box`: the stroke takes room inside the frame, so
+/// the children sit inside padding plus stroke. The canonical layout ignores
+/// strokes, so the stroke's width per side is added to the padding.
+///
+/// An instance patch does not know the patched frame's layout, stroke or
+/// padding, so the flag is reported there instead.
+fn include_stroke_in_layout(map: &mut Map<String, Value>, patch: bool, report: &mut PenDevReport) {
+    let Some(flag) = map.remove("layoutIncludeStroke") else {
+        return;
+    };
+    if patch {
+        report.note("layoutIncludeStroke (instance override)");
+        return;
+    }
+    if flag.as_bool() != Some(true) || !is_auto_layout(map) {
+        return;
+    }
+    let Some(thickness) = map.get("stroke").and_then(|stroke| stroke.get("thickness")) else {
+        return;
+    };
+    let stroke = match thickness {
+        Value::Number(n) => [n.as_f64().unwrap_or(0.0); 4],
+        Value::Object(sides) => ["top", "right", "bottom", "left"]
+            .map(|side| sides.get(side).and_then(Value::as_f64).unwrap_or(0.0)),
+        _ => return,
+    };
+    let Some(padding) = padding_sides(map.get("padding")) else {
+        report.note("layoutIncludeStroke (padding not plain numbers)");
+        return;
+    };
+    let sum: Vec<Value> = padding
+        .iter()
+        .zip(stroke)
+        .map(|(p, s)| (p + s).into())
+        .collect();
+    map.insert("padding".to_owned(), Value::Array(sum));
+}
+
+/// Canonical padding as `[top, right, bottom, left]`; `None` for a value
+/// that is not plain numbers (a bound variable).
+fn padding_sides(padding: Option<&Value>) -> Option<[f64; 4]> {
+    let Some(padding) = padding else {
+        return Some([0.0; 4]);
+    };
+    if let Some(all) = padding.as_f64() {
+        return Some([all; 4]);
+    }
+    let sides: Vec<f64> = padding
+        .as_array()?
+        .iter()
+        .map(Value::as_f64)
+        .collect::<Option<_>>()?;
+    match sides[..] {
+        [all] => Some([all; 4]),
+        [v, h] => Some([v, h, v, h]),
+        [t, r, b, l] => Some([t, r, b, l]),
+        _ => None,
+    }
+}
+
+/// pen.dev `href` makes a text a link. The canonical way to open a URL is
+/// a tap action (`open_url`), plus the link role for accessibility and code
+/// export. The preview runs `open_url` only in a document that declares the
+/// `network` capability; the import does not declare app capabilities.
+/// Authored handlers or semantics win.
+fn convert_link(map: &mut Map<String, Value>) {
+    let Some(Value::String(href)) = map.remove("href") else {
+        return;
+    };
+    if href.trim().is_empty() {
+        return;
+    }
+    // The action's `url` is an expression: a single-quoted string literal,
+    // whose lexer reads `\\` and `\'` as escapes.
+    let literal = format!("'{}'", href.replace('\\', "\\\\").replace('\'', "\\'"));
+    if let Value::Object(events) = map
+        .entry("events")
+        .or_insert_with(|| Value::Object(Map::new()))
+    {
+        events
+            .entry("onTap")
+            .or_insert_with(|| serde_json::json!([{ "open_url": { "url": literal } }]));
+    }
+    if let Value::Object(semantics) = map
+        .entry("semantics")
+        .or_insert_with(|| Value::Object(Map::new()))
+    {
+        semantics
+            .entry("role")
+            .or_insert_with(|| Value::String("link".to_owned()));
     }
 }
 

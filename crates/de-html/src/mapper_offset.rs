@@ -198,6 +198,7 @@ fn wrap(
         route: None,
         screen: None,
         breakpoint: None,
+        placeholder: None,
     })
 }
 

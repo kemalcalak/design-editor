@@ -18,6 +18,8 @@ use wasm_bindgen::JsCast;
 thread_local! {
     /// Per-thread (wasm is single-threaded) coalescer for the active mount.
     static COALESCER: RefCell<Option<Coalescer>> = const { RefCell::new(None) };
+    /// A [`request_after`] timer is armed; later calls wait for it.
+    static TIMER_PENDING: std::cell::Cell<bool> = const { std::cell::Cell::new(false) };
 }
 
 struct Coalescer {
@@ -63,6 +65,32 @@ pub(crate) fn request() {
     });
     if schedule {
         schedule_frame();
+    }
+}
+
+/// Ask for a frame `delay_ms` from now, for animated content with a slower
+/// cadence than the display (the placeholder sweep, #16). One timer at a
+/// time: paints in between do not start a second chain.
+pub(crate) fn request_after(delay_ms: u64) {
+    if delay_ms == 0 || TIMER_PENDING.with(std::cell::Cell::get) {
+        if delay_ms == 0 {
+            request();
+        }
+        return;
+    }
+    let Some(window) = web_sys::window() else {
+        return;
+    };
+    let cb = Closure::once_into_js(|| {
+        TIMER_PENDING.with(|pending| pending.set(false));
+        request();
+    });
+    let delay = i32::try_from(delay_ms).unwrap_or(i32::MAX);
+    if window
+        .set_timeout_with_callback_and_timeout_and_arguments_0(cb.unchecked_ref(), delay)
+        .is_ok()
+    {
+        TIMER_PENDING.with(|pending| pending.set(true));
     }
 }
 

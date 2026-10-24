@@ -30,11 +30,11 @@ impl NativeBackend {
         if effect.children().is_empty() {
             // `RuntimeEffect` is an RCHandle — this is a refcount bump,
             // not a recompile.
-            let mut builder = RuntimeShaderBuilder::new(effect);
+            let mut builder = RuntimeShaderBuilder::new(effect.clone());
             for (name, values) in uniforms {
                 // Tolerate undeclared-name / arity mismatch so one bad
                 // uniform doesn't sink the whole fill.
-                let _ = builder.set_uniform_float(*name, values);
+                set_uniform(&mut builder, &effect, name, values);
             }
             return builder.make_shader(local_matrix);
         }
@@ -87,25 +87,65 @@ fn image_child(image: &skia_safe::Image, box_size: (f32, f32)) -> Option<Shader>
     )
 }
 
-/// The effect's uniform block with every float uniform `uniforms` names at
-/// its reflected offset. Integer uniforms and size mismatches stay zero.
+/// Whether `ty` is an integer uniform type (`int` .. `int4`).
+fn is_int(ty: uniform::Type) -> bool {
+    matches!(
+        ty,
+        uniform::Type::Int | uniform::Type::Int2 | uniform::Type::Int3 | uniform::Type::Int4
+    )
+}
+
+/// `value` as the whole number an integer uniform binds (#165): the
+/// document stores numbers, rounded here.
+fn whole(value: f32) -> i32 {
+    value.round() as i32
+}
+
+/// Bind `values` to the uniform `name` of `effect` on `builder`: floats
+/// for a float uniform, rounded integers for an `int*` one (skia's builder
+/// would otherwise copy the float bits into an int slot). An undeclared
+/// name or a wrong arity is skipped.
+pub(super) fn set_uniform(
+    builder: &mut RuntimeShaderBuilder,
+    effect: &RuntimeEffect,
+    name: &str,
+    values: &[f32],
+) {
+    let Some(slot) = effect.find_uniform(name) else {
+        return;
+    };
+    if std::mem::size_of_val(values) != slot.size_in_bytes() {
+        return;
+    }
+    if is_int(slot.ty()) {
+        let ints: Vec<i32> = values.iter().copied().map(whole).collect();
+        let _ = builder.set_uniform_int(name, &ints);
+    } else {
+        let _ = builder.set_uniform_float(name, values);
+    }
+}
+
+/// The effect's uniform block with every uniform `uniforms` names at its
+/// reflected offset, integers as `i32`. Size mismatches stay zero.
 fn uniform_block(effect: &RuntimeEffect, uniforms: &[(&str, &[f32])]) -> Vec<u8> {
     let mut block = vec![0u8; effect.uniform_size()];
     for (name, values) in uniforms {
         let Some(slot) = effect.find_uniform(name) else {
             continue;
         };
-        let is_int = matches!(
-            slot.ty(),
-            uniform::Type::Int | uniform::Type::Int2 | uniform::Type::Int3 | uniform::Type::Int4
-        );
         let bytes = std::mem::size_of_val(*values);
-        if is_int || bytes != slot.size_in_bytes() || slot.offset() + bytes > block.len() {
+        if bytes != slot.size_in_bytes() || slot.offset() + bytes > block.len() {
             continue;
         }
+        let int = is_int(slot.ty());
         for (index, value) in values.iter().enumerate() {
             let at = slot.offset() + index * 4;
-            block[at..at + 4].copy_from_slice(&value.to_ne_bytes());
+            let raw = if int {
+                whole(*value).to_ne_bytes()
+            } else {
+                value.to_ne_bytes()
+            };
+            block[at..at + 4].copy_from_slice(&raw);
         }
     }
     block

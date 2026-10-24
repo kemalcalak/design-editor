@@ -43,7 +43,9 @@ half4 main(float2 pen_fragCoord) {
 fn imported_annotations_become_rows() {
     let specs = uniform_specs(IMPORTED, None);
     let names: Vec<&str> = specs.iter().map(|s| s.name.as_str()).collect();
-    assert_eq!(names, ["u_ink", "u_count", "u_scale"]);
+    // Integers get rows too since #165; children stay canvas-bound.
+    assert_eq!(names, ["u_ink", "u_count", "u_scale", "u_steps"]);
+    assert_eq!(specs[3].kind, UniformKind::Int(1));
     assert_eq!(specs[0].kind, UniformKind::Color { arity: 4 });
     assert_eq!(specs[0].display_label(), "Ink");
     assert_eq!(specs[0].default.as_deref(), Some("#112233"));
@@ -167,4 +169,27 @@ fn sourceless_bodies_list_their_stored_values() {
             ("seed", UniformKind::Float),
         ]
     );
+}
+
+#[test]
+fn int_and_bool_uniforms_get_whole_number_and_switch_rows() {
+    let sksl = "/** @label Steps @range 1, 8 @default 3 */ uniform int steps;\n\
+                uniform int2 grid;\n\
+                /** @label Invert @bool @default true */ uniform int invert;";
+    let specs = uniform_specs(sksl, None);
+    assert_eq!(specs[0].kind, UniformKind::Int(1));
+    assert_eq!(specs[0].range, Some((1.0, 8.0)));
+    assert_eq!(specs[1].kind, UniformKind::Int(2));
+    assert_eq!(specs[2].kind, UniformKind::Bool);
+    assert_eq!(specs[0].numbers_in(None), vec![3.0]);
+    assert_eq!(specs[2].numbers_in(None), vec![1.0]);
+    let mut values = BTreeMap::new();
+    values.insert("steps".to_owned(), ShaderUniformValue::Float(4.6));
+    values.insert("grid".to_owned(), ShaderUniformValue::Vec(vec![1.2, 2.7]));
+    values.insert("invert".to_owned(), ShaderUniformValue::Float(0.0));
+    assert_eq!(specs[0].numbers_in(Some(&values)), vec![5.0]);
+    assert_eq!(specs[1].numbers_in(Some(&values)), vec![1.0, 3.0]);
+    assert_eq!(specs[2].numbers_in(Some(&values)), vec![0.0]);
+    assert_eq!(UniformKind::Bool.number_fields(), 0);
+    assert_eq!(UniformKind::Int(2).number_fields(), 2);
 }

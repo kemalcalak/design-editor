@@ -51,6 +51,7 @@ pub(crate) fn base_payload(base: &PenNodeBase, kind: &str) -> NodePayload {
         hidden: !base.visible.unwrap_or(true),
         locked: base.locked.unwrap_or(false),
         collapsed: false,
+        placeholder: false,
         fill_type: "solid".into(),
         gradient: None,
         shader: None,
@@ -538,7 +539,21 @@ pub(crate) fn stroke_to_payload(s: Option<&PenStroke>) -> Option<StrokePayload> 
         join: s.join.clone(),
         dash_pattern: s.dash_pattern.clone(),
         dash_offset: s.dash_offset,
+        fill_layers: rich_stroke_paint(s.fill.as_deref()),
     })
+}
+
+/// The stroke paint stack worth a layered paint (#13): anything but nothing
+/// or one source-over solid, which `StrokePayload::color` already carries.
+fn rich_stroke_paint(fills: Option<&[PenFill]>) -> Vec<PenFill> {
+    use jian_ops_schema::style::BlendMode;
+    match fills.unwrap_or_default() {
+        [] => Vec::new(),
+        [PenFill::Solid(body)] if matches!(body.blend_mode, None | Some(BlendMode::Normal)) => {
+            Vec::new()
+        }
+        fills => fills.to_vec(),
+    }
 }
 
 pub(crate) fn apply_alpha(rgba: [f32; 4], opacity: Option<f32>) -> [f32; 4] {

@@ -1,3 +1,4 @@
+use super::blender::apply_blend;
 use super::{to_sk_rect, NativeBackend};
 use de_editor_ui::{ImageBlendMode, Rect};
 
@@ -9,7 +10,7 @@ impl NativeBackend {
             return;
         }
         let mut paint = skia_safe::Paint::default();
-        paint.set_blend_mode(to_skia_blend_mode(mode));
+        apply_blend(&mut paint, mode);
         canvas.save_layer(&skia_safe::canvas::SaveLayerRec::default().paint(&paint));
     }
 
@@ -26,7 +27,7 @@ impl NativeBackend {
         let bounds = to_sk_rect(bounds);
         let mut paint = skia_safe::Paint::default();
         paint.set_alpha_f(opacity.clamp(0.0, 1.0));
-        paint.set_blend_mode(to_skia_blend_mode(mode));
+        apply_blend(&mut paint, mode);
         let rec = skia_safe::canvas::SaveLayerRec::default()
             .bounds(&bounds)
             .paint(&paint);
@@ -45,29 +46,9 @@ impl NativeBackend {
     }
 }
 
-pub(super) fn to_skia_blend_mode(mode: ImageBlendMode) -> skia_safe::BlendMode {
-    match mode {
-        ImageBlendMode::Normal => skia_safe::BlendMode::SrcOver,
-        ImageBlendMode::Darken => skia_safe::BlendMode::Darken,
-        ImageBlendMode::Multiply => skia_safe::BlendMode::Multiply,
-        ImageBlendMode::Screen => skia_safe::BlendMode::Screen,
-        ImageBlendMode::Overlay => skia_safe::BlendMode::Overlay,
-        ImageBlendMode::Lighten => skia_safe::BlendMode::Lighten,
-        ImageBlendMode::Difference => skia_safe::BlendMode::Difference,
-        ImageBlendMode::Hue => skia_safe::BlendMode::Hue,
-        ImageBlendMode::Saturation => skia_safe::BlendMode::Saturation,
-        ImageBlendMode::Color => skia_safe::BlendMode::Color,
-        ImageBlendMode::Luminosity => skia_safe::BlendMode::Luminosity,
-        ImageBlendMode::SoftLight => skia_safe::BlendMode::SoftLight,
-        ImageBlendMode::ColorDodge => skia_safe::BlendMode::ColorDodge,
-        ImageBlendMode::ColorBurn => skia_safe::BlendMode::ColorBurn,
-        ImageBlendMode::HardLight => skia_safe::BlendMode::HardLight,
-        ImageBlendMode::Exclusion => skia_safe::BlendMode::Exclusion,
-    }
-}
-
 #[cfg(test)]
 mod tests {
+    use super::super::blender::to_skia_blend_mode;
     use super::*;
 
     fn pixel(surface: &mut skia_safe::Surface, x: i32, y: i32) -> skia_safe::Color {

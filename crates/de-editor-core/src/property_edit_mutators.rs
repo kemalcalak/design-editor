@@ -75,6 +75,11 @@ impl EditorState {
             PropertyFocus::MotionValue { index, field } => {
                 return self.set_selected_animation_value(index, field, f64::from(value));
             }
+            PropertyFocus::TransitionDuration => {
+                return self.set_selected_transition_duration(f64::from(value));
+            }
+            // Free text: committed from the draft, never as a number.
+            PropertyFocus::InteractionUrl(_) => return false,
             PropertyFocus::ShaderUniform {
                 target,
                 index,
@@ -317,6 +322,8 @@ impl EditorState {
             | PropertyFocus::CornerBR
             | PropertyFocus::EffectRadius(_)
             | PropertyFocus::MotionValue { .. }
+            | PropertyFocus::TransitionDuration
+            | PropertyFocus::InteractionUrl(_)
             | PropertyFocus::ShaderUniform { .. }
             | PropertyFocus::StrokeWidth => {
                 unreachable!("corner radius / stroke width handled before node borrow")
