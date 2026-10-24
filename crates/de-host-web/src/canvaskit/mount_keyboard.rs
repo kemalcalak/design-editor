@@ -148,6 +148,13 @@ pub(super) fn register_keyboard_listeners(
                         || b.host.apply_property_caret(true)
                         || b.host.apply_nudge(nudge, 0.0);
                 }
+                // Cmd/Ctrl+[ / ] browse back / forward in Preview (#153);
+                // the default (the browser's own history) is prevented.
+                "[" | "]" if is_mod && !shift && preview_active => {
+                    b.host.preview_history_step(key == "]");
+                    consumed = true;
+                    evt.prevent_default();
+                }
                 "[" if !is_mod && !b.host.input_active() => {
                     consumed = b.host.apply_reorder(ReorderDirection::Down)
                 }

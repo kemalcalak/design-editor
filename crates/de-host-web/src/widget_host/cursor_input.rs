@@ -72,6 +72,7 @@ impl WidgetHost {
             // release can confirm the pointer never left the armed segment.
             let (vw, vh) = (self.last_viewport_w, self.last_viewport_h);
             self.preview_switcher_hover(x, y, vw, vh);
+            self.preview_browser_hover(x, y, vw, vh);
             self.screen_switcher_hover(x, y, vw, vh);
             return self.preview_dispatch_move(x, y, vw, vh);
         }

@@ -132,9 +132,12 @@ impl WidgetHostNative {
             if self.device_mode_active() {
                 self.on_preview_screen_switched(viewport_width, viewport_height);
             } else if let Some(rect) = switched_screen_rect {
-                self.center_canvas_on(rect, viewport_width, viewport_height);
+                self.frame_canvas_on_switched_page(rect, viewport_width, viewport_height);
             }
         }
+        // #153: a same-page section link scrolls the page. Runs after the
+        // switch handling above so a switch's scroll reset never undoes it.
+        self.apply_preview_page_scroll_request(viewport_width, viewport_height);
 
         // Rebuild the layout-resolved render scene ONCE for the whole
         // paint pass. Every widget builder below reads `editor_state`
@@ -210,6 +213,7 @@ impl WidgetHostNative {
                         );
                     }
                     self.paint_preview_switcher(&mut *frame, canvas_rect);
+                    self.paint_preview_browser_bar(&mut *frame, canvas_rect);
                     self.paint_screen_switcher(&mut *frame, canvas_rect);
                 }
             } else if !self.serve_canvas_from_pan_cache(frame, canvas_rect) {

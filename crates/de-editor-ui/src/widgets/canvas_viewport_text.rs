@@ -11,8 +11,9 @@
 //! underline / strikethrough.
 //!
 //! v1 approximations (documented, TS parity follow-ups):
-//! - WRAP positions and the caret/selection layout are computed with
-//!   the node-level font size + weight even when runs override them;
+//! - WRAP positions and the caret/selection layout are computed in
+//!   the node's family and slant with the node-level font size +
+//!   weight, even when runs override size or weight;
 //!   a wrapped line that splits mid-segment paints each slice with its
 //!   own style but breaks where the flat-string wrap decided.
 //! - All slices on a line share the node's baseline; a run with a
@@ -336,11 +337,6 @@ pub(crate) fn paint_text_node(
             return;
         }
     }
-    let family = if paint_node.font_family.trim().is_empty() {
-        "system-ui"
-    } else {
-        paint_node.font_family.as_str()
-    };
     // Shared line layout — the same resolution the inline text editor
     // hit-tests against (`canvas_text_edit`), so caret / selection /
     // click-to-caret geometry always matches the painted glyphs.
@@ -351,6 +347,9 @@ pub(crate) fn paint_text_node(
     // the text editor) works on the FLAT string with node-level
     // metrics; styled runs only restyle the painted slices.
     let layout = text_edit_layout(cx.backend, paint_node);
+    // The family the lines were wrapped in, so paint and wrap cannot
+    // disagree about the face.
+    let family = layout.family.as_str();
     let font_size = layout.font_size;
     let weight = layout.weight;
     let letter_spacing = layout.letter_spacing;

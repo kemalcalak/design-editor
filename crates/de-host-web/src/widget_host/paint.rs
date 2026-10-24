@@ -121,9 +121,12 @@ impl WidgetHost {
                     // extent, so the cached frame is stale.
                     self.on_preview_screen_switched(viewport_width, viewport_height);
                 } else {
-                    self.center_canvas_on_preview_root(viewport_width, viewport_height);
+                    self.frame_canvas_on_switched_page(viewport_width, viewport_height);
                 }
             }
+            // #153: a same-page section link scrolls the page. Runs after
+            // the switch handling above so its scroll reset never undoes it.
+            self.apply_preview_page_scroll_request(viewport_width, viewport_height);
         }
         backend.fill_rect(
             Rect {
@@ -220,6 +223,7 @@ impl WidgetHost {
                 }
                 // Chrome paints over the presentation in every segment.
                 self.paint_preview_switcher(backend, canvas_rect);
+                self.paint_preview_browser_bar(backend, canvas_rect);
                 self.paint_screen_switcher(backend, canvas_rect);
             } else {
                 // NORMAL PAINT path — the canvas reads editor state + the

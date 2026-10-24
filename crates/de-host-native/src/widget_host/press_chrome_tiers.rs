@@ -215,6 +215,9 @@ impl WidgetHostNative {
                 }
                 return Some(true);
             }
+            if self.preview_browser_press(x, y, viewport_width, viewport_height) {
+                return Some(true);
+            }
             if self.screen_switcher_press(x, y, viewport_width, viewport_height) {
                 return Some(true);
             }

@@ -241,6 +241,7 @@ impl WidgetHostNative {
             // Preview's device pill floats inside the strip, and window drag
             // is decided before `apply_press` runs, so the pill opts out here.
             || self.over_preview_switcher(x, y, viewport_width, viewport_height)
+            || self.over_preview_browser_bar(x, y, viewport_width, viewport_height)
         {
             return false;
         }

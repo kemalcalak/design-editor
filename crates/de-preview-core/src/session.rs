@@ -21,7 +21,6 @@ use std::rc::Rc;
 
 use de_editor_ui::layout_scene::LayoutScene;
 use de_editor_ui::Rect;
-use jian_core::action::services::Router;
 use jian_core::layout::measure::MeasureBackend;
 use jian_core::Runtime;
 use jian_ops_schema::compat::{load_str_with, LoadOptions};
@@ -446,20 +445,11 @@ impl PreviewSession {
         if app_projected {
             let table = jian_core::screens::ScreenTable::from_document(promoted_doc.clone())
                 .ok_or(PreviewEnterError::LostRoutes)?;
-            let router = std::rc::Rc::new(jian_core::screens::ScreenRouter::new(
-                table.entry_path(),
-                table.paths(),
-            ));
-            let mounted_stack = router.current().stack;
-            app = Some(AppMode {
-                current_path: table.entry_path().to_owned(),
-                mounted_stack,
-                page_idx: 0,
-                theme: active_theme.clone(),
-                promoted_doc: promoted_doc.clone(),
+            app = Some(AppMode::new(
                 table,
-                router,
-            });
+                active_theme.clone(),
+                promoted_doc.clone(),
+            ));
         }
 
         // Compile every non-`bind:value` binding on the promoted tree so

@@ -104,10 +104,14 @@ impl super::WidgetHostNative {
             self.preview_device_frame = None;
             return;
         }
-        let canvas = Rect {
-            origin: Point2D::new(canvas_x, canvas_y),
-            size: Point2D::new(canvas_w, canvas_h),
-        };
+        // APP MODE frames start below the browser bar (#153).
+        let canvas = de_preview_core::browse_chrome::frame_canvas(
+            self.preview.as_ref(),
+            Rect {
+                origin: Point2D::new(canvas_x, canvas_y),
+                size: Point2D::new(canvas_w, canvas_h),
+            },
+        );
         let Some(session) = self.preview.as_ref() else {
             self.preview_device_frame = None;
             return;

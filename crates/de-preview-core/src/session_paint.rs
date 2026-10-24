@@ -168,6 +168,11 @@ impl PreviewSession {
     /// value is mounted, hover/pressed/focused/disabled visuals can change the
     /// paint-only scene.
     pub(crate) fn has_preview_widget_visuals(&self) -> bool {
+        // Not only widgets: a link / button under the pointer paints its
+        // hover and pressed state (#153) through the same cloned overlay.
+        if self.hovered_clickable().is_some() {
+            return true;
+        }
         self.runtime.document.as_ref().is_some_and(|document| {
             document.tree.nodes.values().any(|node| {
                 matches!(
@@ -197,10 +202,14 @@ impl PreviewSession {
         let mut scene = base.clone();
         let focused_id = self.focused_schema_id();
         let state_variables = self.state_variables();
+        let clickable = self.hovered_clickable();
         let idx = scene.active_page_index;
         if let Some(page) = scene.pages.get_mut(idx) {
             for node in page.children.iter_mut() {
                 self.overlay_node(node, focused_id.as_deref(), state_variables.as_ref());
+                if let Some(clickable) = clickable.as_deref() {
+                    self.apply_clickable_state(node, clickable);
+                }
             }
         }
         let pointer = self.pointer_binding_value();
@@ -230,6 +239,44 @@ impl PreviewSession {
         }
         for child in node.children.iter_mut() {
             self.overlay_node(child, focused_id, state_variables);
+        }
+    }
+
+    /// Paint the hover (and pressed) state of the clickable `link_id`
+    /// under the pointer (a link or button, #153) when it is not a widget
+    /// — widgets resolve their own states above. Frames and text carry no
+    /// authored `states`, so the state is derived: the whole link or
+    /// button dims (more while pressed). A dim reads on any background
+    /// and any text colour; the widget tint was too faint to notice on a
+    /// coloured button or a light link (checked on rendered frames).
+    fn apply_clickable_state(&self, node: &mut SceneNode, link_id: &str) {
+        if node.id != link_id {
+            for child in node.children.iter_mut() {
+                self.apply_clickable_state(child, link_id);
+            }
+            return;
+        }
+        if node.widget.is_some() {
+            return;
+        }
+        let pressed = self
+            .interaction
+            .pressed_nodes()
+            .into_iter()
+            .any(|id| self.clickable_ancestor(id).as_deref() == Some(link_id));
+        let dim = if pressed { 0.6 } else { 0.75 };
+        let is_text = matches!(node.kind, de_editor_ui::layout_scene::NodeKind::Text);
+        if let (true, Some(fill)) = (is_text, node.fill.as_mut()) {
+            // The text painter draws with the fill colour and does not
+            // read the node's opacity, so a text link dims its colour.
+            fill.a *= dim;
+            for run in node.text_runs.iter_mut() {
+                if let Some(fill) = run.fill.as_mut() {
+                    fill.a *= dim;
+                }
+            }
+        } else {
+            node.opacity *= dim;
         }
     }
 

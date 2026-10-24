@@ -240,6 +240,16 @@ impl DesktopApp {
                         }
                         // Cmd+, toggles the settings modal.
                         "," => consumed = self.host.apply_toggle_agent_settings(),
+                        // Cmd/Ctrl+[ / ] — browse back / forward in Preview
+                        // (#153), like a browser.
+                        "[" if self.host.preview_active() => {
+                            self.host.preview_history_step(false);
+                            consumed = true;
+                        }
+                        "]" if self.host.preview_active() => {
+                            self.host.preview_history_step(true);
+                            consumed = true;
+                        }
                         "s" => {
                             // Commit a pending variable edit before saving.
                             self.host.commit_variable_row_focus_if_any_pub();
