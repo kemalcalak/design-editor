@@ -167,8 +167,9 @@ pub struct Composition {
 }
 
 impl Composition {
-    /// Composition length in seconds. Exact: the tick count is an
-    /// integer and the divisor is a power-of-ten constant.
+    /// Composition length in seconds, for display. Not exact as a
+    /// wire value: an f32 like 6.6 widens to 6.599999904632568, so JSON
+    /// output divides the integer `total_ticks` in f64 instead.
     pub fn total_seconds(&self) -> f32 {
         self.total_ticks as f32 / TICKS_PER_SECOND as f32
     }

@@ -25,8 +25,8 @@
 //! destination `filePath` would route the call at a document that does not
 //! exist instead of writing a deck.
 //!
-//! Unlike `export_item` / `export_nodes` this tool always writes a file
-//! rather than returning base64. A deck is a multi-megabyte artifact and the
+//! Unlike `export_item` / `export_nodes` this tool always writes to disk
+//! (a file, or the hyperframes directory) rather than returning base64. A deck is a multi-megabyte artifact and the
 //! caller's goal is a shareable file; base64 stays the node-scoped answer.
 
 use std::collections::BTreeMap;
@@ -37,7 +37,7 @@ use de_mcp::{McpTool, ToolErrorCode, ToolOutcome};
 
 use crate::export_html::export_deck_html;
 use crate::export_hyperframes::{
-    export_deck_hyperframes, HyperframesExport, FPS, TICKS_PER_SECOND,
+    export_deck_hyperframes, HyperframesExport, COMPOSITION_FILE, FPS, TICKS_PER_SECOND,
 };
 use crate::export_pdf::export_deck_pdf;
 use crate::export_pptx::export_deck_pptx;
@@ -66,7 +66,7 @@ impl McpTool for ExportDeck {
             _ => {
                 return ToolOutcome::Err(
                     ToolErrorCode::MissingArgument,
-                    "outputPath is required — export_deck writes a file".into(),
+                    "outputPath is required — export_deck writes to disk (a file; a directory for hyperframes)".into(),
                 );
             }
         };
@@ -110,9 +110,10 @@ impl McpTool for ExportDeck {
                 if names_an_html_file(&output_path) {
                     return ToolOutcome::Err(
                         ToolErrorCode::InvalidArgument,
-                        "outputPath for hyperframes is a directory: the composition is \
-                         written as <outputPath>/index.html"
-                            .into(),
+                        format!(
+                            "outputPath for hyperframes is a directory: the composition is \
+                             written as <outputPath>/{COMPOSITION_FILE}"
+                        ),
                     );
                 }
                 match export_deck_hyperframes(&self.state, &output_path) {

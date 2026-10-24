@@ -2,6 +2,7 @@
 //! `tools/call`, plus the argument errors every format shares.
 
 use super::*;
+use crate::export_hyperframes::RENDER_NOTES_FILE;
 use de_editor_core::{EditorCommand, NodeFlag, NodeId};
 
 /// Two white 320x180 boards, the second hidden when `hide_second`.
@@ -86,18 +87,18 @@ fn hyperframes_over_tools_call_writes_the_composition_into_the_directory() {
     assert_eq!(result["height"], 180.0);
     // Two text-free boards hold the 3 s floor each.
     assert_eq!(result["durationSeconds"], 6.0);
-    let composition = dir.join("index.html");
+    let composition = dir.join(COMPOSITION_FILE);
     assert_eq!(result["compositionPath"], composition.display().to_string());
     assert_eq!(
         result["renderNotesPath"],
-        dir.join("RENDER.md").display().to_string()
+        dir.join(RENDER_NOTES_FILE).display().to_string()
     );
 
     // The result is only a claim until the files are on disk.
     let html = std::fs::read_to_string(&composition).expect("composition on disk");
     assert!(html.contains("data-composition-id"), "{html}");
     assert_eq!(html.matches("class=\"clip hf-scene\"").count(), 2);
-    assert!(dir.join("RENDER.md").is_file());
+    assert!(dir.join(RENDER_NOTES_FILE).is_file());
     let _ = std::fs::remove_dir_all(&dir);
 }
 
@@ -138,7 +139,7 @@ fn hyperframes_reports_an_empty_page_as_a_failure() {
         error_code(call(&state, "hyperframes", &dir)),
         ToolErrorCode::Internal
     );
-    assert!(!dir.join("index.html").exists());
+    assert!(!dir.join(COMPOSITION_FILE).exists());
 }
 
 #[test]
