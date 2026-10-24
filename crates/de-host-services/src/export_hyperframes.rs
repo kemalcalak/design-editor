@@ -115,7 +115,7 @@ const FADE_TICKS: u32 = 3;
 /// Capture rate written onto the composition root. Thirty is the
 /// renderer's own default; declaring it makes the frame grid a property
 /// of the artifact rather than of whichever CLI version renders it.
-const FPS: u32 = 30;
+pub const FPS: u32 = 30;
 
 /// File names written by [`export_deck_hyperframes`].
 ///

@@ -145,9 +145,12 @@ Apply these silently through node structure; never emit the contract IDs as text
 
 Built boards are not a delivered deck. Export it:
 
-- MCP: `export_deck { format: "pptx" | "html" | "pdf", outputPath }`
-- CLI: `de export-deck --output PATH [--format pptx|html|pdf]`
+- MCP: `export_deck { format: "pptx" | "html" | "pdf" | "hyperframes", outputPath }`
+- CLI: `de export-deck --output PATH [--format pptx|html|pdf|hyperframes]`
 
 `pptx` is editable PowerPoint and the default; `html` is self-contained; `pdf`
-is one page per slide. The path argument is `outputPath` — `filePath` means
+is one page per slide. `hyperframes` turns the deck into a video: `outputPath`
+is a directory that receives `index.html` (one timed scene per visible board,
+held by how much text it carries) and `RENDER.md`; render it with
+`npx hyperframes render <dir> --output deck.mp4`. The path argument is `outputPath` — `filePath` means
 the target `.de` document everywhere in this API.
