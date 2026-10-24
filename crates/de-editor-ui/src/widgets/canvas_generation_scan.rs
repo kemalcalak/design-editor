@@ -320,6 +320,8 @@ pub(super) fn paint_generation_scan(
     if bounds.size.x <= 0.0 || bounds.size.y <= 0.0 {
         return;
     }
+    // Painted inside the culled page walk, so the sweep is on screen (#17).
+    super::canvas_generation_visibility::mark_animating();
 
     let phase = scan_phase(now_ms, SCAN_PERIOD_MS);
     let band_height = bounds.size.y * BAND_HEIGHT_FRACTION;

@@ -16,6 +16,13 @@
 use std::collections::{HashMap, HashSet};
 use std::sync::{LazyLock, Mutex};
 
+#[path = "agent_indicators_wake.rs"]
+mod wake;
+pub use wake::{
+    next_generation_scan_deadline_ms, next_reveal_deadline_ms, reveal_wake, set_burst_smoothing,
+    RevealWake,
+};
+
 /// Window after a reveal starts during which the entrance animation
 /// (scale-pop) plays and the reveal counts as "animating" for redraw
 /// scheduling. While a run is active reveals are retained past this
@@ -460,48 +467,6 @@ pub fn snapshot_at_if_active(now_ms: u64) -> Option<AgentIndicators> {
     }
 }
 
-/// Next host-clock millisecond needed for generated-node reveal animation.
-pub fn next_reveal_deadline_ms(now_ms: u64) -> Option<u64> {
-    let mut r = REGISTRY.lock().unwrap();
-    rebase_external_clock_reveals(&mut r, now_ms);
-    if !r.run_active {
-        r.reveals
-            .retain(|_, started| now_ms.saturating_sub(*started) <= REVEAL_DURATION_MS);
-    }
-    drain_finished_run(&mut r);
-    let next_start = r
-        .reveals
-        .values()
-        .filter(|started| **started > now_ms)
-        .min()
-        .copied();
-    let active_reveal = r
-        .reveals
-        .values()
-        .any(|started| *started <= now_ms && now_ms.saturating_sub(*started) <= REVEAL_DURATION_MS);
-    let active_cursor = r.run_active && r.cursor_agent.is_some();
-    match (next_start, active_reveal || active_cursor) {
-        (Some(start), true) => Some(start.min(now_ms.saturating_add(REVEAL_FRAME_MS))),
-        (Some(start), false) => Some(start),
-        (None, true) => Some(now_ms.saturating_add(REVEAL_FRAME_MS)),
-        // Nothing animating — but if the drain just cleared the overlay,
-        // keep asking for one more frame until the paint path consumes
-        // the erase (otherwise the last-painted cursor stays on screen).
-        (None, false) => r
-            .needs_final_frame
-            .then(|| now_ms.saturating_add(REVEAL_FRAME_MS)),
-    }
-}
-
-/// Next host-clock millisecond needed for the generating-frame scan animation.
-pub fn next_generation_scan_deadline_ms(now_ms: u64) -> Option<u64> {
-    let mut r = REGISTRY.lock().unwrap();
-    rebase_external_clock_reveals(&mut r, now_ms);
-    let reveal_runway_pending = r.reveals.values().any(|started_at| *started_at > now_ms);
-    (!r.frames.is_empty() && (r.run_active || reveal_runway_pending))
-        .then(|| now_ms.saturating_add(REVEAL_FRAME_MS))
-}
-
 fn rebase_external_clock_reveals(r: &mut AgentIndicators, now_ms: u64) {
     let future_floor = now_ms.saturating_add(CLOCK_REBASE_THRESHOLD_MS);
     let mut external: Vec<(String, u64)> = r
@@ -535,19 +500,22 @@ fn rebase_external_clock_reveals(r: &mut AgentIndicators, now_ms: u64) {
         .map(|tail| tail.saturating_add(REVEAL_STAGGER_MS))
         .unwrap_or(now_ms)
         .max(now_ms.saturating_add(CURSOR_FLIGHT_LEAD_MS));
+    // Keep the batch's own beat (capped batches run faster than the
+    // regular stagger, #17) instead of re-spacing it at the full beat.
+    let beat = crate::agent_reveals::recovery_stagger_ms(external.iter().map(|(_, at)| *at));
     for (id, raw_started) in external {
         let offset_start = now_ms.saturating_add(raw_started.saturating_sub(batch_start));
         let started_at = offset_start.max(next_slot);
         if let Some(slot) = r.reveals.get_mut(&id) {
             *slot = started_at;
         }
-        next_slot = started_at.saturating_add(REVEAL_STAGGER_MS);
+        next_slot = started_at.saturating_add(beat);
     }
 }
 
 fn smooth_overdue_reveal_burst(r: &mut AgentIndicators, now_ms: u64) {
     let prev_ms = r.last_reveal_snapshot_ms.replace(now_ms);
-    if prev_ms.is_some_and(|prev| now_ms <= prev) {
+    if prev_ms.is_some_and(|prev| now_ms <= prev) || !wake::burst_smoothing() {
         return;
     }
     let mut ordered: Vec<(String, u64)> = r
@@ -563,6 +531,7 @@ fn smooth_overdue_reveal_burst(r: &mut AgentIndicators, now_ms: u64) {
     if newly_due <= REVEAL_MAX_NEW_STARTS_PER_SNAPSHOT {
         return;
     }
+    let recovery = crate::agent_reveals::recovery_stagger_ms(ordered.iter().map(|(_, at)| *at));
     let mut newly_due_seen = 0;
     let mut reschedule_tail = false;
     let mut next_slot = now_ms;
@@ -573,7 +542,7 @@ fn smooth_overdue_reveal_burst(r: &mut AgentIndicators, now_ms: u64) {
                 if let Some(started_at) = r.reveals.get_mut(&id) {
                     *started_at = next_slot;
                 }
-                next_slot = next_slot.saturating_add(REVEAL_BURST_RECOVERY_STAGGER_MS);
+                next_slot = next_slot.saturating_add(recovery);
                 reschedule_tail = true;
                 continue;
             } else {
@@ -587,7 +556,7 @@ fn smooth_overdue_reveal_burst(r: &mut AgentIndicators, now_ms: u64) {
         if let Some(started_at) = r.reveals.get_mut(&id) {
             *started_at = scheduled_start;
         }
-        next_slot = scheduled_start.saturating_add(REVEAL_BURST_RECOVERY_STAGGER_MS);
+        next_slot = scheduled_start.saturating_add(recovery);
     }
 }
 

@@ -195,6 +195,7 @@ mod canvas_frame_labels;
 mod canvas_generation_scan;
 #[cfg(test)]
 mod canvas_generation_scan_tests;
+pub mod canvas_generation_visibility;
 pub mod canvas_layout_transition;
 pub mod canvas_overlay_transform;
 mod canvas_path_overlay;
@@ -203,6 +204,7 @@ mod canvas_selection_overlay;
 pub mod canvas_shader_clock;
 mod canvas_shader_images;
 // `pub` so both hosts can track the pointer for pointer-reactive shaders.
+mod canvas_placeholder;
 pub mod canvas_shader_pointer;
 pub mod canvas_text_edit;
 pub mod canvas_viewport;
@@ -217,6 +219,7 @@ pub mod canvas_viewport_overlay;
 pub mod canvas_viewport_paint;
 #[cfg(test)]
 mod canvas_viewport_paint_pop_tests;
+mod canvas_viewport_stroke_paint;
 mod canvas_viewport_text;
 mod canvas_viewport_widget;
 pub mod preview_device_switcher;

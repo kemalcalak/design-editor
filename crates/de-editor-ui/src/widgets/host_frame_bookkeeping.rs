@@ -128,12 +128,9 @@ pub fn base_animation_deadline_ms(
     transition: Option<&CanvasLayoutTransition>,
     now_ms: u64,
 ) -> Option<u64> {
-    let mut next = de_editor_core::agent_indicators::next_reveal_deadline_ms(now_ms);
-    if let Some(deadline) =
-        de_editor_core::agent_indicators::next_generation_scan_deadline_ms(now_ms)
-    {
-        next = earliest(next, deadline);
-    }
+    // Generation overlay (reveals, agent cursor, scan): 60 fps only for
+    // what the last frame showed on screen (#17).
+    let mut next = crate::widgets::canvas_generation_visibility::generation_deadline_ms(now_ms);
     if let Some(deadline) = transition.and_then(|t| t.next_deadline_ms(now_ms)) {
         next = earliest(next, deadline);
     }

@@ -368,15 +368,32 @@ fn snapshot_queues_external_reveals_after_active_local_tail() {
 
     // The flight-lead floor (1_040 + 350) wins over the local tail + beat
     // (1_080 + 160) here — the first external reveal still gets a full
-    // cursor flight; followers keep the queue beat.
+    // cursor flight; followers keep the batch's own beat, never closer than
+    // one frame (5 ms raw → 16 ms; #17 lets a capped batch run faster
+    // than the regular stagger).
     assert_eq!(
         snap.reveals.get("external-a"),
         Some(&(1_040 + CURSOR_FLIGHT_LEAD_MS))
     );
     assert_eq!(
         snap.reveals.get("external-b"),
-        Some(&(1_040 + CURSOR_FLIGHT_LEAD_MS + REVEAL_STAGGER_MS))
+        Some(&(1_040 + CURSOR_FLIGHT_LEAD_MS + REVEAL_FRAME_MS))
     );
+    clear();
+}
+
+#[test]
+fn rebased_external_batch_keeps_its_capped_beat() {
+    let _guard = TEST_LOCK.lock().unwrap_or_else(|e| e.into_inner());
+    let epoch = begin();
+    for i in 0..4_u64 {
+        add_reveal(epoch, &format!("x{i}"), 1_700_000_000_000 + i * 20);
+    }
+    let snap = snapshot_at(1_000);
+    let first = 1_000 + CURSOR_FLIGHT_LEAD_MS;
+    for i in 0..4_u64 {
+        assert_eq!(snap.reveals.get(&format!("x{i}")), Some(&(first + i * 20)));
+    }
     clear();
 }
 

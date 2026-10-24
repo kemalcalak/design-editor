@@ -461,7 +461,7 @@ mod paint_tests {
             1_050,
             &ind,
             Default::default(),
-            Point2D::new(400.0, 300.0),
+            Rect::xywh(0.0, 0.0, 800.0, 600.0),
         );
         assert_eq!(
             backend.polygons.len(),
@@ -547,7 +547,7 @@ mod paint_tests {
             1_050,
             &ind,
             Default::default(),
-            Point2D::new(400.0, 300.0),
+            Rect::xywh(0.0, 0.0, 800.0, 600.0),
         );
         assert_eq!(backend.polygons.len(), 7, "fallback pencil still paints");
         let (_, color) = &backend.polygons[5];
@@ -583,7 +583,7 @@ mod paint_tests {
             1_000,
             &ind,
             Default::default(),
-            Point2D::new(400.0, 300.0),
+            Rect::xywh(0.0, 0.0, 800.0, 600.0),
         );
         assert!(
             backend.polygons.is_empty()

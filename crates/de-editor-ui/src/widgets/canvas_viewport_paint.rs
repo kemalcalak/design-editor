@@ -30,6 +30,7 @@ use crate::widgets::canvas_viewport_image::{paint_image_node, paint_image_node_w
 use crate::widgets::canvas_viewport_overlay::{
     paint_fill_then_stroke, paint_node_fill, paint_node_stroke, scaled_non_uniform_corner_radii,
 };
+use crate::widgets::canvas_viewport_stroke_paint as stroke_paint;
 use crate::widgets::canvas_viewport_text::paint_text_node;
 use crate::widgets::canvas_viewport_widget::paint_widget_visual;
 use crate::widgets::PaintCx;
@@ -153,6 +154,9 @@ fn paint_node_body<'a>(
         .reveals
         .map(|schedule| reveal_paint_state(schedule, &node.id))
         .unwrap_or(RevealPaintState::Idle);
+    if !node.hidden {
+        reveal::note_reveal_on_screen(reveal_state, node, viewport_origin, zoom, cull);
+    }
     if node.hidden || matches!(reveal_state, RevealPaintState::Pending) {
         return PaintNodeHits::default();
     }
@@ -432,7 +436,13 @@ fn paint_node_body<'a>(
             unstyled(cx, own_style, |cx| {
                 paint_widget_visual(cx, node, world_rect, zoom)
             });
-            if let Some(accent) = options.generation_accent {
+            // An in-progress frame (#16) carries its own sweep; the live
+            // generation scan would paint the same panel a second time.
+            let in_progress = !options.mask_source
+                && unstyled(cx, own_style, |cx| {
+                    super::canvas_placeholder::paint(cx, node, world_rect, zoom, options.now_ms)
+                });
+            if let Some(accent) = options.generation_accent.filter(|_| !in_progress) {
                 let visually_empty = super::canvas_generation_scan::is_placeholder_section(node)
                     || options.reveals.is_some_and(|schedule| {
                         super::canvas_generation_scan::is_pending_filled_section(
@@ -590,10 +600,7 @@ fn paint_node_body<'a>(
                 // approximation (no native clip_oval on the trait, so
                 // fall back to the rect-clip path the painter has).
                 paint_image_node(cx, node, world_rect, zoom, src, !options.mask_source);
-                if let Some(stroke) = node.stroke {
-                    cx.backend
-                        .stroke_oval(world_rect, stroke.color, stroke.width * zoom);
-                }
+                stroke_paint::paint_oval_stroke(cx, node, world_rect, zoom);
             } else {
                 paint_ellipse(cx, node, world_rect, zoom);
             }
@@ -625,28 +632,9 @@ fn paint_node_body<'a>(
                     cx.backend.fill_polygon(&pts, fill);
                 }
             }
-            if let Some(stroke) = node.stroke {
-                cx.backend
-                    .stroke_polygon(&pts, stroke.color, stroke.width * zoom);
-            }
+            stroke_paint::paint_polygon_stroke(cx, node, &pts, world_rect, zoom);
         }
-        NodeKind::Line => {
-            // Top-left → bottom-right diagonal across the bounds,
-            // stroked at the stroke width (or 1.5 if no stroke).
-            let from = Point2D::new(world_rect.origin.x, world_rect.origin.y);
-            let to = Point2D::new(
-                world_rect.origin.x + world_rect.size.x,
-                world_rect.origin.y + world_rect.size.y,
-            );
-            let (color, width) = match node.stroke {
-                Some(s) => (s.color, s.width * zoom),
-                None => (
-                    node.fill.unwrap_or(crate::Color::BLACK),
-                    (1.5_f32).max(zoom),
-                ),
-            };
-            cx.backend.stroke_line(from, to, color, width);
-        }
+        NodeKind::Line => stroke_paint::paint_line_node_stroke(cx, node, world_rect, zoom),
         NodeKind::Path => {
             if let Some(d) = node.svg_path.as_deref() {
                 paint_svg_path_node(cx, node, world_rect, zoom, d);
@@ -716,14 +704,23 @@ fn paint_node_body<'a>(
                 None => None,
             };
             if let Some((color, width)) = stroke {
-                for pair in points.windows(2) {
-                    cx.backend.stroke_line(
-                        doc_to_world_point(pair[0], viewport_origin, zoom),
-                        doc_to_world_point(pair[1], viewport_origin, zoom),
-                        color,
-                        width,
-                    );
-                }
+                stroke_paint::with_stroke_paint_or(
+                    cx,
+                    node,
+                    world_rect,
+                    zoom,
+                    color,
+                    |cx, color| {
+                        for pair in points.windows(2) {
+                            cx.backend.stroke_line(
+                                doc_to_world_point(pair[0], viewport_origin, zoom),
+                                doc_to_world_point(pair[1], viewport_origin, zoom),
+                                color,
+                                width,
+                            );
+                        }
+                    },
+                );
             }
         }
         NodeKind::Text => {
