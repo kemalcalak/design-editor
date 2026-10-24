@@ -451,3 +451,6 @@ mod shader_image_tests;
 
 #[cfg(test)]
 mod shader_effect_tests;
+
+#[cfg(test)]
+mod text_fill_tests;

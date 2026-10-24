@@ -30,7 +30,7 @@ use crate::widgets::canvas_viewport_image::{paint_image_node, paint_image_node_w
 use crate::widgets::canvas_viewport_overlay::{
     paint_fill_then_stroke, paint_node_fill, paint_node_stroke, scaled_non_uniform_corner_radii,
 };
-use crate::widgets::canvas_viewport_text::paint_text_node;
+use crate::widgets::canvas_viewport_text_fill::paint_text_in_viewport;
 use crate::widgets::canvas_viewport_widget::paint_widget_visual;
 use crate::widgets::PaintCx;
 use crate::{Point2D, Rect};
@@ -737,12 +737,7 @@ fn paint_node_body<'a>(
             }) {
                 // painted
             } else {
-                let zoom = zoom.max(0.0001);
-                cx.backend.save();
-                cx.backend.translate(viewport_origin);
-                cx.backend.scale(Point2D::new(zoom, zoom), Point2D::ZERO);
-                paint_text_node(cx, node, node.bounds, zoom, edit_caret);
-                cx.backend.restore();
+                paint_text_in_viewport(cx, node, world_rect, viewport_origin, zoom, edit_caret);
             }
         }
     }
