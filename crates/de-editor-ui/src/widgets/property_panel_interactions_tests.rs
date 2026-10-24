@@ -558,3 +558,26 @@ fn the_popover_flips_up_near_the_panel_bottom() {
     assert!(menu.origin.y >= viewport.origin.y);
     assert!(menu.origin.y + menu.size.y <= bottom + 0.01);
 }
+
+/// #190: Navigate offers every screen except the one holding the
+/// selection — whether the screen itself or a node inside it is selected.
+#[test]
+fn navigate_targets_leave_out_the_current_screen() {
+    let doc = jian_ops_schema::load_str(
+        r#"{ "version": "1.0.0", "children": [
+            {"type":"frame","id":"home","screen":"/home","width":100,"height":100,
+             "children":[{"type":"rectangle","id":"btn","width":10,"height":10}]},
+            {"type":"frame","id":"detail","screen":"/detail","width":100,"height":100},
+            {"type":"frame","id":"about","screen":"/about","width":100,"height":100}
+        ]}"#,
+    )
+    .expect("fixture parses")
+    .value;
+    let mut state = de_editor_core::EditorState::from_document(doc);
+    state.set_single_selection(de_editor_core::NodeId::new("btn"));
+    assert_eq!(document_screen_paths(&state), ["/detail", "/about"]);
+    state.set_single_selection(de_editor_core::NodeId::new("detail"));
+    assert_eq!(document_screen_paths(&state), ["/home", "/about"]);
+    state.set_single_selection(de_editor_core::NodeId::NONE);
+    assert_eq!(document_screen_paths(&state).len(), 3);
+}

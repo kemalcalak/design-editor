@@ -206,11 +206,15 @@ fn unescape_path_literal(body: &serde_json::Value) -> String {
 }
 
 /// Scan the active page's top-level frames for authored `screen` paths —
-/// the popover's "Navigate to <path>" rows, in document order.
+/// the popover's "Navigate to <path>" rows, in document order. The screen
+/// holding the selection is left out (#190): navigating to the screen
+/// you are already on does nothing.
 pub fn document_screen_paths(state: &de_editor_core::EditorState) -> Vec<String> {
+    let anchor = state.selection.anchor.as_str();
     state
         .active_children()
         .iter()
+        .filter(|n| !subtree_contains(n, anchor))
         .filter_map(|n| n.screen().map(str::to_string))
         .collect()
 }
