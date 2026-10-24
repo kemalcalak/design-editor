@@ -117,6 +117,8 @@ const GUIDELINE_TOPICS: &[(&str, &[&str], &[&str])] = &[
     // the contract, not the model).
     ("card", &["cards", "card-item"], &["cards"]),
     ("icons", &["icon", "icon-font", "lucide"], &["icon-catalog"]),
+    // The `execute` MCP tool's API and transaction rules (#168).
+    ("execute", &["execute-script"], &["execute-script"]),
 ];
 
 /// Compose the named skills (in order) into one coherent guideline doc,
@@ -157,15 +159,21 @@ fn compose_skills(names: &[&str]) -> Option<String> {
 ///   pins, paint-only `translateX/Y` moves
 /// - `"card"` (`cards`, `card-item`) — card-board contract
 /// - `"icons"` (`icon`, `icon-font`, `lucide`) — icon_font/lucide icon catalog
+/// - `"execute"` (`execute-script`) — the `execute` tool: one script that
+///   reads and writes, one undo step, all-or-nothing
 ///
 /// Returns `None` for any unrecognised topic so callers can produce a typed
 /// "unknown topic" error without special-casing the string themselves.
 pub fn guideline_for(topic: &str) -> Option<String> {
-    let (_, _, skill_names) = GUIDELINE_TOPICS
+    let (name, _, skill_names) = GUIDELINE_TOPICS
         .iter()
         .find(|(name, aliases, _)| *name == topic || aliases.contains(&topic))?;
     compose_skills(skill_names).map(|mut guideline| {
-        guideline.push_str("\n\nWhen you are done, call finalize_design once — it runs the same repair passes the built-in pipeline applies.");
+        // `execute` writes land as written; the repair passes are not part
+        // of that tool's contract.
+        if *name != "execute" {
+            guideline.push_str("\n\nWhen you are done, call finalize_design once — it runs the same repair passes the built-in pipeline applies.");
+        }
         guideline
     })
 }
