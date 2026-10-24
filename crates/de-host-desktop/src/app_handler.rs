@@ -530,6 +530,21 @@ impl ApplicationHandler<DesktopEvent> for DesktopApp {
                 button: MouseButton::Left,
                 ..
             } => self.on_left_release(),
+            // Mouse back / forward buttons browse the Preview's history
+            // (#153); outside Preview they do nothing, as before.
+            WindowEvent::MouseInput {
+                state: ElementState::Pressed,
+                button: button @ (MouseButton::Back | MouseButton::Forward),
+                ..
+            } => {
+                if self.host.preview_active()
+                    && self
+                        .host
+                        .preview_history_step(button == MouseButton::Forward)
+                {
+                    self.request_redraw(true);
+                }
+            }
             WindowEvent::MouseWheel { delta, .. } => self.on_mouse_wheel(delta),
             WindowEvent::PinchGesture { delta, .. } => self.on_pinch_gesture(delta),
             // CJK composition: preedit updates paint through the

@@ -66,6 +66,8 @@ mod auto_wire_stub;
 mod binding_overlay;
 mod binding_overlay_apply;
 mod binding_sites;
+mod browse;
+pub mod browse_chrome;
 mod debug_trace;
 pub mod device_frame;
 #[cfg(all(test, not(target_os = "windows")))]
@@ -113,6 +115,9 @@ pub use interaction_state::InteractionState;
 pub use invalidation::InvalidationKind;
 pub use jian_ops_schema::motion::MotionPreference;
 
+/// Website-style browsing (#153): the address bar's content, a section
+/// link's page-scroll request, and the hover cursor shape.
+pub use browse::{BrowseAddress, PageScrollRequest, PreviewCursor};
 /// Typed failure domains for entering / re-solving a preview session
 /// (`PreviewSession::enter` + `app_mode::solve_roots`).
 pub use error::{PreviewEnterError, PreviewLayoutError};
@@ -153,6 +158,8 @@ mod tests_app_mode;
 mod tests_binding_overlay;
 #[cfg(all(test, not(target_os = "windows")))]
 mod tests_bindings;
+#[cfg(all(test, not(target_os = "windows")))]
+mod tests_browse;
 #[cfg(all(test, not(target_os = "windows")))]
 mod tests_caret;
 #[cfg(all(test, not(target_os = "windows")))]

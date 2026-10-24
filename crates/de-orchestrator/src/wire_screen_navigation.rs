@@ -139,6 +139,9 @@ mod screen_route_inventory;
 pub(crate) use screen_route_inventory::{
     ensure_planned_screen_routes, prompt_screen_route_inventory,
 };
+#[path = "wire_web_nav_links.rs"]
+mod wire_web_nav_links;
+pub use wire_web_nav_links::wire_web_nav_links;
 
 /// Scan the active page's top-level `Frame` children for screen-shaped
 /// candidates (numeric width AND height, width in a mobile or desktop band).

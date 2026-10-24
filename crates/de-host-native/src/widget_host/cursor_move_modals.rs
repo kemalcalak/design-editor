@@ -146,6 +146,7 @@ impl WidgetHostNative {
             if self.preview_slideshow_active() {
                 self.slideshow_toolbar_hover(x, y, self.last_viewport_w, self.last_viewport_h);
             } else {
+                self.preview_browser_hover(x, y, self.last_viewport_w, self.last_viewport_h);
                 self.screen_switcher_hover(x, y, self.last_viewport_w, self.last_viewport_h);
                 self.preview_switcher_hover(x, y, self.last_viewport_w, self.last_viewport_h);
             }

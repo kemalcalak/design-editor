@@ -64,6 +64,17 @@ pub struct PreviewState {
     /// activates on RELEASE only while the cursor is still on it.
     pub toolbar_hover: Option<crate::preview_slideshow::SlideshowToolbarButton>,
     pub toolbar_pressed: Option<crate::preview_slideshow::SlideshowToolbarButton>,
+    /// APP MODE browser bar (#153) control under the cursor and the one
+    /// pressed — same press/hover/release contract as the switchers.
+    pub browser_hover: Option<PreviewBrowserControl>,
+    pub browser_pressed: Option<PreviewBrowserControl>,
+}
+
+/// A button on the preview browser bar (#153).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum PreviewBrowserControl {
+    Back,
+    Forward,
 }
 
 /// PropertyPanel Size-section fill / hug / clip toggles.

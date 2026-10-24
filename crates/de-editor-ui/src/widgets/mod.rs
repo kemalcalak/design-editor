@@ -219,6 +219,7 @@ pub mod canvas_viewport_paint;
 mod canvas_viewport_paint_pop_tests;
 mod canvas_viewport_text;
 mod canvas_viewport_widget;
+pub mod preview_browser_bar;
 pub mod preview_device_switcher;
 pub mod scene_paint_options;
 pub mod screen_switcher_pills;
@@ -445,6 +446,7 @@ pub use canvas_viewport::{
 };
 pub use canvas_viewport_paint::{paint_scene_page, paint_scene_page_without_video_badge};
 pub use canvas_viewport_widget::widget_text_inset_left;
+pub use preview_browser_bar::PreviewBrowserBar;
 pub use preview_device_switcher::PreviewDeviceSwitcher;
 pub use scene_paint_options::{paint_scene_page_with, paint_scene_subtree, PaintSceneOptions};
 pub use screen_switcher_pills::ScreenSwitcherPills;
