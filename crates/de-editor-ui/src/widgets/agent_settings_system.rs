@@ -1,8 +1,9 @@
 //! System tab of the settings modal.
 //!
 //! Appearance, the auto-update preference plus its live release-probe
-//! status, the experimental-features opt-in, the pencil-cursor picker and
-//! the Pencil tool's smoothing level (#88) — each on one borderless row in the modal's shared row
+//! status, the experimental-features opt-in, the generation-overlay
+//! pencil-cursor picker and the Pencil tool's smoothing level (#88) —
+//! each on one borderless row in the modal's shared row
 //! language (`agent_settings_rows`), separated by hairlines.
 
 use crate::theme::Theme;
@@ -36,7 +37,7 @@ const SEGMENT_ICON: f32 = 13.0;
 const SEGMENT_ICON_GAP: f32 = 6.0;
 const SEGMENT_PAD_X: f32 = 6.0;
 /// One segment of the three-way Pencil smoothing control.
-const SMOOTHING_SEGMENT_W: f32 = 84.0;
+pub(crate) const SMOOTHING_SEGMENT_W: f32 = 84.0;
 const CURSOR_SWATCH: f32 = 38.0;
 const CURSOR_SWATCH_GAP: f32 = 8.0;
 /// The Auto-update row's Update / Restart button (#111), left of the switch;

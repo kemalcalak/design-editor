@@ -123,7 +123,14 @@ impl WidgetHostNative {
         cancelled |= self.handle_drag.take().is_some();
         cancelled |= self.rotate_drag.take().is_some();
         cancelled |= self.create_drag.take().is_some();
-        cancelled |= self.editor_state.cancel_pencil_stroke();
+        // A Pencil stroke commits instead of vanishing: a stray momentum
+        // scroll (which also lands here) must not throw a drawing away.
+        if self.editor_state.pencil_stroke_active() {
+            let _ = self
+                .editor_state
+                .finish_pencil_stroke(&mut self.next_node_id);
+            cancelled = true;
+        }
         cancelled |= self.marquee_drag.take().is_some();
         cancelled |= self.layer_drag.take().is_some();
         cancelled |= self.path_anchor_drag.take().is_some();

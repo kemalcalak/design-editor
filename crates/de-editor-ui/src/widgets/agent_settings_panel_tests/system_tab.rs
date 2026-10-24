@@ -79,6 +79,7 @@ fn system_pencil_smoothing_segments_pick_their_level() {
     let rect = panel.rect(1200.0, 800.0);
     let content = crate::widgets::agent_settings_panel::content_viewport(rect);
     let y = system_row_mid_y(rect, 4);
+    let seg = crate::widgets::agent_settings_system::SMOOTHING_SEGMENT_W;
     // The control is right-aligned: Smooth is the last segment.
     let right = content.origin.x + content.size.x;
     assert_eq!(
@@ -86,11 +87,11 @@ fn system_pencil_smoothing_segments_pick_their_level() {
         AgentSettingsHit::SelectPencilSmoothing(PencilSmoothing::Smooth)
     );
     assert_eq!(
-        panel.hit_test(rect, crate::Point2D::new(right - 18.0 - 84.0, y)),
+        panel.hit_test(rect, crate::Point2D::new(right - 18.0 - seg, y)),
         AgentSettingsHit::SelectPencilSmoothing(PencilSmoothing::Balanced)
     );
     assert_eq!(
-        panel.hit_test(rect, crate::Point2D::new(right - 18.0 - 168.0, y)),
+        panel.hit_test(rect, crate::Point2D::new(right - 18.0 - 2.0 * seg, y)),
         AgentSettingsHit::SelectPencilSmoothing(PencilSmoothing::Precise)
     );
 }

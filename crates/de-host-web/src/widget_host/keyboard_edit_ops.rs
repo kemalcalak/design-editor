@@ -39,19 +39,19 @@ impl WidgetHost {
         self.mark_dirty();
     }
 
-    /// Map a bare (no Cmd/Ctrl) letter to a tool switch when no text input owns
-    /// the keyboard. Returns true when a tool was set so the keydown router
-    /// falls back to `apply_text` for every other letter (and while typing).
-    /// Web parity fix: the native host had this single-key router but the web
-    /// keydown handler only ever fell through to `apply_text`, so R / T / P /
-    /// etc. silently did nothing on the canvas.
+    /// Test convenience: the tool router without Shift.
     #[cfg(test)]
     pub(crate) fn apply_tool_shortcut(&mut self, key: &str) -> bool {
         self.apply_tool_shortcut_with_shift(key, false)
     }
 
-    /// [`Self::apply_tool_shortcut`] with the Shift state: Shift+P picks the
-    /// freehand Pencil (#88), every other letter ignores Shift.
+    /// Map a bare (no Cmd/Ctrl) letter to a tool switch when no text input owns
+    /// the keyboard. Returns true when a tool was set so the keydown router
+    /// falls back to `apply_text` for every other letter (and while typing).
+    /// Shift+P picks the freehand Pencil (#88); every other letter ignores
+    /// Shift. Web parity fix: the native host had this single-key router but
+    /// the web keydown handler only ever fell through to `apply_text`, so
+    /// R / T / P / etc. silently did nothing on the canvas.
     pub(crate) fn apply_tool_shortcut_with_shift(&mut self, key: &str, shift: bool) -> bool {
         if self.input_active() {
             return false;

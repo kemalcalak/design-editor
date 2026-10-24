@@ -117,3 +117,17 @@ fn smoothing_ids_round_trip() {
     }
     assert_eq!(PencilSmoothing::default(), PencilSmoothing::Balanced);
 }
+
+#[test]
+fn undo_mid_stroke_drops_the_stroke_and_keeps_redo() {
+    let mut s = state_with(vec![]);
+    let mut next_id = 1u64;
+    draw_arc(&mut s, 40);
+    let first = s.finish_pencil_stroke(&mut next_id).expect("first stroke");
+    draw_arc(&mut s, 40);
+    assert!(s.undo(), "undo the first stroke while drawing the second");
+    assert!(!s.pencil_stroke_active(), "the in-flight stroke is dropped");
+    assert!(s.finish_pencil_stroke(&mut next_id).is_none());
+    assert!(s.redo(), "redo still restores the first stroke");
+    assert!(find_node(s.active_children(), &first).is_some());
+}

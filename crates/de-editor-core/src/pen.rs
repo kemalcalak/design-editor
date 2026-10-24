@@ -12,6 +12,9 @@ use crate::walkers::{find_node, find_node_mut};
 use jian_ops_schema::node::PenNode;
 use jian_ops_schema::node::{PenPathAnchor, PenPathHandle, PenPathPointType};
 
+/// Default stroke colour of a new pen path (TS `skia-pen-tool.ts:199-209`).
+pub const PEN_STROKE_HEX: &str = "#374151";
+
 /// Which bezier control handle of a path anchor is being edited.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum PathHandleSide {
@@ -76,7 +79,7 @@ impl EditorState {
         // at start so the in-progress node paints like the committed
         // one will.
         crate::fills::set_primary_fill_hex(&mut node, "transparent");
-        crate::fills::set_primary_stroke_hex(&mut node, "#374151");
+        crate::fills::set_primary_stroke_hex(&mut node, PEN_STROKE_HEX);
         self.active_children_mut().push(node);
         self.mark_document_changed();
         self.ui.pending_pen_history = Some(pre);

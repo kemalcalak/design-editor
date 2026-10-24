@@ -17,6 +17,7 @@ struct UiPrefs {
 /// The preferences this file carries, as the editor holds them.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) struct UiPrefValues {
+    /// The AI generation overlay's cursor silhouette (not the Pencil tool).
     pub(crate) pencil_cursor: PencilCursorStyle,
     pub(crate) pencil_smoothing: PencilSmoothing,
 }

@@ -19,7 +19,7 @@ use jian_ops_schema::node::PenNode;
 use jian_ops_schema::style::{StrokeCap, StrokeJoin, StrokeThickness};
 
 /// Stroke colour of a new pencil path — the pen tool's default.
-pub const PENCIL_STROKE_HEX: &str = "#374151";
+pub const PENCIL_STROKE_HEX: &str = crate::pen::PEN_STROKE_HEX;
 /// Stroke width (doc px) of a new pencil path.
 pub const PENCIL_STROKE_WIDTH: f32 = 2.0;
 /// Minimum on-screen distance (px) between two recorded samples; closer
@@ -55,8 +55,8 @@ impl EditorState {
         true
     }
 
-    /// Drop the in-flight stroke without touching the document (pointer
-    /// cancel, Escape, tool switch). True when one was active.
+    /// Drop the in-flight stroke without touching the document (tool
+    /// switch, undo / redo mid-drag). True when one was active.
     pub fn cancel_pencil_stroke(&mut self) -> bool {
         self.ui.pencil_stroke.take().is_some()
     }
@@ -112,13 +112,11 @@ impl EditorState {
         let pre = self.snapshot_for_history();
         let first = (anchors[0].x, anchors[0].y);
         let mut node = make_path(id.clone().into(), "Pencil", first);
-        if let PenNode::Path(path) = &mut node {
-            path.anchors = Some(anchors);
-            path.closed = Some(false);
-        }
         crate::fills::set_primary_fill_hex(&mut node, "transparent");
         crate::fills::set_primary_stroke_hex(&mut node, PENCIL_STROKE_HEX);
         if let PenNode::Path(path) = &mut node {
+            path.anchors = Some(anchors);
+            path.closed = Some(false);
             if let Some(stroke) = path.stroke.as_mut() {
                 stroke.thickness = StrokeThickness::Uniform(PENCIL_STROKE_WIDTH);
                 stroke.cap = Some(StrokeCap::Round);

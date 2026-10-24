@@ -127,3 +127,18 @@ fn the_select_tool_edits_a_pencil_path_anchor() {
         moved.y
     );
 }
+
+#[test]
+fn a_scroll_mid_stroke_commits_the_drawing_instead_of_dropping_it() {
+    let mut host = empty_host();
+    host.apply_set_tool(Tool::Pencil);
+    let (px, py) = screen(&host, 300.0, 300.0);
+    host.apply_press(px, py, VW, VH);
+    for i in 1..=20 {
+        host.apply_cursor_move(px + i as f32 * 4.0, py + (i as f32 * 0.4).sin() * 15.0);
+    }
+    // A stray momentum scroll lands while the button is still down.
+    host.apply_wheel(px, py, 3.0, VW, VH);
+    assert!(!host.editor_state().pencil_stroke_active());
+    assert_eq!(paths(&host).len(), 1, "the stroke was kept");
+}
