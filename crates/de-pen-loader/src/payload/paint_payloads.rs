@@ -27,7 +27,7 @@ pub struct StrokePayload {
     #[serde(default, skip_serializing_if = "is_zero_i8")]
     pub align: i8,
     /// Authored cap / join / dash (#89), passed through verbatim; the
-    /// scene builder resolves them into a `StrokeRenderStyle`.
+    /// scene builder carries them on `SceneStroke::style`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub cap: Option<jian_ops_schema::style::StrokeCap>,
     #[serde(default, skip_serializing_if = "Option::is_none")]

@@ -254,12 +254,14 @@ impl NodeSnapshot {
                 width: stroke_width.unwrap_or(1.0) as f32,
                 sides: stroke_sides_for_scene(node),
                 align: stroke_align_for_scene(node),
+                style: Default::default(),
             }),
             (None, Some(width)) if width > 0.0 => Some(SceneStroke {
                 color: Self::DEFAULT_STROKE_SWATCH,
                 width: width as f32,
                 sides: stroke_sides_for_scene(node),
                 align: stroke_align_for_scene(node),
+                style: Default::default(),
             }),
             _ => None,
         };

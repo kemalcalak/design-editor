@@ -99,6 +99,7 @@ fn authored_widget_node(kind: NodeKind, mut w: SceneWidget, rect: Rect, radius: 
         width: 2.0,
         sides: None,
         align: SceneStrokeAlign::Center,
+        style: Default::default(),
     });
     node.corner_radius = radius;
     node

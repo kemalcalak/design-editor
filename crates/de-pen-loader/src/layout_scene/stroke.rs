@@ -5,15 +5,12 @@
 //! decide when an authored stroke must NOT reach the scene at all.
 
 use de_editor_core::scene_vars::VariableTable;
-use de_editor_core::stroke_render_style::{self, StrokeRenderStyle};
 use jian_scene::layout_scene::{SceneStroke, SceneStrokeAlign};
 
 use crate::payload::{NodePayload, StrokePayload};
 
 /// The scene stroke of `node` (paint opacity folded into its colour), or
-/// `None` when the node paints none. Also records the stroke's cap / join
-/// / dash for the painter (#89): `SceneStroke` has no slot for them, so
-/// they ride in `stroke_render_style`'s registry, keyed by the scene id.
+/// `None` when the node paints none.
 pub(super) fn resolve_scene_stroke(
     node: &NodePayload,
     node_id: &de_editor_core::NodeId,
@@ -40,21 +37,11 @@ pub(super) fn resolve_scene_stroke(
     } else {
         node.stroke.as_ref()
     };
-    stroke_render_style::register_node(&node.id, stroke.and_then(render_style));
     stroke.map(|s| {
         let mut st = scene_stroke(s, node_id, var_table);
         st.color = super::mul_alpha(st.color, paint_opacity);
         st
     })
-}
-
-fn render_style(s: &StrokePayload) -> Option<StrokeRenderStyle> {
-    StrokeRenderStyle::from_parts(
-        s.cap.as_ref(),
-        s.join.as_ref(),
-        s.dash_pattern.as_deref(),
-        s.dash_offset,
-    )
 }
 
 /// Resolve a payload stroke into a scene stroke. The `$ref` stroke
@@ -79,6 +66,13 @@ fn scene_stroke(
             a if a > 0 => SceneStrokeAlign::Outside,
             _ => SceneStrokeAlign::Center,
         },
+        // Authored cap / join / dash (#89).
+        style: de_editor_core::fills::render_stroke_style(
+            s.cap.as_ref(),
+            s.join.as_ref(),
+            s.dash_pattern.as_deref(),
+            s.dash_offset,
+        ),
     }
 }
 

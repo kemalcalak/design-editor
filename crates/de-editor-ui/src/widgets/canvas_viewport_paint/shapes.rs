@@ -12,6 +12,28 @@ use crate::widgets::canvas_viewport_fill_layers::{
 use crate::widgets::canvas_viewport_overlay::{align_stroke_rect, scaled_non_uniform_corner_radii};
 use crate::widgets::PaintCx;
 use crate::{Point2D, Rect};
+
+/// `node`'s authored stroke cap / join / dash in screen space (#89):
+/// geometry reaches the backend multiplied by `zoom`, so the dash is too.
+pub(super) fn node_stroke_style(node: &SceneNode, zoom: f32) -> crate::layout_scene::StrokeStyle {
+    node.stroke
+        .map(|stroke| stroke.style.scaled(zoom))
+        .unwrap_or_default()
+}
+
+/// Run `paint` with the plain stroke style, then restore `own`: widget
+/// glyphs and generation overlays are chrome, not the node's stroke.
+pub(super) fn unstyled<R>(
+    cx: &mut PaintCx<'_>,
+    own: crate::layout_scene::StrokeStyle,
+    paint: impl FnOnce(&mut PaintCx<'_>) -> R,
+) -> R {
+    cx.backend
+        .set_stroke_style(crate::layout_scene::StrokeStyle::default());
+    let out = paint(cx);
+    cx.backend.set_stroke_style(own);
+    out
+}
 /// Paint every `Effect::DropShadow` on `node` as a blurred shape
 /// behind its fill. The shadow corner radius matches the node
 /// kind — `corner_radius` for Frame / Rect, min-half for an

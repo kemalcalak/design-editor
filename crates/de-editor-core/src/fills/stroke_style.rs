@@ -99,6 +99,42 @@ pub fn node_stroke_style(node: &PenNode) -> Option<StrokeStyleFields> {
     })
 }
 
+/// The render-side style (jian's `StrokeStyle`, carried on `SceneStroke`)
+/// of a schema stroke's cap / join / dash. Unset fields stay unset, so a
+/// plain stroke paints with the backends' defaults; a dash nothing can
+/// draw reads as solid (`StrokeDash::new`).
+pub fn render_stroke_style(
+    cap: Option<&StrokeCap>,
+    join: Option<&StrokeJoin>,
+    dash_pattern: Option<&[f32]>,
+    dash_offset: Option<f32>,
+) -> jian_widgets::StrokeStyle {
+    use jian_widgets::{StrokeCap as Cap, StrokeDash, StrokeJoin as Join};
+    jian_widgets::StrokeStyle {
+        cap: cap.map(|cap| match cap {
+            StrokeCap::None => Cap::Butt,
+            StrokeCap::Round => Cap::Round,
+            StrokeCap::Square => Cap::Square,
+        }),
+        join: join.map(|join| match join {
+            StrokeJoin::Miter => Join::Miter,
+            StrokeJoin::Round => Join::Round,
+            StrokeJoin::Bevel => Join::Bevel,
+        }),
+        dash: dash_pattern.and_then(|pattern| StrokeDash::new(pattern, dash_offset.unwrap_or(0.0))),
+    }
+}
+
+/// [`render_stroke_style`] of a whole schema stroke.
+pub fn pen_stroke_render_style(stroke: &PenStroke) -> jian_widgets::StrokeStyle {
+    render_stroke_style(
+        stroke.cap.as_ref(),
+        stroke.join.as_ref(),
+        stroke.dash_pattern.as_deref(),
+        stroke.dash_offset,
+    )
+}
+
 /// A partial write of a stroke's cap / join / dash. `None` fields are
 /// left untouched; an empty `dash_pattern` clears the dash (solid).
 #[derive(Debug, Clone, PartialEq, Default)]

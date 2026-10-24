@@ -19,7 +19,7 @@ use super::convert::{
 };
 use super::ops;
 use super::stroke_style::StrokeDefaults;
-use de_editor_core::stroke_render_style::StrokeRenderStyle;
+use de_editor_ui::layout_scene::StrokeStyle;
 
 /// `RenderBackend` over CanvasKit. Paints in logical (CSS) pixels; `begin_frame`
 /// applies the device-pixel-ratio so output matches the native backend.
@@ -29,9 +29,11 @@ pub struct CanvasKitBackend {
     /// Logical (CSS) viewport — what widget layout uses.
     pub(super) logical_w: u32,
     pub(super) logical_h: u32,
-    /// Last stroke style sent to the bridge (#89), so it only crosses
-    /// into JS when a node's style differs from the previous one.
-    pub(super) sent_stroke_style: Option<(std::rc::Rc<StrokeRenderStyle>, StrokeDefaults)>,
+    /// Style for the next strokes (#89, `set_stroke_style`).
+    pub(super) stroke_style: StrokeStyle,
+    /// Last style sent to the bridge, so it only crosses into JS when a
+    /// stroke's style differs from the previous one; `None` = plain.
+    pub(super) sent_stroke_style: Option<(StrokeStyle, StrokeDefaults)>,
 }
 
 impl RenderBackend for CanvasKitBackend {
@@ -192,6 +194,9 @@ impl RenderBackend for CanvasKitBackend {
     fn stroke_oval(&mut self, bounds: Rect, color: Color, width: f32) {
         self.sync_stroke_style(StrokeDefaults::Sharp);
         ops::stroke_oval(&self.ck, bounds, color, width);
+    }
+    fn set_stroke_style(&mut self, style: StrokeStyle) {
+        self.stroke_style = style;
     }
     fn stroke_line(&mut self, from: Point2D, to: Point2D, color: Color, width: f32) {
         self.sync_stroke_style(StrokeDefaults::Round);

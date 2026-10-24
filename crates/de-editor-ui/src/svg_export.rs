@@ -631,12 +631,12 @@ fn fill_stroke_attrs(n: &SceneNode) -> String {
 }
 
 /// `stroke-linecap` / `stroke-linejoin` / `stroke-dasharray` /
-/// `stroke-dashoffset` for a node's authored stroke style (#89), which
-/// the scene builder records beside the scene; empty when it has none.
+/// `stroke-dashoffset` for a node's authored stroke style (#89); empty
+/// when it has none.
 pub(crate) fn stroke_style_attrs(n: &SceneNode) -> String {
-    use de_editor_core::stroke_render_style::{registered, LineCap, LineJoin};
+    use crate::layout_scene::{StrokeCap as LineCap, StrokeJoin as LineJoin};
     let mut s = String::new();
-    let Some(style) = n.stroke.and_then(|_| registered(&n.id)) else {
+    let Some(style) = n.stroke.map(|stroke| stroke.style) else {
         return s;
     };
     if let Some(cap) = style.cap {
@@ -655,11 +655,11 @@ pub(crate) fn stroke_style_attrs(n: &SceneNode) -> String {
         };
         let _ = write!(s, r#" stroke-linejoin="{join}""#);
     }
-    if let Some(dash) = style.dash.as_deref() {
-        let lengths: Vec<String> = dash.iter().map(|len| len.to_string()).collect();
+    if let Some(dash) = style.dash {
+        let lengths: Vec<String> = dash.lengths().iter().map(|len| len.to_string()).collect();
         let _ = write!(s, r#" stroke-dasharray="{}""#, lengths.join(" "));
-        if style.dash_offset != 0.0 {
-            let _ = write!(s, r#" stroke-dashoffset="{}""#, style.dash_offset);
+        if dash.offset() != 0.0 {
+            let _ = write!(s, r#" stroke-dashoffset="{}""#, dash.offset());
         }
     }
     s

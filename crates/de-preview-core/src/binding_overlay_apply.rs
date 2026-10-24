@@ -57,6 +57,7 @@ pub(crate) fn apply_value(node: &mut SceneNode, target: BindingTarget, value: &R
                         width: 1.0,
                         sides: None,
                         align: SceneStrokeAlign::Center,
+                        style: Default::default(),
                     });
                 }
             }

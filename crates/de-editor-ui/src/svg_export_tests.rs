@@ -180,6 +180,7 @@ fn fitted_svg_path_keeps_stroke_width_in_document_space() {
         width: 4.0,
         sides: None,
         align: SceneStrokeAlign::Center,
+        style: Default::default(),
     });
 
     let body = serialize_node_svg(&scene_with(vec![path]), "stroked-scaled-path").expect("svg");
@@ -194,7 +195,7 @@ fn fitted_svg_path_keeps_stroke_width_in_document_space() {
 /// #89: a recorded cap / join / dash exports as SVG stroke attributes.
 #[test]
 fn stroke_style_exports_as_svg_attributes() {
-    use de_editor_core::stroke_render_style::{register_node, LineCap, StrokeRenderStyle};
+    use crate::layout_scene::{StrokeCap, StrokeDash, StrokeStyle};
     let id = "svg-export-dashed-path";
     let mut path = SceneNode::leaf(id, NodeKind::Path);
     path.bounds = Rect::xywh(0.0, 0.0, 80.0, 40.0);
@@ -204,18 +205,13 @@ fn stroke_style_exports_as_svg_attributes() {
         width: 2.0,
         sides: None,
         align: SceneStrokeAlign::Center,
-    });
-    register_node(
-        id,
-        Some(StrokeRenderStyle {
-            cap: Some(LineCap::Square),
+        style: StrokeStyle {
+            cap: Some(StrokeCap::Square),
             join: None,
-            dash: Some(vec![4.0, 2.0]),
-            dash_offset: 1.0,
-        }),
-    );
+            dash: StrokeDash::new(&[4.0, 2.0], 1.0),
+        },
+    });
     let body = serialize_node_svg(&scene_with(vec![path]), id).expect("svg");
-    register_node(id, None);
     assert!(body.contains(r#"stroke-linecap="square""#), "{body}");
     assert!(body.contains(r#"stroke-dasharray="4 2""#), "{body}");
     assert!(body.contains(r#"stroke-dashoffset="1""#), "{body}");
@@ -459,6 +455,7 @@ fn clipped_container_stroke_overlays_children_once() {
         width: 8.0,
         sides: None,
         align: SceneStrokeAlign::Center,
+        style: Default::default(),
     });
     frame.children.push(filled_rect(
         "clipped-child",
@@ -512,6 +509,7 @@ fn leaf_rect_keeps_single_combined_shape() {
         width: 8.0,
         sides: None,
         align: SceneStrokeAlign::Center,
+        style: Default::default(),
     });
 
     let body = serialize_node_svg(&scene_with(vec![rect]), "leaf-stroke").expect("svg");
@@ -685,6 +683,7 @@ fn composite_opacity_wraps_gradient_stroke_and_descendants_once() {
         width: 2.0,
         sides: None,
         align: SceneStrokeAlign::Center,
+        style: Default::default(),
     });
     frame.children.push(filled_rect(
         "opacity-child",

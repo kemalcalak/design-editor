@@ -1,8 +1,8 @@
-//! Forwards the active stroke cap / join / dash (#89) to the CanvasKit
-//! bridge. The canvas painter scopes the style per node
-//! (`de_editor_core::stroke_render_style`); every stroke entry point on
-//! [`CanvasKitBackend`] calls [`CanvasKitBackend::sync_stroke_style`]
-//! first, and the bridge's `strokePaint` applies it.
+//! Forwards the stroke cap / join / dash (#89) the canvas painter set
+//! through `RenderBackend::set_stroke_style` to the CanvasKit bridge.
+//! Every stroke entry point on [`CanvasKitBackend`] calls
+//! [`CanvasKitBackend::sync_stroke_style`] first, and the bridge's
+//! `strokePaint` applies it.
 //!
 //! The bridge strokes everything round by default, while the native
 //! backend draws rects and ovals with skia's butt cap + miter join. While
@@ -10,7 +10,7 @@
 //! native default of the primitive being stroked, so a dashed rect has
 //! the same dash ends on desktop and web. Unstyled chrome is untouched.
 
-use de_editor_core::stroke_render_style::{self, LineCap, LineJoin, StrokeRenderStyle};
+use de_editor_ui::layout_scene::{StrokeCap as LineCap, StrokeJoin as LineJoin, StrokeStyle};
 
 use super::backend::CanvasKitBackend;
 
@@ -27,31 +27,27 @@ impl CanvasKitBackend {
     /// Send the active style to the bridge when it differs from the one
     /// the bridge already holds.
     pub(super) fn sync_stroke_style(&mut self, defaults: StrokeDefaults) {
-        let active = stroke_render_style::active();
-        let unchanged = match (&active, &self.sent_stroke_style) {
-            (None, None) => true,
-            (Some(next), Some((sent, sent_defaults))) => {
-                **next == **sent && defaults == *sent_defaults
-            }
-            _ => false,
-        };
-        if unchanged {
+        let next = (!self.stroke_style.is_plain()).then_some((self.stroke_style, defaults));
+        if next == self.sent_stroke_style {
             return;
         }
-        match active.as_deref() {
-            Some(style) => {
-                let (cap, join) = bridge_codes(style, defaults);
-                let dash = style.dash.as_deref().unwrap_or(&[]);
-                self.ck.set_stroke_style(cap, join, dash, style.dash_offset);
+        match next {
+            Some((style, defaults)) => {
+                let (cap, join) = bridge_codes(&style, defaults);
+                let (dash, offset) = style
+                    .dash
+                    .as_ref()
+                    .map_or((&[][..], 0.0), |dash| (dash.lengths(), dash.offset()));
+                self.ck.set_stroke_style(cap, join, dash, offset);
             }
             None => self.ck.clear_stroke_style(),
         }
-        self.sent_stroke_style = active.map(|style| (style, defaults));
+        self.sent_stroke_style = next;
     }
 }
 
 /// Indices into the bridge's `STROKE_CAPS` / `STROKE_JOINS`.
-fn bridge_codes(style: &StrokeRenderStyle, defaults: StrokeDefaults) -> (i32, i32) {
+fn bridge_codes(style: &StrokeStyle, defaults: StrokeDefaults) -> (i32, i32) {
     let (default_cap, default_join) = match defaults {
         StrokeDefaults::Round => (LineCap::Round, LineJoin::Round),
         StrokeDefaults::Sharp => (LineCap::Butt, LineJoin::Miter),
@@ -75,11 +71,10 @@ mod tests {
 
     #[test]
     fn unset_fields_take_the_native_primitive_default() {
-        let style = StrokeRenderStyle {
+        let style = StrokeStyle {
             cap: Some(LineCap::Square),
             join: None,
-            dash: Some(vec![4.0, 4.0]),
-            dash_offset: 0.0,
+            dash: de_editor_ui::layout_scene::StrokeDash::new(&[4.0, 4.0], 0.0),
         };
         assert_eq!(bridge_codes(&style, StrokeDefaults::Sharp), (2, 0));
         assert_eq!(bridge_codes(&style, StrokeDefaults::Round), (2, 1));

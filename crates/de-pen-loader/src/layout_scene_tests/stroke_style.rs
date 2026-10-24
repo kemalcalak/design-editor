@@ -1,31 +1,32 @@
-//! #89: the scene builder records each stroke's cap / join / dash beside
-//! the scene (`stroke_render_style`), since `SceneStroke` has no slot for
-//! them, and clears the record once the stroke loses its style.
+//! #89: the scene builder carries each stroke's cap / join / dash on the
+//! scene stroke (`SceneStroke::style`).
 
 use super::*;
-use de_editor_core::stroke_render_style::{registered, LineCap, LineJoin};
+use jian_scene::layout_scene::{StrokeCap, StrokeJoin};
 
-fn doc(stroke_extra: &str) -> String {
-    format!(
+fn scene_stroke(stroke_extra: &str) -> jian_scene::layout_scene::SceneStroke {
+    let src = format!(
         r##"{{"version":"1.0.0","children":[
-          {{"type":"rectangle","id":"stroke-style-scene-rect","x":0,"y":0,"width":40,"height":20,
+          {{"type":"rectangle","id":"r","x":0,"y":0,"width":40,"height":20,
             "stroke":{{"thickness":2,"fill":[{{"type":"solid","color":"#000000"}}]{stroke_extra}}}}}
         ]}}"##
-    )
+    );
+    let scene = editor_state_to_layout_scene(&state_from(&src));
+    scene.pages[0].children[0].stroke.expect("stroke")
 }
 
 #[test]
-fn an_authored_dash_reaches_the_painter_and_clears_with_the_style() {
-    let id = "stroke-style-scene-rect";
-    let _ = editor_state_to_layout_scene(&state_from(&doc(
-        r#","cap":"square","join":"bevel","dashPattern":[6,3],"dashOffset":2"#,
-    )));
-    let style = registered(id).expect("dashed stroke is recorded");
-    assert_eq!(style.cap, Some(LineCap::Square));
-    assert_eq!(style.join, Some(LineJoin::Bevel));
-    assert_eq!(style.dash.as_deref(), Some(&[6.0, 3.0][..]));
-    assert_eq!(style.dash_offset, 2.0);
+fn an_authored_dash_reaches_the_scene_stroke() {
+    let style =
+        scene_stroke(r#","cap":"square","join":"bevel","dashPattern":[6,3],"dashOffset":2"#).style;
+    assert_eq!(style.cap, Some(StrokeCap::Square));
+    assert_eq!(style.join, Some(StrokeJoin::Bevel));
+    let dash = style.dash.expect("dash");
+    assert_eq!(dash.lengths(), &[6.0, 3.0]);
+    assert_eq!(dash.offset(), 2.0);
+}
 
-    let _ = editor_state_to_layout_scene(&state_from(&doc("")));
-    assert!(registered(id).is_none(), "a plain stroke clears the record");
+#[test]
+fn a_plain_stroke_carries_a_plain_style() {
+    assert!(scene_stroke("").style.is_plain());
 }

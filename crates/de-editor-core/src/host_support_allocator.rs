@@ -227,6 +227,7 @@ impl EditorState {
             },
             icon_font_name: icon_name.to_string(),
             icon_font_family: Some(family.to_string()),
+            weight: None,
             width: Some(SizingBehavior::Number(SIZE)),
             height: Some(SizingBehavior::Number(SIZE)),
             fill: Some(vec![default_icon_fill()]),

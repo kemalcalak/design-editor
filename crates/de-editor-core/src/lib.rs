@@ -143,7 +143,6 @@ pub mod shader_presets;
 pub mod star_shape;
 pub mod state;
 pub mod statusbar_state;
-pub mod stroke_render_style;
 pub mod svg_import;
 pub mod svg_path_bounds;
 mod svg_path_data;
