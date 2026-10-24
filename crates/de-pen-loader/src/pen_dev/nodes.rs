@@ -91,7 +91,7 @@ pub(super) fn convert_children(children: &mut Vec<Value>, parent_flow: bool, ctx
         // the instance patch they become.
         instances::move_root_overrides(map);
         ctx.instance_bases
-            .add_themed_paints(map, *theme != *root_theme);
+            .add_themed_fields(map, &theme, &ctx.variables);
         convert_node(map, in_flow, &role, &theme, ctx);
         let flow = is_auto_layout(map);
         // Slot content on an instance and children in a patch fill a node

@@ -205,6 +205,7 @@ mod canvas_shader_images;
 // `pub` so both hosts can track the pointer for pointer-reactive shaders.
 pub mod canvas_shader_pointer;
 pub mod canvas_text_edit;
+pub(crate) mod canvas_text_wrap;
 pub mod canvas_viewport;
 mod canvas_viewport_background;
 mod canvas_viewport_fill_layers;

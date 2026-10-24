@@ -50,6 +50,30 @@ impl RenderBackend for MeasureOnly<'_> {
     fn measure_text_family(&mut self, text: &str, font_size: f32, family: &str) -> f32 {
         self.inner.measure_text_family(text, font_size, family)
     }
+    // The line layout measures in the node's face (`TextFace`); without
+    // these the trait defaults drop the family and click-to-caret would
+    // wrap differently from the paint.
+    fn measure_text_styled(
+        &mut self,
+        text: &str,
+        font_size: f32,
+        weight: u16,
+        italic: bool,
+    ) -> f32 {
+        self.inner
+            .measure_text_styled(text, font_size, weight, italic)
+    }
+    fn measure_text_family_styled(
+        &mut self,
+        text: &str,
+        font_size: f32,
+        family: &str,
+        weight: u16,
+        italic: bool,
+    ) -> f32 {
+        self.inner
+            .measure_text_family_styled(text, font_size, family, weight, italic)
+    }
     fn text_ascent(&mut self, font_size: f32, weight: u16) -> f32 {
         self.inner.text_ascent(font_size, weight)
     }
