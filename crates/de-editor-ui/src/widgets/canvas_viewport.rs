@@ -138,6 +138,10 @@ pub struct CanvasViewport<'a> {
     /// rect instead of the widget rect. The host's pan cache uses it
     /// to repaint only the strip a scroll refresh exposed.
     pub cull_override: Option<Rect>,
+    /// Pointer in screen space while it is over the canvas, bound to
+    /// `uniform float2 mouse;` shader fills (see
+    /// [`super::canvas_shader_pointer`]). `None` binds the idle value.
+    pub pointer: Option<Point2D>,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -164,6 +168,7 @@ impl<'a> Widget for CanvasViewport<'a> {
         }
         // Time-driven shader fills read this frame's clock while painting.
         super::canvas_shader_clock::begin_frame(self.now_ms);
+        super::canvas_shader_pointer::begin_frame(self.pointer);
         cx.backend.save();
         cx.backend.clip_rect(rect);
 
@@ -540,6 +545,7 @@ impl<'a> Widget for CanvasViewport<'a> {
         }
 
         cx.backend.restore();
+        super::canvas_shader_pointer::end_frame();
     }
 
     fn access_node(&self) -> accesskit::Node {

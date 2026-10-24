@@ -389,8 +389,10 @@ pub(crate) fn paint_gradient_rect(
 /// backend trait stays free of scene-specific types. Native Skia and the
 /// CanvasKit web host run the program; other backends paint `fallback` solid.
 /// A shader that declares `uniform float time;` also gets the canvas clock
-/// (see [`super::canvas_shader_clock`]), overriding any authored `time` the
-/// same way the loader overrides `size`.
+/// (see [`super::canvas_shader_clock`]), and one that declares
+/// `uniform float2 mouse;` the node-local pointer (see
+/// [`super::canvas_shader_pointer`]); both override an authored value of the
+/// same name the way the loader overrides `size`.
 pub(crate) fn paint_shader_rect(
     cx: &mut PaintCx<'_>,
     shader: &SceneShader,
@@ -399,6 +401,7 @@ pub(crate) fn paint_shader_rect(
     corner_radii: Option<[f32; 4]>,
 ) {
     use super::canvas_shader_clock::{time_uniform_value, TIME_UNIFORM};
+    use super::canvas_shader_pointer::{mouse_uniform_value, MOUSE_UNIFORM};
     let time = time_uniform_value(&shader.sksl).map(|seconds| [seconds]);
     let mut uniforms: Vec<(&str, &[f32])> = shader
         .uniforms
@@ -408,6 +411,11 @@ pub(crate) fn paint_shader_rect(
         .collect();
     if let Some(time) = time.as_ref() {
         uniforms.push((TIME_UNIFORM, time.as_slice()));
+    }
+    let mouse = mouse_uniform_value(&shader.sksl, rect, &uniforms);
+    if let Some(mouse) = mouse.as_ref() {
+        uniforms.retain(|(name, _)| *name != MOUSE_UNIFORM);
+        uniforms.push((MOUSE_UNIFORM, mouse.as_slice()));
     }
     if let Some(radii) = corner_radii {
         cx.backend.fill_round_rect_shader_per_corner(

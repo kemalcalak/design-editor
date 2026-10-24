@@ -527,6 +527,30 @@ impl WidgetHostNative {
     }
 
     fn apply_cursor_move_inner(&mut self, x: f32, y: f32) -> bool {
+        let changed = self.apply_cursor_move_ladder(x, y);
+        // After the ladder: tracking never consumes a move, it only adds a
+        // repaint while a pointer-reactive shader is on screen.
+        let pointer_changed = self.track_shader_pointer(x, y);
+        changed || pointer_changed
+    }
+
+    /// Record the canvas pointer for `uniform float2 mouse;` shader fills.
+    /// Returns whether a repaint is owed (see
+    /// `canvas_shader_pointer::track_pointer`).
+    fn track_shader_pointer(&mut self, x: f32, y: f32) -> bool {
+        let over_canvas = !self.home_visible()
+            && self.over_canvas(x, y, self.last_viewport_w, self.last_viewport_h);
+        let next = over_canvas.then(|| de_editor_ui::Point2D::new(x, y));
+        de_editor_ui::widgets::canvas_shader_pointer::track_pointer(&mut self.shader_pointer, next)
+    }
+
+    /// The pointer left the window: pointer-reactive shaders fall back to
+    /// their idle value. Returns whether a repaint is owed.
+    pub fn apply_cursor_left(&mut self) -> bool {
+        de_editor_ui::widgets::canvas_shader_pointer::track_pointer(&mut self.shader_pointer, None)
+    }
+
+    fn apply_cursor_move_ladder(&mut self, x: f32, y: f32) -> bool {
         // The update modal (#111) paints above everything, Home included.
         if let Some(consumed) =
             self.cursor_move_update_modal(x, y, self.last_viewport_w, self.last_viewport_h)

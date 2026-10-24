@@ -162,6 +162,7 @@ impl WidgetHostNative {
         if !strips.is_empty() {
             let mut canvas = CanvasViewport::from_editor(&self.editor_state, &self.layout_scene);
             canvas.now_ms = self.now_ms;
+            canvas.pointer = self.shader_pointer;
             canvas.fast_interaction = true;
             canvas.offset_paint_origin(M - residual.x, M - residual.y);
             for strip in strips {
@@ -309,6 +310,7 @@ impl WidgetHostNative {
                     let mut canvas =
                         CanvasViewport::from_editor(&self.editor_state, &self.layout_scene);
                     canvas.now_ms = self.now_ms;
+                    canvas.pointer = self.shader_pointer;
                     canvas.fast_interaction = false;
                     canvas.offset_paint_origin(M, M);
                     canvas.cull_override = Some(tile);

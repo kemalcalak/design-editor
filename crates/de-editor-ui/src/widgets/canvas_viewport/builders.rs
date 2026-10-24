@@ -82,6 +82,7 @@ impl<'a> CanvasViewport<'a> {
             frame_labels: collect_frame_labels(state),
             fast_interaction: false,
             cull_override: None,
+            pointer: None,
         }
     }
 
@@ -93,6 +94,10 @@ impl<'a> CanvasViewport<'a> {
     pub fn offset_paint_origin(&mut self, dx: f32, dy: f32) {
         self.viewport.pan_x += dx;
         self.viewport.pan_y += dy;
+        if let Some(pointer) = self.pointer.as_mut() {
+            pointer.x += dx;
+            pointer.y += dy;
+        }
     }
 
     /// Read-only construction for the embedding SDK: paints `scene` at
@@ -133,6 +138,7 @@ impl<'a> CanvasViewport<'a> {
             frame_labels: Vec::new(),
             fast_interaction: false,
             cull_override: None,
+            pointer: None,
         }
     }
 

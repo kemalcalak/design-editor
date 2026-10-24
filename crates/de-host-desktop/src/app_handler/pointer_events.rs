@@ -92,6 +92,16 @@ impl DesktopApp {
         true
     }
 
+    /// The pointer left the window. Apply the last queued move first so it
+    /// cannot put the pointer back afterwards, then let pointer-reactive
+    /// shaders fall back to their idle value.
+    pub(super) fn on_cursor_left(&mut self) {
+        let moved = self.drain_pending_cursor_move();
+        if self.host.apply_cursor_left() || moved {
+            self.request_redraw(true);
+        }
+    }
+
     pub(super) fn on_left_press(&mut self, event_loop: &ActiveEventLoop) -> bool {
         // Drain queued cursor move so hover state is current before press lands.
         if self.drain_pending_cursor_move() {

@@ -76,3 +76,9 @@ RULES:
 - To animate, declare `uniform float time;` — the canvas binds elapsed
   seconds every frame (exports render at `time = 0`). Never put `time` in
   `uniforms`; keep motion slow, e.g. `sin(time * 0.5)`.
+- To react to the pointer, declare `uniform float2 mouse;` — the canvas
+  binds the pointer in the same space as `fragCoord` (node-local px, so
+  `distance(p, mouse)` works) and repaints as it moves. With no pointer on
+  the canvas, and in exports, it is `(-10000, -10000)`, far outside the
+  node: write hover effects that fade with distance. Never put `mouse` in
+  `uniforms`.

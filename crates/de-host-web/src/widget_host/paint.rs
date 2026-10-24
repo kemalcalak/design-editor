@@ -362,6 +362,7 @@ impl WidgetHost {
                 let canvas_scene = transition_scene.as_ref().unwrap_or(&self.layout_scene);
                 let mut canvas = CanvasViewport::from_editor(&self.editor_state, canvas_scene);
                 canvas.now_ms = self.now_ms;
+                canvas.pointer = self.shader_pointer;
                 canvas.set_node_drag_active(self.node_drag.as_ref().is_some_and(|drag| drag.moved));
                 canvas.set_node_drag_overlay(self.node_drag_overlay_for_paint());
                 let mut cx = PaintCx {
@@ -384,6 +385,7 @@ impl WidgetHost {
                 let canvas_scene = transition_scene.as_ref().unwrap_or(&self.layout_scene);
                 let mut canvas = CanvasViewport::from_editor(&self.editor_state, canvas_scene);
                 canvas.now_ms = self.now_ms;
+                canvas.pointer = self.shader_pointer;
                 canvas.set_node_drag_active(self.node_drag.as_ref().is_some_and(|drag| drag.moved));
                 canvas.set_node_drag_overlay(self.node_drag_overlay_for_paint());
                 let mut cx = PaintCx {

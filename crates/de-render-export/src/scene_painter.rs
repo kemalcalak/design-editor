@@ -59,12 +59,14 @@ pub fn paint_node(canvas: &Canvas, node: &SceneNode) {
 /// are ordered topmost-first (layer-panel order), so the painter walks
 /// them in reverse — same as `canvas_viewport.rs`'s paint loop.
 ///
-/// Time-driven shader fills are pinned to `time = 0`: a live screenshot runs
-/// on the UI thread between canvas frames, and its pixels must not depend on
-/// when it was taken.
+/// Time-driven shader fills are pinned to `time = 0` and pointer-reactive
+/// ones to the idle `mouse` value: a live screenshot runs on the UI thread
+/// between canvas frames, and its pixels must not depend on when it was taken
+/// or where the pointer was.
 pub fn paint_nodes(canvas: &Canvas, nodes: &[SceneNode]) {
-    de_editor_ui::widgets::canvas_shader_clock::with_fixed_clock(0.0, || {
-        paint_nodes_unpinned(canvas, nodes)
+    use de_editor_ui::widgets::{canvas_shader_clock, canvas_shader_pointer};
+    canvas_shader_pointer::with_fixed_pointer(None, || {
+        canvas_shader_clock::with_fixed_clock(0.0, || paint_nodes_unpinned(canvas, nodes))
     });
 }
 
