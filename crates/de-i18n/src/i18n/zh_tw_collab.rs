@@ -260,6 +260,10 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "updateModal.releases" => "發布頁面",
         "dialog.loadErrorUnsupportedExtension" => "{{name}} 不是 Design Editor 文件。只能開啟 .de 檔案；pen.dev 的 .pen 檔案會以匯入方式開啟。",
         "dialog.loadErrorNotPenDev" => "{{name}} 不是 pen.dev 檔案，無法匯入。",
+        "settings.system.pencilSmoothing" => "鉛筆平滑",
+        "settings.system.pencilSmoothingPrecise" => "精確",
+        "settings.system.pencilSmoothingBalanced" => "均衡",
+        "settings.system.pencilSmoothingSmooth" => "平滑",
         _ => return None,
     })
 }

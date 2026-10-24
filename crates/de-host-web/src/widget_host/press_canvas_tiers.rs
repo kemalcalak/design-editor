@@ -67,6 +67,10 @@ impl WidgetHost {
             }));
         }
         let doc_point = canvas_geometry::canvas_doc_point_unclamped(&self.editor_state, x, y);
+        // Pencil: freehand stroke (`pencil_press.rs`).
+        if matches!(self.editor_state.tool, de_editor_core::Tool::Pencil) {
+            return Some(self.apply_pencil_press(doc_point));
+        }
         if self.start_create_drag_at(doc_point) {
             return Some(true);
         }

@@ -117,6 +117,8 @@ pub mod path_bounds;
 pub mod path_edit;
 pub mod pen;
 pub mod pen_node_ext;
+pub mod pencil;
+pub mod pencil_fit;
 pub mod preview_slideshow;
 pub mod prompt_center_catalog;
 pub mod prompt_center_keyboard;
@@ -320,11 +322,12 @@ pub use editor_ui_state::{
     HomeFamily, HomeHit, HomeSize, HomeState, HomeTemplate, ImageAdjustmentField, ImageFillMode,
     LayerContextMenuState, LeftPanelTab, Locale, MergeConflictRow, MergeResolveFile,
     MergeResolveState, MissingFontSurface, PaddingEditMode, PageRenameState, PencilCursorStyle,
-    PreviewDeviceKind, PromptCenterFocus, PromptCenterState, PromptFilter, PropertyTab, RecentFile,
-    RecentView, SceneFilter, SceneTemplateCenterState, SceneTemplateFocus, SizeToggleState,
-    SlidesDrag, SlidesPanelState, SlidesPanelTarget, StyleImportState, TaskDraft, ThemeMode,
-    UpdateAction, UpdateFailure, UpdateModalButton, UpdateModalState, UpdatePhase, UpdateStatus,
-    VariableRowFocus, CHAT_TAB_MIN_WIDTH, LAYER_PANEL_MAX_WIDTH, LAYER_PANEL_MIN_WIDTH,
+    PencilSmoothing, PreviewDeviceKind, PromptCenterFocus, PromptCenterState, PromptFilter,
+    PropertyTab, RecentFile, RecentView, SceneFilter, SceneTemplateCenterState, SceneTemplateFocus,
+    SizeToggleState, SlidesDrag, SlidesPanelState, SlidesPanelTarget, StyleImportState, TaskDraft,
+    ThemeMode, UpdateAction, UpdateFailure, UpdateModalButton, UpdateModalState, UpdatePhase,
+    UpdateStatus, VariableRowFocus, CHAT_TAB_MIN_WIDTH, LAYER_PANEL_MAX_WIDTH,
+    LAYER_PANEL_MIN_WIDTH,
 };
 pub use export_dialog_state::ExportDialogButton;
 pub use export_quick_menu_state::ExportQuickRow;
