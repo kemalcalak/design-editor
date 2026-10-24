@@ -9,9 +9,11 @@
 //! before this conversion existed.
 //!
 //! Uniform values: numbers and arrays as written, colours as hex strings,
-//! `$variable` references resolved for the node's theme (canonical shader
-//! uniforms cannot hold a reference, so the binding is not kept live), a
-//! missing value from the GLSL `@default`, else zero / black.
+//! a `$variable` kept as a reference the canonical resolver reads per theme
+//! (a number or boolean variable on a scalar, a colour variable on a
+//! colour; any other reference, or a chain, is resolved for the node's
+//! theme and reported), a missing value from the GLSL `@default`, else zero
+//! / black.
 
 use std::collections::HashMap;
 use std::rc::Rc;
@@ -61,7 +63,7 @@ pub(super) fn convert(
         ctx.report.note(missing);
         return None;
     };
-    let values = resolve_values(obj.remove("uniforms"), theme, ctx);
+    let (values, references) = resolve_values(obj.remove("uniforms"), theme, ctx);
     let translation = match glsl::translate(&source, stage, &values) {
         Ok(translation) => translation,
         Err(error) => {
@@ -79,7 +81,21 @@ pub(super) fn convert(
     // onto it (`runtime_shader_local_matrix`).
     uniforms.insert("size".to_owned(), json!([width, height]));
     for user in &translation.uniforms {
-        if let Some(value) = uniform_value(user, values.get(&user.glsl_name), ctx) {
+        let value = values.get(&user.glsl_name);
+        let live = references
+            .get(&user.glsl_name)
+            .filter(|_| binds_live(&user.slot, value));
+        let canonical = match live {
+            // The canonical resolver reads it per theme at render time.
+            Some(reference) => Some(Value::String(format!("${reference}"))),
+            None => {
+                if references.contains_key(&user.glsl_name) {
+                    ctx.report.note("shader uniform variable (fixed value)");
+                }
+                uniform_value(user, value, ctx)
+            }
+        };
+        if let Some(value) = canonical {
             uniforms.insert(user.sksl_name.clone(), value);
         }
     }
@@ -115,13 +131,24 @@ fn read_source(url: &str, ctx: &mut Ctx<'_>) -> Option<Rc<str>> {
 }
 
 /// The pen.dev `uniforms` map with every `$variable` replaced by its value
-/// for `theme`; an unknown variable is removed so the `@default` applies.
-fn resolve_values(uniforms: Option<Value>, theme: &Theme, ctx: &mut Ctx<'_>) -> Map<String, Value> {
+/// for `theme` (the translation needs values: they decide colours and
+/// textures), plus the variable each single-hop reference named. An
+/// unknown variable is removed so the `@default` applies.
+fn resolve_values(
+    uniforms: Option<Value>,
+    theme: &Theme,
+    ctx: &mut Ctx<'_>,
+) -> (Map<String, Value>, HashMap<String, String>) {
     let Some(Value::Object(mut uniforms)) = uniforms else {
-        return Map::new();
+        return (Map::new(), HashMap::new());
     };
     let mut unresolved = Vec::new();
+    let mut references = HashMap::new();
     for (name, value) in uniforms.iter_mut() {
+        let first = value
+            .as_str()
+            .and_then(|s| s.strip_prefix('$'))
+            .map(str::to_owned);
         // A variable may name another one; follow a short chain.
         let mut hops = 0;
         while let Some(reference) = value.as_str().and_then(|s| s.strip_prefix('$')) {
@@ -136,15 +163,34 @@ fn resolve_values(uniforms: Option<Value>, theme: &Theme, ctx: &mut Ctx<'_>) -> 
                 }
             }
         }
-        if hops > 0 && !unresolved.contains(name) {
-            ctx.report.note("shader uniform variable (fixed value)");
+        if let Some(first) = first.filter(|_| !unresolved.contains(name)) {
+            if hops == 1 {
+                references.insert(name.clone(), first);
+            } else {
+                // The render-time resolver follows no chains.
+                ctx.report.note("shader uniform variable (fixed value)");
+            }
         }
     }
     for name in unresolved {
         uniforms.remove(&name);
         ctx.report.note("unresolved variable");
     }
-    uniforms
+    (uniforms, references)
+}
+
+/// Whether a uniform of `slot` can keep a variable whose value under the
+/// node's theme is `value`: a number (or boolean) variable on a scalar, a
+/// colour variable on a colour. The render-time resolver writes the same
+/// kinds (`variables_resolve`, shader uniforms).
+fn binds_live(slot: &Slot, value: Option<&Value>) -> bool {
+    match (slot, value) {
+        (Slot::Float | Slot::Int(1) | Slot::Bool(1), Some(Value::Number(_) | Value::Bool(_))) => {
+            true
+        }
+        (Slot::Colour, Some(text @ Value::String(_))) => colour(text).is_some(),
+        _ => false,
+    }
 }
 
 #[cfg(feature = "sksl-check")]
@@ -177,17 +223,19 @@ fn uniform_value(user: &UserUniform, value: Option<&Value>, ctx: &mut Ctx<'_>) -
                 .unwrap_or(0.0);
             Some(json!(n))
         }
-        Slot::Vector(len) => {
-            let numbers = value
-                .and_then(numbers)
-                .or_else(|| default.map(default_numbers))
-                .unwrap_or_default();
-            let mut numbers: Vec<f64> = match numbers.as_slice() {
-                [single] => vec![*single; *len],
-                _ => numbers,
-            };
-            numbers.resize(*len, 0.0);
-            Some(json!(numbers))
+        Slot::Vector(len) => Some(json!(vector_value(value, default, *len))),
+        Slot::Int(len) | Slot::Bool(len) => {
+            let whole: Vec<f64> = vector_value(value, default, *len)
+                .into_iter()
+                .map(|n| match &user.slot {
+                    Slot::Bool(_) => f64::from(u8::from(n != 0.0)),
+                    _ => n.round(),
+                })
+                .collect();
+            match whole.as_slice() {
+                [single] => Some(json!(single)),
+                _ => Some(json!(whole)),
+            }
         }
         Slot::Colour => {
             let colour = value
@@ -199,6 +247,21 @@ fn uniform_value(user: &UserUniform, value: Option<&Value>, ctx: &mut Ctx<'_>) -
         Slot::Texture(Texture::Image(url)) => image_source(url, ctx).map(Value::String),
         Slot::Texture(Texture::Object | Texture::Background) => None,
     }
+}
+
+/// `len` numbers from the paint's value, else the `@default`, else zeros;
+/// a single number fills every component.
+fn vector_value(value: Option<&Value>, default: Option<&str>, len: usize) -> Vec<f64> {
+    let numbers = value
+        .and_then(numbers)
+        .or_else(|| default.map(default_numbers))
+        .unwrap_or_default();
+    let mut numbers: Vec<f64> = match numbers.as_slice() {
+        [single] => vec![*single; len],
+        _ => numbers,
+    };
+    numbers.resize(len, 0.0);
+    numbers
 }
 
 fn number(value: &Value) -> Option<f64> {
@@ -225,7 +288,11 @@ fn default_numbers(text: &str) -> Vec<f64> {
         .trim_end_matches([']', ')'])
         .split([',', ' '])
         .filter(|part| !part.trim().is_empty())
-        .map(|part| part.trim().parse().unwrap_or(0.0))
+        .map(|part| match part.trim() {
+            "true" => 1.0,
+            "false" => 0.0,
+            part => part.parse().unwrap_or(0.0),
+        })
         .collect()
 }
 

@@ -192,3 +192,37 @@ fn a_time_uniform_binds_and_changes_pixels_in_real_skia() {
         "the bound time must reach the shader: red {early} at 0.25 s vs {late} at 0.75 s"
     );
 }
+
+/// `int` uniforms (#165) bind as whole numbers: the float the document
+/// stores is rounded, not copied bit for bit into the int slot.
+#[test]
+fn integer_uniforms_bind_rounded_values() {
+    let plain = "uniform int steps; uniform int2 grid; half4 main(float2 p) { \
+                 return (steps == 3 && grid.y == 2) ? half4(1, 0, 0, 1) : half4(0, 1, 0, 1); }";
+    // A second program with an image child takes the reflected-block path.
+    let with_child = "uniform shader img; uniform int steps; uniform int2 grid; \
+                      half4 main(float2 p) { return (steps == 3 && grid.y == 2) ? \
+                      half4(1, 0, 0, 1) : half4(0, 1, 0, 1); }";
+    for sksl in [plain, with_child] {
+        let steps = [2.6_f32];
+        let grid = [1.0_f32, 2.2];
+        let uniforms = [("steps", steps.as_slice()), ("grid", grid.as_slice())];
+        let pixels = raster_bytes(4, 4, |backend, canvas| {
+            backend.fill_round_rect_shader(
+                canvas,
+                Rect::xywh(0.0, 0.0, 4.0, 4.0),
+                0.0,
+                sksl,
+                &uniforms,
+                1.0,
+                Color::GREEN,
+            );
+        });
+        let pixel = &pixels[..4];
+        // N32 is BGRA or RGBA by platform; green means the ints were wrong.
+        assert!(
+            pixel[0].max(pixel[2]) > 200 && pixel[1] < 40,
+            "{sksl}: {pixel:?}"
+        );
+    }
+}

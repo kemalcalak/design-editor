@@ -96,10 +96,10 @@ impl NativeBackend {
         // A program that doesn't declare `child` fails to compile here,
         // since the wrapper samples it (cached as a failure like any other).
         let effect = self.shader_cache.get_or_compile(wrapped)?;
-        let mut builder = RuntimeShaderBuilder::new(effect);
+        let mut builder = RuntimeShaderBuilder::new(effect.clone());
         for (name, values) in uniforms {
             // Same tolerance as shader fills: a bad uniform is skipped.
-            let _ = builder.set_uniform_float(*name, values);
+            super::shader_children::set_uniform(&mut builder, &effect, name, values);
         }
         builder
             .set_uniform_float(DOC_TO_DEVICE, &float3x3(&doc_to_device))

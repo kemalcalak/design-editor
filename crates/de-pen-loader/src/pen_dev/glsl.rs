@@ -15,7 +15,7 @@
 //! nearly all syntax, so [`translate`] rewrites the token stream:
 //!
 //! - `precision` statements, precision qualifiers and the harmless
-//!   directives are dropped; object-like `#define`s are substituted;
+//!   directives are dropped;
 //! - GLSL type names become SkSL ones (`vec3` → `float3`, `mat2` →
 //!   `float2x2`);
 //! - `main` takes the fragment coordinate and returns the colour, with
@@ -25,11 +25,18 @@
 //!   canvas pointer flipped like `gl_FragCoord`;
 //! - a colour `vec3` is bound as a `float4` colour uniform and read
 //!   through `.rgb`, so the document keeps a hex colour for it;
-//! - `int` / `ivec` uniforms are bound as floats and read through `int()`;
-//! - `texture2D(tex, uv)` becomes `tex.eval(...)` in node pixels.
+//! - `int` / `ivec` uniforms stay integers; a `bool` / `bvec` one (SkSL has
+//!   no boolean uniforms) is bound as an `int` read through `bool()`;
+//! - `texture2D(tex, uv)` becomes `tex.eval(...)` in node pixels;
+//! - `discard` returns transparent (from a helper function through a
+//!   flag `main` checks), and the other WebGL 1.0 built-ins read their
+//!   fragment-shader values (`gl_FragData[0]`, `gl_FrontFacing`,
+//!   `gl_PointCoord`, `gl_DepthRange`, the `gl_Max*` minimums);
+//! - `texture2DProj` divides by the last coordinate first.
 //!
-//! Anything else (other textures, derivatives, `discard`, …) is left to the
-//! SkSL compiler, which the caller runs to decide whether to keep the paint.
+//! The preprocessor runs first ([`super::glsl_preprocess`]). Anything else
+//! (derivatives, …) is left to the SkSL compiler, which the caller runs to
+//! decide whether to keep the paint.
 
 use std::collections::HashMap;
 
@@ -38,6 +45,7 @@ use serde_json::{Map, Value};
 use super::glsl_bindings::{rename, Bindings, Use};
 use super::glsl_error::GlslError;
 use super::glsl_lex::{lex, next_significant, prev_significant, text, Kind, Token};
+use super::glsl_preprocess::preprocess;
 
 /// Where the shader runs: a fill paints the node, an effect post-processes
 /// its rendering.
@@ -61,10 +69,14 @@ pub(crate) enum Texture {
 /// How a user uniform is bound in the SkSL program.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub(crate) enum Slot {
-    /// One float (also an `int` uniform).
+    /// One float.
     Float,
-    /// A float vector of this length (also an `ivec`).
+    /// A float vector of this length.
     Vector(usize),
+    /// An `int` (1) or `ivecN` (N) uniform, stored as whole numbers.
+    Int(usize),
+    /// A `bool` (1) or `bvecN` (N) uniform, stored as 0 / 1.
+    Bool(usize),
     /// A colour (`vec3` / `vec4`), bound as a hex string.
     Colour,
     /// A `uniform shader` child.
@@ -132,98 +144,22 @@ pub(crate) fn translate(
         sksl: String::new(),
     };
     out.sksl.push_str(&bindings.prelude());
+    if program.helper_discards {
+        out.sksl.push_str("bool pen_Discard;\n");
+    }
+    if tokens
+        .iter()
+        .any(|token| token.is_ident("texture2DProj") || token.is_ident("texture2DProjLod"))
+    {
+        out.sksl.push_str(
+            "float2 pen_project(float3 p) { return p.xy / p.z; }\nfloat2 pen_project(float4 p) { return p.xy / p.w; }\n",
+        );
+    }
     out.emit(0, tokens.len())?;
     Ok(Translation {
         sksl: out.sksl,
         uniforms: bindings.users,
     })
-}
-
-/// Drop the directives SkSL has no use for and substitute object-like
-/// `#define`s. Everything else a preprocessor would do fails the shader.
-fn preprocess(tokens: Vec<Token>) -> Result<Vec<Token>, GlslError> {
-    let mut out = Vec::with_capacity(tokens.len());
-    let mut defines: HashMap<String, Vec<Token>> = HashMap::new();
-    let mut gl_es_depth = 0usize;
-    for token in tokens {
-        if token.kind == Kind::Directive {
-            let line = directive_text(&token.text);
-            let line = line.as_str();
-            let mut words = line.trim_start_matches('#').split_whitespace();
-            match (words.next(), words.next()) {
-                (Some("version" | "extension" | "pragma"), _) => {}
-                (Some("ifdef"), Some("GL_ES")) => gl_es_depth += 1,
-                (Some("endif"), None) if gl_es_depth > 0 => gl_es_depth -= 1,
-                (Some("define"), Some(_)) => {
-                    let (name, body) =
-                        define(line).ok_or_else(|| GlslError::Directive(line.to_owned()))?;
-                    let body = substitute(lex(body), &defines);
-                    defines.insert(name.to_owned(), body);
-                }
-                _ => return Err(GlslError::Directive(line.to_owned())),
-            }
-            // Keep the line count, so compile errors point at the line.
-            out.push(Token::new(Kind::Space, "\n"));
-            continue;
-        }
-        out.push(token);
-    }
-    if gl_es_depth > 0 {
-        return Err(GlslError::Directive("#ifdef GL_ES".to_owned()));
-    }
-    Ok(substitute(out, &defines))
-}
-
-/// A directive line without its comments (`#endif // GL_ES` → `#endif`).
-fn directive_text(raw: &str) -> String {
-    let body = raw.trim().trim_start_matches('#');
-    let kept: Vec<Token> = lex(body)
-        .into_iter()
-        .filter(|token| token.kind != Kind::Comment)
-        .collect();
-    format!("#{}", text(&kept).trim())
-}
-
-/// `#define NAME body` → `(NAME, body)`; `None` for a function-like macro.
-fn define(line: &str) -> Option<(&str, &str)> {
-    let rest = line.trim_start_matches('#').trim_start();
-    let rest = rest.strip_prefix("define")?.trim_start();
-    let end = rest
-        .find(|c: char| !(c.is_ascii_alphanumeric() || c == '_'))
-        .unwrap_or(rest.len());
-    let (name, body) = rest.split_at(end);
-    if name.is_empty() || body.starts_with('(') || body.contains('\\') {
-        return None;
-    }
-    Some((name, body.trim()))
-}
-
-fn substitute(tokens: Vec<Token>, defines: &HashMap<String, Vec<Token>>) -> Vec<Token> {
-    if defines.is_empty() {
-        return tokens;
-    }
-    let mut out = Vec::with_capacity(tokens.len());
-    for token in tokens {
-        match defines
-            .get(&token.text)
-            .filter(|_| token.kind == Kind::Ident)
-        {
-            Some(body) => {
-                // An expression keeps its precedence; a single token (a
-                // number, a type, `gl_FragColor`) must stay bare.
-                let wrap = body.iter().filter(|token| !token.is_trivia()).count() > 1;
-                if wrap {
-                    out.push(Token::new(Kind::Punct, "("));
-                }
-                out.extend(body.iter().cloned());
-                if wrap {
-                    out.push(Token::new(Kind::Punct, ")"));
-                }
-            }
-            None => out.push(token),
-        }
-    }
-    out
 }
 
 /// One `uniform` statement.
@@ -233,6 +169,8 @@ pub(super) struct UniformDecl {
     pub(super) ty: String,
     pub(super) names: Vec<String>,
     pub(super) notes: Annotations,
+    /// Token index of the doc comment in front of the statement.
+    pub(super) doc: Option<usize>,
 }
 
 /// The parsed doc comment in front of a uniform.
@@ -289,17 +227,39 @@ struct Program {
     main_header: (usize, usize),
     /// Indices of main's `{` and `}`.
     main_body: (usize, usize),
+    /// Every top-level function body: `{`, `}` and the return type.
+    functions: Vec<Function>,
+    /// Whether a function other than `main` discards.
+    helper_discards: bool,
+}
+
+/// A top-level function body.
+struct Function {
+    open: usize,
+    close: usize,
+    returns: String,
 }
 
 fn scan(tokens: &[Token]) -> Result<Program, GlslError> {
     let mut uniforms = Vec::new();
     let mut precision = Vec::new();
     let mut main = None;
+    let mut functions = Vec::new();
     let mut depth = 0i32;
     let mut i = 0;
     while i < tokens.len() {
         let token = &tokens[i];
         if token.is_punct('{') {
+            if depth == 0 {
+                if let Some(returns) = function_return_type(tokens, i) {
+                    let close = matching(tokens, i, '{', '}')?;
+                    functions.push(Function {
+                        open: i,
+                        close,
+                        returns,
+                    });
+                }
+            }
             depth += 1;
         } else if token.is_punct('}') {
             depth -= 1;
@@ -343,11 +303,82 @@ fn scan(tokens: &[Token]) -> Result<Program, GlslError> {
         .into_iter()
         .chain(uniforms.iter().map(|decl: &UniformDecl| decl.range))
         .collect();
+    let helper_discards = functions.iter().any(|function| {
+        function.open != open
+            && tokens[function.open..function.close]
+                .iter()
+                .any(|token| token.is_ident("discard"))
+    });
     Ok(Program {
         uniforms,
         skips,
         main_header: (header_start, open),
         main_body: (open, close),
+        functions,
+        helper_discards,
+    })
+}
+
+/// The return type of the function whose body opens at `brace`
+/// (`float f(vec2 p) {` → `float`), or `None` when the block is not a
+/// function body.
+fn function_return_type(tokens: &[Token], brace: usize) -> Option<String> {
+    let close = prev_significant(tokens, brace).filter(|&j| tokens[j].is_punct(')'))?;
+    let mut depth = 0i32;
+    let open = (0..=close).rev().find(|&j| {
+        if tokens[j].is_punct(')') {
+            depth += 1;
+        } else if tokens[j].is_punct('(') {
+            depth -= 1;
+        }
+        depth == 0
+    })?;
+    let name = prev_significant(tokens, open).filter(|&j| tokens[j].kind == Kind::Ident)?;
+    let mut ty = prev_significant(tokens, name).filter(|&j| tokens[j].kind == Kind::Ident)?;
+    while PRECISION_QUALIFIERS.contains(&tokens[ty].text.as_str()) {
+        ty = prev_significant(tokens, ty).filter(|&j| tokens[j].kind == Kind::Ident)?;
+    }
+    Some(tokens[ty].text.clone())
+}
+
+/// A statement returning a zero value of GLSL type `ty`, for a `discard`
+/// inside a function of that return type.
+fn zero_return(ty: &str) -> Result<String, GlslError> {
+    let value = match ty {
+        "void" => return Ok("return".to_owned()),
+        "float" => "0.0".to_owned(),
+        "int" => "0".to_owned(),
+        "bool" => "false".to_owned(),
+        "vec2" | "vec3" | "vec4" | "mat2" | "mat3" | "mat4" => {
+            format!("{}(0.0)", sksl_type(ty).expect("vector type"))
+        }
+        "ivec2" | "ivec3" | "ivec4" => format!("{}(0)", sksl_type(ty).expect("vector type")),
+        "bvec2" | "bvec3" | "bvec4" => format!("{}(false)", sksl_type(ty).expect("vector type")),
+        _ => {
+            return Err(GlslError::Unsupported(
+                "discard in a function returning a struct",
+            ))
+        }
+    };
+    Ok(format!("return {value}"))
+}
+
+/// The value of a WebGL 1.0 built-in: the `gl_Max*` constants (the
+/// minimums the spec guarantees, which is what a portable shader can rely
+/// on) and the fragment inputs a fill or effect has.
+fn builtin_value(name: &str) -> Option<&'static str> {
+    Some(match name {
+        "gl_MaxVertexAttribs" => "8",
+        "gl_MaxVertexUniformVectors" => "128",
+        "gl_MaxVaryingVectors" => "8",
+        "gl_MaxVertexTextureImageUnits" => "0",
+        "gl_MaxCombinedTextureImageUnits" => "8",
+        "gl_MaxTextureImageUnits" => "8",
+        "gl_MaxFragmentUniformVectors" => "16",
+        "gl_MaxDrawBuffers" => "1",
+        "gl_FrontFacing" => "true",
+        "gl_PointCoord" => "(pen_FragCoord.xy / size)",
+        _ => return None,
     })
 }
 
@@ -386,10 +417,11 @@ fn uniform_decl(tokens: &[Token], start: usize, end: usize) -> Result<UniformDec
         return Err(GlslError::Unsupported("uniform without a name"));
     }
     // The doc comment right in front of the statement (only spaces between).
-    let notes = (0..start)
+    let doc = (0..start)
         .rev()
         .find(|&j| tokens[j].kind != Kind::Space)
-        .filter(|&j| tokens[j].kind == Kind::Comment && tokens[j].text.starts_with("/**"))
+        .filter(|&j| tokens[j].kind == Kind::Comment && tokens[j].text.starts_with("/**"));
+    let notes = doc
         .map(|j| Annotations::parse(&tokens[j].text))
         .unwrap_or_default();
     Ok(UniformDecl {
@@ -397,6 +429,7 @@ fn uniform_decl(tokens: &[Token], start: usize, end: usize) -> Result<UniformDec
         ty: ty.text.clone(),
         names,
         notes,
+        doc,
     })
 }
 
@@ -469,16 +502,28 @@ impl Emitter<'_> {
                 self.sksl.push_str(
                     "half4 main(float2 pen_fragCoord) {\n    pen_FragCoord = float4(pen_fragCoord.x, size.y - pen_fragCoord.y, 0.0, 1.0);\n    pen_FragColor = float4(0.0);",
                 );
+                if self.program.helper_discards {
+                    self.sksl.push_str(" pen_Discard = false;");
+                }
                 i = main_open + 1;
                 continue;
             }
             if i == main_close {
-                self.sksl.push_str("\n    return half4(pen_FragColor);\n}");
+                self.sksl
+                    .push_str(&format!("\n    {};\n}}", self.main_return()));
                 i += 1;
                 continue;
             }
             let token = &self.tokens[i];
             let in_main = i > main_open && i < main_close;
+            if self.bindings.tagged_docs.contains(&i) {
+                // The doc comment of a boolean uniform gains the tag the
+                // panel reads (`shader_uniform_specs`).
+                let body = token.text.trim_end_matches("*/").trim_end();
+                self.sksl.push_str(&format!("{body} @bool */"));
+                i += 1;
+                continue;
+            }
             if token.kind != Kind::Ident {
                 self.sksl.push_str(&token.text);
                 i += 1;
@@ -498,19 +543,55 @@ impl Emitter<'_> {
                 "return" if in_main => {
                     let next = next_significant(self.tokens, i + 1);
                     if next.is_some_and(|j| self.tokens[j].is_punct(';')) {
-                        self.sksl.push_str("return half4(pen_FragColor)");
+                        let main_return = self.main_return();
+                        self.sksl.push_str(&main_return);
                     } else {
                         self.sksl.push_str("return");
                     }
                 }
                 "gl_FragCoord" => self.sksl.push_str("pen_FragCoord"),
                 "gl_FragColor" => self.sksl.push_str("pen_FragColor"),
-                "discard" => return Err(GlslError::Unsupported("discard")),
+                "discard" if in_main => self.sksl.push_str("return half4(0.0)"),
+                "discard" => {
+                    let returns = self
+                        .program
+                        .functions
+                        .iter()
+                        .find(|function| function.open < i && i < function.close)
+                        .map(|function| function.returns.as_str())
+                        .ok_or(GlslError::Unsupported("discard outside a function"))?;
+                    let zero = zero_return(returns)?;
+                    self.sksl
+                        .push_str(&format!("{{ pen_Discard = true; {zero}; }}"));
+                    // The block replaces the statement: drop its `;` so an
+                    // `else` that follows still pairs with the `if`.
+                    if let Some(semicolon) = next_significant(self.tokens, i + 1)
+                        .filter(|&j| self.tokens[j].is_punct(';'))
+                    {
+                        i = semicolon + 1;
+                        continue;
+                    }
+                }
+                "gl_FragData" => {
+                    i = self.frag_data(i)?;
+                    continue;
+                }
+                "gl_DepthRange" => {
+                    i = self.depth_range(i)?;
+                    continue;
+                }
+                name if builtin_value(name).is_some() => {
+                    self.sksl.push_str(builtin_value(name).unwrap_or_default());
+                }
                 "sampler2D" | "samplerCube" => {
                     return Err(GlslError::Unsupported("textures passed to functions"))
                 }
                 "texture2D" | "texture2DLod" | "texture" => {
-                    i = self.texture_call(i)?;
+                    i = self.texture_call(i, false)?;
+                    continue;
+                }
+                "texture2DProj" | "texture2DProjLod" => {
+                    i = self.texture_call(i, true)?;
                     continue;
                 }
                 "textureSize" => {
@@ -588,8 +669,56 @@ impl Emitter<'_> {
         })
     }
 
-    /// `texture2D(tex, uv[, bias])` → `tex.eval(pen_texel(uv))`.
-    fn texture_call(&mut self, i: usize) -> Result<usize, GlslError> {
+    /// What `main` returns: the colour, or transparent once a helper
+    /// function discarded the fragment.
+    fn main_return(&self) -> String {
+        if self.program.helper_discards {
+            "return pen_Discard ? half4(0.0) : half4(pen_FragColor)".to_owned()
+        } else {
+            "return half4(pen_FragColor)".to_owned()
+        }
+    }
+
+    /// `gl_FragData[0]` → `pen_FragColor` (WebGL 1.0 has one draw buffer).
+    fn frag_data(&mut self, i: usize) -> Result<usize, GlslError> {
+        let words: Vec<usize> = (i + 1..self.tokens.len())
+            .filter(|&j| !self.tokens[j].is_trivia())
+            .take(3)
+            .collect();
+        let zero_index = words.len() == 3
+            && self.tokens[words[0]].is_punct('[')
+            && self.tokens[words[1]].text == "0"
+            && self.tokens[words[2]].is_punct(']');
+        if !zero_index {
+            return Err(GlslError::Unsupported(
+                "gl_FragData other than gl_FragData[0]",
+            ));
+        }
+        self.sksl.push_str("pen_FragColor");
+        Ok(words[2] + 1)
+    }
+
+    /// `gl_DepthRange.near | far | diff` → `0.0 | 1.0 | 1.0`.
+    fn depth_range(&mut self, i: usize) -> Result<usize, GlslError> {
+        let words: Vec<usize> = (i + 1..self.tokens.len())
+            .filter(|&j| !self.tokens[j].is_trivia())
+            .take(2)
+            .collect();
+        let value = (words.len() == 2 && self.tokens[words[0]].is_punct('.'))
+            .then(|| match self.tokens[words[1]].text.as_str() {
+                "near" => Some("0.0"),
+                "far" | "diff" => Some("1.0"),
+                _ => None,
+            })
+            .flatten()
+            .ok_or(GlslError::Unsupported("gl_DepthRange without a field"))?;
+        self.sksl.push_str(value);
+        Ok(words[1] + 1)
+    }
+
+    /// `texture2D(tex, uv[, bias])` → `tex.eval(pen_texel(uv))`;
+    /// `texture2DProj` divides by the last coordinate first.
+    fn texture_call(&mut self, i: usize, projective: bool) -> Result<usize, GlslError> {
         let SamplerCall {
             sampler,
             args,
@@ -603,8 +732,11 @@ impl Emitter<'_> {
         };
         let uv_lo = next_significant(self.tokens, uv_lo).map_or(uv_hi, |j| j.min(uv_hi));
         self.sksl.push_str(&format!("{child}.eval(pen_texel("));
+        if projective {
+            self.sksl.push_str("pen_project(");
+        }
         self.emit(uv_lo, uv_hi)?;
-        self.sksl.push_str("))");
+        self.sksl.push_str(if projective { ")))" } else { "))" });
         Ok(after)
     }
 

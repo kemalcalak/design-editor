@@ -43,7 +43,7 @@ fn reader(relative: &str) -> Option<Vec<u8>> {
     match relative {
         "shaders/waves.glsl" => Some(WAVES.as_bytes().to_vec()),
         "fx/pixelate.glsl" => Some(PIXELATE.as_bytes().to_vec()),
-        "shaders/broken.glsl" => Some(b"void main() { discard; }".to_vec()),
+        "shaders/broken.glsl" => Some(b"void main() { gl_FragData[2] = vec4(1.0); }".to_vec()),
         _ => None,
     }
 }
@@ -64,7 +64,7 @@ fn document(children: Value) -> Value {
 }
 
 #[test]
-fn shader_fills_import_as_sksl_with_resolved_uniforms() {
+fn shader_fills_import_as_sksl_with_live_variable_uniforms() {
     let mut doc = document(json!([
         { "type": "frame", "id": "light", "width": 320, "height": 200, "fill": [
             { "type": "shader", "enabled": true, "url": "shaders/waves.glsl?v=6",
@@ -84,9 +84,10 @@ fn shader_fills_import_as_sksl_with_resolved_uniforms() {
         fill["uniforms"],
         json!({
             "size": [320.0, 200.0],
-            "u_base": "#f4f4f4",
+            // Variables stay live: the canvas resolves them per theme.
+            "u_base": "$surface",
             "u_accent": "#ffffff",
-            "u_speed": 0.25,
+            "u_speed": "$pace",
             "u_scale": [1.0, 2.0],
         })
     );
@@ -99,7 +100,7 @@ fn shader_fills_import_as_sksl_with_resolved_uniforms() {
         report
             .unsupported
             .get("shader uniform variable (fixed value)"),
-        Some(&2)
+        None
     );
     assert!(!report
         .unsupported
@@ -108,15 +109,24 @@ fn shader_fills_import_as_sksl_with_resolved_uniforms() {
 }
 
 #[test]
-fn a_themed_variable_resolves_for_the_node_theme() {
+fn a_variable_that_cannot_stay_live_resolves_for_the_node_theme() {
     let mut doc = document(json!([
         { "type": "frame", "id": "dark", "theme": { "mode": "dark" }, "fill": [
-            { "type": "shader", "url": "shaders/waves.glsl", "uniforms": { "u_base": "$surface" } }
+            // A colour variable on a plain vector cannot stay a reference.
+            { "type": "shader", "url": "shaders/waves.glsl",
+              "uniforms": { "u_base": "$surface", "u_scale": "$pace" } }
         ]}
     ]));
-    convert(&mut doc, &reader);
+    let report = convert(&mut doc, &reader);
     let fill = &doc["children"][0]["fill"][0];
-    assert_eq!(fill["uniforms"]["u_base"], "#101010");
+    assert_eq!(fill["uniforms"]["u_base"], "$surface");
+    assert_eq!(fill["uniforms"]["u_scale"], json!([0.25, 0.25]));
+    assert_eq!(
+        report
+            .unsupported
+            .get("shader uniform variable (fixed value)"),
+        Some(&1)
+    );
     // No numeric box: the canvas binds the real size at render time.
     assert_eq!(fill["uniforms"]["size"], json!([1.0, 1.0]));
 }
@@ -222,15 +232,16 @@ fn a_themed_instance_resolves_the_component_shader_under_its_own_theme() {
         .iter()
         .find(|child| child["id"] == "scene")
         .unwrap();
-    assert_eq!(scene["fill"][0]["uniforms"]["u_base"], "#f4f4f4");
-    let dark = &doc["children"][1]["descendants"];
-    assert_eq!(dark["scene"]["fill"][0]["uniforms"]["u_base"], "#101010");
-    assert!(
-        dark.get("plain").is_none(),
-        "a shader without variables needs no patch"
-    );
-    assert!(doc["children"][2].get("descendants").is_none());
-    // A plain instance inside a themed frame takes that frame's theme.
-    let nested = &doc["children"][3]["children"][0]["descendants"];
-    assert_eq!(nested["scene"]["fill"][0]["uniforms"]["u_base"], "#101010");
+    // The reference stays live, so the canvas resolves it under each
+    // instance's theme; an instance patch, where one is written, keeps the
+    // reference too.
+    assert_eq!(scene["fill"][0]["uniforms"]["u_base"], "$surface");
+    for instance in [
+        &doc["children"][1],
+        &doc["children"][2],
+        &doc["children"][3]["children"][0],
+    ] {
+        let patched = &instance["descendants"]["scene"]["fill"][0]["uniforms"]["u_base"];
+        assert!(patched.is_null() || patched == "$surface", "{instance}");
+    }
 }

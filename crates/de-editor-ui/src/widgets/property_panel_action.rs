@@ -441,6 +441,13 @@ pub enum PropertyPanelAction {
         index: usize,
         value: f32,
     },
+    /// User clicked a boolean shader uniform's checkbox (#165): write
+    /// `on` to row `index`, one undo step.
+    ToggleShaderUniform {
+        target: de_editor_core::ShaderTarget,
+        index: usize,
+        on: bool,
+    },
     /// User clicked a shader body's Code button: open the source
     /// editor on that program (#164).
     OpenShaderSource(de_editor_core::ShaderTarget),
