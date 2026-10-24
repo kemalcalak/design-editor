@@ -315,6 +315,8 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "motion.scaleY" => "ขนาด Y",
         "motion.rotation" => "การหมุน",
         "interactions.addAnimation" => "แอนิเมชัน",
+        "blendMode.linearBurn" => "เพิ่มความเข้มเชิงเส้น",
+        "blendMode.linearDodge" => "เพิ่มความสว่างเชิงเส้น",
         _ => return None,
     })
 }

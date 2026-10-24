@@ -250,6 +250,8 @@ pub(super) fn convert_blend_mode(map: &mut Map<String, Value>, report: &mut PenD
         "colorDodge" => Some("color_dodge"),
         "softLight" => Some("soft_light"),
         "hardLight" => Some("hard_light"),
+        "linearBurn" => Some("linear_burn"),
+        "linearDodge" => Some("linear_dodge"),
         _ => None,
     };
     match canonical.map(str::to_owned) {

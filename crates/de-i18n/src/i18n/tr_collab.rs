@@ -315,6 +315,8 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "motion.scaleY" => "Ölçek Y",
         "motion.rotation" => "Döndürme",
         "interactions.addAnimation" => "Animasyon",
+        "blendMode.linearBurn" => "Doğrusal yakma",
+        "blendMode.linearDodge" => "Doğrusal soldurma",
         _ => return None,
     })
 }

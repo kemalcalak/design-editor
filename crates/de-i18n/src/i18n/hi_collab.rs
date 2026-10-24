@@ -315,6 +315,8 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "motion.scaleY" => "स्केल Y",
         "motion.rotation" => "घुमाव",
         "interactions.addAnimation" => "एनिमेशन",
+        "blendMode.linearBurn" => "लीनियर बर्न",
+        "blendMode.linearDodge" => "लीनियर डॉज",
         _ => return None,
     })
 }

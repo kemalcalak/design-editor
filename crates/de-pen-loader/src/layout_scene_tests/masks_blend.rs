@@ -92,6 +92,8 @@ fn extended_canonical_blend_modes_map_to_scene_modes() {
         (BlendMode::ColorBurn, ImageBlendMode::ColorBurn),
         (BlendMode::HardLight, ImageBlendMode::HardLight),
         (BlendMode::Exclusion, ImageBlendMode::Exclusion),
+        (BlendMode::LinearBurn, ImageBlendMode::LinearBurn),
+        (BlendMode::LinearDodge, ImageBlendMode::LinearDodge),
     ] {
         assert_eq!(blend_mode_to_scene(Some(&canonical)), scene);
     }
