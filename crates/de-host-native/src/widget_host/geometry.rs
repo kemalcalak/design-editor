@@ -11,7 +11,7 @@ use super::helpers::PANEL_RESIZE_GUTTER;
 use super::{PanelResizeKind, WidgetHostNative};
 use de_editor_ui::widgets::host_canvas_geometry as canvas_geometry;
 use de_editor_ui::widgets::host_overlay_geometry as overlay_geometry;
-use de_editor_ui::widgets::{AIChatPlaceholder, ChatResizeEdge, WINDOW_STRIP_H};
+use de_editor_ui::widgets::{AIChatPlaceholder, ChatResizeEdge};
 use de_editor_ui::{Point2D, Rect};
 
 impl WidgetHostNative {
@@ -30,7 +30,13 @@ impl WidgetHostNative {
 
     /// True when the cursor is over either resize gutter — used by
     /// the runner to set `CursorIcon::EwResize`. None = no gutter.
-    pub fn panel_resize_hover(&self, x: f32, y: f32, viewport_w: f32) -> Option<PanelResizeKind> {
+    pub fn panel_resize_hover(
+        &self,
+        x: f32,
+        y: f32,
+        viewport_w: f32,
+        viewport_h: f32,
+    ) -> Option<PanelResizeKind> {
         // While the workspace is docked, the dock's own 5 px handle owns
         // the column's edge (and runs at a HIGHER press tier than this
         // gutter) — a second gutter over the same pixels would only race
@@ -38,17 +44,22 @@ impl WidgetHostNative {
         if canvas_geometry::workspace_docked(&self.editor_state) {
             return None;
         }
-        // The left rail's edge starts below the window strip, where a press
-        // drags the window instead; the right rail runs full height.
-        if self.editor_state.editor_ui.sidebar_open && y >= WINDOW_STRIP_H {
-            let edge = self.editor_state.editor_ui.layer_panel_width;
-            if (x - edge).abs() <= PANEL_RESIZE_GUTTER {
+        // The gutters sit on the floating cards' inner edges (#86): the
+        // left card's right edge and the properties card's left edge,
+        // along each card's own height.
+        let spans =
+            |rect: de_editor_ui::Rect| y >= rect.origin.y && y <= rect.origin.y + rect.size.y;
+        if self.editor_state.editor_ui.sidebar_open {
+            let card = canvas_geometry::layer_panel_rect(&self.editor_state, viewport_h);
+            let edge = card.origin.x + card.size.x;
+            if spans(card) && (x - edge).abs() <= PANEL_RESIZE_GUTTER {
                 return Some(PanelResizeKind::LayerRight);
             }
         }
         if self.editor_state.property_panel_visible() {
-            let edge = viewport_w - self.editor_state.editor_ui.property_panel_width;
-            if (x - edge).abs() <= PANEL_RESIZE_GUTTER {
+            let card =
+                canvas_geometry::property_panel_rect(&self.editor_state, viewport_w, viewport_h);
+            if spans(card) && (x - card.origin.x).abs() <= PANEL_RESIZE_GUTTER {
                 return Some(PanelResizeKind::PropertyLeft);
             }
         }
@@ -430,8 +441,9 @@ impl WidgetHostNative {
     pub fn update_layer_hover(&mut self, x: f32, y: f32, viewport_w: f32, viewport_h: f32) -> bool {
         use de_editor_ui::widgets::LayerPanelHit;
         let sidebar_open = self.editor_state.editor_ui.sidebar_open;
-        let panel_w = self.editor_state.editor_ui.layer_panel_width;
         let point = Point2D::new(x, y);
+        let over_card =
+            canvas_geometry::layer_panel_rect(&self.editor_state, viewport_h).contains(point);
         // A top-most overlay covers the layer rail when dragged over it — no
         // row highlights underneath it.
         let blocked_by_overlay = self
@@ -443,12 +455,7 @@ impl WidgetHostNative {
             || self
                 .layer_context_menu_rect()
                 .is_some_and(|rect| rect.contains(point));
-        let (new_layer, new_page) = if sidebar_open
-            && !blocked_by_overlay
-            && y >= WINDOW_STRIP_H
-            && x >= 0.0
-            && x <= panel_w
-        {
+        let (new_layer, new_page) = if sidebar_open && !blocked_by_overlay && over_card {
             let layer_rect = self.layers_content_rect(viewport_h);
             let panel = self.layer_panel();
             match panel.hit_test(layer_rect, point) {
@@ -490,9 +497,8 @@ impl WidgetHostNative {
             && !self.chat_panel_surface_contains(x, y, viewport_w, viewport_h)
             && !self.over_topmost_panel(x, y, viewport_w, viewport_h)
             && !self.over_dropdown_overlay(x, y, viewport_w, viewport_h)
-            && y >= WINDOW_STRIP_H
-            && x >= 0.0
-            && x <= self.editor_state.editor_ui.layer_panel_width
+            && canvas_geometry::layer_panel_rect(&self.editor_state, viewport_h)
+                .contains(Point2D::new(x, y))
     }
 
     pub fn layer_drag_in_progress(&self) -> bool {

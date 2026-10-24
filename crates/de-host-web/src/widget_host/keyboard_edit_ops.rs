@@ -453,6 +453,20 @@ impl WidgetHost {
         true
     }
 
+    /// Cmd/Ctrl+\ — open / close the left panel with its motion (#86).
+    /// Mirrors the native host's `apply_toggle_panel`.
+    pub fn apply_toggle_panel(&mut self) -> bool {
+        self.commit_variable_row_focus_if_any();
+        if !de_editor_ui::widgets::floating_panels::toggle_panel(
+            &mut self.editor_state,
+            self.now_ms,
+        ) {
+            return false;
+        }
+        self.mark_dirty();
+        true
+    }
+
     /// CanvasKit keydown chord routing for editor shortcuts that are not
     /// printable text. `is_mod` is Cmd on macOS or Ctrl elsewhere.
     pub(crate) fn apply_keydown_shortcut(

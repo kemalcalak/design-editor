@@ -79,6 +79,8 @@ fn seed() -> WidgetHost {
         .value;
     let mut host = WidgetHost::new();
     host.editor_state = de_editor_core::EditorState::from_document(doc);
+    // Fixtures sit where the open left card floats (#86).
+    host.editor_state.editor_ui.sidebar_open = false;
     host.editor_state.tool = Tool::Select;
     host.editor_state_dirty = true;
     host.last_viewport_w = VIEWPORT_W;
@@ -92,6 +94,8 @@ fn seed_nested() -> WidgetHost {
         .value;
     let mut host = WidgetHost::new();
     host.editor_state = de_editor_core::EditorState::from_document(doc);
+    // Fixtures sit where the open left card floats (#86).
+    host.editor_state.editor_ui.sidebar_open = false;
     host.editor_state.tool = Tool::Select;
     host.editor_state_dirty = true;
     host
@@ -103,6 +107,8 @@ fn seed_deep_hierarchy(selected: &str) -> WidgetHost {
         .value;
     let mut host = WidgetHost::new();
     host.editor_state = de_editor_core::EditorState::from_document(doc);
+    // Fixtures sit where the open left card floats (#86).
+    host.editor_state.editor_ui.sidebar_open = false;
     host.editor_state.tool = Tool::Select;
     host.editor_state
         .set_single_selection(NodeId::new(selected));

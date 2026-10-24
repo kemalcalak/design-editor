@@ -3,7 +3,7 @@ use de_editor_core::editor_ui_state::EffectParamFocus;
 use de_editor_core::ui_draft::PropertyFocus;
 use de_editor_core::{own_bounds, EffectField, NodeId, Tool};
 use de_editor_ui::widgets::{PropertyPanel, PropertyPanelAction, Toolbar};
-use de_editor_ui::{Point2D, Rect};
+use de_editor_ui::Point2D;
 use jian_ops_schema::node::PenNode;
 use jian_ops_schema::style::PenFill;
 use jian_ops_schema::variable::{VariableKind, VariableScalar};
@@ -58,11 +58,8 @@ fn web_move_fill_action_dispatches_as_one_undoable_edit() {
 fn point_for_property_focus(host: &WidgetHost, want: PropertyFocus) -> (f32, f32) {
     let panel = PropertyPanel::for_selection(&host.editor_state)
         .expect("fixture selection shows property panel");
-    let pw = host.editor_state.editor_ui.property_panel_width;
-    let rect = Rect {
-        origin: Point2D::new(W - pw, 0.0),
-        size: Point2D::new(pw, H),
-    };
+    let rect =
+        de_editor_ui::widgets::host_canvas_geometry::property_panel_rect(&host.editor_state, W, H);
     let mut y = rect.origin.y + 2.0;
     while y < rect.origin.y + rect.size.y {
         let mut x = rect.origin.x + 2.0;
@@ -83,11 +80,8 @@ fn point_for_property_action(
 ) -> (f32, f32) {
     let panel = PropertyPanel::for_selection(&host.editor_state)
         .expect("fixture selection shows property panel");
-    let pw = host.editor_state.editor_ui.property_panel_width;
-    let rect = Rect {
-        origin: Point2D::new(W - pw, 0.0),
-        size: Point2D::new(pw, H),
-    };
+    let rect =
+        de_editor_ui::widgets::host_canvas_geometry::property_panel_rect(&host.editor_state, W, H);
     let mut y = rect.origin.y + 2.0;
     while y < rect.origin.y + rect.size.y {
         let mut x = rect.origin.x + 2.0;

@@ -416,6 +416,10 @@ pub fn apply_shared_chrome_hit(
             ChromePress::Handled
         }
         ChromeHit::TogglePreview => ChromePress::Platform,
+        ChromeHit::TogglePanel => {
+            super::floating_panels::toggle_panel(state, now_ms);
+            ChromePress::Handled
+        }
         // Same path as File ▸ Settings.
         ChromeHit::OpenAgentSettings => {
             ui.agent_settings_open = true;
@@ -469,7 +473,7 @@ fn apply_file_menu_tool(state: &mut EditorState, tool: FileMenuTool, now_ms: u64
     let ui = &mut state.editor_ui;
     match tool {
         FileMenuTool::ToggleSidebar => {
-            ui.sidebar_open = !ui.sidebar_open;
+            super::floating_panels::toggle_panel(state, now_ms);
             FileMenuStep::Handled
         }
         FileMenuTool::Variables => FileMenuStep::Toolbar(ToolbarAction::ToggleVariablesPanel),

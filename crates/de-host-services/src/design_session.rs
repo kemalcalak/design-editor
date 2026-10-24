@@ -487,7 +487,8 @@ pub fn fit_design_viewport_to_content(
     let Some(bounds) = active_content_bounds(state) else {
         return false;
     };
-    let (canvas_w, canvas_h) = design_canvas_size(state, viewport_width, viewport_height);
+    let area = design_fit_area(state, viewport_width, viewport_height);
+    let (canvas_w, canvas_h) = (area.size.x, area.size.y);
     if canvas_w <= 1.0 || canvas_h <= 1.0 {
         return false;
     }
@@ -503,8 +504,11 @@ pub fn fit_design_viewport_to_content(
         .clamp(Viewport::MIN_ZOOM, Viewport::MAX_ZOOM);
     let center_x = (bounds.x + bounds.w / 2.0) as f32;
     let center_y = (bounds.y + bounds.h / 2.0) as f32;
-    let next_pan_x = canvas_w / 2.0 - center_x * zoom;
-    let next_pan_y = canvas_h / 2.0 - center_y * zoom;
+    // Centre on the fit area, which starts right of the open left card
+    // (#86), not at the canvas origin.
+    let (origin_x, origin_y) = area_offset(state, area, viewport_width, viewport_height);
+    let next_pan_x = origin_x + canvas_w / 2.0 - center_x * zoom;
+    let next_pan_y = origin_y + canvas_h / 2.0 - center_y * zoom;
 
     let changed = (state.viewport.zoom - zoom).abs() > 0.001
         || (state.viewport.pan_x - next_pan_x).abs() > 0.5
@@ -557,17 +561,49 @@ pub fn design_content_fits_viewport(
     let Some(bounds) = active_content_bounds(state) else {
         return true;
     };
-    let (canvas_w, canvas_h) = design_canvas_size(state, viewport_width, viewport_height);
+    let area = design_fit_area(state, viewport_width, viewport_height);
+    let (canvas_w, canvas_h) = (area.size.x, area.size.y);
     if canvas_w <= 1.0 || canvas_h <= 1.0 {
         return true;
     }
+    let (origin_x, origin_y) = area_offset(state, area, viewport_width, viewport_height);
     let zoom = state.viewport.zoom;
-    let left = bounds.x as f32 * zoom + state.viewport.pan_x;
-    let top = bounds.y as f32 * zoom + state.viewport.pan_y;
+    let left = bounds.x as f32 * zoom + state.viewport.pan_x - origin_x;
+    let top = bounds.y as f32 * zoom + state.viewport.pan_y - origin_y;
     let right = left + bounds.w as f32 * zoom;
     let bottom = top + bounds.h as f32 * zoom;
     const MARGIN: f32 = 2.0;
     left >= -MARGIN && top >= -MARGIN && right <= canvas_w + MARGIN && bottom <= canvas_h + MARGIN
+}
+
+/// The part of the canvas the design pipeline frames its boards into: the
+/// same uncovered area the editor's zoom-to-fit uses (#86), so a run's
+/// boards are never centred under a floating card.
+fn design_fit_area(
+    state: &EditorState,
+    viewport_width: f32,
+    viewport_height: f32,
+) -> de_editor_ui::Rect {
+    de_editor_ui::widgets::floating_panels::uncovered_canvas_rect(
+        state,
+        viewport_width,
+        viewport_height,
+    )
+}
+
+/// `area`'s offset from the canvas origin — pan is canvas-relative.
+fn area_offset(
+    state: &EditorState,
+    area: de_editor_ui::Rect,
+    viewport_width: f32,
+    viewport_height: f32,
+) -> (f32, f32) {
+    let (cx0, cy0, _, _) = de_editor_ui::widgets::host_canvas_geometry::canvas_region(
+        state,
+        viewport_width,
+        viewport_height,
+    );
+    (area.origin.x - cx0, area.origin.y - cy0)
 }
 
 pub fn design_canvas_size(
@@ -584,13 +620,11 @@ pub fn design_canvas_size(
     // 320 px wider and 218 px taller than the one they were drawn into,
     // and every generated deck sat low and right of centre with its last
     // board clipped (measured 2026-09-13). Two fits, two answers; the
-    // painter's answer is the only one that can be correct.
-    let (_, _, canvas_w, canvas_h) = de_editor_ui::widgets::host_canvas_geometry::canvas_region(
-        state,
-        viewport_width,
-        viewport_height,
-    );
-    (canvas_w, canvas_h)
+    // painter's answer is the only one that can be correct. Since #86 the
+    // canvas is full-bleed under floating cards, so the answer is the
+    // uncovered part of it — the same area the editor's own fit uses.
+    let area = design_fit_area(state, viewport_width, viewport_height);
+    (area.size.x, area.size.y)
 }
 
 #[cfg(test)]

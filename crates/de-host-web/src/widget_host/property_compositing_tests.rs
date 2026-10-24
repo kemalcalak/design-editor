@@ -140,8 +140,11 @@ fn web_tile_scale_popover_input_owns_press_and_keeps_popup_open() {
     host.editor_state.set_single_selection(NodeId::new("r"));
     host.editor_state.editor_ui.image_fill_popover_open = true;
     let panel = de_editor_ui::widgets::PropertyPanel::for_selection(&host.editor_state).unwrap();
-    let width = host.editor_state.editor_ui.property_panel_width;
-    let rect = de_editor_ui::Rect::xywh(VIEWPORT_W - width, 0.0, width, VIEWPORT_H);
+    let rect = de_editor_ui::widgets::host_canvas_geometry::property_panel_rect(
+        &host.editor_state,
+        VIEWPORT_W,
+        VIEWPORT_H,
+    );
     let point = find_tile_scale_input(&panel, rect);
 
     assert!(host.apply_press(point.x, point.y, VIEWPORT_W, VIEWPORT_H));
@@ -176,7 +179,13 @@ fn web_image_fill_popover_owns_status_bar_overlap() {
     let property_rect = property_rect(&host);
     let status_rect = host.status_bar_rect(VIEWPORT_W, VIEWPORT_H).unwrap();
     let status = de_editor_ui::widgets::StatusBar::for_editor(&host.editor_state);
-    let point = find_status_bar_popover_overlap(&panel, property_rect, &status, status_rect);
+    // Editor v3 (#86): the properties card stops above the zoom pill and
+    // its popovers open beside it, so the two no longer share pixels; if a
+    // layout change brings the overlap back, the popover must win it.
+    let Some(point) = find_status_bar_popover_overlap(&panel, property_rect, &status, status_rect)
+    else {
+        return;
+    };
     let zoom_before = host.editor_state.viewport.zoom;
 
     assert!(host.apply_press(point.x, point.y, VIEWPORT_W, VIEWPORT_H));
@@ -246,8 +255,11 @@ fn web_tile_scale_draft_commits_before_popup_actions_and_outside_dismiss() {
 
     focus_tile_scale(&mut host, "0.875");
     let panel = de_editor_ui::widgets::PropertyPanel::for_selection(&host.editor_state).unwrap();
-    let width = host.editor_state.editor_ui.property_panel_width;
-    let rect = de_editor_ui::Rect::xywh(VIEWPORT_W - width, 0.0, width, VIEWPORT_H);
+    let rect = de_editor_ui::widgets::host_canvas_geometry::property_panel_rect(
+        &host.editor_state,
+        VIEWPORT_W,
+        VIEWPORT_H,
+    );
     let outside =
         de_editor_ui::Point2D::new(rect.origin.x + 20.0, rect.origin.y + rect.size.y - 20.0);
     assert!(!panel.image_fill_popover_contains(rect, outside));
@@ -279,8 +291,11 @@ fn find_tile_scale_input(
 }
 
 fn property_rect(host: &WidgetHost) -> de_editor_ui::Rect {
-    let width = host.editor_state.editor_ui.property_panel_width;
-    de_editor_ui::Rect::xywh(VIEWPORT_W - width, 0.0, width, VIEWPORT_H)
+    de_editor_ui::widgets::host_canvas_geometry::property_panel_rect(
+        &host.editor_state,
+        VIEWPORT_W,
+        VIEWPORT_H,
+    )
 }
 
 fn find_status_bar_popover_overlap(
@@ -288,7 +303,7 @@ fn find_status_bar_popover_overlap(
     property_rect: de_editor_ui::Rect,
     status: &de_editor_ui::widgets::StatusBar,
     status_rect: de_editor_ui::Rect,
-) -> de_editor_ui::Point2D {
+) -> Option<de_editor_ui::Point2D> {
     let mut y = status_rect.origin.y;
     while y < status_rect.origin.y + status_rect.size.y {
         let mut x = status_rect.origin.x;
@@ -302,13 +317,13 @@ fn find_status_bar_popover_overlap(
                 && status.control_at(status_rect, point).is_some()
                 && !closes_popup
             {
-                return point;
+                return Some(point);
             }
             x += 1.0;
         }
         y += 1.0;
     }
-    panic!("image-fill popover does not overlap a StatusBar control");
+    None
 }
 
 fn find_variables_resize_popover_overlap(

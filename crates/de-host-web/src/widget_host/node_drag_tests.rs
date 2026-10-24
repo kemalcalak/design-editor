@@ -21,6 +21,8 @@ fn seed_json(host: &mut WidgetHost, json: &str) {
         .expect("fixture JSON parses")
         .value;
     host.editor_state = de_editor_core::EditorState::from_document(doc);
+    // Fixtures sit where the open left card floats (#86).
+    host.editor_state.editor_ui.sidebar_open = false;
     host.editor_state.tool = Tool::Select;
     host.editor_state_dirty = true;
 }
@@ -213,6 +215,8 @@ fn select_tool_dragging_flex_child_reorders_during_preview_like_native() {
     .expect("fixture JSON parses")
     .value;
     host.editor_state = de_editor_core::EditorState::from_document(doc);
+    // Fixtures sit where the open left card floats (#86).
+    host.editor_state.editor_ui.sidebar_open = false;
     host.editor_state.tool = Tool::Select;
     host.editor_state.editor_ui.entered_container = Some(NodeId::new("stack"));
     host.editor_state_dirty = true;
@@ -483,6 +487,8 @@ fn dragging_a_selection_with_a_locked_node_does_not_drift_it_in_the_scene() {
     .expect("fixture JSON parses")
     .value;
     host.editor_state = de_editor_core::EditorState::from_document(doc);
+    // Fixtures sit where the open left card floats (#86).
+    host.editor_state.editor_ui.sidebar_open = false;
     host.editor_state.tool = Tool::Select;
 
     // Press the free node to start a drag, then widen the selection to include

@@ -12,8 +12,8 @@ use super::WidgetHost;
 use de_editor_ui::widgets::host_canvas_geometry as canvas_geometry;
 use de_editor_ui::widgets::variables_panel::VariablesPanel;
 use de_editor_ui::widgets::{
-    AIChatPlaceholder, CanvasViewport, LayerPanel, LayoutCx, LocalePicker, PaintCx, PropertyPanel,
-    ShapePicker, StatusBar, Toolbar, Widget, TOOLBAR_WIDTH,
+    AIChatPlaceholder, CanvasViewport, LayoutCx, LocalePicker, PaintCx, PropertyPanel, ShapePicker,
+    StatusBar, Toolbar, Widget, TOOLBAR_WIDTH,
 };
 use de_editor_ui::{Point2D, Rect, RenderBackend};
 
@@ -32,10 +32,10 @@ impl WidgetHost {
     /// Backend-generic composition pass. Layer order matches the
     /// native shell so paint output is cross-platform identical:
     ///   1. background fill (+ document-import progress early-return)
-    ///   2. Left-rail strip (the floating chrome paints after the toolbar)
-    ///   3. LayerPanel (left rail, sidebar-gated)
-    ///   4. CanvasViewport (center band)
-    ///   5. PropertyPanel (right rail, selection-gated) + variables rail
+    ///   2. CanvasViewport (the whole window — #86 full-bleed)
+    ///   3. Left card (`paint_rail.rs`, floating over the canvas)
+    ///   4. —
+    ///   5. PropertyPanel (right card, selection-gated) + variables panel
     ///   6. Toolbar (floating column)
     ///   7. AIChatPlaceholder (floating, painted late so it sits
     ///      on top of toolbar)
@@ -57,6 +57,9 @@ impl WidgetHost {
         // BEFORE any resolve stores under it (mirrors native paint).
         self.rotate_chat_owner_if_session_changed();
         self.sync_theme_from_editor();
+        // The left card's open / close motion (#86) advances once per
+        // frame, before anything below reads its rects.
+        self.editor_state.editor_ui.tick_panel_motion(self.now_ms);
         // Pump the preview router BEFORE painting, mirroring the native
         // host: `navigate_to_screen` only queues `router.replace(path)`,
         // and `reconcile` is what actually swaps the mounted screen. Doing
@@ -165,143 +168,13 @@ impl WidgetHost {
         // The rail's slides tab, resolved ahead of the long immutable
         // borrow below because deriving it needs `&mut self` (mirrors
         // native paint.rs), and it OWNS the rail when it is on show.
-        let rail_open = self.editor_state.editor_ui.sidebar_open;
-        let slides_panel = if rail_open {
-            self.slides_panel_frame(viewport_width, viewport_height)
-        } else {
-            None
-        };
+        let slides_panel = self.slides_panel_frame(viewport_width, viewport_height);
 
         // Frame the slideshow board BEFORE the canvas painting so the camera
         // is ready.
         #[cfg(feature = "canvaskit")]
         if self.preview_slideshow_active() {
             self.frame_slideshow_board((viewport_width, viewport_height));
-        }
-
-        // 3. The left rail's top strip — empty on the web (no window to
-        //    drag), but kept so the rail's body lines up with the desktop.
-        if rail_open {
-            backend.fill_rect(
-                canvas_geometry::left_rail_strip_rect(&self.editor_state),
-                self.theme.card,
-            );
-        }
-
-        // 3a. Slides tab — the same rail showing the deck's page
-        //     navigator instead of the layer tree.
-        if let Some(slides) = &slides_panel {
-            self.paint_slides_panel(&mut *backend, slides);
-        }
-        // 3a-1. Chat tab — the pinned chat owns the rail's BODY (it
-        //        paints in the ordinary chat pass below); the rail keeps
-        //        its card behind the panel and its tab row on top, and a
-        //        minimized chat carried in from a floating session is
-        //        expanded exactly like the native rail does.
-        let chat_owns_rail = rail_open
-            && slides_panel.is_none()
-            && de_editor_ui::widgets::slides_panel_flow::chat_tab_active(&self.editor_state);
-        if chat_owns_rail {
-            backend.fill_rect(self.layer_panel_rect(viewport_height), self.theme.card);
-            if self.editor_state.chat.is_minimized() {
-                self.editor_state.chat.expand();
-            }
-            if let Some(tabs) = self.slides_tab_row(viewport_height) {
-                self.paint_slides_tab_row(&mut *backend, &tabs);
-            }
-        }
-        // 3a-2. Components / Images own the body too: the rail paints its
-        //        card and tab row; Images paints its body here, the
-        //        component browser later (mirrors the native rail).
-        let other_tab_owns_rail = rail_open
-            && slides_panel.is_none()
-            && !chat_owns_rail
-            && !de_editor_ui::widgets::slides_panel_flow::layers_tab_active(&self.editor_state);
-        if other_tab_owns_rail {
-            backend.fill_rect(self.layer_panel_rect(viewport_height), self.theme.card);
-            if let Some(tabs) = self.slides_tab_row(viewport_height) {
-                self.paint_slides_tab_row(&mut *backend, &tabs);
-            }
-            let body = de_editor_ui::widgets::host_canvas_geometry::rail_body_rect(
-                &self.editor_state,
-                viewport_height,
-            );
-            de_editor_ui::widgets::images_tab::paint(
-                &mut de_editor_ui::widgets::PaintCx {
-                    backend: &mut *backend,
-                },
-                &self.editor_state,
-                body,
-            );
-        }
-        if rail_open && slides_panel.is_none() && !chat_owns_rail && !other_tab_owns_rail {
-            let layer_panel_rect = self.layer_panel_rect(viewport_height);
-            // While a drag is active, paint against a panel with the
-            // source's subtree excluded — see native paint.rs. The
-            // panel walks the canonical `PenNode` tree off
-            // `EditorState`; the drag source id is shell-core's
-            // `NodeId` from the input path, losslessly accepted.
-            let active_drag = self.layer_drag.clone().filter(|d| {
-                d.active
-                    && self
-                        .layout_scene
-                        .active_page()
-                        .map(|p| p.find(d.source.as_str()).is_some())
-                        .unwrap_or(false)
-            });
-            let mut layer_panel = if let Some(d) = &active_drag {
-                LayerPanel::from_editor_with_drag_source(&self.editor_state, &d.source)
-            } else {
-                // Per-frame paint: resolve the row model through the
-                // owner-scoped cache so idle / streaming / hover repaints
-                // that don't touch the layer tree skip the walk + measure.
-                self.layer_panel()
-            };
-
-            // Auto-reveal selected node: if the selection changed and differs
-            // from the last-revealed anchor, expand ancestors and reveal.
-            // This covers MCP set_selection, undo/redo, and programmatic
-            // selection changes (not just canvas clicks).
-            if active_drag.is_none() {
-                // Only auto-reveal when not dragging; explicit drag interactions
-                // take precedence and manual collapse should be respected.
-                let should_reveal = match (
-                    &self.editor_state.selection.anchor,
-                    &self.editor_state.editor_ui.last_revealed_layer_anchor,
-                ) {
-                    (anchor, last) if anchor.is_real() => Some(anchor) != last.as_ref(),
-                    _ => false,
-                };
-                if should_reveal {
-                    de_editor_ui::widgets::scroll_flow::reveal_layer_panel_selection(
-                        &mut self.editor_state,
-                        &layer_panel,
-                        layer_panel_rect,
-                    );
-                    // Rebuild the panel after reveal to reflect any expanded ancestors.
-                    layer_panel = self.layer_panel();
-                }
-            }
-
-            if let Some(d) = &active_drag {
-                layer_panel.drop_target = layer_panel
-                    .drop_target_at(layer_panel_rect, Point2D::new(d.current_x, d.current_y));
-                if let Some(item) = LayerPanel::ghost_item_for(&self.editor_state, &d.source) {
-                    layer_panel.drag_ghost = Some((item, d.current_y));
-                }
-            }
-            layer_panel.now_ms = self.now_ms;
-            {
-                let mut cx = PaintCx {
-                    backend: &mut *backend,
-                };
-                layer_panel.paint(&mut cx, layer_panel_rect);
-            }
-            // The tab row heads the rail in BOTH tabs — it is how the
-            // user gets back to the slides.
-            if let Some(tabs) = self.slides_tab_row(viewport_height) {
-                self.paint_slides_tab_row(&mut *backend, &tabs);
-            }
         }
 
         let (canvas_left, canvas_y, canvas_w, canvas_h) =
@@ -393,21 +266,32 @@ impl WidgetHost {
             }
         }
 
+        // The left card floats over the full-bleed canvas (#86).
+        self.paint_left_card(&mut *backend, viewport_height, slides_panel.as_ref());
+
         let property_panel = PropertyPanel::for_selection_at_with_scene(
             &self.editor_state,
             &self.layout_scene,
             self.now_ms,
         );
-        if let Some(panel) = property_panel.as_ref() {
+        if let Some(panel) = property_panel
+            .as_ref()
+            .filter(|_| !self.editor_state.editor_ui.preview.mode)
+        {
             let property_rect = canvas_geometry::property_panel_rect(
                 &self.editor_state,
                 viewport_width,
                 viewport_height,
             );
-            let mut cx = PaintCx {
-                backend: &mut *backend,
-            };
-            panel.paint(&mut cx, property_rect);
+            de_editor_ui::widgets::floating_panels::paint_card(
+                &mut *backend,
+                &self.theme,
+                property_rect,
+                |backend| {
+                    let mut cx = PaintCx { backend };
+                    panel.paint(&mut cx, property_rect);
+                },
+            );
         }
 
         // 5b. VariablesPanel — mirrors TS' `{}` toolbar toggle as a
@@ -471,6 +355,10 @@ impl WidgetHost {
                 de_editor_ui::widgets::CanvasActions::for_editor_ui(ui)
                     .paint_layout(&mut cx, &layout);
             }
+            if let Some(toggle) = chrome.panel_toggle {
+                de_editor_ui::widgets::panel_toggle::PanelToggle::for_editor_ui(ui)
+                    .paint(&mut cx, toggle);
+            }
         }
 
         if let Some(chat_rect) = self.ai_chat_rect(viewport_width, viewport_height) {
@@ -478,10 +366,23 @@ impl WidgetHost {
             // owner (mirrors native).
             let chat = AIChatPlaceholder::from_editor_at(&self.editor_state, self.now_ms)
                 .owned_by(self.chat_panel_owner);
+            // Pinned into the left card, the chat is clipped to the card's
+            // rounded corners like the rest of its content (mirrors native).
+            let card = (!canvas_geometry::workspace_docked(&self.editor_state)
+                && self.editor_state.editor_ui.chat_pinned())
+            .then(|| canvas_geometry::layer_panel_rect(&self.editor_state, viewport_height));
+            if let Some(card) = card {
+                backend.save();
+                backend.clip_round_rect(card, de_editor_ui::widgets::floating_panels::CARD_RADIUS);
+            }
             let mut cx = PaintCx {
                 backend: &mut *backend,
             };
             chat.paint(&mut cx, chat_rect);
+            if card.is_some() {
+                backend.restore();
+                self.paint_left_card_border(&mut *backend, viewport_height);
+            }
         }
 
         if let Some(status_rect) =
@@ -533,7 +434,10 @@ impl WidgetHost {
         // PropertyPanel overlays — painted after canvas floating
         // controls so the image-fill popover can cover the zoom
         // status pill when it extends into the canvas.
-        if let Some(panel) = property_panel.as_ref() {
+        if let Some(panel) = property_panel
+            .as_ref()
+            .filter(|_| !self.editor_state.editor_ui.preview.mode)
+        {
             let property_rect = canvas_geometry::property_panel_rect(
                 &self.editor_state,
                 viewport_width,

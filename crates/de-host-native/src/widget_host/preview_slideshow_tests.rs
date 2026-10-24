@@ -370,12 +370,15 @@ fn a_non_presenting_preview_still_routes_presses_to_the_runtime() {
         "the runtime got its pointer up"
     );
 
-    // Chrome is untouched too: ordinary preview keeps its rails, so the
-    // stage stays the editing canvas region and the StatusBar still answers.
+    // Chrome is untouched too: ordinary preview keeps the editing canvas
+    // region (#86: the whole window, panels float over it) and the
+    // StatusBar still answers.
     let stage = host.preview_canvas_rect(VW, VH);
-    assert!(
-        stage.origin.x > 0.0 && stage.size.x < VW,
-        "an ordinary preview is still bounded by the rails"
+    let (cx0, cy0, cw, ch) = host.canvas_region(VW, VH);
+    assert_eq!(
+        (stage.origin.x, stage.origin.y, stage.size.x, stage.size.y),
+        (cx0, cy0, cw, ch),
+        "an ordinary preview is the editing canvas region"
     );
     let status =
         de_editor_ui::widgets::host_canvas_geometry::status_bar_rect(&host.editor_state, VW, VH)
@@ -414,9 +417,11 @@ fn presenting_takes_the_full_stage_and_gives_it_back_on_exit() {
     host.last_viewport_w = VW;
     host.last_viewport_h = VH;
     let editing_stage = host.preview_canvas_rect(VW, VH);
-    assert!(
-        editing_stage.origin.x > 0.0 && editing_stage.size.x < VW,
-        "the editing canvas is bounded by the rails"
+    let (cx0, _, cw, _) = host.canvas_region(VW, VH);
+    assert_eq!(
+        (editing_stage.origin.x, editing_stage.size.x),
+        (cx0, cw),
+        "the editing stage is the canvas region"
     );
 
     host.enter_preview((VW, VH));

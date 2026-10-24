@@ -15,21 +15,25 @@ use crate::widgets::agent_settings_rows::{tab_intro_height, SECTION_GAP, SECTION
 use crate::{Point2D, Rect};
 use de_editor_core::agent_settings::{AgentSettings, McpCli};
 use de_editor_core::home_mcp_setup::{home_mcp_manual_snippet, wrap_snippet};
+use de_i18n::Locale;
 
 #[path = "agent_settings_mcp_paint.rs"]
 mod paint;
 pub(super) use paint::paint_mcp_tab;
 
 const INTRO_HAS_DESC: bool = true;
-const CARD_H: f32 = 72.0;
+const CARD_H: f32 = 80.0;
 const CARD_PAD: f32 = 16.0;
 const BTN_W: f32 = 72.0;
 const BTN_H: f32 = 30.0;
 const PORT_FIELD_W: f32 = 64.0;
 const PORT_FIELD_H: f32 = 30.0;
 pub(super) const ENDPOINT_FONT: f32 = 11.5;
-const ENDPOINT_COPY_W: f32 = 58.0;
-const ENDPOINT_COPY_H: f32 = 22.0;
+const ENDPOINT_FIELD_H: f32 = 28.0;
+/// Text inset of the endpoint field, and the gap between its text and the
+/// Copy chip pinned inside its right end.
+const ENDPOINT_FIELD_PAD: f32 = 10.0;
+const ENDPOINT_COPY_INSET: f32 = 3.0;
 pub(super) const ROW_H: f32 = 46.0;
 /// Rows the collapsed list shows before "Show N more".
 pub(super) const COLLAPSED_ROWS: usize = 6;
@@ -40,8 +44,20 @@ const REMOVE_W: f32 = 76.0;
 pub(super) const SNIPPET_FONT: f32 = 11.0;
 pub(super) const SNIPPET_LINE: f32 = 17.6;
 const SNIPPET_PAD_LEFT: f32 = 40.0;
-const SNIPPET_COPY_W: f32 = 64.0;
 const SNIPPET_COPY_H: f32 = 26.0;
+/// Copy chip label: size and the lead (pad + icon + gap) / tail before and
+/// after it. Paint draws the label at `COPY_CHIP_LEAD`, so the chip's width
+/// comes from these and the label, never from a constant (#86: "Kopyala"
+/// ran past a fixed 58 px chip).
+pub(super) const COPY_CHIP_FONT: f32 = 11.0;
+pub(super) const COPY_CHIP_PAD: f32 = 8.0;
+pub(super) const COPY_CHIP_ICON: f32 = 12.0;
+pub(super) const COPY_CHIP_GAP: f32 = 5.0;
+const COPY_CHIP_LEAD: f32 = COPY_CHIP_PAD + COPY_CHIP_ICON + COPY_CHIP_GAP;
+/// Headroom over the backend-free width estimate: hit-test has no backend,
+/// so the chip is sized from `estimate_width`, and the real glyphs must
+/// still fit inside it.
+const COPY_LABEL_SLACK: f32 = 1.12;
 const CONNECTED_H: f32 = 20.0;
 /// Same span as Home's acknowledgement, so the two read alike.
 pub(super) const COPY_FEEDBACK_MS: u64 = de_editor_core::HOME_COPIED_MS;
@@ -86,34 +102,79 @@ pub(super) fn port_field_rect(content: Rect) -> Rect {
     )
 }
 
-/// The endpoint line's baseline-row box inside the server card.
-pub(super) fn endpoint_rect(content: Rect) -> Rect {
+/// Width of the Copy chip in `locale`: lead + the wider of its two labels
+/// ("Copy" / "Copied", so the acknowledgement never overflows either) +
+/// the trailing pad.
+pub(super) fn copy_chip_width(locale: Locale) -> f32 {
+    let label = |key| {
+        crate::widgets::home_surface::estimate_width(
+            de_i18n::translate(locale, key),
+            COPY_CHIP_FONT,
+        )
+    };
+    let text = label("home.mcp.copy").max(label("home.mcp.copied"));
+    (COPY_CHIP_LEAD + text * COPY_LABEL_SLACK + COPY_CHIP_PAD).ceil()
+}
+
+/// The widest Copy chip across every shipped locale. The snippet box
+/// reserves this much so its wrapping does not change with the language.
+fn copy_chip_reserve() -> f32 {
+    Locale::ALL
+        .iter()
+        .map(|locale| copy_chip_width(*locale))
+        .fold(0.0, f32::max)
+}
+
+/// The endpoint field: an inset mono well holding the URL, with the Copy
+/// chip pinned inside its right end. Sized from the (monospace, so
+/// exactly measurable) endpoint text and the chip.
+pub(super) fn endpoint_field_rect(content: Rect, endpoint: &str, locale: Locale) -> Rect {
     let card = server_card_rect(content);
+    let text_w = endpoint.chars().count() as f32 * ENDPOINT_FONT * 0.6;
+    let w = ENDPOINT_FIELD_PAD
+        + text_w
+        + ENDPOINT_FIELD_PAD
+        + copy_chip_width(locale)
+        + ENDPOINT_COPY_INSET;
     Rect::xywh(
         card.origin.x + CARD_PAD,
         card.origin.y + 40.0,
-        card.size.x / 2.0,
-        20.0,
+        w,
+        ENDPOINT_FIELD_H,
     )
 }
 
-/// The endpoint's Copy chip, just after the (monospace, so exactly
-/// measurable) endpoint text.
-pub(super) fn endpoint_copy_rect(content: Rect, endpoint: &str) -> Rect {
-    let line = endpoint_rect(content);
-    let text_w = endpoint.chars().count() as f32 * ENDPOINT_FONT * 0.6;
+/// The endpoint's Copy chip, inside the right end of its field.
+pub(super) fn endpoint_copy_rect(content: Rect, endpoint: &str, locale: Locale) -> Rect {
+    let field = endpoint_field_rect(content, endpoint, locale);
+    let w = copy_chip_width(locale);
     Rect::xywh(
-        line.origin.x + text_w + 10.0,
-        line.origin.y + (line.size.y - ENDPOINT_COPY_H) / 2.0,
-        ENDPOINT_COPY_W,
-        ENDPOINT_COPY_H,
+        field.origin.x + field.size.x - ENDPOINT_COPY_INSET - w,
+        field.origin.y + ENDPOINT_COPY_INSET,
+        w,
+        field.size.y - ENDPOINT_COPY_INSET * 2.0,
     )
 }
 
 /// Kept under its old name for the hosts' hover plumbing: the endpoint
 /// Copy chip is the tab's one copy-config action now.
-pub(super) fn client_config_copy_button_rect(content: Rect, settings: &AgentSettings) -> Rect {
-    endpoint_copy_rect(content, &settings.mcp_endpoint_url())
+pub(super) fn client_config_copy_button_rect(
+    content: Rect,
+    settings: &AgentSettings,
+    locale: Locale,
+) -> Rect {
+    endpoint_copy_rect(content, &settings.mcp_endpoint_url(), locale)
+}
+
+/// The Copy chip on an expanded agent's snippet box, top-right.
+pub(super) fn snippet_copy_rect(snippet: Rect, locale: Locale) -> Rect {
+    let w = copy_chip_width(locale);
+    Rect::xywh(
+        snippet.origin.x + snippet.size.x - 8.0 - w,
+        snippet.origin.y + 5.0,
+        w,
+        SNIPPET_COPY_H,
+    )
 }
 
 pub(super) fn agents_header_top(content: Rect) -> f32 {
@@ -141,7 +202,7 @@ pub(super) fn visible_agents(settings: &AgentSettings) -> &'static [McpCli] {
 
 /// The snippet column count for the expanded row, from the box width.
 fn snippet_columns(content: Rect) -> usize {
-    let box_w = content.size.x - SNIPPET_PAD_LEFT - 14.0 - 20.0 - SNIPPET_COPY_W - 8.0;
+    let box_w = content.size.x - SNIPPET_PAD_LEFT - 14.0 - 20.0 - copy_chip_reserve() - 8.0;
     (box_w / (SNIPPET_FONT * 0.6)).floor() as usize
 }
 
@@ -164,7 +225,6 @@ pub(super) struct AgentRow {
     /// The snippet box (zero when collapsed).
     pub snippet: Rect,
     pub action: Rect,
-    pub snippet_copy: Rect,
 }
 
 pub(super) fn agent_rows(content: Rect, settings: &AgentSettings) -> Vec<AgentRow> {
@@ -184,29 +244,20 @@ pub(super) fn agent_rows(content: Rect, settings: &AgentSettings) -> Vec<AgentRo
                 ACTION_H,
             );
             y += ROW_H;
-            let (snippet, snippet_copy) = if settings.mcp_expanded_agent == Some(*cli) {
+            let snippet = if settings.mcp_expanded_agent == Some(*cli) {
                 let lines = snippet_lines(content, settings, *cli).len();
                 let h = snippet_box_h(lines);
                 let rect = Rect::xywh(x + SNIPPET_PAD_LEFT, y, w - SNIPPET_PAD_LEFT - 14.0, h);
                 y += h + 14.0;
-                (
-                    rect,
-                    Rect::xywh(
-                        rect.origin.x + rect.size.x - 8.0 - SNIPPET_COPY_W,
-                        rect.origin.y + 5.0,
-                        SNIPPET_COPY_W,
-                        SNIPPET_COPY_H,
-                    ),
-                )
+                rect
             } else {
-                (Rect::ZERO, Rect::ZERO)
+                Rect::ZERO
             };
             AgentRow {
                 cli: *cli,
                 row,
                 snippet,
                 action,
-                snippet_copy,
             }
         })
         .collect()
@@ -318,14 +369,19 @@ pub enum McpHit {
     None,
 }
 
-pub fn hit_test(content: Rect, settings: &AgentSettings, scrolled: Point2D) -> McpHit {
+pub fn hit_test(
+    content: Rect,
+    settings: &AgentSettings,
+    locale: Locale,
+    scrolled: Point2D,
+) -> McpHit {
     // Host-managed (embed): the extension owns the lifecycle — no
     // start/stop, no port editing; the endpoint still copies.
     let host_managed = settings.mcp_host_managed();
     if !host_managed && server_button_rect(content).contains(scrolled) {
         return McpHit::ToggleServer;
     }
-    if client_config_copy_button_rect(content, settings).contains(scrolled) {
+    if client_config_copy_button_rect(content, settings, locale).contains(scrolled) {
         return McpHit::CopyClientConfig;
     }
     if !host_managed && !settings.mcp_server.running && port_field_rect(content).contains(scrolled)
@@ -339,7 +395,7 @@ pub fn hit_test(content: Rect, settings: &AgentSettings, scrolled: Point2D) -> M
         if row.action.contains(scrolled) {
             return McpHit::ToggleCli(row.cli);
         }
-        if row.snippet_copy.contains(scrolled) {
+        if row.snippet.size.y > 0.0 && snippet_copy_rect(row.snippet, locale).contains(scrolled) {
             return McpHit::CopySnippet(row.cli);
         }
         if row.row.contains(scrolled) {

@@ -86,6 +86,7 @@ fn copy_mcp_client_config_queues_clipboard_text() {
     let copy = de_editor_ui::widgets::agent_settings_panel::mcp_copy_config_button(
         rect,
         &host.editor_state().editor_ui.agent_settings,
+        host.editor_state().editor_ui.effective_locale(),
     );
     let (x, y) = scroll_to_centre(&mut host, rect, copy);
     assert!(host.dispatch_agent_settings_press(x, y, VIEWPORT_W, VIEWPORT_H));
@@ -249,6 +250,7 @@ fn copying_mcp_client_config_records_feedback_time() {
     let copy = de_editor_ui::widgets::agent_settings_panel::mcp_copy_config_button(
         rect,
         &host.editor_state().editor_ui.agent_settings,
+        host.editor_state().editor_ui.effective_locale(),
     );
     let (x, y) = scroll_to_centre(&mut host, rect, copy);
 

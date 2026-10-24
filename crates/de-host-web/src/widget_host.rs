@@ -152,6 +152,7 @@ mod paint;
 #[cfg(test)]
 mod paint_caret_tests;
 mod paint_overlays;
+mod paint_rail;
 mod paint_topmost_overlays;
 #[cfg(test)]
 mod pan_tests;

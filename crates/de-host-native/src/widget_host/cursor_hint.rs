@@ -29,7 +29,7 @@ impl WidgetHostNative {
     pub fn cursor_hint(&self, x: f32, y: f32, viewport_w: f32, viewport_h: f32) -> CursorHint {
         use de_editor_core::Tool;
         // Modal overlays — keep the pointer the OS default.
-        if self.editor_state.editor_ui.agent_settings_open
+        if self.editor_state.editor_ui.pointer_modal_open()
             || self.editor_state.ui.color_picker.is_some()
         {
             return CursorHint::Default;
@@ -166,7 +166,10 @@ impl WidgetHostNative {
             .git_panel_outer_rect(viewport_w, viewport_h)
             .is_some_and(|r| (r).contains(Point2D::new(x, y)));
         if self.is_resizing_panel()
-            || (!over_git_panel && self.panel_resize_hover(x, y, viewport_w).is_some())
+            || (!over_git_panel
+                && self
+                    .panel_resize_hover(x, y, viewport_w, viewport_h)
+                    .is_some())
         {
             return CursorHint::ResizeEw;
         }

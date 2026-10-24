@@ -408,9 +408,11 @@ fn fit_design_viewport_centers_and_fits_mobile_root() {
     assert!(fit_design_viewport_to_content(&mut state, 1440.0, 900.0));
 
     let bounds = active_content_bounds(&state).expect("root bounds");
+    // Measure against the canvas the floating cards leave uncovered (#86).
+    let area = de_editor_ui::widgets::floating_panels::uncovered_canvas_rect(&state, 1440.0, 900.0);
     let (canvas_w, canvas_h) = design_canvas_size(&state, 1440.0, 900.0);
-    let left = state.viewport.pan_x + bounds.x as f32 * state.viewport.zoom;
-    let top = state.viewport.pan_y + bounds.y as f32 * state.viewport.zoom;
+    let left = state.viewport.pan_x + bounds.x as f32 * state.viewport.zoom - area.origin.x;
+    let top = state.viewport.pan_y + bounds.y as f32 * state.viewport.zoom - area.origin.y;
     let right = left + bounds.w as f32 * state.viewport.zoom;
     let bottom = top + bounds.h as f32 * state.viewport.zoom;
     let center_x = (left + right) / 2.0;
@@ -418,13 +420,10 @@ fn fit_design_viewport_centers_and_fits_mobile_root() {
 
     assert!(left >= 0.0, "left edge should be visible, got {left}");
     assert!(top >= 0.0, "top edge should be visible, got {top}");
-    assert!(
-        right <= canvas_w,
-        "right edge should be visible: {right} > {canvas_w}"
-    );
+    assert!(right <= canvas_w, "right edge hidden: {right} > {canvas_w}");
     assert!(
         bottom <= canvas_h,
-        "bottom edge should be visible: {bottom} > {canvas_h}"
+        "bottom edge hidden: {bottom} > {canvas_h}"
     );
     assert!((center_x - canvas_w / 2.0).abs() < 0.5);
     assert!((center_y - canvas_h / 2.0).abs() < 0.5);
