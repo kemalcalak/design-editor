@@ -115,6 +115,12 @@ impl MeasureBackend for CachingMeasureBackend {
         cache.insert(key, result);
         result
     }
+
+    // Preview's runtime relayouts when this advances (a font import while it
+    // is open), so pass the inner backend's generation through.
+    fn font_generation(&self) -> u64 {
+        self.inner.font_generation()
+    }
 }
 
 #[cfg(test)]
