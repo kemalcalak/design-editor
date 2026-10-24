@@ -6,8 +6,9 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use de_ai::chat_provider::{ChatDelta, ChatRequest, ChatToolExecutor, StopReason};
-use de_editor_core::EditorState;
+use de_editor_core::{EditorState, PenNodeExt};
 use de_mcp::{McpTool, ToolErrorCode, ToolOutcome};
+use jian_ops_schema::node::PenNode;
 
 use super::design_agent_run_tool::{DesignLoopDriver, HeadlessDesignExecutor, RunDesignAgentTool};
 
@@ -193,4 +194,103 @@ fn a_provider_error_with_no_authored_result_is_terminal_and_unchanged() {
     };
     assert_eq!(code, ToolErrorCode::ToolFailed);
     assert!(message.contains("401 Unauthorized"), "{message}");
+}
+
+/// Two boards someone drew by hand: a phone board the repairs would rewrite
+/// if they saw it (an icon-shaped path, an empty image slot, a fit-content
+/// height) and an empty phone frame the unfilled-screen marking would
+/// rename.
+const HAND_MADE_BOARDS: &str = r##"{"version":"1.0.0","children":[
+  {"type":"frame","id":"n1","name":"Phone","x":0,"y":0,"width":360,"height":"fit_content","layout":"vertical",
+   "children":[
+     {"type":"text","id":"n2","name":"Title","content":"Hello","fill":[{"type":"solid","color":"#000000"}]},
+     {"type":"path","id":"n3","name":"Chevron","d":"M6 9l6 6 6-6","width":14,"height":14,
+      "stroke":{"thickness":2,"fill":[{"type":"solid","color":"#111111"}]}},
+     {"type":"rectangle","id":"n4","name":"Cover","width":240,"height":160,"fill":[{"type":"image","url":""}]}
+   ]},
+  {"type":"frame","id":"n5","name":"Empty Board","x":500,"y":0,"width":375,"height":812,"children":[]}
+]}"##;
+
+/// A driver that adds one phone screen next to whatever is on the page,
+/// with the same icon-shaped path the hand-made board carries.
+struct NewPhoneScreenDriver {
+    executor: Arc<HeadlessDesignExecutor>,
+}
+
+impl DesignLoopDriver for NewPhoneScreenDriver {
+    fn run(
+        &self,
+        _request: ChatRequest,
+        _cancel: Arc<AtomicBool>,
+    ) -> Box<dyn Iterator<Item = ChatDelta> + Send> {
+        let program = serde_json::json!({
+            "operations": "I(null, {type:'frame', name:'Generated', x:1000, y:0, width:375, height:812, layout:'vertical', children:[{type:'text', name:'Greeting', content:'Hi'}, {type:'path', name:'Generated Chevron', d:'M6 9l6 6 6-6', width:14, height:14, stroke:{thickness:2, fill:[{type:'solid', color:'#111111'}]}}]});"
+        });
+        let result = self.executor.execute("batch_design", &program.to_string());
+        assert!(!result.is_error, "batch_design failed: {}", result.content);
+        self.executor.finalize();
+        Box::new(
+            [ChatDelta::Done {
+                stop_reason: StopReason::EndTurn,
+            }]
+            .into_iter(),
+        )
+    }
+}
+
+fn find_named<'a>(nodes: &'a [PenNode], name: &str) -> Option<&'a PenNode> {
+    nodes.iter().find_map(|node| {
+        if node.base().name.as_deref() == Some(name) {
+            Some(node)
+        } else {
+            find_named(node.children().map(Vec::as_slice).unwrap_or(&[]), name)
+        }
+    })
+}
+
+/// #116: a run next to hand-made boards repairs and finalizes only its own
+/// screen; the boards land byte-for-byte as they were.
+#[test]
+fn the_agent_leaves_hand_made_boards_next_to_its_screen_unchanged() {
+    let state = EditorState::from_document(
+        serde_json::from_str(HAND_MADE_BOARDS).expect("hand-made document"),
+    );
+    let tool = RunDesignAgentTool::for_test(
+        &state,
+        Box::new(|executor| Box::new(NewPhoneScreenDriver { executor })),
+    );
+    let outcome = tool.call(&args(&[("brief", "add a settings screen")]));
+    let ToolOutcome::OkJsonWithCommand(json, command) = outcome else {
+        panic!("expected OkJsonWithCommand, got {outcome:?}");
+    };
+    let mut landed = state.clone();
+    assert!(landed.apply(command), "landing batch applies");
+
+    for before in state.active_children() {
+        let after = landed
+            .active_children()
+            .iter()
+            .find(|root| root.id_str() == before.id_str())
+            .expect("hand-made board still on the page");
+        assert_eq!(
+            serde_json::to_value(after).expect("serialize"),
+            serde_json::to_value(before).expect("serialize"),
+            "the agent run rewrote a board it did not create"
+        );
+    }
+
+    let chevron =
+        find_named(landed.active_children(), "Generated Chevron").expect("generated chevron");
+    assert!(
+        matches!(chevron, PenNode::IconFont(_)),
+        "the agent's own screen is still repaired: {chevron:?}"
+    );
+
+    let parsed: serde_json::Value = serde_json::from_str(&json).expect("result json");
+    assert_eq!(
+        parsed["finalize"]["committedScreens"],
+        serde_json::json!(["Generated"]),
+        "the screen roster names only the run's screens: {json}"
+    );
+    assert_eq!(parsed["finalize"]["unfilledScreens"], serde_json::json!([]));
 }

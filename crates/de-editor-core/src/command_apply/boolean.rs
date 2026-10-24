@@ -24,7 +24,9 @@ impl IdAllocator for CarriedId {
 impl EditorState {
     /// Apply [`EditorCommand::CommitBooleanResult`]. Validates before any
     /// write: the document must still be at `revision`, `new_id` must be
-    /// free and every source must exist on the active page. A live
+    /// free and every source must exist on the active page with no
+    /// children (the commit removes each source with its subtree, so a
+    /// frame holding content would lose it). A live
     /// document that moved on since the MCP snapshot (a source moved or
     /// restyled on the canvas) rejects instead of committing contours
     /// computed from stale geometry.
@@ -39,9 +41,10 @@ impl EditorState {
             || !new_id.is_real()
             || source_ids.is_empty()
             || self.collect_node_ids().contains(&new_id)
-            || source_ids
-                .iter()
-                .any(|id| find_node(self.active_children(), id).is_none())
+            || source_ids.iter().any(|id| {
+                find_node(self.active_children(), id)
+                    .is_none_or(|node| node.children().is_some_and(|kids| !kids.is_empty()))
+            })
         {
             return Ok(false);
         }

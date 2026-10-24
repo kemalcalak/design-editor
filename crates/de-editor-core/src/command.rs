@@ -510,7 +510,8 @@ pub enum EditorCommand {
     /// commits its result as one undo step and selects the new path.
     /// Rejected when the document moved past `revision` (the one the
     /// contours were computed against), `new_id` is taken or a source is
-    /// missing.
+    /// missing or has children. Both the MCP `boolean_op` tool and the
+    /// canvas (`EditorState::commit_canvas_boolean`) commit through it.
     CommitBooleanResult {
         source_ids: Vec<NodeId>,
         contours: Vec<Vec<(f64, f64)>>,

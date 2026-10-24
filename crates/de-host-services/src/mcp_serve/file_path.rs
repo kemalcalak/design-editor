@@ -35,7 +35,7 @@ pub fn process_message_for_file_path_arg(
     let mut applier_failed: Option<String> = None;
     let response =
         super::process_message_with_applier(&mut target_state, line, |tool_name, state, cmd| {
-            let baseline = super::WriteBaseline::for_tool(tool_name, state);
+            let baseline = super::baseline_for_tool(tool_name, state);
             if !state.apply(cmd.clone()) {
                 return false;
             }

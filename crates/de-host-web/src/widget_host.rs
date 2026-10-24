@@ -56,6 +56,8 @@ mod blur_inputs;
 #[cfg(test)]
 mod blur_inputs_tests;
 #[cfg(test)]
+mod boolean_op_tests;
+#[cfg(test)]
 mod boolean_toolbar_tests;
 #[cfg(test)]
 mod canvas_hierarchy_tests;

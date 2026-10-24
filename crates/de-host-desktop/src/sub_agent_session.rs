@@ -203,10 +203,18 @@ pub(crate) fn build_sub_agent_prompt(spec: &SpawnSpec, context_brief: Option<&st
 /// Returns the launched sessions. Subs whose provider can't be built (no
 /// ready builtin model) are skipped; `agents_running` reflects the number
 /// actually launched. Returns an empty `Vec` when nothing launched.
+///
+/// `run_baseline` is the parent run's (#116): each sub's finalize then
+/// covers the parent's screens and the containers the sub fills. Without
+/// one, the page as it is now is the baseline.
 pub(crate) fn launch_sub_agents(
     host: &mut WidgetHostNative,
     specs: Vec<SpawnSpec>,
+    run_baseline: Option<de_editor_core::write_scope::WriteBaseline>,
 ) -> Vec<SubAgentSession> {
+    let run_baseline = run_baseline.unwrap_or_else(|| {
+        de_editor_core::write_scope::WriteBaseline::capture(host.editor_state())
+    });
     let identities =
         assign_agent_identities_seeded(specs.len(), crate::design_loop_indicator::identity_seed());
     let mut subs = Vec::with_capacity(specs.len());
@@ -241,7 +249,8 @@ pub(crate) fn launch_sub_agents(
             attachments: vec![],
             model: None,
         };
-        let session = ChatSession::start_with_tools(provider, req, Some(tool_rx));
+        let session = ChatSession::start_with_tools(provider, req, Some(tool_rx))
+            .with_run_baseline(run_baseline.clone());
 
         subs.push(SubAgentSession {
             session: Some(session),

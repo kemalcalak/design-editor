@@ -404,14 +404,22 @@ pub(super) fn is_status_bar_node(node: &PenNode) -> bool {
 /// batches — measured (test0711-22 23:07 run): the model hand-built a
 /// second "21:30" bar inside the Header several batches in, which then sat
 /// on screen until finalize. OS chrome is a contract, so the duplicate is
-/// removed deterministically rather than echoed.
-pub(super) fn remove_nested_duplicate_status_bars(state: &mut EditorState) -> usize {
-    remove_nested_duplicate_status_bars_for_roots(state, &|_: &str| true)
-}
-
-fn remove_nested_duplicate_status_bars_for_roots(
+/// removed deterministically rather than echoed. Only the roots whose id
+/// `in_scope` accepts are swept.
+pub(super) fn remove_nested_duplicate_status_bars_for_roots(
     state: &mut EditorState,
     in_scope: &dyn Fn(&str) -> bool,
+) -> usize {
+    remove_duplicate_status_bars(state, in_scope, &|_| true)
+}
+
+/// [`remove_nested_duplicate_status_bars_for_roots`] that removes only the
+/// duplicates whose id `removable` accepts, so a design-agent batch drops
+/// the bars it built itself, never one already on a board (#116).
+pub(super) fn remove_duplicate_status_bars(
+    state: &mut EditorState,
+    in_scope: &dyn Fn(&str) -> bool,
+    removable: &dyn Fn(&str) -> bool,
 ) -> usize {
     let mut removed = 0;
     for root in state.active_children_mut() {
@@ -426,23 +434,29 @@ fn remove_nested_duplicate_status_bars_for_roots(
         if !has_canonical {
             continue;
         }
-        fn prune(node: &mut PenNode, keep_canonical: bool, removed: &mut usize) {
+        fn prune(
+            node: &mut PenNode,
+            keep_canonical: bool,
+            removable: &dyn Fn(&str) -> bool,
+            removed: &mut usize,
+        ) {
             let Some(children) = node.children_mut() else {
                 return;
             };
             children.retain(|child| {
                 let duplicate = is_status_bar_node(child)
-                    && !(keep_canonical && is_canonical_status_bar(child));
+                    && !(keep_canonical && is_canonical_status_bar(child))
+                    && removable(child.id_str());
                 if duplicate {
                     *removed += 1;
                 }
                 !duplicate
             });
             for child in children {
-                prune(child, false, removed);
+                prune(child, false, removable, removed);
             }
         }
-        prune(root, true, &mut removed);
+        prune(root, true, removable, &mut removed);
     }
     removed
 }

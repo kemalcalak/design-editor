@@ -11,8 +11,9 @@ use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 
-use de_editor_core::{EditorState, PenNodeExt};
+use de_editor_core::EditorState;
 use de_orchestrator::repair_summary::RepairSummary;
+use de_orchestrator::ScopedFinalizeError;
 
 use super::*;
 
@@ -101,11 +102,11 @@ impl AutoFinalize {
     /// when this returns `Some`); neither does a session that only edited
     /// roots that were already there.
     ///
-    /// The finalizer runs on a copy that holds only the session's roots; its
-    /// recorded commands then apply to the real document as one batch, so
-    /// undo history sees one ordinary step over the whole page. A replay that
-    /// is rejected, touches another root, or diverges from the finalizer's
-    /// own result is skipped.
+    /// The finalizer runs on the session's roots alone
+    /// (`de_orchestrator::record_loop_finalize_for_roots`); its commands then
+    /// apply to the real document as one batch, so undo history sees one
+    /// ordinary step over the whole page. A finalize that would touch another
+    /// root is skipped.
     pub fn run(&mut self, state: &mut EditorState, reason: &'static str) -> Option<RepairSummary> {
         let revision = state.document_revision();
         if !self.enabled()
@@ -117,92 +118,33 @@ impl AutoFinalize {
         // Every skip below still marks this revision handled, so the idle
         // loop does not retry the same document on every poll.
         self.finalized_at_revision = Some(revision);
-        let scoped = session_scoped_state(state, &self.session_roots)?;
-        let recorded = match de_orchestrator::record_loop_finalize_counted(&scoped) {
-            Ok(recorded) => recorded,
-            Err(error) => {
-                eprintln!("design-editor mcp: auto-finalize ({reason}) failed: {error}");
-                return None;
-            }
-        };
-        if !recorded.commands.is_empty() {
-            let Some(finalized) = replay_on_page(state, &recorded, &self.session_roots) else {
-                eprintln!(
-                    "design-editor mcp: auto-finalize ({reason}) skipped: its commands did not replay onto the session's roots alone"
-                );
-                return None;
+        let finalized =
+            match de_orchestrator::record_loop_finalize_for_roots(state, &self.session_roots) {
+                Ok(finalized) => finalized?,
+                Err(error @ ScopedFinalizeError::Record(_)) => {
+                    eprintln!("design-editor mcp: auto-finalize ({reason}) failed: {error}");
+                    return None;
+                }
+                Err(error @ ScopedFinalizeError::Replay) => {
+                    eprintln!("design-editor mcp: auto-finalize ({reason}) skipped: {error}");
+                    return None;
+                }
             };
-            *state = finalized;
+        if let Some(next) = finalized.state {
+            *state = next;
         }
         let finalized_revision = state.document_revision();
         self.finalized_at_revision = Some(finalized_revision);
         eprintln!(
             "design-editor mcp: auto-finalize ({reason}) repairs={} revision={finalized_revision}",
-            recorded.summary.total_repairs()
+            finalized.summary.total_repairs()
         );
-        Some(recorded.summary)
+        Some(finalized.summary)
     }
 
     fn enabled(&self) -> bool {
         self.idle_after != Duration::MAX
     }
-}
-
-/// A clone of `state` whose active page holds only the session's roots, or
-/// `None` when none of them is still on the page.
-fn session_scoped_state(
-    state: &EditorState,
-    session_roots: &BTreeSet<String>,
-) -> Option<EditorState> {
-    if !state
-        .active_children()
-        .iter()
-        .any(|root| session_roots.contains(root.id_str()))
-    {
-        return None;
-    }
-    let mut scoped = state.clone();
-    scoped
-        .active_children_mut()
-        .retain(|root| session_roots.contains(root.id_str()));
-    Some(scoped)
-}
-
-/// Apply the finalizer's recorded commands to a copy of the whole document.
-/// `None` unless the batch applies, every root outside the session is left
-/// exactly as it was, and the session's roots come out as the finalizer
-/// produced them.
-fn replay_on_page(
-    state: &EditorState,
-    recorded: &de_orchestrator::RecordedLoopFinalize,
-    session_roots: &BTreeSet<String>,
-) -> Option<EditorState> {
-    let outside_roots = |state: &EditorState| -> Vec<serde_json::Value> {
-        state
-            .active_children()
-            .iter()
-            .filter(|root| !session_roots.contains(root.id_str()))
-            .filter_map(|root| serde_json::to_value(root).ok())
-            .collect()
-    };
-    let mut next = state.clone();
-    if !next.apply(EditorCommand::Batch {
-        commands: recorded.commands.clone(),
-    }) {
-        return None;
-    }
-    if outside_roots(&next) != outside_roots(state) {
-        return None;
-    }
-    let finalized_roots_match = recorded.state.active_children().iter().all(|expected| {
-        next.active_children()
-            .iter()
-            .find(|root| root.id_str() == expected.id_str())
-            .is_some_and(|root| {
-                serde_json::to_value(root).ok() == serde_json::to_value(expected).ok()
-            })
-    });
-    finalized_roots_match.then_some(next)
 }
 
 pub(super) fn run(path: PathBuf) -> Result<(), McpServeError> {
