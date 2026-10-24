@@ -26,6 +26,9 @@ impl WidgetHostNative {
         if self.try_scroll_home(x, y, dy, viewport_width, viewport_height) {
             return true;
         }
+        if self.wheel_shader_source_editor(x, y, dy, viewport_width, viewport_height) {
+            return true;
+        }
         if self.try_scroll_missing_fonts_picker(x, y, dy, viewport_width, viewport_height) {
             return true;
         }

@@ -258,6 +258,16 @@ impl WidgetHostNative {
                 }
             }
         }
+        if let Some((target, index)) = self.editor_state.editor_ui.shader_editing.uniform_drag {
+            if let Some(panel) = property_panel_probe.as_ref().and_then(Option::as_ref) {
+                if let Some(action) =
+                    panel.shader_uniform_drag_action(property_rect, target, index, x)
+                {
+                    self.apply_property_action(action);
+                    return Some(true);
+                }
+            }
+        }
         if self.apply_image_input_selection_drag_cursor_move(x, y) {
             return Some(true);
         }

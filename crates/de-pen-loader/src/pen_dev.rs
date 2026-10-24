@@ -22,6 +22,8 @@ mod glsl_bindings;
 mod glsl_error;
 mod glsl_lex;
 pub(crate) mod images;
+mod instances;
+mod mesh;
 mod nodes;
 mod paint;
 mod shader;
@@ -201,7 +203,13 @@ pub fn convert(root: &mut Value, assets: AssetReader<'_>) -> PenDevReport {
         report.note("imported .pen libraries");
     }
     let variables = variables::Variables::from_document(doc);
-    let mut ctx = nodes::Ctx::new(assets, &mut report, variables);
+    let instance_bases = match doc.get("children") {
+        Some(Value::Array(children)) => {
+            instances::InstanceBases::from_children(children, &variables)
+        }
+        _ => instances::InstanceBases::default(),
+    };
+    let mut ctx = nodes::Ctx::new(assets, &mut report, variables, instance_bases);
     if let Some(Value::Array(children)) = doc.get_mut("children") {
         nodes::convert_children(children, false, &mut ctx);
     }

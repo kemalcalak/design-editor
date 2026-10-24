@@ -495,6 +495,9 @@ impl WidgetHostNative {
         if self.try_scroll_home(x, y, delta_y, viewport_width, viewport_height) {
             return true;
         }
+        if self.wheel_shader_source_editor(x, y, delta_y, viewport_width, viewport_height) {
+            return true;
+        }
         // Workspace LongPage view: the wheel pans the long page
         // vertically only — no zoom, no horizontal drift. A pinch /
         // zoom-modified wheel falls through to the zoom below.

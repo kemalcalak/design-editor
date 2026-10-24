@@ -334,6 +334,12 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "motion.cornerRadius" => "Bo góc",
         "slidesPanel.transitionNone" => "Không",
         "slidesPanel.transitionPush" => "Đẩy",
+        "shader.editCode" => "Mã",
+        "shader.compiles" => "Biên dịch được",
+        "shader.compileError" => "Lỗi biên dịch",
+        "shader.sourceTitle" => "Mã shader",
+        "shader.close" => "Đóng",
+        "shader.apply" => "Áp dụng",
         _ => return None,
     })
 }

@@ -70,6 +70,15 @@ pub fn property_focus_initial(focus: PropertyFocus, panel: &PropertyPanel) -> St
             }
             _ => String::new(),
         },
+        F::ShaderUniform {
+            target,
+            index,
+            component,
+        } => crate::widgets::property_panel_shader_body::body_for(&panel.snapshot, target)
+            .and_then(|body| {
+                crate::widgets::property_panel_shader_body::field_value(body, index, component)
+            })
+            .unwrap_or_default(),
         F::EffectRadius(index) => panel
             .snapshot
             .effects

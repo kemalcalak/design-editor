@@ -8,6 +8,7 @@ use std::rc::Rc;
 
 use serde_json::{Map, Value};
 
+use super::instances::{self, InstanceBases};
 use super::variables::{self, Theme, Variables};
 use super::{paint, shader, AssetReader, PenDevReport};
 
@@ -35,6 +36,9 @@ pub(super) struct Ctx<'a> {
     pub(super) variables: Variables,
     /// GLSL files and SkSL compile results of the shader paints.
     pub(super) shaders: shader::ShaderCache,
+    /// The file's own stroke keys and themed shader paints, completing
+    /// instance patches.
+    pub(super) instance_bases: InstanceBases,
 }
 
 impl<'a> Ctx<'a> {
@@ -42,6 +46,7 @@ impl<'a> Ctx<'a> {
         assets: AssetReader<'a>,
         report: &'a mut PenDevReport,
         variables: Variables,
+        instance_bases: InstanceBases,
     ) -> Self {
         Self {
             assets,
@@ -50,16 +55,18 @@ impl<'a> Ctx<'a> {
             image_table: Map::new(),
             variables,
             shaders: shader::ShaderCache::default(),
+            instance_bases,
         }
     }
 }
 
 /// How a visited object is used: a node in the tree, or an instance's
-/// property patch (a `descendants` entry without `type`).
-#[derive(Clone, Copy, PartialEq, Eq)]
+/// property patch (a `descendants` entry without `type`) keyed by the id
+/// path of the node it patches.
+#[derive(Clone, PartialEq, Eq)]
 pub(super) enum Role {
     Node,
-    Patch,
+    Patch(String),
 }
 
 /// Convert a `children` array and everything below it. `parent_flow` says
@@ -80,12 +87,23 @@ pub(super) fn convert_children(children: &mut Vec<Value>, parent_flow: bool, ctx
             continue;
         };
         let theme = variables::scoped_theme(map, &theme).map_or(theme, Rc::new);
-        convert_node(map, in_flow, role, &theme, ctx);
+        // Before the conversion, so the moved keys are converted below as
+        // the instance patch they become.
+        instances::move_root_overrides(map);
+        ctx.instance_bases
+            .add_themed_fields(map, &theme, &ctx.variables);
+        convert_node(map, in_flow, &role, &theme, ctx);
         let flow = is_auto_layout(map);
+        // Slot content on an instance and children in a patch fill a node
+        // whose layout is not known here: their order is left as written.
+        let reorder = role == Role::Node && map.get("type").and_then(Value::as_str) != Some("ref");
         for (key, value) in map.iter_mut() {
             match (key.as_str(), value) {
                 ("children", Value::Array(kids)) => {
                     kids.retain(|child| keep_child(child, ctx.report));
+                    if reorder {
+                        paint_order_first_on_top(kids, flow);
+                    }
                     stack.extend(
                         kids.iter_mut()
                             .map(|child| (child, flow, Role::Node, Rc::clone(&theme))),
@@ -93,7 +111,7 @@ pub(super) fn convert_children(children: &mut Vec<Value>, parent_flow: bool, ctx
                 }
                 ("descendants", Value::Object(overrides)) => {
                     overrides.retain(|_, value| keep_child(value, ctx.report));
-                    for value in overrides.values_mut() {
+                    for (path, value) in overrides.iter_mut() {
                         // pen.dev replaces a descendant with an override that
                         // has `type`; the canonical resolver only merges keys
                         // (`ref_resolve::apply_overrides`), so the original
@@ -102,7 +120,7 @@ pub(super) fn convert_children(children: &mut Vec<Value>, parent_flow: bool, ctx
                             ctx.report.note("component child replacement (merged)");
                             Role::Node
                         } else {
-                            Role::Patch
+                            Role::Patch(path.clone())
                         };
                         stack.push((value, false, role, Rc::clone(&theme)));
                     }
@@ -110,6 +128,29 @@ pub(super) fn convert_children(children: &mut Vec<Value>, parent_flow: bool, ctx
                 _ => {}
             }
         }
+    }
+}
+
+/// pen.dev paints a node's children in array order (the last on top); the
+/// canonical canvas paints the first on top (`children.iter().rev()`). The
+/// array also sets auto-layout flow order, so inside a flow parent only the
+/// absolutely positioned children change places: the list is reversed for
+/// paint order, then the flow children are put back in their own order in
+/// the slots they now hold. A free parent is reversed whole.
+fn paint_order_first_on_top(kids: &mut [Value], flow: bool) {
+    if kids.len() < 2 {
+        return;
+    }
+    kids.reverse();
+    if !flow {
+        return;
+    }
+    let in_flow =
+        |kid: &Value| kid.get("layoutPosition").and_then(Value::as_str) != Some("absolute");
+    let slots: Vec<usize> = (0..kids.len()).filter(|&i| in_flow(&kids[i])).collect();
+    let flow_kids: Vec<Value> = slots.iter().rev().map(|&i| kids[i].take()).collect();
+    for (slot, kid) in slots.into_iter().zip(flow_kids) {
+        kids[slot] = kid;
     }
 }
 
@@ -127,7 +168,7 @@ fn keep_child(child: &Value, report: &mut PenDevReport) -> bool {
 fn convert_node(
     map: &mut Map<String, Value>,
     in_flow: bool,
-    role: Role,
+    role: &Role,
     theme: &Theme,
     ctx: &mut Ctx<'_>,
 ) {

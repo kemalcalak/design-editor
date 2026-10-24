@@ -336,6 +336,12 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "motion.cornerRadius" => "모서리 반경",
         "slidesPanel.transitionNone" => "없음",
         "slidesPanel.transitionPush" => "밀어내기",
+        "shader.editCode" => "코드",
+        "shader.compiles" => "컴파일됨",
+        "shader.compileError" => "컴파일 오류",
+        "shader.sourceTitle" => "셰이더 코드",
+        "shader.close" => "닫기",
+        "shader.apply" => "적용",
         _ => return None,
     })
 }

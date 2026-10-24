@@ -334,6 +334,12 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "motion.cornerRadius" => "Radio de esquina",
         "slidesPanel.transitionNone" => "Ninguna",
         "slidesPanel.transitionPush" => "Empujar",
+        "shader.editCode" => "Código",
+        "shader.compiles" => "Compila",
+        "shader.compileError" => "Error de compilación",
+        "shader.sourceTitle" => "Código del shader",
+        "shader.close" => "Cerrar",
+        "shader.apply" => "Aplicar",
         _ => return None,
     })
 }

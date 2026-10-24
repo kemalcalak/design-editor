@@ -136,6 +136,9 @@ impl WidgetHost {
         self.last_viewport_h = viewport_height;
         self.last_cursor_x = x;
         self.last_cursor_y = y;
+        // A press anywhere takes the keyboard from the shader source editor;
+        // its own tier gives it back (native `apply_press_inner`).
+        de_editor_core::shader_source_editor::blur(&mut self.editor_state);
         // Refresh the derived paint doc once up front — every hit-test
         // below reads `&self.layout_scene`, so it must be current.
         self.refresh_layout_scene();

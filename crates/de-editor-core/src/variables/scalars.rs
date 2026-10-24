@@ -50,7 +50,9 @@ impl EditorState {
         let wrote = match target {
             ColorTarget::Fill => set_primary_fill_hex(node, &value),
             ColorTarget::Stroke => set_primary_stroke_hex(node, &value),
-            ColorTarget::GradientStop(_) | ColorTarget::EffectColor(_) => false,
+            ColorTarget::GradientStop(_)
+            | ColorTarget::EffectColor(_)
+            | ColorTarget::ShaderUniform { .. } => false,
         };
         if !wrote {
             return false;
@@ -62,7 +64,9 @@ impl EditorState {
             ColorTarget::Stroke => {
                 self.ui.variables.stroke_refs.insert(sel, name.to_string());
             }
-            ColorTarget::GradientStop(_) | ColorTarget::EffectColor(_) => {}
+            ColorTarget::GradientStop(_)
+            | ColorTarget::EffectColor(_)
+            | ColorTarget::ShaderUniform { .. } => {}
         }
         true
     }
@@ -90,7 +94,9 @@ impl EditorState {
         let wrote = match target {
             ColorTarget::Fill => set_primary_fill_hex(node, &hex),
             ColorTarget::Stroke => set_primary_stroke_hex(node, &hex),
-            ColorTarget::GradientStop(_) | ColorTarget::EffectColor(_) => false,
+            ColorTarget::GradientStop(_)
+            | ColorTarget::EffectColor(_)
+            | ColorTarget::ShaderUniform { .. } => false,
         };
         if !wrote {
             return false;
@@ -102,7 +108,9 @@ impl EditorState {
             ColorTarget::Stroke => {
                 self.ui.variables.stroke_refs.remove(&sel);
             }
-            ColorTarget::GradientStop(_) | ColorTarget::EffectColor(_) => {}
+            ColorTarget::GradientStop(_)
+            | ColorTarget::EffectColor(_)
+            | ColorTarget::ShaderUniform { .. } => {}
         }
         true
     }
@@ -114,7 +122,9 @@ impl EditorState {
         let raw = match target {
             ColorTarget::Fill => first_solid_fill_hex(node),
             ColorTarget::Stroke => first_solid_stroke_hex(node),
-            ColorTarget::GradientStop(_) | ColorTarget::EffectColor(_) => None,
+            ColorTarget::GradientStop(_)
+            | ColorTarget::EffectColor(_)
+            | ColorTarget::ShaderUniform { .. } => None,
         }?;
         raw.strip_prefix('$').filter(|name| !name.is_empty())
     }

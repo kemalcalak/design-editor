@@ -464,6 +464,22 @@ pub enum EditorCommand {
         index: u32,
         hex: String,
     },
+    /// Store one user uniform of a shader fill / effect (#164). `name`
+    /// must be a uniform the program declares and `value` must fit its
+    /// type; see `shader_edit::set_shader_uniform`.
+    SetShaderUniform {
+        node_id: NodeId,
+        target: crate::ShaderTarget,
+        name: String,
+        value: jian_ops_schema::style::ShaderUniformValue,
+    },
+    /// Replace the SkSL source of a shader fill / effect (#164). Not
+    /// compiled here; see `shader_edit::set_shader_source`.
+    SetShaderSource {
+        node_id: NodeId,
+        target: crate::ShaderTarget,
+        sksl: String,
+    },
     /// Set the active canvas tool.
     SetActiveTool { tool: String },
     /// Undo the last change.

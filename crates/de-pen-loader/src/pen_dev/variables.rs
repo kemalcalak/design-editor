@@ -21,7 +21,7 @@ pub(super) type Theme = BTreeMap<String, String>;
 
 /// Node keys the conversion never reads as variable references: identity
 /// and structure (walked separately).
-const SKIPPED_KEYS: &[&str] = &[
+pub(super) const SKIPPED_KEYS: &[&str] = &[
     "type",
     "id",
     "name",
@@ -145,6 +145,19 @@ impl Variables {
         entry.get("value").cloned()
     }
 
+    /// Whether `key: value` stays a live reference in the canonical
+    /// document: what `variables_resolve::resolve_node_for_canvas` reads in
+    /// place (numeric `opacity` / `gap` / whole-string `padding`, a numeric
+    /// `fontWeight` on text, string `content`).
+    pub(super) fn binds_in_place(&self, key: &str, value: &Value, is_text: bool) -> bool {
+        match key {
+            "opacity" | "gap" | "padding" => self.binds(value, "number"),
+            "fontWeight" => is_text && self.binds(value, "number"),
+            "content" => self.binds(value, "string"),
+            _ => false,
+        }
+    }
+
     /// Whether `value` is a reference the canonical resolver reads in place
     /// as a variable of `kind`.
     fn binds(&self, value: &Value, kind: &str) -> bool {
@@ -186,13 +199,7 @@ pub(super) fn resolve_node(
         // What `variables_resolve::resolve_node_for_canvas` reads in place:
         // numeric `opacity` / `gap` / whole-string `padding`, a numeric
         // `fontWeight` on text, string `content`.
-        let bound = match key {
-            "opacity" | "gap" | "padding" => variables.binds(value, "number"),
-            "fontWeight" => is_text && variables.binds(value, "number"),
-            "content" => variables.binds(value, "string"),
-            _ => SKIPPED_KEYS.contains(&key),
-        };
-        if bound {
+        if SKIPPED_KEYS.contains(&key) || variables.binds_in_place(key, value, is_text) {
             continue;
         }
         let slot = Slot {
@@ -294,8 +301,8 @@ fn resolve_value(
             true
         }
         Value::Object(obj) => {
-            // Mesh paints are dropped with their references; shader paints
-            // resolve their uniforms in `shader.rs`.
+            // Mesh paints resolve their colours in `mesh.rs`, shader paints
+            // their uniforms in `shader.rs`.
             if matches!(
                 obj.get("type").and_then(Value::as_str),
                 Some("shader" | "mesh_gradient")
@@ -321,7 +328,7 @@ fn resolve_value(
     }
 }
 
-fn reference(text: &str) -> Option<&str> {
+pub(super) fn reference(text: &str) -> Option<&str> {
     text.strip_prefix('$').filter(|name| !name.is_empty())
 }
 

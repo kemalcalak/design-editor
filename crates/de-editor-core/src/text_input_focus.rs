@@ -20,6 +20,11 @@ impl EditorState {
         if self.editor_ui.image_panel.search_open || self.editor_ui.image_panel.generate_open {
             return self.editor_ui.image_panel.active_input(generate_configured);
         }
+        if let Some(editor) = self.editor_ui.shader_editing.editor.as_ref() {
+            if editor.focused {
+                return Some(&editor.input);
+            }
+        }
         if self.editor_ui.prompt_center.open {
             return Some(match self.editor_ui.prompt_center.focus {
                 crate::PromptCenterFocus::Search => &self.editor_ui.prompt_center.search,
@@ -106,6 +111,14 @@ impl EditorState {
                 .editor_ui
                 .image_panel
                 .active_input_mut(generate_configured);
+        }
+        if crate::shader_source_editor::owns_keyboard(self) {
+            return self
+                .editor_ui
+                .shader_editing
+                .editor
+                .as_mut()
+                .map(|editor| &mut editor.input);
         }
         if self.editor_ui.prompt_center.open {
             return Some(self.editor_ui.prompt_center.focused_input_mut());

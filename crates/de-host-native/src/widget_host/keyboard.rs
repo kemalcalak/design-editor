@@ -50,6 +50,15 @@ impl WidgetHostNative {
         if self.apply_image_panel_text(c) {
             return true;
         }
+        // The shader source editor (#164) owns the keyboard while focused.
+        if let Some(changed) =
+            de_editor_core::shader_source_editor::text(&mut self.editor_state, c, self.now_ms)
+        {
+            if changed {
+                self.mark_dirty();
+            }
+            return true;
+        }
         // Color-picker hex field owns the keyboard while focused.
         if self.editor_state.color_picker_hex_focused() {
             if c.is_control() {

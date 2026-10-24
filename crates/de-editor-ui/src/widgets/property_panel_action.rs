@@ -430,6 +430,17 @@ pub enum PropertyPanelAction {
     /// User clicked a Rows / Columns `−` / `+` in a primary mesh
     /// gradient's body (#142).
     EditMeshLattice(de_editor_core::MeshLatticeEdit),
+    /// User pressed or dragged a ranged-float uniform slider of a
+    /// shader fill / effect (#164): write `value` to row `index`. The
+    /// first step of a drag snapshots history.
+    DragShaderUniform {
+        target: de_editor_core::ShaderTarget,
+        index: usize,
+        value: f32,
+    },
+    /// User clicked a shader body's Code button: open the source
+    /// editor on that program (#164).
+    OpenShaderSource(de_editor_core::ShaderTarget),
     /// User clicked the Widget section's `checked` toggle on a Switch
     /// / Checkbox node — host flips the literal `checked` bool to
     /// `new_value`.

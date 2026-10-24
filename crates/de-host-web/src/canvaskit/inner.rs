@@ -80,6 +80,11 @@ impl CkInner {
             }
         }
         let (w, h) = self.backend.logical_size();
+        // Compile the shader sources the panel shows with CanvasKit (#164).
+        let ck = &self.backend.ck;
+        de_editor_core::shader_check::refresh(self.host.editor_state_mut(), |sksl| {
+            ck.shader_compile_error(sksl)
+        });
         self.backend.begin_frame();
         self.host.paint_dyn(&mut self.backend, w, h);
         self.backend.end_frame();

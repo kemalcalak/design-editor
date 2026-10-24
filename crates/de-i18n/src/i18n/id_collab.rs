@@ -334,6 +334,12 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "motion.cornerRadius" => "Radius sudut",
         "slidesPanel.transitionNone" => "Tidak ada",
         "slidesPanel.transitionPush" => "Dorong",
+        "shader.editCode" => "Kode",
+        "shader.compiles" => "Terkompilasi",
+        "shader.compileError" => "Galat kompilasi",
+        "shader.sourceTitle" => "Kode shader",
+        "shader.close" => "Tutup",
+        "shader.apply" => "Terapkan",
         _ => return None,
     })
 }

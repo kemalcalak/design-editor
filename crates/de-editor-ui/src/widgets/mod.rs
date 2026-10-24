@@ -137,6 +137,7 @@ mod property_panel_press_tests;
 pub mod property_panel_section_tops;
 pub mod property_panel_sections;
 pub(crate) mod property_panel_segments;
+pub mod property_panel_shader_body;
 pub mod property_panel_snapshot;
 pub mod property_panel_stroke;
 pub(crate) mod property_panel_stroke_style;
@@ -205,6 +206,7 @@ mod canvas_shader_images;
 // `pub` so both hosts can track the pointer for pointer-reactive shaders.
 pub mod canvas_shader_pointer;
 pub mod canvas_text_edit;
+pub(crate) mod canvas_text_wrap;
 pub mod canvas_viewport;
 mod canvas_viewport_background;
 mod canvas_viewport_fill_layers;
@@ -409,6 +411,7 @@ pub mod panel_toggle;
 pub mod property_panel_color_variables;
 #[cfg(test)]
 mod property_panel_color_variables_tests;
+pub mod shader_source_editor;
 pub mod shape_picker;
 pub mod slides_panel;
 pub mod slides_panel_actions;

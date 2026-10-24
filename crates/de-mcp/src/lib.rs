@@ -149,6 +149,7 @@ pub mod selected_ops_tools;
 mod selected_ops_tools_tests;
 #[cfg(test)]
 mod selection_tools_tests;
+pub mod shader_tools;
 pub mod slide_transition_tool;
 pub mod style_guide_tools;
 #[cfg(test)]
@@ -276,6 +277,9 @@ pub use selected_ops_tools::{
     ungroup_selected_snapshot, AlignSelected, CopySelected, CutSelected, DeleteSelected,
     DuplicateSelected, GroupSelected, NudgeSelected, PasteClipboard, ReorderSelected,
     UngroupSelected,
+};
+pub use shader_tools::{
+    set_shader_source_snapshot, set_shader_uniform_snapshot, SetShaderSource, SetShaderUniform,
 };
 pub use ui_kit_tool::{list_ui_kits_snapshot, ListUiKits};
 pub mod spawn_agents_error;

@@ -334,6 +334,12 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "motion.cornerRadius" => "Скругление",
         "slidesPanel.transitionNone" => "Нет",
         "slidesPanel.transitionPush" => "Сдвиг",
+        "shader.editCode" => "Код",
+        "shader.compiles" => "Компилируется",
+        "shader.compileError" => "Ошибка компиляции",
+        "shader.sourceTitle" => "Код шейдера",
+        "shader.close" => "Закрыть",
+        "shader.apply" => "Применить",
         _ => return None,
     })
 }

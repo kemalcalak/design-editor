@@ -133,6 +133,13 @@ pub enum PropertyFocus {
     /// The address of `trigger`'s Open URL action in the Interactions
     /// section (#176). Free text.
     InteractionUrl(crate::interaction_edit::InteractionTrigger),
+    /// One number field of a shader uniform row (#164): the float, or
+    /// `component` of a vector, at row `index` of paint `target`.
+    ShaderUniform {
+        target: crate::ShaderTarget,
+        index: usize,
+        component: usize,
+    },
 }
 
 impl PropertyFocus {
@@ -204,6 +211,7 @@ impl PropertyFocus {
                 | PropertyFocus::WidgetMax
                 | PropertyFocus::WidgetStep
                 | PropertyFocus::MotionValue { .. }
+                | PropertyFocus::ShaderUniform { .. }
         )
     }
 }
@@ -220,6 +228,12 @@ pub enum ColorTarget {
     /// Out-of-range writes silently drop at commit; the picker stays
     /// open against a missing target so the user can re-pick.
     EffectColor(usize),
+    /// A colour uniform of a shader fill / effect: row `index` of the
+    /// program's user uniforms (#164).
+    ShaderUniform {
+        target: crate::ShaderTarget,
+        index: usize,
+    },
 }
 
 /// What an inline rename / context action is acting on. Ported from

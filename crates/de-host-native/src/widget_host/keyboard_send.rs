@@ -62,6 +62,15 @@ impl WidgetHostNative {
         if self.apply_image_panel_send() {
             return true;
         }
+        // The shader source editor (#164) owns the keyboard while focused.
+        if let Some(changed) =
+            de_editor_core::shader_source_editor::newline(&mut self.editor_state, self.now_ms)
+        {
+            if changed {
+                self.mark_dirty();
+            }
+            return true;
+        }
         if self.exit_image_crop_edit() {
             return true;
         }

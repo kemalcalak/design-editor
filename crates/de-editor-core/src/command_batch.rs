@@ -114,6 +114,8 @@ fn batchable(cmd: &EditorCommand) -> bool {
         | C::RemoveNodeEffect { .. }
         | C::SetEffectParam { .. }
         | C::SetEffectColor { .. }
+        | C::SetShaderUniform { .. }
+        | C::SetShaderSource { .. }
         | C::DuplicateSelected { .. }
         | C::DeleteSelected
         | C::NudgeSelected { .. }

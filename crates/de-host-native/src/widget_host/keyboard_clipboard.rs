@@ -44,6 +44,15 @@ impl WidgetHostNative {
             }
             return true;
         }
+        // The shader source editor (#164) owns the keyboard while focused.
+        if let Some(changed) =
+            de_editor_core::shader_source_editor::paste(&mut self.editor_state, text, self.now_ms)
+        {
+            if changed {
+                self.mark_dirty();
+            }
+            return true;
+        }
         if self.editor_state.editor_ui.agent_settings.focus.is_some() {
             return self.apply_settings_text_payload(text);
         }

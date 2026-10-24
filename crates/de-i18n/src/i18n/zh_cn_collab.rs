@@ -334,6 +334,12 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "motion.cornerRadius" => "圆角",
         "slidesPanel.transitionNone" => "无",
         "slidesPanel.transitionPush" => "推入",
+        "shader.editCode" => "代码",
+        "shader.compiles" => "编译通过",
+        "shader.compileError" => "编译错误",
+        "shader.sourceTitle" => "着色器代码",
+        "shader.close" => "关闭",
+        "shader.apply" => "应用",
         _ => return None,
     })
 }

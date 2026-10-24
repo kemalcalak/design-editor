@@ -279,6 +279,9 @@ pub struct VisibleSections {
     pub effects: bool,
     pub export: bool,
     pub fill_type: FillType,
+    /// Item count of the primary fill's body: gradient stops, mesh
+    /// vertices, or a shader's uniform rows (#164) — see
+    /// `property_panel_shader_body::primary_body_items`.
     pub gradient_stop_count: usize,
     /// The primary shader's preset row has a "Custom" cell (#141).
     pub shader_custom: bool,

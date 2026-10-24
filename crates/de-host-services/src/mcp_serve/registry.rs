@@ -146,6 +146,8 @@ pub(super) fn rebuild_registry(doc: &EditorState, requested_tool: Option<&str>) 
         set_node_stroke_side_width_snapshot()
     );
     register_tool!("set_node_stroke_style", set_node_stroke_style_snapshot());
+    register_tool!("set_shader_uniform", set_shader_uniform_snapshot());
+    register_tool!("set_shader_source", set_shader_source_snapshot());
     register_tool!("align_selected", align_selected_snapshot());
     register_tool!("set_node_fill_hex", set_node_fill_hex_snapshot());
     register_tool!("set_node_flip", set_node_flip_snapshot());

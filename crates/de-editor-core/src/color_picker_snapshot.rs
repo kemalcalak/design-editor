@@ -67,6 +67,17 @@ pub(crate) fn effect_color_hex(
     }
 }
 
+/// Read the colour of shader uniform row `index` on `node`'s paint
+/// `target`. `None` when that row is not a colour.
+pub(crate) fn shader_uniform_hex(
+    node: &jian_ops_schema::node::PenNode,
+    target: crate::ShaderTarget,
+    index: usize,
+) -> Option<String> {
+    let program = crate::shader_edit::shader_program(node, target)?;
+    program.specs().get(index)?.hex_in(program.uniforms)
+}
+
 /// Read one stop's hex from the node's primary gradient body (a mesh
 /// gradient's stops are its vertices). `None` when the first fill isn't
 /// a gradient or `index` is out of range — the same gating

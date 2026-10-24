@@ -22,8 +22,8 @@
 //! undo only when the colour actually changed.
 
 use crate::color_picker_snapshot::{
-    effect_color_hex, gradient_stop_hex, scalar_as_hex, snapshot_find_node, snapshot_variable_hex,
-    splice_alpha, variant_scalar,
+    effect_color_hex, gradient_stop_hex, scalar_as_hex, shader_uniform_hex, snapshot_find_node,
+    snapshot_variable_hex, splice_alpha, variant_scalar,
 };
 use crate::fills::{
     first_solid_fill_hex, first_solid_stroke_hex, push_drop_shadow, set_primary_fill_hex,
@@ -210,6 +210,7 @@ impl EditorState {
             ColorTarget::Stroke => first_solid_stroke_hex(node).map(str::to_string),
             ColorTarget::GradientStop(i) => gradient_stop_hex(node, i),
             ColorTarget::EffectColor(i) => effect_color_hex(node, i),
+            ColorTarget::ShaderUniform { target, index } => shader_uniform_hex(node, target, index),
         }
         .unwrap_or_else(|| "#000000".to_string());
         let (h, s, v) = rgb_to_hsv(parse_hex_rgb(&current_hex).unwrap_or((0.0, 0.0, 0.0)));
@@ -218,9 +219,10 @@ impl EditorState {
         // but the canonical schema and older `.de` files also allow an
         // alpha byte in `color`; the renderer multiplies both channels.
         let alpha = match target {
-            ColorTarget::Fill | ColorTarget::GradientStop(_) | ColorTarget::EffectColor(_) => {
-                parse_hex_alpha(&current_hex)
-            }
+            ColorTarget::Fill
+            | ColorTarget::GradientStop(_)
+            | ColorTarget::EffectColor(_)
+            | ColorTarget::ShaderUniform { .. } => parse_hex_alpha(&current_hex),
             ColorTarget::Stroke => 1.0,
         };
         self.ui.pending_color_history = Some(self.snapshot_for_history());
@@ -418,6 +420,14 @@ impl EditorState {
                     });
                 }
             }
+            ColorTarget::ShaderUniform { target, index } => {
+                let hex_with_alpha = splice_alpha(&hex, self.picker_alpha());
+                let _ = self.set_selected_shader_uniform(
+                    target,
+                    index,
+                    jian_ops_schema::style::ShaderUniformValue::Color(hex_with_alpha),
+                );
+            }
         }
         if let Some(scope) = instance_scope {
             self.finish_instance_write(scope);
@@ -491,12 +501,18 @@ impl EditorState {
                 ColorTarget::Stroke => first_solid_stroke_hex(n).map(str::to_string),
                 ColorTarget::GradientStop(i) => gradient_stop_hex(n, i),
                 ColorTarget::EffectColor(i) => effect_color_hex(n, i),
+                ColorTarget::ShaderUniform { target, index } => {
+                    shader_uniform_hex(n, target, index)
+                }
             });
             let after = self.selected_node().and_then(|n| match state.target {
                 ColorTarget::Fill => indexed_solid_fill_hex(n, fill_index),
                 ColorTarget::Stroke => first_solid_stroke_hex(n).map(str::to_string),
                 ColorTarget::GradientStop(i) => gradient_stop_hex(n, i),
                 ColorTarget::EffectColor(i) => effect_color_hex(n, i),
+                ColorTarget::ShaderUniform { target, index } => {
+                    shader_uniform_hex(n, target, index)
+                }
             });
             before != after
         };

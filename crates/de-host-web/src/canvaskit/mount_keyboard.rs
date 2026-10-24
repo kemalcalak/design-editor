@@ -96,6 +96,16 @@ pub(super) fn register_keyboard_listeners(
                         evt.prevent_default();
                     }
                 }
+                // The focused shader source editor (#164) owns the arrows and
+                // Tab: none may nudge the node whose shader is being edited.
+                "ArrowUp" | "ArrowDown" | "ArrowLeft" | "ArrowRight" | "Tab"
+                    if !is_mod && b.host.shader_source_editor_focused() =>
+                {
+                    consumed = b.host.apply_shader_editor_key(key.as_str(), shift);
+                    if consumed {
+                        evt.prevent_default();
+                    }
+                }
                 "ArrowUp" | "ArrowDown" if !is_mod && prompt_center_open => consumed = true,
                 "ArrowLeft" | "ArrowRight" if is_mod && prompt_center_open => consumed = true,
                 "ArrowUp" if !is_mod && image_popover_open => consumed = true,

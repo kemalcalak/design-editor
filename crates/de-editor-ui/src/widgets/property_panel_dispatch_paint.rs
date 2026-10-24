@@ -1,12 +1,15 @@
 //! Shared dispatch for the effect-add menu and the paint options #90
 //! exposed (stroke alignment, flip, shader presets), the stroke cap /
-//! join / dash rows (#89) and the mesh lattice steppers (#142). Split
-//! out of `property_panel_dispatch.rs` (800-line cap); both hosts reach
-//! it through `apply_property_action`.
+//! join / dash rows (#89), the mesh lattice steppers (#142) and the
+//! shader uniform sliders and Code button (#164). Split out of
+//! `property_panel_dispatch.rs` (800-line cap); both hosts reach it
+//! through `apply_property_action`.
 //!
-//! History: `AddEffect` snapshots inside `add_effect_to_selected`; the
-//! others are in `updates_document`, so the host snapshots around them
-//! and drops the entry when nothing changed.
+//! History: `AddEffect` snapshots inside `add_effect_to_selected`; a
+//! shader slider snapshots on the first step of a drag (like the effect
+//! amount slider) and writes in place after; opening the source editor
+//! writes nothing; the others are in `updates_document`, so the host
+//! snapshots around them and drops the entry when nothing changed.
 
 use de_editor_core::EditorState;
 
@@ -44,6 +47,21 @@ pub(crate) fn apply_paint_option_action(state: &mut EditorState, action: &Proper
         }
         A::EditMeshLattice(edit) => {
             let _ = state.set_selected_mesh_lattice(*edit);
+        }
+        A::DragShaderUniform {
+            target,
+            index,
+            value,
+        } => {
+            let drag = Some((*target, *index));
+            if state.editor_ui.shader_editing.uniform_drag != drag {
+                state.commit_history();
+                state.editor_ui.shader_editing.uniform_drag = drag;
+            }
+            let _ = state.set_selected_shader_uniform_number(*target, *index, 0, *value);
+        }
+        A::OpenShaderSource(target) => {
+            let _ = state.open_shader_source_editor(*target);
         }
         _ => {}
     }
