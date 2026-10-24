@@ -292,6 +292,8 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "fill.meshRows" => "행",
         "fill.meshColumns" => "열",
         "fill.angular" => "각도형",
+        "layerMenu.booleanFrameHasLayers" => "레이어가 들어 있는 프레임에는 불리언 연산을 적용할 수 없습니다",
+        "fill.presetCustom" => "사용자 정의",
         _ => return None,
     })
 }

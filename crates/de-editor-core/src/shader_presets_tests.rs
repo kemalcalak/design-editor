@@ -99,3 +99,79 @@ fn first_color_uniform_skips_image_children() {
     };
     assert_eq!(first_color_uniform(&body), Some("#ff0000"));
 }
+
+fn custom_body() -> ShaderFillBody {
+    ShaderFillBody {
+        preset: None,
+        sksl: Some("half4 main(float2 p){ return half4(1, 0, 0, 1); }".into()),
+        uniforms: None,
+        explain: None,
+        opacity: Some(0.4),
+        blend_mode: None,
+    }
+}
+
+fn state_with_custom_shader() -> EditorState {
+    let mut node = rect("a", "A", 0.0, 0.0, 40.0, 40.0);
+    if let Some(fills) = node_fills_mut(&mut node) {
+        *fills = vec![PenFill::Shader(custom_body())];
+    }
+    let mut s = state_with(vec![node]);
+    s.set_single_selection(NodeId::new("a"));
+    s
+}
+
+#[test]
+fn a_custom_program_offers_custom_and_comes_back_after_a_preset() {
+    let mut s = state_with_custom_shader();
+    assert!(s.selected_custom_shader_available());
+    assert!(
+        !s.restore_selected_custom_shader(),
+        "nothing stashed while the program is still on the node"
+    );
+
+    assert!(s.set_selected_shader_preset(ShaderPreset::Glow));
+    assert_eq!(
+        ShaderPreset::detect(&shader_body(&s)),
+        Some(ShaderPreset::Glow)
+    );
+    assert!(s.selected_custom_shader_available(), "stashed for the cell");
+    // A second preset pick does not overwrite the stash with a preset.
+    assert!(s.set_selected_shader_preset(ShaderPreset::Fade));
+
+    assert!(s.restore_selected_custom_shader());
+    let back = shader_body(&s);
+    assert_eq!(back.sksl, custom_body().sksl);
+    assert_eq!(back.opacity, Some(0.4));
+    assert!(!s.restore_selected_custom_shader(), "already the program");
+}
+
+#[test]
+fn undo_across_a_preset_pick_keeps_custom_available() {
+    let mut s = state_with_custom_shader();
+    let snap = s.snapshot_for_history();
+    assert!(s.set_selected_shader_preset(ShaderPreset::Noise));
+    s.history_push_past(snap);
+
+    assert!(s.undo());
+    assert_eq!(shader_body(&s).sksl, custom_body().sksl);
+    assert!(s.redo());
+    assert_eq!(
+        ShaderPreset::detect(&shader_body(&s)),
+        Some(ShaderPreset::Noise)
+    );
+    assert!(s.selected_custom_shader_available());
+    assert!(s.restore_selected_custom_shader());
+    assert_eq!(shader_body(&s).sksl, custom_body().sksl);
+}
+
+#[test]
+fn a_replaced_document_drops_the_stash() {
+    let mut s = state_with_custom_shader();
+    assert!(s.set_selected_shader_preset(ShaderPreset::Fade));
+    let doc = s.doc.clone();
+    s.replace_document(doc);
+    s.set_single_selection(NodeId::new("a"));
+    assert!(!s.selected_custom_shader_available());
+    assert!(!s.restore_selected_custom_shader());
+}

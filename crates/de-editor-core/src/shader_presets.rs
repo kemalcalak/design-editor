@@ -165,16 +165,83 @@ pub fn first_color_uniform(body: &ShaderFillBody) -> Option<&str> {
         })
 }
 
+/// The primary fill's shader body when it is a custom program (no
+/// preset reproduces it).
+pub fn primary_custom_shader(node: &PenNode) -> Option<&ShaderFillBody> {
+    match node_fills(node)?.first()? {
+        PenFill::Shader(body) if ShaderPreset::detect(body).is_none() => Some(body),
+        _ => None,
+    }
+}
+
+/// Put `custom` back as the primary shader fill's body, keeping the
+/// current opacity and blend mode (as a preset switch does). `false`
+/// when the primary fill is not a shader or already is that program.
+fn restore_primary_custom_shader(node: &mut PenNode, custom: &ShaderFillBody) -> bool {
+    let Some(PenFill::Shader(body)) = node_fills_mut(node).and_then(|fills| fills.first_mut())
+    else {
+        return false;
+    };
+    let mut next = custom.clone();
+    next.opacity = body.opacity;
+    next.blend_mode = body.blend_mode.clone();
+    if *body == next {
+        return false;
+    }
+    *body = next;
+    true
+}
+
 impl EditorState {
     /// Swap the anchor node's primary shader fill to `preset`.
-    /// Editable-gated; marks the document changed on a real change.
+    /// Editable-gated; marks the document changed on a real change. A
+    /// custom program it replaces is kept in
+    /// `editor_ui.custom_shader_bodies` for the "Custom" cell.
     pub fn set_selected_shader_preset(&mut self, preset: ShaderPreset) -> bool {
         let sel = self.selection.anchor.clone();
         if !sel.is_real() || !self.is_editable(&sel) {
             return false;
         }
+        let Some(node) = find_node_mut(self.active_children_mut(), &sel) else {
+            return false;
+        };
+        let custom = primary_custom_shader(node).cloned();
+        if !set_primary_shader_preset(node, preset) {
+            return false;
+        }
+        if let Some(custom) = custom {
+            self.editor_ui.custom_shader_bodies.insert(sel, custom);
+        }
+        self.mark_document_changed();
+        true
+    }
+
+    /// Whether the anchor's preset row offers "Custom": its primary
+    /// shader is a custom program, or a preset pick stashed one.
+    pub fn selected_custom_shader_available(&self) -> bool {
+        let sel = &self.selection.anchor;
+        crate::walkers::find_node(self.active_children(), sel).is_some_and(|node| {
+            primary_custom_shader(node).is_some()
+                || (matches!(
+                    node_fills(node).and_then(|f| f.first()),
+                    Some(PenFill::Shader(_))
+                ) && self.editor_ui.custom_shader_bodies.contains_key(sel))
+        })
+    }
+
+    /// The "Custom" cell: bring back the program a preset pick replaced.
+    /// One document change (the host snapshots it, so it undoes); the
+    /// stash stays, so undo / redo across it keep the cell working.
+    pub fn restore_selected_custom_shader(&mut self) -> bool {
+        let sel = self.selection.anchor.clone();
+        if !sel.is_real() || !self.is_editable(&sel) {
+            return false;
+        }
+        let Some(custom) = self.editor_ui.custom_shader_bodies.get(&sel).cloned() else {
+            return false;
+        };
         let changed = find_node_mut(self.active_children_mut(), &sel)
-            .is_some_and(|node| set_primary_shader_preset(node, preset));
+            .is_some_and(|node| restore_primary_custom_shader(node, &custom));
         if changed {
             self.mark_document_changed();
         }

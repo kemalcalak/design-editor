@@ -437,6 +437,14 @@ pub fn escape_variable_row_focus(state: &mut EditorState) -> bool {
     true
 }
 
+/// Discard an in-flight pencil stroke (#88, #141): the drag keeps going
+/// but its release finds no stroke, so no node and no history entry. It
+/// is in-flight canvas authoring, so it ranks with the pen rung, above
+/// the panel pickers.
+pub fn escape_pencil_stroke(state: &mut EditorState) -> bool {
+    state.cancel_pencil_stroke()
+}
+
 /// Blur the chat input.
 pub fn escape_chat_focus(state: &mut EditorState, now_ms: u64) -> bool {
     if !state.chat.focused {

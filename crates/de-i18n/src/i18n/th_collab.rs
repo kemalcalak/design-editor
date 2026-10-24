@@ -290,6 +290,8 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "fill.meshRows" => "แถว",
         "fill.meshColumns" => "คอลัมน์",
         "fill.angular" => "เชิงมุม",
+        "layerMenu.booleanFrameHasLayers" => "ใช้การดำเนินการบูลีนกับเฟรมที่มีเลเยอร์ไม่ได้",
+        "fill.presetCustom" => "กำหนดเอง",
         _ => return None,
     })
 }

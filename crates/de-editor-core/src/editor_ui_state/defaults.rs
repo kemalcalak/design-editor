@@ -205,6 +205,7 @@ impl Default for EditorUiState {
             active_guides: Vec::new(),
             pencil_cursor_style: PencilCursorStyle::default(),
             pencil_smoothing: PencilSmoothing::default(),
+            custom_shader_bodies: Default::default(),
             starter_ghost: None,
             canvas_drop_indicator: None,
             update_status: UpdateStatus::Idle,

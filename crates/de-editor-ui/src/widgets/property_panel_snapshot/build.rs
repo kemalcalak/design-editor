@@ -132,6 +132,7 @@ impl NodeSnapshot {
             flip_x: false,
             flip_y: false,
             shader_preset: None,
+            shader_custom_available: false,
             mesh_lattice: None,
             stroke_style: None,
         }
@@ -219,6 +220,7 @@ impl NodeSnapshot {
             flip_x: false,
             flip_y: false,
             shader_preset: None,
+            shader_custom_available: false,
             mesh_lattice: None,
             stroke_style: None,
         })
@@ -334,6 +336,8 @@ impl NodeSnapshot {
             flip_x: base.flip_x == Some(true),
             flip_y: base.flip_y == Some(true),
             shader_preset: de_editor_core::shader_presets::primary_shader_preset(node),
+            shader_custom_available: de_editor_core::shader_presets::primary_custom_shader(node)
+                .is_some(),
             mesh_lattice: de_editor_core::mesh_lattice::primary_mesh_lattice(node),
             stroke_style: super::stroke_style_summary(node),
         }

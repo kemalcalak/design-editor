@@ -95,6 +95,10 @@ impl WidgetHost {
             self.mark_dirty();
             return true;
         }
+        if escape::escape_pencil_stroke(&mut self.editor_state) {
+            self.mark_dirty();
+            return true;
+        }
         if self.editor_state.editor_ui.close_corner_expand() {
             self.mark_dirty();
             return true;

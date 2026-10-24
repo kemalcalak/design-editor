@@ -290,6 +290,8 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "fill.meshRows" => "列",
         "fill.meshColumns" => "欄",
         "fill.angular" => "角度漸層",
+        "layerMenu.booleanFrameHasLayers" => "布林運算無法套用於包含圖層的畫框",
+        "fill.presetCustom" => "自訂",
         _ => return None,
     })
 }

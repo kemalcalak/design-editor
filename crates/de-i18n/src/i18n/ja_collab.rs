@@ -290,6 +290,8 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "fill.meshRows" => "行",
         "fill.meshColumns" => "列",
         "fill.angular" => "角度グラデーション",
+        "layerMenu.booleanFrameHasLayers" => "レイヤーを含むフレームにはブーリアン演算を適用できません",
+        "fill.presetCustom" => "カスタム",
         _ => return None,
     })
 }

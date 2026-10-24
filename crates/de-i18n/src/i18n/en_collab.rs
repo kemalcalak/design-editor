@@ -290,6 +290,8 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "fill.meshRows" => "Rows",
         "fill.meshColumns" => "Columns",
         "fill.angular" => "Angular",
+        "layerMenu.booleanFrameHasLayers" => "Boolean operations can't apply to frames that contain layers",
+        "fill.presetCustom" => "Custom",
         _ => return None,
     })
 }

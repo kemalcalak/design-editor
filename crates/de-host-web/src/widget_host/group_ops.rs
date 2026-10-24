@@ -31,6 +31,16 @@ impl WidgetHost {
         if selected.len() < 2 {
             return false;
         }
+        // Same refusal as the desktop canvas: a frame holding layers can't
+        // be a source, and the toast says so. `true`, like native: the
+        // request was handled and a repaint is owed.
+        if self
+            .editor_state
+            .refuse_boolean_on_containers(&selected, self.now_ms)
+        {
+            self.mark_dirty();
+            return true;
+        }
         let mut rects = Vec::with_capacity(selected.len());
         for id in &selected {
             let Some(node) = page.find(id.as_str()) else {

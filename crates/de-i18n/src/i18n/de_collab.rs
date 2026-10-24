@@ -290,6 +290,8 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "fill.meshRows" => "Zeilen",
         "fill.meshColumns" => "Spalten",
         "fill.angular" => "Konisch",
+        "layerMenu.booleanFrameHasLayers" => "Boolesche Operationen gelten nicht für Rahmen, die Ebenen enthalten",
+        "fill.presetCustom" => "Eigenes",
         _ => return None,
     })
 }

@@ -539,10 +539,19 @@ impl WidgetHostNative {
     /// `canvas_shader_pointer::track_pointer`).
     fn track_shader_pointer(&mut self, x: f32, y: f32) -> bool {
         // Home (native only: the web build has none) and Play mode cover the
-        // editor canvas, so its shaders see no pointer there.
+        // editor canvas, so its shaders see no pointer there. Neither does
+        // floating chrome over it (#141): the same rule as canvas hover.
+        let (vw, vh) = (self.last_viewport_w, self.last_viewport_h);
         let over_canvas = !self.home_visible()
             && !self.editor_state.editor_ui.preview.mode
-            && self.over_canvas(x, y, self.last_viewport_w, self.last_viewport_h);
+            && self.over_canvas(x, y, vw, vh)
+            && !de_editor_ui::widgets::host_canvas_geometry::over_floating_chrome(
+                &self.editor_state,
+                vw,
+                vh,
+                de_editor_ui::Point2D::new(x, y),
+            )
+            && !self.chat_panel_surface_contains(x, y, vw, vh);
         let next = over_canvas.then(|| de_editor_ui::Point2D::new(x, y));
         de_editor_ui::widgets::canvas_shader_pointer::track_pointer(&mut self.shader_pointer, next)
     }

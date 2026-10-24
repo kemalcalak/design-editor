@@ -6,6 +6,7 @@
 //! host's `widget_host/input.rs` split).
 
 use de_editor_ui::widgets::cursor_hover_flow as hover_flow;
+use de_editor_ui::widgets::host_canvas_geometry as canvas_geometry;
 use de_editor_ui::widgets::PropertyPanel;
 use de_editor_ui::{Point2D, Rect};
 
@@ -26,9 +27,24 @@ impl WidgetHost {
     /// Returns whether a repaint is owed (see
     /// `canvas_shader_pointer::track_pointer`).
     fn track_shader_pointer(&mut self, x: f32, y: f32) -> bool {
-        // Play mode covers the editor canvas, so its shaders see no pointer.
+        // Play mode covers the editor canvas, so its shaders see no pointer;
+        // neither does floating chrome over it (#141, as canvas hover).
+        let (vw, vh, point) = (
+            self.last_viewport_w,
+            self.last_viewport_h,
+            Point2D::new(x, y),
+        );
         let over_canvas = !self.editor_state.editor_ui.preview.mode
-            && self.over_canvas(x, y, self.last_viewport_w, self.last_viewport_h);
+            && self.over_canvas(x, y, vw, vh)
+            && !canvas_geometry::over_floating_chrome(&self.editor_state, vw, vh, point)
+            && !self.ai_chat_rect(vw, vh).is_some_and(|rect| {
+                // The resize band counts too, as native's
+                // `chat_panel_surface_contains` does.
+                rect.contains(point)
+                    || de_editor_ui::widgets::AIChatPlaceholder::from_editor(&self.editor_state)
+                        .resize_edge_at(rect, point)
+                        .is_some()
+            });
         let next = over_canvas.then(|| Point2D::new(x, y));
         de_editor_ui::widgets::canvas_shader_pointer::track_pointer(&mut self.shader_pointer, next)
     }

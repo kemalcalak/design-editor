@@ -290,6 +290,8 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "fill.meshRows" => "Hàng",
         "fill.meshColumns" => "Cột",
         "fill.angular" => "Hình nón",
+        "layerMenu.booleanFrameHasLayers" => "Không thể áp dụng phép toán boolean cho khung có chứa lớp",
+        "fill.presetCustom" => "Tùy chỉnh",
         _ => return None,
     })
 }

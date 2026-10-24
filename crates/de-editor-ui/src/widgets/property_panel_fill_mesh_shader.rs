@@ -7,7 +7,9 @@
 //!   (`de_editor_core::mesh_lattice`); a swatch click opens the HSV
 //!   picker on that vertex through `ColorTarget::GradientStop(i)`: the
 //!   snapshot lists mesh vertices as the primary fill's stops.
-//! - **Shader**: one preset row (`de_editor_core::ShaderPreset`).
+//! - **Shader**: one preset row (`de_editor_core::ShaderPreset`), plus a
+//!   trailing "Custom" cell when the node has a custom program on it or
+//!   stashed by a preset pick (#141).
 
 use crate::theme::Theme;
 use crate::widgets::icons::{draw_icon, Icon};
@@ -26,6 +28,8 @@ use de_editor_core::{ColorTarget, FillType, MeshAxis, MeshLatticeEdit, ShaderPre
 const MESH_COLUMNS: usize = 2;
 const MESH_COLUMN_GAP: f32 = 8.0;
 const MESH_ROW_GAP: f32 = 4.0;
+/// Label of the preset row's "Custom" cell.
+const CUSTOM_LABEL_KEY: &str = "fill.presetCustom";
 /// Space under the last body row before the next fill row.
 const BODY_TRAILING_GAP: f32 = 6.0;
 /// The Rows and Columns stepper rows above the vertex grid.
@@ -103,6 +107,11 @@ fn shader_row_rect(x: f32, body_y: f32, width: f32) -> Rect {
     Rect::xywh(x + PAD_X, body_y, width - PAD_X * 2.0, INPUT_HEIGHT)
 }
 
+/// Cells in the preset row: the presets, then "Custom" when offered.
+fn shader_cell_count(custom: bool) -> usize {
+    ShaderPreset::ALL.len() + usize::from(custom)
+}
+
 /// Action rects for the primary fill's mesh / shader body; nothing for
 /// any other fill type. Both stepper buttons are always targets: one at
 /// its limit is a no-op the host drops from history.
@@ -113,6 +122,7 @@ pub(crate) fn push_mesh_shader_action_rects(
     body_y: f32,
     width: f32,
     vertex_count: usize,
+    shader_custom: bool,
 ) {
     match fill_type {
         FillType::MeshGradient => {
@@ -139,10 +149,15 @@ pub(crate) fn push_mesh_shader_action_rects(
             }
         }
         FillType::Shader => {
-            let cells = segment_rects(shader_row_rect(x, body_y, width), ShaderPreset::ALL.len());
-            for (preset, cell) in ShaderPreset::ALL.into_iter().zip(cells) {
-                out.push((PropertyPanelAction::SetShaderPreset(preset), cell));
-            }
+            let cells = segment_rects(
+                shader_row_rect(x, body_y, width),
+                shader_cell_count(shader_custom),
+            );
+            let actions = ShaderPreset::ALL
+                .into_iter()
+                .map(PropertyPanelAction::SetShaderPreset)
+                .chain(shader_custom.then_some(PropertyPanelAction::RestoreCustomShader));
+            out.extend(actions.zip(cells));
         }
         _ => {}
     }
@@ -279,7 +294,8 @@ fn paint_stepper_row(cx: &mut PaintCx<'_>, theme: &Theme, row: Rect, label: &str
     );
 }
 
-/// The preset row; a custom program highlights no cell.
+/// The preset row. A custom program highlights the "Custom" cell; with
+/// none offered it highlights nothing.
 pub(crate) fn paint_fill_shader_body(
     cx: &mut PaintCx<'_>,
     theme: &Theme,
@@ -289,13 +305,17 @@ pub(crate) fn paint_fill_shader_body(
     body_y: f32,
     width: f32,
 ) {
+    let custom = snapshot.shader_custom_available;
     let labels: Vec<&str> = ShaderPreset::ALL
         .iter()
-        .map(|preset| de_i18n::translate(locale, preset.label_key()))
+        .map(|preset| preset.label_key())
+        .chain(custom.then_some(CUSTOM_LABEL_KEY))
+        .map(|key| de_i18n::translate(locale, key))
         .collect();
-    let active = snapshot
-        .shader_preset
-        .and_then(|preset| ShaderPreset::ALL.iter().position(|p| *p == preset));
+    let active = match snapshot.shader_preset {
+        Some(preset) => ShaderPreset::ALL.iter().position(|p| *p == preset),
+        None => custom.then_some(ShaderPreset::ALL.len()),
+    };
     paint_segment_row(
         cx,
         theme,

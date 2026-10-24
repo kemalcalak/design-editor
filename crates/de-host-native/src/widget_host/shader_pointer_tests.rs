@@ -56,6 +56,32 @@ fn without_a_pointer_shader_the_pointer_is_tracked_silently() {
     assert!(!host.apply_cursor_left());
 }
 
+/// Floating chrome over the canvas (#141): the tool rail and the file
+/// pill sit inside the canvas region, but shaders see the off-canvas
+/// value there, the same rule canvas hover follows.
+#[test]
+fn floating_chrome_over_the_canvas_gives_shaders_no_pointer() {
+    let mut host = editor_host();
+    let rail = canvas_geometry::toolbar_rect_for(host.editor_state(), VIEWPORT_W, VIEWPORT_H);
+    let on_rail = Point2D::new(
+        rail.origin.x + rail.size.x / 2.0,
+        rail.origin.y + rail.size.y / 2.0,
+    );
+    let pill = canvas_geometry::chrome_layout(host.editor_state(), VIEWPORT_W, VIEWPORT_H)
+        .file_pill
+        .expect("the file pill paints at this size")
+        .rect;
+    let on_pill = Point2D::new(pill.origin.x + 4.0, pill.origin.y + pill.size.y / 2.0);
+    for point in [on_rail, on_pill] {
+        assert!(host.over_canvas(point.x, point.y, VIEWPORT_W, VIEWPORT_H));
+        let centre = canvas_point(&host);
+        host.apply_cursor_move(centre.x, centre.y);
+        assert_eq!(host.shader_pointer, Some(centre));
+        host.apply_cursor_move(point.x, point.y);
+        assert_eq!(host.shader_pointer, None, "chrome at {point:?}");
+    }
+}
+
 #[test]
 fn play_mode_gives_shaders_no_pointer() {
     let mut host = editor_host();

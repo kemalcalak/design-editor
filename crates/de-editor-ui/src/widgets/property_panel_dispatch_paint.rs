@@ -39,6 +39,9 @@ pub(crate) fn apply_paint_option_action(state: &mut EditorState, action: &Proper
         A::SetShaderPreset(preset) => {
             let _ = state.set_selected_shader_preset(*preset);
         }
+        A::RestoreCustomShader => {
+            let _ = state.restore_selected_custom_shader();
+        }
         A::EditMeshLattice(edit) => {
             let _ = state.set_selected_mesh_lattice(*edit);
         }

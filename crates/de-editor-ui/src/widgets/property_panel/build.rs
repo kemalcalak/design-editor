@@ -186,6 +186,13 @@ impl PropertyPanel {
                 snapshot.widget = None;
             }
             snapshot.is_instance = is_instance;
+            // The snapshot sees a custom program on the node; one a preset
+            // pick stashed lives in UI state.
+            snapshot.shader_custom_available |= snapshot.shader_preset.is_some()
+                && state
+                    .editor_ui
+                    .custom_shader_bodies
+                    .contains_key(&state.selection.anchor);
             if !is_instance
                 && state
                     .components

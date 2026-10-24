@@ -290,6 +290,8 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "fill.meshRows" => "Satırlar",
         "fill.meshColumns" => "Sütunlar",
         "fill.angular" => "Açısal",
+        "layerMenu.booleanFrameHasLayers" => "Boole işlemleri katman içeren çerçevelere uygulanamaz",
+        "fill.presetCustom" => "Özel",
         _ => return None,
     })
 }
