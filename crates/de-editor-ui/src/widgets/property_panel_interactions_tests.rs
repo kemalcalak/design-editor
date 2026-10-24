@@ -507,7 +507,7 @@ fn menu_row_rects_are_stacked() {
         origin: Point2D::new(20.0, 100.0),
         size: Point2D::new(240.0, 30.0),
     };
-    let menu = interaction_menu_rect(anchor, rows.len());
+    let menu = interaction_menu_rect(anchor, rows.len(), TALL);
     let rects = interaction_menu_row_rects(menu, &rows);
     assert_eq!(rects.len(), rows.len());
     for pair in rects.windows(2) {
@@ -519,11 +519,42 @@ fn menu_row_rects_are_stacked() {
 fn a_narrow_dropdown_anchor_opens_the_popover_rightward() {
     // The Motion property dropdown sits at the panel's left edge.
     let dropdown = Rect::xywh(16.0, 300.0, 92.0, 28.0);
-    let menu = interaction_menu_rect(dropdown, 6);
+    let menu = interaction_menu_rect(dropdown, 6, TALL);
     assert_eq!(menu.origin.x, dropdown.origin.x);
     // The header "+" sits at the right edge: the popover hangs left.
     let add = section_add_target(0.0, 0.0, 272.0);
-    let menu = interaction_menu_rect(add, 3);
+    let menu = interaction_menu_rect(add, 3, TALL);
     assert_eq!(menu.origin.x + menu.size.x, add.origin.x + add.size.x);
     assert!(menu.origin.x >= 0.0);
+}
+
+/// A viewport tall enough that every popover in these tests drops below.
+const TALL: Rect = Rect {
+    origin: Point2D { x: 0.0, y: 0.0 },
+    size: Point2D {
+        x: 272.0,
+        y: 10_000.0,
+    },
+};
+
+/// #190: near the bottom of the visible panel the popover opens upward;
+/// with no room on either side it stays inside the viewport.
+#[test]
+fn the_popover_flips_up_near_the_panel_bottom() {
+    let viewport = Rect::xywh(0.0, 100.0, 272.0, 600.0);
+    let bottom = viewport.origin.y + viewport.size.y;
+    // Room below: drops down.
+    let high = Rect::xywh(16.0, 200.0, 240.0, 28.0);
+    let menu = interaction_menu_rect(high, 4, viewport);
+    assert_eq!(menu.origin.y, high.origin.y + high.size.y);
+    // 40 px above the bottom: opens upward, ending at the anchor's top.
+    let low = Rect::xywh(16.0, bottom - 40.0, 240.0, 28.0);
+    let menu = interaction_menu_rect(low, 4, viewport);
+    assert_eq!(menu.origin.y + menu.size.y, low.origin.y);
+    assert!(menu.origin.y >= viewport.origin.y);
+    // Taller than either side: pinned inside the viewport's bottom edge.
+    let mid = Rect::xywh(16.0, 380.0, 240.0, 28.0);
+    let menu = interaction_menu_rect(mid, 12, viewport);
+    assert!(menu.origin.y >= viewport.origin.y);
+    assert!(menu.origin.y + menu.size.y <= bottom + 0.01);
 }

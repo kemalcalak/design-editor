@@ -113,15 +113,9 @@ impl PropertyPanel {
         panel_rect: Rect,
         point: Point2D,
     ) -> InteractionMenuHit {
-        if !self.interaction_menu_open {
-            return InteractionMenuHit::Outside;
-        }
-        let Some(anchor) = self.interaction_menu_anchor_rect(self.scrolled_rect(panel_rect)) else {
+        let Some((menu, rows)) = self.open_interaction_menu(panel_rect) else {
             return InteractionMenuHit::Outside;
         };
-        let rows = self.interaction_menu_rows();
-        let menu =
-            crate::widgets::property_panel_interactions::interaction_menu_rect(anchor, rows.len());
         for (action, row) in
             crate::widgets::property_panel_interactions::interaction_menu_row_rects(menu, &rows)
         {
@@ -139,16 +133,30 @@ impl PropertyPanel {
     /// Row index under `point` in the open popover — drives the hover
     /// highlight (mirrors [`Self::effect_add_menu_row_at`]).
     pub fn interaction_menu_row_at(&self, panel_rect: Rect, point: Point2D) -> Option<usize> {
+        let (menu, rows) = self.open_interaction_menu(panel_rect)?;
+        crate::widgets::property_panel_interactions::interaction_menu_row_rects(menu, &rows)
+            .into_iter()
+            .position(|(_, row)| row.contains(point))
+    }
+
+    /// The open popover's rect (kept inside the visible panel, #190) and
+    /// its rows; `None` while it is closed or has no anchor. Paint, hit and
+    /// hover all place it through here.
+    pub(super) fn open_interaction_menu(
+        &self,
+        panel_rect: Rect,
+    ) -> Option<(Rect, Vec<(PropertyPanelAction, String)>)> {
         if !self.interaction_menu_open {
             return None;
         }
         let anchor = self.interaction_menu_anchor_rect(self.scrolled_rect(panel_rect))?;
         let rows = self.interaction_menu_rows();
-        let menu =
-            crate::widgets::property_panel_interactions::interaction_menu_rect(anchor, rows.len());
-        crate::widgets::property_panel_interactions::interaction_menu_row_rects(menu, &rows)
-            .into_iter()
-            .position(|(_, row)| row.contains(point))
+        let menu = crate::widgets::property_panel_interactions::interaction_menu_rect(
+            anchor,
+            rows.len(),
+            crate::widgets::property_panel_interactions::interaction_menu_viewport(panel_rect),
+        );
+        Some((menu, rows))
     }
 
     /// The rect the popover drops from: the row that opened it

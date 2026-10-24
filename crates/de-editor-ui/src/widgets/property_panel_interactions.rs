@@ -35,7 +35,8 @@ use jian_ops_schema::node::PenNode;
 
 pub use crate::widgets::property_panel_interactions_menu::{
     interaction_menu_rect, interaction_menu_row_rects, interaction_menu_rows,
-    paint_interaction_menu, InteractionMenuHit, INTERACTION_MENU_ROW_H, INTERACTION_MENU_W,
+    interaction_menu_viewport, paint_interaction_menu, InteractionMenuHit, INTERACTION_MENU_ROW_H,
+    INTERACTION_MENU_W,
 };
 pub use de_editor_core::interaction_edit::{
     InteractionMenuTarget, InteractionTrigger, NavigateVerb,
