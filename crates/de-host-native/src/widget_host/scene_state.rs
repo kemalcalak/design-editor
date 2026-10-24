@@ -165,7 +165,14 @@ impl WidgetHostNative {
     /// bumps the epoch itself.)
     pub fn replace_editor_state(&mut self, state: de_editor_core::EditorState) -> bool {
         self.drop_preview_runtime();
+        // What this host can do (font download, batch export, …) belongs to
+        // the host, not to the incoming state, whose flags default to off;
+        // without this the missing-font Download action vanished after
+        // every Open / New / template (#161).
+        let capabilities =
+            de_editor_core::editor_ui_state::HostCapabilities::of(&self.editor_state.editor_ui);
         self.editor_state = state;
+        capabilities.apply_to(&mut self.editor_state.editor_ui);
         self.editor_state.editor_ui.exit_preview();
         // A New / Open while a Home-launched generation is still running
         // must never repaint a workspace for boards that no longer

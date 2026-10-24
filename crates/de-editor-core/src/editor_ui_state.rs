@@ -18,6 +18,7 @@ mod exports;
 pub mod git_panel;
 pub mod groups;
 pub mod home;
+pub mod host_capabilities;
 mod methods;
 mod modal_pointer;
 pub mod panel_motion;
@@ -29,6 +30,7 @@ pub mod update_state;
 pub mod workspace;
 
 pub use exports::*;
+pub use host_capabilities::HostCapabilities;
 pub use panel_motion::{PanelMotion, PANEL_MOTION_MS};
 
 use crate::node_id::NodeId;

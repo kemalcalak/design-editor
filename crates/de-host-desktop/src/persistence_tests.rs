@@ -474,3 +474,56 @@ fn export_dialog_default_name_joins_document_and_selected_node() {
     state.selection.anchor = de_editor_core::NodeId::new("f1");
     assert_eq!(export_dialog_default_name(&state), "0808-k3-2-星图.png");
 }
+
+/// #161: the desktop advertises its host capabilities once at startup;
+/// Open and New replace the whole editor state, and the missing-font
+/// modal must still offer Download for Google families afterwards.
+#[test]
+fn open_and_new_keep_the_missing_font_download_action() {
+    use de_editor_core::editor_ui_state::HostCapabilities;
+    let mut app = crate::DesktopApp::new(None);
+    let host = &mut app.host;
+    host.editor_state_mut().editor_ui.system_fonts_loaded = true;
+    let capabilities = HostCapabilities::of(&host.editor_state().editor_ui);
+    assert!(capabilities.font_download, "desktop advertises downloads");
+
+    let doc = jian_ops_schema::load_str(
+        r#"{"version":"1.0.0","children":[
+            {"type":"text","id":"a","content":"A","fontFamily":"Geologica"},
+            {"type":"text","id":"b","content":"B","fontFamily":"Martian Mono"},
+            {"type":"text","id":"c","content":"C","fontFamily":"Mona Sans"}
+        ]}"#,
+    )
+    .expect("fixture JSON parses")
+    .value;
+    let path = temp_document_path("open-font-download");
+    save_to_path(&EditorState::from_document(doc), &path).expect("save succeeds");
+    let mut current_path = None;
+    assert!(open_path(host, path.clone(), &mut current_path, None));
+    let _ = std::fs::remove_file(&path);
+
+    let ui = &host.editor_state().editor_ui;
+    assert_eq!(HostCapabilities::of(ui), capabilities);
+    assert!(ui.missing_fonts_modal_open);
+    let entries = &ui.missing_fonts_prompt.as_ref().expect("prompt").entries;
+    assert_eq!(entries.len(), 3);
+    for entry in entries {
+        assert!(
+            de_editor_core::missing_fonts::can_download(ui, entry),
+            "{} must offer Download after Open",
+            entry.family
+        );
+    }
+
+    run_action(
+        de_editor_core::editor_ui_state::FileAction::New,
+        host,
+        &mut current_path,
+        None,
+    );
+    assert_eq!(
+        HostCapabilities::of(&host.editor_state().editor_ui),
+        capabilities,
+        "File > New keeps the host capabilities too"
+    );
+}
