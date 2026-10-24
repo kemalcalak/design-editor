@@ -8,6 +8,7 @@ use de_editor_core::PenNodeExt;
 #[test]
 fn only_imports_and_history_steps_skip_the_write_repairs() {
     assert!(writes_verbatim("import_pen_dev"));
+    assert!(writes_verbatim("execute"));
     assert!(writes_verbatim("undo"));
     assert!(writes_verbatim("redo"));
     assert!(!writes_verbatim("import_html"));

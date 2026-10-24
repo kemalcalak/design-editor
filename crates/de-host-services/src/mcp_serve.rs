@@ -644,6 +644,8 @@ use capture_preview_tool::capture_preview_snapshot;
 
 pub(crate) mod export_tool;
 use export_tool::export_nodes_snapshot;
+pub(crate) mod execute_tool;
+use execute_tool::execute_snapshot;
 
 pub(crate) mod export_item_tool;
 use export_item_tool::export_item_snapshot;
