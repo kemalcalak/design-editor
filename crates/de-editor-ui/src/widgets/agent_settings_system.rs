@@ -1,8 +1,8 @@
 //! System tab of the settings modal.
 //!
 //! Appearance, the auto-update preference plus its live release-probe
-//! status, the experimental-features opt-in, and the pencil-cursor
-//! picker — each on one borderless row in the modal's shared row
+//! status, the experimental-features opt-in, the pencil-cursor picker and
+//! the Pencil tool's smoothing level (#88) — each on one borderless row in the modal's shared row
 //! language (`agent_settings_rows`), separated by hairlines.
 
 use crate::theme::Theme;
@@ -35,6 +35,8 @@ const SEGMENT_H: f32 = 30.0;
 const SEGMENT_ICON: f32 = 13.0;
 const SEGMENT_ICON_GAP: f32 = 6.0;
 const SEGMENT_PAD_X: f32 = 6.0;
+/// One segment of the three-way Pencil smoothing control.
+const SMOOTHING_SEGMENT_W: f32 = 84.0;
 const CURSOR_SWATCH: f32 = 38.0;
 const CURSOR_SWATCH_GAP: f32 = 8.0;
 /// The Auto-update row's Update / Restart button (#111), left of the switch;
@@ -53,6 +55,8 @@ pub enum SystemHit {
     ToggleExperimental,
     /// Click on one of the pencil-cursor swatches.
     SelectPencilCursor(de_editor_core::PencilCursorStyle),
+    /// Click on one of the Pencil smoothing segments (#88).
+    SelectPencilSmoothing(de_editor_core::PencilSmoothing),
     None,
 }
 
@@ -84,6 +88,7 @@ enum SystemRow {
     AutoUpdate,
     Experimental,
     PencilCursor,
+    PencilSmoothing,
 }
 
 fn visible_rows() -> &'static [SystemRow] {
@@ -93,12 +98,14 @@ fn visible_rows() -> &'static [SystemRow] {
             SystemRow::AutoUpdate,
             SystemRow::Experimental,
             SystemRow::PencilCursor,
+            SystemRow::PencilSmoothing,
         ]
     } else {
         &[
             SystemRow::Appearance,
             SystemRow::Experimental,
             SystemRow::PencilCursor,
+            SystemRow::PencilSmoothing,
         ]
     }
 }
@@ -110,7 +117,9 @@ impl SystemRow {
     fn lines(self) -> RowLines {
         match self {
             SystemRow::AutoUpdate | SystemRow::Experimental => RowLines::Two,
-            SystemRow::Appearance | SystemRow::PencilCursor => RowLines::One,
+            SystemRow::Appearance | SystemRow::PencilCursor | SystemRow::PencilSmoothing => {
+                RowLines::One
+            }
         }
     }
 }
@@ -220,6 +229,23 @@ fn switch_rect_for(content: Rect, row: SystemRow) -> Rect {
     row_control_rect(rect_for(content, row), SETTINGS_SWITCH_W, SETTINGS_SWITCH_H)
 }
 
+/// Segment `i` of the Pencil smoothing control, right-aligned on its row.
+fn smoothing_segment_rect(content: Rect, i: usize) -> Rect {
+    let count = de_editor_core::PencilSmoothing::ALL.len() as f32;
+    let group = row_control_rect(
+        rect_for(content, SystemRow::PencilSmoothing),
+        SMOOTHING_SEGMENT_W * count,
+        SEGMENT_H,
+    );
+    Rect {
+        origin: Point2D::new(
+            group.origin.x + i as f32 * SMOOTHING_SEGMENT_W,
+            group.origin.y,
+        ),
+        size: Point2D::new(SMOOTHING_SEGMENT_W, SEGMENT_H),
+    }
+}
+
 /// Swatch rect for cursor style index `i`, right-aligned on its row.
 fn cursor_swatch_rect(content: Rect, i: usize) -> Rect {
     let count = de_editor_core::PencilCursorStyle::ALL.len() as f32;
@@ -259,6 +285,11 @@ pub fn hit_test(content: Rect, ui: &EditorUiState, scrolled: Point2D) -> SystemH
     for (i, style) in de_editor_core::PencilCursorStyle::ALL.iter().enumerate() {
         if cursor_swatch_rect(content, i).contains(scrolled) {
             return SystemHit::SelectPencilCursor(*style);
+        }
+    }
+    for (i, level) in de_editor_core::PencilSmoothing::ALL.iter().enumerate() {
+        if smoothing_segment_rect(content, i).contains(scrolled) {
+            return SystemHit::SelectPencilSmoothing(*level);
         }
     }
     SystemHit::None
@@ -307,6 +338,7 @@ pub(super) fn paint_system_tab(
                 );
             }
             SystemRow::PencilCursor => paint_cursor_row(cx, theme, ui, content, rect),
+            SystemRow::PencilSmoothing => paint_smoothing_row(cx, theme, ui, content, rect),
         }
         if index != last {
             paint_row_hairline(cx, theme, rect);
@@ -458,6 +490,67 @@ fn paint_auto_update_row(
         switch_rect_for(content, SystemRow::AutoUpdate),
         enabled,
     );
+}
+
+/// Pencil smoothing: a three-way segmented control (Precise / Balanced /
+/// Smooth), the active level filled like the Appearance segments.
+fn paint_smoothing_row(
+    cx: &mut PaintCx<'_>,
+    theme: &Theme,
+    ui: &EditorUiState,
+    content: Rect,
+    row: Rect,
+) {
+    use de_editor_core::PencilSmoothing;
+    let count = PencilSmoothing::ALL.len() as f32;
+    paint_row_label(
+        cx,
+        theme,
+        row,
+        t_settings(ui, "settings.system.pencilSmoothing"),
+        None,
+        SMOOTHING_SEGMENT_W * count + 16.0,
+    );
+    let group = row_control_rect(row, SMOOTHING_SEGMENT_W * count, SEGMENT_H);
+    cx.backend.stroke_round_rect(group, 8.0, theme.border, 1.0);
+    for (i, level) in PencilSmoothing::ALL.iter().enumerate() {
+        let seg = smoothing_segment_rect(content, i);
+        let active = ui.pencil_smoothing == *level;
+        if active {
+            cx.backend.fill_round_rect(seg, 7.0, theme.muted);
+        }
+        let color = if active {
+            theme.foreground
+        } else {
+            theme.muted_foreground
+        };
+        let key = match level {
+            PencilSmoothing::Precise => "settings.system.pencilSmoothingPrecise",
+            PencilSmoothing::Balanced => "settings.system.pencilSmoothingBalanced",
+            PencilSmoothing::Smooth => "settings.system.pencilSmoothingSmooth",
+        };
+        let label = fit_text(
+            cx,
+            t_settings(ui, key),
+            SMOOTHING_SEGMENT_W - SEGMENT_PAD_X * 2.0,
+            12.0,
+        );
+        let label_w = measure_settings_text(cx, &label, 12.0);
+        let layout = TextLayout::single_run(
+            &label,
+            SETTINGS_FONT_FAMILY,
+            12.0,
+            color.to_jian(),
+            Point2D::new(0.0, 0.0),
+        );
+        cx.backend.draw_text(
+            &layout,
+            Point2D::new(
+                seg.origin.x + (SMOOTHING_SEGMENT_W - label_w) / 2.0,
+                seg.origin.y + SEGMENT_H / 2.0 + 4.0,
+            ),
+        );
+    }
 }
 
 /// Pencil-cursor picker: one swatch per style drawing its real

@@ -52,6 +52,12 @@ impl<'a> CanvasViewport<'a> {
             pencil_cursor_style: state.editor_ui.pencil_cursor_style,
             pen_cursor_doc: state.ui.pen_cursor_doc.map(|p| Point2D::new(p.x, p.y)),
             pen_dragging_handle: state.ui.pen_dragging_handle,
+            pencil_stroke: state
+                .ui
+                .pencil_stroke
+                .as_deref()
+                .map(|pts| pts.iter().map(|p| Point2D::new(p.x, p.y)).collect())
+                .unwrap_or_default(),
             active_guides: state.editor_ui.active_guides.clone(),
             drop_indicator: state.editor_ui.canvas_drop_indicator.clone(),
             node_drag_active: false,
@@ -118,6 +124,7 @@ impl<'a> CanvasViewport<'a> {
             pencil_cursor_style: Default::default(),
             pen_cursor_doc: None,
             pen_dragging_handle: false,
+            pencil_stroke: Vec::new(),
             active_guides: Vec::new(),
             drop_indicator: None,
             node_drag_active: false,

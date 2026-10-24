@@ -380,6 +380,10 @@ pub struct UiDraftState {
     /// mutates the tree, pushed onto the undo stack only when the
     /// finished path has ≥ 2 anchors. Dropped on a 1-anchor cancel.
     pub pending_pen_history: Option<crate::history::EditorSnapshot>,
+    /// Freehand samples (doc coords) of the Pencil stroke being drawn
+    /// (#88). `Some` from press to release; the release fits them into a
+    /// path node. Never part of the document while the drag runs.
+    pub pencil_stroke: Option<Vec<Point2D>>,
     /// Open right-click menu on a path anchor; `None` when closed.
     pub path_anchor_menu: Option<PathAnchorMenuState>,
     /// Active HSV colour picker overlay; `None` when closed.

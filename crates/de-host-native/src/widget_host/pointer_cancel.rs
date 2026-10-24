@@ -123,6 +123,7 @@ impl WidgetHostNative {
         cancelled |= self.handle_drag.take().is_some();
         cancelled |= self.rotate_drag.take().is_some();
         cancelled |= self.create_drag.take().is_some();
+        cancelled |= self.editor_state.cancel_pencil_stroke();
         cancelled |= self.marquee_drag.take().is_some();
         cancelled |= self.layer_drag.take().is_some();
         cancelled |= self.path_anchor_drag.take().is_some();

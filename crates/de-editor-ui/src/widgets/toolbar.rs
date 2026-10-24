@@ -1,7 +1,7 @@
 //! `Toolbar` — the floating tool rail at the canvas's left edge (#30).
 //!
-//! Eight flat buttons, top to bottom: Select, Rectangle, Ellipse, Pen,
-//! Text, Frame, Image, Hand. The Rectangle button is a slot: it carries
+//! Nine flat buttons, top to bottom: Select, Rectangle, Ellipse, Pen,
+//! Pencil, Text, Frame, Image, Hand. The Rectangle button is a slot: it carries
 //! whichever of Rectangle / Polygon / Line the user last chose (its icon
 //! follows), and a right-click on it opens the shape menu for the other
 //! two plus the icon picker. Image is a one-shot action — it imports an
@@ -95,6 +95,7 @@ impl Toolbar {
             ToolbarItem::ShapeSlot,
             ToolbarItem::Tool(Tool::Ellipse, Icon::Circle),
             ToolbarItem::Tool(Tool::Pen, Icon::PenTool),
+            ToolbarItem::Tool(Tool::Pencil, Icon::Pencil),
             ToolbarItem::Tool(Tool::Text, Icon::Type),
             ToolbarItem::Tool(Tool::Frame, Icon::Frame),
             ToolbarItem::Action(ToolbarAction::ImportImage, Icon::Image),
@@ -311,7 +312,7 @@ mod tests {
     }
 
     #[test]
-    fn the_rail_carries_the_eight_design_buttons_in_order() {
+    fn the_rail_carries_the_nine_design_buttons_in_order() {
         let toolbar = Toolbar::default_set();
         let hits: Vec<_> = (0..toolbar.items.len())
             .map(|i| toolbar.hit_test(rail(&toolbar), centre_of(&toolbar, i)))
@@ -323,6 +324,7 @@ mod tests {
                 Some(ToolbarHit::Tool(Tool::Rect)),
                 Some(ToolbarHit::Tool(Tool::Ellipse)),
                 Some(ToolbarHit::Tool(Tool::Pen)),
+                Some(ToolbarHit::Tool(Tool::Pencil)),
                 Some(ToolbarHit::Tool(Tool::Text)),
                 Some(ToolbarHit::Tool(Tool::Frame)),
                 Some(ToolbarHit::Action(ToolbarAction::ImportImage)),
@@ -332,11 +334,11 @@ mod tests {
     }
 
     #[test]
-    fn height_is_eight_buttons_plus_gaps_and_padding() {
+    fn height_is_nine_buttons_plus_gaps_and_padding() {
         let toolbar = Toolbar::default_set();
         assert_eq!(
             toolbar.intrinsic_height(),
-            PAD_Y * 2.0 + 8.0 * BUTTON_SIZE + 7.0 * BUTTON_GAP
+            PAD_Y * 2.0 + 9.0 * BUTTON_SIZE + 8.0 * BUTTON_GAP
         );
     }
 

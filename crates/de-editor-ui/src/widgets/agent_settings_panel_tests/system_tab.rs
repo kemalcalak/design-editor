@@ -8,8 +8,15 @@ use crate::widgets::agent_settings_metrics::CONTENT_TAIL_PAD;
 use crate::widgets::agent_settings_rows::{row_height, tab_intro_height, RowLines, FOOTNOTE_H};
 
 /// Row order and shape on the System tab: Appearance (one line),
-/// Auto-update (two), Experimental (two), Pencil cursor (one).
-const SYSTEM_ROWS: [RowLines; 4] = [RowLines::One, RowLines::Two, RowLines::Two, RowLines::One];
+/// Auto-update (two), Experimental (two), Pencil cursor (one), Pencil
+/// smoothing (one).
+const SYSTEM_ROWS: [RowLines; 5] = [
+    RowLines::One,
+    RowLines::Two,
+    RowLines::Two,
+    RowLines::One,
+    RowLines::One,
+];
 
 /// Centre-y of System row `index`, below the tab's compact heading.
 fn system_row_mid_y(rect: Rect, index: usize) -> f32 {
@@ -31,7 +38,8 @@ fn system_auto_update_switch_has_click_target() {
     let panel = AgentSettingsPanel::for_editor(&state);
     let rect = panel.rect(1200.0, 800.0);
     let content = crate::widgets::agent_settings_panel::content_viewport(rect);
-    // Row order is Appearance, Auto-update, Experimental, Pencil cursor.
+    // Row order is Appearance, Auto-update, Experimental, Pencil cursor,
+    // Pencil smoothing.
     let point = crate::Point2D::new(
         content.origin.x + content.size.x - 18.0,
         system_row_mid_y(rect, 1),
@@ -57,8 +65,33 @@ fn system_tab_reserves_space_for_update_status() {
             + 8.0
             + FOOTNOTE_H
             + CONTENT_TAIL_PAD,
-        "System tab = heading + Appearance/Auto-update/Experimental/Pencil-cursor rows \
-         + version footnote + bottom pad"
+        "System tab = heading + Appearance/Auto-update/Experimental/Pencil-cursor/\
+         Pencil-smoothing rows + version footnote + bottom pad"
+    );
+}
+
+#[test]
+fn system_pencil_smoothing_segments_pick_their_level() {
+    use de_editor_core::PencilSmoothing;
+    let mut state = EditorState::default();
+    state.editor_ui.agent_settings.tab = AgentSettingsTab::System;
+    let panel = AgentSettingsPanel::for_editor(&state);
+    let rect = panel.rect(1200.0, 800.0);
+    let content = crate::widgets::agent_settings_panel::content_viewport(rect);
+    let y = system_row_mid_y(rect, 4);
+    // The control is right-aligned: Smooth is the last segment.
+    let right = content.origin.x + content.size.x;
+    assert_eq!(
+        panel.hit_test(rect, crate::Point2D::new(right - 18.0, y)),
+        AgentSettingsHit::SelectPencilSmoothing(PencilSmoothing::Smooth)
+    );
+    assert_eq!(
+        panel.hit_test(rect, crate::Point2D::new(right - 18.0 - 84.0, y)),
+        AgentSettingsHit::SelectPencilSmoothing(PencilSmoothing::Balanced)
+    );
+    assert_eq!(
+        panel.hit_test(rect, crate::Point2D::new(right - 18.0 - 168.0, y)),
+        AgentSettingsHit::SelectPencilSmoothing(PencilSmoothing::Precise)
     );
 }
 

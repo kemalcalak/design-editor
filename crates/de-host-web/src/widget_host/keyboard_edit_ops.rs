@@ -34,6 +34,7 @@ impl WidgetHost {
         if !matches!(tool, de_editor_core::Tool::Pen) {
             let _ = self.editor_state.cancel_pen_path();
         }
+        // `set_active_tool` below also drops an in-flight Pencil stroke.
         shared::set_active_tool(&mut self.editor_state, tool);
         self.mark_dirty();
     }
@@ -44,11 +45,19 @@ impl WidgetHost {
     /// Web parity fix: the native host had this single-key router but the web
     /// keydown handler only ever fell through to `apply_text`, so R / T / P /
     /// etc. silently did nothing on the canvas.
+    #[cfg(test)]
     pub(crate) fn apply_tool_shortcut(&mut self, key: &str) -> bool {
+        self.apply_tool_shortcut_with_shift(key, false)
+    }
+
+    /// [`Self::apply_tool_shortcut`] with the Shift state: Shift+P picks the
+    /// freehand Pencil (#88), every other letter ignores Shift.
+    pub(crate) fn apply_tool_shortcut_with_shift(&mut self, key: &str, shift: bool) -> bool {
         if self.input_active() {
             return false;
         }
         let tool = match key.to_ascii_lowercase().as_str() {
+            "p" if shift => de_editor_core::Tool::Pencil,
             "v" => de_editor_core::Tool::Select,
             "r" => de_editor_core::Tool::Rect,
             "o" => de_editor_core::Tool::Ellipse,

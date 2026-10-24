@@ -94,6 +94,8 @@ pub struct CanvasViewport<'a> {
     /// True while the Pen press-drag is minting handles — hides the
     /// rubber band (TS `isDraggingHandle`).
     pub(super) pen_dragging_handle: bool,
+    /// Samples (doc coords) of the Pencil stroke being dragged (#88).
+    pub(super) pencil_stroke: Vec<Point2D>,
     /// Smart-guide alignment lines to paint during a node drag —
     /// doc-space, computed by the host's `align_guides` pass.
     pub(super) active_guides: Vec<de_editor_core::align_guides::AlignmentGuide>,
@@ -489,6 +491,7 @@ impl<'a> Widget for CanvasViewport<'a> {
             rect,
             viewport,
         );
+        super::canvas_path_overlay::paint_pencil_preview(cx, &self.pencil_stroke, rect, viewport);
 
         // 4c. Arc-edit handles for a single-selected Ellipse with the
         //     Select tool — start / sweep / inner-radius grab dots.

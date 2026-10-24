@@ -260,6 +260,10 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "updateModal.releases" => "Release-Seite",
         "dialog.loadErrorUnsupportedExtension" => "{{name}} ist kein Design-Editor-Dokument. Nur .de-Dateien lassen sich öffnen; .pen-Dateien von pen.dev werden als Import geöffnet.",
         "dialog.loadErrorNotPenDev" => "{{name}} ist keine pen.dev-Datei und kann daher nicht importiert werden.",
+        "settings.system.pencilSmoothing" => "Bleistift-Glättung",
+        "settings.system.pencilSmoothingPrecise" => "Präzise",
+        "settings.system.pencilSmoothingBalanced" => "Ausgewogen",
+        "settings.system.pencilSmoothingSmooth" => "Glatt",
         _ => return None,
     })
 }

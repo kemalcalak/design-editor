@@ -250,6 +250,8 @@ pub enum AgentSettingsHit {
     ToggleExperimental,
     SelectThemeMode(de_editor_core::editor_ui_state::ThemeMode),
     SelectPencilCursor(de_editor_core::PencilCursorStyle),
+    /// System tab Pencil smoothing segment (#88).
+    SelectPencilSmoothing(de_editor_core::PencilSmoothing),
     FocusMcpPort,
     Outside,
     Inside,
