@@ -220,6 +220,7 @@ pub mod canvas_viewport_paint;
 #[cfg(test)]
 mod canvas_viewport_paint_pop_tests;
 mod canvas_viewport_text;
+mod canvas_viewport_text_fill;
 mod canvas_viewport_widget;
 pub mod preview_browser_bar;
 pub mod preview_device_switcher;

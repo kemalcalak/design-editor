@@ -40,6 +40,57 @@ struct SliceStyle {
     color: Color,
 }
 
+/// Which parts of a text node one paint call draws. The plain path
+/// paints everything in one go; a node whose fill stack is clipped to
+/// its glyphs (#179, `canvas_viewport_text_fill`) splits the paint so the
+/// stack can sit between the selection wash and the overlay.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub(crate) enum TextPass {
+    /// Selection wash, glyphs in their solid ink, IME underline, caret.
+    Full,
+    /// The selection wash only (behind the fill stack).
+    Selection,
+    /// Glyphs + decorations that inherit the node fill, in opaque white:
+    /// the coverage the fill stack is cut to.
+    FillMask,
+    /// Runs with their own fill (painted solid over the stack), the IME
+    /// underline and the caret.
+    Overlay,
+}
+
+impl TextPass {
+    fn paints_selection(self) -> bool {
+        matches!(self, Self::Full | Self::Selection)
+    }
+
+    fn paints_lines(self) -> bool {
+        !matches!(self, Self::Selection)
+    }
+
+    fn paints_caret(self) -> bool {
+        matches!(self, Self::Full | Self::Overlay)
+    }
+
+    /// Whether a slice draws in this pass; `own_fill` = its run carries a
+    /// fill of its own instead of inheriting the node's.
+    fn paints_slice(self, own_fill: bool) -> bool {
+        match self {
+            Self::Full => true,
+            Self::Selection => false,
+            Self::FillMask => !own_fill,
+            Self::Overlay => own_fill,
+        }
+    }
+}
+
+/// Mask coverage colour: only its alpha matters to `DstIn`.
+const MASK_INK: Color = Color {
+    r: 1.0,
+    g: 1.0,
+    b: 1.0,
+    a: 1.0,
+};
+
 /// Map a painted line's byte range `[line_start, line_end)` onto run
 /// ranges. Returns `(slice_start, slice_end, run_index)` triples in
 /// flat-text byte coords; `None` run index = node-level style (gaps,
@@ -191,15 +242,18 @@ fn draw_slice(
     baseline_y: f32,
     letter_spacing: f32,
     justify_extra: f32,
+    ink: bool,
 ) -> (f32, f32) {
     let jc = (style.color).to_jian();
     if letter_spacing.abs() < f32::EPSILON && justify_extra <= 0.0 {
-        backend.draw_text(
-            &TextLayout::single_run(slice, family, style.font_size, jc, Point2D::ZERO)
-                .with_font_weight(style.weight)
-                .with_italic(style.italic),
-            Point2D::new(x, baseline_y),
-        );
+        if ink {
+            backend.draw_text(
+                &TextLayout::single_run(slice, family, style.font_size, jc, Point2D::ZERO)
+                    .with_font_weight(style.weight)
+                    .with_italic(style.italic),
+                Point2D::new(x, baseline_y),
+            );
+        }
         let advance = backend.measure_text_family_styled(
             slice,
             style.font_size,
@@ -216,12 +270,14 @@ fn draw_slice(
     for ch in slice.chars() {
         let mut buf = [0u8; 4];
         let s = ch.encode_utf8(&mut buf);
-        backend.draw_text(
-            &TextLayout::single_run(s, family, style.font_size, jc, Point2D::ZERO)
-                .with_font_weight(style.weight)
-                .with_italic(style.italic),
-            Point2D::new(cursor, baseline_y),
-        );
+        if ink {
+            backend.draw_text(
+                &TextLayout::single_run(s, family, style.font_size, jc, Point2D::ZERO)
+                    .with_font_weight(style.weight)
+                    .with_italic(style.italic),
+                Point2D::new(cursor, baseline_y),
+            );
+        }
         let adv = backend.measure_text_family_styled(
             s,
             style.font_size,
@@ -276,12 +332,36 @@ fn decorate_slice(
 /// translucent bar ("greeking") instead of running the full layout.
 const GREEK_TEXT_MAX_DEVICE_PX: f32 = 3.0;
 
+/// Whether a non-edited text node paints as the greeking bar at `zoom`.
+pub(crate) fn text_is_greeked(backend: &dyn RenderBackend, node: &SceneNode, zoom: f32) -> bool {
+    let font_size_doc = if node.font_size > 0.0 {
+        node.font_size
+    } else {
+        13.0
+    };
+    font_size_doc * zoom * backend.dpi_scale() < GREEK_TEXT_MAX_DEVICE_PX
+}
+
+#[cfg(test)]
 pub(crate) fn paint_text_node(
     cx: &mut PaintCx<'_>,
     node: &SceneNode,
     world_rect: Rect,
     zoom: f32,
     edit_caret: &Option<EditCaret>,
+) {
+    paint_text_node_pass(cx, node, world_rect, zoom, edit_caret, TextPass::Full);
+}
+
+/// [`paint_text_node`] restricted to one [`TextPass`]. Only `Full`
+/// greeks; the split passes run when the caller already chose real glyphs.
+pub(crate) fn paint_text_node_pass(
+    cx: &mut PaintCx<'_>,
+    node: &SceneNode,
+    world_rect: Rect,
+    zoom: f32,
+    edit_caret: &Option<EditCaret>,
+    pass: TextPass,
 ) {
     let editing = edit_caret.as_ref().filter(|c| c.editing == node.id);
     let mut edit_node = None;
@@ -322,20 +402,13 @@ pub(crate) fn paint_text_node(
     // paid full shaping on every panned frame. Paint a translucent ink
     // bar over the node bounds instead; an edited node keeps the exact
     // glyph path so caret / selection geometry stays true.
-    if editing.is_none() {
-        let font_size_doc = if paint_node.font_size > 0.0 {
-            paint_node.font_size
-        } else {
-            13.0
-        };
-        let device_px = font_size_doc * zoom * cx.backend.dpi_scale();
-        if device_px < GREEK_TEXT_MAX_DEVICE_PX {
-            if !text.is_empty() {
-                cx.backend
-                    .fill_rect(world_rect, ink.with_alpha(ink.a * 0.18));
-            }
-            return;
+    if editing.is_none() && pass == TextPass::Full && text_is_greeked(cx.backend, paint_node, zoom)
+    {
+        if !text.is_empty() {
+            cx.backend
+                .fill_rect(world_rect, ink.with_alpha(ink.a * 0.18));
         }
+        return;
     }
     // Shared line layout — the same resolution the inline text editor
     // hit-tests against (`canvas_text_edit`), so caret / selection /
@@ -363,12 +436,14 @@ pub(crate) fn paint_text_node(
                 .filter(|(start, end)| start != end)
         })?
     });
-    if let (Some(c), Some((sel_start, sel_end))) = (editing, selection) {
+    if let (Some(c), Some((sel_start, sel_end)), true) =
+        (editing, selection, pass.paints_selection())
+    {
         for hl in layout.selection_rects(cx.backend, sel_start, sel_end) {
             cx.backend.fill_round_rect(hl, 2.0, c.selection_color);
         }
     }
-    if !text.is_empty() {
+    if !text.is_empty() && pass.paints_lines() {
         // TS `pen-renderer` draws text at the node's authored top-left
         // and does not apply `textAlignVertical` during paint. Figma
         // exports already bake vertical placement into `x/y`; applying
@@ -431,13 +506,12 @@ pub(crate) fn paint_text_node(
                 line_start,
                 line_end,
                 |start, end, run| {
-                    let style = resolved_slice_style(
-                        paint_node,
-                        font_size,
-                        weight,
-                        ink,
-                        run.map(|i| &paint_node.text_runs[i]),
-                    );
+                    let run = run.map(|i| &paint_node.text_runs[i]);
+                    let mut style = resolved_slice_style(paint_node, font_size, weight, ink, run);
+                    if pass == TextPass::FillMask {
+                        style.color = MASK_INK;
+                    }
+                    let draws = pass.paints_slice(run.is_some_and(|r| r.fill.is_some()));
                     let slice = &text[start..end];
                     let slice_x0 = x;
                     let (next_x, glyph_end) = draw_slice(
@@ -449,14 +523,17 @@ pub(crate) fn paint_text_node(
                         baseline_y,
                         letter_spacing,
                         justify_extra,
+                        draws,
                     );
-                    decorate_slice(cx.backend, style, slice_x0, glyph_end, baseline_y);
+                    if draws {
+                        decorate_slice(cx.backend, style, slice_x0, glyph_end, baseline_y);
+                    }
                     x = next_x;
                 },
             );
         }
     }
-    if let Some((start, end, _)) = composition_range {
+    if let (Some((start, end, _)), true) = (composition_range, pass.paints_caret()) {
         let thickness = (1.0 / zoom).max(1.0);
         for rect in layout.selection_rects(cx.backend, start, end) {
             let y = rect.origin.y + font_size * 1.12;
@@ -470,7 +547,7 @@ pub(crate) fn paint_text_node(
     }
     // Caret while editing — at the real caret offset (hidden while a
     // selection is active, textarea-style).
-    if let Some(c) = editing {
+    if let (Some(c), true) = (editing, pass.paints_caret()) {
         if selection.is_none() && c.input.caret_visible(c.now_ms) {
             let caret_byte = composition_range
                 .map(|(_, _, cursor)| cursor.min(text.len()))
