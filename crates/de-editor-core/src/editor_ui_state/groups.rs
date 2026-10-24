@@ -58,6 +58,10 @@ pub struct PreviewState {
     /// [`crate::preview_slideshow`]. `None` for every other document, and
     /// cleared on exit like the rest of this struct's live state.
     pub slideshow: Option<crate::preview_slideshow::SlideshowState>,
+    /// Present was asked for explicitly (Cmd/Ctrl+Enter, #157): the next
+    /// preview entry presents the active page's top-level frames as
+    /// slides whatever the document's scenario. Cleared on exit.
+    pub present: bool,
     /// Presenting-toolbar control under the cursor (hover wash), and the one
     /// currently pressed. Same press/hover/release contract as
     /// [`Self::switcher_hover`] / [`Self::switcher_pressed`]: a control

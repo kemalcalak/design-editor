@@ -192,6 +192,7 @@ mod preview_hover_tests;
 mod preview_input;
 #[cfg(all(test, feature = "gl-host", not(target_os = "windows")))]
 mod preview_motion_clock_tests;
+mod preview_present;
 #[cfg(all(test, feature = "gl-host", not(target_os = "windows")))]
 mod preview_replace_document_tests;
 mod preview_slideshow;

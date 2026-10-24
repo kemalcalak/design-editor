@@ -57,6 +57,16 @@ impl DesktopApp {
             Key::Named(NamedKey::Delete) if !self.zoom_modifier && !settings_focused => {
                 consumed = self.host.apply_delete();
             }
+            // Cmd/Ctrl+Enter — Present the active page from anywhere in
+            // the editor, or leave Present (#157).
+            Key::Named(NamedKey::Enter)
+                if self.zoom_modifier
+                    && !settings_focused
+                    && !home_visible
+                    && !prompt_center_open =>
+            {
+                consumed = self.host.toggle_present_with_cached_viewport();
+            }
             Key::Named(NamedKey::Enter) if !self.zoom_modifier => {
                 consumed = self.host.apply_send();
                 // apply_send may raise pending_send (chat send).
