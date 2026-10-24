@@ -122,6 +122,7 @@ pub fn build_leaf_node(
             width: Some(w),
             height: Some(h),
             corner_radius: None,
+            inner_radius: None,
             fill: None,
             stroke: None,
             effects: None,
