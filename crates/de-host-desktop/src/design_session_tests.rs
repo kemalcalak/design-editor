@@ -409,8 +409,12 @@ fn fit_design_viewport_centers_and_fits_mobile_root() {
 
     let bounds = active_content_bounds(&state).expect("root bounds");
     let (canvas_w, canvas_h) = design_canvas_size(&state, 1440.0, 900.0);
-    let left = state.viewport.pan_x + bounds.x as f32 * state.viewport.zoom;
-    let top = state.viewport.pan_y + bounds.y as f32 * state.viewport.zoom;
+    // The fit area is the canvas the floating cards leave uncovered (#86);
+    // measure the board relative to it.
+    let area = de_editor_ui::widgets::floating_panels::uncovered_canvas_rect(&state, 1440.0, 900.0);
+    assert_eq!((area.size.x, area.size.y), (canvas_w, canvas_h));
+    let left = state.viewport.pan_x + bounds.x as f32 * state.viewport.zoom - area.origin.x;
+    let top = state.viewport.pan_y + bounds.y as f32 * state.viewport.zoom - area.origin.y;
     let right = left + bounds.w as f32 * state.viewport.zoom;
     let bottom = top + bounds.h as f32 * state.viewport.zoom;
     let center_x = (left + right) / 2.0;
