@@ -7,7 +7,8 @@
 //! Each animation the panel can express (one property, two stops) is
 //! five rows: the property dropdown + remove, the trigger dropdown (On
 //! load / In view / On hover / On tap, #155), From | To, Duration, Delay
-//! (ms). Any other shape is two rows — "Custom animation" with remove,
+//! (ms). A Fill tween (#190) puts From and To on a row each, as hex
+//! colours (`PropertyFocus::MotionColor`). Any other shape is two rows — "Custom animation" with remove,
 //! then its trigger dropdown — so a hand-written or MCP-written
 //! declaration is never rewritten by accident. A localized label never
 //! shares its row with another one (#190): the longest translation fits.
@@ -30,7 +31,9 @@ use crate::widgets::property_panel_interactions::{
 use crate::widgets::property_panel_sections::EditContext;
 use crate::widgets::PaintCx;
 use crate::{Point2D, Rect};
-use de_editor_core::motion_edit::{simple_motion, MotionField, MotionProperty, SimpleMotion};
+use de_editor_core::motion_edit::{
+    simple_motion, MotionField, MotionProperty, MotionStop, SimpleMotion,
+};
 use de_editor_core::transition_edit::MotionEasing;
 use de_editor_core::PropertyFocus;
 use jian_ops_schema::motion::MotionTrigger;
@@ -100,6 +103,8 @@ enum Line {
     Trigger(usize),
     /// Animation `index`: two half-width number inputs.
     Pair(usize, [MotionField; 2]),
+    /// Animation `index`: From or To of a colour tween, full width.
+    Color(usize, MotionField),
     /// Animation `index`: one full-width input.
     Field(usize, MotionField),
 }
@@ -117,9 +122,16 @@ fn lines(summary: &InteractionSummary) -> Vec<Line> {
     }
     for (index, motion) in summary.motion.iter().enumerate() {
         out.extend([Line::Head(index), Line::Trigger(index)]);
-        if let MotionSummary::Simple(_) = motion {
+        if let MotionSummary::Simple(simple) = motion {
+            if simple.property.is_color() {
+                out.extend([
+                    Line::Color(index, MotionField::From),
+                    Line::Color(index, MotionField::To),
+                ]);
+            } else {
+                out.push(Line::Pair(index, [MotionField::From, MotionField::To]));
+            }
             out.extend([
-                Line::Pair(index, [MotionField::From, MotionField::To]),
                 Line::Field(index, MotionField::DurationMs),
                 Line::Field(index, MotionField::DelayMs),
             ]);
@@ -230,13 +242,14 @@ pub(crate) fn push_motion_action_rects(
                 )),
                 full_row(x, row_y, width),
             )),
-            Line::TransitionDuration | Line::Pair(..) | Line::Field(..) => {}
+            Line::TransitionDuration | Line::Pair(..) | Line::Field(..) | Line::Color(..) => {}
         }
     }
 }
 
 /// The transition's duration input, then the From / To / Duration /
-/// Delay inputs of every simple row.
+/// Delay inputs of every simple row (From / To of a colour tween are
+/// `MotionColor` hex inputs).
 pub fn motion_input_rects(
     interactions: &InteractionSummary,
     x: f32,
@@ -256,6 +269,10 @@ pub fn motion_input_rects(
             }
             Line::Field(index, field) => out.push((
                 PropertyFocus::MotionValue { index, field },
+                full_row(x, row_y, width),
+            )),
+            Line::Color(index, field) => out.push((
+                PropertyFocus::MotionColor { index, field },
                 full_row(x, row_y, width),
             )),
             Line::TransitionHead | Line::TransitionEasing | Line::Head(_) | Line::Trigger(_) => {}
@@ -366,6 +383,7 @@ pub fn property_label(locale: de_editor_core::Locale, property: MotionProperty) 
         MotionProperty::Width => translate(locale, "motion.width", "Width"),
         MotionProperty::Height => translate(locale, "motion.height", "Height"),
         MotionProperty::CornerRadius => translate(locale, "motion.cornerRadius", "Corner radius"),
+        MotionProperty::Fill => translate(locale, "fill.title", "Fill"),
     }
 }
 
@@ -382,10 +400,17 @@ pub fn trigger_label(locale: de_editor_core::Locale, trigger: MotionTrigger) -> 
 /// The value a field shows when it is not being edited.
 pub fn field_value(simple: &SimpleMotion, field: MotionField) -> String {
     match field {
-        MotionField::From => de_editor_core::motion_edit::format_motion_number(simple.from),
-        MotionField::To => de_editor_core::motion_edit::format_motion_number(simple.to),
+        MotionField::From => stop_value(simple.from),
+        MotionField::To => stop_value(simple.to),
         MotionField::DurationMs => simple.duration_ms.to_string(),
         MotionField::DelayMs => simple.delay_ms.to_string(),
+    }
+}
+
+fn stop_value(stop: MotionStop) -> String {
+    match stop {
+        MotionStop::Number(value) => de_editor_core::motion_edit::format_motion_number(value),
+        MotionStop::Color(rgba) => de_editor_core::motion_edit::format_motion_color(rgba),
     }
 }
 
@@ -455,7 +480,7 @@ pub(crate) fn paint_motion_section(
                     );
                 }
             }
-            Line::TransitionDuration | Line::Pair(..) | Line::Field(..) => {}
+            Line::TransitionDuration | Line::Pair(..) | Line::Field(..) | Line::Color(..) => {}
         }
     }
     for (focus, rect) in motion_input_rects(interactions, x, y, width) {
@@ -467,7 +492,8 @@ pub(crate) fn paint_motion_section(
                     .map(|transition| transition.duration_ms.to_string())
                     .unwrap_or_default(),
             ),
-            PropertyFocus::MotionValue { index, field } => {
+            PropertyFocus::MotionValue { index, field }
+            | PropertyFocus::MotionColor { index, field } => {
                 let Some(MotionSummary::Simple(simple)) = motion.get(index) else {
                     continue;
                 };

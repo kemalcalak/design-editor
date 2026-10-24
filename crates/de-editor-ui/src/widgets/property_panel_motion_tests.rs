@@ -144,6 +144,55 @@ fn field_values_format_like_the_panel_numbers() {
     assert_eq!(field_value(&simple, MotionField::DelayMs), "0");
 }
 
+/// #190: a Fill tween reads as a simple row whose From and To are hex
+/// inputs on a row each.
+#[test]
+fn a_fill_tween_has_hex_inputs() {
+    let summary = summary_of(
+        r##"{"type":"rectangle","id":"r1","animations":[
+        {"trigger":"hover","durationMs":150,
+         "keyframes":[{"offset":0,"values":{"fill":"#3B5BFD"}},{"offset":1,"values":{"fill":"#2F49CA"}}]}]}"##,
+    );
+    let MotionSummary::Simple(simple) = summary.motion[0] else {
+        panic!("a fill tween is simple");
+    };
+    assert_eq!(simple.property, MotionProperty::Fill);
+    assert_eq!(field_value(&simple, MotionField::From), "#3B5BFD");
+    let header_only = SECTION_HEADER_HEIGHT + 6.0 + SECTION_GAP;
+    assert_eq!(
+        motion_section_height(&summary) - header_only,
+        6.0 * (INPUT_HEIGHT + 6.0)
+    );
+    let inputs = motion_input_rects(&summary, 0.0, 0.0, 272.0);
+    let focuses: Vec<_> = inputs.iter().map(|(focus, _)| *focus).collect();
+    assert_eq!(
+        focuses,
+        [
+            PropertyFocus::MotionColor {
+                index: 0,
+                field: MotionField::From
+            },
+            PropertyFocus::MotionColor {
+                index: 0,
+                field: MotionField::To
+            },
+            PropertyFocus::MotionValue {
+                index: 0,
+                field: MotionField::DurationMs
+            },
+            PropertyFocus::MotionValue {
+                index: 0,
+                field: MotionField::DelayMs
+            },
+        ]
+    );
+    assert!(PropertyFocus::MotionColor {
+        index: 0,
+        field: MotionField::From
+    }
+    .is_hex());
+}
+
 /// Width of `text` at 12 px as the chrome face paints it, by script:
 /// Latin ~0.55 em, Cyrillic / Greek / Thai / Devanagari ~0.62 em (combining
 /// marks take no advance), CJK and Hangul a full em. Close to the real
