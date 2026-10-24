@@ -198,6 +198,7 @@ fn convert_node(
     paint::convert_blend_mode(map, ctx.report);
     paint::convert_fill_key(map, theme, ctx);
     paint::convert_stroke(map, role, theme, ctx);
+    include_stroke_in_layout(map, ctx.report);
     paint::convert_effects(map, theme, ctx);
 }
 
@@ -244,6 +245,59 @@ fn strip_sizing_fallback(map: &mut Map<String, Value>, axis: &str) {
         if let Some(open) = size.find('(') {
             size.truncate(open);
         }
+    }
+}
+
+/// pen.dev `layoutIncludeStroke: true` lays an auto-layout frame out like
+/// CSS `box-sizing: border-box`: the stroke takes room inside the frame, so
+/// the children sit inside padding plus stroke. The canonical layout ignores
+/// strokes, so the stroke's width per side is added to the padding.
+fn include_stroke_in_layout(map: &mut Map<String, Value>, report: &mut PenDevReport) {
+    if map.remove("layoutIncludeStroke").and_then(|v| v.as_bool()) != Some(true)
+        || !is_auto_layout(map)
+    {
+        return;
+    }
+    let Some(thickness) = map.get("stroke").and_then(|stroke| stroke.get("thickness")) else {
+        return;
+    };
+    let stroke = match thickness {
+        Value::Number(n) => [n.as_f64().unwrap_or(0.0); 4],
+        Value::Object(sides) => ["top", "right", "bottom", "left"]
+            .map(|side| sides.get(side).and_then(Value::as_f64).unwrap_or(0.0)),
+        _ => return,
+    };
+    let Some(padding) = padding_sides(map.get("padding")) else {
+        report.note("layoutIncludeStroke (variable padding)");
+        return;
+    };
+    let sum: Vec<Value> = padding
+        .iter()
+        .zip(stroke)
+        .map(|(p, s)| (p + s).into())
+        .collect();
+    map.insert("padding".to_owned(), Value::Array(sum));
+}
+
+/// Canonical padding as `[top, right, bottom, left]`; `None` for a value
+/// that is not plain numbers (a bound variable).
+fn padding_sides(padding: Option<&Value>) -> Option<[f64; 4]> {
+    let Some(padding) = padding else {
+        return Some([0.0; 4]);
+    };
+    if let Some(all) = padding.as_f64() {
+        return Some([all; 4]);
+    }
+    let sides: Vec<f64> = padding
+        .as_array()?
+        .iter()
+        .map(Value::as_f64)
+        .collect::<Option<_>>()?;
+    match sides[..] {
+        [all] => Some([all; 4]),
+        [v, h] => Some([v, h, v, h]),
+        [t, r, b, l] => Some([t, r, b, l]),
+        _ => None,
     }
 }
 

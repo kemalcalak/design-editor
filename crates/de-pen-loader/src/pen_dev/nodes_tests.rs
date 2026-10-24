@@ -138,3 +138,40 @@ fn children_take_the_canonical_first_on_top_paint_order() {
         ["badge", "first", "second", "shade"]
     );
 }
+
+#[test]
+fn layout_include_stroke_pads_the_frame_by_its_stroke() {
+    let frame = |id: &str, extra: Value| {
+        let mut node = json!({ "type": "frame", "id": id, "layout": "vertical",
+                               "stroke": "#FF0000", "strokeWidth": 8, "layoutIncludeStroke": true });
+        node.as_object_mut()
+            .unwrap()
+            .extend(extra.as_object().unwrap().clone());
+        node
+    };
+    let mut doc = json!({ "version": "2.21", "children": [
+        frame("uniform", json!({ "padding": 10 })),
+        frame("pair", json!({ "padding": [4, 6] })),
+        frame("sided", json!({ "padding": 2, "strokeWidth": { "top": 12, "left": 4 } })),
+        frame("bound", json!({ "padding": "$pad" })),
+        frame("free", json!({ "layout": "none", "padding": 10 })),
+        frame("off", json!({ "padding": 10, "layoutIncludeStroke": false }))
+    ]});
+    let report = crate::pen_dev::convert(&mut doc, &no_assets);
+    let padding = |index: usize| doc["children"][index]["padding"].clone();
+    assert_eq!(padding(0), json!([18.0, 18.0, 18.0, 18.0]));
+    assert_eq!(padding(1), json!([12.0, 14.0, 12.0, 14.0]));
+    assert_eq!(padding(2), json!([14.0, 2.0, 2.0, 6.0]));
+    assert_eq!(padding(3), json!("$pad"));
+    assert_eq!(padding(4), json!(10));
+    assert_eq!(padding(5), json!(10));
+    for index in 0..6 {
+        assert!(doc["children"][index].get("layoutIncludeStroke").is_none());
+    }
+    assert_eq!(
+        report
+            .unsupported
+            .get("layoutIncludeStroke (variable padding)"),
+        Some(&1)
+    );
+}
