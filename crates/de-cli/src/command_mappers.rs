@@ -140,6 +140,16 @@ pub(crate) fn map_read_nodes(positionals: &[String], flags: &Flags) -> Result<Co
     if flags.contains_key("vars") {
         pairs.push(pair("includeVariables", "true"));
     }
+    // pen.dev `Get` options (#169).
+    for (flag, key) in [
+        ("resolve-vars", "resolveVariables"),
+        ("resolve-instances", "resolveInstances"),
+        ("path-geometry", "includePathGeometry"),
+    ] {
+        if flags.contains_key(flag) {
+            pairs.push(pair(key, "true"));
+        }
+    }
     push_file_path(&mut pairs, flags);
     tool_call("read_nodes", pairs)
 }

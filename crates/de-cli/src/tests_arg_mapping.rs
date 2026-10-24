@@ -162,6 +162,30 @@ fn parse_args_maps_read_nodes_to_ts_tool_shape() {
 }
 
 #[test]
+fn parse_args_maps_read_nodes_resolve_flags() {
+    let p = parse_args(&[
+        "read-nodes".to_string(),
+        "inst1".to_string(),
+        "--resolve-vars".to_string(),
+        "--resolve-instances".to_string(),
+        "--path-geometry".to_string(),
+    ])
+    .expect("parse");
+    assert_eq!(
+        p.command,
+        Command::ToolCall {
+            tool: "read_nodes".to_string(),
+            args: vec![
+                ("nodeIds".to_string(), r#"["inst1"]"#.to_string()),
+                ("resolveVariables".to_string(), "true".to_string()),
+                ("resolveInstances".to_string(), "true".to_string()),
+                ("includePathGeometry".to_string(), "true".to_string()),
+            ],
+        }
+    );
+}
+
+#[test]
 fn parse_args_keeps_each_read_nodes_positional_id() {
     let p = parse_args(&[
         "read-nodes".to_string(),
