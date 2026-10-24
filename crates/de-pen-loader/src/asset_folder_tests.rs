@@ -238,3 +238,55 @@ fn write_document_publishes_images_and_json_together() {
     assert_eq!(std::fs::read(dir.join(src)).unwrap(), PNG);
     let _ = std::fs::remove_dir_all(dir);
 }
+
+#[test]
+fn shader_image_uniforms_save_to_files_and_load_back_inline() {
+    let url = png_url();
+    let original = json!({
+        "children": [
+            {"type": "image", "id": "a", "src": url},
+            {"type": "rectangle", "id": "s", "fill": [{
+                "type": "shader",
+                "sksl": "uniform shader photo; half4 main(float2 p){ return photo.eval(p); }",
+                "uniforms": {"photo": url, "tint": "#ff0000"}
+            }]}
+        ]
+    });
+    let mut root = original.clone();
+    let out = externalize(&mut root, "logo.assets");
+
+    assert_eq!(
+        out.files.len(),
+        1,
+        "the image node and the shader share one file"
+    );
+    let path = root["children"][1]["fill"][0]["uniforms"]["photo"]
+        .as_str()
+        .expect("a folder path");
+    assert!(path.starts_with("logo.assets/"), "{path}");
+    assert_eq!(
+        root["children"][1]["fill"][0]["uniforms"]["tint"],
+        "#ff0000"
+    );
+
+    let missing = resolve(&mut root, &reader("logo.assets", &out));
+
+    assert!(missing.is_empty());
+    assert_eq!(
+        root["children"][1]["fill"][0]["uniforms"]["photo"], url,
+        "a shader uniform takes the data URL itself, not an op-image reference"
+    );
+}
+
+#[test]
+fn unreadable_shader_image_paths_are_reported_missing() {
+    let mut root = json!({
+        "children": [{"type": "rectangle", "fill": [{
+            "type": "shader",
+            "sksl": "uniform shader photo;",
+            "uniforms": {"photo": "logo.assets/0000000000000000.png"}
+        }]}]
+    });
+    let missing = resolve(&mut root, &|_: &str| None);
+    assert_eq!(missing, vec!["logo.assets/0000000000000000.png".to_owned()]);
+}
