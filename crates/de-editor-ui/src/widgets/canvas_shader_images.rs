@@ -21,7 +21,7 @@ use de_editor_core::shader_images::{decode_image_id, image_source, shader_childr
 
 /// The image ids `sksl`'s shader children are bound to in `uniforms`, in
 /// declaration order. A child without a decodable binding is skipped.
-pub fn shader_image_ids(sksl: &str, uniforms: &[(&str, &[f32])]) -> Vec<u64> {
+pub(crate) fn shader_image_ids(sksl: &str, uniforms: &[(&str, &[f32])]) -> Vec<u64> {
     shader_children(sksl)
         .into_iter()
         .filter_map(|child| {

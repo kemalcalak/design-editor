@@ -218,9 +218,8 @@ impl NativeBackend {
     /// the program fails to compile / build. `uniform shader` children bind
     /// the image their uniform names (see `shader_children.rs`). The
     /// compiled `RuntimeEffect` is cached on `self.shader_cache` keyed by
-    /// source hash, so the
-    /// per-frame editor repaint reuses the program rather than
-    /// recompiling. On ANY failure we paint `fallback` solid — never
+    /// source hash, so the per-frame editor repaint reuses the program
+    /// rather than recompiling. On ANY failure we paint `fallback` solid — never
     /// panic, since the source is untrusted.
     #[allow(clippy::too_many_arguments)]
     pub fn fill_round_rect_shader(

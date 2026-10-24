@@ -18,6 +18,25 @@ fn commented_out_children_are_ignored() {
 }
 
 #[test]
+fn declarations_glued_to_punctuation_still_count() {
+    assert_eq!(shader_children("}uniform shader a, b;"), vec!["a"]);
+    assert_eq!(shader_children("uniform shader a\n"), vec!["a"]);
+}
+
+#[test]
+fn a_looked_up_source_survives_newer_registrations() {
+    let kept = "data:image/png;base64,a2VwdA==";
+    let id = register_image_source(kept);
+    for index in 0..REGISTRY_CAP + 8 {
+        register_image_source(&format!("data:image/png;base64,{index:08}"));
+        assert!(
+            image_source(id).is_some(),
+            "evicted after {index} newer sources"
+        );
+    }
+}
+
+#[test]
 fn image_ids_round_trip_through_f32_chunks() {
     for id in [0, 1, 0xffff, 0x1_0000, u64::MAX, 0xcbf2_9ce4_8422_2325] {
         let encoded = encode_image_id(id);

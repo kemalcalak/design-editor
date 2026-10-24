@@ -38,7 +38,7 @@ impl NativeBackend {
             }
             return builder.make_shader(local_matrix);
         }
-        let box_size = fragment_box(rect, uniforms);
+        let box_size = fragment_box(rect, local_matrix);
         let mut children = Vec::with_capacity(effect.children().len());
         for child in effect.children() {
             if child.ty() != ChildType::Shader {
@@ -60,16 +60,17 @@ impl NativeBackend {
     }
 }
 
-/// The node box in the program's `fragCoord` space: the document-space
-/// `size` uniform when the loader bound one (the local matrix scales it to
-/// the screen), else the painted rect.
-fn fragment_box(rect: Rect, uniforms: &[(&str, &[f32])]) -> (f32, f32) {
-    uniforms
-        .iter()
-        .find(|(name, values)| *name == "size" && values.len() == 2)
-        .map(|(_, values)| (values[0], values[1]))
-        .filter(|(w, h)| w.is_finite() && h.is_finite() && *w > 0.0 && *h > 0.0)
-        .unwrap_or((rect.size.x, rect.size.y))
+/// The node box in the program's `fragCoord` space: the painted rect
+/// mapped back through the local matrix, which scales a document-space
+/// `size` uniform onto the screen (`runtime_shader_local_matrix`). The web
+/// bridge derives its box from the same matrix.
+fn fragment_box(rect: Rect, local_matrix: &Matrix) -> (f32, f32) {
+    let (sx, sy) = (local_matrix.scale_x(), local_matrix.scale_y());
+    if sx > 0.0 && sy > 0.0 {
+        (rect.size.x / sx, rect.size.y / sy)
+    } else {
+        (rect.size.x, rect.size.y)
+    }
 }
 
 /// `image` stretched over `box_size`, clamped at the edges.

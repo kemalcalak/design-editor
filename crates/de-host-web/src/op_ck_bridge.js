@@ -176,11 +176,12 @@ export function opCkCreateRuntimeEffectCache(CK) {
 
 // Image children (#9): the names declared `uniform shader <name>;` in source
 // order, outside comments. CanvasKit binds children by position and exposes
-// no child reflection, so this mirrors `de_editor_core::shader_images`.
+// no child reflection, so this mirrors `shader_children` in
+// `de_editor_core::shader_images`; keep the two in step.
 export function opCkShaderChildren(sksl) {
   const code = String(sksl).replace(/\/\*[\s\S]*?(?:\*\/|$)|\/\/[^\n]*/g, ' ');
   const names = [];
-  for (const match of code.matchAll(/\buniform\s+shader\s+([A-Za-z_][A-Za-z0-9_]*)\s*;/g)) {
+  for (const match of code.matchAll(/\buniform\s+shader\s+([A-Za-z_][A-Za-z0-9_]*)\b/g)) {
     names.push(match[1]);
   }
   return names;

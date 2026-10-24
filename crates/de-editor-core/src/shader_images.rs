@@ -23,17 +23,25 @@ use std::sync::{Arc, Mutex, OnceLock};
 /// Number of `f32` values an image binding occupies.
 pub const IMAGE_ID_ARITY: usize = 4;
 
-/// Distinct sources the registry keeps before it forgets the oldest. The
-/// loader re-registers every source it sees on each scene build, so a live
-/// texture forgotten here comes back with the next build.
+/// Distinct sources the registry keeps before it forgets the least recently
+/// used one. Paint looks every visible texture up each frame
+/// ([`image_source`]), which keeps it recent, so only sources no scene has
+/// painted for a while are forgotten (a scene build registers them again).
 const REGISTRY_CAP: usize = 256;
 
 /// Names declared `uniform shader <name>;` in `sksl`, in declaration order
-/// (the order backends bind children in). Comments are skipped.
+/// (the order backends bind children in). Comments are skipped. The web
+/// bridge binds children by position with its own copy of this rule
+/// (`opCkShaderChildren` in `de-host-web/src/op_ck_bridge.js`); keep the
+/// two in step.
 pub fn shader_children(sksl: &str) -> Vec<&str> {
     let mut names = Vec::new();
+    if !sksl.contains("shader") {
+        // Most shader fills have no children: skip the scan.
+        return names;
+    }
     let mut previous: [&str; 2] = ["", ""];
-    for token in tokens(sksl) {
+    for token in sksl_tokens(sksl) {
         if previous[0] == "uniform" && previous[1] == "shader" && is_identifier(token) {
             names.push(token);
         }
@@ -47,9 +55,10 @@ pub fn is_shader_child(sksl: &str, name: &str) -> bool {
     shader_children(sksl).contains(&name)
 }
 
-/// Whitespace / `;` separated tokens of `sksl` outside `//` and `/* */`
-/// comments.
-fn tokens(sksl: &str) -> impl Iterator<Item = &str> {
+/// Tokens of `sksl` outside `//` and `/* */` comments, split on whitespace
+/// and the punctuation that can end a declaration (`;`, `,`, braces,
+/// parentheses). Shared with the canvas-bound `time` / `mouse` lookups.
+pub fn sksl_tokens(sksl: &str) -> impl Iterator<Item = &str> {
     let mut code: Vec<&str> = Vec::new();
     let mut rest = sksl;
     while !rest.is_empty() {
@@ -73,7 +82,7 @@ fn tokens(sksl: &str) -> impl Iterator<Item = &str> {
         }
     }
     code.into_iter().flat_map(|part| {
-        part.split(|c: char| c.is_whitespace() || c == ';')
+        part.split(|c: char| c.is_whitespace() || matches!(c, ';' | ',' | '{' | '}' | '(' | ')'))
             .filter(|token| !token.is_empty())
     })
 }
@@ -86,7 +95,8 @@ fn is_identifier(token: &str) -> bool {
         && chars.all(|c| c.is_ascii_alphanumeric() || c == '_')
 }
 
-/// `id` as four 16-bit chunks, lowest first.
+/// `id` as four 16-bit chunks, lowest first. The web bridge decodes the same
+/// layout (`opCkDecodeShaderImageId`).
 pub fn encode_image_id(id: u64) -> [f32; IMAGE_ID_ARITY] {
     std::array::from_fn(|chunk| ((id >> (16 * chunk)) & 0xffff) as f32)
 }
@@ -112,6 +122,16 @@ struct Registry {
     order: VecDeque<u64>,
 }
 
+impl Registry {
+    /// Mark `id` as the most recently used entry.
+    fn touch(&mut self, id: u64) {
+        if let Some(at) = self.order.iter().position(|entry| *entry == id) {
+            self.order.remove(at);
+            self.order.push_back(id);
+        }
+    }
+}
+
 fn registry() -> &'static Mutex<Registry> {
     static REGISTRY: OnceLock<Mutex<Registry>> = OnceLock::new();
     REGISTRY.get_or_init(|| Mutex::new(Registry::default()))
@@ -126,6 +146,7 @@ pub fn register_image_source(src: &str) -> u64 {
         return id;
     };
     if registry.sources.contains_key(&id) {
+        registry.touch(id);
         return id;
     }
     while registry.order.len() >= REGISTRY_CAP {
@@ -139,9 +160,13 @@ pub fn register_image_source(src: &str) -> u64 {
     id
 }
 
-/// The source [`register_image_source`] recorded for `id`.
+/// The source [`register_image_source`] recorded for `id`, marking it
+/// recently used.
 pub fn image_source(id: u64) -> Option<Arc<str>> {
-    registry().lock().ok()?.sources.get(&id).cloned()
+    let mut registry = registry().lock().ok()?;
+    let src = registry.sources.get(&id).cloned()?;
+    registry.touch(id);
+    Some(src)
 }
 
 #[cfg(test)]

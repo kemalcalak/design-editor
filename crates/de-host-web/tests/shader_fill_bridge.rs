@@ -400,7 +400,7 @@ entry.effect.delete();
 }
 
 #[test]
-fn shader_children_and_image_ids_parse_like_the_rust_side() {
+fn shader_children_and_image_ids_match_the_rust_cases() {
     let mut javascript = source("op_ck_bridge.js");
     javascript.push_str(
         r#"
@@ -415,6 +415,9 @@ assert(
   'commented-out children are ignored',
 );
 assert(same(opCkShaderChildren('/* uniform shader x;'), []), 'an unterminated comment hides the rest');
+// Same cases as `declarations_glued_to_punctuation_still_count` in Rust.
+assert(same(opCkShaderChildren('}uniform shader a, b;'), ['a']), 'glued to a brace, first of a list');
+assert(same(opCkShaderChildren('uniform shader a\n'), ['a']), 'no semicolon');
 // u64::MAX and 0x0123_4567_89ab_cdef as four 16-bit chunks, lowest first.
 assert(same(opCkDecodeShaderImageId([65535, 65535, 65535, 65535]), { lo: 0xffffffff, hi: 0xffffffff }), 'max id');
 assert(same(opCkDecodeShaderImageId([0xcdef, 0x89ab, 0x4567, 0x0123]), { lo: 0x89abcdef, hi: 0x01234567 }), 'mixed id');

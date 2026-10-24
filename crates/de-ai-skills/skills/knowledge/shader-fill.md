@@ -5,7 +5,7 @@ phase: [generation]
 trigger:
   keywords: [shader, glsl, sksl, generative, noise, grain, turbulence, feTurbulence, aurora]
 priority: 28
-budget: 960
+budget: 1080
 category: knowledge
 ---
 
@@ -56,7 +56,15 @@ fill: [{ type: "shader",
   uniforms: { core: "#7c3aed", edge: "#0b0614", size: [600, 600] } }]
 ```
 
-3) Turbulence preset (film grain / FBM value noise):
+3) Image with a tint (any image source in `photo`):
+
+```
+fill: [{ type: "shader",
+  sksl: "uniform shader photo; uniform half4 tint; half4 main(float2 p){ half4 c = photo.eval(p); return half4(mix(c.rgb, tint.rgb * c.a, 0.4), c.a); }",
+  uniforms: { photo: "https://example.com/photo.jpg", tint: "#7c3aed" } }]
+```
+
+4) Turbulence preset (film grain / FBM value noise):
 
 ```
 fill: [{ type: "shader", preset: "turbulence",
@@ -73,10 +81,11 @@ RULES:
 - Pass the node's pixel size as a `float2 size` uniform when you need to
   normalise `fragCoord` (SkSL has no built-in resolution).
 - To sample an image, declare `uniform shader image0;` and bind
-  `uniforms: { image0: "<url>" }` — a `data:` / `https://` URL (same as
-  an image fill's `url`). `image0.eval(p)` returns the image stretched
-  over the node box in `fragCoord` space (premultiplied); it is
-  transparent until the image loads. Exports include it.
+  `uniforms: { image0: "<src>" }` — a `data:` URL, an `https://` URL, or
+  a saved document's `<name>.assets/<file>` path. `image0.eval(p)`
+  returns premultiplied colour, the image STRETCHED over the node box
+  (no aspect fit; with a `size` uniform, `p` runs over `size`). It is
+  transparent until loaded; exports include it. Presets ignore images.
 - To animate, declare `uniform float time;` — the canvas binds elapsed
   seconds every frame (exports render at `time = 0`). Never put `time` in
   `uniforms`; keep motion slow, e.g. `sin(time * 0.5)`.

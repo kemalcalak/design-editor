@@ -157,11 +157,12 @@ fn fill_hex(fill: &PenFill) -> Option<&str> {
         PenFill::RadialGradient(body) => body.stops.first().map(|s| s.color.as_str()),
         PenFill::MeshGradient(body) => body.stops.first().map(|s| s.color.as_str()),
         PenFill::Shader(body) => body.uniforms.as_ref().and_then(|u| {
-            let sksl = body.sksl.as_deref().unwrap_or_default();
+            let children =
+                crate::shader_images::shader_children(body.sksl.as_deref().unwrap_or_default());
             u.iter().find_map(|(name, v)| match v {
                 // An image source bound to a shader child is not a colour.
                 jian_ops_schema::style::ShaderUniformValue::Color(c)
-                    if !crate::shader_images::is_shader_child(sksl, name) =>
+                    if !children.contains(&name.as_str()) =>
                 {
                     Some(c.as_str())
                 }
