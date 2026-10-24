@@ -60,6 +60,11 @@ pub(crate) fn apply_paint_option_action(state: &mut EditorState, action: &Proper
             }
             let _ = state.set_selected_shader_uniform_number(*target, *index, 0, *value);
         }
+        A::ToggleShaderUniform { target, index, on } => {
+            state.commit_history();
+            let value = if *on { 1.0 } else { 0.0 };
+            let _ = state.set_selected_shader_uniform_number(*target, *index, 0, value);
+        }
         A::OpenShaderSource(target) => {
             let _ = state.open_shader_source_editor(*target);
         }

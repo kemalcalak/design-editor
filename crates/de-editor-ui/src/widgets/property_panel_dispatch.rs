@@ -654,6 +654,7 @@ pub fn apply_property_action(
         | A::RestoreCustomShader
         | A::EditMeshLattice(_)
         | A::DragShaderUniform { .. }
+        | A::ToggleShaderUniform { .. }
         | A::OpenShaderSource(_) => {
             crate::widgets::property_panel_dispatch_paint::apply_paint_option_action(state, action);
             Handled

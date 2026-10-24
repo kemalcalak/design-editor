@@ -117,12 +117,106 @@ fn a_string_value_makes_an_unannotated_vector_a_colour() {
 }
 
 #[test]
-fn integer_uniforms_bind_as_floats() {
+fn integer_uniforms_stay_integers() {
     let src = "uniform int steps; uniform ivec2 grid; void main() { gl_FragColor = vec4(float(steps) + float(grid.x)); }";
     let out = translate(src, Stage::Fill, &Map::new()).unwrap();
-    assert!(out.sksl.contains("uniform float steps;"), "{}", out.sksl);
-    assert!(out.sksl.contains("float(int(steps))"), "{}", out.sksl);
-    assert!(out.sksl.contains("float(int2(grid).x)"), "{}", out.sksl);
+    assert!(out.sksl.contains("uniform int steps;"), "{}", out.sksl);
+    assert!(out.sksl.contains("uniform int2 grid;"), "{}", out.sksl);
+    assert!(
+        out.sksl.contains("float(steps) + float(grid.x)"),
+        "{}",
+        out.sksl
+    );
+    assert_eq!(out.uniforms[0].slot, Slot::Int(1));
+    assert_eq!(out.uniforms[1].slot, Slot::Int(2));
+}
+
+#[test]
+fn boolean_uniforms_bind_as_tagged_ints() {
+    let src = "/** @label Invert */ uniform bool flip; uniform bvec2 axes; void main() { gl_FragColor = vec4(flip ? 1.0 : 0.0, axes.x ? 1.0 : 0.0, 0.0, 1.0); }";
+    let out = translate(src, Stage::Fill, &Map::new()).unwrap();
+    assert!(
+        out.sksl
+            .contains("/** @label Invert @bool */ uniform int flip;"),
+        "{}",
+        out.sksl
+    );
+    assert!(out.sksl.contains("bool(flip) ? 1.0"), "{}", out.sksl);
+    assert!(out.sksl.contains("bool2(axes).x"), "{}", out.sksl);
+    assert_eq!(out.uniforms[0].slot, Slot::Bool(1));
+    assert_eq!(out.uniforms[1].slot, Slot::Bool(2));
+}
+
+#[test]
+fn discard_returns_transparent() {
+    let src = "void main() { if (gl_FragCoord.x < 1.0) discard; gl_FragColor = vec4(1.0); }";
+    let sksl = translate(src, Stage::Fill, &Map::new()).unwrap().sksl;
+    assert!(!sksl.contains("discard"), "{sksl}");
+    assert!(sksl.contains("< 1.0) return half4(0.0);"), "{sksl}");
+    assert!(!sksl.contains("pen_Discard"), "{sksl}");
+}
+
+#[test]
+fn discard_in_a_helper_sets_a_flag_main_checks() {
+    let src = "float edge(float x) { if (x < 0.0) discard; return x; } void main() { gl_FragColor = vec4(edge(gl_FragCoord.x - 2.0)); if (true) return; }";
+    let sksl = translate(src, Stage::Fill, &Map::new()).unwrap().sksl;
+    assert!(sksl.contains("bool pen_Discard;"), "{sksl}");
+    assert!(
+        sksl.contains("{ pen_Discard = true; return 0.0; };"),
+        "{sksl}"
+    );
+    assert!(sksl.contains("pen_Discard = false;"), "{sksl}");
+    assert_eq!(
+        sksl.matches("return pen_Discard ? half4(0.0) : half4(pen_FragColor)")
+            .count(),
+        2,
+        "{sksl}"
+    );
+}
+
+#[test]
+fn webgl_builtins_read_fragment_values() {
+    let src = "void main() { vec2 p = gl_PointCoord; float n = float(gl_MaxDrawBuffers) + gl_DepthRange.far; if (gl_FrontFacing) { gl_FragData[0] = vec4(p, n, 1.0); } }";
+    let sksl = translate(src, Stage::Fill, &Map::new()).unwrap().sksl;
+    assert!(
+        sksl.contains("float2 p = (pen_FragCoord.xy / size);"),
+        "{sksl}"
+    );
+    assert!(sksl.contains("float(1) + 1.0"), "{sksl}");
+    assert!(sksl.contains("if (true)"), "{sksl}");
+    assert!(
+        sksl.contains("pen_FragColor = float4(p, n, 1.0);"),
+        "{sksl}"
+    );
+}
+
+#[test]
+fn projective_lookups_divide_by_the_last_coordinate() {
+    let src = "uniform sampler2D tex; void main() { gl_FragColor = texture2DProj(tex, vec3(0.5, 0.5, 2.0)); }";
+    let sksl = translate(src, Stage::Fill, &values(json!({ "tex": "a.png" })))
+        .unwrap()
+        .sksl;
+    assert!(sksl.contains("float2 pen_project(float3 p)"), "{sksl}");
+    assert!(
+        sksl.contains("tex.eval(pen_texel(pen_project(float3(0.5, 0.5, 2.0))))"),
+        "{sksl}"
+    );
+}
+
+#[test]
+fn conditional_blocks_and_function_macros_translate() {
+    let src = "#ifdef GL_ES
+precision highp float;
+#endif
+#define SQ(x) ((x) * (x))
+#if __VERSION__ >= 100 && defined(GL_ES)
+#define SHADE 0.5
+#else
+#define SHADE 1.0
+#endif
+void main() { gl_FragColor = vec4(SQ(SHADE)); }";
+    let sksl = translate(src, Stage::Fill, &Map::new()).unwrap().sksl;
+    assert!(sksl.contains("float4(((0.5) * (0.5)))"), "{sksl}");
 }
 
 #[test]
@@ -151,7 +245,7 @@ fn defines_and_gl_es_guards_are_preprocessed() {
     let src = "#version 100\n#ifdef GL_ES\nprecision mediump float;\n#endif\n#define PI 3.14159\n#define TAU (2.0 * PI)\nvoid main() { gl_FragColor = vec4(sin(TAU)); }";
     let sksl = translate(src, Stage::Fill, &Map::new()).unwrap().sksl;
     assert!(!sksl.contains('#'), "{sksl}");
-    assert!(sksl.contains("sin(((2.0 * 3.14159)))"), "{sksl}");
+    assert!(sksl.contains("sin((2.0 * 3.14159))"), "{sksl}");
 }
 
 #[test]
@@ -185,16 +279,20 @@ fn unsupported_sources_fail_with_a_reason() {
     let fill = |src: &str| translate(src, Stage::Fill, &Map::new()).unwrap_err();
     assert_eq!(fill("float f() { return 1.0; }"), GlslError::NoMain);
     assert!(matches!(
-        fill("#if 1\n#endif\nvoid main() {}"),
+        fill("#if 1\nvoid main() {}"),
         GlslError::Directive(_)
     ));
     assert!(matches!(
-        fill("#define F(x) x\nvoid main() {}"),
+        fill("#error unsupported\nvoid main() {}"),
         GlslError::Directive(_)
     ));
     assert_eq!(
-        fill("void main() { discard; }"),
-        GlslError::Unsupported("discard")
+        fill("struct S { float a; }; S f() { discard; } void main() {}"),
+        GlslError::Unsupported("discard in a function returning a struct")
+    );
+    assert_eq!(
+        fill("void main() { gl_FragData[1] = vec4(1.0); }"),
+        GlslError::Unsupported("gl_FragData other than gl_FragData[0]")
     );
     assert!(matches!(
         fill("uniform sampler2D tex; void main() { gl_FragColor = texture2D(tex, vec2(0.0)); }"),
@@ -294,6 +392,31 @@ fn translated_fixtures_compile_in_skia() {
             "uniform int steps; uniform ivec2 grid; uniform vec3 tint; void main() { float v = 0.0; for (int i = 0; i < 4; i++) { if (i >= steps) break; v += mod(float(i), 2.0); } gl_FragColor = vec4(tint * v + vec3(float(grid.x)), atan(1.0, 2.0)); }",
             Stage::Fill,
             json!({ "tint": "#00ff00" }),
+        ),
+        (
+            "/** @label Invert */ uniform bool flip; uniform bvec2 axes; void main() { gl_FragColor = vec4(flip ? 1.0 : 0.0, axes.x ? 1.0 : 0.0, 0.0, 1.0); }",
+            Stage::Fill,
+            json!({}),
+        ),
+        (
+            "float edge(float x) { if (x < 0.0) discard; return x; } void main() { if (gl_FragCoord.y < 2.0) discard; gl_FragColor = vec4(edge(gl_FragCoord.x - 2.0)); if (true) return; }",
+            Stage::Fill,
+            json!({}),
+        ),
+        (
+            "void main() { vec2 p = gl_PointCoord; float n = float(gl_MaxDrawBuffers) + gl_DepthRange.far; if (gl_FrontFacing) { gl_FragData[0] = vec4(p, n, 1.0); } }",
+            Stage::Fill,
+            json!({}),
+        ),
+        (
+            "uniform sampler2D tex; void main() { gl_FragColor = texture2DProj(tex, vec3(0.5, 0.5, 2.0)) + texture2DProj(tex, vec4(0.5)); }",
+            Stage::Fill,
+            json!({ "tex": "a.png" }),
+        ),
+        (
+            "#define SQ(x) ((x) * (x))\n#if defined(GL_ES)\n#define SHADE 0.5\n#endif\nvoid main() { gl_FragColor = vec4(SQ(SHADE)); }",
+            Stage::Fill,
+            json!({}),
         ),
     ];
     for (src, stage, vals) in cases {

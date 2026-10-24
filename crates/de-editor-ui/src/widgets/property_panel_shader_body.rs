@@ -43,6 +43,8 @@ const LABEL_FONT_SIZE: f32 = 11.0;
 const CODE_BUTTON_W: f32 = 76.0;
 /// Space under the Code row.
 const TRAILING_GAP: f32 = 6.0;
+/// Side of a boolean row's checkbox.
+const SWITCH_SIDE: f32 = 16.0;
 /// Prefixes of a vector's component fields.
 const COMPONENTS: [&str; 4] = ["x", "y", "z", "w"];
 
@@ -96,19 +98,38 @@ pub fn attach_checks(
     state: &de_editor_core::EditorState,
 ) {
     let checks = &state.editor_ui.shader_editing.checks;
-    let status = |target| {
-        de_editor_core::shader_edit::shader_program(node, target)
-            .and_then(|program| program.sksl)
-            .map_or(ShaderCheck::Pending, |sksl| checks.status(sksl))
+    let refresh = |body: &mut ShaderBody, target| {
+        let Some(program) = de_editor_core::shader_edit::shader_program(node, target) else {
+            return;
+        };
+        // A variable-bound uniform shows its value under the active theme
+        // (#165); the node-only snapshot has no variables at hand.
+        let resolved = program.uniforms.and_then(|uniforms| {
+            de_editor_core::variables_resolve::resolve_shader_uniforms(
+                uniforms,
+                &state.doc,
+                &state.ui.variables.active_theme,
+            )
+        });
+        if let Some(resolved) = resolved.as_ref() {
+            let shown = de_editor_core::shader_edit::ShaderProgram {
+                sksl: program.sksl,
+                uniforms: Some(resolved),
+            };
+            body.rows = ShaderBody::of(shown, None).rows;
+        }
+        body.check = program
+            .sksl
+            .map_or(ShaderCheck::Pending, |sksl| checks.status(sksl));
     };
     for (index, fill) in snapshot.fills.iter_mut().enumerate() {
         if let Some(body) = fill.shader.as_mut() {
-            body.check = status(ShaderTarget::Fill(index));
+            refresh(body, ShaderTarget::Fill(index));
         }
     }
     for (index, effect) in snapshot.effects.iter_mut().enumerate() {
         if let Some(body) = effect.shader.as_mut() {
-            body.check = status(ShaderTarget::Effect(index));
+            refresh(body, ShaderTarget::Effect(index));
         }
     }
 }
@@ -184,6 +205,17 @@ fn fields(control: Rect, n: usize) -> Vec<Rect> {
         .collect()
 }
 
+/// The checkbox of a boolean row, at the start of its control.
+fn switch_rect(control: Rect) -> Rect {
+    let side = SWITCH_SIDE.min(control.size.y);
+    Rect::xywh(
+        control.origin.x,
+        control.origin.y + (control.size.y - side) / 2.0,
+        side,
+        side,
+    )
+}
+
 /// A ranged float's `(slider, number)`.
 fn slider_and_number(control: Rect) -> (Rect, Rect) {
     let number = Rect::xywh(
@@ -213,10 +245,14 @@ pub fn slider_value(slider: Rect, range: (f32, f32), x: f32) -> f32 {
 /// The number fields of a row: `(component, rect)`.
 fn number_rects(row: &ShaderUniformRow, control: Rect) -> Vec<(usize, Rect)> {
     match (row.kind, row.range) {
-        (UniformKind::Float, Some(_)) => vec![(0, slider_and_number(control).1)],
-        (UniformKind::Float, None) => vec![(0, control)],
-        (UniformKind::Vector(n), _) => fields(control, n).into_iter().enumerate().collect(),
-        (UniformKind::Color { .. }, _) => Vec::new(),
+        (UniformKind::Float | UniformKind::Int(1), Some(_)) => {
+            vec![(0, slider_and_number(control).1)]
+        }
+        (UniformKind::Float | UniformKind::Int(1), None) => vec![(0, control)],
+        (UniformKind::Vector(n) | UniformKind::Int(n), _) => {
+            fields(control, n).into_iter().enumerate().collect()
+        }
+        (UniformKind::Color { .. } | UniformKind::Bool, _) => Vec::new(),
     }
 }
 
@@ -238,7 +274,15 @@ pub fn push_action_rects(
     for (index, row) in body.rows.iter().enumerate() {
         let (_, control) = split_row(row_rect(x, y, width, index));
         match (row.kind, row.range) {
-            (UniformKind::Float, Some(_)) => out.push((
+            (UniformKind::Bool, _) => out.push((
+                PropertyPanelAction::ToggleShaderUniform {
+                    target,
+                    index,
+                    on: row.numbers.first().is_none_or(|v| *v == 0.0),
+                },
+                switch_rect(control),
+            )),
+            (UniformKind::Float | UniformKind::Int(1), Some(_)) => out.push((
                 PropertyPanelAction::DragShaderUniform {
                     target,
                     index,
@@ -322,16 +366,29 @@ pub fn paint_body(
         let (label, control) = split_row(row_rect(x, y, width, index));
         paint_label(cx, theme, label, &row.label);
         match (row.kind, row.range) {
-            (UniformKind::Float, Some(range)) => {
+            (UniformKind::Float | UniformKind::Int(1), Some(range)) => {
                 let value = row.numbers.first().copied().unwrap_or(range.0);
                 paint_slider(cx, theme, slider_and_number(control).0, range, value);
+            }
+            (UniformKind::Bool, _) => {
+                let checked = row.numbers.first().is_some_and(|v| *v != 0.0);
+                jian_widgets::components::checkbox::Checkbox {
+                    checked,
+                    enabled: true,
+                }
+                .paint(
+                    cx.backend,
+                    switch_rect(control),
+                    &crate::widgets::button::tokens_from_theme(theme),
+                );
             }
             (UniformKind::Color { .. }, _) => {
                 paint_colour(cx, theme, control, row.hex.as_deref().unwrap_or("#000000"));
             }
             _ => {}
         }
-        let vector = matches!(row.kind, UniformKind::Vector(_));
+        let vector = matches!(row.kind, UniformKind::Vector(_))
+            || matches!(row.kind, UniformKind::Int(n) if n > 1);
         for (component, rect) in number_rects(row, control) {
             let focus = PropertyFocus::ShaderUniform {
                 target,

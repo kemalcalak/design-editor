@@ -123,6 +123,23 @@ assert(
   JSON.stringify(boundUniforms) === JSON.stringify(Array.from(new Float32Array([0.1, 0.2, 0.3, 0.4]))),
   'uniforms must bind by reflected name and slot while unknown names are ignored',
 );
+// Integer uniforms (#165) bind too, rounded to whole numbers.
+const intEffect = {
+  getUniformFloatCount: () => 2,
+  getUniformCount: () => 1,
+  getUniformName: () => 'grid',
+  getUniform: () => ({ columns: 2, rows: 1, isInteger: true, slot: 0 }),
+  makeShader: (data) => { boundUniforms = Array.from(data); return { delete() {} }; },
+};
+const intEntry = opCkCreateRuntimeEffectCache({ RuntimeEffect: { Make: () => intEffect } }).get('int');
+assert(
+  opCkMakeRuntimeShader(intEntry, ['grid'], new Float32Array([2.6, 1.2]), new Uint32Array([2])) !== null,
+  'an int uniform must build a shader',
+);
+assert(
+  JSON.stringify(boundUniforms) === JSON.stringify([3, 1]),
+  `int uniforms must bind rounded, got ${JSON.stringify(boundUniforms)}`,
+);
 assert(
   JSON.stringify(opCkRuntimeEffectLocalMatrix(
     ['size'], new Float32Array([64, 64]), new Uint32Array([2]), 5, 7, 128, 128,

@@ -19,6 +19,9 @@
 //! - `@color` (or SkSL's `layout(color)`) makes a `float3` / `float4` a
 //!   colour;
 //! - `@default` is the value a missing uniform takes;
+//! - an `int` / `int2..4` uniform gets whole-number fields, and `@bool` on
+//!   an `int` makes it a switch (SkSL has no boolean uniforms; the `.pen`
+//!   import tags a GLSL `bool` so, #165);
 //! - `@time` / `@mouse` / `@resolution` mark canvas-bound uniforms, which
 //!   get no row (nor do `size`, `time`, `mouse` and `uniform shader`
 //!   children, which the canvas binds itself).
@@ -47,6 +50,11 @@ pub enum UniformKind {
     /// stored as a hex string (the backends expand it); a 3-component one
     /// as three floats, which is what a `float3` uniform binds.
     Color { arity: usize },
+    /// An `int` (1) or `intN` (N) uniform: whole-number fields, stored as
+    /// floats the backends round.
+    Int(usize),
+    /// An `@bool` `int`: a switch, stored as 0 / 1.
+    Bool,
 }
 
 impl UniformKind {
@@ -55,8 +63,8 @@ impl UniformKind {
     pub fn number_fields(self) -> usize {
         match self {
             Self::Float => 1,
-            Self::Vector(n) => n,
-            Self::Color { .. } => 0,
+            Self::Vector(n) | Self::Int(n) => n,
+            Self::Color { .. } | Self::Bool => 0,
         }
     }
 }
@@ -128,6 +136,24 @@ impl ShaderUniformSpec {
             (UniformKind::Color { arity: 3 }, ShaderUniformValue::Color(hex)) => {
                 rgba(hex).map(|[r, g, b, _]| ShaderUniformValue::Vec(vec![r, g, b]))
             }
+            (UniformKind::Int(1), ShaderUniformValue::Float(v)) if v.is_finite() => {
+                Some(ShaderUniformValue::Float(v.round()))
+            }
+            (UniformKind::Int(1), ShaderUniformValue::Vec(v))
+                if v.len() == 1 && v[0].is_finite() =>
+            {
+                Some(ShaderUniformValue::Float(v[0].round()))
+            }
+            (UniformKind::Int(n), ShaderUniformValue::Vec(v))
+                if n > 1 && v.len() == n && v.iter().all(|c| c.is_finite()) =>
+            {
+                Some(ShaderUniformValue::Vec(
+                    v.iter().map(|c| c.round()).collect(),
+                ))
+            }
+            (UniformKind::Bool, ShaderUniformValue::Float(v)) if v.is_finite() => {
+                Some(ShaderUniformValue::Float(f32::from(u8::from(*v != 0.0))))
+            }
             _ => None,
         }
     }
@@ -148,8 +174,11 @@ impl ShaderUniformSpec {
     /// component for a vector, none for a colour.
     pub fn numbers_in(&self, values: Option<&BTreeMap<String, ShaderUniformValue>>) -> Vec<f32> {
         match (self.kind, self.value_in(values)) {
-            (UniformKind::Float, ShaderUniformValue::Float(v)) => vec![v],
-            (UniformKind::Vector(_), ShaderUniformValue::Vec(v)) => v,
+            (
+                UniformKind::Float | UniformKind::Int(1) | UniformKind::Bool,
+                ShaderUniformValue::Float(v),
+            ) => vec![v],
+            (UniformKind::Vector(_) | UniformKind::Int(_), ShaderUniformValue::Vec(v)) => v,
             _ => Vec::new(),
         }
     }
@@ -162,11 +191,17 @@ impl ShaderUniformSpec {
         let numbers: Vec<f32> = text
             .split(|c: char| c == ',' || c.is_whitespace())
             .filter(|part| !part.is_empty())
-            .map(|part| part.parse::<f32>().ok())
+            .map(|part| match part {
+                "true" => Some(1.0),
+                "false" => Some(0.0),
+                part => part.parse::<f32>().ok(),
+            })
             .collect::<Option<_>>()?;
         match self.kind {
-            UniformKind::Float => numbers.first().map(|v| ShaderUniformValue::Float(*v)),
-            UniformKind::Vector(n) | UniformKind::Color { arity: n } => {
+            UniformKind::Float | UniformKind::Int(1) | UniformKind::Bool => numbers
+                .first()
+                .and_then(|v| self.coerce(&ShaderUniformValue::Float(*v))),
+            UniformKind::Vector(n) | UniformKind::Color { arity: n } | UniformKind::Int(n) => {
                 // `@default 1` on a vector fills every component.
                 let filled = match numbers.as_slice() {
                     [one] => vec![*one; n],
@@ -180,8 +215,10 @@ impl ShaderUniformSpec {
 
     fn zero(&self) -> ShaderUniformValue {
         match self.kind {
-            UniformKind::Float => ShaderUniformValue::Float(0.0),
-            UniformKind::Vector(n) => ShaderUniformValue::Vec(vec![0.0; n]),
+            UniformKind::Float | UniformKind::Int(1) | UniformKind::Bool => {
+                ShaderUniformValue::Float(0.0)
+            }
+            UniformKind::Vector(n) | UniformKind::Int(n) => ShaderUniformValue::Vec(vec![0.0; n]),
             UniformKind::Color { arity: 4 } => ShaderUniformValue::Color("#000000".to_owned()),
             UniformKind::Color { arity } => ShaderUniformValue::Vec(vec![0.0; arity]),
         }
@@ -237,13 +274,14 @@ pub fn uniform_specs(
                 {
                     UniformKind::Color { arity: n }
                 }
+                UniformKind::Int(1) if notes.boolean => UniformKind::Bool,
                 other => other,
             };
             out.push(ShaderUniformSpec {
                 name: name.to_owned(),
                 kind,
                 label: notes.label.clone(),
-                range: if kind == UniformKind::Float {
+                range: if matches!(kind, UniformKind::Float | UniformKind::Int(1)) {
                     notes.range()
                 } else {
                     None
@@ -290,13 +328,17 @@ pub fn stored_value_specs(values: &BTreeMap<String, ShaderUniformValue>) -> Vec<
 }
 
 /// SkSL type name → control kind; `None` for what the panel cannot edit
-/// (children, ints — the uniform block skips them — matrices, bools).
+/// (children, matrices).
 fn kind_of(ty: &str) -> Option<UniformKind> {
     Some(match ty {
         "float" | "half" => UniformKind::Float,
         "float2" | "half2" | "vec2" => UniformKind::Vector(2),
         "float3" | "half3" | "vec3" => UniformKind::Vector(3),
         "float4" | "half4" | "vec4" => UniformKind::Vector(4),
+        "int" => UniformKind::Int(1),
+        "int2" => UniformKind::Int(2),
+        "int3" => UniformKind::Int(3),
+        "int4" => UniformKind::Int(4),
         _ => return None,
     })
 }
@@ -308,6 +350,8 @@ struct Notes {
     min: Option<f32>,
     max: Option<f32>,
     color: bool,
+    /// `@bool`: an `int` that holds a boolean.
+    boolean: bool,
     canvas_bound: bool,
     default: Option<String>,
 }
@@ -347,6 +391,7 @@ impl Notes {
                     "min" => notes.min = value.parse().ok().or(notes.min),
                     "max" => notes.max = value.parse().ok().or(notes.max),
                     "color" | "colour" => notes.color = true,
+                    "bool" | "boolean" => notes.boolean = true,
                     "time" | "mouse" | "resolution" => notes.canvas_bound = true,
                     "default" if !value.is_empty() => notes.default = Some(value.to_owned()),
                     _ => {}

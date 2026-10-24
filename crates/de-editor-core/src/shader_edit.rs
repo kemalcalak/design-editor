@@ -307,12 +307,20 @@ impl EditorState {
                 let value = spec.range.map_or(value, |(lo, hi)| value.clamp(lo, hi));
                 ShaderUniformValue::Float(value)
             }
-            crate::UniformKind::Vector(_) => {
+            crate::UniformKind::Int(1) => {
+                let value = spec.range.map_or(value, |(lo, hi)| value.clamp(lo, hi));
+                ShaderUniformValue::Float(value.round())
+            }
+            crate::UniformKind::Bool => {
+                ShaderUniformValue::Float(f32::from(u8::from(value != 0.0)))
+            }
+            crate::UniformKind::Vector(_) | crate::UniformKind::Int(_) => {
+                let int = matches!(spec.kind, crate::UniformKind::Int(_));
                 let mut numbers = spec.numbers_in(uniforms);
                 let Some(slot) = numbers.get_mut(component) else {
                     return false;
                 };
-                *slot = value;
+                *slot = if int { value.round() } else { value };
                 ShaderUniformValue::Vec(numbers)
             }
             crate::UniformKind::Color { .. } => return false,
