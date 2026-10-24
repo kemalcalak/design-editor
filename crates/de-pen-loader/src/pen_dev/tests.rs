@@ -501,3 +501,29 @@ fn an_image_crop_becomes_a_canonical_crop_transform() {
     assert!(doc["children"][2]["fill"][0].get("transform").is_none());
     assert!(!report.unsupported.contains_key("image crop"));
 }
+
+#[test]
+fn a_text_link_opens_its_url_on_tap() {
+    let src = json!({ "version": "2.21", "children": [
+        { "type": "text", "id": "link", "content": "Docs", "href": "https://example.com/it's" },
+        { "type": "text", "id": "own", "content": "Own", "href": "https://example.com",
+          "events": { "onTap": [{ "navigate": { "to": "home" } }] } }
+    ]})
+    .to_string();
+    let loaded = load_canonical_with_assets(&src, &no_assets).expect("loads");
+    let report = loaded.compatibility.pen_dev.expect("converted");
+    assert!(!report.has_losses(), "{}", report.summary());
+    let doc = serde_json::to_value(&loaded.loaded.value).unwrap();
+    let link = &doc["children"][0];
+    assert!(link.get("href").is_none());
+    assert_eq!(
+        link["events"]["onTap"],
+        json!([{ "open_url": { "url": "'https://example.com/it%27s'" } }])
+    );
+    assert_eq!(link["semantics"]["role"], "link");
+    // An authored tap handler is kept.
+    assert_eq!(
+        doc["children"][1]["events"]["onTap"][0]["navigate"]["to"],
+        "home"
+    );
+}

@@ -194,6 +194,7 @@ fn convert_node(
         strip_sizing_fallback(map, axis);
     }
     convert_visibility(map, ctx.report);
+    convert_link(map);
     convert_layout_position(map);
     paint::convert_blend_mode(map, ctx.report);
     paint::convert_fill_key(map, theme, ctx);
@@ -298,6 +299,36 @@ fn padding_sides(padding: Option<&Value>) -> Option<[f64; 4]> {
         [v, h] => Some([v, h, v, h]),
         [t, r, b, l] => Some([t, r, b, l]),
         _ => None,
+    }
+}
+
+/// pen.dev `href` makes a text a link. The canonical way to open a URL is
+/// a tap action (`open_url`, which the preview runs), plus the link role for
+/// accessibility and code export. Authored handlers or semantics win.
+fn convert_link(map: &mut Map<String, Value>) {
+    let Some(Value::String(href)) = map.remove("href") else {
+        return;
+    };
+    if href.trim().is_empty() {
+        return;
+    }
+    // The action's `url` is an expression: a single-quoted string literal.
+    let literal = format!("'{}'", href.replace('\'', "%27"));
+    if let Value::Object(events) = map
+        .entry("events")
+        .or_insert_with(|| Value::Object(Map::new()))
+    {
+        events
+            .entry("onTap")
+            .or_insert_with(|| serde_json::json!([{ "open_url": { "url": literal } }]));
+    }
+    if let Value::Object(semantics) = map
+        .entry("semantics")
+        .or_insert_with(|| Value::Object(Map::new()))
+    {
+        semantics
+            .entry("role")
+            .or_insert_with(|| Value::String("link".to_owned()));
     }
 }
 
