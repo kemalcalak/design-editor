@@ -117,9 +117,9 @@ pub(crate) fn run_export(
 
 pub(crate) fn map_export_deck(flags: &Flags) -> Result<Command, CliError> {
     let format = flag_value(flags, "format").unwrap_or_else(|| "pptx".into());
-    if !matches!(format.as_str(), "pptx" | "html" | "pdf") {
+    if !matches!(format.as_str(), "pptx" | "html" | "pdf" | "hyperframes") {
         return Err(CliError::Usage(format!(
-            "unsupported deck format {format:?}: must be one of pptx, html, pdf"
+            "unsupported deck format {format:?}: must be one of pptx, html, pdf, hyperframes"
         )));
     }
     let output =

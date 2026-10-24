@@ -218,8 +218,8 @@ fn export_deck_defaults_to_pptx_and_requires_an_output() {
     ));
 
     // PowerPoint is the format users reach for by name, so it is the default;
-    // the other two must still be selectable.
-    for format in ["html", "pdf"] {
+    // the others must still be selectable.
+    for format in ["html", "pdf", "hyperframes"] {
         let parsed = parse_args(&args(&[
             "export-deck",
             "--output",
