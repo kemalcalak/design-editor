@@ -10,7 +10,6 @@
 //! runtime never writes back, so the document is left exactly as it was.
 
 use std::collections::BTreeMap;
-use std::rc::Rc;
 
 use base64::Engine as _;
 use de_editor_core::EditorState;
@@ -72,7 +71,9 @@ impl CapturePreview {
             page_index,
             self.preserve_authored_geometry,
             false,
-            Rc::new(jian_skia::SkiaMeasure::new()),
+            // The layout measure the editor canvas and native Preview use, so
+            // the capture wraps text where the canvas does (#197).
+            de_pen_loader::layout_measure_backend(),
             de_preview_core::PreviewHostCapabilities::none(),
             de_preview_core::MotionPreference::Full,
             0,
