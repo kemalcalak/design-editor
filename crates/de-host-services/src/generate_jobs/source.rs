@@ -7,7 +7,10 @@ use base64::Engine as _;
 use super::GenerateJobError;
 
 pub const MAX_SOURCE_BYTES: usize = 16 * 1024 * 1024;
+/// pen.dev's lower bound for the background transforms.
 pub const MIN_SOURCE_PX: u32 = 256;
+/// Vectorize takes small logos and marks too.
+pub const MIN_TRACE_SOURCE_PX: u32 = 16;
 pub const MAX_SOURCE_PX: u32 = 4096;
 
 /// Where a transform's source comes from. A remote url is fetched on the
@@ -19,8 +22,10 @@ pub enum SourceRef {
 }
 
 impl SourceRef {
-    /// Classify a url taken from the document.
-    pub fn from_url(url: &str) -> Result<Self, GenerateJobError> {
+    /// Classify a url taken from the document. `allow_remote` is off on the
+    /// web daemon, whose documents come from the browser: fetching their
+    /// urls from the daemon's host would be an SSRF hop.
+    pub fn from_url(url: &str, allow_remote: bool) -> Result<Self, GenerateJobError> {
         let url = url.trim();
         if url.starts_with(super::PENDING_IMAGE_PREFIX) {
             return Err(GenerateJobError::Source(
@@ -31,6 +36,12 @@ impl SourceRef {
             return Ok(SourceRef::Data(url.to_string()));
         }
         if url.starts_with("https://") || url.starts_with("http://") {
+            if !allow_remote {
+                return Err(GenerateJobError::Source(
+                    "remote image urls are not fetched by the web daemon; embed the image first"
+                        .into(),
+                ));
+            }
             return Ok(SourceRef::Remote(url.to_string()));
         }
         Err(GenerateJobError::Source(format!(
@@ -39,10 +50,11 @@ impl SourceRef {
         )))
     }
 
-    /// The decoded, checked source. Network for a remote url.
-    pub fn load(&self) -> Result<SourceImage, GenerateJobError> {
+    /// The decoded, checked source (sides at least `min_px`). Network for a
+    /// remote url.
+    pub fn load(&self, min_px: u32) -> Result<SourceImage, GenerateJobError> {
         match self {
-            SourceRef::Data(url) => SourceImage::from_data_url(url),
+            SourceRef::Data(url) => SourceImage::from_data_url(url, min_px),
             SourceRef::Remote(url) => {
                 let client = super::backend::provider_client()?;
                 let fetched = crate::chat_runtime::block_on_anywhere(
@@ -55,7 +67,7 @@ impl SourceRef {
                 let (_, bytes) = fetched.ok_or_else(|| {
                     GenerateJobError::Source("the image could not be downloaded".into())
                 })?;
-                SourceImage::from_bytes(bytes)
+                SourceImage::from_bytes(bytes, min_px)
             }
         }
     }
@@ -71,7 +83,7 @@ pub struct SourceImage {
 }
 
 impl SourceImage {
-    pub fn from_data_url(url: &str) -> Result<Self, GenerateJobError> {
+    pub fn from_data_url(url: &str, min_px: u32) -> Result<Self, GenerateJobError> {
         let payload = url
             .strip_prefix("data:")
             .and_then(|rest| rest.split_once(','))
@@ -84,10 +96,10 @@ impl SourceImage {
         let bytes = base64::engine::general_purpose::STANDARD
             .decode(payload.trim())
             .map_err(|_| GenerateJobError::Source("invalid base64 payload".into()))?;
-        Self::from_bytes(bytes)
+        Self::from_bytes(bytes, min_px)
     }
 
-    pub fn from_bytes(bytes: Vec<u8>) -> Result<Self, GenerateJobError> {
+    pub fn from_bytes(bytes: Vec<u8>, min_px: u32) -> Result<Self, GenerateJobError> {
         if bytes.len() > MAX_SOURCE_BYTES {
             return Err(GenerateJobError::Source("larger than 16 MB".into()));
         }
@@ -106,10 +118,10 @@ impl SourceImage {
         let (width, height) = image::ImageReader::with_format(std::io::Cursor::new(&bytes), format)
             .into_dimensions()
             .map_err(|e| GenerateJobError::Source(format!("unreadable image: {e}")))?;
-        let range = MIN_SOURCE_PX..=MAX_SOURCE_PX;
+        let range = min_px..=MAX_SOURCE_PX;
         if !range.contains(&width) || !range.contains(&height) {
             return Err(GenerateJobError::Source(format!(
-                "{width}x{height} px is outside {MIN_SOURCE_PX} to {MAX_SOURCE_PX} px a side"
+                "{width}x{height} px is outside {min_px} to {MAX_SOURCE_PX} px a side"
             )));
         }
         Ok(Self {

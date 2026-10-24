@@ -33,7 +33,8 @@ pub fn screen_custom_endpoints() {
     SCREEN_CUSTOM_ENDPOINTS.store(true, Ordering::Release);
 }
 
-fn screening() -> bool {
+/// Whether this process screens custom endpoints (the web daemon).
+pub(crate) fn screening() -> bool {
     SCREEN_CUSTOM_ENDPOINTS.load(Ordering::Acquire)
 }
 
@@ -144,16 +145,10 @@ impl GenerateBackend for ProviderBackend {
     }
 
     fn edit_image(&self, request: &EditJobRequest) -> Result<String, GenerateJobError> {
-        if screening() && has_custom_endpoint(&request.profile) {
-            // The edit calls dial their endpoint directly; the web daemon's
-            // browser-supplied endpoints only go through the screened
-            // generation route.
-            return Err(GenerateJobError::Unsupported {
-                operation: "a custom image endpoint",
-                provider: "web daemon's",
-            });
-        }
-        let source = request.source.load()?;
+        // Also checked by the tool before anything is written; repeated here
+        // so no path reaches an unscreened custom endpoint.
+        super::image_edit::check_supported(&request.kind, &request.profile, screening())?;
+        let source = request.source.load(super::source::MIN_SOURCE_PX)?;
         let client = provider_client()?;
         crate::chat_runtime::block_on_anywhere(edit_image(
             &client,

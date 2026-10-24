@@ -36,6 +36,7 @@ pub mod source;
 pub mod svg_llm;
 pub mod vectorize;
 
+pub(crate) use backend::screening as backend_screening;
 pub use backend::{
     screen_custom_endpoints, EditJobRequest, GenerateBackend, ImageJobRequest, ProviderBackend,
     StockJobRequest, SvgJobRequest,
@@ -142,6 +143,10 @@ pub enum LandingTarget {
     PendingUrl(String),
     /// Draw into this `placeholder` frame and clear the flag.
     Frame(String),
+    /// A background transform: rewrite the pending url to the edited image,
+    /// or back to the source image when the edit failed, so a failed edit
+    /// never deletes the image it was meant to change.
+    Edit { pending: String, source: String },
 }
 
 /// A started job's handle: its id, the pending url the caller writes (fill
@@ -254,6 +259,32 @@ impl GenerateJobs {
         })
     }
 
+    /// [`Self::reserve`] for a background transform of `source_url`.
+    pub fn reserve_edit(
+        &self,
+        kind: GenerateKind,
+        node_id: Option<&str>,
+        source_url: &str,
+    ) -> Result<JobTicket, GenerateJobError> {
+        let mut ticket = self.reserve(kind, node_id)?;
+        ticket.target = LandingTarget::Edit {
+            pending: ticket.pending_url.clone(),
+            source: source_url.to_string(),
+        };
+        Ok(ticket)
+    }
+
+    /// Whether an `svg` / `vectorize-image` job is still drawing into
+    /// `frame_id`; a second one would land on a frame the first already
+    /// finished.
+    pub fn frame_job_running(&self, frame_id: &str) -> bool {
+        self.lock().records.iter().any(|record| {
+            record.status == JobStatus::Pending
+                && record.kind.lands_in_frame()
+                && record.node_id.as_deref() == Some(frame_id)
+        })
+    }
+
     /// Run `work` for a reserved ticket on its own worker thread. A panicking
     /// provider still releases its slot and reports the job failed.
     pub fn spawn(self: &Arc<Self>, ticket: JobTicket, work: JobWork) {
@@ -266,10 +297,19 @@ impl GenerateJobs {
                     std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| match &work {
                         JobWork::Image(request) => jobs.backend.generate_image(request),
                         JobWork::Stock(request) => jobs.backend.stock_image(request),
-                        JobWork::Svg(request) => jobs.backend.generate_svg(request),
-                        JobWork::Vectorize(source) => {
-                            source.load().and_then(|image| vectorize::vectorize(&image))
-                        }
+                        JobWork::Svg(request) => jobs
+                            .backend
+                            .generate_svg(request)
+                            .and_then(|svg| svg_llm::check_artwork(svg, GenerateJobError::NoSvg)),
+                        JobWork::Vectorize(source) => source
+                            .load(source::MIN_TRACE_SOURCE_PX)
+                            .and_then(|image| vectorize::vectorize(&image))
+                            .and_then(|svg| {
+                                svg_llm::check_artwork(
+                                    svg,
+                                    GenerateJobError::Trace("no shapes found in the image".into()),
+                                )
+                            }),
                         JobWork::Edit(request) => jobs.backend.edit_image(request),
                     }))
                     .unwrap_or(Err(GenerateJobError::Panicked));
@@ -365,6 +405,9 @@ impl GenerateJobs {
             let landed = match &entry.target {
                 LandingTarget::PendingUrl(url) => landing::resolve_pending_url(state, url, outcome),
                 LandingTarget::Frame(frame) => landing::resolve_frame(state, frame, outcome),
+                LandingTarget::Edit { pending, source } => {
+                    landing::resolve_pending_url(state, pending, outcome.or(Ok(source.as_str())))
+                }
             };
             if landed.is_empty() {
                 if entry.finished_at.elapsed() < UNPLACED_TTL {

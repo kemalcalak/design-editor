@@ -83,7 +83,7 @@ fn multipart_body_frames_fields_and_the_file() {
 
 #[test]
 fn gemini_edit_sends_the_image_before_the_instruction() {
-    let source = super::super::source::SourceImage::from_bytes(png(300, 300, [9, 9, 9, 255]))
+    let source = super::super::source::SourceImage::from_bytes(png(300, 300, [9, 9, 9, 255]), 256)
         .expect("source");
     let body = gemini_edit_body(&source, &EditKind::RemoveBackground);
     let parts = body["contents"][0]["parts"].as_array().unwrap();
@@ -129,7 +129,7 @@ fn chroma_key_clears_green_and_keeps_the_subject() {
 
 #[test]
 fn replicate_profiles_are_refused_for_transforms() {
-    let source = super::super::source::SourceImage::from_bytes(png(300, 300, [9, 9, 9, 255]))
+    let source = super::super::source::SourceImage::from_bytes(png(300, 300, [9, 9, 9, 255]), 256)
         .expect("source");
     let client = reqwest::Client::new();
     let result = crate::chat_runtime::block_on_anywhere(edit_image(

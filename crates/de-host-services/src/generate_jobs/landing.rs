@@ -64,6 +64,18 @@ pub(crate) fn node_image_url(node: &PenNode) -> Option<String> {
     })
 }
 
+/// Whether `node` shows `url` (an image fill or an image node's `src`).
+pub(crate) fn node_shows_url(node: &PenNode, url: &str) -> bool {
+    match node {
+        PenNode::Image(image) => image.src.as_str() == url,
+        _ => node_fills(node).is_some_and(|fills| {
+            fills
+                .iter()
+                .any(|fill| matches!(fill, PenFill::Image(body) if body.url.as_str() == url))
+        }),
+    }
+}
+
 /// The patch that makes `node` show `pending` in place of `source`: the
 /// image fill (or `src`) holding `source` takes the pending url, other fills
 /// stay; a node not showing `source` gets [`pending_patch`] semantics.

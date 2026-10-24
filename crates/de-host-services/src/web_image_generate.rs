@@ -42,7 +42,7 @@ const MAX_PROVIDER_BODY_BYTES: usize = 16 * 1024 * 1024;
 
 /// Read a provider response's status + body under
 /// [`MAX_PROVIDER_BODY_BYTES`] (streaming abort, not read-then-check).
-async fn read_provider_body(
+pub(crate) async fn read_provider_body(
     provider: &'static str,
     resp: reqwest::Response,
 ) -> Result<(reqwest::StatusCode, String), ImageGenerateError> {
@@ -364,7 +364,7 @@ fn gemini_aspect_ratio(width: Option<f64>, height: Option<f64>) -> Option<&'stat
     })
 }
 
-fn provider_error(provider: &str, status: reqwest::StatusCode, body: &str) -> String {
+pub(crate) fn provider_error(provider: &str, status: reqwest::StatusCode, body: &str) -> String {
     // TS: prefer the provider's error.message, else status + slice.
     if let Ok(json) = serde_json::from_str::<serde_json::Value>(body) {
         if let Some(message) = json

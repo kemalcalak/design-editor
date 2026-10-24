@@ -18,6 +18,9 @@ pub const SVG_TIMEOUT: Duration = Duration::from_secs(300);
 const SVG_MAX_OUTPUT_TOKENS: u32 = 16_000;
 /// Longest SVG accepted from the model.
 const MAX_SVG_CHARS: usize = 512 * 1024;
+/// Most nodes one piece of artwork may land as (the tracer caps its own
+/// paths below this); more would stall the editor that lands it.
+pub const MAX_ARTWORK_NODES: usize = 5000;
 
 const SVG_SYSTEM_PROMPT: &str = "You are a vector illustrator. Answer with exactly one \
 standalone SVG document and nothing else: no prose, no Markdown fence. Use a viewBox. Draw \
@@ -105,17 +108,43 @@ pub fn generate_svg_blocking(
             break;
         }
     }
-    let timed_out = cancel.swap(true, Ordering::AcqRel) && Instant::now() >= deadline;
+    // `swap` stops the watchdog; it returns true when the watchdog had
+    // already cancelled the stream, i.e. the deadline passed.
+    let timed_out = cancel.swap(true, Ordering::AcqRel);
     if let Ok(handle) = watchdog {
         let _ = handle.join();
     }
-    if let Some(failure) = failure {
-        return Err(failure);
+    // A complete drawing that raced the deadline still counts; anything
+    // else after a timeout is reported as the timeout, not as the provider
+    // error the cancelled stream may have produced.
+    match (extract_svg(&text), timed_out, failure) {
+        (Some(svg), _, None) => Ok(svg),
+        (_, true, _) => Err(GenerateJobError::TimedOut),
+        (_, false, Some(failure)) => Err(failure),
+        (None, false, None) => Err(GenerateJobError::NoSvg),
     }
-    if timed_out && text.is_empty() {
-        return Err(GenerateJobError::TimedOut);
+}
+
+/// Check, on the worker, that `svg` lands as at least one and at most
+/// [`MAX_ARTWORK_NODES`] nodes, so a job never reports done for an empty
+/// frame and the landing never floods the editor. `empty` is the error for
+/// a drawing with no importable shapes.
+pub fn check_artwork(svg: String, empty: GenerateJobError) -> Result<String, GenerateJobError> {
+    fn count(nodes: &[jian_ops_schema::node::PenNode]) -> usize {
+        use de_editor_core::PenNodeExt as _;
+        nodes
+            .iter()
+            .map(|node| 1 + node.children().map_or(0, |kids| count(kids)))
+            .sum()
     }
-    extract_svg(&text).ok_or(GenerateJobError::NoSvg)
+    let nodes = de_editor_core::svg_import::svg_nodes_fitted(&svg, 100.0, 100.0);
+    match count(&nodes) {
+        0 => Err(empty),
+        n if n > MAX_ARTWORK_NODES => Err(GenerateJobError::Trace(format!(
+            "the artwork has {n} shapes, more than {MAX_ARTWORK_NODES}"
+        ))),
+        _ => Ok(svg),
+    }
 }
 
 /// The `<svg …>…</svg>` element in a model answer, if any. Answers that try
@@ -162,6 +191,25 @@ mod tests {
         let prompt = svg_user_prompt("a fox", 400.4, 199.6);
         assert!(prompt.contains("a fox"));
         assert!(prompt.contains("viewBox=\"0 0 400 200\""), "{prompt}");
+    }
+
+    #[test]
+    fn artwork_without_shapes_or_with_too_many_is_refused() {
+        let empty = "<svg viewBox=\"0 0 10 10\"><text>hi</text></svg>".to_string();
+        assert_eq!(
+            check_artwork(empty, GenerateJobError::NoSvg),
+            Err(GenerateJobError::NoSvg)
+        );
+        let one = "<svg viewBox=\"0 0 10 10\"><rect width=\"10\" height=\"10\"/></svg>".to_string();
+        assert!(check_artwork(one, GenerateJobError::NoSvg).is_ok());
+        let many = format!(
+            "<svg viewBox=\"0 0 10 10\">{}</svg>",
+            "<rect width=\"1\" height=\"1\"/>".repeat(MAX_ARTWORK_NODES + 1)
+        );
+        assert!(matches!(
+            check_artwork(many, GenerateJobError::NoSvg),
+            Err(GenerateJobError::Trace(_))
+        ));
     }
 
     #[test]

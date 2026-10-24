@@ -665,8 +665,11 @@ By category:
   `InsertSubtree` + flag clear — and the background transforms (`remove-background` /
   `replace-background`, `generate_jobs/image_edit.rs`): provider image edits (OpenAI `images/edits`
   with `background: transparent`; Gemini edit + local green chroma key, since Gemini has no alpha;
-  Replicate / Atlas refused) returning a pending url. Sources (`imageUrl` already in the document, or
-  `sourceNodeId`) are checked against pen.dev's JPEG/PNG/WEBP, 16 MB, 256-4096 px limits.
+  Replicate / Atlas refused at call time) returning a pending url; a failed edit rewrites it back to
+  the source (`LandingTarget::Edit`). Sources (`imageUrl` already in the document, or
+  `sourceNodeId`) are checked against pen.dev's JPEG/PNG/WEBP, 16 MB, 256-4096 px limits (vectorize
+  from 16 px). Artwork is checked on the worker (`svg_llm::check_artwork`: at least one, at most
+  5,000 nodes). The web daemon refuses remote source urls and custom endpoints for transforms.
 - **Pages + components** — `add_page` / `rename_page` /
   `delete_page` / `duplicate_page` / `reorder_page` /
   `set_active_page` / `instantiate_component` / `create_component`

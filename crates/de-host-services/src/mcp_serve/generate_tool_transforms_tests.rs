@@ -33,6 +33,7 @@ struct Scripted {
     svg: Option<String>,
     edits: Mutex<Vec<(SourceRef, EditKind)>>,
     prompts: Mutex<Vec<String>>,
+    fail_edit: bool,
 }
 
 impl GenerateBackend for Scripted {
@@ -54,6 +55,9 @@ impl GenerateBackend for Scripted {
             .lock()
             .unwrap()
             .push((request.source.clone(), request.kind.clone()));
+        if self.fail_edit {
+            return Err(GenerateJobError::TimedOut);
+        }
         Ok(EDITED.to_string())
     }
 }
@@ -242,12 +246,8 @@ fn sources_are_checked_at_call_time() {
     let tool = GenerateTool::for_test(&state, Arc::clone(&jobs));
     let cases: Vec<(Call, ToolErrorCode, &str)> = vec![
         (
-            vec![
-                ("type", "vectorize-image"),
-                ("nodeId", "logo"),
-                ("sourceNodeId", "photo"),
-            ],
-            ToolErrorCode::ToolFailed,
+            vec![("type", "remove-background"), ("sourceNodeId", "photo")],
+            ToolErrorCode::InvalidArgument,
             "outside 256 to 4096 px",
         ),
         (
@@ -378,4 +378,133 @@ fn replace_background_returns_a_url_that_lands_where_the_client_puts_it() {
         backend.edits.lock().unwrap()[0].1,
         EditKind::ReplaceBackground("wet slate slab".into())
     );
+}
+
+#[test]
+fn a_failed_edit_puts_the_source_image_back() {
+    let photo = two_colour_png(300, 300);
+    let jobs = GenerateJobs::new(Arc::new(Scripted {
+        fail_edit: true,
+        ..Default::default()
+    }));
+    let mut state = state(&photo, true);
+    run(
+        &mut state,
+        &jobs,
+        &[
+            ("type", "remove-background"),
+            ("sourceNodeId", "photo"),
+            ("nodeId", "photo"),
+        ],
+    );
+    let PenNode::Rectangle(rect) = node(&state, "photo") else {
+        panic!("photo rectangle");
+    };
+    let fills = rect.container.fill.clone().unwrap();
+    assert_eq!(fills.len(), 2, "nothing lost: {fills:?}");
+    assert!(matches!(&fills[1], PenFill::Image(body) if body.url.as_str() == photo));
+    assert!(matches!(
+        jobs.records(None)[0].status,
+        crate::generate_jobs::JobStatus::Failed(_)
+    ));
+}
+
+#[test]
+fn providers_without_an_edit_call_are_refused_before_anything_is_written() {
+    let photo = two_colour_png(300, 300);
+    let jobs = GenerateJobs::new(Arc::new(Scripted::default()));
+    let mut state = state(&photo, true);
+    let profile = &mut state.editor_ui.agent_settings.image_gen_profiles[0];
+    profile.provider = ImageGenProvider::Replicate;
+    profile.model = "flux".into();
+    let tool = GenerateTool::for_test(&state, Arc::clone(&jobs));
+    match tool.call(&args(&[
+        ("type", "remove-background"),
+        ("sourceNodeId", "photo"),
+        ("nodeId", "photo"),
+    ])) {
+        ToolOutcome::Err(ToolErrorCode::ToolFailed, message) => {
+            assert!(
+                message.contains("not supported by the Replicate"),
+                "{message}"
+            )
+        }
+        other => panic!("expected a refusal, got {other:?}"),
+    }
+    assert!(jobs.records(None).is_empty(), "no job, no write");
+}
+
+#[test]
+fn frames_with_auto_layout_or_a_running_job_are_refused() {
+    let jobs = GenerateJobs::new(Arc::new(Scripted {
+        svg: Some(SVG.into()),
+        ..Default::default()
+    }));
+    let mut state = state("data:image/png;base64,AA==", true);
+    let tool = GenerateTool::for_test(&state, Arc::clone(&jobs));
+    let call = args(&[("type", "svg"), ("nodeId", "logo"), ("prompt", "x")]);
+    let ToolOutcome::OkJsonWithCommand(_, command) = tool.call(&call) else {
+        panic!("first call starts a job");
+    };
+    // While the first job may still run, a second one is refused unless it
+    // already finished.
+    if jobs.any_running() {
+        assert!(matches!(
+            tool.call(&call),
+            ToolOutcome::Err(ToolErrorCode::InvalidArgument, _)
+        ));
+    }
+    assert!(jobs.wait_idle(Duration::from_secs(5)));
+    assert!(state.apply(command));
+    assert!(state.apply(EditorCommand::PatchNodeData {
+        node_id: NodeId::new("logo"),
+        patch_json: r#"{"layout":"vertical"}"#.into(),
+        page_id: None,
+    }));
+    let tool = GenerateTool::for_test(&state, Arc::clone(&jobs));
+    match tool.call(&call) {
+        ToolOutcome::Err(ToolErrorCode::InvalidArgument, message) => {
+            assert!(message.contains("auto layout"), "{message}")
+        }
+        other => panic!("expected an auto-layout refusal, got {other:?}"),
+    }
+}
+
+#[test]
+fn an_edit_target_must_show_the_source_image() {
+    let photo = two_colour_png(300, 300);
+    let jobs = GenerateJobs::new(Arc::new(Scripted::default()));
+    let state = state(&photo, true);
+    let tool = GenerateTool::for_test(&state, Arc::clone(&jobs));
+    match tool.call(&args(&[
+        ("type", "remove-background"),
+        ("sourceNodeId", "photo"),
+        ("nodeId", "card"),
+    ])) {
+        ToolOutcome::Err(ToolErrorCode::InvalidArgument, message) => {
+            assert!(
+                message.contains("does not show the source image"),
+                "{message}"
+            )
+        }
+        other => panic!("expected a refusal, got {other:?}"),
+    }
+    assert!(jobs.records(None).is_empty());
+}
+
+#[test]
+fn small_logos_can_be_vectorized() {
+    let logo = two_colour_png(64, 64);
+    let jobs = GenerateJobs::new(Arc::new(Scripted::default()));
+    let mut state = state(&logo, false);
+    run(
+        &mut state,
+        &jobs,
+        &[
+            ("type", "vectorize-image"),
+            ("nodeId", "logo"),
+            ("sourceNodeId", "photo"),
+        ],
+    );
+    assert!(frame_children(&state, "logo") >= 1);
 }

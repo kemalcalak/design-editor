@@ -23,9 +23,6 @@ use super::source::{png_data_url, SourceImage};
 use super::{GenerateJobError, GEMINI_FALLBACK_IMAGE_MODEL, OPENAI_FALLBACK_IMAGE_MODEL};
 use crate::web_image_generate::{is_gpt_image_model, ImageGenerateError};
 
-/// Cap on a provider's edit response (Gemini inlines the image as base64).
-const MAX_EDIT_BODY_BYTES: usize = 32 * 1024 * 1024;
-
 /// Which transform.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum EditKind {
@@ -67,6 +64,33 @@ pub fn edit_prompt(kind: &EditKind, provider: ImageGenProvider) -> String {
     }
 }
 
+/// Refuse a transform the configured provider cannot do, before anything is
+/// written: Replicate / Atlas have no generic edit call, and the web daemon
+/// (`screening`) cannot screen a custom endpoint for these direct calls.
+pub fn check_supported(
+    kind: &EditKind,
+    profile: &ImageGenProfile,
+    screening: bool,
+) -> Result<(), GenerateJobError> {
+    if matches!(
+        profile.provider,
+        ImageGenProvider::Replicate | ImageGenProvider::Atlas
+    ) {
+        return Err(GenerateJobError::Unsupported {
+            operation: kind.operation(),
+            provider: profile.provider.label(),
+        });
+    }
+    let custom = profile
+        .base_url
+        .as_deref()
+        .is_some_and(|base| !base.trim().is_empty());
+    if screening && custom {
+        return Err(GenerateJobError::CustomEndpointRefused);
+    }
+    Ok(())
+}
+
 /// Run one edit and return the result as a `data:` url.
 pub async fn edit_image(
     client: &reqwest::Client,
@@ -74,6 +98,7 @@ pub async fn edit_image(
     kind: &EditKind,
     profile: &ImageGenProfile,
 ) -> Result<String, GenerateJobError> {
+    check_supported(kind, profile, false)?;
     match profile.provider {
         ImageGenProvider::OpenAi | ImageGenProvider::Custom => {
             openai_edit(client, source, kind, profile).await
@@ -88,10 +113,7 @@ pub async fn edit_image(
             Ok(png_data_url(&keyed))
         }
         ImageGenProvider::Replicate | ImageGenProvider::Atlas => {
-            Err(GenerateJobError::Unsupported {
-                operation: kind.operation(),
-                provider: profile.provider.label(),
-            })
+            unreachable!("refused by check_supported")
         }
     }
 }
@@ -166,7 +188,7 @@ async fn openai_edit(
         .unwrap_or("https://api.openai.com");
     let endpoint = format!("{}/v1/images/edits", base.trim_end_matches('/'));
     let model = openai_edit_model(profile);
-    let boundary = format!("de-boundary-{:016x}", fastish_nonce());
+    let boundary = format!("de-boundary-{:016x}", boundary_nonce());
     let extension = source.mime.trim_start_matches("image/");
     let body = multipart_body(
         &boundary,
@@ -197,13 +219,24 @@ async fn openai_edit(
             message: e.to_string(),
         })
     })?;
-    json.get("data")
+    let first = json
+        .get("data")
         .and_then(|d| d.as_array())
-        .and_then(|d| d.first())
+        .and_then(|d| d.first());
+    if let Some(b64) = first
         .and_then(|d| d.get("b64_json"))
         .and_then(serde_json::Value::as_str)
-        .map(|b64| format!("data:image/png;base64,{b64}"))
-        .ok_or(GenerateJobError::Image(ImageGenerateError::MissingImageUrl))
+    {
+        return Ok(format!("data:image/png;base64,{b64}"));
+    }
+    // OpenAI-compatible endpoints may answer with a url instead.
+    let url = first
+        .and_then(|d| d.get("url"))
+        .and_then(serde_json::Value::as_str)
+        .ok_or(GenerateJobError::Image(ImageGenerateError::MissingImageUrl))?;
+    crate::web_image_search::fetch_image_data_url(client, url)
+        .await
+        .ok_or(GenerateJobError::Image(ImageGenerateError::DownloadFailed))
 }
 
 /// The Gemini image model an edit uses.
@@ -287,34 +320,18 @@ fn request_error(provider: &'static str, message: String) -> GenerateJobError {
 }
 
 fn provider_error(provider: &str, status: reqwest::StatusCode, body: &str) -> GenerateJobError {
-    let message = serde_json::from_str::<serde_json::Value>(body)
-        .ok()
-        .and_then(|json| {
-            json.pointer("/error/message")
-                .and_then(serde_json::Value::as_str)
-                .map(|m| m.chars().take(200).collect::<String>())
-        })
-        .unwrap_or_else(|| {
-            format!(
-                "{provider} returned {}: {}",
-                status.as_u16(),
-                body.chars().take(150).collect::<String>()
-            )
-        });
-    GenerateJobError::Image(ImageGenerateError::Provider(message))
+    GenerateJobError::Image(ImageGenerateError::Provider(
+        crate::web_image_generate::provider_error(provider, status, body),
+    ))
 }
 
 async fn read_body(
     provider: &'static str,
     response: reqwest::Response,
 ) -> Result<(reqwest::StatusCode, String), GenerateJobError> {
-    let status = response.status();
-    let bytes = crate::web_image_search::read_capped(response, MAX_EDIT_BODY_BYTES)
+    crate::web_image_generate::read_provider_body(provider, response)
         .await
-        .ok_or(GenerateJobError::Image(ImageGenerateError::BodyTooLarge {
-            provider,
-        }))?;
-    Ok((status, String::from_utf8_lossy(&bytes).into_owned()))
+        .map_err(GenerateJobError::Image)
 }
 
 fn decode_data_url_payload(url: &str) -> Result<Vec<u8>, GenerateJobError> {
@@ -324,10 +341,11 @@ fn decode_data_url_payload(url: &str) -> Result<Vec<u8>, GenerateJobError> {
         .unwrap_or_default();
     base64::engine::general_purpose::STANDARD
         .decode(payload)
-        .map_err(|_| GenerateJobError::Source("the edited image could not be decoded".into()))
+        .map_err(|_| GenerateJobError::EditResult("not valid base64".into()))
 }
 
-fn fastish_nonce() -> u64 {
+/// A multipart boundary that cannot occur in the image bytes by chance.
+fn boundary_nonce() -> u64 {
     let mut bytes = [0u8; 8];
     if getrandom::fill(&mut bytes).is_err() {
         return std::time::SystemTime::now()
@@ -343,7 +361,7 @@ fn fastish_nonce() -> u64 {
 /// spill left on edge pixels is pulled back. Returns a PNG with alpha.
 pub fn chroma_key_green(bytes: &[u8]) -> Result<Vec<u8>, GenerateJobError> {
     let mut rgba = image::load_from_memory(bytes)
-        .map_err(|e| GenerateJobError::Source(format!("the edited image: {e}")))?
+        .map_err(|e| GenerateJobError::EditResult(e.to_string()))?
         .to_rgba8();
     for pixel in rgba.pixels_mut() {
         let [r, g, b, a] = pixel.0;
@@ -366,7 +384,7 @@ pub fn chroma_key_green(bytes: &[u8]) -> Result<Vec<u8>, GenerateJobError> {
     }
     let mut out = Vec::new();
     rgba.write_to(&mut std::io::Cursor::new(&mut out), image::ImageFormat::Png)
-        .map_err(|e| GenerateJobError::Source(format!("encode the cutout: {e}")))?;
+        .map_err(|e| GenerateJobError::EditResult(format!("encode the cutout: {e}")))?;
     Ok(out)
 }
 

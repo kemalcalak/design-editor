@@ -24,7 +24,7 @@ use crate::generate_jobs::{
 };
 
 /// Longest prompt or query accepted.
-const MAX_PROMPT_CHARS: usize = 4000;
+pub(super) const MAX_PROMPT_CHARS: usize = 4000;
 
 /// The `generate` tool over a snapshot of the document.
 pub struct GenerateTool {
