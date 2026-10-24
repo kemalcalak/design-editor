@@ -3,10 +3,9 @@
 # directory.
 #
 # Mirrors the workspace's other wasm gate (`tools/check-wasm-bundle.sh` for
-# de-host-web):
-# cargo build → wasm-bindgen → wasm-opt, no wasm-pack (0.13.1 is broken on
-# stable Rust, and pinning the CLI from Cargo.lock is the only version story
-# that holds).
+# de-host-web): cargo build → wasm-bindgen → wasm-opt, no wasm-pack (0.13.1
+# is broken on stable Rust, and pinning the CLI from Cargo.lock is the only
+# version story that holds).
 #
 # Steps:
 #   1. Verify prerequisites: cargo, wasm-bindgen. wasm-opt and node are

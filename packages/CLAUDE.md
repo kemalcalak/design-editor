@@ -1,10 +1,10 @@
 # Packages
 
-The JS packages that remain after the TypeScript retirement and the #48 cleanup (the web viewer SDK and the VS Code extension are gone). This directory is the **Bun project root** (`packages/package.json`); the repository root is a **pure Cargo workspace** with no `package.json`.
+The JS that remains after the TypeScript retirement: the Chrome extension and the build tooling around it. This directory is the **Bun project root** (`packages/package.json`); the repository root is a **pure Cargo workspace** with no `package.json`.
 
 > The `pen-*` packages (pen-types, pen-core, pen-engine, pen-renderer, pen-figma, pen-mcp, pen-ai-skills, pen-sdk, pen-react, pen-acp) and pen-codegen were **retired** along with `apps/*`. Their functionality now lives in the Rust `crates/` (see `crates/CLAUDE.md`). Nothing here depends on them. The `agent-native` Zig runtime was also **removed** — the built-in agent runtime is now the Rust `agent` crate (`vendor/agent`, shared with Zode).
 
-## Workspace tooling
+## Tooling
 
 Run these from `packages/`:
 
@@ -15,7 +15,8 @@ Run these from `packages/`:
 ## de-chrome-extension (`de-chrome-extension/`)
 
 Manifest V3 Chrome extension that captures the **rendered** active tab and
-imports it into a running Design Editor. No dependencies — load it unpacked from `chrome://extensions`.
+imports it into a running Design Editor. No dependencies — load it unpacked
+from `chrome://extensions`.
 
 - **The logic is Rust.** `crates/de-chrome-extension-core` (endpoint rules,
   chunked-transfer integrity, `/mcp` envelope + reply classification, download-name
