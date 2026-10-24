@@ -55,6 +55,8 @@ fn kind(node: &PenNode) -> &'static str {
         PenNode::RadioGroup(_) => "radio-group",
         PenNode::Progress(_) => "progress",
         PenNode::Tabs(_) => "tabs",
+        // Never emitted: `node_hidden` skips canvas-only nodes (#12).
+        PenNode::Note(_) | PenNode::Context(_) | PenNode::Prompt(_) => "note",
     }
 }
 
