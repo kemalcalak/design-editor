@@ -412,6 +412,32 @@ pub fn over_chrome(state: &EditorState, viewport_w: f32, viewport_h: f32, point:
         || chrome.panel_toggle.is_some_and(|t| t.contains(point))
 }
 
+/// Whether `point` lands on floating chrome that sits over the canvas but
+/// is not a card: the file pill, the action group, the panel toggle, the
+/// tool rail (when it paints) and the zoom pill. [`over_canvas`] already
+/// excludes the cards; the chat panel is host geometry, so hosts add it.
+/// Canvas-only readers that must not see the pointer through the chrome
+/// (the shader `mouse` uniform) combine the three.
+pub fn over_floating_chrome(
+    state: &EditorState,
+    viewport_w: f32,
+    viewport_h: f32,
+    point: Point2D,
+) -> bool {
+    if over_chrome(state, viewport_w, viewport_h, point) {
+        return true;
+    }
+    // The hosts' toolbar paint guard (native `paint.rs`).
+    let (_, _, canvas_w, _) = canvas_region(state, viewport_w, viewport_h);
+    let toolbar_painted = toolbar_fits(canvas_w)
+        && !state.editor_ui.workspace.visible
+        && !state.editor_ui.preview.mode;
+    if toolbar_painted && toolbar_rect_for(state, viewport_w, viewport_h).contains(point) {
+        return true;
+    }
+    status_bar_rect(state, viewport_w, viewport_h).is_some_and(|rect| rect.contains(point))
+}
+
 /// Whether a press at `point` belongs to the window rather than the app:
 /// the canvas's top band where no floating chrome sits. Desktop only — the web host has no window. The
 /// caller still has to rule out a canvas node under the point (that

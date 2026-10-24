@@ -9,7 +9,9 @@ impl WidgetHostNative {
     /// Run a path boolean op on the active selection (Union /
     /// Subtract / Intersect / Exclude). Backed by skia's `Path::op`.
     /// Returns true when the op committed (≥ 2 Path nodes were
-    /// selected + the result yielded a non-empty polyline).
+    /// selected + the result yielded a non-empty polyline) or was refused
+    /// with a notice (a source holds layers): either way the shortcut was
+    /// handled and a repaint is owed.
     #[cfg(feature = "gl-host")]
     pub fn apply_boolean_op(&mut self, op: de_editor_core::BooleanOp) -> bool {
         // Codex stop-gate: boolean op shortcuts (Cmd+Alt+U/S/I/X)
@@ -19,10 +21,17 @@ impl WidgetHostNative {
         // The skia `Path::op` math runs against the layout-resolved
         // `LayoutScene` + the editor selection.
         self.refresh_layout_scene();
-        let selected: Vec<String> = self
+        // A frame holding layers can't be a source (the commit would drop
+        // its subtree): say so rather than doing nothing under the click.
+        let source_ids = self.editor_state.selection.set.clone();
+        if self
             .editor_state
-            .selection
-            .set
+            .refuse_boolean_on_containers(&source_ids, self.now_ms)
+        {
+            self.mark_dirty();
+            return true;
+        }
+        let selected: Vec<String> = source_ids
             .iter()
             .map(|id| id.as_str().to_string())
             .collect();

@@ -286,6 +286,8 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "settings.system.pencilSmoothingPrecise" => "แม่นยำ",
         "settings.system.pencilSmoothingBalanced" => "สมดุล",
         "settings.system.pencilSmoothingSmooth" => "เรียบ",
+        "layerMenu.booleanFrameHasLayers" => "ใช้การดำเนินการบูลีนกับเฟรมที่มีเลเยอร์ไม่ได้",
+        "fill.presetCustom" => "กำหนดเอง",
         _ => return None,
     })
 }

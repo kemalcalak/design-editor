@@ -280,6 +280,8 @@ pub struct VisibleSections {
     pub export: bool,
     pub fill_type: FillType,
     pub gradient_stop_count: usize,
+    /// The primary shader's preset row has a "Custom" cell (#141).
+    pub shader_custom: bool,
     /// Whether the Interactions section paints — see
     /// [`SectionCapabilities::interactions`].
     pub interactions: bool,
@@ -414,6 +416,7 @@ impl VisibleSections {
         export: true,
         fill_type: FillType::Solid,
         gradient_stop_count: 0,
+        shader_custom: false,
         interactions: true,
     };
 }

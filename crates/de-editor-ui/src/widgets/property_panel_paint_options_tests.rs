@@ -288,3 +288,45 @@ fn shader_preset_row_swaps_the_body() {
     let (panel, _) = actions(&state);
     assert_eq!(panel.snapshot.shader_preset, Some(ShaderPreset::Noise));
 }
+
+/// #141: a custom program gets a "Custom" cell; a preset replaces it and
+/// the cell brings it back.
+#[test]
+fn custom_cell_restores_the_program_a_preset_replaced() {
+    let mut state = rect_state("");
+    assert!(state.set_selected_fill_type_at(0, FillType::Shader));
+    let custom = node_fills(node(&state)).and_then(|f| f.first()).cloned();
+    let (panel, _) = actions(&state);
+    assert!(panel.snapshot.shader_custom_available);
+    reachable(&state, &PropertyPanelAction::RestoreCustomShader);
+
+    dispatch(
+        &mut state,
+        &PropertyPanelAction::SetShaderPreset(ShaderPreset::Glow),
+    );
+    reachable(&state, &PropertyPanelAction::RestoreCustomShader);
+    dispatch(&mut state, &PropertyPanelAction::RestoreCustomShader);
+    let (panel, _) = actions(&state);
+    assert_eq!(panel.snapshot.shader_preset, None);
+    assert_eq!(
+        node_fills(node(&state)).and_then(|f| f.first()).cloned(),
+        custom
+    );
+}
+
+#[test]
+fn a_preset_only_shader_has_no_custom_cell() {
+    let mut state = state_from(
+        r##"{ "version": "1.0.0", "children": [
+              {"type":"rectangle","id":"r","name":"R","x":0,"y":0,"width":120,"height":80,
+               "fill":[{"type":"shader","preset":"turbulence"}]}
+        ]}"##,
+    );
+    state.set_single_selection(NodeId::new("r"));
+    let (panel, rects) = actions(&state);
+    assert_eq!(panel.snapshot.shader_preset, Some(ShaderPreset::Noise));
+    assert!(!panel.snapshot.shader_custom_available);
+    assert!(!rects
+        .iter()
+        .any(|(a, _)| *a == PropertyPanelAction::RestoreCustomShader));
+}

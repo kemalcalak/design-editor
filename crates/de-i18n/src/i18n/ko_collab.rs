@@ -288,6 +288,8 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "settings.system.pencilSmoothingPrecise" => "정밀",
         "settings.system.pencilSmoothingBalanced" => "균형",
         "settings.system.pencilSmoothingSmooth" => "부드럽게",
+        "layerMenu.booleanFrameHasLayers" => "레이어가 들어 있는 프레임에는 불리언 연산을 적용할 수 없습니다",
+        "fill.presetCustom" => "사용자 정의",
         _ => return None,
     })
 }

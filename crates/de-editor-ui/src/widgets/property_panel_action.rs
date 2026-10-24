@@ -424,6 +424,9 @@ pub enum PropertyPanelAction {
     FlipSelection(de_editor_core::FlipAxis),
     /// User picked a preset in a primary shader fill's preset row.
     SetShaderPreset(de_editor_core::ShaderPreset),
+    /// User clicked the preset row's "Custom" cell: restore the custom
+    /// program a preset pick replaced (#141).
+    RestoreCustomShader,
     /// User clicked the Widget section's `checked` toggle on a Switch
     /// / Checkbox node — host flips the literal `checked` bool to
     /// `new_value`.

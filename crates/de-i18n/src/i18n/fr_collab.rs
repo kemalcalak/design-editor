@@ -286,6 +286,8 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "settings.system.pencilSmoothingPrecise" => "Précis",
         "settings.system.pencilSmoothingBalanced" => "Équilibré",
         "settings.system.pencilSmoothingSmooth" => "Lisse",
+        "layerMenu.booleanFrameHasLayers" => "Les opérations booléennes ne s’appliquent pas aux cadres qui contiennent des calques",
+        "fill.presetCustom" => "Personnalisé",
         _ => return None,
     })
 }

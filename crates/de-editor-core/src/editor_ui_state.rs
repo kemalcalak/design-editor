@@ -665,6 +665,12 @@ pub struct EditorUiState {
     /// Pencil-tool curve-fit tolerance (Settings > System, #88).
     /// Persisted across launches on desktop.
     pub pencil_smoothing: PencilSmoothing,
+    /// The custom (non-preset) shader program a preset pick replaced, per
+    /// node id, so the preset row's "Custom" cell can bring it back (#141).
+    /// UI state, never persisted or snapshotted: undo / redo move the
+    /// document, the stash stays. Cleared in `clear_document_derived`.
+    pub custom_shader_bodies:
+        std::collections::HashMap<NodeId, jian_ops_schema::style::ShaderFillBody>,
     /// Ghost of the blank starter frame `(x, y, w, h)` in doc px. Set when a
     /// design prompt clears the pristine starter; the canvas keeps painting
     /// it until the generated design's sized root lands (or the turn ends),

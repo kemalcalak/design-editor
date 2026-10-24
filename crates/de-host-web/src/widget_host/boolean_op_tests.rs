@@ -65,9 +65,21 @@ fn canvas_boolean_refuses_a_frame_with_children() {
     host.next_node_id = 50;
     let before = host.editor_state().doc.clone();
 
-    assert!(!host.apply_boolean_op(BooleanOp::Union));
+    assert!(
+        host.apply_boolean_op(BooleanOp::Union),
+        "handled: the notice repaints"
+    );
 
     assert_eq!(host.editor_state().doc, before, "frame keeps its child");
     assert!(host.editor_state().history.past.is_empty());
     assert_eq!(host.next_node_id, 50, "no id minted");
+    let toast = host
+        .editor_state()
+        .editor_ui
+        .visible_toast(host.now_ms)
+        .expect("the refusal raises a notice");
+    assert_eq!(
+        toast.i18n_key,
+        de_editor_core::host_support::BOOLEAN_CONTAINER_TOAST_KEY
+    );
 }

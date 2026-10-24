@@ -49,6 +49,29 @@ fn paths(host: &WidgetHostNative) -> Vec<&jian_ops_schema::node::PathNode> {
         .collect()
 }
 
+/// #141: Escape mid-drag discards the stroke. The release that follows
+/// inserts nothing and pushes no history; the tool stays on Pencil.
+#[test]
+fn escape_during_a_pencil_drag_discards_the_stroke() {
+    let mut host = empty_host();
+    host.apply_set_tool(Tool::Pencil);
+    let depth = host.editor_state().history.past.len();
+    let (px, py) = screen(&host, 300.0, 300.0);
+    assert!(host.apply_press(px, py, VW, VH));
+    for i in 1..=20 {
+        let (x, y) = screen(&host, 300.0 + i as f32 * 4.0, 300.0 + i as f32);
+        host.apply_cursor_move(x, y);
+    }
+    assert!(host.apply_escape());
+    assert!(!host.editor_state().pencil_stroke_active());
+    let (x, y) = screen(&host, 400.0, 330.0);
+    host.apply_cursor_move(x, y);
+    host.apply_release_with_viewport(VW, VH);
+    assert!(paths(&host).is_empty(), "no node");
+    assert_eq!(host.editor_state().history.past.len(), depth, "no history");
+    assert_eq!(host.editor_state().tool, Tool::Pencil);
+}
+
 #[test]
 fn a_pencil_drag_commits_one_fitted_path_and_undoes_in_one_step() {
     let mut host = empty_host();

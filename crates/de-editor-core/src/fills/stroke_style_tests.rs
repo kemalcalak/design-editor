@@ -128,3 +128,59 @@ fn dotted_preset_sets_round_caps_and_solid_clears_dash() {
         StrokeDashPreset::Dashed
     ));
 }
+
+/// #141: a None / Square cap click while Dotted is active switches the
+/// dash to Solid; a Round click keeps the dots, and Dashed keeps its dash.
+#[test]
+fn a_non_round_cap_turns_dotted_into_solid() {
+    let mut node = rect(r#","stroke":{"thickness":2}"#);
+    let dotted = StrokeStyleEdit::Dash(StrokeDashPreset::Dotted);
+    assert!(apply_stroke_style_edit(&mut node, &dotted));
+    assert!(!apply_stroke_style_edit(
+        &mut node,
+        &StrokeStyleEdit::Cap(StrokeCap::Round)
+    ));
+    assert_eq!(
+        node_stroke_style(&node).unwrap().dash_pattern,
+        Some(vec![0.0, 4.0])
+    );
+
+    for cap in [StrokeCap::None, StrokeCap::Square] {
+        // Back to Dotted (a no-op on the first pass, which still is).
+        let _ = apply_stroke_style_edit(&mut node, &dotted);
+        assert_eq!(
+            node_stroke_style(&node).unwrap().dash_pattern,
+            Some(vec![0.0, 4.0])
+        );
+        assert!(apply_stroke_style_edit(
+            &mut node,
+            &StrokeStyleEdit::Cap(cap.clone())
+        ));
+        let style = node_stroke_style(&node).unwrap();
+        assert_eq!(style.cap, Some(cap));
+        assert_eq!(style.dash_pattern, None, "dots need round caps");
+    }
+
+    // Dots left over from another width still count as dots.
+    let mut resized = rect(r#","stroke":{"thickness":5,"cap":"round","dashPattern":[0,4]}"#);
+    assert!(apply_stroke_style_edit(
+        &mut resized,
+        &StrokeStyleEdit::Cap(StrokeCap::Square)
+    ));
+    assert_eq!(node_stroke_style(&resized).unwrap().dash_pattern, None);
+
+    let dashed = StrokeStyleEdit::Dash(StrokeDashPreset::Dashed);
+    assert!(apply_stroke_style_edit(&mut node, &dashed));
+    assert!(apply_stroke_style_edit(
+        &mut node,
+        &StrokeStyleEdit::Cap(StrokeCap::Round)
+    ));
+    assert!(apply_stroke_style_edit(
+        &mut node,
+        &StrokeStyleEdit::Cap(StrokeCap::None)
+    ));
+    assert_eq!(
+        node_stroke_style(&node).unwrap().dash_pattern,
+        Some(vec![8.0, 8.0])
+    );
+}

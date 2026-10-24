@@ -11,10 +11,14 @@
 use crate::command::EditorCommand;
 use crate::id_allocator::IdAllocator;
 use crate::node_id::NodeId;
+use crate::pen_node_ext::PenNodeExt;
 use crate::state::EditorState;
 use crate::tool::Tool;
 use crate::walkers::find_node_mut;
 use jian_ops_schema::node::PenNode;
+
+/// Toast a canvas boolean raises when a source holds layers (#141).
+pub const BOOLEAN_CONTAINER_TOAST_KEY: &str = "layerMenu.booleanFrameHasLayers";
 
 impl EditorState {
     /// Build an editor state seeded with the demo sample document —
@@ -297,6 +301,31 @@ impl EditorState {
         }
     }
 
+    /// Refuse a canvas boolean whose sources include a container with
+    /// children, and say why. [`EditorCommand::CommitBooleanResult`]
+    /// would refuse it anyway (it removes each source with its subtree),
+    /// but silently; this raises a Warn toast instead. Only a selection
+    /// a boolean could otherwise apply to (two or more nodes) is checked.
+    /// Returns `true` when it refused: the host stops there, nothing in
+    /// the document changes.
+    pub fn refuse_boolean_on_containers(&mut self, source_ids: &[NodeId], now_ms: u64) -> bool {
+        let has_children = |id: &NodeId| {
+            crate::walkers::find_node(self.active_children(), id)
+                .and_then(|node| node.children())
+                .is_some_and(|kids| !kids.is_empty())
+        };
+        if source_ids.len() < 2 || !source_ids.iter().any(has_children) {
+            return false;
+        }
+        self.editor_ui.show_toast(
+            BOOLEAN_CONTAINER_TOAST_KEY,
+            Vec::new(),
+            crate::editor_toast::EditorToastLevel::Warn,
+            now_ms,
+        );
+        true
+    }
+
     /// Commit a canvas-computed path boolean through
     /// [`EditorCommand::CommitBooleanResult`], the same command the MCP
     /// `boolean_op` tool sends, so both share its validation (sources
@@ -514,5 +543,35 @@ mod tests {
         ));
         assert_eq!(s.doc, before, "the frame and its child survive");
         assert_eq!(next, 100);
+    }
+
+    #[test]
+    fn refuse_boolean_on_containers_toasts_and_changes_nothing() {
+        let src = r##"{
+            "version": "1.0.0",
+            "children": [
+              {"type":"frame","id":"n10","x":0,"y":0,"width":20,"height":20,
+               "children":[{"type":"rectangle","id":"n12","x":0,"y":0,"width":5,"height":5}]},
+              {"type":"frame","id":"n13","x":40,"y":0,"width":20,"height":20},
+              {"type":"rectangle","id":"n11","x":10,"y":0,"width":20,"height":20}
+            ]
+        }"##;
+        let doc = jian_ops_schema::load_str(src)
+            .expect("fixture parses")
+            .value;
+        let mut s = EditorState::from_document(doc);
+        let before = s.doc.clone();
+        let ids = |raw: &[&str]| raw.iter().map(|id| NodeId::new(*id)).collect::<Vec<_>>();
+        // An empty frame and a leaf are fine, and so is a lone frame
+        // (nothing to combine, so nothing to explain).
+        assert!(!s.refuse_boolean_on_containers(&ids(&["n13", "n11"]), 5));
+        assert!(!s.refuse_boolean_on_containers(&ids(&["n10"]), 5));
+        assert!(s.editor_ui.visible_toast(5).is_none());
+
+        assert!(s.refuse_boolean_on_containers(&ids(&["n10", "n11"]), 5));
+        let toast = s.editor_ui.visible_toast(5).expect("the refusal says why");
+        assert_eq!(toast.i18n_key, BOOLEAN_CONTAINER_TOAST_KEY);
+        assert_eq!(s.doc, before, "nothing is deleted");
+        assert!(s.history.past.is_empty());
     }
 }

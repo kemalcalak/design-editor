@@ -237,4 +237,7 @@ pub struct NodeSnapshot {
     /// Built-in preset of the primary shader fill, `None` for a custom
     /// program or a non-shader fill — highlights the preset row.
     pub shader_preset: Option<de_editor_core::ShaderPreset>,
+    /// The preset row offers a "Custom" cell (#141): the primary shader
+    /// is a custom program, or a preset pick stashed one to restore.
+    pub shader_custom_available: bool,
 }

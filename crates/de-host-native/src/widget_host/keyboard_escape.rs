@@ -239,6 +239,10 @@ impl WidgetHostNative {
             self.mark_dirty();
             return true;
         }
+        if escape::escape_pencil_stroke(&mut self.editor_state) {
+            self.mark_dirty();
+            return true;
+        }
         // Anchor-menu close, then pen CANCEL (TS Escape discards).
         if self.apply_pen_escape() {
             return true;

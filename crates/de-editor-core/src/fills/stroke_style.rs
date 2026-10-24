@@ -229,15 +229,23 @@ pub enum StrokeStyleEdit {
     Dash(StrokeDashPreset),
 }
 
+/// Apply one Stroke-section click. Dots are zero-length dashes that only
+/// round caps draw, so Dotted writes a Round cap, and a None / Square cap
+/// picked while Dotted is active switches the dash back to Solid (#141):
+/// every click does what it says and the stroke never goes invisible.
 pub fn apply_stroke_style_edit(node: &mut PenNode, edit: &StrokeStyleEdit) -> bool {
     match edit {
-        StrokeStyleEdit::Cap(cap) => set_stroke_style(
-            node,
-            &StrokeStyleWrite {
-                cap: Some(cap.clone()),
-                ..StrokeStyleWrite::default()
-            },
-        ),
+        StrokeStyleEdit::Cap(cap) => {
+            let drops_dots = *cap != StrokeCap::Round && dotted(node);
+            set_stroke_style(
+                node,
+                &StrokeStyleWrite {
+                    cap: Some(cap.clone()),
+                    dash_pattern: drops_dots.then(Vec::new),
+                    ..StrokeStyleWrite::default()
+                },
+            )
+        }
         StrokeStyleEdit::Join(join) => set_stroke_style(
             node,
             &StrokeStyleWrite {
@@ -247,6 +255,15 @@ pub fn apply_stroke_style_edit(node: &mut PenNode, edit: &StrokeStyleEdit) -> bo
         ),
         StrokeStyleEdit::Dash(preset) => set_stroke_dash_preset(node, *preset),
     }
+}
+
+/// Whether the node's stroke draws dots: a zero-length dash, which only a
+/// round cap makes visible. Not tied to the stroke width, so Dotted still
+/// counts after the width changed under it.
+fn dotted(node: &PenNode) -> bool {
+    node_stroke(node)
+        .and_then(|stroke| stroke.dash_pattern.as_deref())
+        .is_some_and(|pattern| pattern.iter().step_by(2).any(|dash| *dash <= 0.0))
 }
 
 #[cfg(test)]

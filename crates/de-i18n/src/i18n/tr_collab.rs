@@ -286,6 +286,8 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "settings.system.pencilSmoothingPrecise" => "Hassas",
         "settings.system.pencilSmoothingBalanced" => "Dengeli",
         "settings.system.pencilSmoothingSmooth" => "Yumuşak",
+        "layerMenu.booleanFrameHasLayers" => "Boole işlemleri katman içeren çerçevelere uygulanamaz",
+        "fill.presetCustom" => "Özel",
         _ => return None,
     })
 }

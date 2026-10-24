@@ -100,6 +100,7 @@ pub fn updates_document(action: &PropertyPanelAction) -> bool {
             | PropertyPanelAction::SetStrokeStyle(_)
             | PropertyPanelAction::FlipSelection(_)
             | PropertyPanelAction::SetShaderPreset(_)
+            | PropertyPanelAction::RestoreCustomShader
     )
 }
 
@@ -648,7 +649,8 @@ pub fn apply_property_action(
         | A::SetStrokeAlign(_)
         | A::SetStrokeStyle(_)
         | A::FlipSelection(_)
-        | A::SetShaderPreset(_) => {
+        | A::SetShaderPreset(_)
+        | A::RestoreCustomShader => {
             crate::widgets::property_panel_dispatch_paint::apply_paint_option_action(state, action);
             Handled
         }

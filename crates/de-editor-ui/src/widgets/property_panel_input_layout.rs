@@ -416,6 +416,7 @@ pub(crate) fn push_fill_action_rects(
                     y,
                     w,
                     visible.gradient_stop_count,
+                    visible.shader_custom,
                 );
             }
             // Solid acts on the row itself; a non-primary fill has no body.

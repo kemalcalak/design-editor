@@ -286,6 +286,8 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "settings.system.pencilSmoothingPrecise" => "Точно",
         "settings.system.pencilSmoothingBalanced" => "Баланс",
         "settings.system.pencilSmoothingSmooth" => "Плавно",
+        "layerMenu.booleanFrameHasLayers" => "Булевы операции нельзя применять к фреймам, в которых есть слои",
+        "fill.presetCustom" => "Свой",
         _ => return None,
     })
 }
