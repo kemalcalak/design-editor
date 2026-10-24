@@ -71,6 +71,10 @@ impl RenderBackend for BaselineAdjustingBackend<'_> {
         self.inner.clip_round_rect(rect, radius);
     }
 
+    fn set_stroke_style(&mut self, style: crate::layout_scene::StrokeStyle) {
+        self.inner.set_stroke_style(style);
+    }
+
     fn stroke_line(&mut self, from: Point2D, to: Point2D, color: Color, width: f32) {
         self.inner.stroke_line(from, to, color, width);
     }

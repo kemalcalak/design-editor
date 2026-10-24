@@ -42,6 +42,10 @@ de-util = { path = "../de-util" }
 base64 = "0.22"
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
+# Inflate the gzipped extended icon catalogs (Material Symbols + phosphor, #4).
+# Pure Rust. Optional on wasm (only the fetching `runtime-icon-catalog` build
+# needs it); native always embeds and inflates them, see the target table.
+flate2 = { version = "1", default-features = false, features = ["rust_backend"], optional = true }
 
 # Rasterize SVG image sources into PNG at the byte-cache seam — skia
 # decodes PNG/JPEG/GIF/WebP, not SVG, so every captured-page `<svg>`
@@ -53,6 +57,8 @@ serde_json = { workspace = true }
 # `raster-images` (not worth carrying the `image` crate).
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 resvg = { version = "0.48", default-features = false }
+# Native always embeds + inflates the extended icon catalogs (see `flate2` above).
+flate2 = { version = "1", default-features = false, features = ["rust_backend"] }
 
 [dev-dependencies]
 # Enable jian-scene's find-visit instrumentation so the canvas-viewport
@@ -69,7 +75,9 @@ default = []
 # on. Every other consumer — the desktop hosts, and the `de-web-sdk` viewer,
 # which renders iconFont nodes but has no daemon behind it — keeps the embed,
 # because for them "not fetched yet" would simply mean "never".
-runtime-icon-catalog = []
+# Also turns on the gzip inflate for the extended (Material Symbols / phosphor)
+# catalogs, which this build fetches instead of embedding.
+runtime-icon-catalog = ["dep:flate2"]
 # Forward the browser host's opt-in locale split to de-i18n. The source gate is
 # feature AND wasm32, so Cargo feature unification cannot strip native tables.
 runtime-locale-catalog = ["de-i18n/runtime-locale-catalog"]

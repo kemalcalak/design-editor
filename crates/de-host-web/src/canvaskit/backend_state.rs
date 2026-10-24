@@ -12,6 +12,8 @@ impl CanvasKitBackend {
             dpr,
             logical_w,
             logical_h,
+            stroke_style: Default::default(),
+            sent_stroke_style: None,
         }
     }
 

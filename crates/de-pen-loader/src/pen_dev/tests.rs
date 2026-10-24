@@ -311,7 +311,7 @@ fn a_pen_dev_document_loads_into_the_typed_schema() {
                         "offset": { "x": 0, "y": 8 }, "blur": 24 },
             "children": [
                 { "type": "icon", "id": "i", "icon": "plus", "library": "lucide",
-                  "width": 16, "height": 16, "fill": "#FFFFFF" },
+                  "width": 16, "height": 16, "fill": "#FFFFFF", "weight": 700 },
                 { "type": "text", "id": "t", "content": "Hi", "fontFamily": "Manrope",
                   "fontWeight": "700", "textGrowth": "fixed-width", "width": "fill_container",
                   "lineHeight": 1.5, "fill": "#FFFFFF" },
@@ -346,10 +346,14 @@ fn a_pen_dev_document_loads_into_the_typed_schema() {
     assert_eq!(home.container.effects.as_ref().map(Vec::len), Some(1));
     let kids = home.children.as_ref().expect("children");
     assert_eq!(kids.len(), 2, "the note is dropped");
-    assert!(matches!(
-        kids[0],
-        jian_ops_schema::node::PenNode::IconFont(_)
-    ));
+    let jian_ops_schema::node::PenNode::IconFont(icon) = &kids[0] else {
+        panic!("the icon converts to icon_font");
+    };
+    assert_eq!(
+        icon.weight,
+        Some(jian_ops_schema::node::FontWeight::Number(700)),
+        "the icon weight survives the import"
+    );
 }
 
 /// Converts a real pen.dev file. Not run in CI: set `PEN_DEV_SAMPLE` to a

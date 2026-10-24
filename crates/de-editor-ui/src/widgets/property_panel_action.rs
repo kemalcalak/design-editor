@@ -417,6 +417,8 @@ pub enum PropertyPanelAction {
     /// User picked Inside / Center / Outside in the Stroke section's
     /// alignment row.
     SetStrokeAlign(jian_ops_schema::style::StrokeAlign),
+    /// User picked a cell in the Stroke section's Cap / Join / Dash rows.
+    SetStrokeStyle(de_editor_core::fills::StrokeStyleEdit),
     /// User clicked a flip button in the Position header — toggles the
     /// mirror flag on every selected node.
     FlipSelection(de_editor_core::FlipAxis),

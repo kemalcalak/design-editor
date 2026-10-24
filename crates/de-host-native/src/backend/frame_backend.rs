@@ -105,6 +105,10 @@ impl<'a> RenderBackend for NativeFrameBackend<'a> {
         self.inner.rotate(self.canvas, radians, pivot);
     }
 
+    fn set_stroke_style(&mut self, style: de_editor_ui::layout_scene::StrokeStyle) {
+        self.inner.set_stroke_style(style);
+    }
+
     fn stroke_line(&mut self, from: Point2D, to: Point2D, color: Color, width: f32) {
         self.inner.stroke_line(self.canvas, from, to, color, width);
     }

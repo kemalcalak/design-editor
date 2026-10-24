@@ -85,7 +85,7 @@ pub(crate) use reveal::{reveal_pop_scale, REVEAL_WIREFRAME_MS};
 #[cfg(test)]
 pub(crate) use shapes::arc_polygon;
 pub(crate) use shapes::paint_svg_path_node;
-use shapes::{paint_drop_shadows, paint_ellipse, push_clip_content};
+use shapes::{node_stroke_style, paint_drop_shadows, paint_ellipse, push_clip_content, unstyled};
 
 /// Effects whose zoom-scaled footprint stays under this many device
 /// pixels are invisible — but their save-layers still break the GPU
@@ -123,6 +123,21 @@ fn paint_node_inner<'a>(
     transforms: &mut Vec<OverlayTransform>,
     parent_hovered: bool,
 ) -> PaintNodeHits<'a> {
+    let hits = paint_node_body(cx, node, options, transforms, parent_hovered);
+    // Leave the plain stroke style behind (#89): the next sibling, the
+    // parent's after-children stroke and later chrome never inherit ours.
+    cx.backend
+        .set_stroke_style(crate::layout_scene::StrokeStyle::default());
+    hits
+}
+
+fn paint_node_body<'a>(
+    cx: &mut PaintCx<'_>,
+    node: &'a SceneNode,
+    options: &PaintNodeOptions<'_, '_>,
+    transforms: &mut Vec<OverlayTransform>,
+    parent_hovered: bool,
+) -> PaintNodeHits<'a> {
     if options.hidden == Some(node.id.as_str()) {
         return PaintNodeHits::default();
     }
@@ -151,6 +166,9 @@ fn paint_node_inner<'a>(
     // materialization: ghost box → real element.
     if let RevealPaintState::Active { elapsed_ms } = reveal_state {
         if elapsed_ms < REVEAL_WIREFRAME_MS && world_rect.size.x > 0.0 && world_rect.size.y > 0.0 {
+            // The ghost outline is chrome: no parent's dash / cap (#89).
+            cx.backend
+                .set_stroke_style(crate::layout_scene::StrokeStyle::default());
             let blue = super::canvas_generation_scan::SKELETON_BLUE;
             let t = elapsed_ms as f32 / REVEAL_WIREFRAME_MS as f32;
             // Brighten in fast, hold; the pop right after replaces it.
@@ -181,6 +199,11 @@ fn paint_node_inner<'a>(
             return PaintNodeHits::default();
         }
     }
+    // This node's cap / join / dash for every stroke it paints (#89).
+    // Children reset it when they finish, so it is set again after them
+    // for the container stroke painted last.
+    let own_style = node_stroke_style(node, zoom);
+    cx.backend.set_stroke_style(own_style);
     let pop_scale = match reveal_state {
         RevealPaintState::Active { elapsed_ms } => {
             reveal_pop_scale(elapsed_ms.saturating_sub(REVEAL_WIREFRAME_MS))
@@ -405,7 +428,9 @@ fn paint_node_inner<'a>(
             }
             // `tabs` degrades to a `frame`; retain its tab bar while only
             // the authored/live active panel participates in paint + hits.
-            paint_widget_visual(cx, node, world_rect, zoom);
+            unstyled(cx, own_style, |cx| {
+                paint_widget_visual(cx, node, world_rect, zoom)
+            });
             if let Some(accent) = options.generation_accent {
                 let visually_empty = super::canvas_generation_scan::is_placeholder_section(node)
                     || options.reveals.is_some_and(|schedule| {
@@ -423,18 +448,22 @@ fn paint_node_inner<'a>(
                         .queued_shell_ids
                         .is_some_and(|ids| ids.contains(&node.id));
                     if on_deck {
-                        super::canvas_generation_scan::paint_generation_scan(
-                            cx,
-                            node,
-                            world_rect,
-                            zoom,
-                            options.now_ms,
-                            accent,
-                        );
+                        unstyled(cx, own_style, |cx| {
+                            super::canvas_generation_scan::paint_generation_scan(
+                                cx,
+                                node,
+                                world_rect,
+                                zoom,
+                                options.now_ms,
+                                accent,
+                            )
+                        });
                     } else if queued {
-                        super::canvas_generation_scan::paint_queued_skeleton(
-                            cx, node, world_rect, zoom, accent,
-                        );
+                        unstyled(cx, own_style, |cx| {
+                            super::canvas_generation_scan::paint_queued_skeleton(
+                                cx, node, world_rect, zoom, accent,
+                            )
+                        });
                     }
                 }
             }
@@ -447,6 +476,7 @@ fn paint_node_inner<'a>(
                 is_hovered,
                 &mut hits,
             );
+            cx.backend.set_stroke_style(own_style);
             if clipped {
                 cx.backend.restore();
             }
@@ -454,13 +484,18 @@ fn paint_node_inner<'a>(
                 paint_node_stroke(cx, node, world_rect, zoom);
             }
         }
-        NodeKind::Other(tag) if tag == "icon_font" => crate::widgets::icons::paint_icon_font_node(
-            cx.backend,
-            node.font_family.as_str(),
-            node.text.as_deref().unwrap_or(""),
-            world_rect,
-            node.fill,
-        ),
+        NodeKind::Other(tag) if tag == "icon_font" => {
+            // `font_weight` carries the icon weight (0 = unset), like a text
+            // node's: `icon_family` says what each family does with it.
+            crate::widgets::icons::paint_icon_font_node_weighted(
+                cx.backend,
+                node.font_family.as_str(),
+                node.text.as_deref().unwrap_or(""),
+                node.font_weight,
+                world_rect,
+                node.fill,
+            )
+        }
         NodeKind::Group | NodeKind::Other(_) => {
             // `clipContent` is container-level in the canonical schema
             // (Frame / Group / Rectangle all carry it) — honour it on
@@ -474,6 +509,7 @@ fn paint_node_inner<'a>(
                 is_hovered,
                 &mut hits,
             );
+            cx.backend.set_stroke_style(own_style);
             if clipped {
                 cx.backend.restore();
             }
@@ -484,7 +520,9 @@ fn paint_node_inner<'a>(
             // checkbox / slider / progress / radio_group / number_input
             // / text_area) paint their recognizable static visual on the
             // design surface instead of the bare rect.
-            let widget_painted = paint_widget_visual(cx, node, world_rect, zoom);
+            let widget_painted = unstyled(cx, own_style, |cx| {
+                paint_widget_visual(cx, node, world_rect, zoom)
+            });
             if !widget_painted {
                 if has_children {
                     if paint_fill_layers(cx, node, world_rect, zoom) {
@@ -534,6 +572,7 @@ fn paint_node_inner<'a>(
                 is_hovered,
                 &mut hits,
             );
+            cx.backend.set_stroke_style(own_style);
             if clipped {
                 cx.backend.restore();
             }
@@ -690,7 +729,9 @@ fn paint_node_inner<'a>(
             // chevron static visual (in world coords) instead of bare
             // text. Painted before the doc-space text transform so its
             // own text runs land at the right spot.
-            if paint_widget_visual(cx, node, world_rect, zoom) {
+            if unstyled(cx, own_style, |cx| {
+                paint_widget_visual(cx, node, world_rect, zoom)
+            }) {
                 // painted
             } else {
                 let zoom = zoom.max(0.0001);
@@ -734,6 +775,10 @@ mod reveal_tests;
 #[cfg(test)]
 #[path = "canvas_viewport_stroke_align_tests.rs"]
 mod stroke_align_tests;
+
+#[cfg(test)]
+#[path = "canvas_viewport_stroke_style_tests.rs"]
+mod stroke_style_tests;
 
 #[cfg(test)]
 #[path = "canvas_viewport_layered_shape_tests.rs"]

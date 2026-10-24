@@ -388,6 +388,16 @@ pub(super) fn fill_polygon(ck: &OpCk, points: &[Point2D], color: Color) {
     ck.fill_polygon(&flat, color.r, color.g, color.b, color.a);
 }
 
+/// Stroke a closed polygon as one path, so joins and dashes run around
+/// its corners (the trait default strokes each edge on its own).
+pub(super) fn stroke_polygon(ck: &OpCk, points: &[Point2D], color: Color, width: f32) {
+    if points.len() < 2 {
+        return;
+    }
+    let flat: Vec<f32> = points.iter().flat_map(|p| [p.x, p.y]).collect();
+    ck.stroke_polygon(&flat, color.r, color.g, color.b, color.a, width);
+}
+
 pub(super) fn stroke_svg_path(
     ck: &OpCk,
     d: &str,
@@ -558,16 +568,34 @@ pub(super) fn fill_inner_shadow_svg_path_with_fill_rule(
 /// Angular (conic) gradient arms. The bridge builds a CanvasKit sweep
 /// shader turned to the canonical 12 o'clock start (see
 /// `makeAngularGradient` in `op_ck_bridge.js`).
-#[allow(clippy::too_many_arguments)]
+///
+/// The sweep geometry rides in one value so the `RenderBackend` forwards
+/// in `backend.rs` (one impl block, close to the 800-line cap) stay short.
+#[derive(Clone, Copy)]
+pub(super) struct Sweep {
+    cx_frac: f32,
+    cy_frac: f32,
+    rotation_deg: f32,
+    opacity: f32,
+}
+
+impl Sweep {
+    pub(super) fn new(cx_frac: f32, cy_frac: f32, rotation_deg: f32, opacity: f32) -> Self {
+        Self {
+            cx_frac,
+            cy_frac,
+            rotation_deg,
+            opacity,
+        }
+    }
+}
+
 pub(super) fn fill_round_rect_angular_gradient(
     ck: &OpCk,
     rect: Rect,
     radius: f32,
     stops: &[(f32, Color)],
-    cx_frac: f32,
-    cy_frac: f32,
-    rotation_deg: f32,
-    opacity: f32,
+    sweep: Sweep,
 ) {
     if stops.is_empty() {
         return;
@@ -580,23 +608,19 @@ pub(super) fn fill_round_rect_angular_gradient(
         rect.size.y,
         radius,
         &stops,
-        cx_frac,
-        cy_frac,
-        rotation_deg,
-        opacity,
+        sweep.cx_frac,
+        sweep.cy_frac,
+        sweep.rotation_deg,
+        sweep.opacity,
     );
 }
 
-#[allow(clippy::too_many_arguments)]
 pub(super) fn fill_round_rect_angular_gradient_per_corner(
     ck: &OpCk,
     rect: Rect,
     radii: [f32; 4],
     stops: &[(f32, Color)],
-    cx_frac: f32,
-    cy_frac: f32,
-    rotation_deg: f32,
-    opacity: f32,
+    sweep: Sweep,
 ) {
     if stops.is_empty() {
         return;
@@ -612,23 +636,19 @@ pub(super) fn fill_round_rect_angular_gradient_per_corner(
         radii[2],
         radii[3],
         &stops,
-        cx_frac,
-        cy_frac,
-        rotation_deg,
-        opacity,
+        sweep.cx_frac,
+        sweep.cy_frac,
+        sweep.rotation_deg,
+        sweep.opacity,
     );
 }
 
-#[allow(clippy::too_many_arguments)]
 pub(super) fn fill_svg_path_in_rect_angular_gradient_with_fill_rule(
     ck: &OpCk,
     d: &str,
     rect: Rect,
     stops: &[(f32, Color)],
-    cx_frac: f32,
-    cy_frac: f32,
-    rotation_deg: f32,
-    opacity: f32,
+    sweep: Sweep,
     even_odd: bool,
 ) {
     if stops.is_empty() {
@@ -643,9 +663,9 @@ pub(super) fn fill_svg_path_in_rect_angular_gradient_with_fill_rule(
         rect.size.y,
         even_odd,
         &flat,
-        cx_frac,
-        cy_frac,
-        rotation_deg,
-        opacity,
+        sweep.cx_frac,
+        sweep.cy_frac,
+        sweep.rotation_deg,
+        sweep.opacity,
     );
 }

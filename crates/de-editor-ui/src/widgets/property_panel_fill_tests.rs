@@ -172,9 +172,12 @@ fn fill_type_picker_flips_above_when_below_space_is_insufficient() {
 
 #[test]
 fn fill_type_picker_clamps_inside_viewport_when_neither_side_fits() {
-    let viewport = Rect::xywh(0.0, 36.0, 280.0, 180.0);
+    // Tall enough for the whole list (seven types since #7), too short
+    // for it to fit either below or above the trigger.
+    let viewport = Rect::xywh(0.0, 36.0, 280.0, 240.0);
     let action_rect = Rect::xywh(40.0, 90.0, 110.0, 26.0);
     let popup_height = FILL_TYPE_ROW_HEIGHT * FILL_TYPE_COUNT as f32;
+    assert!(popup_height <= viewport.size.y);
 
     let picker = fill_type_picker_rect(action_rect, viewport);
 

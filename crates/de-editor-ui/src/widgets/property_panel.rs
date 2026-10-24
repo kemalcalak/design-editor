@@ -387,6 +387,7 @@ impl PropertyPanel {
             stroke: caps.stroke,
             stroke_edit_mode: self.stroke_edit_mode,
             stroke_mode_popover_open: self.stroke_mode_popover_open,
+            stroke_style_rows: self.snapshot.stroke.is_some(),
             fill_menu: self.fill_menu_open,
             export_open: self.export_section_open,
             color_variable_count: self.color_variable_count,

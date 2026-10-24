@@ -1,6 +1,8 @@
 //! Rectangle emission helpers for the SVG serializer.
 
-use super::{fill_attrs, fill_stroke_attrs, normalize_rect, stroke_attrs, xml_escape};
+use super::{
+    fill_attrs, fill_stroke_attrs, normalize_rect, stroke_attrs, stroke_style_attrs, xml_escape,
+};
 use crate::layout_scene::{NodeKind, SceneNode};
 use std::fmt::Write as _;
 
@@ -24,8 +26,9 @@ pub(super) fn emit_rect_stroke_overlay(out: &mut String, node: &SceneNode) {
         return;
     };
     let attrs = format!(
-        r#" fill="none"{}"#,
-        stroke_attrs(stroke.color, stroke.width)
+        r#" fill="none"{}{}"#,
+        stroke_attrs(stroke.color, stroke.width),
+        stroke_style_attrs(node)
     );
     // The overlay is a paint detail, not a second scene node. Leaving it
     // unlabelled avoids collisions with authored ids such as `foo-stroke`.
