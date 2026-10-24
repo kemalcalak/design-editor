@@ -134,9 +134,17 @@ fn run(args: &[String]) -> Result<String, CliError> {
         Command::UseTemplate { template_id } => {
             template_cli::run_use_template(target_port, &target_token, &template_id)?
         }
-        Command::ExportFrames { output_dir, format } => {
-            export_cli::run_export_frames(target_port, &target_token, &output_dir, &format)?
-        }
+        Command::ExportFrames {
+            output_dir,
+            format,
+            time_ms,
+        } => export_cli::run_export_frames(
+            target_port,
+            &target_token,
+            &output_dir,
+            &format,
+            time_ms.as_deref(),
+        )?,
         Command::Styles { id, tag, platform } => template_cli::run_styles(
             target_port,
             &target_token,
@@ -150,6 +158,7 @@ fn run(args: &[String]) -> Result<String, CliError> {
             output,
             format,
             scale,
+            time_ms,
         } => export_cli::run_export(
             target_port,
             &target_token,
@@ -157,6 +166,7 @@ fn run(args: &[String]) -> Result<String, CliError> {
             &output,
             &format,
             scale.as_deref(),
+            time_ms.as_deref(),
         )?,
     };
     Ok(if pretty { pretty_json(&out) } else { out })
@@ -253,6 +263,8 @@ enum Command {
         output: String,
         format: String,
         scale: Option<String>,
+        /// Shader clock for the capture, in ms (`--time-ms`, #8).
+        time_ms: Option<String>,
     },
     ExportDeck {
         output: String,
@@ -273,6 +285,8 @@ enum Command {
     ExportFrames {
         output_dir: String,
         format: String,
+        /// Shader clock for every frame, in ms (`--time-ms`, #8).
+        time_ms: Option<String>,
     },
 }
 

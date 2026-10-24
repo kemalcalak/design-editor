@@ -27,8 +27,68 @@ fn export_item_maps_to_dedicated_command() {
             output: "/tmp/page.png".into(),
             format: "png".into(),
             scale: Some("2".into()),
+            time_ms: None,
         }
     );
+}
+
+#[test]
+fn time_ms_flag_maps_onto_export_and_export_frames() {
+    let parsed = parse_args(&args(&[
+        "export",
+        "--item",
+        "n1",
+        "--output",
+        "/tmp/n1.png",
+        "--time-ms",
+        "1500",
+    ]))
+    .expect("parse timed export");
+    assert!(matches!(
+        parsed.command,
+        Command::Export { time_ms: Some(ref ms), .. } if ms == "1500"
+    ));
+
+    let frames = parse_args(&args(&[
+        "export-frames",
+        "--output-dir",
+        "/tmp/frames",
+        "--time-ms",
+        "250.5",
+    ]))
+    .expect("parse timed export-frames");
+    assert!(matches!(
+        frames.command,
+        Command::ExportFrames { time_ms: Some(ref ms), .. } if ms == "250.5"
+    ));
+
+    for argv in [
+        vec!["export", "--output", "/tmp/x.png", "--time-ms", "soon"],
+        vec![
+            "export-frames",
+            "--output-dir",
+            "/tmp/f",
+            "--time-ms",
+            "NaN",
+        ],
+    ] {
+        let error = parse_args(&args(&argv)).unwrap_err().to_string();
+        assert!(error.contains("--time-ms must be a number"), "{error}");
+    }
+
+    let bare = parse_args(&args(&["export", "--output", "/tmp/x.png", "--time-ms"]))
+        .unwrap_err()
+        .to_string();
+    assert!(bare.contains("--time-ms needs a value"), "{bare}");
+}
+
+#[test]
+fn time_ms_travels_as_a_json_number_and_only_when_given() {
+    let mut arguments = serde_json::Map::new();
+    crate::export_cli::insert_time_ms(&mut arguments, None).expect("absent");
+    assert!(arguments.is_empty());
+    crate::export_cli::insert_time_ms(&mut arguments, Some("1500")).expect("present");
+    assert_eq!(arguments["timeMs"], serde_json::json!(1500.0));
 }
 
 #[test]
