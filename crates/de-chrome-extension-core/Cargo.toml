@@ -41,6 +41,6 @@ jian-ops-schema = { path = "../../vendor/jian/crates/jian-ops-schema" }
 # through an intermediate `serde_json::Value`.
 serde = { workspace = true }
 serde_json = { workspace = true }
-# Pin matches de-host-web / de-web-sdk — the wasm-bindgen crate and the
+# Pin matches de-host-web — the wasm-bindgen crate and the
 # installed `wasm-bindgen-cli` must agree exactly.
 wasm-bindgen = "=0.2.117"

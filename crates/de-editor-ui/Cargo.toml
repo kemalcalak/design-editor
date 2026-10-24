@@ -72,9 +72,8 @@ default = []
 #
 # Opt-in, and only `de-host-web` opts in: it has a daemon to fetch the catalog
 # from (`/pkg/assets/iconify-catalog-core.json`) and a frame pump to install it
-# on. Every other consumer — the desktop hosts, and the `de-web-sdk` viewer,
-# which renders iconFont nodes but has no daemon behind it — keeps the embed,
-# because for them "not fetched yet" would simply mean "never".
+# on. Every other consumer (the desktop hosts) keeps the embed, because for
+# them "not fetched yet" would simply mean "never".
 # Also turns on the gzip inflate for the extended (Material Symbols / phosphor)
 # catalogs, which this build fetches instead of embedding.
 runtime-icon-catalog = ["dep:flate2"]
