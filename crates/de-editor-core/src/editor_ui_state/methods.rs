@@ -8,6 +8,8 @@ use super::{
     EditorUiState, FontPickerPurpose, Locale, MissingFontSurface, RecentFile, SceneTemplateFocus,
     ThemeMode, RECENT_FILE_CAP,
 };
+use de_util::document_file::{is_document_path, is_pen_dev_path, EXTENSION};
+use std::path::Path;
 
 impl EditorUiState {
     /// A fresh UI state — sidebar open, dark theme, no menus open.
@@ -121,6 +123,32 @@ impl EditorUiState {
         let before = self.recent_files.len();
         self.recent_files.retain(|recent| recent.path != path);
         self.recent_files.len() != before
+    }
+
+    /// Drop recent files that can no longer open, called once after the
+    /// settings load. An entry with an extension that does not open (`.op`
+    /// from before the `.de` rename) moves to its `.de` sibling, an entry
+    /// whose file is gone is dropped, and a duplicate keeps the newest one.
+    /// `exists` is the host's file check. Returns whether the list changed.
+    pub fn reconcile_recent_files(&mut self, exists: impl Fn(&Path) -> bool) -> bool {
+        let before = std::mem::take(&mut self.recent_files);
+        for recent in &before {
+            let path = Path::new(&recent.path);
+            let target = if is_document_path(path) || is_pen_dev_path(path) {
+                path.to_path_buf()
+            } else {
+                path.with_extension(EXTENSION)
+            };
+            let target_s = target.to_string_lossy().into_owned();
+            if self.recent_files.iter().any(|kept| kept.path == target_s) || !exists(&target) {
+                continue;
+            }
+            self.recent_files.push(RecentFile {
+                path: target_s,
+                modified_at: recent.modified_at,
+            });
+        }
+        self.recent_files != before
     }
 
     /// Enter canvas Preview (Play) mode. The host follows up by

@@ -260,7 +260,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "updateModal.close" => "닫기",
         "updateModal.retry" => "다시 시도",
         "updateModal.releases" => "릴리스 페이지",
-        "dialog.loadErrorUnsupportedExtension" => "{{name}}은(는) Design Editor 문서가 아닙니다. .de 파일만 열 수 있으며, pen.dev .pen 파일은 가져오기로 열립니다.",
+        "dialog.loadErrorUnsupportedExtension" => "{{name}}은(는) Design Editor 문서가 아닙니다. .de 파일만 열 수 있습니다.",
         "dialog.loadErrorNotPenDev" => "{{name}}은(는) pen.dev 파일이 아니므로 가져올 수 없습니다.",
         "shapes.star" => "별",
         "star.points" => "꼭짓점",

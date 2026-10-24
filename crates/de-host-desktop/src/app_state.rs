@@ -53,6 +53,17 @@ impl DesktopApp {
         let fit_blank_frame = initial_file.is_none();
         // Best-effort prefs restore onto the host's `EditorState`.
         de_host_services::settings_io::load(host.editor_state_mut());
+        // Recents saved before the `.de` rename, or pointing at files since
+        // deleted, would only open into an error dialog. A path the check
+        // cannot answer for (permissions) stays. Saved at once, because
+        // `save_if_changed` only diffs against later events.
+        let recents_changed = host
+            .editor_state_mut()
+            .editor_ui
+            .reconcile_recent_files(|path| !matches!(path.try_exists(), Ok(false)));
+        if recents_changed && !cfg!(test) {
+            de_host_services::settings_io::save(host.editor_state());
+        }
         let entry_surface = host.editor_state().editor_ui.entry_surface;
         // Keep unit-test fixtures deterministic and canvas-first; production
         // startup alone applies the persisted Home preference, while the

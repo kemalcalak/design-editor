@@ -258,7 +258,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "updateModal.close" => "Schließen",
         "updateModal.retry" => "Erneut versuchen",
         "updateModal.releases" => "Release-Seite",
-        "dialog.loadErrorUnsupportedExtension" => "{{name}} ist kein Design-Editor-Dokument. Nur .de-Dateien lassen sich öffnen; .pen-Dateien von pen.dev werden als Import geöffnet.",
+        "dialog.loadErrorUnsupportedExtension" => "{{name}} ist kein Design-Editor-Dokument. Nur .de-Dateien lassen sich öffnen.",
         "dialog.loadErrorNotPenDev" => "{{name}} ist keine pen.dev-Datei und kann daher nicht importiert werden.",
         "shapes.star" => "Stern",
         "star.points" => "Zacken",
