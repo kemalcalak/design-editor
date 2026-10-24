@@ -29,6 +29,9 @@ impl WidgetHostNative {
         // tab's build is then stamped with the fresh owner.
         self.rotate_chat_owner_if_session_changed();
         self.sync_theme_from_editor();
+        // The left card's open / close motion (#86) advances once per
+        // frame, before anything below reads its rects.
+        self.editor_state.editor_ui.tick_panel_motion(self.now_ms);
         // 1. Background fill so previous-frame pixels never bleed.
         frame.fill_rect(
             Rect {
@@ -165,15 +168,8 @@ impl WidgetHostNative {
             let stage = self.preview_canvas_rect(viewport_width, viewport_height);
             self.frame_slideshow_board((stage.size.x, stage.size.y));
         }
-        // 3. The left rail — painted BEFORE the canvas (it pushes the
-        //    canvas).
-        if !workspace_visible {
-            self.paint_left_rail(frame, viewport_width, viewport_height);
-        }
-
-        // 4. CanvasViewport — middle band, respects sidebar
-        //    collapse state. It paints before the right rail so
-        //    PropertyPanel popovers can extend into the canvas.
+        // 3. CanvasViewport — the whole window (#86: full-bleed). Every
+        //    panel floats over it, so it paints first.
         let canvas_rect =
             canvas_geometry::canvas_rect(&self.editor_state, viewport_width, viewport_height);
         let canvas_w = canvas_rect.size.x;
@@ -236,6 +232,7 @@ impl WidgetHostNative {
                     let canvas_scene = transition_scene.as_ref().unwrap_or(&self.layout_scene);
                     let mut canvas = CanvasViewport::from_editor(&self.editor_state, canvas_scene);
                     canvas.now_ms = self.now_ms;
+                    canvas.pointer = self.shader_pointer;
                     canvas.fast_interaction = self.canvas_fast_interaction_active();
                     canvas.set_node_drag_active(
                         self.node_drag.as_ref().is_some_and(|drag| drag.moved),
@@ -290,21 +287,30 @@ impl WidgetHostNative {
             }
         }
 
-        // 5. PropertyPanel — only when selection.
+        // 4. The left card — floats over the canvas (#86).
+        if !workspace_visible {
+            self.paint_left_rail(frame, viewport_width, viewport_height);
+        }
+
+        // 5. PropertyPanel — only when selection, as the right card.
         let property_panel = PropertyPanel::for_selection_at_with_scene(
             &self.editor_state,
             &self.layout_scene,
             self.now_ms,
         );
-        if let Some(panel) = property_panel
-            .as_ref()
-            .filter(|_| !presenting && !workspace_visible)
-        {
+        if let Some(panel) = property_panel.as_ref().filter(|_| {
+            !presenting && !workspace_visible && !self.editor_state.editor_ui.preview.mode
+        }) {
             let property_rect = self.property_rect(viewport_width, viewport_height);
-            let mut cx = PaintCx {
-                backend: &mut *frame,
-            };
-            panel.paint(&mut cx, property_rect);
+            de_editor_ui::widgets::floating_panels::paint_card(
+                &mut *frame,
+                &self.theme,
+                property_rect,
+                |backend| {
+                    let mut cx = PaintCx { backend };
+                    panel.paint(&mut cx, property_rect);
+                },
+            );
         }
 
         // 5b. VariablesPanel — mirrors TS' `{}` toolbar toggle as a
@@ -373,15 +379,28 @@ impl WidgetHostNative {
             // owner — the display-frame cursor hint reads it back by that owner.
             let chat = AIChatPlaceholder::from_editor_at(&self.editor_state, self.now_ms)
                 .owned_by(self.chat_panel_owner);
+            // Pinned into the left card, the chat is clipped to the card's
+            // rounded corners like the rest of its content.
+            let card = (!workspace_visible && self.editor_state.editor_ui.chat_pinned())
+                .then(|| canvas_geometry::layer_panel_rect(&self.editor_state, viewport_height));
+            if let Some(card) = card {
+                use de_editor_ui::RenderBackend;
+                frame.save();
+                frame.clip_round_rect(card, de_editor_ui::widgets::floating_panels::CARD_RADIUS);
+            }
             let mut cx = PaintCx {
                 backend: &mut *frame,
             };
             chat.paint(&mut cx, chat_rect);
+            if card.is_some() {
+                use de_editor_ui::RenderBackend;
+                frame.restore();
+            }
         }
-        // The rail's edge belongs to the rail, but it has to go down
-        // after the pinned chat has filled the rail's body.
-        if !presenting {
-            self.paint_rail_canvas_edge(frame, viewport_height);
+        // The left card's hairline belongs to the card, but it has to go
+        // down after the pinned chat has filled the card's body.
+        if !presenting && !workspace_visible && self.editor_state.editor_ui.chat_pinned() {
+            self.paint_left_card_border(frame, viewport_height);
         }
 
         // 8. StatusBar — floating bottom-right.
@@ -444,10 +463,9 @@ impl WidgetHostNative {
         // 8.6. PropertyPanel overlays — painted after canvas floating
         //      controls so the image-fill popover can cover the zoom
         //      status pill when it extends into the canvas.
-        if let Some(panel) = property_panel
-            .as_ref()
-            .filter(|_| !presenting && !workspace_visible)
-        {
+        if let Some(panel) = property_panel.as_ref().filter(|_| {
+            !presenting && !workspace_visible && !self.editor_state.editor_ui.preview.mode
+        }) {
             let property_rect = self.property_rect(viewport_width, viewport_height);
             let mut cx = PaintCx {
                 backend: &mut *frame,

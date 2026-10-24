@@ -11,6 +11,7 @@ use de_ai::chat_provider::{
     ChatToolResult, FinalizeReport, QualitySummary, UnfilledScreensReport, CHECK_BLOCKERS_OP,
     LOOP_FINALIZE_OP,
 };
+use de_editor_core::write_scope::WriteBaseline;
 use de_editor_core::{ChatMessage, ChatRole, ChatToolCall};
 
 /// One tool call forwarded from an agent-loop worker to a host UI thread.
@@ -39,8 +40,9 @@ impl ChatToolExecutor for UiChatToolExecutor {
 
     /// Forward the reserved [`LOOP_FINALIZE_OP`] over the same tool channel so
     /// the host (which owns the live `EditorState`) runs
-    /// `de_orchestrator::apply_loop_finalize` plus the promise-delivery
-    /// invariant's detect-and-mark pass. Blocks on the ack like any tool call;
+    /// `de_orchestrator::agent_run_finalize::finalize_agent_run`: the loop
+    /// finalize plus the promise-delivery invariant's detect-and-mark pass,
+    /// over the roots this run created. Blocks on the ack like any tool call;
     /// the ack's `content` carries back the (already canvas-marked)
     /// committed/unfilled report — no new IPC needed, this reuses the same
     /// envelope every other tool result already rides.
@@ -54,8 +56,7 @@ impl ChatToolExecutor for UiChatToolExecutor {
 
     /// Cheap, read-only promise-delivery check — same reserved op, with
     /// `checkOnly: true` so the host runs ONLY the detector
-    /// (`unfilled_screens::detect_unfilled_screens` /
-    /// `list_screen_candidates`), never `apply_loop_finalize` or the
+    /// (`agent_run_finalize::agent_run_screens`), never the finalize or the
     /// canvas-marking side effect.
     fn check_unfilled_screens(&self) -> UnfilledScreensReport {
         unfilled_report_from_ack(&self.forward(LOOP_FINALIZE_OP, r#"{"checkOnly":true}"#))
@@ -240,6 +241,9 @@ pub struct ChatSession {
     /// chat keeps its classic aggregated tool panel.
     is_design_loop: bool,
     loop_finalized: bool,
+    /// The page before a design-agent loop started; its finalize covers only
+    /// the roots created since (#116). `None` for plain chat.
+    run_baseline: Option<WriteBaseline>,
     viewport_fitted: bool,
 }
 
@@ -514,16 +518,32 @@ impl ChatSession {
             finished: false,
             is_design_loop: false,
             loop_finalized: false,
+            run_baseline: None,
             viewport_fitted: false,
         }
     }
 
     /// Mark this turn as a design-agent loop so the pump stamps tool positions
     /// into the visible narration timeline (see [`apply_poll_to_message_with`]).
+    /// `run_baseline` is the page as the loop found it, captured at launch.
     /// Chainable.
-    pub fn into_design_loop(mut self) -> Self {
+    pub fn into_design_loop(mut self, run_baseline: WriteBaseline) -> Self {
         self.is_design_loop = true;
+        self.run_baseline = Some(run_baseline);
         self
+    }
+
+    /// Attach a run baseline without making the turn a design loop: a
+    /// `spawn_agents` sub-loop shares its parent's, so its finalize covers
+    /// the parent run's roots, including the containers it fills. Chainable.
+    pub fn with_run_baseline(mut self, run_baseline: WriteBaseline) -> Self {
+        self.run_baseline = Some(run_baseline);
+        self
+    }
+
+    /// The page as this turn's design run found it; `None` for plain chat.
+    pub fn run_baseline(&self) -> Option<&WriteBaseline> {
+        self.run_baseline.as_ref()
     }
 
     /// True when this turn is a design-agent loop.
@@ -589,6 +609,7 @@ impl ChatSession {
             finished: false,
             is_design_loop: false,
             loop_finalized: false,
+            run_baseline: None,
             viewport_fitted: false,
         }
     }

@@ -67,23 +67,22 @@ pub(crate) fn effect_color_hex(
     }
 }
 
-/// Read one stop's hex from the node's primary gradient body.
-/// `None` when the first fill isn't a gradient or `index` is out of
-/// range — the same gating `set_primary_gradient_stop_hex` applies
-/// on the write path.
+/// Read one stop's hex from the node's primary gradient body (a mesh
+/// gradient's stops are its vertices). `None` when the first fill isn't
+/// a gradient or `index` is out of range — the same gating
+/// `set_primary_gradient_stop_hex` applies on the write path.
 pub(crate) fn gradient_stop_hex(
     node: &jian_ops_schema::node::PenNode,
     index: usize,
 ) -> Option<String> {
     use jian_ops_schema::style::PenFill;
     let fills = crate::fills::node_fills(node)?;
-    let first = fills.first()?;
-    let stops = match first {
-        PenFill::LinearGradient(b) => &b.stops,
-        PenFill::RadialGradient(b) => &b.stops,
-        _ => return None,
-    };
-    stops.get(index).map(|s| s.color.clone())
+    match fills.first()? {
+        PenFill::LinearGradient(b) => b.stops.get(index).map(|s| s.color.clone()),
+        PenFill::RadialGradient(b) => b.stops.get(index).map(|s| s.color.clone()),
+        PenFill::MeshGradient(b) => b.stops.get(index).map(|s| s.color.clone()),
+        _ => None,
+    }
 }
 
 /// Resolve a Color variable's hex scalar from a history snapshot's

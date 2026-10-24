@@ -29,14 +29,9 @@ impl Widget for PropertyPanel {
     }
 
     fn paint(&self, cx: &mut PaintCx<'_>, rect: Rect) {
+        // The hairline is the floating card's (#86): hosts paint the panel
+        // through `floating_panels::paint_card`.
         cx.backend.fill_rect(rect, self.theme.card);
-        cx.backend.fill_rect(
-            Rect {
-                origin: rect.origin,
-                size: Point2D::new(1.0, rect.size.y),
-            },
-            self.theme.border,
-        );
 
         let x = rect.origin.x;
         let w = rect.size.x;
@@ -168,6 +163,18 @@ impl Widget for PropertyPanel {
             y,
             w,
         );
+        // Multi-select panel presses are inert (`hit.rs`), so the buttons
+        // only show for one node; Shift+H / Shift+V flip a multi-selection.
+        if !self.is_multi {
+            crate::widgets::property_panel_flip::paint_flip_buttons(
+                cx,
+                &self.theme,
+                &self.snapshot,
+                x,
+                tops.position,
+                w,
+            );
+        }
         y = section_start(y, tops.flex, "position");
         let flex_section_y = y;
         if caps.flex_layout {

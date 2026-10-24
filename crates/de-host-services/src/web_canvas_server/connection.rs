@@ -312,7 +312,7 @@ pub(super) fn dispatch<S: Read + Write>(
             &mut guard.editor,
             &req.body,
             |tool_name, editor, cmd| {
-                let baseline = crate::mcp_serve::WriteBaseline::for_tool(tool_name, editor);
+                let baseline = crate::mcp_serve::baseline_for_tool(tool_name, editor);
                 let ok = editor.apply(cmd.clone());
                 if let Some(baseline) = baseline.filter(|_| ok) {
                     let scope = baseline.scope_after(editor);

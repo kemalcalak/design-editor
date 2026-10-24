@@ -120,6 +120,7 @@ impl ScreenshotProvider for RealScreenshotProvider {
             node_id: None,
             padding: 0.0,
             scale: 1.0,
+            time_ms: None,
         };
         // A render failure (empty page, oversized bounds) downgrades to
         // `None` — the loop then skips the vision round, exactly like the

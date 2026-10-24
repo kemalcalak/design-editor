@@ -180,7 +180,9 @@ impl DesktopApp {
                 && !self.host.is_resizing_panel()
                 && !overlay_open
             {
-                false
+                // The ladder is skipped over the layer panel, so tell
+                // pointer-reactive shaders the pointer left the canvas.
+                self.host.apply_cursor_left()
             } else {
                 self.host.apply_cursor_move(cx, cy)
             };

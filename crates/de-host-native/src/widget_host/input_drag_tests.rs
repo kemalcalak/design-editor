@@ -430,6 +430,11 @@ fn anchor_drag_back_to_start_lands_at_start() {
     let viewport_w = 1440.0;
     let viewport_h = 900.0;
     let (cx0, cy0, _cw, _ch) = host.canvas_region(viewport_w, viewport_h);
+    // The canvas is full-bleed (#86): doc (0, 0) would sit under the
+    // window controls, so pan the document into open canvas first.
+    host.editor_state_mut().viewport.pan_x = 400.0;
+    host.editor_state_mut().viewport.pan_y = 300.0;
+    let (cx0, cy0) = (cx0 + 400.0, cy0 + 300.0);
     // Drag away to doc (80, 25).
     host.apply_cursor_move(cx0 + 80.0, cy0 + 25.0);
     let after_first = anchor_at(&host, "n60", 1);
@@ -498,6 +503,9 @@ fn node_drag_not_intercepted_by_align_toolbar_hover() {
     // Two-node selection so the align toolbar is shown.
     host.editor_state_mut().selection.set = vec![NodeId::new("n90"), NodeId::new("n91")];
     host.editor_state_mut().selection.anchor = NodeId::new("n91");
+    // The open left card floats over the canvas's left edge (#86), where
+    // these rects sit.
+    host.editor_state_mut().editor_ui.sidebar_open = false;
     host.mark_paint_dirty_for_test();
     let viewport_w = 1440.0;
     let viewport_h = 900.0;

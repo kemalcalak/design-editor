@@ -106,6 +106,7 @@ fn mcp_client_config_copy_rect(rect: Rect) -> Rect {
     super::agent_settings_mcp::client_config_copy_button_rect(
         crate::widgets::agent_settings_panel::content_viewport(rect),
         &de_editor_core::agent_settings::AgentSettings::default(),
+        EditorState::default().editor_ui.effective_locale(),
     )
 }
 

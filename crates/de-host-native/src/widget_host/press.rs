@@ -230,12 +230,13 @@ impl WidgetHostNative {
         // variable-row inline editor.
         self.commit_variable_row_focus_if_any();
         if self.editor_state.ui.property_focus.is_some() {
-            let property_left = if self.editor_state.property_panel_visible() {
-                self.property_rect(viewport_width, viewport_height).origin.x
-            } else {
-                viewport_width
-            };
-            if x < property_left {
+            // A press anywhere off the properties card commits (#86: the
+            // card floats, so "left of its edge" is no longer the test).
+            let on_card = self.editor_state.property_panel_visible()
+                && self
+                    .property_rect(viewport_width, viewport_height)
+                    .contains(Point2D::new(x, y));
+            if !on_card {
                 self.commit_property_focus_if_any();
             }
         }

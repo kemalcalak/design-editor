@@ -352,8 +352,8 @@ struct DesktopApp {
     /// replay) have started. They start once, the first time a surface
     /// that shows CLI provider state opens — see `cli_probe_gate`.
     cli_probes_started: bool,
-    /// Last persisted pencil-cursor style (see `ui_prefs`).
-    last_saved_pencil_cursor: Option<de_editor_core::PencilCursorStyle>,
+    /// Last persisted UI preferences (see `ui_prefs`).
+    last_saved_ui_prefs: Option<ui_prefs::UiPrefValues>,
     /// Providers the store remembers as LAST KNOWN GOOD — seeded from
     /// `agents.json` at startup, extended when a probe succeeds, cleared
     /// only when the user explicitly disconnects. Deliberately not a

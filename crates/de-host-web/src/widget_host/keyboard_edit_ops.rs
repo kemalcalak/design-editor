@@ -34,21 +34,30 @@ impl WidgetHost {
         if !matches!(tool, de_editor_core::Tool::Pen) {
             let _ = self.editor_state.cancel_pen_path();
         }
+        // `set_active_tool` below also drops an in-flight Pencil stroke.
         shared::set_active_tool(&mut self.editor_state, tool);
         self.mark_dirty();
+    }
+
+    /// Test convenience: the tool router without Shift.
+    #[cfg(test)]
+    pub(crate) fn apply_tool_shortcut(&mut self, key: &str) -> bool {
+        self.apply_tool_shortcut_with_shift(key, false)
     }
 
     /// Map a bare (no Cmd/Ctrl) letter to a tool switch when no text input owns
     /// the keyboard. Returns true when a tool was set so the keydown router
     /// falls back to `apply_text` for every other letter (and while typing).
-    /// Web parity fix: the native host had this single-key router but the web
-    /// keydown handler only ever fell through to `apply_text`, so R / T / P /
-    /// etc. silently did nothing on the canvas.
-    pub(crate) fn apply_tool_shortcut(&mut self, key: &str) -> bool {
+    /// Shift+P picks the freehand Pencil (#88); every other letter ignores
+    /// Shift. Web parity fix: the native host had this single-key router but
+    /// the web keydown handler only ever fell through to `apply_text`, so
+    /// R / T / P / etc. silently did nothing on the canvas.
+    pub(crate) fn apply_tool_shortcut_with_shift(&mut self, key: &str, shift: bool) -> bool {
         if self.input_active() {
             return false;
         }
         let tool = match key.to_ascii_lowercase().as_str() {
+            "p" if shift => de_editor_core::Tool::Pencil,
             "v" => de_editor_core::Tool::Select,
             "r" => de_editor_core::Tool::Rect,
             "o" => de_editor_core::Tool::Ellipse,
@@ -453,6 +462,20 @@ impl WidgetHost {
         true
     }
 
+    /// Cmd/Ctrl+\ — open / close the left panel with its motion (#86).
+    /// Mirrors the native host's `apply_toggle_panel`.
+    pub fn apply_toggle_panel(&mut self) -> bool {
+        self.commit_variable_row_focus_if_any();
+        if !de_editor_ui::widgets::floating_panels::toggle_panel(
+            &mut self.editor_state,
+            self.now_ms,
+        ) {
+            return false;
+        }
+        self.mark_dirty();
+        true
+    }
+
     /// CanvasKit keydown chord routing for editor shortcuts that are not
     /// printable text. `is_mod` is Cmd on macOS or Ctrl elsewhere.
     pub(crate) fn apply_keydown_shortcut(
@@ -531,6 +554,23 @@ impl WidgetHost {
             return true;
         }
         false
+    }
+
+    /// Shift+H / Shift+V — flip the selection (native parity:
+    /// `WidgetHostNative::apply_flip`). Returns true when `key` is one of
+    /// the two letters and no input owns the keyboard, so the keydown
+    /// router consumes it instead of switching tools.
+    pub(crate) fn apply_flip_shortcut(&mut self, key: &str) -> bool {
+        if self.input_active() {
+            return false;
+        }
+        let Some(axis) = de_editor_core::FlipAxis::from_shortcut_key(key) else {
+            return false;
+        };
+        if de_editor_core::flip_selection(&mut self.editor_state, axis) {
+            self.mark_dirty();
+        }
+        true
     }
 }
 

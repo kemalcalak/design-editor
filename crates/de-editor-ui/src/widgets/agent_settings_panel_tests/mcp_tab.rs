@@ -15,6 +15,7 @@ fn mcp_running_client_config_paints_copy_icon_like_ts() {
     let copy = crate::widgets::agent_settings_mcp::client_config_copy_button_rect(
         crate::widgets::agent_settings_panel::content_viewport(rect),
         &state.editor_ui.agent_settings,
+        state.editor_ui.effective_locale(),
     );
     let mut backend = CaptureBackend::default();
     let mut cx = PaintCx {
@@ -107,6 +108,7 @@ fn mcp_running_client_config_copy_icon_is_clickable() {
     let copy = crate::widgets::agent_settings_mcp::client_config_copy_button_rect(
         content,
         &state.editor_ui.agent_settings,
+        state.editor_ui.effective_locale(),
     );
     // The custom-configuration section sits below the twelve CLI rows, so
     // scroll it into view before pressing its action.

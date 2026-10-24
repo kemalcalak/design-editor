@@ -32,7 +32,11 @@ pub fn set_image_node_mode(node: &mut PenNode, mode: ImageFillMode) -> bool {
     let PenNode::Image(image) = node else {
         return false;
     };
-    image.object_fit = Some(mode.to_image_node_schema());
+    // Stretch has no Image-node equivalent; the node keeps its mode.
+    let Some(fit) = mode.to_image_node_schema() else {
+        return false;
+    };
+    image.object_fit = Some(fit);
     true
 }
 

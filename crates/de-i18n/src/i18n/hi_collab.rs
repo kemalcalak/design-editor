@@ -260,6 +260,18 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "updateModal.releases" => "रिलीज़ पेज",
         "dialog.loadErrorUnsupportedExtension" => "{{name}} Design Editor दस्तावेज़ नहीं है। केवल .de फ़ाइलें खुलती हैं; pen.dev की .pen फ़ाइलें आयात के रूप में खुलती हैं।",
         "dialog.loadErrorNotPenDev" => "{{name}} pen.dev फ़ाइल नहीं है, इसलिए इसे आयात नहीं किया जा सकता।",
+        "stroke.inside" => "अंदर",
+        "stroke.center" => "मध्य",
+        "stroke.outside" => "बाहर",
+        "effects.addInnerShadow" => "आंतरिक छाया",
+        "image.stretch" => "खींचें",
+        "fill.presetNoise" => "नॉइज़",
+        "fill.presetFade" => "फ़ेड",
+        "fill.presetGlow" => "चमक",
+        "settings.system.pencilSmoothing" => "पेंसिल स्मूदिंग",
+        "settings.system.pencilSmoothingPrecise" => "सटीक",
+        "settings.system.pencilSmoothingBalanced" => "संतुलित",
+        "settings.system.pencilSmoothingSmooth" => "स्मूद",
         _ => return None,
     })
 }

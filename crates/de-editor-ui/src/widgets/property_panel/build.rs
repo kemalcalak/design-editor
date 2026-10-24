@@ -5,7 +5,7 @@
 //! design-editor 800-line cap.
 
 use super::{NodeSnapshot, PropertyPanel};
-use crate::layout_scene::{SceneStroke, SceneStrokeAlign};
+use crate::layout_scene::SceneStroke;
 use crate::widgets::editor_state_ext::theme_for;
 use crate::widgets::property_panel_sections as sections;
 use crate::widgets::property_panel_snapshot::color_from_hex;
@@ -61,7 +61,7 @@ fn apply_resolved_variable_colors(
             color,
             width,
             sides: crate::widgets::property_panel_snapshot::stroke_sides_for_scene(node),
-            align: SceneStrokeAlign::Center,
+            align: crate::widgets::property_panel_snapshot::stroke_align_for_scene(node),
         });
     }
 }

@@ -112,6 +112,7 @@ fn mode_to_draw_mode(mode: de_editor_core::ImageFillMode) -> ImageDrawMode {
         de_editor_core::ImageFillMode::Fit => ImageDrawMode::Fit,
         de_editor_core::ImageFillMode::Crop => ImageDrawMode::Crop,
         de_editor_core::ImageFillMode::Tile => ImageDrawMode::Tile,
+        de_editor_core::ImageFillMode::Stretch => ImageDrawMode::Stretch,
     }
 }
 

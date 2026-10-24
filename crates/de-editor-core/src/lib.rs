@@ -117,6 +117,8 @@ pub mod path_bounds;
 pub mod path_edit;
 pub mod pen;
 pub mod pen_node_ext;
+pub mod pencil;
+pub mod pencil_fit;
 pub mod preview_slideshow;
 pub mod prompt_center_catalog;
 pub mod prompt_center_keyboard;
@@ -134,7 +136,10 @@ pub mod scene_template_palette;
 pub mod scene_template_prompt;
 pub mod scene_vars;
 pub mod selection;
+pub mod selection_flip;
 pub mod selection_resolve;
+pub mod shader_images;
+pub mod shader_presets;
 pub mod state;
 pub mod statusbar_state;
 pub mod svg_import;
@@ -174,6 +179,7 @@ pub mod variables_resolve;
 pub mod viewport;
 pub mod walkers;
 pub mod web_sync;
+pub mod write_scope;
 
 #[cfg(test)]
 mod command_allocator_tests;
@@ -318,11 +324,12 @@ pub use editor_ui_state::{
     HomeFamily, HomeHit, HomeSize, HomeState, HomeTemplate, ImageAdjustmentField, ImageFillMode,
     LayerContextMenuState, LeftPanelTab, Locale, MergeConflictRow, MergeResolveFile,
     MergeResolveState, MissingFontSurface, PaddingEditMode, PageRenameState, PencilCursorStyle,
-    PreviewDeviceKind, PromptCenterFocus, PromptCenterState, PromptFilter, PropertyTab, RecentFile,
-    RecentView, SceneFilter, SceneTemplateCenterState, SceneTemplateFocus, SizeToggleState,
-    SlidesDrag, SlidesPanelState, SlidesPanelTarget, StyleImportState, TaskDraft, ThemeMode,
-    UpdateAction, UpdateFailure, UpdateModalButton, UpdateModalState, UpdatePhase, UpdateStatus,
-    VariableRowFocus, CHAT_TAB_MIN_WIDTH, LAYER_PANEL_MAX_WIDTH, LAYER_PANEL_MIN_WIDTH,
+    PencilSmoothing, PreviewDeviceKind, PromptCenterFocus, PromptCenterState, PromptFilter,
+    PropertyTab, RecentFile, RecentView, SceneFilter, SceneTemplateCenterState, SceneTemplateFocus,
+    SizeToggleState, SlidesDrag, SlidesPanelState, SlidesPanelTarget, StyleImportState, TaskDraft,
+    ThemeMode, UpdateAction, UpdateFailure, UpdateModalButton, UpdateModalState, UpdatePhase,
+    UpdateStatus, VariableRowFocus, CHAT_TAB_MIN_WIDTH, LAYER_PANEL_MAX_WIDTH,
+    LAYER_PANEL_MIN_WIDTH,
 };
 pub use export_dialog_state::ExportDialogButton;
 pub use export_quick_menu_state::ExportQuickRow;
@@ -365,6 +372,8 @@ pub use node_id::NodeId;
 pub use pen_node_ext::PenNodeExt;
 pub use render_backend::*;
 pub use selection::SelectionState;
+pub use selection_flip::{flip_selection, FlipAxis};
+pub use shader_presets::ShaderPreset;
 pub use state::EditorState;
 pub use statusbar_state::StatusBarButton;
 pub use theme_presets::ThemePreset;

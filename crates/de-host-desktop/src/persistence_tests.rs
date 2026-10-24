@@ -127,9 +127,28 @@ fn new_file_action_resets_to_starter_frame() {
         Some(jian_ops_schema::sizing::SizingBehavior::Number(800.0))
     ));
     let v = host.editor_state().viewport;
-    assert!((v.zoom - 0.8933333).abs() < 1e-3, "zoom {}", v.zoom);
-    assert!((v.pan_x - 64.0).abs() < 1e-2, "pan_x {}", v.pan_x);
-    assert!((v.pan_y - 92.66669).abs() < 1e-2, "pan_y {}", v.pan_y);
+    // Framed into the canvas the floating cards leave uncovered (#86).
+    let area = de_editor_ui::widgets::floating_panels::uncovered_canvas_rect(
+        host.editor_state(),
+        super::super::INITIAL_VIEWPORT_W,
+        super::super::INITIAL_VIEWPORT_H,
+    );
+    let zoom = ((area.size.x - 128.0) / 1200.0)
+        .min((area.size.y - 128.0) / 800.0)
+        .min(1.0);
+    let pan_x = area.origin.x + area.size.x / 2.0 - 600.0 * zoom;
+    let pan_y = area.origin.y + area.size.y / 2.0 - 400.0 * zoom;
+    assert!((v.zoom - zoom).abs() < 1e-3, "zoom {} vs {zoom}", v.zoom);
+    assert!(
+        (v.pan_x - pan_x).abs() < 1e-2,
+        "pan_x {} vs {pan_x}",
+        v.pan_x
+    );
+    assert!(
+        (v.pan_y - pan_y).abs() < 1e-2,
+        "pan_y {} vs {pan_y}",
+        v.pan_y
+    );
 }
 
 #[test]
@@ -349,10 +368,16 @@ fn opening_document_fits_and_centers_multiple_root_nodes() {
         active_page_bbox(host.editor_state()).expect("opened content has bounds");
     let content_center_x = ((min_x + max_x) / 2.0) as f32;
     let content_center_y = ((min_y + max_y) / 2.0) as f32;
-    let (canvas_w, canvas_h) = de_host_services::design_session::design_canvas_size(
+    // The fit centres content in the canvas the floating cards leave
+    // uncovered (#86), not in the whole window.
+    let area = de_editor_ui::widgets::floating_panels::uncovered_canvas_rect(
         host.editor_state(),
         super::super::INITIAL_VIEWPORT_W,
         super::super::INITIAL_VIEWPORT_H,
+    );
+    let (centre_x, centre_y) = (
+        area.origin.x + area.size.x / 2.0,
+        area.origin.y + area.size.y / 2.0,
     );
     let screen_center_x =
         host.editor_state().viewport.pan_x + content_center_x * host.editor_state().viewport.zoom;
@@ -360,12 +385,12 @@ fn opening_document_fits_and_centers_multiple_root_nodes() {
         host.editor_state().viewport.pan_y + content_center_y * host.editor_state().viewport.zoom;
 
     assert!(
-        (screen_center_x - canvas_w / 2.0).abs() < 0.5,
-        "opened content should be horizontally centered: screen_center_x={screen_center_x}, canvas_w={canvas_w}"
+        (screen_center_x - centre_x).abs() < 0.5,
+        "opened content should be horizontally centered: screen_center_x={screen_center_x}, centre_x={centre_x}"
     );
     assert!(
-        (screen_center_y - canvas_h / 2.0).abs() < 0.5,
-        "opened content should be vertically centered: screen_center_y={screen_center_y}, canvas_h={canvas_h}"
+        (screen_center_y - centre_y).abs() < 0.5,
+        "opened content should be vertically centered: screen_center_y={screen_center_y}, centre_y={centre_y}"
     );
 
     let _ = std::fs::remove_file(&path);
@@ -403,18 +428,24 @@ fn opening_document_fits_and_centers_fit_content_root() {
     assert!((max_y - min_y - 750.0).abs() < 0.01);
     let content_center_x = ((min_x + max_x) / 2.0) as f32;
     let content_center_y = ((min_y + max_y) / 2.0) as f32;
-    let (canvas_w, canvas_h) = de_host_services::design_session::design_canvas_size(
+    // The fit centres content in the canvas the floating cards leave
+    // uncovered (#86), not in the whole window.
+    let area = de_editor_ui::widgets::floating_panels::uncovered_canvas_rect(
         host.editor_state(),
         super::super::INITIAL_VIEWPORT_W,
         super::super::INITIAL_VIEWPORT_H,
+    );
+    let (centre_x, centre_y) = (
+        area.origin.x + area.size.x / 2.0,
+        area.origin.y + area.size.y / 2.0,
     );
     let screen_center_x =
         host.editor_state().viewport.pan_x + content_center_x * host.editor_state().viewport.zoom;
     let screen_center_y =
         host.editor_state().viewport.pan_y + content_center_y * host.editor_state().viewport.zoom;
 
-    assert!((screen_center_x - canvas_w / 2.0).abs() < 0.5);
-    assert!((screen_center_y - canvas_h / 2.0).abs() < 0.5);
+    assert!((screen_center_x - centre_x).abs() < 0.5);
+    assert!((screen_center_y - centre_y).abs() < 0.5);
 
     let _ = std::fs::remove_file(&path);
 }

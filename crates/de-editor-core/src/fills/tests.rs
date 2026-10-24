@@ -202,7 +202,10 @@ fn transformed_legacy_stretch_summary_reports_crop_preview_payload() {
 }
 
 #[test]
-fn untransformed_stretch_summary_keeps_historical_fill_fallback() {
+fn untransformed_stretch_summary_reports_stretch() {
+    // Stretch is a panel mode now (#90), so an identity-transform stretch
+    // fill reads as what the canvas paints instead of falling back to Fill.
+    // A non-identity transform still reads as Crop (see above).
     let src = r#"{"version":"1.0.0","children":[{
         "type":"rectangle","id":"stretch","name":"Stretch",
         "x":0,"y":0,"width":10,"height":10,
@@ -220,7 +223,29 @@ fn untransformed_stretch_summary_keeps_historical_fill_fallback() {
         .expect("one node");
 
     let summary = first_image_fill_summary(&node).expect("image summary");
-    assert_eq!(summary.mode, ImageFillMode::Fill);
+    assert_eq!(summary.mode, ImageFillMode::Stretch);
     assert_eq!(summary.transform, Some([1.0, 0.0, 0.0, 0.0, 1.0, 0.0]));
     assert_eq!(summary.original_size, None);
+}
+
+#[test]
+fn a_shader_image_uniform_is_not_taken_as_the_colour_when_converting() {
+    let src = r##"{"version":"1.0.0","children":[{
+        "type":"rectangle","id":"s","name":"S","x":0,"y":0,"width":10,"height":10,
+        "fill":[{"type":"shader","sksl":"uniform shader image0; uniform half4 tint;",
+            "uniforms":{"image0":"data:image/png;base64,AA==","tint":"#336699"}}]
+    }]}"##;
+    let node = jian_ops_schema::load_str(src)
+        .expect("shader fixture parses")
+        .value
+        .children
+        .into_iter()
+        .next()
+        .expect("one node");
+    let shader = node_fills(&node).expect("fills")[0].clone();
+    // `image0` sorts before `tint`, so a first-string pick would take it.
+    match convert_fill(shader, FillType::Solid) {
+        PenFill::Solid(body) => assert_eq!(body.color, "#336699"),
+        other => panic!("expected a solid fill, got {other:?}"),
+    }
 }

@@ -260,6 +260,18 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "updateModal.releases" => "Página de versiones",
         "dialog.loadErrorUnsupportedExtension" => "{{name}} no es un documento de Design Editor. Solo se abren archivos .de; los archivos .pen de pen.dev se abren como importación.",
         "dialog.loadErrorNotPenDev" => "{{name}} no es un archivo de pen.dev, así que no se puede importar.",
+        "stroke.inside" => "Interior",
+        "stroke.center" => "Centro",
+        "stroke.outside" => "Exterior",
+        "effects.addInnerShadow" => "Sombra interior",
+        "image.stretch" => "Estirar",
+        "fill.presetNoise" => "Ruido",
+        "fill.presetFade" => "Fundido",
+        "fill.presetGlow" => "Resplandor",
+        "settings.system.pencilSmoothing" => "Suavizado del lápiz",
+        "settings.system.pencilSmoothingPrecise" => "Preciso",
+        "settings.system.pencilSmoothingBalanced" => "Equilibrado",
+        "settings.system.pencilSmoothingSmooth" => "Suave",
         _ => return None,
     })
 }

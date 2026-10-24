@@ -5,9 +5,9 @@
 
 use super::{
     DesignMdPanelState, EditorUiState, EmbedHost, EntrySurface, ExportFormat, FlexLayout,
-    GitPanelState, HomeState, Locale, PencilCursorStyle, PreviewState, PromptCenterState,
-    PropertyTab, SceneTemplateCenterState, SizeToggleState, ThemeMode, UpdateStatus,
-    WorkspaceState,
+    GitPanelState, HomeState, Locale, PencilCursorStyle, PencilSmoothing, PreviewState,
+    PromptCenterState, PropertyTab, SceneTemplateCenterState, SizeToggleState, ThemeMode,
+    UpdateStatus, WorkspaceState,
 };
 use crate::tool::Tool;
 use std::collections::HashSet;
@@ -16,6 +16,7 @@ impl Default for EditorUiState {
     fn default() -> Self {
         Self {
             sidebar_open: true,
+            panel_motion: None,
             layer_panel_width: 240.0,
             property_panel_width: 272.0,
             chat_tab_width_bumped: false,
@@ -203,6 +204,7 @@ impl Default for EditorUiState {
             last_variable_name_click: None,
             active_guides: Vec::new(),
             pencil_cursor_style: PencilCursorStyle::default(),
+            pencil_smoothing: PencilSmoothing::default(),
             starter_ghost: None,
             canvas_drop_indicator: None,
             update_status: UpdateStatus::Idle,

@@ -59,7 +59,7 @@ pub struct ConfiguredBuiltinProvider {
     /// uses this provider as a plain LLM and must never see tools.
     tools: Vec<ChatToolDef>,
     executor: Option<Arc<dyn ChatToolExecutor>>,
-    /// Run the loop-end structural backstop (`apply_loop_finalize`) for
+    /// Run the loop-end structural backstop (`finalize_agent_run`) for
     /// this provider's turns. Set ONLY by the gated design-generation
     /// provider; regular chat leaves it false so an ordinary tool-using
     /// chat turn never mutates an existing design (Track-1 Step 4 scope).

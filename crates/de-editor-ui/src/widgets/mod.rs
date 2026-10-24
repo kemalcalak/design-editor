@@ -79,6 +79,7 @@ pub mod property_panel_commit;
 pub mod property_panel_compositing;
 pub mod property_panel_corner;
 pub mod property_panel_dispatch;
+mod property_panel_dispatch_paint;
 pub mod property_panel_dispatch_support;
 pub mod property_panel_effects;
 pub mod property_panel_export;
@@ -88,10 +89,12 @@ pub mod property_panel_fill;
 mod property_panel_fill_body;
 mod property_panel_fill_image_body;
 pub mod property_panel_fill_menu;
+mod property_panel_fill_mesh_shader;
 mod property_panel_fill_picker;
 #[cfg(test)]
 mod property_panel_fill_tests;
 pub mod property_panel_flex;
+mod property_panel_flip;
 pub mod property_panel_header;
 pub mod property_panel_icon;
 #[cfg(test)]
@@ -123,11 +126,15 @@ mod property_panel_multi_select_tests;
 mod property_panel_overlay_hit;
 mod property_panel_page;
 #[cfg(test)]
+mod property_panel_paint_options_tests;
+#[cfg(test)]
 mod property_panel_press_tests;
 pub mod property_panel_section_tops;
 pub mod property_panel_sections;
+pub(crate) mod property_panel_segments;
 pub mod property_panel_snapshot;
 pub mod property_panel_stroke;
+pub(crate) mod property_panel_stroke_style;
 #[cfg(test)]
 mod property_panel_stroke_tests;
 #[cfg(test)]
@@ -187,6 +194,9 @@ mod canvas_path_overlay;
 mod canvas_selection_overlay;
 // `pub` so both hosts can read the animated-shader flag after paint.
 pub mod canvas_shader_clock;
+mod canvas_shader_images;
+// `pub` so both hosts can track the pointer for pointer-reactive shaders.
+pub mod canvas_shader_pointer;
 pub mod canvas_text_edit;
 pub mod canvas_viewport;
 mod canvas_viewport_background;
@@ -217,6 +227,7 @@ pub mod chrome_tooltip;
 pub mod cursor_hover_flow;
 pub mod drag_flow;
 mod drag_flow_index;
+pub mod floating_panels;
 pub mod host_canvas_geometry;
 pub mod host_frame_bookkeeping;
 pub mod host_overlay_geometry;
@@ -233,6 +244,7 @@ pub mod scroll_flow;
 pub mod icon_catalog;
 pub mod icon_catalog_aliases;
 pub mod icons;
+mod icons_import;
 mod icons_lookup;
 #[cfg(test)]
 mod icons_tests;
@@ -380,6 +392,7 @@ pub(crate) mod menu_paint;
 pub mod missing_fonts_flow;
 pub mod missing_fonts_panel;
 mod missing_fonts_row;
+pub mod panel_toggle;
 pub mod property_panel_color_variables;
 #[cfg(test)]
 mod property_panel_color_variables_tests;

@@ -308,9 +308,21 @@ pub(crate) fn shader_payload(fill: &PenFill) -> Option<ShaderPayload> {
         .map(|preset| preset.uniforms.clone())
         .unwrap_or_default();
     let mut fallback: Option<[f32; 4]> = None;
+    let children = de_editor_core::shader_images::shader_children(&sksl);
     if let Some(map) = &body.uniforms {
         for (name, val) in map {
             match val {
+                // A string bound to a `uniform shader` child is an image
+                // source, carried as its encoded paint image id (#9).
+                ShaderUniformValue::Color(src)
+                    if expanded.is_none() && children.contains(&name.as_str()) =>
+                {
+                    let id = de_editor_core::shader_images::register_image_source(src);
+                    uniforms.push(ShaderUniformPayload {
+                        name: name.clone(),
+                        values: de_editor_core::shader_images::encode_image_id(id).to_vec(),
+                    });
+                }
                 ShaderUniformValue::Float(f) if expanded.is_none() => {
                     uniforms.push(ShaderUniformPayload {
                         name: name.clone(),

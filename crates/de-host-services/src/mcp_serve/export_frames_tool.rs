@@ -35,6 +35,12 @@ impl McpTool for ExportFrames {
     }
 
     fn call(&self, args: &BTreeMap<String, String>) -> ToolOutcome {
+        super::capture_time::at_requested_time(args, |_| self.export(args))
+    }
+}
+
+impl ExportFrames {
+    fn export(&self, args: &BTreeMap<String, String>) -> ToolOutcome {
         let directory = match args.get("outputDir").map(|value| value.trim()) {
             Some(directory) if !directory.is_empty() => PathBuf::from(directory),
             _ => {

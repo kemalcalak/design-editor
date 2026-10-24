@@ -73,6 +73,7 @@ mod image;
 mod image_diagnostics;
 mod layer;
 mod path;
+mod shader_children;
 mod shaped_text;
 mod text;
 #[cfg(test)]

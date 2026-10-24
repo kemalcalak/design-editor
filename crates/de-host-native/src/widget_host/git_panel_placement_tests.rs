@@ -330,6 +330,9 @@ fn cursor_stays_neutral_over_the_git_panel() {
 #[test]
 fn caret_bridge_catches_cursor_and_clicks() {
     let mut host = host_with_git_panel_open();
+    // The open left card floats under the file pill's popover (#86);
+    // shut it so the probe below lands on bare canvas.
+    host.editor_state_mut().editor_ui.sidebar_open = false;
     let (vw, vh) = (1400.0, 900.0);
     let body = host.git_panel_rect(vw, vh).expect("panel open => Some");
     // A probe in the caret bridge: below the pill, above the body.
@@ -712,9 +715,12 @@ fn canvas_press_dismisses_the_open_git_panel() {
     let mut host = host_with_git_panel_open();
     let (vw, vh) = (1400.0, 900.0);
     let body = host.git_panel_rect(vw, vh).expect("panel open => Some");
-    // A point centred under the panel but well below its body — on the
-    // empty canvas, clear of the panel, caret bridge, toolbar, and chat.
-    let px = body.origin.x + body.size.x / 2.0;
+    // A point below the panel's body and right of the floating left card
+    // (#86: the card runs under the file pill's popover) — on the empty
+    // canvas, clear of the panel, caret bridge, toolbar, and chat.
+    let card =
+        de_editor_ui::widgets::host_canvas_geometry::layer_panel_rect(host.editor_state(), vh);
+    let px = (body.origin.x + body.size.x / 2.0).max(card.origin.x + card.size.x + 120.0);
     let py = body.origin.y + body.size.y + 120.0;
     assert!(py < vh - 80.0, "probe sits on-screen below the panel");
     assert!(

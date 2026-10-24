@@ -63,12 +63,12 @@ fn copy_chip(
     outlined(cx, theme, rect, 6.0, theme.card);
     crate::widgets::button::paint_ghost_button_feedback(cx.backend, theme, rect, hovered, pressed);
     let icon = if copied { Icon::Check } else { Icon::Copy };
-    let icon_size = 12.0;
+    let icon_size = COPY_CHIP_ICON;
     draw_icon(
         cx.backend,
         icon,
         Point2D::new(
-            rect.origin.x + 8.0,
+            rect.origin.x + COPY_CHIP_PAD,
             rect.origin.y + (rect.size.y - icon_size) / 2.0,
         ),
         icon_size,
@@ -91,12 +91,12 @@ fn copy_chip(
         cx,
         label,
         SETTINGS_FONT_FAMILY,
-        11.0,
+        COPY_CHIP_FONT,
         theme.muted_foreground,
         500,
         Point2D::new(
-            rect.origin.x + 8.0 + icon_size + 5.0,
-            centered_text_baseline_y(rect, 11.0),
+            rect.origin.x + COPY_CHIP_PAD + icon_size + COPY_CHIP_GAP,
+            centered_text_baseline_y(rect, COPY_CHIP_FONT),
         ),
     );
 }
@@ -132,7 +132,9 @@ fn paint_server_card(
     now_ms: u64,
 ) {
     let card = server_card_rect(content);
-    outlined(cx, theme, card, 10.0, theme.background);
+    // v3 floating-card language (#86): the lifted card surface, 12 px
+    // corners, one hairline.
+    outlined(cx, theme, card, 12.0, theme.card);
     // Host-managed (embed): the extension's proxy is alive by the time any
     // editor mounts — the card reads always-running at the host's port.
     let host_managed = settings.mcp_host_managed();
@@ -168,21 +170,28 @@ fn paint_server_card(
         Point2D::new(x + 16.0, card.origin.y + 29.0),
     );
     let url = settings.mcp_endpoint_url();
-    let line = endpoint_rect(content);
+    let locale = ui.effective_locale();
+    // The endpoint sits in an inset well with its Copy chip pinned inside
+    // the well's right end.
+    let field = endpoint_field_rect(content, &url, locale);
+    outlined(cx, theme, field, 8.0, theme.background);
     text(
         cx,
         &url,
         MONO,
         ENDPOINT_FONT,
-        theme.muted_foreground,
+        theme.foreground,
         400,
-        Point2D::new(line.origin.x, centered_text_baseline_y(line, ENDPOINT_FONT)),
+        Point2D::new(
+            field.origin.x + 10.0,
+            centered_text_baseline_y(field, ENDPOINT_FONT),
+        ),
     );
     copy_chip(
         cx,
         theme,
         ui,
-        endpoint_copy_rect(content, &url),
+        endpoint_copy_rect(content, &url, locale),
         copy_feedback_active(settings.mcp_client_config_copied_at_ms, now_ms),
         settings.hover_mcp_client_config_copy,
         ui.button_pressed(ButtonPressTarget::AgentSettings(
@@ -506,7 +515,7 @@ fn paint_agent_row(
         cx,
         theme,
         ui,
-        row.snippet_copy,
+        snippet_copy_rect(row.snippet, ui.effective_locale()),
         copy_feedback_active(settings.mcp_snippet_copied_at_ms, now_ms),
         false,
         false,

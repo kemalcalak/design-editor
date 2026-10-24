@@ -8,9 +8,9 @@ use de_editor_ui::widgets::{LayerPanel, PaintCx, Widget};
 use de_editor_ui::Point2D;
 
 impl WidgetHostNative {
-    /// The left rail (slides navigator, Pages + Layers tree, or the
-    /// Chat tab's column). Painted BEFORE the canvas (the rail pushes
-    /// the canvas).
+    /// The left card (slides navigator, Pages + Layers tree, or a tab's
+    /// body). Painted AFTER the canvas: it floats over it (#86). Hidden
+    /// in Preview, like its input (`left_card_on_screen`).
     pub(in crate::widget_host) fn paint_left_rail(
         &mut self,
         frame: &mut NativeFrameBackend<'_>,
@@ -25,15 +25,40 @@ impl WidgetHostNative {
         //    behind the panel and the tab row on top), or the Pages +
         //    Layers tree.
         let presenting = self.preview_slideshow_active();
-        let rail_open = self.left_rail_visible() && !presenting;
-        if rail_open {
-            self.paint_left_rail_strip(frame);
+        // On screen while open AND while it slides shut (#86).
+        if !self.left_rail_visible() || presenting {
+            return;
         }
-        let slides_panel = if rail_open {
-            self.slides_panel_frame(viewport_width, viewport_height)
-        } else {
-            None
-        };
+        // The card ground, then everything inside clipped to its corners.
+        let card = canvas_geometry::layer_panel_rect(&self.editor_state, viewport_height);
+        {
+            use de_editor_ui::RenderBackend;
+            let radius = de_editor_ui::widgets::floating_panels::CARD_RADIUS;
+            frame.fill_round_rect(card, radius, self.theme.card);
+            frame.save();
+            frame.clip_round_rect(card, radius);
+        }
+        self.paint_left_card_body(frame, viewport_width, viewport_height);
+        use de_editor_ui::RenderBackend;
+        frame.restore();
+        // A pinned chat fills the body later and draws the hairline after
+        // itself; otherwise the card closes here, under the composer pill
+        // that may travel across its edge.
+        if !self.editor_state.editor_ui.chat_pinned() {
+            self.paint_left_card_border(frame, viewport_height);
+        }
+    }
+
+    /// Everything inside the left card: the slides navigator, a tab's body
+    /// (Agent / Components / Images) or the Pages + Layers tree, and the
+    /// tab row heading it.
+    fn paint_left_card_body(
+        &mut self,
+        frame: &mut NativeFrameBackend<'_>,
+        viewport_width: f32,
+        viewport_height: f32,
+    ) {
+        let slides_panel = self.slides_panel_frame(viewport_width, viewport_height);
         if let Some(slides) = &slides_panel {
             self.paint_slides_panel(frame, slides);
         }
@@ -41,8 +66,7 @@ impl WidgetHostNative {
         // paint under the pinned chat, but the rail still paints its
         // card (the chat panel draws over it at the ordinary chat pass)
         // and its tab row, which is how the user gets back.
-        let chat_owns_rail = rail_open
-            && slides_panel.is_none()
+        let chat_owns_rail = slides_panel.is_none()
             && de_editor_ui::widgets::slides_panel_flow::chat_tab_active(&self.editor_state);
         if chat_owns_rail {
             let panel = self.layers_content_rect(viewport_height);
@@ -62,8 +86,7 @@ impl WidgetHostNative {
         // Components / Images own the body too: the rail paints its card
         // and tab row; Images paints its body right here, the component
         // browser later in the floating-panel pass.
-        let other_tab_owns_rail = rail_open
-            && slides_panel.is_none()
+        let other_tab_owns_rail = slides_panel.is_none()
             && !chat_owns_rail
             && !de_editor_ui::widgets::slides_panel_flow::layers_tab_active(&self.editor_state);
         if other_tab_owns_rail {
@@ -83,7 +106,7 @@ impl WidgetHostNative {
                 body,
             );
         }
-        if rail_open && slides_panel.is_none() && !chat_owns_rail && !other_tab_owns_rail {
+        if slides_panel.is_none() && !chat_owns_rail && !other_tab_owns_rail {
             // Compute the active drop target so the panel can paint
             // the drop-indicator line during a drag-to-reorder.
             // The rail is the tab row's leftovers when a tab row shows,
@@ -163,44 +186,26 @@ impl WidgetHostNative {
         }
     }
 
-    /// The rail's window strip: the traffic lights' (or the custom
-    /// window dots') home and the window's drag handle.
-    fn paint_left_rail_strip(&self, frame: &mut NativeFrameBackend<'_>) {
-        use de_editor_ui::RenderBackend;
-        let strip = canvas_geometry::left_rail_strip_rect(&self.editor_state);
-        frame.fill_rect(strip, self.theme.card);
-        de_editor_ui::widgets::paint_window_control_dots(
-            frame,
-            strip,
-            self.editor_state.editor_ui.window_control_hover,
-        );
-    }
-
-    /// One hard edge between the rail and the canvas.
+    /// The left card's hairline.
     ///
     /// Painted AFTER the pinned chat, not at the end of the rail pass:
-    /// the chat fills the rail's body with its own ground, which buried
-    /// everything below the tab row and left the rule stopping halfway
-    /// down. The rail's card and the canvas ground are close enough in
-    /// the light theme that the seam read as a smudge without it.
-    pub(in crate::widget_host) fn paint_rail_canvas_edge(
+    /// the chat fills the card's body with its own ground, which would
+    /// bury the border's lower half.
+    pub(in crate::widget_host) fn paint_left_card_border(
         &mut self,
         frame: &mut NativeFrameBackend<'_>,
         viewport_height: f32,
     ) {
-        if !self.editor_state.editor_ui.sidebar_open || self.editor_state.editor_ui.preview.mode {
+        if !de_editor_ui::widgets::floating_panels::left_card_on_screen(&self.editor_state) {
             return;
         }
         use de_editor_ui::RenderBackend;
-        let panel = canvas_geometry::left_rail_rect(&self.editor_state, viewport_height);
-        frame.fill_rect(
-            de_editor_ui::Rect::xywh(
-                panel.origin.x + panel.size.x - 1.0,
-                panel.origin.y,
-                1.0,
-                panel.size.y,
-            ),
+        let card = canvas_geometry::layer_panel_rect(&self.editor_state, viewport_height);
+        frame.stroke_round_rect(
+            card,
+            de_editor_ui::widgets::floating_panels::CARD_RADIUS,
             self.theme.border,
+            1.0,
         );
     }
 }

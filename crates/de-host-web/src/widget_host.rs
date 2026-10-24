@@ -56,6 +56,8 @@ mod blur_inputs;
 #[cfg(test)]
 mod blur_inputs_tests;
 #[cfg(test)]
+mod boolean_op_tests;
+#[cfg(test)]
 mod boolean_toolbar_tests;
 #[cfg(test)]
 mod canvas_hierarchy_tests;
@@ -150,12 +152,16 @@ mod paint;
 #[cfg(test)]
 mod paint_caret_tests;
 mod paint_overlays;
+mod paint_rail;
 mod paint_topmost_overlays;
 #[cfg(test)]
 mod pan_tests;
 mod pen_press;
 #[cfg(test)]
 mod pen_press_tests;
+mod pencil_press;
+#[cfg(test)]
+mod pencil_press_tests;
 mod press;
 mod press_canvas_tiers;
 mod press_chrome_tiers;
@@ -357,6 +363,9 @@ pub struct WidgetHost {
     /// browser IME candidate-window fallback instead of viewport (0, 0).
     pub(in crate::widget_host) last_cursor_x: f32,
     pub(in crate::widget_host) last_cursor_y: f32,
+    /// Pointer over the canvas (logical px) for `uniform float2 mouse;`
+    /// shader fills; `None` while it is over chrome or off the canvas.
+    pub(in crate::widget_host) shader_pointer: Option<Point2D>,
     /// Stable, process-unique id scoping this host's chat-panel transcript
     /// cache (mirrors native `WidgetHostNative::chat_panel_owner`). Stamped onto
     /// every `AIChatPlaceholder` this host builds so the thread-local canonical

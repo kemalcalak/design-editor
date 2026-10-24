@@ -269,6 +269,8 @@ impl DesktopApp {
                         "y" => consumed = self.host.apply_redo(),
                         "g" => consumed = self.host.apply_group(),
                         "j" => consumed = self.host.apply_toggle_chat(),
+                        // Cmd/Ctrl+\ — open / close the left panel (#86).
+                        "\\" => consumed = self.host.apply_toggle_panel(),
                         // Cmd/Ctrl+T — open a fresh chat tab (MT.3). Preserves
                         // existing tabs and leaves any in-flight run bound to its
                         // own tab. Gated after the `settings_focused` swallow like
@@ -320,6 +322,21 @@ impl DesktopApp {
                     }
                 }
             }
+            // Shift+H / Shift+V — flip the selection (#90). Ahead of the
+            // bare-letter arm below, which ignores Shift and would read
+            // them as H (Hand) / V (Select).
+            Key::Character(ref ch)
+                if !self.zoom_modifier
+                    && self.shift_modifier
+                    && !self.alt_modifier
+                    && !self.host.input_active_pub()
+                    && de_editor_core::FlipAxis::from_shortcut_key(ch.as_str()).is_some() =>
+            {
+                if let Some(axis) = de_editor_core::FlipAxis::from_shortcut_key(ch.as_str()) {
+                    let _ = self.host.apply_flip(axis);
+                }
+                consumed = true;
+            }
             // Single-letter tool switches (no modifier). Only
             // fire when no input is focused so typing in a
             // text node / chat / rename doesn't switch tools.
@@ -333,6 +350,10 @@ impl DesktopApp {
                     "l" => self.host.apply_set_tool(de_editor_core::Tool::Line),
                     "t" => self.host.apply_set_tool(de_editor_core::Tool::Text),
                     "f" => self.host.apply_set_tool(de_editor_core::Tool::Frame),
+                    // Shift+P — the freehand Pencil (#88); bare P stays Pen.
+                    "p" if self.shift_modifier => {
+                        self.host.apply_set_tool(de_editor_core::Tool::Pencil)
+                    }
                     "p" => self.host.apply_set_tool(de_editor_core::Tool::Pen),
                     "y" => self.host.apply_set_tool(de_editor_core::Tool::Polygon),
                     "h" => self.host.apply_set_tool(de_editor_core::Tool::Hand),

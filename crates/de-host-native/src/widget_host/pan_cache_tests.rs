@@ -16,6 +16,8 @@ fn seed_red_rect(host: &mut WidgetHostNative) {
         .value;
     let mut state = de_editor_core::EditorState::from_document(doc);
     state.chat.minimize();
+    // The rect and the gestures sit where the open left card floats (#86).
+    state.editor_ui.sidebar_open = false;
     *host.editor_state_mut() = state;
     host.mark_paint_dirty_for_test();
 }

@@ -40,7 +40,7 @@ pub use editor::{
     ExportArtifact,
 };
 pub use error::ExportError;
-pub use scene_painter::{paint_node, paint_nodes};
+pub use scene_painter::{paint_node, paint_nodes, with_capture_time_ms, MAX_CAPTURE_TIME_MS};
 pub use svg::{export_node_svg, export_svg, render_node_svg_bytes, render_svg_bytes};
 
 const MARGIN: f32 = 0.0;
@@ -445,3 +445,6 @@ mod tests;
 
 #[cfg(test)]
 mod shader_clock_tests;
+
+#[cfg(test)]
+mod shader_image_tests;

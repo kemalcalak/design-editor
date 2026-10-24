@@ -341,6 +341,13 @@ mod viewport_fit_tests {
         const VIEWPORT_WIDTH: f32 = 1200.0;
         const VIEWPORT_HEIGHT: f32 = 800.0;
         const PROPERTY_PANEL_WIDTH: f32 = 280.0;
+        // #86: the canvas is full-bleed; the fit area starts right of the
+        // tool column and, with a selection, stops at the floating
+        // properties card's left edge (inset from the window edge).
+        use de_editor_ui::widgets::floating_panels::CARD_INSET;
+        use de_editor_ui::widgets::TOOLBAR_WIDTH;
+        let left = CARD_INSET + TOOLBAR_WIDTH;
+        let card_left = VIEWPORT_WIDTH - PROPERTY_PANEL_WIDTH - CARD_INSET;
 
         let mut state = state_with_root(844.0);
         state.editor_ui.sidebar_open = false;
@@ -350,14 +357,14 @@ mod viewport_fit_tests {
 
         assert_eq!(
             design_canvas_size(&state, VIEWPORT_WIDTH, VIEWPORT_HEIGHT),
-            (VIEWPORT_WIDTH, VIEWPORT_HEIGHT),
-            "Design with no selection must use the full canvas width"
+            (VIEWPORT_WIDTH - left, VIEWPORT_HEIGHT),
+            "Design with no selection runs to the window's right edge"
         );
 
         state.set_single_selection(de_editor_core::NodeId::new("root"));
         assert_eq!(
             design_canvas_size(&state, VIEWPORT_WIDTH, VIEWPORT_HEIGHT),
-            (VIEWPORT_WIDTH - PROPERTY_PANEL_WIDTH, VIEWPORT_HEIGHT),
+            (card_left - left, VIEWPORT_HEIGHT),
             "Design with a live selection must reserve the property rail"
         );
 
@@ -365,7 +372,7 @@ mod viewport_fit_tests {
         state.editor_ui.property_tab = de_editor_core::PropertyTab::Code;
         assert_eq!(
             design_canvas_size(&state, VIEWPORT_WIDTH, VIEWPORT_HEIGHT),
-            (VIEWPORT_WIDTH - PROPERTY_PANEL_WIDTH, VIEWPORT_HEIGHT),
+            (card_left - left, VIEWPORT_HEIGHT),
             "Code remains selection-independent and must reserve the property rail"
         );
     }

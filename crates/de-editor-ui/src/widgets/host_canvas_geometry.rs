@@ -16,6 +16,7 @@ use de_editor_core::EditorState;
 use crate::layout_scene::LayoutScene;
 use crate::widgets::canvas_actions::{CanvasActions, CanvasActionsLayout};
 use crate::widgets::file_pill::{FilePill, FilePillLayout};
+use crate::widgets::floating_panels;
 use crate::widgets::slides_panel_flow;
 use crate::widgets::window_strip::{
     window_controls_inset, WINDOW_CONTROLS_AVAILABLE, WINDOW_STRIP_H,
@@ -41,10 +42,10 @@ pub const CHROME_INSET_X: f32 = 16.0;
 /// pill gives way on a narrow canvas.
 const CHROME_MIN_GAP: f32 = 8.0;
 pub const STATUS_INSET: f32 = 16.0;
-/// Width of the composer-only card docked at the canvas floor. Wide
+/// Width of the composer pill docked at the bottom centre (#86). Wide
 /// enough for a sentence and the control row, narrow enough that it
 /// never reads as a panel covering the design.
-pub const COMPOSER_CARD_W: f32 = 420.0;
+pub const COMPOSER_CARD_W: f32 = 520.0;
 /// Below this the canvas cannot hold the card at all.
 const AI_CHAT_MINIMIZED_MIN_WIDTH_REF: f32 = 240.0;
 
@@ -163,17 +164,7 @@ pub fn pinned_chat(state: &EditorState, viewport_w: f32, viewport_h: f32) -> Opt
         };
     }
     if ui.chat_composer_only() {
-        let (cx0, cy0, cw, ch) = canvas_region(state, viewport_w, viewport_h);
-        let _ = cy0;
-        let width = COMPOSER_CARD_W.min((cw - AICHAT_INSET_LEFT * 2.0).max(0.0));
-        if width < AI_CHAT_MINIMIZED_MIN_WIDTH_REF {
-            return Some(PinnedChat::Closed);
-        }
-        return Some(PinnedChat::Composer {
-            x: cx0 + AICHAT_INSET_LEFT,
-            bottom: cy0 + ch - AICHAT_INSET_BOTTOM,
-            width,
-        });
+        return composer_pill(state, viewport_w, viewport_h);
     }
     if !slides_panel_flow::chat_tab_active(state) {
         return None;
@@ -187,10 +178,62 @@ pub fn pinned_chat(state: &EditorState, viewport_w: f32, viewport_h: f32) -> Opt
     )))
 }
 
-/// Top-left of the canvas region in viewport-logical px. Collapses to
-/// `x = 0` when the sidebar is closed — the whole point of the
-/// invariant. There is no title bar (#30): the canvas runs to the
-/// window's top edge and its chrome floats over it.
+/// The composer pill (#86): centred at the bottom of the window, clear of
+/// the left card, the properties card and the zoom pill. While the panel
+/// motion runs on the Agent tab it travels between that spot and the left
+/// card's composer slot, so the pill reads as growing into the panel; on
+/// any other tab it just keeps clear of the sliding card.
+fn composer_pill(state: &EditorState, viewport_w: f32, viewport_h: f32) -> Option<PinnedChat> {
+    let (cx0, cy0, cw, ch) = canvas_region(state, viewport_w, viewport_h);
+    // Room between the left card (at its current slide) or the window
+    // edge, and the zoom pill or the properties card.
+    let card_edge = floating_panels::left_card_on_screen(state).then(|| {
+        let card = floating_panels::left_card_rect(state, viewport_h);
+        card.origin.x + card.size.x + AICHAT_INSET_LEFT
+    });
+    let left_edge = card_edge.unwrap_or(0.0).max(cx0 + AICHAT_INSET_LEFT);
+    let mut right_edge = cx0 + cw - STATUS_BAR_WIDTH - STATUS_INSET * 2.0;
+    if state.right_rail_visible() {
+        let card = floating_panels::right_card_rect(state, viewport_w, viewport_h);
+        right_edge = right_edge.min(card.origin.x - AICHAT_INSET_LEFT);
+    }
+    let width = COMPOSER_CARD_W.min((right_edge - left_edge).max(0.0));
+    if width < AI_CHAT_MINIMIZED_MIN_WIDTH_REF {
+        return Some(PinnedChat::Closed);
+    }
+    let centred = cx0 + (cw - width) / 2.0;
+    let pill_x = centred.clamp(left_edge, (right_edge - width).max(left_edge));
+    let pill_bottom = cy0 + ch - AICHAT_INSET_BOTTOM;
+    if !state.editor_ui.panel_motion_active() || !slides_panel_flow::chat_tab_active(state) {
+        return Some(PinnedChat::Composer {
+            x: pill_x,
+            bottom: pill_bottom,
+            width,
+        });
+    }
+    // Mid-motion with the Agent tab: lerp towards the card's composer
+    // slot (its body's bottom edge, full body width).
+    let card = floating_panels::left_card_rect(state, viewport_h);
+    let slot_x = card.origin.x + COMPOSER_SLOT_INSET;
+    let slot_w = (card.size.x - COMPOSER_SLOT_INSET * 2.0).max(0.0);
+    let slot_bottom = card.origin.y + card.size.y - COMPOSER_SLOT_INSET;
+    let t = floating_panels::panel_reveal(state);
+    let lerp = |a: f32, b: f32| a + (b - a) * t;
+    Some(PinnedChat::Composer {
+        x: lerp(pill_x, slot_x),
+        bottom: lerp(pill_bottom, slot_bottom),
+        width: lerp(width, slot_w),
+    })
+}
+
+/// Inset of the left card's composer slot from the card's edges — where
+/// the pinned chat draws its composer.
+const COMPOSER_SLOT_INSET: f32 = 12.0;
+
+/// Top-left of the canvas region in viewport-logical px. Editor v3 (#86):
+/// the canvas is full-bleed — `(0, 0)` — and every panel floats over it,
+/// so opening or closing one never moves the artboards. There is no
+/// title bar (#30): the chrome floats over the canvas too.
 ///
 /// While the workspace is docked, the canvas starts at the dock edge —
 /// which is the LEFT PANEL's edge (`layer_panel_width`, 0 when the
@@ -207,19 +250,14 @@ pub fn canvas_origin(state: &EditorState) -> (f32, f32) {
             de_editor_core::WORKSPACE_HEADER_H + de_editor_core::WORKSPACE_TOOLBAR_H,
         );
     }
-    let cx0 = if state.editor_ui.sidebar_open {
-        state.editor_ui.layer_panel_width
-    } else {
-        0.0
-    };
-    (cx0, 0.0)
+    (0.0, 0.0)
 }
 
-/// Canvas region `(x, y, w, h)` in viewport-logical px. The right rail
-/// only reserves width while it is actually visible, and both extents
-/// clamp at zero so a viewport narrower than the rails can't produce a
-/// negative-size rect. While the workspace is docked there is no right
-/// rail, and the presentation family's deck strip reserves the bottom.
+/// Canvas region `(x, y, w, h)` in viewport-logical px: the whole window
+/// outside the workspace (#86 — the floating cards cover it, they do not
+/// shrink it). While the workspace is docked, its dock and header
+/// reserve the left / top and the presentation family's deck strip the
+/// bottom; extents clamp at zero.
 pub fn canvas_region(
     state: &EditorState,
     viewport_w: f32,
@@ -237,12 +275,7 @@ pub fn canvas_region(
         let canvas_h = (viewport_h - canvas_top - strip_h).max(0.0);
         return (canvas_left, canvas_top, canvas_w, canvas_h);
     }
-    let canvas_right = if state.right_rail_visible() {
-        viewport_w - state.editor_ui.property_panel_width
-    } else {
-        viewport_w
-    };
-    let canvas_w = (canvas_right - canvas_left).max(0.0);
+    let canvas_w = (viewport_w - canvas_left).max(0.0);
     let canvas_h = (viewport_h - canvas_top).max(0.0);
     (canvas_left, canvas_top, canvas_w, canvas_h)
 }
@@ -257,36 +290,12 @@ pub fn canvas_rect(state: &EditorState, viewport_w: f32, viewport_h: f32) -> Rec
     }
 }
 
-/// Left rail's body — everything below the window strip. Callers gate on
-/// `editor_ui.sidebar_open` themselves — this returns the rect the panel
-/// WOULD occupy. Its tab row, layer rows and pinned chat all measure from
-/// here, so the strip above can never shift them out from under their
-/// click targets.
+/// The left panel — the floating left card (#86). Callers gate on
+/// `editor_ui.sidebar_open` themselves — this returns the rect the card
+/// WOULD occupy at the current reveal. Its tab row, layer rows and pinned
+/// chat all measure from here, so they slide with the card.
 pub fn layer_panel_rect(state: &EditorState, viewport_h: f32) -> Rect {
-    Rect {
-        origin: Point2D::new(0.0, WINDOW_STRIP_H),
-        size: Point2D::new(
-            state.editor_ui.layer_panel_width,
-            (viewport_h - WINDOW_STRIP_H).max(0.0),
-        ),
-    }
-}
-
-/// The whole left rail, window strip included — what its background and
-/// right hairline paint over.
-pub fn left_rail_rect(state: &EditorState, viewport_h: f32) -> Rect {
-    Rect::xywh(
-        0.0,
-        0.0,
-        state.editor_ui.layer_panel_width,
-        viewport_h.max(0.0),
-    )
-}
-
-/// The left rail's window strip (traffic lights / window controls, drag
-/// area).
-pub fn left_rail_strip_rect(state: &EditorState) -> Rect {
-    Rect::xywh(0.0, 0.0, state.editor_ui.layer_panel_width, WINDOW_STRIP_H)
+    floating_panels::left_card_rect(state, viewport_h)
 }
 
 /// Whether the left rail is on screen showing `tab`'s body: the rail is
@@ -310,18 +319,14 @@ pub fn rail_body_rect(state: &EditorState, viewport_h: f32) -> Rect {
     slides_panel_flow::layers_content_rect(state, layer_panel_rect(state, viewport_h))
 }
 
-/// Right rail. Runs the window's full height. Callers gate on the panel
-/// actually resolving for the current selection — this returns the rect
-/// it WOULD occupy.
+/// The properties panel — the floating right card (#86). Callers gate on
+/// the panel actually resolving for the current selection — this
+/// returns the rect it WOULD occupy.
 pub fn property_panel_rect(state: &EditorState, viewport_w: f32, viewport_h: f32) -> Rect {
-    let width = state.editor_ui.property_panel_width;
-    Rect {
-        origin: Point2D::new(viewport_w - width, 0.0),
-        size: Point2D::new(width, viewport_h.max(0.0)),
-    }
+    floating_panels::right_card_rect(state, viewport_w, viewport_h)
 }
 
-/// Where the floating chrome sits for this frame. Each half is `None` when
+/// Where the floating chrome sits for this frame. Each part is `None` when
 /// it does not paint: neither while the generation workspace owns the
 /// layout (it has its own header), the action group when the canvas is
 /// narrower than the group, and the file pill when it would run into the
@@ -330,6 +335,9 @@ pub fn property_panel_rect(state: &EditorState, viewport_w: f32, viewport_h: f32
 pub struct ChromeLayout {
     pub file_pill: Option<FilePillLayout>,
     pub actions: Option<CanvasActionsLayout>,
+    /// The panel toggle above the tool rail (#86); `None` in Preview,
+    /// where the panels are hidden.
+    pub panel_toggle: Option<Rect>,
 }
 
 pub fn chrome_layout(state: &EditorState, viewport_w: f32, viewport_h: f32) -> ChromeLayout {
@@ -337,19 +345,16 @@ pub fn chrome_layout(state: &EditorState, viewport_w: f32, viewport_h: f32) -> C
         return ChromeLayout {
             file_pill: None,
             actions: None,
+            panel_toggle: None,
         };
     }
     let ui = &state.editor_ui;
     let (cx0, cy0, cw, _ch) = canvas_region(state, viewport_w, viewport_h);
     let top = cy0 + CHROME_INSET_TOP;
     let actions_widget = CanvasActions::for_editor_ui(ui);
-    // With the left rail shut, the window controls sit over the canvas's
-    // top-left corner, so the pill starts right of them.
-    let controls = if ui.sidebar_open {
-        0.0
-    } else {
-        window_controls_inset(ui.window_fullscreen)
-    };
+    // The window controls always sit over the canvas's top-left corner
+    // (#86: no rail strip any more), so the pill starts right of them.
+    let controls = window_controls_inset(ui.window_fullscreen);
     let left = cx0 + CHROME_INSET_X.max(controls + CHROME_MIN_GAP);
     let pill = FilePill::for_editor_ui(ui).layout_at(Point2D::new(left, top));
     let pill_right = pill.rect.origin.x + pill.rect.size.x;
@@ -366,9 +371,12 @@ pub fn chrome_layout(state: &EditorState, viewport_w: f32, viewport_h: f32) -> C
     if !fits(&actions) {
         actions = place(true);
     }
+    let toggle = floating_panels::panel_toggle_rect(state);
     ChromeLayout {
         file_pill: fits(&actions).then_some(pill),
         actions,
+        panel_toggle: (!ui.preview.mode && toggle.origin.x + toggle.size.x <= cx0 + cw)
+            .then_some(toggle),
     }
 }
 
@@ -381,6 +389,9 @@ pub fn chrome_hit_at(
     point: Point2D,
 ) -> Option<crate::widgets::ChromeHit> {
     let chrome = chrome_layout(state, viewport_w, viewport_h);
+    if chrome.panel_toggle.is_some_and(|rect| rect.contains(point)) {
+        return Some(crate::widgets::ChromeHit::TogglePanel);
+    }
     let ui = &state.editor_ui;
     chrome
         .file_pill
@@ -398,11 +409,11 @@ pub fn over_chrome(state: &EditorState, viewport_w: f32, viewport_h: f32, point:
     let chrome = chrome_layout(state, viewport_w, viewport_h);
     chrome.file_pill.is_some_and(|p| p.rect.contains(point))
         || chrome.actions.is_some_and(|a| a.rect.contains(point))
+        || chrome.panel_toggle.is_some_and(|t| t.contains(point))
 }
 
 /// Whether a press at `point` belongs to the window rather than the app:
-/// the left rail's window strip, or the canvas's top band where no
-/// floating chrome sits. Desktop only — the web host has no window. The
+/// the canvas's top band where no floating chrome sits. Desktop only — the web host has no window. The
 /// caller still has to rule out a canvas node under the point (that
 /// needs the scene) before it drags.
 pub fn window_drag_band_at(
@@ -417,10 +428,6 @@ pub fn window_drag_band_at(
     if point.y < 0.0 || point.y >= WINDOW_STRIP_H {
         return false;
     }
-    let ui = &state.editor_ui;
-    if ui.sidebar_open && left_rail_strip_rect(state).contains(point) {
-        return true;
-    }
     let (cx0, _cy0, cw, _ch) = canvas_region(state, viewport_w, viewport_h);
     if point.x < cx0 || point.x >= cx0 + cw {
         return false;
@@ -429,13 +436,22 @@ pub fn window_drag_band_at(
         && !toolbar_rect_for(state, viewport_w, viewport_h).contains(point)
 }
 
-/// The floating tool rail: inset from the canvas's left edge and centred
-/// on its height, never rising into the file pill's band
-/// ([`TOOLBAR_INSET_Y`]). `toolbar_h` comes from the widget's own layout
-/// pass, which is why it is a parameter rather than derived.
+/// The floating tool rail (#86): under the panel toggle, beside the left
+/// card when it is open (both slide with the card). Inside the workspace
+/// it keeps its old place, inset from the dock's canvas edge and centred
+/// on its height. `toolbar_h` comes from the widget's own layout pass,
+/// which is why it is a parameter rather than derived.
 pub fn toolbar_rect(state: &EditorState, viewport_w: f32, viewport_h: f32, toolbar_h: f32) -> Rect {
     let (canvas_left, canvas_top, _canvas_w, canvas_h) =
         canvas_region(state, viewport_w, viewport_h);
+    if !workspace_docked(state) {
+        return Rect::xywh(
+            floating_panels::tool_column_x(state),
+            canvas_top + floating_panels::tool_rail_top(),
+            TOOLBAR_WIDTH,
+            toolbar_h,
+        );
+    }
     let centred = canvas_top + (canvas_h - toolbar_h) / 2.0;
     Rect {
         origin: Point2D::new(
@@ -512,10 +528,16 @@ pub fn marquee_rect(m: &MarqueeDragState) -> Option<Rect> {
 }
 
 /// Whether `(x, y)` is inside the canvas region (inclusive of its
-/// edges, matching the paint clip).
+/// edges, matching the paint clip) and not under a floating card: the
+/// canvas runs under the cards (#86), but a press, hover or wheel on a
+/// card is never the canvas's.
 pub fn over_canvas(state: &EditorState, x: f32, y: f32, viewport_w: f32, viewport_h: f32) -> bool {
     let (cx0, cy0, cw, ch) = canvas_region(state, viewport_w, viewport_h);
-    x >= cx0 && x <= cx0 + cw && y >= cy0 && y <= cy0 + ch
+    x >= cx0
+        && x <= cx0 + cw
+        && y >= cy0
+        && y <= cy0 + ch
+        && !floating_panels::over_floating_card(state, viewport_w, viewport_h, Point2D::new(x, y))
 }
 
 /// Screen → document point through the canvas region, WITHOUT the

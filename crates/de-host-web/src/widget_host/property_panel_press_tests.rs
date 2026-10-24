@@ -84,11 +84,11 @@ fn seed(host: &mut WidgetHost, json: &str) {
 }
 
 fn property_rect(host: &WidgetHost) -> Rect {
-    let width = host.editor_state.editor_ui.property_panel_width;
-    Rect {
-        origin: Point2D::new(VIEWPORT_W - width, 0.0),
-        size: Point2D::new(width, VIEWPORT_H),
-    }
+    de_editor_ui::widgets::host_canvas_geometry::property_panel_rect(
+        &host.editor_state,
+        VIEWPORT_W,
+        VIEWPORT_H,
+    )
 }
 
 fn point_for_action(host: &WidgetHost, want: impl Fn(&PropertyPanelAction) -> bool) -> Point2D {

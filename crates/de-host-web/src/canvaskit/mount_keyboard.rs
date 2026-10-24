@@ -155,6 +155,10 @@ pub(super) fn register_keyboard_listeners(
                         b.host
                             .apply_keydown_shortcut(key.as_str(), is_mod, shift, evt.alt_key())
                 }
+                // Cmd/Ctrl+\ — open / close the left panel (#86).
+                "\\" if is_mod && !shift && !image_popover_open && !prompt_center_open => {
+                    consumed = b.host.apply_toggle_panel()
+                }
                 "d" | "D" if is_mod && !shift && !image_popover_open && !prompt_center_open => {
                     consumed = b.host.apply_duplicate()
                 }
@@ -218,7 +222,7 @@ pub(super) fn register_keyboard_listeners(
                         }
                     }
                     // No Cmd/Ctrl held: a bare letter is first offered to the
-                    // single-key tool router (V/R/O/L/T/F/P/Y/H), which self-
+                    // single-key tool router (V/R/O/L/T/F/P/Y/H, Shift+P), which self-
                     // gates on no input owning the keyboard; every other letter
                     // (and any keystroke while a field is focused) types via
                     // apply_text.
@@ -227,7 +231,15 @@ pub(super) fn register_keyboard_listeners(
                         // modifier (and on macOS yields special glyphs like ®/π),
                         // so an Alt+letter must not trip the bare-letter router.
                         // A resulting printable char still types via apply_text.
-                        if !evt.alt_key() && b.host.apply_tool_shortcut(key.as_str()) {
+                        // Shift+H / Shift+V flip the selection (#90)
+                        // before the tool router reads them as H / V, never
+                        // in Preview (native gates it via input_active).
+                        if !evt.alt_key()
+                            && ((shift
+                                && !preview_active
+                                && b.host.apply_flip_shortcut(key.as_str()))
+                                || b.host.apply_tool_shortcut_with_shift(key.as_str(), shift))
+                        {
                             consumed = true;
                         } else if crate::event::ime::keydown_should_insert_text(
                             b.ime.as_ref().is_some_and(|ime| ime.owns_dom_focus()),

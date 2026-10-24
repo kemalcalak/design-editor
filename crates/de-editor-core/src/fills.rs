@@ -19,12 +19,14 @@
 //! - [`primary`] — primary-fill writers (opacity, hex, gradient stops)
 //! - [`kinds`] — fill-type classification, defaults and conversion
 //! - [`edits`] — indexed fill list edits, stroke hex, effect appenders
+//! - [`stroke_style`] — stroke alignment (and later caps / joins / dashes)
 
 pub mod access;
 pub mod edits;
 pub mod image;
 pub mod kinds;
 pub mod primary;
+pub mod stroke_style;
 #[cfg(test)]
 mod tests;
 
@@ -33,6 +35,7 @@ pub use edits::*;
 pub use image::*;
 pub use kinds::*;
 pub use primary::*;
+pub use stroke_style::*;
 
 use crate::editor_ui_state::{FillType, ImageAdjustmentField, ImageFillMode};
 use crate::PenNodeExt;

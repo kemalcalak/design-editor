@@ -63,17 +63,24 @@ fn point_where_effect_menu_overlaps_action(host: &WidgetHostNative) -> (Point2D,
     let popup = panel
         .effect_add_menu_rect(rect)
         .expect("open effect menu has painted bounds");
-    let point = Point2D::new(
-        popup.origin.x + popup.size.x / 2.0,
-        popup.origin.y + popup.size.y / 2.0,
-    );
-    let row = panel
-        .effect_add_menu_row_at(rect, point)
-        .expect("popup center is the middle effect row");
-    let action = panel
-        .action_hover_index(rect, point)
-        .expect("middle effect row overlaps an inspector action");
-    (point, action, row)
+    // Scan the popup rather than assume its centre: the overlap depends on
+    // how many effect kinds the menu lists.
+    let mut y = popup.origin.y;
+    while y < popup.origin.y + popup.size.y {
+        let mut x = popup.origin.x;
+        while x < popup.origin.x + popup.size.x {
+            let point = Point2D::new(x, y);
+            if let (Some(row), Some(action)) = (
+                panel.effect_add_menu_row_at(rect, point),
+                panel.action_hover_index(rect, point),
+            ) {
+                return (point, action, row);
+            }
+            x += 4.0;
+        }
+        y += 4.0;
+    }
+    panic!("no effect-menu row overlaps an inspector action");
 }
 
 #[test]

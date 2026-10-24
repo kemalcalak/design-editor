@@ -126,15 +126,11 @@ pub fn image_fill_popover_action_rects(
         origin: Point2D::new(pop.origin.x + PANEL_PAD, mode_y),
         size: Point2D::new(pop.size.x - PANEL_PAD * 2.0, MODE_H),
     };
-    let chip_w = mode_rect.size.x / de_editor_core::ImageFillMode::ALL.len() as f32;
-    for (i, mode) in de_editor_core::ImageFillMode::ALL.iter().enumerate() {
-        out.push((
-            PropertyPanelAction::SetImageFillMode(*mode),
-            Rect {
-                origin: Point2D::new(mode_rect.origin.x + i as f32 * chip_w, mode_rect.origin.y),
-                size: Point2D::new(chip_w, mode_rect.size.y),
-            },
-        ));
+    // Stretch is an image-fill mode only; an Image node keeps four.
+    let modes = de_editor_core::ImageFillMode::modes_for(visible.image);
+    let cells = crate::widgets::property_panel_segments::segment_rects(mode_rect, modes.len());
+    for (mode, cell) in modes.iter().zip(cells) {
+        out.push((PropertyPanelAction::SetImageFillMode(*mode), cell));
     }
 
     let show_tile_scale = tile_scale_visible(snapshot);
@@ -302,7 +298,8 @@ pub fn paint_image_fill_popover(
         theme.foreground,
         1.8,
     );
-    paint_mode_control(cx, theme, pop, summary.mode, locale);
+    let modes = de_editor_core::ImageFillMode::modes_for(visible.image);
+    paint_mode_control(cx, theme, pop, modes, summary.mode, locale);
     if tile_scale_visible(snapshot) {
         paint_tile_scale(cx, theme, pop, &summary, edit, locale);
     }
@@ -418,6 +415,7 @@ fn paint_mode_control(
     cx: &mut PaintCx<'_>,
     theme: &Theme,
     pop: Rect,
+    modes: &[de_editor_core::ImageFillMode],
     active: de_editor_core::ImageFillMode,
     locale: de_editor_core::Locale,
 ) {
@@ -426,27 +424,20 @@ fn paint_mode_control(
         origin: Point2D::new(pop.origin.x + PANEL_PAD, mode_y),
         size: Point2D::new(pop.size.x - PANEL_PAD * 2.0, MODE_H),
     };
-    // Mode segmented control via jian ToggleGroup (even cells aligned with the
-    // full-cell hit walker above); active cell fills primary.
-    let labels: Vec<&str> = de_editor_core::ImageFillMode::ALL
+    // Even cells aligned with the full-cell hit walker above; the active
+    // cell fills primary. Five image-fill modes get a smaller face.
+    let labels: Vec<&str> = modes
         .iter()
         .map(|m| de_i18n::translate(locale, m.label_key()))
         .collect();
-    let active_idx = de_editor_core::ImageFillMode::ALL
-        .iter()
-        .position(|m| *m == active)
-        .unwrap_or(0);
-    jian_widgets::components::toggle_group::ToggleGroup {
-        options: &labels,
-        icons: None,
-        active: active_idx,
-        hover: None,
-        font_size: 11.0,
-    }
-    .paint(
-        cx.backend,
+    let font_size = if modes.len() > 4 { 10.0 } else { 11.0 };
+    crate::widgets::property_panel_segments::paint_segment_row(
+        cx,
+        theme,
         rect,
-        &crate::widgets::button::tokens_from_theme(theme),
+        &labels,
+        Some(modes.iter().position(|m| *m == active).unwrap_or(0)),
+        font_size,
     );
 }
 

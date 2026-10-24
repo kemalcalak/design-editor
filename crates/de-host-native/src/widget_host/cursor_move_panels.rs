@@ -283,6 +283,10 @@ impl WidgetHostNative {
         if let Some(consumed) = self.apply_pen_cursor_move(x, y) {
             return Some(consumed);
         }
+        // Pencil stroke samples (`pencil_press.rs`).
+        if let Some(consumed) = self.apply_pencil_cursor_move(x, y) {
+            return Some(consumed);
+        }
         None
     }
 }

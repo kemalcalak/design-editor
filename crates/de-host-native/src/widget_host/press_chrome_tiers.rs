@@ -75,7 +75,7 @@ impl WidgetHostNative {
         // its band lies over the rail's own content, and a rail that
         // claimed those pixels first could only ever be dragged wider.
         if !in_git_panel && !in_chat_model_picker {
-            if let Some(kind) = self.panel_resize_hover(x, y, viewport_width) {
+            if let Some(kind) = self.panel_resize_hover(x, y, viewport_width, viewport_height) {
                 let start_width = match kind {
                     PanelResizeKind::LayerRight => self.editor_state.editor_ui.layer_panel_width,
                     PanelResizeKind::PropertyLeft => {

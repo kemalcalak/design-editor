@@ -86,8 +86,12 @@ pub fn mcp_server_button(panel: Rect) -> Rect {
 
 /// MCP tab: the endpoint's Copy chip in the server card. It sits right
 /// after the endpoint text, so it needs the settings that pick the URL.
-pub fn mcp_copy_config_button(panel: Rect, settings: &AgentSettings) -> Rect {
-    agent_settings_mcp::client_config_copy_button_rect(content_rect(panel), settings)
+pub fn mcp_copy_config_button(
+    panel: Rect,
+    settings: &AgentSettings,
+    locale: de_i18n::Locale,
+) -> Rect {
+    agent_settings_mcp::client_config_copy_button_rect(content_rect(panel), settings, locale)
 }
 
 /// System tab: the switch on the Auto-update row.
@@ -246,6 +250,8 @@ pub enum AgentSettingsHit {
     ToggleExperimental,
     SelectThemeMode(de_editor_core::editor_ui_state::ThemeMode),
     SelectPencilCursor(de_editor_core::PencilCursorStyle),
+    /// System tab Pencil smoothing segment (#88).
+    SelectPencilSmoothing(de_editor_core::PencilSmoothing),
     FocusMcpPort,
     Outside,
     Inside,

@@ -45,7 +45,45 @@ pub(crate) fn map_export(flags: &Flags) -> Result<Command, CliError> {
         output,
         format,
         scale,
+        time_ms: time_ms_flag(flags)?,
     })
+}
+
+/// `--time-ms N`: the shader clock the daemon renders this export at (#8).
+/// Only "is it a number" is checked here; the daemon owns the range check
+/// (`timeMs`, 0..=3600000) so the CLI and MCP callers hear the same error.
+fn time_ms_flag(flags: &Flags) -> Result<Option<String>, CliError> {
+    let time_ms = flag_value(flags, "time-ms");
+    match &time_ms {
+        Some(value) => {
+            parse_time_ms(value)?;
+        }
+        // A bare `--time-ms` must not silently export at time 0.
+        None if flags.contains_key("time-ms") => {
+            return Err(CliError::usage("--time-ms needs a value in milliseconds"));
+        }
+        None => {}
+    }
+    Ok(time_ms)
+}
+
+fn parse_time_ms(value: &str) -> Result<f64, CliError> {
+    value
+        .parse::<f64>()
+        .ok()
+        .filter(|ms| ms.is_finite())
+        .ok_or_else(|| CliError::Usage(format!("--time-ms must be a number, got {value:?}")))
+}
+
+/// Add `timeMs` to a tool call's arguments when `--time-ms` was given.
+pub(crate) fn insert_time_ms(
+    arguments: &mut serde_json::Map<String, Value>,
+    time_ms: Option<&str>,
+) -> Result<(), CliError> {
+    if let Some(time_ms) = time_ms {
+        arguments.insert("timeMs".into(), Value::from(parse_time_ms(time_ms)?));
+    }
+    Ok(())
 }
 
 pub(crate) fn run_export(
@@ -55,6 +93,7 @@ pub(crate) fn run_export(
     output: &str,
     format: &str,
     scale: Option<&str>,
+    time_ms: Option<&str>,
 ) -> Result<String, CliError> {
     let mut arguments = serde_json::Map::new();
     if let Some(item_id) = item_id {
@@ -67,6 +106,7 @@ pub(crate) fn run_export(
             .map_err(|_| CliError::Usage(format!("--scale must be a number, got {scale:?}")))?;
         arguments.insert("scale".into(), Value::from(scale));
     }
+    insert_time_ms(&mut arguments, time_ms)?;
     let response = post(
         port,
         token,
@@ -77,9 +117,9 @@ pub(crate) fn run_export(
 
 pub(crate) fn map_export_deck(flags: &Flags) -> Result<Command, CliError> {
     let format = flag_value(flags, "format").unwrap_or_else(|| "pptx".into());
-    if !matches!(format.as_str(), "pptx" | "html" | "pdf") {
+    if !matches!(format.as_str(), "pptx" | "html" | "pdf" | "hyperframes") {
         return Err(CliError::Usage(format!(
-            "unsupported deck format {format:?}: must be one of pptx, html, pdf"
+            "unsupported deck format {format:?}: must be one of pptx, html, pdf, hyperframes"
         )));
     }
     let output =
@@ -159,7 +199,11 @@ pub(crate) fn map_export_frames(flags: &Flags) -> Result<Command, CliError> {
     let output_dir = flag_value(flags, "output-dir")
         .or_else(|| flag_value(flags, "output"))
         .ok_or_else(|| CliError::usage("--output-dir is required"))?;
-    Ok(Command::ExportFrames { output_dir, format })
+    Ok(Command::ExportFrames {
+        output_dir,
+        format,
+        time_ms: time_ms_flag(flags)?,
+    })
 }
 
 /// Batch-export every top-level frame. Like `run_export_deck`, the daemon
@@ -170,6 +214,7 @@ pub(crate) fn run_export_frames(
     token: &str,
     output_dir: &str,
     format: &str,
+    time_ms: Option<&str>,
 ) -> Result<String, CliError> {
     let directory = Path::new(output_dir);
     let absolute = if directory.is_absolute() {
@@ -185,6 +230,7 @@ pub(crate) fn run_export_frames(
         "outputDir".into(),
         Value::String(absolute.display().to_string()),
     );
+    insert_time_ms(&mut arguments, time_ms)?;
     post(
         port,
         token,

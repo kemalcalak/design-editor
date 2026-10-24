@@ -624,6 +624,7 @@ fn web_mcp_client_config_copy_is_hidden_when_mcp_tab_is_persisted() {
     let copy = de_editor_ui::widgets::agent_settings_panel::mcp_copy_config_button(
         rect,
         &host.editor_state.editor_ui.agent_settings,
+        host.editor_state.editor_ui.effective_locale(),
     );
     let scroll = copy.origin.y - content.origin.y;
     host.editor_state.editor_ui.agent_settings.scroll_y.offset = scroll;

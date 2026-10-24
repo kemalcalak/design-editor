@@ -131,3 +131,71 @@ fn a_shader_declaring_time_receives_the_frame_clock_over_an_authored_value() {
     );
     assert!(crate::widgets::canvas_shader_clock::animated_shader_painted());
 }
+
+#[test]
+fn a_rotated_shader_node_reads_the_pointer_in_its_own_document_pixels() {
+    use crate::layout_scene::{SceneShader, SceneShaderUniform};
+    let _guard = crate::agent_indicator_test_support::lock();
+    de_editor_core::agent_indicators::clear();
+    let mut scene = sample_scene();
+    let frame = &mut scene.pages[0].children[0];
+    // Frame n1 spans (40, 40, 320, 200); a quarter turn about its centre.
+    frame.rotation = std::f32::consts::FRAC_PI_2;
+    frame.children.clear();
+    frame.fill_type = SceneFillType::Shader;
+    frame.shader = Some(SceneShader {
+        sksl: "uniform float2 mouse; uniform float2 size; half4 main(float2 p){ return half4(1); }"
+            .to_string(),
+        uniforms: vec![
+            SceneShaderUniform {
+                name: "size".to_string(),
+                values: vec![320.0, 200.0],
+            },
+            SceneShaderUniform {
+                name: "mouse".to_string(),
+                values: vec![7.0, 7.0],
+            },
+        ],
+        opacity: 1.0,
+        fallback: Color::WHITE,
+    });
+    let state = EditorState::new();
+    let mut viewport = CanvasViewport::from_editor(&state, &scene);
+    let vp = viewport.viewport;
+    let rect = Rect::xywh(0.0, 0.0, 800.0, 600.0);
+    let to_screen = |x: f32, y: f32| {
+        Point2D::new(
+            rect.origin.x + vp.pan_x + x * vp.zoom,
+            rect.origin.y + vp.pan_y + y * vp.zoom,
+        )
+    };
+    // The frame's local point 40 doc px above its centre (200, 140) lands
+    // 40 doc px right of the centre once rotated clockwise.
+    viewport.pointer = Some(to_screen(240.0, 140.0));
+    let mut backend = RecordingBackend::default();
+    {
+        let mut cx = PaintCx {
+            backend: &mut backend,
+        };
+        viewport.paint(&mut cx, rect);
+    }
+    let uniforms = backend
+        .shader_uniforms
+        .first()
+        .expect("the shader fill paints");
+    let mouse: Vec<_> = uniforms
+        .iter()
+        .filter(|(name, _)| name == "mouse")
+        .collect();
+    assert_eq!(
+        mouse.len(),
+        1,
+        "the canvas pointer replaces the authored `mouse`"
+    );
+    let value = &mouse[0].1;
+    assert!(
+        (value[0] - 160.0).abs() < 0.01 && (value[1] - 60.0).abs() < 0.01,
+        "expected node-local (160, 60), got {value:?}"
+    );
+    assert!(crate::widgets::canvas_shader_pointer::pointer_shader_painted());
+}

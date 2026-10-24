@@ -86,10 +86,20 @@ const MIN_SCREEN_HEIGHT: f64 = 480.0;
 /// "committed" set the promise-delivery contract is judged against. Read-only.
 /// Order matches document order (`state.active_children()`).
 pub fn list_screen_candidates(state: &EditorState) -> Vec<UnfilledScreen> {
+    list_screen_candidates_for_roots(state, |_| true)
+}
+
+/// [`list_screen_candidates`] limited to the roots whose id `in_scope`
+/// accepts, so a design-agent run reports only the screens it created
+/// (#116).
+pub fn list_screen_candidates_for_roots(
+    state: &EditorState,
+    in_scope: impl Fn(&str) -> bool,
+) -> Vec<UnfilledScreen> {
     state
         .active_children()
         .iter()
-        .filter(|node| looks_like_a_screen(node))
+        .filter(|node| in_scope(node.id_str()) && looks_like_a_screen(node))
         .map(screen_hit)
         .collect()
 }
@@ -99,10 +109,20 @@ pub fn list_screen_candidates(state: &EditorState) -> Vec<UnfilledScreen> {
 /// Read-only — never mutates the document. Order matches document order
 /// (`state.active_children()`).
 pub fn detect_unfilled_screens(state: &EditorState) -> Vec<UnfilledScreen> {
+    detect_unfilled_screens_for_roots(state, |_| true)
+}
+
+/// [`detect_unfilled_screens`] limited to the roots whose id `in_scope`
+/// accepts: an empty phone board someone drew next to the run is not a
+/// screen the run promised (#116).
+pub fn detect_unfilled_screens_for_roots(
+    state: &EditorState,
+    in_scope: impl Fn(&str) -> bool,
+) -> Vec<UnfilledScreen> {
     state
         .active_children()
         .iter()
-        .filter(|node| looks_like_a_screen(node))
+        .filter(|node| in_scope(node.id_str()) && looks_like_a_screen(node))
         .filter(|node| !has_real_content(node))
         .map(screen_hit)
         .collect()
@@ -159,7 +179,16 @@ pub fn mark_unfilled_screens(sink: &mut dyn crate::types::DocSink, hits: &[Unfil
 /// host bridge (`de-host-desktop::chat_session`) doesn't need to build
 /// its own [`crate::loop_finalize::StateDocSink`] wrapper.
 pub fn finalize_and_mark_unfilled_screens(state: &mut EditorState) -> Vec<String> {
-    let hits = detect_unfilled_screens(state);
+    finalize_and_mark_unfilled_screens_for_roots(state, |_| true)
+}
+
+/// [`finalize_and_mark_unfilled_screens`] limited to the roots whose id
+/// `in_scope` accepts, so the run never renames a board it did not create.
+pub fn finalize_and_mark_unfilled_screens_for_roots(
+    state: &mut EditorState,
+    in_scope: impl Fn(&str) -> bool,
+) -> Vec<String> {
+    let hits = detect_unfilled_screens_for_roots(state, in_scope);
     if hits.is_empty() {
         return Vec::new();
     }

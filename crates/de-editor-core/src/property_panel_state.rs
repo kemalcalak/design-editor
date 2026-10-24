@@ -16,25 +16,40 @@ pub enum FillType {
     LinearGradient,
     RadialGradient,
     MeshGradient,
-    /// Native SkSL shader fill (v1, render-only). Not offered in the
-    /// fill-type picker — arrives via `.de` files or the batch_design
-    /// fill passthrough — but carried so a node that already has a
-    /// shader fill reports + paints correctly.
+    /// Native SkSL shader fill (v1). The type picker offers it and the
+    /// panel swaps its body between the built-in presets
+    /// (`crate::shader_presets`); raw SkSL authoring stays MCP / file only.
     Shader,
     Image,
 }
 
-/// Image-fill fit modes exposed by the TS image-fill popover.
+/// Image-fill fit modes exposed by the image-fill popover.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ImageFillMode {
     Fill,
     Fit,
     Crop,
     Tile,
+    /// Scale the image to the node box, ignoring its aspect ratio. Image
+    /// FILLS only: a standalone Image node's `objectFit` has no stretch.
+    Stretch,
 }
 
 impl ImageFillMode {
-    pub const ALL: [Self; 4] = [Self::Fill, Self::Fit, Self::Crop, Self::Tile];
+    /// Every mode an image fill can take, in popover order.
+    pub const ALL: [Self; 5] = [Self::Fill, Self::Fit, Self::Crop, Self::Tile, Self::Stretch];
+    /// The modes a standalone Image node supports (no Stretch).
+    pub const IMAGE_NODE: [Self; 4] = [Self::Fill, Self::Fit, Self::Crop, Self::Tile];
+
+    /// The popover's mode row: [`Self::IMAGE_NODE`] for an Image node,
+    /// [`Self::ALL`] for an image fill.
+    pub fn modes_for(image_node: bool) -> &'static [Self] {
+        if image_node {
+            &Self::IMAGE_NODE
+        } else {
+            &Self::ALL
+        }
+    }
 
     pub fn label_key(self) -> &'static str {
         match self {
@@ -42,6 +57,7 @@ impl ImageFillMode {
             Self::Fit => "image.fitMode",
             Self::Crop => "image.crop",
             Self::Tile => "image.tile",
+            Self::Stretch => "image.stretch",
         }
     }
 
@@ -51,6 +67,7 @@ impl ImageFillMode {
             Self::Fit => jian_ops_schema::style::ImageFillMode::Fit,
             Self::Crop => jian_ops_schema::style::ImageFillMode::Crop,
             Self::Tile => jian_ops_schema::style::ImageFillMode::Tile,
+            Self::Stretch => jian_ops_schema::style::ImageFillMode::Stretch,
         }
     }
 
@@ -59,18 +76,20 @@ impl ImageFillMode {
             Some(jian_ops_schema::style::ImageFillMode::Fit) => Self::Fit,
             Some(jian_ops_schema::style::ImageFillMode::Crop) => Self::Crop,
             Some(jian_ops_schema::style::ImageFillMode::Tile) => Self::Tile,
-            Some(jian_ops_schema::style::ImageFillMode::Fill)
-            | Some(jian_ops_schema::style::ImageFillMode::Stretch)
-            | None => Self::Fill,
+            Some(jian_ops_schema::style::ImageFillMode::Stretch) => Self::Stretch,
+            Some(jian_ops_schema::style::ImageFillMode::Fill) | None => Self::Fill,
         }
     }
 
-    pub fn to_image_node_schema(self) -> jian_ops_schema::node::image::ImageFitMode {
+    /// The Image-node `objectFit` for this mode; `None` for Stretch,
+    /// which an Image node cannot express.
+    pub fn to_image_node_schema(self) -> Option<jian_ops_schema::node::image::ImageFitMode> {
         match self {
-            Self::Fill => jian_ops_schema::node::image::ImageFitMode::Fill,
-            Self::Fit => jian_ops_schema::node::image::ImageFitMode::Fit,
-            Self::Crop => jian_ops_schema::node::image::ImageFitMode::Crop,
-            Self::Tile => jian_ops_schema::node::image::ImageFitMode::Tile,
+            Self::Fill => Some(jian_ops_schema::node::image::ImageFitMode::Fill),
+            Self::Fit => Some(jian_ops_schema::node::image::ImageFitMode::Fit),
+            Self::Crop => Some(jian_ops_schema::node::image::ImageFitMode::Crop),
+            Self::Tile => Some(jian_ops_schema::node::image::ImageFitMode::Tile),
+            Self::Stretch => None,
         }
     }
 

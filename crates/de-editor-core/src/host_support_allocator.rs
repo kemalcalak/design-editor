@@ -46,7 +46,8 @@ impl EditorState {
             Tool::Slider => ("slider", "Slider"),
             Tool::Progress => ("progress", "Progress"),
             Tool::Tabs => ("tabs", "Tabs"),
-            Tool::Select | Tool::Hand => return Ok(None),
+            // The Pencil builds its path on release (`pencil.rs`), not here.
+            Tool::Select | Tool::Hand | Tool::Pencil => return Ok(None),
         };
         let (width, height) = match crate::widget_default_size(kind) {
             Some(size) => size,
@@ -302,7 +303,9 @@ impl EditorState {
     }
 
     /// Replace boolean-op sources with one path using the caller's id policy.
-    pub fn replace_paths_with_polyline_with_allocator(
+    /// Crate-private: hosts commit through `EditorCommand::CommitBooleanResult`
+    /// (`EditorState::commit_canvas_boolean`), which validates first.
+    pub(crate) fn replace_paths_with_polyline_with_allocator(
         &mut self,
         source_ids: &[NodeId],
         contours: &[Vec<(f64, f64)>],

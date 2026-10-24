@@ -299,13 +299,15 @@ fn panel_resize_drag_continues_inside_left_layer_panel() {
     // just sit on the clamp.
     app.host.editor_state_mut().editor_ui.layer_panel_width = 360.0;
     let start_width = app.host.editor_state().editor_ui.layer_panel_width;
+    // The gutter sits on the floating left card's right edge (#86).
+    let edge = start_width + de_editor_ui::widgets::floating_panels::CARD_INSET;
     let y = de_editor_ui::widgets::WINDOW_STRIP_H + 140.0;
     assert!(app
         .host
-        .apply_press(start_width, y, app.viewport_width, app.viewport_height));
+        .apply_press(edge, y, app.viewport_width, app.viewport_height));
     assert!(app.host.is_resizing_panel());
 
-    app.pending_cursor_move = Some((start_width - 72.0, y));
+    app.pending_cursor_move = Some((edge - 72.0, y));
 
     assert!(app.drain_pending_cursor_move());
     assert!(
@@ -467,10 +469,39 @@ fn fresh_app_fits_blank_frame_like_ts_canvas_init() {
     assert!(app.host.editor_state().selection.is_empty());
     let v = app.host.editor_state().viewport;
 
-    // No implicit page inspector without a selection: fit uses the full canvas width.
-    assert!((v.zoom - 0.8933333).abs() < 1e-3, "zoom {}", v.zoom);
-    assert!((v.pan_x - 64.0).abs() < 1e-2, "pan_x {}", v.pan_x);
-    assert!((v.pan_y - 92.66669).abs() < 1e-2, "pan_y {}", v.pan_y);
+    // No implicit page inspector without a selection: the fit frames the
+    // starter into the canvas the open left card does not cover.
+    let (zoom, pan_x, pan_y) = expected_starter_fit(
+        app.host.editor_state(),
+        app.viewport_width,
+        app.viewport_height,
+    );
+    assert!((v.zoom - zoom).abs() < 1e-3, "zoom {} vs {zoom}", v.zoom);
+    assert!(
+        (v.pan_x - pan_x).abs() < 1e-2,
+        "pan_x {} vs {pan_x}",
+        v.pan_x
+    );
+    assert!(
+        (v.pan_y - pan_y).abs() < 1e-2,
+        "pan_y {} vs {pan_y}",
+        v.pan_y
+    );
+}
+
+/// What the starter frame's fit lands on (#86): the 1200 × 800 frame at
+/// the origin, framed with 64 px padding (never above 100 %) inside the
+/// part of the canvas no floating card covers.
+fn expected_starter_fit(state: &de_editor_core::EditorState, w: f32, h: f32) -> (f32, f32, f32) {
+    let area = de_editor_ui::widgets::floating_panels::uncovered_canvas_rect(state, w, h);
+    let zoom = ((area.size.x - 128.0) / 1200.0)
+        .min((area.size.y - 128.0) / 800.0)
+        .min(1.0);
+    (
+        zoom,
+        area.origin.x + area.size.x / 2.0 - 600.0 * zoom,
+        area.origin.y + area.size.y / 2.0 - 400.0 * zoom,
+    )
 }
 
 #[test]
@@ -481,9 +512,18 @@ fn fresh_app_refits_blank_frame_to_actual_window_size_once() {
 
     assert!(app.fit_initial_blank_frame_to_actual_viewport());
     let v = app.host.editor_state().viewport;
-    assert!((v.zoom - 0.52666664).abs() < 1e-3, "zoom {}", v.zoom);
-    assert!((v.pan_x - 64.0).abs() < 1e-2, "pan_x {}", v.pan_x);
-    assert!((v.pan_y - 139.33334).abs() < 1e-2, "pan_y {}", v.pan_y);
+    let (zoom, pan_x, pan_y) = expected_starter_fit(app.host.editor_state(), 1000.0, 700.0);
+    assert!((v.zoom - zoom).abs() < 1e-3, "zoom {} vs {zoom}", v.zoom);
+    assert!(
+        (v.pan_x - pan_x).abs() < 1e-2,
+        "pan_x {} vs {pan_x}",
+        v.pan_x
+    );
+    assert!(
+        (v.pan_y - pan_y).abs() < 1e-2,
+        "pan_y {} vs {pan_y}",
+        v.pan_y
+    );
 
     app.viewport_width = 1200.0;
     app.viewport_height = 800.0;

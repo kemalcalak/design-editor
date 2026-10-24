@@ -48,6 +48,9 @@ pub struct ChromeTooltip {
 /// of them, so promising `⌘P` there would be a lie.
 const DESKTOP_SHORTCUTS: bool = !cfg!(target_arch = "wasm32");
 
+/// The panel toggle's chord (#86), bound by both hosts' keyboard dispatch.
+pub const PANEL_SHORTCUT: &str = "⌘\\";
+
 /// The label + shortcut for `button`, resolved against the live UI state
 /// so toggles name the action they will perform. An empty label means
 /// the button needs no tooltip.
@@ -76,6 +79,15 @@ pub fn tooltip_for(ui: &EditorUiState, button: ChromeButton) -> ChromeTooltip {
             DESKTOP_SHORTCUTS.then_some("⌘P"),
         ),
         ChromeButton::OpenExportMenu => (translate(ui, "export.title"), None),
+        // Same strings as File ▸ Show / Hide panel; both hosts bind ⌘\.
+        ChromeButton::TogglePanel => (
+            if ui.sidebar_open {
+                translate(ui, "topbar.hideLayers")
+            } else {
+                translate(ui, "topbar.showLayers")
+            },
+            Some(PANEL_SHORTCUT),
+        ),
         // These buttons say what they are in their own text.
         ChromeButton::OpenExportDialog | ChromeButton::OpenAgentSettings => ("", None),
     };
@@ -92,7 +104,8 @@ pub fn suppressed(ui: &EditorUiState, button: ChromeButton) -> bool {
         ChromeButton::Home
         | ChromeButton::Save
         | ChromeButton::ToggleCodeView
-        | ChromeButton::TogglePreview => false,
+        | ChromeButton::TogglePreview
+        | ChromeButton::TogglePanel => false,
     }
 }
 
@@ -125,6 +138,9 @@ pub fn button_anchor(
     button: ChromeButton,
 ) -> Option<Rect> {
     let chrome = chrome_layout(state, viewport_w, viewport_h);
+    if button == ChromeButton::TogglePanel {
+        return chrome.panel_toggle;
+    }
     let ui = &state.editor_ui;
     chrome
         .file_pill
@@ -202,7 +218,7 @@ pub fn paint_rail_tab_tooltip(
 }
 
 /// Every button the chrome can hover, for exhaustive coverage checks.
-pub const ALL_CHROME_BUTTONS: [ChromeButton; 8] = [
+pub const ALL_CHROME_BUTTONS: [ChromeButton; 9] = [
     ChromeButton::Home,
     ChromeButton::ToggleFileMenu,
     ChromeButton::Save,
@@ -211,4 +227,5 @@ pub const ALL_CHROME_BUTTONS: [ChromeButton; 8] = [
     ChromeButton::OpenExportMenu,
     ChromeButton::OpenExportDialog,
     ChromeButton::OpenAgentSettings,
+    ChromeButton::TogglePanel,
 ];
