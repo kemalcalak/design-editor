@@ -42,8 +42,7 @@ impl PainterWrapMeasure {
     }
 }
 
-/// The one style a request's runs share, with its whole text, or `None`
-/// when the runs differ in anything that changes advances.
+/// The one style a request's runs share, with their joined text.
 struct UniformRun<'a> {
     text: std::borrow::Cow<'a, str>,
     family: &'a str,
@@ -53,6 +52,7 @@ struct UniformRun<'a> {
     letter_spacing: f32,
 }
 
+/// `None` when the runs differ in anything that changes advances.
 fn uniform_run<'a>(req: &MeasureRequest<'a>) -> Option<UniformRun<'a>> {
     let first = req.runs.first()?;
     let same = req.runs.iter().all(|run| {
@@ -114,12 +114,16 @@ impl MeasureBackend for PainterWrapMeasure {
             );
             (base + gaps * run.letter_spacing).max(0.0)
         };
-        let lines =
-            de_editor_core::text_wrap::wrap_text_measured(&run.text, max_width, &mut measure);
-        let width = lines
-            .iter()
-            .map(|line| measure(line))
-            .fold(0.0_f32, f32::max);
+        // One font-lock hold for every probe (the lock is reentrant).
+        let (lines, width) = jian_skia::with_font_lock(|| {
+            let lines =
+                de_editor_core::text_wrap::wrap_text_measured(&run.text, max_width, &mut measure);
+            let width = lines
+                .iter()
+                .map(|line| measure(line))
+                .fold(0.0_f32, f32::max);
+            (lines, width)
+        });
         let line_count = u16::try_from(lines.len()).unwrap_or(u16::MAX);
         let height = if req.line_height > 0.0 || run.text.contains('\n') {
             // Same rule as `SkiaMeasure`: authored or literal multi-line
@@ -132,9 +136,11 @@ impl MeasureBackend for PainterWrapMeasure {
             shaped.height / f32::from(shaped.line_count.max(1)) * f32::from(line_count)
         };
         MeasureResult {
-            // A word wider than the line overflows when painted; layout
-            // keeps the budget as the shaper does.
-            width: width.min(max_width),
+            // Rounded up so a box sized from this width (taffy rounds rects
+            // to whole px) never ends up narrower than its widest line. A
+            // word wider than the line overflows when painted; layout keeps
+            // the budget as the shaper does.
+            width: width.ceil().min(max_width),
             height,
             line_count,
             baseline: shaped.baseline,

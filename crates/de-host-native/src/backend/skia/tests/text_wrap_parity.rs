@@ -13,16 +13,6 @@ const SIZE: f32 = 16.0;
 const TEXT: &str =
     "Design tools should break lines where the browser does, at the exact box width.";
 
-fn register_fonts() {
-    // Same set as `text_shaping.rs` (registration is first-call-wins).
-    jian_skia::register_bundled_fonts(vec![
-        include_bytes!("../../../../../de-host-desktop/assets/fonts/CormorantGaramond-VF.ttf")
-            .to_vec(),
-        include_bytes!("../../../../../de-host-desktop/assets/fonts/Inter-VF.ttf").to_vec(),
-        include_bytes!("../../../../../de-host-desktop/assets/fonts/Outfit-VF.ttf").to_vec(),
-    ]);
-}
-
 fn wrapping_node(text: &str, width: f32, weight: u16) -> SceneNode {
     let mut node = SceneNode::leaf("t", NodeKind::Text);
     node.bounds = Rect::xywh(0.0, 0.0, width, 400.0);
@@ -59,7 +49,7 @@ fn layout_line_count(text: &str, width: f32, weight: u16) -> u16 {
 #[test]
 fn painted_wrap_matches_the_layout_line_count_at_every_width() {
     let _guard = crate::font_registry_test_support::lock();
-    register_fonts();
+    super::super::font_fallback_tests::register_test_bundled_fonts();
     let mut native = NativeBackend::with_dpi(1.0);
     let mut surface = skia_safe::surfaces::raster_n32_premul((1, 1)).expect("surface");
     let mut frame = crate::NativeFrameBackend::new(&mut native, surface.canvas());
@@ -87,7 +77,7 @@ fn painted_wrap_matches_the_layout_line_count_at_every_width() {
 #[test]
 fn a_line_one_px_wider_than_the_box_wraps() {
     let _guard = crate::font_registry_test_support::lock();
-    register_fonts();
+    super::super::font_fallback_tests::register_test_bundled_fonts();
     let mut native = NativeBackend::with_dpi(1.0);
     let line = "Exact width wrapping";
     let natural = native.measure_text_family_styled(line, SIZE, FAMILY, 400, false);

@@ -82,8 +82,8 @@ thread_local! {
 }
 
 /// Real skia paragraph shaper — native + web-skia builds (`skia-measure`, default),
-/// with wrapped lines counted the way the canvas painter breaks them
-/// (`painter_wrap_measure`, #186).
+/// with wrapped one-style, simple-script text counted the way the canvas
+/// painter breaks it (`painter_wrap_measure`, #186).
 /// Wrapped in a memoizing cache: paragraph shaping is the dominant layout cost,
 /// and repeat reconversions (drag / resize / colour edits) re-measure identical
 /// text, so the cache turns those into hash lookups. (The estimate backend below

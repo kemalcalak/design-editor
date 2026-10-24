@@ -769,9 +769,10 @@ impl PreviewSession {
     }
 }
 
-/// The measurement backend preview tests solve layout against the same skia
-/// backend the native host injects, so test geometry matches
-/// production. Kept in one place so the 45 call sites don't each spell
+/// The measurement backend preview tests solve layout against: jian's skia
+/// paragraph shaper. (The native host injects `de_pen_loader`'s layout
+/// measure, which wraps this one and counts one-style wrapped lines like the
+/// canvas painter.) Kept in one place so the 45 call sites don't each spell
 #[cfg(all(test, not(target_os = "windows")))]
 pub(crate) fn test_measure() -> Rc<dyn MeasureBackend> {
     Rc::new(jian_skia::SkiaMeasure::new())

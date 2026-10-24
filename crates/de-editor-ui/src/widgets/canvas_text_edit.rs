@@ -3,7 +3,7 @@
 //! painted pixels.
 //!
 //! [`text_edit_layout`] resolves the SAME line layout the canvas
-//! painter uses (`canvas_viewport_paint::paint_text_node` calls it
+//! painter uses (`canvas_viewport_text::paint_text_node` calls it
 //! too), so caret xy, selection rects, and click-to-caret hit-testing
 //! all agree with the painted glyphs: same CJK-aware wrap
 //! (`canvas_text_wrap::wrap_text`, in the node's own face), same

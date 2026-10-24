@@ -16,9 +16,9 @@ fn css_font_stack_parser_preserves_quoted_families_and_expands_generics() {
 
 /// `jian_skia::register_bundled_fonts` is process-global and first-call-wins,
 /// so every test that needs a bundled family must register the SAME set — the
-/// first test to run decides what the whole binary sees. Keep this list in
-/// sync with the copy in `tests/text_shaping.rs`.
-fn register_test_bundled_fonts() {
+/// first test to run decides what the whole binary sees. `tests/text_shaping.rs`
+/// and `tests/text_wrap_parity.rs` call this one list.
+pub(super) fn register_test_bundled_fonts() {
     jian_skia::register_bundled_fonts(vec![
         include_bytes!("../../../../de-host-desktop/assets/fonts/CormorantGaramond-VF.ttf")
             .to_vec(),

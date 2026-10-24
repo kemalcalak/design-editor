@@ -45,11 +45,11 @@ pub(crate) fn wrap_text(
     backend: &mut dyn crate::RenderBackend,
     text: &str,
     font_size: f32,
-    max_w: f32,
+    max_width: f32,
     face: TextFace<'_>,
     letter_spacing: f32,
 ) -> Vec<String> {
-    de_editor_core::text_wrap::wrap_text_measured(text, max_w, &mut |line: &str| {
+    de_editor_core::text_wrap::wrap_text_measured(text, max_width, &mut |line: &str| {
         measure_text_with_letter_spacing(backend, line, font_size, face, letter_spacing)
     })
 }
