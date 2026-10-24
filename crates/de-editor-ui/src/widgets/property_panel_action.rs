@@ -434,23 +434,43 @@ pub enum PropertyPanelAction {
     /// / Checkbox node — host flips the literal `checked` bool to
     /// `new_value`.
     ToggleWidgetChecked(bool),
-    /// User clicked the Interactions section's tap row (or its
-    /// "+ Add interaction" empty state) — host toggles the small
-    /// Navigate/Back/Remove popover open (`editor_ui.interaction_menu_open`).
-    ToggleInteractionMenu,
-    /// User picked "Navigate to <path>" in the popover — host writes
-    /// `events.onTap = [{"replace": "\"<path>\""}]` via
-    /// `PatchNodeData` (see `property_panel_interactions::navigate_patch_json`).
+    /// User clicked an Interactions row, the Interactions header "+" or
+    /// a Motion row's property dropdown — host toggles the shared
+    /// popover for that target (`editor_ui.interaction_menu_*`).
+    ToggleInteractionMenu(de_editor_core::interaction_edit::InteractionMenuTarget),
+    /// User picked a trigger in the "+" popover — the popover switches
+    /// to that trigger's actions; nothing is written yet.
+    PickInteractionTrigger(de_editor_core::interaction_edit::InteractionTrigger),
+    /// User picked "Navigate to <path>" for `trigger`.
     SetInteractionNavigate {
+        trigger: de_editor_core::interaction_edit::InteractionTrigger,
         path: String,
     },
-    /// User picked "Back (pop)" in the popover — host writes
-    /// `events.onTap = [{"pop": null}]`.
-    SetInteractionPop,
-    /// User picked "Remove" in the popover, or the multi-action row's
-    /// "Remove all" — host clears the node's `onTap` handler (and the
-    /// whole `events` field when nothing else is left in it).
-    RemoveInteraction,
+    /// User picked "Back (pop)" for the trigger.
+    SetInteractionPop(de_editor_core::interaction_edit::InteractionTrigger),
+    /// User picked Slide (`push`) or Fade (`replace`) under a navigate.
+    SetInteractionTransition {
+        trigger: de_editor_core::interaction_edit::InteractionTrigger,
+        verb: de_editor_core::interaction_edit::NavigateVerb,
+    },
+    /// User picked "Remove" in the popover, or a multi-action trigger's
+    /// "Remove all" — host clears that trigger's handler (and the whole
+    /// `events` field when nothing else is left in it).
+    RemoveInteraction(de_editor_core::interaction_edit::InteractionTrigger),
+    /// Motion header "+": append a fade-in animation.
+    AddAnimation,
+    /// A Motion row's remove button.
+    RemoveAnimation(usize),
+    /// A Motion row's On load | In view cell.
+    SetAnimationTrigger {
+        index: usize,
+        trigger: jian_ops_schema::motion::MotionTrigger,
+    },
+    /// User picked a property in a Motion row's dropdown.
+    SetAnimationProperty {
+        index: usize,
+        property: de_editor_core::motion_edit::MotionProperty,
+    },
     /// Code panel action — see `CodegenAction`.
     Codegen(CodegenAction),
 }

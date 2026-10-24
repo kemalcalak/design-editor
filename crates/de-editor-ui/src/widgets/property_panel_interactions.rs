@@ -1,63 +1,47 @@
-//! Interactions section — read-only screen marker + `events.onTap`
-//! rows, plus the small Navigate/Back/Remove edit menu. New in this
-//! change (the property panel previously showed no interaction
-//! state at all, even though the generation pipeline
-//! (`de-orchestrator::wire_screen_navigation`) has been wiring
-//! `screen` + `events.onTap` into documents for a while).
+//! Interactions section: the read-only screen marker, then one row per
+//! authored trigger (Tap / Hover / Long press) with its action, and a
+//! Transition row under a navigate (#154). The Motion section
+//! (`property_panel_motion.rs`) paints directly below it in the same
+//! slot, so its summary rides on [`InteractionSummary::motion`].
 //!
-//! v1 scope, matching the plan this section ships against:
-//! - `screen` is shown but not editable (a top-level screen frame's
-//!   route path is read-only here; editing it is a v2 TODO).
-//! - A single `onTap` action is editable via a small popover:
-//!   "Navigate to <path>" (writes `replace`, one per authored
-//!   `screen` on the current page) / "Back (pop)" / "Remove".
-//! - Zero or one `onTap` action shows one clickable row; more than
-//!   one shows every action read-only plus a single "Remove all"
-//!   row (no per-action editing in v1 — see `InteractionSummary`).
+//! Rows per trigger:
+//! - one action: a dropdown row opening the shared popover (Navigate
+//!   to <screen> / Back / Remove), plus a Slide | Fade row when the
+//!   action navigates — the verb is the screen transition Preview plays
+//!   (`push` slides, `replace` cross-fades);
+//! - several actions (hand-authored or MCP-written): each read-only,
+//!   then a "Remove all" row.
 //!
-//! Data types (`InteractionSummary` / `TapActionSummary`) live here
-//! rather than in `property_panel_snapshot.rs` (where every other
-//! summary type lives) purely to avoid growing that already
-//! 800-line-ceiling-busting file any further; the paint + geometry
-//! helpers below follow the same section-file split as
-//! `property_panel_effects.rs` / `property_panel_icon.rs`.
+//! The header "+" opens the popover's list: the triggers not authored
+//! yet, then "Animation", which adds a Motion row. The Motion section
+//! only appears once the node has an animation, so a node with neither
+//! stays one header tall (the #83 compact budget). The edits live in
+//! `de_editor_core::interaction_edit`; the popover is in
+//! `property_panel_interactions_menu.rs`.
 
 use crate::theme::Theme;
 use crate::widgets::property_panel::PropertyPanelAction;
 use crate::widgets::property_panel_inputs::{
-    paint_dropdown, paint_section_divider, paint_section_label, paint_section_label_with_add,
-    INPUT_HEIGHT, INPUT_RADIUS, PAD_X, SECTION_GAP, SECTION_HEADER_HEIGHT,
+    paint_dropdown, paint_section_divider, paint_section_label_with_add, section_add_target,
+    INPUT_HEIGHT, PAD_X, SECTION_GAP, SECTION_HEADER_HEIGHT,
 };
+use crate::widgets::property_panel_motion::MotionSummary;
 use crate::widgets::PaintCx;
 use crate::{Point2D, Rect, TextLayout};
 use de_editor_core::pen_node_ext::PenNodeExt;
 use jian_ops_schema::events::Action;
 use jian_ops_schema::node::PenNode;
 
-/// Which verb an authored Navigate action used. Manual edits from
-/// this panel always write `Replace` (matches
-/// `wire_screen_navigation`'s own tab-binding verb); `Push` is only
-/// ever something a hand-authored or MCP-written document can carry,
-/// shown read-only.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum NavigateVerb {
-    Push,
-    Replace,
-}
+pub use crate::widgets::property_panel_interactions_menu::{
+    interaction_menu_rect, interaction_menu_row_rects, interaction_menu_rows,
+    paint_interaction_menu, InteractionMenuHit, INTERACTION_MENU_ROW_H, INTERACTION_MENU_W,
+};
+pub use de_editor_core::interaction_edit::{
+    InteractionMenuTarget, InteractionTrigger, NavigateVerb,
+};
 
-impl NavigateVerb {
-    fn as_str(self) -> &'static str {
-        match self {
-            NavigateVerb::Push => "push",
-            NavigateVerb::Replace => "replace",
-        }
-    }
-}
-
-/// One `events.onTap` action, summarized for display. `Other` covers
-/// every action key besides navigation (`set`, `fetch`, …) — shown
-/// as `Tap → <key>`, read-only (no v1 editor surface understands the
-/// body of an arbitrary action).
+/// One authored action, summarized for display. `Other` covers every
+/// action key besides navigation (`set`, `fetch`, …), shown read-only.
 #[derive(Debug, Clone, PartialEq)]
 pub enum TapActionSummary {
     Navigate { verb: NavigateVerb, path: String },
@@ -65,58 +49,91 @@ pub enum TapActionSummary {
     Other(String),
 }
 
-/// Interaction state for the selected node — always present (empty
-/// when nothing is authored) so the section can paint its "+ Add
-/// interaction" empty state. `screen` is `Some` only for a top-level
-/// Frame carrying an authored `screen` route (see
-/// `NodeSnapshot::from_node`'s caller, which gates this on the
-/// selection being a page-root child).
+/// One authored trigger and its actions (never empty).
+#[derive(Debug, Clone, PartialEq)]
+pub struct TriggerSummary {
+    pub trigger: InteractionTrigger,
+    pub actions: Vec<TapActionSummary>,
+}
+
+/// Interaction and motion state for the selected node — always present
+/// (empty when nothing is authored). `screen` is `Some` only for a
+/// top-level Frame carrying an authored `screen` route.
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct InteractionSummary {
     pub screen: Option<String>,
-    pub on_tap: Vec<TapActionSummary>,
+    /// Authored triggers, in [`InteractionTrigger::ALL`] order.
+    pub triggers: Vec<TriggerSummary>,
+    /// The Motion section's rows (`animations`).
+    pub motion: Vec<MotionSummary>,
 }
 
-/// Build the summary from a node's `events.onTap` + (when
+impl InteractionSummary {
+    /// The actions authored for `trigger` (empty when none).
+    pub fn actions(&self, trigger: InteractionTrigger) -> &[TapActionSummary] {
+        self.triggers
+            .iter()
+            .find(|t| t.trigger == trigger)
+            .map_or(&[], |t| t.actions.as_slice())
+    }
+
+    /// Triggers with no action yet, in list order — the "+" menu rows.
+    pub fn unauthored_triggers(&self) -> Vec<InteractionTrigger> {
+        InteractionTrigger::ALL
+            .into_iter()
+            .filter(|t| self.actions(*t).is_empty())
+            .collect()
+    }
+}
+
+/// Build the summary from a node's `events`, `animations` and (when
 /// `is_top_level`) its `screen` marker.
 pub(crate) fn interactions_of(node: &PenNode, is_top_level: bool) -> InteractionSummary {
+    let triggers = node
+        .events()
+        .map(|handlers| {
+            InteractionTrigger::ALL
+                .into_iter()
+                .filter_map(|trigger| {
+                    let actions = trigger.actions(handlers)?;
+                    (!actions.is_empty()).then(|| TriggerSummary {
+                        trigger,
+                        actions: actions.iter().map(parse_action).collect(),
+                    })
+                })
+                .collect()
+        })
+        .unwrap_or_default();
     InteractionSummary {
         screen: is_top_level
             .then(|| node.screen())
             .flatten()
             .map(str::to_string),
-        on_tap: node
-            .on_tap()
-            .map(|actions| actions.iter().map(parse_tap_action).collect())
-            .unwrap_or_default(),
+        triggers,
+        motion: crate::widgets::property_panel_motion::motion_of(node),
     }
 }
 
-fn parse_tap_action(action: &Action) -> TapActionSummary {
+fn parse_action(action: &Action) -> TapActionSummary {
     let Some((key, body)) = action.single() else {
         return TapActionSummary::Other(String::new());
     };
+    if let Some(verb) = NavigateVerb::from_key(key) {
+        return TapActionSummary::Navigate {
+            verb,
+            path: unescape_path_literal(body),
+        };
+    }
     match key {
-        "push" => TapActionSummary::Navigate {
-            verb: NavigateVerb::Push,
-            path: unescape_path_literal(body),
-        },
-        "replace" => TapActionSummary::Navigate {
-            verb: NavigateVerb::Replace,
-            path: unescape_path_literal(body),
-        },
         "pop" => TapActionSummary::Pop,
         other => TapActionSummary::Other(other.to_string()),
     }
 }
 
-/// `body` is the JSON string VALUE `"\"/path\""` (embedded quote
-/// characters included) — the Tier-1 EXPRESSION source for a string
-/// literal, per `wire_screen_navigation`'s navigate-patch contract
-/// (`de-orchestrator/src/wire_screen_navigation.rs`). Strip the
-/// embedded quote pair to recover the bare path for display; any
-/// other shape (e.g. a hand-authored bare path with no expression
-/// quoting) is shown as-is so the row never goes blank.
+/// `body` is the JSON string VALUE `"\"/path\""` — the Tier-1 expression
+/// source of a string literal (`wire_screen_navigation`'s contract).
+/// Strip the embedded quote pair for display; any other shape (a bare
+/// hand-authored path) shows as-is so the row never goes blank.
 fn unescape_path_literal(body: &serde_json::Value) -> String {
     let Some(s) = body.as_str() else {
         return body.to_string();
@@ -127,29 +144,8 @@ fn unescape_path_literal(body: &serde_json::Value) -> String {
         .to_string()
 }
 
-/// Build the `events.onTap` navigate patch JSON for this panel's
-/// "Navigate to…" edit — always `replace` (v1 scope). `path` must
-/// already be a `/`-rooted route path; the JSON string VALUE is the
-/// literal `"<path>"` (quotes included) so it compiles as a Tier-1
-/// string-literal expression. Constructed by the SAME double-encoding
-/// `wire_screen_navigation::navigate_patch` uses, not hand-assembled,
-/// so the two writers can never drift out of sync.
-pub fn navigate_patch_json(path: &str) -> String {
-    let body = serde_json::to_string(path).unwrap_or_default(); // -> "\"/path\""
-    let escaped_body = serde_json::to_string(&body).unwrap_or_default(); // -> "\"\\\"/path\\\"\""
-    format!(r#"{{"events":{{"onTap":[{{"replace":{escaped_body}}}]}}}}"#)
-}
-
-/// The `events.onTap` back (`pop`) patch JSON.
-pub const POP_PATCH_JSON: &str = r#"{"events":{"onTap":[{"pop":null}]}}"#;
-
-/// Scan the active page's top-level frames for authored `screen`
-/// paths — the source list for the popover's "Navigate to <path>"
-/// rows (`来源=扫当前页顶层 frame 的 screen 值`, not a fresh scan of
-/// every possible screen-shaped frame the way
-/// `wire_screen_navigation::collect_screen_candidates` does — this is
-/// a read-only picker source, not a wiring pass). Order matches
-/// document order.
+/// Scan the active page's top-level frames for authored `screen` paths —
+/// the popover's "Navigate to <path>" rows, in document order.
 pub fn document_screen_paths(state: &de_editor_core::EditorState) -> Vec<String> {
     state
         .active_children()
@@ -158,36 +154,74 @@ pub fn document_screen_paths(state: &de_editor_core::EditorState) -> Vec<String>
         .collect()
 }
 
-// ── Section paint + geometry ────────────────────────────────────────
+// ── Rows: one list drives height, hit rects and paint ───────────────
 
-/// Number of rows the section paints: an optional Screen row, plus
-/// one clickable row (single action) or N read-only rows + a trailing
-/// "Remove all" row (multiple actions). With no action the section is
-/// its header alone and the header's "+" opens the menu (#83). Shared
-/// by the height calc + the action-rect walker so they can't drift.
-fn interaction_row_count(interactions: &InteractionSummary) -> usize {
-    let screen_row = usize::from(interactions.screen.is_some());
-    let tap_rows = match interactions.on_tap.len() {
-        0 => 0,
-        1 => 1,
-        n => n + 1,
-    };
-    screen_row + tap_rows
+/// One painted row of the section.
+#[derive(Debug, Clone, PartialEq)]
+enum Row<'a> {
+    Screen(&'a str),
+    /// A trigger's single action — opens the popover.
+    Action(InteractionTrigger, &'a TapActionSummary),
+    /// The Slide | Fade row under a single navigate.
+    Transition(InteractionTrigger, NavigateVerb),
+    /// One of several actions, read-only.
+    ReadOnly(InteractionTrigger, &'a TapActionSummary),
+    RemoveAll(InteractionTrigger),
 }
 
-/// Total vertical space the Interactions section consumes. Mirrors
-/// the `n * (INPUT_HEIGHT + 6.0) + 6.0 + SECTION_GAP` row-stacking
-/// math `paint_interactions_section` walks.
+const ROW_STEP: f32 = INPUT_HEIGHT + 6.0;
+/// Width of the Transition row's label column.
+const TRANSITION_LABEL_W: f32 = 76.0;
+
+fn rows(summary: &InteractionSummary) -> Vec<Row<'_>> {
+    let mut out = Vec::new();
+    if let Some(screen) = &summary.screen {
+        out.push(Row::Screen(screen));
+    }
+    for t in &summary.triggers {
+        match t.actions.as_slice() {
+            [] => {}
+            [only] => {
+                out.push(Row::Action(t.trigger, only));
+                if let TapActionSummary::Navigate { verb, .. } = only {
+                    out.push(Row::Transition(t.trigger, *verb));
+                }
+            }
+            many => {
+                out.extend(many.iter().map(|a| Row::ReadOnly(t.trigger, a)));
+                out.push(Row::RemoveAll(t.trigger));
+            }
+        }
+    }
+    out
+}
+
+/// Total vertical space the Interactions section consumes (the Motion
+/// section below it adds its own height).
 pub fn interactions_section_height(interactions: &InteractionSummary) -> f32 {
-    let n = interaction_row_count(interactions) as f32;
-    SECTION_HEADER_HEIGHT + n * (INPUT_HEIGHT + 6.0) + 6.0 + SECTION_GAP
+    SECTION_HEADER_HEIGHT + rows(interactions).len() as f32 * ROW_STEP + 6.0 + SECTION_GAP
 }
 
-/// Emit the section's clickable-row rects: the empty state's header
-/// "+" or the single tap row (`ToggleInteractionMenu`), or a multi-action row's
-/// trailing `RemoveInteraction` row. The Screen row and read-only
-/// multi-action rows contribute height but no rect — matches
-/// `paint_interactions_section` exactly.
+fn row_rect(x: f32, y: f32, width: f32) -> Rect {
+    Rect::xywh(x + PAD_X, y, width - PAD_X * 2.0, INPUT_HEIGHT)
+}
+
+/// The Slide | Fade cells of a Transition row at `row`.
+fn transition_cells(row: Rect) -> Vec<Rect> {
+    let segments = Rect::xywh(
+        row.origin.x + TRANSITION_LABEL_W,
+        row.origin.y,
+        row.size.x - TRANSITION_LABEL_W,
+        row.size.y,
+    );
+    crate::widgets::property_panel_segments::segment_rects(segments, 2)
+}
+
+const TRANSITION_VERBS: [NavigateVerb; 2] = [NavigateVerb::Push, NavigateVerb::Replace];
+
+/// Emit the section's clickable rects (header "+", action rows,
+/// transition cells, "Remove all"), then the Motion section's — the
+/// same row walk paint uses.
 pub fn push_interaction_action_rects(
     out: &mut Vec<(PropertyPanelAction, Rect)>,
     interactions: &InteractionSummary,
@@ -195,105 +229,154 @@ pub fn push_interaction_action_rects(
     y: f32,
     width: f32,
 ) {
-    let usable_w = width - PAD_X * 2.0;
+    // The "+" always shows: an animation can always be added.
+    out.push((
+        PropertyPanelAction::ToggleInteractionMenu(InteractionMenuTarget::AddTrigger),
+        section_add_target(x, y, width),
+    ));
     let mut row_y = y + SECTION_HEADER_HEIGHT;
-    if interactions.screen.is_some() {
-        row_y += INPUT_HEIGHT + 6.0;
+    for row in rows(interactions) {
+        let rect = row_rect(x, row_y, width);
+        match row {
+            Row::Action(trigger, _) => out.push((
+                PropertyPanelAction::ToggleInteractionMenu(InteractionMenuTarget::Trigger(trigger)),
+                rect,
+            )),
+            Row::Transition(trigger, _) => {
+                for (verb, cell) in TRANSITION_VERBS.into_iter().zip(transition_cells(rect)) {
+                    out.push((
+                        PropertyPanelAction::SetInteractionTransition { trigger, verb },
+                        cell,
+                    ));
+                }
+            }
+            Row::RemoveAll(trigger) => {
+                out.push((PropertyPanelAction::RemoveInteraction(trigger), rect));
+            }
+            Row::Screen(_) | Row::ReadOnly(..) => {}
+        }
+        row_y += ROW_STEP;
     }
-    let row_rect = |row_y: f32| Rect {
-        origin: Point2D::new(x + PAD_X, row_y),
-        size: Point2D::new(usable_w, INPUT_HEIGHT),
-    };
-    match interactions.on_tap.len() {
-        0 => {
-            out.push((
-                PropertyPanelAction::ToggleInteractionMenu,
-                crate::widgets::property_panel_inputs::section_add_target(x, y, width),
-            ));
-        }
-        1 => {
-            out.push((PropertyPanelAction::ToggleInteractionMenu, row_rect(row_y)));
-        }
-        n => {
-            row_y += (INPUT_HEIGHT + 6.0) * n as f32;
-            out.push((PropertyPanelAction::RemoveInteraction, row_rect(row_y)));
-        }
-    }
+    crate::widgets::property_panel_motion::push_motion_action_rects(
+        out,
+        &interactions.motion,
+        x,
+        y + interactions_section_height(interactions),
+        width,
+    );
 }
 
+/// Paint the Interactions section, then the Motion section below it.
+/// Returns the y where the next section starts.
+#[allow(clippy::too_many_arguments)]
 pub fn paint_interactions_section(
     cx: &mut PaintCx<'_>,
     theme: &Theme,
     interactions: &InteractionSummary,
+    edit: &crate::widgets::property_panel_sections::EditContext<'_>,
     locale: de_editor_core::Locale,
     x: f32,
     y: f32,
     width: f32,
 ) -> f32 {
     let title = translate(locale, "interactions.title", "Interactions");
-    let mut y = if interactions.on_tap.is_empty() {
-        paint_section_label_with_add(cx, theme, title, x, y, width)
-    } else {
-        paint_section_label(cx, theme, title, x, y, width)
-    };
-    let row_w = width - PAD_X * 2.0;
-    let row_rect = |y: f32| Rect {
-        origin: Point2D::new(x + PAD_X, y),
-        size: Point2D::new(row_w, INPUT_HEIGHT),
-    };
-    if let Some(screen) = &interactions.screen {
-        paint_plain_row(
-            cx,
-            theme,
-            row_rect(y),
-            &format!(
-                "{}: {}",
-                translate(locale, "interactions.screen", "Screen"),
-                screen
-            ),
-        );
-        y += INPUT_HEIGHT + 6.0;
-    }
-    match interactions.on_tap.len() {
-        0 => {}
-        1 => {
-            paint_dropdown(
-                cx,
-                theme,
-                row_rect(y),
-                &tap_action_label(locale, &interactions.on_tap[0]),
-            );
-            y += INPUT_HEIGHT + 6.0;
-        }
-        _ => {
-            for action in &interactions.on_tap {
-                paint_plain_row(cx, theme, row_rect(y), &tap_action_label(locale, action));
-                y += INPUT_HEIGHT + 6.0;
+    let mut y = paint_section_label_with_add(cx, theme, title, x, y, width);
+    for row in rows(interactions) {
+        let rect = row_rect(x, y, width);
+        match row {
+            Row::Screen(screen) => {
+                let label = translate(locale, "interactions.screen", "Screen");
+                paint_plain_row(cx, theme, rect, &format!("{label}: {screen}"));
             }
-            paint_dropdown(
+            Row::Action(trigger, action) => {
+                paint_fitted_dropdown(cx, theme, rect, &action_label(locale, trigger, action));
+            }
+            Row::Transition(_, verb) => paint_transition_row(cx, theme, locale, rect, verb),
+            Row::ReadOnly(trigger, action) => {
+                paint_plain_row(cx, theme, rect, &action_label(locale, trigger, action));
+            }
+            Row::RemoveAll(_) => paint_dropdown(
                 cx,
                 theme,
-                row_rect(y),
+                rect,
                 translate(locale, "interactions.removeAll", "Remove all"),
-            );
-            y += INPUT_HEIGHT + 6.0;
+            ),
         }
+        y += ROW_STEP;
     }
     y += 6.0;
     paint_section_divider(cx, theme, x, y, width);
-    y + SECTION_GAP
+    crate::widgets::property_panel_motion::paint_motion_section(
+        cx,
+        theme,
+        &interactions.motion,
+        edit,
+        locale,
+        x,
+        y + SECTION_GAP,
+        width,
+    )
 }
 
-/// Human-readable row label for one authored `onTap` action, e.g.
-/// `Tap → Navigate (replace) /profile` / `Tap → Back (pop)` /
-/// `Tap → set` (unknown key, read-only).
-fn tap_action_label(locale: de_editor_core::Locale, action: &TapActionSummary) -> String {
-    let prefix = translate(locale, "interactions.tapPrefix", "Tap →");
+fn paint_transition_row(
+    cx: &mut PaintCx<'_>,
+    theme: &Theme,
+    locale: de_editor_core::Locale,
+    rect: Rect,
+    verb: NavigateVerb,
+) {
+    let label_rect = Rect::xywh(
+        rect.origin.x,
+        rect.origin.y,
+        TRANSITION_LABEL_W - 4.0,
+        rect.size.y,
+    );
+    paint_plain_row(
+        cx,
+        theme,
+        label_rect,
+        translate(locale, "interactions.transition", "Transition"),
+    );
+    let segments = Rect::xywh(
+        rect.origin.x + TRANSITION_LABEL_W,
+        rect.origin.y,
+        rect.size.x - TRANSITION_LABEL_W,
+        rect.size.y,
+    );
+    let labels = [
+        translate(locale, "interactions.slide", "Slide"),
+        translate(locale, "interactions.fade", "Fade"),
+    ];
+    let active = TRANSITION_VERBS.iter().position(|v| *v == verb);
+    crate::widgets::property_panel_segments::paint_segment_row(
+        cx, theme, segments, &labels, active, 11.0,
+    );
+}
+
+/// The trigger's row prefix, e.g. `Tap →`.
+fn trigger_prefix(locale: de_editor_core::Locale, trigger: InteractionTrigger) -> &'static str {
+    match trigger {
+        InteractionTrigger::Tap => translate(locale, "interactions.tapPrefix", "Tap →"),
+        InteractionTrigger::Hover => translate(locale, "interactions.hoverPrefix", "Hover →"),
+        InteractionTrigger::LongPress => {
+            translate(locale, "interactions.longPressPrefix", "Long press →")
+        }
+    }
+}
+
+/// Row label for one authored action, e.g. `Tap → Navigate /profile`,
+/// `Hover → Back (pop)` or `Long press → set` (unknown key, read-only).
+/// The verb is not repeated here: the Transition row shows it.
+fn action_label(
+    locale: de_editor_core::Locale,
+    trigger: InteractionTrigger,
+    action: &TapActionSummary,
+) -> String {
+    let prefix = trigger_prefix(locale, trigger);
     match action {
-        TapActionSummary::Navigate { verb, path } => format!(
-            "{prefix} {} ({}) {path}",
+        TapActionSummary::Navigate { path, .. } => format!(
+            "{prefix} {} {path}",
             translate(locale, "interactions.navigate", "Navigate"),
-            verb.as_str(),
         ),
         TapActionSummary::Pop => {
             format!(
@@ -305,9 +388,18 @@ fn tap_action_label(locale: de_editor_core::Locale, action: &TapActionSummary) -
     }
 }
 
-fn paint_plain_row(cx: &mut PaintCx<'_>, theme: &Theme, rect: Rect, text: &str) {
+/// A dropdown whose label is ellipsized to stay clear of the chevron.
+pub(crate) fn paint_fitted_dropdown(cx: &mut PaintCx<'_>, theme: &Theme, rect: Rect, text: &str) {
+    let fitted =
+        crate::widgets::text_metrics::fit_chrome(cx.backend, text, rect.size.x - 40.0, 12.0);
+    paint_dropdown(cx, theme, rect, &fitted);
+}
+
+/// A muted read-only row; the text is ellipsized to the row width.
+pub(crate) fn paint_plain_row(cx: &mut PaintCx<'_>, theme: &Theme, rect: Rect, text: &str) {
+    let text = crate::widgets::text_metrics::fit_chrome(cx.backend, text, rect.size.x - 4.0, 12.0);
     let layout = TextLayout::single_run(
-        text,
+        &text,
         crate::widgets::text_metrics::CHROME_FONT_FAMILY,
         12.0,
         (theme.muted_foreground).to_jian(),
@@ -319,123 +411,9 @@ fn paint_plain_row(cx: &mut PaintCx<'_>, theme: &Theme, rect: Rect, text: &str) 
     );
 }
 
-// ── Navigate/Back/Remove edit menu ──────────────────────────────────
-
-pub(crate) const INTERACTION_MENU_ROW_H: f32 = 30.0;
-pub(crate) const INTERACTION_MENU_W: f32 = 200.0;
-
-/// Hit-result for a click on the open Navigate/Back/Remove menu.
-#[derive(Debug, Clone, PartialEq)]
-pub enum InteractionMenuHit {
-    Row(PropertyPanelAction),
-    Inside,
-    Outside,
-}
-
-/// Menu rows in paint order: one "Navigate to <path>" row per screen
-/// path authored on the current page, then "Back (pop)", then
-/// "Remove" (only when there is an existing action to remove).
-pub(crate) fn interaction_menu_rows(
-    locale: de_editor_core::Locale,
-    screen_paths: &[String],
-    removable: bool,
-) -> Vec<(PropertyPanelAction, String)> {
-    let navigate_to = translate(locale, "interactions.navigateTo", "Navigate to");
-    let mut rows: Vec<(PropertyPanelAction, String)> = screen_paths
-        .iter()
-        .map(|path| {
-            (
-                PropertyPanelAction::SetInteractionNavigate { path: path.clone() },
-                format!("{navigate_to} {path}"),
-            )
-        })
-        .collect();
-    rows.push((
-        PropertyPanelAction::SetInteractionPop,
-        translate(locale, "interactions.back", "Back (pop)").to_string(),
-    ));
-    if removable {
-        rows.push((
-            PropertyPanelAction::RemoveInteraction,
-            translate(locale, "interactions.remove", "Remove").to_string(),
-        ));
-    }
-    rows
-}
-
-/// The menu popover rect, anchored to the tap row's rect (drops just
-/// below it, right-aligned — matches `effect_add_menu_rect`).
-pub(crate) fn interaction_menu_rect(anchor: Rect, row_count: usize) -> Rect {
-    let h = row_count as f32 * INTERACTION_MENU_ROW_H + 8.0;
-    let right = anchor.origin.x + anchor.size.x;
-    Rect {
-        origin: Point2D::new(right - INTERACTION_MENU_W, anchor.origin.y + anchor.size.y),
-        size: Point2D::new(INTERACTION_MENU_W, h),
-    }
-}
-
-/// `(action, row_rect)` for each menu row, given the menu rect.
-pub(crate) fn interaction_menu_row_rects(
-    menu: Rect,
-    rows: &[(PropertyPanelAction, String)],
-) -> Vec<(PropertyPanelAction, Rect)> {
-    rows.iter()
-        .enumerate()
-        .map(|(i, (action, _))| {
-            let ry = menu.origin.y + 4.0 + i as f32 * INTERACTION_MENU_ROW_H;
-            (
-                action.clone(),
-                Rect {
-                    origin: Point2D::new(menu.origin.x, ry),
-                    size: Point2D::new(menu.size.x, INTERACTION_MENU_ROW_H),
-                },
-            )
-        })
-        .collect()
-}
-
-/// Paint the Navigate/Back/Remove popover anchored to `anchor` (the
-/// tap row's rect). `hover` highlights the row index under the
-/// cursor, matching the Effects add-menu's `paint_effect_add_menu`.
-pub(crate) fn paint_interaction_menu(
-    cx: &mut PaintCx<'_>,
-    theme: &Theme,
-    anchor: Rect,
-    rows: &[(PropertyPanelAction, String)],
-    hover: Option<usize>,
-) {
-    let menu = interaction_menu_rect(anchor, rows.len());
-    cx.backend
-        .fill_round_rect(menu, INPUT_RADIUS, theme.popover);
-    cx.backend
-        .stroke_round_rect(menu, INPUT_RADIUS, theme.border, 1.0);
-    for (i, (_, label)) in rows.iter().enumerate() {
-        let ry = menu.origin.y + 4.0 + i as f32 * INTERACTION_MENU_ROW_H;
-        if hover == Some(i) {
-            let row = Rect {
-                origin: Point2D::new(menu.origin.x + 4.0, ry),
-                size: Point2D::new(menu.size.x - 8.0, INTERACTION_MENU_ROW_H),
-            };
-            cx.backend.fill_round_rect(row, 6.0, theme.muted);
-        }
-        let text = TextLayout::single_run(
-            label,
-            crate::widgets::text_metrics::CHROME_FONT_FAMILY,
-            12.0,
-            theme.foreground.to_jian(),
-            Point2D::new(0.0, 0.0),
-        );
-        cx.backend.draw_text(
-            &text,
-            Point2D::new(
-                menu.origin.x + 12.0,
-                ry + INTERACTION_MENU_ROW_H / 2.0 + 4.0,
-            ),
-        );
-    }
-}
-
-fn translate(
+/// Locale lookup with an English fallback for a key missing from the
+/// catalogs (debug builds would otherwise show the raw key).
+pub(crate) fn translate(
     locale: de_editor_core::Locale,
     key: &'static str,
     fallback: &'static str,

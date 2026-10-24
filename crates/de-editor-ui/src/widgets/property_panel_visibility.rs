@@ -18,7 +18,7 @@ pub(crate) struct SectionCapabilities {
     pub(crate) stroke: bool,
     pub(crate) effects: bool,
     pub(crate) export: bool,
-    /// Whether the Interactions section (screen marker + `events.onTap`)
+    /// Whether the Interactions + Motion sections (screen marker, `events`, `animations`)
     /// paints for this kind. Every canonical `PenNode` variant carries
     /// an `events` field, so this is `true` everywhere single-select
     /// paints sections at all — `false` only for the multi-select

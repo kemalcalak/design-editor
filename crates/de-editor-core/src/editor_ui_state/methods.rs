@@ -355,9 +355,15 @@ impl EditorUiState {
         was
     }
 
-    /// Toggle the Interactions section's Navigate/Back/Remove popover.
-    pub fn toggle_interaction_menu(&mut self) {
-        self.interaction_menu_open = !self.interaction_menu_open;
+    /// Toggle the Interactions popover for `target`: a second press on
+    /// the same row closes it, a press on another row retargets it.
+    pub fn toggle_interaction_menu(
+        &mut self,
+        target: crate::interaction_edit::InteractionMenuTarget,
+    ) {
+        self.interaction_menu_open =
+            !(self.interaction_menu_open && self.interaction_menu_target == target);
+        self.interaction_menu_target = target;
         self.interaction_menu_hover = None;
     }
 

@@ -211,7 +211,16 @@ pub fn property_panel_content_height(
         false,
         false,
     );
-    let inputs = editable_input_rects(panel_rect, visible, fills, effects);
+    let mut inputs = editable_input_rects(panel_rect, visible, fills, effects);
+    inputs.extend(
+        crate::widgets::property_panel_motion::motion_input_rects_in_panel(
+            panel_rect,
+            visible,
+            effects,
+            fills,
+            interactions,
+        ),
+    );
     let bottom = actions
         .iter()
         .map(|(_, r)| r.origin.y + r.size.y)

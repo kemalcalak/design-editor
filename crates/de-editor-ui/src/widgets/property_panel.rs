@@ -137,9 +137,10 @@ pub struct PropertyPanel {
     /// Whether the Effects "+" add-menu is
     /// open.
     pub effect_add_picker_open: bool,
-    /// Whether the Interactions section's Navigate/Back/Remove popover
-    /// is open.
+    /// Whether the shared Interactions / Motion popover is open.
     pub interaction_menu_open: bool,
+    /// Which list the open popover shows (#154).
+    pub interaction_menu_target: de_editor_core::interaction_edit::InteractionMenuTarget,
     /// Row index hovered in the open Interactions popover (`None` =
     /// none).
     pub interaction_menu_hover: Option<usize>,
