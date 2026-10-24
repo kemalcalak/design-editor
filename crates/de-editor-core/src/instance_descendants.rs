@@ -27,6 +27,23 @@ use serde_json::{Map, Value};
 /// Separator between the segments of a descendant id path.
 pub const PATH_SEPARATOR: char = '/';
 
+/// The node key listing typed fields bound to design variables
+/// (`PenNodeBase::variable_bindings`).
+const VARIABLE_BINDINGS: &str = "variableBindings";
+
+/// Spread one override key onto `node`. Variable bindings merge per field
+/// instead of replacing the node's whole map, so an override that binds
+/// one field keeps the node's other bindings.
+pub fn merge_override_key(node: &mut Map<String, Value>, key: &str, value: &Value) {
+    if key == VARIABLE_BINDINGS {
+        if let (Some(Value::Object(own)), Value::Object(added)) = (node.get_mut(key), value) {
+            own.extend(added.iter().map(|(k, v)| (k.clone(), v.clone())));
+            return;
+        }
+    }
+    node.insert(key.to_owned(), value.clone());
+}
+
 /// True when a `descendants` entry replaces its node instead of patching
 /// it (pen.dev: "`type` is present = replacement").
 pub fn is_replacement(entry: &Value) -> bool {
@@ -110,7 +127,7 @@ pub fn apply_entry(child: &Value, overrides: Option<&Map<String, Value>>) -> Val
                 patch_nested_instance_root(&mut mapped, patch);
             } else {
                 for (key, value) in patch {
-                    mapped.insert(key.clone(), value.clone());
+                    merge_override_key(&mut mapped, key, value);
                 }
             }
             mapped
@@ -169,7 +186,9 @@ fn patch_nested_instance_root(ref_map: &mut Map<String, Value>, patch: &Map<Stri
         .entry(target)
         .or_insert_with(|| Value::Object(Map::new()));
     if let Value::Object(top) = top {
-        top.extend(rest);
+        for (key, value) in &rest {
+            merge_override_key(top, key, value);
+        }
     }
 }
 
