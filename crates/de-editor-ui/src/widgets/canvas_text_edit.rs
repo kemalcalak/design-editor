@@ -6,8 +6,9 @@
 //! painter uses (`canvas_viewport_paint::paint_text_node` calls it
 //! too), so caret xy, selection rects, and click-to-caret hit-testing
 //! all agree with the painted glyphs: same CJK-aware wrap
-//! (`canvas_text_wrap::wrap_text`, in the node's own face), same wrap-width tolerance,
-//! same per-line alignment, same letter-spacing advance model.
+//! (`canvas_text_wrap::wrap_text`, in the node's own face), same
+//! wrap-width tolerance, same per-line alignment, same letter-spacing
+//! advance model.
 //!
 //! All geometry is in DOCUMENT space (the painter applies the
 //! viewport transform as a canvas transform); the host converts
