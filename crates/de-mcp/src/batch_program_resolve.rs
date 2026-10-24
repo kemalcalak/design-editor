@@ -128,6 +128,61 @@ pub(crate) fn find_node_by_path<'a>(
     Some(current)
 }
 
+/// pen.dev's `instanceId/childId` path (any nesting depth): a node that
+/// exists only once the instance expands, written through the instance's
+/// `descendants` (#166). Tried as written first, then with every segment
+/// translated through the alias table (ids the program minted).
+pub(crate) fn find_instance_descendant(
+    state: &EditorState,
+    path: &str,
+    alias: &BTreeMap<String, String>,
+) -> Option<de_editor_core::InstanceDescendant> {
+    if !path.contains('/') {
+        return None;
+    }
+    let locate = |path: &str| {
+        de_editor_core::instance_anchor::locate_document_path(
+            state.active_children(),
+            &state.doc,
+            path,
+        )
+    };
+    locate(path).or_else(|| {
+        let translated: Vec<String> = path.split('/').map(|s| lookup_id(s, alias)).collect();
+        locate(&translated.join("/"))
+    })
+}
+
+/// The program-visible path of a node minted into the owned content of
+/// `parent` (a located instance descendant): `instance/prefix/new_id`, so a
+/// later line can insert into or update it.
+pub(crate) fn instance_child_path(
+    parent: &de_editor_core::InstanceDescendant,
+    new_id: &str,
+) -> String {
+    let path = parent.target.path();
+    let prefix = path.rsplit_once('/').map_or("", |(prefix, _)| prefix);
+    if prefix.is_empty() {
+        format!("{}/{new_id}", parent.ref_id.as_str())
+    } else {
+        format!("{}/{prefix}/{new_id}", parent.ref_id.as_str())
+    }
+}
+
+/// Emit-ready instance edit for a located descendant.
+pub(crate) fn instance_edit_command(
+    hit: &de_editor_core::InstanceDescendant,
+    edit: de_editor_core::InstanceEdit,
+    page_id: Option<String>,
+) -> EditorCommand {
+    EditorCommand::EditInstanceDescendant {
+        instance_id: hit.ref_id.clone(),
+        path: hit.target.path(),
+        edit,
+        page_id,
+    }
+}
+
 // --- Small helpers ------------------------------------------------------
 
 pub(crate) fn parent_node_id(parent: Option<&str>) -> NodeId {

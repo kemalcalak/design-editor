@@ -432,3 +432,62 @@ fn measured_truncation_stays_inside_its_budget() {
     assert!(measure(&output) <= 98.0, "{output:?}");
     assert_eq!(truncate_to_width_measured("abc", 0.0, measure), "");
 }
+
+/// #190: the tail lists Present with its chord after Redo, on every host;
+/// the row is hit where it paints and maps to the Present step.
+#[test]
+fn the_tail_lists_present_with_its_shortcut() {
+    let ui = EditorUiState::default();
+    let menu = FileMenu::for_editor_ui(&ui, Vec::new());
+    let panel = menu_panel(&menu);
+    let mut backend = TextCaptureBackend::default();
+    {
+        let mut cx = PaintCx {
+            backend: &mut backend,
+        };
+        menu.paint(&mut cx, panel);
+    }
+    let present = de_i18n::translate(ui.effective_locale(), "workspace.present");
+    let (_, label_at) = backend
+        .texts
+        .iter()
+        .find(|(text, _)| text == present)
+        .expect("Present row painted");
+    let (_, chord_at) = backend
+        .texts
+        .iter()
+        .find(|(text, _)| *text == paint::platform_chord("⌘↩"))
+        .expect("chord painted");
+    assert!((label_at.y - chord_at.y).abs() < 2.0, "same row");
+    let row_point = Point2D::new(panel.origin.x + 20.0, label_at.y - 4.0);
+    let MenuHit::Row(row) = menu.hit(panel, row_point) else {
+        panic!("Present row is hit");
+    };
+    assert_eq!(menu.choice_for_row(row), Some(FileMenuChoice::Present));
+    let mut state = de_editor_core::EditorState::default();
+    state.editor_ui.file_menu_open = true;
+    assert_eq!(
+        crate::widgets::press_flow::apply_file_menu_app_choice(
+            &mut state,
+            FileMenuChoice::Present,
+            0
+        ),
+        Some(crate::widgets::press_flow::FileMenuStep::Present)
+    );
+    assert!(!state.editor_ui.file_menu_open);
+}
+
+/// #190: Windows and Linux spell the chords with Ctrl.
+#[test]
+fn chords_use_the_platform_modifier() {
+    let present = paint::platform_chord("⌘↩");
+    let redo = paint::platform_chord("⌘⇧Z");
+    if cfg!(any(target_os = "windows", target_os = "linux")) {
+        assert_eq!(
+            (present.as_ref(), redo.as_ref()),
+            ("Ctrl+Enter", "Ctrl+Shift+Z")
+        );
+    } else {
+        assert_eq!((present.as_ref(), redo.as_ref()), ("⌘↩", "⌘⇧Z"));
+    }
+}

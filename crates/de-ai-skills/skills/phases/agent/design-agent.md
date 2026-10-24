@@ -76,7 +76,9 @@ Call `batch_get` to read the structure of any component or section you plan to r
 
 ### Step 6 — Understand the canvas layout
 
-Call `snapshot_layout` to inspect the current bounding boxes, hierarchy, and free space before inserting new frames. This prevents you from placing new content on top of existing frames.
+Call `snapshot_layout` to inspect the current bounding boxes, hierarchy, and free space before inserting new frames. This prevents you from placing new content on top of existing frames. An entry with `problems: "partially clipped"` or `"fully clipped"` sticks out of a clipping ancestor (`clipContent`) and is cut off on the canvas: fix its size or position, or the ancestor's, instead of guessing from the boxes.
+
+To read the real values of a component or section, call `read_nodes` with `resolveVariables: true` (computed colours and numbers instead of `$variable` references) and `resolveInstances: true` (component instances expanded into their full subtree). Nodes inside an instance then carry `instanceId/childId` ids; pass that path to `U(...)` to override that child on this instance only. Path outlines are left out unless you pass `includePathGeometry: true`.
 
 ### Step 7 — Generate nodes with `batch_design`'s `script` mode (THE build protocol)
 
@@ -136,7 +138,7 @@ One operation per line. Bindings let later lines reference nodes created earlier
 | Operation | Syntax | Effect |
 |-----------|--------|--------|
 | Insert | `name=I(parent, {...node...})` | Create a new node. `parent` is a node id, a binding from this batch, or `document`/`root`. |
-| Update | `U(idOrPath, {...updates...})` | Update fields on an existing node. |
+| Update | `U(idOrPath, {...updates...})` | Update fields on an existing node. An `instanceId/childId` path (from `read_nodes` with `resolveInstances`) overrides that child on one instance; only `U` takes such a path. |
 | Copy | `C(id, parent, {overrides})` | Copy a node to a new parent with optional overrides. Returns a **new** id. After a copy always reference the new id from the result — NEVER the old descendant ids. |
 | Replace | `R(idOrPath, {...node...})` | Replace a node in place. |
 | Delete | `D(id)` | Delete a node. |

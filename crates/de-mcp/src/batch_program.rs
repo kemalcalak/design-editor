@@ -73,10 +73,12 @@ use super::{EditorCommand, ToolOutcome};
 use super::batch_program_exec_ops::{
     execute_copy, execute_image, execute_kit_instantiate, execute_replace,
 };
+use super::batch_program_instance::execute_instance_insert;
 use super::batch_program_parse::{parse_json_arg, parse_node_json, regex};
 use super::batch_program_resolve::{
-    count_forest, find_node_by_path, line_preview, lookup_id, parent_node_id, resolve_page_index,
-    resolve_parent_ref, resolve_path_expr, resolve_ref, strip_outer_quotes, with_page_id,
+    count_forest, find_instance_descendant, find_node_by_path, instance_edit_command, line_preview,
+    lookup_id, parent_node_id, resolve_page_index, resolve_parent_ref, resolve_path_expr,
+    resolve_ref, strip_outer_quotes, with_page_id,
 };
 
 /// Every fallible step of the executor fails with [`ProgramError`].
@@ -99,31 +101,9 @@ pub(crate) fn run_batch_design_program(
         .map(|raw| matches!(raw.trim(), "true" | "1"))
         .unwrap_or(false);
     let lines = split_operations(operations);
-    let mut ctx = ProgramCtx {
-        sim: snapshot.clone(),
-        page_id: page_id.clone(),
-        bindings: BTreeMap::new(),
-        alias: BTreeMap::new(),
-        results: Vec::new(),
-        commands: Vec::new(),
-        post_process,
-        auto_seq: 0,
-        current_line: 0,
-        explicitly_sized_append_lines: explicitly_sized_append_lines(&lines),
-        replaceable_empty_root_ids: Vec::new(),
-        id_high_water: 0,
-    };
-    // Pin the sim's active page to the requested page so sim READS
-    // (path lookups, node counts) see the same children every emitted
-    // command targets via its `page_id` field. An unknown page id is
-    // left to per-command apply rejection (consistent per-line errors).
-    if let Some(raw) = page_id.as_deref() {
-        if let Some(index) = resolve_page_index(&ctx.sim, raw) {
-            let _ = ctx.sim.apply(EditorCommand::SetActivePage {
-                index: index as u32,
-            });
-        }
-    }
+    let mut ctx = ProgramCtx::new(snapshot, page_id);
+    ctx.post_process = post_process;
+    ctx.explicitly_sized_append_lines = explicitly_sized_append_lines(&lines);
     // Only roots that were empty BEFORE this program began are starter
     // placeholders. An empty root inserted by an earlier line is a real
     // sibling screen, not a new placeholder for the next I(null, ...) line.
@@ -274,6 +254,37 @@ pub(crate) struct ProgramCtx {
 }
 
 impl ProgramCtx {
+    /// A context simulating on a clone of `snapshot`, its active page pinned
+    /// to `page_id` so sim READS (path lookups, node counts) see the same
+    /// children every emitted command targets via its `page_id` field. An
+    /// unknown page id is left to per-command apply rejection (consistent
+    /// per-line errors).
+    pub(crate) fn new(snapshot: &EditorState, page_id: Option<String>) -> Self {
+        let mut sim = snapshot.clone();
+        if let Some(index) = page_id
+            .as_deref()
+            .and_then(|raw| resolve_page_index(&sim, raw))
+        {
+            let _ = sim.apply(EditorCommand::SetActivePage {
+                index: index as u32,
+            });
+        }
+        Self {
+            sim,
+            page_id,
+            bindings: BTreeMap::new(),
+            alias: BTreeMap::new(),
+            results: Vec::new(),
+            commands: Vec::new(),
+            post_process: false,
+            auto_seq: 0,
+            current_line: 0,
+            explicitly_sized_append_lines: BTreeSet::new(),
+            replaceable_empty_root_ids: Vec::new(),
+            id_high_water: 0,
+        }
+    }
+
     /// Emit `cmd` AND apply it to the sim. The sim apply is the line's
     /// final validation gate — the host will run the same code.
     pub(crate) fn emit(&mut self, cmd: EditorCommand, failure: &str) -> Result<()> {
@@ -324,8 +335,9 @@ impl ProgramCtx {
     }
 }
 
-/// TS `executeLine` — one DSL operation.
-fn execute_line(line: &str, ctx: &mut ProgramCtx) -> Result<()> {
+/// TS `executeLine` — one DSL operation. Also the write path of the
+/// `execute` script tool (`script_execute.rs`), one call per operation.
+pub(crate) fn execute_line(line: &str, ctx: &mut ProgramCtx) -> Result<()> {
     // Strip a trailing statement/list separator before the grammar sees the
     // line: the patterns below all anchor on `\)$`, so one stray `,` makes
     // the operation unparsable. A model that reaches for a separator writes
@@ -501,8 +513,22 @@ fn execute_insert(binding: &str, args: &str, ctx: &mut ProgramCtx) -> Result<()>
     let comma = find_top_level_char(args, ',')
         .ok_or_else(|| ProgramError::Syntax("Insert requires parent and node data".into()))?;
     let parent_raw = args[..comma].trim();
-    let parent = resolve_parent_ref(parent_raw, &ctx.bindings);
+    let parent = if parent_raw.contains('+') {
+        Some(resolve_path_expr(parent_raw, &ctx.bindings))
+    } else {
+        resolve_parent_ref(parent_raw, &ctx.bindings)
+    };
     let mut node = parse_node_json(&args[comma + 1..], ctx.post_process, parent.is_none())?;
+    if let Some(hit) = parent
+        .as_deref()
+        .filter(|path| {
+            path.contains('/')
+                && find_node_by_path(ctx.sim.active_children(), path, &ctx.alias).is_none()
+        })
+        .and_then(|path| find_instance_descendant(&ctx.sim, path, &ctx.alias))
+    {
+        return execute_instance_insert(binding, node, &hit, ctx);
+    }
     delete_superseded_draft(binding, parent.as_deref(), &node, ctx);
 
     // TS auto-replace: a root-level frame insert replaces the first EMPTY
@@ -594,9 +620,16 @@ fn execute_update(args: &str, ctx: &mut ProgramCtx) -> Result<()> {
     let mut value = parse_json_arg(&args[comma + 1..])?;
     normalize_node_shape(&mut value);
     let Some(target) = find_node_by_path(ctx.sim.active_children(), &path, &ctx.alias) else {
-        return Err(ProgramError::NotFound(format!(
-            "Update target not found: {path}"
-        )));
+        let Some(hit) = find_instance_descendant(&ctx.sim, &path, &ctx.alias) else {
+            return Err(ProgramError::NotFound(format!(
+                "Update target not found: {path}"
+            )));
+        };
+        let edit = de_editor_core::InstanceEdit::Patch {
+            patch_json: value.to_string(),
+        };
+        let cmd = instance_edit_command(&hit, edit, ctx.page_id.clone());
+        return ctx.emit(cmd, &format!("Update failed for: {path}"));
     };
     let node_id = NodeId::new(target.id_str());
     // `batch_direct_ops` is shared with the non-program write paths and is

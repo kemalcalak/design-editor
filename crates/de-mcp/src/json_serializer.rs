@@ -42,21 +42,21 @@ pub fn response_to_json(r: &ToolResponse) -> String {
 /// failures, still emitted via [`response_to_json`]). External MCP clients
 /// (Claude Code / Codex) require this envelope.
 ///
-/// When `image` is `Some`, an MCP `ImageContent` block is emitted BEFORE
-/// any text block so vision-capable MCP clients receive the image as
-/// multimodal content instead of a base64 string buried in JSON text.
+/// Every entry of `images` becomes an MCP `ImageContent` block emitted
+/// BEFORE the text block so vision-capable MCP clients receive the images
+/// as multimodal content instead of base64 strings buried in JSON text.
 pub fn tool_response_to_json(r: &ToolResponse) -> String {
     let (id_repr, body) = match r {
         ToolResponse::Ok {
             id,
             result,
             json,
-            image,
+            images,
             ..
         } => {
             let mut content_blocks: Vec<String> = Vec::new();
-            // Image block first (when present) so vision models see it.
-            if let Some(img) = image {
+            // Image blocks first so vision models see them.
+            for img in images {
                 content_blocks.push(format!(
                     r#"{{"type":"image","data":{},"mimeType":{}}}"#,
                     json_escape(&img.data),

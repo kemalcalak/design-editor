@@ -60,6 +60,15 @@ const CHEVRON_SIZE: f32 = 12.0;
 const CHEVRON_GAP: f32 = 4.0;
 /// Padding inside a button, either side of its content.
 const BUTTON_PAD_X: f32 = 8.0;
+/// Side of the duration stepper's `−` and `+` targets on the Transition
+/// label line (#190).
+const STEPPER_BUTTON: f32 = 18.0;
+/// Width of the stepper's value column between them (`5000 ms`).
+const STEPPER_VALUE_W: f32 = 52.0;
+/// Alpha of a stepper end a press would not move.
+const STEPPER_DISABLED_ALPHA: f32 = 0.4;
+/// Gap between the Transition label and the stepper.
+const STEPPER_LABEL_GAP: f32 = 6.0;
 
 /// Height of one dropdown row — the same 30 px the export quick menu
 /// and the file menu use, so every menu in the app scans alike.
@@ -110,6 +119,12 @@ pub struct SlidesActionLayout {
     pub transition_cells: Vec<Rect>,
     /// The kind every targeted slide shares (`None` = mixed): the lit cell.
     pub transition: Option<SlideTransitionKind>,
+    /// The duration stepper's `−`, value and `+` rects, right-aligned on
+    /// the Transition label line; `None` while it is hidden (mixed kinds
+    /// or none).
+    pub duration_stepper: Option<[Rect; 3]>,
+    /// The duration it shows, in ms.
+    pub transition_duration_ms: Option<u64>,
     /// The dropdown's surface, when it is open.
     pub menu: Option<Rect>,
     /// How many of the listed slides the selection covers. Drives the
@@ -136,6 +151,9 @@ pub struct SlidesActionState {
     /// The slide transition the Transition row shows as set — see
     /// `EditorState::slides_transition_kind`.
     pub transition: Option<SlideTransitionKind>,
+    /// The duration the stepper shows, `None` to hide it — see
+    /// `EditorState::slides_transition_duration`.
+    pub transition_duration_ms: Option<u64>,
 }
 
 impl SlidesActionLayout {
@@ -173,6 +191,24 @@ impl SlidesActionLayout {
             transition_row,
             TRANSITION_KINDS.len(),
         );
+        let duration_stepper = actions.transition_duration_ms.map(|_| {
+            // Ends where the label line ends, 2 px above the cells.
+            let y = transition_row.origin.y - TRANSITION_LABEL_H - 2.0;
+            let right = x + inner_w;
+            let plus = Rect {
+                origin: Point2D::new(right - STEPPER_BUTTON, y),
+                size: Point2D::new(STEPPER_BUTTON, STEPPER_BUTTON),
+            };
+            let value = Rect {
+                origin: Point2D::new(plus.origin.x - STEPPER_VALUE_W, y),
+                size: Point2D::new(STEPPER_VALUE_W, STEPPER_BUTTON),
+            };
+            let minus = Rect {
+                origin: Point2D::new(value.origin.x - STEPPER_BUTTON, y),
+                size: Point2D::new(STEPPER_BUTTON, STEPPER_BUTTON),
+            };
+            [minus, value, plus]
+        });
         let present = Rect {
             origin: Point2D::new(x, y),
             size: Point2D::new(half, BUTTON_H),
@@ -204,6 +240,8 @@ impl SlidesActionLayout {
             export,
             transition_cells,
             transition: actions.transition,
+            duration_stepper,
+            transition_duration_ms: actions.transition_duration_ms,
             menu,
             selected_slides: actions.selected_slides,
             selected_enabled,
@@ -254,6 +292,14 @@ impl SlidesActionLayout {
             .find_map(|(kind, cell)| contains(*cell, point).then_some(*kind))
         {
             return Some(SlidesPanelTarget::Transition(kind));
+        }
+        if let Some([minus, _, plus]) = self.duration_stepper {
+            if contains(minus, point) {
+                return Some(SlidesPanelTarget::TransitionDuration { longer: false });
+            }
+            if contains(plus, point) {
+                return Some(SlidesPanelTarget::TransitionDuration { longer: true });
+            }
         }
         if contains(self.present, point) {
             return Some(SlidesPanelTarget::Present);
@@ -324,9 +370,18 @@ fn paint_transition_row(
         origin: first.origin,
         size: Point2D::new(last.origin.x + last.size.x - first.origin.x, first.size.y),
     };
+    // The label stops short of the duration stepper when it shows.
+    let label_right = layout
+        .duration_stepper
+        .map_or(row.origin.x + row.size.x, |[minus, ..]| {
+            minus.origin.x - STEPPER_LABEL_GAP
+        });
     let label_rect = Rect {
         origin: Point2D::new(row.origin.x, row.origin.y - TRANSITION_LABEL_H),
-        size: Point2D::new(row.size.x, TRANSITION_LABEL_H - 2.0),
+        size: Point2D::new(
+            (label_right - row.origin.x).max(0.0),
+            TRANSITION_LABEL_H - 2.0,
+        ),
     };
     let label = crate::widgets::file_menu::truncate_to_width(
         cx,
@@ -347,6 +402,7 @@ fn paint_transition_row(
             centered_text_baseline_y(label_rect, LABEL_FONT),
         ),
     );
+    paint_duration_stepper(cx, theme, layout);
     let active = layout
         .transition
         .and_then(|kind| TRANSITION_KINDS.iter().position(|k| *k == kind));
@@ -357,6 +413,67 @@ fn paint_transition_row(
         &labels.transition_kinds,
         active,
         11.0,
+    );
+}
+
+/// `−  400 ms  +` on the Transition label line (#190).
+fn paint_duration_stepper(cx: &mut PaintCx<'_>, theme: &Theme, layout: &SlidesActionLayout) {
+    let (Some([minus, value, plus]), Some(ms)) =
+        (layout.duration_stepper, layout.transition_duration_ms)
+    else {
+        return;
+    };
+    const GLYPH: f32 = 12.0;
+    // Same look as the mesh Rows / Columns stepper: one muted well, and a
+    // dimmed end that a press would not move.
+    let well = Rect {
+        origin: minus.origin,
+        size: Point2D::new(plus.origin.x + plus.size.x - minus.origin.x, minus.size.y),
+    };
+    cx.backend.fill_round_rect(well, BUTTON_RADIUS, theme.muted);
+    for (icon, rect, enabled) in [
+        (
+            Icon::Minus,
+            minus,
+            ms > de_editor_core::slide_transition::SLIDE_TRANSITION_MIN_MS,
+        ),
+        (
+            Icon::Plus,
+            plus,
+            ms < de_editor_core::slide_transition::SLIDE_TRANSITION_MAX_MS,
+        ),
+    ] {
+        let color = if enabled {
+            theme.foreground
+        } else {
+            crate::util::alpha(theme.muted_foreground, STEPPER_DISABLED_ALPHA)
+        };
+        draw_icon(
+            cx.backend,
+            icon,
+            Point2D::new(
+                rect.origin.x + (rect.size.x - GLYPH) / 2.0,
+                rect.origin.y + (rect.size.y - GLYPH) / 2.0,
+            ),
+            GLYPH,
+            color,
+            1.4,
+        );
+    }
+    let text = format!("{ms} ms");
+    let text_w = text_metrics::measure_chrome(cx.backend, &text, LABEL_FONT);
+    cx.backend.draw_text(
+        &TextLayout::single_run(
+            &text,
+            "system-ui",
+            LABEL_FONT,
+            theme.foreground.to_jian(),
+            Point2D::ZERO,
+        ),
+        Point2D::new(
+            value.origin.x + (value.size.x - text_w) / 2.0,
+            centered_text_baseline_y(value, LABEL_FONT),
+        ),
     );
 }
 

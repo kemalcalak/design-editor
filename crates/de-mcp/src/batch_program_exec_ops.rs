@@ -14,10 +14,11 @@ use super::batch_design::{find_top_level_char, normalize_node_shape};
 use super::batch_direct_ops::split_top_level_args;
 use super::batch_program::{ProgramCtx, Result};
 use super::batch_program_error::ProgramError;
+use super::batch_program_instance::execute_instance_replace;
 use super::batch_program_parse::{parse_json_arg, parse_node_json, parse_string_arg};
 use super::batch_program_resolve::{
-    find_node_by_path, lookup_id, parent_node_id, resolve_kit_component_id, resolve_parent_ref,
-    resolve_path_expr, resolve_ref,
+    find_instance_descendant, find_node_by_path, lookup_id, parent_node_id,
+    resolve_kit_component_id, resolve_parent_ref, resolve_path_expr, resolve_ref,
 };
 use super::EditorCommand;
 
@@ -166,9 +167,13 @@ pub(crate) fn execute_replace(binding: &str, args: &str, ctx: &mut ProgramCtx) -
     let path_raw = args[..comma].trim();
     let path = resolve_path_expr(path_raw, &ctx.bindings);
     let Some(old) = find_node_by_path(ctx.sim.active_children(), &path, &ctx.alias) else {
-        return Err(ProgramError::NotFound(format!(
-            "Replace target not found: {path}"
-        )));
+        let Some(hit) = find_instance_descendant(&ctx.sim, &path, &ctx.alias) else {
+            return Err(ProgramError::NotFound(format!(
+                "Replace target not found: {path}"
+            )));
+        };
+        let node = parse_node_json(&args[comma + 1..], ctx.post_process, false)?;
+        return execute_instance_replace(binding, node, &hit, &path, ctx);
     };
     let old_id = old.id_str().to_string();
     let replaces_document_root = ctx

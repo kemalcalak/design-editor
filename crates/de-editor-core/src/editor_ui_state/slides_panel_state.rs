@@ -91,6 +91,9 @@ pub enum SlidesPanelTarget {
     /// A cell of the action bar's Transition row (#158): set this slide
     /// transition on the selected slides, or on the whole deck.
     Transition(jian_ops_schema::motion::SlideTransitionKind),
+    /// The Transition row's duration stepper (#190): one step longer
+    /// (`+`) or shorter (`−`) on the same slides.
+    TransitionDuration { longer: bool },
 }
 
 impl LeftPanelTab {
