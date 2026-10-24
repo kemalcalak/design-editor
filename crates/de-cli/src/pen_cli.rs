@@ -94,8 +94,10 @@ mod tests {
             run_import_pen(pen.to_str().unwrap(), out.to_str().unwrap()).expect("import succeeds");
         let result: serde_json::Value = serde_json::from_str(&result).unwrap();
         assert_eq!(result["sourceVersion"], "2.21");
-        assert_eq!(result["unsupported"]["note"], 1);
+        // Notes import as canvas-only annotations (#12).
+        assert!(result["unsupported"].get("note").is_none());
         let written = std::fs::read_to_string(&out).unwrap();
+        assert!(written.contains("\"type\": \"note\""), "{written}");
         assert!(written.contains("\"layout\": \"horizontal\""));
         // The image lands in the output's asset folder, named by path.
         let files: Vec<_> = std::fs::read_dir(dir.join("design.assets"))
