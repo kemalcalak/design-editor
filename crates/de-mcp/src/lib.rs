@@ -50,6 +50,7 @@ mod batch_page;
 mod batch_program;
 mod batch_program_error;
 mod batch_program_exec_ops;
+mod batch_program_instance;
 pub mod batch_program_objects;
 mod batch_program_parse;
 #[cfg(test)]
@@ -116,6 +117,7 @@ mod import_snapshot_tool_tests;
 mod insert_node_args;
 mod insert_node_data;
 pub mod json_serializer;
+mod layout_problems;
 pub mod library_tools;
 pub mod lint_tools;
 #[cfg(test)]
@@ -130,6 +132,8 @@ mod open_document_tests;
 pub mod page_tools;
 pub mod parser;
 pub mod read_nodes;
+#[cfg(test)]
+mod read_nodes_resolve_tests;
 #[cfg(test)]
 mod read_nodes_tests;
 pub mod read_tools;

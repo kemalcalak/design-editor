@@ -555,7 +555,7 @@ require_workflow_job_regex build \
     '^[[:space:]]*needs:[[:space:]]*\[version,[[:space:]]*rust-check,[[:space:]]*version-sync\][[:space:]]*$' \
     'build must wait for the version preflight and the required checks'
 require_workflow_job_regex publish \
-    '^[[:space:]]*needs:[[:space:]]*\[version,[[:space:]]*build\][[:space:]]*$' \
+    '^[[:space:]]*needs:[[:space:]]*\[version,[[:space:]]*build(,[[:space:]]*linux-smoke)?\][[:space:]]*$' \
     'publish must wait for the version preflight and every build'
 for version_consumer in build publish; do
     require_workflow_job_regex "$version_consumer" \

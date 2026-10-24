@@ -109,8 +109,12 @@ mod image_fill_upload;
 pub mod image_node_props;
 pub mod image_panel_state;
 pub mod ime_state;
+pub mod instance_anchor;
 mod instance_child_override;
+pub mod instance_descendants;
+pub mod instance_edit;
 pub mod instance_override;
+pub mod instance_path;
 pub mod interaction_edit;
 pub mod mesh_lattice;
 pub mod missing_fonts;
@@ -151,6 +155,7 @@ pub mod shader_effects;
 pub mod shader_images;
 pub mod shader_presets;
 pub mod shader_source_editor;
+pub mod shader_textures;
 pub mod shader_uniform_specs;
 pub mod slide_transition;
 pub mod star_shape;
@@ -371,6 +376,8 @@ pub use image_crop::{
     translate_primary_image_crop,
 };
 pub use image_node_props::image_node_summary;
+pub use instance_anchor::{DescendantTarget, InstanceDescendant};
+pub use instance_edit::InstanceEdit;
 pub use instance_override::{
     apply_instance_override, resolve_instance_display_node,
     resolve_instance_display_node_for_anchor, split_instance_child_anchor, InstanceWriteScope,

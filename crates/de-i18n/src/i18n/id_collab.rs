@@ -342,6 +342,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "shader.sourceTitle" => "Kode shader",
         "shader.close" => "Tutup",
         "shader.apply" => "Terapkan",
+        "property.resetOverride" => "Atur ulang penimpaan",
         "componentBrowser.libraries" => "Pustaka",
         "componentBrowser.libraryNotLoaded" => "Belum dimuat",
         "componentBrowser.libraryMissing" => "Tidak ada",

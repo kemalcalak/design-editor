@@ -342,6 +342,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "shader.sourceTitle" => "Código del shader",
         "shader.close" => "Cerrar",
         "shader.apply" => "Aplicar",
+        "property.resetOverride" => "Restablecer cambio",
         "componentBrowser.libraries" => "Bibliotecas",
         "componentBrowser.libraryNotLoaded" => "Sin cargar",
         "componentBrowser.libraryMissing" => "No encontrada",

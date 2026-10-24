@@ -342,6 +342,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "shader.sourceTitle" => "シェーダーコード",
         "shader.close" => "閉じる",
         "shader.apply" => "適用",
+        "property.resetOverride" => "オーバーライドをリセット",
         "componentBrowser.libraries" => "ライブラリ",
         "componentBrowser.libraryNotLoaded" => "未読み込み",
         "componentBrowser.libraryMissing" => "見つかりません",

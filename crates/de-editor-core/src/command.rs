@@ -177,6 +177,17 @@ pub enum EditorCommand {
         /// or legacy page index.
         page_id: Option<String>,
     },
+    /// Patch, replace, fill or reset one node inside a component instance
+    /// through the instance's `descendants` map (#166). `path` is the
+    /// node's id path inside the instance (`child`, `nested/leaf`).
+    EditInstanceDescendant {
+        instance_id: NodeId,
+        path: String,
+        edit: crate::instance_edit::InstanceEdit,
+        /// `None` edits on the active page; `Some` targets a page id
+        /// or legacy page index.
+        page_id: Option<String>,
+    },
     /// Remove a node + all its descendants.
     DeleteNode {
         node_id: NodeId,

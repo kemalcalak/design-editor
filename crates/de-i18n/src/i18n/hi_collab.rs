@@ -342,6 +342,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "shader.sourceTitle" => "शेडर कोड",
         "shader.close" => "बंद करें",
         "shader.apply" => "लागू करें",
+        "property.resetOverride" => "ओवरराइड रीसेट करें",
         "componentBrowser.libraries" => "लाइब्रेरी",
         "componentBrowser.libraryNotLoaded" => "लोड नहीं हुई",
         "componentBrowser.libraryMissing" => "नहीं मिली",

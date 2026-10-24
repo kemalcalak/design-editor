@@ -12,6 +12,7 @@ use jian_ops_schema::node::PenNode;
 use jian_scene::layout_scene::{NodeKind, SceneNode, ScenePage};
 use serde_json::{json, Map, Value};
 
+use super::layout_problems::{child_clip, clip_problem, Area};
 use super::tools::kind_label;
 use super::{McpTool, ToolErrorCode, ToolOutcome};
 
@@ -45,6 +46,9 @@ struct LayoutRecord {
     y: f64,
     w: f64,
     h: f64,
+    /// `"partially clipped"` / `"fully clipped"` when a clipping ancestor
+    /// hides part or all of the node (#169, pen.dev `ctx.problems`).
+    problems: Option<&'static str>,
 }
 
 #[derive(Clone)]
@@ -161,6 +165,9 @@ fn layout_entry_value(
     obj.insert("y".into(), js_number(record.y - offset.1));
     obj.insert("width".into(), js_number(record.w));
     obj.insert("height".into(), js_number(record.h));
+    if let Some(problems) = record.problems {
+        obj.insert("problems".into(), json!(problems));
+    }
     let children = layout_children_values(selected, &record.id, offset);
     if !children.is_empty() {
         obj.insert("children".into(), Value::Array(children));
@@ -303,7 +310,7 @@ fn page_layout_snapshots(state: &EditorState) -> (Vec<PageLayout>, String) {
                     let records = scene
                         .pages
                         .get(idx)
-                        .map(|scene_page| scene_layout_records(&scene_page.children, &meta))
+                        .map(|scene_page| scene_layout_records(&scene_page.children, &meta, None))
                         .unwrap_or_default();
                     PageLayout {
                         id: page.id.clone(),
@@ -319,7 +326,7 @@ fn page_layout_snapshots(state: &EditorState) -> (Vec<PageLayout>, String) {
             let records = scene
                 .pages
                 .first()
-                .map(|page| scene_layout_records(&page.children, &meta))
+                .map(|page| scene_layout_records(&page.children, &meta, None))
                 .unwrap_or_default();
             (
                 vec![PageLayout {
@@ -377,14 +384,18 @@ fn collect_node_meta(nodes: &[PenNode], out: &mut BTreeMap<String, NodeMeta>) {
     }
 }
 
+/// `clip` is the area the roots' clipping ancestors leave visible (`None` for
+/// page roots).
 fn scene_layout_records(
     roots: &[SceneNode],
     meta: &BTreeMap<String, NodeMeta>,
+    clip: Option<Area>,
 ) -> Vec<LayoutRecord> {
     fn walk(
         nodes: &[SceneNode],
         meta: &BTreeMap<String, NodeMeta>,
         ancestors: &[String],
+        clip: Option<Area>,
         depth: u32,
         out: &mut Vec<LayoutRecord>,
     ) {
@@ -404,16 +415,29 @@ fn scene_layout_records(
                 y: f64::from(bounds.origin.y),
                 w: f64::from(bounds.size.x),
                 h: f64::from(bounds.size.y),
+                problems: clip_problem(node, clip),
             });
             let mut child_ancestors = ancestors.to_vec();
             child_ancestors.push(id);
-            walk(&node.children, meta, &child_ancestors, depth + 1, out);
+            let clip = child_clip(node, clip);
+            walk(&node.children, meta, &child_ancestors, clip, depth + 1, out);
         }
     }
 
     let mut out = Vec::new();
-    walk(roots, meta, &[], 0, &mut out);
+    walk(roots, meta, &[], clip, 0, &mut out);
     out
+}
+
+/// The visible area `id`'s clipping ancestors leave it: `Some(clip)` once
+/// `id` is found under `nodes`, `None` when it is not there.
+fn clip_above(nodes: &[SceneNode], id: &str, clip: Option<Area>) -> Option<Option<Area>> {
+    nodes.iter().find_map(|node| {
+        if node.id == id {
+            return Some(clip);
+        }
+        clip_above(&node.children, id, child_clip(node, clip))
+    })
 }
 
 fn scene_kind_label(kind: &NodeKind) -> &str {
@@ -441,7 +465,8 @@ pub(crate) fn subtree_layout_value(page: &ScenePage, root: &PenNode, max_depth: 
     };
     let mut meta = BTreeMap::new();
     collect_node_meta(std::slice::from_ref(root), &mut meta);
-    let records = scene_layout_records(std::slice::from_ref(scene_root), &meta);
+    let clip = clip_above(&page.children, root.id_str(), None).flatten();
+    let records = scene_layout_records(std::slice::from_ref(scene_root), &meta, clip);
     let selected: Vec<&LayoutRecord> = records.iter().filter(|r| r.depth <= max_depth).collect();
     Value::Array(layout_children_values(&selected, "", (0.0, 0.0)))
 }

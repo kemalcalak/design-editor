@@ -50,6 +50,8 @@ pub(super) fn paint_fill_layers_with(
     if node.fill_layers.is_empty() {
         return false;
     }
+    // A shader fill's `background` child sees what is behind the stack.
+    let backdrop = super::canvas_shader_textures::capture_fill_backdrop(cx, node, world_rect);
 
     // Node opacity belongs to the assembled background, not to each paint.
     // A non-Normal layer also needs this transparent outer backdrop even at
@@ -65,19 +67,38 @@ pub(super) fn paint_fill_layers_with(
     }
     // Canonical fills are front-to-back, whereas raster painting proceeds
     // back-to-front. This keeps CSS's first background-image topmost.
-    for layer in node.fill_layers.iter().rev() {
+    for (slot, layer) in node.fill_layers.iter().enumerate().rev() {
         let blend_mode = layer.blend_mode();
         let isolated = blend_mode != ImageBlendMode::Normal;
         if isolated {
             cx.backend.push_composite_layer(world_rect, 1.0, blend_mode);
         }
-        paint_layer(cx, layer);
+        // A shader fill sampling the node, its backdrop or its SDF (#165).
+        match super::canvas_shader_textures::bind_fill_textures(
+            cx,
+            node,
+            world_rect,
+            slot,
+            backdrop,
+            &mut paint_layer,
+        ) {
+            Some((bound, made)) => {
+                paint_layer(cx, &bound);
+                for id in made {
+                    cx.backend.release_shader_texture(id);
+                }
+            }
+            None => paint_layer(cx, layer),
+        }
         if isolated {
             cx.backend.restore();
         }
     }
     if isolate_stack {
         cx.backend.restore();
+    }
+    if let Some(id) = backdrop {
+        cx.backend.release_shader_texture(id);
     }
     true
 }

@@ -70,6 +70,7 @@ fn batchable(cmd: &EditorCommand) -> bool {
         | C::InsertNode { .. }
         | C::UpdateNode { .. }
         | C::PatchNodeData { .. }
+        | C::EditInstanceDescendant { .. }
         | C::DeleteNode { .. }
         | C::MoveNode { .. }
         | C::CopyNode { .. }

@@ -78,6 +78,8 @@ impl EditorState {
             PropertyFocus::TransitionDuration => {
                 return self.set_selected_transition_duration(f64::from(value));
             }
+            // A hex colour: committed from the draft, never as a number.
+            PropertyFocus::MotionColor { .. } => return false,
             // Free text: committed from the draft, never as a number.
             PropertyFocus::InteractionUrl(_) => return false,
             PropertyFocus::ShaderUniform {
@@ -322,6 +324,7 @@ impl EditorState {
             | PropertyFocus::CornerBR
             | PropertyFocus::EffectRadius(_)
             | PropertyFocus::MotionValue { .. }
+            | PropertyFocus::MotionColor { .. }
             | PropertyFocus::TransitionDuration
             | PropertyFocus::InteractionUrl(_)
             | PropertyFocus::ShaderUniform { .. }

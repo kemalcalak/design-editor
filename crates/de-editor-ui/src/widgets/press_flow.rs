@@ -444,6 +444,9 @@ pub enum FileMenuStep {
     Fullscreen,
     /// Toggle the Git panel — the host owns the repository scan.
     Git,
+    /// Present the active page — the host's `toggle_present`, the same
+    /// call as the Cmd/Ctrl+Enter key arm.
+    Present,
 }
 
 /// Apply the File-menu choices that moved there from the retired title
@@ -461,6 +464,7 @@ pub fn apply_file_menu_app_choice(
         }
         FileMenuChoice::Undo => FileMenuStep::Toolbar(ToolbarAction::Undo),
         FileMenuChoice::Redo => FileMenuStep::Toolbar(ToolbarAction::Redo),
+        FileMenuChoice::Present => FileMenuStep::Present,
         FileMenuChoice::Tool(tool) => apply_file_menu_tool(state, tool, now_ms),
         _ => return None,
     };

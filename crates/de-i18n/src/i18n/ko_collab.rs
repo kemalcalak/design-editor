@@ -344,6 +344,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "shader.sourceTitle" => "셰이더 코드",
         "shader.close" => "닫기",
         "shader.apply" => "적용",
+        "property.resetOverride" => "재정의 초기화",
         "componentBrowser.libraries" => "라이브러리",
         "componentBrowser.libraryNotLoaded" => "로드 안 됨",
         "componentBrowser.libraryMissing" => "없음",

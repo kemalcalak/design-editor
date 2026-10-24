@@ -342,6 +342,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "shader.sourceTitle" => "Gölgelendirici kodu",
         "shader.close" => "Kapat",
         "shader.apply" => "Uygula",
+        "property.resetOverride" => "Geçersiz kılmayı sıfırla",
         "componentBrowser.libraries" => "Kütüphaneler",
         "componentBrowser.libraryNotLoaded" => "Yüklenmedi",
         "componentBrowser.libraryMissing" => "Bulunamadı",

@@ -44,7 +44,7 @@ use serde_json::{Map, Value};
 
 use super::glsl_bindings::{rename, Bindings, Use};
 use super::glsl_error::GlslError;
-use super::glsl_lex::{lex, next_significant, prev_significant, text, Kind, Token};
+use super::glsl_lex::{lex, next_significant, prev_significant, Kind, Token};
 use super::glsl_preprocess::preprocess;
 
 /// Where the shader runs: a fill paints the node, an effect post-processes
@@ -58,11 +58,15 @@ pub(crate) enum Stage {
 /// What a `sampler2D` uniform reads.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub(crate) enum Texture {
-    /// `pencil:object`: the node's own rendering (effects only).
+    /// `pencil:object`: the node's own rendering (in a fill, the fills
+    /// under it).
     Object,
-    /// `pencil:background`: what is painted behind the node (effects only).
+    /// `pencil:background`: what is painted behind the node.
     Background,
-    /// An image file or URL (fills only).
+    /// `@sdf`: the signed distance field of the node's shape (in an
+    /// effect, of the rendered content).
+    Sdf,
+    /// An image file or URL.
     Image(String),
 }
 
@@ -99,6 +103,14 @@ pub(crate) struct UserUniform {
 pub(crate) struct Translation {
     pub(crate) sksl: String,
     pub(crate) uniforms: Vec<UserUniform>,
+    /// Image children whose size the program reads (`textureSize`); the
+    /// import binds [`image_size_uniform`] for each.
+    pub(crate) sized_images: Vec<String>,
+}
+
+/// The uniform holding image child `child`'s pixel size.
+pub(crate) fn image_size_uniform(child: &str) -> String {
+    format!("pen_size_{child}")
 }
 
 /// GLSL type name → SkSL type name.
@@ -134,16 +146,18 @@ pub(crate) fn translate(
     let program = scan(&tokens)?;
     let mut bindings = Bindings::default();
     for decl in &program.uniforms {
-        bindings.declare(decl, stage, values)?;
+        bindings.declare(decl, values)?;
     }
-    bindings.check_textures(stage)?;
+    bindings.finish_children(stage);
     let mut out = Emitter {
         tokens: &tokens,
         program: &program,
         bindings: &bindings,
         sksl: String::new(),
+        sized: Vec::new(),
     };
     out.sksl.push_str(&bindings.prelude());
+    let prelude_end = out.sksl.len();
     if program.helper_discards {
         out.sksl.push_str("bool pen_Discard;\n");
     }
@@ -156,9 +170,25 @@ pub(crate) fn translate(
         );
     }
     out.emit(0, tokens.len())?;
+    // `textureSize` of an image reads a hidden uniform the import fills
+    // with the image's size.
+    let mut sized = out.sized;
+    sized.sort();
+    sized.dedup();
+    let declarations: String = sized
+        .iter()
+        .map(|child| {
+            format!(
+                "/** @internal */ uniform float2 {};\n",
+                image_size_uniform(child)
+            )
+        })
+        .collect();
+    out.sksl.insert_str(prelude_end, &declarations);
     Ok(Translation {
         sksl: out.sksl,
         uniforms: bindings.users,
+        sized_images: sized,
     })
 }
 
@@ -483,6 +513,8 @@ struct Emitter<'a> {
     program: &'a Program,
     bindings: &'a Bindings,
     sksl: String,
+    /// Image children `textureSize` reads.
+    sized: Vec<String>,
 }
 
 impl Emitter<'_> {
@@ -630,131 +662,11 @@ impl Emitter<'_> {
         }
         Ok(())
     }
-
-    /// The sampler named by the first argument of the call at `i`, the
-    /// argument ranges and the index after the call's `)`.
-    fn call_args(&self, i: usize) -> Result<SamplerCall<'_>, GlslError> {
-        let open = next_significant(self.tokens, i + 1)
-            .filter(|&j| self.tokens[j].is_punct('('))
-            .ok_or(GlslError::Unbalanced)?;
-        let close = matching(self.tokens, open, '(', ')')?;
-        let mut args = Vec::new();
-        let mut depth = 0i32;
-        let mut start = open + 1;
-        for j in open + 1..close {
-            let token = &self.tokens[j];
-            if token.is_punct('(') || token.is_punct('[') {
-                depth += 1;
-            } else if token.is_punct(')') || token.is_punct(']') {
-                depth -= 1;
-            } else if depth == 0 && token.is_punct(',') {
-                args.push((start, j));
-                start = j + 1;
-            }
-        }
-        args.push((start, close));
-        let sampler = text(&self.tokens[args[0].0..args[0].1]);
-        let sampler = self
-            .bindings
-            .uses
-            .get(sampler.trim())
-            .filter(|u| matches!(u, Use::Sampler { .. }))
-            .ok_or(GlslError::Unsupported(
-                "texture lookup on a non-uniform sampler",
-            ))?;
-        Ok(SamplerCall {
-            sampler,
-            args,
-            after: close + 1,
-        })
-    }
-
-    /// What `main` returns: the colour, or transparent once a helper
-    /// function discarded the fragment.
-    fn main_return(&self) -> String {
-        if self.program.helper_discards {
-            "return pen_Discard ? half4(0.0) : half4(pen_FragColor)".to_owned()
-        } else {
-            "return half4(pen_FragColor)".to_owned()
-        }
-    }
-
-    /// `gl_FragData[0]` → `pen_FragColor` (WebGL 1.0 has one draw buffer).
-    fn frag_data(&mut self, i: usize) -> Result<usize, GlslError> {
-        let words: Vec<usize> = (i + 1..self.tokens.len())
-            .filter(|&j| !self.tokens[j].is_trivia())
-            .take(3)
-            .collect();
-        let zero_index = words.len() == 3
-            && self.tokens[words[0]].is_punct('[')
-            && self.tokens[words[1]].text == "0"
-            && self.tokens[words[2]].is_punct(']');
-        if !zero_index {
-            return Err(GlslError::Unsupported(
-                "gl_FragData other than gl_FragData[0]",
-            ));
-        }
-        self.sksl.push_str("pen_FragColor");
-        Ok(words[2] + 1)
-    }
-
-    /// `gl_DepthRange.near | far | diff` → `0.0 | 1.0 | 1.0`.
-    fn depth_range(&mut self, i: usize) -> Result<usize, GlslError> {
-        let words: Vec<usize> = (i + 1..self.tokens.len())
-            .filter(|&j| !self.tokens[j].is_trivia())
-            .take(2)
-            .collect();
-        let value = (words.len() == 2 && self.tokens[words[0]].is_punct('.'))
-            .then(|| match self.tokens[words[1]].text.as_str() {
-                "near" => Some("0.0"),
-                "far" | "diff" => Some("1.0"),
-                _ => None,
-            })
-            .flatten()
-            .ok_or(GlslError::Unsupported("gl_DepthRange without a field"))?;
-        self.sksl.push_str(value);
-        Ok(words[1] + 1)
-    }
-
-    /// `texture2D(tex, uv[, bias])` → `tex.eval(pen_texel(uv))`;
-    /// `texture2DProj` divides by the last coordinate first.
-    fn texture_call(&mut self, i: usize, projective: bool) -> Result<usize, GlslError> {
-        let SamplerCall {
-            sampler,
-            args,
-            after,
-        } = self.call_args(i)?;
-        let Use::Sampler { child, .. } = sampler else {
-            unreachable!("call_args returns samplers only");
-        };
-        let Some(&(uv_lo, uv_hi)) = args.get(1) else {
-            return Err(GlslError::Unsupported("texture lookup without coordinates"));
-        };
-        let uv_lo = next_significant(self.tokens, uv_lo).map_or(uv_hi, |j| j.min(uv_hi));
-        self.sksl.push_str(&format!("{child}.eval(pen_texel("));
-        if projective {
-            self.sksl.push_str("pen_project(");
-        }
-        self.emit(uv_lo, uv_hi)?;
-        self.sksl.push_str(if projective { ")))" } else { "))" });
-        Ok(after)
-    }
-
-    /// `textureSize(tex, lod)` of the node or its backdrop → the node size.
-    fn texture_size(&mut self, i: usize) -> Result<usize, GlslError> {
-        let SamplerCall { sampler, after, .. } = self.call_args(i)?;
-        match sampler {
-            Use::Sampler {
-                texture: Texture::Object | Texture::Background,
-                ..
-            } => {
-                self.sksl.push_str("int2(size)");
-                Ok(after)
-            }
-            _ => Err(GlslError::Unsupported("textureSize of an image texture")),
-        }
-    }
 }
+
+// The built-in and texture call rewrites of `Emitter` (800-line cap).
+#[path = "glsl_calls.rs"]
+mod calls;
 
 #[cfg(test)]
 #[path = "glsl_tests.rs"]
