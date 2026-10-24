@@ -454,3 +454,7 @@ mod shader_effect_tests;
 
 #[cfg(test)]
 mod text_fill_tests;
+
+#[cfg(test)]
+#[path = "pen_shader_sampler_tests.rs"]
+mod pen_shader_sampler_tests;

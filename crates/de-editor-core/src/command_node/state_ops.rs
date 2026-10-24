@@ -103,6 +103,14 @@ impl EditorState {
         if !node_id.is_real() {
             return false;
         }
+        if let Some(anchor) = self.instance_path_write_anchor(node_id) {
+            // An `instance/child` path (#169): the same write, routed as an
+            // instance override on the authored Ref.
+            return crate::instance_override::apply_instance_override(self, &anchor, |state| {
+                state.cmd_update_node(&anchor, x, y, width, height, name, fill_hex)
+            })
+            .unwrap_or(false);
+        }
         // Pre-validate EVERY field before the mutable borrow + writes.
         if let Some(w) = width {
             if w < 0 {
@@ -154,6 +162,15 @@ impl EditorState {
         else {
             return false;
         };
+        if let Some(anchor) = self.instance_path_write_anchor(node_id) {
+            if crate::instance_path::patch_touches_structure(&patch) {
+                return false;
+            }
+            return crate::instance_override::apply_instance_override(self, &anchor, |state| {
+                state.cmd_patch_node_data(&anchor, patch_json)
+            })
+            .unwrap_or(false);
+        }
         let Some(current) = walkers::find_node(self.active_children(), node_id) else {
             return false;
         };

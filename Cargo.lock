@@ -1719,6 +1719,7 @@ dependencies = [
  "de-pen-loader",
  "glam",
  "jian-ops-schema",
+ "serde_json",
  "skia-safe",
 ]
 

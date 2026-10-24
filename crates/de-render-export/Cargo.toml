@@ -30,4 +30,5 @@ skia-safe = { version = "0.97.0", default-features = false, features = [
 
 [dev-dependencies]
 base64 = "0.22"
+serde_json = { workspace = true }
 jian-ops-schema = { path = "../../vendor/jian/crates/jian-ops-schema" }

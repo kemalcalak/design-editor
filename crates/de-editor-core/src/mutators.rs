@@ -278,7 +278,12 @@ impl EditorState {
     /// hides it.
     pub fn toggle_node_hidden(&mut self, id: &NodeId) -> bool {
         let Some(node) = find_node_mut(self.active_children_mut(), id) else {
-            return false;
+            // A node inside an instance (layer row of a replacement or slot
+            // content, #166): the flag is stored as the instance's override.
+            return crate::instance_override::apply_instance_override(self, id, |s| {
+                s.toggle_node_hidden(id)
+            })
+            .unwrap_or(false);
         };
         let base = node.base_mut();
         let now_visible = base.visible.unwrap_or(true);
@@ -289,7 +294,12 @@ impl EditorState {
     /// Toggle the `locked` flag on the node. True on success.
     pub fn toggle_node_locked(&mut self, id: &NodeId) -> bool {
         let Some(node) = find_node_mut(self.active_children_mut(), id) else {
-            return false;
+            // A node inside an instance (layer row of a replacement or slot
+            // content, #166): the flag is stored as the instance's override.
+            return crate::instance_override::apply_instance_override(self, id, |s| {
+                s.toggle_node_locked(id)
+            })
+            .unwrap_or(false);
         };
         let base = node.base_mut();
         base.locked = Some(!base.locked.unwrap_or(false));

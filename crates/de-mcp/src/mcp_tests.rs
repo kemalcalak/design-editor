@@ -97,7 +97,7 @@ fn response_to_json_ok_payload() {
         result,
         command: None,
         json: None,
-        image: None,
+        images: Vec::new(),
     };
     let j = response_to_json(&r);
     assert!(j.contains(r#""jsonrpc":"2.0""#));
@@ -130,7 +130,7 @@ fn tool_response_to_json_wraps_ok_in_mcp_content_envelope() {
         result,
         command: None,
         json: None,
-        image: None,
+        images: Vec::new(),
     };
     let j = tool_response_to_json(&r);
     assert!(j.contains(r#""id":7"#), "{j}");
@@ -150,7 +150,7 @@ fn ok_json_rides_verbatim_in_both_serializers() {
         result: BTreeMap::new(),
         command: None,
         json: Some(nested.to_string()),
-        image: None,
+        images: Vec::new(),
     };
     // tools/call envelope: text block holds the nested JSON verbatim.
     assert_eq!(tool_text(&tool_response_to_json(&r)), nested);
@@ -163,8 +163,8 @@ fn ok_json_rides_verbatim_in_both_serializers() {
 }
 
 #[test]
-fn tool_response_to_json_emits_image_content_block_when_image_is_some() {
-    // When `image` is `Some`, the serializer emits an ImageContent block
+fn tool_response_to_json_emits_image_content_block_when_an_image_is_present() {
+    // With an image present, the serializer emits an ImageContent block
     // BEFORE the text block so vision-capable MCP clients receive the
     // image as multimodal content.
     let r = ToolResponse::Ok {
@@ -172,10 +172,10 @@ fn tool_response_to_json_emits_image_content_block_when_image_is_some() {
         result: BTreeMap::new(),
         command: None,
         json: Some(r#"{"nodeId":"n1","format":"png"}"#.into()),
-        image: Some(Box::new(ImageContent {
+        images: vec![ImageContent {
             data: "iVBORw0KGgo=".into(),
             mime_type: "image/png".into(),
-        })),
+        }],
     };
     let j = tool_response_to_json(&r);
     // Parse the JSON-RPC envelope to verify structure.
@@ -206,10 +206,10 @@ fn tool_response_to_json_image_without_text_metadata_still_emits_blocks() {
         result: BTreeMap::new(),
         command: None,
         json: None,
-        image: Some(Box::new(ImageContent {
+        images: vec![ImageContent {
             data: "AAAA".into(),
             mime_type: "image/png".into(),
-        })),
+        }],
     };
     let j = tool_response_to_json(&r);
     assert!(j.contains(r#""type":"image""#), "{j}");
