@@ -1,134 +1,52 @@
 //! Virtual component-instance child lookup for inspector reads/writes.
 //!
-//! Canvas expansion gives every authored component descendant a
-//! render-only `refId__childId` anchor. This module validates that id
-//! against the real Ref + component tree and resolves the effective
-//! child without teaching generic document walkers about virtual nodes.
+//! Canvas expansion gives every rendered instance descendant a
+//! render-only anchor (`refId__childId`, `outer__inner__leaf` for a node
+//! of a nested instance). This module validates that id against the real
+//! Ref + component tree (via [`crate::instance_anchor`]) and resolves the
+//! effective node without teaching generic document walkers about virtual
+//! nodes.
 
+use crate::instance_anchor::{locate_anchor, InstanceDescendant};
 use crate::instance_override::resolve_instance_display_node;
 use crate::node_id::NodeId;
 use crate::pen_node_ext::PenNodeExt;
-use crate::walkers::find_node;
 use jian_ops_schema::node::PenNode;
 use jian_ops_schema::PenDocument;
 
-fn find_authored_node<'a>(doc: &'a PenDocument, id: &str) -> Option<&'a PenNode> {
-    fn walk<'a>(nodes: &'a [PenNode], id: &str) -> Option<&'a PenNode> {
-        for node in nodes {
-            if node.id_str() == id {
-                return Some(node);
-            }
-            if let Some(children) = node.children() {
-                if let Some(hit) = walk(children, id) {
-                    return Some(hit);
-                }
-            }
-        }
-        None
-    }
-
-    if let Some(pages) = doc.pages.as_ref() {
-        for page in pages {
-            if let Some(hit) = walk(&page.children, id) {
-                return Some(hit);
-            }
-        }
-    }
-    walk(&doc.children, id)
+/// Split a canvas instance-child anchor into its authored Ref id and the
+/// descendant's id path relative to that Ref (`child`, `nested/leaf`, or
+/// the id of a node in instance-owned content). A delimiter match is not
+/// enough: the candidate must correspond to a resolvable Ref and a node the
+/// instance really renders.
+pub fn split_instance_child_anchor(anchor: &NodeId, doc: &PenDocument) -> Option<(NodeId, NodeId)> {
+    let hit = locate_anchor(doc, anchor)?;
+    Some((hit.ref_id, NodeId::new_opt(&hit.target.path())?))
 }
 
-/// Split a canvas instance-child anchor into its authored Ref id and
-/// original component-child id. A delimiter match is not enough: the
-/// candidate must correspond to a resolvable Ref and a real descendant
-/// of that Ref's rendered child source.
-///
-/// Nested expanded refs (`outer__inner__leaf`) are intentionally not
-/// resolved yet. They have no single authored Ref node to receive the
-/// override; returning `None` keeps that unsupported case read-only.
-pub fn split_instance_child_anchor(anchor: &NodeId, doc: &PenDocument) -> Option<(NodeId, NodeId)> {
-    fn contains_descendant(children: &[PenNode], child_id: &NodeId) -> bool {
-        for child in children {
-            if child.id_str() == child_id.as_str() {
-                return true;
-            }
-            if child
-                .children()
-                .is_some_and(|grandchildren| contains_descendant(grandchildren, child_id))
-            {
-                return true;
-            }
-        }
-        false
-    }
-
-    let raw = anchor.as_str();
-    if !anchor.is_real() || !raw.contains("__") || find_authored_node(doc, raw).is_some() {
-        return None;
-    }
-    let mut found = None;
-    let mut ambiguous = false;
-    // Check every adjacent underscore pair. `str::match_indices` advances
-    // past a match and therefore misses the real boundary in an id such as
-    // `inst___icon` (`ref_id = "inst_"`, child id = "icon").
-    for separator in raw
-        .as_bytes()
-        .windows(2)
-        .enumerate()
-        .filter_map(|(index, pair)| (pair == b"__").then_some(index))
-    {
-        let (ref_raw, child_with_separator) = raw.split_at(separator);
-        let child_raw = &child_with_separator[2..];
-        let (Some(ref_id), Some(child_id)) = (NodeId::new_opt(ref_raw), NodeId::new_opt(child_raw))
-        else {
-            continue;
-        };
-        let Some(ref_node @ PenNode::Ref(reference)) = find_authored_node(doc, ref_id.as_str())
-        else {
-            continue;
-        };
-        let Some(component) = find_authored_node(doc, &reference.target) else {
-            continue;
-        };
-        let component_children = component.children().filter(|children| !children.is_empty());
-        let Some(children) = component_children.or_else(|| ref_node.children()) else {
-            continue;
-        };
-        if !contains_descendant(children, &child_id)
-            || crate::ref_resolve::instance_child_virtual_id(ref_id.as_str(), child_id.as_str())
-                != raw
-        {
-            continue;
-        }
-        let candidate = (ref_id, child_id);
-        if found
-            .as_ref()
-            .is_some_and(|existing| existing != &candidate)
-        {
-            ambiguous = true;
-        } else {
-            found = Some(candidate);
-        }
-    }
-    (!ambiguous).then_some(found).flatten()
+/// The located instance descendant behind a canvas anchor, with the
+/// override target an edit writes to.
+pub fn instance_descendant_for_anchor(
+    doc: &PenDocument,
+    anchor: &NodeId,
+) -> Option<InstanceDescendant> {
+    locate_anchor(doc, anchor)
 }
 
 /// Resolve an authored Ref root or one of its canvas-only virtual
 /// child anchors into the effective node shown by the inspector.
 /// Child results keep the virtual anchor id while all other fields
-/// come from the component child plus `descendants[child_id]`.
+/// come from the component child plus its `descendants` entries.
 pub fn resolve_instance_display_node_for_anchor(
     doc: &PenDocument,
     anchor: &NodeId,
 ) -> Option<PenNode> {
-    if let Some(node) = find_authored_node(doc, anchor.as_str()) {
+    if let Some(node) = crate::instance_anchor::find_authored(doc, anchor.as_str()) {
         return matches!(node, PenNode::Ref(_))
             .then(|| resolve_instance_display_node(doc, node))
             .flatten();
     }
-    let (ref_id, child_id) = split_instance_child_anchor(anchor, doc)?;
-    let ref_node = find_authored_node(doc, ref_id.as_str())?;
-    let display = resolve_instance_display_node(doc, ref_node)?;
-    let mut child = find_node(display.children()?, &child_id)?.clone();
+    let mut child = locate_anchor(doc, anchor)?.display;
     child.base_mut().id = anchor.as_str().to_string();
     Some(child)
 }
