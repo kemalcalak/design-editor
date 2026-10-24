@@ -20,7 +20,14 @@ pub struct NativeFrameBackend<'a> {
     /// Where draws go: the frame's canvas, or the top redirect's surface.
     pub(super) canvas: &'a skia_safe::Canvas,
     pub(super) redirects: Vec<Redirect<'a>>,
+    /// Open `begin_shader_texture`s: `true` when it redirected, `false`
+    /// when it fell back to a save, so the matching end does the same.
+    pub(super) textures: Vec<bool>,
 }
+
+/// Longest edge of a texture surface; a larger box is clipped to the
+/// canvas instead.
+const MAX_TEXTURE_EDGE: i32 = 4096;
 
 /// What a redirect captures for.
 pub(super) enum Purpose {
@@ -57,8 +64,10 @@ pub(super) fn effect_needs_redirect(sksl: &str) -> bool {
 
 impl<'a> NativeFrameBackend<'a> {
     /// `rect` (paint coordinates) in the current canvas's device pixels,
-    /// clipped to its surface; `None` when nothing is left.
-    fn device_box(&self, rect: Rect) -> Option<skia_safe::IRect> {
+    /// clipped to its surface unless `whole` (a texture: the part off the
+    /// window is sampled too) and not too large; `None` when nothing is
+    /// left.
+    fn device_box(&self, rect: Rect, whole: bool) -> Option<skia_safe::IRect> {
         let matrix = self.canvas.local_to_device_as_3x3();
         let (device, _) = matrix.map_rect(skia_safe::Rect::from_xywh(
             rect.origin.x,
@@ -73,6 +82,13 @@ impl<'a> NativeFrameBackend<'a> {
             device.right.ceil() as i32,
             device.bottom.ceil() as i32,
         );
+        if whole
+            && !device.is_empty()
+            && device.width() <= MAX_TEXTURE_EDGE
+            && device.height() <= MAX_TEXTURE_EDGE
+        {
+            return Some(device);
+        }
         skia_safe::IRect::intersect(
             &device,
             &skia_safe::IRect::from_wh(bounds.width, bounds.height),
@@ -83,7 +99,8 @@ impl<'a> NativeFrameBackend<'a> {
     /// coordinates) on the current canvas's device. `false` (nothing
     /// changed) when the box is empty or no surface can be made.
     pub(super) fn begin_redirect(&mut self, rect: Rect, purpose: Purpose) -> bool {
-        let Some(device) = self.device_box(rect) else {
+        let whole = matches!(purpose, Purpose::Texture(_));
+        let Some(device) = self.device_box(rect, whole) else {
             return false;
         };
         let info = skia_safe::ImageInfo::new_n32_premul((device.width(), device.height()), None);
@@ -123,30 +140,42 @@ impl<'a> NativeFrameBackend<'a> {
         Some(redirect)
     }
 
-    /// `capture_shader_backdrop`: the device pixels under `rect`.
+    /// `capture_shader_backdrop`: the device pixels under `rect`, read
+    /// from the frame's own surface (an open redirect's offscreen holds
+    /// only the node being captured, not what is behind it).
     pub(super) fn capture_backdrop(&mut self, id: u64, rect: Rect) {
         // A surface snapshot sees what is painted so far; content still in
         // an open save-layer is not on it (the web bridge has the same gap).
-        let Some(device) = self.device_box(rect) else {
+        let Some(device) = self.device_box(rect, true) else {
+            return;
+        };
+        let root = self.redirects.first().map_or(self.canvas, |r| r.parent);
+        // The current device's origin in the frame surface's pixels.
+        let (dx, dy) = self
+            .redirects
+            .iter()
+            .fold((0, 0), |(x, y), r| (x + r.origin.0, y + r.origin.1));
+        let bounds = root.base_layer_size();
+        let Some(source_box) = skia_safe::IRect::intersect(
+            &device.with_offset((dx, dy)),
+            &skia_safe::IRect::from_wh(bounds.width, bounds.height),
+        ) else {
             return;
         };
         // SAFETY: `surface()` is `unsafe` only because the returned handle
         // could outlive the canvas; it is dropped at the end of this call.
-        if let Some(mut source) = unsafe { self.canvas.surface() } {
-            if let Some(image) = source.image_snapshot_with_bounds(device) {
-                self.inner.install_frame_texture(id, image);
+        if let Some(mut source) = unsafe { root.surface() } {
+            if let Some(image) = source.image_snapshot_with_bounds(source_box) {
+                let origin = (source_box.left - dx, source_box.top - dy);
+                self.inner.install_frame_texture(id, image, origin, 1.0);
             }
         }
     }
 
-    /// `end_shader_texture`: store the top texture redirect.
+    /// `end_shader_texture`: store the texture the matching begin drew.
     pub(super) fn end_texture(&mut self, sdf: bool, sdf_scale: f32) {
-        if !matches!(
-            self.redirects.last().map(|r| &r.purpose),
-            Some(Purpose::Texture(_))
-        ) {
-            // An unbalanced end (the begin found no surface) still restores
-            // the default's save.
+        if !self.textures.pop().unwrap_or(false) {
+            // The begin found no surface and saved instead.
             self.canvas.restore();
             return;
         }
@@ -156,7 +185,8 @@ impl<'a> NativeFrameBackend<'a> {
         let Purpose::Texture(id) = redirect.purpose else {
             return;
         };
-        let image = if sdf {
+        let origin = redirect.origin;
+        let stored = if sdf {
             let scale = redirect.scale * sdf_scale;
             crate::backend::skia::shader_textures::read_alpha(&mut redirect.surface).and_then(
                 |(alpha, w, h)| {
@@ -164,18 +194,56 @@ impl<'a> NativeFrameBackend<'a> {
                 },
             )
         } else {
-            Some(redirect.surface.image_snapshot())
+            Some((redirect.surface.image_snapshot(), 1.0))
         };
-        if let Some(image) = image {
-            self.inner.install_frame_texture(id, image);
+        if let Some((image, texel)) = stored {
+            self.inner.install_frame_texture(id, image, origin, texel);
         }
     }
 
     /// `begin_shader_texture`; a box with no surface falls back to a save
     /// so the matching end stays balanced.
     pub(super) fn begin_texture(&mut self, id: u64, rect: Rect) {
-        if !self.begin_redirect(rect, Purpose::Texture(id)) {
+        let redirected = self.begin_redirect(rect, Purpose::Texture(id));
+        if !redirected {
             self.canvas.save();
+        }
+        self.textures.push(redirected);
+    }
+
+    /// `push_shader_effect_layer`: a pass sampling more than the node
+    /// draws offscreen (#165), the rest are save-layer filters.
+    pub(super) fn push_effect_layer(
+        &mut self,
+        rect: Rect,
+        sksl: &str,
+        uniforms: &[(&str, &[f32])],
+        backdrop: bool,
+    ) {
+        let redirected = !backdrop
+            && effect_needs_redirect(sksl)
+            && self.begin_redirect(
+                rect,
+                Purpose::Effect {
+                    rect,
+                    sksl: sksl.to_owned(),
+                    uniforms: uniforms
+                        .iter()
+                        .map(|(name, values)| (name.to_string(), values.to_vec()))
+                        .collect(),
+                },
+            );
+        if !redirected {
+            self.inner
+                .push_shader_effect_layer(self.canvas, rect, sksl, uniforms, backdrop);
+        }
+    }
+
+    /// `restore`: closes an offscreen effect pass waiting for it, else a
+    /// plain restore.
+    pub(super) fn restore_layer(&mut self) {
+        if !self.finish_effect_redirect() {
+            self.inner.restore(self.canvas);
         }
     }
 
@@ -186,10 +254,7 @@ impl<'a> NativeFrameBackend<'a> {
             matches!(redirect.purpose, Purpose::Effect { .. })
                 && self.canvas.save_count() == redirect.depth
         });
-        if !waiting {
-            return false;
-        }
-        let Some(mut redirect) = self.end_redirect() else {
+        let Some(mut redirect) = waiting.then(|| self.end_redirect()).flatten() else {
             return false;
         };
         let Purpose::Effect {
@@ -198,7 +263,7 @@ impl<'a> NativeFrameBackend<'a> {
             uniforms,
         } = &redirect.purpose
         else {
-            return false;
+            unreachable!("checked above");
         };
         let bound: Vec<(&str, &[f32])> = uniforms
             .iter()
@@ -243,8 +308,9 @@ impl Drop for NativeFrameBackend<'_> {
 }
 
 /// The `RenderBackend` items for offscreen effect passes and shader
-/// textures, expanded inside the impl in `frame_backend.rs` (one impl block
-/// that sits at the 800-line cap).
+/// textures, expanded inside the impl in `frame_backend.rs`, whose one impl
+/// block sits at the 800-line cap. Every item forwards to an inherent
+/// method above.
 macro_rules! shader_texture_items {
     () => {
         fn push_shader_effect_layer(
@@ -254,53 +320,26 @@ macro_rules! shader_texture_items {
             uniforms: &[(&str, &[f32])],
             backdrop: bool,
         ) {
-            // A pass sampling more than the node draws offscreen (#165).
-            let owned = || {
-                uniforms
-                    .iter()
-                    .map(|(n, v)| (n.to_string(), v.to_vec()))
-                    .collect()
-            };
-            let effect = || $crate::backend::frame_redirect::Purpose::Effect {
-                rect,
-                sksl: sksl.to_owned(),
-                uniforms: owned(),
-            };
-            if backdrop
-                || !$crate::backend::frame_redirect::effect_needs_redirect(sksl)
-                || !self.begin_redirect(rect, effect())
-            {
-                self.inner
-                    .push_shader_effect_layer(self.canvas, rect, sksl, uniforms, backdrop);
-            }
+            self.push_effect_layer(rect, sksl, uniforms, backdrop);
         }
-
         fn restore(&mut self) {
-            if !self.finish_effect_redirect() {
-                self.inner.restore(self.canvas);
-            }
+            self.restore_layer();
         }
-
         fn supports_shader_textures(&self) -> bool {
             true
         }
-
         fn capture_shader_backdrop(&mut self, id: u64, rect: Rect) {
             self.capture_backdrop(id, rect);
         }
-
         fn begin_shader_texture(&mut self, id: u64, rect: Rect) {
             self.begin_texture(id, rect);
         }
-
         fn end_shader_texture(&mut self, sdf: bool, sdf_scale: f32) {
             self.end_texture(sdf, sdf_scale);
         }
-
         fn release_shader_texture(&mut self, id: u64) {
             self.inner.release_frame_texture(id);
         }
-
         fn shader_texture_ready(&self, id: u64) -> bool {
             self.inner.frame_texture(id).is_some()
         }

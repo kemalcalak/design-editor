@@ -12,29 +12,53 @@ use skia_safe::{FilterMode, Image, Matrix, MipmapMode, SamplingOptions, Shader, 
 
 use super::NativeBackend;
 
-/// One frame texture: its raster and what it holds.
+/// One frame texture: its raster, what it holds and where it sits.
 #[derive(Clone)]
 pub(crate) struct FrameTexture {
     pub(crate) image: Image,
     pub(crate) kind: TextureKind,
+    /// Top-left in the device pixels of the canvas it was made on.
+    pub(crate) origin: (i32, i32),
+    /// Device pixels per texel (an SDF may be sampled down).
+    pub(crate) texel: f32,
 }
 
-/// Textures kept before the store starts over: SDFs stay across frames
-/// (their id changes with the silhouette) and a paint that forgot to
-/// release cannot grow it without bound.
-const FRAME_TEXTURE_CAP: usize = 64;
+/// SDFs kept across frames (their id changes with the silhouette) before
+/// the stale ones go. Node and backdrop textures are released by their
+/// paint and never evicted.
+const SDF_CAP: usize = 32;
 
 impl NativeBackend {
-    /// Store `image` as frame texture `id`.
-    pub(crate) fn install_frame_texture(&mut self, id: u64, image: Image) {
+    /// Store `image` as frame texture `id`, made at device `origin` with
+    /// `texel` device pixels per texel.
+    pub(crate) fn install_frame_texture(
+        &mut self,
+        id: u64,
+        image: Image,
+        origin: (i32, i32),
+        texel: f32,
+    ) {
         let Some(kind) = texture_kind(id) else {
             return;
         };
-        if self.frame_textures.len() >= FRAME_TEXTURE_CAP && !self.frame_textures.contains_key(&id)
-        {
-            self.frame_textures.clear();
+        if kind == TextureKind::Sdf {
+            let fields = self
+                .frame_textures
+                .values()
+                .filter(|t| t.kind == TextureKind::Sdf)
+                .count();
+            if fields >= SDF_CAP {
+                self.frame_textures
+                    .retain(|_, t| t.kind != TextureKind::Sdf);
+            }
         }
-        self.frame_textures.insert(id, FrameTexture { image, kind });
+        let texture = FrameTexture {
+            image,
+            kind,
+            origin,
+            texel,
+        };
+        self.frame_textures.insert(id, texture);
     }
 
     /// Forget frame texture `id`.
@@ -91,13 +115,13 @@ pub(crate) fn texture_child(
 
 /// The signed distance field of `alpha` (`width × height` bytes) as an
 /// RGBA float raster, distances divided by `texel_scale` (texels per
-/// node pixel at full resolution).
+/// node pixel at full resolution), with the factor it was sampled down by.
 pub(crate) fn sdf_image(
     alpha: &[u8],
     width: usize,
     height: usize,
     texel_scale: f32,
-) -> Option<Image> {
+) -> Option<(Image, f32)> {
     let (alpha, w, h, factor) = downsample_alpha(alpha, width, height);
     let mut field = signed_distance_field(&alpha, w, h);
     if field.is_empty() {
@@ -107,7 +131,10 @@ pub(crate) fn sdf_image(
     for texel in field.chunks_exact_mut(4) {
         texel[0] *= unit;
     }
-    let bytes: Vec<u8> = field.iter().flat_map(|v| v.to_ne_bytes()).collect();
+    let mut bytes = Vec::with_capacity(field.len() * 4);
+    for value in &field {
+        bytes.extend_from_slice(&value.to_ne_bytes());
+    }
     let info = skia_safe::ImageInfo::new(
         (w as i32, h as i32),
         skia_safe::ColorType::RGBAF32,
@@ -115,6 +142,7 @@ pub(crate) fn sdf_image(
         None,
     );
     skia_safe::images::raster_from_data(&info, skia_safe::Data::new_copy(&bytes), w * 16)
+        .map(|image| (image, factor))
 }
 
 impl NativeBackend {
@@ -175,11 +203,10 @@ impl NativeBackend {
             // Texels per program unit: the pass's device scale.
             let det = total.scale_x() * total.scale_y() - total.skew_x() * total.skew_y();
             let scale = det.abs().sqrt();
-            let field = read_alpha(capture)
-                .and_then(|(alpha, w, h)| sdf_image(&alpha, w, h, scale).map(|f| (f, w)));
-            if let Some((field, full_width)) = field {
-                let shrink = full_width as f32 / field.width().max(1) as f32;
-                let matrix = Matrix::concat(&to_program, &Matrix::scale((shrink, shrink)));
+            let field =
+                read_alpha(capture).and_then(|(alpha, w, h)| sdf_image(&alpha, w, h, scale));
+            if let Some((field, factor)) = field {
+                let matrix = Matrix::concat(&to_program, &Matrix::scale((factor, factor)));
                 for name in sdf_children {
                     if let Some(shader) =
                         texture_child(&field, TileMode::Clamp, mipmap(name), &matrix)
@@ -189,7 +216,10 @@ impl NativeBackend {
                 }
             }
         }
-        let Some(shader) = self.make_runtime_shader(effect, uniforms, rect, &local, &extra) else {
+        let device = canvas.local_to_device_as_3x3();
+        let Some(shader) =
+            self.make_runtime_shader(effect, uniforms, rect, &local, &device, &extra)
+        else {
             return false;
         };
         let mut paint = skia_safe::Paint::default();

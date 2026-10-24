@@ -5,7 +5,7 @@
 //!
 //! A fill's `object` is the fill layers below it, painted again into a
 //! texture over transparent (each with the node's shape, without their
-//! blend modes). `background` is what was painted before the node's fill
+//! blend modes, and without the node's shadows, which pen.dev includes). `background` is what was painted before the node's fill
 //! stack (one capture per node, taken when its stack starts). An `@sdf`
 //! child is the field of the node's silhouette, the shape painted opaque.
 //! Effects bind `background` to a capture taken when the pass opens and an
@@ -13,7 +13,8 @@
 
 use de_editor_core::shader_images::encode_image_id;
 use de_editor_core::shader_textures::{
-    shader_child_specs, texture_id, ChildSource, TextureKind, OBJECT_SDF_TEXTURE,
+    shader_child_specs, texture_id, ChildSource, TextureKind, FILL_BACKDROP_SLOT,
+    OBJECT_SDF_TEXTURE,
 };
 
 use crate::layout_scene::{SceneFillLayer, SceneNode, SceneShaderUniform};
@@ -30,21 +31,51 @@ fn zoom_of(node: &SceneNode, world_rect: Rect) -> f32 {
     }
 }
 
-/// What the node's silhouette depends on, as a texture key: its id, paint
-/// size and shape parameters.
+/// What the node's silhouette texture depends on, hashed: the node, where
+/// and how large it paints, and every shape field the fill painters read.
+/// The texture is drawn in device space, so a pan, zoom or rotation makes
+/// a new one.
 fn silhouette_key(node: &SceneNode, world_rect: Rect) -> String {
-    format!(
-        "{}|{:.1}x{:.1}|{}|{:?}|{:?}|{}|{}|{:?}",
-        node.id,
+    use std::hash::{Hash, Hasher};
+    let mut hasher = std::collections::hash_map::DefaultHasher::new();
+    for value in [
+        world_rect.origin.x,
+        world_rect.origin.y,
         world_rect.size.x,
         world_rect.size.y,
         node.corner_radius,
-        node.corner_radii,
-        node.svg_path,
+        node.rotation,
+        node.arc_start_angle.unwrap_or(-1.0),
+        node.arc_sweep_angle.unwrap_or(-1.0),
+        node.arc_inner_radius.unwrap_or(-1.0),
+    ] {
+        value.to_bits().hash(&mut hasher);
+    }
+    for radius in node.corner_radii.unwrap_or_default() {
+        radius.to_bits().hash(&mut hasher);
+    }
+    let anchors = node.path_anchors.iter().flat_map(|anchor| {
+        [Some(anchor.pos), anchor.handle_in, anchor.handle_out]
+            .into_iter()
+            .flatten()
+    });
+    for point in node.points.iter().copied().chain(anchors) {
+        (point.x.to_bits(), point.y.to_bits()).hash(&mut hasher);
+    }
+    (
+        node.flip_x,
+        node.flip_y,
+        node.path_closed,
+        node.even_odd_fill,
         node.polygon_sides,
-        node.points.len(),
-        node.text,
+        &node.svg_path,
+        &node.text,
+        &node.font_family,
+        node.font_size.to_bits(),
+        node.font_weight,
     )
+        .hash(&mut hasher);
+    format!("{}#{:x}", node.id, hasher.finish())
 }
 
 fn binding(name: &str, id: u64) -> SceneShaderUniform {
@@ -73,7 +104,7 @@ pub(crate) fn capture_fill_backdrop(
     if !wants {
         return None;
     }
-    let id = texture_id(&node.id, usize::MAX, TextureKind::Background);
+    let id = texture_id(&node.id, FILL_BACKDROP_SLOT, TextureKind::Background);
     cx.backend.capture_shader_backdrop(id, world_rect);
     Some(id)
 }

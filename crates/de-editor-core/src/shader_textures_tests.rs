@@ -19,10 +19,6 @@ fn child_specs_read_sources_and_tags() {
             ("photo", ChildSource::Image, false),
         ]
     );
-    assert!(needs_textures(sksl));
-    assert!(!needs_textures(
-        "uniform shader photo; half4 main(float2 p) { return photo.eval(p); }"
-    ));
 }
 
 #[test]

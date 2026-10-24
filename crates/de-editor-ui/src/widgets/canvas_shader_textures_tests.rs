@@ -118,7 +118,7 @@ fn a_fill_sampling_the_node_backdrop_and_sdf_gets_its_textures() {
             2.0,
         )
     );
-    let background = texture_id("n", usize::MAX, TextureKind::Background);
+    let background = texture_id("n", FILL_BACKDROP_SLOT, TextureKind::Background);
     let object = texture_id("n", 0, TextureKind::Object);
     let sdf = texture_id(&silhouette_key(&node, rect), 0, TextureKind::Sdf);
     assert_eq!(

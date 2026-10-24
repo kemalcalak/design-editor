@@ -195,10 +195,14 @@ export function opCkShaderChildTags(sksl) {
   const tags = new Map();
   const source = String(sksl);
   // A doc comment never spans past its own `*/`.
-  const pattern = /(\/\*(?:(?!\*\/)[\s\S])*\*\/|(?:\/\/[^\n]*\n\s*)+)?\s*uniform\s+shader\s+([A-Za-z_][A-Za-z0-9_]*)\b/g;
+  const pattern = /(\/\*(?:(?!\*\/)[\s\S])*\*\/|(?:\/\/[^\n]*\n\s*)+)?\s*uniform\s+shader\s+([A-Za-z_][A-Za-z0-9_\s,]*)/g;
   for (const match of source.matchAll(pattern)) {
     const doc = match[1] || '';
-    tags.set(match[2], { sdf: /@sdf\b/.test(doc), mipmap: /@mipmap\b/.test(doc) });
+    const tag = { sdf: /@sdf\b/.test(doc), mipmap: /@mipmap\b/.test(doc) };
+    // Every name of `uniform shader a, b;` shares the comment.
+    for (const name of match[2].split(',').map((n) => n.trim()).filter(Boolean)) {
+      tags.set(name, tag);
+    }
   }
   return tags;
 }
@@ -311,7 +315,8 @@ export function opCkSignedDistanceField(rgba, width, height) {
 }
 
 // A CanvasKit float image of `image`'s SDF, distances in units of
-// `texelScale` texels; null when CanvasKit refuses.
+// `texelScale` texels, with the factor it was sampled down by
+// (`{ image, factor }`); null when CanvasKit refuses.
 export function opCkMakeSdfImage(CK, image, texelScale) {
   const width = image.width();
   const height = image.height();
@@ -325,13 +330,14 @@ export function opCkMakeSdfImage(CK, image, texelScale) {
   const { field, width: w, height: h, factor } = opCkSignedDistanceField(pixels, width, height);
   const unit = factor / Math.max(texelScale, 1e-6);
   for (let i = 0; i < field.length; i += 4) field[i] *= unit;
-  return CK.MakeImage({
+  const made = CK.MakeImage({
     width: w, height: h,
     colorType: CK.ColorType.RGBA_F32,
     alphaType: CK.AlphaType.Unpremul,
     colorSpace: CK.ColorSpace.SRGB,
     // `MakeImage` copies bytes: hand it the floats' bytes, not the floats.
-  }, new Uint8Array(field.buffer, field.byteOffset, field.byteLength), w * 16) || null;
+  }, new Uint8Array(field.buffer, field.byteOffset, field.byteLength), w * 16);
+  return made ? { image: made, factor } : null;
 }
 
 // The paint image id a child uniform carries as four 16-bit chunks, split
@@ -359,7 +365,11 @@ export function opCkMakeShaderImageChildren(
   boxW,
   boxH,
   imageFor,
+  total = null,
+  local = null,
 ) {
+  // A frame texture maps from the device pixels it was made at (#165).
+  const program = total && local ? opCkMat3Invert(opCkMat3Multiply(total, local)) : null;
   const bindings = new Map();
   let cursor = 0;
   for (let index = 0; index < uniformNames.length; index++) {
@@ -381,12 +391,15 @@ export function opCkMakeShaderImageChildren(
     const imageW = image ? image.width() : 0;
     const imageH = image ? image.height() : 0;
     if (image && imageW > 0 && imageH > 0 && boxW > 0 && boxH > 0) {
+      const matrix = texture && program
+        ? opCkMat3Multiply(program, [texture.texel, 0, texture.dl, 0, texture.texel, texture.dt, 0, 0, 1])
+        : [boxW / imageW, 0, 0, 0, boxH / imageH, 0, 0, 0, 1];
       const shader = image.makeShaderOptions(
         opCkTextureTile(CK, texture ? texture.kind : null),
         opCkTextureTile(CK, texture ? texture.kind : null),
         CK.FilterMode.Linear,
         opCkChildMipmap(CK, entry, child),
-        [boxW / imageW, 0, 0, 0, boxH / imageH, 0, 0, 0, 1],
+        matrix,
       );
       if (shader) return shader;
     }
@@ -502,6 +515,7 @@ export function opCkMakeRuntimeShaderForRect(
   h,
   CK = null,
   imageFor = null,
+  total = null,
 ) {
   const localMatrix = opCkRuntimeEffectLocalMatrix(uniformNames, uniforms, uniformArities, x, y, w, h);
   if (!entry || !entry.children || entry.children.length === 0 || !CK) {
@@ -512,7 +526,7 @@ export function opCkMakeRuntimeShaderForRect(
   const boxW = w / localMatrix[0];
   const boxH = h / localMatrix[4];
   const children = opCkMakeShaderImageChildren(
-    CK, entry, uniformNames, uniforms, uniformArities, boxW, boxH, imageFor,
+    CK, entry, uniformNames, uniforms, uniformArities, boxW, boxH, imageFor, total, localMatrix,
   );
   try {
     return opCkMakeRuntimeShader(entry, uniformNames, uniforms, uniformArities, localMatrix, children);
@@ -551,6 +565,18 @@ export function opCkMat3Invert(m) {
 // under the total matrix `m`, clamped to a `maxW` x `maxH` surface; null
 // when nothing is left.
 export function opCkDeviceBounds(m, x, y, w, h, maxW, maxH) {
+  const box = opCkDeviceBox(m, x, y, w, h);
+  if (!box) return null;
+  const clamped = [
+    Math.max(0, box[0]), Math.max(0, box[1]), Math.min(maxW, box[2]), Math.min(maxH, box[3]),
+  ];
+  return clamped[2] > clamped[0] && clamped[3] > clamped[1] ? clamped : null;
+}
+
+// The integer device-pixel box `[l, t, r, b]` covering the rect, not
+// clamped (a shader texture keeps the part off the surface); null when
+// degenerate.
+export function opCkDeviceBox(m, x, y, w, h) {
   let l = Infinity;
   let t = Infinity;
   let r = -Infinity;
@@ -562,10 +588,7 @@ export function opCkDeviceBounds(m, x, y, w, h, maxW, maxH) {
     const dy = (m[3] * px + m[4] * py + m[5]) / z;
     l = Math.min(l, dx); t = Math.min(t, dy); r = Math.max(r, dx); b = Math.max(b, dy);
   }
-  const box = [
-    Math.max(0, Math.floor(l)), Math.max(0, Math.floor(t)),
-    Math.min(maxW, Math.ceil(r)), Math.min(maxH, Math.ceil(b)),
-  ];
+  const box = [Math.floor(l), Math.floor(t), Math.ceil(r), Math.ceil(b)];
   if (!box.every(Number.isFinite) || box[2] <= box[0] || box[3] <= box[1]) return null;
   return box;
 }
@@ -599,7 +622,7 @@ export function opCkDrawShaderEffectPass(CK, canvas, pass, image, childName, dl,
   // Every other child (#165): the backdrop / images through their
   // uniforms, an `@sdf` child bound to the pass's capture as its field.
   const others = opCkMakeShaderImageChildren(
-    CK, entry, names, values, arities, w / local[0], h / local[4], imageFor,
+    CK, entry, names, values, arities, w / local[0], h / local[4], imageFor, total, local,
   );
   const bindings = new Map();
   let cursor = 0;
@@ -626,11 +649,11 @@ export function opCkDrawShaderEffectPass(CK, canvas, pass, image, childName, dl,
       const scale = Math.sqrt(Math.abs(total[0] * total[4] - total[1] * total[3]) * local[0] * local[4]);
       sdf = opCkMakeSdfImage(CK, image, scale);
     }
-    const shrink = sdf ? image.width() / sdf.width() : 1;
+    const factor = sdf ? sdf.factor : 1;
     return sdf
-      ? sdf.makeShaderOptions(
+      ? sdf.image.makeShaderOptions(
         CK.TileMode.Clamp, CK.TileMode.Clamp, CK.FilterMode.Linear, CK.MipmapMode.None,
-        opCkMat3Multiply(childMatrix, [shrink, 0, 0, 0, shrink, 0, 0, 0, 1]),
+        opCkMat3Multiply(childMatrix, [factor, 0, 0, 0, factor, 0, 0, 0, 1]),
       )
       : CK.Shader.MakeColor(CK.TRANSPARENT, CK.ColorSpace.SRGB);
   });
@@ -639,7 +662,7 @@ export function opCkDrawShaderEffectPass(CK, canvas, pass, image, childName, dl,
     shader = opCkMakeRuntimeShader(entry, names, values, arities, local, children);
   } finally {
     for (const child of children) if (child && child.delete) child.delete();
-    if (sdf && sdf.delete) sdf.delete();
+    if (sdf && sdf.image.delete) sdf.image.delete();
   }
   if (!shader) return false;
   const paint = new CK.Paint();
@@ -750,15 +773,21 @@ export async function opCkInit(canvasId) {
     if (held && held.image && held.image.delete) held.image.delete();
     frameTextures.delete(key);
   };
-  const installFrameTexture = (lo, hi, image) => {
+  // `dl, dt`: the texture's top-left in the device pixels of the canvas it
+  // was made on; `texel`: device pixels per texel. SDFs stay across frames
+  // (32 at most, `SDF_CAP` in Rust); node and backdrop textures are
+  // released by their paint and never evicted.
+  const installFrameTexture = (lo, hi, image, dl, dt, texel) => {
     const kind = opCkTextureKind(hi);
     if (kind === null || !image) {
       if (image && image.delete) image.delete();
       return;
     }
-    if (frameTextures.size >= 64) for (const key of [...frameTextures.keys()]) releaseFrameTexture(key);
+    if (kind === 2 && [...frameTextures.values()].filter((t) => t.kind === 2).length >= 32) {
+      for (const [key, held] of [...frameTextures]) if (held.kind === 2) releaseFrameTexture(key);
+    }
     releaseFrameTexture(`${lo}:${hi}`);
-    frameTextures.set(`${lo}:${hi}`, { image, kind });
+    frameTextures.set(`${lo}:${hi}`, { image, kind, dl, dt, texel });
   };
   const shaderChildFor = (lo, hi) => frameTextures.get(`${lo}:${hi}`) || imageCaches.fullImage(lo, hi);
   const drawShaderEffectPass = (pass, image, childName, dl, dt) =>
@@ -767,7 +796,8 @@ export async function opCkInit(canvasId) {
   // node painted offscreen and draw the program over it on the parent.
   const finishObjectShaderEffect = () => {
     const pass = effectRedirects.pop();
-    const image = pass.surface.makeImageSnapshot();
+    // The pooled surface can be larger than the box: snapshot the box.
+    const image = pass.surface.makeImageSnapshot(Int32Array.of(0, 0, pass.cw, pass.ch));
     pass.canvas.restoreToCount(1);
     canvas = pass.parentCanvas;
     drawSurface = pass.parentSurface;
@@ -1216,6 +1246,7 @@ export async function opCkInit(canvasId) {
       h,
       CK,
       shaderChildFor,
+      canvas.getTotalMatrix(),
     );
     if (!shader) {
       canvas.drawRRect(rrect, fillPaint(
@@ -2550,6 +2581,8 @@ export async function opCkInit(canvasId) {
         ...pass,
         dl,
         dt,
+        cw: dr - dl,
+        ch: db - dt,
         surface: offscreen,
         canvas: offscreenCanvas,
         depth: offscreenCanvas.getSaveCount(),
@@ -2564,16 +2597,27 @@ export async function opCkInit(canvasId) {
     // alpha when `sdf`). Children bind them by id like images.
     supportsShaderTextures() { return true; },
     captureShaderBackdrop(lo, hi, x, y, w, h) {
-      const box = opCkDeviceBounds(
-        canvas.getTotalMatrix(), x, y, w, h, drawSurface.width(), drawSurface.height(),
-      );
+      // From the window surface: an open redirect holds only the node
+      // being captured. `(ox, oy)`: the current surface's offset in it.
+      const root = effectRedirects.length > 0 ? effectRedirects[0].parentSurface : drawSurface;
+      let ox = 0;
+      let oy = 0;
+      for (const held of effectRedirects) {
+        if (held.surface) { ox += held.dl; oy += held.dt; }
+      }
+      const shifted = opCkMat3Multiply([1, 0, ox, 0, 1, oy, 0, 0, 1], canvas.getTotalMatrix());
+      const box = opCkDeviceBounds(shifted, x, y, w, h, root.width(), root.height());
       if (!box) return;
-      installFrameTexture(lo, hi, drawSurface.makeImageSnapshot(Int32Array.of(...box)));
+      installFrameTexture(
+        lo, hi, root.makeImageSnapshot(Int32Array.of(...box)), box[0] - ox, box[1] - oy, 1,
+      );
     },
     beginShaderTexture(lo, hi, x, y, w, h) {
-      const box = opCkDeviceBounds(
-        canvas.getTotalMatrix(), x, y, w, h, drawSurface.width(), drawSurface.height(),
-      );
+      // The whole box, off-surface parts included, unless it is huge.
+      const whole = opCkDeviceBox(canvas.getTotalMatrix(), x, y, w, h);
+      const box = whole && whole[2] - whole[0] <= 4096 && whole[3] - whole[1] <= 4096
+        ? whole
+        : opCkDeviceBounds(canvas.getTotalMatrix(), x, y, w, h, drawSurface.width(), drawSurface.height());
       const offscreen = box && scratchSurface(effectRedirects.length, box[2] - box[0], box[3] - box[1]);
       if (!offscreen) {
         effectRedirects.push({ texture: { lo, hi }, skipped: true, canvas: null });
@@ -2593,6 +2637,8 @@ export async function opCkInit(canvasId) {
         texture: { lo, hi },
         // Device texels per paint unit, for the SDF's distance unit.
         deviceScale: Math.sqrt(Math.abs(total[0] * total[4] - total[1] * total[3])),
+        dl,
+        dt,
         w: box[2] - dl,
         h: box[3] - dt,
         surface: offscreen,
@@ -2620,9 +2666,11 @@ export async function opCkInit(canvasId) {
       if (sdf) {
         const field = opCkMakeSdfImage(CK, image, top.deviceScale * sdfScale);
         image.delete();
-        installFrameTexture(top.texture.lo, top.texture.hi, field);
+        if (field) {
+          installFrameTexture(top.texture.lo, top.texture.hi, field.image, top.dl, top.dt, field.factor);
+        }
       } else {
-        installFrameTexture(top.texture.lo, top.texture.hi, image);
+        installFrameTexture(top.texture.lo, top.texture.hi, image, top.dl, top.dt, 1);
       }
     },
     releaseShaderTexture(lo, hi) { releaseFrameTexture(`${lo}:${hi}`); },

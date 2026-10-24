@@ -185,15 +185,17 @@ assert(opCkTextureKind(0xD8000000) === 2 && opCkTextureKind(0x12345678) === null
 const disc = CK.MakeSurface(40, 40);
 disc.getCanvas().clear(CK.TRANSPARENT);
 disc.getCanvas().drawOval(CK.XYWHRect(0, 0, 40, 40), paint(255, 255, 255));
-const sdf = opCkMakeSdfImage(CK, disc.makeImageSnapshot(), 1);
-assert(sdf && sdf.width() === 40, 'an SDF float image is made');
+const made = opCkMakeSdfImage(CK, disc.makeImageSnapshot(), 1);
+assert(made && made.image.width() === 40 && made.factor === 1, 'an SDF float image is made');
+const sdf = made.image;
 
 // A fill reading the field through a frame texture child.
 const fillSksl = '/** @sdf */ uniform shader shape; half4 main(float2 p) {{ float d = shape.eval(p).r; return d > 0.0 ? half4(d / 40.0, 0.0, 0.0, 1.0) : half4(0.0, 1.0, 0.0, 1.0); }}';
 const fillEntry = opCkCreateRuntimeEffectCache(CK).get(fillSksl);
 const id = new Float32Array([1, 0, 0, 0xD800]);
+// Made at device (0, 0), one texel per pixel, under an identity canvas.
 const shader = opCkMakeRuntimeShaderForRect(fillEntry, ['shape'], id, new Uint32Array([4]), 0, 0, 40, 40, CK,
-  () => ({{ image: sdf, kind: 2 }}));
+  () => ({{ image: sdf, kind: 2, dl: 0, dt: 0, texel: 1 }}), [1, 0, 0, 0, 1, 0, 0, 0, 1]);
 assert(shader, 'the fill shader builds');
 const fill = CK.MakeSurface(40, 40);
 const fillPaint = new CK.Paint();
@@ -219,7 +221,9 @@ assert(effectEntry, 'the effect compiles');
 const values = new Float32Array([2, 0, 0, 0xD400, 0, 0, 0, 0xD800]);
 const pass = {{ entry: effectEntry, x: 0, y: 0, w: 40, h: 40, names: ['background', 'edge'], values, arities: new Uint32Array([4, 4]) }};
 assert(opCkDrawShaderEffectPass(CK, canvas, pass, capture, 'object', 0, 0,
-  () => ({{ image: backdrop, kind: 1 }})), 'the effect pass draws');
+  () => ({{ image: backdrop, kind: 1, dl: 0, dt: 0, texel: 1 }})), 'the effect pass draws');
+// Every name of a multi-name declaration shares its doc tags.
+assert(opCkShaderChildTags('/** @mipmap */ uniform shader a, b;').get('b').mipmap, 'multi-name tags');
 const ep = read(main);
 assert(at(ep, 10, 20)[0] > 240 && at(ep, 10, 20)[2] > 240, `node + backdrop: ${{at(ep, 10, 20)}}`);
 assert(at(ep, 30, 20)[2] > 240 && at(ep, 30, 20)[0] < 16, `backdrop only: ${{at(ep, 30, 20)}}`);

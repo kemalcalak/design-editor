@@ -100,8 +100,12 @@ pub(super) fn convert(
         }
         if let Slot::Texture(Texture::Image(url)) = &user.slot {
             if translation.sized_images.contains(&user.sksl_name) {
-                // `textureSize` of the image; 1 x 1 when it cannot be read.
-                let [w, h] = image_size(url, ctx).unwrap_or([1, 1]);
+                // `textureSize` of the image; 1 x 1 (reported) when it
+                // cannot be read, as for a remote image.
+                let [w, h] = image_size(url, ctx).unwrap_or_else(|| {
+                    ctx.report.note("shader texture size unknown");
+                    [1, 1]
+                });
                 uniforms.insert(
                     glsl::image_size_uniform(&user.sksl_name),
                     json!([w as f64, h as f64]),

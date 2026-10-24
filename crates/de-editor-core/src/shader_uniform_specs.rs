@@ -255,7 +255,7 @@ pub fn uniform_specs(
     let mut out = Vec::new();
     for statement in uniform_statements(sksl) {
         let notes = Notes::parse(statement.comment);
-        if notes.canvas_bound {
+        if notes.hidden {
             continue;
         }
         let Some(kind) = kind_of(statement.ty) else {
@@ -375,7 +375,9 @@ struct Notes {
     /// `@sdf` / `@mipmap` on a `uniform shader` child (#165).
     sdf: bool,
     mipmap: bool,
-    canvas_bound: bool,
+    /// No panel row: bound by the canvas (`@time` / `@mouse` /
+    /// `@resolution`) or by the import (`@internal`).
+    hidden: bool,
     default: Option<String>,
 }
 
@@ -419,7 +421,7 @@ impl Notes {
                     "mipmap" => notes.mipmap = true,
                     // `@internal`: bound by the import, not edited (an
                     // image's `textureSize`, #165).
-                    "time" | "mouse" | "resolution" | "internal" => notes.canvas_bound = true,
+                    "time" | "mouse" | "resolution" | "internal" => notes.hidden = true,
                     "default" if !value.is_empty() => notes.default = Some(value.to_owned()),
                     _ => {}
                 }

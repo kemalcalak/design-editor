@@ -29,6 +29,7 @@ impl NativeBackend {
         uniforms: &[(&str, &[f32])],
         rect: Rect,
         local_matrix: &Matrix,
+        device: &Matrix,
         extra: &[(&str, Shader)],
     ) -> Option<Shader> {
         if effect.children().is_empty() {
@@ -59,7 +60,7 @@ impl NativeBackend {
                     .iter()
                     .find(|(name, _)| *name == child.name())
                     .and_then(|(_, values)| decode_image_id(values))
-                    .and_then(|id| self.bound_child(id, box_size, mipmap)),
+                    .and_then(|id| self.bound_child(id, box_size, mipmap, local_matrix, device)),
             };
             let shader =
                 shader.unwrap_or_else(|| skia_safe::shaders::color(skia_safe::Color::TRANSPARENT));
@@ -71,14 +72,28 @@ impl NativeBackend {
 }
 
 impl NativeBackend {
-    /// The child shader for id `id`: a frame texture first (#165), else a
-    /// resident image, stretched over `box_size`.
-    fn bound_child(&mut self, id: u64, box_size: (f32, f32), mipmap: bool) -> Option<Shader> {
+    /// The child shader for id `id`: a frame texture first (#165), mapped
+    /// from the device pixels it was made at (`device` · `local_matrix`
+    /// takes program coordinates there), else a resident image stretched
+    /// over `box_size`.
+    fn bound_child(
+        &mut self,
+        id: u64,
+        box_size: (f32, f32),
+        mipmap: bool,
+        local_matrix: &Matrix,
+        device: &Matrix,
+    ) -> Option<Shader> {
         if let Some(texture) = self.frame_texture(id) {
-            let image = texture.image.clone();
+            let texture = texture.clone();
             let tile = super::shader_textures::tile_mode(Some(texture.kind));
-            return stretched(&image, box_size)
-                .and_then(|m| super::shader_textures::texture_child(&image, tile, mipmap, &m));
+            let to_program = Matrix::concat(device, local_matrix).invert()?;
+            let (x, y) = (texture.origin.0 as f32, texture.origin.1 as f32);
+            let matrix = Matrix::concat(
+                &Matrix::concat(&to_program, &Matrix::translate((x, y))),
+                &Matrix::scale((texture.texel, texture.texel)),
+            );
+            return super::shader_textures::texture_child(&texture.image, tile, mipmap, &matrix);
         }
         let image = self.raster_image(id)?;
         let matrix = stretched(&image, box_size)?;

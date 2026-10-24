@@ -174,3 +174,64 @@ fn an_image_child_binds_in_an_effect_pass_and_a_redirect_stays_balanced() {
     let middle = pixel(&mut surface, 20, 20);
     assert!(middle.g() > 240, "{middle:?}");
 }
+
+/// Chained passes: an inner pass opened inside an outer offscreen pass
+/// still reads the frame's backdrop, not the outer pass's empty capture.
+#[test]
+fn a_backdrop_captured_inside_an_open_pass_reads_the_frame() {
+    let outer = texture_id("n", 1, TextureKind::Background);
+    let inner = texture_id("n", 0, TextureKind::Background);
+    let program = "uniform shader object; uniform shader background; \
+                   half4 main(float2 p) { half4 n = object.eval(p); return n + background.eval(p) * (1.0 - n.a); }";
+    let mut surface = paint(|frame| {
+        frame.fill_rect(node_box(), color(0.0, 0.0, 1.0));
+        frame.capture_shader_backdrop(outer, node_box());
+        frame.push_shader_effect_layer(
+            node_box(),
+            program,
+            &[("background", &encode_image_id(outer))],
+            false,
+        );
+        frame.capture_shader_backdrop(inner, node_box());
+        frame.push_shader_effect_layer(
+            node_box(),
+            program,
+            &[("background", &encode_image_id(inner))],
+            false,
+        );
+        frame.fill_rect(Rect::xywh(0.0, 0.0, 20.0, 40.0), color(1.0, 0.0, 0.0));
+        frame.restore();
+        frame.restore();
+    });
+    // Right half: no node, both passes show the blue backdrop.
+    let right = pixel(&mut surface, 30, 20);
+    assert!(right.b() > 240, "{right:?}");
+    let left = pixel(&mut surface, 10, 20);
+    assert!(left.r() > 240 && left.b() < 16, "{left:?}");
+}
+
+/// A texture of a box partly off the canvas keeps its place: the fill
+/// samples the node where it is, not squeezed into the visible part.
+#[test]
+fn a_texture_partly_off_the_canvas_keeps_its_mapping() {
+    let id = texture_id("n", 0, TextureKind::Object);
+    let bound = encode_image_id(id);
+    let wide = Rect::xywh(0.0, 0.0, 80.0, 40.0);
+    let mut surface = paint(|frame| {
+        frame.begin_shader_texture(id, wide);
+        frame.fill_rect(Rect::xywh(0.0, 0.0, 20.0, 40.0), color(1.0, 0.0, 0.0));
+        frame.end_shader_texture(false, 1.0);
+        frame.fill_round_rect_shader(
+            wide,
+            0.0,
+            "uniform shader object; half4 main(float2 p) { half4 c = object.eval(p); return half4(c.g, c.r, c.b, 1.0); }",
+            &[("object", &bound)],
+            1.0,
+            color(1.0, 1.0, 1.0),
+        );
+    });
+    let left = pixel(&mut surface, 10, 20);
+    let right = pixel(&mut surface, 30, 20);
+    assert!(left.g() > 240, "{left:?}");
+    assert!(right.g() < 16, "{right:?}");
+}

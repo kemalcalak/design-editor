@@ -15,6 +15,7 @@ impl<'a> NativeFrameBackend<'a> {
             inner,
             canvas,
             redirects: Vec::new(),
+            textures: Vec::new(),
         }
     }
 

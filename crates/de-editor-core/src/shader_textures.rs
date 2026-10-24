@@ -4,14 +4,17 @@
 //! A program declares what a child samples:
 //!
 //! - `uniform shader object;` — the node's own rendering below this paint,
-//!   over transparent: in a fill the fills under it, in an effect the whole
-//!   node (and every earlier shader effect on it);
+//!   over transparent: in a fill the fill layers under it (without their
+//!   blend modes, and without the shadows pen.dev also includes), in an
+//!   effect the whole node (and every earlier shader effect on it);
 //! - `uniform shader background;` — what is painted behind the node, with
 //!   nothing of the node itself; it mirrors past the node box;
 //! - a child whose doc comment says `@sdf` — the signed distance field of
 //!   the node's shape (in an effect: of the rendered content's alpha, edge
 //!   at 50%). Red is the distance in node pixels, positive inside; green /
-//!   blue the unit gradient of increasing distance in node axes (y down);
+//!   blue the unit gradient of increasing distance in screen axes (y
+//!   down; pen.dev's is the unnormalised texel-space gradient, which for a
+//!   distance field is a unit vector too);
 //! - any other child — an image, bound by source in the uniforms (#9).
 //!
 //! `@mipmap` on a child's doc comment samples it mipmapped (off by default:
@@ -55,12 +58,15 @@ pub struct ShaderChildSpec {
     pub mipmap: bool,
 }
 
+/// The `slot` of a node's fill-stack backdrop texture (one per node).
+pub const FILL_BACKDROP_SLOT: usize = usize::MAX;
+
 /// Tag in the top four bits of every frame texture id.
 const TAG: u64 = 0xD;
 
 /// The id an effect binds to its `@sdf` child: the SDF of the pass's own
 /// capture, which the backend computes when the pass closes.
-pub const OBJECT_SDF_TEXTURE: u64 = (TAG << 60) | (2 << 58);
+pub const OBJECT_SDF_TEXTURE: u64 = (TAG << 60) | (kind_bits(TextureKind::Sdf) << 58);
 
 /// The frame texture id of `kind` for paint `slot` of node `node_id`.
 pub fn texture_id(node_id: &str, slot: usize, kind: TextureKind) -> u64 {
@@ -71,7 +77,7 @@ pub fn texture_id(node_id: &str, slot: usize, kind: TextureKind) -> u64 {
     (TAG << 60) | (kind_bits(kind) << 58) | low
 }
 
-fn kind_bits(kind: TextureKind) -> u64 {
+const fn kind_bits(kind: TextureKind) -> u64 {
     match kind {
         TextureKind::Object => 0,
         TextureKind::Background => 1,
@@ -111,14 +117,6 @@ pub fn shader_child_specs(sksl: &str) -> Vec<ShaderChildSpec> {
             mipmap,
         })
         .collect()
-}
-
-/// Whether a fill program samples the node or its backdrop (it then needs
-/// the painter's shader textures).
-pub fn needs_textures(sksl: &str) -> bool {
-    shader_child_specs(sksl)
-        .iter()
-        .any(|child| child.source != ChildSource::Image)
 }
 
 /// Longest edge, in texels, an SDF is computed at; a larger capture is
@@ -187,34 +185,44 @@ fn squared_distances(inside: &[bool], width: usize, height: usize, target: bool)
         .iter()
         .map(|is_in| if *is_in == target { 0.0 } else { FAR })
         .collect();
-    let mut line = vec![0.0f32; width.max(height)];
-    let mut result = vec![0.0f32; width.max(height)];
+    let longest = width.max(height);
+    let mut line = vec![0.0f32; longest];
+    let mut result = vec![0.0f32; longest];
+    let mut scratch = Scratch {
+        v: vec![0; longest],
+        z: vec![0.0; longest + 1],
+    };
     for x in 0..width {
         for y in 0..height {
             line[y] = grid[y * width + x];
         }
-        transform_1d(&line[..height], &mut result[..height]);
+        transform_1d(&line[..height], &mut result[..height], &mut scratch);
         for y in 0..height {
             grid[y * width + x] = result[y];
         }
     }
     for y in 0..height {
         line[..width].copy_from_slice(&grid[y * width..(y + 1) * width]);
-        transform_1d(&line[..width], &mut result[..width]);
+        transform_1d(&line[..width], &mut result[..width], &mut scratch);
         grid[y * width..(y + 1) * width].copy_from_slice(&result[..width]);
     }
     grid
 }
 
+/// Buffers [`transform_1d`] reuses across rows and columns.
+struct Scratch {
+    v: Vec<usize>,
+    z: Vec<f32>,
+}
+
 /// One-dimensional squared distance transform (lower envelope of
 /// parabolas) of `f` into `d`.
-fn transform_1d(f: &[f32], d: &mut [f32]) {
+fn transform_1d(f: &[f32], d: &mut [f32], scratch: &mut Scratch) {
     let n = f.len();
     if n == 0 {
         return;
     }
-    let mut v = vec![0usize; n];
-    let mut z = vec![0.0f32; n + 1];
+    let (v, z) = (&mut scratch.v, &mut scratch.z);
     let mut k = 0usize;
     z[0] = f32::NEG_INFINITY;
     z[1] = f32::INFINITY;
@@ -224,7 +232,6 @@ fn transform_1d(f: &[f32], d: &mut [f32]) {
     };
     for q in 1..n {
         let mut s = intersect(q, v[k]);
-        // `z[0]` is -inf, so this stops at `k == 0` at the latest.
         while k > 0 && s <= z[k] {
             k -= 1;
             s = intersect(q, v[k]);
