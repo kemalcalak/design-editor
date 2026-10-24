@@ -132,6 +132,9 @@ fn convert_node(
     variables::resolve_node(map, &ctx.variables, theme, ctx.report);
     // An absolutely positioned child is out of its parent's flow.
     let absolute = map.get("layoutPosition").and_then(Value::as_str) == Some("absolute");
+    // Before the per-kind defaults, so a promoted rectangle takes the
+    // frame path.
+    keep_reusable_component(map, ctx.report);
     match map.get("type").and_then(Value::as_str) {
         Some("frame") => apply_frame_defaults(map),
         Some("path") => apply_path_view_box(map, in_flow && !absolute, ctx.report),
@@ -149,6 +152,31 @@ fn convert_node(
     paint::convert_fill_key(map, ctx);
     paint::convert_stroke(map, role, ctx);
     paint::convert_effects(map, ctx.report);
+}
+
+/// pen.dev marks a component with `reusable: true` on any node kind; the
+/// canonical schema keeps the flag on frames only (the component registry,
+/// `ComponentLibrary::from_document`, reads it there), so on any other kind
+/// it would be dropped silently. A rectangle becomes a free-form frame with
+/// the same box and paint: both carry the same container props and paint
+/// alike, and `ref` overrides on the root keep applying. Other kinds keep
+/// their type and lose the flag, reported: wrapping them in a frame would
+/// send an instance's root overrides (`fill`, `stroke`) to the wrapper.
+fn keep_reusable_component(map: &mut Map<String, Value>, report: &mut PenDevReport) {
+    if map.get("reusable").and_then(Value::as_bool) != Some(true) {
+        return;
+    }
+    match map.get("type").and_then(Value::as_str) {
+        Some("frame") | None => {}
+        Some("rectangle") => {
+            map.insert("type".to_owned(), Value::String("frame".to_owned()));
+            // Keeps `apply_frame_defaults` from adding pen.dev's
+            // horizontal hug layout to what was a plain box.
+            map.entry("layout")
+                .or_insert_with(|| Value::String("none".to_owned()));
+        }
+        Some(_) => report.note("non-frame reusable component"),
+    }
 }
 
 /// pen.dev frames lay out horizontally and hug their content unless the
@@ -273,3 +301,7 @@ fn numbers4(value: &Value) -> Option<[f64; 4]> {
     }
     Some(out)
 }
+
+#[cfg(test)]
+#[path = "nodes_tests.rs"]
+mod tests;

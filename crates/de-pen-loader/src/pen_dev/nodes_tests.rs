@@ -1,0 +1,105 @@
+//! Node-walk tests for the pen.dev conversion that sit beside `tests.rs`:
+//! reusable components whose pen.dev root is not a frame.
+
+use de_editor_core::{ref_resolve, ComponentLibrary, NodeId};
+use jian_ops_schema::node::container::LayoutMode;
+use jian_ops_schema::node::PenNode;
+use jian_ops_schema::sizing::SizingBehavior;
+use serde_json::{json, Value};
+
+use super::super::no_assets;
+use crate::payload::load_canonical_with_assets;
+
+fn leaf() -> Value {
+    json!({
+        "type": "rectangle", "id": "leaf", "name": "Leaf/First", "reusable": true,
+        "x": 40, "y": 12, "width": 18, "height": 18, "opacity": 0.8,
+        "fill": "#3A7D44", "cornerRadius": [18, 0, 18, 0],
+        "stroke": "#1F4D2A", "strokeWidth": 1.5, "strokeAlignment": "inner",
+        "effect": { "type": "shadow", "shadowType": "outer", "color": "#00000040",
+                    "offset": { "x": 0, "y": 2 }, "blur": 4 }
+    })
+}
+
+fn load(children: Value) -> (jian_ops_schema::PenDocument, super::super::PenDevReport) {
+    let src = json!({ "version": "2.21", "children": children }).to_string();
+    let loaded = load_canonical_with_assets(&src, &no_assets).expect("pen.dev document loads");
+    let report = loaded
+        .compatibility
+        .pen_dev
+        .clone()
+        .expect("converted as pen.dev");
+    (loaded.loaded.value, report)
+}
+
+#[test]
+fn reusable_rectangle_becomes_a_reusable_frame_with_the_same_look() {
+    let (as_frame, report) = load(json!([leaf()]));
+    let mut plain = leaf();
+    plain.as_object_mut().unwrap().remove("reusable");
+    let (as_rect, _) = load(json!([plain]));
+    assert!(!report.has_losses(), "{}", report.summary());
+
+    let PenNode::Frame(frame) = &as_frame.children[0] else {
+        panic!("reusable rectangle imports as a frame");
+    };
+    let PenNode::Rectangle(rect) = &as_rect.children[0] else {
+        panic!("plain rectangle stays a rectangle");
+    };
+    assert_eq!(frame.reusable, Some(true));
+    assert!(frame.children.is_none());
+    assert_eq!(frame.base, rect.base, "id, name, position, opacity");
+    // Free-form, fixed size: the frame defaults add no hug layout.
+    assert_eq!(frame.container.layout, Some(LayoutMode::None));
+    assert_eq!(frame.container.width, Some(SizingBehavior::Number(18.0)));
+    assert_eq!(frame.container.height, Some(SizingBehavior::Number(18.0)));
+    let mut container = frame.container.clone();
+    container.layout = rect.container.layout.clone();
+    assert_eq!(
+        container, rect.container,
+        "size, fill, stroke, radius, effects"
+    );
+}
+
+#[test]
+fn reusable_rectangle_is_a_component_and_its_refs_resolve() {
+    let (doc, _) = load(json!([
+        leaf(),
+        // The canonical schema keeps an instance's root overrides under
+        // `descendants[<component id>]`.
+        { "type": "ref", "id": "copy", "ref": "leaf", "x": 100, "y": 0,
+          "descendants": { "leaf": { "fill": "#FF0000" } } }
+    ]));
+    let components = ComponentLibrary::from_document(&doc);
+    let component = components
+        .find_by_id(&NodeId::new("leaf"))
+        .expect("listed as a component");
+    assert_eq!(component.name, "Leaf/First");
+
+    let roots = ref_resolve::resolve_refs_for_canvas_roots(&doc.children, &doc);
+    let PenNode::Frame(instance) = &roots[1] else {
+        panic!("ref expands to the component's frame");
+    };
+    assert_eq!(instance.base.id, "copy");
+    assert_eq!(instance.base.x, Some(100.0));
+    assert_eq!(instance.reusable, None, "an instance is not a component");
+    assert_eq!(instance.container.width, Some(SizingBehavior::Number(18.0)));
+    let fill = serde_json::to_value(&instance.container.fill).unwrap();
+    assert_eq!(fill[0]["color"], "#FF0000", "root override applies: {fill}");
+}
+
+#[test]
+fn other_reusable_kinds_are_reported() {
+    let (doc, report) = load(json!([
+        { "type": "ellipse", "id": "dot", "reusable": true, "width": 8, "height": 8, "fill": "#000000" },
+        { "type": "frame", "id": "card", "reusable": true, "width": 10, "height": 10 }
+    ]));
+    assert!(matches!(doc.children[0], PenNode::Ellipse(_)));
+    assert_eq!(
+        report.unsupported.get("non-frame reusable component"),
+        Some(&1)
+    );
+    let components = ComponentLibrary::from_document(&doc);
+    assert!(components.find_by_id(&NodeId::new("card")).is_some());
+    assert!(components.find_by_id(&NodeId::new("dot")).is_none());
+}
