@@ -174,6 +174,10 @@ impl WidgetHostNative {
     ) -> bool {
         self.last_viewport_w = viewport_width;
         self.last_viewport_h = viewport_height;
+        // A press anywhere takes the keyboard from the shader source editor;
+        // a press inside it (its tier) gives it back. Higher tiers (the
+        // colour picker's fields, modals) would otherwise share keys with it.
+        de_editor_core::shader_source_editor::blur(&mut self.editor_state);
         // Home is a full-surface first-launch entry and owns every pointer
         // event before document chrome or canvas tiers can see it — but the
         // overlays Home itself opens (agent settings, the language menu, the

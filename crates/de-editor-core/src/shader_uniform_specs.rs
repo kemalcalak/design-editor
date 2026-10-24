@@ -188,7 +188,7 @@ impl ShaderUniformSpec {
     }
 }
 
-/// `#RRGGBB[AA]` → linear 0..1 RGBA.
+/// `#RRGGBB[AA]` → 0..1 RGBA (sRGB bytes / 255).
 pub(crate) fn rgba(hex: &str) -> Option<[f32; 4]> {
     de_util::hex_color::parse_hex_rgba_f32(hex, de_util::hex_color::HexOptions::LENIENT)
 }

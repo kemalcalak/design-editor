@@ -136,7 +136,7 @@ pub fn primary_body_items(snapshot: &crate::widgets::property_panel::NodeSnapsho
 
 /// Height of the uniform rows plus the Code row.
 pub fn body_height(body: &ShaderBody) -> f32 {
-    body.rows.len() as f32 * ROW_STEP + INPUT_HEIGHT + TRAILING_GAP
+    body_height_for_rows(body.rows.len())
 }
 
 /// Height of `rows` uniform rows plus the Code row (the fill section's
@@ -259,8 +259,8 @@ pub fn push_action_rects(
     ));
 }
 
-/// The slider value under `x` for the drag of row `index`: the action
-/// rect walker's slider rect is the hit rect.
+/// The drag action for row `index` with the value under `x`; `slider` is
+/// the slider rect the action walker emitted for that row.
 pub fn drag_value(
     target: ShaderTarget,
     index: usize,
@@ -379,7 +379,8 @@ fn paint_label(cx: &mut PaintCx<'_>, theme: &Theme, rect: Rect, label: &str) {
     );
 }
 
-/// Track, fill and knob, as the effect amount slider paints them.
+/// Track, fill and knob. The knob is a ring (unlike the effect amount
+/// slider's dot) so it stays visible over the filled track at a range end.
 fn paint_slider(cx: &mut PaintCx<'_>, theme: &Theme, slider: Rect, range: (f32, f32), value: f32) {
     let (lo, hi) = range;
     let t = ((value - lo) / (hi - lo)).clamp(0.0, 1.0);

@@ -2,7 +2,9 @@
 //!
 //! "Code" on a shader fill or effect opens a floating editor over the
 //! panel with the program's SkSL. It is a plain multi-line text field:
-//! Enter inserts a newline (keeping the line's indent), Tab four spaces,
+//! Enter inserts a newline (keeping the line's indent), Tab four spaces
+//! (tabs in an opened or pasted source become spaces too, so one char is
+//! one column),
 //! the arrows move by character and line. Apply writes the draft through
 //! `EditorCommand::SetShaderSource` (one undo step) and keeps the editor
 //! open, so a compile error can be fixed and applied again; Close or
@@ -126,7 +128,9 @@ impl EditorState {
         let Some(program) = self.selected_shader_program(target) else {
             return false;
         };
-        let mut input = TextInputState::with_text(program.sksl.unwrap_or_default());
+        // Tabs become spaces: the editor maps one char to one column.
+        let text = program.sksl.unwrap_or_default().replace('\t', INDENT);
+        let mut input = TextInputState::with_text(text);
         input.set_caret(0, 0);
         self.editor_ui.shader_editing.editor = Some(ShaderSourceEditor {
             node_id,
@@ -205,8 +209,9 @@ pub fn paste(state: &mut EditorState, pasted: &str, now_ms: u64) -> Option<bool>
     edit(state, |editor| {
         let cleaned: String = pasted
             .replace("\r\n", "\n")
+            .replace('\t', INDENT)
             .chars()
-            .filter(|c| !c.is_control() || matches!(c, '\n' | '\t'))
+            .filter(|c| !c.is_control() || *c == '\n')
             .collect();
         if cleaned.is_empty() {
             return false;
@@ -300,6 +305,13 @@ pub fn escape(state: &mut EditorState) -> Option<bool> {
         .as_ref()
         .filter(|editor| editor.focused)?;
     Some(state.close_shader_source_editor())
+}
+
+/// Give up the keyboard (the editor stays open).
+pub fn blur(state: &mut EditorState) {
+    if let Some(editor) = state.editor_ui.shader_editing.editor.as_mut() {
+        editor.focused = false;
+    }
 }
 
 /// Whether the editor owns the keyboard.

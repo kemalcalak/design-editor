@@ -36,6 +36,9 @@ impl WidgetHost {
         viewport_height: f32,
     ) -> Option<bool> {
         self.editor_state.editor_ui.shader_editing.editor.as_ref()?;
+        if self.preview_slideshow_active() {
+            return None;
+        }
         let layout = self.shader_editor_layout(viewport_width, viewport_height);
         let consumed = editor::apply_press(
             &mut self.editor_state,

@@ -58,6 +58,13 @@ fn typing_keeps_indent_and_moves_by_line() {
     assert_eq!(paste(&mut s, "a\r\nb", 0), Some(true));
     assert!(draft(&s).contains("y   a\nb\n}"));
     assert!(s.shader_source_editor_dirty());
+    // Pasted tabs become spaces: one char is one column.
+    paste(&mut s, "\tz", 0);
+    assert!(draft(&s).contains("b    z"));
+    // A press elsewhere takes the keyboard; the editor stays open.
+    blur(&mut s);
+    assert_eq!(text(&mut s, 'q', 0), None);
+    assert!(s.editor_ui.shader_editing.editor.is_some());
 }
 
 #[test]

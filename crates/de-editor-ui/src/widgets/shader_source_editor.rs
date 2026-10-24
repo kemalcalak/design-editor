@@ -269,6 +269,9 @@ fn paint_code(
     cx.backend.clip_rect(layout.code);
     let mut line_start = 0;
     for (line, content) in text.split('\n').enumerate() {
+        if line >= editor.scroll_line + VISIBLE_LINES {
+            break;
+        }
         let line_end = line_start + content.len();
         if line >= editor.scroll_line && line < editor.scroll_line + VISIBLE_LINES {
             let row = (line - editor.scroll_line) as f32;
@@ -301,8 +304,8 @@ fn paint_code(
                     );
                 }
             }
+            // Core turns tabs into spaces, so one char is one column.
             let visible: String = content.chars().take(max_columns).collect();
-            let visible = visible.replace('\t', "    ");
             draw_code_text(
                 cx,
                 &visible,
