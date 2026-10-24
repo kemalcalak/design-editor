@@ -165,6 +165,12 @@ pub(super) fn polygon_to_payload(n: &PolygonNode) -> NodePayload {
     p.stroke = stroke_to_payload(n.stroke.as_ref());
     p.corner_radius = n.corner_radius.unwrap_or(0.0) as f32;
     p.polygon_sides = n.polygon_count.clamp(3, 100);
+    // A star rides the ellipse's inner-radius slot (#87): the scene has no
+    // polygon-specific field and the polygon painters read it from here.
+    p.arc_inner_radius = n
+        .inner_radius
+        .and_then(de_editor_core::star_shape::clamp_star_inner_radius)
+        .map(|r| r as f32);
     p
 }
 

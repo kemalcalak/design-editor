@@ -203,6 +203,7 @@ impl WidgetHostNative {
             Tool::Rect
             | Tool::Ellipse
             | Tool::Polygon
+            | Tool::Star
             | Tool::Line
             | Tool::Pen
             | Tool::Frame

@@ -19,8 +19,9 @@
 //! re-exported here so existing `canvas_viewport_paint::…` paths keep
 //! resolving.
 
-use crate::layout_scene::{regular_polygon_points, SceneNode};
+use crate::layout_scene::SceneNode;
 use crate::layout_scene::{Effect, NodeKind};
+use crate::polygon_geometry::polygon_node_points;
 use crate::widgets::canvas_viewport_fill_layers::{
     fill_layer_fallback_color, paint_clipped_fill_layers_with, paint_clipped_shape_rich_fill_layer,
     paint_fill_layers, paint_fill_layers_then_stroke,
@@ -563,7 +564,7 @@ fn paint_node_inner<'a>(
             }
         }
         NodeKind::Polygon => {
-            let pts = regular_polygon_points(world_rect, node.polygon_sides);
+            let pts = polygon_node_points(node, world_rect);
             let layered = paint_clipped_fill_layers_with(
                 cx,
                 node,

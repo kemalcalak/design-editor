@@ -25,6 +25,7 @@ mod node_build;
 mod node_mapper;
 mod page_mapper;
 mod prepared;
+mod star_converter;
 mod text_cache;
 mod text_mapper;
 mod tree;

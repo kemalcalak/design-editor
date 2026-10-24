@@ -18,7 +18,7 @@ use jian_ops_schema::sizing::SizingBehavior;
 /// Resolve an editor `kind` arg into a canonical-schema leaf node.
 /// Accepts the same lowercase strings the read-side tools emit
 /// (`frame` / `group` / `rect` / `ellipse` / `polygon` / `line` /
-/// `text` / `path`). `None` for an unknown kind.
+/// `text` / `path`), plus `star` — a polygon with an inner radius. `None` for an unknown kind.
 ///
 /// `width` / `height` write the variant's literal `SizingBehavior`;
 /// `(x, y)` write `base`. Container kinds (`frame` / `group`) start
@@ -42,6 +42,7 @@ pub fn build_leaf_node(
     };
     let w = SizingBehavior::Number(width.max(0) as f64);
     let h = SizingBehavior::Number(height.max(0) as f64);
+    let is_star = kind == "star";
     let node = match kind {
         "frame" => PenNode::Frame(FrameNode {
             base,
@@ -116,13 +117,18 @@ pub fn build_leaf_node(
             route: None,
             limits: Default::default(),
         }),
-        "polygon" => PenNode::Polygon(PolygonNode {
+        "polygon" | "star" => PenNode::Polygon(PolygonNode {
             base,
-            polygon_count: 3,
+            polygon_count: if is_star {
+                crate::star_shape::STAR_DEFAULT_POINTS
+            } else {
+                3
+            },
             width: Some(w),
             height: Some(h),
             corner_radius: None,
-            inner_radius: None,
+            // A star is a polygon with an inner radius (#87).
+            inner_radius: is_star.then_some(crate::star_shape::STAR_DEFAULT_INNER_RADIUS),
             fill: None,
             stroke: None,
             effects: None,
@@ -325,6 +331,6 @@ pub const WIDGET_KINDS: [&str; 10] = [
 pub fn kind_is_valid(kind: &str) -> bool {
     matches!(
         kind,
-        "frame" | "group" | "rect" | "ellipse" | "polygon" | "line" | "text" | "path"
+        "frame" | "group" | "rect" | "ellipse" | "polygon" | "star" | "line" | "text" | "path"
     ) || WIDGET_KINDS.contains(&kind)
 }

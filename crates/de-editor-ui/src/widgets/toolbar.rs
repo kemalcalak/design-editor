@@ -76,7 +76,7 @@ pub struct Toolbar {
 
 /// Whether `tool` is one the shape slot carries.
 fn slot_carries(tool: Tool) -> bool {
-    matches!(tool, Tool::Rect | Tool::Polygon | Tool::Line)
+    matches!(tool, Tool::Rect | Tool::Polygon | Tool::Star | Tool::Line)
 }
 
 impl Toolbar {
@@ -218,6 +218,7 @@ pub fn icon_for_shape(tool: Tool) -> Icon {
         Tool::Rect => Icon::Square,
         Tool::Ellipse => Icon::Circle,
         Tool::Polygon => Icon::Triangle,
+        Tool::Star => Icon::Star,
         Tool::Line => Icon::Minus,
         Tool::Pen => Icon::PenTool,
         _ => Icon::Square,

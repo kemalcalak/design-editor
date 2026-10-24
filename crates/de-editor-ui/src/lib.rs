@@ -40,6 +40,7 @@ pub mod accessibility;
 pub mod accessibility_regions;
 pub mod font_catalog;
 pub mod image_runtime;
+pub mod polygon_geometry;
 // The render scene now lives in the `jian-scene` crate and `scene_vars` in
 // de-editor-core. Re-exported here so existing consumer paths keep resolving
 // (`de_editor_ui::layout_scene::*` / `::layout_scene_hit::*` / `::scene_vars::*`),
