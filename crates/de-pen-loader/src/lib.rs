@@ -46,6 +46,8 @@ mod html_import_scene_tests;
 mod image_drop_scene_tests;
 #[cfg(feature = "skia-measure")]
 mod measure_cache;
+#[cfg(feature = "skia-measure")]
+mod painter_wrap_measure;
 mod path_bounds;
 #[cfg(test)]
 mod property_edit_scene_tests;
@@ -98,6 +100,7 @@ pub use scene_cache::SceneBuildCache;
 
 // Re-exports so `design-editor`'s existing call sites change
 // minimally.
+pub use adapter::pages::layout_measure_backend;
 pub use adapter::{
     build_var_table, pen_document_to_payload, pen_document_to_payload_preserving_geometry,
     root_authored_origin, root_available_size, LoadedDoc,

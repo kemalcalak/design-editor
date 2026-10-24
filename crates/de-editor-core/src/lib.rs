@@ -174,6 +174,7 @@ pub mod text_edit;
 pub mod text_input_focus;
 pub mod text_script;
 mod text_script_tests;
+pub mod text_wrap;
 pub mod theme_presets;
 pub mod tool;
 pub mod toolbar_state;

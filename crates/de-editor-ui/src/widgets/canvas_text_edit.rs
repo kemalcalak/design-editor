@@ -7,8 +7,8 @@
 //! too), so caret xy, selection rects, and click-to-caret hit-testing
 //! all agree with the painted glyphs: same CJK-aware wrap
 //! (`canvas_text_wrap::wrap_text`, in the node's own face), same
-//! wrap-width tolerance, same per-line alignment, same letter-spacing
-//! advance model.
+//! exact wrap width (`canvas_text_wrap::wrap_width`), same per-line
+//! alignment, same letter-spacing advance model.
 //!
 //! All geometry is in DOCUMENT space (the painter applies the
 //! viewport transform as a canvas transform); the host converts
@@ -49,8 +49,8 @@ pub struct TextEditLayout {
 
 /// Resolve the painted line layout for `node` — paint-parity
 /// defaults (13 px font, weight 400, 1.2 line height) and the same
-/// wrap decision (`text_wrap` + 5% / half-font-size tolerance) as
-/// `paint_text_node`.
+/// wrap decision (`canvas_text_wrap::wrap_width`: the box width, exactly)
+/// as `paint_text_node`.
 pub fn text_edit_layout(backend: &mut dyn RenderBackend, node: &SceneNode) -> TextEditLayout {
     let text = node.text.as_deref().unwrap_or("");
     let mut font_size = if node.font_size > 0.0 {
@@ -68,16 +68,7 @@ pub fn text_edit_layout(backend: &mut dyn RenderBackend, node: &SceneNode) -> Te
     } else {
         1.2
     };
-    let wrap_width_doc = if node.text_wrap {
-        // Same tolerance as the painter (TS renderer parity): without
-        // it CJK strings that exactly fit can wrap differently here
-        // than on the painted canvas.
-        let doc_width = node.bounds.size.x;
-        let tolerance = (doc_width * 0.05).ceil().min((font_size * 0.5).ceil());
-        Some(doc_width + tolerance)
-    } else {
-        None
-    };
+    let wrap_width_doc = super::canvas_text_wrap::wrap_width(node);
     let mut letter_spacing = if node.letter_spacing.is_finite() {
         node.letter_spacing
     } else {
@@ -468,10 +459,43 @@ mod tests {
         let mut b = UniformBackend;
         let mut node = text_node("hello world", 60.0);
         node.text_wrap = true;
-        // 60 px + tolerance(min(ceil(3), ceil(10)) = 3) = 63 → 6 chars.
+        // Breaks at exactly 60 px → "hello " (6 chars = 60 px) fits.
         let layout = text_edit_layout(&mut b, &node);
         assert_eq!(layout.lines, vec!["hello ", "world"]);
         assert_eq!(layout.line_ranges(), vec![(0, 6), (6, 11)]);
+    }
+
+    #[test]
+    fn wrap_breaks_a_line_that_overflows_the_box_by_a_few_px() {
+        // "hello world" = 110 px in a 105 px box. The retired slack
+        // (min(ceil(5%), ceil(fs / 2)) = 6 px) kept it on one line (#186).
+        let mut b = UniformBackend;
+        let mut node = text_node("hello world", 105.0);
+        node.text_wrap = true;
+        let layout = text_edit_layout(&mut b, &node);
+        assert_eq!(layout.lines, vec!["hello ", "world"]);
+        assert_eq!(layout.align_width, 105.0);
+    }
+
+    #[test]
+    fn wrap_keeps_a_line_exactly_as_wide_as_the_box() {
+        let mut b = UniformBackend;
+        let mut node = text_node("hello world", 110.0);
+        node.text_wrap = true;
+        let layout = text_edit_layout(&mut b, &node);
+        assert_eq!(layout.lines, vec!["hello world"]);
+    }
+
+    #[test]
+    fn wrapped_centred_text_centres_in_the_box_width() {
+        // "hi" = 20 px centred in a 100 px box at x = 100 starts at 140;
+        // the slack used to widen the alignment box to 105 (142.5).
+        let mut b = UniformBackend;
+        let mut node = text_node("hi", 100.0);
+        node.text_wrap = true;
+        node.text_align = SceneTextAlign::Center;
+        let layout = text_edit_layout(&mut b, &node);
+        assert_eq!(layout.caret_position(&mut b, 0), (140.0, 50.0));
     }
 
     #[test]

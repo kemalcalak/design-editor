@@ -47,6 +47,6 @@ de-html = { path = "../de-html" }
 # Real skia text measurement (native + web-skia). Off → jian-core estimate
 # backend, so the CanvasKit web build links no skia-safe.
 default = ["skia-measure", "sksl-check"]
-skia-measure = ["dep:jian-skia"]
+skia-measure = ["dep:jian-skia", "dep:skia-safe"]
 # Drop pen.dev shader paints whose translated SkSL does not compile.
 sksl-check = ["dep:skia-safe"]

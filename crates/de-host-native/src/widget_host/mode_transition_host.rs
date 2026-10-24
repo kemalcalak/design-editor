@@ -53,7 +53,8 @@ impl WidgetHostNative {
                 state.ui.active_page_index,
                 state.editor_ui.preserve_authored_geometry,
                 presenting,
-                std::rc::Rc::new(jian_skia::SkiaMeasure::new()),
+                // The canvas layout's measure, so preview text wraps alike.
+                de_pen_loader::layout_measure_backend(),
                 de_preview_core::PreviewHostCapabilities::none(),
                 host_motion_preference(),
                 now_ms,
