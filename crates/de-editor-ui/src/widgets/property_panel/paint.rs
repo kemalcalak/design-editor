@@ -393,6 +393,7 @@ impl Widget for PropertyPanel {
                 &self.labels,
                 self.export_format,
                 self.export_scale,
+                self.visible_sections().export_scale_row,
                 self.export_section_open,
                 x,
                 y,

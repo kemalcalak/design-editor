@@ -211,8 +211,8 @@ pub struct PropertyPanel {
     /// Whether the Code view's close button is hovered.
     pub close_hovered: bool,
     /// Current export format + scale, shown on the Export section's
-    /// two dropdowns. Clicking a dropdown opens its inline select
-    /// popup (NOT the Export modal).
+    /// dropdowns (the scale one only for raster formats). Clicking a
+    /// dropdown opens its inline select popup (NOT the Export modal).
     pub export_format: de_editor_core::ExportFormat,
     pub export_scale: f32,
     /// Whether the Export section's scale / format inline select
@@ -401,6 +401,7 @@ impl PropertyPanel {
             stroke_style_rows: self.snapshot.stroke.is_some(),
             fill_menu: self.fill_menu_open,
             export_open: self.export_section_open,
+            export_scale_row: self.export_format.uses_scale(),
             color_variable_count: self.color_variable_count,
             fill_variable_bound: self.fill_variable_ref.is_some(),
             stroke_variable_bound: self.stroke_variable_ref.is_some(),

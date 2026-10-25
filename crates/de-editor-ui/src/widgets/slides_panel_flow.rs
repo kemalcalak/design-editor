@@ -504,7 +504,7 @@ pub fn release(state: &mut EditorState, layout: &SlidesPanelLayout) -> SlidesRel
 /// chrome from writing two different PDFs.
 fn queue_deck_pdf_export(state: &mut EditorState) {
     use de_editor_core::editor_ui_state::{ExportFormat, FileAction};
-    state.editor_ui.export_format = ExportFormat::Pdf;
+    state.editor_ui.set_export_format(ExportFormat::Pdf);
     state.editor_ui.pending_file_action = Some(FileAction::ExportImageConfirm);
 }
 
@@ -522,7 +522,7 @@ fn queue_deck_pdf_export(state: &mut EditorState) {
 /// later re-open of the export dialog shows the format this actually wrote.
 fn queue_selected_slides_pdf_export(state: &mut EditorState) {
     use de_editor_core::editor_ui_state::{ExportFormat, FileAction};
-    state.editor_ui.export_format = ExportFormat::Pdf;
+    state.editor_ui.set_export_format(ExportFormat::Pdf);
     state.editor_ui.pending_file_action = Some(FileAction::ExportDeckPdfSelection);
 }
 

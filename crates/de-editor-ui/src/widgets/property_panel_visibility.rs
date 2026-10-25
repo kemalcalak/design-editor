@@ -312,6 +312,10 @@ pub struct VisibleSections {
     pub fill_menu: Option<usize>,
     /// Export section expanded (else just its header and "+").
     pub export_open: bool,
+    /// The Export row shows the scale dropdown: only for the raster
+    /// formats (`ExportFormat::uses_scale`, #224); else the format
+    /// dropdown takes the whole row.
+    pub export_scale_row: bool,
     pub color_variable_count: usize,
     pub fill_variable_bound: bool,
     pub stroke_variable_bound: bool,
@@ -454,6 +458,7 @@ impl VisibleSections {
         stroke_style_rows: true,
         fill_menu: None,
         export_open: true,
+        export_scale_row: true,
         color_variable_count: 0,
         fill_variable_bound: false,
         stroke_variable_bound: false,
