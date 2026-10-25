@@ -7,8 +7,31 @@
 //! diagnostics carry. `de-host-desktop` falls back to the GUI on an
 //! unknown mode; `de-host-web-server` treats it as a usage error. Both
 //! decisions stay with the caller.
+//!
+//! Every mode runs on its own thread with [`MODE_STACK_BYTES`] of stack,
+//! not on the caller's: Windows gives a process's main thread 1 MiB, and a
+//! debug daemon loading a document already needs about that (#227).
 
 use std::path::PathBuf;
+
+/// Stack of the thread a server mode runs on. Reserved address space, not
+/// committed memory, so a generous size costs nothing until it is used.
+pub const MODE_STACK_BYTES: usize = 64 * 1024 * 1024;
+
+/// Run `work` on a fresh thread with [`MODE_STACK_BYTES`] of stack and
+/// wait for it. A panic in `work` resumes on the caller.
+pub fn on_mode_stack<T: Send + 'static>(work: impl FnOnce() -> T + Send + 'static) -> T {
+    let spawned = std::thread::Builder::new()
+        .name("de-server-mode".into())
+        .stack_size(MODE_STACK_BYTES)
+        .spawn(work);
+    match spawned {
+        Ok(handle) => handle
+            .join()
+            .unwrap_or_else(|panic| std::panic::resume_unwind(panic)),
+        Err(err) => panic!("could not start the server-mode thread: {err}"),
+    }
+}
 
 /// Run the headless server mode named by `mode` (the first argv token),
 /// consuming the remaining `args`.
@@ -20,7 +43,16 @@ use std::path::PathBuf;
 ///   `"{prog} {mode}: "`) has already been printed to stderr and the
 ///   caller should exit with `code` (2 = malformed invocation, 1 =
 ///   runtime failure).
-pub fn run_cli_mode(prog: &str, mode: &str, mut args: impl Iterator<Item = String>) -> Option<i32> {
+pub fn run_cli_mode(prog: &str, mode: &str, args: impl Iterator<Item = String>) -> Option<i32> {
+    if !matches!(mode, "--mcp" | "--mcp-http" | "--serve-web") {
+        return None;
+    }
+    let (prog, mode) = (prog.to_string(), mode.to_string());
+    let args: Vec<String> = args.collect();
+    on_mode_stack(move || run_mode(&prog, &mode, args.into_iter()))
+}
+
+fn run_mode(prog: &str, mode: &str, mut args: impl Iterator<Item = String>) -> Option<i32> {
     match mode {
         "--mcp" => {
             let Some(path) = args.next() else {
@@ -89,3 +121,7 @@ pub fn run_cli_mode(prog: &str, mode: &str, mut args: impl Iterator<Item = Strin
         _ => None,
     }
 }
+
+#[cfg(test)]
+#[path = "cli_modes_tests.rs"]
+mod tests;
