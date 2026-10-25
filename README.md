@@ -14,7 +14,7 @@
 
 </div>
 
-https://github.com/user-attachments/assets/37822dea-c4a3-4243-a96b-a81040dd8b48
+https://github.com/user-attachments/assets/01afb537-2813-4bc1-a3b4-910c829abfc1
 
 <p align="center">
   <img src="assets/readme/home.png" alt="Home" width="900" />
