@@ -359,6 +359,8 @@ pub(super) fn dispatch<S: Read + Write>(
         }
         response
     };
+    // Before answering, so a client that reads next sees the children.
+    regenerate_scripts(state, hub);
     let status = if response.is_empty() {
         "202 Accepted"
     } else {
@@ -366,6 +368,46 @@ pub(super) fn dispatch<S: Read + Write>(
     };
     crate::mcp_serve::write_mcp_http_response_with_origin(stream, status, &response, cors_origin)?;
     Ok(false)
+}
+
+/// Run the script nodes a write left stale (#19) without holding the state
+/// lock while they run: take the jobs, release, run, then land them under a
+/// short re-lock. A result an edit in between made stale is dropped by
+/// `land_script_output`.
+fn regenerate_scripts(state: &Mutex<WebCanvasState>, hub: &SseHub) {
+    use de_mcp::script_node::{run_script_job, ScriptLayout};
+    let (jobs, layout) = {
+        let mut guard = state.lock().unwrap_or_else(|p| p.into_inner());
+        let layout = ScriptLayout::of(&guard.editor);
+        let jobs = guard.editor.take_script_jobs(&|id| layout.size(id));
+        (jobs, layout)
+    };
+    if jobs.is_empty() {
+        return;
+    }
+    let runs: Vec<_> = jobs
+        .into_iter()
+        .map(|job| {
+            let run = run_script_job(&job);
+            (job, run)
+        })
+        .collect();
+    let mut guard = state.lock().unwrap_or_else(|p| p.into_inner());
+    let mut landed = false;
+    for (job, run) in runs {
+        let elapsed_ms = run.elapsed.as_millis() as u64;
+        landed |= guard.editor.land_script_output(
+            &job.node_id,
+            &job.hash,
+            run.outcome(),
+            elapsed_ms,
+            &|id| layout.size(id),
+        );
+    }
+    if landed {
+        guard.version += 1;
+        hub.broadcast(guard.sse_tick());
+    }
 }
 
 /// Stream Server-Sent Events to a subscribed client: write the SSE headers,

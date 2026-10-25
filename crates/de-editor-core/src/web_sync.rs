@@ -76,7 +76,12 @@ pub struct WebSyncClient {
 /// FNV-1a 64-bit — tiny, dependency-free content hash for the push baseline.
 /// Not cryptographic; only guards against pushing an unchanged document.
 pub(crate) fn fnv1a64(bytes: &[u8]) -> u64 {
-    let mut hash: u64 = 0xcbf2_9ce4_8422_2325;
+    fnv1a64_extend(0xcbf2_9ce4_8422_2325, bytes)
+}
+
+/// Continue an FNV-1a 64 hash over more bytes, so several fields hash as
+/// one stream without being concatenated first.
+pub(crate) fn fnv1a64_extend(mut hash: u64, bytes: &[u8]) -> u64 {
     for &b in bytes {
         hash ^= u64::from(b);
         hash = hash.wrapping_mul(0x0000_0100_0000_01b3);

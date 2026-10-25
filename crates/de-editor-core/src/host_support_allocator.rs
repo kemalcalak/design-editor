@@ -5,7 +5,7 @@ use crate::fills::{set_primary_fill_hex, set_primary_stroke_hex};
 use crate::walkers::find_node;
 use crate::{EditorState, IdAllocError, IdAllocator, NodeId, Tool};
 use jian_ops_schema::node::image::ImageNode;
-use jian_ops_schema::node::{IconFontNode, PathNode, PenNode, PenNodeBase};
+use jian_ops_schema::node::{IconFontNode, PathNode, PenNode, PenNodeBase, ScriptNode};
 use jian_ops_schema::sizing::SizingBehavior;
 use jian_ops_schema::style::{PenEffect, PenFill, PenStroke, SolidFillBody};
 
@@ -413,11 +413,13 @@ fn default_icon_fill() -> PenFill {
 
 fn boolean_path_style(node: &PenNode) -> BooleanPathStyle {
     match node {
-        PenNode::Frame(node) => BooleanPathStyle {
-            fill: node.container.fill.clone(),
-            stroke: node.container.stroke.clone(),
-            effects: node.container.effects.clone(),
-        },
+        PenNode::Frame(node) | PenNode::Script(ScriptNode { frame: node, .. }) => {
+            BooleanPathStyle {
+                fill: node.container.fill.clone(),
+                stroke: node.container.stroke.clone(),
+                effects: node.container.effects.clone(),
+            }
+        }
         PenNode::Rectangle(node) => BooleanPathStyle {
             fill: node.container.fill.clone(),
             stroke: node.container.stroke.clone(),

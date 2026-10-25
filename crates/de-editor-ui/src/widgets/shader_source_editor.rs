@@ -11,7 +11,7 @@
 //! this module is geometry, paint and the shared press / wheel flows the
 //! hosts call.
 
-use de_editor_core::shader_source_editor::{ShaderSourceEditor, VISIBLE_LINES};
+use de_editor_core::shader_source_editor::{ShaderSourceEditor, SourceTarget, VISIBLE_LINES};
 use de_editor_core::{EditorState, ShaderCheck};
 
 use crate::theme::Theme;
@@ -206,7 +206,10 @@ pub fn paint(
     cx.backend.fill_round_rect(panel, RADIUS, theme.popover);
     cx.backend
         .stroke_round_rect(panel, RADIUS, theme.border, 1.0);
-    let title = de_i18n::translate(locale, "shader.sourceTitle");
+    let title = match editor.target {
+        SourceTarget::Shader(_) => de_i18n::translate(locale, "shader.sourceTitle"),
+        SourceTarget::Script => de_i18n::translate(locale, "script.sourceTitle"),
+    };
     draw_chrome_text(
         cx,
         title,

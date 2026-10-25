@@ -190,6 +190,7 @@ impl PropertyPanel {
                 .iter()
                 .any(|n| n.id_str() == state.selection.anchor.as_str());
             let mut snapshot = NodeSnapshot::from_node(node, is_top_level);
+            snapshot.script = crate::widgets::property_panel_script::script_summary(node, state);
             if let Some(browser) = snapshot.browser.as_mut() {
                 crate::widgets::property_panel_browser::apply_live_state(
                     browser,

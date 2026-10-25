@@ -29,7 +29,7 @@ pub use summaries::{
 /// `Other(tag)` so the section mask treats them structurally).
 fn node_kind_of(node: &PenNode) -> NodeKind {
     match node {
-        PenNode::Frame(_) => NodeKind::Frame,
+        PenNode::Frame(_) | PenNode::Script(_) => NodeKind::Frame,
         PenNode::Group(_) => NodeKind::Group,
         PenNode::Rectangle(_) => NodeKind::Rect,
         PenNode::Ellipse(_) => NodeKind::Ellipse,
@@ -182,6 +182,8 @@ pub struct NodeSnapshot {
     pub widget: Option<WidgetSummary>,
     /// Note / context / prompt fields, `Some` only for an annotation (#12).
     pub annotation: Option<crate::widgets::property_panel_annotation::AnnotationSummary>,
+    /// Input rows and run status, `Some` only for a script node (#19).
+    pub script: Option<crate::widgets::property_panel_script::ScriptSummary>,
     /// Browser page settings, `Some` only for a browser node (#20).
     pub browser: Option<crate::widgets::property_panel_browser::BrowserSummary>,
     pub fill: Option<Color>,

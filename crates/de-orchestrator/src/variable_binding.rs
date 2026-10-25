@@ -17,7 +17,7 @@
 
 use de_editor_core::{EditorState, PenNodeExt};
 use jian_ops_schema::node::text::TextContent;
-use jian_ops_schema::node::PenNode;
+use jian_ops_schema::node::{PenNode, ScriptNode};
 use jian_ops_schema::style::{PenEffect, PenFill, PenStroke};
 use jian_ops_schema::variable::VariableKind;
 
@@ -288,7 +288,9 @@ fn channel(value: f32) -> u8 {
 
 fn node_fills_mut(node: &mut PenNode) -> Option<&mut Vec<PenFill>> {
     match node {
-        PenNode::Frame(n) => n.container.fill.as_mut(),
+        PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => {
+            n.container.fill.as_mut()
+        }
         PenNode::Group(n) => n.container.fill.as_mut(),
         PenNode::Rectangle(n) => n.container.fill.as_mut(),
         PenNode::Ellipse(n) => n.fill.as_mut(),
@@ -318,7 +320,9 @@ fn node_fills_mut(node: &mut PenNode) -> Option<&mut Vec<PenFill>> {
 
 fn node_stroke_mut(node: &mut PenNode) -> Option<&mut Option<PenStroke>> {
     match node {
-        PenNode::Frame(n) => Some(&mut n.container.stroke),
+        PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => {
+            Some(&mut n.container.stroke)
+        }
         PenNode::Group(n) => Some(&mut n.container.stroke),
         PenNode::Rectangle(n) => Some(&mut n.container.stroke),
         PenNode::Ellipse(n) => Some(&mut n.stroke),
@@ -348,7 +352,9 @@ fn node_stroke_mut(node: &mut PenNode) -> Option<&mut Option<PenStroke>> {
 
 fn node_effects_mut(node: &mut PenNode) -> Option<&mut Vec<PenEffect>> {
     match node {
-        PenNode::Frame(n) => n.container.effects.as_mut(),
+        PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => {
+            n.container.effects.as_mut()
+        }
         PenNode::Group(n) => n.container.effects.as_mut(),
         PenNode::Rectangle(n) => n.container.effects.as_mut(),
         PenNode::Ellipse(n) => n.effects.as_mut(),

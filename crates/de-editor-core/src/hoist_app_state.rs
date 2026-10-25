@@ -8,7 +8,7 @@
 //! deterministically regardless of concurrent replay order.
 
 use crate::EditorCommand;
-use jian_ops_schema::node::PenNode;
+use jian_ops_schema::node::{PenNode, ScriptNode};
 use jian_ops_schema::state::StateSchema;
 
 /// `plan_idx` for generation paths that have no orchestrator plan
@@ -20,7 +20,7 @@ pub const UNPLANNED_APP_STATE_IDX: usize = usize::MAX;
 /// Take (strip) a node's own `state`, returning the drained schema.
 fn take_node_state(node: &mut PenNode) -> Option<StateSchema> {
     match node {
-        PenNode::Frame(n) => n.state.take(),
+        PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => n.state.take(),
         PenNode::Group(n) => n.state.take(),
         PenNode::Rectangle(n) => n.state.take(),
         PenNode::Ellipse(n) => n.state.take(),
@@ -52,7 +52,7 @@ fn take_node_state(node: &mut PenNode) -> Option<StateSchema> {
 /// matched; leaf nodes return `None` so the recursive walk skips them.
 fn children_mut(node: &mut PenNode) -> Option<&mut Vec<PenNode>> {
     match node {
-        PenNode::Frame(n) => n.children.as_mut(),
+        PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => n.children.as_mut(),
         PenNode::Group(n) => n.children.as_mut(),
         PenNode::Rectangle(n) => n.children.as_mut(),
         PenNode::Tabs(n) => n.children.as_mut(),

@@ -32,6 +32,7 @@ mod instances;
 mod mesh;
 mod nodes;
 mod paint;
+mod script;
 mod shader;
 #[cfg(test)]
 mod tests;

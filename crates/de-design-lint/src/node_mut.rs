@@ -10,7 +10,7 @@
 //! always matches in practice, but the defensive no-op keeps the
 //! `FixReport` total-counting honest.
 
-use jian_ops_schema::node::{CornerRadius, Padding, PenNode};
+use jian_ops_schema::node::{CornerRadius, Padding, PenNode, ScriptNode};
 use jian_ops_schema::sizing::{SizingBehavior, SizingKeyword};
 use jian_ops_schema::style::PenStroke;
 use serde_json::Value;
@@ -150,7 +150,7 @@ pub fn detach_child(parent: &mut PenNode, node_id: &str) -> bool {
 /// kinds and for containers whose `children` field is unset.
 fn children_mut(node: &mut PenNode) -> Option<&mut Vec<PenNode>> {
     match node {
-        PenNode::Frame(n) => n.children.as_mut(),
+        PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => n.children.as_mut(),
         PenNode::Group(n) => n.children.as_mut(),
         PenNode::Rectangle(n) => n.children.as_mut(),
         _ => None,
@@ -160,7 +160,7 @@ fn children_mut(node: &mut PenNode) -> Option<&mut Vec<PenNode>> {
 /// Mutable borrow of any node kind's shared [`PenNodeBase`].
 fn base_mut(node: &mut PenNode) -> &mut jian_ops_schema::node::PenNodeBase {
     match node {
-        PenNode::Frame(n) => &mut n.base,
+        PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => &mut n.base,
         PenNode::Group(n) => &mut n.base,
         PenNode::Rectangle(n) => &mut n.base,
         PenNode::Ellipse(n) => &mut n.base,

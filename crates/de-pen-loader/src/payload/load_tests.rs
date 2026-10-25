@@ -1,5 +1,5 @@
 use super::*;
-use jian_ops_schema::node::PenNode;
+use jian_ops_schema::node::{PenNode, ScriptNode};
 
 fn nested_frame_doc(depth: usize) -> String {
     let mut src = String::from(r#"{"version":"1.0.0","children":["#);
@@ -63,7 +63,7 @@ fn max_depth(nodes: &[PenNode]) -> usize {
 
 fn node_id(node: &PenNode) -> &str {
     match node {
-        PenNode::Frame(node) => &node.base.id,
+        PenNode::Frame(node) | PenNode::Script(ScriptNode { frame: node, .. }) => &node.base.id,
         PenNode::Group(node) => &node.base.id,
         PenNode::Rectangle(node) => &node.base.id,
         PenNode::Ellipse(node) => &node.base.id,

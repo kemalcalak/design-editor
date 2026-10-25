@@ -50,7 +50,7 @@ use de_design_lint::{
 };
 use de_editor_core::{EditorCommand, EditorState, NodeId};
 use de_orchestrator::{DocSink, PreValidationResult, PreValidator};
-use jian_ops_schema::node::{container::LayoutMode, PenNode};
+use jian_ops_schema::node::{container::LayoutMode, PenNode, ScriptNode};
 
 /// Real `PreValidator` implementation backed by `de-design-lint`.
 ///
@@ -296,7 +296,9 @@ fn effects_from_pen_node(
 ) -> &[jian_ops_schema::style::PenEffect] {
     use jian_ops_schema::node::PenNode;
     let opt = match node {
-        PenNode::Frame(n) => n.container.effects.as_deref(),
+        PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => {
+            n.container.effects.as_deref()
+        }
         PenNode::Group(n) => n.container.effects.as_deref(),
         PenNode::Rectangle(n) => n.container.effects.as_deref(),
         PenNode::Ellipse(n) => n.effects.as_deref(),

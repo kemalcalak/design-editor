@@ -277,6 +277,8 @@ pub struct VisibleSections {
     pub widget_checked: bool,
     /// Annotation section (#12) — `Some(kind)` for a note / context / prompt.
     pub annotation: Option<jian_ops_schema::node::AnnotationKind>,
+    /// Script section (#19) — the input rows of a script node.
+    pub script: Option<crate::widgets::property_panel_script::ScriptRows>,
     /// Browser section (#20) — `Some(pages_allowed)` for a browser node.
     pub browser: Option<bool>,
     pub image: bool,
@@ -431,6 +433,7 @@ impl VisibleSections {
         widget: None,
         widget_checked: false,
         annotation: None,
+        script: None,
         browser: None,
         image: false,
         video: false,

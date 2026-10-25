@@ -390,6 +390,16 @@ pub fn action_button_rects_with_fill_picker(
         );
     }
 
+    if let Some(rows) = visible.script {
+        crate::widgets::property_panel_script::push_script_action_rects(
+            &mut out,
+            rows,
+            x0,
+            tops.script,
+            usable_w,
+        );
+    }
+
     if let Some(pages_allowed) = visible.browser {
         crate::widgets::property_panel_browser::push_browser_action_rects(
             &mut out,

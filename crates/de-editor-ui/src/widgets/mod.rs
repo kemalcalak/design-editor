@@ -137,6 +137,7 @@ mod property_panel_page;
 mod property_panel_paint_options_tests;
 #[cfg(test)]
 mod property_panel_press_tests;
+pub mod property_panel_script;
 pub mod property_panel_section_tops;
 pub mod property_panel_sections;
 pub(crate) mod property_panel_segments;

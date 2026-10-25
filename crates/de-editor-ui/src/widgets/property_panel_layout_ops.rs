@@ -8,7 +8,7 @@
 //! only the layout-scene-dependent size resolution.
 
 use de_editor_core::{EditorState, PropertyFocus};
-use jian_ops_schema::node::PenNode;
+use jian_ops_schema::node::{PenNode, ScriptNode};
 use jian_ops_schema::sizing::{SizingBehavior, SizingKeyword};
 
 use crate::widgets::property_panel::{
@@ -183,8 +183,12 @@ fn set_selected_layout_keyword(state: &mut EditorState, property: &str, keyword:
 
 fn selected_sizing(node: &PenNode, width: bool) -> Option<&SizingBehavior> {
     match (node, width) {
-        (PenNode::Frame(n), true) => n.container.width.as_ref(),
-        (PenNode::Frame(n), false) => n.container.height.as_ref(),
+        (PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }), true) => {
+            n.container.width.as_ref()
+        }
+        (PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }), false) => {
+            n.container.height.as_ref()
+        }
         (PenNode::Group(n), true) => n.container.width.as_ref(),
         (PenNode::Group(n), false) => n.container.height.as_ref(),
         (PenNode::Rectangle(n), true) => n.container.width.as_ref(),
@@ -231,7 +235,9 @@ fn selected_sizing(node: &PenNode, width: bool) -> Option<&SizingBehavior> {
 
 fn selected_clip_content(node: &PenNode) -> bool {
     match node {
-        PenNode::Frame(n) => n.container.clip_content.unwrap_or(false),
+        PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => {
+            n.container.clip_content.unwrap_or(false)
+        }
         PenNode::Group(n) => n.container.clip_content.unwrap_or(false),
         PenNode::Rectangle(n) => n.container.clip_content.unwrap_or(false),
         _ => false,

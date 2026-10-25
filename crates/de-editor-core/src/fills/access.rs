@@ -4,6 +4,7 @@
 //! constructor) — the writers live in the sibling modules.
 
 use super::*;
+use jian_ops_schema::node::ScriptNode;
 
 /// Borrow a node's `fill` list, if the variant carries one. Frame /
 /// Group fills live on `container.fill`; the leaf paintable variants
@@ -11,7 +12,9 @@ use super::*;
 /// IconFont) carry their own `fill`. Line / Image / Ref have none.
 pub fn node_fills(node: &PenNode) -> Option<&Vec<PenFill>> {
     match node {
-        PenNode::Frame(n) => n.container.fill.as_ref(),
+        PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => {
+            n.container.fill.as_ref()
+        }
         PenNode::Group(n) => n.container.fill.as_ref(),
         PenNode::Rectangle(n) => n.container.fill.as_ref(),
         PenNode::Ellipse(n) => n.fill.as_ref(),
@@ -44,7 +47,9 @@ pub fn node_fills(node: &PenNode) -> Option<&Vec<PenFill>> {
 /// variants that have no `fill` field at all.
 pub fn node_fills_mut(node: &mut PenNode) -> Option<&mut Vec<PenFill>> {
     match node {
-        PenNode::Frame(n) => Some(n.container.fill.get_or_insert_with(Vec::new)),
+        PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => {
+            Some(n.container.fill.get_or_insert_with(Vec::new))
+        }
         PenNode::Group(n) => Some(n.container.fill.get_or_insert_with(Vec::new)),
         PenNode::Rectangle(n) => Some(n.container.fill.get_or_insert_with(Vec::new)),
         PenNode::Ellipse(n) => Some(n.fill.get_or_insert_with(Vec::new)),
@@ -75,7 +80,9 @@ pub fn node_fills_mut(node: &mut PenNode) -> Option<&mut Vec<PenFill>> {
 /// Borrow a node's `stroke`, if the variant carries one.
 pub(crate) fn node_stroke_mut(node: &mut PenNode) -> Option<&mut Option<PenStroke>> {
     match node {
-        PenNode::Frame(n) => Some(&mut n.container.stroke),
+        PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => {
+            Some(&mut n.container.stroke)
+        }
         PenNode::Group(n) => Some(&mut n.container.stroke),
         PenNode::Rectangle(n) => Some(&mut n.container.stroke),
         PenNode::Ellipse(n) => Some(&mut n.stroke),
@@ -106,7 +113,9 @@ pub(crate) fn node_stroke_mut(node: &mut PenNode) -> Option<&mut Option<PenStrok
 /// Shared stroke accessor for reads.
 pub(crate) fn node_stroke(node: &PenNode) -> Option<&PenStroke> {
     match node {
-        PenNode::Frame(n) => n.container.stroke.as_ref(),
+        PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => {
+            n.container.stroke.as_ref()
+        }
         PenNode::Group(n) => n.container.stroke.as_ref(),
         PenNode::Rectangle(n) => n.container.stroke.as_ref(),
         PenNode::Ellipse(n) => n.stroke.as_ref(),
@@ -153,7 +162,9 @@ pub fn node_supports_effects(node: &PenNode) -> bool {
 
 pub(super) fn node_effects_mut(node: &mut PenNode) -> Option<&mut Vec<PenEffect>> {
     match node {
-        PenNode::Frame(n) => Some(n.container.effects.get_or_insert_with(Vec::new)),
+        PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => {
+            Some(n.container.effects.get_or_insert_with(Vec::new))
+        }
         PenNode::Group(n) => Some(n.container.effects.get_or_insert_with(Vec::new)),
         PenNode::Rectangle(n) => Some(n.container.effects.get_or_insert_with(Vec::new)),
         PenNode::Ellipse(n) => Some(n.effects.get_or_insert_with(Vec::new)),
@@ -192,7 +203,9 @@ pub(crate) fn node_stroke_fills(node: &PenNode) -> Option<&Vec<PenFill>> {
 /// not change which nodes carry a `fill` field.
 pub(crate) fn node_fills_opt_mut(node: &mut PenNode) -> Option<&mut Vec<PenFill>> {
     match node {
-        PenNode::Frame(n) => n.container.fill.as_mut(),
+        PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => {
+            n.container.fill.as_mut()
+        }
         PenNode::Group(n) => n.container.fill.as_mut(),
         PenNode::Rectangle(n) => n.container.fill.as_mut(),
         PenNode::Ellipse(n) => n.fill.as_mut(),
@@ -224,7 +237,9 @@ pub(crate) fn node_fills_opt_mut(node: &mut PenNode) -> Option<&mut Vec<PenFill>
 /// materializing an empty one — companion to [`node_fills_opt_mut`].
 pub(crate) fn node_effects_opt_mut(node: &mut PenNode) -> Option<&mut Vec<PenEffect>> {
     match node {
-        PenNode::Frame(n) => n.container.effects.as_mut(),
+        PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => {
+            n.container.effects.as_mut()
+        }
         PenNode::Group(n) => n.container.effects.as_mut(),
         PenNode::Rectangle(n) => n.container.effects.as_mut(),
         PenNode::Ellipse(n) => n.effects.as_mut(),
@@ -267,7 +282,9 @@ pub fn first_solid_fill_hex(node: &PenNode) -> Option<&str> {
 /// kind — IconFont / Ref — with no effects field).
 pub fn node_effects(node: &PenNode) -> &[jian_ops_schema::style::PenEffect] {
     let slot = match node {
-        PenNode::Frame(n) => n.container.effects.as_deref(),
+        PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => {
+            n.container.effects.as_deref()
+        }
         PenNode::Group(n) => n.container.effects.as_deref(),
         PenNode::Rectangle(n) => n.container.effects.as_deref(),
         PenNode::Ellipse(n) => n.effects.as_deref(),

@@ -1,7 +1,7 @@
 //! Auto-fix application — port of TS `applyFixes`
 //! (`apps/web/src/services/ai/design-pre-validation.ts`).
 
-use jian_ops_schema::node::PenNode;
+use jian_ops_schema::node::{PenNode, ScriptNode};
 use jian_ops_schema::PenDocument;
 
 use crate::issue::{FixProperty, FixReport, Issue, IssueSeverity};
@@ -204,7 +204,7 @@ fn find_node_mut<'a>(root: &'a mut PenNode, node_id: &str) -> Option<&'a mut Pen
         return Some(root);
     }
     match root {
-        PenNode::Frame(n) => n.children.as_mut(),
+        PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => n.children.as_mut(),
         PenNode::Group(n) => n.children.as_mut(),
         PenNode::Rectangle(n) => n.children.as_mut(),
         _ => None,

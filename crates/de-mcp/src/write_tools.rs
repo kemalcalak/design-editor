@@ -161,6 +161,9 @@ pub(super) const ALLOWED_KINDS: &[&str] = &[
     "note",
     "context",
     "prompt",
+    // A live script node (#19): an empty clipping frame; the program and
+    // inputs arrive through `data` or `update_node`.
+    "script",
     // Canvas-only live web page (#20).
     "browser",
     // Component instance: a `ref` node points at a reusable master by id and

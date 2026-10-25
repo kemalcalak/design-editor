@@ -6,7 +6,7 @@
 //! Split out of `batch_program.rs` to stay under the 800-line cap.
 
 use de_editor_core::{EditorState, NodeId, PenNodeExt};
-use jian_ops_schema::node::{ContainerProps, LayoutMode, PenNode};
+use jian_ops_schema::node::{ContainerProps, LayoutMode, PenNode, ScriptNode};
 use jian_scene::layout_scene::SceneNode;
 use serde_json::json;
 
@@ -429,7 +429,9 @@ fn layout_label(container: &ContainerProps) -> &'static str {
 
 fn node_container(node: &PenNode) -> Option<&ContainerProps> {
     match node {
-        PenNode::Frame(node) => Some(&node.container),
+        PenNode::Frame(node) | PenNode::Script(ScriptNode { frame: node, .. }) => {
+            Some(&node.container)
+        }
         PenNode::Group(node) => Some(&node.container),
         PenNode::Rectangle(node) => Some(&node.container),
         _ => None,

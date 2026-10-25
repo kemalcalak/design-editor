@@ -8,12 +8,13 @@
 //! Usage: `cargo run -p de-figma --example probe_fig -- <path.fig> [preserve|design-editor]`
 
 use de_figma::{parse_fig_binary, FigLayoutMode};
-use jian_ops_schema::node::PenNode;
+use jian_ops_schema::node::{PenNode, ScriptNode};
 use jian_ops_schema::sizing::SizingBehavior;
 
 fn variant_name(n: &PenNode) -> &'static str {
     match n {
         PenNode::Frame(_) => "Frame",
+        PenNode::Script(_) => "Script",
         PenNode::Group(_) => "Group",
         PenNode::Rectangle(_) => "Rectangle",
         PenNode::Ellipse(_) => "Ellipse",
@@ -211,7 +212,7 @@ fn type_str(n: &PenNode) -> &'static str {
 
 fn base_of(n: &PenNode) -> &jian_ops_schema::node::base::PenNodeBase {
     match n {
-        PenNode::Frame(x) => &x.base,
+        PenNode::Frame(x) | PenNode::Script(ScriptNode { frame: x, .. }) => &x.base,
         PenNode::Group(x) => &x.base,
         PenNode::Rectangle(x) => &x.base,
         PenNode::Ellipse(x) => &x.base,

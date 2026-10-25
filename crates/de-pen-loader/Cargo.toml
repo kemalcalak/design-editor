@@ -41,6 +41,8 @@ skia-safe = { version = "0.97.0", default-features = false, optional = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 serde_stacker = { workspace = true }
+# Runs a load on a heap stack when the caller's is small (Windows main).
+stacker = { workspace = true }
 
 [dev-dependencies]
 de-html = { path = "../de-html" }

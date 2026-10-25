@@ -69,7 +69,7 @@
 //! then, this pass is the deterministic backstop.
 
 use de_editor_core::{EditorCommand, NodeId, PenNodeExt};
-use jian_ops_schema::node::{PenNode, TextContent};
+use jian_ops_schema::node::{PenNode, ScriptNode, TextContent};
 
 use crate::types::DocSink;
 #[cfg(test)]
@@ -655,7 +655,7 @@ fn clear_position_metadata(node: &mut PenNode) {
 
 fn set_events(node: &mut PenNode, events: Option<jian_ops_schema::events::EventHandlers>) {
     match node {
-        PenNode::Frame(n) => n.events = events,
+        PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => n.events = events,
         PenNode::Group(n) => n.events = events,
         PenNode::Rectangle(n) => n.events = events,
         PenNode::Ellipse(n) => n.events = events,

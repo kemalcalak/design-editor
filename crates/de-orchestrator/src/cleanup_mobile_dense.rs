@@ -8,7 +8,7 @@ use crate::types::DocSink;
 use de_editor_core::{EditorCommand, LayoutPropValue, NodeId, PenNodeExt};
 use jian_ops_schema::node::base::NumberOrExpression;
 use jian_ops_schema::node::container::{ContainerProps, LayoutMode, Padding};
-use jian_ops_schema::node::PenNode;
+use jian_ops_schema::node::{PenNode, ScriptNode};
 use jian_ops_schema::sizing::{SizingBehavior, SizingKeyword};
 
 #[derive(Debug, Clone, Copy)]
@@ -222,7 +222,9 @@ fn padding_sides(padding: &Padding) -> [f64; 4] {
 
 fn width_keyword(node: &PenNode, keyword: SizingKeyword) -> bool {
     let width = match node {
-        PenNode::Frame(n) => n.container.width.as_ref(),
+        PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => {
+            n.container.width.as_ref()
+        }
         PenNode::Group(n) => n.container.width.as_ref(),
         PenNode::Rectangle(n) => n.container.width.as_ref(),
         PenNode::Ellipse(n) => n.width.as_ref(),

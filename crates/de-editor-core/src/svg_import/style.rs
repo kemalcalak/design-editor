@@ -2,6 +2,7 @@
 //! stroke resolution and the named-colour table.
 
 use super::*;
+use jian_ops_schema::node::ScriptNode;
 
 /// Merge `parent` with the element's own `fill` / `stroke` /
 /// `stroke-width` (inline `style="..."` takes precedence over the
@@ -163,7 +164,9 @@ pub(super) fn solid_fill(hex: &str) -> PenFill {
 
 pub(super) fn set_node_stroke(node: &mut PenNode, stroke: PenStroke) {
     match node {
-        PenNode::Frame(n) => n.container.stroke = Some(stroke),
+        PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => {
+            n.container.stroke = Some(stroke)
+        }
         PenNode::Group(n) => n.container.stroke = Some(stroke),
         PenNode::Rectangle(n) => n.container.stroke = Some(stroke),
         PenNode::Ellipse(n) => n.stroke = Some(stroke),
@@ -193,7 +196,7 @@ pub(super) fn set_node_stroke(node: &mut PenNode, stroke: PenStroke) {
 
 pub(super) fn clear_node_fill(node: &mut PenNode) {
     match node {
-        PenNode::Frame(n) => n.container.fill = None,
+        PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => n.container.fill = None,
         PenNode::Group(n) => n.container.fill = None,
         PenNode::Rectangle(n) => n.container.fill = None,
         PenNode::Ellipse(n) => n.fill = None,

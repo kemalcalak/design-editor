@@ -712,6 +712,10 @@ pub fn apply_property_action(
             let _ = state.set_selected_widget_checked(*new_value);
             Handled
         }
+        A::ToggleScriptInput(_) | A::CycleScriptInput(_) | A::OpenScriptSource => {
+            crate::widgets::property_panel_script::apply_script_action(state, action);
+            Handled
+        }
         A::SetBrowserDevice(id) => {
             let before = state.snapshot_for_history();
             if state.set_selected_browser_device(Some(id)) {

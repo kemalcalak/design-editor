@@ -158,6 +158,15 @@ pub fn editable_input_rects(
             usable_w,
         );
     }
+    if let Some(rows) = visible.script {
+        crate::widgets::property_panel_script::push_script_input_rects(
+            &mut rects,
+            rows,
+            x0,
+            tops.script,
+            usable_w,
+        );
+    }
     if visible.browser.is_some() {
         crate::widgets::property_panel_browser::push_browser_input_rects(
             &mut rects,

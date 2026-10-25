@@ -125,6 +125,10 @@ pub enum PropertyFocus {
     /// text, committed through `set_selected_annotation_*`.
     AnnotationContent,
     AnnotationModel,
+    /// A script node's text input at `index` in the Script section (#19).
+    /// Free text: a number, colour, ref or `$variable`, committed through
+    /// `commit_selected_script_input`.
+    ScriptInput(usize),
     /// A browser node's address (free text), page zoom in percent and
     /// page scroll in CSS px (#20), committed through `set_selected_browser_*`.
     BrowserUrl,
@@ -196,6 +200,7 @@ impl PropertyFocus {
                 | PropertyFocus::VideoSrc
                 | PropertyFocus::AnnotationContent
                 | PropertyFocus::AnnotationModel
+                | PropertyFocus::ScriptInput(_)
                 | PropertyFocus::BrowserUrl
                 | PropertyFocus::InteractionUrl(_)
         )

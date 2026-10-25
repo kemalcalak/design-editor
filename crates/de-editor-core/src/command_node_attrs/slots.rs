@@ -4,7 +4,7 @@
 //! `command_node_attrs.rs` to keep every file under the 800-line cap.
 
 use crate::command::StrokeSide;
-use jian_ops_schema::node::{CornerRadius, PenNode};
+use jian_ops_schema::node::{CornerRadius, PenNode, ScriptNode};
 use jian_ops_schema::style::{PenEffect, PenStroke, SidedThickness, StrokeThickness};
 
 /// Write a literal corner radius onto whatever variant carries one.
@@ -14,7 +14,7 @@ use jian_ops_schema::style::{PenEffect, PenStroke, SidedThickness, StrokeThickne
 /// invisible on non-rounded kinds). True when a field was written.
 pub(super) fn write_corner_radius(node: &mut PenNode, radius: f64) -> bool {
     match node {
-        PenNode::Frame(n) => {
+        PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => {
             n.container.corner_radius = Some(CornerRadius::Uniform(radius));
             true
         }
@@ -50,7 +50,9 @@ pub(super) fn write_corner_radius(node: &mut PenNode, radius: f64) -> bool {
 
 fn corner_radius_slot(node: &mut PenNode) -> Option<&mut Option<CornerRadius>> {
     match node {
-        PenNode::Frame(n) => Some(&mut n.container.corner_radius),
+        PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => {
+            Some(&mut n.container.corner_radius)
+        }
         PenNode::Group(n) => Some(&mut n.container.corner_radius),
         PenNode::Rectangle(n) => Some(&mut n.container.corner_radius),
         PenNode::Image(n) => Some(&mut n.corner_radius),
@@ -88,7 +90,9 @@ pub(super) fn write_corner_radius_at(node: &mut PenNode, index: usize, radius: f
 /// `None` for IconFont / Ref (no effects field in the schema).
 pub(crate) fn node_effects_slot(node: &mut PenNode) -> Option<&mut Option<Vec<PenEffect>>> {
     match node {
-        PenNode::Frame(n) => Some(&mut n.container.effects),
+        PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => {
+            Some(&mut n.container.effects)
+        }
         PenNode::Group(n) => Some(&mut n.container.effects),
         PenNode::Rectangle(n) => Some(&mut n.container.effects),
         PenNode::Ellipse(n) => Some(&mut n.effects),
@@ -120,7 +124,9 @@ pub(crate) fn node_effects_slot(node: &mut PenNode) -> Option<&mut Option<Vec<Pe
 /// `fills::node_stroke_mut` arm set. `None` for Text / Image / Ref.
 pub(super) fn node_stroke_slot(node: &mut PenNode) -> Option<&mut Option<PenStroke>> {
     match node {
-        PenNode::Frame(n) => Some(&mut n.container.stroke),
+        PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => {
+            Some(&mut n.container.stroke)
+        }
         PenNode::Group(n) => Some(&mut n.container.stroke),
         PenNode::Rectangle(n) => Some(&mut n.container.stroke),
         PenNode::Ellipse(n) => Some(&mut n.stroke),

@@ -410,7 +410,9 @@ impl ApplicationHandler<DesktopEvent> for DesktopApp {
                     event_loop.exit();
                 }
             }
-            DesktopEvent::ImageDecodeReady | DesktopEvent::BrowserFrameReady => {
+            DesktopEvent::ImageDecodeReady
+            | DesktopEvent::ScriptNodesReady
+            | DesktopEvent::BrowserFrameReady => {
                 self.request_redraw(true);
             }
             DesktopEvent::FontsRegistered => {

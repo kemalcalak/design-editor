@@ -596,7 +596,7 @@ pub fn paint_size_section(
 /// long localized label ("Remplir la hauteur", "高さに合わせる") otherwise
 /// runs straight over the neighbouring column and off the rail's right edge.
 #[allow(clippy::too_many_arguments)]
-fn paint_check_row(
+pub(crate) fn paint_check_row(
     cx: &mut PaintCx<'_>,
     theme: &Theme,
     x: f32,

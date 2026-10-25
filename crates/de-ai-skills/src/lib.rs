@@ -119,6 +119,8 @@ const GUIDELINE_TOPICS: &[(&str, &[&str], &[&str])] = &[
     ("icons", &["icon", "icon-font", "lucide"], &["icon-catalog"]),
     // The `execute` MCP tool's API and transaction rules (#168).
     ("execute", &["execute-script"], &["execute-script"]),
+    // Live script nodes: the program contract, inputs and limits (#19).
+    ("script", &["script-node"], &["script-node"]),
 ];
 
 /// Compose the named skills (in order) into one coherent guideline doc,
@@ -161,6 +163,8 @@ fn compose_skills(names: &[&str]) -> Option<String> {
 /// - `"icons"` (`icon`, `icon-font`, `lucide`) — icon_font/lucide icon catalog
 /// - `"execute"` (`execute-script`) — the `execute` tool: one script that
 ///   reads and writes, one undo step, all-or-nothing
+/// - `"script"` (`script-node`) — live script nodes: the program contract,
+///   typed inputs and run limits
 ///
 /// Returns `None` for any unrecognised topic so callers can produce a typed
 /// "unknown topic" error without special-casing the string themselves.

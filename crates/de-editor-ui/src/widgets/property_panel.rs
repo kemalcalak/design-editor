@@ -372,6 +372,11 @@ impl PropertyPanel {
             widget: self.snapshot.widget.as_ref().map(|w| w.kind),
             widget_checked: self.snapshot.widget.as_ref().is_some_and(|w| w.checked),
             annotation: self.snapshot.annotation.as_ref().map(|a| a.kind),
+            script: self
+                .snapshot
+                .script
+                .as_ref()
+                .map(crate::widgets::property_panel_script::ScriptRows::of),
             browser: self.snapshot.browser.as_ref().map(|b| b.pages_allowed),
             image: caps.image && self.snapshot.is_image_node,
             video: caps.image && self.snapshot.video.is_some(),
