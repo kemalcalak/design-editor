@@ -15,8 +15,9 @@ use super::{paint, shader, AssetReader, PenDevReport};
 
 /// pen.dev node kinds with no canonical equivalent. They are removed with
 /// their subtree and counted in the report. `note`, `context` and `prompt`
-/// map onto the canonical annotation kinds as they are (#12).
-const DROPPED_KINDS: &[(&str, &str)] = &[("script", "script node"), ("browser", "browser node")];
+/// map onto the canonical annotation kinds as they are (#12); `script`
+/// onto the script node, its program read in (#19).
+const DROPPED_KINDS: &[(&str, &str)] = &[("browser", "browser node")];
 
 /// Entity keys pen.dev uses for its own editor and AI tooling only.
 /// `placeholder` survives on frames, which carry the in-progress flag (#16).
@@ -180,6 +181,7 @@ fn convert_node(
     promote_reusable_shape(map, ctx.report);
     match map.get("type").and_then(Value::as_str) {
         Some("frame") => apply_frame_defaults(map),
+        Some("script") => super::script::convert_script(map, ctx),
         Some("path") => apply_path_view_box(map, in_flow && !absolute, ctx.report),
         _ => {}
     }

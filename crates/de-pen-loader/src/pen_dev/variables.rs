@@ -29,6 +29,11 @@ pub(super) const SKIPPED_KEYS: &[&str] = &[
     "theme",
     "children",
     "descendants",
+    // A script's program and inputs (#19): `$` in source is code, and an
+    // input's `$variable` stays a live binding the run resolves.
+    "script",
+    "scriptUri",
+    "inputs",
 ];
 
 /// Keys the canonical schema types as numbers; a reference that resolves to

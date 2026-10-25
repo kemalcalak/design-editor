@@ -113,7 +113,6 @@ fn unsupported_nodes_are_removed_and_reported() {
         { "type": "note", "id": "n", "content": "todo" },
         { "type": "frame", "id": "f", "children": [
             { "type": "browser", "id": "b", "url": "https://example.com" },
-            { "type": "script", "id": "s" },
             { "type": "text", "id": "t", "content": "kept" }
         ]}
     ]));
@@ -122,7 +121,42 @@ fn unsupported_nodes_are_removed_and_reported() {
     assert_eq!(roots[1]["children"].as_array().unwrap().len(), 1);
     assert_eq!(report.unsupported.get("note"), None);
     assert_eq!(report.unsupported.get("browser node"), Some(&1));
-    assert_eq!(report.unsupported.get("script node"), Some(&1));
+}
+
+fn script_reader(relative: &str) -> Option<Vec<u8>> {
+    (relative == "scripts/bars.js")
+        .then(|| b"/** @schema 2.11\n * @input n: number = 3 */\nreturn [];".to_vec())
+}
+
+#[test]
+fn script_nodes_import_with_their_program_and_bindings() {
+    let mut doc = json!({ "version": "2.21",
+    "variables": { "brand": { "type": "color", "value": "#ff0000" } },
+    "children": [
+        { "type": "script", "id": "s", "width": 200, "height": 100, "clip": true,
+          "scriptUri": "scripts/bars.js", "inputs": { "n": 5, "accent": "$brand" } },
+        { "type": "script", "id": "gone", "width": 10, "height": 10,
+          "scriptUri": "scripts/missing.js" }
+    ]});
+    let src = doc.to_string();
+    let report = convert(&mut doc, &script_reader);
+    let script = &doc["children"][0];
+    assert_eq!(script["type"], "script");
+    assert!(script["script"].as_str().unwrap().contains("@input n"));
+    assert_eq!(script["scriptUri"], "scripts/bars.js");
+    assert_eq!(script["inputs"]["accent"], "$brand");
+    assert_eq!(
+        report.unsupported.get("script node (script file missing)"),
+        Some(&1)
+    );
+    assert_eq!(report.unsupported.get("script node"), None);
+    // The whole `.pen` load path: sniff, convert, typed load.
+    let loaded = load_canonical_with_assets(&src, &script_reader).expect("pen.dev load");
+    let jian_ops_schema::node::PenNode::Script(node) = &loaded.loaded.value.children[0] else {
+        panic!("not a script node");
+    };
+    assert_eq!(node.frame.container.clip_content, Some(true));
+    assert!(node.script.is_some());
 }
 
 #[test]

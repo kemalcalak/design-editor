@@ -614,3 +614,13 @@ fn guideline_for_execute_teaches_the_script_api_and_transaction() {
     assert!(guideline_for("execute-script").is_some(), "alias resolves");
     assert!(guideline_topics().contains(&"execute"));
 }
+
+#[test]
+fn guideline_for_script_teaches_the_program_contract() {
+    let guide = guideline_for("script").expect("script guideline must be present");
+    for needle in ["@input", "pencil.width", "pencil.input", "2000", "$name"] {
+        assert!(guide.contains(needle), "script guide must mention {needle}");
+    }
+    assert!(guideline_for("script-node").is_some(), "alias resolves");
+    assert!(guideline_topics().contains(&"script"));
+}

@@ -33,6 +33,23 @@ pub fn build_leaf_node(
     width: i32,
     height: i32,
 ) -> Option<PenNode> {
+    if kind == "script" {
+        // A clipping frame whose children its program generates (#19); the
+        // program and inputs come through `update_node` / the panel.
+        let PenNode::Frame(mut frame) = build_leaf_node("frame", id, name, x, y, width, height)?
+        else {
+            return None;
+        };
+        frame.container.clip_content = Some(true);
+        frame.children = None;
+        return Some(PenNode::Script(jian_ops_schema::node::ScriptNode {
+            frame,
+            script: None,
+            script_uri: None,
+            inputs: None,
+            script_hash: None,
+        }));
+    }
     let base = PenNodeBase {
         id: id.to_string(),
         name: Some(name.to_string()),
@@ -351,7 +368,16 @@ pub const WIDGET_KINDS: [&str; 10] = [
 pub fn kind_is_valid(kind: &str) -> bool {
     matches!(
         kind,
-        "frame" | "group" | "rect" | "ellipse" | "polygon" | "star" | "line" | "text" | "path"
+        "frame"
+            | "group"
+            | "rect"
+            | "ellipse"
+            | "polygon"
+            | "star"
+            | "line"
+            | "text"
+            | "path"
+            | "script"
     ) || WIDGET_KINDS.contains(&kind)
         || jian_ops_schema::node::AnnotationKind::from_tag(kind).is_some()
 }
