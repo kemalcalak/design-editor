@@ -531,7 +531,7 @@ Widget-typed shared logic lives in **`de-editor-ui/src/widgets/`**:
 
 `de-editor-ui/src/accessibility_regions.rs` (crate root, not `widgets/`) single-sources the a11y region walk behind native's `widget_host/a11y.rs` and web's `a11y_bridge.rs`.
 
-Outside the widget hosts the same rule applies: settings payload serde lives in `de-editor-host-core/src/settings_payload.rs`, image generate / search in `de-host-services/src/web_image_{generate,search}.rs`, and the `--mcp` / `--mcp-http` / `--serve-web` argv dispatch in `de_host_services::cli_modes` (shared by `de-host-desktop` and `de-host-web-server`, which differ only in what an unknown mode means). Desktop no longer carries drifted copies of any of them.
+Outside the widget hosts the same rule applies: settings payload serde lives in `de-editor-host-core/src/settings_payload.rs`, image generate / search in `de-host-services/src/web_image_{generate,search}.rs`, and the `--mcp` / `--mcp-http` / `--serve-web` argv dispatch in `de_host_services::cli_modes` (shared by `de-host-desktop` and `de-host-web-server`, which differ only in what an unknown mode means); every mode runs on its own 64 MiB-stack thread (`cli_modes::on_mode_stack`), because a debug daemon outgrows Windows' 1 MiB main thread (#227). Desktop no longer carries drifted copies of any of them.
 
 ### `EditorUiState` split + narrowed snapshots
 
