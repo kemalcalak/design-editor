@@ -262,6 +262,8 @@ pub struct VisibleSections {
     pub widget_checked: bool,
     /// Annotation section (#12) — `Some(kind)` for a note / context / prompt.
     pub annotation: Option<jian_ops_schema::node::AnnotationKind>,
+    /// Script section (#19) — the input rows of a script node.
+    pub script: Option<crate::widgets::property_panel_script::ScriptRows>,
     pub image: bool,
     /// Whether the selected image carries optional video metadata.
     pub video: bool,
@@ -414,6 +416,7 @@ impl VisibleSections {
         widget: None,
         widget_checked: false,
         annotation: None,
+        script: None,
         image: false,
         video: false,
         image_warning: false,

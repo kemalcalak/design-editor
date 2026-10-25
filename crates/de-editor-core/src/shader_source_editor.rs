@@ -39,13 +39,22 @@ pub struct ShaderEditingState {
     pub checks: ShaderCheckCache,
 }
 
+/// What the source editor edits.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum SourceTarget {
+    /// A shader paint's SkSL.
+    Shader(ShaderTarget),
+    /// A script node's JavaScript (#19). Never sent to the SkSL check.
+    Script,
+}
+
 /// The open source editor.
 #[derive(Debug, Clone, PartialEq)]
 pub struct ShaderSourceEditor {
     /// The node it was opened on; Apply writes there even if the
     /// selection moved.
     pub node_id: NodeId,
-    pub target: ShaderTarget,
+    pub target: SourceTarget,
     pub input: TextInputState,
     /// First visible line.
     pub scroll_line: usize,
@@ -124,22 +133,39 @@ impl EditorState {
     /// Open the source editor on the anchor's shader paint `target`. A
     /// fill expanded from a loader preset has no source and opens empty.
     pub fn open_shader_source_editor(&mut self, target: ShaderTarget) -> bool {
-        let node_id = self.selection.anchor.clone();
         let Some(program) = self.selected_shader_program(target) else {
             return false;
         };
         // Tabs become spaces: the editor maps one char to one column.
         let text = program.sksl.unwrap_or_default().replace('\t', INDENT);
+        self.open_source_editor(SourceTarget::Shader(target), text);
+        true
+    }
+
+    /// Open the source editor on the selected script node's program.
+    pub fn open_script_source_editor(&mut self) -> bool {
+        let Some(script) = self.selected_script() else {
+            return false;
+        };
+        let text = script
+            .script
+            .clone()
+            .unwrap_or_default()
+            .replace('\t', INDENT);
+        self.open_source_editor(SourceTarget::Script, text);
+        true
+    }
+
+    fn open_source_editor(&mut self, target: SourceTarget, text: String) {
         let mut input = TextInputState::with_text(text);
         input.set_caret(0, 0);
         self.editor_ui.shader_editing.editor = Some(ShaderSourceEditor {
-            node_id,
+            node_id: self.selection.anchor.clone(),
             target,
             input,
             scroll_line: 0,
             focused: true,
         });
-        true
     }
 
     /// Close the editor, dropping an unapplied draft.
@@ -147,18 +173,27 @@ impl EditorState {
         self.editor_ui.shader_editing.editor.take().is_some()
     }
 
-    /// Write the draft through `SetShaderSource`. The editor stays open;
-    /// the caller owns history.
+    /// Write the draft (a shader through `SetShaderSource`, a script
+    /// through `PatchNodeData`). The editor stays open; the caller owns
+    /// history.
     pub fn apply_shader_source_editor(&mut self) -> bool {
         let Some(editor) = self.editor_ui.shader_editing.editor.as_ref() else {
             return false;
         };
-        let command = crate::EditorCommand::SetShaderSource {
-            node_id: editor.node_id.clone(),
-            target: editor.target,
-            sksl: editor.input.text().to_owned(),
-        };
-        self.apply(command)
+        let node_id = editor.node_id.clone();
+        let text = editor.input.text().to_owned();
+        match editor.target {
+            SourceTarget::Shader(target) => self.apply(crate::EditorCommand::SetShaderSource {
+                node_id,
+                target,
+                sksl: text,
+            }),
+            SourceTarget::Script => self.apply(crate::EditorCommand::PatchNodeData {
+                node_id,
+                patch_json: serde_json::json!({ "script": text }).to_string(),
+                page_id: None,
+            }),
+        }
     }
 
     /// Whether the draft differs from the stored source.
@@ -166,9 +201,18 @@ impl EditorState {
         let Some(editor) = self.editor_ui.shader_editing.editor.as_ref() else {
             return false;
         };
-        let stored = crate::walkers::find_node(self.active_children(), &editor.node_id)
-            .and_then(|node| crate::shader_edit::shader_program(node, editor.target))
-            .map(|program| program.sksl.unwrap_or_default());
+        let node = crate::walkers::find_node(self.active_children(), &editor.node_id);
+        let stored = match editor.target {
+            SourceTarget::Shader(target) => node
+                .and_then(|node| crate::shader_edit::shader_program(node, target))
+                .map(|program| program.sksl.unwrap_or_default()),
+            SourceTarget::Script => match node {
+                Some(jian_ops_schema::node::PenNode::Script(script)) => {
+                    Some(script.script.as_deref().unwrap_or_default())
+                }
+                _ => None,
+            },
+        };
         stored != Some(editor.input.text())
     }
 }

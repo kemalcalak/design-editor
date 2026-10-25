@@ -182,6 +182,8 @@ pub struct NodeSnapshot {
     pub widget: Option<WidgetSummary>,
     /// Note / context / prompt fields, `Some` only for an annotation (#12).
     pub annotation: Option<crate::widgets::property_panel_annotation::AnnotationSummary>,
+    /// Input rows and run status, `Some` only for a script node (#19).
+    pub script: Option<crate::widgets::property_panel_script::ScriptSummary>,
     pub fill: Option<Color>,
     /// Primary solid-fill opacity in `[0.0, 1.0]` — the Fill
     /// section's `100 %` paints `fill_opacity * 100`.

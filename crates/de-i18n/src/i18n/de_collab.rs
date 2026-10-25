@@ -354,6 +354,12 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "componentBrowser.libraryInvalid" => "Nicht lesbar",
         "componentBrowser.linkLibrary" => "Bibliotheksdatei verknüpfen",
         "componentBrowser.libraryNeedsDesktop" => "Bibliotheksdateien lassen sich nur in der Desktop-App verknüpfen",
+        "script.title" => "Skript",
+        "script.edit" => "Skript bearbeiten",
+        "script.sourceTitle" => "Skriptquelltext",
+        "script.running" => "Wird erzeugt…",
+        "script.generated" => "{count} Knoten · {ms} ms",
+        "script.desktopOnly" => "Wird in der Desktop-App neu erzeugt",
         _ => return None,
     })
 }

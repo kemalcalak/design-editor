@@ -730,6 +730,9 @@ mod preview_batch_proof_tests;
 #[cfg(test)]
 #[path = "note_proof_sheet_tests.rs"]
 mod note_proof_sheet_tests;
+#[cfg(test)]
+#[path = "script_proof_sheet_tests.rs"]
+mod script_proof_sheet_tests;
 
 // Serializes tests that touch the process-global `agent_indicators`
 // registry against tests that assert an exact animation deadline. The

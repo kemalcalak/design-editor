@@ -354,6 +354,12 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "componentBrowser.libraryInvalid" => "Không đọc được",
         "componentBrowser.linkLibrary" => "Liên kết tệp thư viện",
         "componentBrowser.libraryNeedsDesktop" => "Cần ứng dụng máy tính để liên kết tệp thư viện",
+        "script.title" => "Script",
+        "script.edit" => "Sửa script",
+        "script.sourceTitle" => "Mã nguồn script",
+        "script.running" => "Đang tạo…",
+        "script.generated" => "{count} nút · {ms} ms",
+        "script.desktopOnly" => "Tạo lại trong ứng dụng máy tính",
         _ => return None,
     })
 }

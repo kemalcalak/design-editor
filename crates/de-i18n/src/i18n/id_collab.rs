@@ -354,6 +354,12 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "componentBrowser.libraryInvalid" => "Tidak terbaca",
         "componentBrowser.linkLibrary" => "Tautkan file pustaka",
         "componentBrowser.libraryNeedsDesktop" => "Menautkan file pustaka memerlukan aplikasi desktop",
+        "script.title" => "Skrip",
+        "script.edit" => "Edit skrip",
+        "script.sourceTitle" => "Sumber skrip",
+        "script.running" => "Membuat…",
+        "script.generated" => "{count} node · {ms} md",
+        "script.desktopOnly" => "Dibuat ulang di aplikasi desktop",
         _ => return None,
     })
 }

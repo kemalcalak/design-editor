@@ -457,6 +457,11 @@ pub enum PropertyPanelAction {
     ToggleWidgetChecked(bool),
     /// Turn the selected annotation into a note, context or prompt (#12).
     SetAnnotationKind(jian_ops_schema::node::AnnotationKind),
+    /// Flip / step the selected script's boolean / enum input at this
+    /// index, or open its source in the code editor (#19).
+    ToggleScriptInput(usize),
+    CycleScriptInput(usize),
+    OpenScriptSource,
     /// User clicked an Interactions row, the Interactions header "+" or
     /// a Motion row's property dropdown — host toggles the shared
     /// popover for that target (`editor_ui.interaction_menu_*`).

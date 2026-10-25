@@ -354,6 +354,12 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "componentBrowser.libraryInvalid" => "読み込めません",
         "componentBrowser.linkLibrary" => "ライブラリファイルをリンク",
         "componentBrowser.libraryNeedsDesktop" => "ライブラリのリンクにはデスクトップアプリが必要です",
+        "script.title" => "スクリプト",
+        "script.edit" => "スクリプトを編集",
+        "script.sourceTitle" => "スクリプトのソース",
+        "script.running" => "生成中…",
+        "script.generated" => "{count} 個のノード · {ms} ms",
+        "script.desktopOnly" => "デスクトップアプリで再生成されます",
         _ => return None,
     })
 }

@@ -257,7 +257,20 @@ impl Widget for PropertyPanel {
                 w,
             );
         }
-        y = section_start(y, tops.image, "annotation");
+        y = section_start(y, tops.script, "annotation");
+        if self.snapshot.script.is_some() {
+            y = crate::widgets::property_panel_script::paint_script_section(
+                cx,
+                &self.theme,
+                &self.snapshot,
+                &edit_ctx,
+                self.locale,
+                x,
+                y,
+                w,
+            );
+        }
+        y = section_start(y, tops.image, "script");
         if caps.image && self.snapshot.is_image_node {
             y = crate::widgets::property_panel_image_node::paint_image_node_section(
                 cx,

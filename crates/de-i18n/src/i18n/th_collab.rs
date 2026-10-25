@@ -354,6 +354,12 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "componentBrowser.libraryInvalid" => "อ่านไม่ได้",
         "componentBrowser.linkLibrary" => "ลิงก์ไฟล์ไลบรารี",
         "componentBrowser.libraryNeedsDesktop" => "การลิงก์ไฟล์ไลบรารีต้องใช้แอปเดสก์ท็อป",
+        "script.title" => "สคริปต์",
+        "script.edit" => "แก้ไขสคริปต์",
+        "script.sourceTitle" => "ซอร์สสคริปต์",
+        "script.running" => "กำลังสร้าง…",
+        "script.generated" => "{count} โหนด · {ms} มิลลิวินาที",
+        "script.desktopOnly" => "สร้างใหม่ในแอปเดสก์ท็อป",
         _ => return None,
     })
 }

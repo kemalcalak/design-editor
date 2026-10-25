@@ -113,6 +113,7 @@ impl NodeSnapshot {
             text: None,
             widget: None,
             annotation: None,
+            script: None,
             fill: None,
             fill_opacity: 1.0,
             fills: Vec::new(),
@@ -193,6 +194,7 @@ impl NodeSnapshot {
             text: None,
             widget: None,
             annotation: None,
+            script: None,
             fill: None,
             fill_opacity: 1.0,
             // Multi-select hides the Fill section (see `for_multi`),
@@ -274,7 +276,11 @@ impl NodeSnapshot {
             _ => None,
         };
         Self {
-            kind: kind.label().to_string(),
+            // A script lays out as a frame but names its own kind (#19).
+            kind: match node {
+                PenNode::Script(_) => "Script".to_string(),
+                _ => kind.label().to_string(),
+            },
             name: base.name.clone().unwrap_or_default(),
             x: bounds.x.round() as i32,
             y: bounds.y.round() as i32,
@@ -311,6 +317,8 @@ impl NodeSnapshot {
             text: text_summary_of(node),
             widget: widget_summary_of(node),
             annotation: crate::widgets::property_panel_annotation::annotation_summary_of(node),
+            // Filled with the run status by the panel builder, which has the state.
+            script: None,
             fill,
             fill_opacity: de_editor_core::first_solid_fill_opacity(node),
             fills: fill_props::fills_of(node),

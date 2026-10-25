@@ -370,7 +370,8 @@ impl EditorState {
             | PropertyFocus::WidgetBindKey
             | PropertyFocus::VideoSrc
             | PropertyFocus::AnnotationContent
-            | PropertyFocus::AnnotationModel => {}
+            | PropertyFocus::AnnotationModel
+            | PropertyFocus::ScriptInput(_) => {}
             PropertyFocus::FillOpacity(index) => {
                 // The primary fill (index 0) keeps `set_selected_fill_opacity`
                 // (writes the first fill's body opacity); a non-primary row

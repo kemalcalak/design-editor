@@ -159,6 +159,13 @@ pub fn property_focus_initial(focus: PropertyFocus, panel: &PropertyPanel) -> St
             .as_ref()
             .map(|a| a.model.clone())
             .unwrap_or_default(),
+        F::ScriptInput(index) => panel
+            .snapshot
+            .script
+            .as_ref()
+            .and_then(|s| s.rows.get(index))
+            .map(|row| row.value.clone())
+            .unwrap_or_default(),
         F::VideoSrc => panel
             .snapshot
             .video
@@ -408,6 +415,9 @@ pub fn commit_property_focus(state: &mut EditorState) -> bool {
         }
         PropertyFocus::AnnotationModel => {
             let _ = state.set_selected_annotation_model(&draft);
+        }
+        PropertyFocus::ScriptInput(index) => {
+            let _ = state.commit_selected_script_input(index, &draft);
         }
         PropertyFocus::Padding => {
             let _ = state.commit_padding_shorthand(&draft);

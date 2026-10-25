@@ -354,6 +354,12 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "componentBrowser.libraryInvalid" => "Не читается",
         "componentBrowser.linkLibrary" => "Связать файл библиотеки",
         "componentBrowser.libraryNeedsDesktop" => "Связывать библиотеки можно только в настольном приложении",
+        "script.title" => "Скрипт",
+        "script.edit" => "Изменить скрипт",
+        "script.sourceTitle" => "Исходный код скрипта",
+        "script.running" => "Генерация…",
+        "script.generated" => "Узлов: {count} · {ms} мс",
+        "script.desktopOnly" => "Обновляется в настольном приложении",
         _ => return None,
     })
 }

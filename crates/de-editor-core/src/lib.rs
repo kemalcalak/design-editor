@@ -21,6 +21,8 @@ pub mod agent_settings_connection;
 pub mod align;
 pub mod align_guides;
 mod annotation_edit;
+mod script_edit;
+pub use script_edit::script_input_from_draft;
 pub mod blank_starter;
 pub mod bridge_protocol;
 pub mod button_press_state;

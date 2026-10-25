@@ -276,7 +276,8 @@ pub(crate) fn icon_for_node(node: &PenNode) -> Icon {
             Icon::Diamond
         }
         PenNode::Ref(_) => Icon::Diamond,
-        PenNode::Frame(_) | PenNode::Script(_) => Icon::Hash,
+        PenNode::Frame(_) => Icon::Hash,
+        PenNode::Script(_) => Icon::Code,
         PenNode::Group(_) => Icon::Square,
         PenNode::Rectangle(_) => Icon::Square,
         PenNode::Ellipse(_) => Icon::Circle,

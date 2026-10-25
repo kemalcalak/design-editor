@@ -354,6 +354,12 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "componentBrowser.libraryInvalid" => "Can't read",
         "componentBrowser.linkLibrary" => "Link library file",
         "componentBrowser.libraryNeedsDesktop" => "Linking library files needs the desktop app",
+        "script.title" => "Script",
+        "script.edit" => "Edit script",
+        "script.sourceTitle" => "Script source",
+        "script.running" => "Generating…",
+        "script.generated" => "{count} nodes · {ms} ms",
+        "script.desktopOnly" => "Regenerates in the desktop app",
         _ => return None,
     })
 }

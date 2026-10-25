@@ -356,6 +356,12 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "componentBrowser.libraryInvalid" => "읽을 수 없음",
         "componentBrowser.linkLibrary" => "라이브러리 파일 연결",
         "componentBrowser.libraryNeedsDesktop" => "라이브러리 파일 연결은 데스크톱 앱에서만 가능합니다",
+        "script.title" => "스크립트",
+        "script.edit" => "스크립트 편집",
+        "script.sourceTitle" => "스크립트 소스",
+        "script.running" => "생성 중…",
+        "script.generated" => "노드 {count}개 · {ms}ms",
+        "script.desktopOnly" => "데스크톱 앱에서 다시 생성됩니다",
         _ => return None,
     })
 }

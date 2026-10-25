@@ -354,6 +354,12 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "componentBrowser.libraryInvalid" => "पढ़ी नहीं जा सकती",
         "componentBrowser.linkLibrary" => "लाइब्रेरी फ़ाइल लिंक करें",
         "componentBrowser.libraryNeedsDesktop" => "लाइब्रेरी फ़ाइलें लिंक करने के लिए डेस्कटॉप ऐप चाहिए",
+        "script.title" => "स्क्रिप्ट",
+        "script.edit" => "स्क्रिप्ट संपादित करें",
+        "script.sourceTitle" => "स्क्रिप्ट स्रोत",
+        "script.running" => "बना रहे हैं…",
+        "script.generated" => "{count} नोड · {ms} ms",
+        "script.desktopOnly" => "डेस्कटॉप ऐप में दोबारा बनता है",
         _ => return None,
     })
 }

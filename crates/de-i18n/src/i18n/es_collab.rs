@@ -354,6 +354,12 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "componentBrowser.libraryInvalid" => "No se puede leer",
         "componentBrowser.linkLibrary" => "Vincular archivo de biblioteca",
         "componentBrowser.libraryNeedsDesktop" => "Para vincular bibliotecas necesitas la app de escritorio",
+        "script.title" => "Script",
+        "script.edit" => "Editar script",
+        "script.sourceTitle" => "Código del script",
+        "script.running" => "Generando…",
+        "script.generated" => "{count} nodos · {ms} ms",
+        "script.desktopOnly" => "Se regenera en la app de escritorio",
         _ => return None,
     })
 }

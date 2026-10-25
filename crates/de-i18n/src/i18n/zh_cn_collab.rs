@@ -354,6 +354,12 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "componentBrowser.libraryInvalid" => "无法读取",
         "componentBrowser.linkLibrary" => "链接组件库文件",
         "componentBrowser.libraryNeedsDesktop" => "链接组件库文件需要桌面应用",
+        "script.title" => "脚本",
+        "script.edit" => "编辑脚本",
+        "script.sourceTitle" => "脚本源码",
+        "script.running" => "正在生成…",
+        "script.generated" => "{count} 个节点 · {ms} 毫秒",
+        "script.desktopOnly" => "在桌面应用中重新生成",
         _ => return None,
     })
 }
