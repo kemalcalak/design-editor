@@ -49,6 +49,7 @@ pub(super) fn parse_tool(s: &str) -> Option<Tool> {
         "progress" => Some(Tool::Progress),
         "tabs" => Some(Tool::Tabs),
         "note" => Some(Tool::Note),
+        "browser" => Some(Tool::Browser),
         _ => None,
     }
 }

@@ -354,6 +354,17 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "componentBrowser.libraryInvalid" => "Okunamıyor",
         "componentBrowser.linkLibrary" => "Kütüphane dosyası bağla",
         "componentBrowser.libraryNeedsDesktop" => "Kütüphane dosyası bağlamak için masaüstü uygulaması gerekir",
+        "shapes.browser" => "Tarayıcı",
+        "browser.title" => "Tarayıcı",
+        "browser.url" => "URL",
+        "browser.zoom" => "Yakınlaştırma",
+        "browser.device.desktop" => "Masaüstü",
+        "browser.device.laptop" => "Dizüstü",
+        "browser.device.tablet" => "Tablet",
+        "browser.device.phone" => "Telefon",
+        "browser.device.phoneSmall" => "Küçük telefon",
+        "browser.scrollX" => "Kaydırma X",
+        "browser.scrollY" => "Kaydırma Y",
         _ => return None,
     })
 }

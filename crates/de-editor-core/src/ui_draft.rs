@@ -125,6 +125,12 @@ pub enum PropertyFocus {
     /// text, committed through `set_selected_annotation_*`.
     AnnotationContent,
     AnnotationModel,
+    /// A browser node's address (free text), page zoom in percent and
+    /// page scroll in CSS px (#20), committed through `set_selected_browser_*`.
+    BrowserUrl,
+    BrowserZoom,
+    BrowserScrollX,
+    BrowserScrollY,
     /// One numeric field (from / to / duration / delay) of the Motion
     /// section's animation at `index` (#154).
     MotionValue {
@@ -190,6 +196,7 @@ impl PropertyFocus {
                 | PropertyFocus::VideoSrc
                 | PropertyFocus::AnnotationContent
                 | PropertyFocus::AnnotationModel
+                | PropertyFocus::BrowserUrl
                 | PropertyFocus::InteractionUrl(_)
         )
     }

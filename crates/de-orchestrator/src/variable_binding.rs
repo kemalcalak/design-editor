@@ -311,7 +311,8 @@ fn node_fills_mut(node: &mut PenNode) -> Option<&mut Vec<PenFill>> {
         | PenNode::Ref(_)
         | PenNode::Note(_)
         | PenNode::Context(_)
-        | PenNode::Prompt(_) => None,
+        | PenNode::Prompt(_)
+        | PenNode::Browser(_) => None,
     }
 }
 
@@ -341,6 +342,7 @@ fn node_stroke_mut(node: &mut PenNode) -> Option<&mut Option<PenStroke>> {
         | PenNode::Note(_)
         | PenNode::Context(_)
         | PenNode::Prompt(_) => None,
+        PenNode::Browser(n) => Some(&mut n.stroke),
     }
 }
 
@@ -370,6 +372,7 @@ fn node_effects_mut(node: &mut PenNode) -> Option<&mut Vec<PenEffect>> {
         | PenNode::Note(_)
         | PenNode::Context(_)
         | PenNode::Prompt(_) => None,
+        PenNode::Browser(n) => n.effects.as_mut(),
     }
 }
 

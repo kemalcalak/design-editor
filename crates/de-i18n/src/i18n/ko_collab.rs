@@ -356,6 +356,17 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "componentBrowser.libraryInvalid" => "읽을 수 없음",
         "componentBrowser.linkLibrary" => "라이브러리 파일 연결",
         "componentBrowser.libraryNeedsDesktop" => "라이브러리 파일 연결은 데스크톱 앱에서만 가능합니다",
+        "shapes.browser" => "브라우저",
+        "browser.title" => "브라우저",
+        "browser.url" => "URL",
+        "browser.zoom" => "확대/축소",
+        "browser.device.desktop" => "데스크톱",
+        "browser.device.laptop" => "노트북",
+        "browser.device.tablet" => "태블릿",
+        "browser.device.phone" => "휴대폰",
+        "browser.device.phoneSmall" => "작은 휴대폰",
+        "browser.scrollX" => "스크롤 X",
+        "browser.scrollY" => "스크롤 Y",
         _ => return None,
     })
 }

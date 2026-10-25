@@ -354,6 +354,17 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "componentBrowser.libraryInvalid" => "Tidak terbaca",
         "componentBrowser.linkLibrary" => "Tautkan file pustaka",
         "componentBrowser.libraryNeedsDesktop" => "Menautkan file pustaka memerlukan aplikasi desktop",
+        "shapes.browser" => "Browser",
+        "browser.title" => "Browser",
+        "browser.url" => "URL",
+        "browser.zoom" => "Zoom",
+        "browser.device.desktop" => "Desktop",
+        "browser.device.laptop" => "Laptop",
+        "browser.device.tablet" => "Tablet",
+        "browser.device.phone" => "Ponsel",
+        "browser.device.phoneSmall" => "Ponsel kecil",
+        "browser.scrollX" => "Gulir X",
+        "browser.scrollY" => "Gulir Y",
         _ => return None,
     })
 }

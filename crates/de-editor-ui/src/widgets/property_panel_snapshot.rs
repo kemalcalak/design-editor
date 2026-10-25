@@ -48,7 +48,7 @@ fn node_kind_of(node: &PenNode) -> NodeKind {
         PenNode::Image(_) => NodeKind::Other("image".to_string()),
         PenNode::IconFont(_) => NodeKind::Other("icon_font".to_string()),
         PenNode::Ref(_) => NodeKind::Other("ref".to_string()),
-        PenNode::Note(_) | PenNode::Context(_) | PenNode::Prompt(_) => {
+        PenNode::Note(_) | PenNode::Context(_) | PenNode::Prompt(_) | PenNode::Browser(_) => {
             NodeKind::Other(node.type_tag().to_string())
         }
     }
@@ -182,6 +182,8 @@ pub struct NodeSnapshot {
     pub widget: Option<WidgetSummary>,
     /// Note / context / prompt fields, `Some` only for an annotation (#12).
     pub annotation: Option<crate::widgets::property_panel_annotation::AnnotationSummary>,
+    /// Browser page settings, `Some` only for a browser node (#20).
+    pub browser: Option<crate::widgets::property_panel_browser::BrowserSummary>,
     pub fill: Option<Color>,
     /// Primary solid-fill opacity in `[0.0, 1.0]` — the Fill
     /// section's `100 %` paints `fill_opacity * 100`.

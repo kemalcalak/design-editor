@@ -354,6 +354,17 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "componentBrowser.libraryInvalid" => "Не читается",
         "componentBrowser.linkLibrary" => "Связать файл библиотеки",
         "componentBrowser.libraryNeedsDesktop" => "Связывать библиотеки можно только в настольном приложении",
+        "shapes.browser" => "Браузер",
+        "browser.title" => "Браузер",
+        "browser.url" => "URL",
+        "browser.zoom" => "Масштаб",
+        "browser.device.desktop" => "Компьютер",
+        "browser.device.laptop" => "Ноутбук",
+        "browser.device.tablet" => "Планшет",
+        "browser.device.phone" => "Телефон",
+        "browser.device.phoneSmall" => "Маленький телефон",
+        "browser.scrollX" => "Прокр. X",
+        "browser.scrollY" => "Прокр. Y",
         _ => return None,
     })
 }

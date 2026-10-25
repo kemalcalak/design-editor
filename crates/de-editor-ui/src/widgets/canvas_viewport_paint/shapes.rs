@@ -41,6 +41,17 @@ pub(super) fn unstyled<R>(
 /// ellipse silhouette. Offset + blur scale by `zoom` so the
 /// shadow tracks the node across viewport zoom. A shadow whose
 /// blur AND offset are both sub-pixel on screen skips entirely.
+/// Drop shadows are cast only by kinds whose silhouette a rounded rect /
+/// ellipse represents faithfully: Frame / Rect / Ellipse, and a browser on
+/// the editor canvas (#20). Polygon / Line / Path shadows are deferred
+/// until a shape-mask path exists.
+pub(super) fn casts_drop_shadow(node: &SceneNode) -> bool {
+    matches!(
+        node.kind,
+        NodeKind::Frame | NodeKind::Rect | NodeKind::Ellipse
+    ) || crate::widgets::canvas_browser::is_painted(node)
+}
+
 pub(super) fn paint_drop_shadows(
     cx: &mut PaintCx<'_>,
     node: &SceneNode,

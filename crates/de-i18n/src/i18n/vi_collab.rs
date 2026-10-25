@@ -354,6 +354,17 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "componentBrowser.libraryInvalid" => "Không đọc được",
         "componentBrowser.linkLibrary" => "Liên kết tệp thư viện",
         "componentBrowser.libraryNeedsDesktop" => "Cần ứng dụng máy tính để liên kết tệp thư viện",
+        "shapes.browser" => "Trình duyệt",
+        "browser.title" => "Trình duyệt",
+        "browser.url" => "URL",
+        "browser.zoom" => "Thu phóng",
+        "browser.device.desktop" => "Máy tính",
+        "browser.device.laptop" => "Laptop",
+        "browser.device.tablet" => "Máy tính bảng",
+        "browser.device.phone" => "Điện thoại",
+        "browser.device.phoneSmall" => "Điện thoại nhỏ",
+        "browser.scrollX" => "Cuộn X",
+        "browser.scrollY" => "Cuộn Y",
         _ => return None,
     })
 }

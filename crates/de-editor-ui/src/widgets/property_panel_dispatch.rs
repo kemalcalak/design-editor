@@ -712,6 +712,13 @@ pub fn apply_property_action(
             let _ = state.set_selected_widget_checked(*new_value);
             Handled
         }
+        A::SetBrowserDevice(id) => {
+            let before = state.snapshot_for_history();
+            if state.set_selected_browser_device(Some(id)) {
+                state.history_push_past(before);
+            }
+            Handled
+        }
         A::SetAnnotationKind(kind) => {
             let before = state.snapshot_for_history();
             if state.set_selected_annotation_kind(*kind) {

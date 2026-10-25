@@ -786,9 +786,9 @@ fn canvas_only_notes_stay_out_of_generated_code() {
     let html = Html.generate(&doc);
     assert!(html.contains("Hello"));
     assert!(!html.contains("Ask legal"), "html: {html}");
-    let json = r#"[{"type":"frame","id":"f","children":[{"type":"prompt","id":"p"},{"type":"text","id":"t","content":"x"}]}]"#;
+    let json = r#"[{"type":"frame","id":"f","children":[{"type":"prompt","id":"p"},{"type":"browser","id":"b"},{"type":"text","id":"t","content":"x"}]}]"#;
     let stripped = strip_canvas_only_json(json);
-    assert!(!stripped.contains("\"prompt\""));
+    assert!(!stripped.contains("\"prompt\"") && !stripped.contains("\"browser\""));
     assert!(stripped.contains("\"t\""));
     assert_eq!(
         strip_canvas_only_json(r#"{"type":"context","id":"c"}"#),

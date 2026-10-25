@@ -23,6 +23,8 @@ pub mod align_guides;
 mod annotation_edit;
 pub mod blank_starter;
 pub mod bridge_protocol;
+pub mod browser_devices;
+mod browser_edit;
 pub mod button_press_state;
 mod catalog_toml;
 pub mod chat;

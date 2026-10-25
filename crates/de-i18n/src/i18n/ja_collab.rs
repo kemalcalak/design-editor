@@ -354,6 +354,17 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "componentBrowser.libraryInvalid" => "読み込めません",
         "componentBrowser.linkLibrary" => "ライブラリファイルをリンク",
         "componentBrowser.libraryNeedsDesktop" => "ライブラリのリンクにはデスクトップアプリが必要です",
+        "shapes.browser" => "ブラウザ",
+        "browser.title" => "ブラウザ",
+        "browser.url" => "URL",
+        "browser.zoom" => "ズーム",
+        "browser.device.desktop" => "デスクトップ",
+        "browser.device.laptop" => "ノートPC",
+        "browser.device.tablet" => "タブレット",
+        "browser.device.phone" => "スマホ",
+        "browser.device.phoneSmall" => "小型スマホ",
+        "browser.scrollX" => "スクロール X",
+        "browser.scrollY" => "スクロール Y",
         _ => return None,
     })
 }

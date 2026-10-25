@@ -132,6 +132,7 @@ fn child_name(node: &PenNode) -> Option<&str> {
         PenNode::Polygon(n) => n.base.name.as_deref(),
         PenNode::Ref(n) => n.base.name.as_deref(),
         PenNode::Note(n) | PenNode::Context(n) | PenNode::Prompt(n) => n.base.name.as_deref(),
+        PenNode::Browser(n) => n.base.name.as_deref(),
     }
 }
 

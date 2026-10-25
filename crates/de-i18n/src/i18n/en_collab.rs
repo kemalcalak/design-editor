@@ -354,6 +354,17 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "componentBrowser.libraryInvalid" => "Can't read",
         "componentBrowser.linkLibrary" => "Link library file",
         "componentBrowser.libraryNeedsDesktop" => "Linking library files needs the desktop app",
+        "shapes.browser" => "Browser",
+        "browser.title" => "Browser",
+        "browser.url" => "URL",
+        "browser.zoom" => "Zoom",
+        "browser.device.desktop" => "Desktop",
+        "browser.device.laptop" => "Laptop",
+        "browser.device.tablet" => "Tablet",
+        "browser.device.phone" => "Phone",
+        "browser.device.phoneSmall" => "Small phone",
+        "browser.scrollX" => "Scroll X",
+        "browser.scrollY" => "Scroll Y",
         _ => return None,
     })
 }

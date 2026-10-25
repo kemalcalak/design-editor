@@ -354,6 +354,17 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "componentBrowser.libraryInvalid" => "पढ़ी नहीं जा सकती",
         "componentBrowser.linkLibrary" => "लाइब्रेरी फ़ाइल लिंक करें",
         "componentBrowser.libraryNeedsDesktop" => "लाइब्रेरी फ़ाइलें लिंक करने के लिए डेस्कटॉप ऐप चाहिए",
+        "shapes.browser" => "ब्राउज़र",
+        "browser.title" => "ब्राउज़र",
+        "browser.url" => "URL",
+        "browser.zoom" => "ज़ूम",
+        "browser.device.desktop" => "डेस्कटॉप",
+        "browser.device.laptop" => "लैपटॉप",
+        "browser.device.tablet" => "टैबलेट",
+        "browser.device.phone" => "फ़ोन",
+        "browser.device.phoneSmall" => "छोटा फ़ोन",
+        "browser.scrollX" => "स्क्रॉल X",
+        "browser.scrollY" => "स्क्रॉल Y",
         _ => return None,
     })
 }

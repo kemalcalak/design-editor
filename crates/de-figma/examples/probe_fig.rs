@@ -37,6 +37,7 @@ fn variant_name(n: &PenNode) -> &'static str {
         PenNode::Note(_) => "Note",
         PenNode::Context(_) => "Context",
         PenNode::Prompt(_) => "Prompt",
+        PenNode::Browser(_) => "Browser",
     }
 }
 
@@ -232,6 +233,7 @@ fn base_of(n: &PenNode) -> &jian_ops_schema::node::base::PenNodeBase {
         PenNode::IconFont(x) => &x.base,
         PenNode::Ref(x) => &x.base,
         PenNode::Note(x) | PenNode::Context(x) | PenNode::Prompt(x) => &x.base,
+        PenNode::Browser(x) => &x.base,
     }
 }
 

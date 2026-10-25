@@ -354,6 +354,17 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "componentBrowser.libraryInvalid" => "อ่านไม่ได้",
         "componentBrowser.linkLibrary" => "ลิงก์ไฟล์ไลบรารี",
         "componentBrowser.libraryNeedsDesktop" => "การลิงก์ไฟล์ไลบรารีต้องใช้แอปเดสก์ท็อป",
+        "shapes.browser" => "เบราว์เซอร์",
+        "browser.title" => "เบราว์เซอร์",
+        "browser.url" => "URL",
+        "browser.zoom" => "ซูม",
+        "browser.device.desktop" => "เดสก์ท็อป",
+        "browser.device.laptop" => "แล็ปท็อป",
+        "browser.device.tablet" => "แท็บเล็ต",
+        "browser.device.phone" => "โทรศัพท์",
+        "browser.device.phoneSmall" => "โทรศัพท์จอเล็ก",
+        "browser.scrollX" => "เลื่อน X",
+        "browser.scrollY" => "เลื่อน Y",
         _ => return None,
     })
 }

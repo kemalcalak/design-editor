@@ -354,6 +354,17 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "componentBrowser.libraryInvalid" => "Illisible",
         "componentBrowser.linkLibrary" => "Lier un fichier de bibliothèque",
         "componentBrowser.libraryNeedsDesktop" => "Lier des bibliothèques nécessite l'app de bureau",
+        "shapes.browser" => "Navigateur",
+        "browser.title" => "Navigateur",
+        "browser.url" => "URL",
+        "browser.zoom" => "Zoom",
+        "browser.device.desktop" => "Ordinateur",
+        "browser.device.laptop" => "Portable",
+        "browser.device.tablet" => "Tablette",
+        "browser.device.phone" => "Téléphone",
+        "browser.device.phoneSmall" => "Petit téléphone",
+        "browser.scrollX" => "Défil. X",
+        "browser.scrollY" => "Défil. Y",
         _ => return None,
     })
 }

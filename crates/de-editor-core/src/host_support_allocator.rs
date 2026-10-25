@@ -48,6 +48,7 @@ impl EditorState {
             Tool::Progress => ("progress", "Progress"),
             Tool::Tabs => ("tabs", "Tabs"),
             Tool::Note => ("note", "Note"),
+            Tool::Browser => ("browser", "Browser"),
             // The Pencil builds its path on release (`pencil.rs`), not here.
             Tool::Select | Tool::Hand | Tool::Pencil => return Ok(None),
         };

@@ -390,6 +390,15 @@ pub fn action_button_rects_with_fill_picker(
         );
     }
 
+    if visible.browser {
+        crate::widgets::property_panel_browser::push_browser_action_rects(
+            &mut out,
+            x0,
+            tops.browser,
+            usable_w,
+        );
+    }
+
     if visible.image {
         crate::widgets::property_panel_image_node::push_image_action_rects_with_video(
             &mut out,

@@ -15,8 +15,9 @@ use super::{paint, shader, AssetReader, PenDevReport};
 
 /// pen.dev node kinds with no canonical equivalent. They are removed with
 /// their subtree and counted in the report. `note`, `context` and `prompt`
-/// map onto the canonical annotation kinds as they are (#12).
-const DROPPED_KINDS: &[(&str, &str)] = &[("script", "script node"), ("browser", "browser node")];
+/// map onto the canonical annotation kinds as they are (#12), `browser`
+/// onto the canonical browser node (#20).
+const DROPPED_KINDS: &[(&str, &str)] = &[("script", "script node")];
 
 /// Entity keys pen.dev uses for its own editor and AI tooling only.
 /// `placeholder` survives on frames, which carry the in-progress flag (#16).
@@ -444,3 +445,7 @@ fn numbers4(value: &Value) -> Option<[f64; 4]> {
 #[cfg(test)]
 #[path = "nodes_tests.rs"]
 mod tests;
+
+#[cfg(test)]
+#[path = "nodes_browser_tests.rs"]
+mod browser_tests;

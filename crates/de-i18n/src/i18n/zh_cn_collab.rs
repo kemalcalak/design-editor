@@ -354,6 +354,17 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "componentBrowser.libraryInvalid" => "无法读取",
         "componentBrowser.linkLibrary" => "链接组件库文件",
         "componentBrowser.libraryNeedsDesktop" => "链接组件库文件需要桌面应用",
+        "shapes.browser" => "浏览器",
+        "browser.title" => "浏览器",
+        "browser.url" => "网址",
+        "browser.zoom" => "缩放",
+        "browser.device.desktop" => "桌面",
+        "browser.device.laptop" => "笔记本",
+        "browser.device.tablet" => "平板",
+        "browser.device.phone" => "手机",
+        "browser.device.phoneSmall" => "小屏手机",
+        "browser.scrollX" => "滚动 X",
+        "browser.scrollY" => "滚动 Y",
         _ => return None,
     })
 }

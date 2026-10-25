@@ -22,7 +22,7 @@ pub const SHAPE_PICKER_WIDTH: f32 = 220.0;
 const ROW_HEIGHT: f32 = 36.0;
 const ROW_PAD_X: f32 = 12.0;
 const ICON_SIZE: f32 = 16.0;
-const ROW_COUNT: usize = 5;
+const ROW_COUNT: usize = 6;
 /// Top + bottom padding inside the panel, so the first / last rows don't sit
 /// flush against the rounded panel edge. Hit-testing accounts for it (see
 /// `hit_popup`), so paint + hit stay aligned.
@@ -34,7 +34,8 @@ const ROW_HL_INSET_Y: f32 = 4.0;
 /// What the user picked from the dropdown.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ShapeChoice {
-    /// Pick a shape tool (Rect / Polygon / Star / Line).
+    /// Pick a shape tool (Rect / Polygon / Star / Line) or the Browser
+    /// tool (#20).
     Tool(Tool),
     /// Open the icon picker (host concern; this widget only
     /// reports the intent).
@@ -51,6 +52,7 @@ struct PickerLabels {
     star: String,
     line: String,
     icon: String,
+    browser: String,
 }
 
 impl PickerLabels {
@@ -69,6 +71,7 @@ impl PickerLabels {
             star: pick("shapes.star", "Star"),
             line: pick("shapes.line", "Line"),
             icon: pick("shapes.icon", "Icon"),
+            browser: pick("shapes.browser", "Browser"),
         }
     }
 }
@@ -115,6 +118,11 @@ impl ShapePicker {
                 icon: Icon::Sparkles,
                 label: labels.icon,
                 choice: ShapeChoice::OpenIconPicker,
+            },
+            PickerRow {
+                icon: Icon::Globe,
+                label: labels.browser,
+                choice: ShapeChoice::Tool(Tool::Browser),
             },
         ];
         Self {
@@ -350,7 +358,7 @@ mod tests {
     }
 
     #[test]
-    fn last_row_opens_the_icon_picker() {
+    fn the_icon_row_opens_the_icon_picker_and_the_last_picks_the_browser() {
         let mut ui = de_editor_core::editor_ui_state::EditorUiState::new();
         ui.shape_picker.open = true;
         let picker = ShapePicker::for_editor_ui(&ui);
@@ -358,9 +366,12 @@ mod tests {
             origin: Point2D::new(0.0, 0.0),
             size: Point2D::new(SHAPE_PICKER_WIDTH, ShapePicker::panel_height()),
         };
+        let icon_y = (ROW_COUNT as f32 - 1.5) * ROW_HEIGHT;
+        let hit = picker.hit_test(panel_rect, Point2D::new(50.0, icon_y));
+        assert_eq!(hit, Some(ShapeChoice::OpenIconPicker));
         let last_y = (ROW_COUNT as f32 - 0.5) * ROW_HEIGHT;
         let hit = picker.hit_test(panel_rect, Point2D::new(50.0, last_y));
-        assert_eq!(hit, Some(ShapeChoice::OpenIconPicker));
+        assert_eq!(hit, Some(ShapeChoice::Tool(Tool::Browser)));
     }
 
     #[test]

@@ -354,6 +354,17 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "componentBrowser.libraryInvalid" => "Nicht lesbar",
         "componentBrowser.linkLibrary" => "Bibliotheksdatei verknüpfen",
         "componentBrowser.libraryNeedsDesktop" => "Bibliotheksdateien lassen sich nur in der Desktop-App verknüpfen",
+        "shapes.browser" => "Browser",
+        "browser.title" => "Browser",
+        "browser.url" => "URL",
+        "browser.zoom" => "Zoom",
+        "browser.device.desktop" => "Desktop",
+        "browser.device.laptop" => "Laptop",
+        "browser.device.tablet" => "Tablet",
+        "browser.device.phone" => "Smartphone",
+        "browser.device.phoneSmall" => "Kleines Smartphone",
+        "browser.scrollX" => "Scroll X",
+        "browser.scrollY" => "Scroll Y",
         _ => return None,
     })
 }

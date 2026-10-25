@@ -30,6 +30,10 @@ pub(super) fn write_corner_radius(node: &mut PenNode, radius: f64) -> bool {
             n.corner_radius = Some(CornerRadius::Uniform(radius));
             true
         }
+        PenNode::Browser(n) => {
+            n.corner_radius = Some(CornerRadius::Uniform(radius));
+            true
+        }
         PenNode::Ellipse(n) => {
             n.corner_radius = Some(radius);
             true
@@ -50,6 +54,7 @@ fn corner_radius_slot(node: &mut PenNode) -> Option<&mut Option<CornerRadius>> {
         PenNode::Group(n) => Some(&mut n.container.corner_radius),
         PenNode::Rectangle(n) => Some(&mut n.container.corner_radius),
         PenNode::Image(n) => Some(&mut n.corner_radius),
+        PenNode::Browser(n) => Some(&mut n.corner_radius),
         _ => None,
     }
 }
@@ -107,6 +112,7 @@ pub(crate) fn node_effects_slot(node: &mut PenNode) -> Option<&mut Option<Vec<Pe
         | PenNode::Note(_)
         | PenNode::Context(_)
         | PenNode::Prompt(_) => None,
+        PenNode::Browser(n) => Some(&mut n.effects),
     }
 }
 
@@ -138,6 +144,7 @@ pub(super) fn node_stroke_slot(node: &mut PenNode) -> Option<&mut Option<PenStro
         | PenNode::Note(_)
         | PenNode::Context(_)
         | PenNode::Prompt(_) => None,
+        PenNode::Browser(n) => Some(&mut n.stroke),
     }
 }
 
