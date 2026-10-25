@@ -134,6 +134,10 @@ pub struct EditorState {
     /// treat the child as editable after the Ref-level lock gate has
     /// already passed. Never serialized or copied into history.
     pub(crate) instance_write_virtual_anchor: Option<crate::NodeId>,
+    /// Script-node runs: what was last scanned, what is running, how the
+    /// last run went (#19). Runtime only; a document replace moves the
+    /// generation, which forces a fresh scan.
+    pub script_regen: crate::script_regen::ScriptRegenState,
 }
 
 impl EditorState {
@@ -167,6 +171,7 @@ impl EditorState {
             theme_presets_dirty: false,
             app_state_owner: std::collections::BTreeMap::new(),
             instance_write_virtual_anchor: None,
+            script_regen: Default::default(),
         }
     }
 

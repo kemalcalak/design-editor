@@ -147,6 +147,8 @@ pub mod scene_template_keyboard;
 pub mod scene_template_palette;
 pub mod scene_template_prompt;
 pub mod scene_vars;
+pub mod script_inputs;
+pub mod script_regen;
 pub mod selection;
 pub mod selection_flip;
 pub mod selection_resolve;

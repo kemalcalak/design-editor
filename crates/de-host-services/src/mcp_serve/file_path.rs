@@ -44,6 +44,7 @@ pub fn process_message_for_file_path_arg(
             if let Some(baseline) = baseline {
                 super::run_write_repairs_after_apply(state, &baseline.scope_after(state));
             }
+            de_mcp::script_node::regenerate_stale_scripts(state);
             if let Err(e) = super::save_editor_state(state, &target.path) {
                 applier_failed = Some(format!("save {} failed: {e}", target.path.display()));
                 return false;

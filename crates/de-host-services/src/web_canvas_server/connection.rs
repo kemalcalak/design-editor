@@ -337,6 +337,9 @@ pub(super) fn dispatch<S: Read + Write>(
                     let scope = baseline.scope_after(editor);
                     crate::mcp_serve::run_write_repairs_after_apply(editor, &scope);
                 }
+                if ok {
+                    de_mcp::script_node::regenerate_stale_scripts(editor);
+                }
                 applied_any |= ok;
                 ok
             },

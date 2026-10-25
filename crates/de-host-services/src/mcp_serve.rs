@@ -154,6 +154,9 @@ fn process_message_with_auto_finalize(
         if let Some(scope) = &scope {
             run_write_repairs_after_apply(state, scope);
         }
+        // No frame loop here: a script node the write made stale runs now,
+        // so the saved file holds its children (#19).
+        de_mcp::script_node::regenerate_stale_scripts(state);
         if let Err(e) = save_editor_state(state, path) {
             applier_failed = Some(format!("save failed: {e}"));
             return false;
@@ -700,6 +703,9 @@ mod import_pen_dev_verbatim_tests;
 mod kit_insert_tools_tests;
 #[cfg(test)]
 mod root_placement_tests;
+#[cfg(test)]
+#[path = "mcp_serve/script_node_mcp_tests.rs"]
+mod script_node_mcp_tests;
 #[cfg(test)]
 mod tests;
 #[cfg(test)]

@@ -363,6 +363,12 @@ impl DesktopApp {
                 self.redraw_dirty = true;
             }
         }
+        // Land finished script-node runs and start the ones the document
+        // needs; a scan only happens when the revision moved (#19).
+        if self.script_nodes.pump(self.host.editor_state_mut()) {
+            self.host.mark_editor_state_dirty();
+            self.redraw_dirty = true;
+        }
         // Start the CLI probes the first time the chat model picker or
         // Settings → Agents is on screen, then drain discovery once it
         // lands. Runs before `drain_provider_connect` below so the replay's

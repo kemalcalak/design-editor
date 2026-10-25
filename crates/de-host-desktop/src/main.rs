@@ -97,6 +97,7 @@ mod render_cli_error;
 mod save_session;
 mod scene_template_generate;
 mod scene_template_open;
+mod script_node_host;
 mod settings_io;
 mod single_instance;
 mod style_import_host;
@@ -167,6 +168,8 @@ enum DesktopEvent {
     FontsRegistered,
     /// A linked component library file changed on disk (#15).
     LibraryChanged,
+    /// A script node's run finished on the worker (#19).
+    ScriptNodesReady,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -334,6 +337,8 @@ struct DesktopApp {
     remote_images: remote_image_host::RemoteImageSession,
     /// Two-thread local image raster decode pool.
     image_decodes: image_decode_host::ImageDecodeHost,
+    /// Script-node runs on a worker thread (#19).
+    script_nodes: script_node_host::ScriptNodeHost,
     /// Loads Home's Recent thumbnails into the image cache.
     home_previews: home_previews::HomePreviews,
     /// Cross-thread wake handle used by live MCP connection threads.
@@ -643,6 +648,7 @@ fn main() {
     macos_app::apply();
     let mut app = DesktopApp::new(initial_file);
     app.image_decodes.set_wake_proxy(mcp_wake_proxy.clone());
+    app.script_nodes.set_wake_proxy(mcp_wake_proxy.clone());
     // This process writes Home previews for its saves; one landing wakes an
     // idle Home to show it.
     de_host_services::home_preview::enable();
