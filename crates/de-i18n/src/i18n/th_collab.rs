@@ -359,10 +359,8 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "browser.url" => "URL",
         "browser.zoom" => "ซูม",
         "browser.device.desktop" => "เดสก์ท็อป",
-        "browser.device.laptop" => "แล็ปท็อป",
         "browser.device.tablet" => "แท็บเล็ต",
         "browser.device.phone" => "โทรศัพท์",
-        "browser.device.phoneSmall" => "โทรศัพท์จอเล็ก",
         "browser.scrollX" => "เลื่อน X",
         "browser.scrollY" => "เลื่อน Y",
         "browser.reload" => "โหลดใหม่",
@@ -370,6 +368,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "browser.status.loading" => "กำลังโหลด…",
         "browser.status.noBrowser" => "ไม่พบ Chrome",
         "browser.status.failed" => "โหลดไม่สำเร็จ",
+        "browser.status.blocked" => "ไม่อนุญาตที่อยู่นี้",
         _ => return None,
     })
 }

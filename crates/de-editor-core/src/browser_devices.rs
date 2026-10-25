@@ -18,19 +18,12 @@ pub struct BrowserDevice {
 }
 
 /// Every preset, in menu order.
-pub const BROWSER_DEVICES: [BrowserDevice; 5] = [
+pub const BROWSER_DEVICES: [BrowserDevice; 3] = [
     BrowserDevice {
         id: "desktop",
         label_key: "browser.device.desktop",
         width: 1440.0,
         height: 900.0,
-        mobile: false,
-    },
-    BrowserDevice {
-        id: "laptop",
-        label_key: "browser.device.laptop",
-        width: 1280.0,
-        height: 800.0,
         mobile: false,
     },
     BrowserDevice {
@@ -45,13 +38,6 @@ pub const BROWSER_DEVICES: [BrowserDevice; 5] = [
         label_key: "browser.device.phone",
         width: 390.0,
         height: 844.0,
-        mobile: true,
-    },
-    BrowserDevice {
-        id: "phone-small",
-        label_key: "browser.device.phoneSmall",
-        width: 375.0,
-        height: 667.0,
         mobile: true,
     },
 ];

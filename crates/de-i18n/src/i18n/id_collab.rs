@@ -359,10 +359,8 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "browser.url" => "URL",
         "browser.zoom" => "Zoom",
         "browser.device.desktop" => "Desktop",
-        "browser.device.laptop" => "Laptop",
         "browser.device.tablet" => "Tablet",
         "browser.device.phone" => "Ponsel",
-        "browser.device.phoneSmall" => "Ponsel kecil",
         "browser.scrollX" => "Gulir X",
         "browser.scrollY" => "Gulir Y",
         "browser.reload" => "Muat ulang",
@@ -370,6 +368,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "browser.status.loading" => "Memuat…",
         "browser.status.noBrowser" => "Chrome tidak ditemukan",
         "browser.status.failed" => "Gagal memuat",
+        "browser.status.blocked" => "Alamat tidak diizinkan",
         _ => return None,
     })
 }

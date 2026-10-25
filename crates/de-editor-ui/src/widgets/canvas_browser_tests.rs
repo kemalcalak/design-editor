@@ -76,10 +76,10 @@ fn only_a_canvas_paint_records_the_node_for_the_page_renderer() {
             .unwrap_or_default()
             .contains(&"cb-visible".to_string())
     };
-    begin_frame();
+    begin_frame(false);
     paint_once(&node);
     assert!(!seen());
-    begin_frame();
+    begin_frame(false);
     with_annotations(false, || paint_once(&node));
     assert!(seen());
 }

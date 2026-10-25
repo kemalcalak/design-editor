@@ -17,8 +17,11 @@ use crate::widgets::property_panel_sections::EditContext;
 use crate::widgets::property_panel_segments::{paint_segment_row, segment_rects};
 use crate::widgets::PaintCx;
 use crate::{Point2D, Rect, TextLayout};
+use de_editor_core::browser_devices::BROWSER_DEVICES;
 use de_editor_core::browser_live::{BrowserLiveState, BrowserPageStatus};
 use de_editor_core::PropertyFocus;
+
+use crate::util::format_panel_number;
 
 /// One row's vertical advance (input + gap).
 const ROW_ADVANCE: f32 = INPUT_HEIGHT + 6.0;
@@ -27,14 +30,15 @@ const BOTTOM_PAD: f32 = 12.0;
 const SEGMENT_FONT: f32 = 12.0;
 /// Gap between the Scroll X and Scroll Y halves.
 const HALF_GAP: f32 = 8.0;
-/// Rows under the header: url, device, zoom, scroll, live page.
+/// The rows under the header, in order.
+const ROW_URL: usize = 0;
+const ROW_DEVICE: usize = 1;
+const ROW_ZOOM: usize = 2;
+const ROW_SCROLL: usize = 3;
+const ROW_LIVE: usize = 4;
 const ROWS: usize = 5;
 /// Share of the live-page row the Reload button takes.
 const RELOAD_SHARE: f32 = 0.4;
-
-/// The device presets the segment row offers, in order. The rest of
-/// `de_editor_core::browser_devices` stays reachable through MCP and import.
-pub const PANEL_DEVICES: [&str; 3] = ["desktop", "tablet", "phone"];
 
 /// The selected browser's editable fields.
 #[derive(Debug, Clone, PartialEq)]
@@ -87,9 +91,9 @@ fn row_rect(x0: f32, top: f32, row: usize, usable_w: f32) -> Rect {
     }
 }
 
-/// The Scroll X / Scroll Y halves of the last row.
+/// The Scroll X / Scroll Y halves of the scroll row.
 fn scroll_rects(x0: f32, top: f32, usable_w: f32) -> [Rect; 2] {
-    let row = row_rect(x0, top, 3, usable_w);
+    let row = row_rect(x0, top, ROW_SCROLL, usable_w);
     let half = (usable_w - HALF_GAP) / 2.0;
     let left = Rect {
         origin: row.origin,
@@ -105,7 +109,7 @@ fn scroll_rects(x0: f32, top: f32, usable_w: f32) -> [Rect; 2] {
 /// The live-page button: Load pages across the row while pages are held,
 /// else Reload on its left part.
 fn live_button_rect(x0: f32, top: f32, usable_w: f32, pages_allowed: bool) -> Rect {
-    let row = row_rect(x0, top, 4, usable_w);
+    let row = row_rect(x0, top, ROW_LIVE, usable_w);
     if pages_allowed {
         Rect {
             origin: row.origin,
@@ -124,9 +128,12 @@ pub fn push_browser_action_rects(
     usable_w: f32,
     pages_allowed: bool,
 ) {
-    let cells = segment_rects(row_rect(x0, top, 1, usable_w), PANEL_DEVICES.len());
-    for (id, rect) in PANEL_DEVICES.into_iter().zip(cells) {
-        out.push((PropertyPanelAction::SetBrowserDevice(id), rect));
+    let cells = segment_rects(
+        row_rect(x0, top, ROW_DEVICE, usable_w),
+        BROWSER_DEVICES.len(),
+    );
+    for (device, rect) in BROWSER_DEVICES.iter().zip(cells) {
+        out.push((PropertyPanelAction::SetBrowserDevice(device.id), rect));
     }
     let action = if pages_allowed {
         PropertyPanelAction::ReloadBrowser
@@ -143,8 +150,14 @@ pub fn push_browser_input_rects(
     top: f32,
     usable_w: f32,
 ) {
-    rects.push((PropertyFocus::BrowserUrl, row_rect(x0, top, 0, usable_w)));
-    rects.push((PropertyFocus::BrowserZoom, row_rect(x0, top, 2, usable_w)));
+    rects.push((
+        PropertyFocus::BrowserUrl,
+        row_rect(x0, top, ROW_URL, usable_w),
+    ));
+    rects.push((
+        PropertyFocus::BrowserZoom,
+        row_rect(x0, top, ROW_ZOOM, usable_w),
+    ));
     let [sx, sy] = scroll_rects(x0, top, usable_w);
     rects.push((PropertyFocus::BrowserScrollX, sx));
     rects.push((PropertyFocus::BrowserScrollY, sy));
@@ -168,20 +181,20 @@ pub fn paint_browser_section(
     let usable_w = width - PAD_X * 2.0;
     let top = y;
     paint_section_label(cx, theme, label(locale, "browser.title"), x, y, width);
-    let zoom = format_number(summary.zoom_percent);
-    let scroll_x = format_number(summary.scroll_x);
-    let scroll_y = format_number(summary.scroll_y);
+    let zoom = format_panel_number(summary.zoom_percent as f32);
+    let scroll_x = format_panel_number(summary.scroll_x as f32);
+    let scroll_y = format_panel_number(summary.scroll_y as f32);
     let [sx, sy] = scroll_rects(x, top, usable_w);
     let inputs = [
         (
             PropertyFocus::BrowserUrl,
-            row_rect(x, top, 0, usable_w),
+            row_rect(x, top, ROW_URL, usable_w),
             label(locale, "browser.url"),
             summary.url.as_str(),
         ),
         (
             PropertyFocus::BrowserZoom,
-            row_rect(x, top, 2, usable_w),
+            row_rect(x, top, ROW_ZOOM, usable_w),
             label(locale, "browser.zoom"),
             zoom.as_str(),
         ),
@@ -212,18 +225,18 @@ pub fn paint_browser_section(
             edit.now_ms,
         );
     }
-    let labels: Vec<&str> = PANEL_DEVICES
+    let labels: Vec<&str> = BROWSER_DEVICES
         .iter()
-        .map(|id| label(locale, device_key(id)))
+        .map(|device| label(locale, device.label_key))
         .collect();
     let active = summary
         .device_id
         .as_deref()
-        .and_then(|id| PANEL_DEVICES.iter().position(|d| *d == id));
+        .and_then(|id| BROWSER_DEVICES.iter().position(|d| d.id == id));
     paint_segment_row(
         cx,
         theme,
-        row_rect(x, top, 1, usable_w),
+        row_rect(x, top, ROW_DEVICE, usable_w),
         &labels,
         active,
         SEGMENT_FONT,
@@ -276,23 +289,10 @@ fn status_key(status: BrowserPageStatus) -> Option<&'static str> {
     match status {
         BrowserPageStatus::Loading => Some("browser.status.loading"),
         BrowserPageStatus::NoBrowser => Some("browser.status.noBrowser"),
+        BrowserPageStatus::Blocked => Some("browser.status.blocked"),
         BrowserPageStatus::Failed => Some("browser.status.failed"),
         BrowserPageStatus::Ready => None,
     }
-}
-
-/// Whole numbers without a trailing `.0`.
-fn format_number(value: f64) -> String {
-    if value.fract() == 0.0 {
-        format!("{}", value as i64)
-    } else {
-        format!("{value:.2}")
-    }
-}
-
-fn device_key(id: &str) -> &'static str {
-    de_editor_core::browser_devices::browser_device(id)
-        .map_or("browser.device.desktop", |device| device.label_key)
 }
 
 fn label(locale: de_editor_core::Locale, key: &'static str) -> &'static str {

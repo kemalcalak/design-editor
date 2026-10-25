@@ -179,6 +179,7 @@ impl<'a> Widget for CanvasViewport<'a> {
         // A culled partial repaint (pan-cache strips / tiles) adds to the
         // frame's pointer-shader flag instead of resetting it.
         super::canvas_shader_pointer::begin_frame(self.pointer, self.cull_override.is_some());
+        super::browser_textures::begin_frame(self.cull_override.is_some());
         super::canvas_text_layout_memo::begin_frame(self.text_layout_generation);
         cx.backend.save();
         cx.backend.clip_rect(rect);
@@ -309,7 +310,6 @@ impl<'a> Widget for CanvasViewport<'a> {
                 let bg = self.theme.background;
                 0.2126 * bg.r + 0.7152 * bg.g + 0.0722 * bg.b < 0.5
             };
-            super::browser_textures::begin_frame();
             let child_hits = super::canvas_placeholder::with_overlay(|| {
                 super::canvas_annotation::with_annotations(dark, || {
                     super::canvas_viewport_paint::paint_scene_nodes_with_options_hiding(

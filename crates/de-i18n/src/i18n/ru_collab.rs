@@ -359,10 +359,8 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "browser.url" => "URL",
         "browser.zoom" => "Масштаб",
         "browser.device.desktop" => "Компьютер",
-        "browser.device.laptop" => "Ноутбук",
         "browser.device.tablet" => "Планшет",
         "browser.device.phone" => "Телефон",
-        "browser.device.phoneSmall" => "Маленький телефон",
         "browser.scrollX" => "Прокр. X",
         "browser.scrollY" => "Прокр. Y",
         "browser.reload" => "Обновить",
@@ -370,6 +368,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "browser.status.loading" => "Загрузка…",
         "browser.status.noBrowser" => "Chrome не найден",
         "browser.status.failed" => "Не удалось загрузить",
+        "browser.status.blocked" => "Адрес не разрешён",
         _ => return None,
     })
 }

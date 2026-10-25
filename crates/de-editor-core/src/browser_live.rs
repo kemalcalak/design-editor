@@ -1,8 +1,9 @@
 //! Live page state of the browser node (#20): what a page snapshot is
 //! rendered from (a [`BrowserRenderRequest`] and its key), whether pages
-//! may load at all, per-node reloads and the last load status. Hosts that
-//! can render pages (the desktop app) read requests from here and write
-//! the status back; the panel shows both.
+//! may load at all, per-node reloads and the last load status. The hosts'
+//! shared render queue (`de_editor_ui::widgets::browser_render_queue`)
+//! reads requests from here and writes the status back; the panel shows
+//! both.
 //!
 //! A document opened from disk that already holds browser nodes keeps its
 //! pages from loading until the user allows them (the panel's Load pages
@@ -31,6 +32,8 @@ pub enum BrowserPageStatus {
     Ready,
     /// No Chromium-based browser is installed.
     NoBrowser,
+    /// The renderer refused the address (the web daemon's URL screen).
+    Blocked,
     Failed,
 }
 
@@ -105,19 +108,24 @@ pub struct BrowserRenderRequest {
     pub key: u64,
 }
 
-/// The snapshot `node` needs, `None` for a non-browser node, a blank
-/// address or an empty box. The viewport is the device preset's width (or
-/// the node's own) at the node's aspect ratio, divided by the page zoom;
-/// the picture is the node box at 2×, capped at [`MAX_SNAPSHOT_EDGE`].
-pub fn browser_render_request(node: &PenNode, reload: u32) -> Option<BrowserRenderRequest> {
+/// How a browser node lays its page out: the CSS viewport and the output
+/// pixels per CSS pixel of its snapshot.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct BrowserLayout {
+    pub width: u32,
+    pub height: u32,
+    pub scale: f64,
+    pub mobile: bool,
+}
+
+/// The viewport is the device preset's width (or the node's own) at the
+/// node's aspect ratio, divided by the page zoom; the snapshot is the node
+/// box at 2×, capped at [`MAX_SNAPSHOT_EDGE`]. `None` for another kind or
+/// an empty box.
+pub fn browser_layout(node: &PenNode) -> Option<BrowserLayout> {
     let PenNode::Browser(browser) = node else {
         return None;
     };
-    let url = browser
-        .url
-        .as_deref()
-        .map(str::trim)
-        .filter(|u| !u.is_empty())?;
     let (box_w, box_h) = (node.width_px()?, node.height_px()?);
     if box_w < 1.0 || box_h < 1.0 {
         return None;
@@ -131,13 +139,29 @@ pub fn browser_render_request(node: &PenNode, reload: u32) -> Option<BrowserRend
         .min(MAX_SNAPSHOT_EDGE * box_w / box_w.max(box_h))
         .max(1.0);
     let scale = ((out_w / layout_w) * 100.0).round() / 100.0;
+    Some(BrowserLayout {
+        width: layout_w as u32,
+        height: layout_h as u32,
+        scale: scale.max(0.01),
+        mobile: device.is_some_and(|d| d.mobile),
+    })
+}
+
+/// The snapshot `node` needs (laid out per [`browser_layout`]), `None`
+/// for a non-browser node, a blank address or an empty box.
+pub fn browser_render_request(node: &PenNode, reload: u32) -> Option<BrowserRenderRequest> {
+    let PenNode::Browser(browser) = node else {
+        return None;
+    };
+    let url = browser_url(node)?;
+    let layout = browser_layout(node)?;
     let mut request = BrowserRenderRequest {
         node_id: browser.base.id.clone(),
         url: url.to_string(),
-        layout_width: layout_w as u32,
-        layout_height: layout_h as u32,
-        scale: scale.max(0.01),
-        mobile: device.is_some_and(|d| d.mobile),
+        layout_width: layout.width,
+        layout_height: layout.height,
+        scale: layout.scale,
+        mobile: layout.mobile,
         scroll_x: clamp_browser_scroll(browser.scroll_x.unwrap_or(0.0)),
         scroll_y: clamp_browser_scroll(browser.scroll_y.unwrap_or(0.0)),
         key: 0,
@@ -152,6 +176,51 @@ pub fn browser_render_request(node: &PenNode, reload: u32) -> Option<BrowserRend
     reload.hash(&mut hasher);
     request.key = hasher.finish();
     Some(request)
+}
+
+/// A browser node's address, `None` for a blank one or another kind.
+pub fn browser_url(node: &PenNode) -> Option<&str> {
+    match node {
+        PenNode::Browser(browser) => browser
+            .url
+            .as_deref()
+            .map(str::trim)
+            .filter(|u| !u.is_empty()),
+        _ => None,
+    }
+}
+
+/// The render request as the web editor sends it to the daemon's
+/// `POST /api/browser/snapshot` (camelCase JSON): one wire shape for both
+/// ends.
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct BrowserSnapshotSpec {
+    pub url: String,
+    pub layout_width: u32,
+    pub layout_height: u32,
+    pub scale: f64,
+    #[serde(default)]
+    pub mobile: bool,
+    #[serde(default)]
+    pub scroll_x: f64,
+    #[serde(default)]
+    pub scroll_y: f64,
+}
+
+impl BrowserRenderRequest {
+    /// What a renderer needs of this request.
+    pub fn snapshot_spec(&self) -> BrowserSnapshotSpec {
+        BrowserSnapshotSpec {
+            url: self.url.clone(),
+            layout_width: self.layout_width,
+            layout_height: self.layout_height,
+            scale: self.scale,
+            mobile: self.mobile,
+            scroll_x: self.scroll_x,
+            scroll_y: self.scroll_y,
+        }
+    }
 }
 
 /// Whether any page of the document holds a browser node.

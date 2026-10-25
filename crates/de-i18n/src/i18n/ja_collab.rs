@@ -359,10 +359,8 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "browser.url" => "URL",
         "browser.zoom" => "ズーム",
         "browser.device.desktop" => "デスクトップ",
-        "browser.device.laptop" => "ノートPC",
         "browser.device.tablet" => "タブレット",
         "browser.device.phone" => "スマホ",
-        "browser.device.phoneSmall" => "小型スマホ",
         "browser.scrollX" => "スクロール X",
         "browser.scrollY" => "スクロール Y",
         "browser.reload" => "再読み込み",
@@ -370,6 +368,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "browser.status.loading" => "読み込み中…",
         "browser.status.noBrowser" => "Chrome が見つかりません",
         "browser.status.failed" => "読み込めません",
+        "browser.status.blocked" => "このアドレスは許可されていません",
         _ => return None,
     })
 }

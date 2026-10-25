@@ -1510,6 +1510,7 @@ dependencies = [
  "de-acp",
  "de-ai",
  "de-ai-skills",
+ "de-browser-render",
  "de-builtin-model-discovery",
  "de-chat-agent",
  "de-config-store",

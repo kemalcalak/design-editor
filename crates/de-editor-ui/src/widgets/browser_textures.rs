@@ -2,10 +2,10 @@
 //!
 //! The canvas painter only records which browser nodes it painted in its
 //! last page frame ([`begin_frame`], [`note_visible`]) and draws the
-//! snapshot the host last finished for a node ([`ready`]). A host that can
-//! render pages drains the visible set ([`take_visible`]), renders off the UI thread, stores the PNG in the
-//! shared image byte cache under [`texture_id`] and marks it ready. Nodes
-//! the painter culled are never noted, so off-screen pages never load.
+//! snapshot last marked ready for a node ([`ready`]). The shared
+//! `browser_render_queue` drains the visible set ([`take_visible`]) and,
+//! when a host's render lands, [`install`]s the PNG. Nodes the painter culled are never
+//! noted, so off-screen pages never load.
 //!
 //! The previous snapshot stays ready until its replacement lands, so a
 //! changed address or size never flashes back to the placeholder.
@@ -34,8 +34,12 @@ fn registry() -> MutexGuard<'static, Registry> {
 }
 
 /// Paint side: the editor canvas starts painting the page; what it notes
-/// from here on replaces the previous frame's visible set.
-pub fn begin_frame() {
+/// from here on replaces the previous frame's visible set. A `partial`
+/// repaint (pan-cache strips and tiles, animated regions) only adds to it.
+pub fn begin_frame(partial: bool) {
+    if partial {
+        return;
+    }
     let mut reg = registry();
     if !reg.framed {
         reg.framed = true;
@@ -64,20 +68,43 @@ pub fn take_visible() -> Option<Vec<String>> {
     Some(ids)
 }
 
-/// The image-cache id a snapshot of `node_id` for request `key` lives under.
-pub fn texture_id(node_id: &str, key: u64) -> u64 {
+/// A fresh image-cache id for a snapshot of `node_id`: never reused, so a
+/// new picture for the same request (an MCP call changed the page) is not
+/// served from the old picture's decoded raster.
+fn fresh_texture_id(node_id: &str, key: u64) -> u64 {
+    static NEXT: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
     let mut hasher = DefaultHasher::new();
     "de-browser-snapshot".hash(&mut hasher);
     node_id.hash(&mut hasher);
     key.hash(&mut hasher);
+    NEXT.fetch_add(1, std::sync::atomic::Ordering::Relaxed)
+        .hash(&mut hasher);
     hasher.finish()
 }
 
-/// Host side: the snapshot for `key` is in the image cache.
-pub fn set_ready(node_id: &str, key: u64) {
-    registry()
-        .ready
-        .insert(node_id.to_string(), (key, texture_id(node_id, key)));
+/// Host side: `png` is the newest picture of `node_id` for request `key`.
+/// Stores it in the image byte cache, marks it ready and calls the
+/// [`set_ready_notifier`] (a picture from another thread, an MCP call,
+/// must wake the host to repaint).
+pub fn install(node_id: &str, key: u64, png: Vec<u8>) {
+    let texture = fresh_texture_id(node_id, key);
+    super::canvas_viewport_image::store_remote_image_bytes(texture, png);
+    registry().ready.insert(node_id.to_string(), (key, texture));
+    if let Some(notify) = NOTIFIER.get() {
+        notify();
+    }
+}
+
+static NOTIFIER: OnceLock<Box<dyn Fn() + Send + Sync>> = OnceLock::new();
+
+/// Register the host's wake-up for [`install`] (once per process).
+pub fn set_ready_notifier(notify: impl Fn() + Send + Sync + 'static) {
+    let _ = NOTIFIER.set(Box::new(notify));
+}
+
+/// Drop the snapshot of `node_id` (its address was cleared).
+pub fn forget(node_id: &str) -> bool {
+    registry().ready.remove(node_id).is_some()
 }
 
 /// `(request key, texture id)` of the newest snapshot of `node_id`.
@@ -106,7 +133,7 @@ mod tests {
     #[test]
     fn visible_nodes_drain_once_and_ready_snapshots_resolve() {
         let _lock = lock_for_tests();
-        begin_frame();
+        begin_frame(false);
         note_visible("bt-a");
         note_visible("bt-b");
         note_visible("bt-a");
@@ -116,15 +143,18 @@ mod tests {
             .filter(|id| id.starts_with("bt-"))
             .collect();
         assert_eq!(visible, ["bt-a", "bt-b"]);
-        begin_frame();
+        begin_frame(false);
         assert!(!take_visible()
             .unwrap_or_default()
             .iter()
             .any(|id| id.starts_with("bt-")));
         assert_eq!(ready("bt-a"), None);
-        set_ready("bt-a", 7);
-        assert_eq!(ready("bt-a"), Some((7, texture_id("bt-a", 7))));
-        assert_ne!(texture_id("bt-a", 7), texture_id("bt-a", 8));
-        assert_ne!(texture_id("bt-a", 7), texture_id("bt-b", 7));
+        install("bt-a", 7, b"PNG".to_vec());
+        let (key, first) = ready("bt-a").unwrap();
+        assert_eq!(key, 7);
+        install("bt-a", 7, b"PNG2".to_vec());
+        let (_, second) = ready("bt-a").unwrap();
+        assert_ne!(first, second, "a new picture never reuses a decoded raster");
+        assert!(forget("bt-a"));
     }
 }

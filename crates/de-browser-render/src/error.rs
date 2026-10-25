@@ -27,9 +27,30 @@ pub enum BrowserRenderError {
     Navigation(String),
     #[error("the screenshot was not a PNG")]
     Screenshot,
+    /// A CSS selector matched nothing on the page.
+    #[error("no element matches `{selector}`")]
+    NoMatch { selector: String },
+    /// A DevTools method outside the allowed domains.
+    #[error("{method} is not available: only the {allowed} domains are")]
+    MethodRefused { method: String, allowed: String },
+    /// A kept-open tab has no page yet.
+    #[error("no page is loaded yet: call action load-page first")]
+    NotLoaded,
 }
 
 impl BrowserRenderError {
+    /// Whether the caller asked for something wrong (a selector that
+    /// matches nothing, a refused method, no page yet) rather than the
+    /// browser failing.
+    pub fn is_caller_error(&self) -> bool {
+        matches!(
+            self,
+            BrowserRenderError::NoMatch { .. }
+                | BrowserRenderError::MethodRefused { .. }
+                | BrowserRenderError::NotLoaded
+        )
+    }
+
     /// Whether the browser process or its connection is gone, so the next
     /// render should start a fresh one instead of reusing it.
     pub fn needs_restart(&self) -> bool {

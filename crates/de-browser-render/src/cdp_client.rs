@@ -19,6 +19,16 @@ const CONNECT_TIMEOUT: Duration = Duration::from_secs(5);
 /// Events kept while waiting for a command reply; older ones are dropped.
 const EVENT_BUFFER: usize = 256;
 
+/// Page snapshots and screenshots arrive as one large message; allow up to
+/// 256 MiB instead of tungstenite's 16 MiB frame default.
+fn socket_config() -> tungstenite::protocol::WebSocketConfig {
+    tungstenite::protocol::WebSocketConfig {
+        max_message_size: Some(256 << 20),
+        max_frame_size: Some(256 << 20),
+        ..Default::default()
+    }
+}
+
 pub(crate) struct CdpClient {
     socket: WebSocket<TcpStream>,
     next_id: u64,
@@ -44,7 +54,8 @@ impl CdpClient {
             .set_read_timeout(Some(CONNECT_TIMEOUT))
             .map_err(|e| connect(e.to_string()))?;
         let (socket, _) =
-            tungstenite::client::client(ws_url, stream).map_err(|e| connect(e.to_string()))?;
+            tungstenite::client::client_with_config(ws_url, stream, Some(socket_config()))
+                .map_err(|e| connect(e.to_string()))?;
         socket
             .get_ref()
             .set_read_timeout(Some(READ_SLICE))

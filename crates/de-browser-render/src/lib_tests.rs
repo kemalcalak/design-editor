@@ -75,3 +75,52 @@ fn a_local_page_renders_at_the_requested_size_and_the_browser_idles_out() {
     assert!(!pool.is_running());
     let _ = std::fs::remove_dir_all(dir);
 }
+
+/// The app dying without dropping the pool (SIGTERM) must not leave the
+/// browser running: the watchdog ends it. Unix, needs a browser.
+#[cfg(unix)]
+#[test]
+#[ignore = "needs an installed Chromium-based browser"]
+fn a_killed_app_takes_its_browser_with_it() {
+    let exe = std::env::current_exe().unwrap();
+    // Re-run this test binary as the "app": it starts a browser, prints the
+    // browser's profile marker and then waits to be killed.
+    let mut app = std::process::Command::new(exe)
+        .args([
+            "--ignored",
+            "--exact",
+            "tests::browser_child_for_kill_test",
+            "--nocapture",
+        ])
+        .env("DE_BROWSER_KILL_TEST", "1")
+        .stdout(std::process::Stdio::piped())
+        .stderr(std::process::Stdio::null())
+        .spawn()
+        .unwrap();
+    std::thread::sleep(Duration::from_secs(6));
+    let alive = |pattern: &str| {
+        std::process::Command::new("pgrep")
+            .args(["-f", pattern])
+            .output()
+            .map(|o| !o.stdout.is_empty())
+            .unwrap_or(false)
+    };
+    let marker = format!("de-browser-{}-", app.id());
+    assert!(alive(&marker), "the app started its browser");
+    app.kill().unwrap();
+    let _ = app.wait();
+    std::thread::sleep(Duration::from_secs(6));
+    assert!(!alive(&marker), "the watchdog ended the orphaned browser");
+}
+
+/// Helper for [`a_killed_app_takes_its_browser_with_it`]; idle otherwise.
+#[test]
+#[ignore = "helper process for a_killed_app_takes_its_browser_with_it"]
+fn browser_child_for_kill_test() {
+    if std::env::var_os("DE_BROWSER_KILL_TEST").is_none() {
+        return;
+    }
+    let pool = BrowserPool::new();
+    let _ = pool.renderer().render(&spec("about:blank".into()));
+    std::thread::sleep(Duration::from_secs(60));
+}

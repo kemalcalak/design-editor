@@ -361,10 +361,8 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "browser.url" => "URL",
         "browser.zoom" => "확대/축소",
         "browser.device.desktop" => "데스크톱",
-        "browser.device.laptop" => "노트북",
         "browser.device.tablet" => "태블릿",
         "browser.device.phone" => "휴대폰",
-        "browser.device.phoneSmall" => "작은 휴대폰",
         "browser.scrollX" => "스크롤 X",
         "browser.scrollY" => "스크롤 Y",
         "browser.reload" => "새로고침",
@@ -372,6 +370,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "browser.status.loading" => "불러오는 중…",
         "browser.status.noBrowser" => "Chrome을 찾을 수 없음",
         "browser.status.failed" => "불러올 수 없음",
+        "browser.status.blocked" => "허용되지 않은 주소",
         _ => return None,
     })
 }

@@ -359,10 +359,8 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "browser.url" => "URL",
         "browser.zoom" => "Yakınlaştırma",
         "browser.device.desktop" => "Masaüstü",
-        "browser.device.laptop" => "Dizüstü",
         "browser.device.tablet" => "Tablet",
         "browser.device.phone" => "Telefon",
-        "browser.device.phoneSmall" => "Küçük telefon",
         "browser.scrollX" => "Kaydırma X",
         "browser.scrollY" => "Kaydırma Y",
         "browser.reload" => "Yenile",
@@ -370,6 +368,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "browser.status.loading" => "Yükleniyor…",
         "browser.status.noBrowser" => "Chrome bulunamadı",
         "browser.status.failed" => "Yüklenemedi",
+        "browser.status.blocked" => "Bu adrese izin yok",
         _ => return None,
     })
 }

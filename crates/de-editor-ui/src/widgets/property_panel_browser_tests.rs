@@ -25,7 +25,7 @@ fn inputs_cover_url_zoom_and_both_scroll_halves_inside_the_section() {
 }
 
 #[test]
-fn the_device_row_has_one_cell_per_panel_preset() {
+fn the_device_row_has_one_cell_per_preset() {
     let mut out = Vec::new();
     push_browser_action_rects(&mut out, 0.0, 0.0, 240.0, true);
     let ids: Vec<_> = out
@@ -35,10 +35,11 @@ fn the_device_row_has_one_cell_per_panel_preset() {
             _ => None,
         })
         .collect();
-    assert_eq!(ids, PANEL_DEVICES.to_vec());
-    for id in PANEL_DEVICES {
-        assert!(de_editor_core::browser_devices::browser_device(id).is_some());
-    }
+    let table: Vec<&str> = de_editor_core::browser_devices::BROWSER_DEVICES
+        .iter()
+        .map(|device| device.id)
+        .collect();
+    assert_eq!(ids, table);
 }
 
 #[test]
@@ -54,7 +55,6 @@ fn the_summary_reads_the_page_settings() {
     assert_eq!((summary.scroll_x, summary.scroll_y), (0.0, 40.0));
     let text: PenNode = serde_json::from_str(r#"{"type":"text","id":"t","content":"x"}"#).unwrap();
     assert!(browser_summary_of(&text).is_none());
-    assert_eq!(format_number(120.0), "120");
 }
 
 #[test]

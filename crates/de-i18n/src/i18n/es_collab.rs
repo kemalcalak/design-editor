@@ -359,10 +359,8 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "browser.url" => "URL",
         "browser.zoom" => "Zoom",
         "browser.device.desktop" => "Escritorio",
-        "browser.device.laptop" => "Portátil",
         "browser.device.tablet" => "Tableta",
         "browser.device.phone" => "Teléfono",
-        "browser.device.phoneSmall" => "Teléfono pequeño",
         "browser.scrollX" => "Despl. X",
         "browser.scrollY" => "Despl. Y",
         "browser.reload" => "Recargar",
@@ -370,6 +368,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "browser.status.loading" => "Cargando…",
         "browser.status.noBrowser" => "No se encontró Chrome",
         "browser.status.failed" => "No se pudo cargar",
+        "browser.status.blocked" => "Dirección no permitida",
         _ => return None,
     })
 }

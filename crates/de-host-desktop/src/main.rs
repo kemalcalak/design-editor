@@ -649,6 +649,13 @@ fn main() {
     let mut app = DesktopApp::new(initial_file);
     app.image_decodes.set_wake_proxy(mcp_wake_proxy.clone());
     app.browser_renders.set_wake_proxy(mcp_wake_proxy.clone());
+    // A snapshot an MCP `browser` call put on a node repaints the canvas.
+    let browser_proxy = std::sync::Mutex::new(mcp_wake_proxy.clone());
+    de_editor_ui::widgets::browser_textures::set_ready_notifier(move || {
+        if let Ok(proxy) = browser_proxy.lock() {
+            let _ = proxy.send_event(DesktopEvent::BrowserFrameReady);
+        }
+    });
     // This process writes Home previews for its saves; one landing wakes an
     // idle Home to show it.
     de_host_services::home_preview::enable();

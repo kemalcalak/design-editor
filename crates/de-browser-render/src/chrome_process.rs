@@ -2,6 +2,11 @@
 //! `--remote-debugging-port=0`, its DevTools websocket address read from
 //! the "DevTools listening on ws://…" line it prints on stderr. Dropping
 //! the handle ends the process tree and deletes the profile.
+//!
+//! A static pool is never dropped when the app is killed (SIGTERM, a
+//! crash), so on Unix a small watchdog (`sh`) polls the app's pid and ends
+//! the browser's process group within seconds once the app is gone. Windows
+//! relies on the app's own shutdown path.
 
 use std::io::{BufRead, BufReader};
 use std::path::{Path, PathBuf};
@@ -17,6 +22,8 @@ const DEVTOOLS_PREFIX: &str = "DevTools listening on ";
 
 pub(crate) struct ChromeProcess {
     child: Child,
+    /// Ends the browser if this process dies without dropping it (Unix).
+    watchdog: Option<Child>,
     profile: PathBuf,
     ws_url: String,
 }
@@ -62,11 +69,15 @@ impl ChromeProcess {
             }
         });
         match rx.recv_timeout(STARTUP_TIMEOUT) {
-            Ok(ws_url) => Ok(Self {
-                child,
-                profile,
-                ws_url,
-            }),
+            Ok(ws_url) => {
+                let watchdog = spawn_watchdog(child.id());
+                Ok(Self {
+                    child,
+                    watchdog,
+                    profile,
+                    ws_url,
+                })
+            }
             Err(_) => {
                 let _ = de_process_io::kill_process_tree(&mut child);
                 let _ = child.wait();
@@ -89,9 +100,41 @@ impl ChromeProcess {
 
 impl Drop for ChromeProcess {
     fn drop(&mut self) {
+        if let Some(mut watchdog) = self.watchdog.take() {
+            let _ = watchdog.kill();
+            let _ = watchdog.wait();
+        }
         let _ = de_process_io::terminate_process_tree(&mut self.child, Duration::from_secs(2));
         let _ = std::fs::remove_dir_all(&self.profile);
     }
+}
+
+/// Start the watchdog for the browser `browser_pid` (its own process group).
+#[cfg(unix)]
+fn spawn_watchdog(browser_pid: u32) -> Option<Child> {
+    Command::new("/bin/sh")
+        .arg("-c")
+        .arg(watchdog_script(std::process::id(), browser_pid))
+        .stdin(Stdio::null())
+        .stdout(Stdio::null())
+        .stderr(Stdio::null())
+        .spawn()
+        .ok()
+}
+
+#[cfg(not(unix))]
+fn spawn_watchdog(_browser_pid: u32) -> Option<Child> {
+    None
+}
+
+/// Poll the app every 2 s; once it is gone, end the browser's group
+/// (politely, then for good).
+#[cfg_attr(not(unix), allow(dead_code))]
+fn watchdog_script(app_pid: u32, browser_pid: u32) -> String {
+    format!(
+        "while kill -0 {app_pid} 2>/dev/null; do sleep 2; done; \
+         kill -TERM -{browser_pid} 2>/dev/null; sleep 2; kill -KILL -{browser_pid} 2>/dev/null"
+    )
 }
 
 fn launch_args(profile: &Path) -> Vec<String> {
@@ -129,6 +172,14 @@ mod tests {
         );
         assert_eq!(devtools_url("[0101/000000.0:INFO] something else"), None);
         assert_eq!(devtools_url("DevTools listening on http://x"), None);
+    }
+
+    #[test]
+    fn the_watchdog_waits_for_the_app_then_ends_the_browser_group() {
+        let script = watchdog_script(41, 4242);
+        assert!(script.starts_with("while kill -0 41 2>/dev/null; do sleep 2; done;"));
+        assert!(script.contains("kill -TERM -4242"));
+        assert!(script.contains("kill -KILL -4242"));
     }
 
     #[test]

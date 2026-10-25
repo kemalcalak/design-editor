@@ -359,10 +359,8 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "browser.url" => "網址",
         "browser.zoom" => "縮放",
         "browser.device.desktop" => "桌面",
-        "browser.device.laptop" => "筆電",
         "browser.device.tablet" => "平板",
         "browser.device.phone" => "手機",
-        "browser.device.phoneSmall" => "小螢幕手機",
         "browser.scrollX" => "捲動 X",
         "browser.scrollY" => "捲動 Y",
         "browser.reload" => "重新載入",
@@ -370,6 +368,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "browser.status.loading" => "載入中…",
         "browser.status.noBrowser" => "找不到 Chrome",
         "browser.status.failed" => "無法載入",
+        "browser.status.blocked" => "不允許此網址",
         _ => return None,
     })
 }

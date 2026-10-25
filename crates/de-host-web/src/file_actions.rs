@@ -334,6 +334,8 @@ pub fn ingest_document_source(
     let mut state = EditorState::from_document(loaded.value);
     de_pen_loader::apply_editor_meta_or_legacy_fallback(&mut state, editor_meta);
     preserve_app_preferences(previous, &mut state);
+    // Someone else's browser nodes wait for the user's Load pages (#20).
+    state.hold_browser_pages_if_any();
     let mut ingested = IngestedDoc::new(state, warnings);
     ingested.pen_dev = canonical.compatibility.pen_dev;
     Ok(ingested)

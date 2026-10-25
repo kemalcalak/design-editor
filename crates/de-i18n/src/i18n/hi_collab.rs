@@ -359,10 +359,8 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "browser.url" => "URL",
         "browser.zoom" => "ज़ूम",
         "browser.device.desktop" => "डेस्कटॉप",
-        "browser.device.laptop" => "लैपटॉप",
         "browser.device.tablet" => "टैबलेट",
         "browser.device.phone" => "फ़ोन",
-        "browser.device.phoneSmall" => "छोटा फ़ोन",
         "browser.scrollX" => "स्क्रॉल X",
         "browser.scrollY" => "स्क्रॉल Y",
         "browser.reload" => "फिर से लोड करें",
@@ -370,6 +368,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "browser.status.loading" => "लोड हो रहा है…",
         "browser.status.noBrowser" => "Chrome नहीं मिला",
         "browser.status.failed" => "लोड नहीं हो सका",
+        "browser.status.blocked" => "इस पते की अनुमति नहीं है",
         _ => return None,
     })
 }

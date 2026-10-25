@@ -191,6 +191,13 @@ pub(super) fn dispatch<S: Read + Write>(
         crate::mcp_serve::write_mcp_http_response_with_origin(stream, status, &body, cors_origin)?;
         return Ok(false);
     }
+    // Live browser pages (#20): render without the state lock; a slow page
+    // only holds this connection.
+    if req.method == "POST" && req.path == "/api/browser/snapshot" {
+        let (status, body) = crate::web_browser_snapshot::snapshot_reply(&req.body);
+        crate::mcp_serve::write_mcp_http_response_with_origin(stream, status, &body, cors_origin)?;
+        return Ok(false);
+    }
     // All `/api/mcp/*` REST paths go to the REST handler — including ones this
     // daemon doesn't implement yet, which it answers with 404 rather than
     // mis-routing them into the JSON-RPC dispatch below.

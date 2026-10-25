@@ -359,10 +359,8 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "browser.url" => "URL",
         "browser.zoom" => "Thu phóng",
         "browser.device.desktop" => "Máy tính",
-        "browser.device.laptop" => "Laptop",
         "browser.device.tablet" => "Máy tính bảng",
         "browser.device.phone" => "Điện thoại",
-        "browser.device.phoneSmall" => "Điện thoại nhỏ",
         "browser.scrollX" => "Cuộn X",
         "browser.scrollY" => "Cuộn Y",
         "browser.reload" => "Tải lại",
@@ -370,6 +368,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "browser.status.loading" => "Đang tải…",
         "browser.status.noBrowser" => "Không tìm thấy Chrome",
         "browser.status.failed" => "Không tải được",
+        "browser.status.blocked" => "Địa chỉ không được phép",
         _ => return None,
     })
 }
