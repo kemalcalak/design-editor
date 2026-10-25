@@ -22,6 +22,7 @@ pub(super) fn normalize_legacy_value(value: &mut serde_json::Value) -> bool {
         repair_legacy_figma_child_order,
         &mut changed,
     );
+    changed |= super::missing_ids::assign_missing_ids(value);
     changed
 }
 
@@ -164,6 +165,8 @@ fn collect_number_variables(root: &serde_json::Value) -> std::collections::HashM
 /// - PenNode `fill` written as a bare color/`$ref` string → wrap into the
 ///   `Vec<PenFill>` jian expects.
 /// - Image node missing the required `src`.
+/// - Text / icon / ref / polygon nodes missing a required field (see
+///   `insert_required_defaults`).
 /// - Pencil legacy `type: "icon"` → canonical `icon_font`.
 /// - A `stroke` written as a bare color string → wrap into a `PenStroke`.
 /// - A stroke object's `fill` string (no `type` key on the stroke object) →
@@ -239,6 +242,9 @@ fn normalize_node_value(
                             *changed = true;
                         }
                     }
+                    // After the icon remap, so a Pencil `icon` is seen as
+                    // `icon_font`.
+                    insert_required_defaults(map, changed);
                     // A PenNode `fill` written as a bare string / single object /
                     // legacy `type:"color"` array → canonical `Vec<PenFill>`.
                     normalize_fill(map, changed);
@@ -278,6 +284,45 @@ fn normalize_node_value(
             Value::Array(items) => stack.extend(items.iter_mut()),
             _ => {}
         }
+    }
+}
+
+/// Seed the required fields a writer can omit (pen.dev drops text `content`
+/// on an empty text layer), so one such node does not reject the whole
+/// document:
+/// - text `content` and a styled segment's `text`;
+/// - an icon's `iconFontName` (paints as the unknown-glyph dot);
+/// - a ref's `ref` target (stays an unresolved instance);
+/// - a polygon's `polygonCount` (3, the editor's own default).
+///
+/// A typed `descendants` entry is seeded too: `type` makes it a whole
+/// replacement node, not a patch (`instance_descendants::is_replacement`).
+fn insert_required_defaults(
+    map: &mut serde_json::Map<String, serde_json::Value>,
+    changed: &mut bool,
+) {
+    use serde_json::Value;
+    let (key, default) = match map.get("type").and_then(Value::as_str) {
+        Some("text") => {
+            // Styled segments are repaired here too, before `content` itself.
+            if let Some(Value::Array(segments)) = map.get_mut("content") {
+                for segment in segments.iter_mut().filter_map(Value::as_object_mut) {
+                    if !segment.contains_key("text") {
+                        segment.insert("text".to_string(), Value::String(String::new()));
+                        *changed = true;
+                    }
+                }
+            }
+            ("content", Value::String(String::new()))
+        }
+        Some("icon_font") => ("iconFontName", Value::String(String::new())),
+        Some("ref") => ("ref", Value::String(String::new())),
+        Some("polygon") => ("polygonCount", Value::from(3)),
+        _ => return,
+    };
+    if !map.contains_key(key) {
+        map.insert(key.to_string(), default);
+        *changed = true;
     }
 }
 
