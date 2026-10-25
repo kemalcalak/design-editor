@@ -589,17 +589,17 @@ mod tests {
         };
 
         assert!(!settle_pending_locale(&mut ui, false, false, false));
-        assert_eq!(ui.locale, de_i18n::Locale::ZhCn);
+        assert_eq!(ui.locale, de_i18n::Locale::EnUs);
         assert_eq!(ui.pending_locale, Some(de_i18n::Locale::Ja));
 
         assert!(!settle_pending_locale(&mut ui, false, true, false));
-        assert_eq!(ui.locale, de_i18n::Locale::ZhCn);
+        assert_eq!(ui.locale, de_i18n::Locale::EnUs);
         assert_eq!(ui.pending_locale, None);
 
         ui.pending_locale = Some(de_i18n::Locale::Ja);
         ui.locale_persistence_override = Some(de_i18n::Locale::Ja);
         assert!(!settle_pending_locale(&mut ui, false, true, false));
-        assert_eq!(ui.locale, de_i18n::Locale::ZhCn);
+        assert_eq!(ui.locale, de_i18n::Locale::EnUs);
         assert_eq!(ui.pending_locale, None);
         assert_eq!(ui.locale_persistence_override, Some(de_i18n::Locale::Ja));
 

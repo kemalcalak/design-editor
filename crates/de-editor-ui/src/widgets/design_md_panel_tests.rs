@@ -199,7 +199,9 @@ fn empty_state_action_button_contents_are_centered() {
 
     panel.paint(&mut cx, rect);
 
-    for label in ["导入 design.md", "自动生成"] {
+    let locale = state.editor_ui.locale;
+    for key in ["designMd.importCta", "designMd.autoGenerateCta"] {
+        let label = de_i18n::translate(locale, key);
         let (text, text_origin) = backend
             .texts
             .iter()

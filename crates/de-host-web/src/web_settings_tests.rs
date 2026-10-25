@@ -31,13 +31,13 @@ fn settings_payload_restores_locale_but_never_theme() {
     // would let a blob reload flip the screen. The field is still
     // written for older builds — see `partition_tests` — and is still readable
     // as the one-time migration source through `payload_theme_of`.
-    let payload = r#"{"version":1,"theme":"light","locale":"en-US"}"#;
+    let payload = r#"{"version":1,"theme":"light","locale":"ja"}"#;
     let mut state = EditorState::new();
     let before_theme = state.editor_ui.theme_mode;
 
     apply_json(&mut state, payload).expect("settings payload should parse");
 
-    assert_eq!(state.editor_ui.locale, Locale::EnUs);
+    assert_eq!(state.editor_ui.locale, Locale::Ja);
     assert_eq!(state.editor_ui.theme_mode, before_theme);
     assert_eq!(payload_theme_of(Some(payload)), Some(ThemeMode::Light));
 }
@@ -765,8 +765,8 @@ fn pending_legacy_migration_blocks_an_ordinary_settings_write() {
     // it here would leave the fingerprint unchanged and the test would pass
     // for the wrong reason. Locale genuinely lives in the blob — and it has to
     // be a value the default is not, or this is the same no-op trap.
-    assert_ne!(state.editor_ui.locale, Locale::EnUs);
-    state.editor_ui.locale = Locale::EnUs;
+    assert_ne!(state.editor_ui.locale, Locale::Ja);
+    state.editor_ui.locale = Locale::Ja;
 
     assert!(
         save_credentials_if_changed_with(&state, &mut credential_baseline, |_, _| false).is_none()

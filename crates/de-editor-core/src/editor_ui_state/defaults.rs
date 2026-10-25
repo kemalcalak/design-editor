@@ -26,7 +26,7 @@ impl Default for EditorUiState {
             entry_surface: EntrySurface::default(),
             home: HomeState::default(),
             workspace: WorkspaceState::default(),
-            locale: Locale::ZhCn,
+            locale: Locale::EnUs,
             pending_locale: None,
             locale_persistence_override: None,
             host_locale_override: None,
