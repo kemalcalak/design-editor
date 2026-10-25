@@ -25,7 +25,7 @@ use jian_ops_schema::style::{PenFill, StrokeThickness};
 use jian_ops_schema::variable::{VariableDefinition, VariableScalar, VariableValue};
 use serde_json::Value;
 
-/// The 17 jian `PenNode` kinds, as a flat `Copy` enum. jian models kind via
+/// The jian `PenNode` kinds, as a flat `Copy` enum. jian models kind via
 /// the `PenNode` enum variant + the `"type"` tag; detectors need a cheap
 /// kind discriminant for skip-sets and grouping keys, so this mirrors it.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -54,6 +54,7 @@ pub enum NodeKind {
     Note,
     Context,
     Prompt,
+    Browser,
 }
 
 /// An active theme map — axis name → selected theme value. Mirrors the TS
@@ -96,6 +97,7 @@ pub fn node_kind(node: &PenNode) -> NodeKind {
         PenNode::Note(_) => NodeKind::Note,
         PenNode::Context(_) => NodeKind::Context,
         PenNode::Prompt(_) => NodeKind::Prompt,
+        PenNode::Browser(_) => NodeKind::Browser,
     }
 }
 
@@ -128,6 +130,7 @@ pub fn node_kind_str(node: &PenNode) -> &'static str {
         NodeKind::Note => "note",
         NodeKind::Context => "context",
         NodeKind::Prompt => "prompt",
+        NodeKind::Browser => "browser",
     }
 }
 
@@ -412,6 +415,7 @@ fn base(node: &PenNode) -> &jian_ops_schema::node::PenNodeBase {
         PenNode::Tabs(n) => &n.base,
         PenNode::Ref(n) => &n.base,
         PenNode::Note(n) | PenNode::Context(n) | PenNode::Prompt(n) => &n.base,
+        PenNode::Browser(n) => &n.base,
     }
 }
 
@@ -447,7 +451,8 @@ pub fn node_fills(node: &PenNode) -> Option<&Vec<PenFill>> {
         | PenNode::Ref(_)
         | PenNode::Note(_)
         | PenNode::Context(_)
-        | PenNode::Prompt(_) => None,
+        | PenNode::Prompt(_)
+        | PenNode::Browser(_) => None,
     }
 }
 
@@ -481,6 +486,7 @@ fn stroke(node: &PenNode) -> Option<&jian_ops_schema::style::PenStroke> {
         | PenNode::Note(_)
         | PenNode::Context(_)
         | PenNode::Prompt(_) => None,
+        PenNode::Browser(n) => n.stroke.as_ref(),
     }
 }
 
@@ -554,6 +560,7 @@ fn corner_radius_value(node: &PenNode) -> Option<Value> {
         PenNode::Group(n) => n.container.corner_radius.as_ref().map(corner_radius_json),
         PenNode::Rectangle(n) => n.container.corner_radius.as_ref().map(corner_radius_json),
         PenNode::Image(n) => n.corner_radius.as_ref().map(corner_radius_json),
+        PenNode::Browser(n) => n.corner_radius.as_ref().map(corner_radius_json),
         PenNode::Ellipse(n) => n.corner_radius.map(json_number),
         PenNode::Polygon(n) => n.corner_radius.map(json_number),
         _ => None,
@@ -582,6 +589,7 @@ pub fn corner_radius_numeric(node: &PenNode) -> f64 {
         PenNode::Group(n) => n.container.corner_radius.as_ref(),
         PenNode::Rectangle(n) => n.container.corner_radius.as_ref(),
         PenNode::Image(n) => n.corner_radius.as_ref(),
+        PenNode::Browser(n) => n.corner_radius.as_ref(),
         PenNode::Ellipse(n) => return n.corner_radius.unwrap_or(0.0),
         PenNode::Polygon(n) => return n.corner_radius.unwrap_or(0.0),
         _ => return 0.0,

@@ -31,13 +31,13 @@ macro_rules! base_mut {
 pub(crate) fn node_base(node: &PenNode) -> &PenNodeBase {
     base_ref!(node; Frame, Group, Rectangle, Ellipse, Line, Polygon, Path, Text,
         TextInput, Image, IconFont, TextArea, Select, Switch, Checkbox, Slider,
-        RadioGroup, NumberInput, Progress, Tabs, Ref, Note, Context, Prompt)
+        RadioGroup, NumberInput, Progress, Tabs, Ref, Note, Context, Prompt, Browser)
 }
 
 pub(crate) fn node_base_mut(node: &mut PenNode) -> &mut PenNodeBase {
     base_mut!(node; Frame, Group, Rectangle, Ellipse, Line, Polygon, Path, Text,
         TextInput, Image, IconFont, TextArea, Select, Switch, Checkbox, Slider,
-        RadioGroup, NumberInput, Progress, Tabs, Ref, Note, Context, Prompt)
+        RadioGroup, NumberInput, Progress, Tabs, Ref, Note, Context, Prompt, Browser)
 }
 
 /// NOTE: the wildcard arm is a silent-drift surface. Unlike `base_ref!` /
@@ -61,7 +61,7 @@ pub(crate) fn node_width_mut(node: &mut PenNode) -> Option<&mut Option<SizingBeh
         PenNode::Rectangle(node) => Some(&mut node.container.width),
         node => leaf_axis_mut!(node, width; Ellipse, Polygon, Path, Text, TextInput,
             Image, IconFont, TextArea, Select, Switch, Checkbox, Slider,
-            RadioGroup, NumberInput, Progress, Tabs),
+            RadioGroup, NumberInput, Progress, Tabs, Browser),
     }
 }
 
@@ -89,6 +89,7 @@ pub(crate) fn node_width(node: &PenNode) -> Option<&SizingBehavior> {
         PenNode::Progress(node) => node.width.as_ref(),
         PenNode::Tabs(node) => node.width.as_ref(),
         PenNode::Note(node) | PenNode::Context(node) | PenNode::Prompt(node) => node.width.as_ref(),
+        PenNode::Browser(node) => node.width.as_ref(),
         PenNode::Line(_) | PenNode::Ref(_) => None,
     }
 }
@@ -119,6 +120,7 @@ pub(crate) fn node_height(node: &PenNode) -> Option<&SizingBehavior> {
         PenNode::Note(node) | PenNode::Context(node) | PenNode::Prompt(node) => {
             node.height.as_ref()
         }
+        PenNode::Browser(node) => node.height.as_ref(),
         PenNode::Line(_) | PenNode::Ref(_) => None,
     }
 }

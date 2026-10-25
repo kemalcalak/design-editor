@@ -43,6 +43,7 @@ fn pen_base(n: &PenNode) -> &jian_ops_schema::node::base::PenNodeBase {
         PenNode::IconFont(i) => &i.base,
         PenNode::Ref(r) => &r.base,
         PenNode::Note(r) | PenNode::Context(r) | PenNode::Prompt(r) => &r.base,
+        PenNode::Browser(r) => &r.base,
     }
 }
 

@@ -177,7 +177,7 @@ pub fn is_canvas_only_value(value: &serde_json::Value) -> bool {
     value
         .get("type")
         .and_then(serde_json::Value::as_str)
-        .is_some_and(|tag| jian_ops_schema::node::AnnotationKind::from_tag(tag).is_some())
+        .is_some_and(jian_ops_schema::node::PenNode::is_canvas_only_tag)
 }
 
 /// Drop canvas-only nodes from every array under `value`, at any depth.
@@ -316,7 +316,8 @@ pub(crate) fn node_fills(node: &PenNode) -> Option<&Vec<PenFill>> {
         | PenNode::Ref(_)
         | PenNode::Note(_)
         | PenNode::Context(_)
-        | PenNode::Prompt(_) => None,
+        | PenNode::Prompt(_)
+        | PenNode::Browser(_) => None,
     }
 }
 
@@ -375,7 +376,8 @@ pub(crate) fn node_stroke(node: &PenNode) -> Option<&jian_ops_schema::style::Pen
         | PenNode::Ref(_)
         | PenNode::Note(_)
         | PenNode::Context(_)
-        | PenNode::Prompt(_) => None,
+        | PenNode::Prompt(_)
+        | PenNode::Browser(_) => None,
     }
 }
 

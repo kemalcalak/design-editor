@@ -410,7 +410,9 @@ impl ApplicationHandler<DesktopEvent> for DesktopApp {
                     event_loop.exit();
                 }
             }
-            DesktopEvent::ImageDecodeReady | DesktopEvent::ScriptNodesReady => {
+            DesktopEvent::ImageDecodeReady
+            | DesktopEvent::ScriptNodesReady
+            | DesktopEvent::BrowserFrameReady => {
                 self.request_redraw(true);
             }
             DesktopEvent::FontsRegistered => {
@@ -628,6 +630,7 @@ impl ApplicationHandler<DesktopEvent> for DesktopApp {
         self.host.flush_settings_input();
         de_host_services::settings_io::save(self.host.editor_state());
         crate::prompt_center_store::flush_user_prompts_if_dirty(&mut self.host);
+        self.browser_renders.shutdown();
         if let Some(mut server) = self.mcp_server.take() {
             server.stop();
             crate::mcp_port_file::remove();

@@ -108,9 +108,11 @@ pub(crate) mod test_support;
 // re-exports keep every `de_host_services::settings_io*` import stable.
 pub use de_editor_host_core::settings_io;
 pub use de_editor_host_core::settings_io_error;
+mod browser_url_policy;
 mod test_config_root;
 pub mod user_scene_template_store;
 pub mod validation_providers;
+pub mod web_browser_snapshot;
 pub mod web_canvas_server;
 pub mod web_canvas_server_error;
 pub mod web_chat_standard;

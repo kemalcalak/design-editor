@@ -30,13 +30,16 @@
 //! - [`geometry`] — root origin / available-size probes
 //! - `node_payload` — the `PenNode` → `NodePayload` dispatcher
 //! - `shapes` — the per-variant payload builders
+//! - `browser` — the live browser node's payload (#20)
 
+mod browser;
 pub mod entry;
 pub mod geometry;
 pub(crate) mod node_payload;
 pub(crate) mod pages;
 mod shapes;
 
+use browser::*;
 pub use entry::*;
 pub use geometry::*;
 pub(crate) use node_payload::*;
@@ -51,8 +54,8 @@ use jian_ops_schema::{
     node::base::PenNodeBase,
     node::container::{AlignItems, ContainerProps, CornerRadius, LayoutMode, Padding},
     node::{
-        AnnotationKind, EllipseNode, FontWeight, FrameNode, GroupNode, IconFontNode, ImageNode,
-        LineNode, NoteNode, PathNode, PenNode, PolygonNode, RectangleNode, TextNode,
+        AnnotationKind, BrowserNode, EllipseNode, FontWeight, FrameNode, GroupNode, IconFontNode,
+        ImageNode, LineNode, NoteNode, PathNode, PenNode, PolygonNode, RectangleNode, TextNode,
     },
     sizing::SizingBehavior,
     PenDocument,

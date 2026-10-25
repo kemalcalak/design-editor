@@ -126,6 +126,7 @@ fn base_mut(node: &mut PenNode) -> &mut PenNodeBase {
         PenNode::IconFont(node) => &mut node.base,
         PenNode::Ref(node) => &mut node.base,
         PenNode::Note(node) | PenNode::Context(node) | PenNode::Prompt(node) => &mut node.base,
+        PenNode::Browser(node) => &mut node.base,
     }
 }
 

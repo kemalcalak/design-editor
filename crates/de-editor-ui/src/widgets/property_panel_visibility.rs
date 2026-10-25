@@ -127,6 +127,21 @@ impl SectionCapabilities {
                 export: false,
                 interactions: false,
             },
+            // A live browser (#20) is canvas-only too: its box, opacity,
+            // stroke, effects and the Browser section, no fill or export.
+            K::Other(tag) if tag == "browser" => Self {
+                create_component: false,
+                flex_layout: false,
+                size_options: true,
+                text: false,
+                image: false,
+                opacity: true,
+                fill: false,
+                stroke: true,
+                effects: true,
+                export: false,
+                interactions: false,
+            },
             K::Other(_) => Self {
                 create_component: false,
                 flex_layout: false,
@@ -264,6 +279,8 @@ pub struct VisibleSections {
     pub annotation: Option<jian_ops_schema::node::AnnotationKind>,
     /// Script section (#19) — the input rows of a script node.
     pub script: Option<crate::widgets::property_panel_script::ScriptRows>,
+    /// Browser section (#20) — `Some(pages_allowed)` for a browser node.
+    pub browser: Option<bool>,
     pub image: bool,
     /// Whether the selected image carries optional video metadata.
     pub video: bool,
@@ -417,6 +434,7 @@ impl VisibleSections {
         widget_checked: false,
         annotation: None,
         script: None,
+        browser: None,
         image: false,
         video: false,
         image_warning: false,

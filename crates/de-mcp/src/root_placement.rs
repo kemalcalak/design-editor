@@ -35,6 +35,7 @@ pub fn places_new_roots(tool: &str) -> bool {
                 | "import_pen_dev"
                 | "import_html_url"
                 | "import_web_snapshot"
+                | "browser"
                 | "upsert_screen"
                 | "upsert_component"
                 | "instantiate_component"

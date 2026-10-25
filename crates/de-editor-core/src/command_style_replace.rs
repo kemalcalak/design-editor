@@ -6,7 +6,7 @@ use crate::state::EditorState;
 use crate::walkers::find_node_mut;
 use jian_ops_schema::node::base::NumberOrExpression;
 use jian_ops_schema::node::container::{ContainerProps, CornerRadius, Padding};
-use jian_ops_schema::node::{FontWeight, PenNode, ScriptNode};
+use jian_ops_schema::node::{BrowserNode, FontWeight, ImageNode, PenNode, ScriptNode};
 use jian_ops_schema::style::{PenFill, PenStroke, StrokeThickness};
 
 /// A rejected style-property replacement request.
@@ -273,8 +273,9 @@ fn replace_corner_radius(node: &mut PenNode, replacement: &StylePropertyReplacem
         }
         PenNode::Group(n) => replace_container_corner_radius(&mut n.container, replacement),
         PenNode::Rectangle(n) => replace_container_corner_radius(&mut n.container, replacement),
-        PenNode::Image(n) => {
-            let Some(current) = n.corner_radius.as_ref().map(corner_radius_value) else {
+        PenNode::Image(ImageNode { corner_radius, .. })
+        | PenNode::Browser(BrowserNode { corner_radius, .. }) => {
+            let Some(current) = corner_radius.as_ref().map(corner_radius_value) else {
                 return false;
             };
             if !style_value_equal(&current, &replacement.from) {
@@ -283,7 +284,7 @@ fn replace_corner_radius(node: &mut PenNode, replacement: &StylePropertyReplacem
             let Ok(to) = corner_radius_from_value(&replacement.to) else {
                 return false;
             };
-            n.corner_radius = Some(to);
+            *corner_radius = Some(to);
             true
         }
         PenNode::Ellipse(n) => replace_scalar_radius(&mut n.corner_radius, replacement),
@@ -442,7 +443,8 @@ fn node_fill_mut(node: &mut PenNode) -> Option<&mut Vec<PenFill>> {
         | PenNode::Ref(_)
         | PenNode::Note(_)
         | PenNode::Context(_)
-        | PenNode::Prompt(_) => None,
+        | PenNode::Prompt(_)
+        | PenNode::Browser(_) => None,
     }
 }
 
@@ -474,6 +476,7 @@ fn node_stroke_mut(node: &mut PenNode) -> Option<&mut PenStroke> {
         | PenNode::Note(_)
         | PenNode::Context(_)
         | PenNode::Prompt(_) => None,
+        PenNode::Browser(n) => n.stroke.as_mut(),
     }
 }
 

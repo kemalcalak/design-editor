@@ -50,7 +50,8 @@ pub(crate) fn node_effects(node: &PenNode) -> &[PenEffect] {
         | PenNode::Ref(_)
         | PenNode::Note(_)
         | PenNode::Context(_)
-        | PenNode::Prompt(_) => None,
+        | PenNode::Prompt(_)
+        | PenNode::Browser(_) => None,
     };
     effects.map(Vec::as_slice).unwrap_or(&[])
 }

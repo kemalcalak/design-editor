@@ -43,12 +43,15 @@ pub enum Tool {
     /// Sticky note (#12): a click drops a `note` annotation at its default
     /// size; the panel switches it to `context` or `prompt`.
     Note,
+    /// Live browser (#20): a click drops a desktop-sized `browser` node,
+    /// picked from the shape menu.
+    Browser,
 }
 
 impl Tool {
     /// All tools, in toolbar display order. Single source of truth for
     /// the toolbar build path.
-    pub const ALL: [Tool; 22] = [
+    pub const ALL: [Tool; 23] = [
         Tool::Select,
         Tool::Rect,
         Tool::Ellipse,
@@ -71,6 +74,7 @@ impl Tool {
         Tool::Progress,
         Tool::Tabs,
         Tool::Note,
+        Tool::Browser,
     ];
 
     /// The ten form-widget tools, in toolbar / flyout display order.
@@ -115,6 +119,7 @@ impl Tool {
             Tool::Progress => "progress",
             Tool::Tabs => "tabs",
             Tool::Note => "note",
+            Tool::Browser => "browser",
         }
     }
 
@@ -128,9 +133,9 @@ impl Tool {
     }
 
     /// True when a press drops the node at its default size and a drag
-    /// does not resize it (the Note tool).
+    /// does not resize it (the Note and Browser tools).
     pub fn keeps_default_size(self) -> bool {
-        matches!(self, Tool::Note)
+        matches!(self, Tool::Note | Tool::Browser)
     }
 
     /// True when this tool is one of the ten form-widget tools.

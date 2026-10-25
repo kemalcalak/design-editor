@@ -377,6 +377,7 @@ impl PropertyPanel {
                 .script
                 .as_ref()
                 .map(crate::widgets::property_panel_script::ScriptRows::of),
+            browser: self.snapshot.browser.as_ref().map(|b| b.pages_allowed),
             image: caps.image && self.snapshot.is_image_node,
             video: caps.image && self.snapshot.video.is_some(),
             image_warning: caps.image

@@ -49,6 +49,7 @@ pub fn run_web_canvas(options: ServeWebOptions) -> Result<()> {
         .local_addr()
         .map_err(|e| WebCanvasError::Config(e.to_string()))?;
     let bound = local_addr.port();
+    crate::browser_url_policy::screen_for_daemon(local_addr.ip());
     eprintln!("design-editor --serve-web: listening on {host}:{bound}");
     match crate::web_static::resolve_bundle_dir() {
         Some(dir) => eprintln!(
@@ -189,6 +190,8 @@ pub fn run_web_canvas(options: ServeWebOptions) -> Result<()> {
         }
     }
     eprintln!("design-editor --serve-web: shutdown requested; exiting");
+    // End the headless browser the snapshot route started (#20).
+    de_browser_render::BrowserPool::shared().shutdown();
     Ok(())
 }
 

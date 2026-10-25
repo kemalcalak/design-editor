@@ -371,6 +371,10 @@ impl EditorState {
             | PropertyFocus::VideoSrc
             | PropertyFocus::AnnotationContent
             | PropertyFocus::AnnotationModel
+            | PropertyFocus::BrowserUrl
+            | PropertyFocus::BrowserZoom
+            | PropertyFocus::BrowserScrollX
+            | PropertyFocus::BrowserScrollY
             | PropertyFocus::ScriptInput(_) => {}
             PropertyFocus::FillOpacity(index) => {
                 // The primary fill (index 0) keeps `set_selected_fill_opacity`
@@ -752,6 +756,7 @@ fn node_corner_radii(node: &PenNode) -> Option<[f64; 4]> {
         PenNode::Group(node) => node.container.corner_radius.as_ref(),
         PenNode::Rectangle(node) => node.container.corner_radius.as_ref(),
         PenNode::Image(node) => node.corner_radius.as_ref(),
+        PenNode::Browser(node) => node.corner_radius.as_ref(),
         _ => None,
     }?;
     Some(match radius {

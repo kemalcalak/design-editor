@@ -645,6 +645,10 @@ pub(crate) mod screenshot_tool;
 use screenshot_tool::get_screenshot_snapshot;
 pub(crate) mod capture_preview_tool;
 use capture_preview_tool::capture_preview_snapshot;
+pub(crate) mod browser_tool;
+mod browser_tool_canvas;
+mod browser_tool_driver;
+use browser_tool::browser_tool_snapshot;
 
 pub(crate) mod export_tool;
 use export_tool::export_nodes_snapshot;

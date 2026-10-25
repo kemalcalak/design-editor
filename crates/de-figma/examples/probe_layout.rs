@@ -322,6 +322,7 @@ fn sizing(node: &PenNode) -> (Option<&SizingBehavior>, Option<&SizingBehavior>) 
         PenNode::Note(node) | PenNode::Context(node) | PenNode::Prompt(node) => {
             (node.width.as_ref(), node.height.as_ref())
         }
+        PenNode::Browser(node) => (node.width.as_ref(), node.height.as_ref()),
         PenNode::Line(_) | PenNode::Ref(_) => (None, None),
     }
 }
@@ -361,6 +362,7 @@ fn base_of(node: &PenNode) -> &PenNodeBase {
         PenNode::IconFont(node) => &node.base,
         PenNode::Ref(node) => &node.base,
         PenNode::Note(node) | PenNode::Context(node) | PenNode::Prompt(node) => &node.base,
+        PenNode::Browser(node) => &node.base,
     }
 }
 

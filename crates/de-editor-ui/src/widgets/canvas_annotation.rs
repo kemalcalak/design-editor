@@ -49,6 +49,12 @@ pub(crate) fn with_annotations<R>(dark: bool, paint: impl FnOnce() -> R) -> R {
     paint()
 }
 
+/// `Some(dark)` while the editor canvas paints a page, `None` for every
+/// other caller of the node painter. Canvas-only kinds read it (#20).
+pub(crate) fn editor_canvas_dark() -> Option<bool> {
+    CANVAS_THEME.with(Cell::get)
+}
+
 /// Whether a scene `kind` tag names an annotation.
 pub fn is_annotation_tag(tag: &str) -> bool {
     jian_ops_schema::node::AnnotationKind::from_tag(tag).is_some()

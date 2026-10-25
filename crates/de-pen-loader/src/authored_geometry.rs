@@ -56,6 +56,7 @@ fn size_of(node: &PenNode) -> (f32, f32) {
         PenNode::Note(n) | PenNode::Context(n) | PenNode::Prompt(n) => {
             numeric_size(&n.width, &n.height)
         }
+        PenNode::Browser(n) => numeric_size(&n.width, &n.height),
     }
 }
 
@@ -107,5 +108,6 @@ fn base_of(node: &PenNode) -> &PenNodeBase {
         PenNode::IconFont(n) => &n.base,
         PenNode::Ref(n) => &n.base,
         PenNode::Note(n) | PenNode::Context(n) | PenNode::Prompt(n) => &n.base,
+        PenNode::Browser(n) => &n.base,
     }
 }

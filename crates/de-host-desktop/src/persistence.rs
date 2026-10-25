@@ -194,6 +194,8 @@ fn load_into_host(
     let mut state = loaded.state;
     preserve_app_preferences(host.editor_state(), &mut state);
     state.editor_ui.home.hide();
+    // Someone else's browser nodes wait for the user's Load pages (#20).
+    state.hold_browser_pages_if_any();
     let pen_dev_import = loaded.report.pen_dev_import.clone();
     let bound_path = pen_dev_import.is_none().then(|| path.to_path_buf());
     set_file_name_display(&mut state, bound_path.as_deref());

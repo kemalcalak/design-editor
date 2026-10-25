@@ -37,7 +37,8 @@ pub fn node_fills(node: &PenNode) -> Option<&Vec<PenFill>> {
         | PenNode::Ref(_)
         | PenNode::Note(_)
         | PenNode::Context(_)
-        | PenNode::Prompt(_) => None,
+        | PenNode::Prompt(_)
+        | PenNode::Browser(_) => None,
     }
 }
 
@@ -71,7 +72,8 @@ pub fn node_fills_mut(node: &mut PenNode) -> Option<&mut Vec<PenFill>> {
         | PenNode::Ref(_)
         | PenNode::Note(_)
         | PenNode::Context(_)
-        | PenNode::Prompt(_) => None,
+        | PenNode::Prompt(_)
+        | PenNode::Browser(_) => None,
     }
 }
 
@@ -104,6 +106,7 @@ pub(crate) fn node_stroke_mut(node: &mut PenNode) -> Option<&mut Option<PenStrok
         | PenNode::Note(_)
         | PenNode::Context(_)
         | PenNode::Prompt(_) => None,
+        PenNode::Browser(n) => Some(&mut n.stroke),
     }
 }
 
@@ -136,6 +139,7 @@ pub(crate) fn node_stroke(node: &PenNode) -> Option<&PenStroke> {
         | PenNode::Note(_)
         | PenNode::Context(_)
         | PenNode::Prompt(_) => None,
+        PenNode::Browser(n) => n.stroke.as_ref(),
     }
 }
 
@@ -184,6 +188,7 @@ pub(super) fn node_effects_mut(node: &mut PenNode) -> Option<&mut Vec<PenEffect>
         | PenNode::Note(_)
         | PenNode::Context(_)
         | PenNode::Prompt(_) => None,
+        PenNode::Browser(n) => Some(n.effects.get_or_insert_with(Vec::new)),
     }
 }
 
@@ -223,7 +228,8 @@ pub(crate) fn node_fills_opt_mut(node: &mut PenNode) -> Option<&mut Vec<PenFill>
         | PenNode::Ref(_)
         | PenNode::Note(_)
         | PenNode::Context(_)
-        | PenNode::Prompt(_) => None,
+        | PenNode::Prompt(_)
+        | PenNode::Browser(_) => None,
     }
 }
 
@@ -257,6 +263,7 @@ pub(crate) fn node_effects_opt_mut(node: &mut PenNode) -> Option<&mut Vec<PenEff
         | PenNode::Note(_)
         | PenNode::Context(_)
         | PenNode::Prompt(_) => None,
+        PenNode::Browser(n) => n.effects.as_mut(),
     }
 }
 
@@ -301,6 +308,7 @@ pub fn node_effects(node: &PenNode) -> &[jian_ops_schema::style::PenEffect] {
         | PenNode::Note(_)
         | PenNode::Context(_)
         | PenNode::Prompt(_) => None,
+        PenNode::Browser(n) => n.effects.as_deref(),
     };
     slot.unwrap_or(&[])
 }

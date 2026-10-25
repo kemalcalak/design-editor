@@ -318,6 +318,10 @@ fn collect_node_refs(node: &PenNode, refs: &mut ReferencedImages) {
         }
         PenNode::Ref(reference) => reference.children.as_ref(),
         PenNode::Note(_) | PenNode::Context(_) | PenNode::Prompt(_) => None,
+        PenNode::Browser(browser) => {
+            collect_stroke_refs(browser.stroke.as_ref(), refs);
+            None
+        }
     };
     if let Some(children) = children {
         for child in children {
@@ -489,6 +493,10 @@ fn patch_node(node: &mut PenNode, cache: &mut BlobCache) -> usize {
         }
         PenNode::Ref(r) => r.children.as_mut(),
         PenNode::Note(_) | PenNode::Context(_) | PenNode::Prompt(_) => None,
+        PenNode::Browser(b) => {
+            count += patch_stroke(&mut b.stroke, cache);
+            None
+        }
     };
     if let Some(children) = children {
         for child in children {

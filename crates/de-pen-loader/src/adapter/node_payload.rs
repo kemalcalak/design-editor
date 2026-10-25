@@ -42,6 +42,7 @@ pub(super) fn node_to_payload_with_text_context(
         PenNode::Note(n) => annotation_to_payload(AnnotationKind::Note, n),
         PenNode::Context(n) => annotation_to_payload(AnnotationKind::Context, n),
         PenNode::Prompt(n) => annotation_to_payload(AnnotationKind::Prompt, n),
+        PenNode::Browser(n) => browser_to_payload(n),
     };
     // The line painter is special-cased on signed bounds, so don't
     // overwrite its hand-encoded geometry with the taffy AABB.

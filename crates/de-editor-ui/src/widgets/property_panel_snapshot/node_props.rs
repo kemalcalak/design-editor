@@ -202,6 +202,7 @@ pub(super) fn node_width_sizing(node: &PenNode) -> Option<&SizingBehavior> {
         PenNode::Image(n) => n.width.as_ref(),
         PenNode::IconFont(n) => n.width.as_ref(),
         PenNode::Note(n) | PenNode::Context(n) | PenNode::Prompt(n) => n.width.as_ref(),
+        PenNode::Browser(n) => n.width.as_ref(),
         PenNode::Line(_) | PenNode::Ref(_) => None,
     }
 }
@@ -230,6 +231,7 @@ pub(super) fn node_height_sizing(node: &PenNode) -> Option<&SizingBehavior> {
         PenNode::Image(n) => n.height.as_ref(),
         PenNode::IconFont(n) => n.height.as_ref(),
         PenNode::Note(n) | PenNode::Context(n) | PenNode::Prompt(n) => n.height.as_ref(),
+        PenNode::Browser(n) => n.height.as_ref(),
         PenNode::Line(_) | PenNode::Ref(_) => None,
     }
 }
@@ -293,6 +295,7 @@ pub(super) fn has_corner_radius(node: &PenNode) -> bool {
             | PenNode::Ellipse(_)
             | PenNode::Polygon(_)
             | PenNode::Image(_)
+            | PenNode::Browser(_)
     )
 }
 
@@ -315,6 +318,7 @@ pub(super) fn container_corner_radius(node: &PenNode) -> f32 {
         PenNode::Group(n) => n.container.corner_radius.as_ref(),
         PenNode::Rectangle(n) => n.container.corner_radius.as_ref(),
         PenNode::Image(n) => n.corner_radius.as_ref(),
+        PenNode::Browser(n) => n.corner_radius.as_ref(),
         _ => None,
     };
     match cr {
@@ -337,6 +341,7 @@ pub(super) fn container_corner_radii(node: &PenNode) -> Option<[f32; 4]> {
         PenNode::Group(node) => node.container.corner_radius.as_ref(),
         PenNode::Rectangle(node) => node.container.corner_radius.as_ref(),
         PenNode::Image(node) => node.corner_radius.as_ref(),
+        PenNode::Browser(node) => node.corner_radius.as_ref(),
         _ => return None,
     };
     Some(match radius {

@@ -65,6 +65,7 @@ pub(super) fn rebuild_registry(doc: &EditorState, requested_tool: Option<&str>) 
     );
     register_tool!("get_screenshot", get_screenshot_snapshot(doc));
     register_tool!("capture_preview", capture_preview_snapshot(doc));
+    register_tool!("browser", browser_tool_snapshot(doc));
     register_tool!("export_item", export_item_snapshot(doc));
     register_tool!("export_nodes", export_nodes_snapshot(doc));
     register_tool!("export_deck", export_deck_snapshot(doc));
