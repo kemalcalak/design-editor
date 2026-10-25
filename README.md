@@ -14,9 +14,7 @@
 
 </div>
 
-<p align="center">
-  <img src="assets/readme/agent-builds-live.gif" alt="Claude Code building a landing page on the canvas over MCP" width="900" />
-</p>
+https://github.com/user-attachments/assets/37822dea-c4a3-4243-a96b-a81040dd8b48
 
 <p align="center">
   <img src="assets/readme/home.png" alt="Home" width="900" />
