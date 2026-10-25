@@ -156,6 +156,8 @@ mod paint_floating_panels;
 mod paint_animated_regions;
 #[cfg(test)]
 mod animated_regions_tests;
+#[cfg(test)]
+mod large_doc_frame_tests;
 mod paint_pan_cache;
 mod paint_rail;
 mod paint_topmost_overlays;
