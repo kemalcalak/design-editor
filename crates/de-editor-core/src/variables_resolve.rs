@@ -40,7 +40,7 @@ use std::collections::BTreeMap;
 use jian_ops_schema::node::base::NumberOrExpression;
 use jian_ops_schema::node::container::Padding;
 use jian_ops_schema::node::text::{FontWeight, TextContent};
-use jian_ops_schema::node::PenNode;
+use jian_ops_schema::node::{PenNode, ScriptNode};
 use jian_ops_schema::style::{PenEffect, PenFill};
 use jian_ops_schema::variable::{VariableDefinition, VariableScalar, VariableValue};
 use jian_ops_schema::PenDocument;
@@ -432,7 +432,9 @@ pub fn roots_have_tokens(nodes: &[PenNode]) -> bool {
             }
         }
         let container_token = match node {
-            PenNode::Frame(n) => container_has_token(&n.container),
+            PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => {
+                container_has_token(&n.container)
+            }
             PenNode::Group(n) => container_has_token(&n.container),
             PenNode::Rectangle(n) => container_has_token(&n.container),
             _ => false,

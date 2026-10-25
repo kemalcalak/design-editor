@@ -2,6 +2,7 @@
 //! the available size / sizing behaviour a layout pass starts from.
 
 use super::*;
+use jian_ops_schema::node::ScriptNode;
 
 /// `(base.x, base.y)` for any `PenNode`, defaulting to `(0, 0)`
 /// when the schema didn't author them. Used by `compute_layout`
@@ -20,9 +21,7 @@ pub fn root_authored_origin(n: &PenNode) -> (f32, f32) {
 
 fn pen_base(n: &PenNode) -> &jian_ops_schema::node::base::PenNodeBase {
     match n {
-        PenNode::Frame(f) | PenNode::Script(jian_ops_schema::node::ScriptNode { frame: f, .. }) => {
-            &f.base
-        }
+        PenNode::Frame(f) | PenNode::Script(ScriptNode { frame: f, .. }) => &f.base,
         PenNode::Group(g) => &g.base,
         PenNode::Rectangle(r) => &r.base,
         PenNode::Ellipse(e) => &e.base,

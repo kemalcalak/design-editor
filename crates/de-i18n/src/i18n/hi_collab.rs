@@ -360,6 +360,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "script.running" => "बना रहे हैं…",
         "script.generated" => "{count} नोड · {ms} ms",
         "script.desktopOnly" => "डेस्कटॉप ऐप में दोबारा बनता है",
+        "script.hugSize" => "हग आकार 0 पर चलता है: इसे स्थिर या फ़िल करें",
         _ => return None,
     })
 }

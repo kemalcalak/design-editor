@@ -15,8 +15,9 @@ use std::sync::Arc;
 use std::time::{Duration, Instant};
 
 use de_editor_core::script_regen::{forest_size, ScriptJob, ScriptOutcome};
-use de_editor_core::EditorState;
+use de_editor_core::{EditorState, NodeId};
 use jian_ops_schema::node::PenNode;
+use jian_scene::layout_scene::LayoutScene;
 use rquickjs::{Context, Runtime};
 use serde_json::Value;
 
@@ -182,16 +183,46 @@ pub fn nodes_from_json(json: &str) -> Result<Vec<PenNode>, ScriptNodeError> {
     Ok(nodes)
 }
 
+/// The laid-out size of `id` in `scene`, in document px.
+pub fn scene_size(scene: &LayoutScene, id: &NodeId) -> Option<(f64, f64)> {
+    let node = scene.pages.iter().find_map(|page| page.find(id.as_str()))?;
+    Some((f64::from(node.bounds.size.x), f64::from(node.bounds.size.y)))
+}
+
+/// Fill sizes for hosts that lay out on demand: a layout of the whole
+/// document, built only when a script is fill-sized. Owned, so a host can
+/// take jobs, release its document and land them later with the same
+/// answers.
+pub struct ScriptLayout {
+    scene: Option<LayoutScene>,
+}
+
+impl ScriptLayout {
+    pub fn of(state: &EditorState) -> Self {
+        let scene = state
+            .scripts_need_layout()
+            .then(|| de_pen_loader::editor_state_to_layout_scene(state));
+        Self { scene }
+    }
+
+    pub fn size(&self, id: &NodeId) -> Option<(f64, f64)> {
+        scene_size(self.scene.as_ref()?, id)
+    }
+}
+
 /// Run every stale script now and land the results. For hosts without a
 /// frame loop (the file-backed MCP servers), after a write; the desktop
 /// editor runs the same jobs on a worker thread instead. Returns whether
 /// the document changed.
 pub fn regenerate_stale_scripts(state: &mut EditorState) -> bool {
+    let layout = ScriptLayout::of(state);
+    let sizes = |id: &NodeId| layout.size(id);
     let mut changed = false;
-    for job in state.take_script_jobs() {
+    for job in state.take_script_jobs(&sizes) {
         let run = run_script_job(&job);
         let elapsed_ms = run.elapsed.as_millis() as u64;
-        changed |= state.land_script_output(&job.node_id, &job.hash, run.outcome(), elapsed_ms);
+        changed |=
+            state.land_script_output(&job.node_id, &job.hash, run.outcome(), elapsed_ms, &sizes);
     }
     changed
 }

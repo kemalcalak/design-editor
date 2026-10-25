@@ -115,3 +115,11 @@ fn stale_scripts_regenerate_in_place() {
     // Already current: nothing to do.
     assert!(!regenerate_stale_scripts(&mut state));
 }
+
+#[test]
+fn the_insert_dsl_refuses_children_under_a_script() {
+    let program = r#"s=I(null,{"type":"script","width":50,"height":50,"script":"return [];"})
+I(s,{"type":"text","content":"hand-made"})"#;
+    let error = crate::batch_design_dsl::parse_insert_operations(program).unwrap_err();
+    assert!(error.to_string().contains("is a script node"), "{error}");
+}

@@ -1,6 +1,7 @@
 use super::*;
 use crate::widgets::property_panel::PropertyPanel;
 use crate::widgets::property_panel_test_support::{state_from, visible_for};
+use de_editor_core::script_regen::no_layout;
 use de_editor_core::shader_source_editor::SourceTarget;
 use de_editor_core::NodeId;
 
@@ -36,6 +37,7 @@ fn a_script_lists_one_row_per_declared_input() {
     );
     assert_eq!(summary.status, ScriptStatusLine::None);
     assert_eq!(panel.snapshot.kind, "Script");
+    assert!(!summary.hug_axis, "both axes are fixed");
     let visible = visible_for(&panel);
     assert_eq!(visible.script.map(|rows| rows.count), Some(4));
 }
@@ -72,6 +74,7 @@ fn a_status_line_adds_a_row() {
     let summary = ScriptSummary {
         rows: Vec::new(),
         status: ScriptStatusLine::None,
+        hug_axis: false,
     };
     let quiet = script_section_height(ScriptRows::of(&summary));
     let running = ScriptSummary {
@@ -81,6 +84,14 @@ fn a_status_line_adds_a_row() {
     assert_eq!(
         script_section_height(ScriptRows::of(&running)) - quiet,
         ROW_ADVANCE
+    );
+    let hugging = ScriptSummary {
+        hug_axis: true,
+        ..running
+    };
+    assert_eq!(
+        script_section_height(ScriptRows::of(&hugging)) - quiet,
+        ROW_ADVANCE * 2.0
     );
 }
 
@@ -114,11 +125,11 @@ fn actions_write_one_undo_step_and_open_the_source_editor() {
 #[test]
 fn the_run_status_reaches_the_summary() {
     let mut state = selected();
-    let job = state.take_script_jobs().remove(0);
+    let job = state.take_script_jobs(&no_layout).remove(0);
     let summary = script_summary(state.selected_node().unwrap(), &state).unwrap();
     assert_eq!(summary.status, ScriptStatusLine::Running);
     let failed = de_editor_core::script_regen::ScriptOutcome::Failed("boom".into());
-    state.land_script_output(&job.node_id, &job.hash, failed, 1);
+    state.land_script_output(&job.node_id, &job.hash, failed, 1, &no_layout);
     let summary = script_summary(state.selected_node().unwrap(), &state).unwrap();
     assert_eq!(summary.status, ScriptStatusLine::Failed("boom".into()));
 }

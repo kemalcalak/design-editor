@@ -126,13 +126,27 @@ impl EditorState {
 
     /// Replace the selected script's source. False when nothing changes.
     pub fn set_selected_script_source(&mut self, source: &str) -> bool {
-        let Some(script) = self.selected_script() else {
-            return false;
-        };
-        if script.script.as_deref() == Some(source) {
+        let node_id = self.selection.anchor.clone();
+        if !node_id.is_real() || !self.is_editable(&node_id) {
             return false;
         }
-        self.patch_selected_script(json!({ "script": source }))
+        self.set_script_source(node_id, source)
+    }
+
+    /// Replace script node `node_id`'s source: the one write both the
+    /// panel and the code editor's Apply go through. False when nothing
+    /// changes.
+    pub(crate) fn set_script_source(&mut self, node_id: crate::NodeId, source: &str) -> bool {
+        let unchanged = matches!(
+            crate::walkers::find_node(self.active_children(), &node_id),
+            Some(PenNode::Script(script)) if script.script.as_deref() == Some(source)
+        );
+        !unchanged
+            && self.apply(EditorCommand::PatchNodeData {
+                node_id,
+                patch_json: json!({ "script": source }).to_string(),
+                page_id: None,
+            })
     }
 
     fn patch_selected_script(&mut self, patch: Value) -> bool {

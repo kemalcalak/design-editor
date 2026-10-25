@@ -222,7 +222,7 @@ mod tests {
     use crate::fixes::detect_and_fix;
     use crate::node_mut;
     use crate::node_util;
-    use jian_ops_schema::node::PenNode;
+    use jian_ops_schema::node::{PenNode, ScriptNode};
     use jian_ops_schema::PenDocument;
     use serde_json::Value;
 
@@ -304,10 +304,7 @@ mod tests {
             return Some(root);
         }
         match root {
-            PenNode::Frame(n)
-            | PenNode::Script(jian_ops_schema::node::ScriptNode { frame: n, .. }) => {
-                n.children.as_mut()
-            }
+            PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => n.children.as_mut(),
             PenNode::Group(n) => n.children.as_mut(),
             PenNode::Rectangle(n) => n.children.as_mut(),
             _ => None,

@@ -14,7 +14,7 @@ use jian_ops_schema::style::{PenEffect, PenStroke, SidedThickness, StrokeThickne
 /// invisible on non-rounded kinds). True when a field was written.
 pub(super) fn write_corner_radius(node: &mut PenNode, radius: f64) -> bool {
     match node {
-        PenNode::Frame(n) => {
+        PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => {
             n.container.corner_radius = Some(CornerRadius::Uniform(radius));
             true
         }
@@ -46,7 +46,9 @@ pub(super) fn write_corner_radius(node: &mut PenNode, radius: f64) -> bool {
 
 fn corner_radius_slot(node: &mut PenNode) -> Option<&mut Option<CornerRadius>> {
     match node {
-        PenNode::Frame(n) => Some(&mut n.container.corner_radius),
+        PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => {
+            Some(&mut n.container.corner_radius)
+        }
         PenNode::Group(n) => Some(&mut n.container.corner_radius),
         PenNode::Rectangle(n) => Some(&mut n.container.corner_radius),
         PenNode::Image(n) => Some(&mut n.corner_radius),

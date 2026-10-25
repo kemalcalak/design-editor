@@ -362,6 +362,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "script.running" => "생성 중…",
         "script.generated" => "노드 {count}개 · {ms}ms",
         "script.desktopOnly" => "데스크톱 앱에서 다시 생성됩니다",
+        "script.hugSize" => "맞춤 크기는 0으로 실행됩니다. 고정 또는 채우기로 설정하세요",
         _ => return None,
     })
 }

@@ -22,6 +22,8 @@ pub mod ai;
 mod codegen_targets;
 mod flex;
 #[cfg(test)]
+mod script_tests;
+#[cfg(test)]
 mod tests;
 
 pub use crate::codegen_targets::{Compose, Flutter, React, ReactNative, Svelte, SwiftUi, Vue};
@@ -237,7 +239,9 @@ pub(crate) fn node_corner_radius(node: &PenNode) -> f64 {
         None => 0.0,
     };
     match node {
-        PenNode::Frame(n) => uniform(&n.container.corner_radius),
+        PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => {
+            uniform(&n.container.corner_radius)
+        }
         PenNode::Group(n) => uniform(&n.container.corner_radius),
         PenNode::Rectangle(n) => uniform(&n.container.corner_radius),
         PenNode::Ellipse(n) => n.corner_radius.unwrap_or(0.0),

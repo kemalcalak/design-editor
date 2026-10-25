@@ -264,7 +264,9 @@ impl PenNodeExt for PenNode {
     fn is_auto_layout_container(&self) -> bool {
         use jian_ops_schema::node::container::LayoutMode;
         let layout = match self {
-            PenNode::Frame(n) => n.container.layout.as_ref(),
+            PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => {
+                n.container.layout.as_ref()
+            }
             PenNode::Group(n) => n.container.layout.as_ref(),
             PenNode::Rectangle(n) => n.container.layout.as_ref(),
             _ => None,

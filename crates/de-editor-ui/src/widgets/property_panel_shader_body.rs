@@ -518,17 +518,9 @@ fn paint_colour(cx: &mut PaintCx<'_>, theme: &Theme, control: Rect, hex: &str) {
     );
 }
 
-/// The Code button and the compile state beside it.
-fn paint_code_row(
-    cx: &mut PaintCx<'_>,
-    theme: &Theme,
-    locale: de_editor_core::Locale,
-    body: &ShaderBody,
-    x: f32,
-    y: f32,
-    width: f32,
-) {
-    let button = code_button_rect(x, y, width, body.rows.len());
+/// A muted button with the code glyph and `label`: the shader Code row's
+/// button and the Script section's Edit script (#19).
+pub(crate) fn paint_code_button(cx: &mut PaintCx<'_>, theme: &Theme, button: Rect, label: &str) {
     cx.backend
         .fill_round_rect(button, INPUT_RADIUS, theme.muted);
     draw_icon(
@@ -542,7 +534,6 @@ fn paint_code_row(
         theme.foreground,
         1.4,
     );
-    let label = de_i18n::translate(locale, "shader.editCode");
     let label = text_metrics::fit_chrome(cx.backend, label, button.size.x - 32.0, LABEL_FONT_SIZE);
     let layout = TextLayout::single_run(
         &label,
@@ -557,6 +548,25 @@ fn paint_code_row(
             button.origin.x + 28.0,
             button.origin.y + INPUT_TEXT_BASELINE,
         ),
+    );
+}
+
+/// The Code button and the compile state beside it.
+fn paint_code_row(
+    cx: &mut PaintCx<'_>,
+    theme: &Theme,
+    locale: de_editor_core::Locale,
+    body: &ShaderBody,
+    x: f32,
+    y: f32,
+    width: f32,
+) {
+    let button = code_button_rect(x, y, width, body.rows.len());
+    paint_code_button(
+        cx,
+        theme,
+        button,
+        de_i18n::translate(locale, "shader.editCode"),
     );
     let (key, color) = match body.check {
         ShaderCheck::Pending => return,

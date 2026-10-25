@@ -96,3 +96,32 @@ fn insert_node_creates_a_script_from_data_or_an_empty_one_by_kind() {
     assert_eq!(kinds, ["script", "script"]);
     let _ = std::fs::remove_file(&path);
 }
+
+#[test]
+fn batch_design_refuses_children_under_a_script() {
+    let path = std::env::temp_dir().join(format!(
+        "design-editor-mcp-script-parent-{}-{}.de",
+        std::process::id(),
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .expect("system clock")
+            .as_nanos()
+    ));
+    std::fs::write(&path, r#"{"version":"1.0.0","children":[]}"#).expect("seed document");
+    let mut state = load_editor_state(&path).expect("load document");
+    let operations = r#"s=I(null,{"type":"script","width":50,"height":50,"script":"return [];"})
+I(s,{"type":"text","content":"hand-made"})"#;
+    let line = serde_json::json!({
+        "jsonrpc": "2.0", "id": 1, "method": "tools/call",
+        "params": {"name": "batch_design", "arguments": {"operations": operations}}
+    })
+    .to_string();
+    let response = process_message(&mut state, &path, &line)
+        .expect("dispatch")
+        .expect("response");
+    // The program executor refuses a script as an insert parent, so the
+    // batch rolls back instead of authoring children the next run drops.
+    assert!(response.contains(r#"\"applied\":false"#), "{response}");
+    assert!(response.contains("not a container"), "{response}");
+    let _ = std::fs::remove_file(&path);
+}

@@ -360,6 +360,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "script.running" => "Membuat…",
         "script.generated" => "{count} node · {ms} md",
         "script.desktopOnly" => "Dibuat ulang di aplikasi desktop",
+        "script.hugSize" => "Ukuran menyesuaikan berjalan di 0: buat tetap atau isi",
         _ => return None,
     })
 }

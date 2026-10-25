@@ -2,6 +2,7 @@
 //! when a variable is renamed or deleted.
 
 use super::*;
+use jian_ops_schema::node::ScriptNode;
 
 /// Replace every `$old` token in the tree with `$new` (rename) or
 /// its resolved concrete value (`new == None`, delete) — the TS
@@ -40,6 +41,34 @@ fn replace_color(
     }
 }
 
+/// A script's input bindings (#19): renamed, or frozen to the variable's
+/// value when it is deleted (an unresolvable one stays dangling).
+fn replace_in_script_inputs(
+    inputs: Option<&mut BTreeMap<String, jian_ops_schema::node::ScriptInputValue>>,
+    token: &str,
+    new: Option<&str>,
+    vars: Option<&Vars>,
+    theme: &Theme,
+) {
+    use jian_ops_schema::node::ScriptInputValue;
+    for value in inputs.into_iter().flat_map(|map| map.values_mut()) {
+        if !matches!(value, ScriptInputValue::Text(text) if text == token) {
+            continue;
+        }
+        let replacement = match new {
+            Some(new) => Some(ScriptInputValue::Text(format!("${new}"))),
+            None => resolve_variable_ref(token, vars, theme).map(|scalar| match scalar {
+                VariableScalar::Bool(b) => ScriptInputValue::Bool(b),
+                VariableScalar::Num(n) => ScriptInputValue::Number(n),
+                VariableScalar::Str(s) => ScriptInputValue::Text(s),
+            }),
+        };
+        if let Some(replacement) = replacement {
+            *value = replacement;
+        }
+    }
+}
+
 fn replace_in_node(
     node: &mut PenNode,
     token: &str,
@@ -72,6 +101,9 @@ fn replace_in_node(
         {
             super::bindings::rename_in_overrides(descendants, old, new);
         }
+    }
+    if let PenNode::Script(script) = node {
+        replace_in_script_inputs(script.inputs.as_mut(), token, new, vars, theme);
     }
     if let Some(container) = node_container_mut(node) {
         if let Some(gap) = container.gap.as_mut() {
@@ -191,7 +223,7 @@ pub(super) fn node_container_mut(
     node: &mut PenNode,
 ) -> Option<&mut jian_ops_schema::node::container::ContainerProps> {
     match node {
-        PenNode::Frame(n) => Some(&mut n.container),
+        PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => Some(&mut n.container),
         PenNode::Group(n) => Some(&mut n.container),
         PenNode::Rectangle(n) => Some(&mut n.container),
         _ => None,

@@ -1,12 +1,16 @@
-//! The shader source editor's state and keyboard editing (#164).
+//! The source editor's state and keyboard editing (#164): shader SkSL
+//! and, since #19, a script node's JavaScript (`SourceTarget`).
 //!
-//! "Code" on a shader fill or effect opens a floating editor over the
-//! panel with the program's SkSL. It is a plain multi-line text field:
+//! "Code" on a shader fill or effect, or Edit script on a script node,
+//! opens a floating editor over the panel with the program's source. A
+//! script draft is never sent to the SkSL check. It is a plain multi-line
+//! text field:
 //! Enter inserts a newline (keeping the line's indent), Tab four spaces
 //! (tabs in an opened or pasted source become spaces too, so one char is
 //! one column),
 //! the arrows move by character and line. Apply writes the draft through
-//! `EditorCommand::SetShaderSource` (one undo step) and keeps the editor
+//! `EditorCommand::SetShaderSource`, or a script's `PatchNodeData` (one
+//! undo step either way), and keeps the editor
 //! open, so a compile error can be fixed and applied again; Close or
 //! Escape drops an unapplied draft.
 //!
@@ -188,11 +192,7 @@ impl EditorState {
                 target,
                 sksl: text,
             }),
-            SourceTarget::Script => self.apply(crate::EditorCommand::PatchNodeData {
-                node_id,
-                patch_json: serde_json::json!({ "script": text }).to_string(),
-                page_id: None,
-            }),
+            SourceTarget::Script => self.set_script_source(node_id, &text),
         }
     }
 

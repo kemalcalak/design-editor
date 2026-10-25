@@ -11,7 +11,10 @@ category: knowledge
 
 SCRIPT NODES — CONTENT A PROGRAM GENERATES
 
-A `script` node is a clipping frame whose children come from a JavaScript program. Use it for procedural content that should follow its inputs: charts, grids, patterns, repeated marks. The editor reruns the program whenever its source, its inputs, a bound variable or its size changes, and saves the generated children with the document, so readers without a script engine still show them.
+A `script` node is a clipping frame whose children come from a JavaScript program. Use it for procedural content that should follow its inputs: charts, grids, patterns, repeated marks. The editor reruns the program whenever its source, its inputs, a bound variable (or the active theme it resolves under) or its size changes, and saves the generated children with the document, so readers without a script engine still show them.
+
+SIZE
+Give each axis a fixed number or `fill_container`. A fixed axis runs at that size; a `fill_container` axis runs at the size layout gives it and reruns when that changes. A `fit_content` (hug) or unset axis runs at 0, because a hugging box would follow the very children the run produces.
 
 CREATE
 `batch_design` `I(parent, {type: "script", name, x, y, width, height, script: "...", inputs: {...}})`, or `insert_node` with the same object as `data`. Change inputs or the program later with `update_node` (`data: {inputs: {...}}` replaces the whole inputs map; send every input you want to keep). Never insert children into a script node: the program owns them and the next run replaces them.
@@ -23,7 +26,7 @@ THE PROGRAM
 - Limits per run: 1 second, 16 MiB, 2000 returned nodes. A program may not return another script node. A run that throws or breaks a limit keeps the previous children; the panel shows the error.
 
 INPUTS
-Store values in `inputs` by name. A string `"$name"` binds the input to a design variable: the program receives the variable's value under the active theme and reruns when it changes.
+Store values in `inputs` by name. A string `"$name"` binds the input to a design variable: the program receives the variable's value under the theme in effect at the node (the active theme, or a `theme` set on the node or an ancestor) and reruns when it changes. A `ref` input passes the node id as a string.
 
 EXAMPLE
 ```js

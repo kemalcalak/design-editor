@@ -7,6 +7,7 @@
 //! before touching the tree. Carved off `command_node.rs` to keep every
 //! file under the 800-line cap.
 
+use jian_ops_schema::node::ScriptNode;
 use jian_ops_schema::node::{
     BoolOrExpression, CheckboxNode, ContainerProps, EllipseNode, FrameNode, GroupNode, LineNode,
     NumberInputNode, NumberOrExpression, PathNode, PenNode, PenNodeBase, PolygonNode, ProgressNode,
@@ -42,7 +43,7 @@ pub fn build_leaf_node(
         };
         frame.container.clip_content = Some(true);
         frame.children = None;
-        return Some(PenNode::Script(jian_ops_schema::node::ScriptNode {
+        return Some(PenNode::Script(ScriptNode {
             frame,
             script: None,
             script_uri: None,

@@ -268,7 +268,9 @@ fn replace_stroke_thickness(node: &mut PenNode, replacement: &StylePropertyRepla
 
 fn replace_corner_radius(node: &mut PenNode, replacement: &StylePropertyReplacement) -> bool {
     match node {
-        PenNode::Frame(n) => replace_container_corner_radius(&mut n.container, replacement),
+        PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => {
+            replace_container_corner_radius(&mut n.container, replacement)
+        }
         PenNode::Group(n) => replace_container_corner_radius(&mut n.container, replacement),
         PenNode::Rectangle(n) => replace_container_corner_radius(&mut n.container, replacement),
         PenNode::Image(n) => {
@@ -477,7 +479,7 @@ fn node_stroke_mut(node: &mut PenNode) -> Option<&mut PenStroke> {
 
 fn container_mut(node: &mut PenNode) -> Option<&mut ContainerProps> {
     match node {
-        PenNode::Frame(n) => Some(&mut n.container),
+        PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => Some(&mut n.container),
         PenNode::Group(n) => Some(&mut n.container),
         PenNode::Rectangle(n) => Some(&mut n.container),
         _ => None,

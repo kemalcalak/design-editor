@@ -493,7 +493,7 @@ fn node_stroke(node: &PenNode) -> Option<&PenStroke> {
 
 fn container(node: &PenNode) -> Option<&ContainerProps> {
     match node {
-        PenNode::Frame(n) => Some(&n.container),
+        PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => Some(&n.container),
         PenNode::Group(n) => Some(&n.container),
         PenNode::Rectangle(n) => Some(&n.container),
         _ => None,
@@ -534,7 +534,9 @@ fn stroke_thickness_value(thickness: &StrokeThickness) -> Value {
 
 fn corner_radius(node: &PenNode) -> Option<Value> {
     match node {
-        PenNode::Frame(n) => n.container.corner_radius.as_ref().map(corner_radius_value),
+        PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => {
+            n.container.corner_radius.as_ref().map(corner_radius_value)
+        }
         PenNode::Group(n) => n.container.corner_radius.as_ref().map(corner_radius_value),
         PenNode::Rectangle(n) => n.container.corner_radius.as_ref().map(corner_radius_value),
         PenNode::Ellipse(n) => n.corner_radius.and_then(number_value),

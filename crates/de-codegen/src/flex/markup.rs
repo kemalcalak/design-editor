@@ -21,7 +21,7 @@ use crate::codegen_targets::codegen_motion_css;
 use crate::codegen_targets::{image_object_fit, tabs_nav_markup, widget_markup};
 use crate::{node_children, node_hidden};
 use de_editor_core::pen_node_ext::PenNodeExt;
-use jian_ops_schema::node::{ContainerProps, ImageFitMode, PenNode};
+use jian_ops_schema::node::{ContainerProps, ImageFitMode, PenNode, ScriptNode};
 use jian_ops_schema::sizing::SizingBehavior;
 
 pub(crate) struct Walker<'a> {
@@ -62,7 +62,7 @@ fn kind(node: &PenNode) -> &'static str {
 
 fn container_of(node: &PenNode) -> Option<&ContainerProps> {
     match node {
-        PenNode::Frame(n) => Some(&n.container),
+        PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => Some(&n.container),
         PenNode::Group(n) => Some(&n.container),
         PenNode::Rectangle(n) => Some(&n.container),
         _ => None,
@@ -137,7 +137,7 @@ impl Walker<'_> {
         let mut extra_shadows = Vec::new();
 
         match node {
-            PenNode::Frame(_) | PenNode::Group(_) | PenNode::Rectangle(_) => {
+            PenNode::Frame(_) | PenNode::Script(_) | PenNode::Group(_) | PenNode::Rectangle(_) => {
                 let c = container_of(node).expect("container variant");
                 apply_background(&mut el.decls, fills_of(node), size, self.assets, &hint);
                 extra_shadows = apply_stroke(&mut el.decls, node);

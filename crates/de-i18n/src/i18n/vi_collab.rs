@@ -360,6 +360,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "script.running" => "Đang tạo…",
         "script.generated" => "{count} nút · {ms} ms",
         "script.desktopOnly" => "Tạo lại trong ứng dụng máy tính",
+        "script.hugSize" => "Kích thước ôm chạy ở 0: đặt cố định hoặc lấp đầy",
         _ => return None,
     })
 }

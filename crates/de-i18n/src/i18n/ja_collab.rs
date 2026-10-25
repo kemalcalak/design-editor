@@ -360,6 +360,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "script.running" => "生成中…",
         "script.generated" => "{count} 個のノード · {ms} ms",
         "script.desktopOnly" => "デスクトップアプリで再生成されます",
+        "script.hugSize" => "ハグ指定のサイズは 0 で実行されます。固定か塗りつぶしにしてください",
         _ => return None,
     })
 }

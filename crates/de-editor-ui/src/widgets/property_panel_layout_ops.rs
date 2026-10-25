@@ -233,7 +233,9 @@ fn selected_sizing(node: &PenNode, width: bool) -> Option<&SizingBehavior> {
 
 fn selected_clip_content(node: &PenNode) -> bool {
     match node {
-        PenNode::Frame(n) => n.container.clip_content.unwrap_or(false),
+        PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => {
+            n.container.clip_content.unwrap_or(false)
+        }
         PenNode::Group(n) => n.container.clip_content.unwrap_or(false),
         PenNode::Rectangle(n) => n.container.clip_content.unwrap_or(false),
         _ => false,

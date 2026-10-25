@@ -41,7 +41,7 @@ fn exportable_frames(state: &EditorState) -> Vec<(NodeId, String)> {
     state
         .active_children()
         .iter()
-        .filter(|node| matches!(node, PenNode::Frame(_)))
+        .filter(|node| matches!(node, PenNode::Frame(_) | PenNode::Script(_)))
         .filter(|node| node.base().visible != Some(false))
         .filter_map(|node| {
             let base = node.base();

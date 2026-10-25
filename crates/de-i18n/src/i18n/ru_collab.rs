@@ -360,6 +360,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "script.running" => "Генерация…",
         "script.generated" => "Узлов: {count} · {ms} мс",
         "script.desktopOnly" => "Обновляется в настольном приложении",
+        "script.hugSize" => "Размер «по содержимому» равен 0: задайте фиксированный или заполнение",
         _ => return None,
     })
 }

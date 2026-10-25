@@ -360,6 +360,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "script.running" => "Generando…",
         "script.generated" => "{count} nodos · {ms} ms",
         "script.desktopOnly" => "Se regenera en la app de escritorio",
+        "script.hugSize" => "Un tamaño ajustado se ejecuta a 0: usa fijo o rellenar",
         _ => return None,
     })
 }

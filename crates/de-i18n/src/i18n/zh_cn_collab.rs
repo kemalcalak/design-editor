@@ -360,6 +360,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "script.running" => "正在生成…",
         "script.generated" => "{count} 个节点 · {ms} 毫秒",
         "script.desktopOnly" => "在桌面应用中重新生成",
+        "script.hugSize" => "自适应尺寸按 0 运行：请设为固定或填充",
         _ => return None,
     })
 }

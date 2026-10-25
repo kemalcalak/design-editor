@@ -7,14 +7,14 @@
 //! the same rows.
 
 use jian_ops_schema::node::{PenNode, ScriptInputValue};
+use jian_ops_schema::sizing::{SizingBehavior, SizingKeyword};
 
 use crate::theme::Theme;
 use crate::util::format_panel_number;
-use crate::widgets::icons::{draw_icon, Icon};
 use crate::widgets::property_panel::{NodeSnapshot, PropertyPanelAction};
 use crate::widgets::property_panel_inputs::{
     paint_input_with_prefix_focused_state, paint_section_divider, paint_section_label,
-    INPUT_HEIGHT, INPUT_RADIUS, INPUT_TEXT_BASELINE, PAD_X, SECTION_GAP, SECTION_HEADER_HEIGHT,
+    INPUT_HEIGHT, INPUT_TEXT_BASELINE, PAD_X, SECTION_GAP, SECTION_HEADER_HEIGHT,
 };
 use crate::widgets::property_panel_sections::EditContext;
 use crate::widgets::text_metrics;
@@ -30,8 +30,10 @@ const ROW_ADVANCE: f32 = INPUT_HEIGHT + 6.0;
 const BOTTOM_PAD: f32 = 12.0;
 const LABEL_FONT_SIZE: f32 = 11.0;
 const EDIT_BUTTON_W: f32 = 120.0;
-/// Rows past this many are not shown (the masks below are 64 bits).
-const MAX_ROWS: usize = 64;
+/// Rows past this many are not shown: one bit each in `ScriptRows`' masks.
+const MAX_ROWS: usize = u64::BITS as usize;
+/// Whether this build runs scripts (the web editor shows saved children).
+const SCRIPT_ENGINE_AVAILABLE: bool = !cfg!(target_arch = "wasm32");
 
 /// How one input is edited.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -73,6 +75,8 @@ pub enum ScriptStatusLine {
 pub struct ScriptSummary {
     pub rows: Vec<ScriptInputRow>,
     pub status: ScriptStatusLine,
+    /// A hug or unset axis, which runs at 0: the section says so.
+    pub hug_axis: bool,
 }
 
 /// The section's shape, small enough for the `Copy` `VisibleSections`.
@@ -82,6 +86,7 @@ pub struct ScriptRows {
     toggle_mask: u64,
     cycle_mask: u64,
     has_status: bool,
+    has_hug_hint: bool,
 }
 
 impl ScriptRows {
@@ -89,6 +94,7 @@ impl ScriptRows {
         let mut rows = ScriptRows {
             count: summary.rows.len().min(MAX_ROWS),
             has_status: summary.status != ScriptStatusLine::None,
+            has_hug_hint: summary.hug_axis,
             ..Default::default()
         };
         for (i, row) in summary.rows.iter().take(MAX_ROWS).enumerate() {
@@ -165,15 +171,26 @@ pub fn script_summary(node: &PenNode, state: &EditorState) -> Option<ScriptSumma
             elapsed_ms: *elapsed_ms,
         },
         Some(ScriptRunStatus::Failed { message, .. }) => ScriptStatusLine::Failed(message.clone()),
-        None if cfg!(target_arch = "wasm32") => ScriptStatusLine::DesktopOnly,
+        None if !SCRIPT_ENGINE_AVAILABLE => ScriptStatusLine::DesktopOnly,
         None => ScriptStatusLine::None,
     };
-    Some(ScriptSummary { rows, status })
+    let hug = |sizing: &Option<SizingBehavior>| {
+        matches!(
+            sizing,
+            None | Some(SizingBehavior::Keyword(SizingKeyword::FitContent))
+        )
+    };
+    let hug_axis = hug(&script.frame.container.width) || hug(&script.frame.container.height);
+    Some(ScriptSummary {
+        rows,
+        status,
+        hug_axis,
+    })
 }
 
 /// Section height without the trailing gap (callers add `SECTION_GAP`).
 pub fn script_section_height(rows: ScriptRows) -> f32 {
-    let lines = rows.count + 1 + usize::from(rows.has_status);
+    let lines = rows.count + 1 + usize::from(rows.has_status) + usize::from(rows.has_hug_hint);
     SECTION_HEADER_HEIGHT + ROW_ADVANCE * lines as f32 + BOTTOM_PAD
 }
 
@@ -256,7 +273,18 @@ pub fn paint_script_section(
     for (i, row) in summary.rows.iter().take(MAX_ROWS).enumerate() {
         let rect = row_rect(x, top, usable_w, i);
         match row.control {
-            ScriptControl::Toggle(checked) => paint_check_row(cx, theme, rect, &row.name, checked),
+            ScriptControl::Toggle(checked) => {
+                crate::widgets::property_panel_sections::paint_check_row(
+                    cx,
+                    theme,
+                    rect.origin.x,
+                    rect.origin.y,
+                    rect.size.x,
+                    &row.name,
+                    checked,
+                    INPUT_HEIGHT,
+                )
+            }
             ScriptControl::Text | ScriptControl::Cycle => {
                 let focus = PropertyFocus::ScriptInput(i);
                 let text = (row.control == ScriptControl::Text).then_some(focus);
@@ -276,26 +304,46 @@ pub fn paint_script_section(
         }
     }
     let rows = summary.rows.len().min(MAX_ROWS);
-    paint_edit_button(cx, theme, locale, edit_button_rect(x, top, usable_w, rows));
+    crate::widgets::property_panel_shader_body::paint_code_button(
+        cx,
+        theme,
+        edit_button_rect(x, top, usable_w, rows),
+        label(locale, "script.edit"),
+    );
+    let mut line = rows + 1;
     if let Some((text, color)) = status_text(locale, &summary.status, theme) {
-        let rect = row_rect(x, top, usable_w, rows + 1);
-        let text = text_metrics::fit_chrome(cx.backend, &text, rect.size.x, LABEL_FONT_SIZE);
-        let layout = TextLayout::single_run(
-            &text,
-            text_metrics::CHROME_FONT_FAMILY,
-            LABEL_FONT_SIZE,
-            color.to_jian(),
-            Point2D::new(0.0, 0.0),
-        );
-        cx.backend.draw_text(
-            &layout,
-            Point2D::new(rect.origin.x, rect.origin.y + INPUT_TEXT_BASELINE),
+        paint_note(cx, row_rect(x, top, usable_w, line), &text, color);
+        line += 1;
+    }
+    if summary.hug_axis {
+        let rect = row_rect(x, top, usable_w, line);
+        paint_note(
+            cx,
+            rect,
+            label(locale, "script.hugSize"),
+            theme.muted_foreground,
         );
     }
-    let lines = rows + 1 + usize::from(summary.status != ScriptStatusLine::None);
-    let y = top + SECTION_HEADER_HEIGHT + ROW_ADVANCE * lines as f32 + BOTTOM_PAD;
+    // The walkers' height, so paint and hit-testing cannot disagree.
+    let y = top + script_section_height(ScriptRows::of(summary));
     paint_section_divider(cx, theme, x, y, width);
     y + SECTION_GAP
+}
+
+/// One line of small text fitted to `rect`.
+fn paint_note(cx: &mut PaintCx<'_>, rect: Rect, text: &str, color: crate::Color) {
+    let text = text_metrics::fit_chrome(cx.backend, text, rect.size.x, LABEL_FONT_SIZE);
+    let layout = TextLayout::single_run(
+        &text,
+        text_metrics::CHROME_FONT_FAMILY,
+        LABEL_FONT_SIZE,
+        color.to_jian(),
+        Point2D::new(0.0, 0.0),
+    );
+    cx.backend.draw_text(
+        &layout,
+        Point2D::new(rect.origin.x, rect.origin.y + INPUT_TEXT_BASELINE),
+    );
 }
 
 fn status_text(
@@ -321,70 +369,6 @@ fn status_text(
             theme.muted_foreground,
         ),
     })
-}
-
-fn paint_check_row(cx: &mut PaintCx<'_>, theme: &Theme, rect: Rect, name: &str, checked: bool) {
-    let box_rect = Rect {
-        origin: Point2D::new(rect.origin.x, rect.origin.y + (INPUT_HEIGHT - 16.0) / 2.0),
-        size: Point2D::new(16.0, 16.0),
-    };
-    jian_widgets::components::checkbox::Checkbox {
-        checked,
-        enabled: true,
-    }
-    .paint(
-        cx.backend,
-        box_rect,
-        &crate::widgets::button::tokens_from_theme(theme),
-    );
-    let layout = TextLayout::single_run(
-        name,
-        text_metrics::CHROME_FONT_FAMILY,
-        12.0,
-        theme.foreground.to_jian(),
-        Point2D::new(0.0, 0.0),
-    );
-    cx.backend.draw_text(
-        &layout,
-        Point2D::new(rect.origin.x + 22.0, rect.origin.y + INPUT_TEXT_BASELINE),
-    );
-}
-
-fn paint_edit_button(
-    cx: &mut PaintCx<'_>,
-    theme: &Theme,
-    locale: de_editor_core::Locale,
-    button: Rect,
-) {
-    cx.backend
-        .fill_round_rect(button, INPUT_RADIUS, theme.muted);
-    draw_icon(
-        cx.backend,
-        Icon::Code,
-        Point2D::new(
-            button.origin.x + 8.0,
-            button.origin.y + (button.size.y - 14.0) / 2.0,
-        ),
-        14.0,
-        theme.foreground,
-        1.4,
-    );
-    let text = label(locale, "script.edit");
-    let text = text_metrics::fit_chrome(cx.backend, text, button.size.x - 32.0, LABEL_FONT_SIZE);
-    let layout = TextLayout::single_run(
-        &text,
-        text_metrics::CHROME_FONT_FAMILY,
-        LABEL_FONT_SIZE,
-        theme.foreground.to_jian(),
-        Point2D::new(0.0, 0.0),
-    );
-    cx.backend.draw_text(
-        &layout,
-        Point2D::new(
-            button.origin.x + 28.0,
-            button.origin.y + INPUT_TEXT_BASELINE,
-        ),
-    );
 }
 
 /// The panel's script actions, shared by both hosts' dispatch.

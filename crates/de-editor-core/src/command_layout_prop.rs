@@ -18,7 +18,7 @@ use crate::walkers::find_node_mut;
 use jian_ops_schema::node::base::NumberOrExpression;
 use jian_ops_schema::node::container::{AlignItems, JustifyContent, LayoutMode, Padding};
 use jian_ops_schema::node::text::{TextAlign, TextAlignVertical, TextGrowth};
-use jian_ops_schema::node::PenNode;
+use jian_ops_schema::node::{PenNode, ScriptNode};
 use jian_ops_schema::sizing::{SizingBehavior, SizingKeyword};
 
 // ── helper: parse justify_content keyword ────────────────────────────────────
@@ -374,7 +374,7 @@ fn property_invalidates_preserved_geometry(property: &str) -> bool {
 fn set_container_gap(node: &mut PenNode, gap: f64) -> bool {
     let noe = NumberOrExpression::Number(gap);
     match node {
-        PenNode::Frame(n) => {
+        PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => {
             n.container.gap = Some(noe);
             true
         }
@@ -392,7 +392,7 @@ fn set_container_gap(node: &mut PenNode, gap: f64) -> bool {
 
 fn set_container_layout(node: &mut PenNode, mode: LayoutMode) -> bool {
     match node {
-        PenNode::Frame(n) => {
+        PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => {
             n.container.layout = Some(mode);
             true
         }
@@ -410,7 +410,7 @@ fn set_container_layout(node: &mut PenNode, mode: LayoutMode) -> bool {
 
 fn set_container_padding(node: &mut PenNode, pad: Padding) -> bool {
     match node {
-        PenNode::Frame(n) => {
+        PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => {
             n.container.padding = Some(pad);
             true
         }
@@ -428,7 +428,7 @@ fn set_container_padding(node: &mut PenNode, pad: Padding) -> bool {
 
 fn set_container_clip_content(node: &mut PenNode, value: bool) -> bool {
     match node {
-        PenNode::Frame(n) => {
+        PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => {
             n.container.clip_content = Some(value);
             true
         }
@@ -446,7 +446,7 @@ fn set_container_clip_content(node: &mut PenNode, value: bool) -> bool {
 
 fn set_container_justify(node: &mut PenNode, jc: JustifyContent) -> bool {
     match node {
-        PenNode::Frame(n) => {
+        PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => {
             n.container.justify_content = Some(jc);
             true
         }
@@ -464,7 +464,7 @@ fn set_container_justify(node: &mut PenNode, jc: JustifyContent) -> bool {
 
 fn set_container_align(node: &mut PenNode, ai: AlignItems) -> bool {
     match node {
-        PenNode::Frame(n) => {
+        PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => {
             n.container.align_items = Some(ai);
             true
         }
@@ -542,7 +542,7 @@ fn set_text_growth(node: &mut PenNode, tg: TextGrowth) -> bool {
 
 fn set_node_width(node: &mut PenNode, sb: SizingBehavior) -> bool {
     match node {
-        PenNode::Frame(n) => {
+        PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => {
             n.container.width = Some(sb);
             true
         }
@@ -588,7 +588,7 @@ fn set_node_width(node: &mut PenNode, sb: SizingBehavior) -> bool {
 
 fn set_node_height(node: &mut PenNode, sb: SizingBehavior) -> bool {
     match node {
-        PenNode::Frame(n) => {
+        PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => {
             n.container.height = Some(sb);
             true
         }

@@ -3,6 +3,7 @@
 //! vertical-centre text parity).
 
 use super::*;
+use jian_ops_schema::node::ScriptNode;
 
 pub(crate) fn node_to_payload(node: &PenNode, rects: &BTreeMap<String, [f32; 4]>) -> NodePayload {
     node_to_payload_with_text_context(node, rects, None)
@@ -15,7 +16,7 @@ pub(super) fn node_to_payload_with_text_context(
 ) -> NodePayload {
     use crate::widget_payload as wp;
     let mut p = match node {
-        PenNode::Frame(n) | PenNode::Script(jian_ops_schema::node::ScriptNode { frame: n, .. }) => {
+        PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => {
             frame_to_payload(n, rects)
         }
         PenNode::Group(n) => group_to_payload(n, rects),

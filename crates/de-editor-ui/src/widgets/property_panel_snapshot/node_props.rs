@@ -74,7 +74,9 @@ pub(super) fn ellipse_arc_of(node: &PenNode) -> Option<EllipseArcSummary> {
 
 fn container_layout(node: &PenNode) -> Option<&LayoutMode> {
     match node {
-        PenNode::Frame(n) => n.container.layout.as_ref(),
+        PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => {
+            n.container.layout.as_ref()
+        }
         PenNode::Group(n) => n.container.layout.as_ref(),
         PenNode::Rectangle(n) => n.container.layout.as_ref(),
         _ => None,
@@ -91,7 +93,9 @@ pub(super) fn flex_layout_of(node: &PenNode) -> de_editor_core::FlexLayout {
 
 pub(super) fn layout_justify_of(node: &PenNode) -> LayoutJustifyValue {
     let value = match node {
-        PenNode::Frame(n) => n.container.justify_content.as_ref(),
+        PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => {
+            n.container.justify_content.as_ref()
+        }
         PenNode::Group(n) => n.container.justify_content.as_ref(),
         PenNode::Rectangle(n) => n.container.justify_content.as_ref(),
         _ => None,
@@ -107,7 +111,9 @@ pub(super) fn layout_justify_of(node: &PenNode) -> LayoutJustifyValue {
 
 pub(super) fn layout_align_of(node: &PenNode) -> LayoutAlignValue {
     let value = match node {
-        PenNode::Frame(n) => n.container.align_items.as_ref(),
+        PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => {
+            n.container.align_items.as_ref()
+        }
         PenNode::Group(n) => n.container.align_items.as_ref(),
         PenNode::Rectangle(n) => n.container.align_items.as_ref(),
         _ => None,
@@ -124,7 +130,9 @@ pub(super) fn layout_align_of(node: &PenNode) -> LayoutAlignValue {
 
 pub(super) fn layout_gap_of(node: &PenNode) -> f32 {
     let gap = match node {
-        PenNode::Frame(n) => n.container.gap.as_ref(),
+        PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => {
+            n.container.gap.as_ref()
+        }
         PenNode::Group(n) => n.container.gap.as_ref(),
         PenNode::Rectangle(n) => n.container.gap.as_ref(),
         _ => None,
@@ -137,7 +145,9 @@ pub(super) fn layout_gap_of(node: &PenNode) -> f32 {
 
 pub(super) fn layout_padding_of(node: &PenNode) -> LayoutPaddingSummary {
     let padding = match node {
-        PenNode::Frame(n) => n.container.padding.as_ref(),
+        PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => {
+            n.container.padding.as_ref()
+        }
         PenNode::Group(n) => n.container.padding.as_ref(),
         PenNode::Rectangle(n) => n.container.padding.as_ref(),
         _ => None,
@@ -230,7 +240,9 @@ pub(super) fn sizing_is(sizing: Option<&SizingBehavior>, keyword: SizingKeyword)
 
 pub(super) fn clip_content_of(node: &PenNode) -> bool {
     match node {
-        PenNode::Frame(n) => n.container.clip_content.unwrap_or(false),
+        PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => {
+            n.container.clip_content.unwrap_or(false)
+        }
         PenNode::Group(n) => n.container.clip_content.unwrap_or(false),
         PenNode::Rectangle(n) => n.container.clip_content.unwrap_or(false),
         _ => false,
@@ -297,7 +309,9 @@ pub(super) fn can_create_component(node: &PenNode) -> bool {
 pub(super) fn container_corner_radius(node: &PenNode) -> f32 {
     use jian_ops_schema::node::container::CornerRadius;
     let cr = match node {
-        PenNode::Frame(n) => n.container.corner_radius.as_ref(),
+        PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => {
+            n.container.corner_radius.as_ref()
+        }
         PenNode::Group(n) => n.container.corner_radius.as_ref(),
         PenNode::Rectangle(n) => n.container.corner_radius.as_ref(),
         PenNode::Image(n) => n.corner_radius.as_ref(),
@@ -317,7 +331,9 @@ pub(super) fn container_corner_radius(node: &PenNode) -> f32 {
 pub(super) fn container_corner_radii(node: &PenNode) -> Option<[f32; 4]> {
     use jian_ops_schema::node::container::CornerRadius;
     let radius = match node {
-        PenNode::Frame(node) => node.container.corner_radius.as_ref(),
+        PenNode::Frame(node) | PenNode::Script(ScriptNode { frame: node, .. }) => {
+            node.container.corner_radius.as_ref()
+        }
         PenNode::Group(node) => node.container.corner_radius.as_ref(),
         PenNode::Rectangle(node) => node.container.corner_radius.as_ref(),
         PenNode::Image(node) => node.corner_radius.as_ref(),
