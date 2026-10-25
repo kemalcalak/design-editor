@@ -20,7 +20,7 @@ use de_editor_core::editor_ui_state::EditorUiState;
 use de_editor_core::pen_node_ext::PenNodeExt;
 use de_editor_core::ui_draft::LayerContextTarget;
 use de_editor_core::EditorState;
-use jian_ops_schema::node::PenNode;
+use jian_ops_schema::node::{PenNode, ScriptNode};
 
 use super::layer_panel::{LayerItem, PageItem};
 use super::layer_panel_instance_rows::{has_owned_rows, push_owned_rows};
@@ -239,6 +239,7 @@ pub(super) fn pages_content_width(pages: &[PageItem], viewport_w: f32) -> f32 {
 pub(super) fn kind_label(node: &PenNode) -> &'static str {
     match node {
         PenNode::Frame(_) => "Frame",
+        PenNode::Script(_) => "Script",
         PenNode::Group(_) => "Group",
         PenNode::Rectangle(_) => "Rectangle",
         PenNode::Ellipse(_) => "Ellipse",
@@ -269,9 +270,13 @@ pub(super) fn kind_label(node: &PenNode) -> &'static str {
 /// component definitions + Ref instances paint the TS Diamond glyph.
 pub(crate) fn icon_for_node(node: &PenNode) -> Icon {
     match node {
-        PenNode::Frame(f) if f.reusable == Some(true) => Icon::Diamond,
+        PenNode::Frame(f) | PenNode::Script(ScriptNode { frame: f, .. })
+            if f.reusable == Some(true) =>
+        {
+            Icon::Diamond
+        }
         PenNode::Ref(_) => Icon::Diamond,
-        PenNode::Frame(_) => Icon::Hash,
+        PenNode::Frame(_) | PenNode::Script(_) => Icon::Hash,
         PenNode::Group(_) => Icon::Square,
         PenNode::Rectangle(_) => Icon::Square,
         PenNode::Ellipse(_) => Icon::Circle,

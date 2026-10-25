@@ -11,7 +11,7 @@ use de_editor_ui::layout_scene::{SceneNode, ScenePage};
 use de_figma::{parse_fig_binary, FigLayoutMode};
 use de_host_services::export::{export_node_raster, RasterFormat};
 use jian_ops_schema::node::base::PenNodeBase;
-use jian_ops_schema::node::PenNode;
+use jian_ops_schema::node::{PenNode, ScriptNode};
 use jian_ops_schema::sizing::SizingBehavior;
 
 #[derive(Debug)]
@@ -291,7 +291,7 @@ fn numeric(sizing: Option<&SizingBehavior>) -> f64 {
 
 fn sizing(node: &PenNode) -> (Option<&SizingBehavior>, Option<&SizingBehavior>) {
     match node {
-        PenNode::Frame(node) => (
+        PenNode::Frame(node) | PenNode::Script(ScriptNode { frame: node, .. }) => (
             node.container.width.as_ref(),
             node.container.height.as_ref(),
         ),
@@ -339,7 +339,7 @@ fn children_of(node: &PenNode) -> &[PenNode] {
 
 fn base_of(node: &PenNode) -> &PenNodeBase {
     match node {
-        PenNode::Frame(node) => &node.base,
+        PenNode::Frame(node) | PenNode::Script(ScriptNode { frame: node, .. }) => &node.base,
         PenNode::Group(node) => &node.base,
         PenNode::Rectangle(node) => &node.base,
         PenNode::Ellipse(node) => &node.base,

@@ -10,7 +10,7 @@
 use crate::common::FigLayoutMode;
 use crate::kiwi::FigValue;
 use jian_ops_schema::constraints::{Constraints, HConstraint, VConstraint};
-use jian_ops_schema::node::{PenNode, PenNodeBase};
+use jian_ops_schema::node::{PenNode, PenNodeBase, ScriptNode};
 
 fn is_auto_layout(mode: Option<&str>) -> bool {
     matches!(mode, Some("HORIZONTAL" | "VERTICAL"))
@@ -104,7 +104,7 @@ fn map_figma_constraints(figma: &FigValue) -> Constraints {
 
 fn base_mut(node: &mut PenNode) -> &mut PenNodeBase {
     match node {
-        PenNode::Frame(node) => &mut node.base,
+        PenNode::Frame(node) | PenNode::Script(ScriptNode { frame: node, .. }) => &mut node.base,
         PenNode::Group(node) => &mut node.base,
         PenNode::Rectangle(node) => &mut node.base,
         PenNode::Ellipse(node) => &mut node.base,

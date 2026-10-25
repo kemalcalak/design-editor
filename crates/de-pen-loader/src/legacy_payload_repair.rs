@@ -3,7 +3,7 @@
 //! Layout repair adjusts computed rectangles before payload conversion. This
 //! module handles authored helper strokes that should not paint as visible UI.
 
-use jian_ops_schema::node::{FrameNode, PenNode};
+use jian_ops_schema::node::{FrameNode, PenNode, ScriptNode};
 
 use crate::payload::NodePayload;
 
@@ -110,7 +110,7 @@ fn is_legacy_dark_help_card_missing_stroke_fill(payload: &NodePayload) -> bool {
 
 fn child_name(node: &PenNode) -> Option<&str> {
     match node {
-        PenNode::Frame(n) => n.base.name.as_deref(),
+        PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => n.base.name.as_deref(),
         PenNode::Group(n) => n.base.name.as_deref(),
         PenNode::Rectangle(n) => n.base.name.as_deref(),
         PenNode::Text(n) => n.base.name.as_deref(),

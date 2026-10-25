@@ -6,7 +6,7 @@ use crate::state::EditorState;
 use crate::walkers::find_node_mut;
 use jian_ops_schema::node::base::NumberOrExpression;
 use jian_ops_schema::node::container::{ContainerProps, CornerRadius, Padding};
-use jian_ops_schema::node::{FontWeight, PenNode};
+use jian_ops_schema::node::{FontWeight, PenNode, ScriptNode};
 use jian_ops_schema::style::{PenFill, PenStroke, StrokeThickness};
 
 /// A rejected style-property replacement request.
@@ -415,7 +415,9 @@ fn replace_font_weight(node: &mut PenNode, replacement: &StylePropertyReplacemen
 
 fn node_fill_mut(node: &mut PenNode) -> Option<&mut Vec<PenFill>> {
     match node {
-        PenNode::Frame(n) => n.container.fill.as_mut(),
+        PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => {
+            n.container.fill.as_mut()
+        }
         PenNode::Group(n) => n.container.fill.as_mut(),
         PenNode::Rectangle(n) => n.container.fill.as_mut(),
         PenNode::Ellipse(n) => n.fill.as_mut(),
@@ -444,7 +446,9 @@ fn node_fill_mut(node: &mut PenNode) -> Option<&mut Vec<PenFill>> {
 
 fn node_stroke_mut(node: &mut PenNode) -> Option<&mut PenStroke> {
     match node {
-        PenNode::Frame(n) => n.container.stroke.as_mut(),
+        PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => {
+            n.container.stroke.as_mut()
+        }
         PenNode::Group(n) => n.container.stroke.as_mut(),
         PenNode::Rectangle(n) => n.container.stroke.as_mut(),
         PenNode::Ellipse(n) => n.stroke.as_mut(),
@@ -482,7 +486,7 @@ fn container_mut(node: &mut PenNode) -> Option<&mut ContainerProps> {
 
 fn existing_children_mut(node: &mut PenNode) -> Option<&mut Vec<PenNode>> {
     match node {
-        PenNode::Frame(n) => n.children.as_mut(),
+        PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => n.children.as_mut(),
         PenNode::Group(n) => n.children.as_mut(),
         PenNode::Rectangle(n) => n.children.as_mut(),
         PenNode::Ref(n) => n.children.as_mut(),

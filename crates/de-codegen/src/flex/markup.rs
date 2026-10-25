@@ -34,7 +34,7 @@ pub(crate) struct Walker<'a> {
 
 fn kind(node: &PenNode) -> &'static str {
     match node {
-        PenNode::Frame(_) => "frame",
+        PenNode::Frame(_) | PenNode::Script(_) => "frame",
         PenNode::Group(_) => "group",
         PenNode::Rectangle(_) => "rect",
         PenNode::Ellipse(_) => "ellipse",

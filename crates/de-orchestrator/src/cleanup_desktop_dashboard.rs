@@ -12,7 +12,7 @@ use crate::types::DocSink;
 use de_editor_core::{EditorCommand, LayoutPropValue, NodeId, PenNodeExt};
 use jian_ops_schema::node::base::NumberOrExpression;
 use jian_ops_schema::node::container::{ContainerProps, LayoutMode};
-use jian_ops_schema::node::PenNode;
+use jian_ops_schema::node::{PenNode, ScriptNode};
 use jian_ops_schema::sizing::{SizingBehavior, SizingKeyword};
 
 const DESKTOP_DASHBOARD_MIN_WIDTH: f64 = 900.0;
@@ -195,7 +195,9 @@ fn width_keyword(node: &PenNode, keyword: SizingKeyword) -> bool {
 
 fn width_behavior(node: &PenNode) -> Option<&SizingBehavior> {
     match node {
-        PenNode::Frame(n) => n.container.width.as_ref(),
+        PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => {
+            n.container.width.as_ref()
+        }
         PenNode::Group(n) => n.container.width.as_ref(),
         PenNode::Rectangle(n) => n.container.width.as_ref(),
         PenNode::Ellipse(n) => n.width.as_ref(),

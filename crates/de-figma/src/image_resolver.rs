@@ -4,7 +4,7 @@
 
 use base64::Engine;
 use jian_ops_schema::document::PenDocument;
-use jian_ops_schema::node::{ImageSrc, PenNode};
+use jian_ops_schema::node::{ImageSrc, PenNode, ScriptNode};
 use jian_ops_schema::style::{PenFill, PenStroke};
 use std::collections::{HashMap, HashSet};
 #[cfg(test)]
@@ -219,7 +219,7 @@ fn collect_stroke_refs(stroke: Option<&PenStroke>, refs: &mut ReferencedImages) 
 
 fn collect_node_refs(node: &PenNode, refs: &mut ReferencedImages) {
     let children = match node {
-        PenNode::Frame(frame) => {
+        PenNode::Frame(frame) | PenNode::Script(ScriptNode { frame, .. }) => {
             collect_fill_refs(frame.container.fill.as_deref(), refs);
             collect_stroke_refs(frame.container.stroke.as_ref(), refs);
             frame.children.as_ref()
@@ -390,7 +390,7 @@ fn patch_source(source: &mut ImageSrc, cache: &mut BlobCache) -> usize {
 fn patch_node(node: &mut PenNode, cache: &mut BlobCache) -> usize {
     let mut count = 0;
     let children: Option<&mut Vec<PenNode>> = match node {
-        PenNode::Frame(f) => {
+        PenNode::Frame(f) | PenNode::Script(ScriptNode { frame: f, .. }) => {
             count += patch_fills(&mut f.container.fill, cache);
             count += patch_stroke(&mut f.container.stroke, cache);
             f.children.as_mut()

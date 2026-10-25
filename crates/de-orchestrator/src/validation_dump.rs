@@ -9,7 +9,7 @@
 
 use de_editor_core::EditorState;
 use jian_ops_schema::node::text::TextContent;
-use jian_ops_schema::node::PenNode;
+use jian_ops_schema::node::{PenNode, ScriptNode};
 use jian_ops_schema::sizing::SizingBehavior;
 use jian_ops_schema::style::{PenFill, PenStroke, StrokeThickness};
 
@@ -186,7 +186,7 @@ fn walk_dump(node: &PenNode, depth: usize, lines: &mut Vec<String>) {
 
 fn node_id(node: &PenNode) -> &str {
     match node {
-        PenNode::Frame(n) => &n.base.id,
+        PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => &n.base.id,
         PenNode::Group(n) => &n.base.id,
         PenNode::Rectangle(n) => &n.base.id,
         PenNode::Ellipse(n) => &n.base.id,
@@ -213,7 +213,7 @@ fn node_id(node: &PenNode) -> &str {
 
 fn node_name(node: &PenNode) -> Option<&str> {
     let base = match node {
-        PenNode::Frame(n) => &n.base,
+        PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => &n.base,
         PenNode::Group(n) => &n.base,
         PenNode::Rectangle(n) => &n.base,
         PenNode::Ellipse(n) => &n.base,
@@ -342,7 +342,7 @@ fn node_corner_radius(node: &PenNode) -> Option<&jian_ops_schema::node::containe
 fn node_opacity(node: &PenNode) -> Option<f64> {
     use jian_ops_schema::node::base::NumberOrExpression;
     let base = match node {
-        PenNode::Frame(n) => &n.base,
+        PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => &n.base,
         PenNode::Group(n) => &n.base,
         PenNode::Rectangle(n) => &n.base,
         PenNode::Ellipse(n) => &n.base,
@@ -423,7 +423,7 @@ fn stroke_thickness_value(thickness: &StrokeThickness) -> f32 {
 
 fn node_children(node: &PenNode) -> Option<&Vec<PenNode>> {
     match node {
-        PenNode::Frame(n) => n.children.as_ref(),
+        PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => n.children.as_ref(),
         PenNode::Group(n) => n.children.as_ref(),
         PenNode::Rectangle(n) => n.children.as_ref(),
         _ => None,

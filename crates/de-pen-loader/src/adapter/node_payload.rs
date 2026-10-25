@@ -15,7 +15,9 @@ pub(super) fn node_to_payload_with_text_context(
 ) -> NodePayload {
     use crate::widget_payload as wp;
     let mut p = match node {
-        PenNode::Frame(n) => frame_to_payload(n, rects),
+        PenNode::Frame(n) | PenNode::Script(jian_ops_schema::node::ScriptNode { frame: n, .. }) => {
+            frame_to_payload(n, rects)
+        }
         PenNode::Group(n) => group_to_payload(n, rects),
         PenNode::Rectangle(n) => rect_to_payload(n, rects),
         PenNode::Ellipse(n) => ellipse_to_payload(n),

@@ -20,7 +20,9 @@ pub fn root_authored_origin(n: &PenNode) -> (f32, f32) {
 
 fn pen_base(n: &PenNode) -> &jian_ops_schema::node::base::PenNodeBase {
     match n {
-        PenNode::Frame(f) => &f.base,
+        PenNode::Frame(f) | PenNode::Script(jian_ops_schema::node::ScriptNode { frame: f, .. }) => {
+            &f.base
+        }
         PenNode::Group(g) => &g.base,
         PenNode::Rectangle(r) => &r.base,
         PenNode::Ellipse(e) => &e.base,

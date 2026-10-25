@@ -10,7 +10,7 @@ use de_editor_core::{
 };
 use jian_ops_schema::node::base::NumberOrExpression;
 use jian_ops_schema::node::container::{ContainerProps, CornerRadius, Padding};
-use jian_ops_schema::node::{FontWeight, PenNode};
+use jian_ops_schema::node::{FontWeight, PenNode, ScriptNode};
 use jian_ops_schema::style::{PenFill, PenStroke, StrokeThickness};
 use serde_json::Value;
 
@@ -431,7 +431,9 @@ fn property_value(node: &PenNode, property: StyleProperty) -> Option<Value> {
 
 fn node_fill(node: &PenNode) -> Option<&Vec<PenFill>> {
     match node {
-        PenNode::Frame(n) => n.container.fill.as_ref(),
+        PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => {
+            n.container.fill.as_ref()
+        }
         PenNode::Group(n) => n.container.fill.as_ref(),
         PenNode::Rectangle(n) => n.container.fill.as_ref(),
         PenNode::Ellipse(n) => n.fill.as_ref(),
@@ -460,7 +462,9 @@ fn node_fill(node: &PenNode) -> Option<&Vec<PenFill>> {
 
 fn node_stroke(node: &PenNode) -> Option<&PenStroke> {
     match node {
-        PenNode::Frame(n) => n.container.stroke.as_ref(),
+        PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => {
+            n.container.stroke.as_ref()
+        }
         PenNode::Group(n) => n.container.stroke.as_ref(),
         PenNode::Rectangle(n) => n.container.stroke.as_ref(),
         PenNode::Ellipse(n) => n.stroke.as_ref(),

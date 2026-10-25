@@ -29,7 +29,7 @@ pub use summaries::{
 /// `Other(tag)` so the section mask treats them structurally).
 fn node_kind_of(node: &PenNode) -> NodeKind {
     match node {
-        PenNode::Frame(_) => NodeKind::Frame,
+        PenNode::Frame(_) | PenNode::Script(_) => NodeKind::Frame,
         PenNode::Group(_) => NodeKind::Group,
         PenNode::Rectangle(_) => NodeKind::Rect,
         PenNode::Ellipse(_) => NodeKind::Ellipse,

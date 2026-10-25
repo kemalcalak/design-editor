@@ -16,7 +16,7 @@ use super::assets::Assets;
 use super::ir::Decls;
 use super::value::{color, color_alpha, px, round2};
 use crate::{fmt_num, node_fills, node_stroke};
-use jian_ops_schema::node::{CornerRadius, NumberOrExpression, PenNode};
+use jian_ops_schema::node::{CornerRadius, NumberOrExpression, PenNode, ScriptNode};
 use jian_ops_schema::style::{
     BlendMode, GradientStop, ImageFillMode, PenEffect, PenFill, ShaderUniformValue, StrokeAlign,
     StrokeThickness,
@@ -25,7 +25,9 @@ use jian_ops_schema::style::{
 /// The node's effect list, when its variant carries one.
 pub(crate) fn node_effects(node: &PenNode) -> &[PenEffect] {
     let effects = match node {
-        PenNode::Frame(n) => n.container.effects.as_ref(),
+        PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => {
+            n.container.effects.as_ref()
+        }
         PenNode::Group(n) => n.container.effects.as_ref(),
         PenNode::Rectangle(n) => n.container.effects.as_ref(),
         PenNode::Ellipse(n) => n.effects.as_ref(),

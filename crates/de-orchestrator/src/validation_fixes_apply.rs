@@ -605,7 +605,9 @@ fn node_has_layout(node: &jian_ops_schema::node::PenNode) -> bool {
 fn node_child_count(node: &jian_ops_schema::node::PenNode) -> usize {
     use jian_ops_schema::node::PenNode;
     match node {
-        PenNode::Frame(n) => n.children.as_ref().map(|c| c.len()).unwrap_or(0),
+        PenNode::Frame(n) | PenNode::Script(jian_ops_schema::node::ScriptNode { frame: n, .. }) => {
+            n.children.as_ref().map(|c| c.len()).unwrap_or(0)
+        }
         PenNode::Group(n) => n.children.as_ref().map(|c| c.len()).unwrap_or(0),
         PenNode::Rectangle(n) => n.children.as_ref().map(|c| c.len()).unwrap_or(0),
         _ => 0,
@@ -715,7 +717,9 @@ fn collect_node(node: &jian_ops_schema::node::PenNode, out: &mut Vec<NodeSnapsho
 
     // Recurse into children.
     if let Some(children) = match node {
-        PenNode::Frame(n) => n.children.as_ref(),
+        PenNode::Frame(n) | PenNode::Script(jian_ops_schema::node::ScriptNode { frame: n, .. }) => {
+            n.children.as_ref()
+        }
         PenNode::Group(n) => n.children.as_ref(),
         PenNode::Rectangle(n) => n.children.as_ref(),
         _ => None,

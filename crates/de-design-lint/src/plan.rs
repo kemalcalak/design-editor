@@ -304,7 +304,10 @@ mod tests {
             return Some(root);
         }
         match root {
-            PenNode::Frame(n) => n.children.as_mut(),
+            PenNode::Frame(n)
+            | PenNode::Script(jian_ops_schema::node::ScriptNode { frame: n, .. }) => {
+                n.children.as_mut()
+            }
             PenNode::Group(n) => n.children.as_mut(),
             PenNode::Rectangle(n) => n.children.as_mut(),
             _ => None,

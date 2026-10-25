@@ -12,7 +12,7 @@ use de_editor_core::pen_node_ext::PenNodeExt;
 use jian_ops_schema::node::base::NumberOrExpression;
 use jian_ops_schema::node::container::LayoutMode;
 use jian_ops_schema::node::container::{AlignItems, JustifyContent, Padding};
-use jian_ops_schema::node::PenNode;
+use jian_ops_schema::node::{PenNode, ScriptNode};
 use jian_ops_schema::sizing::{SizingBehavior, SizingKeyword};
 
 pub(super) fn node_opacity_percent(node: &PenNode) -> f32 {
@@ -170,7 +170,9 @@ pub(super) fn layout_padding_of(node: &PenNode) -> LayoutPaddingSummary {
 
 pub(super) fn node_width_sizing(node: &PenNode) -> Option<&SizingBehavior> {
     match node {
-        PenNode::Frame(n) => n.container.width.as_ref(),
+        PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => {
+            n.container.width.as_ref()
+        }
         PenNode::Group(n) => n.container.width.as_ref(),
         PenNode::Rectangle(n) => n.container.width.as_ref(),
         PenNode::Ellipse(n) => n.width.as_ref(),
@@ -196,7 +198,9 @@ pub(super) fn node_width_sizing(node: &PenNode) -> Option<&SizingBehavior> {
 
 pub(super) fn node_height_sizing(node: &PenNode) -> Option<&SizingBehavior> {
     match node {
-        PenNode::Frame(n) => n.container.height.as_ref(),
+        PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => {
+            n.container.height.as_ref()
+        }
         PenNode::Group(n) => n.container.height.as_ref(),
         PenNode::Rectangle(n) => n.container.height.as_ref(),
         PenNode::Ellipse(n) => n.height.as_ref(),

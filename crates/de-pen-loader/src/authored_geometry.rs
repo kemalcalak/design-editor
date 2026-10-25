@@ -1,7 +1,7 @@
 use std::collections::BTreeMap;
 
 use jian_ops_schema::node::base::PenNodeBase;
-use jian_ops_schema::node::PenNode;
+use jian_ops_schema::node::{PenNode, ScriptNode};
 use jian_ops_schema::sizing::SizingBehavior;
 
 pub fn rects_for_roots(roots: &[PenNode]) -> BTreeMap<String, [f32; 4]> {
@@ -30,7 +30,9 @@ fn collect_rect(
 
 fn size_of(node: &PenNode) -> (f32, f32) {
     match node {
-        PenNode::Frame(n) => numeric_size(&n.container.width, &n.container.height),
+        PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => {
+            numeric_size(&n.container.width, &n.container.height)
+        }
         PenNode::Group(n) => numeric_size(&n.container.width, &n.container.height),
         PenNode::Rectangle(n) => numeric_size(&n.container.width, &n.container.height),
         PenNode::Ellipse(n) => numeric_size(&n.width, &n.height),
@@ -70,7 +72,9 @@ fn numeric(value: &Option<SizingBehavior>) -> f32 {
 
 fn children_of(node: &PenNode) -> &[PenNode] {
     match node {
-        PenNode::Frame(n) => n.children.as_deref().unwrap_or(&[]),
+        PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => {
+            n.children.as_deref().unwrap_or(&[])
+        }
         PenNode::Group(n) => n.children.as_deref().unwrap_or(&[]),
         PenNode::Rectangle(n) => n.children.as_deref().unwrap_or(&[]),
         PenNode::Tabs(n) => n.children.as_deref().unwrap_or(&[]),
@@ -81,7 +85,7 @@ fn children_of(node: &PenNode) -> &[PenNode] {
 
 fn base_of(node: &PenNode) -> &PenNodeBase {
     match node {
-        PenNode::Frame(n) => &n.base,
+        PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => &n.base,
         PenNode::Group(n) => &n.base,
         PenNode::Rectangle(n) => &n.base,
         PenNode::Ellipse(n) => &n.base,

@@ -19,7 +19,7 @@
 use std::collections::BTreeMap;
 
 use jian_ops_schema::node::base::NumberOrExpression;
-use jian_ops_schema::node::{BoolOrExpression, CornerRadius, Padding, PenNode};
+use jian_ops_schema::node::{BoolOrExpression, CornerRadius, Padding, PenNode, ScriptNode};
 use jian_ops_schema::sizing::SizingBehavior;
 use jian_ops_schema::style::{PenFill, StrokeThickness};
 use jian_ops_schema::variable::{VariableDefinition, VariableScalar, VariableValue};
@@ -72,7 +72,7 @@ pub fn node_id(node: &PenNode) -> &str {
 /// The node's kind discriminant.
 pub fn node_kind(node: &PenNode) -> NodeKind {
     match node {
-        PenNode::Frame(_) => NodeKind::Frame,
+        PenNode::Frame(_) | PenNode::Script(_) => NodeKind::Frame,
         PenNode::Group(_) => NodeKind::Group,
         PenNode::Rectangle(_) => NodeKind::Rectangle,
         PenNode::Ellipse(_) => NodeKind::Ellipse,
@@ -189,7 +189,7 @@ fn numeric_sizing(sizing: Option<&SizingBehavior>) -> Option<f64> {
 /// slice — matching the TS `'children' in node ? … : []` guard.
 pub fn children(node: &PenNode) -> &[PenNode] {
     let kids = match node {
-        PenNode::Frame(n) => n.children.as_ref(),
+        PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => n.children.as_ref(),
         PenNode::Group(n) => n.children.as_ref(),
         PenNode::Rectangle(n) => n.children.as_ref(),
         PenNode::Tabs(n) => n.children.as_ref(),
@@ -390,7 +390,7 @@ fn resolve_themed_value(
 /// Borrow the flattened `PenNodeBase` of any node kind.
 fn base(node: &PenNode) -> &jian_ops_schema::node::PenNodeBase {
     match node {
-        PenNode::Frame(n) => &n.base,
+        PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => &n.base,
         PenNode::Group(n) => &n.base,
         PenNode::Rectangle(n) => &n.base,
         PenNode::Ellipse(n) => &n.base,
@@ -422,7 +422,9 @@ fn base(node: &PenNode) -> &jian_ops_schema::node::PenNodeBase {
 /// just the first solid color.
 pub fn node_fills(node: &PenNode) -> Option<&Vec<PenFill>> {
     match node {
-        PenNode::Frame(n) => n.container.fill.as_ref(),
+        PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => {
+            n.container.fill.as_ref()
+        }
         PenNode::Group(n) => n.container.fill.as_ref(),
         PenNode::Rectangle(n) => n.container.fill.as_ref(),
         PenNode::Ellipse(n) => n.fill.as_ref(),
@@ -453,7 +455,9 @@ pub fn node_fills(node: &PenNode) -> Option<&Vec<PenFill>> {
 /// kinds carry it via `ContainerProps`; `Text` / `Group` / `Image` do not.
 fn stroke(node: &PenNode) -> Option<&jian_ops_schema::style::PenStroke> {
     match node {
-        PenNode::Frame(n) => n.container.stroke.as_ref(),
+        PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => {
+            n.container.stroke.as_ref()
+        }
         PenNode::Rectangle(n) => n.container.stroke.as_ref(),
         PenNode::Group(n) => n.container.stroke.as_ref(),
         PenNode::Ellipse(n) => n.stroke.as_ref(),

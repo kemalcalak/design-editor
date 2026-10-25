@@ -31,7 +31,7 @@ pub use crate::flex::{
 };
 
 use de_editor_core::pen_node_ext::PenNodeExt;
-use jian_ops_schema::node::PenNode;
+use jian_ops_schema::node::{PenNode, ScriptNode};
 use jian_ops_schema::style::PenFill;
 use jian_ops_schema::variable::{VariableScalar, VariableValue};
 use jian_ops_schema::PenDocument;
@@ -287,7 +287,9 @@ pub(crate) fn node_fill_css(node: &PenNode) -> Option<String> {
 /// Borrow the node's fill list, when its variant carries fills.
 pub(crate) fn node_fills(node: &PenNode) -> Option<&Vec<PenFill>> {
     match node {
-        PenNode::Frame(n) => n.container.fill.as_ref(),
+        PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => {
+            n.container.fill.as_ref()
+        }
         PenNode::Group(n) => n.container.fill.as_ref(),
         PenNode::Rectangle(n) => n.container.fill.as_ref(),
         PenNode::Ellipse(n) => n.fill.as_ref(),
@@ -344,7 +346,9 @@ pub(crate) fn node_stroke_css(node: &PenNode) -> Option<(String, f32)> {
 /// The node's stroke, when its variant carries one.
 pub(crate) fn node_stroke(node: &PenNode) -> Option<&jian_ops_schema::style::PenStroke> {
     match node {
-        PenNode::Frame(n) => n.container.stroke.as_ref(),
+        PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => {
+            n.container.stroke.as_ref()
+        }
         PenNode::Group(n) => n.container.stroke.as_ref(),
         PenNode::Rectangle(n) => n.container.stroke.as_ref(),
         PenNode::Ellipse(n) => n.stroke.as_ref(),

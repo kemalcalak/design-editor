@@ -162,6 +162,7 @@ pub fn default_export_file_name(state: &EditorState) -> String {
 fn kind_stem(node: &PenNode) -> &'static str {
     match node {
         PenNode::Frame(_) => "frame",
+        PenNode::Script(_) => "script",
         PenNode::Group(_) => "group",
         PenNode::Rectangle(_) => "rectangle",
         PenNode::Ellipse(_) => "ellipse",

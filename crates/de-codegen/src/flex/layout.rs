@@ -18,7 +18,7 @@
 use super::ir::Decls;
 use super::value::{fixed_size, number_or_expr_px, px};
 use jian_ops_schema::node::{AlignItems, ContainerProps, JustifyContent, LayoutMode, Padding};
-use jian_ops_schema::node::{PenNode, PenNodeBase};
+use jian_ops_schema::node::{PenNode, PenNodeBase, ScriptNode};
 use jian_ops_schema::sizing::{SizeLimits, SizingBehavior, SizingKeyword};
 
 /// How a node's parent lays it out.
@@ -123,7 +123,7 @@ pub(crate) fn node_sizing(
     Option<&SizeLimits>,
 ) {
     match node {
-        PenNode::Frame(n) => (
+        PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => (
             n.container.width.as_ref(),
             n.container.height.as_ref(),
             Some(&n.container.limits),

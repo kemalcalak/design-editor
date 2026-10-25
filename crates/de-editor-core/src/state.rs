@@ -48,7 +48,7 @@ use crate::selection::SelectionState;
 use crate::tool::Tool;
 use crate::ui_draft::UiDraftState;
 use crate::viewport::Viewport;
-use jian_ops_schema::node::PenNode;
+use jian_ops_schema::node::{PenNode, ScriptNode};
 
 /// The editor's runtime state — the canonical document plus the
 /// editor-only state layered on top of it.
@@ -345,7 +345,7 @@ fn document_max_depth(doc: &jian_ops_schema::PenDocument) -> usize {
 
 fn node_children(node: &PenNode) -> Option<&[PenNode]> {
     match node {
-        PenNode::Frame(n) => n.children.as_deref(),
+        PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => n.children.as_deref(),
         PenNode::Group(n) => n.children.as_deref(),
         PenNode::Rectangle(n) => n.children.as_deref(),
         _ => None,

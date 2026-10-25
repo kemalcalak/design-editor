@@ -7,18 +7,24 @@
 //! here once instead of being re-spelled per module.
 
 use jian_ops_schema::node::base::PenNodeBase;
-use jian_ops_schema::node::PenNode;
+use jian_ops_schema::node::{PenNode, ScriptNode};
 use jian_ops_schema::sizing::SizingBehavior;
 
 macro_rules! base_ref {
     ($node:expr; $($variant:ident),+ $(,)?) => {
-        match $node { $(PenNode::$variant(node) => &node.base,)+ }
+        match $node {
+            $(PenNode::$variant(node) => &node.base,)+
+            PenNode::Script(node) => &node.frame.base,
+        }
     };
 }
 
 macro_rules! base_mut {
     ($node:expr; $($variant:ident),+ $(,)?) => {
-        match $node { $(PenNode::$variant(node) => &mut node.base,)+ }
+        match $node {
+            $(PenNode::$variant(node) => &mut node.base,)+
+            PenNode::Script(node) => &mut node.frame.base,
+        }
     };
 }
 
@@ -61,7 +67,9 @@ pub(crate) fn node_width_mut(node: &mut PenNode) -> Option<&mut Option<SizingBeh
 
 pub(crate) fn node_width(node: &PenNode) -> Option<&SizingBehavior> {
     match node {
-        PenNode::Frame(node) => node.container.width.as_ref(),
+        PenNode::Frame(node) | PenNode::Script(ScriptNode { frame: node, .. }) => {
+            node.container.width.as_ref()
+        }
         PenNode::Group(node) => node.container.width.as_ref(),
         PenNode::Rectangle(node) => node.container.width.as_ref(),
         PenNode::Ellipse(node) => node.width.as_ref(),
@@ -87,7 +95,9 @@ pub(crate) fn node_width(node: &PenNode) -> Option<&SizingBehavior> {
 
 pub(crate) fn node_height(node: &PenNode) -> Option<&SizingBehavior> {
     match node {
-        PenNode::Frame(node) => node.container.height.as_ref(),
+        PenNode::Frame(node) | PenNode::Script(ScriptNode { frame: node, .. }) => {
+            node.container.height.as_ref()
+        }
         PenNode::Group(node) => node.container.height.as_ref(),
         PenNode::Rectangle(node) => node.container.height.as_ref(),
         PenNode::Ellipse(node) => node.height.as_ref(),

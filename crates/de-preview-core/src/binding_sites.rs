@@ -6,7 +6,7 @@
 
 use jian_core::binding::{BindingTarget, InvalidationKind};
 use jian_core::expression::Expression as CompiledExpression;
-use jian_ops_schema::node::PenNode;
+use jian_ops_schema::node::{PenNode, ScriptNode};
 
 /// One compiled non-`bind:value` binding on a promoted-document node.
 /// Re-evaluated against the live state graph each overlay pass
@@ -26,7 +26,7 @@ pub(super) struct BindingSite {
 /// The node's authored `bindings` map, across all schema variants.
 fn node_bindings(node: &PenNode) -> Option<&jian_ops_schema::events::Bindings> {
     match node {
-        PenNode::Frame(n) => n.bindings.as_ref(),
+        PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => n.bindings.as_ref(),
         PenNode::Group(n) => n.bindings.as_ref(),
         PenNode::Rectangle(n) => n.bindings.as_ref(),
         PenNode::Ellipse(n) => n.bindings.as_ref(),

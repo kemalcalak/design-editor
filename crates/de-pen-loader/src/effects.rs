@@ -2,7 +2,7 @@
 //! `DocPayload` save format. Carved off `persistence.rs` to keep
 //! that file under the 800-line cap.
 
-use jian_ops_schema::node::PenNode;
+use jian_ops_schema::node::{PenNode, ScriptNode};
 use jian_ops_schema::style::PenEffect;
 use jian_scene::layout_scene::{DropShadow, Effect};
 use serde::{Deserialize, Serialize};
@@ -121,7 +121,9 @@ fn shadow_payload_to_effect(s: &ShadowPayload) -> Effect {
 /// none.
 pub(crate) fn canonical_node_effects(node: &PenNode) -> Option<&[PenEffect]> {
     match node {
-        PenNode::Frame(n) => n.container.effects.as_deref(),
+        PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => {
+            n.container.effects.as_deref()
+        }
         PenNode::Group(n) => n.container.effects.as_deref(),
         PenNode::Rectangle(n) => n.container.effects.as_deref(),
         PenNode::Ellipse(n) => n.effects.as_deref(),
