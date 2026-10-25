@@ -169,3 +169,23 @@ fn capture_preview_proof_pngs() {
         println!("{name}: {meta}");
     }
 }
+
+#[test]
+fn entry_node_id_opens_on_the_board_holding_that_node() {
+    let tool = tool();
+    // `go` sits on `home`; `detail` is its own board (#223).
+    let (_, meta) = image_and_meta(call(&tool, &[("entryNodeId", "detail")]));
+    assert_eq!(meta["screen"], "/detail");
+    assert_eq!(meta["nodeId"], "detail");
+    let (_, meta) = image_and_meta(call(&tool, &[("entryNodeId", "go")]));
+    assert_eq!(meta["screen"], "/");
+    assert_eq!(meta["nodeId"], "home");
+}
+
+#[test]
+fn an_unknown_entry_node_id_is_refused() {
+    assert!(matches!(
+        call(&tool(), &[("entryNodeId", "nope")]),
+        ToolOutcome::Err(ToolErrorCode::InvalidArgument, _)
+    ));
+}

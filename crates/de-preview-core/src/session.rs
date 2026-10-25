@@ -30,6 +30,7 @@ use crate::binding_overlay::BindingOverlay;
 use crate::binding_sites::{collect_binding_sites, BindingSite};
 use crate::error::PreviewEnterError;
 use crate::scene_helpers::format_warning;
+pub(crate) use crate::session_entry::ResetSeed;
 use crate::transition::ScreenTransition;
 
 /// One page-root's mapping between the design scene's coordinate space
@@ -45,19 +46,6 @@ pub(crate) struct RootFrame {
     /// The root's authored `(base.x, base.y)` — the delta between scene
     /// space and the runtime's root-relative space.
     pub(crate) offset: (f32, f32),
-}
-
-#[derive(Clone)]
-pub(crate) struct ResetSeed {
-    pub(crate) document: jian_ops_schema::PenDocument,
-    pub(crate) canvas_size: (f32, f32),
-    pub(crate) active_theme: std::collections::BTreeMap<String, String>,
-    pub(crate) active_page_index: usize,
-    pub(crate) preserve_authored_geometry: bool,
-    pub(crate) presenting: bool,
-    pub(crate) measure: Rc<dyn MeasureBackend>,
-    pub(crate) host_capabilities: de_preview_contracts::PreviewHostCapabilities,
-    pub(crate) host_motion_preference: jian_ops_schema::motion::MotionPreference,
 }
 
 /// A live preview runtime built from a snapshot of the editor document.
@@ -280,6 +268,7 @@ impl PreviewSession {
             canvas_size,
             active_theme,
             active_page_index,
+            None,
             preserve_authored_geometry,
             presenting,
             measure,
@@ -290,13 +279,16 @@ impl PreviewSession {
     }
 
     /// Preview entry with the host's reduced-motion preference known before
-    /// lifecycle animations are admitted.
+    /// lifecycle animations are admitted. `entry_root_id` is the top-level
+    /// board to open on (#223): the entry screen when it is routed, the
+    /// framed root otherwise; `None` keeps the authored entry.
     #[allow(clippy::too_many_arguments)]
     pub fn enter_with_host_motion_preference(
         doc: &jian_ops_schema::PenDocument,
         canvas_size: (f32, f32),
         active_theme: &std::collections::BTreeMap<String, String>,
         active_page_index: usize,
+        entry_root_id: Option<&str>,
         preserve_authored_geometry: bool,
         presenting: bool,
         measure: Rc<dyn MeasureBackend>,
@@ -309,6 +301,7 @@ impl PreviewSession {
             canvas_size,
             active_theme: active_theme.clone(),
             active_page_index,
+            entry_root_id: entry_root_id.map(str::to_owned),
             preserve_authored_geometry,
             presenting,
             measure: measure.clone(),
@@ -318,18 +311,16 @@ impl PreviewSession {
         let debug = crate::debug_trace::PreviewDebugState::default();
         let _ = canvas_size; // layout is root-derived, not canvas-derived.
 
-        // Track C-1: if the document has no authored `screen` marker at
-        // all, auto-wire a preview-only clone with Track A's deterministic
-        // screen/nav pass before anything else runs, so a hand-drawn or
-        // pre-Track-A multi-screen document still enters App Mode. `doc`
-        // is a local binding for the rest of `enter` — it either points at
-        // the caller's document (untouched) or at `auto_wired` (owned
-        // here); either way the CALLER's document is never mutated. See
-        // `auto_wire`'s module doc for the "any marker → skip entirely"
-        // rationale.
+        // Track C-1 / #223: auto-wire a preview-only clone (routes for the
+        // entry board's site, header / footer / tab links) before anything
+        // else runs, so a hand-drawn or imported multi-screen document
+        // still enters App Mode. `doc` is a local binding for the rest of
+        // `enter` — it either points at the caller's document (untouched)
+        // or at `auto_wired` (owned here); either way the CALLER's document
+        // is never mutated. See `auto_wire`'s module doc.
         #[cfg(feature = "gl-host")]
         let auto_wired = (!presenting)
-            .then(|| crate::auto_wire::auto_wire_for_preview(doc, active_page_index))
+            .then(|| crate::auto_wire::auto_wire_for_preview(doc, active_page_index, entry_root_id))
             .flatten();
         // Mobile: the orchestrator-backed pass is not linked; authored
         // `screen` markers still drive App Mode.
@@ -375,7 +366,10 @@ impl PreviewSession {
         if !presenting {
             let (projected, ws) = jian_ops_schema::screen_projection::project_screens(&prepared);
             projection_warnings.extend(ws.iter().map(|w| format!("preview: {w}")));
-            if let Some((normalized, _variants)) = projected {
+            if let Some((mut normalized, _variants)) = projected {
+                if let Some(entry) = entry_root_id {
+                    crate::session_entry::reroot_projection(&mut normalized, entry);
+                }
                 prepared = std::borrow::Cow::Owned(normalized);
                 app_projected = true;
             }

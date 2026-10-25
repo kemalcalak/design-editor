@@ -12,19 +12,29 @@
 //! the classic single-page workbench view even though the doc plainly has
 //! several screen-shaped top-level frames.
 //!
-//! [`auto_wire_for_preview`] closes that gap AT PREVIEW-ENTRY TIME: if the
-//! document carries NO authored `screen` marker at all (on the page
-//! `enter` is about to preview), it runs the SAME deterministic pass over
-//! an `EditorState` built from a clone of the document and hands the
+//! [`auto_wire_for_preview`] closes that gap AT PREVIEW-ENTRY TIME: it
+//! wires an `EditorState` built from a clone of the document and hands the
 //! result back. `enter` then builds the runtime from that wired clone
 //! instead of the original — the caller-visible (saved) document is never
 //! touched, matching `enter`'s existing "never mutates the saved doc"
 //! invariant (see the module doc on `preview/mod.rs`).
 //!
-//! After that shared pass it runs one preview-only pass generation never
-//! runs: `wire_web_nav_links` (#153), which binds website header / footer
-//! links to their pages and to same-page sections. The same "any authored
-//! marker → skip" gate below covers both passes.
+//! The editor hosts name the board Preview opens on; then the entry's site
+//! is routed and its links bound ("Entering on a board" below). Without a
+//! board (MCP capture without `entryNodeId`) the older rule holds: when the
+//! page carries no authored `screen` marker, the generation pass and the
+//! website link pass (`wire_web_nav_links`, #153) run on the clone.
+//!
+//! ## Entering on a board (#223)
+//!
+//! The editor hosts always name the board Preview opens on. Then the
+//! routed boards are that board's site (`de_editor_core::
+//! preview_screen_set`), component instances are expanded before wiring
+//! so a shared header's links bind on every page, and the pass fills gaps
+//! around authored markers instead of stepping aside: the panel's "Mark
+//! as screen" / "Set as start screen" controls write single markers, and
+//! one marker must not switch every other page off. The rule below is
+//! kept for entries without a board (MCP capture without `entryNodeId`).
 //!
 //! ## Why "any authored marker → skip entirely", not Track A's own
 //! "fill only the gaps" rule
@@ -56,7 +66,9 @@
 //! `de-pen-loader` in `Cargo.toml`.
 
 use de_editor_core::{EditorCommand, EditorState, NodeId};
-use de_orchestrator::wire_screen_navigation::{wire_screen_navigation, wire_web_nav_links};
+use de_orchestrator::wire_screen_navigation::{
+    wire_preview_screens, wire_screen_navigation, wire_web_nav_links,
+};
 use de_orchestrator::DocSink;
 use jian_ops_schema::node::PenNode;
 use jian_ops_schema::PenDocument;
@@ -98,16 +110,41 @@ fn has_authored_screen_marker(state: &EditorState) -> bool {
         .any(|node| matches!(node, PenNode::Frame(f) if f.screen.is_some()))
 }
 
-/// If `doc` carries no authored `screen` marker on `active_page_index`,
-/// run Track A's deterministic screen/nav wiring pass over an `EditorState`
-/// CLONE and return the wired document; otherwise `None` — the caller
-/// keeps using the original `doc` unmodified (zero cost, zero risk of
-/// layering preview-only bindings atop an author's in-progress App Mode
-/// work). Never mutates `doc` itself.
+/// The preview-only wired copy of `doc`, or `None` to preview `doc` as is.
+/// Never mutates `doc` itself.
+///
+/// With an entry board (#223) the boards Preview browses are that board
+/// and the boards of its kind (`de_editor_core::preview_screen_set`): the
+/// pass expands component instances first, so links inside a shared
+/// header instance can be bound per page, then routes those boards and
+/// binds their navigation (`wire_preview_screens`). Authored markers and
+/// events are kept and gaps around them are filled.
+///
+/// Without one, it keeps the older rule: when no top-level frame on
+/// `active_page_index` carries an authored `screen` marker, Track A's
+/// shape-based pass and the website link pass run on the clone;
+/// otherwise `None`.
 pub(super) fn auto_wire_for_preview(
     doc: &PenDocument,
     active_page_index: usize,
+    entry_root_id: Option<&str>,
 ) -> Option<PenDocument> {
+    if let Some(entry) = entry_root_id {
+        let roots = de_editor_core::preview_screen_set::page_roots(doc, active_page_index);
+        let screens = de_editor_core::preview_screen_set::preview_screen_set(roots, entry);
+        if screens.is_empty() {
+            return None;
+        }
+        let expanded = if de_editor_core::ref_resolve::document_has_refs(doc) {
+            de_editor_core::ref_resolve::resolve_refs_for_canvas(doc)
+        } else {
+            doc.clone()
+        };
+        let mut state = EditorState::from_document(expanded);
+        state.ui.active_page_index = active_page_index;
+        wire_preview_screens(&mut PreviewDocSink { state: &mut state }, &screens);
+        return Some(state.doc);
+    }
     let mut state = EditorState::from_document(doc.clone());
     state.ui.active_page_index = active_page_index;
     if has_authored_screen_marker(&state) {

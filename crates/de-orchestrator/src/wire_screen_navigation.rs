@@ -55,9 +55,9 @@ use crate::types::DocSink;
 
 /// "Screen-shaped" top-level frame width bands: phone/narrow-tablet portrait
 /// widths, or desktop-and-up. Chosen to gate OUT ordinary section widths
-/// (e.g. a 600-900px card row) that are not standalone app screens.
-const MOBILE_SCREEN_WIDTH: std::ops::RangeInclusive<f64> = 320.0..=480.0;
-const DESKTOP_SCREEN_MIN_WIDTH: f64 = 1024.0;
+/// (e.g. a 600-900px card row) that are not standalone app screens. They
+/// live in core so Preview's entry and site choice (#223) use the same.
+use de_editor_core::preview_screen_set::{DESKTOP_SCREEN_MIN_WIDTH, MOBILE_SCREEN_WIDTH};
 
 /// Compatibility band for shared-nav's shipped detail-page exemption.
 /// Interaction backfill uses its own stricter geometry fact.
@@ -144,6 +144,9 @@ pub(crate) use screen_route_inventory::{
 #[path = "wire_web_nav_links.rs"]
 mod wire_web_nav_links;
 pub use wire_web_nav_links::wire_web_nav_links;
+#[path = "wire_preview_screens.rs"]
+mod wire_preview_screens;
+pub use wire_preview_screens::wire_preview_screens;
 
 /// Scan the active page's top-level `Frame` children for screen-shaped
 /// candidates (numeric width AND height, width in a mobile or desktop band).
@@ -520,58 +523,9 @@ pub(crate) fn first_text_content(node: &PenNode) -> Option<&str> {
     node.children()?.iter().find_map(first_text_content)
 }
 
-/// `pub(crate)` for the `navIssues` echo scan — see [`collect_nav_containers`].
-/// NOT `is_ascii_alphanumeric`: that dropped every CJK codepoint, so a
-/// Chinese app normalized every label and screen name to the EMPTY string and
-/// `labels_match` refused them all. The whole tab-navigation layer therefore
-/// no-opped on such documents — measured on `0808-k3-2.de`, a two-screen
-/// Chinese star-gazing app whose screen ROUTES were written (that path never
-/// looks at labels) while not one tab received an `onTap` action.
-pub(crate) fn normalize_label(s: &str) -> String {
-    s.chars()
-        .filter(|c| c.is_alphanumeric())
-        .flat_map(|c| c.to_lowercase())
-        .collect()
-}
-
-/// Split a label/screen name on the separators an authored app commonly
-/// uses for a brand prefix, a hyphenated subtitle, or a breadcrumb (space,
-/// em dash, en dash, hyphen, colon, middle dot, pipe) into normalized,
-/// non-empty word tokens. "Wander — Trips" → `["wander", "trips"]`.
-fn label_tokens(s: &str) -> Vec<String> {
-    s.split([' ', '—', '–', '-', ':', '·', '|'])
-        .map(normalize_label)
-        .filter(|t| !t.is_empty())
-        .collect()
-}
-
-/// Match iff the fully-normalized forms are equal or one is a prefix of the
-/// other (covers "Profile" vs "Profile Screen" → "profile" /
-/// "profilescreen") — OR, failing that, the two labels share a whole word
-/// TOKEN once split on the usual separators (covers a brand-prefixed screen
-/// name, "Wander — Trips", matching a bare tab label "Trips": neither
-/// normalized form is a prefix of the other — "trips" vs "wandertrips" —
-/// but "trips" is a token of both). Token matching compares WHOLE tokens
-/// only, never a bare substring — "Roadtrips" tokenizes to `["roadtrips"]`,
-/// which never equals the "trips" token, so it correctly stays unmatched.
-/// Ambiguous (neither) never binds — a wrong navigate is worse than a dead
-/// tap. Takes RAW (un-normalized) label/name text — both checks normalize
-/// internally, so every caller passes its text straight through instead of
-/// pre-normalizing (pre-normalizing would destroy the word boundaries the
-/// token check needs). `pub(crate)` for the `navIssues` echo scan — see
-/// [`collect_nav_containers`].
-pub(crate) fn labels_match(a: &str, b: &str) -> bool {
-    let (na, nb) = (normalize_label(a), normalize_label(b));
-    if na.is_empty() || nb.is_empty() {
-        return false;
-    }
-    if na == nb || na.starts_with(&nb) || nb.starts_with(&na) {
-        return true;
-    }
-    let ta = label_tokens(a);
-    let tb = label_tokens(b);
-    ta.iter().any(|t| tb.contains(t))
-}
+// Label matching lives in `crate::label_match` (#223); re-exported here so
+// the passes that import it from this module keep their paths.
+pub(crate) use crate::label_match::labels_match;
 
 // ── Shared-nav legacy detail signal ──────────────────────────────────────
 

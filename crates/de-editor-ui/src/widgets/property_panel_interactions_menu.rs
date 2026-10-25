@@ -13,6 +13,7 @@ use crate::widgets::property_panel_interactions::{
 use crate::widgets::PaintCx;
 use crate::{Point2D, Rect, TextLayout};
 use de_editor_core::motion_edit::MotionProperty;
+use de_editor_core::screen_marker_edit::ScreenMarkerEdit;
 use de_editor_core::transition_edit::MotionEasing;
 
 pub const INTERACTION_MENU_ROW_H: f32 = 30.0;
@@ -39,7 +40,8 @@ fn trigger_label(locale: de_editor_core::Locale, trigger: InteractionTrigger) ->
 
 /// Popover rows for `target`, in paint order.
 /// - `AddTrigger`: the triggers not authored yet, "Animation", then
-///   "Transition" while the node has none.
+///   "Transition" while the node has none, then "Mark as screen" on an
+///   unmarked top-level frame (#223).
 /// - `Trigger(t)`: one "Navigate to <path>" row per screen on the page,
 ///   one "Scroll to <section>" row per section, "Open URL", "Back
 ///   (pop)", then — when `t` has an action — "Change to <trigger>" per
@@ -73,6 +75,12 @@ pub fn interaction_menu_rows(
                 rows.push((
                     PropertyPanelAction::AddTransition,
                     translate(locale, "interactions.transition", "Transition").to_string(),
+                ));
+            }
+            if summary.can_be_screen && summary.screen.is_none() {
+                rows.push((
+                    PropertyPanelAction::EditScreenMarker(ScreenMarkerEdit::Mark),
+                    translate(locale, "interactions.markScreen", "Mark as screen").to_string(),
                 ));
             }
             rows

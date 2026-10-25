@@ -376,6 +376,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "browser.status.noBrowser" => "未找到 Chrome",
         "browser.status.failed" => "无法加载",
         "browser.status.blocked" => "不允许此地址",
+        "interactions.markScreen" => "标记为屏幕",
+        "interactions.setStartScreen" => "设为起始屏幕",
+        "interactions.removeScreen" => "移除屏幕",
         _ => return None,
     })
 }

@@ -302,6 +302,7 @@ impl PreviewMotionState {
         &self,
         runtime: &jian_core::Runtime,
         scene: &LayoutScene,
+        entry_root_id: Option<&str>,
         animation: &PreviewAnimationState,
         effective: MotionPreference,
         now_ms: u64,
@@ -312,7 +313,8 @@ impl PreviewMotionState {
         let Some(page) = scene.active_page() else {
             return;
         };
-        let Some(viewport) = page.children.first().map(|node| node.bounds) else {
+        let framed = crate::present::framed_scene_root(page, entry_root_id);
+        let Some(viewport) = framed.map(|node| node.bounds) else {
             return;
         };
         let declarations = node_declarations(runtime, false);
@@ -588,6 +590,7 @@ impl crate::session::PreviewSession {
         self.motion.observe_in_view(
             &self.runtime,
             scene,
+            self.reset_seed.entry_root_id.as_deref(),
             &self.animation,
             effective,
             self.last_now_ms,

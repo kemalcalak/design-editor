@@ -293,16 +293,62 @@ fn every_trigger_authored_keeps_the_header_add_for_animations() {
 }
 
 #[test]
-fn screen_row_adds_height_but_no_click_rect() {
-    let with_screen = InteractionSummary {
-        screen: Some("/home".to_string()),
+fn a_marked_screen_shows_its_route_and_marker_buttons() {
+    let marked = |path: &str| InteractionSummary {
+        screen: Some(path.to_string()),
+        can_be_screen: true,
         ..InteractionSummary::default()
     };
-    let without_screen = InteractionSummary::default();
-    assert!(
-        interactions_section_height(&with_screen) > interactions_section_height(&without_screen)
+    let unmarked = InteractionSummary {
+        can_be_screen: true,
+        ..InteractionSummary::default()
+    };
+    // Unmarked: no row (Mark as screen is in the "+" menu).
+    assert_eq!(
+        interactions_section_height(&unmarked),
+        interactions_section_height(&InteractionSummary::default())
     );
-    assert_eq!(interaction_rects(&with_screen).len(), 1);
+    let edits = |summary: &InteractionSummary| -> Vec<ScreenMarkerEdit> {
+        interaction_rects(summary)
+            .into_iter()
+            .filter_map(|(action, _)| match action {
+                PropertyPanelAction::EditScreenMarker(edit) => Some(edit),
+                _ => None,
+            })
+            .collect()
+    };
+    assert_eq!(
+        edits(&marked("/home")),
+        [ScreenMarkerEdit::Start, ScreenMarkerEdit::Remove]
+    );
+    assert_eq!(edits(&marked("/")), [ScreenMarkerEdit::Remove]);
+    assert!(interactions_section_height(&marked("/home")) > interactions_section_height(&unmarked));
+}
+
+#[test]
+fn the_add_menu_offers_mark_as_screen_on_an_unmarked_top_level_frame() {
+    use crate::widgets::property_panel_interactions_menu::interaction_menu_rows;
+    let mark = PropertyPanelAction::EditScreenMarker(ScreenMarkerEdit::Mark);
+    let offers = |summary: &InteractionSummary| {
+        interaction_menu_rows(
+            de_editor_core::Locale::EnUs,
+            InteractionMenuTarget::AddTrigger,
+            &[],
+            summary,
+        )
+        .iter()
+        .any(|(action, _)| *action == mark)
+    };
+    let top_level = InteractionSummary {
+        can_be_screen: true,
+        ..InteractionSummary::default()
+    };
+    assert!(offers(&top_level));
+    assert!(!offers(&InteractionSummary::default()));
+    assert!(!offers(&InteractionSummary {
+        screen: Some("/".into()),
+        ..top_level
+    }));
 }
 
 #[test]

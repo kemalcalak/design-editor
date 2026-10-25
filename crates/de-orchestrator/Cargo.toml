@@ -27,6 +27,8 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 futures = "0.3"
 regex = "1"
+# Canonical decomposition for diacritic-insensitive nav label matching (#223).
+unicode-normalization = "0.1"
 tracing = { workspace = true }
 tokio = { version = "1", features = ["sync", "rt", "macros"] }
 

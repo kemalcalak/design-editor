@@ -376,6 +376,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "browser.status.noBrowser" => "Chrome introuvable",
         "browser.status.failed" => "Échec du chargement",
         "browser.status.blocked" => "Adresse non autorisée",
+        "interactions.markScreen" => "Marquer comme écran",
+        "interactions.setStartScreen" => "Définir comme écran de départ",
+        "interactions.removeScreen" => "Retirer l’écran",
         _ => return None,
     })
 }

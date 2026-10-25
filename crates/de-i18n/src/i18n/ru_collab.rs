@@ -376,6 +376,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "browser.status.noBrowser" => "Chrome не найден",
         "browser.status.failed" => "Не удалось загрузить",
         "browser.status.blocked" => "Адрес не разрешён",
+        "interactions.markScreen" => "Отметить как экран",
+        "interactions.setStartScreen" => "Сделать стартовым экраном",
+        "interactions.removeScreen" => "Убрать экран",
         _ => return None,
     })
 }

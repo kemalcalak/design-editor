@@ -376,6 +376,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "browser.status.noBrowser" => "ไม่พบ Chrome",
         "browser.status.failed" => "โหลดไม่สำเร็จ",
         "browser.status.blocked" => "ไม่อนุญาตที่อยู่นี้",
+        "interactions.markScreen" => "ทำเครื่องหมายเป็นหน้าจอ",
+        "interactions.setStartScreen" => "ตั้งเป็นหน้าจอเริ่มต้น",
+        "interactions.removeScreen" => "นำหน้าจอออก",
         _ => return None,
     })
 }

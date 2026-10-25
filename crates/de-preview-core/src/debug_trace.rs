@@ -587,6 +587,7 @@ impl crate::session::PreviewSession {
             seed.canvas_size,
             &seed.active_theme,
             seed.active_page_index,
+            seed.entry_root_id.as_deref(),
             seed.preserve_authored_geometry,
             seed.presenting,
             seed.measure,

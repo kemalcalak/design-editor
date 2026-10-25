@@ -14,6 +14,7 @@
 pub(crate) fn auto_wire_for_preview(
     _doc: &jian_ops_schema::PenDocument,
     _active_page_index: usize,
+    _entry_root_id: Option<&str>,
 ) -> Option<jian_ops_schema::PenDocument> {
     None
 }

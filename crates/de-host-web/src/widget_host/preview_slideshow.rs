@@ -185,11 +185,17 @@ impl WidgetHost {
         let (_canvas_left, _canvas_y, canvas_w, canvas_h) =
             self.canvas_region(viewport_w, viewport_h);
         let canvas_size = (canvas_w, canvas_h);
+        // Open on the board holding the selection (#223).
+        let entry = de_editor_core::preview_screen_set::preview_entry_root(
+            self.editor_state.active_children(),
+            Some(self.editor_state.selection.anchor.as_str()),
+        );
         match crate::preview_host::enter_preview(
             &self.editor_state.doc,
             canvas_size,
             &self.editor_state.ui.variables.active_theme,
             self.editor_state.ui.active_page_index,
+            entry.as_deref(),
             op_ck,
             de_editor_core::preview_slideshow::slideshow_for_document(&self.editor_state).is_some(),
             self.now_ms,

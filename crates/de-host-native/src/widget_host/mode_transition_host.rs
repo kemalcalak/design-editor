@@ -46,11 +46,17 @@ impl WidgetHostNative {
     /// destination device-frame rect, so this can't be reordered.
     pub fn enter_preview(&mut self, canvas_size: (f32, f32)) -> bool {
         self.enter_preview_with_builder(canvas_size, |state, presenting, now_ms| {
+            // Open on the board holding the selection (#223).
+            let entry = de_editor_core::preview_screen_set::preview_entry_root(
+                state.active_children(),
+                Some(state.selection.anchor.as_str()),
+            );
             crate::preview::PreviewSession::enter_with_host_motion_preference(
                 &state.doc,
                 canvas_size,
                 &state.ui.variables.active_theme,
                 state.ui.active_page_index,
+                entry.as_deref(),
                 state.editor_ui.preserve_authored_geometry,
                 presenting,
                 // The canvas layout's measure, so preview text wraps alike.

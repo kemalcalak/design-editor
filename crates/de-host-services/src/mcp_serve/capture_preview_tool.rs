@@ -64,11 +64,33 @@ impl CapturePreview {
             .map(|ms| ms.round() as u64)
             .unwrap_or(0);
 
+        // `entryNodeId`: the board holding that node, as the editor opens on
+        // its selection; an id on no board of the page is refused.
+        let entry = match args
+            .get("entryNodeId")
+            .map(|s| s.trim())
+            .filter(|s| !s.is_empty())
+        {
+            Some(id) => Some(
+                de_editor_core::preview_screen_set::top_level_board(
+                    de_editor_core::preview_screen_set::page_roots(&self.document, page_index),
+                    id,
+                )
+                .ok_or_else(|| {
+                    (
+                        ToolErrorCode::InvalidArgument,
+                        format!("entryNodeId {id} is on no board of the page"),
+                    )
+                })?,
+            ),
+            None => None,
+        };
         let mut session = PreviewSession::enter_with_host_motion_preference(
             &self.document,
             CANVAS_SIZE,
             &self.active_theme,
             page_index,
+            entry.as_deref(),
             self.preserve_authored_geometry,
             false,
             // The layout measure the editor canvas and native Preview use, so
@@ -94,16 +116,12 @@ impl CapturePreview {
             .filter(|s| !s.is_empty())
         {
             Some(id) => id.to_string(),
-            None => page
-                .children
-                .first()
-                .map(|node| node.id.clone())
-                .ok_or_else(|| {
-                    (
-                        ToolErrorCode::ToolFailed,
-                        "preview shows nothing".to_string(),
-                    )
-                })?,
+            None => session.framed_root().map(|(id, _)| id).ok_or_else(|| {
+                (
+                    ToolErrorCode::ToolFailed,
+                    "preview shows nothing".to_string(),
+                )
+            })?,
         };
         let bytes = crate::export::with_capture_time_ms(clock_ms as f64, || {
             render_node_on_page_raster_bytes(page, &node_id, RasterFormat::Png, 1.0)

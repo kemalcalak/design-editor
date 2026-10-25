@@ -24,6 +24,7 @@ use de_preview_core::PreviewSession;
 /// * `canvas_size` — The logical (CSS) viewport dimensions
 /// * `active_theme` — The current design token override map
 /// * `active_page_index` — The active page's index in the document
+/// * `entry_root_id` — The top-level board to open on (the selection's board)
 /// * `op_ck` — The CanvasKit bridge object from the design canvas rendering path
 /// * `presenting` — Whether preview is in presentation mode (app-mode routed)
 ///
@@ -36,11 +37,14 @@ use de_preview_core::PreviewSession;
 /// # Panics
 ///
 /// This function does not panic — all errors are returned as `PreviewEnterError`.
+// Mirrors `PreviewSession::enter_with_host_motion_preference`'s parameters.
+#[allow(clippy::too_many_arguments)]
 pub fn enter_preview(
     doc: &jian_ops_schema::PenDocument,
     canvas_size: (f32, f32),
     active_theme: &std::collections::BTreeMap<String, String>,
     active_page_index: usize,
+    entry_root_id: Option<&str>,
     op_ck: &crate::canvaskit::OpCk,
     presenting: bool,
     now_ms: u64,
@@ -57,6 +61,7 @@ pub fn enter_preview(
         canvas_size,
         active_theme,
         active_page_index,
+        entry_root_id,
         false, // preserve_authored_geometry: web preview does not preserve hand-drawn bounds
         presenting,
         measure_backend,

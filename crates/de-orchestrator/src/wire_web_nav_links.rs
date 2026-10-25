@@ -12,21 +12,22 @@
 //!    outside the header / footer) → `scroll_to` that section.
 //!
 //! Preview entry is the only caller (`de_preview_core::auto_wire`, on a
-//! clone, and only when no `screen` marker is authored), so generation
-//! output is unchanged. Like the parent pass it is additive only (an item
+//! clone; through `wire_preview_screens` for the boards Preview browses),
+//! so generation output is unchanged. Like the parent pass it is additive only (an item
 //! whose subtree already carries `events` is skipped), matches labels
-//! through [`labels_match`] and adds no schema fields. Unlike it, an
+//! through `crate::label_match` and adds no schema fields. Unlike it, an
 //! ambiguous label binds nothing: a wrong website link is worse than a
 //! dead one.
 //!
-//! Surfaces are found only near the page's top (a direct child of the
+//! Surfaces are found only at the page's top level (a direct child of the
 //! page, or of an unnamed wrapper directly under it), so a "Card Header"
 //! deep inside a section never turns its title into a link.
 
 use de_editor_core::PenNodeExt;
+use jian_ops_schema::node::container::LayoutMode;
 use jian_ops_schema::node::{PenNode, TextContent};
 
-use super::{apply_on_tap, identity_haystack, labels_match, normalize_label, subtree_has_events};
+use super::{apply_on_tap, identity_haystack, subtree_has_events};
 use crate::types::DocSink;
 use de_editor_core::interaction_edit::{navigate_action, scroll_to_action, NavigateVerb};
 use jian_ops_schema::events::Action;
@@ -51,6 +52,14 @@ const SURFACE_PAIRS: [(&str, &str); 4] = [
     ("menu", "bar"),
 ];
 
+/// The tallest first child that still reads as a header band.
+const HEADER_MAX_HEIGHT: f64 = 200.0;
+/// The tallest last child that still reads as a footer band.
+const FOOTER_MAX_HEIGHT: f64 = 480.0;
+/// The longest text a link band holds, in characters: link labels are
+/// short; a heading or a paragraph marks a content section instead.
+const LINK_TEXT_MAX_CHARS: usize = 40;
+
 /// A link target: what its label is matched against, the patch value
 /// (a route path for a page, a node id for a section), and its depth
 /// under the page (sections only; shallower wins a tie).
@@ -62,10 +71,24 @@ struct Target {
 
 /// Bind header / footer link items to their pages or sections.
 pub fn wire_web_nav_links(sink: &mut dyn DocSink) {
+    let ids: Vec<String> = sink
+        .state()
+        .active_children()
+        .iter()
+        .map(|node| node.id_str().to_owned())
+        .collect();
+    wire_web_nav_links_on(sink, &ids);
+}
+
+/// [`wire_web_nav_links`] for the top-level frames `page_ids` only, as the
+/// pages links are bound on and as the pages they may lead to: the boards
+/// Preview browses (#223).
+pub(crate) fn wire_web_nav_links_on(sink: &mut dyn DocSink, page_ids: &[String]) {
     let patches = {
         let roots = sink.state().active_children();
         let pages: Vec<Target> = roots
             .iter()
+            .filter(|node| page_ids.iter().any(|id| id == node.id_str()))
             .filter_map(|node| match node {
                 PenNode::Frame(frame) => frame.screen.as_ref().map(|path| Target {
                     name: display_name(node),
@@ -76,17 +99,18 @@ pub fn wire_web_nav_links(sink: &mut dyn DocSink) {
             })
             .collect();
         let mut patches = Vec::new();
-        for root in roots
-            .iter()
-            .filter(|node| matches!(node, PenNode::Frame(_)))
-        {
+        for root in roots.iter().filter(|node| {
+            matches!(node, PenNode::Frame(_)) && page_ids.iter().any(|id| id == node.id_str())
+        }) {
             let surfaces = collect_surfaces(root);
             if surfaces.is_empty() {
                 continue;
             }
             let mut sections = Vec::new();
             for child in root.children().into_iter().flatten() {
-                collect_sections(child, 1, &mut sections);
+                if !surfaces.iter().any(|surface| std::ptr::eq(*surface, child)) {
+                    collect_sections(child, 1, &mut sections);
+                }
             }
             for surface in surfaces {
                 let mut items = Vec::new();
@@ -108,38 +132,28 @@ pub fn wire_web_nav_links(sink: &mut dyn DocSink) {
     }
 }
 
-/// The `onTap` action for a link labelled `label`: a page match wins
-/// over a section match; see [`single_match`] for ties.
+/// The `onTap` action for a link labelled `label`: the target named most
+/// strongly (`crate::label_match`, any language); among equally strong
+/// ones a page beats a section and a shallower section a deeper one (a
+/// "Pricing" section beats its own "Pricing Card"). A tie that survives
+/// binds nothing: a wrong website link is worse than a dead one.
 fn link_patch(label: &str, pages: &[Target], sections: &[Target]) -> Option<Action> {
-    if let Some(path) = single_match(label, pages) {
-        return Some(navigate_action(NavigateVerb::Replace, path));
+    enum Link<'a> {
+        Page(&'a str),
+        Section(&'a str),
     }
-    let target = single_match(label, sections)?;
-    Some(scroll_to_action(target))
-}
-
-/// The value of the one target `label` names. Exact (normalized) name
-/// matches win over [`labels_match`]'s prefix / word matches, then the
-/// shallowest wins, so a "Pricing" section beats its own "Pricing Card".
-/// A tie that survives both binds nothing.
-fn single_match<'a>(label: &str, targets: &'a [Target]) -> Option<&'a str> {
-    let wanted = normalize_label(label);
-    let exact: Vec<&Target> = targets
+    let targets = pages
         .iter()
-        .filter(|t| !wanted.is_empty() && normalize_label(&t.name) == wanted)
-        .collect();
-    let matched = if exact.is_empty() {
-        targets
-            .iter()
-            .filter(|t| labels_match(label, &t.name))
-            .collect()
-    } else {
-        exact
-    };
-    let shallowest = matched.iter().map(|t| t.depth).min()?;
-    let mut best = matched.into_iter().filter(|t| t.depth == shallowest);
-    let first = best.next()?;
-    best.next().is_none().then_some(first.value.as_str())
+        .map(|t| (t.name.as_str(), 0, Link::Page(&t.value)))
+        .chain(
+            sections
+                .iter()
+                .map(|t| (t.name.as_str(), 1 + t.depth, Link::Section(&t.value))),
+        );
+    Some(match crate::label_match::best_match(label, targets)? {
+        Link::Page(path) => navigate_action(NavigateVerb::Replace, path),
+        Link::Section(id) => scroll_to_action(id),
+    })
 }
 
 fn display_name(node: &PenNode) -> String {
@@ -172,10 +186,28 @@ fn is_surface(node: &PenNode) -> bool {
 
 /// The page's surfaces: direct children of `root` that are one, and the
 /// ones directly inside an unnamed wrapper child (a page's layout column).
+/// Besides names and roles, the page's structure marks them in any
+/// language (#223): its first child holding only short texts, at most
+/// `HEADER_MAX_HEIGHT` tall or, without an authored height, laid out as a
+/// row (a header); and its last child holding only short texts, at most
+/// `FOOTER_MAX_HEIGHT` tall when its height is authored (a footer). A
+/// heading or paragraph marks a page column, hero or content section.
 fn collect_surfaces(root: &PenNode) -> Vec<&PenNode> {
     let mut out = Vec::new();
-    for child in root.children().into_iter().flatten() {
-        if is_surface(child) {
+    let children: Vec<&PenNode> = root.children().into_iter().flatten().collect();
+    let last = children.len().saturating_sub(1);
+    for (index, &child) in children.iter().enumerate() {
+        let header_band = index == 0
+            && match child.height_px() {
+                Some(height) => height <= HEADER_MAX_HEIGHT,
+                None => is_row(child),
+            }
+            && is_link_band(child);
+        let footer_band = index == last
+            && index > 0
+            && child.height_px().is_none_or(|h| h <= FOOTER_MAX_HEIGHT)
+            && is_link_band(child);
+        if header_band || footer_band || is_surface(child) {
             out.push(child);
         } else if child.base().name.is_none() {
             out.extend(
@@ -240,6 +272,35 @@ fn collect_items<'a>(
         collect_items(child, stack, out);
     }
     stack.pop();
+}
+
+fn is_row(node: &PenNode) -> bool {
+    matches!(
+        node,
+        PenNode::Frame(frame) if frame.container.layout == Some(LayoutMode::Horizontal)
+    )
+}
+
+/// Several texts, all of them short: a row of links, not content.
+fn is_link_band(node: &PenNode) -> bool {
+    let mut texts = Vec::new();
+    collect_plain_texts(node, &mut texts);
+    texts.len() >= 2
+        && texts
+            .iter()
+            .all(|text| text.trim().chars().count() <= LINK_TEXT_MAX_CHARS)
+}
+
+fn collect_plain_texts<'a>(node: &'a PenNode, out: &mut Vec<&'a str>) {
+    if let PenNode::Text(text) = node {
+        if let TextContent::Plain(label) = &text.content {
+            out.push(label.as_str());
+        }
+        return;
+    }
+    for child in node.children().into_iter().flatten() {
+        collect_plain_texts(child, out);
+    }
 }
 
 fn text_count(node: &PenNode) -> usize {
