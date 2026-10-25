@@ -31,13 +31,13 @@ fn settings_payload_restores_locale_but_never_theme() {
     // would let a blob reload flip the screen. The field is still
     // written for older builds — see `partition_tests` — and is still readable
     // as the one-time migration source through `payload_theme_of`.
-    let payload = r#"{"version":1,"theme":"light","locale":"en-US"}"#;
+    let payload = r#"{"version":1,"theme":"light","locale":"ja"}"#;
     let mut state = EditorState::new();
     let before_theme = state.editor_ui.theme_mode;
 
     apply_json(&mut state, payload).expect("settings payload should parse");
 
-    assert_eq!(state.editor_ui.locale, Locale::EnUs);
+    assert_eq!(state.editor_ui.locale, Locale::Ja);
     assert_eq!(state.editor_ui.theme_mode, before_theme);
     assert_eq!(payload_theme_of(Some(payload)), Some(ThemeMode::Light));
 }
