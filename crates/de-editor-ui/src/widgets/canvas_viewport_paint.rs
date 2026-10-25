@@ -44,6 +44,7 @@ use mask::paint_child_siblings;
 
 #[path = "canvas_viewport_layer_bounds.rs"]
 mod layer_bounds;
+pub(super) use layer_bounds::{begin_subtree_bounds_memo, end_subtree_bounds_memo};
 use layer_bounds::{
     node_composite_layer_bounds, sibling_mask_layer_bounds, subtree_intersects_cull,
 };
