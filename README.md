@@ -15,6 +15,10 @@
 </div>
 
 <p align="center">
+  <img src="assets/readme/agent-builds-live.gif" alt="Claude Code building a landing page on the canvas over MCP" width="900" />
+</p>
+
+<p align="center">
   <img src="assets/readme/home.png" alt="Home" width="900" />
 </p>
 
