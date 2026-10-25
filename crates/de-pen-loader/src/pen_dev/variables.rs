@@ -76,6 +76,40 @@ const TEXT_KEYS: &[&str] = &[
     "height",
 ];
 
+/// Top-level node keys whose resolved references stay bound to their
+/// variable through `variableBindings` (the canonical field keeps the value
+/// as its fallback). References inside paints and effects are not: their
+/// position in the canonical paint list is not stable.
+const BINDABLE_KEYS: &[&str] = &[
+    "x",
+    "y",
+    "width",
+    "height",
+    "rotation",
+    "opacity",
+    "enabled",
+    "fontSize",
+    "fontFamily",
+    "fontWeight",
+    "letterSpacing",
+    "lineHeight",
+    "cornerRadius",
+    "padding",
+    "gap",
+    "strokeWidth",
+    "innerRadius",
+    "startAngle",
+    "sweepAngle",
+    "polygonCount",
+    "icon",
+    "library",
+    "weight",
+];
+
+/// The node key the bindings are written under
+/// (`PenNodeBase::variable_bindings`).
+pub(super) const BINDINGS_KEY: &str = "variableBindings";
+
 /// The document's `variables` table and default theme.
 pub(super) struct Variables {
     table: Map<String, Value>,
@@ -194,6 +228,7 @@ pub(super) fn resolve_node(
 ) {
     let is_text = map.get("type").and_then(Value::as_str) == Some("text");
     let mut dropped = Vec::new();
+    let mut bindings = Map::new();
     for (key, value) in map.iter_mut() {
         let key = key.as_str();
         // What `variables_resolve::resolve_node_for_canvas` reads in place:
@@ -206,12 +241,20 @@ pub(super) fn resolve_node(
             key,
             kind: SlotKind::of(key, SlotKind::Strict),
         };
-        if !resolve_value(value, slot, variables, theme, report) {
+        let mut path = key.to_owned();
+        let mut found = Bound {
+            path: &mut path,
+            bindings: &mut bindings,
+        };
+        if !resolve_value(value, slot, variables, theme, report, &mut found) {
             dropped.push(key.to_owned());
         }
     }
     for key in dropped {
         map.remove(&key);
+    }
+    if !bindings.is_empty() {
+        map.insert(BINDINGS_KEY.to_owned(), Value::Object(bindings));
     }
     // A number or boolean variable bound to text content shows as text.
     if let Some(content) = map
@@ -252,6 +295,28 @@ impl SlotKind {
     }
 }
 
+/// The JSON path of the value being resolved, and the bindings found so far
+/// (`path → { variable, value }`).
+struct Bound<'a> {
+    path: &'a mut String,
+    bindings: &'a mut Map<String, Value>,
+}
+
+impl Bound<'_> {
+    /// Run `f` with `segment` appended to the path.
+    fn nested<R>(&mut self, segment: &str, f: impl FnOnce(&mut Bound<'_>) -> R) -> R {
+        let len = self.path.len();
+        self.path.push('/');
+        self.path.push_str(segment);
+        let out = f(&mut Bound {
+            path: self.path,
+            bindings: self.bindings,
+        });
+        self.path.truncate(len);
+        out
+    }
+}
+
 /// Where a value sits: the top-level node key (for the report label) and
 /// what the schema accepts there.
 #[derive(Clone, Copy)]
@@ -268,6 +333,7 @@ fn resolve_value(
     variables: &Variables,
     theme: &Theme,
     report: &mut PenDevReport,
+    found: &mut Bound<'_>,
 ) -> bool {
     match value {
         Value::String(text) => {
@@ -284,16 +350,26 @@ fn resolve_value(
                 !chained && (slot.kind != SlotKind::Number || resolved.is_number())
             });
             if let Some(resolved) = resolved {
+                if slot.kind != SlotKind::Paint && BINDABLE_KEYS.contains(&slot.key) {
+                    found.bindings.insert(
+                        found.path.clone(),
+                        serde_json::json!({ "variable": name, "value": resolved }),
+                    );
+                } else {
+                    report.note(resolved_label(slot.key));
+                }
                 *value = resolved;
-                report.note(resolved_label(slot.key));
                 return true;
             }
             report.note("unresolved variable");
             slot.kind == SlotKind::Text
         }
         Value::Array(items) => {
-            for item in items.iter_mut() {
-                if !resolve_value(item, slot, variables, theme, report) {
+            for (index, item) in items.iter_mut().enumerate() {
+                let kept = found.nested(&index.to_string(), |found| {
+                    resolve_value(item, slot, variables, theme, report, found)
+                });
+                if !kept {
                     // Keep the array's shape (padding / radius sides).
                     *item = Value::from(0);
                 }
@@ -315,7 +391,10 @@ fn resolve_value(
                     kind: SlotKind::of(key, slot.kind),
                     ..slot
                 };
-                if !resolve_value(item, inner, variables, theme, report) {
+                let kept = found.nested(key, |found| {
+                    resolve_value(item, inner, variables, theme, report, found)
+                });
+                if !kept {
                     dropped.push(key.clone());
                 }
             }
