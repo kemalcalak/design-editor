@@ -59,7 +59,10 @@ impl WidgetHostNative {
             use de_editor_ui::widgets::ExportDialog;
             let dlg = ExportDialog::centered(self.last_viewport_w, self.last_viewport_h);
             let new_hover = dlg
-                .hit_test(Point2D::new(x, y))
+                .hit_test(
+                    Point2D::new(x, y),
+                    self.editor_state.editor_ui.export_format,
+                )
                 .map(de_editor_ui::widgets::editor_state_ext::export_dialog_button);
             let changed = new_hover != self.editor_state.editor_ui.export_dialog_hover;
             if changed {

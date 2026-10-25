@@ -3,7 +3,8 @@
 //! (`apps/web/src/components/shared/export-dialog.tsx`):
 //!   - Format radio group: PNG / JPEG / WEBP / SVG / PDF, plus the
 //!     HTML + CSS and HTML + Tailwind code exports (#170)
-//!   - Scale radio group: 1× / 2× / 3×
+//!   - Scale radio group: 1× / 2× / 3×, shown only for the raster
+//!     formats (#224); the dialog keeps its size so the footer stays put
 //!   - Cancel / Export buttons
 //!
 //! Selection writes back to `Document.ui.export_format` /
@@ -145,34 +146,36 @@ impl ExportDialog {
             );
         }
 
-        // Scale row label + pills.
-        let scale_label_y = body_y + 16.0 + PILL_HEIGHT + ROW_GAP;
-        let scale_label = TextLayout::single_run(
-            tr("export.scale"),
-            FONT_FAMILY,
-            12.0,
-            (theme.muted_foreground).to_jian(),
-            Point2D::new(0.0, 0.0),
-        );
-        backend.draw_text(
-            &scale_label,
-            Point2D::new(self.rect.origin.x + PAD, scale_label_y),
-        );
-        for (i, lbl) in ["1x", "2x", "3x"].iter().enumerate() {
-            let s = (i as u8) + 1;
-            let selected = scale_index(ui.export_scale) == s;
-            let button = de_editor_core::ExportDialogButton::Scale(s);
-            let hovered = ui.export_dialog_hover == Some(button);
-            let pressed = export_dialog_pressed(ui, button);
-            self.paint_pill(
-                backend,
-                theme,
-                self.scale_pill_rect(i),
-                lbl,
-                selected,
-                hovered,
-                pressed,
+        // Scale row label + pills, raster formats only (#224).
+        if ui.export_format.uses_scale() {
+            let scale_label_y = body_y + 16.0 + PILL_HEIGHT + ROW_GAP;
+            let scale_label = TextLayout::single_run(
+                tr("export.scale"),
+                FONT_FAMILY,
+                12.0,
+                (theme.muted_foreground).to_jian(),
+                Point2D::new(0.0, 0.0),
             );
+            backend.draw_text(
+                &scale_label,
+                Point2D::new(self.rect.origin.x + PAD, scale_label_y),
+            );
+            for (i, lbl) in ["1x", "2x", "3x"].iter().enumerate() {
+                let s = (i as u8) + 1;
+                let selected = scale_index(ui.export_scale) == s;
+                let button = de_editor_core::ExportDialogButton::Scale(s);
+                let hovered = ui.export_dialog_hover == Some(button);
+                let pressed = export_dialog_pressed(ui, button);
+                self.paint_pill(
+                    backend,
+                    theme,
+                    self.scale_pill_rect(i),
+                    lbl,
+                    selected,
+                    hovered,
+                    pressed,
+                );
+            }
         }
 
         // Footer buttons — Cancel as an outline (border + hover wash), Export
@@ -233,7 +236,13 @@ impl ExportDialog {
         paint_centered_label(backend, label, 12.0, color, rect);
     }
 
-    pub fn hit_test(&self, point: Point2D) -> Option<ExportDialogHit> {
+    /// `format` is the selected export format: its scale pills are not
+    /// painted for non-raster formats, so they take no hits either.
+    pub fn hit_test(
+        &self,
+        point: Point2D,
+        format: de_editor_core::ExportFormat,
+    ) -> Option<ExportDialogHit> {
         if !(self.rect).contains(point) {
             return None;
         }
@@ -242,9 +251,11 @@ impl ExportDialog {
                 return Some(ExportDialogHit::Format(fmt));
             }
         }
-        for i in 0..3 {
-            if (self.scale_pill_rect(i)).contains(point) {
-                return Some(ExportDialogHit::Scale((i as u8) + 1));
+        if format.uses_scale() {
+            for i in 0..3 {
+                if (self.scale_pill_rect(i)).contains(point) {
+                    return Some(ExportDialogHit::Scale((i as u8) + 1));
+                }
             }
         }
         let (cancel, export) = self.button_rects();
@@ -440,7 +451,10 @@ mod tests {
         for (i, &fmt) in ExportFormat::ALL.iter().enumerate() {
             let r = dlg.format_pill_rect(i);
             let center = Point2D::new(r.origin.x + r.size.x / 2.0, r.origin.y + r.size.y / 2.0);
-            assert_eq!(dlg.hit_test(center), Some(ExportDialogHit::Format(fmt)));
+            assert_eq!(
+                dlg.hit_test(center, de_editor_core::ExportFormat::Png),
+                Some(ExportDialogHit::Format(fmt))
+            );
         }
     }
 
@@ -451,7 +465,7 @@ mod tests {
             let r = dlg.scale_pill_rect(i);
             let center = Point2D::new(r.origin.x + r.size.x / 2.0, r.origin.y + r.size.y / 2.0);
             assert_eq!(
-                dlg.hit_test(center),
+                dlg.hit_test(center, de_editor_core::ExportFormat::Png),
                 Some(ExportDialogHit::Scale((i as u8) + 1))
             );
         }
@@ -463,8 +477,9 @@ mod tests {
         let (c, e) = dlg.button_rects();
         let cc = Point2D::new(c.origin.x + c.size.x / 2.0, c.origin.y + c.size.y / 2.0);
         let ec = Point2D::new(e.origin.x + e.size.x / 2.0, e.origin.y + e.size.y / 2.0);
-        assert_eq!(dlg.hit_test(cc), Some(ExportDialogHit::Cancel));
-        assert_eq!(dlg.hit_test(ec), Some(ExportDialogHit::Export));
+        let png = de_editor_core::ExportFormat::Png;
+        assert_eq!(dlg.hit_test(cc, png), Some(ExportDialogHit::Cancel));
+        assert_eq!(dlg.hit_test(ec, png), Some(ExportDialogHit::Export));
     }
 
     #[test]
@@ -496,8 +511,44 @@ mod tests {
     #[test]
     fn hit_test_outside_dialog_returns_none() {
         let dlg = ExportDialog::centered(1000.0, 800.0);
-        assert_eq!(dlg.hit_test(Point2D::new(0.0, 0.0)), None);
-        assert_eq!(dlg.hit_test(Point2D::new(999.0, 799.0)), None);
+        let png = de_editor_core::ExportFormat::Png;
+        assert_eq!(dlg.hit_test(Point2D::new(0.0, 0.0), png), None);
+        assert_eq!(dlg.hit_test(Point2D::new(999.0, 799.0), png), None);
+    }
+
+    #[test]
+    fn scale_pills_take_hits_only_for_raster_formats() {
+        let dlg = ExportDialog::centered(1000.0, 800.0);
+        let r = dlg.scale_pill_rect(1);
+        let center = Point2D::new(r.origin.x + r.size.x / 2.0, r.origin.y + r.size.y / 2.0);
+        for fmt in de_editor_core::ExportFormat::ALL {
+            let expected = fmt.uses_scale().then_some(ExportDialogHit::Scale(2));
+            assert_eq!(dlg.hit_test(center, fmt), expected, "{fmt:?}");
+        }
+    }
+
+    #[test]
+    fn scale_row_paints_only_for_raster_formats() {
+        let dlg = ExportDialog::centered(1000.0, 800.0);
+        let scale = dlg.scale_pill_rect(0);
+        for (fmt, shown) in [
+            (de_editor_core::ExportFormat::Png, true),
+            (de_editor_core::ExportFormat::Svg, false),
+            (de_editor_core::ExportFormat::Pdf, false),
+            (de_editor_core::ExportFormat::Html, false),
+        ] {
+            let ui = EditorUiState {
+                locale: de_editor_core::Locale::EnUs,
+                export_format: fmt,
+                ..Default::default()
+            };
+            let mut backend = CaptureBackend::default();
+            dlg.paint(&mut backend, &Theme::dark(), &ui);
+            let painted_pill = backend.round_fills.iter().any(|(rect, ..)| *rect == scale);
+            let painted_label = backend.texts.iter().any(|(text, _)| text == "Scale");
+            assert_eq!(painted_pill, shown, "{fmt:?} scale pill");
+            assert_eq!(painted_label, shown, "{fmt:?} scale label");
+        }
     }
 
     #[test]

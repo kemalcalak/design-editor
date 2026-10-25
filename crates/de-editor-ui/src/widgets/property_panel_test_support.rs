@@ -73,6 +73,7 @@ pub(super) fn visible_for(panel: &PropertyPanel) -> sections::VisibleSections {
         stroke_style_rows: panel.snapshot.stroke.is_some(),
         fill_menu: panel.fill_menu_open,
         export_open: panel.export_section_open,
+        export_scale_row: panel.export_format.uses_scale(),
         color_variable_count: panel.color_variable_count,
         fill_variable_bound: panel.fill_variable_ref.is_some(),
         stroke_variable_bound: panel.stroke_variable_ref.is_some(),

@@ -276,7 +276,7 @@ pub fn apply_export_quick_row(state: &mut EditorState, row: ExportQuickRow) {
     let action = match row {
         ExportQuickRow::Pptx => FileAction::ExportPptx,
         ExportQuickRow::Pdf => {
-            state.editor_ui.export_format = ExportFormat::Pdf;
+            state.editor_ui.set_export_format(ExportFormat::Pdf);
             FileAction::ExportImageConfirm
         }
         ExportQuickRow::SlideshowHtml => FileAction::ExportSlideshowHtml,

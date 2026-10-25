@@ -638,7 +638,7 @@ pub fn apply_property_action(
         }
         A::SetExportFormat(format) => {
             let ui = &mut state.editor_ui;
-            ui.export_format = *format;
+            ui.set_export_format(*format);
             ui.export_format_picker_open = false;
             ui.export_picker_hover = None;
             Handled

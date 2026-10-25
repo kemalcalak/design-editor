@@ -272,7 +272,7 @@ pub enum PropertyPanelAction {
     ToggleExportSection,
     /// User clicked the Export section's format dropdown — host
     /// toggles `editor_ui.export_format_picker_open` (the inline
-    /// PNG/JPEG/WEBP/SVG/PDF select popup).
+    /// select popup listing every `ExportFormat`).
     ToggleExportFormatPicker,
     /// User picked a scale (1.0 / 2.0 / 3.0) from the inline popup.
     SetExportScale(f32),
