@@ -8,7 +8,7 @@
 
 use crate::import_warning::ImportWarning;
 use jian_ops_schema::node::text::TextContent;
-use jian_ops_schema::node::PenNode;
+use jian_ops_schema::node::{PenNode, ScriptNode};
 use std::collections::BTreeSet;
 
 use crate::css::declarations::Declaration;
@@ -160,7 +160,9 @@ fn unquote(value: &str) -> String {
 
 fn child_nodes(node: &PenNode) -> &[PenNode] {
     match node {
-        PenNode::Frame(frame) => frame.children.as_deref().unwrap_or_default(),
+        PenNode::Frame(frame) | PenNode::Script(ScriptNode { frame, .. }) => {
+            frame.children.as_deref().unwrap_or_default()
+        }
         PenNode::Group(group) => group.children.as_deref().unwrap_or_default(),
         PenNode::Rectangle(rectangle) => rectangle.children.as_deref().unwrap_or_default(),
         PenNode::Ref(reference) => reference.children.as_deref().unwrap_or_default(),

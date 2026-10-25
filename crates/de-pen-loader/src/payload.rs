@@ -390,7 +390,24 @@ pub fn load_canonical_with_assets(
     load_canonical_inner(src, Some(assets))
 }
 
+/// Stack a load may need, and what it runs on when less is left. Typed
+/// parsing goes through serde's buffered `Content` path for the tagged node
+/// enum, which `serde_stacker` does not guard; a debug build spends about
+/// 1 MiB there even on a small document. Windows gives the main thread 1 MiB
+/// (macOS / Linux 8 MiB), so a load on it would overflow.
+const LOAD_RED_ZONE: usize = 2 * 1024 * 1024;
+const LOAD_STACK: usize = 16 * 1024 * 1024;
+
 fn load_canonical_inner(
+    src: &str,
+    assets: Option<crate::pen_dev::AssetReader<'_>>,
+) -> Result<CanonicalLoad, jian_ops_schema::OpsSchemaError> {
+    stacker::maybe_grow(LOAD_RED_ZONE, LOAD_STACK, || {
+        load_canonical_on_stack(src, assets)
+    })
+}
+
+fn load_canonical_on_stack(
     src: &str,
     assets: Option<crate::pen_dev::AssetReader<'_>>,
 ) -> Result<CanonicalLoad, jian_ops_schema::OpsSchemaError> {
@@ -749,6 +766,9 @@ fn reject_unsupported_format_version(
 #[cfg(test)]
 #[path = "payload/load_tests.rs"]
 mod load_tests;
+#[cfg(test)]
+#[path = "payload/small_stack_load_tests.rs"]
+mod small_stack_load_tests;
 
 #[cfg(test)]
 #[path = "payload/deep_image_thumb_tests.rs"]

@@ -200,6 +200,7 @@ impl DesktopApp {
             remote_images: remote_image_host::RemoteImageSession::new(),
             browser_renders: crate::browser_render_host::BrowserRenderHost::new(),
             image_decodes: image_decode_host::ImageDecodeHost::new(),
+            script_nodes: Default::default(),
             home_previews: crate::home_previews::HomePreviews::default(),
             mcp_wake_proxy: None,
             forwarded_files: single_instance::ForwardQueue::default(),

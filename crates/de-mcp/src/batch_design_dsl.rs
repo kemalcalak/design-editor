@@ -124,6 +124,9 @@ fn build_tree(
     }
     visit[idx] = 1;
     let mut node = inserts[idx].node.clone();
+    if matches!(node, PenNode::Script(_)) && !children_by_parent[idx].is_empty() {
+        return Err(InsertDslError::ScriptParent(inserts[idx].binding.clone()));
+    }
     for child_idx in &children_by_parent[idx] {
         let child = build_tree(*child_idx, inserts, children_by_parent, visit)?;
         let Some(children) = node.children_mut_or_insert() else {

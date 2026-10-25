@@ -33,6 +33,11 @@ fn visible_for(panel: &PropertyPanel) -> sections::VisibleSections {
         widget: panel.snapshot.widget.as_ref().map(|w| w.kind),
         widget_checked: panel.snapshot.widget.as_ref().is_some_and(|w| w.checked),
         annotation: panel.snapshot.annotation.as_ref().map(|a| a.kind),
+        script: panel
+            .snapshot
+            .script
+            .as_ref()
+            .map(crate::widgets::property_panel_script::ScriptRows::of),
         browser: panel.snapshot.browser.as_ref().map(|b| b.pages_allowed),
         image: caps.image && panel.snapshot.is_image_node,
         video: caps.image && panel.snapshot.video.is_some(),
@@ -53,6 +58,7 @@ fn visible_for(panel: &PropertyPanel) -> sections::VisibleSections {
         stroke_style_rows: panel.snapshot.stroke.is_some(),
         fill_menu: panel.fill_menu_open,
         export_open: panel.export_section_open,
+        export_scale_row: panel.export_format.uses_scale(),
         color_variable_count: panel.color_variable_count,
         fill_variable_bound: panel.fill_variable_ref.is_some(),
         stroke_variable_bound: panel.stroke_variable_ref.is_some(),

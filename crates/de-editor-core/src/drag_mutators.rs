@@ -14,7 +14,7 @@ use crate::state::EditorState;
 use crate::walkers::{self, find_node_mut};
 use jian_ops_schema::node::container::LayoutMode;
 use jian_ops_schema::node::text::TextGrowth;
-use jian_ops_schema::node::PenNode;
+use jian_ops_schema::node::{PenNode, ScriptNode};
 
 /// Main axis of an auto-layout (flex) container.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -65,7 +65,9 @@ pub enum DragDropTarget {
 /// free-layout containers and leaf nodes.
 pub fn auto_layout_direction(node: &PenNode) -> Option<FlexDirection> {
     let layout = match node {
-        PenNode::Frame(n) => n.container.layout.as_ref(),
+        PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => {
+            n.container.layout.as_ref()
+        }
         PenNode::Group(n) => n.container.layout.as_ref(),
         PenNode::Rectangle(n) => n.container.layout.as_ref(),
         _ => None,

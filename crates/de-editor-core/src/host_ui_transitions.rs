@@ -82,9 +82,20 @@ impl EditorUiState {
     pub fn open_export_dialog(&mut self) {
         self.image_panel.close_popovers();
         if let Some(format) = scenario_default_export_format(self.scenario) {
-            self.export_format = format;
+            self.set_export_format(format);
         }
         self.export_dialog_open = true;
+    }
+
+    /// Select the export format. A non-raster format takes no scale and
+    /// the panel drops its scale dropdown (#224), so an open scale picker
+    /// closes with it instead of lingering unseen and eating the next
+    /// press. Every format switch outside tests goes through here.
+    pub fn set_export_format(&mut self, format: ExportFormat) {
+        self.export_format = format;
+        if !format.uses_scale() {
+            self.export_scale_picker_open = false;
+        }
     }
 }
 
@@ -320,6 +331,37 @@ pub fn apply_chat_design_block(
 #[cfg(test)]
 mod export_dialog_tests {
     use super::*;
+
+    #[test]
+    fn set_export_format_closes_scale_picker_only_for_non_raster() {
+        for format in ExportFormat::ALL {
+            let mut ui = EditorUiState {
+                export_scale_picker_open: true,
+                ..Default::default()
+            };
+            ui.set_export_format(format);
+            assert_eq!(ui.export_format, format);
+            assert_eq!(
+                ui.export_scale_picker_open,
+                format.uses_scale(),
+                "{format:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn deck_export_dialog_closes_the_panel_scale_picker() {
+        let mut ui = EditorUiState {
+            scenario: Some(TemplateScene::Slides),
+            export_scale_picker_open: true,
+            ..Default::default()
+        };
+
+        ui.open_export_dialog();
+
+        assert_eq!(ui.export_format, ExportFormat::Pdf);
+        assert!(!ui.export_scale_picker_open);
+    }
 
     #[test]
     fn opening_a_deck_export_dialog_presets_pdf() {

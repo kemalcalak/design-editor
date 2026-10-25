@@ -4,7 +4,7 @@ use crate::pen_node_ext::PenNodeExt;
 use crate::state::EditorState;
 use crate::ui_draft::PropertyFocus;
 use crate::walkers::find_node_mut;
-use jian_ops_schema::node::PenNode;
+use jian_ops_schema::node::{PenNode, ScriptNode};
 
 fn stroke_side_for_focus(focus: PropertyFocus) -> Option<crate::StrokeSide> {
     match focus {
@@ -374,7 +374,8 @@ impl EditorState {
             | PropertyFocus::BrowserUrl
             | PropertyFocus::BrowserZoom
             | PropertyFocus::BrowserScrollX
-            | PropertyFocus::BrowserScrollY => {}
+            | PropertyFocus::BrowserScrollY
+            | PropertyFocus::ScriptInput(_) => {}
             PropertyFocus::FillOpacity(index) => {
                 // The primary fill (index 0) keeps `set_selected_fill_opacity`
                 // (writes the first fill's body opacity); a non-primary row
@@ -749,7 +750,9 @@ impl EditorState {
 fn node_corner_radii(node: &PenNode) -> Option<[f64; 4]> {
     use jian_ops_schema::node::container::CornerRadius;
     let radius = match node {
-        PenNode::Frame(node) => node.container.corner_radius.as_ref(),
+        PenNode::Frame(node) | PenNode::Script(ScriptNode { frame: node, .. }) => {
+            node.container.corner_radius.as_ref()
+        }
         PenNode::Group(node) => node.container.corner_radius.as_ref(),
         PenNode::Rectangle(node) => node.container.corner_radius.as_ref(),
         PenNode::Image(node) => node.corner_radius.as_ref(),

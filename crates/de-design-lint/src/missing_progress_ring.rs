@@ -5,7 +5,7 @@
 //! design decision, so deterministic code must not guess the ring's geometry,
 //! value, palette, or stroke treatment.
 
-use jian_ops_schema::node::{PenNode, TextContent};
+use jian_ops_schema::node::{PenNode, ScriptNode, TextContent};
 use jian_ops_schema::sizing::SizingBehavior;
 
 use crate::node_util::{
@@ -266,7 +266,7 @@ fn explicit_numeric_size(node: &PenNode) -> Option<(f64, f64)> {
 
 fn node_name(node: &PenNode) -> Option<&str> {
     match node {
-        PenNode::Frame(n) => n.base.name.as_deref(),
+        PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => n.base.name.as_deref(),
         PenNode::Group(n) => n.base.name.as_deref(),
         PenNode::Rectangle(n) => n.base.name.as_deref(),
         PenNode::Ellipse(n) => n.base.name.as_deref(),

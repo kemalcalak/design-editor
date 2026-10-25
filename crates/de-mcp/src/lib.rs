@@ -159,6 +159,8 @@ mod script_execute_session;
 #[cfg(feature = "script")]
 mod script_execute_tree;
 #[cfg(feature = "script")]
+pub mod script_node;
+#[cfg(feature = "script")]
 pub mod script_runner;
 pub mod selected_ops_tools;
 #[cfg(test)]

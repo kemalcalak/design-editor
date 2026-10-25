@@ -168,7 +168,8 @@ pub fn post_json(url: &str, body: &str, on_response: Option<Rc<dyn Fn(String)>>)
 
 /// Issue one async JSON `POST` and report both HTTP status and body. This is
 /// used when a caller must distinguish an acknowledged write from a completed
-/// but rejected request.
+/// but rejected request. Returns false when the request could not start;
+/// `on_response` is then never called, so the caller settles it itself.
 pub fn post_json_with_status(url: &str, body: &str, on_response: Rc<dyn Fn(u16, String)>) -> bool {
     let Ok(xhr) = web_sys::XmlHttpRequest::new() else {
         return false;

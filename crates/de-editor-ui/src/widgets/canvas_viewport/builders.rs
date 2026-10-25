@@ -13,6 +13,7 @@ use crate::widgets::WidgetId;
 use crate::{Color, Point2D, Rect};
 use de_editor_core::EditorState;
 use de_editor_core::Viewport as DocViewport;
+use jian_ops_schema::node::ScriptNode;
 impl<'a> CanvasViewport<'a> {
     /// Build the canvas widget for a paint pass.
     ///
@@ -218,8 +219,12 @@ fn collect_frame_labels(state: &EditorState) -> Vec<FrameLabel> {
                 theme.primary
             } else {
                 match node {
-                    PenNode::Frame(f) if f.reusable == Some(true) => COMPONENT,
-                    PenNode::Frame(_) => FRAME_LABEL,
+                    PenNode::Frame(f) | PenNode::Script(ScriptNode { frame: f, .. })
+                        if f.reusable == Some(true) =>
+                    {
+                        COMPONENT
+                    }
+                    PenNode::Frame(_) | PenNode::Script(_) => FRAME_LABEL,
                     PenNode::Ref(_) => INSTANCE,
                     _ => return None,
                 }

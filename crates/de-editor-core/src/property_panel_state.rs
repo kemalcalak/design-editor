@@ -236,6 +236,19 @@ impl ExportFormat {
         matches!(self, ExportFormat::Html | ExportFormat::HtmlTailwind)
     }
 
+    /// True for the raster exports, the only ones the 1x / 2x / 3x
+    /// scale affects (SVG / PDF are vector, HTML / Tailwind are code).
+    pub fn uses_scale(self) -> bool {
+        // Exhaustive on purpose: a new format must decide.
+        match self {
+            ExportFormat::Png | ExportFormat::Jpeg | ExportFormat::Webp => true,
+            ExportFormat::Svg
+            | ExportFormat::Pdf
+            | ExportFormat::Html
+            | ExportFormat::HtmlTailwind => false,
+        }
+    }
+
     pub fn label(self) -> &'static str {
         match self {
             ExportFormat::Png => "PNG",

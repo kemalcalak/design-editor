@@ -42,6 +42,9 @@ pub(crate) enum InsertDslError {
     ParentCycle,
     /// An operation is a child of a binding whose node cannot hold children.
     NotAContainer(String),
+    /// The binding is a script node, whose program generates its children
+    /// (#19): authored children would be replaced by the next run.
+    ScriptParent(String),
     /// The `name =` prefix is not a legal binding identifier.
     InvalidBinding(String),
     /// The line is not an `I(parent, node)` call.
@@ -82,6 +85,11 @@ impl fmt::Display for InsertDslError {
             InsertDslError::NotAContainer(binding) => write!(
                 f,
                 "binding {binding:?} cannot receive children because it is not a container"
+            ),
+            InsertDslError::ScriptParent(binding) => write!(
+                f,
+                "binding {binding:?} is a script node: its program generates its children; \
+                 change its inputs or script instead"
             ),
             InsertDslError::InvalidBinding(binding) => write!(f, "invalid binding {binding:?}"),
             InsertDslError::UnsupportedOperation(binding) => {

@@ -159,6 +159,13 @@ pub fn property_focus_initial(focus: PropertyFocus, panel: &PropertyPanel) -> St
             .as_ref()
             .map(|a| a.model.clone())
             .unwrap_or_default(),
+        F::ScriptInput(index) => panel
+            .snapshot
+            .script
+            .as_ref()
+            .and_then(|s| s.rows.get(index))
+            .map(|row| row.value.clone())
+            .unwrap_or_default(),
         F::BrowserUrl => browser_text(panel, |b| b.url.clone()),
         F::BrowserZoom => browser_text(panel, |b| format_panel_number(b.zoom_percent as f32)),
         F::BrowserScrollX => browser_text(panel, |b| format_panel_number(b.scroll_x as f32)),
@@ -426,6 +433,9 @@ pub fn commit_property_focus(state: &mut EditorState) -> bool {
         }
         PropertyFocus::AnnotationModel => {
             let _ = state.set_selected_annotation_model(&draft);
+        }
+        PropertyFocus::ScriptInput(index) => {
+            let _ = state.commit_selected_script_input(index, &draft);
         }
         PropertyFocus::BrowserUrl => {
             let _ = state.set_selected_browser_url(&draft);

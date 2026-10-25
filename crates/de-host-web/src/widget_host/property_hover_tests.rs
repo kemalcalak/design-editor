@@ -278,7 +278,7 @@ fn export_dialog_press_sets_and_release_clears_pressed_button() {
         let mut x = r.origin.x;
         while x <= r.origin.x + r.size.x {
             let p = de_editor_ui::Point2D::new(x, y);
-            if dlg.hit_test(p)
+            if dlg.hit_test(p, de_editor_core::ExportFormat::Png)
                 == Some(de_editor_ui::widgets::export_dialog::ExportDialogHit::Scale(1))
             {
                 point = Some(p);

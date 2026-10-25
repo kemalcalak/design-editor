@@ -617,7 +617,7 @@ fn explain_reference_error(msg: &str) -> Option<ScriptError> {
     })
 }
 
-fn describe_js_error(ctx: &rquickjs::Ctx<'_>, err: rquickjs::Error) -> ScriptError {
+pub(crate) fn describe_js_error(ctx: &rquickjs::Ctx<'_>, err: rquickjs::Error) -> ScriptError {
     if err.is_exception() {
         let caught = ctx.catch();
         if let Some(exc) = caught.as_exception() {

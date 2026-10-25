@@ -272,7 +272,7 @@ pub enum PropertyPanelAction {
     ToggleExportSection,
     /// User clicked the Export section's format dropdown — host
     /// toggles `editor_ui.export_format_picker_open` (the inline
-    /// PNG/JPEG/WEBP/SVG/PDF select popup).
+    /// select popup listing every `ExportFormat`).
     ToggleExportFormatPicker,
     /// User picked a scale (1.0 / 2.0 / 3.0) from the inline popup.
     SetExportScale(f32),
@@ -457,6 +457,11 @@ pub enum PropertyPanelAction {
     ToggleWidgetChecked(bool),
     /// Turn the selected annotation into a note, context or prompt (#12).
     SetAnnotationKind(jian_ops_schema::node::AnnotationKind),
+    /// Flip / step the selected script's boolean / enum input at this
+    /// index, or open its source in the code editor (#19).
+    ToggleScriptInput(usize),
+    CycleScriptInput(usize),
+    OpenScriptSource,
     /// Switch the selected browser node to a device preset (#20).
     SetBrowserDevice(&'static str),
     /// Render the selected browser's page again (#20).

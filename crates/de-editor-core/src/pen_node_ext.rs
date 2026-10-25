@@ -12,8 +12,8 @@
 //! accessors (`id`, `children`, `children_mut`, geometry getters /
 //! setters) without each mutator having to `match` all 12 variants.
 
-use jian_ops_schema::node::PenNode;
 use jian_ops_schema::node::{AlignItems, JustifyContent, LayoutMode, PenNodeBase};
+use jian_ops_schema::node::{PenNode, ScriptNode};
 use jian_ops_schema::sizing::SizingBehavior;
 
 /// Read a `SizingBehavior` as a concrete pixel number. Keyword /
@@ -47,7 +47,8 @@ pub trait PenNodeExt {
     fn children_mut_or_insert(&mut self) -> Option<&mut Vec<PenNode>>;
 
     /// True when this variant can hold children (Frame / Group /
-    /// Rectangle / Ref). Used by reparenting + group ops.
+    /// Rectangle / Ref). Used by reparenting + group ops. A script node is
+    /// not one: its program owns its children, so nothing is inserted there.
     fn is_container(&self) -> bool;
 
     /// True when this node is a `Group` — the ungroup target.
@@ -106,7 +107,7 @@ pub trait PenNodeExt {
 macro_rules! base_arms {
     ($self:ident) => {
         match $self {
-            PenNode::Frame(n) => &n.base,
+            PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => &n.base,
             PenNode::Group(n) => &n.base,
             PenNode::Rectangle(n) => &n.base,
             PenNode::Ellipse(n) => &n.base,
@@ -136,7 +137,7 @@ macro_rules! base_arms {
 macro_rules! events_arms {
     ($self:ident) => {
         match $self {
-            PenNode::Frame(n) => n.events.as_ref(),
+            PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => n.events.as_ref(),
             PenNode::Group(n) => n.events.as_ref(),
             PenNode::Rectangle(n) => n.events.as_ref(),
             PenNode::Ellipse(n) => n.events.as_ref(),
@@ -166,7 +167,7 @@ macro_rules! events_arms {
 macro_rules! base_mut_arms {
     ($self:ident) => {
         match $self {
-            PenNode::Frame(n) => &mut n.base,
+            PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => &mut n.base,
             PenNode::Group(n) => &mut n.base,
             PenNode::Rectangle(n) => &mut n.base,
             PenNode::Ellipse(n) => &mut n.base,
@@ -215,7 +216,7 @@ impl PenNodeExt for PenNode {
 
     fn children(&self) -> Option<&Vec<PenNode>> {
         match self {
-            PenNode::Frame(n) => n.children.as_ref(),
+            PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => n.children.as_ref(),
             PenNode::Group(n) => n.children.as_ref(),
             PenNode::Rectangle(n) => n.children.as_ref(),
             PenNode::Tabs(n) => n.children.as_ref(),
@@ -226,7 +227,7 @@ impl PenNodeExt for PenNode {
 
     fn children_mut(&mut self) -> Option<&mut Vec<PenNode>> {
         match self {
-            PenNode::Frame(n) => n.children.as_mut(),
+            PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => n.children.as_mut(),
             PenNode::Group(n) => n.children.as_mut(),
             PenNode::Rectangle(n) => n.children.as_mut(),
             PenNode::Tabs(n) => n.children.as_mut(),
@@ -237,7 +238,9 @@ impl PenNodeExt for PenNode {
 
     fn children_mut_or_insert(&mut self) -> Option<&mut Vec<PenNode>> {
         match self {
-            PenNode::Frame(n) => Some(n.children.get_or_insert_with(Vec::new)),
+            PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => {
+                Some(n.children.get_or_insert_with(Vec::new))
+            }
             PenNode::Group(n) => Some(n.children.get_or_insert_with(Vec::new)),
             PenNode::Rectangle(n) => Some(n.children.get_or_insert_with(Vec::new)),
             PenNode::Tabs(n) => Some(n.children.get_or_insert_with(Vec::new)),
@@ -264,7 +267,9 @@ impl PenNodeExt for PenNode {
     fn is_auto_layout_container(&self) -> bool {
         use jian_ops_schema::node::container::LayoutMode;
         let layout = match self {
-            PenNode::Frame(n) => n.container.layout.as_ref(),
+            PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => {
+                n.container.layout.as_ref()
+            }
             PenNode::Group(n) => n.container.layout.as_ref(),
             PenNode::Rectangle(n) => n.container.layout.as_ref(),
             _ => None,
@@ -274,7 +279,9 @@ impl PenNodeExt for PenNode {
 
     fn width_px(&self) -> Option<f64> {
         match self {
-            PenNode::Frame(n) => sizing_px(&n.container.width),
+            PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => {
+                sizing_px(&n.container.width)
+            }
             PenNode::Group(n) => sizing_px(&n.container.width),
             PenNode::Rectangle(n) => sizing_px(&n.container.width),
             PenNode::Ellipse(n) => sizing_px(&n.width),
@@ -301,7 +308,9 @@ impl PenNodeExt for PenNode {
 
     fn height_px(&self) -> Option<f64> {
         match self {
-            PenNode::Frame(n) => sizing_px(&n.container.height),
+            PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => {
+                sizing_px(&n.container.height)
+            }
             PenNode::Group(n) => sizing_px(&n.container.height),
             PenNode::Rectangle(n) => sizing_px(&n.container.height),
             PenNode::Ellipse(n) => sizing_px(&n.height),
@@ -329,7 +338,9 @@ impl PenNodeExt for PenNode {
     fn set_width_px(&mut self, w: f64) {
         let v = SizingBehavior::Number(w.max(0.0));
         match self {
-            PenNode::Frame(n) => n.container.width = Some(v),
+            PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => {
+                n.container.width = Some(v)
+            }
             PenNode::Group(n) => n.container.width = Some(v),
             PenNode::Rectangle(n) => n.container.width = Some(v),
             PenNode::Ellipse(n) => n.width = Some(v),
@@ -367,7 +378,9 @@ impl PenNodeExt for PenNode {
     fn set_height_px(&mut self, h: f64) {
         let v = SizingBehavior::Number(h.max(0.0));
         match self {
-            PenNode::Frame(n) => n.container.height = Some(v),
+            PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => {
+                n.container.height = Some(v)
+            }
             PenNode::Group(n) => n.container.height = Some(v),
             PenNode::Rectangle(n) => n.container.height = Some(v),
             PenNode::Ellipse(n) => n.height = Some(v),

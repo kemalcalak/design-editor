@@ -1,8 +1,9 @@
 //! Export-section paint code split out of
 //! `property_panel_sections.rs` to honour the 800-line ceiling
 //! (mirrors the `property_panel_fill.rs` split). Contains the
-//! Export section itself (two dropdowns + the Export action
-//! button) plus the inline scale / format select popups.
+//! Export section itself (scale + format dropdowns, the scale one
+//! only for raster formats, then the Export action button) plus the
+//! inline scale / format select popups.
 
 use crate::theme::Theme;
 use crate::widgets::icons::{draw_icon, Icon};
@@ -25,6 +26,27 @@ pub fn export_scale_label(scale: f32) -> &'static str {
     }
 }
 
+/// The Export dropdown row's rects at row origin `(x, y)` in a section
+/// `width` wide: the scale dropdown (left half, `None` when the format
+/// takes no scale, #224) and the format dropdown (right half, or the
+/// whole row). Paint and the action walker both read this.
+pub(crate) fn export_row_rects(
+    x: f32,
+    y: f32,
+    width: f32,
+    show_scale: bool,
+) -> (Option<Rect>, Rect) {
+    let usable_w = width - PAD_X * 2.0;
+    if !show_scale {
+        return (None, Rect::xywh(x + PAD_X, y, usable_w, INPUT_HEIGHT));
+    }
+    let half_w = (usable_w - 8.0) / 2.0;
+    (
+        Some(Rect::xywh(x + PAD_X, y, half_w, INPUT_HEIGHT)),
+        Rect::xywh(x + PAD_X + half_w + 8.0, y, half_w, INPUT_HEIGHT),
+    )
+}
+
 /// Space below a collapsed Export header (#83), before the Code chips.
 pub const EXPORT_COLLAPSED_GAP: f32 = 8.0;
 
@@ -40,8 +62,8 @@ pub fn export_section_height(open: bool) -> f32 {
 }
 
 /// Paint the Export section: title with a "+" / "−" toggle, then —
-/// when `open` — a row of two dropdowns (scale + format) and a
-/// full-width Export action button below them.
+/// when `open` — the dropdown row (scale + format, or format alone
+/// when `show_scale` is false) and a full-width Export action button.
 // Paint-context + geometry args threaded through; a struct adds no gain.
 #[allow(clippy::too_many_arguments)]
 pub fn paint_export_section(
@@ -50,6 +72,7 @@ pub fn paint_export_section(
     labels: &PropertyLabels,
     format: de_editor_core::ExportFormat,
     scale: f32,
+    show_scale: bool,
     open: bool,
     x: f32,
     y: f32,
@@ -69,29 +92,25 @@ pub fn paint_export_section(
         return y + EXPORT_COLLAPSED_GAP;
     }
     let usable_w = width - PAD_X * 2.0;
-    let half_w = (usable_w - 8.0) / 2.0;
-    // Left dropdown: scale. Right dropdown: format. Clicking either
-    // opens its inline select popup (`paint_export_picker`); the
-    // full Export modal is reached only via File ▸ Export Image.
+    let (scale_rect, format_rect) = export_row_rects(x, y, width, show_scale);
+    // Left dropdown: scale (raster formats only). Right dropdown (or
+    // the whole row): format. Clicking either opens its inline select
+    // popup (`paint_export_picker`); the full Export modal is reached
+    // only via File ▸ Export Image.
     let tokens = &crate::widgets::button::tokens_from_theme(theme);
-    jian_widgets::components::select_trigger::SelectTrigger {
-        icon_paths: None,
-        label: export_scale_label(scale),
-        placeholder: "",
-        hovered: false,
-        pressed: false,
-        enabled: true,
-        font_size: 12.0,
-        bordered: true,
+    if let Some(scale_rect) = scale_rect {
+        jian_widgets::components::select_trigger::SelectTrigger {
+            icon_paths: None,
+            label: export_scale_label(scale),
+            placeholder: "",
+            hovered: false,
+            pressed: false,
+            enabled: true,
+            font_size: 12.0,
+            bordered: true,
+        }
+        .paint(cx.backend, scale_rect, tokens);
     }
-    .paint(
-        cx.backend,
-        Rect {
-            origin: Point2D::new(x + PAD_X, y),
-            size: Point2D::new(half_w, INPUT_HEIGHT),
-        },
-        tokens,
-    );
     jian_widgets::components::select_trigger::SelectTrigger {
         icon_paths: None,
         label: format.label(),
@@ -102,14 +121,7 @@ pub fn paint_export_section(
         font_size: 12.0,
         bordered: true,
     }
-    .paint(
-        cx.backend,
-        Rect {
-            origin: Point2D::new(x + PAD_X + half_w + 8.0, y),
-            size: Point2D::new(half_w, INPUT_HEIGHT),
-        },
-        tokens,
-    );
+    .paint(cx.backend, format_rect, tokens);
     y += INPUT_HEIGHT + 12.0;
     // Export action button — full-width primary button. Triggers a
     // direct export with the chosen scale + format (the host queues

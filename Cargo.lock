@@ -1699,6 +1699,7 @@ dependencies = [
  "serde_json",
  "serde_stacker",
  "skia-safe",
+ "stacker",
 ]
 
 [[package]]

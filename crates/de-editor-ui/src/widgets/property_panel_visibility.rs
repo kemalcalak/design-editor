@@ -277,6 +277,8 @@ pub struct VisibleSections {
     pub widget_checked: bool,
     /// Annotation section (#12) — `Some(kind)` for a note / context / prompt.
     pub annotation: Option<jian_ops_schema::node::AnnotationKind>,
+    /// Script section (#19) — the input rows of a script node.
+    pub script: Option<crate::widgets::property_panel_script::ScriptRows>,
     /// Browser section (#20) — `Some(pages_allowed)` for a browser node.
     pub browser: Option<bool>,
     pub image: bool,
@@ -310,6 +312,10 @@ pub struct VisibleSections {
     pub fill_menu: Option<usize>,
     /// Export section expanded (else just its header and "+").
     pub export_open: bool,
+    /// The Export row shows the scale dropdown: only for the raster
+    /// formats (`ExportFormat::uses_scale`, #224); else the format
+    /// dropdown takes the whole row.
+    pub export_scale_row: bool,
     pub color_variable_count: usize,
     pub fill_variable_bound: bool,
     pub stroke_variable_bound: bool,
@@ -431,6 +437,7 @@ impl VisibleSections {
         widget: None,
         widget_checked: false,
         annotation: None,
+        script: None,
         browser: None,
         image: false,
         video: false,
@@ -451,6 +458,7 @@ impl VisibleSections {
         stroke_style_rows: true,
         fill_menu: None,
         export_open: true,
+        export_scale_row: true,
         color_variable_count: 0,
         fill_variable_bound: false,
         stroke_variable_bound: false,

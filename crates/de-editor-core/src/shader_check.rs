@@ -115,7 +115,13 @@ pub fn sources_to_check(state: &EditorState) -> Vec<String> {
             }
         }
     }
-    if let Some(editor) = state.editor_ui.shader_editing.editor.as_ref() {
+    if let Some(editor) = state
+        .editor_ui
+        .shader_editing
+        .editor
+        .as_ref()
+        .filter(|editor| editor.target != crate::shader_source_editor::SourceTarget::Script)
+    {
         push(editor.input.text());
     }
     out

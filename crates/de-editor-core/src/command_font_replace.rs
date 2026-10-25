@@ -5,7 +5,7 @@
 //! module handles both shapes through one source-independent editor command.
 
 use crate::EditorState;
-use jian_ops_schema::node::{PenNode, TextContent};
+use jian_ops_schema::node::{PenNode, ScriptNode, TextContent};
 
 /// Replace one family token in a CSS font-family value.
 ///
@@ -175,7 +175,7 @@ fn replace_slot(slot: &mut Option<String>, from: &str, to: &str) -> usize {
 /// Borrow authored children without materializing an absent child array.
 fn existing_children_mut(node: &mut PenNode) -> Option<&mut Vec<PenNode>> {
     match node {
-        PenNode::Frame(n) => n.children.as_mut(),
+        PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => n.children.as_mut(),
         PenNode::Group(n) => n.children.as_mut(),
         PenNode::Rectangle(n) => n.children.as_mut(),
         PenNode::Tabs(n) => n.children.as_mut(),

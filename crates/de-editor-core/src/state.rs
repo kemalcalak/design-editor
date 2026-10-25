@@ -48,7 +48,7 @@ use crate::selection::SelectionState;
 use crate::tool::Tool;
 use crate::ui_draft::UiDraftState;
 use crate::viewport::Viewport;
-use jian_ops_schema::node::PenNode;
+use jian_ops_schema::node::{PenNode, ScriptNode};
 
 /// The editor's runtime state — the canonical document plus the
 /// editor-only state layered on top of it.
@@ -134,6 +134,10 @@ pub struct EditorState {
     /// treat the child as editable after the Ref-level lock gate has
     /// already passed. Never serialized or copied into history.
     pub(crate) instance_write_virtual_anchor: Option<crate::NodeId>,
+    /// Script-node runs: what was last scanned, what is running, how the
+    /// last run went (#19). Runtime only; a document replace moves the
+    /// generation, which forces a fresh scan.
+    pub script_regen: crate::script_regen::ScriptRegenState,
 }
 
 impl EditorState {
@@ -167,6 +171,7 @@ impl EditorState {
             theme_presets_dirty: false,
             app_state_owner: std::collections::BTreeMap::new(),
             instance_write_virtual_anchor: None,
+            script_regen: Default::default(),
         }
     }
 
@@ -345,7 +350,7 @@ fn document_max_depth(doc: &jian_ops_schema::PenDocument) -> usize {
 
 fn node_children(node: &PenNode) -> Option<&[PenNode]> {
     match node {
-        PenNode::Frame(n) => n.children.as_deref(),
+        PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => n.children.as_deref(),
         PenNode::Group(n) => n.children.as_deref(),
         PenNode::Rectangle(n) => n.children.as_deref(),
         _ => None,

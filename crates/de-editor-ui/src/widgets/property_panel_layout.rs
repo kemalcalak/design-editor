@@ -390,6 +390,16 @@ pub fn action_button_rects_with_fill_picker(
         );
     }
 
+    if let Some(rows) = visible.script {
+        crate::widgets::property_panel_script::push_script_action_rects(
+            &mut out,
+            rows,
+            x0,
+            tops.script,
+            usable_w,
+        );
+    }
+
     if let Some(pages_allowed) = visible.browser {
         crate::widgets::property_panel_browser::push_browser_action_rects(
             &mut out,
@@ -540,22 +550,23 @@ pub fn action_button_rects_with_fill_picker(
     }
     if visible.export && visible.export_open {
         let mut y = tops.export;
-        // Export section: header + a row of two dropdowns (scale on
-        // the left, format on the right) mirroring
-        // `paint_export_section`. Each dropdown is its own toggle
+        // Export section: header + the dropdown row (scale on the
+        // left for raster formats, format on the right or across the
+        // row) from `export_row_rects`, the geometry
+        // `paint_export_section` paints. Each dropdown is its own toggle
         // rect; when its inline select popup is open the option rows
         // are emitted too. `hit_test_action` walks the result in
         // `rev()`, so a popup-row hit is tested before its toggle.
         y += SECTION_HEADER_HEIGHT;
-        let scale_rect = Rect {
-            origin: Point2D::new(x0 + PAD_X, y),
-            size: Point2D::new(half_w, INPUT_HEIGHT),
-        };
-        let format_rect = Rect {
-            origin: Point2D::new(x0 + PAD_X + half_w + 8.0, y),
-            size: Point2D::new(half_w, INPUT_HEIGHT),
-        };
-        out.push((PropertyPanelAction::ToggleExportScalePicker, scale_rect));
+        let (scale_rect, format_rect) = crate::widgets::property_panel_export::export_row_rects(
+            x0,
+            y,
+            w,
+            visible.export_scale_row,
+        );
+        if let Some(scale_rect) = scale_rect {
+            out.push((PropertyPanelAction::ToggleExportScalePicker, scale_rect));
+        }
         out.push((PropertyPanelAction::ToggleExportFormatPicker, format_rect));
         y += INPUT_HEIGHT + 12.0;
         // Full-width Export action button below the dropdown row.
@@ -575,7 +586,7 @@ pub fn action_button_rects_with_fill_picker(
         // here. `first_row_y` is placed so the background's bottom
         // edge lands `4 px` above the dropdown (matches the `6 px`
         // top/bottom padding `paint_select_popup` adds).
-        if export_scale_picker_open {
+        if let Some(scale_rect) = scale_rect.filter(|_| export_scale_picker_open) {
             let count = 3.0;
             let first_row_y = scale_rect.origin.y - 4.0 - 6.0 - count * EXPORT_PICKER_ROW_H;
             for (i, scale) in [1.0_f32, 2.0, 3.0].into_iter().enumerate() {
@@ -592,13 +603,8 @@ pub fn action_button_rects_with_fill_picker(
             }
         }
         if export_format_picker_open {
-            let formats: Vec<_> = [
-                de_editor_core::ExportFormat::Png,
-                de_editor_core::ExportFormat::Jpeg,
-                de_editor_core::ExportFormat::Webp,
-                de_editor_core::ExportFormat::Svg,
-            ]
-            .to_vec();
+            // Every format the Export dialog offers (#224).
+            let formats = de_editor_core::ExportFormat::ALL;
             let count = formats.len() as f32;
             let first_row_y = format_rect.origin.y - 4.0 - 6.0 - count * EXPORT_PICKER_ROW_H;
             for (i, fmt) in formats.into_iter().enumerate() {

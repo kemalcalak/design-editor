@@ -13,7 +13,7 @@ use jian_ops_schema::node::base::NumberOrExpression;
 use jian_ops_schema::node::container::{
     AlignItems, ContainerProps, JustifyContent, LayoutMode, Padding,
 };
-use jian_ops_schema::node::PenNode;
+use jian_ops_schema::node::{PenNode, ScriptNode};
 use jian_ops_schema::sizing::{SizingBehavior, SizingKeyword};
 use jian_ops_schema::style::StrokeThickness;
 
@@ -717,7 +717,7 @@ fn node_id(node: &PenNode) -> &str {
 
 fn base(node: &PenNode) -> Option<&jian_ops_schema::node::base::PenNodeBase> {
     Some(match node {
-        PenNode::Frame(n) => &n.base,
+        PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => &n.base,
         PenNode::Group(n) => &n.base,
         PenNode::Rectangle(n) => &n.base,
         PenNode::Text(n) => &n.base,
@@ -754,7 +754,7 @@ fn container_props(node: &PenNode) -> Option<&ContainerProps> {
 
 fn children(node: &PenNode) -> Option<&[PenNode]> {
     match node {
-        PenNode::Frame(n) => n.children.as_deref(),
+        PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => n.children.as_deref(),
         PenNode::Group(n) => n.children.as_deref(),
         PenNode::Rectangle(n) => n.children.as_deref(),
         PenNode::Tabs(n) => n.children.as_deref(),

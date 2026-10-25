@@ -211,8 +211,8 @@ pub struct PropertyPanel {
     /// Whether the Code view's close button is hovered.
     pub close_hovered: bool,
     /// Current export format + scale, shown on the Export section's
-    /// two dropdowns. Clicking a dropdown opens its inline select
-    /// popup (NOT the Export modal).
+    /// dropdowns (the scale one only for raster formats). Clicking a
+    /// dropdown opens its inline select popup (NOT the Export modal).
     pub export_format: de_editor_core::ExportFormat,
     pub export_scale: f32,
     /// Whether the Export section's scale / format inline select
@@ -372,6 +372,11 @@ impl PropertyPanel {
             widget: self.snapshot.widget.as_ref().map(|w| w.kind),
             widget_checked: self.snapshot.widget.as_ref().is_some_and(|w| w.checked),
             annotation: self.snapshot.annotation.as_ref().map(|a| a.kind),
+            script: self
+                .snapshot
+                .script
+                .as_ref()
+                .map(crate::widgets::property_panel_script::ScriptRows::of),
             browser: self.snapshot.browser.as_ref().map(|b| b.pages_allowed),
             image: caps.image && self.snapshot.is_image_node,
             video: caps.image && self.snapshot.video.is_some(),
@@ -396,6 +401,7 @@ impl PropertyPanel {
             stroke_style_rows: self.snapshot.stroke.is_some(),
             fill_menu: self.fill_menu_open,
             export_open: self.export_section_open,
+            export_scale_row: self.export_format.uses_scale(),
             color_variable_count: self.color_variable_count,
             fill_variable_bound: self.fill_variable_ref.is_some(),
             stroke_variable_bound: self.stroke_variable_ref.is_some(),

@@ -54,6 +54,8 @@ mod path_bounds;
 #[cfg(test)]
 mod property_edit_scene_tests;
 mod scene_cache;
+#[cfg(test)]
+mod script_scene_tests;
 mod shader_preset;
 #[cfg(test)]
 mod snapshot_scene_tests;
@@ -91,7 +93,9 @@ pub mod variables;
 /// against the editor's variables + active theme. Builds the scene
 /// directly from the layout-resolved `DocPayload` — no intermediate
 /// shell-core `Document`.
-pub use editor_scene::{editor_state_to_active_page_layout_scene, editor_state_to_layout_scene};
+pub use editor_scene::{
+    editor_state_to_active_page_layout_scene, editor_state_to_layout_scene, scene_node_size,
+};
 pub use layout_scene::{
     blend_mode_to_scene, pen_document_to_layout_scene, pen_document_to_layout_scene_for_preview,
     pen_document_to_layout_scene_with_geometry_mode,

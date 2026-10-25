@@ -98,6 +98,7 @@ mod render_cli_error;
 mod save_session;
 mod scene_template_generate;
 mod scene_template_open;
+mod script_node_host;
 mod settings_io;
 mod single_instance;
 mod style_import_host;
@@ -170,6 +171,8 @@ enum DesktopEvent {
     FontsRegistered,
     /// A linked component library file changed on disk (#15).
     LibraryChanged,
+    /// A script node's run finished on the worker (#19).
+    ScriptNodesReady,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -339,6 +342,8 @@ struct DesktopApp {
     browser_renders: browser_render_host::BrowserRenderHost,
     /// Two-thread local image raster decode pool.
     image_decodes: image_decode_host::ImageDecodeHost,
+    /// Script-node runs on a worker thread (#19).
+    script_nodes: script_node_host::ScriptNodeHost,
     /// Loads Home's Recent thumbnails into the image cache.
     home_previews: home_previews::HomePreviews,
     /// Cross-thread wake handle used by live MCP connection threads.
@@ -648,6 +653,7 @@ fn main() {
     macos_app::apply();
     let mut app = DesktopApp::new(initial_file);
     app.image_decodes.set_wake_proxy(mcp_wake_proxy.clone());
+    app.script_nodes.set_wake_proxy(mcp_wake_proxy.clone());
     app.browser_renders.set_wake_proxy(mcp_wake_proxy.clone());
     // A snapshot an MCP `browser` call put on a node repaints the canvas.
     let browser_proxy = std::sync::Mutex::new(mcp_wake_proxy.clone());
@@ -737,6 +743,9 @@ mod preview_batch_proof_tests;
 #[cfg(test)]
 #[path = "note_proof_sheet_tests.rs"]
 mod note_proof_sheet_tests;
+#[cfg(test)]
+#[path = "script_proof_sheet_tests.rs"]
+mod script_proof_sheet_tests;
 
 // Serializes tests that touch the process-global `agent_indicators`
 // registry against tests that assert an exact animation deadline. The
