@@ -85,6 +85,7 @@ mod motion_pointer;
 mod present;
 mod scene_helpers;
 mod session;
+mod session_entry;
 mod session_paint;
 mod slide_paint;
 mod test_helpers;
@@ -180,6 +181,8 @@ mod tests_debug_trace;
 mod tests_device_frame;
 #[cfg(all(test, not(target_os = "windows")))]
 mod tests_effects;
+#[cfg(all(test, not(target_os = "windows")))]
+mod tests_entry_root;
 #[cfg(all(test, not(target_os = "windows")))]
 mod tests_event_payloads;
 #[cfg(all(test, not(target_os = "windows")))]

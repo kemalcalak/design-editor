@@ -41,6 +41,7 @@ pub fn enter_preview(
     canvas_size: (f32, f32),
     active_theme: &std::collections::BTreeMap<String, String>,
     active_page_index: usize,
+    entry_root_id: Option<&str>,
     op_ck: &crate::canvaskit::OpCk,
     presenting: bool,
     now_ms: u64,
@@ -57,6 +58,7 @@ pub fn enter_preview(
         canvas_size,
         active_theme,
         active_page_index,
+        entry_root_id,
         false, // preserve_authored_geometry: web preview does not preserve hand-drawn bounds
         presenting,
         measure_backend,

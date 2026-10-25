@@ -64,11 +64,23 @@ impl CapturePreview {
             .map(|ms| ms.round() as u64)
             .unwrap_or(0);
 
+        // `entryNodeId`: the board the editor would open on for that selection.
+        let entry = args
+            .get("entryNodeId")
+            .map(|s| s.trim())
+            .filter(|s| !s.is_empty())
+            .and_then(|id| {
+                de_editor_core::preview_screen_set::preview_entry_root(
+                    self.page_roots(page_index),
+                    Some(id),
+                )
+            });
         let mut session = PreviewSession::enter_with_host_motion_preference(
             &self.document,
             CANVAS_SIZE,
             &self.active_theme,
             page_index,
+            entry.as_deref(),
             self.preserve_authored_geometry,
             false,
             // The layout measure the editor canvas and native Preview use, so
@@ -94,16 +106,12 @@ impl CapturePreview {
             .filter(|s| !s.is_empty())
         {
             Some(id) => id.to_string(),
-            None => page
-                .children
-                .first()
-                .map(|node| node.id.clone())
-                .ok_or_else(|| {
-                    (
-                        ToolErrorCode::ToolFailed,
-                        "preview shows nothing".to_string(),
-                    )
-                })?,
+            None => session.framed_root().map(|(id, _)| id).ok_or_else(|| {
+                (
+                    ToolErrorCode::ToolFailed,
+                    "preview shows nothing".to_string(),
+                )
+            })?,
         };
         let bytes = crate::export::with_capture_time_ms(clock_ms as f64, || {
             render_node_on_page_raster_bytes(page, &node_id, RasterFormat::Png, 1.0)
@@ -124,6 +132,17 @@ impl CapturePreview {
             mime_type: "image/png".into(),
             metadata_json: Some(metadata.to_string()),
         })
+    }
+
+    /// The top-level nodes of page `index` (a pageless document's children).
+    fn page_roots(&self, index: usize) -> &[jian_ops_schema::node::PenNode] {
+        match self.document.pages.as_deref() {
+            Some(pages) if !pages.is_empty() => pages
+                .get(index)
+                .map(|page| page.children.as_slice())
+                .unwrap_or_default(),
+            _ => &self.document.children,
+        }
     }
 
     /// The page to preview: `pageId` (a page id or name), else the

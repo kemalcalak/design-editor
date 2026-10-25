@@ -13,6 +13,19 @@ use de_editor_ui::widgets::{
 };
 use de_editor_ui::{Color, Point2D, Rect, RenderBackend};
 
+/// The root `page` presents: the board Preview was opened on when the
+/// page holds it (#223, workbench mode keeps every board), else the
+/// first root (APP MODE mounts one screen per page).
+pub(crate) fn framed_scene_root<'a>(
+    page: &'a de_editor_ui::layout_scene::ScenePage,
+    entry_root_id: Option<&str>,
+) -> Option<&'a SceneNode> {
+    page.children
+        .iter()
+        .find(|node| Some(node.id.as_str()) == entry_root_id)
+        .or_else(|| page.children.first())
+}
+
 /// Everything the pinned-nav pass needs, precomputed by the host's
 /// `DeviceFrame` so paint and hit-testing share one set of numbers.
 pub struct PinnedPaint {
@@ -28,11 +41,18 @@ pub struct PinnedPaint {
 
 impl PreviewSession {
     /// The root the device frame presents: schema id + scene-space rect.
+    /// The board Preview was opened on when the page holds it (#223),
+    /// else the first root.
     pub fn framed_root(&self) -> Option<(String, Rect)> {
-        let page = self.scene.active_page()?;
-        page.children
-            .first()
+        self.framed_scene_root()
             .map(|node| (node.id.clone(), node.bounds))
+    }
+
+    fn framed_scene_root(&self) -> Option<&SceneNode> {
+        framed_scene_root(
+            self.scene.active_page()?,
+            self.reset_seed.entry_root_id.as_deref(),
+        )
     }
 
     /// Scene-space rect of one top-level root by schema id.
@@ -62,8 +82,7 @@ impl PreviewSession {
     /// letterbox blend with the design instead of reading as a stray
     /// white seam against a dark theme.
     pub fn framed_root_fill(&self) -> Option<Color> {
-        let page = self.scene.active_page()?;
-        page.children.first()?.fill
+        self.framed_scene_root()?.fill
     }
 
     /// Mirror the host's page scroll into the framed root's `$scroll`
@@ -127,8 +146,7 @@ impl PreviewSession {
     /// to every device kind, since a landing page pins its nav just as
     /// deliberately as a phone screen pins its tab bar.
     fn authored_pin_at_edge(&self, bottom: bool) -> Option<(String, Rect)> {
-        let page = self.scene.active_page()?;
-        let root = page.children.first()?;
+        let root = self.framed_scene_root()?;
         let root_top = root.bounds.origin.y;
         let root_bottom = root_top + root.bounds.size.y;
         root.children
@@ -161,8 +179,7 @@ impl PreviewSession {
         if !phone {
             return None;
         }
-        let page = self.scene.active_page()?;
-        let root = page.children.first()?;
+        let root = self.framed_scene_root()?;
         let root_bottom = root.bounds.origin.y + root.bounds.size.y;
         let valid = |node: &SceneNode| {
             let height = node.bounds.size.y;
@@ -223,8 +240,7 @@ impl PreviewSession {
         if !phone {
             return None;
         }
-        let page = self.scene.active_page()?;
-        let root = page.children.first()?;
+        let root = self.framed_scene_root()?;
         let candidate = root.children.first()?;
         let height = candidate.bounds.size.y;
         if candidate.hidden || !height.is_finite() || height <= 0.0 || height > 60.0 {

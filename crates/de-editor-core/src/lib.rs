@@ -134,6 +134,7 @@ pub mod pen;
 pub mod pen_node_ext;
 pub mod pencil;
 pub mod pencil_fit;
+pub mod preview_screen_set;
 pub mod preview_slideshow;
 pub mod prompt_center_catalog;
 pub mod prompt_center_keyboard;
