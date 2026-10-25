@@ -30,6 +30,7 @@ use crate::widgets::property_panel_motion::MotionSummary;
 use crate::widgets::PaintCx;
 use crate::{Point2D, Rect, TextLayout};
 use de_editor_core::pen_node_ext::PenNodeExt;
+use de_editor_core::screen_marker_edit::ScreenMarkerEdit;
 use jian_ops_schema::events::Action;
 use jian_ops_schema::node::PenNode;
 
@@ -84,6 +85,8 @@ pub struct TriggerSummary {
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct InteractionSummary {
     pub screen: Option<String>,
+    /// A top-level Frame: it can be marked as a Preview screen (#223).
+    pub can_be_screen: bool,
     /// Authored triggers, in [`InteractionTrigger::ALL`] order.
     pub triggers: Vec<TriggerSummary>,
     /// The Motion section's rows (`animations`).
@@ -155,6 +158,7 @@ pub(crate) fn interactions_of(node: &PenNode, is_top_level: bool) -> Interaction
             .then(|| node.screen())
             .flatten()
             .map(str::to_string),
+        can_be_screen: is_top_level && matches!(node, PenNode::Frame(_)),
         triggers,
         motion: crate::widgets::property_panel_motion::motion_of(node),
         transition: node
@@ -263,6 +267,9 @@ fn subtree_contains(node: &PenNode, id: &str) -> bool {
 #[derive(Debug, Clone, PartialEq)]
 enum Row<'a> {
     Screen(&'a str),
+    /// A marked screen's button (#223): Set as start screen, Remove
+    /// screen.
+    ScreenMarker(ScreenMarkerEdit),
     /// A trigger's single action — opens the popover.
     Action(InteractionTrigger, &'a TapActionSummary),
     /// The Slide | Fade row under a single navigate.
@@ -278,8 +285,14 @@ const ROW_STEP: f32 = INPUT_HEIGHT + 6.0;
 
 fn rows(summary: &InteractionSummary) -> Vec<Row<'_>> {
     let mut out = Vec::new();
-    if let Some(screen) = &summary.screen {
+    // Unmarked: "Mark as screen" sits in the header "+" menu, so a plain
+    // frame's panel keeps its height.
+    if let Some(screen) = summary.screen.as_deref() {
         out.push(Row::Screen(screen));
+        if screen != "/" {
+            out.push(Row::ScreenMarker(ScreenMarkerEdit::Start));
+        }
+        out.push(Row::ScreenMarker(ScreenMarkerEdit::Remove));
     }
     for t in &summary.triggers {
         match t.actions.as_slice() {
@@ -355,6 +368,9 @@ pub fn push_interaction_action_rects(
             }
             Row::RemoveAll(trigger) => {
                 out.push((PropertyPanelAction::RemoveInteraction(trigger), rect));
+            }
+            Row::ScreenMarker(edit) => {
+                out.push((PropertyPanelAction::EditScreenMarker(edit), rect));
             }
             Row::Screen(_) | Row::ReadOnly(..) | Row::Url(_) => {}
         }
@@ -443,6 +459,16 @@ pub fn paint_interactions_section(
                 rect,
                 translate(locale, "interactions.removeAll", "Remove all"),
             ),
+            Row::ScreenMarker(edit) => {
+                let (key, fallback) = match edit {
+                    ScreenMarkerEdit::Mark => ("interactions.markScreen", "Mark as screen"),
+                    ScreenMarkerEdit::Start => {
+                        ("interactions.setStartScreen", "Set as start screen")
+                    }
+                    ScreenMarkerEdit::Remove => ("interactions.removeScreen", "Remove screen"),
+                };
+                paint_dropdown(cx, theme, rect, translate(locale, key, fallback));
+            }
         }
         y += ROW_STEP;
     }

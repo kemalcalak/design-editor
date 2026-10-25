@@ -147,6 +147,7 @@ mod root_placement_tests;
 pub mod scalar_vars;
 #[cfg(test)]
 mod scalar_vars_tests;
+pub mod screen_tools;
 #[cfg(feature = "script")]
 pub mod script_execute;
 #[cfg(feature = "script")]
@@ -288,6 +289,7 @@ pub use scalar_vars::{
     CreateVariable, DeleteVariable, RenameVariable, SetVariableBoolean, SetVariableNumber,
     SetVariableString,
 };
+pub use screen_tools::{set_screen_snapshot, SetScreen};
 pub use selected_ops_tools::{
     align_selected_snapshot, copy_selected_snapshot, cut_selected_snapshot,
     delete_selected_snapshot, duplicate_selected_snapshot, group_selected_snapshot,

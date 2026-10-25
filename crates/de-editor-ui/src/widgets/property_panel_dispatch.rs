@@ -754,6 +754,7 @@ pub fn apply_property_action(
         | A::MoveInteraction { .. }
         | A::SetInteractionTransition { .. }
         | A::RemoveInteraction(_)
+        | A::EditScreenMarker(_)
         | A::AddAnimation
         | A::RemoveAnimation(_)
         | A::SetAnimationTrigger { .. }

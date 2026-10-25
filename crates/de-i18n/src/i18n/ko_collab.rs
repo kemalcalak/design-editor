@@ -371,6 +371,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "browser.status.noBrowser" => "Chrome을 찾을 수 없음",
         "browser.status.failed" => "불러올 수 없음",
         "browser.status.blocked" => "허용되지 않은 주소",
+        "interactions.markScreen" => "화면으로 표시",
+        "interactions.setStartScreen" => "시작 화면으로 설정",
+        "interactions.removeScreen" => "화면 제거",
         _ => return None,
     })
 }

@@ -369,6 +369,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "browser.status.noBrowser" => "Không tìm thấy Chrome",
         "browser.status.failed" => "Không tải được",
         "browser.status.blocked" => "Địa chỉ không được phép",
+        "interactions.markScreen" => "Đánh dấu là màn hình",
+        "interactions.setStartScreen" => "Đặt làm màn hình bắt đầu",
+        "interactions.removeScreen" => "Gỡ màn hình",
         _ => return None,
     })
 }

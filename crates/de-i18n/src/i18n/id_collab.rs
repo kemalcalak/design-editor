@@ -369,6 +369,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "browser.status.noBrowser" => "Chrome tidak ditemukan",
         "browser.status.failed" => "Gagal memuat",
         "browser.status.blocked" => "Alamat tidak diizinkan",
+        "interactions.markScreen" => "Tandai sebagai layar",
+        "interactions.setStartScreen" => "Jadikan layar awal",
+        "interactions.removeScreen" => "Hapus layar",
         _ => return None,
     })
 }

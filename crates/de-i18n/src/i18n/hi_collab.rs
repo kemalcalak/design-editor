@@ -369,6 +369,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "browser.status.noBrowser" => "Chrome नहीं मिला",
         "browser.status.failed" => "लोड नहीं हो सका",
         "browser.status.blocked" => "इस पते की अनुमति नहीं है",
+        "interactions.markScreen" => "स्क्रीन के रूप में चिह्नित करें",
+        "interactions.setStartScreen" => "प्रारंभ स्क्रीन बनाएँ",
+        "interactions.removeScreen" => "स्क्रीन हटाएँ",
         _ => return None,
     })
 }

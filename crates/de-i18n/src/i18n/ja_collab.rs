@@ -369,6 +369,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "browser.status.noBrowser" => "Chrome が見つかりません",
         "browser.status.failed" => "読み込めません",
         "browser.status.blocked" => "このアドレスは許可されていません",
+        "interactions.markScreen" => "画面としてマーク",
+        "interactions.setStartScreen" => "開始画面に設定",
+        "interactions.removeScreen" => "画面を解除",
         _ => return None,
     })
 }

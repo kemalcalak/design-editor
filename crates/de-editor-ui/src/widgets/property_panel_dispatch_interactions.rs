@@ -26,6 +26,7 @@ pub(crate) fn is_interaction_action(action: &PropertyPanelAction) -> bool {
             | A::MoveInteraction { .. }
             | A::SetInteractionTransition { .. }
             | A::RemoveInteraction(_)
+            | A::EditScreenMarker(_)
             | A::AddAnimation
             | A::RemoveAnimation(_)
             | A::SetAnimationTrigger { .. }
@@ -95,6 +96,9 @@ pub(crate) fn apply_interaction_action(state: &mut EditorState, action: &Propert
         }
         A::RemoveInteraction(trigger) => {
             let _ = state.remove_selected_interaction(*trigger);
+        }
+        A::EditScreenMarker(edit) => {
+            let _ = state.edit_selected_screen_marker(*edit);
         }
         A::AddAnimation => {
             let _ = state.add_selected_animation();

@@ -369,6 +369,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "browser.status.noBrowser" => "Chrome bulunamadı",
         "browser.status.failed" => "Yüklenemedi",
         "browser.status.blocked" => "Bu adrese izin yok",
+        "interactions.markScreen" => "Ekran olarak işaretle",
+        "interactions.setStartScreen" => "Başlangıç ekranı yap",
+        "interactions.removeScreen" => "Ekranı kaldır",
         _ => return None,
     })
 }

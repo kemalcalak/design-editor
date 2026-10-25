@@ -498,6 +498,9 @@ pub enum PropertyPanelAction {
     /// "Remove all" — host clears that trigger's handler (and the whole
     /// `events` field when nothing else is left in it).
     RemoveInteraction(de_editor_core::interaction_edit::InteractionTrigger),
+    /// A top-level frame's Mark as screen / Set as start screen / Remove
+    /// screen row (#223).
+    EditScreenMarker(de_editor_core::screen_marker_edit::ScreenMarkerEdit),
     /// Motion header "+": append a fade-in animation.
     AddAnimation,
     /// A Motion row's remove button.

@@ -369,6 +369,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "browser.status.noBrowser" => "Chrome não encontrado",
         "browser.status.failed" => "Falha ao carregar",
         "browser.status.blocked" => "Endereço não permitido",
+        "interactions.markScreen" => "Marcar como tela",
+        "interactions.setStartScreen" => "Definir como tela inicial",
+        "interactions.removeScreen" => "Remover tela",
         _ => return None,
     })
 }
