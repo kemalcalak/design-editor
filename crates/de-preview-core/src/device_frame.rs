@@ -30,9 +30,14 @@ pub struct PinnedGeom {
 /// Device-frame geometry shared by paint and hit-testing.
 pub struct DeviceFrame {
     pub kind: PreviewDeviceKind,
-    /// Screen-space frame rect after fit and centering.
+    /// Screen-space frame rect after `chrome_fit` and centering.
     pub frame: Rect,
+    /// Scene-to-screen scale of the content. Equals `chrome_fit` unless
+    /// the framed root is wider than the device, which shrinks it to the
+    /// frame's width instead of cropping it (#237).
     pub fit: f32,
+    /// Scale of the device silhouette itself (frame size, corner radius).
+    pub chrome_fit: f32,
     /// Screen-space page origin before applying the scroll offset.
     pub content_origin: Point2D,
     /// Pinned bottom nav, if detected.
@@ -188,15 +193,23 @@ pub fn compute_frame_geometry(
     status_scene: Option<Rect>,
 ) -> DeviceFrame {
     let (frame_w, frame_h) = frame_size(kind);
-    let fit = (canvas.size.x / frame_w)
+    let chrome_fit = (canvas.size.x / frame_w)
         .min(canvas.size.y / frame_h)
         .min(1.0);
     let frame = Rect {
         origin: Point2D::new(
-            canvas.origin.x + (canvas.size.x - frame_w * fit) / 2.0,
-            canvas.origin.y + (canvas.size.y - frame_h * fit) / 2.0,
+            canvas.origin.x + (canvas.size.x - frame_w * chrome_fit) / 2.0,
+            canvas.origin.y + (canvas.size.y - frame_h * chrome_fit) / 2.0,
         ),
-        size: Point2D::new(frame_w * fit, frame_h * fit),
+        size: Point2D::new(frame_w * chrome_fit, frame_h * chrome_fit),
+    };
+    // A root wider than the device (a desktop page on Phone) is shrunk to
+    // the frame's width, so the centring offset below is 0 (its left edge);
+    // a narrower one keeps its authored size.
+    let fit = if root_scene.size.x > frame_w {
+        chrome_fit * frame_w / root_scene.size.x
+    } else {
+        chrome_fit
     };
     let content_origin = Point2D::new(
         frame.origin.x + (frame.size.x - root_scene.size.x * fit) / 2.0 - root_scene.origin.x * fit,
@@ -240,15 +253,18 @@ pub fn compute_frame_geometry(
         }
     });
     let status_h = pinned_top.as_ref().map_or(0.0, |p| p.node_scene.size.y);
+    // The frame's height in scene pixels at the content scale (exactly
+    // `frame_h` when the root fits).
+    let visible_scene_h = frame_h * (chrome_fit / fit);
     let (nav_top, viewport_h) = match &pinned {
         Some(pinned) => {
             let nav_h = pinned.node_scene.size.y;
             (
                 (pinned.node_scene.origin.y - root_scene.origin.y).max(0.0),
-                frame_h - nav_h - status_h,
+                visible_scene_h - nav_h - status_h,
             )
         }
-        None => (content_h, frame_h - status_h),
+        None => (content_h, visible_scene_h - status_h),
     };
     let content_span_x = (
         content_origin.x + root_scene.origin.x * fit,
@@ -258,6 +274,7 @@ pub fn compute_frame_geometry(
         kind,
         frame,
         fit,
+        chrome_fit,
         content_origin,
         pinned,
         pinned_top,

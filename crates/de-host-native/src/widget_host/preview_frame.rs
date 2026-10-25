@@ -277,7 +277,7 @@ impl super::WidgetHostNative {
             None => (steady_frame, 1.0),
         };
 
-        let radius = frame_radius(device_frame.kind) * device_frame.fit;
+        let radius = frame_radius(device_frame.kind) * device_frame.chrome_fit;
         // Line the bezel with the screen's OWN background (falling back
         // to the host's canvas-surface tone) rather than a hardcoded
         // white: the device silhouette is a fixed size (`frame_size`)

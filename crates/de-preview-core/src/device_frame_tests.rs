@@ -278,3 +278,74 @@ fn status_bar_strip_maps_through_pinned_top() {
         _ => panic!("expected scrolled surface below the status strip"),
     }
 }
+
+/// #237: a desktop page on Phone is shrunk to the frame's width from its
+/// left edge instead of being centre-cropped.
+#[test]
+fn phone_fits_a_wider_root_to_the_frame_width() {
+    let canvas = rect(0.0, 0.0, 1000.0, 844.0);
+    let frame = compute_frame_geometry(
+        PreviewDeviceKind::Phone,
+        canvas,
+        rect(0.0, 0.0, 1440.0, 6000.0),
+        None,
+        None,
+    );
+    assert!((frame.chrome_fit - 1.0).abs() < 1e-6);
+    assert!((frame.fit - 390.0 / 1440.0).abs() < 1e-6);
+    let (left, right) = (
+        frame.frame.origin.x,
+        frame.frame.origin.x + frame.frame.size.x,
+    );
+    assert!((frame.content_span_x.0 - left).abs() < 0.01);
+    assert!((frame.content_span_x.1 - right).abs() < 0.01);
+
+    let surface = PreviewSurface::Scrolled { scroll_y: 0.0 };
+    let at = |x: f32| device_scene_point(&frame, &surface, Point2D::new(x, 100.0)).unwrap();
+    assert!(at(left).x.abs() < 0.1);
+    assert!((at(right).x - 1440.0).abs() < 0.1);
+
+    // The whole frame height is visible page: 844 screen px at 390/1440.
+    let visible = 844.0 * 1440.0 / 390.0;
+    assert!((frame.viewport_h - visible).abs() < 0.5);
+    assert!((scroll_max(&frame) - (6000.0 - visible)).abs() < 0.5);
+}
+
+#[test]
+fn phone_keeps_a_fitting_root_at_its_own_size() {
+    let frame = compute_frame_geometry(
+        PreviewDeviceKind::Phone,
+        rect(0.0, 0.0, 1000.0, 844.0),
+        rect(0.0, 0.0, 390.0, 2000.0),
+        None,
+        None,
+    );
+    assert_eq!(frame.fit, frame.chrome_fit);
+    assert_eq!(frame.viewport_h, 844.0);
+}
+
+/// #237 with a shrunk silhouette and a pinned nav: the content scale
+/// compounds both, and the nav strip still spans the frame's bottom.
+#[test]
+fn shrunk_phone_fits_a_wider_root_with_a_pinned_nav() {
+    let frame = compute_frame_geometry(
+        PreviewDeviceKind::Phone,
+        rect(0.0, 0.0, 500.0, 422.0),
+        rect(0.0, 0.0, 1440.0, 6000.0),
+        Some(rect(0.0, 5920.0, 1440.0, 80.0)),
+        None,
+    );
+    assert!((frame.chrome_fit - 0.5).abs() < 1e-6);
+    let fit = 0.5 * 390.0 / 1440.0;
+    assert!((frame.fit - fit).abs() < 1e-6);
+
+    let pinned = frame.pinned.as_ref().expect("pinned nav");
+    assert!((pinned.strip.size.y - 80.0 * fit).abs() < 0.01);
+    let strip_bottom = pinned.strip.origin.y + pinned.strip.size.y;
+    assert!((strip_bottom - (frame.frame.origin.y + frame.frame.size.y)).abs() < 0.01);
+    assert!((pinned.paint_origin.x - frame.frame.origin.x).abs() < 0.01);
+
+    let visible = 844.0 * 1440.0 / 390.0;
+    assert!((frame.viewport_h - (visible - 80.0)).abs() < 0.5);
+    assert!((scroll_max(&frame) - (5920.0 - (visible - 80.0))).abs() < 0.5);
+}
