@@ -12,21 +12,21 @@
 //!    outside the header / footer) → `scroll_to` that section.
 //!
 //! Preview entry is the only caller (`de_preview_core::auto_wire`, on a
-//! clone, and only when no `screen` marker is authored), so generation
-//! output is unchanged. Like the parent pass it is additive only (an item
+//! clone; through `wire_preview_screens` for the boards Preview browses),
+//! so generation output is unchanged. Like the parent pass it is additive only (an item
 //! whose subtree already carries `events` is skipped), matches labels
-//! through [`labels_match`] and adds no schema fields. Unlike it, an
+//! through `crate::label_match` and adds no schema fields. Unlike it, an
 //! ambiguous label binds nothing: a wrong website link is worse than a
 //! dead one.
 //!
-//! Surfaces are found only near the page's top (a direct child of the
+//! Surfaces are found only at the page's top level (a direct child of the
 //! page, or of an unnamed wrapper directly under it), so a "Card Header"
 //! deep inside a section never turns its title into a link.
 
 use de_editor_core::PenNodeExt;
 use jian_ops_schema::node::{PenNode, TextContent};
 
-use super::{apply_on_tap, identity_haystack, labels_match, normalize_label, subtree_has_events};
+use super::{apply_on_tap, identity_haystack, subtree_has_events};
 use crate::types::DocSink;
 use de_editor_core::interaction_edit::{navigate_action, scroll_to_action, NavigateVerb};
 use jian_ops_schema::events::Action;
@@ -124,38 +124,28 @@ pub(crate) fn wire_web_nav_links_on(sink: &mut dyn DocSink, page_ids: &[String])
     }
 }
 
-/// The `onTap` action for a link labelled `label`: a page match wins
-/// over a section match; see [`single_match`] for ties.
+/// The `onTap` action for a link labelled `label`: the target named most
+/// strongly (`crate::label_match`, any language); among equally strong
+/// ones a page beats a section and a shallower section a deeper one (a
+/// "Pricing" section beats its own "Pricing Card"). A tie that survives
+/// binds nothing: a wrong website link is worse than a dead one.
 fn link_patch(label: &str, pages: &[Target], sections: &[Target]) -> Option<Action> {
-    if let Some(path) = single_match(label, pages) {
-        return Some(navigate_action(NavigateVerb::Replace, path));
+    enum Link<'a> {
+        Page(&'a str),
+        Section(&'a str),
     }
-    let target = single_match(label, sections)?;
-    Some(scroll_to_action(target))
-}
-
-/// The value of the one target `label` names. Exact (normalized) name
-/// matches win over [`labels_match`]'s prefix / word matches, then the
-/// shallowest wins, so a "Pricing" section beats its own "Pricing Card".
-/// A tie that survives both binds nothing.
-fn single_match<'a>(label: &str, targets: &'a [Target]) -> Option<&'a str> {
-    let wanted = normalize_label(label);
-    let exact: Vec<&Target> = targets
+    let targets = pages
         .iter()
-        .filter(|t| !wanted.is_empty() && normalize_label(&t.name) == wanted)
-        .collect();
-    let matched = if exact.is_empty() {
-        targets
-            .iter()
-            .filter(|t| labels_match(label, &t.name))
-            .collect()
-    } else {
-        exact
-    };
-    let shallowest = matched.iter().map(|t| t.depth).min()?;
-    let mut best = matched.into_iter().filter(|t| t.depth == shallowest);
-    let first = best.next()?;
-    best.next().is_none().then_some(first.value.as_str())
+        .map(|t| (t.name.as_str(), 0, Link::Page(&t.value)))
+        .chain(
+            sections
+                .iter()
+                .map(|t| (t.name.as_str(), 1 + t.depth, Link::Section(&t.value))),
+        );
+    Some(match crate::label_match::best_match(label, targets)? {
+        Link::Page(path) => navigate_action(NavigateVerb::Replace, path),
+        Link::Section(id) => scroll_to_action(id),
+    })
 }
 
 fn display_name(node: &PenNode) -> String {

@@ -140,6 +140,7 @@ pub(crate) mod cleanup_typography;
 pub mod concurrent;
 pub mod geometry_validation;
 pub(crate) mod hero_bleed;
+mod label_match;
 pub mod loop_finalize;
 pub mod loop_finalize_scoped;
 pub mod nav_issues;

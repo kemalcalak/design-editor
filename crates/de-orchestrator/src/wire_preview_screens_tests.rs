@@ -163,3 +163,31 @@ fn a_lone_board_gets_section_links_but_no_route() {
     assert_eq!(screen(&state, "solo"), None);
     assert_eq!(on_tap(&state, "solo-l-a"), scroll("solo-features"));
 }
+
+/// Inflected labels (#223): "Teams" names the "Teams directory" section by
+/// a whole word and the "Team page" board only by a stem, so the section
+/// wins on the home page; on the team page, which has no such section,
+/// the stem leads to the team page.
+const INFLECTED: &str = r#"{"version":"1.0","children":[
+    {"type":"frame","id":"home","name":"Home","x":0,"y":0,"width":1280,"height":2000,
+     "layout":"vertical","children":[
+        {"type":"frame","id":"home-top","width":1280,"height":64,"layout":"horizontal","children":[
+            {"type":"text","id":"home-l-teams","content":"Teams"},
+            {"type":"text","id":"home-l-contact","content":"Contact"}]},
+        {"type":"frame","id":"home-dir","name":"Teams directory","width":1280,"height":600}]},
+    {"type":"frame","id":"team","name":"Team page: Rocket","x":1400,"y":0,"width":1280,
+     "height":1500,"layout":"vertical","children":[
+        {"type":"frame","id":"team-top","width":1280,"height":64,"layout":"horizontal","children":[
+            {"type":"text","id":"team-l-teams","content":"Teams"},
+            {"type":"text","id":"team-l-contact","content":"Contact"}]},
+        {"type":"frame","id":"team-story","name":"Journey","width":1280,"height":600}]}
+]}"#;
+
+#[test]
+fn a_whole_word_section_beats_a_stem_page() {
+    let state = wire(INFLECTED, "home");
+    assert_eq!(on_tap(&state, "home-l-teams"), scroll("home-dir"));
+    assert_eq!(on_tap(&state, "team-l-teams"), replace("/team-page-rocket"));
+    // Nothing is named "Contact": dead, not guessed.
+    assert_eq!(on_tap(&state, "home-l-contact"), None);
+}
