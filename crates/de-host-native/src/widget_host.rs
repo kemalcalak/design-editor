@@ -34,6 +34,8 @@ mod agent_settings_tests;
 mod ai_chat_geometry;
 #[cfg(test)]
 mod ai_chat_minimized_tests;
+#[cfg(test)]
+mod animated_regions_tests;
 mod arc_drag;
 mod blur_inputs;
 #[cfg(test)]
@@ -143,6 +145,8 @@ mod keyboard_clipboard;
 mod keyboard_delete;
 mod keyboard_escape;
 mod keyboard_send;
+#[cfg(test)]
+mod large_doc_frame_tests;
 mod missing_fonts_dispatch;
 mod mode_transition_host;
 #[cfg(test)]
@@ -151,13 +155,9 @@ mod overlay_rects;
 #[cfg(test)]
 mod page_switch_center_tests;
 mod paint;
+mod paint_animated_regions;
 mod paint_chrome_menus;
 mod paint_floating_panels;
-mod paint_animated_regions;
-#[cfg(test)]
-mod animated_regions_tests;
-#[cfg(test)]
-mod large_doc_frame_tests;
 mod paint_pan_cache;
 mod paint_rail;
 mod paint_topmost_overlays;

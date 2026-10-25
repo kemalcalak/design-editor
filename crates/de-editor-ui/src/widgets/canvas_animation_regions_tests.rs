@@ -34,10 +34,13 @@ fn begin_frame_clears_the_record() {
     record(rect(0.0, 0.0, 1.0, 1.0));
     mark_backdrop();
     begin_frame();
-    assert_eq!(snapshot(), AnimationRegions {
-        rects: Vec::new(),
-        located: true
-    });
+    assert_eq!(
+        snapshot(),
+        AnimationRegions {
+            rects: Vec::new(),
+            located: true
+        }
+    );
 }
 
 #[test]
@@ -62,7 +65,9 @@ fn the_placeholder_sweep_marks_the_frame_unlocated() {
 fn a_time_shader_alone_stays_located() {
     start_canvas_frame();
     crate::widgets::canvas_shader_clock::begin_frame(0);
-    assert!(crate::widgets::canvas_shader_clock::time_uniform_value("uniform float time;").is_some());
+    assert!(
+        crate::widgets::canvas_shader_clock::time_uniform_value("uniform float time;").is_some()
+    );
     assert!(snapshot().located);
 }
 
@@ -111,8 +116,8 @@ fn the_forward_map_inverts_the_pointer_map() {
         &[],
     )
     .expect("declares mouse");
-    let mapped = canvas_shader_pointer::map_to_canvas(rect(local[0], local[1], 0.0, 0.0))
-        .expect("finite");
+    let mapped =
+        canvas_shader_pointer::map_to_canvas(rect(local[0], local[1], 0.0, 0.0)).expect("finite");
     canvas_shader_pointer::leave_node_transform(outer);
     assert!((mapped.origin.x - screen.x).abs() < 1e-3, "{mapped:?}");
     assert!((mapped.origin.y - screen.y).abs() < 1e-3, "{mapped:?}");

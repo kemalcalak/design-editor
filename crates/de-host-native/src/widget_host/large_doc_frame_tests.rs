@@ -23,7 +23,9 @@ const TIME_SKSL: &str = "uniform float time; uniform float2 size; half4 main(flo
 /// A tiny PNG as a data URL, so the image fills need no file.
 fn png_data_url() -> String {
     let mut surface = skia_safe::surfaces::raster_n32_premul((64, 64)).expect("surface");
-    surface.canvas().clear(skia_safe::Color::from_rgb(200, 120, 40));
+    surface
+        .canvas()
+        .clear(skia_safe::Color::from_rgb(200, 120, 40));
     let image = surface.image_snapshot();
     let data = image
         .encode(None, skia_safe::EncodedImageFormat::PNG, None)

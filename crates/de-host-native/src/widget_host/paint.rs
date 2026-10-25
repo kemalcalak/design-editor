@@ -284,8 +284,7 @@ impl WidgetHostNative {
                     }
                     rendered_layer
                 };
-                self.canvas_animation =
-                    de_editor_ui::widgets::canvas_animation_regions::snapshot();
+                self.canvas_animation = de_editor_ui::widgets::canvas_animation_regions::snapshot();
                 if let Some(mut surface) = cached_layer {
                     use super::canvas_pan_cache::PAN_CACHE_MARGIN;
                     frame.draw_offscreen_layer(

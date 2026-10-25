@@ -55,7 +55,11 @@ fn paint_at(host: &mut WidgetHostNative, backend: &mut NativeBackend, now_ms: u6
 
 /// Largest per-channel difference between two frames.
 fn max_diff(a: &[u8], b: &[u8]) -> u8 {
-    a.iter().zip(b).map(|(x, y)| x.abs_diff(*y)).max().unwrap_or(0)
+    a.iter()
+        .zip(b)
+        .map(|(x, y)| x.abs_diff(*y))
+        .max()
+        .unwrap_or(0)
 }
 
 /// Run frames at 1000, 1016, 1032, ... on one host and compare the last
@@ -90,7 +94,10 @@ fn a_time_shader_frame_repaints_only_its_region_and_matches_a_full_paint() {
         "rest frames after the layer build repaint only the animated region"
     );
     assert!(host.pan_cache.is_some(), "the layer stays resident at rest");
-    assert!(diff <= 1, "served frame differs from a full repaint by {diff}");
+    assert!(
+        diff <= 1,
+        "served frame differs from a full repaint by {diff}"
+    );
 }
 
 #[test]
@@ -108,7 +115,10 @@ fn content_above_and_rotated_shaders_stay_correct() {
         return;
     }
     assert!(host.pan_cache_animation_refreshes >= 2);
-    assert!(diff <= 1, "served frame differs from a full repaint by {diff}");
+    assert!(
+        diff <= 1,
+        "served frame differs from a full repaint by {diff}"
+    );
 }
 
 #[test]

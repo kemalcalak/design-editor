@@ -89,7 +89,11 @@ pub(crate) fn mark_backdrop() {
 /// Grow `rect` outward to whole device pixels at `dpi`, so a clip to it
 /// covers every pixel it touches with full coverage.
 pub fn snap_out(rect: Rect, dpi: f32) -> Rect {
-    let dpi = if dpi.is_finite() && dpi > 0.0 { dpi } else { 1.0 };
+    let dpi = if dpi.is_finite() && dpi > 0.0 {
+        dpi
+    } else {
+        1.0
+    };
     let x0 = (rect.origin.x * dpi).floor() / dpi;
     let y0 = (rect.origin.y * dpi).floor() / dpi;
     let x1 = ((rect.origin.x + rect.size.x) * dpi).ceil() / dpi;

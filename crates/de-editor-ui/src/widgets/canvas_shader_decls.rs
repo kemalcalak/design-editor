@@ -75,7 +75,8 @@ mod tests {
 
     #[test]
     fn decls_match_the_uncached_scan() {
-        let both = "uniform float time; uniform half2 mouse; half4 main(float2 p){return half4(1);}";
+        let both =
+            "uniform float time; uniform half2 mouse; half4 main(float2 p){return half4(1);}";
         assert_eq!(
             shader_decls(both),
             ShaderDecls {
