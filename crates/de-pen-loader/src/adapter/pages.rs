@@ -106,9 +106,12 @@ pub(super) fn compute_layout(root: &PenNode, out: &mut BTreeMap<String, [f32; 4]
     let Some(root_id) = taffy_roots.first() else {
         return;
     };
-    if engine.compute(*root_id, (root_w, root_h)).is_err() {
+    let Ok(text_widths) = engine.compute_with_text_widths(*root_id, (root_w, root_h)) else {
         return;
-    }
+    };
+    let mut wrapping = std::collections::HashSet::new();
+    collect_wrapping_text_ids(root, &mut wrapping);
+    let mut unrounded = Vec::new();
     // Walk every node by SlotMap iteration, looking up its absolute
     // rect via `node_rect`. Keyed back by the schema id we stashed
     // in `tree.by_id` during insertion. `node_rect` already carries
@@ -126,9 +129,41 @@ pub(super) fn compute_layout(root: &PenNode, out: &mut BTreeMap<String, [f32; 4]
                     rect.size.height,
                 ],
             );
+            if wrapping.contains(id_str.as_str()) {
+                if let Some(width) = text_widths.get(node_key) {
+                    unrounded.push((id_str.clone(), rect.size.width, *width));
+                }
+            }
         }
     }
+    // The repair walks sibling positions on the whole-pixel grid, so it
+    // runs on the rounded boxes.
     crate::layout_repair::repair_fit_content_layout(root, out);
+    // Wrapping text then takes taffy's unrounded width: for fixed-width
+    // text that is the width the measure wrapped at, and the painter wraps
+    // at the box width, so a pixel either way could move a line break the
+    // box height was sized for (#202). A box the repair resized keeps the
+    // repair's width.
+    for (id, rounded, width) in unrounded {
+        if let Some(rect) = out.get_mut(&id) {
+            if rect[2] == rounded {
+                rect[2] = width;
+            }
+        }
+    }
+}
+
+/// Ids of the text nodes the painter wraps (`shapes::text_wraps`).
+fn collect_wrapping_text_ids<'a>(node: &'a PenNode, out: &mut std::collections::HashSet<&'a str>) {
+    use de_editor_core::pen_node_ext::PenNodeExt;
+    if let PenNode::Text(text) = node {
+        if super::shapes::text_wraps(text) {
+            out.insert(text.base.id.as_str());
+        }
+    }
+    for child in node.children().into_iter().flatten() {
+        collect_wrapping_text_ids(child, out);
+    }
 }
 
 /// This thread's layout text measure (shared, memoized). Hosts that run
@@ -137,3 +172,7 @@ pub(super) fn compute_layout(root: &PenNode, out: &mut BTreeMap<String, [f32; 4]
 pub fn layout_measure_backend() -> Rc<dyn MeasureBackend> {
     LAYOUT_MEASURE_BACKEND.with(Rc::clone)
 }
+
+#[cfg(test)]
+#[path = "pages_wrap_width_tests.rs"]
+mod wrap_width_tests;

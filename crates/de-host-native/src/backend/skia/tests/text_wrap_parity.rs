@@ -66,7 +66,9 @@ fn painted_wrap_matches_the_layout_line_count_at_every_width() {
                 "weight {weight}: painted lines {:?} at width {width} disagree with layout",
                 painted.lines
             );
-            width += 3.0;
+            // Fractional steps too: layout hands wrapping text its unrounded
+            // `fill_container` width (#202), so the painter wraps at those.
+            width += 2.7;
         }
     }
 }
