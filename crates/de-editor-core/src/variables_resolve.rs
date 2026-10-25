@@ -24,6 +24,7 @@
 //! - `palette` — the generated [`DEFAULT_PALETTE_FALLBACK`] table
 //! - `replace` — [`replace_variable_refs_in_tree`] and its walk
 
+mod bindings;
 mod palette;
 mod replace;
 mod shader_uniforms;
@@ -221,6 +222,11 @@ fn resolve_fill(fill: &mut PenFill, vars: Option<&Vars>, theme: &Theme) -> bool 
         PenFill::Shader(body) => {
             changed |= shader_uniforms::resolve(body.uniforms.as_mut(), vars, theme);
         }
+        PenFill::MeshGradient(body) => {
+            for stop in &mut body.stops {
+                changed |= fix(&mut stop.color);
+            }
+        }
         _ => {}
     }
     changed
@@ -263,6 +269,9 @@ pub fn resolve_node_for_canvas(node: &mut PenNode, vars: Option<&Vars>, theme: &
         }
         None => theme,
     };
+
+    // Typed fields bound to a variable (`variableBindings`).
+    changed |= bindings::apply(node, vars, theme);
 
     // Opacity — `NumberOrExpression` on the shared base.
     if let Some(opacity) = node.base_mut().opacity.as_mut() {
@@ -366,6 +375,13 @@ pub fn resolve_node_for_canvas(node: &mut PenNode, vars: Option<&Vars>, theme: &
     changed
 }
 
+/// Write the themed values of `node`'s own variable-bound fields
+/// (`variableBindings`) into it, for surfaces that show one node rather than
+/// the resolved canvas (the property panel). Returns whether a field changed.
+pub fn apply_variable_bindings(node: &mut PenNode, vars: Option<&Vars>, theme: &Theme) -> bool {
+    bindings::apply(node, vars, theme)
+}
+
 /// True when a canvas-root list contains any `$token` that
 /// [`resolve_node_for_canvas`] would resolve.
 ///
@@ -379,6 +395,7 @@ pub fn roots_have_tokens(nodes: &[PenNode]) -> bool {
             PenFill::RadialGradient(body) => body.stops.iter().any(|s| is_variable_ref(&s.color)),
             PenFill::AngularGradient(body) => body.stops.iter().any(|s| is_variable_ref(&s.color)),
             PenFill::Shader(body) => shader_uniforms::has_tokens(body.uniforms.as_ref()),
+            PenFill::MeshGradient(body) => body.stops.iter().any(|s| is_variable_ref(&s.color)),
             _ => false,
         }
     }
@@ -391,7 +408,7 @@ pub fn roots_have_tokens(nodes: &[PenNode]) -> bool {
     }
     fn node_has_token(node: &PenNode) -> bool {
         let base = crate::pen_node_ext::PenNodeExt::base(node);
-        if base.opacity.as_ref().is_some_and(expr_has_token) {
+        if base.opacity.as_ref().is_some_and(expr_has_token) || bindings::has_bindings(node) {
             return true;
         }
         if let Some(fills) = crate::fills::node_fills(node) {
@@ -501,6 +518,16 @@ pub fn resolve_shader_uniforms(
     if !shader_uniforms::has_tokens(Some(uniforms)) {
         return None;
     }
+    let theme = node_theme(doc, roots, node_id, active);
+    let mut resolved = uniforms.clone();
+    shader_uniforms::resolve(Some(&mut resolved), doc.variables.as_ref(), &theme);
+    Some(resolved)
+}
+
+/// The theme node `node_id` on `roots` resolves against on the canvas:
+/// the document's effective `active` theme overlaid by the `theme` of each
+/// ancestor and of the node itself.
+pub fn node_theme(doc: &PenDocument, roots: &[PenNode], node_id: &str, active: &Theme) -> Theme {
     let mut theme = effective_theme(doc, active);
     fn scope(nodes: &[PenNode], id: &str, theme: &mut Theme) -> bool {
         for node in nodes {
@@ -519,7 +546,5 @@ pub fn resolve_shader_uniforms(
         false
     }
     scope(roots, node_id, &mut theme);
-    let mut resolved = uniforms.clone();
-    shader_uniforms::resolve(Some(&mut resolved), doc.variables.as_ref(), &theme);
-    Some(resolved)
+    theme
 }

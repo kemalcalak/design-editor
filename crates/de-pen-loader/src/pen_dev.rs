@@ -19,6 +19,7 @@ use serde_json::Value;
 
 pub use imports::PenDevImport;
 
+mod bindings;
 mod glsl;
 mod glsl_bindings;
 mod glsl_error;
