@@ -65,6 +65,14 @@ fn replace_in_node(
     if let Some(opacity) = node.base_mut().opacity.as_mut() {
         replace_expr(opacity);
     }
+    super::bindings::rename(node, token, new, vars, theme);
+    if let PenNode::Ref(reference) = node {
+        if let (Some(descendants), Some(old)) =
+            (reference.descendants.as_mut(), token.strip_prefix('$'))
+        {
+            super::bindings::rename_in_overrides(descendants, old, new);
+        }
+    }
     if let Some(container) = node_container_mut(node) {
         if let Some(gap) = container.gap.as_mut() {
             replace_expr(gap);
@@ -167,6 +175,11 @@ fn replace_in_fill(
         }
         PenFill::Shader(body) => {
             super::shader_uniforms::replace(body.uniforms.as_mut(), token, new, vars, theme)
+        }
+        PenFill::MeshGradient(body) => {
+            for stop in &mut body.stops {
+                replace_color(&mut stop.color, token, new, vars, theme);
+            }
         }
         _ => {}
     }

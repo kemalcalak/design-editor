@@ -8,6 +8,7 @@ use std::rc::Rc;
 
 use serde_json::{Map, Value};
 
+use super::bindings;
 use super::instances::{self, InstanceBases};
 use super::variables::{self, Theme, Variables};
 use super::{paint, shader, AssetReader, PenDevReport};
@@ -199,6 +200,7 @@ fn convert_node(
     paint::convert_stroke(map, role, theme, ctx);
     include_stroke_in_layout(map, matches!(role, Role::Patch(_)), ctx.report);
     paint::convert_effects(map, theme, ctx);
+    bindings::finish(map, ctx.report);
 }
 
 /// pen.dev allows `reusable: true` on any node kind; the canonical schema
