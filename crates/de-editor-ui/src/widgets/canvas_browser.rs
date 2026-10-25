@@ -18,6 +18,7 @@ use crate::widgets::browser_textures;
 use crate::widgets::canvas_annotation::editor_canvas_dark;
 use crate::widgets::canvas_viewport_image::{cached_bytes_for, paint_cached_raster};
 use crate::widgets::icons::{draw_icon, Icon};
+use crate::widgets::text_metrics;
 use crate::widgets::PaintCx;
 use crate::{Color, Point2D, Rect, TextLayout};
 
@@ -127,11 +128,15 @@ fn paint_placeholder(
         1.5,
     );
     if let Some(label) = label {
-        let layout = TextLayout::single_run(&label, "", label_size, ink.to_jian(), Point2D::ZERO);
-        let width = cx
-            .backend
-            .measure_text(&label, label_size)
-            .min(world_rect.size.x);
+        let layout = TextLayout::single_run(
+            &label,
+            text_metrics::CHROME_FONT_FAMILY,
+            label_size,
+            ink.to_jian(),
+            Point2D::ZERO,
+        );
+        let width =
+            text_metrics::measure_chrome(cx.backend, &label, label_size).min(world_rect.size.x);
         cx.backend.draw_text(
             &layout,
             Point2D::new(centre_x - width * 0.5, top + glyph + gap + label_size * 0.8),
