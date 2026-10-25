@@ -359,7 +359,6 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "script.sourceTitle" => "Código do script",
         "script.running" => "Gerando…",
         "script.generated" => "{count} nós · {ms} ms",
-        "script.desktopOnly" => "É regenerado no app para desktop",
         "script.hugSize" => "Um tamanho ajustado roda com 0: use fixo ou preencher",
         _ => return None,
     })

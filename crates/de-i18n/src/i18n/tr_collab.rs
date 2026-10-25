@@ -359,7 +359,6 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "script.sourceTitle" => "Betik kaynağı",
         "script.running" => "Üretiliyor…",
         "script.generated" => "{count} düğüm · {ms} ms",
-        "script.desktopOnly" => "Masaüstü uygulamasında yeniden üretilir",
         "script.hugSize" => "Sığdırılan boyut 0 ile çalışır: sabit ya da doldur yapın",
         _ => return None,
     })

@@ -28,6 +28,8 @@ pub(super) struct CkInner {
     /// DOM-side video playback layer used only while CanvasKit preview is
     /// active. The painted canvas remains the poster source of truth.
     pub(super) video_overlay: crate::video_overlay::VideoOverlayLayer,
+    /// Script-node runs on the daemon (#219).
+    pub(super) scripts: crate::web_script_runner::WebScriptRunner,
 }
 
 impl CkInner {
@@ -49,6 +51,12 @@ impl CkInner {
             crate::iconify_web::ensure_core_catalog();
         }
         crate::web_asset_fetch::drain_pending();
+        // Land finished script runs and send the ones the document needs;
+        // a scan only happens when the document, theme or page moved.
+        let (state, scene) = self.host.editor_state_mut_and_layout_scene();
+        if self.scripts.pump(state, scene) {
+            self.host.mark_editor_state_dirty();
+        }
         // A template clicked before its document arrived is instantiated here,
         // the frame after the fetch lands. No-op on every other frame and on
         // native, where the document was already in the binary.

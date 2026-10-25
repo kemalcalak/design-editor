@@ -359,7 +359,6 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "script.sourceTitle" => "腳本原始碼",
         "script.running" => "正在產生…",
         "script.generated" => "{count} 個節點 · {ms} 毫秒",
-        "script.desktopOnly" => "在桌面應用程式中重新產生",
         "script.hugSize" => "自適應尺寸以 0 執行：請設為固定或填滿",
         _ => return None,
     })

@@ -359,7 +359,6 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "script.sourceTitle" => "ซอร์สสคริปต์",
         "script.running" => "กำลังสร้าง…",
         "script.generated" => "{count} โหนด · {ms} มิลลิวินาที",
-        "script.desktopOnly" => "สร้างใหม่ในแอปเดสก์ท็อป",
         "script.hugSize" => "ขนาดแบบพอดีเนื้อหาทำงานที่ 0 ตั้งเป็นคงที่หรือเติมเต็ม",
         _ => return None,
     })

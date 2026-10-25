@@ -32,8 +32,6 @@ const LABEL_FONT_SIZE: f32 = 11.0;
 const EDIT_BUTTON_W: f32 = 120.0;
 /// Rows past this many are not shown: one bit each in `ScriptRows`' masks.
 const MAX_ROWS: usize = u64::BITS as usize;
-/// Whether this build runs scripts (the web editor shows saved children).
-const SCRIPT_ENGINE_AVAILABLE: bool = !cfg!(target_arch = "wasm32");
 
 /// How one input is edited.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -66,8 +64,6 @@ pub enum ScriptStatusLine {
         elapsed_ms: u64,
     },
     Failed(String),
-    /// The web editor has no script engine: it shows saved children only.
-    DesktopOnly,
 }
 
 /// The selected script node's rows and status.
@@ -171,7 +167,6 @@ pub fn script_summary(node: &PenNode, state: &EditorState) -> Option<ScriptSumma
             elapsed_ms: *elapsed_ms,
         },
         Some(ScriptRunStatus::Failed { message, .. }) => ScriptStatusLine::Failed(message.clone()),
-        None if !SCRIPT_ENGINE_AVAILABLE => ScriptStatusLine::DesktopOnly,
         None => ScriptStatusLine::None,
     };
     let hug = |sizing: &Option<SizingBehavior>| {
@@ -364,10 +359,6 @@ fn status_text(
             theme.muted_foreground,
         ),
         ScriptStatusLine::Failed(message) => (message.clone(), theme.destructive),
-        ScriptStatusLine::DesktopOnly => (
-            label(locale, "script.desktopOnly").to_string(),
-            theme.muted_foreground,
-        ),
     })
 }
 

@@ -17,7 +17,7 @@ use std::time::Duration;
 use de_editor_core::script_regen::{ScriptJob, ScriptOutcome};
 use de_editor_core::{EditorState, NodeId};
 use de_editor_ui::layout_scene::LayoutScene;
-use de_mcp::script_node::{run_script_job, scene_size, ScriptNodeError, ScriptNodeRun};
+use de_mcp::script_node::{run_script_job, ScriptNodeError, ScriptNodeRun};
 use winit::event_loop::EventLoopProxy;
 
 use crate::DesktopEvent;
@@ -56,7 +56,7 @@ impl ScriptNodeHost {
     /// `scene` is the canvas layout fill-sized scripts take their size
     /// from. Returns true when the document changed.
     pub(crate) fn pump(&mut self, state: &mut EditorState, scene: &LayoutScene) -> bool {
-        let sizes = |id: &NodeId| scene_size(scene, id);
+        let sizes = |id: &NodeId| de_pen_loader::scene_node_size(scene, id.as_str());
         let mut changed = false;
         while let Ok((job, run)) = self.result_rx.try_recv() {
             let elapsed_ms = run.elapsed.as_millis() as u64;

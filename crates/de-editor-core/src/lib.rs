@@ -150,6 +150,7 @@ pub mod scene_vars;
 mod script_edit;
 pub mod script_inputs;
 pub mod script_regen;
+pub mod script_wire;
 pub mod selection;
 pub mod selection_flip;
 pub mod selection_resolve;

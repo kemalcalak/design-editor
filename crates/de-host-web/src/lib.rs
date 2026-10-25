@@ -95,6 +95,9 @@ mod iconify_web;
 // Runtime fetch for the product assets the wasm bundle omits.
 #[cfg(feature = "canvaskit")]
 mod web_asset_fetch;
+// Script nodes, run by the daemon (#219).
+#[cfg(feature = "canvaskit")]
+mod web_script_runner;
 // Web chat session — drains `chat.pending_send` / Stop / New Chat and streams
 // real standard-mode turns through the daemon's `/api/ai/standard` route.
 #[cfg(feature = "canvaskit")]

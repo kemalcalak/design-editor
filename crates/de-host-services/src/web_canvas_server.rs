@@ -545,6 +545,7 @@ mod doc_routes;
 mod export_routes;
 mod origin_guard;
 mod run_loop;
+mod script_routes;
 pub mod serve_mode;
 mod serve_options;
 

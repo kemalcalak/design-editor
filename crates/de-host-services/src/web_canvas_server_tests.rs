@@ -414,7 +414,12 @@ fn credential_origin_check_rejects_null_malformed_and_cross_authority_origins() 
 
 #[test]
 fn sensitive_browser_posts_include_credentials_and_ai_routes() {
-    for path in ["/api/settings/credentials", "/api/ai/stream"] {
+    for path in [
+        "/api/settings/credentials",
+        "/api/ai/stream",
+        // A page on another origin must not run programs on the daemon (#219).
+        "/api/scripts/run",
+    ] {
         let request = crate::mcp_serve::HttpRequest {
             method: "POST".into(),
             path: path.into(),

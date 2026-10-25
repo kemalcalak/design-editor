@@ -359,7 +359,6 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "script.sourceTitle" => "Skriptquelltext",
         "script.running" => "Wird erzeugt…",
         "script.generated" => "{count} Knoten · {ms} ms",
-        "script.desktopOnly" => "Wird in der Desktop-App neu erzeugt",
         "script.hugSize" => "Eine Hug-Größe läuft mit 0: feste Größe oder Füllen wählen",
         _ => return None,
     })
