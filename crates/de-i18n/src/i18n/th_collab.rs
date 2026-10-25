@@ -360,6 +360,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "script.running" => "กำลังสร้าง…",
         "script.generated" => "{count} โหนด · {ms} มิลลิวินาที",
         "script.hugSize" => "ขนาดแบบพอดีเนื้อหาทำงานที่ 0 ตั้งเป็นคงที่หรือเติมเต็ม",
+        "script.engineUnreachable" => "เชื่อมต่อเอนจินสคริปต์ไม่ได้ เปิดตัวแก้ไขผ่านเซิร์ฟเวอร์ของมัน",
         "shapes.browser" => "เบราว์เซอร์",
         "browser.title" => "เบราว์เซอร์",
         "browser.url" => "URL",

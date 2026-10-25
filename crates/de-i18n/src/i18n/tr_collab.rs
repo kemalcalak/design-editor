@@ -360,6 +360,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "script.running" => "Üretiliyor…",
         "script.generated" => "{count} düğüm · {ms} ms",
         "script.hugSize" => "Sığdırılan boyut 0 ile çalışır: sabit ya da doldur yapın",
+        "script.engineUnreachable" => "Betik motoruna ulaşılamıyor: düzenleyiciyi sunucusu üzerinden açın",
         "shapes.browser" => "Tarayıcı",
         "browser.title" => "Tarayıcı",
         "browser.url" => "URL",

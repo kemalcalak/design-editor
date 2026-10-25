@@ -360,6 +360,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "script.running" => "正在產生…",
         "script.generated" => "{count} 個節點 · {ms} 毫秒",
         "script.hugSize" => "自適應尺寸以 0 執行：請設為固定或填滿",
+        "script.engineUnreachable" => "無法連線腳本引擎：請透過編輯器伺服器開啟",
         "shapes.browser" => "瀏覽器",
         "browser.title" => "瀏覽器",
         "browser.url" => "網址",

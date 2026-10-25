@@ -1,5 +1,6 @@
 use super::*;
 use crate::NodeId;
+use serde_json::json;
 
 fn job() -> ScriptJob {
     ScriptJob {
@@ -29,7 +30,7 @@ fn an_answer_with_nodes_is_generated_output() {
         { "type": "rectangle", "id": "a", "width": 10, "height": 10 }
     ]))
     .unwrap();
-    let body = script_run_answer(Ok(&nodes), 7);
+    let body = script_run_answer(ScriptOutcome::Generated(nodes.clone()), 7);
     let (outcome, elapsed) = parse_script_run_answer(200, &body);
     assert_eq!(outcome, ScriptOutcome::Generated(nodes));
     assert_eq!(elapsed, 7);
@@ -37,20 +38,32 @@ fn an_answer_with_nodes_is_generated_output() {
 
 #[test]
 fn failures_carry_the_daemons_message_or_say_why() {
-    let body = script_run_answer(Err("script error: no data"), 2);
+    let body = script_run_answer(ScriptOutcome::Failed("script error: no data".into()), 2);
     assert_eq!(
         parse_script_run_answer(200, &body),
         (ScriptOutcome::Failed("script error: no data".into()), 2)
     );
     assert_eq!(
-        parse_script_run_answer(0, ""),
-        (ScriptOutcome::Failed(SCRIPT_ENGINE_UNREACHABLE.into()), 0)
-    );
-    assert_eq!(
-        parse_script_run_answer(404, "not found"),
+        parse_script_run_answer(500, "<html>oops</html>"),
         (
-            ScriptOutcome::Failed("script engine answered 404 without a result".into()),
+            ScriptOutcome::Failed("script engine answered 500 without a result".into()),
             0
         )
     );
+}
+
+#[test]
+fn no_daemon_is_unreachable_not_a_failed_program() {
+    for (status, text) in [
+        (0, ""),
+        (404, "<html>Not Found</html>"),
+        (405, ""),
+        (404, r#"{"error":"unknown route"}"#),
+    ] {
+        assert_eq!(
+            parse_script_run_answer(status, text),
+            (ScriptOutcome::Unreachable, 0),
+            "{status} {text}"
+        );
+    }
 }

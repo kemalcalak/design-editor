@@ -24,12 +24,18 @@ use crate::DesktopEvent;
 
 type WakeProxy = Arc<Mutex<Option<EventLoopProxy<DesktopEvent>>>>;
 
+/// A job tagged with the document epoch it was taken from.
+type EpochJob = (u64, ScriptJob);
+type EpochRun = (u64, ScriptJob, ScriptNodeRun);
+
 pub(crate) struct ScriptNodeHost {
+    /// The host's document epoch core's run state belongs to.
+    epoch: u64,
     /// `None` until a job needs the worker, and again after the worker
     /// stopped; the next job then spawns a fresh one.
-    job_tx: Option<Sender<ScriptJob>>,
-    result_tx: Sender<(ScriptJob, ScriptNodeRun)>,
-    result_rx: Receiver<(ScriptJob, ScriptNodeRun)>,
+    job_tx: Option<Sender<EpochJob>>,
+    result_tx: Sender<EpochRun>,
+    result_rx: Receiver<EpochRun>,
     wake_proxy: WakeProxy,
 }
 
@@ -37,6 +43,7 @@ impl Default for ScriptNodeHost {
     fn default() -> Self {
         let (result_tx, result_rx) = channel();
         Self {
+            epoch: 0,
             job_tx: None,
             result_tx,
             result_rx,
@@ -52,13 +59,24 @@ impl ScriptNodeHost {
         }
     }
 
-    /// Land finished runs, then send out the jobs the document needs now.
-    /// `scene` is the canvas layout fill-sized scripts take their size
-    /// from. Returns true when the document changed.
-    pub(crate) fn pump(&mut self, state: &mut EditorState, scene: &LayoutScene) -> bool {
+    /// Land finished runs. `scene` is the canvas layout fill-sized
+    /// scripts take their size from, as it was when the jobs were taken.
+    /// Returns true when the document changed.
+    pub(crate) fn land(
+        &mut self,
+        state: &mut EditorState,
+        scene: &LayoutScene,
+        epoch: u64,
+    ) -> bool {
+        self.adopt_epoch(state, epoch);
         let sizes = |id: &NodeId| de_pen_loader::scene_node_size(scene, id.as_str());
         let mut changed = false;
-        while let Ok((job, run)) = self.result_rx.try_recv() {
+        while let Ok((run_epoch, job, run)) = self.result_rx.try_recv() {
+            // A run for a replaced document names nodes this one may share
+            // by id only.
+            if run_epoch != epoch {
+                continue;
+            }
             let elapsed_ms = run.elapsed.as_millis() as u64;
             changed |= state.land_script_output(
                 &job.node_id,
@@ -68,6 +86,14 @@ impl ScriptNodeHost {
                 &sizes,
             );
         }
+        changed
+    }
+
+    /// Send out the jobs the document needs now. Call with the scene
+    /// rebuilt after [`Self::land`] changed the document.
+    pub(crate) fn send_stale(&mut self, state: &mut EditorState, scene: &LayoutScene, epoch: u64) {
+        self.adopt_epoch(state, epoch);
+        let sizes = |id: &NodeId| de_pen_loader::scene_node_size(scene, id.as_str());
         for job in state.take_script_jobs(&sizes) {
             if let Err(job) = self.send(job) {
                 // No worker would take it: record the failure so the node
@@ -76,19 +102,27 @@ impl ScriptNodeHost {
                 state.land_script_output(&job.node_id, &job.hash, failed, 0, &sizes);
             }
         }
-        changed
+    }
+
+    /// A new document: its predecessor's runs are dropped as they finish.
+    fn adopt_epoch(&mut self, state: &mut EditorState, epoch: u64) {
+        if self.epoch != epoch {
+            self.epoch = epoch;
+            state.reset_script_runs();
+        }
     }
 
     /// Hand `job` to the worker, spawning a fresh one once if the current
     /// one is gone. Gives the job back when no worker takes it.
     fn send(&mut self, mut job: ScriptJob) -> Result<(), ScriptJob> {
+        let epoch = self.epoch;
         for _ in 0..2 {
             let Some(tx) = self.worker() else {
                 return Err(job);
             };
-            match tx.send(job) {
+            match tx.send((epoch, job)) {
                 Ok(()) => return Ok(()),
-                Err(SendError(back)) => {
+                Err(SendError((_, back))) => {
                     job = back;
                     self.job_tx = None;
                 }
@@ -97,9 +131,9 @@ impl ScriptNodeHost {
         Err(job)
     }
 
-    fn worker(&mut self) -> Option<&Sender<ScriptJob>> {
+    fn worker(&mut self) -> Option<&Sender<EpochJob>> {
         if self.job_tx.is_none() {
-            let (job_tx, job_rx) = channel::<ScriptJob>();
+            let (job_tx, job_rx) = channel::<EpochJob>();
             let results = self.result_tx.clone();
             let wake = Arc::clone(&self.wake_proxy);
             let spawned = std::thread::Builder::new()
@@ -114,12 +148,8 @@ impl ScriptNodeHost {
     }
 }
 
-fn worker_loop(
-    jobs: Receiver<ScriptJob>,
-    results: Sender<(ScriptJob, ScriptNodeRun)>,
-    wake: WakeProxy,
-) {
-    while let Ok(job) = jobs.recv() {
+fn worker_loop(jobs: Receiver<EpochJob>, results: Sender<EpochRun>, wake: WakeProxy) {
+    while let Ok((epoch, job)) = jobs.recv() {
         // A panic in the engine fails this run instead of the worker.
         let run = catch_unwind(AssertUnwindSafe(|| run_script_job(&job))).unwrap_or_else(|_| {
             ScriptNodeRun {
@@ -127,7 +157,7 @@ fn worker_loop(
                 elapsed: Duration::ZERO,
             }
         });
-        if results.send((job, run)).is_err() {
+        if results.send((epoch, job, run)).is_err() {
             break;
         }
         if let Some(proxy) = wake.lock().ok().and_then(|wake| wake.clone()) {

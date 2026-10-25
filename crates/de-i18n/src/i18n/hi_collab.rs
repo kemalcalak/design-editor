@@ -360,6 +360,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "script.running" => "बना रहे हैं…",
         "script.generated" => "{count} नोड · {ms} ms",
         "script.hugSize" => "हग आकार 0 पर चलता है: इसे स्थिर या फ़िल करें",
+        "script.engineUnreachable" => "स्क्रिप्ट इंजन तक नहीं पहुँच सके: एडिटर को उसके सर्वर से खोलें",
         "shapes.browser" => "ब्राउज़र",
         "browser.title" => "ब्राउज़र",
         "browser.url" => "URL",

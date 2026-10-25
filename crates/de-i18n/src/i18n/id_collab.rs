@@ -360,6 +360,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "script.running" => "Membuat…",
         "script.generated" => "{count} node · {ms} md",
         "script.hugSize" => "Ukuran menyesuaikan berjalan di 0: buat tetap atau isi",
+        "script.engineUnreachable" => "Mesin skrip tidak terjangkau: buka editor melalui servernya",
         "shapes.browser" => "Browser",
         "browser.title" => "Browser",
         "browser.url" => "URL",

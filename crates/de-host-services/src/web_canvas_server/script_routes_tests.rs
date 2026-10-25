@@ -2,8 +2,11 @@ use super::*;
 use serde_json::Value;
 
 fn answer(body: &str) -> (&'static str, Value) {
-    let (status, body) = run_script(body);
-    (status, serde_json::from_str(&body).expect("json answer"))
+    let reply = run_script(body);
+    (
+        reply.status,
+        serde_json::from_str(&reply.body).expect("json answer"),
+    )
 }
 
 #[test]
@@ -41,4 +44,15 @@ fn a_body_that_is_not_a_job_is_refused() {
     let (status, body) = answer(r#"{"script":"return []"}"#);
     assert_eq!(status, "400 Bad Request");
     assert_eq!(body["ok"], false);
+}
+
+#[test]
+fn output_past_the_node_cap_is_a_failed_run() {
+    let (status, body) = answer(
+        r#"{"source":"return Array.from({length: 2001}, () => ({type: 'rectangle', width: 1, height: 1}));","width":10,"height":10}"#,
+    );
+    assert_eq!(status, "200 OK");
+    assert_eq!(body["ok"], false);
+    assert!(body.get("nodes").is_none());
+    assert!(body["error"].as_str().unwrap().contains("2000"), "{body}");
 }

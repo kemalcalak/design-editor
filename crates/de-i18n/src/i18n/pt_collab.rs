@@ -360,6 +360,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "script.running" => "Gerando…",
         "script.generated" => "{count} nós · {ms} ms",
         "script.hugSize" => "Um tamanho ajustado roda com 0: use fixo ou preencher",
+        "script.engineUnreachable" => "Motor de scripts inacessível: abra o editor pelo servidor dele",
         "shapes.browser" => "Navegador",
         "browser.title" => "Navegador",
         "browser.url" => "URL",

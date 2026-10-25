@@ -360,6 +360,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "script.running" => "Đang tạo…",
         "script.generated" => "{count} nút · {ms} ms",
         "script.hugSize" => "Kích thước ôm chạy ở 0: đặt cố định hoặc lấp đầy",
+        "script.engineUnreachable" => "Không kết nối được công cụ script: mở trình chỉnh sửa qua máy chủ của nó",
         "shapes.browser" => "Trình duyệt",
         "browser.title" => "Trình duyệt",
         "browser.url" => "URL",

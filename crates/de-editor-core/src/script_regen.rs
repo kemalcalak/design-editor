@@ -65,6 +65,10 @@ pub enum ScriptOutcome {
     /// (`de_mcp::script_node::ScriptNodeError`) lives in a crate core
     /// cannot depend on, so it crosses as its message.
     Failed(String),
+    /// No engine answered (an editor whose engine is the daemon, #219).
+    /// Not a verdict on the program: the node is retried on the next scan
+    /// an edit, theme or page change starts, not every frame.
+    Unreachable,
 }
 
 /// The last thing known about a node's script, for the panel.
@@ -81,6 +85,8 @@ pub enum ScriptRunStatus {
         hash: String,
         message: String,
     },
+    /// No engine answered; see [`ScriptOutcome::Unreachable`].
+    Unreachable,
 }
 
 /// What a scan depends on besides the document: the theme the inputs
@@ -435,6 +441,13 @@ impl EditorState {
         jobs
     }
 
+    /// Forget every run in flight and every status: the host replaced the
+    /// document, so the answers still out belong to another one and are
+    /// dropped instead of landed.
+    pub fn reset_script_runs(&mut self) {
+        self.script_regen = ScriptRegenState::default();
+    }
+
     /// Land a finished run. Returns true when the document changed.
     /// `layout` must answer as it did for [`Self::take_script_jobs`].
     pub fn land_script_output(
@@ -446,6 +459,14 @@ impl EditorState {
         layout: LaidOutSize<'_>,
     ) -> bool {
         self.script_regen.in_flight.remove(node_id);
+        if outcome == ScriptOutcome::Unreachable {
+            // Keep the scan key: forcing a scan would resend at once, every
+            // frame, while the engine is down. The next edit retries.
+            self.script_regen
+                .status
+                .insert(node_id.clone(), ScriptRunStatus::Unreachable);
+            return false;
+        }
         // Whatever happens, look again: an edit made while this ran may
         // need a fresh job.
         self.script_regen.scanned = None;
@@ -479,6 +500,7 @@ impl EditorState {
                 return false;
             }
             ScriptOutcome::Generated(nodes) => nodes,
+            ScriptOutcome::Unreachable => unreachable!("handled above"),
         };
         let prefix = format!("{}-", node_id.as_str());
         let mut taken = HashSet::new();

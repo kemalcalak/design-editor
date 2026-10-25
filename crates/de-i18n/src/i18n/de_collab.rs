@@ -360,6 +360,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "script.running" => "Wird erzeugt…",
         "script.generated" => "{count} Knoten · {ms} ms",
         "script.hugSize" => "Eine Hug-Größe läuft mit 0: feste Größe oder Füllen wählen",
+        "script.engineUnreachable" => "Skript-Engine nicht erreichbar: Editor über seinen Server öffnen",
         "shapes.browser" => "Browser",
         "browser.title" => "Browser",
         "browser.url" => "URL",

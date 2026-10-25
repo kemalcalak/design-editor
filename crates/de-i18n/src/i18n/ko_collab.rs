@@ -362,6 +362,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "script.running" => "생성 중…",
         "script.generated" => "노드 {count}개 · {ms}ms",
         "script.hugSize" => "맞춤 크기는 0으로 실행됩니다. 고정 또는 채우기로 설정하세요",
+        "script.engineUnreachable" => "스크립트 엔진에 연결할 수 없습니다. 편집기 서버를 통해 여세요",
         "shapes.browser" => "브라우저",
         "browser.title" => "브라우저",
         "browser.url" => "URL",

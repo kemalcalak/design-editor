@@ -538,7 +538,9 @@ impl WidgetHost {
 
     /// Mutable editor state with its layout scene, rebuilt first if stale:
     /// the script runner sizes fill-sized scripts from it (#219). The
-    /// native host's twin has the same name.
+    /// native host's twin has the same name and contract: the scene matches
+    /// the state as it is when this returns, so a caller that changes the
+    /// document through the state must call again for a current scene.
     #[cfg(feature = "canvaskit")]
     pub fn editor_state_mut_and_layout_scene(
         &mut self,

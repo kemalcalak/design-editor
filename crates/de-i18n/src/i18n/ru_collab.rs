@@ -360,6 +360,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "script.running" => "Генерация…",
         "script.generated" => "Узлов: {count} · {ms} мс",
         "script.hugSize" => "Размер «по содержимому» равен 0: задайте фиксированный или заполнение",
+        "script.engineUnreachable" => "Движок скриптов недоступен: откройте редактор через его сервер",
         "shapes.browser" => "Браузер",
         "browser.title" => "Браузер",
         "browser.url" => "URL",

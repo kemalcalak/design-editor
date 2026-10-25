@@ -64,6 +64,8 @@ pub enum ScriptStatusLine {
         elapsed_ms: u64,
     },
     Failed(String),
+    /// No engine answered (a web page without its daemon).
+    Unreachable,
 }
 
 /// The selected script node's rows and status.
@@ -167,6 +169,7 @@ pub fn script_summary(node: &PenNode, state: &EditorState) -> Option<ScriptSumma
             elapsed_ms: *elapsed_ms,
         },
         Some(ScriptRunStatus::Failed { message, .. }) => ScriptStatusLine::Failed(message.clone()),
+        Some(ScriptRunStatus::Unreachable) => ScriptStatusLine::Unreachable,
         None => ScriptStatusLine::None,
     };
     let hug = |sizing: &Option<SizingBehavior>| {
@@ -359,6 +362,10 @@ fn status_text(
             theme.muted_foreground,
         ),
         ScriptStatusLine::Failed(message) => (message.clone(), theme.destructive),
+        ScriptStatusLine::Unreachable => (
+            label(locale, "script.engineUnreachable").to_string(),
+            theme.destructive,
+        ),
     })
 }
 

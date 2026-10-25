@@ -7,26 +7,29 @@
 //! runs on the connection's own thread.
 
 use de_editor_core::script_wire::{script_run_answer, ScriptRunRequest};
-use serde_json::json;
 
-/// The HTTP status and JSON body for a run request. A program that fails
-/// is still a `200` answer (`ok: false` with the message the panel shows);
-/// only a body that is not a job is a `400`.
-pub(super) fn run_script(body: &str) -> (&'static str, String) {
+use super::WebReply;
+use crate::mcp_serve::rest_error_body;
+
+/// The reply to a run request. A program that fails is still a `200`
+/// answer (`ok: false` with the message the panel shows); only a body that
+/// is not a job is a `400`.
+pub(super) fn run_script(body: &str) -> WebReply {
     let request: ScriptRunRequest = match serde_json::from_str(body) {
         Ok(request) => request,
         Err(error) => {
-            let body = json!({ "ok": false, "error": format!("invalid script job: {error}") });
-            return ("400 Bad Request", body.to_string());
+            return WebReply {
+                status: "400 Bad Request",
+                body: rest_error_body(&format!("invalid script job: {error}")),
+            };
         }
     };
     let run = de_mcp::script_node::run_script_job(&request.into_job());
     let elapsed_ms = run.elapsed.as_millis() as u64;
-    let body = match &run.result {
-        Ok(nodes) => script_run_answer(Ok(nodes), elapsed_ms),
-        Err(error) => script_run_answer(Err(&error.to_string()), elapsed_ms),
-    };
-    ("200 OK", body)
+    WebReply {
+        status: "200 OK",
+        body: script_run_answer(run.outcome(), elapsed_ms),
+    }
 }
 
 #[cfg(test)]
