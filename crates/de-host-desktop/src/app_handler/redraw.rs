@@ -365,11 +365,16 @@ impl DesktopApp {
         }
         // Land finished script-node runs and start the ones the document
         // needs; a scan only happens when the revision moved (#19).
+        let epoch = self.host.document_epoch();
         let (state, scene) = self.host.editor_state_mut_and_layout_scene();
-        if self.script_nodes.pump(state, scene) {
+        if self.script_nodes.land(state, scene, epoch) {
             self.host.mark_editor_state_dirty();
             self.redraw_dirty = true;
         }
+        // Fetched again: a landing rebuilds the scene the next jobs' fill
+        // sizes come from.
+        let (state, scene) = self.host.editor_state_mut_and_layout_scene();
+        self.script_nodes.send_stale(state, scene, epoch);
         // Start the CLI probes the first time the chat model picker or
         // Settings → Agents is on screen, then drain discovery once it
         // lands. Runs before `drain_provider_connect` below so the replay's

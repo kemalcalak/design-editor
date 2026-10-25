@@ -156,3 +156,10 @@ pub fn editor_state_to_active_page_layout_scene(
         active_page_index,
     }
 }
+
+/// The laid-out size of node `id` in `scene`, in document px: what a
+/// fill-sized script node runs at (#19).
+pub fn scene_node_size(scene: &LayoutScene, id: &str) -> Option<(f64, f64)> {
+    let node = scene.pages.iter().find_map(|page| page.find(id))?;
+    Some((f64::from(node.bounds.size.x), f64::from(node.bounds.size.y)))
+}

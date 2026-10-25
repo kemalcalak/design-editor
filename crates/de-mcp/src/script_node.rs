@@ -183,12 +183,6 @@ pub fn nodes_from_json(json: &str) -> Result<Vec<PenNode>, ScriptNodeError> {
     Ok(nodes)
 }
 
-/// The laid-out size of `id` in `scene`, in document px.
-pub fn scene_size(scene: &LayoutScene, id: &NodeId) -> Option<(f64, f64)> {
-    let node = scene.pages.iter().find_map(|page| page.find(id.as_str()))?;
-    Some((f64::from(node.bounds.size.x), f64::from(node.bounds.size.y)))
-}
-
 /// Fill sizes for hosts that lay out on demand: a layout of the whole
 /// document, built only when a script is fill-sized. Owned, so a host can
 /// take jobs, release its document and land them later with the same
@@ -206,7 +200,7 @@ impl ScriptLayout {
     }
 
     pub fn size(&self, id: &NodeId) -> Option<(f64, f64)> {
-        scene_size(self.scene.as_ref()?, id)
+        de_pen_loader::scene_node_size(self.scene.as_ref()?, id.as_str())
     }
 }
 

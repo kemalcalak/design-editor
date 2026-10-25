@@ -122,6 +122,7 @@ pub(super) async fn mount_ck(canvas_id: String) -> Result<(), JsValue> {
         a11y,
         ime,
         video_overlay,
+        scripts: Default::default(),
     }));
     // Reset the credential-sync queue BEFORE the first repaint and before the
     // rAF coalescer is installed below. `repaint` calls
