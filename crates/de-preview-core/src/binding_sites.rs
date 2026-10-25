@@ -47,7 +47,7 @@ fn node_bindings(node: &PenNode) -> Option<&jian_ops_schema::events::Bindings> {
         PenNode::Image(n) => n.bindings.as_ref(),
         PenNode::IconFont(n) => n.bindings.as_ref(),
         PenNode::Ref(n) => n.bindings.as_ref(),
-        PenNode::Note(_) | PenNode::Context(_) | PenNode::Prompt(_) => None,
+        PenNode::Note(_) | PenNode::Context(_) | PenNode::Prompt(_) | PenNode::Browser(_) => None,
     }
 }
 

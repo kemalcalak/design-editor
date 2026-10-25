@@ -114,6 +114,7 @@ impl NodeSnapshot {
             widget: None,
             annotation: None,
             script: None,
+            browser: None,
             fill: None,
             fill_opacity: 1.0,
             fills: Vec::new(),
@@ -195,6 +196,7 @@ impl NodeSnapshot {
             widget: None,
             annotation: None,
             script: None,
+            browser: None,
             fill: None,
             fill_opacity: 1.0,
             // Multi-select hides the Fill section (see `for_multi`),
@@ -319,6 +321,7 @@ impl NodeSnapshot {
             annotation: crate::widgets::property_panel_annotation::annotation_summary_of(node),
             // Filled with the run status by the panel builder, which has the state.
             script: None,
+            browser: crate::widgets::property_panel_browser::browser_summary_of(node),
             fill,
             fill_opacity: de_editor_core::first_solid_fill_opacity(node),
             fills: fill_props::fills_of(node),

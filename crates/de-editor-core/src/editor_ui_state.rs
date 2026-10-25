@@ -675,6 +675,8 @@ pub struct EditorUiState {
     /// document, the stash stays. Cleared in `clear_document_derived`.
     pub custom_shader_bodies:
         std::collections::HashMap<NodeId, jian_ops_schema::style::ShaderFillBody>,
+    /// Live browser pages: load gate, reloads, statuses (#20).
+    pub browser_live: crate::browser_live::BrowserLiveState,
     /// Shader source editor, slider drag and compile results (#164).
     pub shader_editing: crate::shader_source_editor::ShaderEditingState,
     /// Ghost of the blank starter frame `(x, y, w, h)` in doc px. Set when a

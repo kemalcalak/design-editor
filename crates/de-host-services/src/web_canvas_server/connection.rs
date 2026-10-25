@@ -191,6 +191,13 @@ pub(super) fn dispatch<S: Read + Write>(
         crate::mcp_serve::write_mcp_http_response_with_origin(stream, status, &body, cors_origin)?;
         return Ok(false);
     }
+    // Live browser pages (#20): render without the state lock; a slow page
+    // only holds this connection.
+    if req.method == "POST" && req.path == "/api/browser/snapshot" {
+        let (status, body) = crate::web_browser_snapshot::snapshot_reply(&req.body);
+        crate::mcp_serve::write_mcp_http_response_with_origin(stream, status, &body, cors_origin)?;
+        return Ok(false);
+    }
     // The web editor's script runs (#219): pure like the conversion above,
     // so the program never runs under the state lock.
     if req.method == "POST" && req.path == "/api/scripts/run" {

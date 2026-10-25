@@ -167,6 +167,14 @@ pub fn editable_input_rects(
             usable_w,
         );
     }
+    if visible.browser.is_some() {
+        crate::widgets::property_panel_browser::push_browser_input_rects(
+            &mut rects,
+            x0,
+            tops.browser,
+            usable_w,
+        );
+    }
     if visible.video {
         crate::widgets::property_panel_video::push_video_input_rects(&mut rects, x0, tops.video, w);
     }

@@ -17,6 +17,7 @@ mod app_handler;
 mod app_poll;
 mod app_state;
 mod asset_fetch_error;
+mod browser_render_host;
 mod builtin_model_refresh_host;
 mod bundled_fonts;
 mod chat_acp;
@@ -143,6 +144,8 @@ enum DesktopEvent {
     McpWake,
     /// A background image decode completed and can be installed.
     ImageDecodeReady,
+    /// A live browser page snapshot finished rendering (#20).
+    BrowserFrameReady,
     /// A second launch forwarded a document to this instance (see
     /// `single_instance`). Wakes the loop to drain the forward queue + raise
     /// the window.
@@ -335,6 +338,8 @@ struct DesktopApp {
     /// canvas painter recorded as cache misses — fetched bytes land in
     /// the painter's shared byte cache so the next frame draws them.
     remote_images: remote_image_host::RemoteImageSession,
+    /// Headless-Chrome snapshots of the visible browser nodes (#20).
+    browser_renders: browser_render_host::BrowserRenderHost,
     /// Two-thread local image raster decode pool.
     image_decodes: image_decode_host::ImageDecodeHost,
     /// Script-node runs on a worker thread (#19).
@@ -649,6 +654,14 @@ fn main() {
     let mut app = DesktopApp::new(initial_file);
     app.image_decodes.set_wake_proxy(mcp_wake_proxy.clone());
     app.script_nodes.set_wake_proxy(mcp_wake_proxy.clone());
+    app.browser_renders.set_wake_proxy(mcp_wake_proxy.clone());
+    // A snapshot an MCP `browser` call put on a node repaints the canvas.
+    let browser_proxy = std::sync::Mutex::new(mcp_wake_proxy.clone());
+    de_editor_ui::widgets::browser_textures::set_ready_notifier(move || {
+        if let Ok(proxy) = browser_proxy.lock() {
+            let _ = proxy.send_event(DesktopEvent::BrowserFrameReady);
+        }
+    });
     // This process writes Home previews for its saves; one landing wakes an
     // idle Home to show it.
     de_host_services::home_preview::enable();

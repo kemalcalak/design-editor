@@ -57,6 +57,7 @@ fn kind(node: &PenNode) -> &'static str {
         PenNode::Tabs(_) => "tabs",
         // Never emitted: `node_hidden` skips canvas-only nodes (#12).
         PenNode::Note(_) | PenNode::Context(_) | PenNode::Prompt(_) => "note",
+        PenNode::Browser(_) => "browser",
     }
 }
 

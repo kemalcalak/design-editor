@@ -147,6 +147,7 @@ pub(crate) fn canonical_node_effects(node: &PenNode) -> Option<&[PenEffect]> {
         | PenNode::Note(_)
         | PenNode::Context(_)
         | PenNode::Prompt(_) => None,
+        PenNode::Browser(n) => n.effects.as_deref(),
     }
 }
 

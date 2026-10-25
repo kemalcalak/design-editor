@@ -716,6 +716,21 @@ pub fn apply_property_action(
             crate::widgets::property_panel_script::apply_script_action(state, action);
             Handled
         }
+        A::SetBrowserDevice(id) => {
+            let before = state.snapshot_for_history();
+            if state.set_selected_browser_device(Some(id)) {
+                state.history_push_past(before);
+            }
+            Handled
+        }
+        A::ReloadBrowser => {
+            let _ = state.reload_selected_browser();
+            Handled
+        }
+        A::AllowBrowserPages => {
+            state.allow_browser_pages();
+            Handled
+        }
         A::SetAnnotationKind(kind) => {
             let before = state.snapshot_for_history();
             if state.set_selected_annotation_kind(*kind) {

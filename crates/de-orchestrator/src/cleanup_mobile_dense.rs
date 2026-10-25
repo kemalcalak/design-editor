@@ -244,6 +244,7 @@ fn width_keyword(node: &PenNode, keyword: SizingKeyword) -> bool {
         PenNode::Image(n) => n.width.as_ref(),
         PenNode::IconFont(n) => n.width.as_ref(),
         PenNode::Note(n) | PenNode::Context(n) | PenNode::Prompt(n) => n.width.as_ref(),
+        PenNode::Browser(n) => n.width.as_ref(),
         PenNode::Line(_) | PenNode::Ref(_) => None,
     };
     matches!(width, Some(SizingBehavior::Keyword(value)) if *value == keyword)

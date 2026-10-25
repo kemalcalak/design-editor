@@ -559,6 +559,43 @@ fn paint_image_node_with_stroke(
     }
 }
 
+/// Draw the cached raster `id` (encoded `bytes`) stretched over
+/// `world_rect`, rounded by `radius` (screen px). Same decode rules as an
+/// image node: only the on-screen size is decoded, off the paint thread,
+/// and a coarser resident raster draws while it sharpens. False when no
+/// raster is ready yet (the caller paints its placeholder).
+pub(super) fn paint_cached_raster(
+    cx: &mut PaintCx<'_>,
+    world_rect: Rect,
+    id: u64,
+    bytes: &[u8],
+    radius: f32,
+) -> bool {
+    let max_edge_px = required_raster_edge(world_rect, cx.backend.dpi_scale());
+    let sharp_enough = cx.backend.image_decoded(id, bytes, max_edge_px);
+    if !sharp_enough {
+        note_pending_decode(id, max_edge_px);
+    }
+    if !sharp_enough && !cx.backend.image_resident(id) {
+        return false;
+    }
+    cx.backend
+        .draw_image_with_options_transform_blend_and_tile_scale(
+            world_rect,
+            id,
+            bytes,
+            crate::ImageDrawMode::Stretch,
+            crate::ImageAdjustments::default(),
+            1.0,
+            radius,
+            None,
+            crate::ImageBlendMode::Normal,
+            None,
+            1.0,
+        );
+    true
+}
+
 #[cfg(test)]
 mod blur_up_tests;
 

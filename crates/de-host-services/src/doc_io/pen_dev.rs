@@ -46,7 +46,7 @@ mod tests {
             &path,
             r##"{"version":"2.21","children":[{"type":"frame","id":"f","width":10,"height":10,
                 "fill":[{"type":"image","url":"images/a.png"},{"type":"image","url":"images/b.png"}],
-                "children":[{"type":"browser","id":"n"}]}]}"##,
+                "children":[{"type":"ellipse","id":"n","reusable":true}]}]}"##,
         )
         .unwrap();
 
@@ -59,7 +59,10 @@ mod tests {
             .clone()
             .expect("pen.dev report");
         assert_eq!(report.missing_images, vec!["images/b.png"]);
-        assert_eq!(report.unsupported.get("browser node"), Some(&1));
+        assert_eq!(
+            report.unsupported.get("non-frame reusable component"),
+            Some(&1)
+        );
         assert!(!loaded.report.needs_schema_upgrade());
 
         let err = super::super::save_to_path(&loaded.state, &path).expect_err("source is kept");

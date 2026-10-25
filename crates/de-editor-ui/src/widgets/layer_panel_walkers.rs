@@ -263,6 +263,7 @@ pub(super) fn kind_label(node: &PenNode) -> &'static str {
         PenNode::Note(_) => "Note",
         PenNode::Context(_) => "Context",
         PenNode::Prompt(_) => "Prompt",
+        PenNode::Browser(_) => "Browser",
     }
 }
 
@@ -298,6 +299,7 @@ pub(crate) fn icon_for_node(node: &PenNode) -> Icon {
         PenNode::Note(_) => Icon::StickyNote,
         PenNode::Context(_) => Icon::FileText,
         PenNode::Prompt(_) => Icon::Sparkles,
+        PenNode::Browser(_) => Icon::Globe,
     }
 }
 

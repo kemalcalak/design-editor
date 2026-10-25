@@ -45,7 +45,7 @@ const DESIGN: &str = r##"{
       "children": [{ "type": "text", "id": "label", "content": "Go", "fill": "$accent" }] },
     { "type": "ref", "id": "use", "ref": "btn", "x": 200, "y": 0,
       "descendants": { "label": { "content": "Buy" } } },
-    { "type": "browser", "id": "n", "url": "https://example.com" }
+    { "type": "ellipse", "id": "n", "reusable": true }
   ]
 }"##;
 
@@ -71,7 +71,7 @@ fn imports_keep_instances_bound_and_existing_variables_untouched() {
         Some("bg")
     );
     assert_eq!(result.get("renamedIds").map(String::as_str), Some("1"));
-    assert!(result["notCarriedOver"].contains("browser node ×1"));
+    assert!(result["notCarriedOver"].contains("non-frame reusable component ×1"));
 
     let [EditorCommand::SetVariables {
         variables,
@@ -88,7 +88,12 @@ fn imports_keep_instances_bound_and_existing_variables_untouched() {
 
     // `btn` collides with the host document: renamed, and the instance
     // follows it.
-    assert_eq!(nodes.len(), 2, "the note is dropped");
+    assert_eq!(
+        nodes.len(),
+        3,
+        "the reusable ellipse imports as a plain ellipse"
+    );
+    assert!(matches!(nodes[2], PenNode::Ellipse(_)));
     assert_eq!(nodes[0].id_str(), "btn-2");
     let PenNode::Ref(instance) = &nodes[1] else {
         panic!("instance expected");

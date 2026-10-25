@@ -157,6 +157,7 @@ pub(crate) fn node_sizing(
         PenNode::Note(n) | PenNode::Context(n) | PenNode::Prompt(n) => {
             (n.width.as_ref(), n.height.as_ref(), None)
         }
+        PenNode::Browser(n) => (n.width.as_ref(), n.height.as_ref(), None),
         PenNode::Line(_) | PenNode::Ref(_) => (None, None, None),
     }
 }

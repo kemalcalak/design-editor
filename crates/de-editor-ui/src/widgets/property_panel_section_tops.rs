@@ -23,6 +23,7 @@ pub struct SectionTops {
     pub widget: f32,
     pub annotation: f32,
     pub script: f32,
+    pub browser: f32,
     pub image: f32,
     pub video: f32,
     pub layer: f32,
@@ -74,6 +75,10 @@ pub fn section_tops(
         script: next(visible.script.map_or(0.0, |rows| {
             crate::widgets::property_panel_script::script_section_height(rows) + SECTION_GAP
         })),
+        browser: next(shown(
+            visible.browser.is_some(),
+            crate::widgets::property_panel_browser::browser_section_height() + SECTION_GAP,
+        )),
         image: next(shown(
             visible.image,
             crate::widgets::property_panel_image_node::image_section_height_with_video(

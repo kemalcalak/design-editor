@@ -186,6 +186,7 @@ fn kind_stem(node: &PenNode) -> &'static str {
         PenNode::Note(_) => "note",
         PenNode::Context(_) => "context",
         PenNode::Prompt(_) => "prompt",
+        PenNode::Browser(_) => "browser",
     }
 }
 

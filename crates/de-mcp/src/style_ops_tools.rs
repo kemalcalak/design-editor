@@ -456,7 +456,8 @@ fn node_fill(node: &PenNode) -> Option<&Vec<PenFill>> {
         | PenNode::Ref(_)
         | PenNode::Note(_)
         | PenNode::Context(_)
-        | PenNode::Prompt(_) => None,
+        | PenNode::Prompt(_)
+        | PenNode::Browser(_) => None,
     }
 }
 
@@ -488,6 +489,7 @@ fn node_stroke(node: &PenNode) -> Option<&PenStroke> {
         | PenNode::Note(_)
         | PenNode::Context(_)
         | PenNode::Prompt(_) => None,
+        PenNode::Browser(n) => n.stroke.as_ref(),
     }
 }
 
@@ -542,6 +544,7 @@ fn corner_radius(node: &PenNode) -> Option<Value> {
         PenNode::Ellipse(n) => n.corner_radius.and_then(number_value),
         PenNode::Polygon(n) => n.corner_radius.and_then(number_value),
         PenNode::Image(n) => n.corner_radius.as_ref().map(corner_radius_value),
+        PenNode::Browser(n) => n.corner_radius.as_ref().map(corner_radius_value),
         _ => None,
     }
 }

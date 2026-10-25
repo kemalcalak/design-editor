@@ -10,6 +10,7 @@ pub(super) fn is_sensitive_browser_post(request: &crate::mcp_serve::HttpRequest)
         && (request.path == "/api/settings/credentials"
             || request.path.starts_with("/api/ai/")
             || request.path.starts_with("/api/figma/")
+            || request.path == "/api/browser/snapshot"
             // A page on another origin must not run programs here (#219).
             || request.path.starts_with("/api/scripts/"))
 }

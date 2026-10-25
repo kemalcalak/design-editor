@@ -85,6 +85,7 @@ fn node_id(node: &PenNode) -> &str {
         PenNode::Tabs(node) => &node.base.id,
         PenNode::Ref(node) => &node.base.id,
         PenNode::Note(node) | PenNode::Context(node) | PenNode::Prompt(node) => &node.base.id,
+        PenNode::Browser(node) => &node.base.id,
     }
 }
 

@@ -518,6 +518,13 @@ impl DesktopApp {
                 );
                 painted = true;
             }
+            // Live browser pages (#20), right after the paint that noted
+            // the visible browser nodes: requests go to worker threads,
+            // landed snapshots and statuses repaint.
+            if self.browser_renders.pump(self.host.editor_state_mut()) {
+                self.host.mark_editor_state_dirty();
+                self.request_redraw(true);
+            }
             if let (Some(start), Some((blits0, scrolls0, builds0))) = (frame_start, stats_before) {
                 let elapsed = start.elapsed();
                 if elapsed.as_millis() >= 32 {

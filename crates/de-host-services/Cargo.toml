@@ -25,6 +25,8 @@ pinned-skia-binaries = ["skia-safe/no-compile"]
 #     (figma_convert.rs). ---
 de-figma = { path = "../de-figma" }
 de-html = { path = "../de-html" }
+# Headless-browser pages for the MCP `browser` tool and the web daemon (#20).
+de-browser-render = { path = "../de-browser-render" }
 de-editor-core = { path = "../de-editor-core" }
 de-builtin-model-discovery = { path = "../de-builtin-model-discovery" }
 de-config-store = { path = "../de-config-store" }

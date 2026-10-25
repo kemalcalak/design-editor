@@ -112,7 +112,6 @@ fn unsupported_nodes_are_removed_and_reported() {
     let (doc, report) = converted(json!([
         { "type": "note", "id": "n", "content": "todo" },
         { "type": "frame", "id": "f", "children": [
-            { "type": "browser", "id": "b", "url": "https://example.com" },
             { "type": "text", "id": "t", "content": "kept" }
         ]}
     ]));
@@ -120,7 +119,8 @@ fn unsupported_nodes_are_removed_and_reported() {
     assert_eq!(roots.len(), 2, "a note is kept (#12)");
     assert_eq!(roots[1]["children"].as_array().unwrap().len(), 1);
     assert_eq!(report.unsupported.get("note"), None);
-    assert_eq!(report.unsupported.get("browser node"), Some(&1));
+    // Browser (#20) and script (#19) nodes are canonical kinds now.
+    assert!(report.unsupported.is_empty(), "{:?}", report.unsupported);
 }
 
 fn script_reader(relative: &str) -> Option<Vec<u8>> {
@@ -310,14 +310,13 @@ fn instance_overrides_the_canonical_merge_cannot_express_are_reported() {
             "width-only": { "strokeWidth": 3 },
             "paint-only": { "stroke": "#f00" },
             "both": { "stroke": "#f00", "strokeWidth": 2 },
-            "gone": { "type": "browser", "id": "n" }
+            "chart": { "type": "script", "id": "n" }
         }}]),
     );
     let overrides = doc["children"][0]["descendants"].as_object().unwrap();
-    assert!(
-        !overrides.contains_key("gone"),
-        "dropped kinds leave overrides too"
-    );
+    // Script nodes are a canonical kind now (#19): a script-typed override is
+    // a replacement like any other, not dropped.
+    assert_eq!(overrides["chart"]["type"], "script");
     assert!(overrides["width-only"].get("strokeWidth").is_none());
     assert_eq!(overrides["both"]["stroke"]["thickness"], 2);
     // A typed override is a replacement the canonical resolver honours
@@ -329,7 +328,7 @@ fn instance_overrides_the_canonical_merge_cannot_express_are_reported() {
         .keys()
         .any(|feature| feature.contains("replacement")));
     assert_eq!(report.unsupported.get("partial stroke override"), Some(&2));
-    assert_eq!(report.unsupported.get("browser node"), Some(&1));
+    assert_eq!(report.unsupported.get("script node"), None);
 }
 
 #[test]

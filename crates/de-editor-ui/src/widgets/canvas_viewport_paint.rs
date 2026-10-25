@@ -22,7 +22,6 @@
 use crate::layout_scene::SceneNode;
 use crate::layout_scene::{Effect, NodeKind};
 use crate::polygon_geometry::polygon_node_points;
-use crate::widgets::canvas_annotation as annotation;
 use crate::widgets::canvas_viewport_fill_layers::{
     fill_layer_fallback_color, paint_clipped_fill_layers_with, paint_clipped_shape_rich_fill_layer,
     paint_fill_layers, paint_fill_layers_then_stroke,
@@ -35,6 +34,7 @@ use crate::widgets::canvas_viewport_stroke_paint as stroke_paint;
 use crate::widgets::canvas_viewport_text_fill::paint_text_in_viewport;
 use crate::widgets::canvas_viewport_widget::paint_widget_visual;
 use crate::widgets::PaintCx;
+use crate::widgets::{canvas_annotation as annotation, canvas_browser as browser};
 use crate::{Point2D, Rect};
 use jian_scene::path_geometry::flatten_path_points;
 
@@ -89,7 +89,10 @@ pub(crate) use reveal::{reveal_pop_scale, REVEAL_WIREFRAME_MS};
 #[cfg(test)]
 pub(crate) use shapes::arc_polygon;
 pub(crate) use shapes::paint_svg_path_node;
-use shapes::{node_stroke_style, paint_drop_shadows, paint_ellipse, push_clip_content, unstyled};
+use shapes::{
+    casts_drop_shadow, node_stroke_style, paint_drop_shadows, paint_ellipse, push_clip_content,
+    unstyled,
+};
 
 /// Effects whose zoom-scaled footprint stays under this many device
 /// pixels are invisible — but their save-layers still break the GPU
@@ -387,18 +390,12 @@ fn paint_node_body<'a>(
         cx.backend.push_blur_layer(sigma);
     }
 
-    // Drop shadows paint behind the node's own fill. Only kinds
-    // whose silhouette a rounded rect / ellipse can represent
-    // faithfully (Frame / Rect / Ellipse) cast one; Polygon / Line
-    // / Path shadows are deferred until a shape-mask path exists.
+    // Drop shadows paint behind the node's own fill (`casts_drop_shadow`).
     if !node.effects.is_empty()
         && !options.fast_interaction
         && world_rect.size.x > 0.0
         && world_rect.size.y > 0.0
-        && matches!(
-            node.kind,
-            NodeKind::Frame | NodeKind::Rect | NodeKind::Ellipse
-        )
+        && casts_drop_shadow(node)
     {
         paint_drop_shadows(cx, node, world_rect, zoom, dpi_scale);
     }
@@ -513,6 +510,9 @@ fn paint_node_body<'a>(
         }
         NodeKind::Other(tag) if annotation::is_annotation_tag(tag) => {
             annotation::paint(cx, node, world_rect, viewport_origin, zoom, edit_caret);
+        }
+        NodeKind::Other(tag) if browser::is_browser_tag(tag) => {
+            browser::paint(cx, node, world_rect, zoom)
         }
         NodeKind::Group | NodeKind::Other(_) => {
             // `clipContent` is container-level in the canonical schema

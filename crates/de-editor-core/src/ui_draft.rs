@@ -129,6 +129,12 @@ pub enum PropertyFocus {
     /// Free text: a number, colour, ref or `$variable`, committed through
     /// `commit_selected_script_input`.
     ScriptInput(usize),
+    /// A browser node's address (free text), page zoom in percent and
+    /// page scroll in CSS px (#20), committed through `set_selected_browser_*`.
+    BrowserUrl,
+    BrowserZoom,
+    BrowserScrollX,
+    BrowserScrollY,
     /// One numeric field (from / to / duration / delay) of the Motion
     /// section's animation at `index` (#154).
     MotionValue {
@@ -195,6 +201,7 @@ impl PropertyFocus {
                 | PropertyFocus::AnnotationContent
                 | PropertyFocus::AnnotationModel
                 | PropertyFocus::ScriptInput(_)
+                | PropertyFocus::BrowserUrl
                 | PropertyFocus::InteractionUrl(_)
         )
     }
