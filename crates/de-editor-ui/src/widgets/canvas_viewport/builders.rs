@@ -89,6 +89,7 @@ impl<'a> CanvasViewport<'a> {
             fast_interaction: false,
             cull_override: None,
             pointer: None,
+            text_layout_generation: None,
         }
     }
 
@@ -146,6 +147,7 @@ impl<'a> CanvasViewport<'a> {
             fast_interaction: false,
             cull_override: None,
             pointer: None,
+            text_layout_generation: None,
         }
     }
 

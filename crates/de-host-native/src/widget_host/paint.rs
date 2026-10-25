@@ -242,6 +242,8 @@ impl WidgetHostNative {
                     let mut canvas = CanvasViewport::from_editor(&self.editor_state, canvas_scene);
                     canvas.now_ms = self.now_ms;
                     canvas.pointer = self.shader_pointer;
+                    // Native knows when its fonts change: text layouts are memoized (#208).
+                    canvas.text_layout_generation = Some(jian_skia::font_generation());
                     canvas.fast_interaction = self.canvas_fast_interaction_active();
                     canvas.set_node_drag_active(
                         self.node_drag.as_ref().is_some_and(|drag| drag.moved),

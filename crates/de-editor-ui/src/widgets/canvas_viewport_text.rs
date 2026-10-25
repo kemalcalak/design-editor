@@ -23,7 +23,6 @@
 //!   gap-free (e.g. CJK) lines are left-aligned.
 
 use crate::layout_scene::{SceneNode, SceneTextAlign, SceneTextRun};
-use crate::widgets::canvas_text_edit::text_edit_layout;
 use crate::widgets::canvas_viewport::EditCaret;
 use crate::widgets::PaintCx;
 use crate::{Color, Point2D, Rect, RenderBackend, TextBaselineRequest, TextLayout};
@@ -446,7 +445,7 @@ pub(crate) fn paint_text_node_pass(
     // viewport scale as a canvas transform. The layout (and therefore
     // the text editor) works on the FLAT string with node-level
     // metrics; styled runs only restyle the painted slices.
-    let layout = text_edit_layout(cx.backend, paint_node);
+    let layout = super::canvas_text_layout_memo::text_layout(cx.backend, paint_node);
     // The family the lines were wrapped in, so paint and wrap cannot
     // disagree about the face.
     let family = layout.family.as_str();

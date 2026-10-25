@@ -91,6 +91,8 @@ impl WidgetHostNative {
             let mut canvas = CanvasViewport::from_editor(&self.editor_state, &self.layout_scene);
             canvas.now_ms = self.now_ms;
             canvas.pointer = self.shader_pointer;
+            // Native knows when its fonts change: text layouts are memoized (#208).
+            canvas.text_layout_generation = Some(jian_skia::font_generation());
             // Same quality the layer holds: degraded mid-gesture.
             canvas.fast_interaction = !cache.sharp && self.fast_interaction_active();
             canvas.offset_paint_origin(M - offset.x, M - offset.y);

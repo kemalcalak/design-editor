@@ -215,6 +215,8 @@ pub mod canvas_annotation;
 mod canvas_placeholder;
 pub mod canvas_shader_pointer;
 pub mod canvas_text_edit;
+// `pub` for the hosts' frame hooks (#208).
+pub mod canvas_text_layout_memo;
 pub(crate) mod canvas_text_wrap;
 pub mod canvas_viewport;
 mod canvas_viewport_background;

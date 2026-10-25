@@ -144,6 +144,10 @@ pub struct CanvasViewport<'a> {
     /// `uniform float2 mouse;` shader fills (see
     /// [`super::canvas_shader_pointer`]). `None` binds the idle value.
     pub pointer: Option<Point2D>,
+    /// The host's font-registry generation; set, it lets text nodes reuse
+    /// their line layout across frames (see
+    /// [`super::canvas_text_layout_memo`], #208).
+    pub text_layout_generation: Option<u64>,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -175,6 +179,8 @@ impl<'a> Widget for CanvasViewport<'a> {
         // A culled partial repaint (pan-cache strips / tiles) adds to the
         // frame's pointer-shader flag instead of resetting it.
         super::canvas_shader_pointer::begin_frame(self.pointer, self.cull_override.is_some());
+        super::canvas_text_layout_memo::begin_frame(self.text_layout_generation);
+        super::canvas_viewport_paint::begin_subtree_bounds_memo();
         cx.backend.save();
         cx.backend.clip_rect(rect);
 
@@ -567,6 +573,8 @@ impl<'a> Widget for CanvasViewport<'a> {
 
         cx.backend.restore();
         super::canvas_shader_pointer::end_frame();
+        super::canvas_text_layout_memo::end_frame();
+        super::canvas_viewport_paint::end_subtree_bounds_memo();
     }
 
     fn access_node(&self) -> accesskit::Node {
