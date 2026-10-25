@@ -765,8 +765,8 @@ fn pending_legacy_migration_blocks_an_ordinary_settings_write() {
     // it here would leave the fingerprint unchanged and the test would pass
     // for the wrong reason. Locale genuinely lives in the blob — and it has to
     // be a value the default is not, or this is the same no-op trap.
-    assert_ne!(state.editor_ui.locale, Locale::EnUs);
-    state.editor_ui.locale = Locale::EnUs;
+    assert_ne!(state.editor_ui.locale, Locale::Ja);
+    state.editor_ui.locale = Locale::Ja;
 
     assert!(
         save_credentials_if_changed_with(&state, &mut credential_baseline, |_, _| false).is_none()

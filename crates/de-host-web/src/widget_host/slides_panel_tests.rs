@@ -185,7 +185,6 @@ fn the_tab_row_switches_the_rail_both_ways() {
         )
     };
     let layers_tab = centre(tabs.rect_of(de_editor_core::LeftPanelTab::Layers));
-    let slides_tab = centre(tabs.rect_of(de_editor_core::LeftPanelTab::Slides));
 
     host.apply_press(layers_tab.x, layers_tab.y, VW, VH);
     host.apply_release_with_viewport(VW, VH);
@@ -195,6 +194,10 @@ fn the_tab_row_switches_the_rail_both_ways() {
     );
     assert!(host.slides_panel_frame(VW, VH).is_none());
 
+    // Read the row again: the active tab is the wide labelled pill, so
+    // switching to Layers moved every tab after it.
+    let tabs = host.slides_tab_row(VH).expect("tab row");
+    let slides_tab = centre(tabs.rect_of(de_editor_core::LeftPanelTab::Slides));
     host.apply_press(slides_tab.x, slides_tab.y, VW, VH);
     host.apply_release_with_viewport(VW, VH);
     assert_eq!(

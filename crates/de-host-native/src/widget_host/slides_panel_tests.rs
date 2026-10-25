@@ -325,13 +325,6 @@ fn the_tab_row_switches_the_rail_both_ways() {
         tabs.rect_of(de_editor_core::LeftPanelTab::Layers).origin.y
             + tabs.rect_of(de_editor_core::LeftPanelTab::Layers).size.y / 2.0,
     );
-    let slides_tab = Point2D::new(
-        tabs.rect_of(de_editor_core::LeftPanelTab::Slides).origin.x
-            + tabs.rect_of(de_editor_core::LeftPanelTab::Slides).size.x / 2.0,
-        tabs.rect_of(de_editor_core::LeftPanelTab::Slides).origin.y
-            + tabs.rect_of(de_editor_core::LeftPanelTab::Slides).size.y / 2.0,
-    );
-
     host.apply_press(layers_tab.x, layers_tab.y, VW, VH);
     host.apply_release_with_viewport(VW, VH);
     assert_eq!(
@@ -343,7 +336,15 @@ fn the_tab_row_switches_the_rail_both_ways() {
         "the layer tree owns the rail now"
     );
 
-    // The tab row still takes clicks while the tree owns the rail.
+    // The tab row still takes clicks while the tree owns the rail. Read
+    // it again: the active tab is the wide labelled pill, so switching to
+    // Layers moved every tab after it.
+    let tabs = host.slides_tab_row(VH).expect("tab row");
+    let slides_rect = tabs.rect_of(de_editor_core::LeftPanelTab::Slides);
+    let slides_tab = Point2D::new(
+        slides_rect.origin.x + slides_rect.size.x / 2.0,
+        slides_rect.origin.y + slides_rect.size.y / 2.0,
+    );
     host.apply_press(slides_tab.x, slides_tab.y, VW, VH);
     host.apply_release_with_viewport(VW, VH);
     assert_eq!(

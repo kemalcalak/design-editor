@@ -16,9 +16,7 @@ pub fn detect() -> Locale {
 /// Pure resolution behind [`detect`]: the environment result, else the
 /// first supported tag in `preferred`, else English.
 pub fn resolve(environment: Option<Locale>, preferred: impl IntoIterator<Item = String>) -> Locale {
-    environment
-        .or_else(|| preferred.into_iter().find_map(|tag| Locale::from_tag(&tag)))
-        .unwrap_or(Locale::EnUs)
+    environment.unwrap_or_else(|| Locale::from_preferred(preferred))
 }
 
 #[cfg(test)]

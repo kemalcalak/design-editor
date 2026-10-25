@@ -62,6 +62,9 @@ pub(super) async fn mount_ck(canvas_id: String) -> Result<(), JsValue> {
     host.editor_state_mut().editor_ui.embed = de_editor_core::EmbedHost::from_query(&search);
     host.editor_state_mut().editor_ui.host_owns_chat =
         crate::web_settings::host_owns_chat_from_query(&search);
+    // First-visit locale from the browser's language list. Seeded before the
+    // settings load so a stored choice, and the host hint below, still win.
+    host.editor_state_mut().editor_ui.locale = browser_locale(&window);
     let credential_load = crate::web_settings::load_into(host.editor_state_mut());
     // Theme is device-level, so it is resolved from its own unpartitioned key
     // rather than from the partition blob just loaded. On a browser that has
@@ -92,8 +95,9 @@ pub(super) async fn mount_ck(canvas_id: String) -> Result<(), JsValue> {
     let backend = init_backend(&canvas_id, dpr, logical_w, logical_h).await?;
     if let Some(catalog) = initial_catalog {
         // The XHR itself owns the three-second timeout. Success installs the
-        // target catalog; failure leaves the stored locale in place so its first
-        // paint uses the embedded English fallback without blocking mount.
+        // target catalog; failure leaves the stored or browser-seeded locale in
+        // place so its first paint uses the embedded English fallback without
+        // blocking mount.
         let _ = catalog.await;
     }
     // Set the OpCk for preview text measurement before any paint.
@@ -691,4 +695,11 @@ pub(super) async fn mount_ck(canvas_id: String) -> Result<(), JsValue> {
     std::mem::forget(inner);
     std::mem::forget(listeners);
     Ok(())
+}
+
+/// The UI locale `navigator.languages` asks for: its first supported tag,
+/// else English, the rule the desktop host applies to the OS language list.
+fn browser_locale(window: &web_sys::Window) -> de_editor_core::Locale {
+    let languages = window.navigator().languages();
+    de_editor_core::Locale::from_preferred(languages.iter().filter_map(|tag| tag.as_string()))
 }

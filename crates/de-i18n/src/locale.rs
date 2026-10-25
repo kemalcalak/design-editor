@@ -132,6 +132,18 @@ impl Locale {
         Self::from_tag(tag).unwrap_or(Locale::EnUs)
     }
 
+    /// The first supported tag in a preference-ordered language list (OS or
+    /// browser), else English.
+    pub fn from_preferred<I>(tags: I) -> Self
+    where
+        I: IntoIterator,
+        I::Item: AsRef<str>,
+    {
+        tags.into_iter()
+            .find_map(|tag| Self::from_tag(tag.as_ref()))
+            .unwrap_or(Locale::EnUs)
+    }
+
     /// Resolve locale environment values in POSIX precedence order.
     ///
     /// The first non-empty value controls the result. `C`, `POSIX`, and
@@ -240,5 +252,15 @@ mod tests {
         );
         assert_eq!(Locale::from_env_values(None, None, None), None);
         assert_eq!(Locale::parse_lossy("unsupported"), Locale::EnUs);
+    }
+
+    #[test]
+    fn preferred_lists_take_the_first_supported_tag() {
+        assert_eq!(
+            Locale::from_preferred(["xx-ZZ", "tr-TR", "en-US"]),
+            Locale::Tr
+        );
+        assert_eq!(Locale::from_preferred(["xx-ZZ"]), Locale::EnUs);
+        assert_eq!(Locale::from_preferred(Vec::<String>::new()), Locale::EnUs);
     }
 }
