@@ -224,7 +224,11 @@ impl WidgetHostNative {
                 // margin) so following pure-pan frames blit it above.
                 // Zoom ticks never build: the next tick's zoom change
                 // would invalidate the freshly built layer anyway.
-                let build_pan_cache = self.pan_cache_usable() && !self.last_gesture_was_zoom;
+                // At rest a canvas with located animation (#208) also
+                // paints into the layer, so the frames after it repaint
+                // only the animated regions.
+                let build_pan_cache = (self.pan_cache_usable() && !self.last_gesture_was_zoom)
+                    || self.rest_animation_layer_wanted();
                 let cached_layer = {
                     let mut transition_scene = None;
                     if let Some(transition) = self.layout_transition.as_ref() {
@@ -238,6 +242,8 @@ impl WidgetHostNative {
                     let mut canvas = CanvasViewport::from_editor(&self.editor_state, canvas_scene);
                     canvas.now_ms = self.now_ms;
                     canvas.pointer = self.shader_pointer;
+                    // Native knows when its fonts change: text layouts are memoized (#208).
+                    canvas.text_layout_generation = Some(jian_skia::font_generation());
                     canvas.fast_interaction = self.canvas_fast_interaction_active();
                     canvas.set_node_drag_active(
                         self.node_drag.as_ref().is_some_and(|drag| drag.moved),
@@ -278,6 +284,7 @@ impl WidgetHostNative {
                     }
                     rendered_layer
                 };
+                self.canvas_animation = de_editor_ui::widgets::canvas_animation_regions::snapshot();
                 if let Some(mut surface) = cached_layer {
                     use super::canvas_pan_cache::PAN_CACHE_MARGIN;
                     frame.draw_offscreen_layer(
@@ -287,7 +294,8 @@ impl WidgetHostNative {
                         Point2D::new(0.0, 0.0),
                     );
                     let raster_generation = frame.raster_generation();
-                    self.store_pan_cache(surface, canvas_rect, dpi, raster_generation);
+                    let sharp = !self.canvas_fast_interaction_active();
+                    self.store_pan_cache(surface, canvas_rect, dpi, raster_generation, sharp);
                 }
             }
         }

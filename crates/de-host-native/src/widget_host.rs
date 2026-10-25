@@ -34,6 +34,8 @@ mod agent_settings_tests;
 mod ai_chat_geometry;
 #[cfg(test)]
 mod ai_chat_minimized_tests;
+#[cfg(test)]
+mod animated_regions_tests;
 mod arc_drag;
 mod blur_inputs;
 #[cfg(test)]
@@ -143,6 +145,8 @@ mod keyboard_clipboard;
 mod keyboard_delete;
 mod keyboard_escape;
 mod keyboard_send;
+#[cfg(test)]
+mod large_doc_frame_tests;
 mod missing_fonts_dispatch;
 mod mode_transition_host;
 #[cfg(test)]
@@ -151,6 +155,7 @@ mod overlay_rects;
 #[cfg(test)]
 mod page_switch_center_tests;
 mod paint;
+mod paint_animated_regions;
 mod paint_chrome_menus;
 mod paint_floating_panels;
 mod paint_pan_cache;
@@ -466,6 +471,13 @@ pub struct WidgetHostNative {
     pub(in crate::widget_host) pan_cache_scrolls: u64,
     /// Full expanded-layer builds performed (test observability).
     pub(in crate::widget_host) pan_cache_builds: u64,
+    /// Frames that repainted the layer's animated regions (#208).
+    pub(in crate::widget_host) pan_cache_animation_refreshes: u64,
+    /// Animated regions the last full canvas paint recorded (#208): while
+    /// they are `located`, the pan cache may hold animated content and
+    /// repaints only these regions per frame.
+    pub(in crate::widget_host) canvas_animation:
+        de_editor_ui::widgets::canvas_animation_regions::AnimationRegions,
     /// Whether the most recent gesture tick was a zoom — zoom frames
     /// never build the pan cache (each tick would invalidate it).
     pub(in crate::widget_host) last_gesture_was_zoom: bool,

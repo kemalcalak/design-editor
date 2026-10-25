@@ -144,6 +144,10 @@ pub struct CanvasViewport<'a> {
     /// `uniform float2 mouse;` shader fills (see
     /// [`super::canvas_shader_pointer`]). `None` binds the idle value.
     pub pointer: Option<Point2D>,
+    /// The host's font-registry generation; set, it lets text nodes reuse
+    /// their line layout across frames (see
+    /// [`super::canvas_text_layout_memo`], #208).
+    pub text_layout_generation: Option<u64>,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -170,10 +174,12 @@ impl<'a> Widget for CanvasViewport<'a> {
         }
         // Time-driven shader fills read this frame's clock while painting.
         super::canvas_shader_clock::begin_frame(self.now_ms);
+        super::canvas_animation_regions::begin_frame();
         super::canvas_generation_visibility::begin_frame(self.cull_override.is_some());
         // A culled partial repaint (pan-cache strips / tiles) adds to the
         // frame's pointer-shader flag instead of resetting it.
         super::canvas_shader_pointer::begin_frame(self.pointer, self.cull_override.is_some());
+        super::canvas_text_layout_memo::begin_frame(self.text_layout_generation);
         cx.backend.save();
         cx.backend.clip_rect(rect);
 
@@ -183,7 +189,13 @@ impl<'a> Widget for CanvasViewport<'a> {
         // 2. Dotted grid — canvas-local, scales with pan/zoom.
         let viewport = &self.viewport;
         if self.show_grid {
-            super::canvas_viewport_grid::paint_grid(cx, rect, viewport, &self.theme);
+            super::canvas_viewport_grid::paint_grid_within(
+                cx,
+                rect,
+                viewport,
+                &self.theme,
+                self.cull_override,
+            );
         }
         let indicators = de_editor_core::agent_indicators::snapshot_at_if_active(self.now_ms);
         let selection_chrome_visible = !self.node_drag_active;
@@ -560,6 +572,7 @@ impl<'a> Widget for CanvasViewport<'a> {
 
         cx.backend.restore();
         super::canvas_shader_pointer::end_frame();
+        super::canvas_text_layout_memo::end_frame();
     }
 
     fn access_node(&self) -> accesskit::Node {

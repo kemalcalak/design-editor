@@ -316,6 +316,7 @@ fn paint_node_body<'a>(
     let background_blur_pushed = if let Some(sigma) =
         background_blur_sigma.filter(|_| world_rect.size.x > 0.0 && world_rect.size.y > 0.0)
     {
+        super::canvas_animation_regions::mark_backdrop();
         cx.backend.save();
         shader_effects::clip_node_silhouette(cx, node, world_rect, zoom);
         cx.backend.push_backdrop_blur_layer(sigma);

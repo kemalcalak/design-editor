@@ -24,21 +24,52 @@ struct GridMetrics {
 /// so it scrolls with the document content. Dots get sparser as
 /// zoom decreases (skipping every other dot at low zoom) so they
 /// stay visually airy.
-pub(super) fn paint_grid(cx: &mut PaintCx<'_>, rect: Rect, viewport: &DocViewport, theme: &Theme) {
+///
+/// With `limit` (a partial repaint's cull rect: a pan strip, a restore
+/// tile, an animated region, #208) only the dots near it are emitted. The
+/// lattice stays anchored to `rect`, so they land exactly where a full
+/// paint puts them; the rest would be clipped away anyway.
+pub(super) fn paint_grid_within(
+    cx: &mut PaintCx<'_>,
+    rect: Rect,
+    viewport: &DocViewport,
+    theme: &Theme,
+    limit: Option<Rect>,
+) {
     let metrics = grid_metrics(rect, viewport, theme);
-    let count = grid_dot_count_from_metrics(rect, metrics);
-    let mut centers = Vec::with_capacity(count);
-    let mut y = metrics.origin_y - metrics.step;
-    while y < rect.origin.y + rect.size.y + metrics.step {
-        let mut x = metrics.origin_x - metrics.step;
-        while x < rect.origin.x + rect.size.x + metrics.step {
+    let step = metrics.step;
+    let first_x = metrics.origin_x - step;
+    let first_y = metrics.origin_y - step;
+    let end_x = rect.origin.x + rect.size.x + step;
+    let end_y = rect.origin.y + rect.size.y + step;
+    // First lattice index at or before `from` (never before the start).
+    let skip = |first: f32, from: f32| ((from - first) / step).floor().max(0.0);
+    let (x0, y0, x1, y1) = match limit {
+        Some(limit) => (
+            first_x + skip(first_x, limit.origin.x - step) * step,
+            first_y + skip(first_y, limit.origin.y - step) * step,
+            end_x.min(limit.origin.x + limit.size.x + step),
+            end_y.min(limit.origin.y + limit.size.y + step),
+        ),
+        None => (first_x, first_y, end_x, end_y),
+    };
+    let mut centers = Vec::with_capacity(match limit {
+        Some(_) => 0,
+        None => grid_dot_count_from_metrics(rect, metrics),
+    });
+    let mut y = y0;
+    while y < y1 {
+        let mut x = x0;
+        while x < x1 {
             centers.push(Point2D::new(x, y));
-            x += metrics.step;
+            x += step;
         }
-        y += metrics.step;
+        y += step;
     }
-    cx.backend
-        .fill_dots(&centers, metrics.dot_radius, metrics.color);
+    if !centers.is_empty() {
+        cx.backend
+            .fill_dots(&centers, metrics.dot_radius, metrics.color);
+    }
 }
 
 #[cfg(test)]

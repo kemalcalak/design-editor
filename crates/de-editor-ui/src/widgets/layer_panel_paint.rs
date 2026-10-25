@@ -40,7 +40,45 @@ pub(super) fn truncate_to_fit(s: &str, font_size: f32, max_w: f32) -> String {
     format!("{}…", kept)
 }
 
+///
+/// Rows repaint every frame, and measuring a long name's binary search took
+/// ~7% of an animated canvas frame (#208), so results are memoized while
+/// the host reports a stable font generation (see
+/// [`super::canvas_text_layout_memo::font_generation`]).
 pub(super) fn truncate_to_fit_measured(
+    backend: &mut dyn RenderBackend,
+    s: &str,
+    font_size: f32,
+    max_w: f32,
+) -> String {
+    use std::cell::RefCell;
+    use std::collections::HashMap;
+    type Key = (String, u32, u32);
+    thread_local! {
+        static MEMO: RefCell<(Option<u64>, HashMap<Key, String>)> =
+            RefCell::new((None, HashMap::new()));
+    }
+    let Some(generation) = super::canvas_text_layout_memo::font_generation() else {
+        return truncate_to_fit_measured_uncached(backend, s, font_size, max_w);
+    };
+    let key = (s.to_owned(), font_size.to_bits(), max_w.to_bits());
+    let hit = MEMO.with(|memo| {
+        let mut memo = memo.borrow_mut();
+        if memo.0 != Some(generation) || memo.1.len() >= 4_096 {
+            memo.0 = Some(generation);
+            memo.1.clear();
+        }
+        memo.1.get(&key).cloned()
+    });
+    if let Some(display) = hit {
+        return display;
+    }
+    let display = truncate_to_fit_measured_uncached(backend, s, font_size, max_w);
+    MEMO.with(|memo| memo.borrow_mut().1.insert(key, display.clone()));
+    display
+}
+
+fn truncate_to_fit_measured_uncached(
     backend: &mut dyn RenderBackend,
     s: &str,
     font_size: f32,

@@ -70,6 +70,8 @@ impl WidgetHostNative {
             pan_cache_blits: 0,
             pan_cache_scrolls: 0,
             pan_cache_builds: 0,
+            pan_cache_animation_refreshes: 0,
+            canvas_animation: Default::default(),
             last_gesture_was_zoom: false,
             shift_held: false,
             alt_held: false,

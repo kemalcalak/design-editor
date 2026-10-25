@@ -54,6 +54,10 @@ pub(in crate::widget_host) struct CanvasPanCache {
     /// drop the cache when the hover changed (some hover clears skip
     /// `mark_dirty`), or the outline would freeze on screen.
     pub hovered: Option<de_editor_core::NodeId>,
+    /// Boxes of the self-animating content baked into the layer (#208),
+    /// in the logical space the layer was painted in (window coordinates
+    /// at `pan`). Every served frame repaints them before the blit.
+    pub animated: Vec<Rect>,
 }
 
 /// Progressive gesture-end quality restore: the visible region splits
@@ -71,9 +75,10 @@ pub(in crate::widget_host) const PAN_CACHE_RESTORE_TILES: usize = 6;
 
 impl WidgetHostNative {
     /// Whether the current frame may serve or build the pan cache.
-    /// Conservative: any time-driven canvas animation, and any shader
-    /// reading the pointer (which moves relative to the panned content),
-    /// opts out so a blitted frame can never freeze it visibly.
+    /// Animated content (time- or pointer-driven shaders) is allowed only
+    /// when the last paint located all of it, so every served frame can
+    /// repaint those regions (`animation_allows_cache`, #208); anything
+    /// else animating opts out so a blitted frame can never freeze it.
     pub(in crate::widget_host) fn pan_cache_usable(&self) -> bool {
         self.fast_interaction_active()
             && self.preview.is_none()
@@ -82,8 +87,7 @@ impl WidgetHostNative {
                 .as_ref()
                 .is_none_or(|transition| !transition.is_active(self.now_ms))
             && de_editor_core::agent_indicators::snapshot_at_if_active(self.now_ms).is_none()
-            && !de_editor_ui::widgets::canvas_shader_clock::animated_shader_painted()
-            && !de_editor_ui::widgets::canvas_shader_pointer::pointer_shader_painted()
+            && self.animation_allows_cache()
             && self.node_drag.is_none()
             && self.marquee_drag.is_none()
             && self.editor_state.editor_ui.starter_ghost.is_none()
@@ -117,8 +121,10 @@ impl WidgetHostNative {
         rect: Rect,
         dpi: f32,
         raster_generation: u64,
+        sharp: bool,
     ) {
         self.pan_cache_builds = self.pan_cache_builds.wrapping_add(1);
+        let animated = self.canvas_animation.rects.clone();
         let hovered = self.editor_state.editor_ui.canvas_hover_node.clone();
         let viewport = &self.editor_state.viewport;
         self.pan_cache = Some(CanvasPanCache {
@@ -127,10 +133,12 @@ impl WidgetHostNative {
             rect,
             pan: Point2D::new(viewport.pan_x, viewport.pan_y),
             dpi,
-            // Layers are built mid-gesture in degrade mode.
-            sharp: false,
+            // Gesture builds paint in degrade mode; a rest build (an
+            // animated canvas, #208) is full quality.
+            sharp,
             raster_generation,
             hovered,
+            animated,
         });
     }
 

@@ -17,7 +17,7 @@
 //! frame marks the frame, and hosts call [`track_pointer`] on every cursor
 //! move so a moving pointer repaints only while one is on screen.
 
-use std::cell::Cell;
+use std::cell::{Cell, RefCell};
 
 use crate::{Point2D, Rect};
 
@@ -38,6 +38,10 @@ thread_local! {
     /// preview, thumbnails and exports never see the pointer, so they must
     /// not make the host repaint on pointer moves.
     static IN_FRAME: Cell<bool> = const { Cell::new(false) };
+    /// The node transforms pushed around the current paint, outermost
+    /// first, so a painted box maps back to canvas space
+    /// ([`map_to_canvas`], used by `canvas_animation_regions`).
+    static TRANSFORMS: RefCell<Vec<NodeTransform>> = const { RefCell::new(Vec::new()) };
 }
 
 /// Start a canvas frame with the pointer in screen space (`None` when it is
@@ -48,6 +52,7 @@ thread_local! {
 pub fn begin_frame(pointer: Option<Point2D>, accumulate: bool) {
     LOCAL_POINTER.with(|local| local.set(pointer.filter(|p| p.is_finite())));
     IN_FRAME.with(|in_frame| in_frame.set(true));
+    TRANSFORMS.with(|stack| stack.borrow_mut().clear());
     if !accumulate {
         POINTER_PAINTED.with(|painted| painted.set(false));
     }
@@ -58,6 +63,12 @@ pub fn begin_frame(pointer: Option<Point2D>, accumulate: bool) {
 pub fn end_frame() {
     LOCAL_POINTER.with(|local| local.set(None));
     IN_FRAME.with(|in_frame| in_frame.set(false));
+    TRANSFORMS.with(|stack| stack.borrow_mut().clear());
+}
+
+/// Whether a canvas frame is painting (not an export, thumbnail or preview).
+pub(crate) fn in_canvas_frame() -> bool {
+    IN_FRAME.with(Cell::get)
 }
 
 /// Whether a pointer-reading shader was painted since the last
@@ -106,6 +117,7 @@ pub(crate) struct NodeTransform {
 /// Map the pointer into a node's coordinate space as its transform is
 /// pushed. Returns the outer pointer for [`leave_node_transform`].
 pub(crate) fn enter_node_transform(transform: NodeTransform) -> Option<Point2D> {
+    TRANSFORMS.with(|stack| stack.borrow_mut().push(transform));
     LOCAL_POINTER.with(|local| {
         let outer = local.get();
         local.set(outer.and_then(|point| inverse_node_transform(point, transform)));
@@ -115,7 +127,64 @@ pub(crate) fn enter_node_transform(transform: NodeTransform) -> Option<Point2D> 
 
 /// Restore the pointer [`enter_node_transform`] returned.
 pub(crate) fn leave_node_transform(outer: Option<Point2D>) {
+    TRANSFORMS.with(|stack| stack.borrow_mut().pop());
     LOCAL_POINTER.with(|local| local.set(outer));
+}
+
+/// Bounding box, in canvas paint space, of `rect` painted under the node
+/// transforms currently pushed. `None` when a transform is degenerate or
+/// the result is not finite.
+pub(crate) fn map_to_canvas(rect: Rect) -> Option<Rect> {
+    TRANSFORMS.with(|stack| {
+        let stack = stack.borrow();
+        if stack.is_empty() {
+            return (rect.origin.is_finite() && rect.size.is_finite()).then_some(rect);
+        }
+        let corners = [
+            rect.origin,
+            Point2D::new(rect.origin.x + rect.size.x, rect.origin.y),
+            Point2D::new(rect.origin.x, rect.origin.y + rect.size.y),
+            rect.origin + rect.size,
+        ];
+        let mut min = Point2D::new(f32::INFINITY, f32::INFINITY);
+        let mut max = Point2D::new(f32::NEG_INFINITY, f32::NEG_INFINITY);
+        for corner in corners {
+            let mut point = corner;
+            for transform in stack.iter().rev() {
+                point = forward_node_transform(point, *transform);
+            }
+            if !point.is_finite() {
+                return None;
+            }
+            min = min.min(point);
+            max = max.max(point);
+        }
+        Some(Rect {
+            origin: min,
+            size: max - min,
+        })
+    })
+}
+
+/// Where a point drawn at `point` inside the node's transform lands:
+/// `pivot + S_pop · S_flip · R · (point - pivot)` (the inverse of
+/// [`inverse_node_transform`]).
+fn forward_node_transform(point: Point2D, t: NodeTransform) -> Point2D {
+    let mut d = point - t.pivot;
+    if t.rotation.abs() > f32::EPSILON {
+        let (sin, cos) = t.rotation.sin_cos();
+        d = Point2D::new(d.x * cos - d.y * sin, d.x * sin + d.y * cos);
+    }
+    if t.flip_x {
+        d.x = -d.x;
+    }
+    if t.flip_y {
+        d.y = -d.y;
+    }
+    if let Some(scale) = t.pop_scale {
+        d *= scale;
+    }
+    t.pivot + d
 }
 
 /// Skia pre-concatenates, so a point drawn at `p` lands at
@@ -161,7 +230,7 @@ pub fn mouse_uniform_value(
     rect: Rect,
     uniforms: &[(&str, &[f32])],
 ) -> Option<[f32; 2]> {
-    if !declares_mouse_uniform(sksl) {
+    if !super::canvas_shader_decls::shader_decls(sksl).mouse {
         return None;
     }
     if IN_FRAME.with(Cell::get) {
