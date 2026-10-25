@@ -8,9 +8,9 @@ const NESTED_FRAME: &str =
     include_str!("../../../../vendor/jian/crates/jian-ops-schema/tests/corpus/nested-frame.op");
 
 #[test]
-fn a_document_loads_on_a_512_kib_thread() {
+fn a_document_loads_on_a_256_kib_thread() {
     let loaded = std::thread::Builder::new()
-        .stack_size(512 * 1024)
+        .stack_size(256 * 1024)
         .spawn(|| load_canonical(NESTED_FRAME).map(|r| r.value.children.len()))
         .expect("spawn small-stack thread")
         .join()
