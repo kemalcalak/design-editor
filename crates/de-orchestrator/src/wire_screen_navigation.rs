@@ -144,6 +144,9 @@ pub(crate) use screen_route_inventory::{
 #[path = "wire_web_nav_links.rs"]
 mod wire_web_nav_links;
 pub use wire_web_nav_links::wire_web_nav_links;
+#[path = "wire_preview_screens.rs"]
+mod wire_preview_screens;
+pub use wire_preview_screens::wire_preview_screens;
 
 /// Scan the active page's top-level `Frame` children for screen-shaped
 /// candidates (numeric width AND height, width in a mobile or desktop band).

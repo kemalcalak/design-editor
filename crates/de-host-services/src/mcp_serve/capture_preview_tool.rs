@@ -71,7 +71,7 @@ impl CapturePreview {
             .filter(|s| !s.is_empty())
             .and_then(|id| {
                 de_editor_core::preview_screen_set::preview_entry_root(
-                    self.page_roots(page_index),
+                    de_editor_core::preview_screen_set::page_roots(&self.document, page_index),
                     Some(id),
                 )
             });
@@ -132,17 +132,6 @@ impl CapturePreview {
             mime_type: "image/png".into(),
             metadata_json: Some(metadata.to_string()),
         })
-    }
-
-    /// The top-level nodes of page `index` (a pageless document's children).
-    fn page_roots(&self, index: usize) -> &[jian_ops_schema::node::PenNode] {
-        match self.document.pages.as_deref() {
-            Some(pages) if !pages.is_empty() => pages
-                .get(index)
-                .map(|page| page.children.as_slice())
-                .unwrap_or_default(),
-            _ => &self.document.children,
-        }
     }
 
     /// The page to preview: `pageId` (a page id or name), else the

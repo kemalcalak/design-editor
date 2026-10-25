@@ -51,6 +51,9 @@ const SURFACE_PAIRS: [(&str, &str); 4] = [
     ("menu", "bar"),
 ];
 
+/// The tallest first child that still reads as a header band.
+const HEADER_MAX_HEIGHT: f64 = 200.0;
+
 /// A link target: what its label is matched against, the patch value
 /// (a route path for a page, a node id for a section), and its depth
 /// under the page (sections only; shallower wins a tie).
@@ -62,6 +65,18 @@ struct Target {
 
 /// Bind header / footer link items to their pages or sections.
 pub fn wire_web_nav_links(sink: &mut dyn DocSink) {
+    let ids: Vec<String> = sink
+        .state()
+        .active_children()
+        .iter()
+        .map(|node| node.id_str().to_owned())
+        .collect();
+    wire_web_nav_links_on(sink, &ids);
+}
+
+/// [`wire_web_nav_links`] for the top-level frames `page_ids` only: the
+/// boards Preview browses (#223).
+pub(crate) fn wire_web_nav_links_on(sink: &mut dyn DocSink, page_ids: &[String]) {
     let patches = {
         let roots = sink.state().active_children();
         let pages: Vec<Target> = roots
@@ -76,17 +91,18 @@ pub fn wire_web_nav_links(sink: &mut dyn DocSink) {
             })
             .collect();
         let mut patches = Vec::new();
-        for root in roots
-            .iter()
-            .filter(|node| matches!(node, PenNode::Frame(_)))
-        {
+        for root in roots.iter().filter(|node| {
+            matches!(node, PenNode::Frame(_)) && page_ids.iter().any(|id| id == node.id_str())
+        }) {
             let surfaces = collect_surfaces(root);
             if surfaces.is_empty() {
                 continue;
             }
             let mut sections = Vec::new();
             for child in root.children().into_iter().flatten() {
-                collect_sections(child, 1, &mut sections);
+                if !surfaces.iter().any(|surface| std::ptr::eq(*surface, child)) {
+                    collect_sections(child, 1, &mut sections);
+                }
             }
             for surface in surfaces {
                 let mut items = Vec::new();
@@ -172,10 +188,20 @@ fn is_surface(node: &PenNode) -> bool {
 
 /// The page's surfaces: direct children of `root` that are one, and the
 /// ones directly inside an unnamed wrapper child (a page's layout column).
+/// Besides names and roles, the page's structure marks them in any
+/// language (#223): its first child when it is a short band holding
+/// several texts (a header), and its last child holding several texts (a
+/// footer).
 fn collect_surfaces(root: &PenNode) -> Vec<&PenNode> {
     let mut out = Vec::new();
-    for child in root.children().into_iter().flatten() {
-        if is_surface(child) {
+    let children: Vec<&PenNode> = root.children().into_iter().flatten().collect();
+    let last = children.len().saturating_sub(1);
+    for (index, &child) in children.iter().enumerate() {
+        let header_band = index == 0
+            && child.height_px().is_none_or(|h| h <= HEADER_MAX_HEIGHT)
+            && text_count(child) >= 2;
+        let footer_band = index == last && index > 0 && text_count(child) >= 2;
+        if header_band || footer_band || is_surface(child) {
             out.push(child);
         } else if child.base().name.is_none() {
             out.extend(

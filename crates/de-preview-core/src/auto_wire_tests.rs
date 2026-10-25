@@ -27,7 +27,7 @@ fn two_unmarked_screens() -> &'static str {
 #[test]
 fn unmarked_multi_screen_doc_gets_wired() {
     let doc = parse(two_unmarked_screens());
-    let wired = auto_wire_for_preview(&doc, 0).expect("no marker -> pass runs");
+    let wired = auto_wire_for_preview(&doc, 0, None).expect("no marker -> pass runs");
     assert_eq!(frame_screen(&wired, "home"), Some("/"));
     assert_eq!(frame_screen(&wired, "profile"), Some("/profile"));
 }
@@ -36,7 +36,7 @@ fn unmarked_multi_screen_doc_gets_wired() {
 fn caller_document_is_never_mutated() {
     let doc = parse(two_unmarked_screens());
     let before = serde_json::to_string(&doc).unwrap();
-    let _ = auto_wire_for_preview(&doc, 0);
+    let _ = auto_wire_for_preview(&doc, 0, None);
     let after = serde_json::to_string(&doc).unwrap();
     assert_eq!(after, before, "auto_wire_for_preview must not touch `doc`");
 }
@@ -54,7 +54,7 @@ fn any_authored_marker_skips_the_whole_pass() {
     ]}"#;
     let doc = parse(json);
     assert!(
-        auto_wire_for_preview(&doc, 0).is_none(),
+        auto_wire_for_preview(&doc, 0, None).is_none(),
         "an authored marker anywhere on the page must skip the whole pass"
     );
 }
@@ -69,7 +69,7 @@ fn single_screen_doc_is_untouched() {
          "layout":"vertical","children":[]}
     ]}"#;
     let doc = parse(json);
-    let wired = auto_wire_for_preview(&doc, 0).expect("no marker -> pass runs");
+    let wired = auto_wire_for_preview(&doc, 0, None).expect("no marker -> pass runs");
     assert_eq!(
         serde_json::to_string(&wired).unwrap(),
         serde_json::to_string(&doc).unwrap(),
@@ -114,7 +114,7 @@ fn on_tap(doc: &PenDocument, id: &str) -> Option<serde_json::Value> {
 #[test]
 fn website_header_links_are_wired_to_pages_and_sections() {
     let doc = parse(unmarked_site());
-    let wired = auto_wire_for_preview(&doc, 0).expect("no marker -> pass runs");
+    let wired = auto_wire_for_preview(&doc, 0, None).expect("no marker -> pass runs");
     assert_eq!(
         on_tap(&wired, "to-pricing"),
         Some(serde_json::json!([{ "replace": "\"/pricing\"" }]))
@@ -138,5 +138,33 @@ fn an_authored_marker_also_skips_website_links() {
         r#""id":"pricing","name":"Pricing","#,
         r#""id":"pricing","name":"Pricing","screen":"/pricing","#,
     );
-    assert!(auto_wire_for_preview(&parse(&json), 0).is_none());
+    assert!(auto_wire_for_preview(&parse(&json), 0, None).is_none());
+}
+
+/// #223: with an entry board, instances are expanded and an authored
+/// marker no longer switches the pass off.
+#[test]
+fn an_entry_board_fills_gaps_around_authored_markers() {
+    let doc = parse(
+        r#"{"version":"1.0","children":[
+        {"type":"frame","id":"home","name":"Home","reusable":true,"width":390,"height":844,
+         "layout":"vertical","children":[]},
+        {"type":"frame","id":"profile","name":"Profile","screen":"/me","width":390,
+         "height":844,"layout":"vertical","children":[]},
+        {"type":"ref","id":"home-dark","ref":"home","x":500,"y":0}
+    ]}"#,
+    );
+    assert!(auto_wire_for_preview(&doc, 0, None).is_none(), "old rule");
+    let wired = auto_wire_for_preview(&doc, 0, Some("home")).expect("pass runs");
+    assert_eq!(frame_screen(&wired, "home"), Some("/"));
+    assert_eq!(frame_screen(&wired, "profile"), Some("/me"));
+    // The instance is expanded into a frame and is not part of the site.
+    assert_eq!(frame_screen(&wired, "home-dark"), None);
+    assert!(matches!(
+        wired
+            .children
+            .iter()
+            .find(|n| matches!(n, PenNode::Frame(f) if f.base.id == "home-dark")),
+        Some(PenNode::Frame(_))
+    ));
 }

@@ -311,18 +311,16 @@ impl PreviewSession {
         let debug = crate::debug_trace::PreviewDebugState::default();
         let _ = canvas_size; // layout is root-derived, not canvas-derived.
 
-        // Track C-1: if the document has no authored `screen` marker at
-        // all, auto-wire a preview-only clone with Track A's deterministic
-        // screen/nav pass before anything else runs, so a hand-drawn or
-        // pre-Track-A multi-screen document still enters App Mode. `doc`
-        // is a local binding for the rest of `enter` — it either points at
-        // the caller's document (untouched) or at `auto_wired` (owned
-        // here); either way the CALLER's document is never mutated. See
-        // `auto_wire`'s module doc for the "any marker → skip entirely"
-        // rationale.
+        // Track C-1 / #223: auto-wire a preview-only clone (routes for the
+        // entry board's site, header / footer / tab links) before anything
+        // else runs, so a hand-drawn or imported multi-screen document
+        // still enters App Mode. `doc` is a local binding for the rest of
+        // `enter` — it either points at the caller's document (untouched)
+        // or at `auto_wired` (owned here); either way the CALLER's document
+        // is never mutated. See `auto_wire`'s module doc.
         #[cfg(feature = "gl-host")]
         let auto_wired = (!presenting)
-            .then(|| crate::auto_wire::auto_wire_for_preview(doc, active_page_index))
+            .then(|| crate::auto_wire::auto_wire_for_preview(doc, active_page_index, entry_root_id))
             .flatten();
         // Mobile: the orchestrator-backed pass is not linked; authored
         // `screen` markers still drive App Mode.
