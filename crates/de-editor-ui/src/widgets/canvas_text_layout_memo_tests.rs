@@ -66,7 +66,8 @@ fn any_text_input_change_recomputes() {
     begin_frame(Some(1));
     let base = text_layout(&mut backend, &node);
 
-    let mut edits: Vec<Box<dyn Fn(&mut SceneNode)>> = vec![
+    type Edit = Box<dyn Fn(&mut SceneNode)>;
+    let mut edits: Vec<Edit> = vec![
         Box::new(|n| n.text = Some("hello brave old world".into())),
         Box::new(|n| n.font_size = 18.0),
         Box::new(|n| n.font_weight = 700),

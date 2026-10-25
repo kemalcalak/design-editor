@@ -21,31 +21,6 @@ const MIN_LAYER_EXTENT: f32 = 1.0;
 
 type BoundsResult = Result<Option<Rect>, ()>;
 
-/// `(node address, node id address, hidden id address, hidden id length)`.
-type BoundsKey = (usize, usize, usize, usize);
-
-thread_local! {
-    /// Subtree bounds memo for one canvas frame (#208). The walker asks for
-    /// every visited node's whole-subtree bounds, so without it a deep tree
-    /// costs O(nodes x depth) per paint, and a frame repainting several
-    /// animated regions pays that once per region. The scene is borrowed
-    /// for the whole paint, so node addresses are stable inside it; the
-    /// memo exists only between [`begin_subtree_bounds_memo`] and
-    /// [`end_subtree_bounds_memo`].
-    static SUBTREE_BOUNDS: std::cell::RefCell<Option<std::collections::HashMap<BoundsKey, BoundsResult>>> =
-        const { std::cell::RefCell::new(None) };
-}
-
-/// Start memoizing subtree bounds for the canvas paint that is starting.
-pub(in crate::widgets) fn begin_subtree_bounds_memo() {
-    SUBTREE_BOUNDS.with(|memo| *memo.borrow_mut() = Some(std::collections::HashMap::new()));
-}
-
-/// Stop memoizing: the scene the addresses point into may change.
-pub(in crate::widgets) fn end_subtree_bounds_memo() {
-    SUBTREE_BOUNDS.with(|memo| *memo.borrow_mut() = None);
-}
-
 /// Bounds for a node-level blend layer. The caller has already installed the
 /// root node's transform, so only descendant transforms are folded into this
 /// local-coordinate allocation hint.
@@ -122,36 +97,6 @@ pub(super) fn subtree_intersects_cull(
 }
 
 fn subtree_visual_bounds(
-    node: &SceneNode,
-    apply_root_transform: bool,
-    hidden_id: Option<&str>,
-) -> BoundsResult {
-    if !apply_root_transform {
-        return subtree_visual_bounds_uncached(node, false, hidden_id);
-    }
-    let key = (
-        node as *const SceneNode as usize,
-        node.id.as_ptr() as usize,
-        hidden_id.map_or(0, |id| id.as_ptr() as usize),
-        hidden_id.map_or(0, str::len),
-    );
-    let cached = SUBTREE_BOUNDS.with(|memo| memo.borrow().as_ref().map(|map| map.get(&key).copied()));
-    match cached {
-        Some(Some(bounds)) => bounds,
-        Some(None) => {
-            let bounds = subtree_visual_bounds_uncached(node, true, hidden_id);
-            SUBTREE_BOUNDS.with(|memo| {
-                if let Some(map) = memo.borrow_mut().as_mut() {
-                    map.insert(key, bounds);
-                }
-            });
-            bounds
-        }
-        None => subtree_visual_bounds_uncached(node, true, hidden_id),
-    }
-}
-
-fn subtree_visual_bounds_uncached(
     node: &SceneNode,
     apply_root_transform: bool,
     hidden_id: Option<&str>,

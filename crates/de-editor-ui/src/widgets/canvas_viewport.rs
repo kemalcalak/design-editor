@@ -180,7 +180,6 @@ impl<'a> Widget for CanvasViewport<'a> {
         // frame's pointer-shader flag instead of resetting it.
         super::canvas_shader_pointer::begin_frame(self.pointer, self.cull_override.is_some());
         super::canvas_text_layout_memo::begin_frame(self.text_layout_generation);
-        super::canvas_viewport_paint::begin_subtree_bounds_memo();
         cx.backend.save();
         cx.backend.clip_rect(rect);
 
@@ -574,7 +573,6 @@ impl<'a> Widget for CanvasViewport<'a> {
         cx.backend.restore();
         super::canvas_shader_pointer::end_frame();
         super::canvas_text_layout_memo::end_frame();
-        super::canvas_viewport_paint::end_subtree_bounds_memo();
     }
 
     fn access_node(&self) -> accesskit::Node {
