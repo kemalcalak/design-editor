@@ -17,6 +17,7 @@ use serde::{Deserialize, Serialize};
 mod compatibility;
 mod fast_load;
 mod legacy_normalize;
+mod missing_ids;
 mod paint_payloads;
 mod video_alias;
 

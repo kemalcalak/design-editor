@@ -387,6 +387,101 @@ fn image_node_without_src_loads_via_injected_empty_src() {
     assert_eq!(loaded.value.children.len(), 1, "the image node should load");
 }
 
+/// Loads one pen.dev 2.21 node through the open-file path and returns it.
+fn load_pen_dev_node(node: &str) -> PenNode {
+    let doc = format!(r#"{{"version":"2.21","children":[{node}]}}"#);
+    let loaded = load_canonical_with_assets(&doc, &crate::pen_dev::no_assets)
+        .expect("pen.dev node with an omitted field must load");
+    loaded
+        .loaded
+        .value
+        .children
+        .into_iter()
+        .next()
+        .expect("one node")
+}
+
+#[test]
+fn pen_dev_empty_text_layer_without_content_loads_as_empty_text() {
+    // pen.dev writes no `content` on a text layer whose text is empty.
+    let node = load_pen_dev_node(r#"{"type":"text","id":"t","fontSize":10}"#);
+    let PenNode::Text(text) = node else {
+        panic!("text node expected");
+    };
+    assert_eq!(
+        text.content,
+        jian_ops_schema::node::TextContent::Plain(String::new())
+    );
+}
+
+#[test]
+fn styled_text_segment_without_text_loads_as_empty_segment() {
+    let node = load_pen_dev_node(r#"{"type":"text","id":"t","content":[{"fontSize":10}]}"#);
+    let PenNode::Text(text) = node else {
+        panic!("text node expected");
+    };
+    let jian_ops_schema::node::TextContent::Styled(segments) = text.content else {
+        panic!("styled content expected");
+    };
+    assert_eq!(segments[0].text, "");
+}
+
+#[test]
+fn icon_without_a_glyph_name_loads_with_an_empty_name() {
+    for node in [
+        r#"{"type":"icon","id":"i","library":"lucide","width":16,"height":16}"#,
+        r#"{"type":"icon_font","id":"i","width":16,"height":16}"#,
+    ] {
+        let PenNode::IconFont(icon) = load_pen_dev_node(node) else {
+            panic!("icon_font node expected");
+        };
+        assert_eq!(icon.icon_font_name, "");
+    }
+}
+
+#[test]
+fn ref_without_a_target_loads_as_an_unresolved_instance() {
+    let PenNode::Ref(instance) = load_pen_dev_node(r#"{"type":"ref","id":"r"}"#) else {
+        panic!("ref node expected");
+    };
+    assert_eq!(instance.target, "");
+}
+
+#[test]
+fn dangling_ref_does_not_panic_the_scene_builder() {
+    // Smoke check: the repaired ref (empty target) must lay out and paint.
+    let doc = load_canonical(r#"{"version":"1.0","children":[{"type":"ref","id":"r"}]}"#)
+        .expect("ref without target must load")
+        .value;
+    let first_page = 0;
+    crate::pen_document_to_layout_scene(&doc, &Default::default(), first_page);
+}
+
+#[test]
+fn polygon_without_a_point_count_loads_as_a_triangle() {
+    let node = load_pen_dev_node(r#"{"type":"polygon","id":"p","width":10,"height":10}"#);
+    let PenNode::Polygon(polygon) = node else {
+        panic!("polygon node expected");
+    };
+    assert_eq!(polygon.polygon_count, 3);
+}
+
+#[test]
+fn nodes_without_an_id_get_fresh_ids_that_skip_existing_ones() {
+    // `missing-id-1` is taken, so the two id-less nodes (one nested, one on
+    // a page) must take the next free ids.
+    let doc = r#"{"version":"1.0","pages":[{"id":"p","name":"Page","children":[
+      {"type":"frame","id":"missing-id-1","children":[{"type":"rectangle","width":4,"height":4}]},
+      {"type":"frame","width":10,"height":10}
+    ]}]}"#;
+    let loaded = load_canonical(doc).expect("id-less nodes must load").value;
+    let page = &loaded.pages.as_ref().expect("pages")[0];
+    let nested = &children(&page.children[0]).expect("children")[0];
+    let mut new_ids = vec![node_id(nested), node_id(&page.children[1])];
+    new_ids.sort();
+    assert_eq!(new_ids, ["missing-id-2", "missing-id-3"]);
+}
+
 #[test]
 fn video_alias_loads_as_an_image_with_the_poster_source() {
     let doc = r#"{
