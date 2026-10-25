@@ -33,6 +33,7 @@ fn visible_for(panel: &PropertyPanel) -> sections::VisibleSections {
         widget: panel.snapshot.widget.as_ref().map(|w| w.kind),
         widget_checked: panel.snapshot.widget.as_ref().is_some_and(|w| w.checked),
         annotation: panel.snapshot.annotation.as_ref().map(|a| a.kind),
+        browser: panel.snapshot.browser.as_ref().map(|b| b.pages_allowed),
         image: caps.image && panel.snapshot.is_image_node,
         video: caps.image && panel.snapshot.video.is_some(),
         image_warning: false,

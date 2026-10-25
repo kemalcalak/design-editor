@@ -9,7 +9,8 @@ pub(super) fn is_sensitive_browser_post(request: &crate::mcp_serve::HttpRequest)
     request.method == "POST"
         && (request.path == "/api/settings/credentials"
             || request.path.starts_with("/api/ai/")
-            || request.path.starts_with("/api/figma/"))
+            || request.path.starts_with("/api/figma/")
+            || request.path == "/api/browser/snapshot")
 }
 
 /// `application/json` (optionally with parameters, e.g. `; charset=utf-8`).

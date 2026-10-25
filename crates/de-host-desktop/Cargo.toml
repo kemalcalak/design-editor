@@ -84,6 +84,8 @@ de-host-native = { path = "../de-host-native", features = ["gl-host"] }
 # over Phases 2-5; de-host-desktop's serve-web dispatch + GUI residuals call into
 # it via `de_host_services::*`.
 de-host-services = { path = "../de-host-services" }
+# Headless-Chrome snapshots for live browser nodes (#20).
+de-browser-render = { path = "../de-browser-render" }
 de-util = { path = "../de-util" }
 # Accessibility (#67) — the platform-free `accesskit` core types
 # (`TreeUpdate` / `ActionRequest` / `ActivationHandler` …) used by the

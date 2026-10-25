@@ -205,6 +205,12 @@ pub fn build_leaf_node(
             route: None,
             limits: Default::default(),
         }),
+        "browser" => PenNode::Browser(jian_ops_schema::node::BrowserNode {
+            base,
+            width: Some(w),
+            height: Some(h),
+            ..Default::default()
+        }),
         // Form-widget kinds (Phase D2) build their own default props.
         _ if jian_ops_schema::node::AnnotationKind::from_tag(kind).is_some() => {
             build_annotation_node(kind, base, w, h)?
@@ -351,7 +357,16 @@ pub const WIDGET_KINDS: [&str; 10] = [
 pub fn kind_is_valid(kind: &str) -> bool {
     matches!(
         kind,
-        "frame" | "group" | "rect" | "ellipse" | "polygon" | "star" | "line" | "text" | "path"
+        "frame"
+            | "group"
+            | "rect"
+            | "ellipse"
+            | "polygon"
+            | "star"
+            | "line"
+            | "text"
+            | "path"
+            | "browser"
     ) || WIDGET_KINDS.contains(&kind)
         || jian_ops_schema::node::AnnotationKind::from_tag(kind).is_some()
 }

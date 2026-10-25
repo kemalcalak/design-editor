@@ -320,6 +320,7 @@ fn effects_from_pen_node(
         | PenNode::Note(_)
         | PenNode::Context(_)
         | PenNode::Prompt(_) => None,
+        PenNode::Browser(n) => n.effects.as_deref(),
     };
     opt.unwrap_or(&[])
 }

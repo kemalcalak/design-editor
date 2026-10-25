@@ -208,6 +208,7 @@ fn node_id(node: &PenNode) -> &str {
         PenNode::IconFont(n) => &n.base.id,
         PenNode::Ref(n) => &n.base.id,
         PenNode::Note(n) | PenNode::Context(n) | PenNode::Prompt(n) => &n.base.id,
+        PenNode::Browser(n) => &n.base.id,
     }
 }
 
@@ -235,6 +236,7 @@ fn node_name(node: &PenNode) -> Option<&str> {
         PenNode::IconFont(n) => &n.base,
         PenNode::Ref(n) => &n.base,
         PenNode::Note(n) | PenNode::Context(n) | PenNode::Prompt(n) => &n.base,
+        PenNode::Browser(n) => &n.base,
     };
     base.name.as_deref()
 }
@@ -364,6 +366,7 @@ fn node_opacity(node: &PenNode) -> Option<f64> {
         PenNode::IconFont(n) => &n.base,
         PenNode::Ref(n) => &n.base,
         PenNode::Note(n) | PenNode::Context(n) | PenNode::Prompt(n) => &n.base,
+        PenNode::Browser(n) => &n.base,
     };
     match &base.opacity {
         Some(NumberOrExpression::Number(v)) => Some(*v),

@@ -223,6 +223,8 @@ fn selected_sizing(node: &PenNode, width: bool) -> Option<&SizingBehavior> {
         (PenNode::Tabs(n), false) => n.height.as_ref(),
         (PenNode::Note(n) | PenNode::Context(n) | PenNode::Prompt(n), true) => n.width.as_ref(),
         (PenNode::Note(n) | PenNode::Context(n) | PenNode::Prompt(n), false) => n.height.as_ref(),
+        (PenNode::Browser(n), true) => n.width.as_ref(),
+        (PenNode::Browser(n), false) => n.height.as_ref(),
         (PenNode::Line(_) | PenNode::Ref(_), _) => None,
     }
 }

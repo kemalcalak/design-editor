@@ -159,6 +159,10 @@ pub fn property_focus_initial(focus: PropertyFocus, panel: &PropertyPanel) -> St
             .as_ref()
             .map(|a| a.model.clone())
             .unwrap_or_default(),
+        F::BrowserUrl => browser_text(panel, |b| b.url.clone()),
+        F::BrowserZoom => browser_text(panel, |b| format_panel_number(b.zoom_percent as f32)),
+        F::BrowserScrollX => browser_text(panel, |b| format_panel_number(b.scroll_x as f32)),
+        F::BrowserScrollY => browser_text(panel, |b| format_panel_number(b.scroll_y as f32)),
         F::VideoSrc => panel
             .snapshot
             .video
@@ -245,6 +249,20 @@ where
         .widget
         .as_ref()
         .map(|w| field(w).clone())
+        .unwrap_or_default()
+}
+
+/// Read one field off the selected browser's snapshot (#20), defaulting
+/// to the empty draft when the selection is not a browser.
+fn browser_text<F>(panel: &PropertyPanel, field: F) -> String
+where
+    F: FnOnce(&crate::widgets::property_panel_browser::BrowserSummary) -> String,
+{
+    panel
+        .snapshot
+        .browser
+        .as_ref()
+        .map(field)
         .unwrap_or_default()
 }
 
@@ -408,6 +426,21 @@ pub fn commit_property_focus(state: &mut EditorState) -> bool {
         }
         PropertyFocus::AnnotationModel => {
             let _ = state.set_selected_annotation_model(&draft);
+        }
+        PropertyFocus::BrowserUrl => {
+            let _ = state.set_selected_browser_url(&draft);
+        }
+        PropertyFocus::BrowserZoom => {
+            if let Ok(percent) = draft.trim().parse::<f64>() {
+                let _ = state.set_selected_browser_zoom(percent / 100.0);
+            }
+        }
+        PropertyFocus::BrowserScrollX | PropertyFocus::BrowserScrollY => {
+            if let Ok(value) = draft.trim().parse::<f64>() {
+                let x = (focus == PropertyFocus::BrowserScrollX).then_some(value);
+                let y = (focus == PropertyFocus::BrowserScrollY).then_some(value);
+                let _ = state.set_selected_browser_scroll(x, y);
+            }
         }
         PropertyFocus::Padding => {
             let _ = state.commit_padding_shorthand(&draft);

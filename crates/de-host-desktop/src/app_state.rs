@@ -198,6 +198,7 @@ impl DesktopApp {
             image_search: image_search_session::ImageSearchSession::new(),
             image_panel: image_panel_host::ImagePanelJobs::new(),
             remote_images: remote_image_host::RemoteImageSession::new(),
+            browser_renders: crate::browser_render_host::BrowserRenderHost::new(),
             image_decodes: image_decode_host::ImageDecodeHost::new(),
             home_previews: crate::home_previews::HomePreviews::default(),
             mcp_wake_proxy: None,

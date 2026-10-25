@@ -38,6 +38,7 @@ use de_editor_ui::widgets::host_frame_bookkeeping as bookkeeping;
 use de_editor_ui::{Point2D, Rect, Theme};
 
 mod a11y_bridge;
+// Live browser page snapshots from the daemon (#20).
 #[cfg(test)]
 mod agent_settings_acp_press_tests;
 #[cfg(test)]
@@ -59,6 +60,8 @@ mod blur_inputs_tests;
 mod boolean_op_tests;
 #[cfg(test)]
 mod boolean_toolbar_tests;
+#[cfg(feature = "canvaskit")]
+pub(crate) mod browser_snapshot_fetch;
 #[cfg(test)]
 mod canvas_hierarchy_tests;
 mod chat_design_apply;

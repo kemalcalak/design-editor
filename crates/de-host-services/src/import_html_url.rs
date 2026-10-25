@@ -14,7 +14,7 @@ use crate::import_html_url_error::ImportHtmlUrlError;
 use crate::provider_dial::{client_for, EndpointDialPolicy};
 use crate::web_image_search::{read_capped, ImageJobSlot};
 
-const ALLOWLIST_ENV: &str = "DESIGN_EDITOR_WEB_AI_ENDPOINT_ALLOWLIST";
+pub(crate) const ALLOWLIST_ENV: &str = "DESIGN_EDITOR_WEB_AI_ENDPOINT_ALLOWLIST";
 const PAGE_BYTES_CAP: usize = 10 * 1024 * 1024;
 const RESOURCE_BYTES_CAP: usize = 4 * 1024 * 1024;
 const REQUEST_TIMEOUT: Duration = Duration::from_secs(20);
@@ -218,7 +218,7 @@ fn screen_import_url(url: &str) -> Result<reqwest::Url, ImportHtmlUrlError> {
     screen_import_url_with_allowlist(url, allowlist.as_deref())
 }
 
-fn screen_import_url_with_allowlist(
+pub(crate) fn screen_import_url_with_allowlist(
     url: &str,
     allowlist: Option<&str>,
 ) -> Result<reqwest::Url, ImportHtmlUrlError> {

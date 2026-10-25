@@ -739,6 +739,7 @@ fn base(node: &PenNode) -> Option<&jian_ops_schema::node::base::PenNodeBase> {
         PenNode::Polygon(n) => &n.base,
         PenNode::Ref(n) => &n.base,
         PenNode::Note(n) | PenNode::Context(n) | PenNode::Prompt(n) => &n.base,
+        PenNode::Browser(n) => &n.base,
     })
 }
 

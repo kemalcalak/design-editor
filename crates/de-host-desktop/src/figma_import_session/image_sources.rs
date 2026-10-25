@@ -242,6 +242,10 @@ fn visit_import_node(node: &jian_ops_schema::node::PenNode, f: &mut impl FnMut(&
         }
         PenNode::Ref(node) => node.children.as_ref(),
         PenNode::Note(_) | PenNode::Context(_) | PenNode::Prompt(_) => None,
+        PenNode::Browser(node) => {
+            visit_import_stroke(&node.stroke, f);
+            None
+        }
     };
     if let Some(children) = children {
         for child in children {

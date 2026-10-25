@@ -390,6 +390,16 @@ pub fn action_button_rects_with_fill_picker(
         );
     }
 
+    if let Some(pages_allowed) = visible.browser {
+        crate::widgets::property_panel_browser::push_browser_action_rects(
+            &mut out,
+            x0,
+            tops.browser,
+            usable_w,
+            pages_allowed,
+        );
+    }
+
     if visible.image {
         crate::widgets::property_panel_image_node::push_image_action_rects_with_video(
             &mut out,
