@@ -12,19 +12,18 @@
 //! the classic single-page workbench view even though the doc plainly has
 //! several screen-shaped top-level frames.
 //!
-//! [`auto_wire_for_preview`] closes that gap AT PREVIEW-ENTRY TIME: if the
-//! document carries NO authored `screen` marker at all (on the page
-//! `enter` is about to preview), it runs the SAME deterministic pass over
-//! an `EditorState` built from a clone of the document and hands the
+//! [`auto_wire_for_preview`] closes that gap AT PREVIEW-ENTRY TIME: it
+//! wires an `EditorState` built from a clone of the document and hands the
 //! result back. `enter` then builds the runtime from that wired clone
 //! instead of the original — the caller-visible (saved) document is never
 //! touched, matching `enter`'s existing "never mutates the saved doc"
 //! invariant (see the module doc on `preview/mod.rs`).
 //!
-//! After that shared pass it runs one preview-only pass generation never
-//! runs: `wire_web_nav_links` (#153), which binds website header / footer
-//! links to their pages and to same-page sections. The same "any authored
-//! marker → skip" gate below covers both passes.
+//! The editor hosts name the board Preview opens on; then the entry's site
+//! is routed and its links bound ("Entering on a board" below). Without a
+//! board (MCP capture without `entryNodeId`) the older rule holds: when the
+//! page carries no authored `screen` marker, the generation pass and the
+//! website link pass (`wire_web_nav_links`, #153) run on the clone.
 //!
 //! ## Entering on a board (#223)
 //!

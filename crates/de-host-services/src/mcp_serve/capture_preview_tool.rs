@@ -64,17 +64,27 @@ impl CapturePreview {
             .map(|ms| ms.round() as u64)
             .unwrap_or(0);
 
-        // `entryNodeId`: the board the editor would open on for that selection.
-        let entry = args
+        // `entryNodeId`: the board holding that node, as the editor opens on
+        // its selection; an id on no board of the page is refused.
+        let entry = match args
             .get("entryNodeId")
             .map(|s| s.trim())
             .filter(|s| !s.is_empty())
-            .and_then(|id| {
-                de_editor_core::preview_screen_set::preview_entry_root(
+        {
+            Some(id) => Some(
+                de_editor_core::preview_screen_set::top_level_board(
                     de_editor_core::preview_screen_set::page_roots(&self.document, page_index),
-                    Some(id),
+                    id,
                 )
-            });
+                .ok_or_else(|| {
+                    (
+                        ToolErrorCode::InvalidArgument,
+                        format!("entryNodeId {id} is on no board of the page"),
+                    )
+                })?,
+            ),
+            None => None,
+        };
         let mut session = PreviewSession::enter_with_host_motion_preference(
             &self.document,
             CANVAS_SIZE,

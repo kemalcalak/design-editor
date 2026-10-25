@@ -156,7 +156,7 @@ fn a_board_without_a_header_takes_screen_like_boards_of_its_width() {
 }
 
 #[test]
-fn hand_drawn_boards_without_components() {
+fn boards_without_components_group_by_width_and_screen_shape() {
     let roots = roots(
         r#"[
         {"type":"frame","id":"a","x":0,"y":0,"width":390,"height":844,"children":[
@@ -169,4 +169,46 @@ fn hand_drawn_boards_without_components() {
     assert_eq!(preview_screen_set(&roots, "b"), ["b", "a"]);
     assert_eq!(preview_screen_set(&roots, "card"), ["card"]);
     assert!(preview_screen_set(&roots, "missing").is_empty());
+}
+
+#[test]
+fn without_selection_an_authored_start_screen_wins() {
+    let roots = roots(
+        r#"[
+        {"type":"frame","id":"first","x":0,"y":0,"width":1280,"height":800},
+        {"type":"frame","id":"start","screen":"/","x":2000,"y":3000,"width":1280,"height":800}
+    ]"#,
+    );
+    assert_eq!(preview_entry_root(&roots, None).as_deref(), Some("start"));
+}
+
+#[test]
+fn instance_anchors_resolve_through_any_separator_and_nested_masters() {
+    // An instance id holding `__` itself, and an instance of a master that
+    // sits on the components board rather than at the top level.
+    let roots = roots(
+        r#"[
+        {"type":"frame","id":"kit","x":0,"y":0,"width":1600,"height":800,"children":[
+            {"type":"frame","id":"page-master","reusable":true,"width":390,"height":844}]},
+        {"type":"frame","id":"board","x":0,"y":1000,"width":390,"height":844,"children":[
+            {"type":"ref","id":"my__card","ref":"page-master"}]},
+        {"type":"ref","id":"variant","ref":"page-master","x":500,"y":1000}
+    ]"#,
+    );
+    assert_eq!(
+        preview_entry_root(&roots, Some("my__card__title")).as_deref(),
+        Some("board")
+    );
+    let variant = roots.iter().find(|n| n.id_str() == "variant").unwrap();
+    assert!(is_screen_like_board(&roots, variant));
+}
+
+#[test]
+fn page_roots_clamp_a_stale_page_index() {
+    let doc: jian_ops_schema::PenDocument = serde_json::from_str(
+        r#"{"version":"1.0","pages":[{"id":"p","name":"P","children":[
+            {"type":"frame","id":"a","width":390,"height":844}]}]}"#,
+    )
+    .unwrap();
+    assert_eq!(page_roots(&doc, 7).len(), 1);
 }

@@ -24,6 +24,7 @@
 //! deep inside a section never turns its title into a link.
 
 use de_editor_core::PenNodeExt;
+use jian_ops_schema::node::container::LayoutMode;
 use jian_ops_schema::node::{PenNode, TextContent};
 
 use super::{apply_on_tap, identity_haystack, subtree_has_events};
@@ -53,6 +54,11 @@ const SURFACE_PAIRS: [(&str, &str); 4] = [
 
 /// The tallest first child that still reads as a header band.
 const HEADER_MAX_HEIGHT: f64 = 200.0;
+/// The tallest last child that still reads as a footer band.
+const FOOTER_MAX_HEIGHT: f64 = 480.0;
+/// The longest text a link band holds, in characters: link labels are
+/// short; a heading or a paragraph marks a content section instead.
+const LINK_TEXT_MAX_CHARS: usize = 40;
 
 /// A link target: what its label is matched against, the patch value
 /// (a route path for a page, a node id for a section), and its depth
@@ -74,13 +80,15 @@ pub fn wire_web_nav_links(sink: &mut dyn DocSink) {
     wire_web_nav_links_on(sink, &ids);
 }
 
-/// [`wire_web_nav_links`] for the top-level frames `page_ids` only: the
-/// boards Preview browses (#223).
+/// [`wire_web_nav_links`] for the top-level frames `page_ids` only, as the
+/// pages links are bound on and as the pages they may lead to: the boards
+/// Preview browses (#223).
 pub(crate) fn wire_web_nav_links_on(sink: &mut dyn DocSink, page_ids: &[String]) {
     let patches = {
         let roots = sink.state().active_children();
         let pages: Vec<Target> = roots
             .iter()
+            .filter(|node| page_ids.iter().any(|id| id == node.id_str()))
             .filter_map(|node| match node {
                 PenNode::Frame(frame) => frame.screen.as_ref().map(|path| Target {
                     name: display_name(node),
@@ -179,18 +187,26 @@ fn is_surface(node: &PenNode) -> bool {
 /// The page's surfaces: direct children of `root` that are one, and the
 /// ones directly inside an unnamed wrapper child (a page's layout column).
 /// Besides names and roles, the page's structure marks them in any
-/// language (#223): its first child when it is a short band holding
-/// several texts (a header), and its last child holding several texts (a
-/// footer).
+/// language (#223): its first child holding only short texts, at most
+/// `HEADER_MAX_HEIGHT` tall or, without an authored height, laid out as a
+/// row (a header); and its last child holding only short texts, at most
+/// `FOOTER_MAX_HEIGHT` tall when its height is authored (a footer). A
+/// heading or paragraph marks a page column, hero or content section.
 fn collect_surfaces(root: &PenNode) -> Vec<&PenNode> {
     let mut out = Vec::new();
     let children: Vec<&PenNode> = root.children().into_iter().flatten().collect();
     let last = children.len().saturating_sub(1);
     for (index, &child) in children.iter().enumerate() {
         let header_band = index == 0
-            && child.height_px().is_none_or(|h| h <= HEADER_MAX_HEIGHT)
-            && text_count(child) >= 2;
-        let footer_band = index == last && index > 0 && text_count(child) >= 2;
+            && match child.height_px() {
+                Some(height) => height <= HEADER_MAX_HEIGHT,
+                None => is_row(child),
+            }
+            && is_link_band(child);
+        let footer_band = index == last
+            && index > 0
+            && child.height_px().is_none_or(|h| h <= FOOTER_MAX_HEIGHT)
+            && is_link_band(child);
         if header_band || footer_band || is_surface(child) {
             out.push(child);
         } else if child.base().name.is_none() {
@@ -256,6 +272,35 @@ fn collect_items<'a>(
         collect_items(child, stack, out);
     }
     stack.pop();
+}
+
+fn is_row(node: &PenNode) -> bool {
+    matches!(
+        node,
+        PenNode::Frame(frame) if frame.container.layout == Some(LayoutMode::Horizontal)
+    )
+}
+
+/// Several texts, all of them short: a row of links, not content.
+fn is_link_band(node: &PenNode) -> bool {
+    let mut texts = Vec::new();
+    collect_plain_texts(node, &mut texts);
+    texts.len() >= 2
+        && texts
+            .iter()
+            .all(|text| text.trim().chars().count() <= LINK_TEXT_MAX_CHARS)
+}
+
+fn collect_plain_texts<'a>(node: &'a PenNode, out: &mut Vec<&'a str>) {
+    if let PenNode::Text(text) = node {
+        if let TextContent::Plain(label) = &text.content {
+            out.push(label.as_str());
+        }
+        return;
+    }
+    for child in node.children().into_iter().flatten() {
+        collect_plain_texts(child, out);
+    }
 }
 
 fn text_count(node: &PenNode) -> usize {

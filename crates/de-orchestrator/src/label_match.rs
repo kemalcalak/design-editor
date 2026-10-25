@@ -41,11 +41,13 @@ pub(crate) fn normalize_label(s: &str) -> String {
         .collect()
 }
 
-/// `s` split into normalized words.
+/// `s` split into normalized words. An apostrophe joins rather than
+/// splits ("Today's" is one word, "todays"): split, its one-letter halves
+/// would match any other label with an apostrophe.
 pub(crate) fn label_tokens(s: &str) -> Vec<String> {
     s.nfd()
         .collect::<String>()
-        .split(|c: char| !is_word_char(c))
+        .split(|c: char| !is_word_char(c) && !is_apostrophe(c))
         .map(normalize_label)
         .filter(|t| !t.is_empty())
         .collect()
@@ -75,7 +77,8 @@ pub(crate) fn match_strength(a: &str, b: &str) -> Option<MatchStrength> {
     (stem || spaceless).then_some(MatchStrength::Stem)
 }
 
-/// Exact or word matches only: the strict rule the generation passes use.
+/// Exact or word matches only: the strict rule the generation passes use
+/// (`wire_nav_tabs`, `nav_issues`, `unify_shared_nav`), first match wins.
 pub(crate) fn labels_match(a: &str, b: &str) -> bool {
     match_strength(a, b).is_some_and(|s| s <= MatchStrength::Word)
 }
@@ -115,6 +118,10 @@ fn shares_stem(a: &str, b: &str) -> bool {
 
 fn is_word_char(c: char) -> bool {
     c.is_alphanumeric() || unicode_normalization::char::is_combining_mark(c)
+}
+
+fn is_apostrophe(c: char) -> bool {
+    matches!(c, '\'' | '\u{2019}' | '\u{02BC}')
 }
 
 fn is_generic_diacritic(c: char) -> bool {

@@ -140,8 +140,8 @@ const HAND_DRAWN: &str = r#"{"version":"1.0","children":[
 #[test]
 fn headers_and_footers_are_found_by_structure_in_any_script() {
     let state = wire(HAND_DRAWN, "p1");
-    assert_eq!(screen(&state, "p2").as_deref(), Some("/screen-1"));
-    let to_price = replace("/screen-1");
+    assert_eq!(screen(&state, "p2").as_deref(), Some("/价格"));
+    let to_price = replace("/价格");
     assert_eq!(on_tap(&state, "p1-l-price"), to_price.clone());
     assert_eq!(on_tap(&state, "p1-f-price"), to_price);
     assert_eq!(on_tap(&state, "p1-l-contact"), scroll("p1-contact"));
@@ -190,4 +190,84 @@ fn a_whole_word_section_beats_a_stem_page() {
     assert_eq!(on_tap(&state, "team-l-teams"), replace("/team-page-rocket"));
     // Nothing is named "Contact": dead, not guessed.
     assert_eq!(on_tap(&state, "home-l-contact"), None);
+}
+
+/// Content is never taken for a header or footer by place: a page
+/// column, a hero and a closing contact section all hold a heading or a
+/// paragraph (#223 review).
+#[test]
+fn content_bands_are_not_taken_for_headers_or_footers() {
+    let json = r#"{"version":"1.0","children":[
+        {"type":"frame","id":"a","name":"Start","x":0,"y":0,"width":1280,"height":2000,
+         "layout":"vertical","children":[
+            {"type":"frame","id":"a-hero","name":"Hero","width":1280,"layout":"vertical","children":[
+                {"type":"text","id":"a-hero-h","content":"Pricing"},
+                {"type":"text","id":"a-hero-p","content":"Plans that grow with your team, billed monthly or yearly."}]},
+            {"type":"frame","id":"a-contact","name":"Contact","width":1280,"layout":"vertical","children":[
+                {"type":"text","id":"a-contact-h","content":"Pricing"},
+                {"type":"text","id":"a-contact-p","content":"Write to us any time and we answer within a day."}]}]},
+        {"type":"frame","id":"b","name":"Pricing","x":1400,"y":0,"width":1280,"height":900}
+    ]}"#;
+    let state = wire(json, "a");
+    for id in ["a-hero-h", "a-contact-h"] {
+        assert_eq!(on_tap(&state, id), None, "{id}");
+    }
+}
+
+/// A fit-content footer of short links is found by place.
+#[test]
+fn a_fit_content_footer_of_links_is_found() {
+    let json = r#"{"version":"1.0","children":[
+        {"type":"frame","id":"a","name":"Start","x":0,"y":0,"width":1280,"height":2000,
+         "layout":"vertical","children":[
+            {"type":"frame","id":"a-main","name":"Main","width":1280,"height":1500},
+            {"type":"frame","id":"a-end","width":1280,"layout":"vertical","children":[
+                {"type":"text","id":"a-end-price","content":"Pricing"},
+                {"type":"text","id":"a-end-copy","content":"© 2026"}]}]},
+        {"type":"frame","id":"b","name":"Pricing","x":1400,"y":0,"width":1280,"height":900}
+    ]}"#;
+    let state = wire(json, "a");
+    assert_eq!(on_tap(&state, "a-end-price"), replace("/pricing"));
+}
+
+/// Another site's authored pages keep their routes but are not link
+/// targets: the desktop "About" link is not made ambiguous by the mobile
+/// "About" page (#223 review).
+#[test]
+fn another_sites_authored_pages_do_not_steal_links() {
+    let json = r#"{"version":"1.0","children":[
+        {"type":"frame","id":"home","name":"Home","x":0,"y":0,"width":1280,"height":900,
+         "layout":"vertical","children":[
+            {"type":"frame","id":"home-top","width":1280,"height":64,"layout":"horizontal","children":[
+                {"type":"text","id":"home-l-about","content":"About"},
+                {"type":"text","id":"home-l-home","content":"Home"}]}]},
+        {"type":"frame","id":"about","name":"About","x":1400,"y":0,"width":1280,"height":900},
+        {"type":"frame","id":"m-about","name":"About","screen":"/m-about","x":3000,"y":0,
+         "width":390,"height":844}
+    ]}"#;
+    let state = wire(json, "home");
+    assert_eq!(on_tap(&state, "home-l-about"), replace("/about"));
+    assert_eq!(screen(&state, "m-about").as_deref(), Some("/m-about"));
+}
+
+/// A `/` on another page keeps its place; the entry takes a path of its
+/// own (preview entry re-roots on it).
+#[test]
+fn a_root_on_another_page_is_respected() {
+    let json = r#"{"version":"1.0","pages":[
+        {"id":"p1","name":"One","children":[
+            {"type":"frame","id":"elsewhere","name":"Elsewhere","screen":"/","width":390,"height":844}]},
+        {"id":"p2","name":"Two","children":[
+            {"type":"frame","id":"a","name":"Alpha","x":0,"y":0,"width":390,"height":844},
+            {"type":"frame","id":"b","name":"Beta","x":500,"y":0,"width":390,"height":844}]}
+    ]}"#;
+    let doc: PenDocument = serde_json::from_str(json).unwrap();
+    let mut state = EditorState::from_document(doc);
+    state.ui.active_page_index = 1;
+    let screens =
+        de_editor_core::preview_screen_set::preview_screen_set(state.active_children(), "a");
+    let mut sink = crate::loop_finalize::StateDocSink { state: &mut state };
+    wire_preview_screens(&mut sink, &screens);
+    assert_eq!(screen(&state, "a").as_deref(), Some("/alpha"));
+    assert_eq!(screen(&state, "b").as_deref(), Some("/beta"));
 }

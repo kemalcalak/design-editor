@@ -14,10 +14,10 @@ use jian_ops_schema::node::PenNode;
 use crate::PenNodeExt;
 
 /// Phone / narrow-tablet portrait widths, and desktop-and-up widths: the
-/// bands a standalone screen is drawn at (the orchestrator's screen pass
-/// uses the same bands).
-const MOBILE_WIDTH: std::ops::RangeInclusive<f64> = 320.0..=480.0;
-const DESKTOP_MIN_WIDTH: f64 = 1024.0;
+/// bands a standalone screen is drawn at. The orchestrator's screen pass
+/// reads the same constants.
+pub const MOBILE_SCREEN_WIDTH: std::ops::RangeInclusive<f64> = 320.0..=480.0;
+pub const DESKTOP_SCREEN_MIN_WIDTH: f64 = 1024.0;
 
 /// The top-level board Preview should open on, by id.
 ///
@@ -25,44 +25,60 @@ const DESKTOP_MIN_WIDTH: f64 = 1024.0;
 /// selection anchor. A selected node resolves to its top-level ancestor,
 /// including a node inside a component instance (`inst__child` canvas
 /// anchors and `inst/child` id paths name the instance first). With no
-/// usable selection, the top-left-most screen-like board wins (smallest
-/// y, then x); `None` when the page has none.
+/// usable selection, the frame an author made the start screen (`/`)
+/// wins, else the top-left-most screen-like board (smallest y, then x);
+/// `None` when the page has none.
 pub fn preview_entry_root(roots: &[PenNode], selected: Option<&str>) -> Option<String> {
     selected
         .filter(|id| !id.is_empty())
-        .and_then(|id| top_level_ancestor(roots, id))
+        .and_then(|id| top_level_board(roots, id))
+        .or_else(|| start_screen(roots))
         .or_else(|| top_left_screen_board(roots))
 }
 
-/// The top-level nodes of page `index` (a pageless document's children).
+fn start_screen(roots: &[PenNode]) -> Option<String> {
+    roots.iter().find_map(|node| match node {
+        PenNode::Frame(frame) if frame.screen.as_deref() == Some("/") => {
+            Some(frame.base.id.clone())
+        }
+        _ => None,
+    })
+}
+
+/// The top-level nodes of page `index` (a pageless document's children),
+/// clamped like `EditorState::active_children`.
 pub fn page_roots(doc: &jian_ops_schema::PenDocument, index: usize) -> &[PenNode] {
     match doc.pages.as_deref() {
-        Some(pages) if !pages.is_empty() => pages
-            .get(index)
-            .map(|page| page.children.as_slice())
-            .unwrap_or_default(),
+        Some(pages) if !pages.is_empty() => &pages[index.min(pages.len() - 1)].children,
         _ => &doc.children,
     }
 }
 
-/// The id of the top-level node in `roots` that is `id` or contains it.
-fn top_level_ancestor(roots: &[PenNode], id: &str) -> Option<String> {
-    if let Some(root) = roots.iter().find(|root| subtree_contains(root, id)) {
+/// The id of the top-level node in `roots` that is node `id` or holds it.
+/// A node inside an instance is not in the tree: its canvas anchor
+/// (`inst__child`) or id path (`inst/child`) names the instance first, so
+/// every prefix ending at a separator is tried (an id may itself contain
+/// `__`), and the instance may sit anywhere below a board.
+pub fn top_level_board(roots: &[PenNode], id: &str) -> Option<String> {
+    let target = crate::NodeId::new(id.to_owned());
+    if let Some(root) = roots
+        .iter()
+        .find(|root| crate::walkers::descendant_contains(root, &target))
+    {
         return Some(root.id_str().to_owned());
     }
-    // A node inside an instance is not in the tree: its id names the
-    // instance first, which may itself sit anywhere below a board.
-    let (head, _) = id.split_once("__").or_else(|| id.split_once('/'))?;
-    top_level_ancestor(roots, head)
-}
-
-fn subtree_contains(node: &PenNode, id: &str) -> bool {
-    node.id_str() == id
-        || node
-            .children()
-            .into_iter()
-            .flatten()
-            .any(|child| subtree_contains(child, id))
+    let mut cuts: Vec<usize> = id
+        .match_indices(crate::ref_resolve::INSTANCE_CHILD_SEPARATOR)
+        .map(|(at, _)| at)
+        .chain(
+            id.match_indices(crate::instance_descendants::PATH_SEPARATOR)
+                .map(|(at, _)| at),
+        )
+        .filter(|&at| at > 0)
+        .collect();
+    cuts.sort_unstable();
+    cuts.into_iter()
+        .find_map(|at| top_level_board(roots, &id[..at]))
 }
 
 fn top_left_screen_board(roots: &[PenNode]) -> Option<String> {
@@ -105,8 +121,8 @@ pub fn preview_screen_set(roots: &[PenNode], entry_root_id: &str) -> Vec<String>
         let same_kind = other.instance == kind.instance
             && (other.width - kind.width).abs() < 0.5
             && (!kind.instance || other.theme == kind.theme);
-        let same_site = match kind.header {
-            Some(header) => other.header == Some(header),
+        let same_site = match kind.lead_component {
+            Some(lead) => other.lead_component == Some(lead),
             None => other.screen_like,
         };
         if same_kind && same_site {
@@ -128,9 +144,9 @@ struct BoardShape<'a> {
     width: f64,
     instance: bool,
     theme: Option<&'a std::collections::BTreeMap<String, String>>,
-    /// The component the board's first child instantiates: a header
-    /// shared by every page of one site.
-    header: Option<&'a str>,
+    /// The component the board's first child instantiates: on a website,
+    /// the header every page of the site shares.
+    lead_component: Option<&'a str>,
     screen_like: bool,
 }
 
@@ -140,9 +156,10 @@ fn board_shape<'a>(roots: &'a [PenNode], node: &'a PenNode) -> Option<BoardShape
     let (frame, root_override) = match node {
         PenNode::Frame(_) => (node, None),
         PenNode::Ref(r) => (
-            roots
-                .iter()
-                .find(|root| matches!(root, PenNode::Frame(_)) && root.id_str() == r.target)?,
+            // The master: a top-level board, or a frame anywhere on the
+            // page (a components board).
+            crate::walkers::find_node(roots, &crate::NodeId::new(r.target.clone()))
+                .filter(|master| matches!(master, PenNode::Frame(_)))?,
             r.descendants.as_ref().and_then(|d| d.get(&r.target)),
         ),
         _ => return None,
@@ -163,13 +180,13 @@ fn board_shape<'a>(roots: &'a [PenNode], node: &'a PenNode) -> Option<BoardShape
         && children
             .iter()
             .all(|child| matches!(child, PenNode::Text(_)));
-    let in_band = MOBILE_WIDTH.contains(&width) || width >= DESKTOP_MIN_WIDTH;
+    let in_band = MOBILE_SCREEN_WIDTH.contains(&width) || width >= DESKTOP_SCREEN_MIN_WIDTH;
     Some(BoardShape {
         width,
         instance: matches!(node, PenNode::Ref(_)),
         theme: node.base().theme.as_ref(),
-        header: match children.first() {
-            Some(PenNode::Ref(header)) => Some(header.target.as_str()),
+        lead_component: match children.first() {
+            Some(PenNode::Ref(lead)) => Some(lead.target.as_str()),
             _ => None,
         },
         screen_like: in_band && height.is_some_and(|h| h > 0.0) && !holds_masters && !text_only,

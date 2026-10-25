@@ -55,9 +55,9 @@ use crate::types::DocSink;
 
 /// "Screen-shaped" top-level frame width bands: phone/narrow-tablet portrait
 /// widths, or desktop-and-up. Chosen to gate OUT ordinary section widths
-/// (e.g. a 600-900px card row) that are not standalone app screens.
-const MOBILE_SCREEN_WIDTH: std::ops::RangeInclusive<f64> = 320.0..=480.0;
-const DESKTOP_SCREEN_MIN_WIDTH: f64 = 1024.0;
+/// (e.g. a 600-900px card row) that are not standalone app screens. They
+/// live in core so Preview's entry and site choice (#223) use the same.
+use de_editor_core::preview_screen_set::{DESKTOP_SCREEN_MIN_WIDTH, MOBILE_SCREEN_WIDTH};
 
 /// Compatibility band for shared-nav's shipped detail-page exemption.
 /// Interaction backfill uses its own stricter geometry fact.
@@ -313,13 +313,10 @@ fn wire_nav_tabs(
                 let Some(label) = first_text_content(item) else {
                     continue;
                 };
-                // The strongest unique match (#223): a tab no screen names
-                // more strongly than another stays unbound.
-                let matched_path = crate::label_match::best_match(
-                    label,
-                    screen_names.iter().map(|(name, path)| (*name, 0, *path)),
-                )
-                .map(str::to_string);
+                let matched_path = screen_names
+                    .iter()
+                    .find(|(screen_name, _)| labels_match(label, screen_name))
+                    .map(|(_, path)| path.to_string());
                 let Some(path) = matched_path else {
                     continue;
                 };

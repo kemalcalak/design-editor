@@ -120,7 +120,14 @@ fn own_path(roots: &[PenNode], node_id: &str, used: &mut BTreeSet<String>) -> St
         .find(|node| node.id_str() == node_id)
         .and_then(|node| node.base().name.clone())
         .unwrap_or_default();
-    let slug = route_slug(&name);
+    unique_route_path(&name, used)
+}
+
+/// A route path made from `name` that `used` doesn't hold yet (`/slug`,
+/// then `/slug-2`, …; `/screen` for a name without words), recorded in
+/// `used`. Preview's auto-wire names routes the same way.
+pub fn unique_route_path(name: &str, used: &mut BTreeSet<String>) -> String {
+    let slug = route_slug(name);
     let base = if slug.is_empty() {
         "screen".to_owned()
     } else {

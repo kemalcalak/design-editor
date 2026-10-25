@@ -181,3 +181,11 @@ fn entry_node_id_opens_on_the_board_holding_that_node() {
     assert_eq!(meta["screen"], "/");
     assert_eq!(meta["nodeId"], "home");
 }
+
+#[test]
+fn an_unknown_entry_node_id_is_refused() {
+    assert!(matches!(
+        call(&tool(), &[("entryNodeId", "nope")]),
+        ToolOutcome::Err(ToolErrorCode::InvalidArgument, _)
+    ));
+}

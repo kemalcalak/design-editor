@@ -113,3 +113,14 @@ fn best_match_prefers_strength_then_rank_and_refuses_ties() {
         Some("exact")
     );
 }
+
+#[test]
+fn apostrophes_join_words_instead_of_splitting_them() {
+    assert_eq!(label_tokens("Today's picks"), ["todays", "picks"]);
+    assert_eq!(match_strength("What's new", "Editor's picks"), None);
+    assert_eq!(match_strength("L'équipe", "D'autres"), None);
+    assert_eq!(
+        match_strength("Today's picks", "todays picks"),
+        Some(MatchStrength::Exact)
+    );
+}
