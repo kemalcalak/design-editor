@@ -1,5 +1,7 @@
 //! Browser section (#20): the page address, the device preset (Desktop /
-//! Tablet / Phone), the page zoom and the page scroll. Visible when the
+//! Tablet / Phone), the page zoom, the page scroll and the live-page row
+//! (Reload with the load status, or Load pages while an opened document's
+//! pages are held). Visible when the
 //! selection is a browser node (`VisibleSections.browser`). Paint and both
 //! layout walkers step through the same rows, like the Annotation section.
 
@@ -14,7 +16,8 @@ use crate::widgets::property_panel_inputs::{
 use crate::widgets::property_panel_sections::EditContext;
 use crate::widgets::property_panel_segments::{paint_segment_row, segment_rects};
 use crate::widgets::PaintCx;
-use crate::{Point2D, Rect};
+use crate::{Point2D, Rect, TextLayout};
+use de_editor_core::browser_live::{BrowserLiveState, BrowserPageStatus};
 use de_editor_core::PropertyFocus;
 
 /// One row's vertical advance (input + gap).
@@ -24,8 +27,10 @@ const BOTTOM_PAD: f32 = 12.0;
 const SEGMENT_FONT: f32 = 12.0;
 /// Gap between the Scroll X and Scroll Y halves.
 const HALF_GAP: f32 = 8.0;
-/// Rows under the header: url, device, zoom, scroll.
-const ROWS: usize = 4;
+/// Rows under the header: url, device, zoom, scroll, live page.
+const ROWS: usize = 5;
+/// Share of the live-page row the Reload button takes.
+const RELOAD_SHARE: f32 = 0.4;
 
 /// The device presets the segment row offers, in order. The rest of
 /// `de_editor_core::browser_devices` stays reachable through MCP and import.
@@ -40,6 +45,9 @@ pub struct BrowserSummary {
     pub zoom_percent: f64,
     pub scroll_x: f64,
     pub scroll_y: f64,
+    /// Whether pages may load (see `de_editor_core::browser_live`).
+    pub pages_allowed: bool,
+    pub status: Option<BrowserPageStatus>,
 }
 
 /// `Some` for a browser node.
@@ -53,7 +61,15 @@ pub fn browser_summary_of(node: &PenNode) -> Option<BrowserSummary> {
         zoom_percent: (b.zoom.unwrap_or(1.0) * 100.0).round(),
         scroll_x: b.scroll_x.unwrap_or(0.0),
         scroll_y: b.scroll_y.unwrap_or(0.0),
+        pages_allowed: true,
+        status: None,
     })
+}
+
+/// Fill in the session's live-page state (the panel builder has it).
+pub fn apply_live_state(summary: &mut BrowserSummary, live: &BrowserLiveState, node_id: &str) {
+    summary.pages_allowed = live.pages_allowed();
+    summary.status = live.status(node_id);
 }
 
 /// Section height without the trailing gap (callers add `SECTION_GAP`).
@@ -86,17 +102,38 @@ fn scroll_rects(x0: f32, top: f32, usable_w: f32) -> [Rect; 2] {
     [left, right]
 }
 
-/// The device cells, one action each.
+/// The live-page button: Load pages across the row while pages are held,
+/// else Reload on its left part.
+fn live_button_rect(x0: f32, top: f32, usable_w: f32, pages_allowed: bool) -> Rect {
+    let row = row_rect(x0, top, 4, usable_w);
+    if pages_allowed {
+        Rect {
+            origin: row.origin,
+            size: Point2D::new(usable_w * RELOAD_SHARE, INPUT_HEIGHT),
+        }
+    } else {
+        row
+    }
+}
+
+/// The device cells and the live-page button, one action each.
 pub fn push_browser_action_rects(
     out: &mut Vec<(PropertyPanelAction, Rect)>,
     x0: f32,
     top: f32,
     usable_w: f32,
+    pages_allowed: bool,
 ) {
     let cells = segment_rects(row_rect(x0, top, 1, usable_w), PANEL_DEVICES.len());
     for (id, rect) in PANEL_DEVICES.into_iter().zip(cells) {
         out.push((PropertyPanelAction::SetBrowserDevice(id), rect));
     }
+    let action = if pages_allowed {
+        PropertyPanelAction::ReloadBrowser
+    } else {
+        PropertyPanelAction::AllowBrowserPages
+    };
+    out.push((action, live_button_rect(x0, top, usable_w, pages_allowed)));
 }
 
 /// The url, zoom and scroll input rects.
@@ -191,9 +228,57 @@ pub fn paint_browser_section(
         active,
         SEGMENT_FONT,
     );
+    paint_live_row(cx, theme, summary, locale, x, top, usable_w);
     let y = top + SECTION_HEADER_HEIGHT + ROW_ADVANCE * ROWS as f32 + BOTTOM_PAD;
     paint_section_divider(cx, theme, x, y, width);
     y + SECTION_GAP
+}
+
+/// Load pages, or Reload and the status beside it.
+fn paint_live_row(
+    cx: &mut PaintCx<'_>,
+    theme: &Theme,
+    summary: &BrowserSummary,
+    locale: de_editor_core::Locale,
+    x: f32,
+    top: f32,
+    usable_w: f32,
+) {
+    let button = live_button_rect(x, top, usable_w, summary.pages_allowed);
+    let key = if summary.pages_allowed {
+        "browser.reload"
+    } else {
+        "browser.loadPages"
+    };
+    paint_segment_row(cx, theme, button, &[label(locale, key)], None, SEGMENT_FONT);
+    let Some(status_key) = summary
+        .status
+        .filter(|_| summary.pages_allowed)
+        .and_then(status_key)
+    else {
+        return;
+    };
+    let text = label(locale, status_key);
+    let left = button.origin.x + button.size.x + HALF_GAP;
+    let layout = TextLayout::single_run(
+        text,
+        crate::widgets::text_metrics::CHROME_FONT_FAMILY,
+        SEGMENT_FONT,
+        theme.muted_foreground.to_jian(),
+        Point2D::new(0.0, 0.0),
+    );
+    let baseline = jian_widgets::centered_text_baseline_y(button, SEGMENT_FONT);
+    cx.backend.draw_text(&layout, Point2D::new(left, baseline));
+}
+
+/// The i18n key of a status worth showing (Ready shows nothing).
+fn status_key(status: BrowserPageStatus) -> Option<&'static str> {
+    match status {
+        BrowserPageStatus::Loading => Some("browser.status.loading"),
+        BrowserPageStatus::NoBrowser => Some("browser.status.noBrowser"),
+        BrowserPageStatus::Failed => Some("browser.status.failed"),
+        BrowserPageStatus::Ready => None,
+    }
 }
 
 /// Whole numbers without a trailing `.0`.

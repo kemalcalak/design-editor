@@ -3,9 +3,10 @@
 //! The scene carries a browser as `NodeKind::Other("browser")` with its
 //! frame, corner radius and stroke, and the address in the widget's
 //! `value_str` (`de-pen-loader`'s `browser_to_payload`). The editor canvas
-//! paints a page box: a blank page with a globe and the address, clipped
-//! to the node's corners, then the node's stroke. Drop shadows paint in the
-//! node painter's shared shadow pass ([`is_painted`] opts the node in).
+//! paints a page box clipped to the node's corners: the page snapshot a
+//! host rendered (`browser_textures`), else a blank page with a globe and
+//! the address; then the node's stroke. Drop shadows paint in the node
+//! painter's shared shadow pass ([`is_painted`] opts the node in).
 //!
 //! Browsers are canvas-only, like annotations: they paint only while
 //! `canvas_viewport` paints the page (inside
@@ -13,7 +14,9 @@
 //! screenshots and mask sources leave them out.
 
 use crate::layout_scene::{NodeKind, SceneNode};
+use crate::widgets::browser_textures;
 use crate::widgets::canvas_annotation::editor_canvas_dark;
+use crate::widgets::canvas_viewport_image::{cached_bytes_for, paint_cached_raster};
 use crate::widgets::icons::{draw_icon, Icon};
 use crate::widgets::PaintCx;
 use crate::{Color, Point2D, Rect, TextLayout};
@@ -85,7 +88,15 @@ pub(super) fn paint(cx: &mut PaintCx<'_>, node: &SceneNode, world_rect: Rect, zo
     cx.backend.save();
     cx.backend.clip_round_rect(world_rect, radius);
     cx.backend.fill_rect(world_rect, page);
-    paint_placeholder(cx, node, world_rect, zoom, ink);
+    // Recorded only here, where the node is on screen: a culled browser
+    // never reaches the host's render queue.
+    browser_textures::note_visible(&node.id);
+    let drawn = browser_textures::ready(&node.id)
+        .and_then(|(_, texture)| Some((texture, cached_bytes_for(texture)?)))
+        .is_some_and(|(texture, bytes)| paint_cached_raster(cx, world_rect, texture, &bytes, 0.0));
+    if !drawn {
+        paint_placeholder(cx, node, world_rect, zoom, ink);
+    }
     cx.backend.restore();
     super::canvas_viewport_stroke_paint::paint_node_stroke(cx, node, world_rect, zoom);
 }

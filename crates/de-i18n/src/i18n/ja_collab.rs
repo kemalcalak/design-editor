@@ -365,6 +365,11 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "browser.device.phoneSmall" => "小型スマホ",
         "browser.scrollX" => "スクロール X",
         "browser.scrollY" => "スクロール Y",
+        "browser.reload" => "再読み込み",
+        "browser.loadPages" => "ページを読み込む",
+        "browser.status.loading" => "読み込み中…",
+        "browser.status.noBrowser" => "Chrome が見つかりません",
+        "browser.status.failed" => "読み込めません",
         _ => return None,
     })
 }

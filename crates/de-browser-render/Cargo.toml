@@ -1,0 +1,19 @@
+# Headless Chrome page renderer for the live browser node (#20). Native only:
+# it launches the user's installed Chrome / Chromium / Edge / Brave and talks
+# the DevTools protocol over a plain localhost websocket. The desktop host
+# and the serve-web daemon use it; the wasm bundle never links it.
+[package]
+name = "de-browser-render"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "Design Editor headless-browser page snapshots over the Chrome DevTools Protocol"
+
+[dependencies]
+base64 = "0.22"
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+tungstenite = { version = "0.24", default-features = false, features = ["handshake"] }
+# Process-group spawn + tree termination shared with the CLI agents.
+de-process-io = { path = "../de-process-io" }

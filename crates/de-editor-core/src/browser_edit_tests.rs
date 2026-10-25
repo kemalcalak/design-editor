@@ -75,3 +75,23 @@ fn an_edit_undoes_as_one_step_and_other_kinds_are_refused() {
     assert!(!state.set_selected_browser_url("example.com"));
     assert!(!state.set_selected_browser_zoom(2.0));
 }
+
+#[test]
+fn an_opened_document_holds_its_pages_until_allowed_and_typing_an_address_allows_them() {
+    let mut state = with_browser();
+    state.hold_browser_pages_if_any();
+    assert!(!state.editor_ui.browser_live.pages_allowed());
+    assert!(state.set_selected_browser_url("example.com"));
+    assert!(state.editor_ui.browser_live.pages_allowed());
+    state.hold_browser_pages_if_any();
+    assert!(state.reload_selected_browser());
+    assert!(state.editor_ui.browser_live.pages_allowed());
+    assert_eq!(state.editor_ui.browser_live.reload_count("b1"), 1);
+    let rect = build_leaf_node("rect", "r1", "Rect", 0, 0, 10, 10).unwrap();
+    let mut plain = state_with(vec![rect]);
+    plain.hold_browser_pages_if_any();
+    assert!(
+        plain.editor_ui.browser_live.pages_allowed(),
+        "no browser, nothing held"
+    );
+}

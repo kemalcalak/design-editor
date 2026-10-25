@@ -365,6 +365,11 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "browser.device.phoneSmall" => "小螢幕手機",
         "browser.scrollX" => "捲動 X",
         "browser.scrollY" => "捲動 Y",
+        "browser.reload" => "重新載入",
+        "browser.loadPages" => "載入頁面",
+        "browser.status.loading" => "載入中…",
+        "browser.status.noBrowser" => "找不到 Chrome",
+        "browser.status.failed" => "無法載入",
         _ => return None,
     })
 }

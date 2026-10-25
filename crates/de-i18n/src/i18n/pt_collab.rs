@@ -365,6 +365,11 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "browser.device.phoneSmall" => "Celular pequeno",
         "browser.scrollX" => "Rolagem X",
         "browser.scrollY" => "Rolagem Y",
+        "browser.reload" => "Recarregar",
+        "browser.loadPages" => "Carregar páginas",
+        "browser.status.loading" => "Carregando…",
+        "browser.status.noBrowser" => "Chrome não encontrado",
+        "browser.status.failed" => "Falha ao carregar",
         _ => return None,
     })
 }

@@ -719,6 +719,14 @@ pub fn apply_property_action(
             }
             Handled
         }
+        A::ReloadBrowser => {
+            let _ = state.reload_selected_browser();
+            Handled
+        }
+        A::AllowBrowserPages => {
+            state.allow_browser_pages();
+            Handled
+        }
         A::SetAnnotationKind(kind) => {
             let before = state.snapshot_for_history();
             if state.set_selected_annotation_kind(*kind) {

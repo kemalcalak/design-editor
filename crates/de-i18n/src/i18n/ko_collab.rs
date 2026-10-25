@@ -367,6 +367,11 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "browser.device.phoneSmall" => "작은 휴대폰",
         "browser.scrollX" => "스크롤 X",
         "browser.scrollY" => "스크롤 Y",
+        "browser.reload" => "새로고침",
+        "browser.loadPages" => "페이지 불러오기",
+        "browser.status.loading" => "불러오는 중…",
+        "browser.status.noBrowser" => "Chrome을 찾을 수 없음",
+        "browser.status.failed" => "불러올 수 없음",
         _ => return None,
     })
 }

@@ -64,3 +64,22 @@ fn a_blank_browser_shows_only_the_globe_and_long_addresses_are_cut() {
     assert_eq!(shown.chars().count(), 48);
     assert!(shown.ends_with('…'));
 }
+
+#[test]
+fn only_a_canvas_paint_records_the_node_for_the_page_renderer() {
+    let mut node = browser(Some("https://example.com"));
+    node.id = "cb-visible".into();
+    use crate::widgets::browser_textures::{begin_frame, lock_for_tests, take_visible};
+    let _lock = lock_for_tests();
+    let seen = || {
+        take_visible()
+            .unwrap_or_default()
+            .contains(&"cb-visible".to_string())
+    };
+    begin_frame();
+    paint_once(&node);
+    assert!(!seen());
+    begin_frame();
+    with_annotations(false, || paint_once(&node));
+    assert!(seen());
+}

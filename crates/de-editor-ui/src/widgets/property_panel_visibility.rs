@@ -277,8 +277,8 @@ pub struct VisibleSections {
     pub widget_checked: bool,
     /// Annotation section (#12) — `Some(kind)` for a note / context / prompt.
     pub annotation: Option<jian_ops_schema::node::AnnotationKind>,
-    /// Browser section (#20) — a browser node is selected.
-    pub browser: bool,
+    /// Browser section (#20) — `Some(pages_allowed)` for a browser node.
+    pub browser: Option<bool>,
     pub image: bool,
     /// Whether the selected image carries optional video metadata.
     pub video: bool,
@@ -431,7 +431,7 @@ impl VisibleSections {
         widget: None,
         widget_checked: false,
         annotation: None,
-        browser: false,
+        browser: None,
         image: false,
         video: false,
         image_warning: false,

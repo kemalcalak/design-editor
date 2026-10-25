@@ -365,6 +365,11 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "browser.device.phoneSmall" => "โทรศัพท์จอเล็ก",
         "browser.scrollX" => "เลื่อน X",
         "browser.scrollY" => "เลื่อน Y",
+        "browser.reload" => "โหลดใหม่",
+        "browser.loadPages" => "โหลดหน้า",
+        "browser.status.loading" => "กำลังโหลด…",
+        "browser.status.noBrowser" => "ไม่พบ Chrome",
+        "browser.status.failed" => "โหลดไม่สำเร็จ",
         _ => return None,
     })
 }

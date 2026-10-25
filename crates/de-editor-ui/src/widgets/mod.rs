@@ -212,6 +212,7 @@ mod canvas_shader_decls;
 mod canvas_shader_images;
 mod canvas_shader_textures;
 // `pub` so both hosts can track the pointer for pointer-reactive shaders.
+pub mod browser_textures;
 pub mod canvas_annotation;
 pub mod canvas_browser;
 mod canvas_placeholder;

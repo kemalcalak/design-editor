@@ -365,6 +365,11 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "browser.device.phoneSmall" => "Điện thoại nhỏ",
         "browser.scrollX" => "Cuộn X",
         "browser.scrollY" => "Cuộn Y",
+        "browser.reload" => "Tải lại",
+        "browser.loadPages" => "Tải trang",
+        "browser.status.loading" => "Đang tải…",
+        "browser.status.noBrowser" => "Không tìm thấy Chrome",
+        "browser.status.failed" => "Không tải được",
         _ => return None,
     })
 }

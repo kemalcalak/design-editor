@@ -190,6 +190,13 @@ impl PropertyPanel {
                 .iter()
                 .any(|n| n.id_str() == state.selection.anchor.as_str());
             let mut snapshot = NodeSnapshot::from_node(node, is_top_level);
+            if let Some(browser) = snapshot.browser.as_mut() {
+                crate::widgets::property_panel_browser::apply_live_state(
+                    browser,
+                    &state.editor_ui.browser_live,
+                    node.id_str(),
+                );
+            }
             // "Scroll to" targets need the page, not just the node (#176).
             snapshot.interactions.sections =
                 crate::widgets::property_panel_interactions::document_section_targets(state);

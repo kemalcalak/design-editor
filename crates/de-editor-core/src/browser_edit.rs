@@ -35,6 +35,8 @@ impl EditorState {
         if current == next {
             return false;
         }
+        // Typing an address is the go-ahead to load pages.
+        self.editor_ui.browser_live.allow_pages();
         self.patch_selected_browser(json!({ "url": next }))
     }
 
@@ -90,6 +92,29 @@ impl EditorState {
             return false;
         }
         self.patch_selected_browser(Value::Object(patch))
+    }
+
+    /// Hold the pages of a just-opened document that already holds browser
+    /// nodes until the user allows them (see `browser_live`).
+    pub fn hold_browser_pages_if_any(&mut self) {
+        if crate::browser_live::document_has_browser(&self.doc) {
+            self.editor_ui.browser_live.hold_pages();
+        }
+    }
+
+    /// Let the document's pages load (the panel's Load pages row).
+    pub fn allow_browser_pages(&mut self) {
+        self.editor_ui.browser_live.allow_pages();
+    }
+
+    /// Ask for a fresh snapshot of the selected browser.
+    pub fn reload_selected_browser(&mut self) -> bool {
+        let Some(id) = self.selected_browser().map(|b| b.base.id.clone()) else {
+            return false;
+        };
+        self.editor_ui.browser_live.allow_pages();
+        self.editor_ui.browser_live.reload(&id);
+        true
     }
 
     fn patch_selected_browser(&mut self, patch: Value) -> bool {

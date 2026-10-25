@@ -27,12 +27,12 @@ fn inputs_cover_url_zoom_and_both_scroll_halves_inside_the_section() {
 #[test]
 fn the_device_row_has_one_cell_per_panel_preset() {
     let mut out = Vec::new();
-    push_browser_action_rects(&mut out, 0.0, 0.0, 240.0);
+    push_browser_action_rects(&mut out, 0.0, 0.0, 240.0, true);
     let ids: Vec<_> = out
         .iter()
-        .map(|(action, _)| match action {
-            PropertyPanelAction::SetBrowserDevice(id) => *id,
-            other => panic!("unexpected {other:?}"),
+        .filter_map(|(action, _)| match action {
+            PropertyPanelAction::SetBrowserDevice(id) => Some(*id),
+            _ => None,
         })
         .collect();
     assert_eq!(ids, PANEL_DEVICES.to_vec());
@@ -55,4 +55,24 @@ fn the_summary_reads_the_page_settings() {
     let text: PenNode = serde_json::from_str(r#"{"type":"text","id":"t","content":"x"}"#).unwrap();
     assert!(browser_summary_of(&text).is_none());
     assert_eq!(format_number(120.0), "120");
+}
+
+#[test]
+fn the_live_row_offers_reload_or_load_pages() {
+    let action_of = |allowed| {
+        let mut out = Vec::new();
+        push_browser_action_rects(&mut out, 0.0, 0.0, 240.0, allowed);
+        out.last().cloned().unwrap()
+    };
+    let (reload, reload_rect) = action_of(true);
+    assert_eq!(reload, PropertyPanelAction::ReloadBrowser);
+    let (allow, allow_rect) = action_of(false);
+    assert_eq!(allow, PropertyPanelAction::AllowBrowserPages);
+    assert!(
+        allow_rect.size.x > reload_rect.size.x,
+        "Load pages spans the row"
+    );
+    assert!(allow_rect.origin.y + allow_rect.size.y <= browser_section_height());
+    assert_eq!(status_key(BrowserPageStatus::Ready), None);
+    assert!(status_key(BrowserPageStatus::NoBrowser).is_some());
 }

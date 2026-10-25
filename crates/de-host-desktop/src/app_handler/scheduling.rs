@@ -102,6 +102,7 @@ impl DesktopApp {
             // paint recorded (the next pump picks them up).
             || self.remote_images.is_pending()
             || de_editor_ui::widgets::canvas_viewport_image::has_pending_remote_image_requests()
+            || self.browser_renders.is_pending()
             || self.image_decodes.is_pending()
             || de_editor_ui::widgets::canvas_viewport_image::has_pending_decodes()
             || self

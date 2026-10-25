@@ -459,6 +459,10 @@ pub enum PropertyPanelAction {
     SetAnnotationKind(jian_ops_schema::node::AnnotationKind),
     /// Switch the selected browser node to a device preset (#20).
     SetBrowserDevice(&'static str),
+    /// Render the selected browser's page again (#20).
+    ReloadBrowser,
+    /// Let an opened document's held pages load (#20).
+    AllowBrowserPages,
     /// User clicked an Interactions row, the Interactions header "+" or
     /// a Motion row's property dropdown — host toggles the shared
     /// popover for that target (`editor_ui.interaction_menu_*`).

@@ -309,6 +309,7 @@ impl<'a> Widget for CanvasViewport<'a> {
                 let bg = self.theme.background;
                 0.2126 * bg.r + 0.7152 * bg.g + 0.0722 * bg.b < 0.5
             };
+            super::browser_textures::begin_frame();
             let child_hits = super::canvas_placeholder::with_overlay(|| {
                 super::canvas_annotation::with_annotations(dark, || {
                     super::canvas_viewport_paint::paint_scene_nodes_with_options_hiding(

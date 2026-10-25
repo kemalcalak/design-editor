@@ -358,6 +358,12 @@ impl DesktopApp {
         if self.remote_images.pump() {
             self.redraw_dirty = true;
         }
+        // Live browser pages (#20): render requests for the visible nodes
+        // go to worker threads; finished snapshots land in the same cache.
+        if self.browser_renders.pump(self.host.editor_state_mut()) {
+            self.host.mark_editor_state_dirty();
+            self.redraw_dirty = true;
+        }
         if let Some(backend) = self.backend.as_mut() {
             if self.image_decodes.pump(backend) {
                 self.redraw_dirty = true;

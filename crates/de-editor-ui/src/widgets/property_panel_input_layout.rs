@@ -158,7 +158,7 @@ pub fn editable_input_rects(
             usable_w,
         );
     }
-    if visible.browser {
+    if visible.browser.is_some() {
         crate::widgets::property_panel_browser::push_browser_input_rects(
             &mut rects,
             x0,

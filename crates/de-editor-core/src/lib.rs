@@ -25,6 +25,7 @@ pub mod blank_starter;
 pub mod bridge_protocol;
 pub mod browser_devices;
 mod browser_edit;
+pub mod browser_live;
 pub mod button_press_state;
 mod catalog_toml;
 pub mod chat;

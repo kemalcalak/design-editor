@@ -72,7 +72,7 @@ pub fn section_tops(
             crate::widgets::property_panel_annotation::annotation_section_height(kind) + SECTION_GAP
         })),
         browser: next(shown(
-            visible.browser,
+            visible.browser.is_some(),
             crate::widgets::property_panel_browser::browser_section_height() + SECTION_GAP,
         )),
         image: next(shown(
