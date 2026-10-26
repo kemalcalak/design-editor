@@ -387,6 +387,11 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "htmlImport.warn.motion.keyframes_static" => {
             "@keyframes '{{name}}' animasyonu korunamadı ve statik olarak içe aktarıldı."
         }
+        "whatsNew.heading" => "Yenilikler",
+        "whatsNew.version" => "Sürüm {{version}}",
+        "whatsNew.close" => "Anladım",
+        "whatsNew.previous" => "Önceki",
+        "whatsNew.next" => "Sonraki",
         _ => return None,
     })
 }

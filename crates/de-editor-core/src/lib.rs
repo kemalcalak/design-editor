@@ -141,6 +141,7 @@ pub mod prompt_center_keyboard;
 pub mod property_edit_mutators;
 pub mod property_panel_state;
 pub mod ref_resolve;
+pub mod release_notes;
 pub mod rename;
 pub mod render_backend;
 pub mod request_snapshot;
@@ -177,6 +178,7 @@ mod svg_path_data;
 pub mod sync_gate;
 pub mod transition_edit;
 pub mod user_scene_templates;
+pub mod version_order;
 pub mod video_node_props;
 pub mod web_assets;
 

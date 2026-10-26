@@ -34,7 +34,7 @@ use crate::web_storage::storage_get;
 
 /// Device-level theme key. Deliberately carries **no** `::anon` suffix — that
 /// suffix marks the keys of the legacy settings blob.
-const DEVICE_THEME_KEY: &str = "design-editor-rust-web-theme";
+pub(super) const DEVICE_THEME_KEY: &str = "design-editor-rust-web-theme";
 
 /// Why a device-theme write did not land.
 ///

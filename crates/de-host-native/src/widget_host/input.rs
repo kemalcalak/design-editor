@@ -574,6 +574,11 @@ impl WidgetHostNative {
         {
             return consumed;
         }
+        if let Some(consumed) =
+            self.cursor_move_whats_new(x, y, self.last_viewport_w, self.last_viewport_h)
+        {
+            return consumed;
+        }
         // The Home-anchored model picker hovers above the takeover —
         // its hover pass runs before Home's.
         if let Some(consumed) =

@@ -387,6 +387,11 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "htmlImport.warn.motion.keyframes_static" => {
             "The @keyframes '{{name}}' animation could not be kept and was imported static."
         }
+        "whatsNew.heading" => "What's new",
+        "whatsNew.version" => "Version {{version}}",
+        "whatsNew.close" => "Got it",
+        "whatsNew.previous" => "Previous",
+        "whatsNew.next" => "Next",
         _ => return None,
     })
 }

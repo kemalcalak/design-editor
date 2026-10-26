@@ -387,6 +387,11 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "htmlImport.warn.motion.keyframes_static" => {
             "Không thể giữ hoạt ảnh @keyframes '{{name}}', phần tử được nhập ở dạng tĩnh."
         }
+        "whatsNew.heading" => "Có gì mới",
+        "whatsNew.version" => "Phiên bản {{version}}",
+        "whatsNew.close" => "Đã hiểu",
+        "whatsNew.previous" => "Trước",
+        "whatsNew.next" => "Tiếp",
         _ => return None,
     })
 }

@@ -23,6 +23,21 @@ use super::WidgetHost;
 impl WidgetHost {
     /// Drags holding pointer capture, then the modal surfaces, in priority
     /// order. `None` means none of them owned this move.
+    /// "What's new" (#251) button hover; `None` while the window is closed.
+    /// Runs before every other tier, preview routing included.
+    pub(in crate::widget_host) fn cursor_move_whats_new(&mut self, x: f32, y: f32) -> Option<bool> {
+        let changed = de_editor_ui::widgets::whats_new_flow::hover(
+            &mut self.editor_state,
+            Point2D::new(x, y),
+            self.last_viewport_w,
+            self.last_viewport_h,
+        )?;
+        if changed {
+            self.mark_dirty();
+        }
+        Some(changed)
+    }
+
     pub(in crate::widget_host) fn cursor_move_modal_tiers(
         &mut self,
         x: f32,

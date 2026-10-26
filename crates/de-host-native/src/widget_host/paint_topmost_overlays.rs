@@ -81,7 +81,9 @@ impl WidgetHostNative {
             );
         }
 
-        // In-app update modal (#111) — above even the missing-font prompt.
+        // "What's new" (#251), then the in-app update modal (#111) above
+        // even the missing-font prompt.
+        self.paint_whats_new(frame, viewport_width, viewport_height);
         self.paint_update_modal(frame, viewport_width, viewport_height);
     }
 }

@@ -14,6 +14,12 @@ use de_editor_core::host_escape_transitions as escape;
 impl WidgetHost {
     /// Escape — handles one layer per press.
     pub fn apply_escape(&mut self) -> bool {
+        // "What's new" (#251) sits above every surface; Escape closes it
+        // like its "Got it" button.
+        if self.editor_state.editor_ui.escape_whats_new() {
+            self.mark_dirty();
+            return true;
+        }
         // Slideshow presentation consumes Escape to exit. This must run
         // before all the property/panel/modal escapes so presentation gets
         // priority when it is active. Use the cached viewport dimensions,

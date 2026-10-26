@@ -387,6 +387,11 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "htmlImport.warn.motion.keyframes_static" => {
             "Анимацию @keyframes '{{name}}' не удалось сохранить, элемент импортирован статичным."
         }
+        "whatsNew.heading" => "Что нового",
+        "whatsNew.version" => "Версия {{version}}",
+        "whatsNew.close" => "Понятно",
+        "whatsNew.previous" => "Назад",
+        "whatsNew.next" => "Далее",
         _ => return None,
     })
 }

@@ -387,6 +387,11 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "htmlImport.warn.motion.keyframes_static" => {
             "ไม่สามารถคงแอนิเมชัน @keyframes '{{name}}' ไว้ได้ จึงนำเข้าแบบคงที่"
         }
+        "whatsNew.heading" => "มีอะไรใหม่",
+        "whatsNew.version" => "เวอร์ชัน {{version}}",
+        "whatsNew.close" => "รับทราบ",
+        "whatsNew.previous" => "ก่อนหน้า",
+        "whatsNew.next" => "ถัดไป",
         _ => return None,
     })
 }

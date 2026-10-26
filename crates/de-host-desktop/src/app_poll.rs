@@ -24,10 +24,14 @@ impl DesktopApp {
                 // offer could only end in "can't update itself".
                 let installable = crate::update_check::installer_asset_name(version).is_some();
                 if installable && ui.update_modal.is_none() {
-                    ui.update_modal = Some(de_editor_core::UpdateModalState::new(
+                    let mut offer = de_editor_core::UpdateModalState::new(
                         version.clone(),
                         de_editor_core::UpdatePhase::Offer,
-                    ));
+                    );
+                    // Never over the "What's new" window (#251): the offer
+                    // waits hidden and shows when that window closes.
+                    offer.visible = !ui.whats_new_visible();
+                    ui.update_modal = Some(offer);
                 }
             }
         }

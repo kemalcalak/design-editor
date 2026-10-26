@@ -16,6 +16,11 @@ impl WidgetHostNative {
             self.mark_dirty();
             return true;
         }
+        // "What's new" (#251) closes like its "Got it" button.
+        if self.editor_state.editor_ui.escape_whats_new() {
+            self.mark_dirty();
+            return true;
+        }
         // The result view is retired; the workspace is not a takeover,
         // so Escape in it walks the ordinary ladder (chat focus first,
         // then selection).

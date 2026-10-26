@@ -65,6 +65,10 @@ impl WidgetHost {
         // below (layer context menu, layer drag, align toolbar) reads
         // current geometry, never a stale snapshot.
         self.refresh_layout_scene();
+        // "What's new" (#251) owns the cursor while shown.
+        if let Some(changed) = self.cursor_move_whats_new(x, y) {
+            return changed;
+        }
         // Route canvas moves to preview when preview mode is active
         #[cfg(feature = "canvaskit")]
         if self.editor_state.editor_ui.preview.mode && self.preview.is_some() {

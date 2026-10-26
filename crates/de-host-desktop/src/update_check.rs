@@ -18,6 +18,7 @@
 
 use std::sync::mpsc::{self, Receiver, TryRecvError};
 
+use de_editor_core::version_order::is_newer;
 use de_editor_core::UpdateStatus;
 
 /// GitHub publish target — mirrors the TS app's `constants.ts`
@@ -261,32 +262,6 @@ fn windows_start(target: &str) -> std::io::Result<std::process::Child> {
     c.raw_arg(windows_start_args(target));
     c.creation_flags(CREATE_NO_WINDOW);
     c.spawn()
-}
-
-/// Whether `latest` is a strictly newer version than `current`.
-/// Both are dotted numeric strings (`0.8.0`); a pre-release suffix
-/// (`-beta.1`) is dropped before the numeric compare so a stable
-/// release of the same core version doesn't read as an update.
-fn is_newer(latest: &str, current: &str) -> bool {
-    fn parts(v: &str) -> Vec<u64> {
-        v.split('-')
-            .next()
-            .unwrap_or(v)
-            .split('.')
-            .map(|n| n.trim().parse::<u64>().unwrap_or(0))
-            .collect()
-    }
-    let l = parts(latest);
-    let c = parts(current);
-    let len = l.len().max(c.len());
-    for i in 0..len {
-        let lv = l.get(i).copied().unwrap_or(0);
-        let cv = c.get(i).copied().unwrap_or(0);
-        if lv != cv {
-            return lv > cv;
-        }
-    }
-    false
 }
 
 /// Open `url` in the user's default browser. Best-effort: a missing

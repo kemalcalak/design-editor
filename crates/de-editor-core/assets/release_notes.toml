@@ -1,0 +1,160 @@
+# In-app release notes, shown once on the first launch after an update.
+#
+# One [[note]] block per (version, locale), newest release first. Every
+# release needs all 15 UI locales (see `de_i18n::Locale::ALL`) with the
+# same number of `item` lines; a test enforces both. A missing locale
+# falls back to en-US at runtime.
+#
+# Fields: `version`, `locale` (BCP-47 code), `title`, optional `intro`
+# (one short paragraph) and one `item = "..."` line per bullet, in order.
+# Write for users: short, plain, no issue numbers or technical terms.
+
+[[note]]
+version = "0.5.2"
+locale = "en-US"
+title = "Bring your slides in"
+intro = "Open slide decks made elsewhere and keep working on them here."
+item = "Open HTML slide decks, including ones made with Claude, and each slide becomes its own editable board."
+item = "Open PowerPoint files the same way: text, shapes, images and speaker notes come with them."
+item = "Animations come along too. They play when you present and stay when you export the deck again."
+item = "After each update, this window shows what changed, in your language."
+
+[[note]]
+version = "0.5.2"
+locale = "tr"
+title = "Slaytlarınızı getirin"
+intro = "Başka yerde hazırlanmış slayt destelerini açın ve burada üzerinde çalışmaya devam edin."
+item = "Claude ile hazırlananlar dahil HTML slayt destelerini açın; her slayt ayrı, düzenlenebilir bir pano olur."
+item = "PowerPoint dosyalarını da aynı şekilde açın: metinler, şekiller, görseller ve konuşmacı notları birlikte gelir."
+item = "Animasyonlar da korunur. Sunum yaparken oynar, desteyi yeniden dışa aktardığınızda da kalır."
+item = "Her güncellemeden sonra bu pencere nelerin değiştiğini kendi dilinizde gösterir."
+
+[[note]]
+version = "0.5.2"
+locale = "zh-CN"
+title = "导入你的幻灯片"
+intro = "打开在其他地方制作的幻灯片,在这里继续编辑。"
+item = "打开 HTML 幻灯片(包括用 Claude 制作的),每张幻灯片都会成为一个可编辑的画板。"
+item = "PowerPoint 文件也能这样打开:文字、形状、图片和演讲者备注都会一并带入。"
+item = "动画也会保留:演示时会播放,再次导出幻灯片时也不会丢失。"
+item = "每次更新后,这个窗口会用你的语言告诉你有哪些变化。"
+
+[[note]]
+version = "0.5.2"
+locale = "zh-TW"
+title = "匯入你的投影片"
+intro = "開啟在其他地方製作的投影片,在這裡繼續編輯。"
+item = "開啟 HTML 投影片(包括用 Claude 製作的),每張投影片都會成為一個可編輯的畫板。"
+item = "PowerPoint 檔案也能這樣開啟:文字、形狀、圖片和演講者備忘稿都會一併帶入。"
+item = "動畫也會保留:簡報時會播放,再次匯出投影片時也不會遺失。"
+item = "每次更新後,這個視窗會用你的語言告訴你有哪些變化。"
+
+[[note]]
+version = "0.5.2"
+locale = "ja"
+title = "スライドを取り込もう"
+intro = "ほかのツールで作ったスライドを開いて、ここで編集を続けられます。"
+item = "Claude で作ったものを含む HTML のスライドを開くと、各スライドが編集できるボードになります。"
+item = "PowerPoint ファイルも同じように開けます。テキスト、図形、画像、発表者ノートもそのまま取り込まれます。"
+item = "アニメーションも引き継がれます。プレゼン中に再生され、スライドを書き出し直しても残ります。"
+item = "アップデートのたびに、このウィンドウで変更点をお使いの言語でお知らせします。"
+
+[[note]]
+version = "0.5.2"
+locale = "ko"
+title = "슬라이드를 가져오세요"
+intro = "다른 곳에서 만든 슬라이드를 열고 여기서 계속 작업하세요."
+item = "Claude로 만든 것을 포함해 HTML 슬라이드를 열면 각 슬라이드가 편집 가능한 보드가 됩니다."
+item = "PowerPoint 파일도 같은 방식으로 열 수 있습니다. 텍스트, 도형, 이미지, 발표자 노트가 함께 들어옵니다."
+item = "애니메이션도 그대로 유지됩니다. 발표할 때 재생되고, 슬라이드를 다시 내보내도 남아 있습니다."
+item = "업데이트할 때마다 이 창에서 바뀐 점을 사용하는 언어로 보여 드립니다."
+
+[[note]]
+version = "0.5.2"
+locale = "fr"
+title = "Importez vos présentations"
+intro = "Ouvrez des présentations créées ailleurs et continuez à les modifier ici."
+item = "Ouvrez des présentations HTML, y compris celles créées avec Claude : chaque diapositive devient un plan de travail modifiable."
+item = "Ouvrez aussi les fichiers PowerPoint : textes, formes, images et notes du présentateur sont repris."
+item = "Les animations suivent aussi. Elles se jouent pendant la présentation et restent quand vous exportez à nouveau."
+item = "Après chaque mise à jour, cette fenêtre présente les nouveautés dans votre langue."
+
+[[note]]
+version = "0.5.2"
+locale = "es"
+title = "Trae tus presentaciones"
+intro = "Abre presentaciones creadas en otro lugar y sigue trabajando en ellas aquí."
+item = "Abre presentaciones HTML, incluidas las creadas con Claude, y cada diapositiva se convierte en un tablero editable."
+item = "Abre también archivos de PowerPoint: textos, formas, imágenes y notas del orador llegan con ellos."
+item = "Las animaciones también se conservan. Se reproducen al presentar y se mantienen al volver a exportar."
+item = "Después de cada actualización, esta ventana te muestra las novedades en tu idioma."
+
+[[note]]
+version = "0.5.2"
+locale = "de"
+title = "Bring deine Folien mit"
+intro = "Öffne Präsentationen, die du woanders erstellt hast, und arbeite hier weiter."
+item = "Öffne HTML-Präsentationen, auch solche aus Claude: Jede Folie wird zu einem eigenen, bearbeitbaren Board."
+item = "PowerPoint-Dateien öffnest du genauso: Texte, Formen, Bilder und Sprechernotizen kommen mit."
+item = "Auch Animationen bleiben erhalten. Sie laufen beim Präsentieren und bleiben beim erneuten Export."
+item = "Nach jedem Update zeigt dir dieses Fenster, was neu ist, in deiner Sprache."
+
+[[note]]
+version = "0.5.2"
+locale = "pt"
+title = "Traga seus slides"
+intro = "Abra apresentações criadas em outro lugar e continue trabalhando nelas aqui."
+item = "Abra apresentações HTML, incluindo as feitas com o Claude, e cada slide vira um quadro editável."
+item = "Abra arquivos do PowerPoint do mesmo jeito: textos, formas, imagens e anotações do apresentador vêm junto."
+item = "As animações também vêm. Elas tocam na apresentação e continuam quando você exporta de novo."
+item = "Depois de cada atualização, esta janela mostra as novidades no seu idioma."
+
+[[note]]
+version = "0.5.2"
+locale = "ru"
+title = "Переносите свои слайды"
+intro = "Открывайте презентации, созданные в других местах, и продолжайте работу здесь."
+item = "Открывайте HTML-презентации, в том числе созданные в Claude: каждый слайд становится отдельной редактируемой доской."
+item = "Так же открываются файлы PowerPoint: текст, фигуры, изображения и заметки докладчика переносятся вместе с ними."
+item = "Анимации тоже сохраняются. Они воспроизводятся во время показа и остаются при повторном экспорте."
+item = "После каждого обновления это окно покажет, что изменилось, на вашем языке."
+
+[[note]]
+version = "0.5.2"
+locale = "hi"
+title = "अपनी स्लाइड्स लाएँ"
+intro = "कहीं और बनी स्लाइड्स खोलें और यहाँ उन पर काम जारी रखें।"
+item = "Claude से बनी स्लाइड्स समेत HTML स्लाइड डेक खोलें, हर स्लाइड एक अलग संपादन योग्य बोर्ड बन जाती है।"
+item = "PowerPoint फ़ाइलें भी इसी तरह खोलें: टेक्स्ट, आकृतियाँ, चित्र और वक्ता नोट्स साथ आते हैं।"
+item = "एनिमेशन भी साथ आते हैं। प्रस्तुति के समय चलते हैं और डेक दोबारा एक्सपोर्ट करने पर भी बने रहते हैं।"
+item = "हर अपडेट के बाद यह विंडो आपकी भाषा में बताती है कि क्या बदला है।"
+
+[[note]]
+version = "0.5.2"
+locale = "th"
+title = "นำสไลด์ของคุณเข้ามา"
+intro = "เปิดสไลด์ที่สร้างจากที่อื่น แล้วทำงานต่อได้ที่นี่"
+item = "เปิดสไลด์ HTML รวมถึงสไลด์ที่สร้างด้วย Claude แล้วแต่ละสไลด์จะกลายเป็นบอร์ดที่แก้ไขได้"
+item = "เปิดไฟล์ PowerPoint ได้แบบเดียวกัน ทั้งข้อความ รูปร่าง รูปภาพ และบันทึกของผู้นำเสนอจะติดมาด้วย"
+item = "ภาพเคลื่อนไหวก็ติดมาด้วย โดยจะเล่นขณะนำเสนอ และยังคงอยู่เมื่อส่งออกสไลด์อีกครั้ง"
+item = "หลังการอัปเดตแต่ละครั้ง หน้าต่างนี้จะแสดงสิ่งที่เปลี่ยนไปเป็นภาษาของคุณ"
+
+[[note]]
+version = "0.5.2"
+locale = "vi"
+title = "Mang slide của bạn vào"
+intro = "Mở các bộ slide tạo ở nơi khác và tiếp tục làm việc ngay tại đây."
+item = "Mở bộ slide HTML, kể cả những bộ tạo bằng Claude, mỗi slide trở thành một bảng vẽ có thể chỉnh sửa."
+item = "Mở tệp PowerPoint theo cách tương tự: văn bản, hình khối, hình ảnh và ghi chú của người trình bày đều đi kèm."
+item = "Hiệu ứng chuyển động cũng được giữ lại. Chúng phát khi trình chiếu và vẫn còn khi bạn xuất lại bộ slide."
+item = "Sau mỗi lần cập nhật, cửa sổ này cho bạn biết những gì đã thay đổi bằng ngôn ngữ của bạn."
+
+[[note]]
+version = "0.5.2"
+locale = "id"
+title = "Bawa slide Anda"
+intro = "Buka dek slide yang dibuat di tempat lain dan lanjutkan pekerjaan di sini."
+item = "Buka dek slide HTML, termasuk yang dibuat dengan Claude, dan setiap slide menjadi papan yang bisa diedit."
+item = "Buka file PowerPoint dengan cara yang sama: teks, bentuk, gambar, dan catatan pembicara ikut terbawa."
+item = "Animasi juga ikut. Animasi diputar saat presentasi dan tetap ada saat Anda mengekspor dek lagi."
+item = "Setelah setiap pembaruan, jendela ini menunjukkan apa yang berubah dalam bahasa Anda."
