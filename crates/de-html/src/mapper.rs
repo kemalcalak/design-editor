@@ -42,6 +42,7 @@ mod stack;
 
 #[path = "mapper_box.rs"]
 mod box_model;
+pub(crate) use box_model::{box_insets, enter_box};
 
 #[path = "mapper_node_access.rs"]
 pub(crate) mod node_access;
@@ -96,6 +97,10 @@ pub struct MapCtx<'a> {
     /// Nearest non-static ancestor used by absolutely positioned descendants.
     pub positioned_width: f64,
     pub positioned_height: f64,
+    /// Where that ancestor's padding box starts, measured from its outer
+    /// corner (its left / top border). Jian places `x` / `y` from a frame's
+    /// outer corner, so an absolute child's insets shift by this much.
+    pub positioned_origin: (f64, f64),
     /// Set by a parent that already centred every child through
     /// `align-items`, so the per-child auto-margin emulation stays out of the
     /// way instead of wrapping each child a second time.
@@ -167,6 +172,7 @@ pub(crate) fn map_element_scoped(
     let previous_containing = (context.containing_width, context.containing_height);
     let previous_width_is_definite = context.containing_width_is_definite;
     let previous_positioned = (context.positioned_width, context.positioned_height);
+    let previous_origin = context.positioned_origin;
     match style.get("position") {
         Some("fixed") => {
             context.containing_width = context.opts.viewport_width;
@@ -272,6 +278,9 @@ pub(crate) fn map_element_scoped(
         layout_parent_style,
         context,
     );
+    // Read before the containing block moves: padding percentages resolve
+    // against the parent's reference, like every other length on this box.
+    let insets = box_model::box_insets(&style, context);
     context.containing_width_is_definite = layout_heuristics::width_is_definite(
         container.width.as_ref(),
         context.containing_width_is_definite,
@@ -288,10 +297,7 @@ pub(crate) fn map_element_scoped(
         container.limits.max_height,
         parent_reference.1,
     );
-    if layout_heuristics::establishes_positioning_context(&style) {
-        context.positioned_width = context.containing_width;
-        context.positioned_height = context.containing_height;
-    }
+    box_model::enter_box(context, &style, insets);
     let previous_auto_margin = context.auto_margin_handled_by_parent;
     context.auto_margin_handled_by_parent = children_centered_by_auto_margins;
     let mapped_children = map_container_children(
@@ -322,6 +328,7 @@ pub(crate) fn map_element_scoped(
     context.containing_width_is_definite = previous_width_is_definite;
     context.positioned_width = previous_positioned.0;
     context.positioned_height = previous_positioned.1;
+    context.positioned_origin = previous_origin;
     let node = offset::wrap_offset(
         context,
         frame(base, container, children),

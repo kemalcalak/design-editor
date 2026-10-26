@@ -9,7 +9,7 @@
 
 use crate::import_warning::ImportWarning;
 use jian_ops_schema::node::base::{NumberOrExpression, PenNodeBase};
-use jian_ops_schema::node::container::{AlignItems, ContainerProps, LayoutMode, Padding};
+use jian_ops_schema::node::container::{AlignItems, ContainerProps, LayoutMode};
 use jian_ops_schema::node::{FrameNode, PenNode};
 use jian_ops_schema::sizing::{SizingBehavior, SizingKeyword};
 
@@ -94,13 +94,9 @@ pub(crate) fn apply_flex_wrap(
 
     let column_gap = axis_gap(style, context, "column-gap");
     let row_gap = axis_gap(style, context, "row-gap");
-    // `containing_width` is this container's own resolved width. A
-    // `FillContainer` container inherits the ancestor's width WITHOUT that
-    // ancestor's padding subtracted — a pre-existing convention shared with
-    // `mapper_grid`, so row capacity can be over-estimated under a padded
-    // ancestor. Fixing it means threading a content width down the whole
-    // descent, which is out of scope here.
-    let available = (context.containing_width - horizontal_padding(container)).max(0.0);
+    // `containing_width` is already this container's content box: the
+    // mapper subtracts its padding and border before mapping the children.
+    let available = context.containing_width;
     let rows = chunk_rows(&widths, available, column_gap);
     if rows.len() < 2 {
         // Nothing wrapped, so the container keeps its single horizontal row.
@@ -351,20 +347,6 @@ fn axis_gap(style: &ComputedStyle, context: &MapCtx<'_>, axis: &str) -> f64 {
     .unwrap_or(0.0)
 }
 
-/// Padding already resolved onto the container, so the row capacity uses the
-/// content box rather than the border box. The canonical axis order is
-/// `XY = [vertical, horizontal]` and `LtrB = [top, right, bottom, left]`
-/// (jian-core `layout/resolve.rs`), so the inline axis is the SECOND slot of
-/// `XY` and the second + fourth of `LtrB`.
-fn horizontal_padding(container: &ContainerProps) -> f64 {
-    match &container.padding {
-        Some(Padding::Uniform(value)) => value * 2.0,
-        Some(Padding::XY([_, horizontal])) => horizontal * 2.0,
-        Some(Padding::LtrB([_, right, _, left])) => left + right,
-        Some(Padding::Expression(_)) | None => 0.0,
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -378,25 +360,6 @@ mod tests {
         // A single oversized item still occupies its own row.
         assert_eq!(chunk_rows(&[900.0, 100.0], 500.0, 0.0), [1, 1]);
         assert!(chunk_rows(&[], 500.0, 0.0).is_empty());
-    }
-
-    /// B1. The inline axis is the second slot of `XY` and the second + fourth
-    /// of `LtrB`; both arms used to read the block axis instead.
-    #[test]
-    fn horizontal_padding_reads_the_inline_axis() {
-        let with = |padding| ContainerProps {
-            padding: Some(padding),
-            ..Default::default()
-        };
-        assert_eq!(horizontal_padding(&with(Padding::Uniform(8.0))), 16.0);
-        // XY is [vertical, horizontal].
-        assert_eq!(horizontal_padding(&with(Padding::XY([100.0, 20.0]))), 40.0);
-        // LtrB is [top, right, bottom, left].
-        assert_eq!(
-            horizontal_padding(&with(Padding::LtrB([1.0, 2.0, 3.0, 4.0]))),
-            6.0
-        );
-        assert_eq!(horizontal_padding(&ContainerProps::default()), 0.0);
     }
 }
 

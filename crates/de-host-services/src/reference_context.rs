@@ -148,7 +148,12 @@ pub async fn resolve_reference_context(
     let Some(ReferenceIntent::Url(url)) = detect_reference_intent(prompt) else {
         return Ok(None);
     };
-    let page = import_page_from_url(&url, None)?;
+    // A Claude artifact link is read by driving a local browser for up to
+    // its load deadline, which this async path must not block a worker on.
+    if reqwest::Url::parse(&url).is_ok_and(|url| crate::claude_artifact::is_claude_artifact(&url)) {
+        return Ok(None);
+    }
+    let page = import_page_from_url(&url, None, None)?;
     let source_host = page
         .final_url
         .host_str()

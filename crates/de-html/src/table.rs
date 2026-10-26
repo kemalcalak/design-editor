@@ -286,13 +286,9 @@ fn layout_subject_mut(node: &mut PenNode) -> &mut PenNode {
 /// every column gets an equal share, which is what an even pricing or
 /// comparison table wants.
 ///
-/// Two deliberate approximations live here, both bounded by the same missing
+/// One deliberate approximation lives here, bounded by the same missing
 /// piece — a real used-width solve for the table box:
 ///
-/// * The table's own percentage `padding` resolves against
-///   `context.containing_width`, which at this point is the TABLE's width, not
-///   the CSS containing block a percentage padding is defined against. They
-///   agree for the common `width: 100%` table and diverge for a pinned one.
 /// * `border-spacing` around the table's outer edge has no representation (see
 ///   [`spacing_gap`]) and is therefore left out of the column budget as well,
 ///   so a spaced table's columns are each `2 * spacing / columns` too wide.
@@ -303,12 +299,9 @@ fn column_widths(
     columns: usize,
     gap: f64,
 ) -> Vec<f64> {
-    let padding: f64 = ["padding-left", "padding-right"]
-        .into_iter()
-        .filter_map(|name| length_px(style.get(name)?, style, context, context.containing_width))
-        .sum();
-    let content =
-        (context.containing_width - padding - gap * columns.saturating_sub(1) as f64).max(0.0);
+    // `containing_width` is the table's content box (padding and border are
+    // already subtracted by the mapper).
+    let content = (context.containing_width - gap * columns.saturating_sub(1) as f64).max(0.0);
     let authored = authored_track_widths(context, style, element, columns, content);
     let pinned: f64 = authored.iter().flatten().sum();
     let free_tracks = authored.iter().filter(|width| width.is_none()).count();

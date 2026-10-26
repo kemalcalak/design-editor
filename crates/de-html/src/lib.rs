@@ -1,17 +1,19 @@
 //! HTML and CSS → editable PenNode importer.
 
 use jian_ops_schema::document::PenDocument;
-use jian_ops_schema::node::base::PenNodeBase;
-use jian_ops_schema::node::{FrameNode, PenNode};
-use jian_ops_schema::sizing::{SizingBehavior, SizingKeyword};
+use jian_ops_schema::node::PenNode;
 use jian_ops_schema::style::{PenFill, SolidFillBody};
 
 pub mod color;
 pub mod css;
 pub mod css_encoding;
+mod deck;
+mod deck_print;
+mod deck_visibility;
 pub mod dom;
 pub(crate) mod font_face;
 pub mod html_encoding;
+mod import_root;
 pub mod import_warning;
 mod import_warning_display;
 #[cfg(test)]
@@ -59,6 +61,7 @@ pub use project_zip_range::{
 pub use snapshot::{import_snapshot, import_snapshot_document};
 
 pub use css::MediaQueryError;
+pub use deck::{DECK_COLUMNS, DECK_GAP};
 
 #[cfg(test)]
 mod e2e_tests;
@@ -127,6 +130,9 @@ pub struct HtmlImportResult {
     /// [`ImportWarning::code`] and an [`ImportWarning::i18n_key`] for the
     /// post-import diagnostics panel.
     pub diagnostics: Vec<ImportWarning>,
+    /// The document's name when no root carries it: a slide deck's boards
+    /// are named after their slides, so the page title rides here.
+    pub document_name: Option<String>,
 }
 
 impl HtmlImportResult {
@@ -143,6 +149,7 @@ impl HtmlImportResult {
             nodes,
             warnings: import_warning::render_warnings(&diagnostics),
             diagnostics,
+            document_name: None,
         }
     }
 }
@@ -226,6 +233,7 @@ pub fn import_html_with_resources(
     );
     warnings.extend(ua_warnings);
     let mut budget = resources::ResourceBudget::default();
+    let print_selectors = deck_print::print_page_selectors(&parsed.stylesheet_sources);
     let mut author_parser =
         css::cascade::StylesheetParser::new(css::cascade::StyleOrigin::Author, 500);
     stylesheets::extend_author_rules(
@@ -266,6 +274,10 @@ pub fn import_html_with_resources(
         dom::INITIAL_ROOT_FONT_SIZE_ATTR.to_string(),
         opts.base_font_size.to_string(),
     ));
+    // A deck imports one board per slide; showing the slides its player keeps
+    // hidden comes first, so every pass below sees them as on screen.
+    let slides = deck::detect_slides(&document_element, &rules, &print_selectors, opts);
+    deck::show_slides(&mut document_element, &slides, &rules, opts);
     let document_style = css::cascade::compute_style_for_viewport(
         &[&document_element],
         &rules,
@@ -327,112 +339,24 @@ pub fn import_html_with_resources(
         containing_width_is_definite: true,
         positioned_width: opts.viewport_width,
         positioned_height: viewport_height,
+        positioned_origin: (0.0, 0.0),
         auto_margin_handled_by_parent: false,
         pending_base_outcome: Default::default(),
     };
-    let root_id = context.generate_id();
-    let can_transfer_text_clip = mapper::text_scope::subtree_allows_text_clip_transfer(
-        &context,
-        &body_path,
-        &body_style,
-        &body.children,
-    );
-    let (mut container, text_fill_override) = mapper::text_scope::container_props_with_text_scope(
-        &body_style,
-        &mut context,
-        can_transfer_text_clip,
-    );
-    container.width = Some(SizingBehavior::Number(opts.viewport_width));
-    container.height = container
-        .height
-        .or(Some(SizingBehavior::Keyword(SizingKeyword::FitContent)));
-    let mut body_children_centered = false;
-    if container.align_items.is_none() {
-        container.align_items =
-            mapper::infer_child_alignment(&context, &body_path, &body_style, &body.children);
-        body_children_centered = container.align_items.is_some();
-    }
-    if container.fill.is_none() {
-        container.fill = Some(vec![solid_fill("#ffffff")]);
-    }
-    let name = opts
-        .document_name
-        .clone()
-        .or(parsed.title)
-        .unwrap_or_else(|| "HTML Import".to_string());
-    let mut base = PenNodeBase {
-        id: root_id,
-        name: Some(name),
-        ..Default::default()
-    };
-    // The document root has no parent to reserve an un-shifted box in, so an
-    // in-flow offset on `<body>` is reported rather than silently applied.
-    let body_outcome = mapper::apply_base_style(&mut base, &body_style, &mut context);
-    mapper::warn_dropped_flow_offset(&mut context, body_outcome);
-    if base
-        .explain
-        .as_deref()
-        .is_some_and(|value| value.starts_with("__op_html_z_index:"))
-    {
-        base.explain = None;
-    }
-    if body_display_none {
-        base.visible = Some(false);
-    }
-    context.containing_width = opts.viewport_width;
-    context.containing_height = match container.height.as_ref() {
-        Some(SizingBehavior::Number(value)) => *value,
-        _ => viewport_height,
-    };
-    if !matches!(body_style.get("position"), None | Some("static"))
-        || body_style
-            .get("transform")
-            .is_some_and(|value| value != "none")
-    {
-        context.positioned_width = context.containing_width;
-        context.positioned_height = context.containing_height;
-    }
-    context.auto_margin_handled_by_parent = body_children_centered;
-    let children = if body_display_none {
-        Vec::new()
+    let is_deck = !slides.is_empty() && !body_display_none;
+    let mut nodes = if is_deck {
+        deck::map_slides(&mut context, &document_element, &slides)
     } else {
-        let mapped = mapper::map_container_children(
+        vec![import_root::map_body_root(
             &mut context,
             &body_path,
             &body_style,
-            Some(&document_style),
-            &body.children,
-            text_fill_override.as_deref(),
-        );
-        mapper::apply_root_margins(
-            &mut container,
             &document_style,
-            &body_style,
-            mapped.collapsed,
-            &mut context,
-        );
-        mapper::apply_flex_wrap(&mut context, &body_style, &mut container, mapped.nodes)
+            parsed.title.clone(),
+            body_display_none,
+        )]
     };
-    let root = PenNode::Frame(FrameNode {
-        base,
-        container,
-        children: Some(children),
-        image_search_query: None,
-        reusable: None,
-        slot: None,
-        state: None,
-        bindings: None,
-        events: None,
-        lifecycle: None,
-        semantics: None,
-        gestures: None,
-        route: None,
-        screen: None,
-        breakpoint: None,
-        placeholder: None,
-    });
     warnings.extend(context.warnings);
-    let mut nodes = vec![root];
     font_face::warn_undownloaded(&web_fonts, &nodes, &mut warnings);
     // This pass also reads intrinsic sizes from already-embedded data URLs,
     // so it still has useful work when no network/project fetcher is present.
@@ -445,7 +369,11 @@ pub fn import_html_with_resources(
         &mut warnings,
         &mut image_cache,
     );
-    HtmlImportResult::new(nodes, warnings)
+    let mut result = HtmlImportResult::new(nodes, warnings);
+    if is_deck {
+        result.document_name = opts.document_name.clone().or(parsed.title);
+    }
+    result
 }
 
 pub fn import_html_document(
@@ -458,10 +386,13 @@ pub fn import_html_document(
 }
 
 pub(crate) fn wrap_imported_document(imported: HtmlImportResult) -> HtmlDocumentResult {
-    let name = imported.nodes.first().and_then(|node| match node {
-        PenNode::Frame(frame) => frame.base.name.clone(),
-        _ => None,
-    });
+    let name = imported
+        .document_name
+        .clone()
+        .or_else(|| match imported.nodes.first() {
+            Some(PenNode::Frame(frame)) => frame.base.name.clone(),
+            _ => None,
+        });
     HtmlDocumentResult::new(
         PenDocument {
             version: "1.0".to_string(),

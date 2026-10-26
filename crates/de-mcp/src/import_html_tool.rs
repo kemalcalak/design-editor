@@ -3,7 +3,7 @@ use std::{collections::BTreeMap, fs};
 use de_html::{import_html, HtmlImportOptions};
 
 use super::import_common::{
-    import_result_to_outcome, parse_import_placement, parse_viewport_height,
+    import_result_to_outcome, parse_import_placement, parse_viewport_height, parse_viewport_width,
 };
 use super::{McpTool, ToolErrorCode, ToolOutcome};
 
@@ -50,9 +50,15 @@ impl McpTool for ImportHtml {
             Ok(value) => value,
             Err((code, message)) => return ToolOutcome::Err(code, message),
         };
+        let viewport_width = match parse_viewport_width(args) {
+            Ok(value) => value,
+            Err((code, message)) => return ToolOutcome::Err(code, message),
+        };
+        let defaults = HtmlImportOptions::default();
         let options = HtmlImportOptions {
+            viewport_width: viewport_width.unwrap_or(defaults.viewport_width),
             viewport_height,
-            ..HtmlImportOptions::default()
+            ..defaults
         };
         let result = import_html(&html, &options);
         import_result_to_outcome(result, placement)
