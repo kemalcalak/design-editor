@@ -1,4 +1,3 @@
-use crate::import_warning::ImportWarning;
 use std::collections::{BTreeMap, BTreeSet};
 
 use jian_ops_schema::constraints::{Constraints, HConstraint, VConstraint};
@@ -16,8 +15,8 @@ use crate::color::parse_css_color;
 use crate::css::cascade::ComputedStyle;
 use crate::mapper::{container_props_from, fill_glyph_color, MapCtx};
 use crate::{
-    wrap_imported_document, HtmlDocumentResult, HtmlImportOptions, HtmlImportResult,
-    MAX_OUTPUT_NODES,
+    import_warning::ImportWarning, wrap_imported_document, HtmlDocumentResult, HtmlImportOptions,
+    HtmlImportResult, MAX_OUTPUT_NODES,
 };
 
 #[path = "snapshot_stack.rs"]

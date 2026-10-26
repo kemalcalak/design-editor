@@ -251,7 +251,7 @@ fn layout_subject(node: &PenNode) -> &PenNode {
     };
     if !matches!(
         frame.base.name.as_deref(),
-        Some("Margin" | "Offset" | "Auto margin")
+        Some("Margin" | "Offset" | "Auto margin" | "Anchor")
     ) {
         return node;
     }
@@ -267,7 +267,7 @@ fn layout_subject_mut(node: &mut PenNode) -> &mut PenNode {
     let descend = matches!(
         node,
         PenNode::Frame(frame)
-            if matches!(frame.base.name.as_deref(), Some("Margin" | "Offset" | "Auto margin"))
+            if matches!(frame.base.name.as_deref(), Some("Margin" | "Offset" | "Auto margin" | "Anchor"))
                 && frame.children.as_ref().is_some_and(|children| !children.is_empty())
     );
     if descend {

@@ -309,10 +309,10 @@ pub(crate) fn map_element_scoped(
         container.limits.max_height,
         parent_reference.1,
     );
-    let definite = (
-        context.containing_width_is_definite,
-        matches!(container.height, Some(SizingBehavior::Number(value)) if value.is_finite()),
-    );
+    // Only a number is known before layout: a `fill_container` width can be
+    // a flex share of its parent rather than the parent's whole width.
+    let is_number = |axis: &Option<SizingBehavior>| matches!(axis, Some(SizingBehavior::Number(value)) if value.is_finite());
+    let definite = (is_number(&container.width), is_number(&container.height));
     box_model::enter_box(context, &style, insets, definite);
     let previous_auto_margin = context.auto_margin_handled_by_parent;
     context.auto_margin_handled_by_parent = children_centered_by_auto_margins;

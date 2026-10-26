@@ -23,6 +23,7 @@ use super::layout_heuristics::{has_offset, position_value};
 use super::node_access::node_base_mut;
 use super::MapCtx;
 use crate::css::cascade::ComputedStyle;
+use crate::import_warning::ImportWarning;
 
 /// How an absolute child is anchored to its parent's box.
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -46,6 +47,14 @@ pub(super) fn plan(
     if style.get("position") != Some("absolute") {
         return None;
     }
+    // A transform moves the box after layout from where its insets put it;
+    // the map-time placement already folds that in, so it stays numeric.
+    if style
+        .get("transform")
+        .is_some_and(|value| value.trim() != "none")
+    {
+        return None;
+    }
     let (parent_x, parent_y) = context.positioned_definite;
     let end_x =
         has_offset(style, "right") && !has_offset(style, "left") && !(parent_x && own_definite.0);
@@ -54,7 +63,7 @@ pub(super) fn plan(
     if !end_x && !end_y {
         return None;
     }
-    let inset = |name: &str, reference: f64| {
+    let length = |name: &str, reference: f64| {
         position_value(style.get(name), style.font_size, reference, context)
             .0
             .unwrap_or(0.0)
@@ -63,23 +72,30 @@ pub(super) fn plan(
     // right / bottom borders are taken to match (the import keeps no
     // per-side record for them).
     let (origin_x, origin_y) = context.positioned_origin;
-    let x = base.x.unwrap_or(0.0);
-    let y = base.y.unwrap_or(0.0);
+    let (width, height) = (context.containing_width, context.containing_height);
+    let end_inset = |inset: &str, margin: &str, reference: f64, origin: f64| {
+        length(inset, reference) + length(margin, width) + origin
+    };
+    let top = if end_y { 0.0 } else { base.y.unwrap_or(0.0) };
+    let left = if end_x { 0.0 } else { base.x.unwrap_or(0.0) };
+    let right = if end_x {
+        end_inset("right", "margin-right", width, origin_x)
+    } else {
+        0.0
+    };
+    let bottom = if end_y {
+        end_inset("bottom", "margin-bottom", height, origin_y)
+    } else {
+        0.0
+    };
+    // Padding cannot pull a box past its parent's edge: a badge hung
+    // outside a corner (`right: -6px`) keeps its numeric place.
+    let padding = [top, right, bottom, left];
+    if padding.iter().any(|edge| *edge < 0.0 || !edge.is_finite()) {
+        return None;
+    }
     Some(Anchor {
-        padding: [
-            if end_y { 0.0 } else { y },
-            if end_x {
-                inset("right", context.containing_width) + origin_x
-            } else {
-                0.0
-            },
-            if end_y {
-                inset("bottom", context.containing_height) + origin_y
-            } else {
-                0.0
-            },
-            if end_x { 0.0 } else { x },
-        ],
+        padding,
         end: (end_x, end_y),
     })
 }
@@ -90,24 +106,30 @@ pub(super) fn wrap(context: &mut MapCtx<'_>, mut node: PenNode, anchor: Option<A
         return node;
     };
     if context.node_count.saturating_add(1) > crate::MAX_OUTPUT_NODES {
+        context.warn_once(ImportWarning::NodeLimitMapping);
         return node;
     }
     context.node_count += 1;
     // The node is now in flow inside the anchor; the anchor takes its place
-    // among the parent's absolute children, with its stacking hint.
-    let explain = {
+    // among the parent's children, so the private carriers the parent's
+    // post-passes read (stacking, grid placement, wrap margins) move with it.
+    let (explain, theme) = {
         let base = node_base_mut(&mut node);
         base.x = None;
         base.y = None;
         base.constraints = None;
-        base.explain.take()
+        (base.explain.take(), base.theme.take())
     };
-    let edge = |pinned_end: bool| {
-        if pinned_end {
-            AlignItems::End
-        } else {
-            AlignItems::Start
-        }
+    let (end_x, end_y) = end;
+    let justify = if end_y {
+        JustifyContent::End
+    } else {
+        JustifyContent::Start
+    };
+    let align = if end_x {
+        AlignItems::End
+    } else {
+        AlignItems::Start
     };
     PenNode::Frame(FrameNode {
         base: PenNodeBase {
@@ -117,18 +139,15 @@ pub(super) fn wrap(context: &mut MapCtx<'_>, mut node: PenNode, anchor: Option<A
             y: Some(0.0),
             role: Some("overlay".to_string()),
             explain,
+            theme,
             ..Default::default()
         },
         container: ContainerProps {
             width: Some(SizingBehavior::Keyword(SizingKeyword::FillContainer)),
             height: Some(SizingBehavior::Keyword(SizingKeyword::FillContainer)),
             layout: Some(LayoutMode::Vertical),
-            justify_content: Some(if end.1 {
-                JustifyContent::End
-            } else {
-                JustifyContent::Start
-            }),
-            align_items: Some(edge(end.0)),
+            justify_content: Some(justify),
+            align_items: Some(align),
             padding: Some(Padding::LtrB(padding)),
             ..Default::default()
         },
