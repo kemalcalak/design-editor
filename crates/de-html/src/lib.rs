@@ -344,6 +344,7 @@ pub fn import_html_with_resources(
         positioned_width: opts.viewport_width,
         positioned_height: viewport_height,
         positioned_origin: (0.0, 0.0),
+        positioned_definite: (true, true),
         auto_margin_handled_by_parent: false,
         pending_base_outcome: Default::default(),
     };
