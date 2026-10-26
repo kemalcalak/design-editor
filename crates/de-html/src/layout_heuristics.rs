@@ -341,8 +341,16 @@ pub(super) fn apply_position(
         (margin_top, margin_bottom),
         (distribute_vertical_auto, false),
     );
-    base.x = Some(x);
-    base.y = Some(y);
+    // A fixed box's containing block is the viewport, whose origin is the
+    // document root's corner; an absolute one starts inside its ancestor's
+    // border.
+    let (origin_x, origin_y) = if style.get("position") == Some("absolute") {
+        context.positioned_origin
+    } else {
+        (0.0, 0.0)
+    };
+    base.x = Some(x + origin_x);
+    base.y = Some(y + origin_y);
     let has_left = has_offset(style, "left");
     let has_right = has_offset(style, "right");
     let has_top = has_offset(style, "top");
@@ -682,6 +690,7 @@ mod tests {
             containing_width_is_definite: true,
             positioned_width: options.viewport_width,
             positioned_height: options.viewport_height(),
+            positioned_origin: (0.0, 0.0),
             auto_margin_handled_by_parent: false,
             pending_base_outcome: Default::default(),
         }

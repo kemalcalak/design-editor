@@ -327,6 +327,7 @@ pub fn import_html_with_resources(
         containing_width_is_definite: true,
         positioned_width: opts.viewport_width,
         positioned_height: viewport_height,
+        positioned_origin: (0.0, 0.0),
         auto_margin_handled_by_parent: false,
         pending_base_outcome: Default::default(),
     };
@@ -379,19 +380,13 @@ pub fn import_html_with_resources(
     if body_display_none {
         base.visible = Some(false);
     }
+    let body_insets = mapper::box_insets(&body_style, &context);
     context.containing_width = opts.viewport_width;
     context.containing_height = match container.height.as_ref() {
         Some(SizingBehavior::Number(value)) => *value,
         _ => viewport_height,
     };
-    if !matches!(body_style.get("position"), None | Some("static"))
-        || body_style
-            .get("transform")
-            .is_some_and(|value| value != "none")
-    {
-        context.positioned_width = context.containing_width;
-        context.positioned_height = context.containing_height;
-    }
+    mapper::enter_box(&mut context, &body_style, body_insets);
     context.auto_margin_handled_by_parent = body_children_centered;
     let children = if body_display_none {
         Vec::new()
