@@ -82,14 +82,6 @@ impl WidgetHost {
         }
 
         // "What's new" (#251) — above even the missing-font prompt.
-        let mut cx = PaintCx {
-            backend: &mut *backend,
-        };
-        de_editor_ui::widgets::whats_new_flow::paint(
-            &mut cx,
-            &self.editor_state,
-            viewport_width,
-            viewport_height,
-        );
+        self.paint_whats_new(backend, viewport_width, viewport_height);
     }
 }

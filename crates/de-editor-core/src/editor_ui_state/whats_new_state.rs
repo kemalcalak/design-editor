@@ -68,6 +68,11 @@ impl super::EditorUiState {
     /// which shows nothing. Saved settings without a seen version come from
     /// a build older than this window, so only `running`'s own notes show.
     pub fn open_whats_new_on_startup(&mut self, had_settings: bool, running: &str) {
+        // A pre-release build (`1.2.0-beta.1`) neither shows nor records
+        // notes, so the stable release's notes still show when it lands.
+        if running.contains('-') {
+            return;
+        }
         let locale = self.effective_locale();
         let versions: Vec<String> = match (had_settings, self.last_seen_version.as_deref()) {
             (false, _) => Vec::new(),

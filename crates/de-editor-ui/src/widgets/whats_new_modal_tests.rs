@@ -117,9 +117,54 @@ fn an_unspaced_run_breaks_between_characters_but_not_before_marks() {
     let lines = wrap(thai, 120.0, BODY_SIZE);
     assert!(lines.len() > 1);
     assert_eq!(lines.concat(), thai);
-    for line in &lines[1..] {
-        assert!(!is_combining(line.chars().next().unwrap()), "{line}");
+    for pair in lines.windows(2) {
+        let first = pair[1].chars().next().unwrap() as u32;
+        let last = pair[0].chars().last().unwrap() as u32;
+        let mark = matches!(first, 0x0E31 | 0x0E33..=0x0E3A | 0x0E47..=0x0E4E);
+        assert!(!mark, "line starts with a mark: {}", pair[1]);
+        assert!(
+            !(0x0E40..=0x0E44).contains(&last),
+            "line ends on a leading vowel: {}",
+            pair[0]
+        );
     }
+}
+
+#[test]
+fn cjk_breaks_between_characters_instead_of_at_the_last_space() {
+    let text = "Claude で作ったものを含む HTML のスライドを開くと、各スライドが編集できるボードになります。";
+    let lines = wrap(text, 300.0, BODY_SIZE);
+    // A space-first break would end the first line at "HTML" with room left.
+    assert!(
+        estimate_width(&lines[0], BODY_SIZE) > 300.0 - BODY_SIZE * 1.5,
+        "{lines:?}"
+    );
+}
+
+#[test]
+fn the_card_keeps_one_height_while_paging_and_fits_a_short_window() {
+    let mut state = state_with(2);
+    let before = WhatsNewModal::for_editor(&state)
+        .unwrap()
+        .rect(1200.0, 800.0);
+    state.editor_ui.whats_new.as_mut().unwrap().page = 1;
+    let after = WhatsNewModal::for_editor(&state)
+        .unwrap()
+        .rect(1200.0, 800.0);
+    assert_eq!(before, after);
+
+    let modal = WhatsNewModal::for_editor(&state).unwrap();
+    let card = modal.rect(1200.0, 240.0);
+    assert!(card.origin.y + card.size.y <= 240.0 - 16.0 + 0.01);
+    let got = button(&state, WhatsNewButton::GotIt).unwrap();
+    assert!(got.size.y > 0.0);
+    let short_got = modal
+        .button_rects(card)
+        .into_iter()
+        .find(|(b, _)| *b == WhatsNewButton::GotIt)
+        .unwrap()
+        .1;
+    assert!(short_got.origin.y >= card.origin.y);
 }
 
 #[test]

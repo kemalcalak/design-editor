@@ -389,7 +389,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         }
         "whatsNew.heading" => "Có gì mới",
         "whatsNew.version" => "Phiên bản {{version}}",
-        "whatsNew.close" => "Đã hiểu",
+        "whatsNew.gotIt" => "Đã hiểu",
         "whatsNew.previous" => "Trước",
         "whatsNew.next" => "Tiếp",
         _ => return None,

@@ -367,6 +367,11 @@ pub(super) async fn mount_ck(canvas_id: String) -> Result<(), JsValue> {
                 let Ok(mut b) = inner.try_borrow_mut() else {
                     return;
                 };
+                // Only primary presses reach the "What's new" window (#251);
+                // nothing behind it opens a menu or starts a pan.
+                if b.host.whats_new_visible() && !matches!(action, MousePressAction::PrimaryPress) {
+                    return;
+                }
                 b.host.set_modifier_shift(evt.shift_key());
                 b.host.set_modifier_alt(evt.alt_key());
                 b.host.set_clocks(now_ms_perf(), now_unix_secs());
@@ -554,7 +559,7 @@ pub(super) async fn mount_ck(canvas_id: String) -> Result<(), JsValue> {
                 return;
             };
             // Nothing scrolls behind the "What's new" window (#251).
-            if b.host.editor_state().editor_ui.whats_new_visible() {
+            if b.host.whats_new_visible() {
                 return;
             }
             let (w, h) = b.backend.logical_size();

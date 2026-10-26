@@ -9,6 +9,7 @@ use super::paint::{draw_text, draw_text_weighted, outline};
 use super::{HomeLayout, HomeSurface, SANS};
 use crate::widgets::brand_icons::paint_figma_logo;
 use crate::widgets::icons::{draw_icon, Icon};
+use crate::widgets::line_break::break_point;
 use crate::widgets::text_metrics::fit_in_family;
 use crate::widgets::PaintCx;
 use crate::{Point2D, Rect};
@@ -148,63 +149,6 @@ pub(super) fn wrap_title(
         rest = rest[end..].trim_start();
     }
     lines
-}
-
-/// The byte index to end this line at: after the last space that still
-/// fits, else after as many characters as fit (at least one cluster). A
-/// character break never strands a combining mark (Thai vowels and tone
-/// marks, Devanagari matras) away from its base.
-fn break_point(text: &str, max_w: f32, measure: &mut impl FnMut(&str) -> f32) -> usize {
-    let mut last_fit = None;
-    let mut last_space = None;
-    let mut chars = text.char_indices().peekable();
-    while let Some((index, ch)) = chars.next() {
-        let end = index + ch.len_utf8();
-        // Everything before this character fits, so ending the line at
-        // this space (dropped by the caller's trim) fits too.
-        if ch == ' ' && index > 0 {
-            last_space = Some(end);
-        }
-        if measure(&text[..end]) > max_w {
-            break;
-        }
-        let next_joins = chars.peek().is_some_and(|&(_, next)| joins_previous(next));
-        if !next_joins && ch != VIRAMA {
-            last_fit = Some(end);
-        }
-    }
-    last_space
-        .or(last_fit)
-        .unwrap_or_else(|| first_cluster_end(text))
-}
-
-const VIRAMA: char = '\u{094D}';
-
-/// A mark drawn on the character before it, never at a line start.
-fn joins_previous(ch: char) -> bool {
-    matches!(ch as u32,
-        0x0300..=0x036F
-            | 0x0900..=0x0903
-            | 0x093A..=0x093C
-            | 0x093E..=0x094F
-            | 0x0951..=0x0957
-            | 0x0962..=0x0963
-            | 0x0E31
-            | 0x0E34..=0x0E3A
-            | 0x0E47..=0x0E4E)
-}
-
-/// The end of the first character plus any marks that join it.
-fn first_cluster_end(text: &str) -> usize {
-    let mut chars = text.char_indices();
-    let mut end = chars.next().map_or(text.len(), |(_, ch)| ch.len_utf8());
-    for (index, ch) in chars {
-        if !joins_previous(ch) {
-            break;
-        }
-        end = index + ch.len_utf8();
-    }
-    end
 }
 
 #[cfg(test)]

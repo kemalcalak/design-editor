@@ -1,9 +1,10 @@
 # In-app release notes, shown once on the first launch after an update.
 #
-# One [[note]] block per (version, locale), newest release first. Every
-# release needs all 15 UI locales (see `de_i18n::Locale::ALL`) with the
-# same number of `item` lines; a test enforces both. A missing locale
-# falls back to en-US at runtime.
+# One [[note]] block per (version, locale); keep the newest release at the
+# top for readers (the window sorts by version itself). Every release needs
+# all 15 UI locales (see `de_i18n::Locale::ALL`), each with an `intro`
+# exactly when en-US has one and the same number of `item` lines; a test
+# enforces this. A missing locale falls back to en-US at runtime.
 #
 # Fields: `version`, `locale` (BCP-47 code), `title`, optional `intro`
 # (one short paragraph) and one `item = "..."` line per bullet, in order.
@@ -23,10 +24,10 @@ item = "After each update, this window shows what changed, in your language."
 version = "0.5.2"
 locale = "tr"
 title = "Slaytlarınızı getirin"
-intro = "Başka yerde hazırlanmış slayt destelerini açın ve burada üzerinde çalışmaya devam edin."
-item = "Claude ile hazırlananlar dahil HTML slayt destelerini açın; her slayt ayrı, düzenlenebilir bir pano olur."
+intro = "Başka yerde hazırlanmış sunumları açın ve burada üzerinde çalışmaya devam edin."
+item = "Claude ile hazırlananlar dahil HTML sunumlarını açın; her slayt ayrı, düzenlenebilir bir pano olur."
 item = "PowerPoint dosyalarını da aynı şekilde açın: metinler, şekiller, görseller ve konuşmacı notları birlikte gelir."
-item = "Animasyonlar da korunur. Sunum yaparken oynar, desteyi yeniden dışa aktardığınızda da kalır."
+item = "Animasyonlar da korunur. Sunum yaparken oynar, sunumu yeniden dışa aktardığınızda da kalır."
 item = "Her güncellemeden sonra bu pencere nelerin değiştiğini kendi dilinizde gösterir."
 
 [[note]]
@@ -106,7 +107,7 @@ title = "Traga seus slides"
 intro = "Abra apresentações criadas em outro lugar e continue trabalhando nelas aqui."
 item = "Abra apresentações HTML, incluindo as feitas com o Claude, e cada slide vira um quadro editável."
 item = "Abra arquivos do PowerPoint do mesmo jeito: textos, formas, imagens e anotações do apresentador vêm junto."
-item = "As animações também vêm. Elas tocam na apresentação e continuam quando você exporta de novo."
+item = "As animações também vêm. Elas são reproduzidas na apresentação e continuam quando você exporta de novo."
 item = "Depois de cada atualização, esta janela mostra as novidades no seu idioma."
 
 [[note]]
@@ -124,9 +125,9 @@ version = "0.5.2"
 locale = "hi"
 title = "अपनी स्लाइड्स लाएँ"
 intro = "कहीं और बनी स्लाइड्स खोलें और यहाँ उन पर काम जारी रखें।"
-item = "Claude से बनी स्लाइड्स समेत HTML स्लाइड डेक खोलें, हर स्लाइड एक अलग संपादन योग्य बोर्ड बन जाती है।"
+item = "Claude से बनी प्रस्तुतियों समेत HTML प्रस्तुतियाँ खोलें, हर स्लाइड एक अलग संपादन योग्य बोर्ड बन जाती है।"
 item = "PowerPoint फ़ाइलें भी इसी तरह खोलें: टेक्स्ट, आकृतियाँ, चित्र और वक्ता नोट्स साथ आते हैं।"
-item = "एनिमेशन भी साथ आते हैं। प्रस्तुति के समय चलते हैं और डेक दोबारा एक्सपोर्ट करने पर भी बने रहते हैं।"
+item = "एनिमेशन भी साथ आते हैं। प्रस्तुति के समय चलते हैं और प्रस्तुति दोबारा निर्यात करने पर भी बने रहते हैं।"
 item = "हर अपडेट के बाद यह विंडो आपकी भाषा में बताती है कि क्या बदला है।"
 
 [[note]]
@@ -143,18 +144,18 @@ item = "หลังการอัปเดตแต่ละครั้ง �
 version = "0.5.2"
 locale = "vi"
 title = "Mang slide của bạn vào"
-intro = "Mở các bộ slide tạo ở nơi khác và tiếp tục làm việc ngay tại đây."
-item = "Mở bộ slide HTML, kể cả những bộ tạo bằng Claude, mỗi slide trở thành một bảng vẽ có thể chỉnh sửa."
+intro = "Mở các bản trình bày tạo ở nơi khác và tiếp tục làm việc ngay tại đây."
+item = "Mở bản trình bày HTML, kể cả những bản tạo bằng Claude, mỗi slide trở thành một bảng vẽ có thể chỉnh sửa."
 item = "Mở tệp PowerPoint theo cách tương tự: văn bản, hình khối, hình ảnh và ghi chú của người trình bày đều đi kèm."
-item = "Hiệu ứng chuyển động cũng được giữ lại. Chúng phát khi trình chiếu và vẫn còn khi bạn xuất lại bộ slide."
+item = "Hiệu ứng chuyển động cũng được giữ lại. Chúng phát khi trình chiếu và vẫn còn khi bạn xuất lại bản trình bày."
 item = "Sau mỗi lần cập nhật, cửa sổ này cho bạn biết những gì đã thay đổi bằng ngôn ngữ của bạn."
 
 [[note]]
 version = "0.5.2"
 locale = "id"
 title = "Bawa slide Anda"
-intro = "Buka dek slide yang dibuat di tempat lain dan lanjutkan pekerjaan di sini."
-item = "Buka dek slide HTML, termasuk yang dibuat dengan Claude, dan setiap slide menjadi papan yang bisa diedit."
+intro = "Buka presentasi yang dibuat di tempat lain dan lanjutkan pekerjaan di sini."
+item = "Buka presentasi HTML, termasuk yang dibuat dengan Claude, dan setiap slide menjadi papan yang bisa diedit."
 item = "Buka file PowerPoint dengan cara yang sama: teks, bentuk, gambar, dan catatan pembicara ikut terbawa."
-item = "Animasi juga ikut. Animasi diputar saat presentasi dan tetap ada saat Anda mengekspor dek lagi."
+item = "Animasi juga ikut. Animasi diputar saat presentasi dan tetap ada saat Anda mengekspor presentasi lagi."
 item = "Setelah setiap pembaruan, jendela ini menunjukkan apa yang berubah dalam bahasa Anda."

@@ -141,16 +141,8 @@ impl WidgetHost {
         de_editor_core::shader_source_editor::blur(&mut self.editor_state);
         // "What's new" (#251) paints above every surface and owns the
         // pointer while shown (native runs it first too).
-        if let Some(changed) = de_editor_ui::widgets::whats_new_flow::press(
-            &mut self.editor_state,
-            Point2D::new(x, y),
-            viewport_width,
-            viewport_height,
-        ) {
-            if changed {
-                self.mark_dirty();
-            }
-            return true;
+        if let Some(consumed) = self.press_whats_new(x, y, viewport_width, viewport_height) {
+            return consumed;
         }
         // Refresh the derived paint doc once up front — every hit-test
         // below reads `&self.layout_scene`, so it must be current.

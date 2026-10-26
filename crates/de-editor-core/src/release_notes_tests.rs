@@ -138,6 +138,12 @@ fn completeness_names_the_missing_locale_and_item_mismatch() {
         })
         .collect();
     assert_eq!(check_complete(&full), Ok(()));
+    full[2].intro = Some("Dropped elsewhere.".into());
+    assert!(check_complete(&full)
+        .unwrap_err()
+        .message
+        .contains("disagree on `intro`"));
+    full[2].intro = None;
     full[3].items.push("Extra.".into());
     assert!(check_complete(&full)
         .unwrap_err()

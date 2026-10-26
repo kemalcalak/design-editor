@@ -130,7 +130,7 @@ fn notes_between_in<'a>(
 }
 
 /// Whole-file rules: every release carries all 15 UI locales, each with
-/// as many bullets as its English note. Runtime lookup falls back to
+/// an intro exactly when its English note has one and as many bullets. Runtime lookup falls back to
 /// English, so this is enforced by a test rather than at startup.
 pub fn check_complete(notes: &[ReleaseNote]) -> Result<(), ReleaseNotesError> {
     let mut versions: Vec<&str> = Vec::new();
@@ -140,8 +140,9 @@ pub fn check_complete(notes: &[ReleaseNote]) -> Result<(), ReleaseNotesError> {
         }
     }
     for version in versions {
-        let english = note_in(notes, version, Locale::EnUs)
-            .filter(|note| note.locale == Locale::EnUs)
+        let english = notes
+            .iter()
+            .find(|note| note.version == version && note.locale == Locale::EnUs)
             .ok_or_else(|| ReleaseNotesError::new(0, format!("{version} has no en-US note")))?;
         for locale in Locale::ALL {
             let note = notes
@@ -150,6 +151,12 @@ pub fn check_complete(notes: &[ReleaseNote]) -> Result<(), ReleaseNotesError> {
                 .ok_or_else(|| {
                     ReleaseNotesError::new(0, format!("{version} has no {} note", locale.code()))
                 })?;
+            if note.intro.is_some() != english.intro.is_some() {
+                return Err(ReleaseNotesError::new(
+                    0,
+                    format!("{version} {} and en-US disagree on `intro`", locale.code()),
+                ));
+            }
             if note.items.len() != english.items.len() {
                 return Err(ReleaseNotesError::new(
                     0,

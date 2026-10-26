@@ -136,3 +136,14 @@ fn an_update_offer_held_back_by_the_window_shows_after_it_closes() {
     ui.press_whats_new_button(WhatsNewButton::GotIt);
     assert!(ui.update_modal_visible());
 }
+
+#[test]
+fn a_pre_release_build_leaves_everything_alone() {
+    let mut ui = EditorUiState {
+        last_seen_version: Some("1.0.0".into()),
+        ..Default::default()
+    };
+    ui.open_whats_new_on_startup(true, "2.0.0-beta.1");
+    assert!(!ui.whats_new_visible());
+    assert_eq!(ui.last_seen_version.as_deref(), Some("1.0.0"));
+}

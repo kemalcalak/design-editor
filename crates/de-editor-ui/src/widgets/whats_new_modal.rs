@@ -7,12 +7,14 @@
 use crate::theme::Theme;
 use crate::widgets::editor_state_ext::{theme_for, translate};
 use crate::widgets::home_surface::estimate_width;
+use crate::widgets::line_break::wrap_lines;
 use crate::widgets::panel_controls::{paint_accent_button, paint_neutral_button, ButtonSpec};
 use crate::widgets::text_metrics::CHROME_FONT_FAMILY;
 use crate::widgets::{LayoutBox, LayoutCx, PaintCx, Widget, WidgetId};
 use crate::{Color, Point2D, Rect, TextLayout};
 use de_editor_core::editor_ui_state::{WhatsNewButton, WhatsNewState};
 use de_editor_core::release_notes::{note_for, ReleaseNote};
+use de_editor_core::text_wrap::wrap_text_measured;
 use de_editor_core::{EditorState, EditorUiState};
 
 const CARD_W: f32 = 480.0;
@@ -29,6 +31,10 @@ const ITEM_GAP: f32 = 6.0;
 const BULLET_INDENT: f32 = 16.0;
 const SECTION_GAP: f32 = 14.0;
 const BUTTON_H: f32 = 32.0;
+const BUTTON_RADIUS: f32 = 8.0;
+/// Baselines sit this far above the bottom of their line box.
+const TITLE_BASELINE_INSET: f32 = 6.0;
+const BODY_BASELINE_INSET: f32 = 5.0;
 const BUTTON_MIN_W: f32 = 88.0;
 const BUTTON_PAD_X: f32 = 14.0;
 const BUTTON_GAP: f32 = 8.0;
@@ -73,10 +79,21 @@ impl<'a> WhatsNewModal<'a> {
         })
     }
 
-    /// Centred card, as tall as the page's content.
+    /// Centred card, as tall as the longest page so the buttons stay put
+    /// while paging, and never taller than the viewport (the text is
+    /// clipped above the buttons instead, which always stay reachable).
     pub fn rect(&self, viewport_w: f32, viewport_h: f32) -> Rect {
         let w = CARD_W.min((viewport_w - VIEWPORT_MARGIN * 2.0).max(0.0));
-        let h = self.card_height(&self.lines(w - PAD * 2.0));
+        let inner_w = w - PAD * 2.0;
+        let locale = self.ui.effective_locale();
+        let tallest = self
+            .state
+            .versions
+            .iter()
+            .filter_map(|version| note_for(version, locale))
+            .map(|note| card_height(&lines_for(note, inner_w)))
+            .fold(card_height(&self.lines(inner_w)), f32::max);
+        let h = tallest.min((viewport_h - VIEWPORT_MARGIN * 2.0).max(0.0));
         Rect {
             origin: Point2D::new(
                 ((viewport_w - w) / 2.0).max(VIEWPORT_MARGIN),
@@ -87,35 +104,7 @@ impl<'a> WhatsNewModal<'a> {
     }
 
     fn lines(&self, inner_w: f32) -> PageLines {
-        let item_w = inner_w - BULLET_INDENT;
-        PageLines {
-            title: wrap(&self.note.title, inner_w, TITLE_SIZE),
-            intro: self
-                .note
-                .intro
-                .as_deref()
-                .map(|intro| wrap(intro, inner_w, BODY_SIZE))
-                .unwrap_or_default(),
-            items: self
-                .note
-                .items
-                .iter()
-                .map(|item| wrap(item, item_w, BODY_SIZE))
-                .collect(),
-        }
-    }
-
-    fn card_height(&self, lines: &PageLines) -> f32 {
-        let mut h = PAD + EYEBROW_SIZE + SECTION_GAP;
-        h += lines.title.len() as f32 * TITLE_LINE_H;
-        if !lines.intro.is_empty() {
-            h += SECTION_GAP / 2.0 + lines.intro.len() as f32 * LINE_H;
-        }
-        h += SECTION_GAP;
-        let item_lines: usize = lines.items.iter().map(Vec::len).sum();
-        h += item_lines as f32 * LINE_H;
-        h += ITEM_GAP * lines.items.len().saturating_sub(1) as f32;
-        h + SECTION_GAP * 2.0 + BUTTON_H + PAD
+        lines_for(self.note, inner_w)
     }
 
     /// Button rects along the card's bottom edge: the paging pair on the
@@ -169,7 +158,7 @@ impl<'a> WhatsNewModal<'a> {
         self.t(match button {
             WhatsNewButton::Previous => "whatsNew.previous",
             WhatsNewButton::Next => "whatsNew.next",
-            WhatsNewButton::GotIt => "whatsNew.close",
+            WhatsNewButton::GotIt => "whatsNew.gotIt",
         })
     }
 
@@ -178,7 +167,7 @@ impl<'a> WhatsNewModal<'a> {
         let enabled = self.state.enabled(button);
         let spec = ButtonSpec {
             rect,
-            radius: 8.0,
+            radius: BUTTON_RADIUS,
             label: self.button_label(button),
             label_size: BODY_SIZE,
             hovered: enabled && self.state.hover == Some(button),
@@ -191,7 +180,8 @@ impl<'a> WhatsNewModal<'a> {
         } else {
             // A paging button at the end of the list: the outline stays so
             // the pair keeps its place, the label fades.
-            cx.backend.stroke_round_rect(rect, 8.0, theme.border, 1.0);
+            cx.backend
+                .stroke_round_rect(rect, BUTTON_RADIUS, theme.border, 1.0);
             let label = spec.label;
             let label_x = rect.origin.x + (rect.size.x - estimate_width(label, BODY_SIZE)) / 2.0;
             let baseline = jian_widgets::centered_text_baseline_y(rect, BODY_SIZE);
@@ -207,48 +197,47 @@ impl<'a> WhatsNewModal<'a> {
     }
 }
 
-/// Greedy wrap against the layout-time width estimate, so hit-test (no
-/// backend) and paint agree on the card height. Breaks at spaces and
-/// between CJK characters; a run with no break point that is still too
-/// wide (Thai has no spaces inside a phrase) is cut between characters,
-/// never before a combining mark.
+fn lines_for(note: &ReleaseNote, inner_w: f32) -> PageLines {
+    let item_w = inner_w - BULLET_INDENT;
+    PageLines {
+        title: wrap(&note.title, inner_w, TITLE_SIZE),
+        intro: note
+            .intro
+            .as_deref()
+            .map(|intro| wrap(intro, inner_w, BODY_SIZE))
+            .unwrap_or_default(),
+        items: note
+            .items
+            .iter()
+            .map(|item| wrap(item, item_w, BODY_SIZE))
+            .collect(),
+    }
+}
+
+/// The full height a page's text asks for.
+fn card_height(lines: &PageLines) -> f32 {
+    let mut h = PAD + EYEBROW_SIZE + SECTION_GAP;
+    h += lines.title.len() as f32 * TITLE_LINE_H;
+    if !lines.intro.is_empty() {
+        h += SECTION_GAP / 2.0 + lines.intro.len() as f32 * LINE_H;
+    }
+    h += SECTION_GAP;
+    let item_lines: usize = lines.items.iter().map(Vec::len).sum();
+    h += item_lines as f32 * LINE_H;
+    h += ITEM_GAP * lines.items.len().saturating_sub(1) as f32;
+    h + SECTION_GAP * 2.0 + BUTTON_H + PAD
+}
+
+/// Wrap against the layout-time width estimate, so hit-test (no backend)
+/// and paint agree on the card height. The canvas wrap breaks Latin at
+/// spaces and CJK between characters; a line it leaves too wide (Thai
+/// writes phrases without spaces) is broken again between clusters.
 fn wrap(text: &str, max_w: f32, size: f32) -> Vec<String> {
     let mut measure = |s: &str| estimate_width(s, size);
-    de_editor_core::text_wrap::wrap_text_measured(text, max_w, &mut measure)
+    wrap_text_measured(text, max_w, &mut measure)
         .into_iter()
-        .flat_map(|line| split_overwide(line, max_w, size))
+        .flat_map(|line| wrap_lines(&line, max_w, |s| estimate_width(s, size)))
         .collect()
-}
-
-fn split_overwide(line: String, max_w: f32, size: f32) -> Vec<String> {
-    if estimate_width(&line, size) <= max_w {
-        return vec![line];
-    }
-    let mut out = Vec::new();
-    let mut current = String::new();
-    for ch in line.chars() {
-        let mut candidate = current.clone();
-        candidate.push(ch);
-        if !current.is_empty() && !is_combining(ch) && estimate_width(&candidate, size) > max_w {
-            out.push(std::mem::take(&mut current));
-            current.push(ch);
-        } else {
-            current = candidate;
-        }
-    }
-    if !current.is_empty() {
-        out.push(current);
-    }
-    out
-}
-
-/// Marks that attach to the previous character in the scripts the notes
-/// use without spaces (Thai) or with stacked signs (Devanagari).
-fn is_combining(ch: char) -> bool {
-    matches!(ch as u32,
-        0x0300..=0x036F
-        | 0x0900..=0x0903 | 0x093A..=0x094F | 0x0951..=0x0957 | 0x0962..=0x0963
-        | 0x0E31 | 0x0E34..=0x0E3A | 0x0E47..=0x0E4E)
 }
 
 fn draw(cx: &mut PaintCx<'_>, text: &str, size: f32, color: Color, x: f32, baseline: f32) {
@@ -273,7 +262,7 @@ impl Widget for WhatsNewModal<'_> {
                 0.0,
                 0.0,
                 CARD_W,
-                self.card_height(&self.lines(CARD_W - PAD * 2.0)),
+                card_height(&self.lines(CARD_W - PAD * 2.0)),
             ),
         }
     }
@@ -287,6 +276,16 @@ impl Widget for WhatsNewModal<'_> {
         let x = rect.origin.x + PAD;
         let inner_w = rect.size.x - PAD * 2.0;
         let lines = self.lines(inner_w);
+        let buttons = self.button_rects(rect);
+        // A card capped by a short viewport clips its text above the buttons.
+        let text_bottom = rect.origin.y + rect.size.y - PAD - BUTTON_H - SECTION_GAP;
+        cx.backend.save();
+        cx.backend.clip_rect(Rect::xywh(
+            rect.origin.x,
+            rect.origin.y,
+            rect.size.x,
+            (text_bottom - rect.origin.y).max(0.0),
+        ));
 
         // Eyebrow: "What's new" on the left, the release on the right.
         let mut y = rect.origin.y + PAD + EYEBROW_SIZE;
@@ -317,7 +316,7 @@ impl Widget for WhatsNewModal<'_> {
                 TITLE_SIZE,
                 theme.foreground,
                 x,
-                y + TITLE_LINE_H - 6.0,
+                y + TITLE_LINE_H - TITLE_BASELINE_INSET,
             );
             y += TITLE_LINE_H;
         }
@@ -330,7 +329,7 @@ impl Widget for WhatsNewModal<'_> {
                     BODY_SIZE,
                     theme.muted_foreground,
                     x,
-                    y + LINE_H - 5.0,
+                    y + LINE_H - BODY_BASELINE_INSET,
                 );
                 y += LINE_H;
             }
@@ -344,7 +343,7 @@ impl Widget for WhatsNewModal<'_> {
             cx.backend
                 .fill_round_rect(Rect::xywh(x + 2.0, dot_y, 4.0, 4.0), 2.0, theme.primary);
             for line in item {
-                let baseline = y + LINE_H - 5.0;
+                let baseline = y + LINE_H - BODY_BASELINE_INSET;
                 draw(
                     cx,
                     line,
@@ -357,22 +356,21 @@ impl Widget for WhatsNewModal<'_> {
             }
         }
 
-        let buttons = self.button_rects(rect);
-        if self.state.versions.len() > 1 {
-            // "2 / 3" after the paging pair.
-            if let Some((_, next)) = buttons.iter().find(|(b, _)| *b == WhatsNewButton::Next) {
-                let page = format!("{} / {}", self.state.page + 1, self.state.versions.len());
-                let baseline = jian_widgets::centered_text_baseline_y(*next, BODY_SIZE);
-                let page_x = next.origin.x + next.size.x + BUTTON_GAP + 4.0;
-                draw(
-                    cx,
-                    &page,
-                    BODY_SIZE,
-                    theme.muted_foreground,
-                    page_x,
-                    baseline,
-                );
-            }
+        cx.backend.restore();
+
+        // "2 / 3" after the paging pair (only shown with several releases).
+        if let Some((_, next)) = buttons.iter().find(|(b, _)| *b == WhatsNewButton::Next) {
+            let page = format!("{} / {}", self.state.page + 1, self.state.versions.len());
+            let baseline = jian_widgets::centered_text_baseline_y(*next, BODY_SIZE);
+            let page_x = next.origin.x + next.size.x + BUTTON_GAP + 4.0;
+            draw(
+                cx,
+                &page,
+                BODY_SIZE,
+                theme.muted_foreground,
+                page_x,
+                baseline,
+            );
         }
         for (button, button_rect) in buttons {
             self.paint_button(cx, button, button_rect);

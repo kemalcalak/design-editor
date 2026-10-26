@@ -391,7 +391,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         }
         "whatsNew.heading" => "새로운 기능",
         "whatsNew.version" => "버전 {{version}}",
-        "whatsNew.close" => "확인",
+        "whatsNew.gotIt" => "확인",
         "whatsNew.previous" => "이전",
         "whatsNew.next" => "다음",
         _ => return None,
