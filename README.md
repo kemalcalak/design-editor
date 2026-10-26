@@ -23,14 +23,6 @@ https://github.com/user-attachments/assets/ed3abf77-70f7-4ebd-bc37-2ff855917423
 
 </details>
 
-<p align="center">
-  <img src="assets/readme/home.png" alt="Home" width="900" />
-</p>
-
-<p align="center">
-  <img src="assets/readme/editor.png" alt="Editor with the agent panel" width="900" />
-</p>
-
 - **Agents design live.** A built-in MCP server lets Claude Code and other agents build on the canvas while you watch.
 - **Bring your own model.** The in-app chat works with major providers, any OpenAI-compatible endpoint, or agents installed on your machine.
 - **Local-first.** No account, no cloud, no telemetry. Rust and Skia, on macOS, Windows and Linux.
