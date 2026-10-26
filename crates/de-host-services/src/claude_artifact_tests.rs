@@ -1,6 +1,4 @@
-use serde_json::json;
-
-use super::{content_frame, has_body_content, is_claude_artifact, ContentFrame};
+use super::is_claude_artifact;
 
 fn url(text: &str) -> reqwest::Url {
     reqwest::Url::parse(text).expect("test url")
@@ -29,57 +27,26 @@ fn recognises_claude_artifact_links_only() {
 }
 
 #[test]
-fn picks_the_deepest_frame_under_the_content_host() {
-    let reply = json!({ "frameTree": {
-        "frame": { "id": "main", "url": "https://claude.ai/artifact/abc" },
-        "childFrames": [
-            { "frame": { "id": "ads", "url": "https://example.com/" } },
-            { "frame": { "id": "host", "url": "https://abc.frame.claudeusercontent.com/?v=1" },
-              "childFrames": [
-                { "frame": { "id": "doc", "url": "about:srcdoc" } }
-              ] }
-        ]
-    }});
-    assert_eq!(
-        content_frame(&reply),
-        Some(ContentFrame {
-            id: "doc".to_string(),
-            base_url: Some("https://abc.frame.claudeusercontent.com/?v=1".to_string()),
-        })
+fn an_artifact_link_is_refused_at_once_with_the_saved_html_route() {
+    use std::collections::BTreeMap;
+
+    use de_mcp::{McpTool, ToolErrorCode, ToolOutcome};
+
+    let mut args = BTreeMap::new();
+    args.insert(
+        "url".to_string(),
+        "https://claude.ai/artifact/0f7c9a3e-1111-2222-3333-444455556666?sk=x#1".to_string(),
     );
-
-    // A video the artifact embeds sits deeper, but it is not the artifact.
-    let embedding = json!({ "frameTree": {
-        "frame": { "id": "main", "url": "https://claude.ai/artifact/abc" },
-        "childFrames": [
-            { "frame": { "id": "host", "url": "https://abc.frame.claudeusercontent.com/" },
-              "childFrames": [
-                { "frame": { "id": "video", "url": "https://www.youtube.com/embed/x" },
-                  "childFrames": [ { "frame": { "id": "ad", "url": "about:blank" } } ] }
-              ] }
-        ]
-    }});
-    assert_eq!(
-        content_frame(&embedding).map(|frame| frame.id),
-        Some("host".to_string())
+    // No network or browser: the answer comes before any fetch.
+    let started = std::time::Instant::now();
+    let outcome = crate::import_html_url::ImportHtmlUrl.call(&args);
+    assert!(started.elapsed() < std::time::Duration::from_secs(1));
+    let ToolOutcome::Err(code, message) = outcome else {
+        panic!("an artifact link must not import")
+    };
+    assert_eq!(code, ToolErrorCode::InvalidArgument);
+    assert!(
+        message.contains("download the artifact as HTML"),
+        "{message}"
     );
-
-    let shell_only = json!({ "frameTree": {
-        "frame": { "id": "main", "url": "https://claude.ai/artifact/abc" },
-        "childFrames": [ { "frame": { "id": "blank", "url": "about:blank" } } ]
-    }});
-    assert_eq!(content_frame(&shell_only), None);
-}
-
-#[test]
-fn an_empty_body_is_not_rendered_content() {
-    assert!(!has_body_content(
-        "<html><head></head><body>\n </body></html>"
-    ));
-    assert!(!has_body_content(
-        "<html><head><title>x</title></head></html>"
-    ));
-    assert!(has_body_content(
-        "<html><body class='deck'><section>One</section></body></html>"
-    ));
 }
