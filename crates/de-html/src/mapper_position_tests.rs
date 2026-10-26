@@ -258,6 +258,38 @@ fn a_bottom_pinned_row_in_a_layout_sized_body_is_anchored_to_its_bottom_edge() {
     assert_eq!(row.container.width, Some(SizingBehavior::Number(1136.0)));
 }
 
+#[test]
+fn an_inset_zero_box_in_a_layout_sized_body_fills_its_height() {
+    // `.devs { position:absolute; inset:0 }` inside a `flex:1` body: its
+    // height is the body's, which only layout knows, so it fills an anchor
+    // instead of keeping a guess taken from the slide.
+    let result = import_html(
+        "<div style='display:flex;flex-direction:column;width:1280px;height:720px;\
+                     padding:60px 72px;box-sizing:border-box'>\
+           <h2 style='margin:0;height:80px'>Title</h2>\
+           <div style='flex:1;position:relative'>\
+             <div style='position:absolute;inset:0;display:flex;align-items:flex-end;\
+                         padding-bottom:40px'><div style='width:100px;height:100px'></div></div>\
+           </div>\
+         </div>",
+        &HtmlImportOptions::default(),
+    );
+    let PenNode::Frame(root) = &result.nodes[0] else {
+        panic!()
+    };
+    let body = frame_child(frame_child(root, 0), 1);
+    let anchor = frame_child(body, 0);
+    assert_eq!(anchor.base.name.as_deref(), Some("Anchor"));
+    let filled = frame_child(anchor, 0);
+    assert_eq!(
+        filled.container.height,
+        Some(SizingBehavior::Keyword(
+            jian_ops_schema::sizing::SizingKeyword::FillContainer
+        ))
+    );
+    assert_eq!(filled.container.width, Some(SizingBehavior::Number(1136.0)));
+}
+
 fn anchored_child(html: &str) -> FrameNode {
     let result = import_html(html, &HtmlImportOptions::default());
     let PenNode::Frame(root) = &result.nodes[0] else {
