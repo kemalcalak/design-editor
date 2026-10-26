@@ -2,6 +2,7 @@
 //! to one frame at the import viewport's width.
 
 use jian_ops_schema::node::base::PenNodeBase;
+use jian_ops_schema::node::container::{ContainerProps, Padding};
 use jian_ops_schema::node::{FrameNode, PenNode};
 use jian_ops_schema::sizing::{SizingBehavior, SizingKeyword};
 
@@ -74,7 +75,7 @@ pub(crate) fn map_body_root(
     if body_display_none {
         base.visible = Some(false);
     }
-    let body_insets = mapper::box_insets(body_style, &context);
+    let body_insets = mapper::box_insets(body_style, context);
     context.containing_width = root_width;
     context.containing_height = match container.height.as_ref() {
         Some(SizingBehavior::Number(value)) => *value,
@@ -93,6 +94,7 @@ pub(crate) fn map_body_root(
             &body_path[1].children,
             text_fill_override.as_deref(),
         );
+        let inline_padding = horizontal_padding(&container);
         mapper::apply_root_margins(
             &mut container,
             document_style,
@@ -100,6 +102,10 @@ pub(crate) fn map_body_root(
             mapped.collapsed,
             context,
         );
+        // The root has no parent to keep `<html>` / `<body>` margins in, so
+        // they fold into its padding; wrapped rows must fit inside them too.
+        let margins = horizontal_padding(&container) - inline_padding;
+        context.containing_width = (context.containing_width - margins).max(0.0);
         mapper::apply_flex_wrap(context, body_style, &mut container, mapped.nodes)
     };
     PenNode::Frame(FrameNode {
@@ -120,4 +126,16 @@ pub(crate) fn map_body_root(
         breakpoint: None,
         placeholder: None,
     })
+}
+
+/// Left + right padding of a resolved container. `XY` is
+/// `[vertical, horizontal]` and `LtrB` is `[top, right, bottom, left]`
+/// (jian-core `layout/resolve.rs`).
+fn horizontal_padding(container: &ContainerProps) -> f64 {
+    match &container.padding {
+        Some(Padding::Uniform(value)) => value * 2.0,
+        Some(Padding::XY([_, horizontal])) => horizontal * 2.0,
+        Some(Padding::LtrB([_, right, _, left])) => left + right,
+        Some(Padding::Expression(_)) | None => 0.0,
+    }
 }

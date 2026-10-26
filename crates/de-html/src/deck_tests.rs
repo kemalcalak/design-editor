@@ -217,3 +217,47 @@ fn a_body_that_declares_its_width_sets_the_root_width() {
     let result = import_html(html, &HtmlImportOptions::default());
     assert_eq!(size(frame(&result.nodes[0])).0, Some(1280.0));
 }
+
+#[test]
+fn scroll_reveal_sections_and_carousels_stay_one_page() {
+    // Sections that start transparent animate in on scroll; they are a page.
+    let reveal = "<style>.reveal{opacity:0}</style><header>Brand</header>\
+        <section class='reveal'><h2>One</h2></section>\
+        <section class='reveal'><h2>Two</h2></section><footer>Footer</footer>";
+    let result = import_html(reveal, &HtmlImportOptions::default());
+    assert_eq!(result.nodes.len(), 1);
+    assert!(all_texts(&result.nodes).contains("Footer"));
+
+    // A carousel's items are a widget's slides, not a deck's.
+    let carousel = "<style>.slide{width:300px;height:200px}.slide+.slide{display:none}</style>\
+        <h1>Shop</h1><div class='swiper'><div class='slide'>A</div><div class='slide'>B</div>\
+        <div class='slide'>C</div></div>";
+    let result = import_html(carousel, &HtmlImportOptions::default());
+    assert_eq!(result.nodes.len(), 1);
+    assert!(all_texts(&result.nodes).contains("Shop"));
+}
+
+#[test]
+fn print_breaks_that_page_a_document_do_not_make_a_deck() {
+    // Chapters break before their heading; markers break after themselves.
+    for css in [
+        "@media print { h2 { break-before: page } }",
+        "@media print { .page-break { page-break-after: always } }",
+    ] {
+        let html = format!(
+            "<style>{css}</style><article><h2>One</h2><p>a</p>\
+             <div class='page-break'></div><h2>Two</h2><p>b</p>\
+             <div class='page-break'></div><h2>Three</h2></article>"
+        );
+        let result = import_html(&html, &HtmlImportOptions::default());
+        assert_eq!(result.nodes.len(), 1, "{css}");
+    }
+}
+
+#[test]
+fn a_deck_document_is_named_after_the_page_title() {
+    let options = HtmlImportOptions::default();
+    let result = crate::import_html_document(PLAYER_DECK, &options, None, None);
+    assert_eq!(result.document.name.as_deref(), Some("Quarterly"));
+    assert_eq!(result.document.children.len(), 5);
+}

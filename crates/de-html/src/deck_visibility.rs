@@ -24,6 +24,17 @@ const STATE_CLASSES: [&str; 10] = [
     "selected",
 ];
 
+/// The element is not on screen: hidden by its style or by an attribute.
+/// [`show`] undoes exactly these.
+pub(crate) fn needs_showing(element: &DomElement, style: &ComputedStyle) -> bool {
+    is_hidden(style) || element.attrs.iter().any(|(name, value)| hides(name, value))
+}
+
+/// `hidden`, or `aria-hidden="true"`.
+fn hides(name: &str, value: &str) -> bool {
+    name == "hidden" || (name == "aria-hidden" && value == "true")
+}
+
 /// Hidden by viewer state rather than removed from the document.
 pub(crate) fn is_hidden(style: &ComputedStyle) -> bool {
     style.get("display") == Some("none")
@@ -44,12 +55,11 @@ pub(crate) fn show(
     ancestors: &[&DomElement],
     element: &mut DomElement,
     parent_style: Option<&ComputedStyle>,
+    root_font_size: f64,
     rules: &[StyleRule],
     opts: &HtmlImportOptions,
 ) {
-    element
-        .attrs
-        .retain(|(name, value)| name != "hidden" && !(name == "aria-hidden" && value == "true"));
+    element.attrs.retain(|(name, value)| !hides(name, value));
     let style_of = |element: &DomElement| {
         let mut path = ancestors.to_vec();
         path.push(element);
@@ -57,7 +67,7 @@ pub(crate) fn show(
             &path,
             rules,
             parent_style,
-            opts.base_font_size,
+            root_font_size,
             opts.viewport_width,
             opts.viewport_height(),
         )

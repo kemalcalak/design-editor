@@ -48,6 +48,22 @@ fn picks_the_deepest_frame_under_the_content_host() {
         })
     );
 
+    // A video the artifact embeds sits deeper, but it is not the artifact.
+    let embedding = json!({ "frameTree": {
+        "frame": { "id": "main", "url": "https://claude.ai/artifact/abc" },
+        "childFrames": [
+            { "frame": { "id": "host", "url": "https://abc.frame.claudeusercontent.com/" },
+              "childFrames": [
+                { "frame": { "id": "video", "url": "https://www.youtube.com/embed/x" },
+                  "childFrames": [ { "frame": { "id": "ad", "url": "about:blank" } } ] }
+              ] }
+        ]
+    }});
+    assert_eq!(
+        content_frame(&embedding).map(|frame| frame.id),
+        Some("host".to_string())
+    );
+
     let shell_only = json!({ "frameTree": {
         "frame": { "id": "main", "url": "https://claude.ai/artifact/abc" },
         "childFrames": [ { "frame": { "id": "blank", "url": "about:blank" } } ]

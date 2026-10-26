@@ -92,6 +92,11 @@ pub(crate) fn enter_box(context: &mut MapCtx<'_>, style: &ComputedStyle, insets:
         context.positioned_width = (width - border[1] - border[3]).max(0.0);
         context.positioned_height = (height - border[0] - border[2]).max(0.0);
         context.positioned_origin = (border[3], border[0]);
+    } else {
+        // Absolute descendants stay children of this static box, whose own
+        // offset inside the positioned ancestor is only known after layout;
+        // the ancestor's border no longer sits at their parent's corner.
+        context.positioned_origin = (0.0, 0.0);
     }
     context.containing_width = (width - padding[1] - padding[3] - border[1] - border[3]).max(0.0);
     context.containing_height = (height - padding[0] - padding[2] - border[0] - border[2]).max(0.0);

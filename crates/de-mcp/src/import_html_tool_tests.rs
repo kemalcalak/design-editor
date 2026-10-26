@@ -105,3 +105,10 @@ fn viewport_width_sets_the_page_root_width() {
         ToolOutcome::Err(..)
     ));
 }
+
+/// de-html cannot depend on the placement crate, so the two gaps are kept
+/// equal here: a deck's grid spacing matches the gap between placed roots.
+#[test]
+fn deck_gap_matches_the_root_placement_gap() {
+    assert_eq!(de_html::DECK_GAP, de_editor_core::root_placement::ROOT_GAP);
+}

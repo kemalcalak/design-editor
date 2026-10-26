@@ -6,10 +6,13 @@
 //! raw inline stylesheets itself. Linked stylesheets are not scanned.
 
 use crate::css::selectors::{parse_selector_list, Selector};
+use crate::css::strip_comments;
 use crate::dom::StylesheetSource;
 
-/// Selectors of every rule that breaks the printed page after (or before)
-/// the element, from `@media print` blocks and `<style media="print">`.
+/// Selectors of every rule that breaks the printed page after the element,
+/// from `@media print` blocks and `<style media="print">`. A break
+/// *before* is left out: that is how documents start chapters
+/// (`h2 { break-before: page }`), not how decks end slides.
 pub(crate) fn print_page_selectors(sources: &[StylesheetSource]) -> Vec<Selector> {
     let mut selectors = Vec::new();
     for source in sources {
@@ -20,6 +23,9 @@ pub(crate) fn print_page_selectors(sources: &[StylesheetSource]) -> Vec<Selector
             .map_or((None, stylesheet.as_str()), |(media, css)| {
                 (Some(media), css)
             });
+        if !css.contains("print") {
+            continue;
+        }
         let css = strip_comments(css);
         if media.is_some_and(is_print_media) {
             collect_paging_rules(&css, &mut selectors);
@@ -35,19 +41,6 @@ fn is_print_media(media: &str) -> bool {
     media
         .split(|c: char| !c.is_ascii_alphanumeric() && c != '-')
         .any(|word| word.eq_ignore_ascii_case("print"))
-}
-
-fn strip_comments(css: &str) -> String {
-    let mut out = String::with_capacity(css.len());
-    let mut rest = css;
-    while let Some(start) = rest.find("/*") {
-        out.push_str(&rest[..start]);
-        rest = rest[start + 2..]
-            .find("*/")
-            .map_or("", |end| &rest[start + 2 + end + 2..]);
-    }
-    out.push_str(rest);
-    out
 }
 
 /// Byte index just past the `}` closing the block whose `{` is at `open`.
@@ -113,13 +106,13 @@ fn pages_the_document(declarations: &str) -> bool {
         let value = value.trim().trim_end_matches("!important").trim();
         let value = value.to_ascii_lowercase();
         match name.trim().to_ascii_lowercase().as_str() {
-            "break-after" | "break-before" => {
+            "break-after" => {
                 matches!(
                     value.as_str(),
                     "page" | "always" | "left" | "right" | "recto" | "verso"
                 )
             }
-            "page-break-after" | "page-break-before" => {
+            "page-break-after" => {
                 matches!(value.as_str(), "always" | "left" | "right")
             }
             _ => false,

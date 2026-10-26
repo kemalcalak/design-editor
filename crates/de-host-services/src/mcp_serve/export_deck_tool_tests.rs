@@ -162,7 +162,7 @@ fn rejects_missing_and_unknown_arguments() {
 /// An HTML deck brought in through `import_html` exports back as a deck
 /// without any hand edits: one slide per imported board, in order.
 #[test]
-fn an_imported_html_deck_exports_back_as_html_and_pptx() {
+fn an_imported_html_deck_exports_back_as_html_pptx_and_pdf() {
     let slide =
         |title: &str| format!("<section class='sl'><h1>{title}</h1><p>{title} body</p></section>");
     let html = format!(
@@ -188,7 +188,11 @@ fn an_imported_html_deck_exports_back_as_html_and_pptx() {
 
     let dir = temp_dir("imported");
     std::fs::create_dir_all(&dir).expect("temp dir");
-    for (format, file) in [("html", "deck.html"), ("pptx", "deck.pptx")] {
+    for (format, file) in [
+        ("html", "deck.html"),
+        ("pptx", "deck.pptx"),
+        ("pdf", "deck.pdf"),
+    ] {
         let path = dir.join(file);
         let ToolOutcome::OkJson(result) = call(&state, format, &path) else {
             panic!("export_deck {format} failed")

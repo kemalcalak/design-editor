@@ -6,7 +6,7 @@
 //! headless browser (`de-browser-render`), and the importer reads the HTML of
 //! the frame the artifact rendered into. Only a publicly shared artifact
 //! opens without the user's Claude sign-in; anything else reports
-//! [`ImportHtmlUrlError::ArtifactNotPublic`] and points at the saved-HTML
+//! [`ImportHtmlUrlError::ArtifactUnavailable`] and points at the saved-HTML
 //! route, which the HTML file import already handles.
 
 use std::time::{Duration, Instant};
@@ -65,7 +65,7 @@ pub(crate) fn read_artifact(url: &str) -> Result<ArtifactPage, ImportHtmlUrlErro
     sessions.close(SESSION_KEY);
     match outcome {
         Ok(Some(page)) => Ok(page),
-        Ok(None) => Err(ImportHtmlUrlError::ArtifactNotPublic),
+        Ok(None) => Err(ImportHtmlUrlError::ArtifactUnavailable),
         Err(error) => Err(ImportHtmlUrlError::ArtifactBrowser(error.to_string())),
     }
 }
@@ -77,16 +77,23 @@ fn read_in(
     session.load(url)?;
     let deadline = Instant::now() + LOAD_DEADLINE;
     let mut frame_seen = None;
+    // A script artifact paints a placeholder before it mounts, so the HTML
+    // is taken once two reads in a row agree.
+    let mut last_read: Option<String> = None;
     loop {
         let tree = session.cdp("Page.getFrameTree", json!({}))?;
         if let Some(frame) = content_frame(&tree) {
-            if let Ok(html) = frame_html(session, &frame.id) {
-                if has_body_content(&html) {
-                    return Ok(Some(ArtifactPage {
-                        html,
-                        base_url: frame.base_url,
-                    }));
+            match frame_html(session, &frame.id) {
+                Ok(html) if has_body_content(&html) => {
+                    if last_read.as_deref() == Some(html.as_str()) {
+                        return Ok(Some(ArtifactPage {
+                            html,
+                            base_url: frame.base_url,
+                        }));
+                    }
+                    last_read = Some(html);
                 }
+                _ => last_read = None,
             }
             frame_seen = Some(frame);
         }
@@ -147,8 +154,9 @@ pub(crate) struct ContentFrame {
 }
 
 /// The deepest frame at or under a `*.claudeusercontent.com` frame in a
-/// `Page.getFrameTree` reply: the shell may nest the artifact one frame
-/// further down (a `srcdoc` document).
+/// `Page.getFrameTree` reply, not counting frames from other hosts the
+/// artifact embeds: the shell may nest the artifact one frame further down
+/// (a `srcdoc` document).
 pub(crate) fn content_frame(reply: &Value) -> Option<ContentFrame> {
     fn walk(
         node: &Value,
@@ -162,7 +170,14 @@ pub(crate) fn content_frame(reply: &Value) -> Option<ContentFrame> {
             .and_then(Value::as_str)
             .unwrap_or("");
         let is_http = url.starts_with("https://") || url.starts_with("http://");
-        let inside = inside || (is_http && host_of(url).ends_with(CONTENT_HOST_SUFFIX));
+        let on_content_host = is_http && host_of(url).ends_with(CONTENT_HOST_SUFFIX);
+        // Below the content host, only its own documents (`srcdoc`,
+        // `about:`) are the artifact; an http frame on another host is
+        // something the artifact embeds (a video, a map).
+        if inside && is_http && !on_content_host {
+            return;
+        }
+        let inside = inside || on_content_host;
         let base = if is_http { Some(url) } else { base };
         if inside && best.as_ref().is_none_or(|(deepest, _)| depth > *deepest) {
             if let Some(id) = node.pointer("/frame/id").and_then(Value::as_str) {

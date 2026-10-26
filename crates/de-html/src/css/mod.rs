@@ -332,3 +332,4 @@ mod cascade_tests {
 }
 
 mod declaration_syntax;
+pub(crate) use declaration_syntax::strip_comments;

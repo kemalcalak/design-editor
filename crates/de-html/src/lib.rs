@@ -130,6 +130,9 @@ pub struct HtmlImportResult {
     /// [`ImportWarning::code`] and an [`ImportWarning::i18n_key`] for the
     /// post-import diagnostics panel.
     pub diagnostics: Vec<ImportWarning>,
+    /// The document's name when no root carries it: a slide deck's boards
+    /// are named after their slides, so the page title rides here.
+    pub document_name: Option<String>,
 }
 
 impl HtmlImportResult {
@@ -146,6 +149,7 @@ impl HtmlImportResult {
             nodes,
             warnings: import_warning::render_warnings(&diagnostics),
             diagnostics,
+            document_name: None,
         }
     }
 }
@@ -339,20 +343,20 @@ pub fn import_html_with_resources(
         auto_margin_handled_by_parent: false,
         pending_base_outcome: Default::default(),
     };
-    let nodes = if slides.is_empty() || body_display_none {
+    let is_deck = !slides.is_empty() && !body_display_none;
+    let mut nodes = if is_deck {
+        deck::map_slides(&mut context, &document_element, &slides)
+    } else {
         vec![import_root::map_body_root(
             &mut context,
             &body_path,
             &body_style,
             &document_style,
-            parsed.title,
+            parsed.title.clone(),
             body_display_none,
         )]
-    } else {
-        deck::map_slides(&mut context, &document_element, &slides)
     };
     warnings.extend(context.warnings);
-    let mut nodes = nodes;
     font_face::warn_undownloaded(&web_fonts, &nodes, &mut warnings);
     // This pass also reads intrinsic sizes from already-embedded data URLs,
     // so it still has useful work when no network/project fetcher is present.
@@ -365,7 +369,11 @@ pub fn import_html_with_resources(
         &mut warnings,
         &mut image_cache,
     );
-    HtmlImportResult::new(nodes, warnings)
+    let mut result = HtmlImportResult::new(nodes, warnings);
+    if is_deck {
+        result.document_name = opts.document_name.clone().or(parsed.title);
+    }
+    result
 }
 
 pub fn import_html_document(
@@ -378,10 +386,13 @@ pub fn import_html_document(
 }
 
 pub(crate) fn wrap_imported_document(imported: HtmlImportResult) -> HtmlDocumentResult {
-    let name = imported.nodes.first().and_then(|node| match node {
-        PenNode::Frame(frame) => frame.base.name.clone(),
-        _ => None,
-    });
+    let name = imported
+        .document_name
+        .clone()
+        .or_else(|| match imported.nodes.first() {
+            Some(PenNode::Frame(frame)) => frame.base.name.clone(),
+            _ => None,
+        });
     HtmlDocumentResult::new(
         PenDocument {
             version: "1.0".to_string(),

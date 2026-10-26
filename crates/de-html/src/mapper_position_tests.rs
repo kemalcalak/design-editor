@@ -204,3 +204,26 @@ fn absolute_insets_keep_the_positioned_ancestors_own_padding() {
     let target = frame_child(frame_child(root, 0), 0);
     assert_eq!((target.base.x, target.base.y), (Some(245.0), Some(175.0)));
 }
+
+#[test]
+fn root_flex_wrap_rows_fit_inside_the_body_margins() {
+    // 2 × 716 = 1432 fits the 1440 viewport but not inside 8px body margins.
+    let result = import_html(
+        "<body style='display:flex;flex-wrap:wrap;margin:8px'>\
+           <div style='width:716px;height:20px'>a</div>\
+           <div style='width:716px;height:20px'>b</div>\
+         </body>",
+        &HtmlImportOptions::default(),
+    );
+    let PenNode::Frame(root) = &result.nodes[0] else {
+        panic!()
+    };
+    let rows: Vec<_> = children(root)
+        .iter()
+        .map(|child| match child {
+            PenNode::Frame(frame) => frame.base.name.clone().unwrap_or_default(),
+            other => format!("{other:?}"),
+        })
+        .collect();
+    assert_eq!(rows, ["Wrap row", "Wrap row"]);
+}

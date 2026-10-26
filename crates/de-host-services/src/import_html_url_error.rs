@@ -59,8 +59,9 @@ pub enum ImportHtmlUrlError {
     /// The HTML importer produced no nodes.
     NoImportableContent { detail: String },
     /// A Claude artifact link that did not open to its content: private
-    /// (behind a sign-in), deleted, or not loaded in time.
-    ArtifactNotPublic,
+    /// (behind a sign-in), deleted, or not loaded in time. The shell shows
+    /// the same nothing for all three, so they are one case.
+    ArtifactUnavailable,
     /// No local browser could open a Claude artifact link (an artifact only
     /// renders through its page's script). Carries the browser's message.
     ArtifactBrowser(String),
@@ -88,7 +89,7 @@ impl ImportHtmlUrlError {
             | ImportHtmlUrlError::ResponseTooLarge { .. }
             | ImportHtmlUrlError::TooManyConcurrentJobs
             | ImportHtmlUrlError::NotHtmlPage
-            | ImportHtmlUrlError::ArtifactNotPublic
+            | ImportHtmlUrlError::ArtifactUnavailable
             | ImportHtmlUrlError::ArtifactBrowser(_) => ToolErrorCode::ToolFailed,
             ImportHtmlUrlError::NoImportableContent { .. } => ToolErrorCode::InvalidArgument,
         }
@@ -126,9 +127,10 @@ impl fmt::Display for ImportHtmlUrlError {
             ImportHtmlUrlError::NoImportableContent { detail } => {
                 write!(f, "no importable content: {detail}")
             }
-            ImportHtmlUrlError::ArtifactNotPublic => f.write_str(
-                "the Claude artifact did not open: only artifacts shared publicly can be \
-                 imported by link. Download it as HTML in Claude and import the file instead",
+            ImportHtmlUrlError::ArtifactUnavailable => f.write_str(
+                "the Claude artifact did not open: it may be private, deleted, or still \
+                 loading. Only artifacts shared publicly import by link; download it as HTML \
+                 in Claude and import the file instead",
             ),
             ImportHtmlUrlError::ArtifactBrowser(detail) => write!(
                 f,

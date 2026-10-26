@@ -64,17 +64,19 @@ fn parse_viewport_axis(
         })
 }
 
-/// Shift every imported root by the placement's x/y. A page import has one
-/// root without a position; a slide deck has one board per slide, already
-/// laid out in a grid, and moves as a whole.
+/// Place the imported roots. A page import has one root, which lands at
+/// the placement's x/y; a slide deck has one board per slide, already laid
+/// out in a grid, which moves by x/y as a whole.
 pub fn offset_roots(nodes: &mut [PenNode], placement: &ImportPlacement) {
     if placement.x == 0 && placement.y == 0 {
         return;
     }
+    let single = nodes.len() == 1;
     for node in nodes {
         if let PenNode::Frame(frame) = node {
-            frame.base.x = Some(frame.base.x.unwrap_or(0.0) + placement.x as f64);
-            frame.base.y = Some(frame.base.y.unwrap_or(0.0) + placement.y as f64);
+            let base = |value: Option<f64>| if single { 0.0 } else { value.unwrap_or(0.0) };
+            frame.base.x = Some(base(frame.base.x) + placement.x as f64);
+            frame.base.y = Some(base(frame.base.y) + placement.y as f64);
         }
     }
 }

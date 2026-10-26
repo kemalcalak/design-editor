@@ -13,8 +13,8 @@
 //! 1. `aria-roledescription="slide"` (outside a carousel),
 //! 2. print rules that break the page after an element
 //!    ([`crate::deck_print`]),
-//! 3. a run of sibling `section`s (or `.slide`-like elements) that a player
-//!    toggles, that share one fixed size, or whose class names a slide.
+//! 3. a run of sibling `section`s (or `.slide` elements, outside any
+//!    carousel) that a player toggles or that share one fixed px size.
 //!
 //! Every rule wants at least two slides.
 
@@ -22,11 +22,10 @@ use jian_ops_schema::node::base::PenNodeBase;
 use jian_ops_schema::node::container::ContainerProps;
 use jian_ops_schema::node::{FrameNode, PenNode};
 use jian_ops_schema::sizing::SizingBehavior;
-use jian_ops_schema::style::{PenFill, SolidFillBody};
 
 use crate::css::cascade::{compute_style_for_viewport, ComputedStyle, StyleRule};
 use crate::css::selectors::{matches, Selector};
-use crate::deck_visibility::{is_hidden, show};
+use crate::deck_visibility::{needs_showing, show};
 use crate::dom::{DomElement, DomNode};
 use crate::length::{parse_length, CssLength, LengthCtx};
 use crate::mapper::{self, MapCtx};
@@ -60,11 +59,27 @@ pub(crate) fn detect_slides(
                 .iter()
                 .any(|selector| matches(selector, chain))
         });
-        if printed.len() >= MIN_SLIDES {
+        if printed.len() >= MIN_SLIDES && are_content_siblings(document, &printed) {
             return printed;
         }
     }
     sibling_slides(document, rules, opts)
+}
+
+/// Paged elements make a deck when they are siblings that hold content: a
+/// run of empty `.page-break` markers, or breaks scattered through an
+/// article, page a document rather than divide it into slides.
+fn are_content_siblings(document: &DomElement, slides: &[SlidePath]) -> bool {
+    let parent = |path: &SlidePath| path[..path.len() - 1].to_vec();
+    slides.iter().all(|path| parent(path) == parent(&slides[0]))
+        && slides.iter().all(|path| {
+            chain_at(document, path).last().is_some_and(|slide| {
+                slide.children.iter().any(|child| match child {
+                    DomNode::Element(_) => true,
+                    DomNode::Text(text) => !text.trim().is_empty(),
+                })
+            })
+        })
 }
 
 /// Show every slide (and any ancestor) the player keeps hidden, so the
@@ -76,15 +91,12 @@ pub(crate) fn show_slides(
     opts: &HtmlImportOptions,
 ) {
     for path in slides {
+        let mut styles = style_chain(&chain_at(document, path), rules, opts);
         for depth in 1..=path.len() {
             let shown = {
                 let chain = chain_at(document, &path[..depth]);
-                let styles = style_chain(&chain, rules, opts);
                 let element = chain[depth];
-                let hidden = is_hidden(&styles[depth])
-                    || element.attr("hidden").is_some()
-                    || element.attr("aria-hidden") == Some("true");
-                if !hidden {
+                if !needs_showing(element, &styles[depth]) {
                     continue;
                 }
                 let mut shown = element.clone();
@@ -92,12 +104,15 @@ pub(crate) fn show_slides(
                     &chain[..depth],
                     &mut shown,
                     Some(&styles[depth - 1]),
+                    styles[0].font_size,
                     rules,
                     opts,
                 );
                 shown
             };
             *element_at_mut(document, &path[..depth]) = shown;
+            // Showing a box can change what its descendants compute.
+            styles = style_chain(&chain_at(document, path), rules, opts);
         }
     }
 }
@@ -203,6 +218,8 @@ fn backdrop(styles: &[ComputedStyle]) -> Option<String> {
         .find(|hex| !is_transparent_hex(hex))
 }
 
+/// `parse_css_color` spells a colour with alpha as `#rrggbbaa`; alpha `00`
+/// paints nothing, so it is no backdrop.
 fn is_transparent_hex(hex: &str) -> bool {
     hex.len() == 9 && hex.ends_with("00")
 }
@@ -253,12 +270,9 @@ fn into_board(
     }
     frame.container.clip_content = Some(true);
     if frame.container.fill.is_none() {
-        frame.container.fill = Some(vec![PenFill::Solid(SolidFillBody {
-            color: backdrop.unwrap_or_else(|| "#ffffff".to_string()),
-            explain: None,
-            opacity: None,
-            blend_mode: None,
-        })]);
+        frame.container.fill = Some(vec![crate::solid_fill(
+            backdrop.as_deref().unwrap_or("#ffffff"),
+        )]);
     }
     PenNode::Frame(frame)
 }
@@ -329,7 +343,7 @@ fn slide_name(slide: &DomElement, number: usize) -> String {
     let label = slide
         .attr("aria-label")
         .map(str::to_string)
-        .or_else(|| first_heading(slide).map(|heading| text_of(heading)))
+        .or_else(|| first_heading(slide).map(text_of))
         .map(|text| text.split_whitespace().collect::<Vec<_>>().join(" "))
         .filter(|text| !text.is_empty());
     match label {
@@ -373,7 +387,7 @@ fn is_aria_slide(chain: &[&DomElement]) -> bool {
     chain.last().is_some_and(|element| role(element, "slide"))
         && !chain[..chain.len() - 1]
             .iter()
-            .any(|ancestor| role(ancestor, "carousel"))
+            .any(|ancestor| is_carousel(ancestor))
 }
 
 /// Elements matching `predicate`, outermost only, in document order.
@@ -432,11 +446,12 @@ fn sibling_slides(
                 None => groups.push((key, vec![index])),
             }
         }
-        for (key, members) in groups {
-            if members.len() < MIN_SLIDES.max(best.len() + 1) {
+        let in_carousel = chain.iter().any(|ancestor| is_carousel(ancestor));
+        for (_, members) in groups {
+            if in_carousel || members.len() < MIN_SLIDES.max(best.len() + 1) {
                 continue;
             }
-            if looks_like_deck(chain, &key, &members, rules, opts) {
+            if looks_like_deck(chain, &members, rules, opts) {
                 *best = members
                     .iter()
                     .map(|index| {
@@ -463,29 +478,48 @@ fn sibling_slides(
     best
 }
 
-/// `section` or a class naming a slide; siblings group by tag + first class.
+/// Class names of the carousels and sliders a web page embeds; their items
+/// are slides of a widget, not of a deck.
+const CAROUSEL_CLASS_WORDS: [&str; 8] = [
+    "carousel", "slider", "swiper", "slick", "splide", "glide", "embla", "flickity",
+];
+
+fn is_carousel(element: &DomElement) -> bool {
+    element
+        .attr("aria-roledescription")
+        .is_some_and(|role| role.trim().eq_ignore_ascii_case("carousel"))
+        || element.classes().iter().any(|class| {
+            let class = class.to_ascii_lowercase();
+            CAROUSEL_CLASS_WORDS.iter().any(|word| class.contains(word))
+        })
+}
+
+/// A `section`, or an element whose class is exactly `slide`; siblings
+/// group by tag + first class.
 fn candidate_key(element: &DomElement) -> Option<String> {
     let classes = element.classes();
     let names_slide = classes
         .iter()
-        .any(|class| class.to_ascii_lowercase().contains("slide"));
+        .any(|class| class.eq_ignore_ascii_case("slide"));
     (element.tag == "section" || names_slide)
         .then(|| format!("{}.{}", element.tag, classes.first().copied().unwrap_or("")))
 }
 
+/// A run of siblings is a deck when a player shows one and keeps the rest
+/// off screen (`display: none`, `visibility: hidden`, `hidden`), or when
+/// every member declares the same px width and height. A transparent
+/// start (`opacity: 0`) is how pages animate sections in on scroll, so it
+/// is not a player's toggle.
 fn looks_like_deck(
     parent_chain: &[&DomElement],
-    key: &str,
     members: &[usize],
     rules: &[StyleRule],
     opts: &HtmlImportOptions,
 ) -> bool {
-    if key.to_ascii_lowercase().contains("slide") {
-        return true;
-    }
     let parent = parent_chain[parent_chain.len() - 1];
     let parent_styles = style_chain(parent_chain, rules, opts);
     let root_font_size = parent_styles[0].font_size;
+    let mut off_screen = 0;
     let mut sizes = Vec::new();
     for &index in members {
         let DomNode::Element(member) = &parent.children[index] else {
@@ -501,16 +535,20 @@ fn looks_like_deck(
             opts.viewport_width,
             opts.viewport_height(),
         );
-        // A player toggles the slide on screen: the rest wait hidden.
-        if is_hidden(&style) {
-            return true;
+        if style.get("display") == Some("none")
+            || matches!(style.get("visibility"), Some("hidden" | "collapse"))
+            || member.attr("hidden").is_some()
+        {
+            off_screen += 1;
         }
         let px = |name: &str| definite_px(&style, name, root_font_size, opts);
         sizes.push((px("width"), px("height")));
     }
-    sizes.first().is_some_and(|first| {
-        matches!(first, (Some(_), Some(_))) && sizes.iter().all(|s| s == first)
-    })
+    let toggled = off_screen > 0 && off_screen + 1 >= members.len();
+    let one_size = sizes.first().is_some_and(|first| {
+        matches!(first, (Some(_), Some(_))) && sizes.iter().all(|size| size == first)
+    });
+    toggled || one_size
 }
 
 /// Computed styles of every element in `chain`, outermost first.
