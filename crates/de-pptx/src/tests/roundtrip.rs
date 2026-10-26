@@ -1,8 +1,8 @@
 //! PPTX → boards → PPTX: the imported deck goes back out through the
 //! editor's own `export_deck` writers and reads in again unchanged where
-//! the export is structured (slide count, size, text).
+//! the export is structured (slide count, size, text, shape kinds, fills,
+//! positions).
 
-use de_editor_core::scene_template_catalog::TemplateScene;
 use de_editor_core::EditorState;
 use serde_json::Value;
 
@@ -12,7 +12,7 @@ use crate::import_pptx;
 fn deck_state() -> EditorState {
     let import = import_pptx(&fixture::deck(), "Fixture").expect("fixture imports");
     let mut state = EditorState::from_document(import.document);
-    state.editor_ui.scenario = Some(TemplateScene::Slides);
+    state.tag_as_deck();
     state
 }
 
@@ -44,6 +44,36 @@ fn imported_deck_exports_back_to_pptx_and_reimports() {
     for text in ["Plain link", "In a card", "Q1", "12"] {
         assert!(second.contains(text), "{text:?} in {second}");
     }
+
+    // Shapes keep their kind, paint and place through the round trip.
+    let card = find_where(boards[1], &|n| {
+        n["type"] == "rectangle" && n["fill"][0]["color"] == "#ED7D31"
+    })
+    .expect("the card's box");
+    let original = super::find(
+        super::boards(&serde_json::to_value(&deck_state().doc).expect("doc"))[1],
+        "Card",
+    )
+    .expect("card")
+    .clone();
+    super::near(&card["width"], original["width"].as_f64().expect("width"));
+    let oval = find_where(boards[1], &|n| n["type"] == "ellipse").expect("the oval");
+    assert_eq!(oval["fill"][0]["type"], "linear_gradient");
+    assert!(
+        find_where(boards[1], &|n| n["type"] == "image").is_some(),
+        "pictures come back"
+    );
+}
+
+/// Depth-first search by predicate.
+fn find_where<'a>(node: &'a Value, wanted: &dyn Fn(&Value) -> bool) -> Option<&'a Value> {
+    if wanted(node) {
+        return Some(node);
+    }
+    node["children"]
+        .as_array()?
+        .iter()
+        .find_map(|child| find_where(child, wanted))
 }
 
 #[test]

@@ -27,16 +27,19 @@ impl Rgba {
         Self { r, g, b, a: 1.0 }
     }
 
+    /// A DrawingML `val` (`RRGGBB`, no `#`).
     pub fn from_hex(hex: &str) -> Option<Self> {
-        let hex = hex.trim().trim_start_matches('#');
-        if hex.len() != 6 || !hex.is_ascii() {
-            return None;
-        }
-        let channel = |i: usize| u8::from_str_radix(&hex[i..i + 2], 16).ok();
+        let opts = de_util::hex_color::HexOptions {
+            require_hash: false,
+            allow_rgb_shorthand: false,
+            allow_rgba_shorthand: false,
+            allow_alpha: false,
+        };
+        let [r, g, b, _] = de_util::hex_color::parse_hex_rgba8(hex.trim(), opts)?;
         Some(Self::opaque(
-            f64::from(channel(0)?) / 255.0,
-            f64::from(channel(2)?) / 255.0,
-            f64::from(channel(4)?) / 255.0,
+            f64::from(r) / 255.0,
+            f64::from(g) / 255.0,
+            f64::from(b) / 255.0,
         ))
     }
 
@@ -100,7 +103,8 @@ impl<'a> ColorContext<'a> {
                 pct(el, "b")?.clamp(0.0, 1.0).powf(1.0 / 2.2),
             ),
             "hslClr" => {
-                let hue = xml::attr_f64(el, "hue")? / 60_000.0;
+                // 60000ths of a degree; `hsl_to_rgb` takes sixths of a turn.
+                let hue = xml::attr_f64(el, "hue")? / 3_600_000.0;
                 hsl_to_rgb(hue, pct(el, "sat")?, pct(el, "lum")?)
             }
             _ => return None,
@@ -116,6 +120,26 @@ fn pct(el: Node<'_, '_>, name: &str) -> Option<f64> {
 
 fn apply_modifiers(mut color: Rgba, el: Node<'_, '_>) -> Rgba {
     for modifier in xml::elements(el) {
+        // `inv` (and `gray`) carry no value.
+        match modifier.tag_name().name() {
+            "inv" => {
+                color.r = 1.0 - color.r;
+                color.g = 1.0 - color.g;
+                color.b = 1.0 - color.b;
+                continue;
+            }
+            "gray" => {
+                let luma = 0.3 * color.r + 0.59 * color.g + 0.11 * color.b;
+                color = Rgba {
+                    r: luma,
+                    g: luma,
+                    b: luma,
+                    a: color.a,
+                };
+                continue;
+            }
+            _ => {}
+        }
         let Some(v) = pct(modifier, "val") else {
             continue;
         };
@@ -144,11 +168,6 @@ fn apply_modifiers(mut color: Rgba, el: Node<'_, '_>) -> Rgba {
                 let alpha = color.a;
                 color = hsl_to_rgb(h, s.clamp(0.0, 1.0), l.clamp(0.0, 1.0));
                 color.a = alpha;
-            }
-            "inv" => {
-                color.r = 1.0 - color.r;
-                color.g = 1.0 - color.g;
-                color.b = 1.0 - color.b;
             }
             _ => {}
         }
@@ -263,6 +282,18 @@ mod tests {
             "<a:schemeClr val=\"accent1\"><a:lumMod val=\"60000\"/><a:lumOff val=\"40000\"/></a:schemeClr>",
         );
         assert_eq!(c.hex(), "#8FAADC");
+    }
+
+    #[test]
+    fn hsl_hue_and_inversion() {
+        assert_eq!(
+            resolve("<a:hslClr hue=\"14400000\" sat=\"100000\" lum=\"50000\"/>").hex(),
+            "#0000FF"
+        );
+        assert_eq!(
+            resolve("<a:srgbClr val=\"000000\"><a:inv/></a:srgbClr>").hex(),
+            "#FFFFFF"
+        );
     }
 
     #[test]

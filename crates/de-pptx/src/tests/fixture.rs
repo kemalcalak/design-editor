@@ -2,10 +2,13 @@
 //! asserts against. Three slides on one layout / master / theme:
 //!
 //! 1. title + bulleted body placeholders (positions and styles inherited
-//!    from layout and master), speaker notes;
+//!    from layout and master), speaker notes; stored as `slide9.xml` so
+//!    only `sldIdLst` makes it the first slide;
 //! 2. one of each shape kind: text box, filled rectangle with text,
 //!    gradient ellipse, connector, picture, scaled group, custom path,
-//!    table, a chart with a fallback picture and one without;
+//!    table, a rotated + mirrored picture-filled triangle, a numbered
+//!    list, a chart with a fallback picture and one without, SmartArt,
+//!    an OLE object with its preview, a video;
 //! 3. hidden, with its own gradient background.
 
 use std::io::{Cursor, Write};
@@ -270,11 +273,56 @@ fn slide2() -> String {
         pic(13, "Chart picture", &xfrm(457_200, 4_800_000, 1_905_000, 1_428_750)),
     );
     let bare_chart = chart_frame(14, 3_000_000);
+    // Rotated a quarter turn and mirrored, filled with the picture.
+    let badge = sp(
+        15,
+        "Badge",
+        &format!(
+            "<a:xfrm rot=\"5400000\" flipH=\"1\"><a:off x=\"9144000\" y=\"3048000\"/><a:ext cx=\"952500\" cy=\"952500\"/></a:xfrm>\
+<a:prstGeom prst=\"triangle\"><a:avLst/></a:prstGeom><a:blipFill><a:blip r:embed=\"rIdImg\"/><a:stretch><a:fillRect/></a:stretch></a:blipFill>"
+        ),
+        "",
+    );
+    let steps = sp(
+        16,
+        "Steps",
+        &format!("{}<a:prstGeom prst=\"rect\"><a:avLst/></a:prstGeom><a:noFill/>", xfrm(6_096_000, 3_048_000, 2_286_000, 952_500)),
+        &tx(&["Plan", "Build", "Ship"]
+            .iter()
+            .map(|t| format!("<a:p><a:pPr><a:buAutoNum type=\"arabicPeriod\"/></a:pPr><a:r><a:rPr lang=\"en-US\"/><a:t>{t}</a:t></a:r></a:p>"))
+            .collect::<String>()),
+    );
+    let frame = |id: u32, uri: &str, inner: &str| {
+        format!(
+            "<p:graphicFrame><p:nvGraphicFramePr><p:cNvPr id=\"{id}\" name=\"Frame {id}\"/><p:cNvGraphicFramePr/><p:nvPr/></p:nvGraphicFramePr>\
+<p:xfrm><a:off x=\"5715000\" y=\"4800000\"/><a:ext cx=\"952500\" cy=\"952500\"/></p:xfrm>\
+<a:graphic><a:graphicData uri=\"{uri}\">{inner}</a:graphicData></a:graphic></p:graphicFrame>"
+        )
+    };
+    let smart_art = frame(
+        17,
+        "http://schemas.openxmlformats.org/drawingml/2006/diagram",
+        "",
+    );
+    let ole = frame(
+        18,
+        "http://schemas.openxmlformats.org/presentationml/2006/ole",
+        &format!(
+            "<p:oleObj r:id=\"rIdOle\"><p:embed/>{}</p:oleObj>",
+            pic(19, "Object preview", &xfrm(0, 0, 952_500, 952_500))
+        ),
+    );
+    let video = format!(
+        "<p:pic><p:nvPicPr><p:cNvPr id=\"20\" name=\"Clip\"/><p:cNvPicPr/><p:nvPr><a:videoFile r:link=\"rIdVideo\"/></p:nvPr></p:nvPicPr>\
+<p:blipFill><a:blip r:embed=\"rIdImg\"/><a:stretch><a:fillRect/></a:stretch></p:blipFill>\
+<p:spPr>{}<a:prstGeom prst=\"rect\"><a:avLst/></a:prstGeom></p:spPr></p:pic>",
+        xfrm(7_620_000, 4_800_000, 952_500, 952_500)
+    );
     format!(
         "<p:sld {}><p:cSld>{}</p:cSld></p:sld>",
         ns(),
         tree(&format!(
-            "{text_box}{card}{ellipse}{connector}{picture}{group}{path}{table}{chart_with_fallback}{bare_chart}"
+            "{text_box}{card}{ellipse}{connector}{picture}{group}{path}{table}{chart_with_fallback}{bare_chart}{badge}{steps}{smart_art}{ole}{video}"
         ))
     )
 }
@@ -313,7 +361,7 @@ fn notes1() -> String {
 fn presentation() -> String {
     format!(
         "<p:presentation {}><p:sldMasterIdLst><p:sldMasterId id=\"2147483648\" r:id=\"rId1\"/></p:sldMasterIdLst>\
-<p:sldIdLst><p:sldId id=\"256\" r:id=\"rId2\"/><p:sldId id=\"257\" r:id=\"rId3\"/><p:sldId id=\"258\" r:id=\"rId4\"/></p:sldIdLst>\
+<p:sldIdLst><p:sldId id=\"256\" r:id=\"rId9\"/><p:sldId id=\"257\" r:id=\"rId3\"/><p:sldId id=\"258\" r:id=\"rId4\"/></p:sldIdLst>\
 <p:sldSz cx=\"12192000\" cy=\"6858000\"/><p:notesSz cx=\"6858000\" cy=\"9144000\"/>\
 <p:defaultTextStyle><a:defPPr><a:defRPr lang=\"en-US\" sz=\"1800\"/></a:defPPr></p:defaultTextStyle></p:presentation>",
         ns()
@@ -333,7 +381,9 @@ pub fn deck() -> Vec<u8> {
             "ppt/_rels/presentation.xml.rels".into(),
             rels(&[
                 ("rId1", "slideMaster", "slideMasters/slideMaster1.xml"),
-                ("rId2", "slide", "slides/slide1.xml"),
+                // The title slide is the last part by file name and rel id:
+                // only `sldIdLst` puts it first.
+                ("rId9", "slide", "slides/slide9.xml"),
                 ("rId3", "slide", "slides/slide2.xml"),
                 ("rId4", "slide", "slides/slide3.xml"),
             ])
@@ -344,9 +394,9 @@ pub fn deck() -> Vec<u8> {
         ("ppt/slideMasters/_rels/slideMaster1.xml.rels".into(), rels(&[("rId1", "theme", "../theme/theme1.xml")]).into_bytes()),
         ("ppt/slideLayouts/slideLayout1.xml".into(), layout().into_bytes()),
         ("ppt/slideLayouts/_rels/slideLayout1.xml.rels".into(), rels(&[("rId1", "slideMaster", "../slideMasters/slideMaster1.xml")]).into_bytes()),
-        ("ppt/slides/slide1.xml".into(), slide1().into_bytes()),
+        ("ppt/slides/slide9.xml".into(), slide1().into_bytes()),
         (
-            "ppt/slides/_rels/slide1.xml.rels".into(),
+            "ppt/slides/_rels/slide9.xml.rels".into(),
             rels(&[("rId1", "slideLayout", "../slideLayouts/slideLayout1.xml"), ("rId2", "notesSlide", "../notesSlides/notesSlide1.xml")]).into_bytes(),
         ),
         ("ppt/slides/slide2.xml".into(), slide2().into_bytes()),
@@ -357,6 +407,7 @@ pub fn deck() -> Vec<u8> {
                 ("rIdImg", "image", "../media/image1.png"),
                 ("rIdLink", "hyperlink", "https://example.com/"),
                 ("rIdChart", "chart", "../charts/chart1.xml"),
+                ("rIdVideo", "video", "../media/clip.mp4"),
             ])
             .into_bytes(),
         ),
@@ -364,6 +415,7 @@ pub fn deck() -> Vec<u8> {
         ("ppt/slides/_rels/slide3.xml.rels".into(), rels(&[("rId1", "slideLayout", "../slideLayouts/slideLayout1.xml")]).into_bytes()),
         ("ppt/notesSlides/notesSlide1.xml".into(), notes1().into_bytes()),
         ("ppt/media/image1.png".into(), png),
+        ("ppt/media/clip.mp4".into(), vec![0; 64]),
     ];
     zip_parts(&parts)
 }

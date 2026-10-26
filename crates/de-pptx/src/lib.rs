@@ -16,6 +16,9 @@
 //! Pure Rust, no host dependency: the desktop open path, the browser
 //! host (wasm32), MCP `import_pptx` and `de import:pptx` share it.
 
+use std::collections::HashMap;
+use std::sync::Arc;
+
 use jian_ops_schema::document::PenDocument;
 use serde_json::{json, Value};
 
@@ -58,14 +61,26 @@ pub struct PptxImport {
     pub slides: usize,
 }
 
-/// True when `bytes` look like a ZIP archive (`PK\x03\x04`). A cheap
-/// guard before the full parse, used to tell a deck from a random file.
-pub fn looks_like_zip(bytes: &[u8]) -> bool {
-    bytes.starts_with(b"PK\x03\x04")
-}
-
 /// Import a `.pptx`. `name` becomes the document name (the file stem).
 pub fn import_pptx(bytes: &[u8], name: &str) -> Result<PptxImport, PptxError> {
+    let converted = convert(bytes, name)?;
+    Ok(PptxImport {
+        document: typed(converted.value, converted.images)?,
+        warnings: converted.warnings,
+        slides: converted.slides,
+    })
+}
+
+/// The deck as `.de` JSON, before the typed parse.
+pub(crate) struct Converted {
+    pub value: Value,
+    /// `op-image:` reference id → `data:` URL.
+    pub images: HashMap<String, Arc<str>>,
+    pub warnings: Vec<String>,
+    pub slides: usize,
+}
+
+pub(crate) fn convert(bytes: &[u8], name: &str) -> Result<Converted, PptxError> {
     let package = package::Package::open(bytes)?;
     let src = package.text("ppt/presentation.xml")?;
     let doc = xml::parse(&src, "ppt/presentation.xml")?;
@@ -99,13 +114,25 @@ pub fn import_pptx(bytes: &[u8], name: &str) -> Result<PptxImport, PptxError> {
         "name": name,
         "children": children,
     });
-    let document: PenDocument =
-        serde_json::from_value(value).map_err(|e| PptxError::Convert(e.to_string()))?;
-    Ok(PptxImport {
-        document,
+    Ok(Converted {
+        value,
+        images: media.into_table(),
         warnings: warnings.into_vec(),
         slides: count,
     })
+}
+
+/// Parse the JSON into the schema. Inside the load scope every `op-image:`
+/// reference resolves to one shared payload per picture, however many
+/// slides repeat it.
+pub(crate) fn typed(
+    value: Value,
+    images: HashMap<String, Arc<str>>,
+) -> Result<PenDocument, PptxError> {
+    jian_ops_schema::node::image_src::intern::with_load_scope(images, || {
+        serde_json::from_value(value)
+    })
+    .map_err(|e| PptxError::Convert(e.to_string()))
 }
 
 /// Place the boards on the grid and their notes under them.

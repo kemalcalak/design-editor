@@ -41,7 +41,7 @@ crates/
 └── …                     de-mcp / de-ai / de-ai-skills / de-codegen / de-orchestrator / de-figma /
                           de-git / de-opmerge / de-pen-loader / de-design-lint / de-config-store /
                           de-process-io / de-acp / de-i18n / de-rpc-transport / de-smoke /
-                          de-host-services / de-host-web-server / de-html
+                          de-host-services / de-host-web-server / de-html / de-pptx
 ```
 
 `de-util` is the workspace's single source for three helpers that had drifted
@@ -562,6 +562,10 @@ A document links other `.de` / pen.dev `.pen` files as live component libraries.
 - `doc_io::load_editor_state_with_report` re-reads every link on open (pen.dev `imports` become links, `alias:` prefixes are dropped); `set_file_name_display` rebases links on Save As. Desktop `library_io.rs` polls link stamps once a second on a thread and re-syncs on `DesktopEvent::LibraryChanged`.
 - Sync is not an undo step; `undo` / `redo` call `reconcile_library_masters` so history cannot roll a library back. Unlink keeps masters an instance still uses as local components.
 - Surfaces: the Components tab's Libraries section (`component_browser_libraries.rs`; Link / Reload queue `LibraryRequest`, the web host answers with a toast), MCP `list_libraries` / `add_library` / `remove_library` (`de-mcp/src/library_tools.rs`, `EditorCommand::Library`).
+
+### PowerPoint import (#246)
+
+`de-pptx` (pure Rust, wasm32-clean: `zip` + `roxmltree`) turns a `.pptx` into a `PenDocument`: one `layout: none` frame per slide at `sldSz`, in `sldIdLst` order, on a 4-column grid (80 px gaps), speaker notes as `note` annotations under their boards. Placeholders inherit box and text style slide → layout (by `idx`, then type) → master (by family) → `txStyles` → shape `fontRef` → `defaultTextStyle`; colours resolve through the colour map and theme with the DrawingML modifiers. Pictures ride as `op-image:` refs resolved inside `image_src::intern::with_load_scope`, so a logo repeated on every slide is one allocation. Charts / SmartArt / OLE / media take their stored fallback picture or a labelled placeholder and are counted in `PptxImport::warnings`. Entry points: `doc_io::load_editor_state_with_report` (desktop Open / drop / Import ▸ PowerPoint; unbound like pen.dev, `refuse_overwrite` blocks saving onto a `.pptx`), the web host's `dom_io/pptx_import.rs`, MCP `import_pptx`, CLI `de import:pptx`. Imported decks are tagged `EditorState::tag_as_deck`.
 
 ## Font weight + text wrapping
 

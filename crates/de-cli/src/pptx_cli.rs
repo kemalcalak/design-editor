@@ -21,13 +21,7 @@ pub(super) fn map_import_pptx(positionals: &[String], flags: &Flags) -> Result<C
 }
 
 pub(super) fn pptx_default_out_path(pptx_path: &str) -> String {
-    let lower = pptx_path.to_ascii_lowercase();
-    let base = if lower.ends_with(de_util::document_file::PPTX_SUFFIX) {
-        &pptx_path[..pptx_path.len() - de_util::document_file::PPTX_SUFFIX.len()]
-    } else {
-        pptx_path
-    };
-    de_util::document_file::file_name(base)
+    de_util::document_file::file_name(de_util::document_file::strip_known_suffix(pptx_path))
 }
 
 /// Convert a PowerPoint deck into a new `.de`: one board per slide, tagged
@@ -57,10 +51,20 @@ pub(super) fn run_import_pptx(pptx_path: &str, out_path: &str) -> Result<String,
         "ok": true,
         "filePath": out_path,
         "slides": import.slides,
-        "nodeCount": import.document.children.len(),
+        "nodeCount": count_nodes(&import.document.children),
         "warnings": import.warnings,
     })
     .to_string())
+}
+
+/// Every node of the imported boards and notes, not just the roots.
+fn count_nodes(nodes: &[jian_ops_schema::node::PenNode]) -> usize {
+    nodes
+        .iter()
+        .map(|node| {
+            1 + de_editor_core::PenNodeExt::children(node).map_or(0, |kids| count_nodes(kids))
+        })
+        .sum()
 }
 
 #[cfg(test)]

@@ -31,8 +31,9 @@ pub const PPTX_EXTENSION: &str = "pptx";
 /// PowerPoint import extension with the leading dot.
 pub const PPTX_SUFFIX: &str = ".pptx";
 
-/// Browser `accept` list for the Open picker: documents plus pen.dev imports.
-pub const OPEN_ACCEPT: &str = ".de,.pen";
+/// Browser `accept` list for the Open picker: documents plus the pen.dev
+/// and PowerPoint imports.
+pub const OPEN_ACCEPT: &str = ".de,.pen,.pptx";
 
 /// Whether `path` names a Design Editor document. Case-insensitive so
 /// `Design.DE` from a case-folding filesystem or argv still opens.
@@ -55,10 +56,10 @@ pub fn file_name(stem: &str) -> String {
     format!("{stem}{SUFFIX}")
 }
 
-/// `name` without a trailing `.de` or `.pen` (case-insensitive), for titles
-/// and recent-file rows. Other names come back unchanged.
+/// `name` without a trailing `.de`, `.pen` or `.pptx` (case-insensitive),
+/// for titles and recent-file rows. Other names come back unchanged.
 pub fn strip_known_suffix(name: &str) -> &str {
-    [SUFFIX, PEN_DEV_SUFFIX]
+    [SUFFIX, PEN_DEV_SUFFIX, PPTX_SUFFIX]
         .into_iter()
         .find_map(|suffix| {
             let split = name.len().checked_sub(suffix.len())?;
@@ -115,6 +116,7 @@ mod tests {
     fn strip_known_suffix_drops_document_and_pen_dev_suffixes() {
         assert_eq!(strip_known_suffix("Logo.de"), "Logo");
         assert_eq!(strip_known_suffix("Logo.PEN"), "Logo");
+        assert_eq!(strip_known_suffix("Deck.pptx"), "Deck");
         assert_eq!(strip_known_suffix("Logo.op"), "Logo.op");
         assert_eq!(strip_known_suffix("de"), "de");
         assert_eq!(strip_known_suffix("ğ.de"), "ğ");

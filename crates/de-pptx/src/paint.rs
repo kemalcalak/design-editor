@@ -174,6 +174,9 @@ pub fn read_line(
     Line::Stroke(stroke(ln, color, width))
 }
 
+/// The `lnRef` index of the theme's thinnest line.
+pub const THIN_LINE: i64 = 1;
+
 /// A stroke from the style's `lnRef` alone: its colour, and the theme's
 /// thin / medium / thick widths (6350 / 12700 / 19050 EMU by default).
 pub fn style_line(idx: i64, color: Rgba) -> Option<Value> {

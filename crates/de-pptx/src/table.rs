@@ -9,10 +9,10 @@
 use roxmltree::Node;
 use serde_json::{json, Value};
 
-use crate::context::{base, round, Ctx, PxBox, Xfrm, PX_PER_EMU};
-use crate::frame::solid_or_none;
+use crate::context::{base, round, Ctx, PxBox, Xfrm};
+use crate::frame::authored_paint;
 use crate::shape::Walk;
-use crate::text::{self, TextSource};
+use crate::text::{self, TextSource, DEFAULT_INSETS_EMU};
 use crate::text_style::StyleChain;
 use crate::xml;
 
@@ -64,7 +64,7 @@ pub fn table(
                 h: row_y[r_end] - row_y[r],
             };
             let tc_pr = xml::child(cell, "tcPr");
-            let fill = tc_pr.and_then(|p| solid_or_none(ctx, walk, p));
+            let fill = tc_pr.and_then(|p| authored_paint(ctx, walk, p));
             unstyled_cells |= fill.is_none();
             cells.push(json!({
                 "type": "rectangle",
@@ -113,35 +113,24 @@ fn cell_text(
     let mut chain = StyleChain::default();
     chain.push(xml::child(body, "lstStyle"));
     chain.push(ctx.default_text);
+    // Cell margins live on `tcPr` (marL / marT / …), not `bodyPr`.
+    let margin = |name: &str, i: usize| {
+        tc_pr
+            .and_then(|p| xml::attr_f64(p, name))
+            .unwrap_or(DEFAULT_INSETS_EMU[i])
+    };
     let source = TextSource {
         body,
         chain,
-        // Cell margins live on `tcPr` (marL / marT / …), not `bodyPr`.
         body_props: Vec::new(),
+        insets: Some([
+            margin("marL", 0),
+            margin("marT", 1),
+            margin("marR", 2),
+            margin("marB", 3),
+        ]),
     };
-    let margin = |name: &str, default: f64| {
-        tc_pr
-            .and_then(|p| xml::attr_f64(p, name))
-            .unwrap_or(default)
-            * PX_PER_EMU
-    };
-    let inner = PxBox {
-        x: b.x + margin("marL", 91_440.0),
-        y: b.y + margin("marT", 45_720.0),
-        w: (b.w - margin("marL", 91_440.0) - margin("marR", 91_440.0)).max(1.0),
-        h: (b.h - margin("marT", 45_720.0) - margin("marB", 45_720.0)).max(1.0),
-    };
-    // `text_node` applies default insets; hand it a box that undoes them
-    // so the cell margins are the only ones.
-    let default_l = 91_440.0 * PX_PER_EMU;
-    let default_t = 45_720.0 * PX_PER_EMU;
-    let padded = PxBox {
-        x: inner.x - default_l,
-        y: inner.y - default_t,
-        w: inner.w + 2.0 * default_l,
-        h: inner.h + 2.0 * default_t,
-    };
-    let (mut fields, at) = text::text_node(ctx, walk.rels, &source, padded)?;
+    let (mut fields, at) = text::text_node(ctx, walk.rels, &source, b)?;
     if let Some(anchor) = tc_pr.and_then(|p| p.attribute("anchor")) {
         let vertical = match anchor {
             "ctr" => "middle",

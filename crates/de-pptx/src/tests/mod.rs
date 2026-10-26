@@ -226,6 +226,120 @@ fn unsupported_content_degrades_with_warnings() {
 }
 
 #[test]
+fn rotation_flips_and_picture_fills_carry_over() {
+    let (doc, _) = imported();
+    let badge = find(boards(&doc)[1], "Badge").expect("badge");
+    assert_eq!(badge["type"], "path");
+    near(&badge["rotation"], 90.0);
+    assert_eq!(badge["flipX"], true);
+    assert_eq!(badge["fill"][0]["type"], "image");
+    assert_eq!(badge["fill"][0]["mode"], "stretch");
+}
+
+#[test]
+fn numbered_lists_count_their_paragraphs() {
+    let (doc, _) = imported();
+    let steps = find(boards(&doc)[1], "Steps").expect("steps");
+    assert_eq!(text_of(steps), "1. Plan\n2. Build\n3. Ship");
+}
+
+#[test]
+fn smart_art_ole_and_video_degrade_with_warnings() {
+    let (doc, warnings) = imported();
+    let slide = boards(&doc)[1];
+    assert_eq!(
+        all_text(find(slide, "Frame 17").expect("smartart box")),
+        "SmartArt"
+    );
+    let preview = find(slide, "Object preview").expect("ole preview");
+    assert_eq!(preview["type"], "image");
+    near(&preview["x"], 600.0);
+    assert_eq!(find(slide, "Clip").expect("video poster")["type"], "image");
+    for warning in [
+        "smartart (placeholder)",
+        "embedded object (preview picture)",
+        "video (poster image only)",
+    ] {
+        assert!(
+            warnings.contains(&warning.to_string()),
+            "{warning} in {warnings:?}"
+        );
+    }
+}
+
+#[test]
+fn a_repeated_picture_is_one_shared_payload() {
+    use jian_ops_schema::node::PenNode;
+    let import = import_pptx(&fixture::deck(), "Fixture").expect("fixture imports");
+    fn images(nodes: &[PenNode], out: &mut Vec<std::sync::Arc<str>>) {
+        for node in nodes {
+            if let PenNode::Image(image) = node {
+                out.push(image.src.as_arc());
+            }
+            if let Some(kids) = de_editor_core::PenNodeExt::children(node) {
+                images(kids, out);
+            }
+        }
+    }
+    let mut srcs = Vec::new();
+    images(&import.document.children, &mut srcs);
+    assert!(srcs.len() >= 3, "{}", srcs.len());
+    assert!(srcs
+        .windows(2)
+        .all(|w| std::sync::Arc::ptr_eq(&w[0], &w[1])));
+}
+
+#[test]
+fn no_field_is_dropped_on_the_way_into_the_schema() {
+    // Every key the converter writes must survive the typed parse: a
+    // misspelled field would otherwise vanish without a test noticing.
+    let converted = crate::convert(&fixture::deck(), "Fixture").expect("fixture converts");
+    let before = converted.value.clone();
+    let document = crate::typed(converted.value, converted.images).expect("typed");
+    let typed = serde_json::to_value(&document).expect("serialize");
+    let mut dropped = Vec::new();
+    dropped_keys(&before, &typed, "", &mut dropped);
+    assert!(dropped.is_empty(), "{dropped:?}");
+}
+
+fn dropped_keys(before: &Value, after: &Value, at: &str, out: &mut Vec<String>) {
+    match (before, after) {
+        (Value::Object(b), Value::Object(a)) => {
+            for (key, value) in b {
+                match a.get(key) {
+                    Some(kept) => dropped_keys(value, kept, &format!("{at}/{key}"), out),
+                    None => out.push(format!("{at}/{key}")),
+                }
+            }
+        }
+        (Value::Array(b), Value::Array(a)) => {
+            for (i, (value, kept)) in b.iter().zip(a).enumerate() {
+                dropped_keys(value, kept, &format!("{at}/{i}"), out);
+            }
+        }
+        _ => {}
+    }
+}
+
+#[test]
+fn boards_wrap_onto_grid_rows_with_room_for_notes() {
+    let slide = |notes: Option<&str>| crate::slide::SlideOut {
+        board: serde_json::json!({"type": "frame", "id": "s"}),
+        notes: notes.map(str::to_string),
+    };
+    let mut slides: Vec<_> = (0..5).map(|_| slide(None)).collect();
+    slides[0] = slide(Some("hi"));
+    let out = crate::lay_out(slides, (100.0, 50.0));
+    let frames: Vec<&Value> = out.iter().filter(|n| n["type"] == "frame").collect();
+    near(&frames[3]["x"], 3.0 * (100.0 + GRID_GAP));
+    near(&frames[4]["x"], 0.0);
+    near(
+        &frames[4]["y"],
+        50.0 + GRID_GAP + crate::NOTE_GAP + crate::NOTE_HEIGHT,
+    );
+}
+
+#[test]
 fn non_decks_are_refused_with_typed_errors() {
     assert!(matches!(
         import_pptx(b"plain text", "x"),

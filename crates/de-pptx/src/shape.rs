@@ -79,12 +79,7 @@ fn group(ctx: &mut Ctx<'_, '_, '_>, walk: &Walk<'_>, el: Node<'_, '_>) -> Option
     if children.is_empty() {
         return None;
     }
-    let mut node = base(ctx.ids.next(), el, b, Some(&xfrm), true);
-    node.insert("type".into(), json!("group"));
-    node.insert("width".into(), json!(round(b.w)));
-    node.insert("height".into(), json!(round(b.h)));
-    node.insert("children".into(), Value::Array(children));
-    Some(Value::Object(node))
+    Some(wrap(ctx, el, b, &xfrm, children))
 }
 
 /// The inheritance sources of one shape: itself, then its layout and
@@ -134,31 +129,61 @@ fn shape(ctx: &mut Ctx<'_, '_, '_>, walk: &Walk<'_>, el: Node<'_, '_>) -> Option
     let text = text_of(ctx, walk, &sources, b);
 
     let drawn = fill.is_some() || stroke.is_some() || matches!(geometry, Geometry::Line);
-    let shape_node = drawn.then(|| geometry_node(ctx, el, &geometry, fill, stroke));
+    let paint = drawn.then(|| paint_fields(ctx, el, &geometry, fill, stroke));
 
-    match (shape_node, text) {
+    match (paint, text) {
         (None, None) => None,
-        (Some(geometry), None) => Some(place(ctx, el, geometry, b, &xfrm, true)),
-        (None, Some(text)) => Some(place_text(ctx, el, text, Some(&xfrm), (0.0, 0.0))),
-        (Some(geometry), Some(text)) => {
-            // One group so the box and its text move together. The flips
-            // mirror the outline only: PowerPoint never mirrors text.
+        (Some(fields), None) => Some(place(ctx, el, &geometry, fields, b, &xfrm)),
+        (None, Some(text)) => Some(place_text(
+            ctx,
+            el,
+            text,
+            TextPlacement::Alone { b, xfrm: &xfrm },
+        )),
+        (Some(fields), Some(text)) => {
+            // One group so the box and its text move together. The group
+            // takes the rotation; the flips mirror the outline only, since
+            // PowerPoint never mirrors text.
             let local = PxBox {
                 x: 0.0,
                 y: 0.0,
                 ..b
             };
-            let unrotated = Xfrm { rot: 0.0, ..xfrm };
-            let geometry = place(ctx, el, geometry, local, &unrotated, true);
-            let text = place_text(ctx, el, text, None, (b.x, b.y));
-            let mut node = base(ctx.ids.next(), el, b, Some(&xfrm), false);
-            node.insert("type".into(), json!("group"));
-            node.insert("width".into(), json!(round(b.w)));
-            node.insert("height".into(), json!(round(b.h)));
-            node.insert("children".into(), json!([geometry, text]));
-            Some(Value::Object(node))
+            let outline = place(
+                ctx,
+                el,
+                &geometry,
+                fields,
+                local,
+                &Xfrm { rot: 0.0, ..xfrm },
+            );
+            let label = place_text(ctx, el, text, TextPlacement::InGroup { origin: (b.x, b.y) });
+            let unflipped = Xfrm {
+                flip_h: false,
+                flip_v: false,
+                ..xfrm
+            };
+            Some(wrap(ctx, el, b, &unflipped, vec![outline, label]))
         }
     }
+}
+
+/// A group the size of `b` carrying `xfrm`'s rotation and flips, around
+/// children placed in its own pixels. Rotation and flips pivot on the
+/// group's centre, which is the shape box's centre, as in PowerPoint.
+fn wrap(
+    ctx: &mut Ctx<'_, '_, '_>,
+    el: Node<'_, '_>,
+    b: PxBox,
+    xfrm: &Xfrm,
+    children: Vec<Value>,
+) -> Value {
+    let mut node = base(ctx.ids.next(), el, b, Some(xfrm), true);
+    node.insert("type".into(), json!("group"));
+    node.insert("width".into(), json!(round(b.w)));
+    node.insert("height".into(), json!(round(b.h)));
+    node.insert("children".into(), Value::Array(children));
+    Value::Object(node)
 }
 
 fn resolve_fill(
@@ -218,12 +243,13 @@ fn text_of(
         body,
         chain,
         body_props,
+        insets: None,
     };
     text::text_node(ctx, walk.rels, &source, b)
 }
 
-/// The geometry fields of a shape (type, size, fill, stroke), no box yet.
-fn geometry_node(
+/// The paint fields of a shape (type, fill, stroke, path data), no box yet.
+fn paint_fields(
     ctx: &mut Ctx<'_, '_, '_>,
     el: Node<'_, '_>,
     geometry: &Geometry,
@@ -266,30 +292,17 @@ fn geometry_node(
             }
         }
     }
+    // A connector always shows: with no outline of its own it takes the
+    // theme's thin line.
     let stroke = stroke.or_else(|| {
         matches!(geometry, Geometry::Line)
-            .then(|| paint::style_line(1, crate::color::Rgba::BLACK))
+            .then(|| paint::style_line(paint::THIN_LINE, crate::color::Rgba::BLACK))
             .flatten()
     });
     if let Some(stroke) = stroke {
         node.insert("stroke".into(), stroke);
     }
-    node.insert("_geometry".into(), json!(geometry_tag(geometry)));
-    if let Geometry::Path { bounds, .. } = geometry {
-        node.insert(
-            "_bounds".into(),
-            json!([bounds.x, bounds.y, bounds.w, bounds.h]),
-        );
-    }
     node
-}
-
-fn geometry_tag(geometry: &Geometry) -> &'static str {
-    match geometry {
-        Geometry::Line => "line",
-        Geometry::Path { .. } => "path",
-        _ => "box",
-    }
 }
 
 fn geometry_is_bent(el: Node<'_, '_>) -> bool {
@@ -309,21 +322,18 @@ fn has_arrowheads(el: Node<'_, '_>) -> bool {
     })
 }
 
-/// Give geometry fields their id and box. A line runs corner to corner,
-/// so its flips pick the corners instead of mirroring the node.
+/// Give paint fields their id and box. A line runs corner to corner, so
+/// its flips pick the corners instead of mirroring the node.
 fn place(
     ctx: &mut Ctx<'_, '_, '_>,
     el: Node<'_, '_>,
-    mut geometry: Map<String, Value>,
+    geometry: &Geometry,
+    fields: Map<String, Value>,
     b: PxBox,
     xfrm: &Xfrm,
-    flip: bool,
 ) -> Value {
-    let kind = geometry.remove("_geometry");
-    let bounds = geometry.remove("_bounds");
-    let id = ctx.ids.next();
-    let mut node = match kind.as_ref().and_then(Value::as_str) {
-        Some("line") => {
+    let (at, node_xfrm) = match geometry {
+        Geometry::Line => {
             let (x, x2) = if xfrm.flip_h {
                 (b.x + b.w, -b.w)
             } else {
@@ -334,64 +344,102 @@ fn place(
             } else {
                 (b.y, b.h)
             };
-            let mut node = base(id, el, PxBox { x, y, ..b }, Some(xfrm), false);
+            let mut node = base(ctx.ids.next(), el, PxBox { x, y, ..b }, Some(xfrm), false);
             node.insert("x2".into(), json!(round(x2)));
             node.insert("y2".into(), json!(round(y2)));
-            node
+            node.extend(fields);
+            return Value::Object(node);
         }
-        Some("path") => {
-            let [bx, by, bw, bh] = bounds
-                .and_then(|v| serde_json::from_value::<[f64; 4]>(v).ok())
-                .unwrap_or([0.0, 0.0, b.w, b.h]);
-            let mut node = base(
-                id,
-                el,
-                PxBox {
-                    x: b.x + bx,
-                    y: b.y + by,
-                    w: bw,
-                    h: bh,
-                },
-                Some(xfrm),
-                flip,
-            );
-            node.insert("width".into(), json!(round(bw.max(0.01))));
-            node.insert("height".into(), json!(round(bh.max(0.01))));
-            node
+        Geometry::Path { bounds, .. } => {
+            let at = PxBox {
+                x: b.x + bounds.x,
+                y: b.y + bounds.y,
+                w: bounds.w,
+                h: bounds.h,
+            };
+            let transformed = xfrm.rot.abs() > 1e-6 || xfrm.flip_h || xfrm.flip_v;
+            if transformed && at != b {
+                // The path covers part of its box, so it would pivot on its
+                // own centre; let a box-sized group carry the transform.
+                let local = PxBox {
+                    x: bounds.x,
+                    y: bounds.y,
+                    ..at
+                };
+                let path = sized(base(ctx.ids.next(), el, local, None, false), local, fields);
+                return wrap(ctx, el, b, xfrm, vec![path]);
+            }
+            (at, xfrm)
         }
-        _ => {
-            let mut node = base(id, el, b, Some(xfrm), flip);
-            node.insert("width".into(), json!(round(b.w)));
-            node.insert("height".into(), json!(round(b.h)));
-            node
-        }
+        _ => (b, xfrm),
     };
-    node.extend(geometry);
+    sized(
+        base(ctx.ids.next(), el, at, Some(node_xfrm), true),
+        at,
+        fields,
+    )
+}
+
+/// `node` with `at`'s size and the paint fields.
+fn sized(mut node: Map<String, Value>, at: PxBox, fields: Map<String, Value>) -> Value {
+    node.insert("width".into(), json!(round(at.w.max(0.01))));
+    node.insert("height".into(), json!(round(at.h.max(0.01))));
+    node.extend(fields);
     Value::Object(node)
 }
 
-/// A text node at its inset box, moved by `-offset` (the group origin
-/// when the text sits inside the shape's group). `xfrm` carries the
-/// rotation when the text stands alone; inside a group the group has it.
+/// Where a text node goes.
+enum TextPlacement<'x> {
+    /// On its own: it carries the shape's name and rotation; `b` is the
+    /// shape box its insets came from.
+    Alone { b: PxBox, xfrm: &'x Xfrm },
+    /// Inside the shape's group, whose origin is `origin`.
+    InGroup { origin: (f64, f64) },
+}
+
 fn place_text(
     ctx: &mut Ctx<'_, '_, '_>,
     el: Node<'_, '_>,
     text: (Map<String, Value>, PxBox),
-    xfrm: Option<&Xfrm>,
-    offset: (f64, f64),
+    placement: TextPlacement<'_>,
 ) -> Value {
     let (fields, inner) = text;
-    let at = PxBox {
-        x: inner.x - offset.0,
-        y: inner.y - offset.1,
-        ..inner
-    };
-    let mut node = base(ctx.ids.next(), el, at, xfrm, false);
-    // The group carries the name; the text inside it is just the text.
-    if xfrm.is_none() {
-        node.remove("name");
-        node.remove("visible");
+    match placement {
+        TextPlacement::Alone { b, xfrm } => {
+            let centred = (inner.x + inner.w / 2.0 - (b.x + b.w / 2.0)).abs() < 0.01
+                && (inner.y + inner.h / 2.0 - (b.y + b.h / 2.0)).abs() < 0.01;
+            if xfrm.rot.abs() > 1e-6 && !centred {
+                // Uneven insets move the text's centre off the shape's;
+                // rotate around the shape like PowerPoint does.
+                let label = place_text(
+                    ctx,
+                    el,
+                    (fields, inner),
+                    TextPlacement::InGroup { origin: (b.x, b.y) },
+                );
+                let unflipped = Xfrm {
+                    flip_h: false,
+                    flip_v: false,
+                    ..*xfrm
+                };
+                return wrap(ctx, el, b, &unflipped, vec![label]);
+            }
+            let mut node = base(ctx.ids.next(), el, inner, Some(xfrm), false);
+            node.extend(fields);
+            Value::Object(node)
+        }
+        TextPlacement::InGroup { origin } => {
+            let at = PxBox {
+                x: inner.x - origin.0,
+                y: inner.y - origin.1,
+                ..inner
+            };
+            let mut node = base(ctx.ids.next(), el, at, None, false);
+            // The group carries the name; the text inside it is just the text.
+            node.remove("name");
+            node.remove("visible");
+            node.extend(fields);
+            Value::Object(node)
+        }
     }
-    node.extend(fields);
-    Value::Object(node)
 }

@@ -107,7 +107,9 @@ pub fn read_paragraph(ppr: Node<'_, '_>, colors: &ColorContext<'_>) -> ParaStyle
             "buAutoNum" => {
                 para.bullet = Some(Bullet::AutoNum {
                     scheme: el.attribute("type").unwrap_or("arabicPeriod").to_string(),
-                    start: xml::attr_i64(el, "startAt").unwrap_or(1).max(1) as u32,
+                    // The schema caps `startAt` at 32767; a hostile value
+                    // would otherwise build enormous letter numbers.
+                    start: xml::attr_i64(el, "startAt").unwrap_or(1).clamp(1, 32_767) as u32,
                 })
             }
             "buFont" => para.bullet_font = el.attribute("typeface").map(str::to_string),

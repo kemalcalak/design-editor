@@ -12,6 +12,8 @@ use crate::xml;
 
 /// Pixels per EMU: decks are authored at 96 px per inch like the export.
 pub const PX_PER_EMU: f64 = 1.0 / 9525.0;
+/// Pixels per typographic point (96 px and 72 pt per inch).
+pub const PX_PER_PT: f64 = 96.0 / 72.0;
 
 pub struct Ctx<'a, 'i, 'p> {
     pub colors: ColorContext<'a>,

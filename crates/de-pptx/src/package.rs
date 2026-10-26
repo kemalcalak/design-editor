@@ -45,15 +45,20 @@ impl Package {
             if entry.is_dir() {
                 continue;
             }
-            total = total.saturating_add(entry.size());
-            if total > MAX_UNPACKED_BYTES {
-                return Err(PptxError::NotZip("archive inflates past 1 GiB".into()));
-            }
             let name = entry
                 .name()
                 .map_err(|e| PptxError::NotZip(e.to_string()))?
                 .trim_start_matches('/')
                 .to_string();
+            // Video, audio, embedded fonts and OLE payloads are never read;
+            // inflating them would only cost memory.
+            if !needed(&name) {
+                continue;
+            }
+            total = total.saturating_add(entry.size());
+            if total > MAX_UNPACKED_BYTES {
+                return Err(PptxError::TooLarge);
+            }
             let mut data = Vec::with_capacity(entry.size().min(64 << 20) as usize);
             entry.read_to_end(&mut data).map_err(|e| PptxError::Part {
                 part: name.clone(),
@@ -124,6 +129,13 @@ impl Package {
         }
         Ok(out)
     }
+}
+
+/// Whether the importer ever reads this part: XML, relationships and the
+/// picture formats the canvas decodes.
+fn needed(name: &str) -> bool {
+    let extension = name.rsplit('.').next().unwrap_or("").to_ascii_lowercase();
+    matches!(extension.as_str(), "xml" | "rels") || crate::media::mime_for(&extension).is_some()
 }
 
 /// First relationship of `kind`, for parts that have exactly one

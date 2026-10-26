@@ -270,6 +270,17 @@ fn alert_import_losses(
     );
 }
 
+/// The picker for a File ▸ Import source that opens like a document.
+fn pick_import_source(host: &WidgetHostNative, label: &str, extension: &str) -> Option<PathBuf> {
+    rfd::FileDialog::new()
+        .set_title(de_i18n::translate(
+            host.editor_state().editor_ui.locale,
+            "dialog.pickerOpenTitle",
+        ))
+        .add_filter(label, &[extension])
+        .pick_file()
+}
+
 /// Cmd+O — pop the Open dialog and replace the current document.
 pub fn handle_open(
     host: &mut WidgetHostNative,
@@ -600,35 +611,23 @@ pub fn run_action(
             ActionOutcome::FigmaImportStarted(path)
         }
         FileAction::FinishFigmaImport(selection) => ActionOutcome::FigmaImportSelection(selection),
+        // Both open like File ▸ Open: the file converts into an untitled
+        // document and its loss report is shown there (#72, #246).
         FileAction::ImportPenDev => {
-            let Some(path) = rfd::FileDialog::new()
-                .set_title(de_i18n::translate(
-                    host.editor_state().editor_ui.locale,
-                    "dialog.pickerOpenTitle",
-                ))
-                .add_filter("pen.dev", &[de_util::document_file::PEN_DEV_EXTENSION])
-                .pick_file()
-            else {
-                return ActionOutcome::Noop;
-            };
-            // Same path as File ▸ Open: a pen.dev document converts into
-            // an untitled document and its loss report is shown there.
-            ActionOutcome::saved_or_noop(open_path(host, path, current_path, window))
+            match pick_import_source(host, "pen.dev", de_util::document_file::PEN_DEV_EXTENSION) {
+                Some(path) => {
+                    ActionOutcome::saved_or_noop(open_path(host, path, current_path, window))
+                }
+                None => ActionOutcome::Noop,
+            }
         }
         FileAction::ImportPptx => {
-            let Some(path) = rfd::FileDialog::new()
-                .set_title(de_i18n::translate(
-                    host.editor_state().editor_ui.locale,
-                    "dialog.pickerOpenTitle",
-                ))
-                .add_filter("PowerPoint", &[de_util::document_file::PPTX_EXTENSION])
-                .pick_file()
-            else {
-                return ActionOutcome::Noop;
-            };
-            // Same path as File ▸ Open: the deck converts into an untitled
-            // document of boards and its warnings are shown there (#246).
-            ActionOutcome::saved_or_noop(open_path(host, path, current_path, window))
+            match pick_import_source(host, "PowerPoint", de_util::document_file::PPTX_EXTENSION) {
+                Some(path) => {
+                    ActionOutcome::saved_or_noop(open_path(host, path, current_path, window))
+                }
+                None => ActionOutcome::Noop,
+            }
         }
         FileAction::ImportImageOrSvg => {
             crate::persistence_image::handle_import_image_or_svg(host);

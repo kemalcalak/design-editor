@@ -94,6 +94,9 @@ pub enum DocIoError {
     /// The save target is a pen.dev document. Those are import sources:
     /// writing the canonical schema over one would break it for pen.dev.
     PenDevSourceReadOnly { path: String },
+    /// The save target is a PowerPoint `.pptx`, which only ever opens as
+    /// an import source.
+    PptxSourceReadOnly { path: String },
     /// The open path names neither a `.de` document nor a pen.dev `.pen`
     /// import (for example an old `.op` file). Refused before parsing.
     /// Carries the LOCALISED `dialog.loadErrorUnsupportedExtension` sentence.
@@ -137,6 +140,10 @@ impl fmt::Display for DocIoError {
             DocIoError::PenDevSourceReadOnly { path } => write!(
                 f,
                 "{path} is a pen.dev document; save the imported design to a new file"
+            ),
+            DocIoError::PptxSourceReadOnly { path } => write!(
+                f,
+                "{path} is a PowerPoint deck; save the imported deck to a new .de file"
             ),
         }
     }

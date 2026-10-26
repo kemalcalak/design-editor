@@ -8,6 +8,7 @@
 
 use roxmltree::Node;
 
+use crate::context::PX_PER_EMU;
 use crate::xml;
 
 pub enum Geometry {
@@ -252,10 +253,10 @@ fn custom_path(custom: Node<'_, '_>, w: f64, h: f64) -> Option<Geometry> {
     for path in xml::children(list, "path") {
         let sx = xml::attr_f64(path, "w")
             .filter(|v| *v > 0.0)
-            .map_or(1.0 / 9525.0, |pw| w / pw);
+            .map_or(PX_PER_EMU, |pw| w / pw);
         let sy = xml::attr_f64(path, "h")
             .filter(|v| *v > 0.0)
-            .map_or(1.0 / 9525.0, |ph| h / ph);
+            .map_or(PX_PER_EMU, |ph| h / ph);
         let point = |pt: Node<'_, '_>| -> (f64, f64) {
             (
                 xml::attr_f64(pt, "x").unwrap_or(0.0) * sx,
@@ -320,20 +321,20 @@ fn custom_path(custom: Node<'_, '_>, w: f64, h: f64) -> Option<Geometry> {
                         let a = start + sweep * f64::from(i) / 24.0;
                         extent.add((centre.0 + rx * a.cos(), centre.1 + ry * a.sin()));
                     }
-                    let end_angle = start + sweep;
-                    current = (
-                        centre.0 + rx * end_angle.cos(),
-                        centre.1 + ry * end_angle.sin(),
-                    );
-                    d.push_str(&format!(
-                        "A{} {} 0 {} {} {} {} ",
-                        num(rx),
-                        num(ry),
-                        u8::from(sweep.abs() > std::f64::consts::PI),
-                        u8::from(sweep > 0.0),
-                        num(current.0),
-                        num(current.1)
-                    ));
+                    // Two half arcs: an SVG arc whose end meets its start
+                    // (a full turn) draws nothing.
+                    for half in 1..=2 {
+                        let angle = start + sweep * f64::from(half) / 2.0;
+                        current = (centre.0 + rx * angle.cos(), centre.1 + ry * angle.sin());
+                        d.push_str(&format!(
+                            "A{} {} 0 0 {} {} {} ",
+                            num(rx),
+                            num(ry),
+                            u8::from(sweep > 0.0),
+                            num(current.0),
+                            num(current.1)
+                        ));
+                    }
                 }
                 "close" => d.push_str("Z "),
                 _ => {}

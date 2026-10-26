@@ -10,6 +10,9 @@ use std::fmt;
 pub enum PptxError {
     /// The bytes are not a ZIP archive.
     NotZip(String),
+    /// The parts the importer reads inflate past its 1 GiB ceiling (a ZIP
+    /// bomb, or a deck no editor document could hold).
+    TooLarge,
     /// A ZIP archive without `ppt/presentation.xml`.
     NotPresentation,
     /// A part the deck needs could not be read from the archive.
@@ -26,6 +29,7 @@ impl fmt::Display for PptxError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             PptxError::NotZip(detail) => write!(f, "not a PowerPoint file (zip: {detail})"),
+            PptxError::TooLarge => write!(f, "the presentation is larger than 1 GiB unpacked"),
             PptxError::NotPresentation => {
                 write!(f, "not a PowerPoint presentation (no ppt/presentation.xml)")
             }

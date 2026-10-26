@@ -12,6 +12,7 @@ path = "src/lib.rs"
 
 [dependencies]
 jian-ops-schema = { path = "../../vendor/jian/crates/jian-ops-schema" }
+de-util = { path = "../de-util" }
 # Pure Rust and wasm32-clean: the browser host parses decks in the bundle.
 # `zip` and `roxmltree` are already in the lock file (de-html, usvg), so the
 # importer adds no new crate to the build graph.

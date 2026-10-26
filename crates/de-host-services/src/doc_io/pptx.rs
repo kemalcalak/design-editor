@@ -4,7 +4,6 @@
 
 use super::load::{finish_loaded_state, localized_with_name};
 use super::{DocIoError, DocumentLoadReport, LoadedEditorState};
-use de_editor_core::scene_template_catalog::TemplateScene;
 use de_editor_core::EditorState;
 
 pub(super) fn load_pptx(
@@ -23,8 +22,7 @@ pub(super) fn load_pptx(
         )
     })?;
     let mut state = EditorState::from_document(import.document);
-    // A deck presents slide by slide in Preview, like one made here.
-    state.editor_ui.scenario = Some(TemplateScene::Slides);
+    state.tag_as_deck();
     Ok(LoadedEditorState {
         state: finish_loaded_state(state, None),
         report: DocumentLoadReport {
@@ -37,6 +35,7 @@ pub(super) fn load_pptx(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use de_editor_core::scene_template_catalog::TemplateScene;
 
     #[test]
     fn a_deck_opens_as_an_untitled_slides_document() {
@@ -65,6 +64,15 @@ mod tests {
         assert_eq!(loaded.state.editor_ui.scenario, Some(TemplateScene::Slides));
         let boards = de_editor_core::preview_slideshow::active_page_boards(&loaded.state);
         assert_eq!(boards.len(), 2);
+
+        // A save aimed at the deck (an MCP `filePath`) is refused.
+        let before = std::fs::read(&path).expect("deck bytes");
+        let err = crate::doc_io::save_to_path(&loaded.state, &path).expect_err("source is kept");
+        assert!(
+            matches!(err, DocIoError::PptxSourceReadOnly { .. }),
+            "{err}"
+        );
+        assert_eq!(std::fs::read(&path).expect("deck bytes"), before);
 
         std::fs::write(&path, b"not a zip").expect("write");
         let Err(error) = crate::doc_io::load_editor_state(&path, de_editor_core::Locale::EnUs)

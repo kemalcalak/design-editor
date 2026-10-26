@@ -177,8 +177,9 @@ pub fn placeholder_box(
     Value::Object(node)
 }
 
-/// A cell / table background authored in `parent`, if any.
-pub fn solid_or_none(
+/// The paint (solid, gradient or picture) authored directly in `parent`,
+/// if any: a table cell's own background.
+pub fn authored_paint(
     ctx: &mut Ctx<'_, '_, '_>,
     walk: &Walk<'_>,
     parent: Node<'_, '_>,

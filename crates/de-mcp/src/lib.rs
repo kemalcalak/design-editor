@@ -108,6 +108,7 @@ pub mod import_common;
 pub mod import_html_tool;
 #[cfg(test)]
 mod import_html_tool_tests;
+pub(crate) mod import_ids;
 pub mod import_pen_dev_tool;
 #[cfg(test)]
 mod import_pen_dev_tool_tests;
