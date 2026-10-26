@@ -123,7 +123,11 @@ fn parse_path(path: &Path) -> Result<HtmlPrepared, HtmlImportError> {
         ));
     }
     let diagnostics = diagnostic_rows(&result.diagnostics);
-    let state = EditorState::from_document(result.document);
+    let mut state = EditorState::from_document(result.document);
+    if result.slides > 0 {
+        // A slide deck opens as a deck, like a `.pptx`: Preview presents it.
+        state.tag_as_deck();
+    }
     Ok(HtmlPrepared {
         prepared: PreparedImport {
             state,
@@ -351,6 +355,32 @@ mod tests {
         assert!(host.editor_state().is_dirty());
         assert!(host.editor_state().editor_ui.document_dirty);
         assert!(current_path.is_none());
+    }
+
+    #[test]
+    fn an_html_slide_deck_opens_tagged_as_a_deck() {
+        let dir = temp_path("deck", "dir");
+        let _ = std::fs::create_dir_all(&dir);
+        std::fs::write(
+            dir.join("deck.html"),
+            b"<html><head><style>.sl{width:1280px;height:720px;display:none}.sl.on{display:block}</style></head>\
+              <body><section class=\"sl on\"><h1>One</h1></section>\
+              <section class=\"sl\"><h1>Two</h1></section></body></html>",
+        )
+        .unwrap();
+        let deck = parse_path(&dir.join("deck.html")).expect("parse").prepared;
+        assert_eq!(
+            deck.state.editor_ui.scenario,
+            Some(de_editor_core::scene_template_catalog::TemplateScene::Slides)
+        );
+
+        std::fs::write(
+            dir.join("page.html"),
+            b"<html><body><p>Plain page</p></body></html>",
+        )
+        .unwrap();
+        let page = parse_path(&dir.join("page.html")).expect("parse").prepared;
+        assert_eq!(page.state.editor_ui.scenario, None);
     }
 
     #[test]

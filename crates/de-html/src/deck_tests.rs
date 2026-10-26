@@ -335,3 +335,38 @@ fn text_in_a_span_that_is_a_flex_item_wraps_at_its_width() {
         "{wraps:?}"
     );
 }
+
+/// A player that adds `.play` next to `.on` on the slide it shows, with
+/// every entrance animation hung off `.play` (as Claude decks do).
+const PLAY_GATED_DECK: &str = r#"<!doctype html><html><head><style>
+.sl { position: absolute; inset: 0; width: 1280px; height: 720px; display: none; }
+.sl.on { display: flex; }
+.sl.paused { display: none !important; }
+.play .a-up { animation: up .55s cubic-bezier(.2,.7,.2,1) both; }
+.play .a-fade { animation: fade .5s ease both; animation-delay: .2s; }
+.paused .a-fade { animation: fade 1s ease both; }
+@keyframes up { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+@keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+</style></head><body>
+<section class="sl"><h1 class="a-up">One</h1><p class="a-fade">First body</p></section>
+<section class="sl"><h1 class="a-up">Two</h1><p class="a-fade">Second body</p></section>
+<script>slides[0].classList.add('on'); slides[0].classList.add('play');</script>
+</body></html>"#;
+
+fn animated(node: &PenNode) -> usize {
+    let json = serde_json::to_string(node).expect("serialize");
+    json.matches("\"animations\"").count()
+}
+
+#[test]
+fn entrance_animations_gated_on_a_play_class_come_in_on_every_slide() {
+    let result = import_html(PLAY_GATED_DECK, &HtmlImportOptions::default());
+    assert_eq!(names(&result.nodes), ["One", "Two"]);
+    for board in &result.nodes {
+        // The heading rises and the body fades in; `.paused` would hide the
+        // slide, so it is not added and its slower fade does not apply.
+        assert_eq!(animated(board), 2, "{board:?}");
+        let json = serde_json::to_string(board).expect("serialize");
+        assert!(json.contains("\"delayMs\":200"), "{json}");
+    }
+}

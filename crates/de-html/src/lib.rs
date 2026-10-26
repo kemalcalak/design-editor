@@ -8,6 +8,7 @@ pub mod color;
 pub mod css;
 pub mod css_encoding;
 mod deck;
+mod deck_play_state;
 mod deck_print;
 mod deck_visibility;
 pub mod dom;
@@ -135,6 +136,8 @@ pub struct HtmlImportResult {
     /// The document's name when no root carries it: a slide deck's boards
     /// are named after their slides, so the page title rides here.
     pub document_name: Option<String>,
+    /// Boards made from a slide deck's slides; 0 for an ordinary page.
+    pub slides: usize,
 }
 
 impl HtmlImportResult {
@@ -152,6 +155,7 @@ impl HtmlImportResult {
             warnings: import_warning::render_warnings(&diagnostics),
             diagnostics,
             document_name: None,
+            slides: 0,
         }
     }
 }
@@ -170,6 +174,9 @@ pub struct HtmlDocumentResult {
     pub warnings: Vec<String>,
     /// Typed mirror of `warnings`; see [`HtmlImportResult::diagnostics`].
     pub diagnostics: Vec<ImportWarning>,
+    /// See [`HtmlImportResult::slides`]: a host opening a deck as a new
+    /// document tags it as one, so Preview presents it.
+    pub slides: usize,
 }
 
 impl HtmlDocumentResult {
@@ -180,6 +187,7 @@ impl HtmlDocumentResult {
             document,
             warnings: import_warning::render_warnings(&diagnostics),
             diagnostics,
+            slides: 0,
         }
     }
 
@@ -377,6 +385,7 @@ pub fn import_html_with_resources(
     let mut result = HtmlImportResult::new(nodes, warnings);
     if is_deck {
         result.document_name = opts.document_name.clone().or(parsed.title);
+        result.slides = result.nodes.len();
     }
     result
 }
@@ -391,6 +400,7 @@ pub fn import_html_document(
 }
 
 pub(crate) fn wrap_imported_document(imported: HtmlImportResult) -> HtmlDocumentResult {
+    let slides = imported.slides;
     let name = imported
         .document_name
         .clone()
@@ -398,7 +408,7 @@ pub(crate) fn wrap_imported_document(imported: HtmlImportResult) -> HtmlDocument
             Some(PenNode::Frame(frame)) => frame.base.name.clone(),
             _ => None,
         });
-    HtmlDocumentResult::new(
+    let mut result = HtmlDocumentResult::new(
         PenDocument {
             version: "1.0".to_string(),
             name,
@@ -419,7 +429,9 @@ pub(crate) fn wrap_imported_document(imported: HtmlImportResult) -> HtmlDocument
             motion: None,
         },
         imported.diagnostics,
-    )
+    );
+    result.slides = slides;
+    result
 }
 
 pub(crate) const MAX_OUTPUT_NODES: usize = 40_000;

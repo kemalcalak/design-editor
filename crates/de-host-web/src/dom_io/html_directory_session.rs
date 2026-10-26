@@ -306,7 +306,7 @@ fn import_until_resolved(session: SessionRef) {
     finish(
         &session,
         Ok(IngestedDoc::from_html(
-            de_editor_core::EditorState::from_document(imported.document),
+            deck_aware_state(imported.document, imported.slides),
             imported.warnings,
             &imported.diagnostics,
         )),
@@ -493,6 +493,19 @@ fn entry_file_stem(path: &str) -> &str {
     file_name
         .rsplit_once('.')
         .map_or(file_name, |(stem, _)| stem)
+}
+
+/// The imported document as editor state; a slide deck opens tagged as a
+/// deck, like a `.pptx`, so Preview presents it.
+fn deck_aware_state(
+    document: de_editor_core::PenDocument,
+    slides: usize,
+) -> de_editor_core::EditorState {
+    let mut state = de_editor_core::EditorState::from_document(document);
+    if slides > 0 {
+        state.tag_as_deck();
+    }
+    state
 }
 
 #[cfg(test)]

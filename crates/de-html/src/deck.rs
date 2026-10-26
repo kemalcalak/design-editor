@@ -25,7 +25,8 @@ use jian_ops_schema::sizing::SizingBehavior;
 
 use crate::css::cascade::{compute_style_for_viewport, ComputedStyle, StyleRule};
 use crate::css::selectors::{matches, Selector};
-use crate::deck_visibility::{needs_showing, revealed_attrs};
+use crate::deck_play_state::{play_state_classes, with_classes};
+use crate::deck_visibility::{is_hidden, needs_showing, revealed_attrs};
 use crate::dom::{DomElement, DomNode};
 use crate::length::{parse_length, CssLength, LengthCtx};
 use crate::mapper::{self, MapCtx};
@@ -118,6 +119,22 @@ pub(crate) fn show_slides(
             element_at_mut(document, at).attrs = revealed;
             // Showing a box can change what its descendants compute.
             styles = style_chain(&chain_at(document, path), rules, opts);
+        }
+    }
+    let play = play_state_classes(document, rules);
+    if play.is_empty() {
+        return;
+    }
+    for path in slides {
+        for class in &play {
+            let before = element_at_mut(document, path).attrs.clone();
+            element_at_mut(document, path).attrs =
+                with_classes(&before, std::slice::from_ref(class));
+            // A class that hides the slide is not the one that plays it.
+            let styles = style_chain(&chain_at(document, path), rules, opts);
+            if styles.last().is_some_and(is_hidden) {
+                element_at_mut(document, path).attrs = before;
+            }
         }
     }
 }
