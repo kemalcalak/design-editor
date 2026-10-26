@@ -277,7 +277,7 @@ fn slide2() -> String {
     let badge = sp(
         15,
         "Badge",
-        &format!(
+        &String::from(
             "<a:xfrm rot=\"5400000\" flipH=\"1\"><a:off x=\"9144000\" y=\"3048000\"/><a:ext cx=\"952500\" cy=\"952500\"/></a:xfrm>\
 <a:prstGeom prst=\"triangle\"><a:avLst/></a:prstGeom><a:blipFill><a:blip r:embed=\"rIdImg\"/><a:stretch><a:fillRect/></a:stretch></a:blipFill>"
         ),

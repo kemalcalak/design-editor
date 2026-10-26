@@ -142,6 +142,9 @@ mod tests {
     fn file_name_appends_the_suffix() {
         assert_eq!(file_name("Logo"), "Logo.de");
         assert_eq!(UNTITLED_FILE_NAME, file_name("untitled"));
-        assert_eq!(OPEN_ACCEPT, format!("{SUFFIX},{PEN_DEV_SUFFIX}"));
+        assert_eq!(
+            OPEN_ACCEPT,
+            format!("{SUFFIX},{PEN_DEV_SUFFIX},{PPTX_SUFFIX}")
+        );
     }
 }
