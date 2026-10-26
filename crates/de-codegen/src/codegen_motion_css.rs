@@ -3,7 +3,8 @@
 use super::{node_children, node_hidden};
 use crate::{fmt_num, html_escape};
 use de_editor_core::PenNodeExt;
-use jian_ops_schema::motion::{Easing, MotionTrigger, NodeAnimation};
+use de_util::motion::is_infinite_iterations;
+use jian_ops_schema::motion::{Easing, MotionTrigger, NodeAnimation, NodeAnimationFillMode};
 use jian_ops_schema::node::PenNode;
 use serde_json::Value;
 use std::collections::BTreeMap;
@@ -53,7 +54,13 @@ fn collect_animated_nodes<'a>(node: &'a PenNode, out: &mut Vec<&'a PenNode>) {
 }
 
 fn render_keyframes(out: &mut String, node_id: &str, index: usize, animation: &NodeAnimation) {
-    let name = animation_name(node_id, index);
+    out.push_str(&keyframes_block(&animation_name(node_id, index), animation));
+}
+
+/// One animation's `@keyframes {name} { … }` block. Shared with the deck
+/// slideshow export (#245), which plays the same CSS per slide.
+pub fn keyframes_block(name: &str, animation: &NodeAnimation) -> String {
+    let mut out = String::new();
     out.push_str(&format!("@keyframes {name} {{\n"));
     for keyframe in &animation.keyframes {
         out.push_str(&format!(
@@ -66,6 +73,7 @@ fn render_keyframes(out: &mut String, node_id: &str, index: usize, animation: &N
         out.push_str("  }\n");
     }
     out.push_str("}\n");
+    out
 }
 
 /// `hover` / `tap` animations (#155) play while the element is hovered /
@@ -99,18 +107,31 @@ fn animation_list(
         .iter()
         .enumerate()
         .filter(|(_, animation)| wanted(animation.trigger))
-        .map(|(index, animation)| {
-            format!(
-                "{} {}ms {} {}ms {} both",
-                animation_name(node_id, index),
-                animation.duration_ms,
-                easing_to_css(&animation.easing),
-                animation.delay_ms,
-                animation.iterations
-            )
-        })
+        .map(|(index, animation)| animation_value(&animation_name(node_id, index), animation))
         .collect::<Vec<_>>()
         .join(", ")
+}
+
+/// One entry of a CSS `animation` list playing `name`. The start frame
+/// shows through the delay (`backwards`); a `forwards` animation also holds
+/// its last frame (`both`). A count at the import's `infinite` ceiling is
+/// written back as `infinite`.
+pub fn animation_value(name: &str, animation: &NodeAnimation) -> String {
+    let fill = match animation.fill_mode {
+        NodeAnimationFillMode::Forwards => "both",
+        NodeAnimationFillMode::None => "backwards",
+    };
+    let iterations = if is_infinite_iterations(animation.iterations) {
+        "infinite".to_string()
+    } else {
+        animation.iterations.to_string()
+    };
+    format!(
+        "{name} {}ms {} {}ms {iterations} {fill}",
+        animation.duration_ms,
+        easing_to_css(&animation.easing),
+        animation.delay_ms,
+    )
 }
 
 fn render_reduced_block(out: &mut String, nodes: &[&PenNode], media: bool) {
@@ -255,7 +276,7 @@ fn css_number(value: &Value, suffix: &str) -> String {
     }
 }
 
-fn easing_to_css(easing: &Easing) -> String {
+pub fn easing_to_css(easing: &Easing) -> String {
     match easing {
         Easing::Linear => "linear".to_string(),
         Easing::Ease => "ease".to_string(),
@@ -269,15 +290,18 @@ fn easing_to_css(easing: &Easing) -> String {
     }
 }
 
-fn animation_name(node_id: &str, index: usize) -> String {
+/// The keyframes name of a node's `index`-th animation.
+pub fn animation_name(node_id: &str, index: usize) -> String {
     format!("de-{}-{index}", css_identifier(node_id))
 }
 
-fn selector(node_id: &str) -> String {
+/// The attribute selector of an animated node's element.
+pub fn selector(node_id: &str) -> String {
     format!("[data-de-motion-node=\"{}\"]", css_identifier(node_id))
 }
 
-fn css_identifier(value: &str) -> String {
+/// `value` with every character outside `[A-Za-z0-9_-]` replaced by `-`.
+pub fn css_identifier(value: &str) -> String {
     let sanitized: String = value
         .chars()
         .map(|character| {
@@ -292,5 +316,61 @@ fn css_identifier(value: &str) -> String {
         "node".to_string()
     } else {
         sanitized
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn fade(fill_mode: NodeAnimationFillMode, iterations: u32) -> NodeAnimation {
+        serde_json::from_value(serde_json::json!({
+            "trigger": "mount",
+            "keyframes": {"from": {"opacity": 0}, "to": {"opacity": 1}},
+            "durationMs": 300,
+            "delayMs": 120,
+            "easing": "linear",
+            "iterations": iterations,
+            "fillMode": match fill_mode {
+                NodeAnimationFillMode::Forwards => "forwards",
+                NodeAnimationFillMode::None => "none",
+            },
+        }))
+        .expect("animation parses")
+    }
+
+    #[test]
+    fn the_fill_mode_decides_whether_the_last_frame_holds() {
+        assert_eq!(
+            animation_value("a", &fade(NodeAnimationFillMode::Forwards, 1)),
+            "a 300ms linear 120ms 1 both"
+        );
+        // No fill: the start frame still shows through the delay, but the
+        // node returns to its own look at the end.
+        assert_eq!(
+            animation_value("a", &fade(NodeAnimationFillMode::None, 2)),
+            "a 300ms linear 120ms 2 backwards"
+        );
+    }
+
+    #[test]
+    fn the_infinite_ceiling_is_written_back_as_infinite() {
+        let animation = fade(
+            NodeAnimationFillMode::Forwards,
+            de_util::motion::INFINITE_ITERATIONS,
+        );
+        assert_eq!(
+            animation_value("a", &animation),
+            "a 300ms linear 120ms infinite both"
+        );
+    }
+
+    #[test]
+    fn a_keyframes_block_lists_each_stop() {
+        let block = keyframes_block("de-x-0", &fade(NodeAnimationFillMode::Forwards, 1));
+        assert_eq!(
+            block,
+            "@keyframes de-x-0 {\n  0% {\n    opacity: 0;\n  }\n  100% {\n    opacity: 1;\n  }\n}\n"
+        );
     }
 }

@@ -379,6 +379,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "interactions.markScreen" => "Tandai sebagai layar",
         "interactions.setStartScreen" => "Jadikan layar awal",
         "interactions.removeScreen" => "Hapus layar",
+        "htmlImport.warn.motion.keyframes_static" => {
+            "Animasi @keyframes '{{name}}' tidak dapat dipertahankan dan diimpor statis."
+        }
         _ => return None,
     })
 }

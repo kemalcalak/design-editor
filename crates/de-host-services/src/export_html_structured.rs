@@ -49,6 +49,7 @@ use de_editor_ui::layout_scene::{
     Effect, NodeKind, SceneFillType, SceneImageFit, SceneNode, ScenePage,
 };
 use de_editor_ui::{ImageAdjustments, Point2D, Rect};
+use std::collections::BTreeSet;
 
 use crate::export::ExportError;
 
@@ -105,6 +106,20 @@ pub fn board_slide_markup(
     board_id: &str,
     name: String,
 ) -> Result<SlideMarkup, ExportError> {
+    board_slide_markup_with_motion(page, board_id, name, &BTreeSet::new())
+}
+
+/// [`board_slide_markup`], wrapping every node in `animated` (by scene
+/// id) in a box of its own that carries `data-de-motion-node` (#245).
+/// The wrapper sits exactly on the node's bounds, so a CSS scale about its
+/// centre is the node's own centre pivot, and the node's element keeps
+/// its own transform (rotation) untouched inside it.
+pub fn board_slide_markup_with_motion(
+    page: &ScenePage,
+    board_id: &str,
+    name: String,
+    animated: &BTreeSet<String>,
+) -> Result<SlideMarkup, ExportError> {
     let board = page
         .find(board_id)
         .ok_or_else(|| ExportError::NodeNotFoundOnPage {
@@ -128,6 +143,7 @@ pub fn board_slide_markup(
         parent_origin: bounds.origin,
         structured_nodes: 0,
         fallback_reasons: Vec::new(),
+        animated,
     };
     emitter.emit(board)?;
 
@@ -141,7 +157,7 @@ pub fn board_slide_markup(
     })
 }
 
-struct Emitter {
+struct Emitter<'a> {
     out: String,
     /// Doc-space origin of the box the element being emitted is
     /// positioned against.
@@ -156,13 +172,40 @@ struct Emitter {
     parent_origin: Point2D,
     structured_nodes: usize,
     fallback_reasons: Vec<&'static str>,
+    /// Scene ids of the nodes whose animations the page plays.
+    animated: &'a BTreeSet<String>,
 }
 
-impl Emitter {
+impl Emitter<'_> {
     fn emit(&mut self, node: &SceneNode) -> Result<(), ExportError> {
         if node.hidden || de_editor_ui::canvas_only::is_canvas_only(node) {
             return Ok(());
         }
+        if self.animated.contains(&node.id) {
+            return self.emit_in_motion_box(node);
+        }
+        self.emit_node(node)
+    }
+
+    /// Emit `node` inside a box on its own bounds that the page animates.
+    fn emit_in_motion_box(&mut self, node: &SceneNode) -> Result<(), ExportError> {
+        let rect = self.local(node.bounds);
+        let mut style = String::new();
+        css::place(&mut style, rect);
+        let id = de_codegen::motion_css::css_identifier(&node.id);
+        self.out.push_str(&format!(
+            r#"<div class="n" data-de-motion-node="{}" style="{style}">"#,
+            de_util::xml_escape::escape_html(&id)
+        ));
+        let outer = self.parent_origin;
+        self.parent_origin = de_editor_ui::scene_bounds::normalize_rect(node.bounds).origin;
+        let result = self.emit_node(node);
+        self.parent_origin = outer;
+        self.out.push_str("</div>");
+        result
+    }
+
+    fn emit_node(&mut self, node: &SceneNode) -> Result<(), ExportError> {
         if let Some(reason) = unexpressible(node) {
             if fallback::emit(&mut self.out, node, self.parent_origin)? {
                 self.fallback_reasons.push(reason);

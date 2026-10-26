@@ -381,6 +381,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "interactions.markScreen" => "화면으로 표시",
         "interactions.setStartScreen" => "시작 화면으로 설정",
         "interactions.removeScreen" => "화면 제거",
+        "htmlImport.warn.motion.keyframes_static" => {
+            "@keyframes '{{name}}' 애니메이션을 유지할 수 없어 정적으로 가져왔습니다."
+        }
         _ => return None,
     })
 }

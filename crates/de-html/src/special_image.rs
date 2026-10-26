@@ -393,6 +393,7 @@ fn parent_content_box(context: &MapCtx<'_>, path: &[&DomElement]) -> ParentConte
         let mut probe = MapCtx {
             opts: context.opts,
             rules: context.rules,
+            keyframes: context.keyframes,
             warnings: Vec::new(),
             warned: Default::default(),
             next_id: 0,

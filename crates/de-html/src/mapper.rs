@@ -83,6 +83,9 @@ mod margin_tests;
 pub struct MapCtx<'a> {
     pub opts: &'a HtmlImportOptions,
     pub rules: &'a [StyleRule],
+    /// Author `@keyframes` blocks, read when an element runs an animation
+    /// (#245).
+    pub keyframes: &'a crate::css::keyframes::KeyframesMap,
     pub warnings: Vec<ImportWarning>,
     /// Rendered text of every warning in `warnings` (mirrors
     /// `SheetParser::warned`). Only `warn_once` maintains it; a direct
@@ -567,6 +570,23 @@ pub(crate) fn apply_base_style_with_box(
     let reserved_box =
         (definite == (true, true)).then_some((own_width.max(0.0), own_height.max(0.0)));
     let bake = crate::transform::bake_transform(style, context, own_width, own_height, definite);
+    let motion = crate::mapper_motion::map_animations(
+        style,
+        context,
+        crate::mapper_motion::MotionBox {
+            own: (own_width.max(0.0), own_height.max(0.0)),
+            definite,
+            static_transform: style
+                .get("transform")
+                .is_some_and(|value| !value.trim().eq_ignore_ascii_case("none")),
+        },
+    );
+    if let Some(opacity) = motion.held_opacity {
+        base.opacity = Some(NumberOrExpression::Number(opacity));
+    }
+    if !motion.animations.is_empty() {
+        base.animations = Some(motion.animations);
+    }
     if let Some(bake) = &bake {
         if bake.rotation_degrees.abs() > 1e-9 {
             base.rotation = Some(bake.rotation_degrees);
