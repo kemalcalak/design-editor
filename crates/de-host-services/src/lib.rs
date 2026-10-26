@@ -85,6 +85,7 @@ pub mod google_fonts;
 pub mod google_fonts_error;
 pub mod home_preview;
 pub mod image_relevance_judge;
+mod claude_artifact;
 mod import_html_url;
 pub mod import_html_url_error;
 pub mod loop_blocker_ledger;
