@@ -12,7 +12,7 @@ use std::collections::{BTreeMap, HashSet};
 
 use de_editor_core::{EditorState, NodeId};
 
-use super::import_common::{count_subtree_nodes, offset_roots, parse_import_placement};
+use super::import_common::{count_subtree_nodes, parse_import_placement, shift_roots};
 use super::import_ids::rename_colliding_ids;
 use super::{EditorCommand, McpTool, ToolErrorCode, ToolOutcome};
 
@@ -65,7 +65,7 @@ impl McpTool for ImportPptx {
             }
         };
         let mut nodes = import.document.children;
-        offset_roots(&mut nodes, &placement);
+        shift_roots(&mut nodes, &placement);
         let renamed = rename_colliding_ids(&mut nodes, &self.existing_ids);
         let node_count = count_subtree_nodes(&nodes);
 

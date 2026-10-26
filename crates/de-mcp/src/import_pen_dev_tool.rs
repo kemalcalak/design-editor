@@ -18,7 +18,7 @@ use de_editor_core::{EditorState, NodeId, PenNodeExt};
 use jian_ops_schema::node::PenNode;
 use jian_ops_schema::variable::VariableDefinition;
 
-use super::import_common::{count_subtree_nodes, offset_roots, parse_import_placement};
+use super::import_common::{count_subtree_nodes, parse_import_placement, shift_roots};
 use super::import_ids::{collect_ids, rename_colliding_ids};
 use super::{EditorCommand, McpTool, ToolErrorCode, ToolOutcome};
 
@@ -88,7 +88,7 @@ impl McpTool for ImportPenDev {
                 format!("no importable content in {path:?}"),
             );
         }
-        offset_roots(&mut nodes, &placement);
+        shift_roots(&mut nodes, &placement);
         let renamed = rename_colliding_ids(&mut nodes, &self.existing_ids);
         let dangling = drop_misbound_instances(&mut nodes, &self.existing_ids);
 

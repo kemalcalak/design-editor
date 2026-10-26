@@ -84,3 +84,89 @@ mod tests {
         let _ = std::fs::remove_dir_all(dir);
     }
 }
+
+/// Open time of a realistic deck on the desktop path (#246): 50 slides,
+/// five distinct ~1 MB photos shared across them, title + body text and a
+/// few shapes per slide. Run with
+/// `cargo test -p de-host-services --release open_time -- --ignored --nocapture`.
+#[cfg(test)]
+mod timing {
+    use de_editor_core::EditorState;
+
+    fn photo(seed: u32) -> String {
+        use base64::Engine;
+        let mut state = seed.wrapping_mul(2_654_435_761);
+        let image = image::RgbImage::from_fn(900, 600, |x, y| {
+            state ^= state << 13;
+            state ^= state >> 17;
+            state ^= state << 5;
+            let noise = (state & 0x3f) as u8;
+            image::Rgb([
+                (x / 4) as u8 ^ noise,
+                (y / 3) as u8 ^ noise,
+                noise.wrapping_mul(3),
+            ])
+        });
+        let mut png = Vec::new();
+        image::DynamicImage::ImageRgb8(image)
+            .write_to(&mut std::io::Cursor::new(&mut png), image::ImageFormat::Png)
+            .expect("encode");
+        format!(
+            "data:image/png;base64,{}",
+            base64::engine::general_purpose::STANDARD.encode(png)
+        )
+    }
+
+    #[test]
+    #[ignore = "timing probe; run in release"]
+    fn open_time_of_a_fifty_slide_deck() {
+        let photos: Vec<String> = (0..5).map(photo).collect();
+        let boards: Vec<serde_json::Value> = (0..50)
+            .map(|i| {
+                serde_json::json!({
+                    "type": "frame", "id": format!("b{i}"), "x": i * 2000, "y": 0,
+                    "width": 1920, "height": 1080, "layout": "none",
+                    "fill": [{"type": "solid", "color": "#FFFFFF"}],
+                    "children": [
+                        {"type": "text", "id": format!("t{i}"), "x": 120, "y": 80, "width": 1600,
+                         "height": 120, "content": format!("Slide {i}: quarterly results"), "fontSize": 72},
+                        {"type": "text", "id": format!("p{i}"), "x": 120, "y": 260, "width": 800,
+                         "height": 600, "content": "First point\nSecond point\nThird point\nFourth point",
+                         "fontSize": 36},
+                        {"type": "image", "id": format!("i{i}"), "x": 1000, "y": 260, "width": 800,
+                         "height": 533, "src": photos[i % photos.len()]},
+                        {"type": "rectangle", "id": format!("r{i}"), "x": 0, "y": 1040, "width": 1920,
+                         "height": 40, "fill": [{"type": "solid", "color": "#4472C4"}]},
+                        {"type": "ellipse", "id": format!("e{i}"), "x": 1800, "y": 40, "width": 60,
+                         "height": 60, "fill": [{"type": "solid", "color": "#ED7D31"}]}
+                    ]
+                })
+            })
+            .collect();
+        let source: jian_ops_schema::PenDocument =
+            serde_json::from_value(serde_json::json!({"version": "1.0.0", "children": boards}))
+                .expect("fixture");
+        let (bytes, _) = crate::export_pptx::build_deck_pptx(&EditorState::from_document(source))
+            .expect("export");
+        let dir = std::env::temp_dir().join(format!("de-pptx-timing-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).expect("dir");
+        let path = dir.join("Deck.pptx");
+        std::fs::write(&path, &bytes).expect("write");
+
+        let started = std::time::Instant::now();
+        let loaded =
+            crate::doc_io::load_editor_state_with_report(&path, de_editor_core::Locale::EnUs)
+                .expect("opens");
+        let parsed = started.elapsed();
+        // The desktop open frames the document right after, which builds
+        // the layout scene once.
+        let _scene = de_pen_loader::editor_state_to_active_page_layout_scene(&loaded.state);
+        let total = started.elapsed();
+        println!(
+            "deck {:.1} MB, {} boards: import {parsed:?}, import + layout scene {total:?}",
+            bytes.len() as f64 / 1_048_576.0,
+            de_editor_core::preview_slideshow::active_page_boards(&loaded.state).len()
+        );
+        let _ = std::fs::remove_dir_all(dir);
+    }
+}
