@@ -132,9 +132,9 @@ fn is_block_text_container(
         .is_some_and(|element| !is_semantic_block(&element.tag));
     let blockified = match display {
         None if inline_tag => Some("block"),
-        Some("inline" | "inline-block" | "inline flow" | "inline flow-root") => Some("block"),
-        Some("inline-flex" | "inline flex") => Some("flex"),
-        Some("inline-grid" | "inline grid") => Some("grid"),
+        Some("inline" | "inline-block") => Some("block"),
+        Some("inline-flex") => Some("flex"),
+        Some("inline-grid") => Some("grid"),
         _ => None,
     };
     // Only an inline-level box can change, so only it pays for the parent's

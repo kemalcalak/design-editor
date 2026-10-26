@@ -366,18 +366,19 @@ fn slide_name(slide: &DomElement, number: usize) -> String {
     }
 }
 
-/// `2 of 4`, `2 / 4`: a slide's place in the deck, which the board's place
-/// on the page already says.
+/// `2 of 4`, `2 / 4`, `2/4`, `Slide 2 of 4`: a slide's place in the deck,
+/// which the board's place on the page already says.
 fn is_position_label(label: &str) -> bool {
-    let words: Vec<&str> = label.split_whitespace().collect();
     let number = |word: &str| !word.is_empty() && word.chars().all(|c| c.is_ascii_digit());
-    match words.as_slice() {
-        [a, sep, b] => number(a) && number(b) && (sep.eq_ignore_ascii_case("of") || *sep == "/"),
-        [single] => single
-            .split_once('/')
-            .is_some_and(|(a, b)| number(a) && number(b)),
-        _ => false,
-    }
+    let spaced = label.replace('/', " / ");
+    let words: Vec<&str> = spaced.split_whitespace().collect();
+    // A leading noun ("Slide", "Page") does not change what the label says.
+    let words = match words.as_slice() {
+        [noun, rest @ ..] if rest.len() == 3 && !number(noun) => rest,
+        all => all,
+    };
+    matches!(words, [a, sep, b]
+        if number(a) && number(b) && (sep.eq_ignore_ascii_case("of") || *sep == "/"))
 }
 
 fn first_heading(element: &DomElement) -> Option<&DomElement> {
