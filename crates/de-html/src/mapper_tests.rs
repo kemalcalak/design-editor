@@ -24,6 +24,7 @@ fn map_one(html_element: crate::dom::DomElement, css: &str) -> Option<PenNode> {
         positioned_width: options.viewport_width,
         positioned_height: options.viewport_height(),
         positioned_origin: (0.0, 0.0),
+        positioned_definite: (true, true),
         auto_margin_handled_by_parent: false,
         pending_base_outcome: Default::default(),
     };
@@ -320,6 +321,7 @@ fn implicit_single_column_grid_does_not_warn() {
         positioned_width: options.viewport_width,
         positioned_height: options.viewport_height(),
         positioned_origin: (0.0, 0.0),
+        positioned_definite: (true, true),
         auto_margin_handled_by_parent: false,
         pending_base_outcome: Default::default(),
     };

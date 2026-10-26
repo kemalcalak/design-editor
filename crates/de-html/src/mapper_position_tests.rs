@@ -227,3 +227,80 @@ fn root_flex_wrap_rows_fit_inside_the_body_margins() {
         .collect();
     assert_eq!(rows, ["Wrap row", "Wrap row"]);
 }
+
+#[test]
+fn a_bottom_pinned_row_in_a_layout_sized_body_is_anchored_to_its_bottom_edge() {
+    // `.bd` grows with flex, so its height is unknown at import; the row
+    // keeps its pin through an anchor that lays it out against the bottom.
+    let result = import_html(
+        "<div style='display:flex;flex-direction:column;width:1280px;height:720px;\
+                     padding:60px 72px;box-sizing:border-box'>\
+           <h2 style='margin:0;height:80px'>Title</h2>\
+           <div style='flex:1;position:relative'>\
+             <div style='position:absolute;left:0;right:0;bottom:0;height:200px'></div>\
+           </div>\
+         </div>",
+        &HtmlImportOptions::default(),
+    );
+    let PenNode::Frame(root) = &result.nodes[0] else {
+        panic!()
+    };
+    let body = frame_child(frame_child(root, 0), 1);
+    let anchor = frame_child(body, 0);
+    assert_eq!(anchor.base.name.as_deref(), Some("Anchor"));
+    assert_eq!((anchor.base.x, anchor.base.y), (Some(0.0), Some(0.0)));
+    assert_eq!(
+        anchor.container.justify_content,
+        Some(jian_ops_schema::node::container::JustifyContent::End)
+    );
+    let row = frame_child(anchor, 0);
+    assert_eq!((row.base.x, row.base.y), (None, None));
+    assert_eq!(row.container.width, Some(SizingBehavior::Number(1136.0)));
+}
+
+fn anchored_child(html: &str) -> FrameNode {
+    let result = import_html(html, &HtmlImportOptions::default());
+    let PenNode::Frame(root) = &result.nodes[0] else {
+        panic!()
+    };
+    frame_child(frame_child(root, 0), 0).clone()
+}
+
+#[test]
+fn a_badge_hung_outside_a_corner_keeps_its_numeric_place() {
+    // Padding cannot reach past the parent's edge, so a negative inset is
+    // placed at map time as before.
+    let badge = anchored_child(
+        "<div style='position:relative;display:flex'>\
+           <span style='position:absolute;right:-6px;top:-6px;background:#f00'>3</span>\
+         </div>",
+    );
+    assert_ne!(badge.base.name.as_deref(), Some("Anchor"));
+    assert_eq!(badge.base.y, Some(-6.0));
+}
+
+#[test]
+fn a_transformed_pinned_child_keeps_its_numeric_place() {
+    let tip = anchored_child(
+        "<div style='position:relative'>\
+           <div style='position:absolute;left:0;bottom:0;transform:translateY(100%)'>tip</div>\
+         </div>",
+    );
+    assert_ne!(tip.base.name.as_deref(), Some("Anchor"));
+}
+
+#[test]
+fn an_anchor_keeps_the_pinned_childs_end_margin() {
+    let anchor = anchored_child(
+        "<div style='position:relative'>\
+           <div style='position:absolute;left:0;bottom:8px;margin-bottom:4px'>note</div>\
+         </div>",
+    );
+    assert_eq!(anchor.base.name.as_deref(), Some("Anchor"));
+    assert_eq!(
+        anchor.container.padding,
+        Some(jian_ops_schema::node::container::Padding::LtrB([
+            0.0, 0.0, 12.0, 0.0
+        ]))
+    );
+}

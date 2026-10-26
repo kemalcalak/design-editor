@@ -84,14 +84,23 @@ pub(crate) fn box_insets(style: &ComputedStyle, context: &MapCtx<'_>) -> BoxInse
 /// Move the containing block into a box whose border-box size the caller
 /// already wrote to `containing_width` / `containing_height`: in-flow
 /// children see its content box, and a positioned box hands its padding box
-/// (and where that starts) to its absolute descendants.
-pub(crate) fn enter_box(context: &mut MapCtx<'_>, style: &ComputedStyle, insets: BoxInsets) {
+/// (and where that starts) to its absolute descendants. `definite` says
+/// which of a positioned box's axes the import knows before layout; an
+/// absolute descendant pinned to an axis that is not known is anchored at
+/// layout time (`mapper_anchor`).
+pub(crate) fn enter_box(
+    context: &mut MapCtx<'_>,
+    style: &ComputedStyle,
+    insets: BoxInsets,
+    definite: (bool, bool),
+) {
     let BoxInsets { padding, border } = insets;
     let (width, height) = (context.containing_width, context.containing_height);
     if super::layout_heuristics::establishes_positioning_context(style) {
         context.positioned_width = (width - border[1] - border[3]).max(0.0);
         context.positioned_height = (height - border[0] - border[2]).max(0.0);
         context.positioned_origin = (border[3], border[0]);
+        context.positioned_definite = definite;
     } else {
         // Absolute descendants stay children of this static box, whose own
         // offset inside the positioned ancestor is only known after layout;
@@ -224,6 +233,7 @@ mod tests {
             positioned_width: 600.0,
             positioned_height: 400.0,
             positioned_origin: (0.0, 0.0),
+            positioned_definite: (true, true),
             auto_margin_handled_by_parent: false,
             pending_base_outcome: Default::default(),
         };
