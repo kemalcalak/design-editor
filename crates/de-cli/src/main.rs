@@ -106,8 +106,14 @@ fn run(args: &[String]) -> Result<String, CliError> {
         Command::ImportHtml {
             html_path,
             out_path,
+            viewport_width,
             viewport_height,
-        } => html_cli::run_import_html(&html_path, &out_path, viewport_height.as_deref())?,
+        } => html_cli::run_import_html(
+            &html_path,
+            &out_path,
+            viewport_width.as_deref(),
+            viewport_height.as_deref(),
+        )?,
         Command::ImportSnapshot {
             json_path,
             out_path,
@@ -241,8 +247,10 @@ enum Command {
     ImportHtml {
         html_path: String,
         out_path: String,
-        /// Optional `--viewport-height` override for the import viewport,
-        /// kept as the validated raw text so `Command` stays `Eq`.
+        /// Optional `--viewport-width` / `--viewport-height` overrides for
+        /// the import viewport, kept as the validated raw text so `Command`
+        /// stays `Eq`.
+        viewport_width: Option<String>,
         viewport_height: Option<String>,
     },
     ImportSnapshot {

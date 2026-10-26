@@ -4,12 +4,16 @@ use std::time::Duration;
 
 use de_editor_core::EditorCommand;
 use de_html::{import_html_with_resources, HtmlImportOptions};
-use de_mcp::import_common::{count_subtree_nodes, parse_import_placement, parse_viewport_height};
+use de_mcp::import_common::{
+    count_subtree_nodes, offset_roots, parse_import_placement, parse_viewport_height,
+    parse_viewport_width,
+};
 use de_mcp::{McpTool, ToolErrorCode, ToolOutcome};
 use jian_ops_schema::node::PenNode;
 use reqwest::header::{CONTENT_TYPE, LOCATION};
 
 use crate::chat_runtime::block_on_anywhere;
+use crate::claude_artifact;
 use crate::import_html_url_error::ImportHtmlUrlError;
 use crate::provider_dial::{client_for, EndpointDialPolicy};
 use crate::web_image_search::{read_capped, ImageJobSlot};
@@ -41,28 +45,30 @@ impl McpTool for ImportHtmlUrl {
             Ok(value) => value,
             Err((code, message)) => return ToolOutcome::Err(code, message),
         };
+        let viewport_width = match parse_viewport_width(args) {
+            Ok(value) => value,
+            Err((code, message)) => return ToolOutcome::Err(code, message),
+        };
         let placement = match parse_import_placement(args) {
             Ok(placement) => placement,
             Err((code, message)) => return ToolOutcome::Err(code, message),
         };
 
-        let page = match import_page_from_url(raw_url, viewport_height) {
+        let page = match import_page_from_url(raw_url, viewport_width, viewport_height) {
             Ok(page) => page,
             Err(error) => return ToolOutcome::Err(error.tool_error_code(), error.to_string()),
         };
         let mut nodes = page.nodes;
-        if placement.x != 0 || placement.y != 0 {
-            if let PenNode::Frame(frame) = &mut nodes[0] {
-                frame.base.x = Some(placement.x as f64);
-                frame.base.y = Some(placement.y as f64);
-            }
-        }
+        offset_roots(&mut nodes, &placement);
         // Diverges from `de_mcp::import_common::import_result_to_outcome`
         // only by the extra `sourceUrl` output entry.
         let mut output = BTreeMap::new();
         output.insert("wrote".into(), "true".into());
         output.insert("nodeCount".into(), count_subtree_nodes(&nodes).to_string());
         output.insert("sourceUrl".into(), page.final_url.to_string());
+        if nodes.len() > 1 {
+            output.insert("slides".into(), nodes.len().to_string());
+        }
         if !page.warnings.is_empty() {
             output.insert("warnings".into(), page.warnings.join("\n"));
         }
@@ -82,6 +88,7 @@ impl McpTool for ImportHtmlUrl {
 /// reference-context enrichment path.
 pub(crate) fn import_page_from_url(
     raw_url: &str,
+    viewport_width: Option<f64>,
     viewport_height: Option<f64>,
 ) -> Result<ImportedPage, ImportHtmlUrlError> {
     let allowlist = std::env::var(ALLOWLIST_ENV).ok();
@@ -89,26 +96,46 @@ pub(crate) fn import_page_from_url(
     let Some(_job_slot) = ImageJobSlot::acquire() else {
         return Err(ImportHtmlUrlError::TooManyConcurrentJobs);
     };
-    // `call` is a synchronous MCP tool that can be reached either from a
-    // plain worker thread (CLI / stdio server) or from a tokio worker (the
-    // web daemon's connection pool). A private runtime built here would
-    // panic on `block_on` in the latter case, so both fetch paths below go
-    // through the one sanctioned bridge, which sheds the worker instead.
-    let page = block_on_anywhere(fetch_capped(
-        initial_url,
-        PAGE_BYTES_CAP,
-        allowlist.as_deref(),
-    ))?;
-    let content_type_is_html = page
-        .content_type
-        .as_deref()
-        .is_some_and(|value| value.to_ascii_lowercase().contains("text/html"));
-    let body_looks_html = page.bytes.iter().take(512).any(|byte| *byte == b'<');
-    if !content_type_is_html && !body_looks_html {
-        return Err(ImportHtmlUrlError::NotHtmlPage);
-    }
-
-    let html = String::from_utf8_lossy(&page.bytes);
+    // A Claude artifact link serves a script shell; the artifact itself only
+    // exists once that script has run, so it is read from a local browser.
+    let (html, base_url, source_url) = if claude_artifact::is_claude_artifact(&initial_url) {
+        let artifact = claude_artifact::read_artifact(initial_url.as_str())?;
+        if artifact.html.len() > PAGE_BYTES_CAP {
+            return Err(ImportHtmlUrlError::ResponseTooLarge {
+                url: initial_url.to_string(),
+            });
+        }
+        let base_url = artifact
+            .base_url
+            .and_then(|base| screen_import_url_with_allowlist(&base, allowlist.as_deref()).ok())
+            .unwrap_or_else(|| initial_url.clone());
+        (artifact.html, base_url, initial_url)
+    } else {
+        // `call` is a synchronous MCP tool that can be reached either from a
+        // plain worker thread (CLI / stdio server) or from a tokio worker (the
+        // web daemon's connection pool). A private runtime built here would
+        // panic on `block_on` in the latter case, so both fetch paths below go
+        // through the one sanctioned bridge, which sheds the worker instead.
+        let page = block_on_anywhere(fetch_capped(
+            initial_url,
+            PAGE_BYTES_CAP,
+            allowlist.as_deref(),
+        ))?;
+        let content_type_is_html = page
+            .content_type
+            .as_deref()
+            .is_some_and(|value| value.to_ascii_lowercase().contains("text/html"));
+        let body_looks_html = page.bytes.iter().take(512).any(|byte| *byte == b'<');
+        if !content_type_is_html && !body_looks_html {
+            return Err(ImportHtmlUrlError::NotHtmlPage);
+        }
+        let final_url = page.final_url;
+        (
+            String::from_utf8_lossy(&page.bytes).into_owned(),
+            final_url.clone(),
+            final_url,
+        )
+    };
     let fetcher = |resource_url: &str| {
         let resource_url =
             screen_import_url_with_allowlist(resource_url, allowlist.as_deref()).ok()?;
@@ -120,10 +147,12 @@ pub(crate) fn import_page_from_url(
         .ok()
         .map(|resource| resource.bytes)
     };
+    let defaults = HtmlImportOptions::default();
     let options = HtmlImportOptions {
-        base_url: Some(page.final_url.to_string()),
+        viewport_width: viewport_width.unwrap_or(defaults.viewport_width),
+        base_url: Some(base_url.to_string()),
         viewport_height,
-        ..HtmlImportOptions::default()
+        ..defaults
     };
     let result = import_html_with_resources(&html, &options, Some(&fetcher), None);
     if result.nodes.is_empty() {
@@ -138,7 +167,7 @@ pub(crate) fn import_page_from_url(
     }
     Ok(ImportedPage {
         nodes: result.nodes,
-        final_url: page.final_url,
+        final_url: source_url,
         warnings: result.warnings,
     })
 }
