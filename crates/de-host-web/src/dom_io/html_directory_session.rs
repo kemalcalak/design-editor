@@ -495,6 +495,19 @@ fn entry_file_stem(path: &str) -> &str {
         .map_or(file_name, |(stem, _)| stem)
 }
 
+/// The imported document as editor state; a slide deck opens tagged as a
+/// deck, like a `.pptx`, so Preview presents it.
+fn deck_aware_state(
+    document: de_editor_core::PenDocument,
+    slides: usize,
+) -> de_editor_core::EditorState {
+    let mut state = de_editor_core::EditorState::from_document(document);
+    if slides > 0 {
+        state.tag_as_deck();
+    }
+    state
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -568,17 +581,4 @@ mod tests {
         );
         assert!(DirectoryProjectIndex::prepare(&paths(&["../index.html"])).is_err());
     }
-}
-
-/// The imported document as editor state; a slide deck opens tagged as a
-/// deck, like a `.pptx`, so Preview presents it.
-fn deck_aware_state(
-    document: de_editor_core::PenDocument,
-    slides: usize,
-) -> de_editor_core::EditorState {
-    let mut state = de_editor_core::EditorState::from_document(document);
-    if slides > 0 {
-        state.tag_as_deck();
-    }
-    state
 }
