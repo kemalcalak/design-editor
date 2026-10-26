@@ -208,7 +208,8 @@ fn shape(ctx: &mut Ctx<'_, '_, '_>, walk: &Walk<'_>, el: Node<'_, '_>) -> Option
                 flip_v: false,
                 ..xfrm
             };
-            Some(wrap(ctx, el, b, &unflipped, vec![outline, label]))
+            // Front-to-back: the text over its box.
+            Some(wrap(ctx, el, b, &unflipped, vec![label, outline]))
         }
     }
 }
