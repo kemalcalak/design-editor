@@ -26,7 +26,9 @@ fn deck() -> WidgetHostNative {
                   "opacity":1,"fill":[{{"type":"solid","color":"#111111"}}],"animations":{fade}}}]}}
         ]}}"##
     );
-    let document = jian_ops_schema::load_str(&source).expect("deck parses").value;
+    let document = jian_ops_schema::load_str(&source)
+        .expect("deck parses")
+        .value;
     let mut state = EditorState::from_document(document);
     state.editor_ui.scenario = Some(TemplateScene::Slides);
     let mut host = WidgetHostNative::new();
