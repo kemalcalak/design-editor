@@ -10,13 +10,17 @@ pub fn load_editor_state(
     load_editor_state_with_report(path, locale).map(|loaded| loaded.state)
 }
 
-/// Load a document from disk. Only `.de` documents and pen.dev `.pen`
-/// imports open; any other extension is refused before the file is read,
-/// and a `.pen` whose content is not pen.dev is refused after the sniff.
+/// Load a document from disk. Only `.de` documents and the pen.dev `.pen`
+/// and PowerPoint `.pptx` imports open; any other extension is refused
+/// before the file is read, and a `.pen` whose content is not pen.dev is
+/// refused after the sniff.
 pub fn load_editor_state_with_report(
     path: &std::path::Path,
     locale: de_editor_core::Locale,
 ) -> Result<LoadedEditorState, DocIoError> {
+    if de_util::document_file::is_pptx_path(path) {
+        return super::pptx::load_pptx(path, locale);
+    }
     let pen_dev_path = de_util::document_file::is_pen_dev_path(path);
     if !pen_dev_path && !de_util::document_file::is_document_path(path) {
         return Err(DocIoError::UnsupportedExtension(localized_with_name(
@@ -38,7 +42,7 @@ pub fn load_editor_state_with_report(
 
 /// `de_i18n` owns these sentences; `{{name}}` is the file name, not the full
 /// path, so the dialog line stays short.
-fn localized_with_name(
+pub(super) fn localized_with_name(
     locale: de_editor_core::Locale,
     key: &'static str,
     path: &std::path::Path,
@@ -186,6 +190,7 @@ fn parse_editor_state_source(
             .is_some_and(|extraction| extraction.inferred_preserve_authored_geometry),
         rewrite_blocked_by_schema_warning,
         pen_dev_import: canonical.compatibility.pen_dev,
+        pptx_import: None,
     };
     Ok((
         EditorState::from_document(loaded.value),
@@ -205,7 +210,7 @@ fn finish_loaded_state_with_report(
     }
 }
 
-fn finish_loaded_state(mut state: EditorState, meta: Option<EditorMeta>) -> EditorState {
+pub(super) fn finish_loaded_state(mut state: EditorState, meta: Option<EditorMeta>) -> EditorState {
     if let Some(meta) = meta {
         apply_editor_meta(&mut state, meta);
     } else {

@@ -16,15 +16,19 @@ use de_editor_core::EditorState;
 
 /// Tools whose writes must land exactly as authored, so no repair runs after
 /// them:
-/// - `import_pen_dev` creates new roots, which [`WriteScope`] would take for
-///   AI-generated screens; repairing them rewrites someone else's work.
+/// - `import_pen_dev` / `import_pptx` create new roots, which [`WriteScope`]
+///   would take for AI-generated screens; repairing them rewrites someone
+///   else's work.
 /// - `execute` (#168) already read back its layout and took its screenshots
 ///   in the same call; a repair after it would land a document the script
 ///   never saw.
 /// - `undo` / `redo` restore an earlier document; a root they bring back
 ///   would look new and be repaired, so the step would not round-trip.
 pub(crate) fn writes_verbatim(tool_name: &str) -> bool {
-    matches!(tool_name, "import_pen_dev" | "execute" | "undo" | "redo")
+    matches!(
+        tool_name,
+        "import_pen_dev" | "import_pptx" | "execute" | "undo" | "redo"
+    )
 }
 
 /// The baseline every MCP applier captures right before applying a write

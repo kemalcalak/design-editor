@@ -1278,6 +1278,7 @@ dependencies = [
  "de-figma",
  "de-html",
  "de-pen-loader",
+ "de-pptx",
  "de-process-io",
  "de-rpc-transport",
  "de-util",
@@ -1527,6 +1528,7 @@ dependencies = [
  "de-mcp",
  "de-orchestrator",
  "de-pen-loader",
+ "de-pptx",
  "de-preview-core",
  "de-process-io",
  "de-render-export",
@@ -1568,6 +1570,7 @@ dependencies = [
  "de-html",
  "de-i18n",
  "de-pen-loader",
+ "de-pptx",
  "de-preview-core",
  "de-util",
  "jian-core",
@@ -1642,6 +1645,7 @@ dependencies = [
  "de-editor-core",
  "de-html",
  "de-pen-loader",
+ "de-pptx",
  "de-util",
  "jian-ops-schema",
  "jian-scene",
@@ -1701,6 +1705,21 @@ dependencies = [
  "serde_stacker",
  "skia-safe",
  "stacker",
+]
+
+[[package]]
+name = "de-pptx"
+version = "0.5.1"
+dependencies = [
+ "base64",
+ "de-editor-core",
+ "de-host-services",
+ "de-util",
+ "flate2",
+ "jian-ops-schema",
+ "roxmltree",
+ "serde_json",
+ "zip 9.0.4",
 ]
 
 [[package]]

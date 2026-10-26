@@ -94,6 +94,10 @@ pub enum FileAction {
     /// and opens it like File ▸ Open: a pen.dev document converts into a
     /// new untitled document and its source is never written (#72).
     ImportPenDev,
+    /// File ▸ Import ▸ PowerPoint — host picks a `.pptx` and opens it like
+    /// File ▸ Open: the deck converts into a new untitled document with one
+    /// board per slide; its source is never written (#246).
+    ImportPptx,
     /// User chose `Import image or SVG…` in the toolbar shape picker
     /// — host opens a file dialog, then inserts the raster image as a
     /// new Image node (or parses the SVG into nodes; SVG path lands

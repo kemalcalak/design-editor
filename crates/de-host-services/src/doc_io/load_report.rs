@@ -11,16 +11,25 @@ pub struct DocumentLoadReport {
     /// The file was a pen.dev document converted on open. It stays an
     /// import source: the editor binds no path to it and never rewrites it.
     pub pen_dev_import: Option<de_pen_loader::pen_dev::PenDevReport>,
+    /// The file was a PowerPoint deck converted on open (#246): what could
+    /// not come over as-is. Like a pen.dev import it binds no path.
+    pub pptx_import: Option<Vec<String>>,
 }
 
 impl DocumentLoadReport {
     /// Whether a current-shape rewrite is both useful and known to be safe.
     pub fn needs_schema_upgrade(&self) -> bool {
         !self.rewrite_blocked_by_schema_warning
-            && self.pen_dev_import.is_none()
+            && !self.is_import()
             && (self.normalized_legacy
                 || self.patched_legacy_version.is_some()
                 || self.inferred_editor_meta)
+    }
+
+    /// Whether the file was converted from another format on open. An
+    /// import source is never the document's save path.
+    pub fn is_import(&self) -> bool {
+        self.pen_dev_import.is_some() || self.pptx_import.is_some()
     }
 }
 

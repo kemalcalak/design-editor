@@ -28,13 +28,16 @@ pub enum ImportMenuChoice {
     Html,
     /// Open a pen.dev design (`.pen`) as a new document.
     PenDev,
+    /// Open a PowerPoint deck (`.pptx`) as a new document of boards.
+    Pptx,
 }
 
 impl ImportMenuChoice {
-    pub const ALL: [ImportMenuChoice; 3] = [
+    pub const ALL: [ImportMenuChoice; 4] = [
         ImportMenuChoice::Figma,
         ImportMenuChoice::Html,
         ImportMenuChoice::PenDev,
+        ImportMenuChoice::Pptx,
     ];
 
     /// Locale key for the row label.
@@ -43,6 +46,7 @@ impl ImportMenuChoice {
             ImportMenuChoice::Figma => "import.fromFigma",
             ImportMenuChoice::Html => "import.fromHtml",
             ImportMenuChoice::PenDev => "import.fromPenDev",
+            ImportMenuChoice::Pptx => "import.fromPptx",
         }
     }
 
@@ -54,6 +58,7 @@ impl ImportMenuChoice {
             ImportMenuChoice::Figma => "Import from Figma",
             ImportMenuChoice::Html => "Import from HTML",
             ImportMenuChoice::PenDev => "Import from pen.dev",
+            ImportMenuChoice::Pptx => "Import from PowerPoint",
         }
     }
 
@@ -72,8 +77,8 @@ impl ImportMenuChoice {
         match self {
             ImportMenuChoice::Figma => "⌘⇧F",
             ImportMenuChoice::Html => "⌘⇧H",
-            // No chord: File ▸ Open (⌘O) already opens a `.pen`.
-            ImportMenuChoice::PenDev => "",
+            // No chord: File ▸ Open (⌘O) already opens a `.pen` / `.pptx`.
+            ImportMenuChoice::PenDev | ImportMenuChoice::Pptx => "",
         }
     }
 }
@@ -330,5 +335,6 @@ mod tests {
         assert_eq!(ImportMenuChoice::Html.shortcut_label(), "⌘⇧H");
         // No chord: File ▸ Open already opens a `.pen`; the row paints none.
         assert_eq!(ImportMenuChoice::PenDev.shortcut_label(), "");
+        assert_eq!(ImportMenuChoice::Pptx.shortcut_label(), "");
     }
 }

@@ -18,6 +18,7 @@ pub fn drop_kind(name: &str) -> DropKind {
     let path = std::path::Path::new(&lower);
     if de_util::document_file::is_document_path(path)
         || de_util::document_file::is_pen_dev_path(path)
+        || de_util::document_file::is_pptx_path(path)
     {
         DropKind::Document
     } else if lower.ends_with(".fig") {

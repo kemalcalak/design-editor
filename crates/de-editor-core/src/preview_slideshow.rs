@@ -192,6 +192,14 @@ pub fn slideshow_for_document(state: &EditorState) -> Option<SlideshowState> {
 }
 
 impl EditorState {
+    /// Tag the document as a deck, so Preview presents its boards slide by
+    /// slide. Imported decks (PowerPoint, #246) carry the tag the way a
+    /// deck opened from a template does; every host's import path calls
+    /// this rather than writing the scenario itself.
+    pub fn tag_as_deck(&mut self) {
+        self.editor_ui.scenario = Some(TemplateScene::Slides);
+    }
+
     /// Ask the next preview entry to present the active page (#157).
     /// Returns false — and asks nothing — when the page has no frame to
     /// present.
