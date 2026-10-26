@@ -330,6 +330,7 @@ fn expression_axis_is_preserved_and_reports_the_dedicated_diagnostic() {
         positioned_width: options.viewport_width,
         positioned_height: options.viewport_height(),
         positioned_origin: (0.0, 0.0),
+        positioned_definite: (true, true),
         auto_margin_handled_by_parent: false,
         pending_base_outcome: Default::default(),
     };

@@ -261,3 +261,14 @@ fn a_deck_document_is_named_after_the_page_title() {
     assert_eq!(result.document.name.as_deref(), Some("Quarterly"));
     assert_eq!(result.document.children.len(), 5);
 }
+
+#[test]
+fn slides_hidden_by_a_sibling_selector_still_show() {
+    // The player hides every slide after the first; only the document knows
+    // the siblings, so the reveal is worked out in place.
+    let html = "<style>.sl{width:640px;height:360px}.sl+.sl{display:none}</style>\
+        <section class='sl'><h2>First</h2></section>\
+        <section class='sl'><h2>Second</h2></section>";
+    let result = import_html(html, &HtmlImportOptions::default());
+    assert_eq!(names(&result.nodes), ["First", "Second"]);
+}

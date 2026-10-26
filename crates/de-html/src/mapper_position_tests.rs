@@ -227,3 +227,33 @@ fn root_flex_wrap_rows_fit_inside_the_body_margins() {
         .collect();
     assert_eq!(rows, ["Wrap row", "Wrap row"]);
 }
+
+#[test]
+fn a_bottom_pinned_row_in_a_layout_sized_body_is_anchored_to_its_bottom_edge() {
+    // `.bd` grows with flex, so its height is unknown at import; the row
+    // keeps its pin through an anchor that lays it out against the bottom.
+    let result = import_html(
+        "<div style='display:flex;flex-direction:column;width:1280px;height:720px;\
+                     padding:60px 72px;box-sizing:border-box'>\
+           <h2 style='margin:0;height:80px'>Title</h2>\
+           <div style='flex:1;position:relative'>\
+             <div style='position:absolute;left:0;right:0;bottom:0;height:200px'></div>\
+           </div>\
+         </div>",
+        &HtmlImportOptions::default(),
+    );
+    let PenNode::Frame(root) = &result.nodes[0] else {
+        panic!()
+    };
+    let body = frame_child(frame_child(root, 0), 1);
+    let anchor = frame_child(body, 0);
+    assert_eq!(anchor.base.name.as_deref(), Some("Anchor"));
+    assert_eq!((anchor.base.x, anchor.base.y), (Some(0.0), Some(0.0)));
+    assert_eq!(
+        anchor.container.justify_content,
+        Some(jian_ops_schema::node::container::JustifyContent::End)
+    );
+    let row = frame_child(anchor, 0);
+    assert_eq!((row.base.x, row.base.y), (None, None));
+    assert_eq!(row.container.width, Some(SizingBehavior::Number(1136.0)));
+}

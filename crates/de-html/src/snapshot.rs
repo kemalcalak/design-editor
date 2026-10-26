@@ -603,6 +603,7 @@ impl<'a> SnapshotCtx<'a> {
             positioned_width: rect.w,
             positioned_height: rect.h,
             positioned_origin: (0.0, 0.0),
+            positioned_definite: (true, true),
             auto_margin_handled_by_parent: false,
             pending_base_outcome: Default::default(),
         };

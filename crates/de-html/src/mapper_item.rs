@@ -46,6 +46,7 @@ pub(super) fn finish_leaf(
         context,
     );
     let node = offset::wrap_offset(context, node, outcome.flow_offset, outcome.reserved_box);
+    let node = super::anchor::wrap(context, node, outcome.anchor);
     let handled_by_parent = context.auto_margin_handled_by_parent;
     let node = align_by_auto_margins(context, node, style, parent_style, handled_by_parent);
     margin::wrap_margins(
