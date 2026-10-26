@@ -187,6 +187,10 @@ impl WidgetHostNative {
         if let Some(consumed) = self.press_update_modal(x, y, viewport_width, viewport_height) {
             return consumed;
         }
+        // "What's new" (#251) opens at launch over Home, under the update modal.
+        if let Some(consumed) = self.press_whats_new(x, y, viewport_width, viewport_height) {
+            return consumed;
+        }
         if let Some(consumed) = self.press_home_overlays(x, y, viewport_width, viewport_height) {
             return consumed;
         }

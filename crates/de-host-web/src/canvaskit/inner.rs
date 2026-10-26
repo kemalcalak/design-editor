@@ -144,6 +144,8 @@ impl CkInner {
         // a device preference must not be collateral damage of a settings blob
         // this tab refuses to touch. Cheap: a comparison, not a write.
         let _ = crate::web_settings::theme::save_if_changed(self.host.editor_state());
+        // The "What's new" seen release (#251) is a device key too.
+        let _ = crate::web_settings::last_seen::save_if_changed(self.host.editor_state());
         if !crate::web_settings::credential_migration_pending(&self.credential_fingerprint) {
             if let Some(settings_fingerprint) = self.settings_fingerprint.as_mut() {
                 let _ = crate::web_settings::save_if_changed(

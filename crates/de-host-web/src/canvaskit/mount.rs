@@ -86,6 +86,9 @@ pub(super) async fn mount_ck(canvas_id: String) -> Result<(), JsValue> {
             .editor_ui
             .set_host_locale_override(Some(locale));
     }
+    // "What's new" (#251): after the settings, theme and locale are known,
+    // before the first paint.
+    crate::web_settings::last_seen::open_after_load(host.editor_state_mut());
     // The anon-partition locale is synchronously known now. Start its catalog
     // XHR before CanvasKit's ~24 MB initialization so the two downloads overlap;
     // the host-side prefetch directly claims the existing asset registry because
@@ -364,6 +367,11 @@ pub(super) async fn mount_ck(canvas_id: String) -> Result<(), JsValue> {
                 let Ok(mut b) = inner.try_borrow_mut() else {
                     return;
                 };
+                // Only primary presses reach the "What's new" window (#251);
+                // nothing behind it opens a menu or starts a pan.
+                if b.host.whats_new_visible() && !matches!(action, MousePressAction::PrimaryPress) {
+                    return;
+                }
                 b.host.set_modifier_shift(evt.shift_key());
                 b.host.set_modifier_alt(evt.alt_key());
                 b.host.set_clocks(now_ms_perf(), now_unix_secs());
@@ -550,6 +558,10 @@ pub(super) async fn mount_ck(canvas_id: String) -> Result<(), JsValue> {
             let Ok(mut b) = inner.try_borrow_mut() else {
                 return;
             };
+            // Nothing scrolls behind the "What's new" window (#251).
+            if b.host.whats_new_visible() {
+                return;
+            }
             let (w, h) = b.backend.logical_size();
             let (x, y) = b.event_offset_to_logical(evt.offset_x() as f32, evt.offset_y() as f32);
             let mut modifiers = de_editor_ui::Modifiers::empty();

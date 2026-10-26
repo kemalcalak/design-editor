@@ -139,6 +139,11 @@ impl WidgetHost {
         // A press anywhere takes the keyboard from the shader source editor;
         // its own tier gives it back (native `apply_press_inner`).
         de_editor_core::shader_source_editor::blur(&mut self.editor_state);
+        // "What's new" (#251) paints above every surface and owns the
+        // pointer while shown (native runs it first too).
+        if let Some(consumed) = self.press_whats_new(x, y, viewport_width, viewport_height) {
+            return consumed;
+        }
         // Refresh the derived paint doc once up front — every hit-test
         // below reads `&self.layout_scene`, so it must be current.
         self.refresh_layout_scene();

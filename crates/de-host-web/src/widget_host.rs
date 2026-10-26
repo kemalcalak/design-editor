@@ -226,6 +226,7 @@ mod variables_panel_tests;
 mod variables_preset_press;
 mod viewport_fit;
 mod web_fonts;
+mod whats_new_host;
 mod wheel_pan;
 
 // Floating-chrome insets live with the canvas-region math they are

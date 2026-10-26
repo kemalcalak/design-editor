@@ -387,6 +387,11 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "htmlImport.warn.motion.keyframes_static" => {
             "@keyframes '{{name}}' एनिमेशन रखा नहीं जा सका और स्थिर रूप में आयात हुआ।"
         }
+        "whatsNew.heading" => "नया क्या है",
+        "whatsNew.version" => "संस्करण {{version}}",
+        "whatsNew.gotIt" => "समझ गया",
+        "whatsNew.previous" => "पिछला",
+        "whatsNew.next" => "अगला",
         _ => return None,
     })
 }

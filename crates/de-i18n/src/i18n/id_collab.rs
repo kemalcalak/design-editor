@@ -387,6 +387,11 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "htmlImport.warn.motion.keyframes_static" => {
             "Animasi @keyframes '{{name}}' tidak dapat dipertahankan dan diimpor statis."
         }
+        "whatsNew.heading" => "Yang baru",
+        "whatsNew.version" => "Versi {{version}}",
+        "whatsNew.gotIt" => "Mengerti",
+        "whatsNew.previous" => "Sebelumnya",
+        "whatsNew.next" => "Berikutnya",
         _ => return None,
     })
 }

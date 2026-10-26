@@ -34,6 +34,9 @@ use de_editor_core::{BuiltinAgentKind, ImageGenProvider};
 
 #[path = "settings_io_checked.rs"]
 mod settings_io_checked;
+#[path = "settings_io_temp.rs"]
+mod settings_io_temp;
+use settings_io_temp::create_unique_settings_temp;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 struct AcpAgentPayload {
@@ -76,6 +79,7 @@ pub struct Fingerprint {
     home_recent_view: de_editor_core::RecentView,
     chat_agent: String,
     chat_model: String,
+    last_seen_version: Option<String>,
 }
 
 pub fn fingerprint(state: &EditorState) -> Fingerprint {
@@ -102,6 +106,7 @@ pub fn fingerprint(state: &EditorState) -> Fingerprint {
         home_recent_view: eui.home.recent_view,
         chat_agent: selected_chat_agent_name(eui),
         chat_model: selected_chat_model_value(state),
+        last_seen_version: eui.last_seen_version.clone(),
     }
 }
 
@@ -217,6 +222,10 @@ struct SettingsPayload {
     /// `selected_chat_model_value`); resolved after the catalog is rebuilt.
     #[serde(default)]
     chat_model: Option<String>,
+    /// The newest release whose "What's new" notes were seen (#251);
+    /// absent in files written before that window existed.
+    #[serde(default)]
+    last_seen_version: Option<String>,
 }
 
 /// Resolve the platform-specific settings path. `None` when no
@@ -315,6 +324,7 @@ fn to_payload(state: &EditorState) -> SettingsPayload {
         home_recent_view: Some(eui.home.recent_view.as_str().into()),
         chat_agent: Some(selected_chat_agent_name(eui)),
         chat_model: Some(selected_chat_model_value(state)),
+        last_seen_version: eui.last_seen_version.clone(),
     }
 }
 
@@ -427,6 +437,9 @@ fn apply_payload_with_options(
     }
     if let Some(size) = payload.preferred_agent_team_size {
         eui.preferred_agent_team_size = size.clamp(1, 6);
+    }
+    if let Some(seen) = payload.last_seen_version {
+        eui.last_seen_version = Some(seen);
     }
     if let Some(surface) = payload.entry_surface.as_deref() {
         eui.entry_surface = de_editor_core::EntrySurface::from_str(surface);
@@ -597,6 +610,12 @@ pub fn load(state: &mut EditorState) {
     }
 }
 
+/// Whether a settings file from an earlier run exists. Read before
+/// [`load`] to tell a fresh install from an upgrade (#251).
+pub fn settings_file_exists() -> bool {
+    settings_path().is_some_and(|path| path.exists())
+}
+
 /// The lenient startup load behind [`load`]. A missing file is a normal
 /// first run. A file that exists but does not parse is NOT silently
 /// replaced by defaults: its bytes are copied to a `settings.json.corrupt-…`
@@ -651,84 +670,6 @@ fn seed_system_locale(state: &mut EditorState) {
 pub fn save_checked(state: &EditorState) -> Result<(), SettingsIoError> {
     let path = settings_path().ok_or(SettingsIoError::PathUnavailable)?;
     save_checked_to_path(state, &path)
-}
-
-struct PendingSettingsFile {
-    path: PathBuf,
-    file: Option<std::fs::File>,
-}
-
-impl PendingSettingsFile {
-    fn file_mut(&mut self) -> &mut std::fs::File {
-        self.file
-            .as_mut()
-            .expect("pending settings file must stay open until replacement")
-    }
-
-    fn close(&mut self) {
-        drop(self.file.take());
-    }
-}
-
-impl Drop for PendingSettingsFile {
-    fn drop(&mut self) {
-        self.close();
-        let _ = std::fs::remove_file(&self.path);
-    }
-}
-
-fn create_unique_settings_temp(path: &Path) -> Result<PendingSettingsFile, SettingsIoError> {
-    let parent = path.parent().unwrap_or_else(|| Path::new("."));
-    let file_name = path
-        .file_name()
-        .map(|name| name.to_string_lossy())
-        .unwrap_or_else(|| "settings.json".into());
-
-    for _ in 0..128 {
-        let sequence = SETTINGS_TEMP_SEQUENCE.fetch_add(1, Ordering::Relaxed);
-        let tmp_path = parent.join(format!(
-            ".{file_name}.{}.{}.tmp",
-            std::process::id(),
-            sequence
-        ));
-        let mut options = std::fs::OpenOptions::new();
-        options.write(true).create_new(true);
-        #[cfg(unix)]
-        {
-            use std::os::unix::fs::OpenOptionsExt;
-            options.mode(0o600);
-        }
-
-        match options.open(&tmp_path) {
-            Ok(file) => {
-                let pending = PendingSettingsFile {
-                    path: tmp_path,
-                    file: Some(file),
-                };
-                #[cfg(unix)]
-                {
-                    use std::os::unix::fs::PermissionsExt;
-                    pending
-                        .file
-                        .as_ref()
-                        .expect("new settings file must be open")
-                        .set_permissions(std::fs::Permissions::from_mode(0o600))
-                        .map_err(|error| SettingsIoError::SecureTemp {
-                            detail: error.to_string(),
-                        })?;
-                }
-                return Ok(pending);
-            }
-            Err(error) if error.kind() == std::io::ErrorKind::AlreadyExists => continue,
-            Err(error) => {
-                return Err(SettingsIoError::CreateTemp {
-                    detail: error.to_string(),
-                });
-            }
-        }
-    }
-
-    Err(SettingsIoError::TempAllocExhausted)
 }
 
 fn save_checked_to_path(state: &EditorState, path: &Path) -> Result<(), SettingsIoError> {

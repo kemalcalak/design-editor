@@ -420,6 +420,7 @@ mod html_import_diagnostics_panel_tests;
 pub mod icon_picker_panel;
 pub mod ime_preedit_overlay;
 pub mod import_menu;
+mod line_break;
 pub mod locale_picker;
 pub mod marquee_flow;
 pub(crate) mod menu_paint;
@@ -442,6 +443,8 @@ pub mod update_modal;
 pub mod variables_panel;
 pub mod variables_panel_geometry_flow;
 mod variables_preset_menu;
+pub mod whats_new_flow;
+pub mod whats_new_modal;
 pub mod window_strip;
 
 // Test-support: shared RenderBackend stubs (never ships in non-test builds).

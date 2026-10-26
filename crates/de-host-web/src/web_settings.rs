@@ -73,6 +73,8 @@ fn partitioned(base: &str) -> String {
     format!("{base}::{STORAGE_PARTITION}")
 }
 
+#[path = "web_settings_last_seen.rs"]
+pub(crate) mod last_seen;
 #[path = "web_settings_legacy.rs"]
 mod legacy;
 #[path = "web_settings_storage.rs"]

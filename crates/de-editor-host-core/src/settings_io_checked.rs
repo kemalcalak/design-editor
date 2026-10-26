@@ -34,6 +34,7 @@ pub(super) fn validate_payload_fields(raw: &serde_json::Value) -> Result<()> {
             "home_recent_view",
             "chat_agent",
             "chat_model",
+            "last_seen_version",
         ],
         "root",
     )?;

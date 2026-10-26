@@ -31,6 +31,7 @@ pub use super::slides_panel_state::{
 pub use super::update_state::{
     UpdateAction, UpdateFailure, UpdateModalButton, UpdateModalState, UpdatePhase,
 };
+pub use super::whats_new_state::{WhatsNewButton, WhatsNewState};
 pub use super::workspace::{
     WorkspaceHit, WorkspacePhase, WorkspaceState, WorkspaceView, WORKSPACE_DECK_STRIP_H,
     WORKSPACE_ENTER_MS, WORKSPACE_HEADER_H, WORKSPACE_TOOLBAR_H,

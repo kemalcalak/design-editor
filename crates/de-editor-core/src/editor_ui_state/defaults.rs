@@ -214,6 +214,8 @@ impl Default for EditorUiState {
             update_status: UpdateStatus::Idle,
             update_modal: None,
             pending_update_action: None,
+            whats_new: None,
+            last_seen_version: None,
             git_panel: GitPanelState::default(),
             design_md_panel: DesignMdPanelState::default(),
             prompt_center: PromptCenterState::default(),

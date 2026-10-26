@@ -80,5 +80,8 @@ impl WidgetHost {
                 self.now_ms,
             );
         }
+
+        // "What's new" (#251) — above even the missing-font prompt.
+        self.paint_whats_new(backend, viewport_width, viewport_height);
     }
 }

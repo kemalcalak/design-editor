@@ -387,6 +387,11 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "htmlImport.warn.motion.keyframes_static" => {
             "無法保留 @keyframes '{{name}}' 動畫，已按靜態匯入。"
         }
+        "whatsNew.heading" => "新功能",
+        "whatsNew.version" => "版本 {{version}}",
+        "whatsNew.gotIt" => "知道了",
+        "whatsNew.previous" => "上一個",
+        "whatsNew.next" => "下一個",
         _ => return None,
     })
 }

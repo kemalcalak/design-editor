@@ -21,6 +21,19 @@ pub(crate) fn should_show_home(
     !initial_file && entry_surface == de_editor_core::EntrySurface::Home
 }
 
+/// Open the "What's new" window on the first launch after an update
+/// (#251). With nothing to show, the running version is recorded at once:
+/// `save_if_changed` only diffs against later events, so a fresh install
+/// would otherwise read as an upgrade on its next launch.
+fn open_whats_new(host: &mut WidgetHostNative, had_settings: bool) {
+    let ui = &mut host.editor_state_mut().editor_ui;
+    let seen_before = ui.last_seen_version.clone();
+    ui.open_whats_new_on_startup(had_settings, env!("CARGO_PKG_VERSION"));
+    if !ui.whats_new_visible() && ui.last_seen_version != seen_before {
+        de_host_services::settings_io::save(host.editor_state());
+    }
+}
+
 /// Where the window's close button leads.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum CloseTarget {
@@ -51,6 +64,9 @@ impl DesktopApp {
         // app-launch policy, not the host's resting state.
         host.editor_state_mut().chat.minimize();
         let fit_blank_frame = initial_file.is_none();
+        // A settings file from an earlier run marks an upgrade rather than
+        // a fresh install for the "What's new" window (#251).
+        let had_settings = de_host_services::settings_io::settings_file_exists();
         // Best-effort prefs restore onto the host's `EditorState`.
         de_host_services::settings_io::load(host.editor_state_mut());
         // Recents saved before the `.de` rename, or pointing at files since
@@ -70,6 +86,9 @@ impl DesktopApp {
         // pure `should_show_home` tests cover the routing matrix.
         host.editor_state_mut().editor_ui.home.visible =
             !cfg!(test) && should_show_home(initial_file.is_some(), entry_surface);
+        if !cfg!(test) {
+            open_whats_new(&mut host, had_settings);
+        }
         prompt_center_store::install_user_prompts(&mut host);
         // Imported UIKits + browser-open flag (`uikits.json`). Skipped
         // under test like the update / model probes — unit tests must

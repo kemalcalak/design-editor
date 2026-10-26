@@ -27,6 +27,7 @@ pub mod slides_panel_state;
 #[cfg(test)]
 mod tests;
 pub mod update_state;
+pub mod whats_new_state;
 pub mod workspace;
 
 pub use exports::*;
@@ -701,6 +702,11 @@ pub struct EditorUiState {
     /// Update work queued by the modal or the System tab for the desktop
     /// host to drain.
     pub pending_update_action: Option<UpdateAction>,
+    /// "What's new" window (#251), opened once after an update. Transient.
+    pub whats_new: Option<WhatsNewState>,
+    /// The newest release whose notes this user has seen (or that ran
+    /// with nothing to show). Persisted in the hosts' settings.
+    pub last_seen_version: Option<String>,
 
     // --- In-app Git -------------------------------------------------
     /// Floating Git panel snapshot — filled by the desktop host from

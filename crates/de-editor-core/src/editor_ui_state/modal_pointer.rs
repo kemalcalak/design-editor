@@ -20,6 +20,7 @@ impl EditorUiState {
             || self.figma_import_open
             || self.missing_fonts_modal_open
             || self.update_modal_visible()
+            || self.whats_new_visible()
     }
 
     /// Drop the hover state of the surfaces that sit behind a modal, so

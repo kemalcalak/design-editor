@@ -31,6 +31,16 @@ pub(super) fn register_keyboard_listeners(
             };
             b.host.set_clocks(now_ms_perf(), now_unix_secs());
             let key = evt.key();
+            // "What's new" (#251) owns the keyboard while shown: Escape
+            // closes it and nothing reaches the editor behind it. Other keys
+            // keep their browser default (reload, find, zoom).
+            if b.host.whats_new_visible() {
+                if key == "Escape" && b.host.apply_escape() {
+                    evt.prevent_default();
+                    crate::repaint_coalescer::request();
+                }
+                return;
+            }
             let starts_space_pan = evt.code() == "Space"
                 && !evt.repeat()
                 && !evt.meta_key()

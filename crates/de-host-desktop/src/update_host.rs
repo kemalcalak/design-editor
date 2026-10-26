@@ -10,11 +10,13 @@ use winit::keyboard::{Key, NamedKey};
 use crate::{update_check, update_install, DesktopApp};
 
 impl DesktopApp {
-    /// Whether `event` must be dropped because the update modal is shown.
-    /// Left clicks and pointer moves still go to the host (the modal's own
-    /// press / hover tiers), and Escape reaches its Escape rung.
+    /// Whether `event` must be dropped because the update modal or the
+    /// "What's new" window (#251) is shown. Left clicks and pointer moves
+    /// still go to the host (the modal's own press / hover tiers), and
+    /// Escape reaches its Escape rung.
     pub(crate) fn update_modal_blocks(&self, event: &WindowEvent) -> bool {
-        if !self.host.editor_state().editor_ui.update_modal_visible() {
+        let ui = &self.host.editor_state().editor_ui;
+        if !ui.update_modal_visible() && !ui.whats_new_visible() {
             return false;
         }
         update_modal_blocks_event(event)

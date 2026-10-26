@@ -203,6 +203,26 @@ fn connected_state_round_trips_through_payload() {
 }
 
 #[test]
+fn last_seen_version_round_trips_and_moves_the_fingerprint() {
+    let mut src = EditorState::new();
+    let before = fingerprint(&src);
+    src.editor_ui.last_seen_version = Some("1.0.0".into());
+    assert_ne!(before, fingerprint(&src));
+    let json = serde_json::to_string(&to_payload(&src)).unwrap();
+    let raw: serde_json::Value = serde_json::from_str(&json).unwrap();
+    // The strict (web / serve-web) loader must accept the field too.
+    settings_io_checked::validate_payload_fields(&raw).unwrap();
+    let mut dst = EditorState::new();
+    apply_payload(&mut dst, serde_json::from_value(raw).unwrap());
+    assert_eq!(dst.editor_ui.last_seen_version.as_deref(), Some("1.0.0"));
+
+    // A file from before the field leaves the state unset (an upgrade).
+    let mut old = EditorState::new();
+    apply_payload(&mut old, serde_json::from_str(r#"{"version":1}"#).unwrap());
+    assert_eq!(old.editor_ui.last_seen_version, None);
+}
+
+#[test]
 fn six_cli_mcp_payload_migrates_to_new_cli_count() {
     let payload: SettingsPayload = serde_json::from_str(
         r#"{"version":1,"mcp_cli_enabled":[true,false,true,false,true,true]}"#,
