@@ -58,13 +58,10 @@ pub enum ImportHtmlUrlError {
     NotHtmlPage,
     /// The HTML importer produced no nodes.
     NoImportableContent { detail: String },
-    /// A Claude artifact link that did not open to its content: private
-    /// (behind a sign-in), deleted, or not loaded in time. The shell shows
-    /// the same nothing for all three, so they are one case.
-    ArtifactUnavailable,
-    /// No local browser could open a Claude artifact link (an artifact only
-    /// renders through its page's script). Carries the browser's message.
-    ArtifactBrowser(String),
+    /// A Claude artifact link. Its page is a script shell whose content
+    /// claude.ai serves only to a regular browser, so it cannot be read; the
+    /// saved HTML can.
+    ClaudeArtifactLink,
 }
 
 impl ImportHtmlUrlError {
@@ -77,9 +74,9 @@ impl ImportHtmlUrlError {
     /// reported as `ToolFailed`, again matching the previous literals.
     pub(crate) fn tool_error_code(&self) -> ToolErrorCode {
         match self {
-            ImportHtmlUrlError::UrlInvalid | ImportHtmlUrlError::UrlNotAllowed => {
-                ToolErrorCode::InvalidArgument
-            }
+            ImportHtmlUrlError::UrlInvalid
+            | ImportHtmlUrlError::UrlNotAllowed
+            | ImportHtmlUrlError::ClaudeArtifactLink => ToolErrorCode::InvalidArgument,
             ImportHtmlUrlError::Dial(_)
             | ImportHtmlUrlError::Fetch { .. }
             | ImportHtmlUrlError::HttpStatus { .. }
@@ -88,9 +85,7 @@ impl ImportHtmlUrlError {
             | ImportHtmlUrlError::RedirectLocationInvalid
             | ImportHtmlUrlError::ResponseTooLarge { .. }
             | ImportHtmlUrlError::TooManyConcurrentJobs
-            | ImportHtmlUrlError::NotHtmlPage
-            | ImportHtmlUrlError::ArtifactUnavailable
-            | ImportHtmlUrlError::ArtifactBrowser(_) => ToolErrorCode::ToolFailed,
+            | ImportHtmlUrlError::NotHtmlPage => ToolErrorCode::ToolFailed,
             ImportHtmlUrlError::NoImportableContent { .. } => ToolErrorCode::InvalidArgument,
         }
     }
@@ -127,16 +122,9 @@ impl fmt::Display for ImportHtmlUrlError {
             ImportHtmlUrlError::NoImportableContent { detail } => {
                 write!(f, "no importable content: {detail}")
             }
-            ImportHtmlUrlError::ArtifactUnavailable => f.write_str(
-                "the Claude artifact did not open: it may be private, deleted, or still \
-                 loading. Only artifacts shared publicly import by link; download it as HTML \
-                 in Claude and import the file instead",
-            ),
-            ImportHtmlUrlError::ArtifactBrowser(detail) => write!(
-                f,
-                "a Claude artifact link is opened in a local Chrome or Chromium, which \
-                 failed: {detail}. Download the artifact as HTML in Claude and import the \
-                 file instead"
+            ImportHtmlUrlError::ClaudeArtifactLink => f.write_str(
+                "Claude artifacts can't be read from a link; download the artifact as HTML in \
+                 Claude and import the file instead",
             ),
         }
     }
