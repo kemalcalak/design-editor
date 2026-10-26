@@ -10,6 +10,7 @@ use crate::color::{ColorContext, Rgba};
 use crate::context::{round, Ctx, IdGen, Mapping};
 use crate::error::PptxError;
 use crate::media::Media;
+use crate::motion;
 use crate::package::{first_of_kind, Package, Relationships};
 use crate::paint::{self, Fill};
 use crate::shape::{walk_tree, Scope, Walk};
@@ -121,6 +122,7 @@ pub fn build_slide(
         layout: layout_root,
         master: master_root,
         default_text: input.default_text,
+        targets: HashMap::new(),
     };
 
     let empty = Relationships::new();
@@ -164,6 +166,9 @@ pub fn build_slide(
     add_tree(&mut ctx, Some(slide_root), &slide.rels, Scope::Slide);
 
     let (width, height) = input.size;
+    let mut animations = motion::animations(slide_root, &ctx.targets, input.size, ctx.warnings);
+    attach_animations(&mut children, &mut animations);
+    let transition = motion::transition(slide_root, ctx.warnings);
     let mut board = json!({
         "type": "frame",
         "id": prefix,
@@ -178,6 +183,9 @@ pub fn build_slide(
     if xml::attr_bool(slide_root, "show") == Some(false) {
         board["visible"] = json!(false);
     }
+    if let Some(transition) = transition {
+        board["slideTransition"] = transition;
+    }
 
     let notes = notes_src
         .as_ref()
@@ -185,6 +193,21 @@ pub fn build_slide(
         .transpose()?
         .and_then(|doc| notes_text(doc.root_element()));
     Ok(SlideOut { board, notes })
+}
+
+/// Put each node's animations on it, wherever it sits in the tree.
+fn attach_animations(nodes: &mut [Value], animations: &mut motion::Animations) {
+    if animations.is_empty() {
+        return;
+    }
+    for node in nodes {
+        if let Some(list) = node["id"].as_str().and_then(|id| animations.remove(id)) {
+            node["animations"] = Value::Array(list);
+        }
+        if let Some(children) = node.get_mut("children").and_then(Value::as_array_mut) {
+            attach_animations(children, animations);
+        }
+    }
 }
 
 /// The first background along slide → layout → master. `bgRef` points

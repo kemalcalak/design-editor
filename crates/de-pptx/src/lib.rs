@@ -28,6 +28,8 @@ mod error;
 mod frame;
 mod geometry;
 mod media;
+mod motion;
+pub mod motion_table;
 mod package;
 mod paint;
 mod shape;

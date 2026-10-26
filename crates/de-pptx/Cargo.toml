@@ -26,3 +26,6 @@ serde_json = { workspace = true }
 [dev-dependencies]
 de-editor-core = { path = "../de-editor-core" }
 de-host-services = { path = "../de-host-services" }
+# Imported entrances play in Present (#246): the preview session's scene.
+de-preview-core = { path = "../de-preview-core", features = ["testing"] }
+de-pen-loader = { path = "../de-pen-loader" }

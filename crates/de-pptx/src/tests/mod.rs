@@ -2,6 +2,7 @@
 //! editor's own deck exporters.
 
 mod fixture;
+mod present;
 mod roundtrip;
 
 use serde_json::Value;
@@ -11,7 +12,7 @@ use crate::{import_pptx, PptxError, GRID_GAP};
 /// The imported fixture as JSON, so assertions read like the `.de` file.
 fn imported() -> (Value, Vec<String>) {
     let import = import_pptx(&fixture::deck(), "Fixture").expect("fixture imports");
-    assert_eq!(import.slides, 3);
+    assert_eq!(import.slides, 4);
     let value = serde_json::to_value(&import.document).expect("serialize");
     (value, import.warnings)
 }
@@ -67,9 +68,9 @@ fn all_text(node: &Value) -> String {
 fn every_slide_becomes_a_board_at_the_slide_size_in_order() {
     let (doc, _) = imported();
     let boards = boards(&doc);
-    assert_eq!(boards.len(), 3);
+    assert_eq!(boards.len(), 4);
     let ids: Vec<&str> = boards.iter().filter_map(|b| b["id"].as_str()).collect();
-    assert_eq!(ids, ["s1", "s2", "s3"]);
+    assert_eq!(ids, ["s1", "s2", "s3", "s4"]);
     for (i, board) in boards.iter().enumerate() {
         near(&board["width"], 1280.0);
         near(&board["height"], 720.0);
@@ -336,6 +337,53 @@ fn boards_wrap_onto_grid_rows_with_room_for_notes() {
     near(
         &frames[4]["y"],
         50.0 + GRID_GAP + crate::NOTE_GAP + crate::NOTE_HEIGHT,
+    );
+}
+
+/// The single animation on the node named `name` of the animated slide.
+fn animation<'a>(doc: &'a Value, name: &str) -> &'a Value {
+    let node = find(boards(doc)[3], name).unwrap_or_else(|| panic!("{name}"));
+    let list = node["animations"]
+        .as_array()
+        .unwrap_or_else(|| panic!("{name} has animations"));
+    assert_eq!(list.len(), 1, "{name}: {list:?}");
+    &list[0]
+}
+
+#[test]
+fn entrances_and_transitions_carry_over() {
+    let (doc, warnings) = imported();
+    let slide = boards(&doc)[3];
+    assert_eq!(slide["slideTransition"]["kind"], "fade");
+    assert_eq!(slide["slideTransition"]["durationMs"], 1200);
+
+    let title = animation(&doc, "Motion title");
+    assert_eq!(title["trigger"], "mount");
+    assert_eq!(title["durationMs"], 500);
+    assert!(title.get("delayMs").is_none());
+    near(&title["keyframes"][0]["values"]["opacity"], 0.0);
+    near(&title["keyframes"][1]["values"]["opacity"], 1.0);
+
+    // After the title: starts when it ends, floats in from 0.25 slide
+    // widths (320 px) to the left.
+    let floated = animation(&doc, "Float box");
+    assert_eq!(floated["delayMs"], 500);
+    assert_eq!(floated["durationMs"], 750);
+    near(&floated["keyframes"][0]["values"]["translateX"], -320.0);
+    near(&floated["keyframes"][1]["values"]["translateX"], 0.0);
+    assert_eq!(floated["easing"], "linear");
+
+    // With the box: zooms from half size, eased, played twice.
+    let zoomed = animation(&doc, "Zoom circle");
+    assert_eq!(zoomed["delayMs"], 500);
+    near(&zoomed["keyframes"][0]["values"]["scaleX"], 0.5);
+    near(&zoomed["keyframes"][0]["values"]["scaleY"], 0.5);
+    assert_eq!(zoomed["easing"], "ease_in_out");
+    assert_eq!(zoomed["iterations"], 2);
+
+    assert!(
+        warnings.contains(&"emphasis animation (not imported)".to_string()),
+        "{warnings:?}"
     );
 }
 

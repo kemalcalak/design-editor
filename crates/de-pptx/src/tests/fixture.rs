@@ -1,5 +1,5 @@
 //! A small deck written part by part, so every test reads the XML it
-//! asserts against. Three slides on one layout / master / theme:
+//! asserts against. Four slides on one layout / master / theme:
 //!
 //! 1. title + bulleted body placeholders (positions and styles inherited
 //!    from layout and master), speaker notes; stored as `slide9.xml` so
@@ -9,7 +9,10 @@
 //!    table, a rotated + mirrored picture-filled triangle, a numbered
 //!    list, a chart with a fallback picture and one without, SmartArt,
 //!    an OLE object with its preview, a video;
-//! 3. hidden, with its own gradient background.
+//! 3. hidden, with its own gradient background;
+//! 4. animated: a fading title, a box floating in from the left after it,
+//!    a circle zooming in with it (eased, played twice), an emphasis
+//!    effect the editor cannot play, and a PowerPoint 2010 fade transition.
 
 use std::io::{Cursor, Write};
 
@@ -336,6 +339,137 @@ fn slide3() -> String {
     )
 }
 
+/// One effect of a main sequence: `class` / `node_type` as PowerPoint
+/// writes them, `behaviours` the effect's children.
+fn effect(
+    id: &mut u32,
+    spid: u32,
+    class: &str,
+    node_type: &str,
+    extra: &str,
+    behaviours: &str,
+) -> String {
+    *id += 1;
+    let me = *id;
+    format!(
+        "<p:par><p:cTn id=\"{me}\" presetID=\"10\" presetClass=\"{class}\" presetSubtype=\"0\" fill=\"hold\" \
+nodeType=\"{node_type}\"{extra}><p:stCondLst><p:cond delay=\"0\"/></p:stCondLst><p:childTnLst>{}</p:childTnLst></p:cTn></p:par>",
+        behaviours.replace("SPID", &spid.to_string())
+    )
+}
+
+fn behaviour_set() -> &'static str {
+    "<p:set><p:cBhvr><p:cTn id=\"90\" dur=\"1\" fill=\"hold\"/><p:tgtEl><p:spTgt spid=\"SPID\"/></p:tgtEl>\
+<p:attrNameLst><p:attrName>style.visibility</p:attrName></p:attrNameLst></p:cBhvr><p:to><p:strVal val=\"visible\"/></p:to></p:set>"
+}
+
+fn behaviour_fade(dur: u32) -> String {
+    format!(
+        "<p:animEffect transition=\"in\" filter=\"fade\"><p:cBhvr><p:cTn id=\"91\" dur=\"{dur}\"/>\
+<p:tgtEl><p:spTgt spid=\"SPID\"/></p:tgtEl></p:cBhvr></p:animEffect>"
+    )
+}
+
+fn behaviour_anim(attr: &str, from: &str, to: &str, dur: u32) -> String {
+    format!("<p:anim calcmode=\"lin\" valueType=\"num\"><p:cBhvr additive=\"base\"><p:cTn id=\"92\" dur=\"{dur}\" fill=\"hold\"/>\
+<p:tgtEl><p:spTgt spid=\"SPID\"/></p:tgtEl><p:attrNameLst><p:attrName>{attr}</p:attrName></p:attrNameLst></p:cBhvr>\
+<p:tavLst><p:tav tm=\"0\"><p:val><p:strVal val=\"{from}\"/></p:val></p:tav><p:tav tm=\"100000\"><p:val><p:strVal val=\"{to}\"/></p:val></p:tav></p:tavLst></p:anim>")
+}
+
+fn slide4() -> String {
+    let title = sp(
+        2,
+        "Motion title",
+        &format!(
+            "{}<a:prstGeom prst=\"rect\"><a:avLst/></a:prstGeom><a:noFill/>",
+            xfrm(457_200, 304_800, 4_572_000, 609_600)
+        ),
+        &tx(&run("Motion")),
+    );
+    let fill = |hex: &str| format!("<a:solidFill><a:srgbClr val=\"{hex}\"/></a:solidFill>");
+    // Centred at x = 400 px on a 1280 px slide.
+    let box_shape = sp(
+        3,
+        "Float box",
+        &format!(
+            "{}<a:prstGeom prst=\"rect\"><a:avLst/></a:prstGeom>{}",
+            xfrm(2_857_500, 2_000_000, 1_905_000, 952_500),
+            fill("4472C4")
+        ),
+        "",
+    );
+    let circle = sp(
+        4,
+        "Zoom circle",
+        &format!(
+            "{}<a:prstGeom prst=\"ellipse\"><a:avLst/></a:prstGeom>{}",
+            xfrm(7_000_000, 2_000_000, 952_500, 952_500),
+            fill("ED7D31")
+        ),
+        "",
+    );
+    let mut id = 4;
+    let first = effect(
+        &mut id,
+        2,
+        "entr",
+        "withEffect",
+        "",
+        &format!("{}{}", behaviour_set(), behaviour_fade(500)),
+    );
+    let floated = effect(
+        &mut id,
+        3,
+        "entr",
+        "afterEffect",
+        "",
+        &format!(
+            "{}{}{}",
+            behaviour_set(),
+            behaviour_fade(750),
+            behaviour_anim("ppt_x", "#ppt_x-0.25", "#ppt_x", 750)
+        ),
+    );
+    let zoomed = effect(
+        &mut id,
+        4,
+        "entr",
+        "withEffect",
+        " accel=\"50000\" decel=\"50000\" repeatCount=\"2000\"",
+        &format!(
+            "{}{}{}",
+            behaviour_set(),
+            behaviour_anim("ppt_w", "#ppt_w*0.5", "#ppt_w", 750),
+            behaviour_anim("ppt_h", "#ppt_h*0.5", "#ppt_h", 750)
+        ),
+    );
+    let pulse = effect(&mut id, 4, "emph", "afterEffect", "", "<p:animScale><p:cBhvr><p:cTn id=\"93\" dur=\"500\"/><p:tgtEl><p:spTgt spid=\"SPID\"/></p:tgtEl></p:cBhvr><p:by x=\"120000\" y=\"120000\"/></p:animScale>");
+    let group = |delay: u32, effects: &str| {
+        format!("<p:par><p:cTn id=\"{}\" fill=\"hold\"><p:stCondLst><p:cond delay=\"{delay}\"/></p:stCondLst><p:childTnLst>{effects}</p:childTnLst></p:cTn></p:par>", 80 + delay / 100)
+    };
+    // One automatic step: the title fades (0–500 ms), then the box floats
+    // in with the circle zooming (500–1250 ms), then the emphasis.
+    let timing = format!(
+        "<p:timing><p:tnLst><p:par><p:cTn id=\"1\" dur=\"indefinite\" restart=\"never\" nodeType=\"tmRoot\"><p:childTnLst>\
+<p:seq concurrent=\"1\" nextAc=\"seek\"><p:cTn id=\"2\" dur=\"indefinite\" nodeType=\"mainSeq\"><p:childTnLst>\
+<p:par><p:cTn id=\"3\" fill=\"hold\"><p:stCondLst><p:cond delay=\"indefinite\"/></p:stCondLst><p:childTnLst>{}{}{}</p:childTnLst></p:cTn></p:par>\
+</p:childTnLst></p:cTn></p:seq></p:childTnLst></p:cTn></p:par></p:tnLst></p:timing>",
+        group(0, &first),
+        group(500, &format!("{floated}{zoomed}")),
+        group(1250, &pulse),
+    );
+    let transition = format!(
+        "<mc:AlternateContent xmlns:mc=\"{MC}\" xmlns:p14=\"http://schemas.microsoft.com/office/powerpoint/2010/main\">\
+<mc:Choice Requires=\"p14\"><p:transition spd=\"slow\" p14:dur=\"1200\"><p:fade/></p:transition></mc:Choice>\
+<mc:Fallback><p:transition spd=\"slow\"><p:fade/></p:transition></mc:Fallback></mc:AlternateContent>"
+    );
+    format!(
+        "<p:sld {}><p:cSld>{}</p:cSld>{transition}{timing}</p:sld>",
+        ns(),
+        tree(&format!("{title}{box_shape}{circle}"))
+    )
+}
+
 fn notes1() -> String {
     format!(
         "<p:notes {}><p:cSld>{}</p:cSld></p:notes>",
@@ -361,7 +495,7 @@ fn notes1() -> String {
 fn presentation() -> String {
     format!(
         "<p:presentation {}><p:sldMasterIdLst><p:sldMasterId id=\"2147483648\" r:id=\"rId1\"/></p:sldMasterIdLst>\
-<p:sldIdLst><p:sldId id=\"256\" r:id=\"rId9\"/><p:sldId id=\"257\" r:id=\"rId3\"/><p:sldId id=\"258\" r:id=\"rId4\"/></p:sldIdLst>\
+<p:sldIdLst><p:sldId id=\"256\" r:id=\"rId9\"/><p:sldId id=\"257\" r:id=\"rId3\"/><p:sldId id=\"258\" r:id=\"rId4\"/><p:sldId id=\"259\" r:id=\"rId5\"/></p:sldIdLst>\
 <p:sldSz cx=\"12192000\" cy=\"6858000\"/><p:notesSz cx=\"6858000\" cy=\"9144000\"/>\
 <p:defaultTextStyle><a:defPPr><a:defRPr lang=\"en-US\" sz=\"1800\"/></a:defPPr></p:defaultTextStyle></p:presentation>",
         ns()
@@ -386,6 +520,7 @@ pub fn deck() -> Vec<u8> {
                 ("rId9", "slide", "slides/slide9.xml"),
                 ("rId3", "slide", "slides/slide2.xml"),
                 ("rId4", "slide", "slides/slide3.xml"),
+                ("rId5", "slide", "slides/slide4.xml"),
             ])
             .into_bytes(),
         ),
@@ -413,6 +548,8 @@ pub fn deck() -> Vec<u8> {
         ),
         ("ppt/slides/slide3.xml".into(), slide3().into_bytes()),
         ("ppt/slides/_rels/slide3.xml.rels".into(), rels(&[("rId1", "slideLayout", "../slideLayouts/slideLayout1.xml")]).into_bytes()),
+        ("ppt/slides/slide4.xml".into(), slide4().into_bytes()),
+        ("ppt/slides/_rels/slide4.xml.rels".into(), rels(&[("rId1", "slideLayout", "../slideLayouts/slideLayout1.xml")]).into_bytes()),
         ("ppt/notesSlides/notesSlide1.xml".into(), notes1().into_bytes()),
         ("ppt/media/image1.png".into(), png),
         ("ppt/media/clip.mp4".into(), vec![0; 64]),

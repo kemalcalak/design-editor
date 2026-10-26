@@ -16,17 +16,17 @@
 //! `p:push`, both from the right. The base schema only names three speeds,
 //! so the duration picks the nearest.
 //!
-//! The tables here ([`EntrancePreset`], [`TRANSITION_ELEMENTS`],
-//! [`TRANSITION_SPEEDS`]) depend on nothing but jian's schema, so the
-//! PPTX importer can read them backwards: an effect's behaviours back
-//! into a two-stop `mount` animation, a transition element back into a
-//! [`SlideTransitionKind`].
+//! The name tables ([`EntrancePreset`], [`TRANSITION_ELEMENTS`],
+//! [`TRANSITION_SPEEDS`]) live in `de_pptx::motion_table`, which the PPTX
+//! importer (#246) reads backwards: an effect's behaviours back into a
+//! two-stop `mount` animation, a transition element back into a
+//! `SlideTransitionKind`.
 
 use de_editor_core::motion_edit::MotionProperty;
+pub(crate) use de_pptx::motion_table::EntrancePreset;
+use de_pptx::motion_table::{TRANSITION_ELEMENTS, TRANSITION_SPEEDS};
 use de_util::motion::is_infinite_iterations;
-use jian_ops_schema::motion::{
-    Easing, MotionTrigger, NodeAnimation, SlideTransition, SlideTransitionKind,
-};
+use jian_ops_schema::motion::{Easing, MotionTrigger, NodeAnimation, SlideTransition};
 use serde_json::Value;
 use std::fmt::Write as _;
 
@@ -149,47 +149,6 @@ impl Entrance {
         }
     }
 }
-
-/// The entrance presets an [`Entrance`] is filed under, with PowerPoint's
-/// `presetID` / `presetSubtype` (`presetClass="entr"`).
-///
-/// | Preset | id / subtype | Node animation (mount, to rest) |
-/// |---|---|---|
-/// | Fade | 10 / 0 | opacity 0 → 1 |
-/// | Fly In | 2 / 0 | translateX / Y → 0 (`ppt_x` / `ppt_y`) |
-/// | Float In | 42 / 0 | opacity 0 → 1 + translate → 0 |
-/// | Zoom | 53 / 16 | scaleX / Y → 1 (`ppt_w` / `ppt_h`), may add the above |
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub(crate) enum EntrancePreset {
-    Fade,
-    FlyIn,
-    FloatIn,
-    Zoom,
-}
-
-impl EntrancePreset {
-    /// `(presetID, presetSubtype)`.
-    pub(crate) fn ids(self) -> (u32, u32) {
-        match self {
-            EntrancePreset::Fade => (10, 0),
-            EntrancePreset::FlyIn => (2, 0),
-            EntrancePreset::FloatIn => (42, 0),
-            EntrancePreset::Zoom => (53, 16),
-        }
-    }
-}
-
-/// Slide transition kind ↔ the `<p:transition>` child that plays it.
-pub(crate) const TRANSITION_ELEMENTS: [(SlideTransitionKind, &str); 3] = [
-    (SlideTransitionKind::Fade, "<p:fade/>"),
-    (SlideTransitionKind::Slide, "<p:cover dir=\"l\"/>"),
-    (SlideTransitionKind::Push, "<p:push dir=\"l\"/>"),
-];
-
-/// PowerPoint's named speeds: `(spd, duration in ms)`. An export picks the
-/// nearest; an import reads the duration back.
-pub(crate) const TRANSITION_SPEEDS: [(&str, u64); 3] =
-    [("fast", 500), ("med", 750), ("slow", 1000)];
 
 /// The slide's `<p:timing>` playing `effects` (`(shape id, entrance)`)
 /// as the slide starts. Empty for none.

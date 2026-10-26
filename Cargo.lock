@@ -1714,6 +1714,8 @@ dependencies = [
  "base64",
  "de-editor-core",
  "de-host-services",
+ "de-pen-loader",
+ "de-preview-core",
  "de-util",
  "flate2",
  "jian-ops-schema",

@@ -1,11 +1,14 @@
 //! Per-slide conversion state: colours, the layout and master the slide
 //! inherits from, placeholder lookup, coordinate mapping and node ids.
 
+use std::collections::HashMap;
+
 use roxmltree::Node;
 use serde_json::{json, Map, Value};
 
 use crate::color::ColorContext;
 use crate::media::Media;
+use crate::motion::Target;
 use crate::theme::Theme;
 use crate::warnings::Warnings;
 use crate::xml;
@@ -26,6 +29,8 @@ pub struct Ctx<'a, 'i, 'p> {
     pub master: Option<Node<'a, 'i>>,
     /// The presentation's `defaultTextStyle`.
     pub default_text: Option<Node<'a, 'i>>,
+    /// Slide shapes by `cNvPr id`, for the timing's `spTgt spid`.
+    pub targets: HashMap<String, Target>,
 }
 
 /// Node ids are `s<slide>` for a board and `s<slide>-<n>` inside it, so

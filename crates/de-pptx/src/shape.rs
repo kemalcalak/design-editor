@@ -10,6 +10,7 @@ use serde_json::{json, Map, Value};
 use crate::context::{base, round, Ctx, Mapping, Placeholder, PxBox, Xfrm};
 use crate::frame;
 use crate::geometry::{self, Geometry};
+use crate::motion::Target;
 use crate::package::Relationships;
 use crate::paint::{self, Fill, Line};
 use crate::text::{self, TextSource};
@@ -46,6 +47,42 @@ fn element(ctx: &mut Ctx<'_, '_, '_>, walk: &Walk<'_>, el: Node<'_, '_>) -> Opti
     if walk.scope == Scope::Decoration && Placeholder::of(el).is_some() {
         return None;
     }
+    let node = convert(ctx, walk, el)?;
+    if walk.scope == Scope::Slide {
+        record_target(ctx, el, &node);
+    }
+    Some(node)
+}
+
+/// Remember which node a slide shape became, for its animations.
+fn record_target(ctx: &mut Ctx<'_, '_, '_>, el: Node<'_, '_>, node: &Value) {
+    let Some(spid) = el
+        .descendants()
+        .find(|n| n.is_element() && n.tag_name().name() == "cNvPr")
+        .and_then(|n| n.attribute("id"))
+    else {
+        return;
+    };
+    let (Some(id), Some(x), Some(y)) =
+        (node["id"].as_str(), node["x"].as_f64(), node["y"].as_f64())
+    else {
+        return;
+    };
+    let size = |key: &str, line: &str| {
+        node[key]
+            .as_f64()
+            .or_else(|| node[line].as_f64().map(f64::abs))
+            .unwrap_or(0.0)
+    };
+    let (w, h) = (size("width", "x2"), size("height", "y2"));
+    ctx.targets.entry(spid.to_string()).or_insert(Target {
+        id: id.to_string(),
+        center: (x + w / 2.0, y + h / 2.0),
+        size: (w, h),
+    });
+}
+
+fn convert(ctx: &mut Ctx<'_, '_, '_>, walk: &Walk<'_>, el: Node<'_, '_>) -> Option<Value> {
     match el.tag_name().name() {
         "sp" | "cxnSp" => shape(ctx, walk, el),
         "grpSp" => group(ctx, walk, el),
