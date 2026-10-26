@@ -9,6 +9,7 @@ use crate::session::PreviewSession;
 use de_editor_core::slide_transition::{slide_layers, SlideLayerBoard, SlideTransitionRun};
 use de_editor_core::Viewport;
 use de_editor_ui::{ImageBlendMode, Point2D, Rect, RenderBackend};
+use std::collections::BTreeSet;
 
 /// `t` (`0..1`) through `easing`, the curve node motion uses.
 pub fn eased_progress(easing: &jian_ops_schema::motion::Easing, t: f32) -> f32 {
@@ -16,6 +17,32 @@ pub fn eased_progress(easing: &jian_ops_schema::motion::Easing, t: f32) -> f32 {
 }
 
 impl PreviewSession {
+    /// Play the `mount` animations of top-level board `board` again from
+    /// their first frame: Present arriving on a slide (#245). Lifecycle
+    /// starts every board's entrances once when Preview opens, so without
+    /// this a later slide would show its entrances long finished. Does
+    /// nothing before the lifecycle has begun (that start covers it).
+    pub fn replay_board_mount_animations(&mut self, board: &str, now_ms: u64) {
+        if !self.motion.lifecycle_started() {
+            return;
+        }
+        let Some(root) = self.scene.active_page().and_then(|page| page.find(board)) else {
+            return;
+        };
+        let mut ids = BTreeSet::new();
+        collect_ids(root, &mut ids);
+        let now_ms = self.last_now_ms.max(now_ms);
+        self.last_now_ms = now_ms;
+        self.motion.start_mount_animations(
+            &self.runtime,
+            &self.scene,
+            &self.animation,
+            self.effective_motion_preference(),
+            now_ms,
+            Some(&ids),
+        );
+    }
+
     /// Paint top-level board `board` fitted to `canvas_rect` (zero
     /// padding, centred — the slideshow camera), clipped to its own rect,
     /// shifted right by `offset_x` slide widths and at `opacity`.
@@ -94,5 +121,12 @@ impl PreviewSession {
                 now_ms,
             );
         }
+    }
+}
+
+fn collect_ids(node: &de_editor_ui::layout_scene::SceneNode, out: &mut BTreeSet<String>) {
+    out.insert(node.id.clone());
+    for child in &node.children {
+        collect_ids(child, out);
     }
 }
