@@ -158,13 +158,15 @@ pub fn build_slide(
         };
         children.extend(walk_tree(ctx, &walk, tree));
     };
-    if shows(Some(slide_root)) && shows(layout_root) {
-        add_tree(&mut ctx, master_root, master_rels, Scope::Decoration);
-    }
+    // Front-to-back: the slide's own shapes, then the layout's, then the
+    // master's artwork at the very back.
+    add_tree(&mut ctx, Some(slide_root), &slide.rels, Scope::Slide);
     if shows(Some(slide_root)) {
         add_tree(&mut ctx, layout_root, layout_rels, Scope::Decoration);
     }
-    add_tree(&mut ctx, Some(slide_root), &slide.rels, Scope::Slide);
+    if shows(Some(slide_root)) && shows(layout_root) {
+        add_tree(&mut ctx, master_root, master_rels, Scope::Decoration);
+    }
 
     let (width, height) = input.size;
     let mut animations = motion::animations(slide_root, &ctx.targets, input.size, ctx.warnings);

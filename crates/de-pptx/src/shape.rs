@@ -43,6 +43,9 @@ pub fn walk_tree(ctx: &mut Ctx<'_, '_, '_>, walk: &Walk<'_>, tree: Node<'_, '_>)
     for el in xml::elements(tree) {
         out.extend(element(ctx, walk, el));
     }
+    // `p:spTree` lists shapes back-to-front (paint order); canonical
+    // children are front-to-back, so the first shape ends up last.
+    out.reverse();
     out
 }
 
@@ -205,7 +208,8 @@ fn shape(ctx: &mut Ctx<'_, '_, '_>, walk: &Walk<'_>, el: Node<'_, '_>) -> Option
                 flip_v: false,
                 ..xfrm
             };
-            Some(wrap(ctx, el, b, &unflipped, vec![outline, label]))
+            // Front-to-back: the text over its box.
+            Some(wrap(ctx, el, b, &unflipped, vec![label, outline]))
         }
     }
 }

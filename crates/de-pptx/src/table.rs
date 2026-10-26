@@ -83,6 +83,9 @@ pub fn table(
     if styled && unstyled_cells {
         ctx.warnings.add("table style (cell colours not imported)");
     }
+    // Built back-to-front (each cell, then its text); children are
+    // front-to-back.
+    cells.reverse();
     let mut node = base(ctx.ids.next(), frame, b, Some(xfrm), false);
     node.insert("type".into(), json!("group"));
     node.insert("width".into(), json!(round(b.w)));

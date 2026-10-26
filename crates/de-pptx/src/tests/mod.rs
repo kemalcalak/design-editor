@@ -125,8 +125,10 @@ fn master_artwork_sits_behind_the_slide_and_prompts_stay_out() {
     let (doc, _) = imported();
     let slide = boards(&doc)[0];
     let children = slide["children"].as_array().expect("children");
-    assert_eq!(children[0]["name"], "Accent bar");
-    assert_eq!(children[0]["fill"][0]["color"], "#4472C4");
+    // Canonical children are front-to-back: the master's artwork is last.
+    let last = children.last().expect("master artwork");
+    assert_eq!(last["name"], "Accent bar");
+    assert_eq!(last["fill"][0]["color"], "#4472C4");
     assert!(!all_text(slide).contains("Master"), "{}", all_text(slide));
 }
 
@@ -157,14 +159,15 @@ fn shapes_come_in_as_editable_nodes() {
     assert_eq!(text_box["content"][1]["href"], "https://example.com/");
     assert_eq!(text_box["content"][1]["underline"], true);
 
-    // A filled shape with text is a group: the box, then its text.
+    // A filled shape with text is a group, front-to-back: its text, then
+    // the box behind it.
     let card = find(slide, "Card").expect("card");
     assert_eq!(card["type"], "group");
-    let box_node = &card["children"][0];
+    let box_node = &card["children"][1];
     assert_eq!(box_node["type"], "rectangle");
     assert_eq!(box_node["fill"][0]["color"], "#ED7D31");
     near(&box_node["cornerRadius"], 14.4);
-    let label = &card["children"][1];
+    let label = &card["children"][0];
     assert_eq!(label["textAlignVertical"], "middle");
     assert_eq!(label["content"][0]["fill"], "#FFFFFF");
 
@@ -203,8 +206,14 @@ fn shapes_come_in_as_editable_nodes() {
     near(&freeform["height"], 50.0);
 
     let table = find(slide, "Table").expect("table");
-    assert_eq!(all_text(table), "Q1Q21012");
-    assert_eq!(table["children"][0]["fill"][0]["color"], "#D9E2F3");
+    // Children are front-to-back: each cell's text sits before (over) its
+    // box, and the first cell ends up last.
+    assert_eq!(all_text(table), "1210Q2Q1");
+    let cells = table["children"].as_array().expect("cells");
+    let first_box = cells.last().expect("first cell");
+    assert_eq!(first_box["fill"][0]["color"], "#D9E2F3");
+    let first_text = &cells[cells.len() - 2];
+    assert_eq!(first_text["type"], "text");
 }
 
 #[test]
