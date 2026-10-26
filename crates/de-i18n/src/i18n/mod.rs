@@ -502,6 +502,8 @@ mod html_import_warning_key_tests;
 #[cfg(test)]
 mod missing_fonts_key_tests;
 #[cfg(test)]
+mod option_label_distinct_tests;
+#[cfg(test)]
 mod preview_device_key_tests;
 #[cfg(test)]
 mod prompt_center_key_tests;

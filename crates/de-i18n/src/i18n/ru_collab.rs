@@ -333,7 +333,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "motion.height" => "Высота",
         "motion.cornerRadius" => "Скругление",
         "slidesPanel.transitionNone" => "Нет",
-        "slidesPanel.transitionPush" => "Сдвиг",
+        "slidesPanel.transitionPush" => "Толчок",
         "blendMode.linearBurn" => "Линейный затемнитель",
         "blendMode.linearDodge" => "Линейный осветлитель",
         "shader.editCode" => "Код",

@@ -298,7 +298,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "interactions.onHover" => "Beim Hover",
         "interactions.onLongPress" => "Beim langen Drücken",
         "interactions.transition" => "Übergang",
-        "interactions.slide" => "Schieben",
+        "interactions.slide" => "Gleiten",
         "interactions.fade" => "Überblenden",
         "motion.title" => "Bewegung",
         "motion.onLoad" => "Beim Laden",
