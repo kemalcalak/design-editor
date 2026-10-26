@@ -379,6 +379,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "interactions.markScreen" => "Đánh dấu là màn hình",
         "interactions.setStartScreen" => "Đặt làm màn hình bắt đầu",
         "interactions.removeScreen" => "Gỡ màn hình",
+        "htmlImport.warn.motion.keyframes_static" => {
+            "Không thể giữ hoạt ảnh @keyframes '{{name}}', phần tử được nhập ở dạng tĩnh."
+        }
         _ => return None,
     })
 }

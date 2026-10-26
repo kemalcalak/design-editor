@@ -40,6 +40,10 @@ impl fmt::Display for ImportWarning {
             Self::WebFontNotDownloaded { family } => {
                 write!(formatter, "web font '{family}' declared via @font-face is not downloaded; text falls back to available fonts")
             }
+            Self::KeyframesStatic { name } => write!(
+                formatter,
+                "@keyframes '{name}' could not become a node animation; the element was imported static"
+            ),
             Self::GridColumnUnsupported { value } => {
                 write!(
                     formatter,

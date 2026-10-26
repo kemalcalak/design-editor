@@ -379,6 +379,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "interactions.markScreen" => "标记为屏幕",
         "interactions.setStartScreen" => "设为起始屏幕",
         "interactions.removeScreen" => "移除屏幕",
+        "htmlImport.warn.motion.keyframes_static" => {
+            "无法保留 @keyframes '{{name}}' 动画，已按静态导入。"
+        }
         _ => return None,
     })
 }

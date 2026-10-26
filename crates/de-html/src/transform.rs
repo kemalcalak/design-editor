@@ -278,6 +278,41 @@ pub fn bake_transform(
     })
 }
 
+/// Compose a transform list into one matrix without reporting anything:
+/// a keyframe stop (#245) that cannot be read leaves its whole animation
+/// static and warns once for it instead. `None` when the list does not
+/// parse, holds a function with no 2-D reading, or would need a
+/// percentage of an auto-sized axis.
+pub(crate) fn list_matrix(
+    value: &str,
+    length_ctx: &LengthCtx,
+    own: (f64, f64),
+    definite: (bool, bool),
+) -> Option<Affine> {
+    let value = value.trim();
+    if value.eq_ignore_ascii_case("none") {
+        return Some(Affine::IDENTITY);
+    }
+    let function_ctx = FunctionCtx {
+        length_ctx,
+        own,
+        definite,
+    };
+    let mut matrix = Affine::IDENTITY;
+    let (mut unsupported, mut dropped_percentage) = (false, false);
+    for (name, arguments) in split_functions(value)? {
+        let next = function_matrix(
+            &name,
+            &arguments,
+            &function_ctx,
+            &mut unsupported,
+            &mut dropped_percentage,
+        )?;
+        matrix = matrix.multiply(next);
+    }
+    (!unsupported && !dropped_percentage && matrix.is_finite()).then_some(matrix)
+}
+
 /// `scale(0)` (the hidden-popover idiom) and non-finite factors have no node
 /// representation: the schema cannot store a zero-extent box.
 fn is_degenerate(value: f64) -> bool {
@@ -304,7 +339,7 @@ fn finite_scale(value: f64) -> f64 {
     }
 }
 
-fn length_ctx(style: &ComputedStyle, context: &MapCtx<'_>) -> LengthCtx {
+pub(crate) fn length_ctx(style: &ComputedStyle, context: &MapCtx<'_>) -> LengthCtx {
     LengthCtx {
         font_size: style.font_size,
         root_font_size: context.opts.base_font_size,

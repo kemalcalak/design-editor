@@ -22,6 +22,7 @@ mod import_warning_tests;
 pub mod length;
 pub(crate) mod list_markers;
 pub mod mapper;
+mod mapper_motion;
 mod project;
 mod project_zip;
 mod project_zip_range;
@@ -243,6 +244,7 @@ pub fn import_html_with_resources(
     // Kept before the parser is dropped; reported once the mapped nodes reveal
     // which of the declared families text actually asks for.
     let web_fonts = author_parser.web_fonts().to_vec();
+    let keyframes = author_parser.keyframes().clone();
 
     let body = dom::DomElement {
         tag: "body".to_string(),
@@ -319,6 +321,7 @@ pub fn import_html_with_resources(
     let mut context = mapper::MapCtx {
         opts: &mapping_opts,
         rules: &rules,
+        keyframes: &keyframes,
         warnings: Vec::new(),
         warned: Default::default(),
         next_id: 0,

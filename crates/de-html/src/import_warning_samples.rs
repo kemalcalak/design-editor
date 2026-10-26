@@ -26,6 +26,9 @@ pub(crate) fn sample_field_variants() -> Vec<ImportWarning> {
         ImportWarning::WebFontNotDownloaded {
             family: "x".to_string(),
         },
+        ImportWarning::KeyframesStatic {
+            name: "x".to_string(),
+        },
         ImportWarning::GridColumnUnsupported {
             value: "x".to_string(),
         },

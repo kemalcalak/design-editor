@@ -593,6 +593,7 @@ impl<'a> SnapshotCtx<'a> {
         let mut map_context = MapCtx {
             opts: self.opts,
             rules: &rules,
+            keyframes: &crate::css::keyframes::NO_KEYFRAMES,
             warnings: Vec::new(),
             warned: Default::default(),
             next_id: 0,

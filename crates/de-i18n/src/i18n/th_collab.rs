@@ -379,6 +379,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "interactions.markScreen" => "ทำเครื่องหมายเป็นหน้าจอ",
         "interactions.setStartScreen" => "ตั้งเป็นหน้าจอเริ่มต้น",
         "interactions.removeScreen" => "นำหน้าจอออก",
+        "htmlImport.warn.motion.keyframes_static" => {
+            "ไม่สามารถคงแอนิเมชัน @keyframes '{{name}}' ไว้ได้ จึงนำเข้าแบบคงที่"
+        }
         _ => return None,
     })
 }

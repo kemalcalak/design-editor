@@ -57,6 +57,10 @@ pub enum ImportWarning {
     /// `font.web_font_not_downloaded` — web font '{family}' declared via @font-face is not
     ///   downloaded; text falls back to available fonts
     WebFontNotDownloaded { family: String },
+    // --- motion: CSS animations (#245).
+    /// `motion.keyframes_static` — @keyframes '{name}' could not become a node animation; the
+    ///   element was imported static
+    KeyframesStatic { name: String },
     // --- layout: Box, flex, grid and offset layout degradations.
     /// `layout.percentage_absolute_offset_inferred` — percentage absolute offsets resolved against the inferred containing block
     PercentageAbsoluteOffsetInferred,
@@ -354,6 +358,7 @@ impl ImportWarning {
             Self::UnsupportedContainerBlock => ident_pair!("css.unsupported_container_block"),
             Self::UnsupportedAtBlock { .. } => ident_pair!("css.unsupported_block"),
             Self::WebFontNotDownloaded { .. } => ident_pair!("font.web_font_not_downloaded"),
+            Self::KeyframesStatic { .. } => ident_pair!("motion.keyframes_static"),
             Self::PercentageAbsoluteOffsetInferred => {
                 ident_pair!("layout.percentage_absolute_offset_inferred")
             }
@@ -616,6 +621,7 @@ pub const ALL_IMPORT_WARNING_CODES: &[&str] = &[
     "css.unsupported_container_block",
     "css.unsupported_block",
     "font.web_font_not_downloaded",
+    "motion.keyframes_static",
     "layout.percentage_absolute_offset_inferred",
     "layout.percentage_relative_offset_inferred",
     "layout.aspect_ratio_no_definite_axis",

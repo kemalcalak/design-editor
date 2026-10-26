@@ -17,6 +17,7 @@ impl ImportWarning {
             Self::InvalidLayerBlockName { name } => vec![("name", name.to_string())],
             Self::UnsupportedAtBlock { name } => vec![("name", name.to_string())],
             Self::WebFontNotDownloaded { family } => vec![("family", family.to_string())],
+            Self::KeyframesStatic { name } => vec![("name", name.to_string())],
             Self::GridColumnUnsupported { value } => vec![("value", value.to_string())],
             Self::PropertyNotRepresentable { property } => vec![("property", property.to_string())],
             Self::ListStyleTypeUnsupported { value } => vec![("value", value.to_string())],

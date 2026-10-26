@@ -379,6 +379,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "interactions.markScreen" => "Mark as screen",
         "interactions.setStartScreen" => "Set as start screen",
         "interactions.removeScreen" => "Remove screen",
+        "htmlImport.warn.motion.keyframes_static" => {
+            "The @keyframes '{{name}}' animation could not be kept and was imported static."
+        }
         _ => return None,
     })
 }

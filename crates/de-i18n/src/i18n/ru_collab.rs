@@ -379,6 +379,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "interactions.markScreen" => "Отметить как экран",
         "interactions.setStartScreen" => "Сделать стартовым экраном",
         "interactions.removeScreen" => "Убрать экран",
+        "htmlImport.warn.motion.keyframes_static" => {
+            "Анимацию @keyframes '{{name}}' не удалось сохранить, элемент импортирован статичным."
+        }
         _ => return None,
     })
 }

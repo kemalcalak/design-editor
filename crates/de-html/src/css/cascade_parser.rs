@@ -2,6 +2,7 @@ use super::cascade::{CascadeLayer, StyleOrigin, StyleRule};
 use super::cascade_conditions::{media_list, supports_condition};
 use super::cascade_shared::{is_ident, matching, split_top_level, top_level_delimiter};
 use super::declarations::parse_declarations;
+use super::keyframes::{keyframes_name, parse_keyframes_body, KeyframesMap};
 use super::selectors::parse_selector_list;
 use crate::font_face::WebFont;
 use crate::import_warning::ImportWarning;
@@ -19,6 +20,7 @@ pub struct StylesheetParser {
     next_layers: BTreeMap<String, u32>,
     next_anonymous_layer: u32,
     web_fonts: Vec<WebFont>,
+    keyframes: KeyframesMap,
 }
 
 impl StylesheetParser {
@@ -30,6 +32,7 @@ impl StylesheetParser {
             next_layers: BTreeMap::new(),
             next_anonymous_layer: 0,
             web_fonts: Vec::new(),
+            keyframes: KeyframesMap::new(),
         }
     }
 
@@ -42,6 +45,12 @@ impl StylesheetParser {
     /// reports the ones imported text actually asks for.
     pub(crate) fn web_fonts(&self) -> &[WebFont] {
         &self.web_fonts
+    }
+
+    /// `@keyframes` blocks seen across every sheet this parser consumed
+    /// (#245); the mapper turns the ones an element runs into animations.
+    pub(crate) fn keyframes(&self) -> &KeyframesMap {
+        &self.keyframes
     }
 
     pub fn parse(&mut self, css: &str) -> (Vec<StyleRule>, Vec<ImportWarning>) {
@@ -308,8 +317,13 @@ impl SheetParser<'_, '_> {
                     self.context.web_fonts.push(font);
                 }
             }
-            "property" | "keyframes" => {}
-            name if name.ends_with("keyframes") => {}
+            "property" => {}
+            name if name.ends_with("keyframes") => {
+                if let Some(name) = keyframes_name(condition) {
+                    let rule = parse_keyframes_body(&self.css[start..end]);
+                    self.context.keyframes.insert(name, rule);
+                }
+            }
             "container" => self.warn(ImportWarning::UnsupportedContainerBlock),
             _ => self.warn(ImportWarning::UnsupportedAtBlock {
                 name: name.to_string(),
