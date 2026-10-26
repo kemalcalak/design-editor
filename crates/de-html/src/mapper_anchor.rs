@@ -20,7 +20,7 @@ use jian_ops_schema::node::{FrameNode, PenNode};
 use jian_ops_schema::sizing::{SizingBehavior, SizingKeyword};
 
 use super::layout_heuristics::{has_offset, position_value};
-use super::node_access::node_base_mut;
+use super::node_access::{node_base_mut, node_height_mut};
 use super::MapCtx;
 use crate::css::cascade::ComputedStyle;
 use crate::import_warning::ImportWarning;
@@ -32,12 +32,18 @@ pub struct Anchor {
     padding: [f64; 4],
     /// Pinned to the right / bottom edge rather than the left / top one.
     end: (bool, bool),
+    /// Pinned to top and bottom with an auto height (`inset: 0`): the node
+    /// fills the anchor between the insets instead of keeping a guessed
+    /// height. Widths are worked out at map time, so only height stretches.
+    stretch: bool,
 }
 
 /// The anchor `base` (already positioned by `apply_position`) needs, if any:
 /// pinned by `bottom` without `top` (or `right` without `left`) on an axis
 /// where the parent's size or the node's own (`own_definite`) is not known
-/// before layout, so `parent - inset - own` cannot be worked out.
+/// before layout, so `parent - inset - own` cannot be worked out; or pinned
+/// by both `top` and `bottom` with an auto height in such a parent, where
+/// the height itself is `parent - top - bottom`.
 pub(super) fn plan(
     base: &PenNodeBase,
     style: &ComputedStyle,
@@ -60,7 +66,13 @@ pub(super) fn plan(
         has_offset(style, "right") && !has_offset(style, "left") && !(parent_x && own_definite.0);
     let end_y =
         has_offset(style, "bottom") && !has_offset(style, "top") && !(parent_y && own_definite.1);
-    if !end_x && !end_y {
+    let stretch = !parent_y
+        && has_offset(style, "top")
+        && has_offset(style, "bottom")
+        && style
+            .get("height")
+            .is_none_or(|value| value.trim() == "auto");
+    if !end_x && !end_y && !stretch {
         return None;
     }
     let length = |name: &str, reference: f64| {
@@ -83,7 +95,7 @@ pub(super) fn plan(
     } else {
         0.0
     };
-    let bottom = if end_y {
+    let bottom = if end_y || stretch {
         end_inset("bottom", "margin-bottom", height, origin_y)
     } else {
         0.0
@@ -97,12 +109,18 @@ pub(super) fn plan(
     Some(Anchor {
         padding,
         end: (end_x, end_y),
+        stretch,
     })
 }
 
 /// Re-parent `node` into the frame that keeps its pin at layout time.
 pub(super) fn wrap(context: &mut MapCtx<'_>, mut node: PenNode, anchor: Option<Anchor>) -> PenNode {
-    let Some(Anchor { padding, end }) = anchor else {
+    let Some(Anchor {
+        padding,
+        end,
+        stretch,
+    }) = anchor
+    else {
         return node;
     };
     if context.node_count.saturating_add(1) > crate::MAX_OUTPUT_NODES {
@@ -120,6 +138,11 @@ pub(super) fn wrap(context: &mut MapCtx<'_>, mut node: PenNode, anchor: Option<A
         base.constraints = None;
         (base.explain.take(), base.theme.take())
     };
+    if stretch {
+        if let Some(height) = node_height_mut(&mut node) {
+            *height = Some(SizingBehavior::Keyword(SizingKeyword::FillContainer));
+        }
+    }
     let (end_x, end_y) = end;
     let justify = if end_y {
         JustifyContent::End

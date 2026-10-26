@@ -65,6 +65,18 @@ pub(crate) fn node_width_mut(node: &mut PenNode) -> Option<&mut Option<SizingBeh
     }
 }
 
+/// Mutable handle on the node's authored height, wherever the schema keeps it.
+pub(crate) fn node_height_mut(node: &mut PenNode) -> Option<&mut Option<SizingBehavior>> {
+    match node {
+        PenNode::Frame(node) => Some(&mut node.container.height),
+        PenNode::Group(node) => Some(&mut node.container.height),
+        PenNode::Rectangle(node) => Some(&mut node.container.height),
+        node => leaf_axis_mut!(node, height; Ellipse, Polygon, Path, Text, TextInput,
+            Image, IconFont, TextArea, Select, Switch, Checkbox, Slider,
+            RadioGroup, NumberInput, Progress, Tabs, Browser),
+    }
+}
+
 pub(crate) fn node_width(node: &PenNode) -> Option<&SizingBehavior> {
     match node {
         PenNode::Frame(node) | PenNode::Script(ScriptNode { frame: node, .. }) => {
