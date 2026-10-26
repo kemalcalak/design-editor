@@ -320,6 +320,7 @@ fn expression_axis_is_preserved_and_reports_the_dedicated_diagnostic() {
     let mut context = crate::mapper::MapCtx {
         opts: &options,
         rules: &[],
+        keyframes: &crate::css::keyframes::NO_KEYFRAMES,
         warnings: Vec::new(),
         warned: Default::default(),
         next_id: 0,

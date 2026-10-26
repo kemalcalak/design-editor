@@ -20,8 +20,10 @@ use de_editor_core::preview_slideshow::active_page_boards;
 use de_editor_core::EditorState;
 use std::path::Path;
 
+use crate::deck_motion::board_motion;
 use crate::export::ExportError;
-use crate::export_html_structured::board_slide_markup;
+use crate::export_html_motion::{slide_motion_css, transition_attrs, REDUCED_MOTION_CSS};
+use crate::export_html_structured::board_slide_markup_with_motion;
 use crate::export_html_template::{render_slideshow_page, SlideAsset};
 
 /// Fallback browser-tab title for a deck whose document and first board
@@ -56,6 +58,7 @@ pub fn export_deck_html(state: &EditorState, target: &Path) -> Result<DeckHtmlEx
     let page = scene.active_page().ok_or(ExportError::NoActivePage)?;
 
     let mut slides = Vec::new();
+    let mut motion_css = String::new();
     let mut summary = DeckHtmlExport::default();
     for board_id in active_page_boards(state) {
         // Hidden boards are skipped, not failed: hiding a board is the
@@ -69,7 +72,15 @@ pub fn export_deck_html(state: &EditorState, target: &Path) -> Result<DeckHtmlEx
         if node.hidden {
             continue;
         }
-        let markup = board_slide_markup(page, &board_id, board_name(state, &board_id))?;
+        let motion = board_motion(state, &board_id);
+        let animated = motion.animations.iter().map(|(id, _)| id.clone()).collect();
+        let markup = board_slide_markup_with_motion(
+            page,
+            &board_id,
+            board_name(state, &board_id),
+            &animated,
+        )?;
+        motion_css.push_str(&slide_motion_css(&motion.animations));
         summary.structured_nodes += markup.structured_nodes;
         summary.raster_fallbacks += markup.raster_fallbacks();
         slides.push(SlideAsset {
@@ -77,14 +88,18 @@ pub fn export_deck_html(state: &EditorState, target: &Path) -> Result<DeckHtmlEx
             width: markup.width,
             height: markup.height,
             body: markup.body,
+            transition: transition_attrs(motion.transition.as_ref()),
         });
     }
     if slides.is_empty() {
         return Err(ExportError::NothingToExport);
     }
     summary.slides = slides.len();
+    if !motion_css.is_empty() {
+        motion_css.push_str(REDUCED_MOTION_CSS);
+    }
 
-    let html = render_slideshow_page(&deck_title(state, &slides), &slides);
+    let html = render_slideshow_page(&deck_title(state, &slides), &slides, &motion_css);
     std::fs::write(target, html).map_err(|e| ExportError::Write(e.to_string()))?;
     Ok(summary)
 }

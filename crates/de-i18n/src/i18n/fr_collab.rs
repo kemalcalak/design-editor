@@ -384,6 +384,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "interactions.markScreen" => "Marquer comme écran",
         "interactions.setStartScreen" => "Définir comme écran de départ",
         "interactions.removeScreen" => "Retirer l’écran",
+        "htmlImport.warn.motion.keyframes_static" => {
+            "L'animation @keyframes '{{name}}' n'a pas pu être conservée et a été importée statique."
+        }
         _ => return None,
     })
 }

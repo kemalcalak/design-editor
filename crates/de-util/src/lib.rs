@@ -13,6 +13,7 @@ pub mod fnv;
 pub mod hex_color;
 pub mod image_dimensions;
 pub mod json_escape;
+pub mod motion;
 pub mod shader_preset;
 pub mod xml_escape;
 

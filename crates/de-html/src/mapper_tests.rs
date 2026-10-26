@@ -13,6 +13,7 @@ fn map_one(html_element: crate::dom::DomElement, css: &str) -> Option<PenNode> {
     let mut context = MapCtx {
         opts: &options,
         rules: &rules,
+        keyframes: &crate::css::keyframes::NO_KEYFRAMES,
         warnings: Vec::new(),
         warned: Default::default(),
         next_id: 0,
@@ -308,6 +309,7 @@ fn implicit_single_column_grid_does_not_warn() {
     let mut context = MapCtx {
         opts: &options,
         rules: &rules,
+        keyframes: &crate::css::keyframes::NO_KEYFRAMES,
         warnings: Vec::new(),
         warned: Default::default(),
         next_id: 0,

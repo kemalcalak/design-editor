@@ -681,6 +681,7 @@ mod tests {
         MapCtx {
             opts: options,
             rules: &[],
+            keyframes: &crate::css::keyframes::NO_KEYFRAMES,
             warnings: Vec::new(),
             warned: Default::default(),
             next_id: 0,

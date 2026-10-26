@@ -26,6 +26,7 @@ fn geometry_for(
     let mut context = MapCtx {
         opts: &options,
         rules: &rules,
+        keyframes: &crate::css::keyframes::NO_KEYFRAMES,
         warnings: Vec::new(),
         warned: Default::default(),
         next_id: 0,

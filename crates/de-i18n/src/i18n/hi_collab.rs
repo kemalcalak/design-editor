@@ -384,6 +384,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "interactions.markScreen" => "स्क्रीन के रूप में चिह्नित करें",
         "interactions.setStartScreen" => "प्रारंभ स्क्रीन बनाएँ",
         "interactions.removeScreen" => "स्क्रीन हटाएँ",
+        "htmlImport.warn.motion.keyframes_static" => {
+            "@keyframes '{{name}}' एनिमेशन रखा नहीं जा सका और स्थिर रूप में आयात हुआ।"
+        }
         _ => return None,
     })
 }

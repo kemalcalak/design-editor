@@ -555,6 +555,7 @@ mod tests {
         let mut context = crate::mapper::MapCtx {
             opts: &options,
             rules: &rules,
+            keyframes: &crate::css::keyframes::NO_KEYFRAMES,
             warnings: Vec::new(),
             warned: Default::default(),
             next_id: 0,
