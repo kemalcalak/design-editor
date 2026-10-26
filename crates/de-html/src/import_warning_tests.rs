@@ -179,6 +179,7 @@ fn warn_once_deduplicates_on_the_rendered_message() {
         positioned_width: 100.0,
         positioned_height: 100.0,
         positioned_origin: (0.0, 0.0),
+        positioned_definite: (true, true),
         auto_margin_handled_by_parent: false,
         pending_base_outcome: Default::default(),
     };

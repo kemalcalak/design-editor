@@ -6,9 +6,8 @@
 //! it adds the first state class the stylesheet answers with a visible
 //! slide, and falls back to an inline style when none does.
 
-use crate::css::cascade::{compute_style_for_viewport, ComputedStyle, StyleRule};
+use crate::css::cascade::ComputedStyle;
 use crate::dom::DomElement;
-use crate::HtmlImportOptions;
 
 /// The class names deck players use for "this slide is on screen".
 const STATE_CLASSES: [&str; 10] = [
@@ -25,7 +24,7 @@ const STATE_CLASSES: [&str; 10] = [
 ];
 
 /// The element is not on screen: hidden by its style or by an attribute.
-/// [`show`] undoes exactly these.
+/// [`revealed_attrs`] undoes exactly these.
 pub(crate) fn needs_showing(element: &DomElement, style: &ComputedStyle) -> bool {
     is_hidden(style) || element.attrs.iter().any(|(name, value)| hides(name, value))
 }
@@ -49,48 +48,44 @@ fn transparent(style: &ComputedStyle) -> bool {
         .is_some_and(|opacity| opacity <= 0.0)
 }
 
-/// Make `element` render the way the player shows it on screen.
-/// `ancestors` is every element above it, outermost first, already shown.
-pub(crate) fn show(
-    ancestors: &[&DomElement],
-    element: &mut DomElement,
-    parent_style: Option<&ComputedStyle>,
-    root_font_size: f64,
-    rules: &[StyleRule],
-    opts: &HtmlImportOptions,
-) {
-    element.attrs.retain(|(name, value)| !hides(name, value));
-    let style_of = |element: &DomElement| {
-        let mut path = ancestors.to_vec();
-        path.push(element);
-        compute_style_for_viewport(
-            &path,
-            rules,
-            parent_style,
-            root_font_size,
-            opts.viewport_width,
-            opts.viewport_height(),
-        )
-    };
-    if !is_hidden(&style_of(element)) {
-        return;
+/// An element's attributes, as the DOM keeps them.
+pub(crate) type Attrs = [(String, String)];
+
+/// The attributes that make an element render the way the player shows it
+/// on screen. `style_of` computes the element's style with a candidate set
+/// of attributes, in place in the document: sibling selectors such as
+/// `.slide + .slide { display: none }` only match there.
+pub(crate) fn revealed_attrs(
+    attrs: &Attrs,
+    style_of: &mut dyn FnMut(&Attrs) -> ComputedStyle,
+) -> Vec<(String, String)> {
+    let base: Vec<(String, String)> = attrs
+        .iter()
+        .filter(|(name, value)| !hides(name, value))
+        .cloned()
+        .collect();
+    let style = style_of(&base);
+    if !is_hidden(&style) {
+        return base;
     }
-    let classes: Vec<String> = element.classes().into_iter().map(str::to_string).collect();
+    let classes: Vec<&str> = base
+        .iter()
+        .find(|(name, _)| name == "class")
+        .map(|(_, value)| value.split_whitespace().collect())
+        .unwrap_or_default();
     for state in STATE_CLASSES {
-        if classes.iter().any(|class| class == state) {
+        if classes.contains(&state) {
             continue;
         }
-        let mut probe = element.clone();
-        set_classes(
-            &mut probe,
-            classes.iter().map(String::as_str).chain([state]),
+        let candidate = with_attr(
+            &base,
+            "class",
+            &[classes.join(" "), state.to_string()].join(" "),
         );
-        if !is_hidden(&style_of(&probe)) {
-            *element = probe;
-            return;
+        if !is_hidden(&style_of(&candidate)) {
+            return candidate;
         }
     }
-    let style = style_of(element);
     let mut inline = String::new();
     if style.get("display") == Some("none") {
         inline.push_str("display:block;");
@@ -101,19 +96,20 @@ pub(crate) fn show(
     if transparent(&style) {
         inline.push_str("opacity:1;");
     }
-    match element.attrs.iter_mut().find(|(name, _)| name == "style") {
-        Some((_, value)) => {
-            value.push(';');
-            value.push_str(&inline);
-        }
-        None => element.attrs.push(("style".to_string(), inline)),
-    }
+    let existing = base
+        .iter()
+        .find(|(name, _)| name == "style")
+        .map(|(_, value)| format!("{value};"))
+        .unwrap_or_default();
+    with_attr(&base, "style", &format!("{existing}{inline}"))
 }
 
-fn set_classes<'a>(element: &mut DomElement, classes: impl Iterator<Item = &'a str>) {
-    let value = classes.collect::<Vec<_>>().join(" ");
-    match element.attrs.iter_mut().find(|(name, _)| name == "class") {
-        Some((_, existing)) => *existing = value,
-        None => element.attrs.push(("class".to_string(), value)),
+/// `attrs` with `name` set to `value` (replaced, or appended).
+fn with_attr(attrs: &Attrs, name: &str, value: &str) -> Vec<(String, String)> {
+    let mut attrs = attrs.to_vec();
+    match attrs.iter_mut().find(|(existing, _)| existing == name) {
+        Some((_, existing)) => *existing = value.trim().to_string(),
+        None => attrs.push((name.to_string(), value.trim().to_string())),
     }
+    attrs
 }

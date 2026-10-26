@@ -81,7 +81,8 @@ pub(crate) fn map_body_root(
         Some(SizingBehavior::Number(value)) => *value,
         _ => context.opts.viewport_height(),
     };
-    mapper::enter_box(context, body_style, body_insets);
+    let height_is_definite = matches!(container.height, Some(SizingBehavior::Number(_)));
+    mapper::enter_box(context, body_style, body_insets, (true, height_is_definite));
     context.auto_margin_handled_by_parent = body_children_centered;
     let children = if body_display_none {
         Vec::new()

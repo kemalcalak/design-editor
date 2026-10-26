@@ -50,6 +50,10 @@ pub(crate) mod node_access;
 #[path = "mapper_offset.rs"]
 mod offset;
 
+#[path = "mapper_anchor.rs"]
+mod anchor;
+pub use anchor::Anchor;
+
 #[path = "mapper_margin.rs"]
 mod margin;
 pub(crate) use margin::apply_root_margins;
@@ -101,6 +105,10 @@ pub struct MapCtx<'a> {
     /// corner (its left / top border). Jian places `x` / `y` from a frame's
     /// outer corner, so an absolute child's insets shift by this much.
     pub positioned_origin: (f64, f64),
+    /// Whether that ancestor's width / height is known before layout.
+    /// Without it, a child pinned by `right` / `bottom` is anchored at
+    /// layout time (`mapper_anchor`).
+    pub positioned_definite: (bool, bool),
     /// Set by a parent that already centred every child through
     /// `align-items`, so the per-child auto-margin emulation stays out of the
     /// way instead of wrapping each child a second time.
@@ -123,6 +131,9 @@ pub struct BaseStyleOutcome {
     /// into it, when both axes were definite. The offset wrapper reserves this
     /// box in flow so a scaled element does not push its siblings.
     pub reserved_box: Option<(f64, f64)>,
+    /// An absolute node pinned to an edge of a box sized by layout; the
+    /// caller re-parents it through `mapper_anchor::wrap`.
+    pub anchor: Option<Anchor>,
 }
 
 impl MapCtx<'_> {
@@ -173,6 +184,7 @@ pub(crate) fn map_element_scoped(
     let previous_width_is_definite = context.containing_width_is_definite;
     let previous_positioned = (context.positioned_width, context.positioned_height);
     let previous_origin = context.positioned_origin;
+    let previous_definite = context.positioned_definite;
     match style.get("position") {
         Some("fixed") => {
             context.containing_width = context.opts.viewport_width;
@@ -297,7 +309,11 @@ pub(crate) fn map_element_scoped(
         container.limits.max_height,
         parent_reference.1,
     );
-    box_model::enter_box(context, &style, insets);
+    let definite = (
+        context.containing_width_is_definite,
+        matches!(container.height, Some(SizingBehavior::Number(value)) if value.is_finite()),
+    );
+    box_model::enter_box(context, &style, insets, definite);
     let previous_auto_margin = context.auto_margin_handled_by_parent;
     context.auto_margin_handled_by_parent = children_centered_by_auto_margins;
     let mapped_children = map_container_children(
@@ -329,12 +345,14 @@ pub(crate) fn map_element_scoped(
     context.positioned_width = previous_positioned.0;
     context.positioned_height = previous_positioned.1;
     context.positioned_origin = previous_origin;
+    context.positioned_definite = previous_definite;
     let node = offset::wrap_offset(
         context,
         frame(base, container, children),
         outcome.flow_offset,
         outcome.reserved_box,
     );
+    let node = anchor::wrap(context, node, outcome.anchor);
     let node = item::align_by_auto_margins(
         context,
         node,
@@ -610,11 +628,13 @@ pub(crate) fn apply_base_style_with_box(
         return BaseStyleOutcome {
             flow_offset: (0.0, 0.0),
             reserved_box,
+            anchor: anchor::plan(base, style, context, definite),
         };
     }
     BaseStyleOutcome {
         flow_offset,
         reserved_box,
+        anchor: None,
     }
 }
 

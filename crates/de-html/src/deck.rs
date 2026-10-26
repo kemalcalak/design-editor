@@ -25,7 +25,7 @@ use jian_ops_schema::sizing::SizingBehavior;
 
 use crate::css::cascade::{compute_style_for_viewport, ComputedStyle, StyleRule};
 use crate::css::selectors::{matches, Selector};
-use crate::deck_visibility::{needs_showing, show};
+use crate::deck_visibility::{needs_showing, revealed_attrs};
 use crate::dom::{DomElement, DomNode};
 use crate::length::{parse_length, CssLength, LengthCtx};
 use crate::mapper::{self, MapCtx};
@@ -93,24 +93,29 @@ pub(crate) fn show_slides(
     for path in slides {
         let mut styles = style_chain(&chain_at(document, path), rules, opts);
         for depth in 1..=path.len() {
-            let shown = {
-                let chain = chain_at(document, &path[..depth]);
-                let element = chain[depth];
+            let at = &path[..depth];
+            let attrs = {
+                let element = chain_at(document, at)[depth];
                 if !needs_showing(element, &styles[depth]) {
                     continue;
                 }
-                let mut shown = element.clone();
-                show(
-                    &chain[..depth],
-                    &mut shown,
-                    Some(&styles[depth - 1]),
-                    styles[0].font_size,
-                    rules,
-                    opts,
-                );
-                shown
+                element.attrs.clone()
             };
-            *element_at_mut(document, &path[..depth]) = shown;
+            let parent_style = &styles[depth - 1];
+            let root_font_size = styles[0].font_size;
+            let mut style_of = |candidate: &[(String, String)]| {
+                element_at_mut(document, at).attrs = candidate.to_vec();
+                compute_style_for_viewport(
+                    &chain_at(document, at),
+                    rules,
+                    Some(parent_style),
+                    root_font_size,
+                    opts.viewport_width,
+                    opts.viewport_height(),
+                )
+            };
+            let revealed = revealed_attrs(&attrs, &mut style_of);
+            element_at_mut(document, at).attrs = revealed;
             // Showing a box can change what its descendants compute.
             styles = style_chain(&chain_at(document, path), rules, opts);
         }
@@ -285,7 +290,7 @@ fn unwrap_wrappers(mut node: PenNode) -> PenNode {
         };
         let is_wrapper = matches!(
             frame.base.name.as_deref(),
-            Some("Margin" | "Offset" | "Auto margin")
+            Some("Margin" | "Offset" | "Auto margin" | "Anchor")
         ) && frame.children.as_ref().is_some_and(|c| c.len() == 1);
         if !is_wrapper {
             return node;
