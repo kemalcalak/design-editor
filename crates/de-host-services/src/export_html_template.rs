@@ -25,10 +25,24 @@ pub struct SlideAsset {
     pub height: f32,
     /// The slide's inner markup, in board-local coordinates.
     pub body: String,
+    /// The transition the player plays arriving here (#245); `None` cuts.
+    pub transition: Option<SlideTransitionAttrs>,
 }
 
-/// Build the whole page. `title` is the browser-tab / window title.
-pub fn render_slideshow_page(title: &str, slides: &[SlideAsset]) -> String {
+/// A slide transition as the player reads it off the slide element.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct SlideTransitionAttrs {
+    /// `fade` / `slide` / `push`.
+    pub kind: &'static str,
+    pub duration_ms: u64,
+    /// A CSS easing.
+    pub easing: String,
+}
+
+/// Build the whole page. `title` is the browser-tab / window title;
+/// `motion_css` is the stylesheet that plays the slides' node animations
+/// (#245), empty for none.
+pub fn render_slideshow_page(title: &str, slides: &[SlideAsset], motion_css: &str) -> String {
     // Every slide is emitted as its own element and navigation only
     // flips a class. Building the whole deck up front costs one longer
     // load but buys a transition that cannot stutter — swapping one
@@ -37,10 +51,23 @@ pub fn render_slideshow_page(title: &str, slides: &[SlideAsset]) -> String {
     let mut sections = String::new();
     for (i, slide) in slides.iter().enumerate() {
         let current = if i == 0 { " is-current" } else { "" };
+        let transition = slide
+            .transition
+            .as_ref()
+            .map(|t| {
+                format!(
+                    " data-transition=\"{}\" data-transition-ms=\"{}\" \
+                     data-transition-easing=\"{}\"",
+                    t.kind,
+                    t.duration_ms,
+                    escape_html(&t.easing)
+                )
+            })
+            .unwrap_or_default();
         let _ = write!(
             sections,
             "\n<div class=\"slide{current}\" role=\"group\" aria-label=\"{label}\" \
-             data-w=\"{w}\" data-h=\"{h}\" style=\"width:{w}px;height:{h}px\">{body}</div>",
+             data-w=\"{w}\" data-h=\"{h}\"{transition} style=\"width:{w}px;height:{h}px\">{body}</div>",
             label = escape_html(&slide.name),
             w = css_num(slide.width),
             h = css_num(slide.height),
@@ -56,6 +83,7 @@ pub fn render_slideshow_page(title: &str, slides: &[SlideAsset]) -> String {
          <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n\
          <title>{title}</title>\n\
          <style>{PLAYER_CSS}</style>\n\
+         {motion}\
          </head>\n\
          <body>\n\
          <div id=\"deck\">{sections}\n</div>\n\
@@ -64,6 +92,11 @@ pub fn render_slideshow_page(title: &str, slides: &[SlideAsset]) -> String {
          </body>\n\
          </html>\n",
         title = escape_html(title),
+        motion = if motion_css.is_empty() {
+            String::new()
+        } else {
+            format!("<style>\n{motion_css}</style>\n")
+        },
     )
 }
 
@@ -87,7 +120,8 @@ html,body{margin:0;height:100%;background:#000;overflow:hidden}\
 .slide{position:absolute;left:50%;top:50%;transform-origin:50% 50%;\
 transform:translate(-50%,-50%) scale(var(--scale,1));\
 overflow:hidden;background:#fff;opacity:0;visibility:hidden}\
-.slide.is-current{opacity:1;visibility:visible}\
+.slide.is-current{opacity:1;visibility:visible;z-index:2}\
+.slide.is-leaving{opacity:1;visibility:visible;z-index:1}\
 .slide .n{position:absolute;box-sizing:border-box}\
 .slide .k{pointer-events:none}\
 #counter{position:fixed;right:16px;bottom:12px;padding:6px 12px;border-radius:999px;\
@@ -116,13 +150,60 @@ const PLAYER_JS: &str = r#"
       slides[i].style.setProperty('--scale', Math.min(vw / w, vh / h));
     }
   }
+  // Slide transitions (#245), laid out like the editor's Present: next
+  // plays the arriving slide's transition, previous plays the left
+  // slide's mirrored. The left slide stays on show under the arriving one
+  // until the motion ends.
+  var reduce = window.matchMedia &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var running = [];
+  // A step taken mid-transition ends the running one at once. The left
+  // slide is released here too, not only on `finish`: that event waits
+  // for a rendered frame, and a stale `is-leaving` would sort an arriving
+  // slide under the one it replaces.
+  function settle() {
+    var playing = running;
+    running = [];
+    for (var i = 0; i < playing.length; i++) { playing[i].finish(); }
+    for (var j = 0; j < slides.length; j++) { slides[j].classList.remove('is-leaving'); }
+  }
+  function onScreenWidth(slide) {
+    return (parseFloat(slide.getAttribute('data-w')) || 0) *
+      (parseFloat(slide.style.getPropertyValue('--scale')) || 1);
+  }
+  function transition(from, to, forward) {
+    var owner = forward ? to : from;
+    var kind = owner.getAttribute('data-transition');
+    var ms = parseFloat(owner.getAttribute('data-transition-ms')) || 0;
+    if (!kind || ms <= 0 || reduce || !to.animate) { return; }
+    var timing = { duration: ms, easing: owner.getAttribute('data-transition-easing') || 'ease' };
+    var side = forward ? 1 : -1;
+    var played = [];
+    if (kind === 'fade') {
+      played.push(to.animate([{ opacity: 0 }, { opacity: 1 }], timing));
+    } else {
+      played.push(to.animate([
+        { translate: side * onScreenWidth(to) + 'px 0' }, { translate: '0 0' }
+      ], timing));
+      if (kind === 'push') {
+        played.push(from.animate([
+          { translate: '0 0' }, { translate: -side * onScreenWidth(from) + 'px 0' }
+        ], timing));
+      }
+    }
+    from.classList.add('is-leaving');
+    played[0].onfinish = function () { from.classList.remove('is-leaving'); };
+    running = played;
+  }
   function show(next) {
     // Clamp instead of wrap: a deck that jumped back to the title slide
     // on the last click would read as having lost the presenter's place.
     var target = Math.max(0, Math.min(slides.length - 1, next));
     if (target === index) { return; }
+    settle();
     slides[index].classList.remove('is-current');
     slides[target].classList.add('is-current');
+    transition(slides[index], slides[target], target > index);
     index = target;
     counter.textContent = (index + 1) + ' / ' + slides.length;
   }
@@ -163,12 +244,13 @@ mod tests {
             width: 1920.0,
             height: 1080.0,
             body: r#"<div class="n"></div>"#.to_string(),
+            transition: None,
         }
     }
 
     #[test]
     fn only_the_first_slide_starts_visible() {
-        let html = render_slideshow_page("deck", &[slide("one"), slide("two"), slide("three")]);
+        let html = render_slideshow_page("deck", &[slide("one"), slide("two"), slide("three")], "");
         assert_eq!(html.matches("class=\"slide is-current\"").count(), 1);
         assert_eq!(html.matches("class=\"slide\"").count(), 2);
         assert!(html.contains("<div id=\"counter\">1 / 3</div>"));
@@ -179,7 +261,7 @@ mod tests {
         let mut wide = slide("wide");
         wide.width = 1600.0;
         wide.height = 900.0;
-        let html = render_slideshow_page("deck", &[slide("full"), wide]);
+        let html = render_slideshow_page("deck", &[slide("full"), wide], "");
         assert!(html.contains(r#"data-w="1920" data-h="1080""#), "{html}");
         assert!(html.contains(r#"data-w="1600" data-h="900""#), "{html}");
         assert!(
@@ -190,7 +272,7 @@ mod tests {
 
     #[test]
     fn titles_and_slide_names_are_escaped_into_the_markup() {
-        let html = render_slideshow_page("A & B <deck>", &[slide("\"quoted\" & <angled>")]);
+        let html = render_slideshow_page("A & B <deck>", &[slide("\"quoted\" & <angled>")], "");
         assert!(
             html.contains("<title>A &amp; B &lt;deck&gt;</title>"),
             "{html}"
@@ -204,7 +286,7 @@ mod tests {
 
     #[test]
     fn the_player_binds_the_native_slideshow_key_set() {
-        let html = render_slideshow_page("deck", &[slide("one")]);
+        let html = render_slideshow_page("deck", &[slide("one")], "");
         for key in [
             "ArrowRight",
             "ArrowLeft",
@@ -222,11 +304,43 @@ mod tests {
 
     #[test]
     fn the_player_fits_each_slide_to_the_viewport_on_load_and_resize() {
-        let html = render_slideshow_page("deck", &[slide("one")]);
+        let html = render_slideshow_page("deck", &[slide("one")], "");
         assert!(html.contains("addEventListener('resize', fit)"), "{html}");
         assert!(html.contains("Math.min(vw / w, vh / h)"), "{html}");
         // Scaling must not resize the box, or the browser would re-lay
         // out the slide at presentation size.
         assert!(html.contains("scale(var(--scale,1))"), "{html}");
+    }
+
+    #[test]
+    fn a_slide_carries_its_transition_for_the_player() {
+        let mut arriving = slide("two");
+        arriving.transition = Some(SlideTransitionAttrs {
+            kind: "push",
+            duration_ms: 450,
+            easing: "cubic-bezier(0.2,0,0,1)".to_string(),
+        });
+        let html = render_slideshow_page("deck", &[slide("one"), arriving], "");
+        assert!(
+            html.contains(
+                r#"data-transition="push" data-transition-ms="450" data-transition-easing="cubic-bezier(0.2,0,0,1)""#
+            ),
+            "{html}"
+        );
+        assert_eq!(html.matches("data-transition=").count(), 1, "{html}");
+        // The left slide stays visible under the arriving one, and the
+        // player mirrors the motion going back.
+        assert!(html.contains(".slide.is-leaving{opacity:1;visibility:visible"));
+        assert!(html.contains("var side = forward ? 1 : -1;"), "{html}");
+        assert!(html.contains("prefers-reduced-motion: reduce"), "{html}");
+    }
+
+    #[test]
+    fn the_motion_stylesheet_rides_in_the_head_only_when_present() {
+        let plain = render_slideshow_page("deck", &[slide("one")], "");
+        assert_eq!(plain.matches("<style>").count(), 1);
+        let animated = render_slideshow_page("deck", &[slide("one")], "@keyframes de-a-0 {}\n");
+        assert_eq!(animated.matches("<style>").count(), 2);
+        assert!(animated.contains("<style>\n@keyframes de-a-0 {}\n</style>"));
     }
 }

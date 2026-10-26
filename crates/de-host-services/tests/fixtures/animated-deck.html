@@ -1,0 +1,31 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Animated deck</title>
+<style>
+  body { margin: 0; width: 960px; height: 540px; background: #0b1020; font-family: sans-serif; }
+  .slide { position: relative; width: 960px; height: 540px; overflow: hidden; }
+  .title { position: absolute; left: 80px; top: 80px; width: 600px; height: 64px; background: #1e293b;
+           animation: up .6s cubic-bezier(.2,.8,.2,1) both; }
+  .lead { position: absolute; left: 80px; top: 170px; width: 500px; height: 40px; background: #334155;
+          animation: fade .8s ease both .3s; }
+  .dot { position: absolute; left: 700px; top: 120px; width: 120px; height: 120px; border-radius: 50%;
+         background: #38bdf8; animation: grow .5s ease-out both .45s; }
+  .bar { position: absolute; left: 80px; top: 300px; width: 400px; height: 8px; background: #f59e0b;
+         transform-origin: left center; animation: drawx .9s ease-in-out both .6s; }
+  @keyframes up { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+  @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes grow { from { transform: scale(0); } to { transform: scale(1); } }
+  @keyframes drawx { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+</style>
+</head>
+<body>
+  <div class="slide">
+    <div class="title"></div>
+    <div class="lead"></div>
+    <div class="dot"></div>
+    <div class="bar"></div>
+  </div>
+</body>
+</html>

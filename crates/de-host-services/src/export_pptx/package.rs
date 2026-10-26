@@ -55,6 +55,10 @@ pub struct SlidePart {
     /// Indices into the package media table. Position `i` here is the
     /// slide's `rId{i + 2}` — `rId1` is always the layout.
     pub media: Vec<usize>,
+    /// `<p:transition>` arriving on the slide, empty for a cut (#245).
+    pub transition: String,
+    /// `<p:timing>` with the slide's entrance effects, empty for none.
+    pub timing: String,
 }
 
 /// The `r:embed` id a slide uses for the `n`-th media file it carries.
@@ -286,7 +290,11 @@ fn slide_xml(slide: &SlidePart) -> String {
     ));
     out.push_str(EMPTY_TREE_HEAD);
     out.push_str(&slide.shapes);
-    out.push_str("</p:spTree></p:cSld><p:clrMapOvr><a:masterClrMapping/></p:clrMapOvr></p:sld>");
+    out.push_str("</p:spTree></p:cSld><p:clrMapOvr><a:masterClrMapping/></p:clrMapOvr>");
+    // Schema order: clrMapOvr, transition, timing.
+    out.push_str(&slide.transition);
+    out.push_str(&slide.timing);
+    out.push_str("</p:sld>");
     out
 }
 
