@@ -42,7 +42,7 @@ crates/
 ├── de-cli/               `de` command-line tool
 ├── de-util/              Dependency-free leaf: hex-colour parsing + JSON / XML escaping
 └── de-mcp / de-ai / de-ai-skills / de-codegen / de-orchestrator / de-figma /
-   de-git / de-opmerge / de-pen-loader / de-design-lint / de-i18n / de-html /
+   de-git / de-opmerge / de-pen-loader / de-design-lint / de-i18n / de-html / de-pptx /
    de-smoke / …
 
 packages/

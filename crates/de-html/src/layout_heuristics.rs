@@ -563,13 +563,13 @@ fn own_size(value: Option<&str>, font_size: f64, reference: f64, context: &MapCt
         .unwrap_or(0.0)
 }
 
-fn has_offset(style: &ComputedStyle, name: &str) -> bool {
+pub(super) fn has_offset(style: &ComputedStyle, name: &str) -> bool {
     style
         .get(name)
         .is_some_and(|value| !value.trim().eq_ignore_ascii_case("auto"))
 }
 
-fn position_value(
+pub(super) fn position_value(
     value: Option<&str>,
     font_size: f64,
     reference: f64,
@@ -692,6 +692,7 @@ mod tests {
             positioned_width: options.viewport_width,
             positioned_height: options.viewport_height(),
             positioned_origin: (0.0, 0.0),
+            positioned_definite: (true, true),
             auto_margin_handled_by_parent: false,
             pending_base_outcome: Default::default(),
         }

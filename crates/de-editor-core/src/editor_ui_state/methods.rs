@@ -8,7 +8,7 @@ use super::{
     EditorUiState, FontPickerPurpose, Locale, MissingFontSurface, RecentFile, SceneTemplateFocus,
     ThemeMode, RECENT_FILE_CAP,
 };
-use de_util::document_file::{is_document_path, is_pen_dev_path, EXTENSION};
+use de_util::document_file::{is_document_path, is_pen_dev_path, is_pptx_path, EXTENSION};
 use std::path::Path;
 
 impl EditorUiState {
@@ -134,7 +134,7 @@ impl EditorUiState {
         let before = std::mem::take(&mut self.recent_files);
         for recent in &before {
             let path = Path::new(&recent.path);
-            let target = if is_document_path(path) || is_pen_dev_path(path) {
+            let target = if is_document_path(path) || is_pen_dev_path(path) || is_pptx_path(path) {
                 path.to_path_buf()
             } else {
                 path.with_extension(EXTENSION)

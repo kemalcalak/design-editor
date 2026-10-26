@@ -114,6 +114,7 @@ pub(crate) fn drain_pending_file_action<C: RepaintContext + 'static>(inner: &Inn
         }
         FileAction::ImportHtml => import_html_file(inner),
         FileAction::ImportPenDev => open_pen_dev_document(inner),
+        FileAction::ImportPptx => super::pptx_import::open_pptx_document(inner),
         FileAction::ImportImageOrSvg => import_image_or_svg(inner),
         FileAction::PickFillImage => pick_fill_image(inner),
         FileAction::RelinkImage => relink_image(inner),
@@ -502,7 +503,7 @@ pub(super) fn export_image<C: RepaintContext + 'static>(inner: &InnerRc<C>) {
     }
 }
 
-/// File → Open: hidden `.de` / pen.dev `.pen` picker → canonical ingest →
+/// File → Open: hidden `.de` / pen.dev `.pen` / `.pptx` picker → canonical ingest →
 /// state swap → viewport fit.
 pub(super) fn open_document<C: RepaintContext + 'static>(inner: &InnerRc<C>) {
     let inner = inner.clone();
@@ -532,6 +533,11 @@ pub(super) fn read_open_document_file<C: RepaintContext + 'static>(
     file: web_sys::File,
 ) {
     let name = file.name();
+    // A deck is binary: it takes the PowerPoint importer, not the text read.
+    if de_util::document_file::is_pptx_path(std::path::Path::new(&name)) {
+        super::pptx_import::read_pptx_file(inner, file);
+        return;
+    }
     let generation = begin_document_replacement(inner);
     let inner = inner.clone();
     read_file(

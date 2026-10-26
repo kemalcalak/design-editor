@@ -6,10 +6,17 @@ use std::path::Path;
 
 use super::DocIoError;
 
-/// Fail when `path` holds a pen.dev document. Every `doc_io` writer (the
-/// streaming save and both clean-copy paths) calls this before staging, so
-/// no desktop or MCP save can turn an import source into a canonical file.
+/// Fail when `path` holds a pen.dev document or names a PowerPoint deck.
+/// Every `doc_io` writer (the streaming save and both clean-copy paths)
+/// calls this before staging, so no desktop or MCP save can turn an import
+/// source into a canonical file (an MCP `filePath: "Deck.pptx"` loads the
+/// deck, and its write must not land on it).
 pub(super) fn refuse_overwrite(path: &Path) -> Result<(), DocIoError> {
+    if de_util::document_file::is_pptx_path(path) {
+        return Err(DocIoError::PptxSourceReadOnly {
+            path: path.display().to_string(),
+        });
+    }
     match de_pen_loader::pen_dev::sniff_pen_dev_file(path) {
         Some(_) => Err(DocIoError::PenDevSourceReadOnly {
             path: path.display().to_string(),

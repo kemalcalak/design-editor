@@ -272,6 +272,7 @@ mod tests {
             positioned_width: 600.0,
             positioned_height: 400.0,
             positioned_origin: (0.0, 0.0),
+            positioned_definite: (true, true),
             auto_margin_handled_by_parent: false,
             pending_base_outcome: Default::default(),
         };

@@ -148,6 +148,10 @@ impl WidgetHost {
                     self.editor_state.editor_ui.pending_file_action =
                         Some(de_editor_core::editor_ui_state::FileAction::ImportPenDev);
                 }
+                Some(ImportMenuChoice::Pptx) => {
+                    self.editor_state.editor_ui.pending_file_action =
+                        Some(de_editor_core::editor_ui_state::FileAction::ImportPptx);
+                }
                 None => {
                     self.blur_text_inputs_on_blank_press();
                 }
