@@ -14,7 +14,14 @@
 
 </div>
 
+https://github.com/user-attachments/assets/8371c3b2-db77-479d-a734-16b287ba8bac
+
+<details>
+<summary><b>Watch the full feature tour (2 min)</b></summary>
+
 https://github.com/user-attachments/assets/ed3abf77-70f7-4ebd-bc37-2ff855917423
+
+</details>
 
 <p align="center">
   <img src="assets/readme/home.png" alt="Home" width="900" />
