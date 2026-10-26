@@ -13,6 +13,7 @@ pub mod dom;
 pub(crate) mod font_face;
 pub mod html_encoding;
 pub mod import_warning;
+mod import_warning_args;
 mod import_warning_display;
 #[cfg(test)]
 mod import_warning_samples;
