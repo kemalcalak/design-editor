@@ -338,14 +338,19 @@ fn arrange(boards: &mut [PenNode]) {
     }
 }
 
-/// `aria-label`, else the slide's first heading, else `Slide N`.
+/// The slide's first heading, else its `aria-label` unless that only gives
+/// its position, else `Slide N`.
 fn slide_name(slide: &DomElement, number: usize) -> String {
-    let label = slide
-        .attr("aria-label")
-        .map(str::to_string)
-        .or_else(|| first_heading(slide).map(text_of))
-        .map(|text| text.split_whitespace().collect::<Vec<_>>().join(" "))
-        .filter(|text| !text.is_empty());
+    let squash = |text: String| text.split_whitespace().collect::<Vec<_>>().join(" ");
+    let label = first_heading(slide)
+        .map(|heading| squash(text_of(heading)))
+        .filter(|text| !text.is_empty())
+        .or_else(|| {
+            slide
+                .attr("aria-label")
+                .map(|label| squash(label.to_string()))
+                .filter(|label| !label.is_empty() && !is_position_label(label))
+        });
     match label {
         Some(text) if text.chars().count() > MAX_NAME_CHARS => {
             let cut: String = text.chars().take(MAX_NAME_CHARS - 1).collect();
@@ -353,6 +358,20 @@ fn slide_name(slide: &DomElement, number: usize) -> String {
         }
         Some(text) => text,
         None => format!("Slide {number}"),
+    }
+}
+
+/// `2 of 4`, `2 / 4`: a slide's place in the deck, which the board's place
+/// on the page already says.
+fn is_position_label(label: &str) -> bool {
+    let words: Vec<&str> = label.split_whitespace().collect();
+    let number = |word: &str| !word.is_empty() && word.chars().all(|c| c.is_ascii_digit());
+    match words.as_slice() {
+        [a, sep, b] => number(a) && number(b) && (sep.eq_ignore_ascii_case("of") || *sep == "/"),
+        [single] => single
+            .split_once('/')
+            .is_some_and(|(a, b)| number(a) && number(b)),
+        _ => false,
     }
 }
 

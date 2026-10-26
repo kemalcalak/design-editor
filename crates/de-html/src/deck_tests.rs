@@ -261,3 +261,36 @@ fn a_deck_document_is_named_after_the_page_title() {
     assert_eq!(result.document.name.as_deref(), Some("Quarterly"));
     assert_eq!(result.document.children.len(), 5);
 }
+
+#[test]
+fn slides_are_named_after_their_heading_not_their_position() {
+    let html =
+        "<div aria-roledescription='slide' aria-label='1 of 2' style='width:640px;height:360px'>\
+          <h2>Opening</h2></div>\
+        <div aria-roledescription='slide' aria-label='2 / 2' style='width:640px;height:360px'>\
+          <p>no heading</p></div>";
+    let result = import_html(html, &HtmlImportOptions::default());
+    assert_eq!(names(&result.nodes), ["Opening", "Slide 2"]);
+}
+
+#[test]
+fn text_in_a_span_that_is_a_flex_item_wraps_at_its_width() {
+    // `.card` is a flex column, so its `<span>` is blockified and wraps.
+    let html = "<div style='display:flex;flex-direction:column;width:300px'>\
+        <b>Detect</b><span>aria-roledescription, print page breaks or sibling sections</span></div>";
+    let result = import_html(html, &HtmlImportOptions::default());
+    let mut wraps = Vec::new();
+    fn walk(node: &PenNode, out: &mut Vec<Option<jian_ops_schema::node::text::TextGrowth>>) {
+        match node {
+            PenNode::Text(text) => out.push(text.text_growth.clone()),
+            PenNode::Frame(frame) => children(frame).iter().for_each(|c| walk(c, out)),
+            _ => {}
+        }
+    }
+    result.nodes.iter().for_each(|node| walk(node, &mut wraps));
+    assert_eq!(
+        wraps.last().cloned().flatten(),
+        Some(jian_ops_schema::node::text::TextGrowth::FixedWidth),
+        "{wraps:?}"
+    );
+}

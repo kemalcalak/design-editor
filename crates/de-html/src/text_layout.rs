@@ -1,7 +1,7 @@
 use jian_ops_schema::node::text::TextGrowth;
 use jian_ops_schema::sizing::{SizeLimits, SizingBehavior, SizingKeyword};
 
-use crate::css::cascade::ComputedStyle;
+use crate::css::cascade::{compute_style_for_viewport, ComputedStyle};
 use crate::dom::DomElement;
 use crate::length::{parse_length, CssLength, LengthCtx};
 use crate::mapper::MapCtx;
@@ -58,7 +58,7 @@ pub(super) fn map_text_box(
         // together with FixedWidth makes it settle on min-content even when
         // ample space exists (for example, "全部分类 →" wrapped only the arrow).
         None if !context.containing_width_is_definite => None,
-        None if is_block_text_container(style, path) => {
+        None if is_block_text_container(style, path, context) => {
             Some(SizingBehavior::Keyword(SizingKeyword::FillContainer))
         }
         None => None,
@@ -119,8 +119,31 @@ fn clamp(mut value: f64, minimum: Option<f64>, maximum: Option<f64>) -> f64 {
     value.max(0.0)
 }
 
-fn is_block_text_container(style: &ComputedStyle, path: &[&DomElement]) -> bool {
-    match style.get("display").map(str::trim) {
+fn is_block_text_container(
+    style: &ComputedStyle,
+    path: &[&DomElement],
+    context: &MapCtx<'_>,
+) -> bool {
+    let display = style.get("display").map(str::trim);
+    // A flex or grid item is blockified (CSS Display 3 §2.7): an inline
+    // `<span>` in a flex column lays out as a block and wraps at its width.
+    let inline_tag = path
+        .last()
+        .is_some_and(|element| !is_semantic_block(&element.tag));
+    let blockified = match display {
+        None if inline_tag => Some("block"),
+        Some("inline" | "inline-block" | "inline flow" | "inline flow-root") => Some("block"),
+        Some("inline-flex" | "inline flex") => Some("flex"),
+        Some("inline-grid" | "inline grid") => Some("grid"),
+        _ => None,
+    };
+    // Only an inline-level box can change, so only it pays for the parent's
+    // cascade.
+    let display = match blockified {
+        Some(block) if is_flex_or_grid_item(path, context) => Some(block),
+        _ => display,
+    };
+    match display {
         Some(
             "inline" | "inline-block" | "inline flow" | "inline flow-root" | "inline-flex"
             | "inline flex" | "inline-grid" | "inline grid",
@@ -135,6 +158,40 @@ fn is_block_text_container(style: &ComputedStyle, path: &[&DomElement]) -> bool 
             .last()
             .is_some_and(|element| is_semantic_block(&element.tag)),
     }
+}
+
+/// The element's parent lays it out as a flex or grid item. `display` is not
+/// inherited, so the parent's own cascade is enough to tell.
+fn is_flex_or_grid_item(path: &[&DomElement], context: &MapCtx<'_>) -> bool {
+    let Some(parent_path) = path
+        .len()
+        .checked_sub(1)
+        .filter(|len| *len > 0)
+        .map(|len| &path[..len])
+    else {
+        return false;
+    };
+    let parent = compute_style_for_viewport(
+        parent_path,
+        context.rules,
+        None,
+        context.opts.base_font_size,
+        context.opts.viewport_width,
+        context.opts.viewport_height(),
+    );
+    matches!(
+        parent.get("display").map(str::trim),
+        Some(
+            "flex"
+                | "inline-flex"
+                | "block flex"
+                | "inline flex"
+                | "grid"
+                | "inline-grid"
+                | "block grid"
+                | "inline grid"
+        )
+    )
 }
 
 fn is_semantic_block(tag: &str) -> bool {
