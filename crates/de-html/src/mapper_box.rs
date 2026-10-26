@@ -93,10 +93,8 @@ pub(crate) fn enter_box(context: &mut MapCtx<'_>, style: &ComputedStyle, insets:
         context.positioned_height = (height - border[0] - border[2]).max(0.0);
         context.positioned_origin = (border[3], border[0]);
     }
-    context.containing_width =
-        (width - padding[1] - padding[3] - border[1] - border[3]).max(0.0);
-    context.containing_height =
-        (height - padding[0] - padding[2] - border[0] - border[2]).max(0.0);
+    context.containing_width = (width - padding[1] - padding[3] - border[1] - border[3]).max(0.0);
+    context.containing_height = (height - padding[0] - padding[2] - border[0] - border[2]).max(0.0);
 }
 
 pub(super) fn apply_box_sizing(
