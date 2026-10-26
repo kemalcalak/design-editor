@@ -114,6 +114,7 @@ pub(crate) fn drain_pending_file_action<C: RepaintContext + 'static>(inner: &Inn
         }
         FileAction::ImportHtml => import_html_file(inner),
         FileAction::ImportPenDev => open_pen_dev_document(inner),
+        FileAction::ImportPptx => super::pptx_import::open_pptx_document(inner),
         FileAction::ImportImageOrSvg => import_image_or_svg(inner),
         FileAction::PickFillImage => pick_fill_image(inner),
         FileAction::RelinkImage => relink_image(inner),

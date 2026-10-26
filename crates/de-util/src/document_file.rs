@@ -24,6 +24,13 @@ pub const PEN_DEV_EXTENSION: &str = "pen";
 /// pen.dev import extension with the leading dot.
 pub const PEN_DEV_SUFFIX: &str = ".pen";
 
+/// PowerPoint import extension without the leading dot. Like `.pen`, a
+/// deck opens as an untitled document and is never written back.
+pub const PPTX_EXTENSION: &str = "pptx";
+
+/// PowerPoint import extension with the leading dot.
+pub const PPTX_SUFFIX: &str = ".pptx";
+
 /// Browser `accept` list for the Open picker: documents plus pen.dev imports.
 pub const OPEN_ACCEPT: &str = ".de,.pen";
 
@@ -36,6 +43,11 @@ pub fn is_document_path(path: &Path) -> bool {
 /// Whether `path` names a pen.dev `.pen` file (case-insensitive).
 pub fn is_pen_dev_path(path: &Path) -> bool {
     has_extension(path, PEN_DEV_EXTENSION)
+}
+
+/// Whether `path` names a PowerPoint `.pptx` deck (case-insensitive).
+pub fn is_pptx_path(path: &Path) -> bool {
+    has_extension(path, PPTX_EXTENSION)
 }
 
 /// `<stem>.de`.
@@ -91,6 +103,12 @@ mod tests {
     fn pen_is_the_pen_dev_import() {
         assert!(is_pen_dev_path(Path::new("untitled.PEN")));
         assert!(!is_pen_dev_path(Path::new("untitled.de")));
+    }
+
+    #[test]
+    fn pptx_is_the_powerpoint_import() {
+        assert!(is_pptx_path(Path::new("Deck.PPTX")));
+        assert!(!is_pptx_path(Path::new("Deck.ppt")));
     }
 
     #[test]

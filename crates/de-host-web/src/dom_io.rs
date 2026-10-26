@@ -35,6 +35,7 @@ mod figma_import;
 mod html_directory_session;
 mod html_zip_session;
 mod import_generation;
+mod pptx_import;
 
 use browser_files::{html_project_file_path, open_html_project_picker};
 pub(crate) use browser_files::{js_bytes, open_file_picker, read_file, ReadMode};

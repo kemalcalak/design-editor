@@ -19,10 +19,12 @@ use crate::persistence_error::DocumentOpenError;
 pub(crate) const DOCUMENT_EXTENSIONS: &[&str] = &[de_util::document_file::EXTENSION];
 
 /// Extensions for the Open dialog filter: `.de` documents plus pen.dev
-/// `.pen` files, which open as an untitled import.
+/// `.pen` files and PowerPoint `.pptx` decks, which open as an untitled
+/// import.
 const OPEN_EXTENSIONS: &[&str] = &[
     de_util::document_file::EXTENSION,
     de_util::document_file::PEN_DEV_EXTENSION,
+    de_util::document_file::PPTX_EXTENSION,
 ];
 
 /// Pop a Save dialog (rfd native) and write a standalone document to the
@@ -197,7 +199,8 @@ fn load_into_host(
     // Someone else's browser nodes wait for the user's Load pages (#20).
     state.hold_browser_pages_if_any();
     let pen_dev_import = loaded.report.pen_dev_import.clone();
-    let bound_path = pen_dev_import.is_none().then(|| path.to_path_buf());
+    let pptx_import = loaded.report.pptx_import.clone();
+    let bound_path = (!loaded.report.is_import()).then(|| path.to_path_buf());
     set_file_name_display(&mut state, bound_path.as_deref());
     state.clear_selection();
     eprintln!(
@@ -214,6 +217,14 @@ fn load_into_host(
     if let Some(report) = pen_dev_import.filter(|report| report.has_losses()) {
         alert_pen_dev_losses(host, path, &report);
     }
+    if let Some(warnings) = pptx_import.filter(|warnings| !warnings.is_empty()) {
+        alert_import_losses(
+            host,
+            path,
+            ("dialog.pptxImportTitle", "dialog.pptxImportBody"),
+            &warnings.join("\n"),
+        );
+    }
     Ok(Some(OpenedDocument {
         source: path.to_path_buf(),
         bound: bound_path,
@@ -228,16 +239,32 @@ fn alert_pen_dev_losses(
     path: &std::path::Path,
     report: &de_pen_loader::pen_dev::PenDevReport,
 ) {
+    alert_import_losses(
+        host,
+        path,
+        ("dialog.penDevImportTitle", "dialog.penDevImportBody"),
+        &report.summary(),
+    );
+}
+
+/// The import-loss dialog: a title over a body naming the file and what
+/// did not come over as-is (pen.dev and PowerPoint imports share it).
+fn alert_import_losses(
+    host: &WidgetHostNative,
+    path: &std::path::Path,
+    (title_key, body_key): (&'static str, &'static str),
+    details: &str,
+) {
     let locale = host.editor_state().editor_ui.locale;
     let name = path
         .file_name()
         .map(|name| name.to_string_lossy().into_owned())
         .unwrap_or_else(|| path.display().to_string());
-    let body = de_i18n::translate(locale, "dialog.penDevImportBody")
+    let body = de_i18n::translate(locale, body_key)
         .replace("{{name}}", &name)
-        .replace("{{details}}", &report.summary());
+        .replace("{{details}}", details);
     crate::message_dialog::alert(
-        de_i18n::translate(locale, "dialog.penDevImportTitle"),
+        de_i18n::translate(locale, title_key),
         &body,
         rfd::MessageLevel::Warning,
     );
@@ -586,6 +613,21 @@ pub fn run_action(
             };
             // Same path as File ▸ Open: a pen.dev document converts into
             // an untitled document and its loss report is shown there.
+            ActionOutcome::saved_or_noop(open_path(host, path, current_path, window))
+        }
+        FileAction::ImportPptx => {
+            let Some(path) = rfd::FileDialog::new()
+                .set_title(de_i18n::translate(
+                    host.editor_state().editor_ui.locale,
+                    "dialog.pickerOpenTitle",
+                ))
+                .add_filter("PowerPoint", &[de_util::document_file::PPTX_EXTENSION])
+                .pick_file()
+            else {
+                return ActionOutcome::Noop;
+            };
+            // Same path as File ▸ Open: the deck converts into an untitled
+            // document of boards and its warnings are shown there (#246).
             ActionOutcome::saved_or_noop(open_path(host, path, current_path, window))
         }
         FileAction::ImportImageOrSvg => {

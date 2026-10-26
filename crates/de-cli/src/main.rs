@@ -16,6 +16,7 @@ mod mcp_http_cli;
 mod page_theme_cli;
 mod path_args;
 mod pen_cli;
+mod pptx_cli;
 mod skill_export_cli;
 mod skill_install_cli;
 mod skill_install_error;
@@ -103,6 +104,10 @@ fn run(args: &[String]) -> Result<String, CliError> {
             figma_cli::run_import_figma(&fig_path, &out_path)?
         }
         Command::ImportPen { pen_path, out_path } => pen_cli::run_import_pen(&pen_path, &out_path)?,
+        Command::ImportPptx {
+            pptx_path,
+            out_path,
+        } => pptx_cli::run_import_pptx(&pptx_path, &out_path)?,
         Command::ImportHtml {
             html_path,
             out_path,
@@ -236,6 +241,10 @@ enum Command {
     },
     ImportPen {
         pen_path: String,
+        out_path: String,
+    },
+    ImportPptx {
+        pptx_path: String,
         out_path: String,
     },
     ImportHtml {
@@ -480,6 +489,7 @@ fn command_from_positionals(positionals: &[String], flags: &Flags) -> Result<Com
         "import:snapshot" => html_cli::map_import_snapshot(positionals, flags),
         "import:figma" => figma_cli::map_import_figma(positionals, flags),
         "import:pen" => pen_cli::map_import_pen(positionals, flags),
+        "import:pptx" => pptx_cli::map_import_pptx(positionals, flags),
         "codegen:plan" | "codegen:submit" | "codegen:assemble" | "codegen:clean" => {
             codegen_cli::map_codegen(positionals, flags)
         }

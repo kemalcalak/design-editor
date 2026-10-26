@@ -160,7 +160,7 @@ impl McpTool for ImportPenDev {
 /// Rename every incoming id the document already uses (`id` → `id-2`, …),
 /// then rewrite `ref` targets and `descendants` id paths with the same map so
 /// instances keep their components. Returns how many ids were renamed.
-fn rename_colliding_ids(nodes: &mut [PenNode], existing: &HashSet<NodeId>) -> usize {
+pub(crate) fn rename_colliding_ids(nodes: &mut [PenNode], existing: &HashSet<NodeId>) -> usize {
     let mut incoming = HashSet::new();
     collect_ids(nodes, &mut incoming);
     if !incoming

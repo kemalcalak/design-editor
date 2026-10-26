@@ -52,6 +52,7 @@ mod load_report;
 #[cfg(test)]
 mod load_report_tests;
 mod pen_dev;
+mod pptx;
 
 use asset_layout::{write_document_bytes, write_document_with_asset_folder};
 #[cfg(test)]
@@ -295,11 +296,14 @@ pub fn active_page_bbox(state: &EditorState) -> Option<(f64, f64, f64, f64)> {
 }
 
 /// Whether `path` is something the document open path accepts: a `.de`
-/// document or a pen.dev `.pen` import. Used to filter drag-and-drop drops
-/// and the file-association argv before attempting a load. Case-insensitive
-/// so `MyDesign.DE` from a case-folding filesystem / argv still opens.
+/// document, a pen.dev `.pen` import or a PowerPoint `.pptx` import. Used
+/// to filter drag-and-drop drops and the file-association argv before
+/// attempting a load. Case-insensitive so `MyDesign.DE` from a
+/// case-folding filesystem / argv still opens.
 pub fn is_supported_document(path: &std::path::Path) -> bool {
-    de_util::document_file::is_document_path(path) || de_util::document_file::is_pen_dev_path(path)
+    de_util::document_file::is_document_path(path)
+        || de_util::document_file::is_pen_dev_path(path)
+        || de_util::document_file::is_pptx_path(path)
 }
 
 /// True for Figma `.fig` binary exports. The bundle declares `.fig`
@@ -583,6 +587,7 @@ mod tests {
         assert!(is_supported_document(Path::new("Design.de")));
         assert!(is_supported_document(Path::new("Design.DE")));
         assert!(is_supported_document(Path::new("untitled.pen")));
+        assert!(is_supported_document(Path::new("Deck.pptx")));
         assert!(!is_supported_document(Path::new("Design.op")));
         assert!(!is_supported_document(Path::new("Design.json")));
     }

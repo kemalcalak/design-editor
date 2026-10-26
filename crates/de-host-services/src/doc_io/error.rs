@@ -102,6 +102,9 @@ pub enum DocIoError {
     /// opens through the pen.dev importer. Carries the LOCALISED
     /// `dialog.loadErrorNotPenDev` sentence.
     NotPenDevDocument(String),
+    /// A `.pptx` the PowerPoint importer could not read. Carries the
+    /// LOCALISED `dialog.loadErrorNotPptx` sentence with the reason.
+    NotPptxDeck(String),
 }
 
 impl fmt::Display for DocIoError {
@@ -129,7 +132,8 @@ impl fmt::Display for DocIoError {
             | DocIoError::LegacyFormat(message)
             | DocIoError::InvalidUtf8Document(message)
             | DocIoError::UnsupportedExtension(message)
-            | DocIoError::NotPenDevDocument(message) => f.write_str(message),
+            | DocIoError::NotPenDevDocument(message)
+            | DocIoError::NotPptxDeck(message) => f.write_str(message),
             DocIoError::PenDevSourceReadOnly { path } => write!(
                 f,
                 "{path} is a pen.dev document; save the imported design to a new file"
