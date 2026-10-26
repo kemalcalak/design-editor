@@ -148,7 +148,7 @@ pub async fn resolve_reference_context(
     let Some(ReferenceIntent::Url(url)) = detect_reference_intent(prompt) else {
         return Ok(None);
     };
-    let page = import_page_from_url(&url, None)?;
+    let page = import_page_from_url(&url, None, None)?;
     let source_host = page
         .final_url
         .host_str()

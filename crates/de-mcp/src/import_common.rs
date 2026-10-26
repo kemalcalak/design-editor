@@ -23,14 +23,30 @@ pub struct ImportPlacement {
     pub page_id: Option<String>,
 }
 
+/// Parse the optional `viewportWidth` import arg (CSS pixels). Absent or
+/// blank keeps the importer's default width.
+pub fn parse_viewport_width(
+    args: &BTreeMap<String, String>,
+) -> Result<Option<f64>, (ToolErrorCode, String)> {
+    parse_viewport_axis(args, "viewportWidth", "viewport_width")
+}
+
 /// Parse the optional `viewportHeight` import arg (CSS pixels). Absent or
 /// blank keeps the importer's aspect-derived default.
 pub fn parse_viewport_height(
     args: &BTreeMap<String, String>,
 ) -> Result<Option<f64>, (ToolErrorCode, String)> {
+    parse_viewport_axis(args, "viewportHeight", "viewport_height")
+}
+
+fn parse_viewport_axis(
+    args: &BTreeMap<String, String>,
+    key: &str,
+    snake_key: &str,
+) -> Result<Option<f64>, (ToolErrorCode, String)> {
     let Some(raw) = args
-        .get("viewportHeight")
-        .or_else(|| args.get("viewport_height"))
+        .get(key)
+        .or_else(|| args.get(snake_key))
         .map(|value| value.trim())
         .filter(|value| !value.is_empty())
     else {
@@ -43,9 +59,24 @@ pub fn parse_viewport_height(
         .ok_or_else(|| {
             (
                 ToolErrorCode::InvalidArgument,
-                "viewportHeight: expected a positive number of CSS pixels".to_string(),
+                format!("{key}: expected a positive number of CSS pixels"),
             )
         })
+}
+
+/// Shift every imported root by the placement's x/y. A page import has one
+/// root without a position; a slide deck has one board per slide, already
+/// laid out in a grid, and moves as a whole.
+pub fn offset_roots(nodes: &mut [PenNode], placement: &ImportPlacement) {
+    if placement.x == 0 && placement.y == 0 {
+        return;
+    }
+    for node in nodes {
+        if let PenNode::Frame(frame) = node {
+            frame.base.x = Some(frame.base.x.unwrap_or(0.0) + placement.x as f64);
+            frame.base.y = Some(frame.base.y.unwrap_or(0.0) + placement.y as f64);
+        }
+    }
 }
 
 /// Parse the shared placement args. `Err` carries the typed tool error
@@ -110,8 +141,9 @@ pub fn count_subtree_nodes(nodes: &[PenNode]) -> usize {
 }
 
 /// Turn an import result into the shared insert-subtree outcome:
-/// reject empty imports, apply the x/y offset to the root frame, and
-/// report `wrote` / `nodeCount` / `warnings`.
+/// reject empty imports, apply the x/y offset to the root frames, and
+/// report `wrote` / `nodeCount` / `slides` (a deck) / `warnings`. Every root
+/// goes in one `InsertSubtree`, so a deck's boards keep their order.
 pub fn import_result_to_outcome(
     result: HtmlImportResult,
     placement: ImportPlacement,
@@ -128,15 +160,13 @@ pub fn import_result_to_outcome(
         );
     }
     let mut nodes = result.nodes;
-    if placement.x != 0 || placement.y != 0 {
-        if let PenNode::Frame(frame) = &mut nodes[0] {
-            frame.base.x = Some(placement.x as f64);
-            frame.base.y = Some(placement.y as f64);
-        }
-    }
+    offset_roots(&mut nodes, &placement);
     let mut output = BTreeMap::new();
     output.insert("wrote".into(), "true".into());
     output.insert("nodeCount".into(), count_subtree_nodes(&nodes).to_string());
+    if nodes.len() > 1 {
+        output.insert("slides".into(), nodes.len().to_string());
+    }
     if !result.warnings.is_empty() {
         output.insert("warnings".into(), result.warnings.join("\n"));
     }

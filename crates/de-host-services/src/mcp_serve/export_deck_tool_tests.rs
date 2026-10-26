@@ -158,3 +158,55 @@ fn rejects_missing_and_unknown_arguments() {
         ToolErrorCode::InvalidArgument
     );
 }
+
+/// An HTML deck brought in through `import_html` exports back as a deck
+/// without any hand edits: one slide per imported board, in order.
+#[test]
+fn an_imported_html_deck_exports_back_as_html_and_pptx() {
+    let slide =
+        |title: &str| format!("<section class='sl'><h1>{title}</h1><p>{title} body</p></section>");
+    let html = format!(
+        "<style>.sl{{display:none;width:960px;height:540px}}.sl.on{{display:block}}</style>\
+         <nav>01 / 03</nav>{}{}{}",
+        slide("Opening"),
+        slide("Middle"),
+        slide("Closing")
+    );
+    let mut args = BTreeMap::new();
+    args.insert("html".to_string(), html);
+    let ToolOutcome::OkWithCommand(_, command) =
+        de_mcp::import_html_tool::import_html_snapshot().call(&args)
+    else {
+        panic!("import_html should insert the deck")
+    };
+    let mut state = EditorState::new();
+    assert!(state.apply(command));
+    assert_eq!(
+        de_editor_core::preview_slideshow::active_page_boards(&state).len(),
+        3
+    );
+
+    let dir = temp_dir("imported");
+    std::fs::create_dir_all(&dir).expect("temp dir");
+    for (format, file) in [("html", "deck.html"), ("pptx", "deck.pptx")] {
+        let path = dir.join(file);
+        let ToolOutcome::OkJson(result) = call(&state, format, &path) else {
+            panic!("export_deck {format} failed")
+        };
+        let result: serde_json::Value = serde_json::from_str(&result).expect("result json");
+        assert_eq!(result["slides"], 3, "{format}: {result}");
+    }
+    let page = std::fs::read_to_string(dir.join("deck.html")).expect("html deck");
+    let positions: Vec<usize> = ["Opening", "Middle", "Closing"]
+        .iter()
+        .map(|title| {
+            page.find(title)
+                .unwrap_or_else(|| panic!("{title} missing"))
+        })
+        .collect();
+    assert!(
+        positions.windows(2).all(|pair| pair[0] < pair[1]),
+        "{positions:?}"
+    );
+    let _ = std::fs::remove_dir_all(&dir);
+}

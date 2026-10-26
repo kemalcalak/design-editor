@@ -34,11 +34,15 @@ pub(super) fn map_import_html(positionals: &[String], flags: &Flags) -> Result<C
     let source = required_pos(
         positionals,
         1,
-        "Usage: de import:html <file.html|url> [--x N] [--y N] [--parent P] [--page PAGE] [--viewport-height N] [--out out.de]",
+        "Usage: de import:html <file.html|url> [--x N] [--y N] [--parent P] [--page PAGE] [--viewport-width N] [--viewport-height N] [--out out.de]",
     )?;
     let is_url = source.starts_with("http://") || source.starts_with("https://");
+    let viewport_width = match flag_value(flags, "viewport-width") {
+        Some(raw) => Some(parse_viewport_px(&raw, "--viewport-width")?.to_string()),
+        None => None,
+    };
     let viewport_height = match flag_value(flags, "viewport-height") {
-        Some(raw) => Some(parse_viewport_height(&raw)?.to_string()),
+        Some(raw) => Some(parse_viewport_px(&raw, "--viewport-height")?.to_string()),
         None => None,
     };
     if let Some(out_path) = flag_value(flags, "out") {
@@ -51,6 +55,7 @@ pub(super) fn map_import_html(positionals: &[String], flags: &Flags) -> Result<C
         return Ok(Command::ImportHtml {
             html_path: source,
             out_path,
+            viewport_width,
             viewport_height,
         });
     }
@@ -70,6 +75,9 @@ pub(super) fn map_import_html(positionals: &[String], flags: &Flags) -> Result<C
             pairs.push(pair(key, value));
         }
     }
+    if let Some(width) = viewport_width {
+        pairs.push(pair("viewportWidth", width));
+    }
     if let Some(height) = viewport_height {
         pairs.push(pair("viewportHeight", height));
     }
@@ -84,13 +92,14 @@ pub(super) fn map_import_html(positionals: &[String], flags: &Flags) -> Result<C
     )
 }
 
-/// `--viewport-height` accepts a positive finite number of CSS pixels.
-fn parse_viewport_height(raw: &str) -> Result<f64, CliError> {
+/// `--viewport-width` / `--viewport-height` accept a positive finite number
+/// of CSS pixels.
+fn parse_viewport_px(raw: &str, flag: &str) -> Result<f64, CliError> {
     raw.trim()
         .parse::<f64>()
         .ok()
         .filter(|value| value.is_finite() && *value > 0.0)
-        .ok_or_else(|| CliError::usage("--viewport-height expects a positive number of CSS pixels"))
+        .ok_or_else(|| CliError::usage(format!("{flag} expects a positive number of CSS pixels")))
 }
 
 pub(super) fn map_import_snapshot(
@@ -128,9 +137,15 @@ pub(super) fn map_import_snapshot(
 pub(super) fn run_import_html(
     html_path: &str,
     out_path: &str,
+    viewport_width: Option<&str>,
     viewport_height: Option<&str>,
 ) -> Result<String, CliError> {
-    let viewport_height = viewport_height.map(parse_viewport_height).transpose()?;
+    let viewport_width = viewport_width
+        .map(|raw| parse_viewport_px(raw, "--viewport-width"))
+        .transpose()?;
+    let viewport_height = viewport_height
+        .map(|raw| parse_viewport_px(raw, "--viewport-height"))
+        .transpose()?;
     let source_bytes = std::fs::read(html_path)
         .map_err(|error| CliError::Io(format!("read {html_path:?}: {error}")))?;
     let source = de_html::html_encoding::decode_html_bytes(&source_bytes);
@@ -145,11 +160,13 @@ pub(super) fn run_import_html(
         let href = url.strip_prefix(LOCAL_RESOURCE_ORIGIN).unwrap_or(url);
         local_resource_fetch(resource_dir, href)
     };
+    let defaults = de_html::HtmlImportOptions::default();
     let options = de_html::HtmlImportOptions {
+        viewport_width: viewport_width.unwrap_or(defaults.viewport_width),
         document_name: Some(document_name),
         base_url: Some(format!("{LOCAL_RESOURCE_ORIGIN}document.html")),
         viewport_height,
-        ..de_html::HtmlImportOptions::default()
+        ..defaults
     };
     let imported = de_html::import_html_document(source.as_ref(), &options, Some(&fetcher), None);
     if imported.document.children.is_empty() {
@@ -388,6 +405,7 @@ mod tests {
             Command::ImportHtml {
                 html_path: "a.html".to_string(),
                 out_path: "a.de".to_string(),
+                viewport_width: None,
                 viewport_height: None,
             }
         );
@@ -417,6 +435,7 @@ mod tests {
         let result = super::run_import_html(
             input.to_str().expect("UTF-8 input path"),
             output.to_str().expect("UTF-8 output path"),
+            None,
             None,
         )
         .expect("import UTF-16 HTML");
@@ -463,6 +482,7 @@ mod tests {
         let result = super::run_import_html(
             input.to_str().expect("UTF-8 input path"),
             output.to_str().expect("UTF-8 output path"),
+            None,
             None,
         )
         .expect("import HTML");

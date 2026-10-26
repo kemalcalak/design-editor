@@ -4,7 +4,10 @@ use std::time::Duration;
 
 use de_editor_core::EditorCommand;
 use de_html::{import_html_with_resources, HtmlImportOptions};
-use de_mcp::import_common::{count_subtree_nodes, parse_import_placement, parse_viewport_height};
+use de_mcp::import_common::{
+    count_subtree_nodes, offset_roots, parse_import_placement, parse_viewport_height,
+    parse_viewport_width,
+};
 use de_mcp::{McpTool, ToolErrorCode, ToolOutcome};
 use jian_ops_schema::node::PenNode;
 use reqwest::header::{CONTENT_TYPE, LOCATION};
@@ -41,28 +44,30 @@ impl McpTool for ImportHtmlUrl {
             Ok(value) => value,
             Err((code, message)) => return ToolOutcome::Err(code, message),
         };
+        let viewport_width = match parse_viewport_width(args) {
+            Ok(value) => value,
+            Err((code, message)) => return ToolOutcome::Err(code, message),
+        };
         let placement = match parse_import_placement(args) {
             Ok(placement) => placement,
             Err((code, message)) => return ToolOutcome::Err(code, message),
         };
 
-        let page = match import_page_from_url(raw_url, viewport_height) {
+        let page = match import_page_from_url(raw_url, viewport_width, viewport_height) {
             Ok(page) => page,
             Err(error) => return ToolOutcome::Err(error.tool_error_code(), error.to_string()),
         };
         let mut nodes = page.nodes;
-        if placement.x != 0 || placement.y != 0 {
-            if let PenNode::Frame(frame) = &mut nodes[0] {
-                frame.base.x = Some(placement.x as f64);
-                frame.base.y = Some(placement.y as f64);
-            }
-        }
+        offset_roots(&mut nodes, &placement);
         // Diverges from `de_mcp::import_common::import_result_to_outcome`
         // only by the extra `sourceUrl` output entry.
         let mut output = BTreeMap::new();
         output.insert("wrote".into(), "true".into());
         output.insert("nodeCount".into(), count_subtree_nodes(&nodes).to_string());
         output.insert("sourceUrl".into(), page.final_url.to_string());
+        if nodes.len() > 1 {
+            output.insert("slides".into(), nodes.len().to_string());
+        }
         if !page.warnings.is_empty() {
             output.insert("warnings".into(), page.warnings.join("\n"));
         }
@@ -82,6 +87,7 @@ impl McpTool for ImportHtmlUrl {
 /// reference-context enrichment path.
 pub(crate) fn import_page_from_url(
     raw_url: &str,
+    viewport_width: Option<f64>,
     viewport_height: Option<f64>,
 ) -> Result<ImportedPage, ImportHtmlUrlError> {
     let allowlist = std::env::var(ALLOWLIST_ENV).ok();
@@ -120,10 +126,12 @@ pub(crate) fn import_page_from_url(
         .ok()
         .map(|resource| resource.bytes)
     };
+    let defaults = HtmlImportOptions::default();
     let options = HtmlImportOptions {
+        viewport_width: viewport_width.unwrap_or(defaults.viewport_width),
         base_url: Some(page.final_url.to_string()),
         viewport_height,
-        ..HtmlImportOptions::default()
+        ..defaults
     };
     let result = import_html_with_resources(&html, &options, Some(&fetcher), None);
     if result.nodes.is_empty() {
