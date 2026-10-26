@@ -1513,6 +1513,7 @@ dependencies = [
  "de-browser-render",
  "de-builtin-model-discovery",
  "de-chat-agent",
+ "de-codegen",
  "de-config-store",
  "de-design-lint",
  "de-editor-core",

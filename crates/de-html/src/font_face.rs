@@ -150,7 +150,7 @@ fn push_family_list(value: Option<&str>, used: &mut BTreeSet<String>) {
     }
 }
 
-fn unquote(value: &str) -> String {
+pub(crate) fn unquote(value: &str) -> String {
     value
         .trim()
         .trim_matches(|character| character == '"' || character == '\'')

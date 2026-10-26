@@ -357,6 +357,8 @@ impl PreviewMotionState {
         self.inner.borrow_mut().visible_in_view = visible_now;
     }
 
+    /// Start every `mount` animation, or with `under` only those of the
+    /// nodes in that scene node's subtree.
     pub(crate) fn start_mount_animations(
         &self,
         runtime: &jian_core::Runtime,
@@ -364,8 +366,12 @@ impl PreviewMotionState {
         animation: &PreviewAnimationState,
         effective: MotionPreference,
         now_ms: u64,
+        under: Option<&BTreeSet<String>>,
     ) {
         for (target, _, animations) in node_declarations(runtime, false) {
+            if under.is_some_and(|ids| !ids.contains(&target)) {
+                continue;
+            }
             for declaration in animations {
                 if declaration.trigger == MotionTrigger::Mount {
                     self.start_node_animation(
@@ -543,6 +549,7 @@ impl crate::session::PreviewSession {
             &self.animation,
             self.effective_motion_preference(),
             now_ms,
+            None,
         );
     }
 

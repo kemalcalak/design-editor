@@ -169,6 +169,7 @@ fn warn_once_deduplicates_on_the_rendered_message() {
     let mut context = crate::mapper::MapCtx {
         opts: &options,
         rules: &rules,
+        keyframes: &crate::css::keyframes::NO_KEYFRAMES,
         warnings: Vec::new(),
         warned: Default::default(),
         next_id: 0,

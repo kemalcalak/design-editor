@@ -161,10 +161,28 @@ impl WidgetHostNative {
             self.editor_state
                 .begin_slide_transition(&from, delta > 0, self.now_ms);
         }
+        self.replay_slide_motion();
         // The camera follows in `frame_slideshow_board`, which paint runs
         // against the authoritative canvas size on the next frame.
         self.mark_dirty();
         true
+    }
+
+    /// Play the entrances of the slide now on screen again (#245): the
+    /// preview started every board's `mount` animations once, on entry.
+    fn replay_slide_motion(&mut self) {
+        let Some(board) = self
+            .editor_state
+            .preview_slideshow()
+            .and_then(|slideshow| slideshow.current_board())
+            .map(str::to_string)
+        else {
+            return;
+        };
+        let now_ms = self.now_ms;
+        if let Some(session) = self.preview.as_mut() {
+            session.replay_board_mount_animations(&board, now_ms);
+        }
     }
 
     /// Paint the board on screen, letterboxed, plus the slide counter.
@@ -334,6 +352,7 @@ impl WidgetHostNative {
         if !self.editor_state.preview_slideshow_to_end(last) {
             return false;
         }
+        self.replay_slide_motion();
         self.mark_dirty();
         true
     }

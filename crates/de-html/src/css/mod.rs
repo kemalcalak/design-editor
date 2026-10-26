@@ -6,6 +6,7 @@ pub use cascade_conditions::MediaQueryError;
 mod cascade_parser;
 mod cascade_shared;
 pub mod declarations;
+pub mod keyframes;
 pub mod selectors;
 mod selectors_parser;
 
@@ -331,5 +332,5 @@ mod cascade_tests {
     }
 }
 
-mod declaration_syntax;
+pub(crate) mod declaration_syntax;
 pub(crate) use declaration_syntax::strip_comments;

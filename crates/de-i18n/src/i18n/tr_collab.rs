@@ -379,6 +379,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "interactions.markScreen" => "Ekran olarak işaretle",
         "interactions.setStartScreen" => "Başlangıç ekranı yap",
         "interactions.removeScreen" => "Ekranı kaldır",
+        "htmlImport.warn.motion.keyframes_static" => {
+            "@keyframes '{{name}}' animasyonu korunamadı ve statik olarak içe aktarıldı."
+        }
         _ => return None,
     })
 }

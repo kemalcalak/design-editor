@@ -201,6 +201,8 @@ mod preview_present;
 #[cfg(all(test, feature = "gl-host", not(target_os = "windows")))]
 mod preview_replace_document_tests;
 mod preview_slideshow;
+#[cfg(all(test, feature = "gl-host", not(target_os = "windows")))]
+mod preview_slideshow_motion_tests;
 #[cfg(test)]
 mod preview_slideshow_tests;
 #[cfg(all(test, not(target_os = "windows")))]

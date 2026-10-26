@@ -379,6 +379,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "interactions.markScreen" => "画面としてマーク",
         "interactions.setStartScreen" => "開始画面に設定",
         "interactions.removeScreen" => "画面を解除",
+        "htmlImport.warn.motion.keyframes_static" => {
+            "@keyframes '{{name}}' のアニメーションは保持できず、静的に読み込まれました。"
+        }
         _ => return None,
     })
 }

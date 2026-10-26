@@ -55,6 +55,7 @@ mod cli_probe_support;
 pub mod cli_provider_probe;
 mod cli_resolver_windows;
 mod copilot_sdk_probe;
+mod deck_motion;
 #[cfg(test)]
 mod design_agent_reflow_tests;
 #[cfg(test)]
@@ -72,7 +73,10 @@ pub mod design_session;
 pub mod doc_io;
 pub mod export;
 pub mod export_batch;
+#[cfg(test)]
+mod export_deck_roundtrip_tests;
 pub mod export_html;
+mod export_html_motion;
 mod export_html_structured;
 mod export_html_template;
 pub mod export_hyperframes;
