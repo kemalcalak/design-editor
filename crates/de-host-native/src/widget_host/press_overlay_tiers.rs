@@ -222,6 +222,10 @@ impl WidgetHostNative {
                     self.editor_state.editor_ui.pending_file_action =
                         Some(de_editor_core::editor_ui_state::FileAction::ImportPenDev);
                 }
+                Some(ImportMenuChoice::Pptx) => {
+                    self.editor_state.editor_ui.pending_file_action =
+                        Some(de_editor_core::editor_ui_state::FileAction::ImportPptx);
+                }
                 None => {
                     // Silent outside-close is a blank press — blur inputs too.
                     self.blur_text_inputs_on_blank_press();

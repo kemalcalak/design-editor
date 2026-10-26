@@ -20,6 +20,7 @@ de-config-store = { path = "../de-config-store" }
 de-editor-core = { path = "../de-editor-core" }
 jian-ops-schema = { path = "../../vendor/jian/crates/jian-ops-schema" }
 de-figma = { path = "../de-figma" }
+de-pptx = { path = "../de-pptx" }
 de-html = { path = "../de-html" }
 de-pen-loader = { path = "../de-pen-loader", default-features = false }
 de-process-io = { path = "../de-process-io" }

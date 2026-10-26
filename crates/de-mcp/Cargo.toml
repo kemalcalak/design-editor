@@ -30,6 +30,7 @@ de-config-store = { path = "../de-config-store" }
 de-design-lint = { path = "../de-design-lint" }
 de-editor-core = { path = "../de-editor-core" }
 de-html = { path = "../de-html" }
+de-pptx = { path = "../de-pptx" }
 de-pen-loader = { path = "../de-pen-loader" }
 # Canonical JSON string escaping (dependency-free, wasm-clean).
 de-util = { path = "../de-util" }

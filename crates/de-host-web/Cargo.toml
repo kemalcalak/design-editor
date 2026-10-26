@@ -59,6 +59,8 @@ serde_json = { workspace = true, optional = true }
 # browser bundle. Optional + behind `canvaskit` with the rest of the document
 # pipeline deps so the wasm32-clean stub baseline never pulls it.
 de-figma = { path = "../de-figma", optional = true }
+# PowerPoint `.pptx` import (#246): pure Rust like de-figma, same gate.
+de-pptx = { path = "../de-pptx", optional = true }
 de-html = { path = "../de-html" }
 # Step 1b §3.6: handwritten DOM mirror consumes accesskit::TreeUpdate (0.24).
 accesskit = "0.24"
@@ -184,6 +186,7 @@ canvaskit = [
   # All are pure web_sys/serde logic — no skia-safe.
   "dep:serde_json",
   "dep:de-figma",
+  "dep:de-pptx",
   # Codegen pipeline (codegen_web/codegen_bundle) — pure AI/code-generation
   # logic crates, no skia.
   "dep:de-codegen",

@@ -14,6 +14,20 @@ use jian_ops_schema::node::PenNode;
 use super::write_tools::{parse_opt_i32, root_or_node_id};
 use super::{EditorCommand, ToolErrorCode, ToolOutcome};
 
+/// Shift every imported root, whatever its kind, by the placement's x/y:
+/// for imports whose roots keep their own layout (pen.dev boards, a deck's
+/// boards and their notes). Compare [`offset_roots`].
+pub fn shift_roots(nodes: &mut [PenNode], placement: &ImportPlacement) {
+    if placement.x == 0 && placement.y == 0 {
+        return;
+    }
+    for root in nodes {
+        let base = de_editor_core::PenNodeExt::base_mut(root);
+        base.x = Some(base.x.unwrap_or(0.0) + f64::from(placement.x));
+        base.y = Some(base.y.unwrap_or(0.0) + f64::from(placement.y));
+    }
+}
+
 /// Placement args shared by every import tool: optional x/y offset for
 /// the root frame, target parent, and target page.
 pub struct ImportPlacement {

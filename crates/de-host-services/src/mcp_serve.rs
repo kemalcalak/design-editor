@@ -18,6 +18,7 @@ use crate::import_html_url::import_html_url_snapshot;
 use de_editor_core::{EditorCommand, EditorState};
 use de_mcp::import_html_tool::import_html_snapshot;
 use de_mcp::import_pen_dev_tool::import_pen_dev_snapshot;
+use de_mcp::import_pptx_tool::import_pptx_snapshot;
 use de_mcp::import_snapshot_tool::import_web_snapshot_tool;
 use de_mcp::{
     add_library_snapshot, add_node_effect_snapshot, add_page_snapshot, align_selected_snapshot,
@@ -703,6 +704,8 @@ mod generate_tool_tests;
 mod generate_tool_transforms_tests;
 #[cfg(test)]
 mod import_pen_dev_verbatim_tests;
+#[cfg(test)]
+mod import_pptx_tool_tests;
 #[cfg(test)]
 mod kit_insert_tools_tests;
 #[cfg(test)]

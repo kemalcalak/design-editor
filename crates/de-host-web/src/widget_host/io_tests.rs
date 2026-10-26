@@ -349,6 +349,7 @@ fn drop_kind_classifies_by_extension_case_insensitively() {
     use crate::file_actions::{drop_kind, DropKind};
     assert_eq!(drop_kind("design.de"), DropKind::Document);
     assert_eq!(drop_kind("Design.PEN"), DropKind::Document);
+    assert_eq!(drop_kind("Deck.PPTX"), DropKind::Document);
     assert_eq!(drop_kind("Mockup.FIG"), DropKind::Figma);
     assert_eq!(drop_kind("icon.svg"), DropKind::Svg);
     assert_eq!(drop_kind("photo.JPEG"), DropKind::Image);
