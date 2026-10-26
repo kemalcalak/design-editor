@@ -47,6 +47,7 @@ mod chat_subprocess_parse;
 pub mod chat_subprocess_quirks;
 mod chat_subprocess_safety;
 pub mod chat_system_prompt;
+mod claude_artifact;
 pub mod cli_model_discovery;
 pub mod cli_modes;
 pub mod cli_probe_error;

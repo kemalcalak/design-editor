@@ -77,7 +77,7 @@ COMMON COMMANDS:
   de layout [--parent P] [--depth N]      snapshot layout tree
   de find-space [--direction D] [--width W] [--height H]
   de import:svg <file.svg> [--x N] [--y N] [--parent P] [--page PAGE]
-  de import:html <file.html|url> [--x N] [--y N] [--parent P] [--page PAGE] [--viewport-height N] [--out out.de]
+  de import:html <file.html|url> [--x N] [--y N] [--parent P] [--page PAGE] [--viewport-width N] [--viewport-height N] [--out out.de]
   de import:snapshot <snapshot.json> [--x N] [--y N] [--parent P] [--page PAGE] [--out out.de]
   de import:figma <file.fig> [--out output.de]
   de import:pen <file.pen> [--out output.de]

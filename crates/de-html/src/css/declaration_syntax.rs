@@ -119,7 +119,7 @@ pub(super) fn is_css_wide(value: &str) -> bool {
     )
 }
 
-pub(super) fn strip_comments(input: &str) -> String {
+pub(crate) fn strip_comments(input: &str) -> String {
     let mut out = String::with_capacity(input.len());
     let chars: Vec<char> = input.chars().collect();
     let mut index = 0;

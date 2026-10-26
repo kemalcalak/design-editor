@@ -403,6 +403,7 @@ fn parent_content_box(context: &MapCtx<'_>, path: &[&DomElement]) -> ParentConte
             containing_width_is_definite: true,
             positioned_width: width_reference,
             positioned_height: height_reference,
+            positioned_origin: (0.0, 0.0),
             auto_margin_handled_by_parent: false,
             pending_base_outcome: Default::default(),
         };

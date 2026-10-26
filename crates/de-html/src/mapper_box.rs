@@ -62,6 +62,46 @@ pub(super) fn map_padding(
     }
 }
 
+/// The padding and border widths of a box, each `[top, right, bottom, left]`.
+pub(crate) struct BoxInsets {
+    pub padding: [f64; 4],
+    pub border: [f64; 4],
+}
+
+pub(crate) fn box_insets(style: &ComputedStyle, context: &MapCtx<'_>) -> BoxInsets {
+    BoxInsets {
+        padding: [
+            "padding-top",
+            "padding-right",
+            "padding-bottom",
+            "padding-left",
+        ]
+        .map(|name| resolve(style, name, context).unwrap_or(0.0).max(0.0)),
+        border: border_widths(style, context),
+    }
+}
+
+/// Move the containing block into a box whose border-box size the caller
+/// already wrote to `containing_width` / `containing_height`: in-flow
+/// children see its content box, and a positioned box hands its padding box
+/// (and where that starts) to its absolute descendants.
+pub(crate) fn enter_box(context: &mut MapCtx<'_>, style: &ComputedStyle, insets: BoxInsets) {
+    let BoxInsets { padding, border } = insets;
+    let (width, height) = (context.containing_width, context.containing_height);
+    if super::layout_heuristics::establishes_positioning_context(style) {
+        context.positioned_width = (width - border[1] - border[3]).max(0.0);
+        context.positioned_height = (height - border[0] - border[2]).max(0.0);
+        context.positioned_origin = (border[3], border[0]);
+    } else {
+        // Absolute descendants stay children of this static box, whose own
+        // offset inside the positioned ancestor is only known after layout;
+        // the ancestor's border no longer sits at their parent's corner.
+        context.positioned_origin = (0.0, 0.0);
+    }
+    context.containing_width = (width - padding[1] - padding[3] - border[1] - border[3]).max(0.0);
+    context.containing_height = (height - padding[0] - padding[2] - border[0] - border[2]).max(0.0);
+}
+
 pub(super) fn apply_box_sizing(
     style: &ComputedStyle,
     context: &mut MapCtx<'_>,
@@ -183,6 +223,7 @@ mod tests {
             containing_width_is_definite: true,
             positioned_width: 600.0,
             positioned_height: 400.0,
+            positioned_origin: (0.0, 0.0),
             auto_margin_handled_by_parent: false,
             pending_base_outcome: Default::default(),
         };

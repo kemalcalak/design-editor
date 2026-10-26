@@ -204,18 +204,8 @@ fn resolved_track_widths(
     if tracks.len() != columns {
         return None;
     }
-    let padding = ["padding-left", "padding-right"]
-        .into_iter()
-        .filter_map(|name| {
-            resolved_length(
-                style.get(name)?,
-                style.font_size,
-                context,
-                context.containing_width,
-            )
-        })
-        .sum::<f64>();
-    let content_width = (context.containing_width - padding).max(0.0);
+    // The mapper already narrowed `containing_width` to the content box.
+    let content_width = context.containing_width;
     let specs: Vec<_> = tracks
         .iter()
         .map(|track| track_width(track, style.font_size, context, content_width))
@@ -640,6 +630,7 @@ mod tests {
             containing_width_is_definite: true,
             positioned_width: options.viewport_width,
             positioned_height: options.viewport_height(),
+            positioned_origin: (0.0, 0.0),
             auto_margin_handled_by_parent: false,
             pending_base_outcome: Default::default(),
         }
