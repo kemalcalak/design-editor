@@ -339,12 +339,13 @@ fn slide3() -> String {
     )
 }
 
-/// One effect of a main sequence: `class` / `node_type` as PowerPoint
-/// writes them, `behaviours` the effect's children.
+/// One effect of a main sequence: `(presetClass, presetID)` and
+/// `node_type` as PowerPoint writes them, `behaviours` the effect's
+/// children (their own `cTn` ids repeat; nothing reads them).
 fn effect(
     id: &mut u32,
     spid: u32,
-    class: &str,
+    (class, preset): (&str, u32),
     node_type: &str,
     extra: &str,
     behaviours: &str,
@@ -352,7 +353,7 @@ fn effect(
     *id += 1;
     let me = *id;
     format!(
-        "<p:par><p:cTn id=\"{me}\" presetID=\"10\" presetClass=\"{class}\" presetSubtype=\"0\" fill=\"hold\" \
+        "<p:par><p:cTn id=\"{me}\" presetID=\"{preset}\" presetClass=\"{class}\" presetSubtype=\"0\" fill=\"hold\" \
 nodeType=\"{node_type}\"{extra}><p:stCondLst><p:cond delay=\"0\"/></p:stCondLst><p:childTnLst>{}</p:childTnLst></p:cTn></p:par>",
         behaviours.replace("SPID", &spid.to_string())
     )
@@ -412,7 +413,7 @@ fn slide4() -> String {
     let first = effect(
         &mut id,
         2,
-        "entr",
+        ("entr", 10),
         "withEffect",
         "",
         &format!("{}{}", behaviour_set(), behaviour_fade(500)),
@@ -420,7 +421,7 @@ fn slide4() -> String {
     let floated = effect(
         &mut id,
         3,
-        "entr",
+        ("entr", 42),
         "afterEffect",
         "",
         &format!(
@@ -433,7 +434,7 @@ fn slide4() -> String {
     let zoomed = effect(
         &mut id,
         4,
-        "entr",
+        ("entr", 53),
         "withEffect",
         " accel=\"50000\" decel=\"50000\" repeatCount=\"2000\"",
         &format!(
@@ -443,7 +444,7 @@ fn slide4() -> String {
             behaviour_anim("ppt_h", "#ppt_h*0.5", "#ppt_h", 750)
         ),
     );
-    let pulse = effect(&mut id, 4, "emph", "afterEffect", "", "<p:animScale><p:cBhvr><p:cTn id=\"93\" dur=\"500\"/><p:tgtEl><p:spTgt spid=\"SPID\"/></p:tgtEl></p:cBhvr><p:by x=\"120000\" y=\"120000\"/></p:animScale>");
+    let pulse = effect(&mut id, 4, ("emph", 6), "afterEffect", "", "<p:animScale><p:cBhvr><p:cTn id=\"93\" dur=\"500\"/><p:tgtEl><p:spTgt spid=\"SPID\"/></p:tgtEl></p:cBhvr><p:by x=\"120000\" y=\"120000\"/></p:animScale>");
     let group = |delay: u32, effects: &str| {
         format!("<p:par><p:cTn id=\"{}\" fill=\"hold\"><p:stCondLst><p:cond delay=\"{delay}\"/></p:stCondLst><p:childTnLst>{effects}</p:childTnLst></p:cTn></p:par>", 80 + delay / 100)
     };

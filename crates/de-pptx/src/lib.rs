@@ -29,6 +29,7 @@ mod frame;
 mod geometry;
 mod media;
 mod motion;
+mod motion_formula;
 pub mod motion_table;
 mod package;
 mod paint;

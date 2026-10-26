@@ -63,6 +63,36 @@ fn imported_deck_exports_back_to_pptx_and_reimports() {
         find_where(boards[1], &|n| n["type"] == "image").is_some(),
         "pictures come back"
     );
+
+    // The animated slide keeps its transition and entrances. The export
+    // names three speeds, so 1200 ms goes out as "slow" (1000 ms).
+    let animated = boards[2];
+    assert_eq!(animated["slideTransition"]["kind"], "fade");
+    assert_eq!(animated["slideTransition"]["durationMs"], 1000);
+    let animated_node = |kind: &str| {
+        find_where(animated, &|n| {
+            n["type"] == kind && n["animations"].is_array()
+        })
+        .unwrap_or_else(|| panic!("a {kind} with an entrance"))["animations"]
+            .as_array()
+            .expect("animations")
+            .clone()
+    };
+    let title = animated_node("text");
+    assert_eq!(title.len(), 1, "{title:?}");
+    assert_eq!(title[0]["durationMs"], 500);
+    super::near(&title[0]["keyframes"][0]["values"]["opacity"], 0.0);
+    let floated = animated_node("rectangle");
+    assert_eq!(floated[0]["delayMs"], 500);
+    assert_eq!(floated[0]["durationMs"], 750);
+    super::near(&floated[0]["keyframes"][0]["values"]["translateX"], -320.0);
+    super::near(&floated[0]["keyframes"][0]["values"]["opacity"], 0.0);
+    let zoomed = animated_node("ellipse");
+    assert_eq!(zoomed[0]["delayMs"], 500);
+    super::near(&zoomed[0]["keyframes"][0]["values"]["scaleX"], 0.5);
+    super::near(&zoomed[0]["keyframes"][0]["values"]["scaleY"], 0.5);
+    assert_eq!(zoomed[0]["iterations"], 2);
+    assert_eq!(zoomed[0]["easing"], "ease_in_out");
 }
 
 /// Depth-first search by predicate.

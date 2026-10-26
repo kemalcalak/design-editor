@@ -32,6 +32,9 @@ pub struct Walk<'r> {
     pub map: Mapping,
     pub group_fill: Option<Value>,
     pub scope: Scope,
+    /// Where this container's local origin sits on the slide, in px:
+    /// group children are placed in the group's own pixels.
+    pub origin: (f64, f64),
 }
 
 /// Convert every child of a shape tree / group.
@@ -49,13 +52,14 @@ fn element(ctx: &mut Ctx<'_, '_, '_>, walk: &Walk<'_>, el: Node<'_, '_>) -> Opti
     }
     let node = convert(ctx, walk, el)?;
     if walk.scope == Scope::Slide {
-        record_target(ctx, el, &node);
+        record_target(ctx, el, &node, walk.origin);
     }
     Some(node)
 }
 
-/// Remember which node a slide shape became, for its animations.
-fn record_target(ctx: &mut Ctx<'_, '_, '_>, el: Node<'_, '_>, node: &Value) {
+/// Remember which node a slide shape became, and its box on the slide,
+/// for its animations.
+fn record_target(ctx: &mut Ctx<'_, '_, '_>, el: Node<'_, '_>, node: &Value, origin: (f64, f64)) {
     let Some(spid) = el
         .descendants()
         .find(|n| n.is_element() && n.tag_name().name() == "cNvPr")
@@ -77,7 +81,7 @@ fn record_target(ctx: &mut Ctx<'_, '_, '_>, el: Node<'_, '_>, node: &Value) {
     let (w, h) = (size("width", "x2"), size("height", "y2"));
     ctx.targets.entry(spid.to_string()).or_insert(Target {
         id: id.to_string(),
-        center: (x + w / 2.0, y + h / 2.0),
+        center: (origin.0 + x + w / 2.0, origin.1 + y + h / 2.0),
         size: (w, h),
     });
 }
@@ -111,6 +115,7 @@ fn group(ctx: &mut Ctx<'_, '_, '_>, walk: &Walk<'_>, el: Node<'_, '_>) -> Option
         map: xfrm.child_mapping(walk.map),
         group_fill,
         scope: walk.scope,
+        origin: (walk.origin.0 + b.x, walk.origin.1 + b.y),
     };
     let children = walk_tree(ctx, &inner, el);
     if children.is_empty() {

@@ -154,6 +154,7 @@ pub fn build_slide(
             map: Mapping::SLIDE,
             group_fill: None,
             scope,
+            origin: (0.0, 0.0),
         };
         children.extend(walk_tree(ctx, &walk, tree));
     };

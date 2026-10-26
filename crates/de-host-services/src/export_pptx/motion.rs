@@ -249,7 +249,8 @@ presetSubtype=\"{subtype}\" fill=\"hold\" nodeType=\"withEffect\"{repeat}{pacing
 
 /// PowerPoint paces an effect with acceleration / deceleration shares
 /// (in 1/1000 %) instead of a curve: a curve that starts slow
-/// accelerates, one that ends slow decelerates, both split the time.
+/// accelerates, one that ends slow decelerates, both split the time. The
+/// importer reads them back with `de_pptx::motion_table::easing_from_shares`.
 fn accel_decel(easing: &Easing) -> (u32, u32) {
     let (x1, y1, x2, y2) = match easing {
         Easing::Linear => return (0, 0),
@@ -278,9 +279,9 @@ pub(super) fn transition_xml(transition: Option<&SlideTransition>) -> String {
         return String::new();
     };
     // `board_motion` already drops cuts, which have no element here.
-    let Some((_, effect)) = TRANSITION_ELEMENTS
+    let Some((.., effect)) = TRANSITION_ELEMENTS
         .iter()
-        .find(|(kind, _)| *kind == transition.kind)
+        .find(|(kind, ..)| *kind == transition.kind)
     else {
         return String::new();
     };

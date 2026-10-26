@@ -30,12 +30,12 @@ fn imported_entrances_play_in_order_when_the_slide_is_presented() {
     let mut session = PreviewSession::enter(
         &import.document,
         (1280.0, 720.0),
-        &std::collections::BTreeMap::new(),
-        0,
-        false,
-        true,
+        &std::collections::BTreeMap::new(), // active theme
+        0,                                  // active page
+        false,                              // preserve authored geometry
+        true,                               // presenting
         de_pen_loader::layout_measure_backend(),
-        0,
+        0, // now
     )
     .expect("preview session");
     session.begin_lifecycle(0);
