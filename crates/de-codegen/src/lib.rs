@@ -29,7 +29,7 @@ mod tests;
 /// Node motion as CSS, shared with the deck slideshow export (#245).
 pub mod motion_css {
     pub use crate::codegen_targets::codegen_motion_css::{
-        animation_name, animation_value, css_identifier, easing_to_css, keyframes_block,
+        animation_name, animation_value, css_identifier, easing_to_css, keyframes_block, selector,
     };
 }
 

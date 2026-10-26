@@ -574,7 +574,7 @@ pub(crate) fn apply_base_style_with_box(
                 .is_some_and(|value| !value.trim().eq_ignore_ascii_case("none")),
         },
     );
-    if let Some(opacity) = motion.resting_opacity {
+    if let Some(opacity) = motion.held_opacity {
         base.opacity = Some(NumberOrExpression::Number(opacity));
     }
     if !motion.animations.is_empty() {

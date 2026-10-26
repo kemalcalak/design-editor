@@ -10,8 +10,9 @@
 //! This module holds the pure parts: which transition a step plays, the
 //! running transition's clock, where each of the two slides is at a given
 //! progress, and the document writes. Hosts paint through
-//! `de_preview_core`'s slide painter, which also applies the easing. PDF and
-//! deck exports read boards, not this, so they are unaffected.
+//! `de_preview_core`'s slide painter, which also applies the easing. The
+//! deck HTML and PPTX exports play the authored transition too (#245); PDF
+//! reads boards only.
 
 use crate::preview_slideshow::{active_page_boards, selected_page_boards};
 use crate::transition_edit::MotionEasing;
@@ -64,7 +65,9 @@ pub struct SlideLayer {
 }
 
 /// The two layers of a transition at eased progress `t` (`0..1`).
-/// `forward = false` mirrors the horizontal motion.
+/// `forward = false` mirrors the horizontal motion. The deck slideshow
+/// export's player (`de_host_services::export_html_template`) replays
+/// these offsets in the browser; keep it in step.
 pub fn slide_layers(kind: SlideTransitionKind, t: f32, forward: bool) -> Vec<SlideLayer> {
     let t = t.clamp(0.0, 1.0);
     let side = if forward { 1.0 } else { -1.0 };

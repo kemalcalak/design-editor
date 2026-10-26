@@ -153,7 +153,9 @@ const PLAYER_JS: &str = r#"
   // Slide transitions (#245), laid out like the editor's Present: next
   // plays the arriving slide's transition, previous plays the left
   // slide's mirrored. The left slide stays on show under the arriving one
-  // until the motion ends.
+  // until the motion ends. The offsets are
+  // `de_editor_core::slide_transition::slide_layers`' (left: -side * t,
+  // arriving: side * (1 - t)); keep the two in step.
   var reduce = window.matchMedia &&
     window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   var running = [];
@@ -192,7 +194,11 @@ const PLAYER_JS: &str = r#"
       }
     }
     from.classList.add('is-leaving');
-    played[0].onfinish = function () { from.classList.remove('is-leaving'); };
+    // Only the transition still running releases its slide: a step taken
+    // since has settled this one, and `from` may be leaving again.
+    played[0].onfinish = function () {
+      if (running === played) { from.classList.remove('is-leaving'); }
+    };
     running = played;
   }
   function show(next) {

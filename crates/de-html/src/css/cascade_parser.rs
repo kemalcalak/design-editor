@@ -47,10 +47,11 @@ impl StylesheetParser {
         &self.web_fonts
     }
 
-    /// `@keyframes` blocks seen across every sheet this parser consumed
-    /// (#245); the mapper turns the ones an element runs into animations.
-    pub(crate) fn keyframes(&self) -> &KeyframesMap {
-        &self.keyframes
+    /// Move out the `@keyframes` blocks seen across every sheet this
+    /// parser consumed (#245); the mapper turns the ones an element runs
+    /// into animations.
+    pub(crate) fn take_keyframes(&mut self) -> KeyframesMap {
+        std::mem::take(&mut self.keyframes)
     }
 
     pub fn parse(&mut self, css: &str) -> (Vec<StyleRule>, Vec<ImportWarning>) {

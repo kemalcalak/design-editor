@@ -30,7 +30,7 @@ fn an_up_entrance_fades_and_rises_by_a_slide_fraction() {
     .expect("entrance");
     assert!(up.fade);
     assert_eq!(up.offset, (0.0, 14.0 / 500.0));
-    assert_eq!(up.preset(), (42, 0));
+    assert_eq!(up.preset(), EntrancePreset::FloatIn);
     assert_eq!((up.duration_ms, up.delay_ms), (600, 150));
 }
 
@@ -44,7 +44,10 @@ fn grow_and_drawx_are_zoom_entrances() {
         SLIDE,
     )
     .expect("grow");
-    assert_eq!((grow.scale, grow.preset()), ((0.0, 0.0), (53, 16)));
+    assert_eq!(
+        (grow.scale, grow.preset()),
+        ((0.0, 0.0), EntrancePreset::Zoom)
+    );
     let drawx = entrance(
         &mount(
             json!({"scaleX": 0, "translateX": -100}),
@@ -169,4 +172,20 @@ fn assert_balanced(xml: &str) {
         }
     }
     assert!(stack.is_empty(), "unclosed {stack:?}");
+}
+
+#[test]
+fn a_shape_off_the_node_centre_starts_where_the_node_scale_puts_it() {
+    let grow = entrance(&mount(json!({"scaleX": 0, "scaleY": 0}), json!({})), SLIDE).expect("grow");
+    let pivot = de_editor_ui::Point2D::new(500.0, 250.0);
+    // A shape 100px right of and 50px below the node centre starts on it.
+    let shape = grow.about_pivot(de_editor_ui::Point2D::new(600.0, 300.0), pivot, SLIDE);
+    assert_eq!(shape.offset, (-0.1, -0.1));
+    // The centre shape, and any entrance that does not scale, are unchanged.
+    assert_eq!(grow.about_pivot(pivot, pivot, SLIDE), grow);
+    let fade = entrance(&mount(json!({"opacity": 0}), json!({})), SLIDE).expect("fade");
+    assert_eq!(
+        fade.about_pivot(de_editor_ui::Point2D::new(0.0, 0.0), pivot, SLIDE),
+        fade
+    );
 }

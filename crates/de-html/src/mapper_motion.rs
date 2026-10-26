@@ -5,7 +5,8 @@
 //! and `transform` becomes one `mount` animation on the node, keeping the
 //! duration, delay, easing, iteration count and fill mode. Anything else
 //! (more stops, other properties, `var()` in a stop, step easing, an
-//! alternating direction, a transform the node already carries statically)
+//! alternating direction over more than one iteration, a transform the
+//! node already carries statically)
 //! leaves the element as imported (its resting look) and reports the
 //! keyframes by name.
 //!
@@ -17,7 +18,10 @@
 //! same progress, so the node grows from its left edge exactly as in CSS.
 
 use crate::css::cascade::ComputedStyle;
+use crate::css::declaration_syntax::{split_top_level, split_whitespace_top_level};
+use crate::css::declarations::Declaration;
 use crate::css::keyframes::KeyframesRule;
+use crate::font_face::unquote;
 use crate::import_warning::ImportWarning;
 use crate::mapper::MapCtx;
 use crate::transform::{self, Affine};
@@ -45,9 +49,9 @@ pub(crate) struct MotionBox {
 pub(crate) struct MappedMotion {
     pub animations: Vec<NodeAnimation>,
     /// The opacity an element holding its last frame (`forwards` / `both`)
-    /// rests at. A deck element styled `opacity: 0` that fades in is seen
+    /// ends at. A deck element styled `opacity: 0` that fades in is seen
     /// at this value, so the node takes it instead of the static one.
-    pub resting_opacity: Option<f64>,
+    pub held_opacity: Option<f64>,
 }
 
 pub(crate) fn map_animations(
@@ -55,8 +59,11 @@ pub(crate) fn map_animations(
     context: &mut MapCtx<'_>,
     element: MotionBox,
 ) -> MappedMotion {
-    let keyframes = context.keyframes;
     let mut mapped = MappedMotion::default();
+    if style.get("animation").is_none() && style.get("animation-name").is_none() {
+        return mapped;
+    }
+    let keyframes = context.keyframes;
     for layer in animation_layers(style) {
         let Some(rule) = keyframes.get(&layer.name) else {
             // An unknown name animates nothing in a browser either.
@@ -72,13 +79,13 @@ pub(crate) fn map_animations(
             } => {
                 if animation.fill_mode == NodeAnimationFillMode::Forwards {
                     if let Some(opacity) = end_opacity {
-                        mapped.resting_opacity = Some(opacity);
+                        mapped.held_opacity = Some(opacity);
                     }
                 }
                 mapped.animations.push(animation);
             }
             LayerOutcome::Still => {}
-            LayerOutcome::Static => context.warn_once(ImportWarning::KeyframesStatic {
+            LayerOutcome::Unmappable => context.warn_once(ImportWarning::KeyframesStatic {
                 name: layer.name.clone(),
             }),
         }
@@ -176,7 +183,7 @@ fn parse_shorthand(value: &str) -> AnimationLayer {
     let mut layer = AnimationLayer::default();
     let (mut seen_duration, mut seen_timing, mut seen_iterations) = (false, false, false);
     let (mut seen_direction, mut seen_fill) = (false, false);
-    for token in split_tokens(value) {
+    for token in split_whitespace_top_level(value) {
         let lower = token.to_ascii_lowercase();
         if let Some(ms) = parse_time_ms(&lower) {
             if seen_duration {
@@ -204,8 +211,9 @@ fn parse_shorthand(value: &str) -> AnimationLayer {
             layer.fill = lower;
             seen_fill = true;
         } else if matches!(lower.as_str(), "running" | "paused") {
+            // animation-play-state: not modelled, and not a name.
         } else {
-            layer.name = unquote(token);
+            layer.name = unquote(&token);
         }
     }
     layer
@@ -218,10 +226,10 @@ enum LayerOutcome {
         /// The last frame's opacity, when the animation moves opacity.
         end_opacity: Option<f64>,
     },
-    /// Every stop sits at rest: nothing moves.
+    /// Both stops are equal: nothing moves.
     Still,
     /// Not expressible as a node animation.
-    Static,
+    Unmappable,
 }
 
 fn layer_animation(
@@ -231,7 +239,7 @@ fn layer_animation(
     context: &mut MapCtx<'_>,
     element: MotionBox,
 ) -> LayerOutcome {
-    layer_animation_inner(layer, rule, style, context, element).unwrap_or(LayerOutcome::Static)
+    layer_animation_inner(layer, rule, style, context, element).unwrap_or(LayerOutcome::Unmappable)
 }
 
 fn layer_animation_inner(
@@ -251,20 +259,25 @@ fn layer_animation_inner(
         "forwards" | "both" => NodeAnimationFillMode::Forwards,
         _ => NodeAnimationFillMode::None,
     };
-    let (from, to, stop_timing) = two_stops(rule)?;
-    let easing = parse_easing(stop_timing.unwrap_or(&layer.timing))?;
+    let stops = two_stops(rule)?;
+    let easing = parse_easing(stops.timing.unwrap_or(&layer.timing))?;
     let resting_opacity = style.get("opacity").and_then(parse_opacity).unwrap_or(1.0);
     let mut stops = [
-        StopValues::read(from, style, context, element, resting_opacity)?,
-        StopValues::read(to, style, context, element, resting_opacity)?,
+        StopValues::read(stops.from, style, context, element, resting_opacity)?,
+        StopValues::read(stops.to, style, context, element, resting_opacity)?,
     ];
+    let easing = if reverse {
+        // CSS plays a reversed animation's timing function backwards too.
+        reversed_easing(easing)
+    } else {
+        easing
+    };
     if reverse {
         stops.swap(0, 1);
     }
-    let keyframes = keyframes(&stops);
-    if keyframes[1].values.is_empty() {
+    let Some(keyframes) = keyframes(&stops) else {
         return Some(LayerOutcome::Still);
-    }
+    };
     let end_opacity = keyframes[1].values.get("opacity").and_then(Value::as_f64);
     Some(LayerOutcome::Mapped {
         animation: NodeAnimation {
@@ -283,16 +296,17 @@ fn layer_animation_inner(
     })
 }
 
-/// The `0` and `1` stops (either may be absent: it then rests), plus the
-/// `animation-timing-function` the first stop sets for the segment.
-#[allow(clippy::type_complexity)]
-fn two_stops(
-    rule: &KeyframesRule,
-) -> Option<(
-    &[crate::css::declarations::Declaration],
-    &[crate::css::declarations::Declaration],
-    Option<&String>,
-)> {
+/// The `0` and `1` stops of a keyframes block (either may be absent: it
+/// then rests), plus the `animation-timing-function` the first stop sets
+/// for the segment.
+struct TwoStops<'a> {
+    from: &'a [Declaration],
+    to: &'a [Declaration],
+    timing: Option<&'a str>,
+}
+
+/// `None` when the block has a stop between `0` and `1`.
+fn two_stops(rule: &KeyframesRule) -> Option<TwoStops<'_>> {
     let mut from: &[_] = &[];
     let mut to: &[_] = &[];
     for stop in &rule.stops {
@@ -307,8 +321,8 @@ fn two_stops(
     let timing = from
         .iter()
         .find(|declaration| declaration.name == "animation-timing-function")
-        .map(|declaration| &declaration.value);
-    Some((from, to, timing))
+        .map(|declaration| declaration.value.as_str());
+    Some(TwoStops { from, to, timing })
 }
 
 /// One stop resolved to node motion values; `None` fields rest.
@@ -316,14 +330,42 @@ fn two_stops(
 struct StopValues {
     opacity: Option<f64>,
     resting_opacity: f64,
-    /// `(translateX, translateY, scaleX, scaleY, rotation°)` about the
-    /// node centre; `None` when the stop sets no transform.
-    transform: Option<(f64, f64, f64, f64, f64)>,
+    /// `None` when the stop sets no transform.
+    transform: Option<CentreTransform>,
+}
+
+/// A transform as the node plays it: about its own centre.
+#[derive(Clone, Copy, Debug, PartialEq)]
+struct CentreTransform {
+    /// How far the centre moved.
+    translate: (f64, f64),
+    scale: (f64, f64),
+    rotation_degrees: f64,
+}
+
+impl CentreTransform {
+    const REST: Self = Self {
+        translate: (0.0, 0.0),
+        scale: (1.0, 1.0),
+        rotation_degrees: 0.0,
+    };
+
+    /// The node motion keys a transform drives — `MotionProperty::key()`'s
+    /// spelling in de-editor-core — with each one's value.
+    fn parts(&self) -> [(&'static str, f64); 5] {
+        [
+            ("translateX", self.translate.0),
+            ("translateY", self.translate.1),
+            ("scaleX", self.scale.0),
+            ("scaleY", self.scale.1),
+            ("rotation", self.rotation_degrees),
+        ]
+    }
 }
 
 impl StopValues {
     fn read(
-        declarations: &[crate::css::declarations::Declaration],
+        declarations: &[Declaration],
         style: &ComputedStyle,
         context: &mut MapCtx<'_>,
         element: MotionBox,
@@ -355,8 +397,8 @@ impl StopValues {
         Some(stop)
     }
 
-    fn transform_or_rest(&self) -> (f64, f64, f64, f64, f64) {
-        self.transform.unwrap_or((0.0, 0.0, 1.0, 1.0, 0.0))
+    fn transform_or_rest(&self) -> CentreTransform {
+        self.transform.unwrap_or(CentreTransform::REST)
     }
 }
 
@@ -366,7 +408,7 @@ fn centre_transform(
     style: &ComputedStyle,
     context: &mut MapCtx<'_>,
     element: MotionBox,
-) -> Option<(f64, f64, f64, f64, f64)> {
+) -> Option<CentreTransform> {
     let (width, height) = element.own;
     let length_ctx = transform::length_ctx(style, context);
     let list = transform::list_matrix(value, &length_ctx, element.own, element.definite)?;
@@ -380,17 +422,32 @@ fn centre_transform(
         return None;
     }
     let centre = matrix.apply(width / 2.0, height / 2.0);
-    Some((
-        centre.0 - width / 2.0,
-        centre.1 - height / 2.0,
-        decomposed.scale.0,
-        decomposed.scale.1,
-        decomposed.rotation_degrees,
-    ))
+    Some(CentreTransform {
+        translate: (centre.0 - width / 2.0, centre.1 - height / 2.0),
+        scale: decomposed.scale,
+        rotation_degrees: authored_rotation(value, decomposed.rotation_degrees)?,
+    })
 }
 
-/// The two keyframes, holding only the properties some stop moves.
-fn keyframes(stops: &[StopValues; 2]) -> Vec<Keyframe> {
+/// The turn a stop rotates through. A matrix only remembers the angle
+/// within one turn, so `rotate(360deg)` reads back as 0 and a spinner would
+/// not spin; the authored angles are summed instead. `None` when they do
+/// not match the matrix (a mirror folded into the rotation), which the
+/// node could not play.
+fn authored_rotation(value: &str, decomposed: f64) -> Option<f64> {
+    let mut authored = 0.0;
+    for (name, arguments) in transform::split_functions(value).unwrap_or_default() {
+        if matches!(name.as_str(), "rotate" | "rotatez") {
+            authored += transform::parse_angle(arguments.first()?)?;
+        }
+    }
+    let turns = (authored - decomposed) / 360.0;
+    ((turns - turns.round()).abs() < 1e-6).then_some(authored)
+}
+
+/// The two keyframes, holding only the properties some stop moves;
+/// `None` when both stops are equal, so nothing moves.
+fn keyframes(stops: &[StopValues; 2]) -> Option<Vec<Keyframe>> {
     let mut values = [BTreeMap::new(), BTreeMap::new()];
     if stops.iter().any(|stop| stop.opacity.is_some()) {
         for (index, stop) in stops.iter().enumerate() {
@@ -398,34 +455,16 @@ fn keyframes(stops: &[StopValues; 2]) -> Vec<Keyframe> {
             values[index].insert("opacity".to_string(), number(opacity));
         }
     }
-    let transforms = stops.map(|stop| stop.transform_or_rest());
-    let rest = (0.0, 0.0, 1.0, 1.0, 0.0);
-    let parts: [(&str, fn((f64, f64, f64, f64, f64)) -> f64); 5] = [
-        ("translateX", |t| t.0),
-        ("translateY", |t| t.1),
-        ("scaleX", |t| t.2),
-        ("scaleY", |t| t.3),
-        ("rotation", |t| t.4),
-    ];
-    for (key, part) in parts {
-        if transforms
-            .iter()
-            .any(|t| (part(*t) - part(rest)).abs() > 1e-6)
-        {
-            for (index, transform) in transforms.iter().enumerate() {
-                values[index].insert(key.to_string(), number(part(*transform)));
+    let parts = stops.map(|stop| stop.transform_or_rest().parts());
+    for (index, (key, rest)) in CentreTransform::REST.parts().into_iter().enumerate() {
+        if parts.iter().any(|part| (part[index].1 - rest).abs() > 1e-6) {
+            for (stop, part) in parts.iter().enumerate() {
+                values[stop].insert(key.to_string(), number(part[index].1));
             }
         }
     }
     let [from, to] = values;
-    if from == to {
-        // Every property already at rest: nothing moves.
-        return vec![
-            keyframe(0.0, BTreeMap::new()),
-            keyframe(1.0, BTreeMap::new()),
-        ];
-    }
-    vec![keyframe(0.0, from), keyframe(1.0, to)]
+    (from != to).then(|| vec![keyframe(0.0, from), keyframe(1.0, to)])
 }
 
 fn keyframe(offset: f32, values: BTreeMap<String, Value>) -> Keyframe {
@@ -515,41 +554,23 @@ fn parse_easing(value: &str) -> Option<Easing> {
         .then_some(Easing::CubicBezier(x1, y1, x2, y2))
 }
 
-fn unquote(value: &str) -> String {
-    value
-        .trim()
-        .trim_matches(|ch| ch == '"' || ch == '\'')
-        .to_string()
-}
-
-/// Split on commas outside parentheses.
-fn split_list(value: &str) -> Vec<&str> {
-    split_outside_parens(value, |ch| ch == ',')
-}
-
-/// Split on whitespace outside parentheses.
-fn split_tokens(value: &str) -> Vec<&str> {
-    split_outside_parens(value, char::is_whitespace)
-}
-
-fn split_outside_parens(value: &str, is_separator: impl Fn(char) -> bool) -> Vec<&str> {
-    let mut parts = Vec::new();
-    let (mut depth, mut start) = (0usize, 0usize);
-    for (index, ch) in value.char_indices() {
-        match ch {
-            '(' => depth += 1,
-            ')' => depth = depth.saturating_sub(1),
-            ch if depth == 0 && is_separator(ch) => {
-                parts.push(&value[start..index]);
-                start = index + ch.len_utf8();
-            }
-            _ => {}
+/// `easing` played backwards: the curve mirrored through its centre.
+fn reversed_easing(easing: Easing) -> Easing {
+    match easing {
+        Easing::EaseIn => Easing::EaseOut,
+        Easing::EaseOut => Easing::EaseIn,
+        Easing::Ease => Easing::CubicBezier(0.75, 0.0, 0.75, 0.9),
+        Easing::CubicBezier(x1, y1, x2, y2) => {
+            Easing::CubicBezier(1.0 - x2, 1.0 - y2, 1.0 - x1, 1.0 - y1)
         }
+        symmetric => symmetric,
     }
-    parts.push(&value[start..]);
-    parts
+}
+
+/// Split on commas outside parentheses, brackets and strings.
+fn split_list(value: &str) -> Vec<&str> {
+    split_top_level(value, ',')
         .into_iter()
-        .map(str::trim)
         .filter(|part| !part.is_empty())
         .collect()
 }

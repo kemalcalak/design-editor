@@ -11,20 +11,21 @@
 //! translate, scale and rotation tweens; colour, size and corner tweens
 //! stay at the node's own look.
 
-use de_codegen::motion_css::{animation_name, animation_value, css_identifier, keyframes_block};
+use de_codegen::motion_css::{animation_name, animation_value, keyframes_block, selector};
+use de_editor_core::motion_edit::MotionProperty;
 use jian_ops_schema::motion::SlideTransitionKind;
 use jian_ops_schema::motion::{Keyframe, MotionTrigger, NodeAnimation, SlideTransition};
 
 use crate::export_html_template::SlideTransitionAttrs;
 
 /// The keyframe properties a motion box can play.
-const BOX_PROPERTIES: [&str; 6] = [
-    "opacity",
-    "translateX",
-    "translateY",
-    "scaleX",
-    "scaleY",
-    "rotation",
+const BOX_PROPERTIES: [MotionProperty; 6] = [
+    MotionProperty::Opacity,
+    MotionProperty::TranslateX,
+    MotionProperty::TranslateY,
+    MotionProperty::ScaleX,
+    MotionProperty::ScaleY,
+    MotionProperty::Rotation,
 ];
 
 /// The stylesheet that plays one slide's node animations. Empty when the
@@ -32,44 +33,41 @@ const BOX_PROPERTIES: [&str; 6] = [
 pub(crate) fn slide_motion_css(animations: &[(String, Vec<NodeAnimation>)]) -> String {
     let mut out = String::new();
     for (node_id, list) in animations {
-        let mut by_trigger: [Vec<String>; 3] = Default::default();
+        let (mut entrance, mut hover, mut tap) = (Vec::new(), Vec::new(), Vec::new());
         for (index, animation) in list.iter().enumerate() {
             let Some(animation) = box_animation(animation) else {
                 continue;
             };
             let name = animation_name(node_id, index);
             out.push_str(&keyframes_block(&name, &animation));
-            let slot = match animation.trigger {
-                MotionTrigger::Mount | MotionTrigger::InView => 0,
-                MotionTrigger::Hover => 1,
-                MotionTrigger::Tap => 2,
-            };
-            by_trigger[slot].push(animation_value(&name, &animation));
-        }
-        let selector = format!(
-            ".slide.is-current [data-de-motion-node=\"{}\"]",
-            css_identifier(node_id)
-        );
-        let [entrance, hover, tap] = by_trigger;
-        for (pseudo, pointer) in [("", &Vec::new()), (":hover", &hover), (":active", &tap)] {
-            if pseudo.is_empty() && entrance.is_empty() || !pseudo.is_empty() && pointer.is_empty()
-            {
-                continue;
+            let value = animation_value(&name, &animation);
+            match animation.trigger {
+                MotionTrigger::Mount | MotionTrigger::InView => entrance.push(value),
+                MotionTrigger::Hover => hover.push(value),
+                MotionTrigger::Tap => tap.push(value),
             }
-            // A pointer rule keeps the entrance list in front, so hovering
-            // mid-entrance does not restart or drop it.
-            let list: Vec<&str> = entrance
-                .iter()
-                .chain(pointer.iter())
-                .map(String::as_str)
-                .collect();
-            out.push_str(&format!(
-                "{selector}{pseudo} {{\n  animation: {};\n}}\n",
-                list.join(", ")
-            ));
+        }
+        let selector = format!(".slide.is-current {}", selector(node_id));
+        if !entrance.is_empty() {
+            push_rule(&mut out, &selector, "", &entrance, &[]);
+        }
+        for (pseudo, pointer) in [(":hover", &hover), (":active", &tap)] {
+            if !pointer.is_empty() {
+                // The entrance list stays in front, so hovering mid-entrance
+                // neither restarts nor drops it.
+                push_rule(&mut out, &selector, pseudo, &entrance, pointer);
+            }
         }
     }
     out
+}
+
+fn push_rule(out: &mut String, selector: &str, pseudo: &str, first: &[String], then: &[String]) {
+    let list: Vec<&str> = first.iter().chain(then).map(String::as_str).collect();
+    out.push_str(&format!(
+        "{selector}{pseudo} {{\n  animation: {};\n}}\n",
+        list.join(", ")
+    ));
 }
 
 /// Appended once after every slide's rules: a viewer who asked for less
@@ -87,7 +85,11 @@ fn box_animation(animation: &NodeAnimation) -> Option<NodeAnimation> {
             let mut keyframe = keyframe.clone();
             keyframe
                 .values
-                .retain(|property, _| BOX_PROPERTIES.contains(&property.as_str()));
+                // Numbers only: a string would reach the page's `<style>`
+                // verbatim, and these properties take no other value.
+                .retain(|key, value| {
+                    value.is_number() && BOX_PROPERTIES.iter().any(|property| property.key() == key)
+                });
             keyframe
         })
         .collect();
@@ -106,6 +108,7 @@ pub(crate) fn transition_attrs(
 ) -> Option<SlideTransitionAttrs> {
     let transition = transition?;
     let kind = match transition.kind {
+        // `board_motion` already drops cuts; kept for a direct caller.
         SlideTransitionKind::None => return None,
         SlideTransitionKind::Fade => "fade",
         SlideTransitionKind::Slide => "slide",
@@ -182,6 +185,21 @@ mod tests {
         assert!(css.contains("@keyframes de-n-0"), "{css}");
         assert!(!css.contains("background-color"), "{css}");
         assert!(!css.contains("@keyframes de-n-1"), "{css}");
+    }
+
+    #[test]
+    fn only_numbers_reach_the_stylesheet() {
+        let hostile = animation(serde_json::json!({
+            "trigger": "mount",
+            "keyframes": {"from": {"opacity": "0}</style><script>x()</script>"}, "to": {"opacity": 1}},
+            "durationMs": 300,
+        }));
+        let css = slide_motion_css(&[("n".to_string(), vec![hostile])]);
+        assert!(!css.contains("</style>"), "{css}");
+    }
+
+    #[test]
+    fn a_slide_without_animations_has_no_stylesheet() {
         assert_eq!(slide_motion_css(&[]), "");
     }
 

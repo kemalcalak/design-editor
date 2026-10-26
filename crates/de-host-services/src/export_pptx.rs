@@ -113,11 +113,14 @@ pub fn build_deck_pptx(state: &EditorState) -> Result<(Vec<u8>, DeckPptxExport),
         if node.hidden {
             continue;
         }
+        // The package's slide size is the first board's; entrance offsets
+        // are fractions of it, whatever this board's own size.
+        let own = de_editor_ui::scene_bounds::normalize_rect(node.aggregate_bounds()).size;
+        let deck_px = *slide_px.get_or_insert((own.x, own.y));
         let slide_motion = board_motion(state, &board_id);
-        let board = board_slide(page, &board_id, &mut library, &slide_motion)?;
+        let board = board_slide(page, &board_id, &mut library, &slide_motion, deck_px)?;
         summary.structured_nodes += board.structured_nodes;
         summary.raster_fallbacks += board.fallback_reasons.len();
-        slide_px.get_or_insert((board.width, board.height));
         slides.push(SlidePart {
             name: board_name(state, &board_id),
             shapes: board.shapes,
@@ -139,8 +142,6 @@ pub fn build_deck_pptx(state: &EditorState) -> Result<(Vec<u8>, DeckPptxExport),
 /// One board's shapes, plus what it cost to get them.
 struct BoardShapes {
     shapes: String,
-    width: f32,
-    height: f32,
     media: Vec<usize>,
     structured_nodes: usize,
     fallback_reasons: Vec<&'static str>,
@@ -158,6 +159,7 @@ fn board_slide(
     board_id: &str,
     library: &mut MediaLibrary,
     slide_motion: &BoardMotion,
+    deck_px: (f32, f32),
 ) -> Result<BoardShapes, ExportError> {
     let board = page
         .find(board_id)
@@ -177,14 +179,13 @@ fn board_slide(
         });
     }
 
-    let slide_px = (bounds.size.x, bounds.size.y);
     let entrances: BTreeMap<String, Vec<motion::Entrance>> = slide_motion
         .animations
         .iter()
         .filter_map(|(id, animations)| {
             let entrances: Vec<_> = animations
                 .iter()
-                .filter_map(|animation| motion::entrance(animation, slide_px))
+                .filter_map(|animation| motion::entrance(animation, deck_px))
                 .collect();
             (!entrances.is_empty()).then(|| (id.clone(), entrances))
         })
@@ -196,6 +197,8 @@ fn board_slide(
         entrances: &entrances,
         claimed: BTreeSet::new(),
         effects: Vec::new(),
+        shape_owners: Vec::new(),
+        deck_px,
         // Shape id 1 is reserved for the slide's own group shape.
         next_id: 2,
         origin: bounds.origin,
@@ -210,8 +213,6 @@ fn board_slide(
 
     Ok(BoardShapes {
         shapes: emitter.out,
-        width: bounds.size.x,
-        height: bounds.size.y,
         media: emitter.media,
         structured_nodes: emitter.structured_nodes,
         fallback_reasons: emitter.fallback_reasons,
@@ -240,6 +241,11 @@ struct Emitter<'a> {
     claimed: BTreeSet<u32>,
     /// `(shape id, entrance)` per effect the slide plays.
     effects: Vec<(u32, motion::Entrance)>,
+    /// `(first shape id, centre)` of every node as its emission starts:
+    /// a shape id belongs to the last node that started at or before it.
+    shape_owners: Vec<(u32, Point2D)>,
+    /// The package's slide size, for entrance offsets.
+    deck_px: (f32, f32),
 }
 
 impl Emitter<'_> {
@@ -257,9 +263,19 @@ impl Emitter<'_> {
         let shapes: Vec<u32> = (first..self.next_id)
             .filter(|id| self.claimed.insert(*id))
             .collect();
+        // PowerPoint scales each shape about its own centre; the node
+        // scales as one about its centre.
+        let pivot = centre(node.bounds);
         for entrance in entrances {
             for id in &shapes {
-                self.effects.push((*id, entrance.clone()));
+                // Starts are pushed in increasing order.
+                let owner = self
+                    .shape_owners
+                    .partition_point(|(start, _)| start <= id)
+                    .checked_sub(1)
+                    .map_or(pivot, |index| self.shape_owners[index].1);
+                let entrance = entrance.about_pivot(owner, pivot, self.deck_px);
+                self.effects.push((*id, entrance));
             }
         }
         Ok(())
@@ -271,6 +287,9 @@ impl Emitter<'_> {
         alpha: f32,
         is_board: bool,
     ) -> Result<(), ExportError> {
+        if !self.entrances.is_empty() {
+            self.shape_owners.push((self.next_id, centre(node.bounds)));
+        }
         if node.hidden || de_editor_ui::canvas_only::is_canvas_only(node) {
             return Ok(());
         }
@@ -558,4 +577,12 @@ fn clipping_bites(n: &SceneNode) -> bool {
                 || b.origin.x + b.size.x > rect.origin.x + rect.size.x + SLOP
                 || b.origin.y + b.size.y > rect.origin.y + rect.size.y + SLOP)
     })
+}
+
+fn centre(rect: Rect) -> Point2D {
+    let rect = de_editor_ui::scene_bounds::normalize_rect(rect);
+    Point2D::new(
+        rect.origin.x + rect.size.x / 2.0,
+        rect.origin.y + rect.size.y / 2.0,
+    )
 }

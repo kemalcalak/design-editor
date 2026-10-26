@@ -15,7 +15,14 @@
 //! Transitions map one to one: fade → `p:fade`, slide → `p:cover`, push →
 //! `p:push`, both from the right. The base schema only names three speeds,
 //! so the duration picks the nearest.
+//!
+//! The tables here ([`EntrancePreset`], [`TRANSITION_ELEMENTS`],
+//! [`TRANSITION_SPEEDS`]) depend on nothing but jian's schema, so the
+//! PPTX importer can read them backwards: an effect's behaviours back
+//! into a two-stop `mount` animation, a transition element back into a
+//! [`SlideTransitionKind`].
 
+use de_editor_core::motion_edit::MotionProperty;
 use de_util::motion::is_infinite_iterations;
 use jian_ops_schema::motion::{
     Easing, MotionTrigger, NodeAnimation, SlideTransition, SlideTransitionKind,
@@ -67,9 +74,10 @@ pub(super) fn entrance(animation: &NodeAnimation, slide_px: (f32, f32)) -> Optio
         scale: (1.0, 1.0),
     };
     for key in from.values.keys().chain(to.values.keys()) {
-        let rest = match key.as_str() {
-            "opacity" | "scaleX" | "scaleY" => 1.0,
-            "translateX" | "translateY" => 0.0,
+        let property = MotionProperty::from_key(key)?;
+        let rest = match property {
+            MotionProperty::Opacity | MotionProperty::ScaleX | MotionProperty::ScaleY => 1.0,
+            MotionProperty::TranslateX | MotionProperty::TranslateY => 0.0,
             _ => return None,
         };
         let start = number(&from.values, key, rest)?;
@@ -77,46 +85,111 @@ pub(super) fn entrance(animation: &NodeAnimation, slide_px: (f32, f32)) -> Optio
         if (end - rest).abs() > REST_TOLERANCE {
             return None;
         }
-        match key.as_str() {
-            "opacity" => {
+        match property {
+            MotionProperty::Opacity => {
+                // The fade filter only runs from fully transparent.
                 if start.abs() > REST_TOLERANCE {
                     return None;
                 }
                 entrance.fade = true;
             }
-            "translateX" => entrance.offset.0 = start / f64::from(slide_px.0.max(1.0)),
-            "translateY" => entrance.offset.1 = start / f64::from(slide_px.1.max(1.0)),
-            "scaleX" => entrance.scale.0 = start.max(0.0),
-            "scaleY" => entrance.scale.1 = start.max(0.0),
+            MotionProperty::TranslateX => {
+                entrance.offset.0 = start / f64::from(slide_px.0.max(1.0))
+            }
+            MotionProperty::TranslateY => {
+                entrance.offset.1 = start / f64::from(slide_px.1.max(1.0))
+            }
+            MotionProperty::ScaleX => entrance.scale.0 = start.max(0.0),
+            MotionProperty::ScaleY => entrance.scale.1 = start.max(0.0),
             _ => unreachable!("filtered above"),
         }
     }
-    let moves = entrance.fade
-        || entrance.offset != (0.0, 0.0)
-        || (entrance.scale.0 - 1.0).abs() > REST_TOLERANCE
-        || (entrance.scale.1 - 1.0).abs() > REST_TOLERANCE;
+    let moves = entrance.fade || entrance.offset != (0.0, 0.0) || entrance.scales();
     moves.then_some(entrance)
 }
 
 impl Entrance {
+    /// This entrance for one shape of the node: a scale about the node's
+    /// centre `pivot` also moves a shape centred at `shape` by
+    /// `(scale - 1) × (shape - pivot)`, which PowerPoint (scaling each
+    /// shape about its own centre) needs as an extra start offset.
+    pub(super) fn about_pivot(
+        &self,
+        shape: de_editor_ui::Point2D,
+        pivot: de_editor_ui::Point2D,
+        deck_px: (f32, f32),
+    ) -> Entrance {
+        let mut entrance = self.clone();
+        if self.scales() {
+            let shift = |scale: f64, shape: f32, pivot: f32, size: f32| {
+                (scale - 1.0) * f64::from(shape - pivot) / f64::from(size.max(1.0))
+            };
+            entrance.offset.0 += shift(self.scale.0, shape.x, pivot.x, deck_px.0);
+            entrance.offset.1 += shift(self.scale.1, shape.y, pivot.y, deck_px.1);
+        }
+        entrance
+    }
+
     fn scales(&self) -> bool {
         (self.scale.0 - 1.0).abs() > REST_TOLERANCE || (self.scale.1 - 1.0).abs() > REST_TOLERANCE
     }
 
-    /// The preset PowerPoint lists the effect under: Zoom, Float In, Fly
-    /// In or Fade. The behaviours below define the motion either way.
-    fn preset(&self) -> (u32, u32) {
+    /// The preset PowerPoint lists the effect under. The behaviours
+    /// written out below define the motion either way.
+    fn preset(&self) -> EntrancePreset {
+        let moves = self.offset != (0.0, 0.0);
         if self.scales() {
-            (53, 16)
-        } else if self.offset != (0.0, 0.0) && self.fade {
-            (42, 0)
-        } else if self.offset != (0.0, 0.0) {
-            (2, 0)
+            EntrancePreset::Zoom
+        } else if moves && self.fade {
+            EntrancePreset::FloatIn
+        } else if moves {
+            EntrancePreset::FlyIn
         } else {
-            (10, 0)
+            EntrancePreset::Fade
         }
     }
 }
+
+/// The entrance presets an [`Entrance`] is filed under, with PowerPoint's
+/// `presetID` / `presetSubtype` (`presetClass="entr"`).
+///
+/// | Preset | id / subtype | Node animation (mount, to rest) |
+/// |---|---|---|
+/// | Fade | 10 / 0 | opacity 0 → 1 |
+/// | Fly In | 2 / 0 | translateX / Y → 0 (`ppt_x` / `ppt_y`) |
+/// | Float In | 42 / 0 | opacity 0 → 1 + translate → 0 |
+/// | Zoom | 53 / 16 | scaleX / Y → 1 (`ppt_w` / `ppt_h`), may add the above |
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum EntrancePreset {
+    Fade,
+    FlyIn,
+    FloatIn,
+    Zoom,
+}
+
+impl EntrancePreset {
+    /// `(presetID, presetSubtype)`.
+    pub(crate) fn ids(self) -> (u32, u32) {
+        match self {
+            EntrancePreset::Fade => (10, 0),
+            EntrancePreset::FlyIn => (2, 0),
+            EntrancePreset::FloatIn => (42, 0),
+            EntrancePreset::Zoom => (53, 16),
+        }
+    }
+}
+
+/// Slide transition kind ↔ the `<p:transition>` child that plays it.
+pub(crate) const TRANSITION_ELEMENTS: [(SlideTransitionKind, &str); 3] = [
+    (SlideTransitionKind::Fade, "<p:fade/>"),
+    (SlideTransitionKind::Slide, "<p:cover dir=\"l\"/>"),
+    (SlideTransitionKind::Push, "<p:push dir=\"l\"/>"),
+];
+
+/// PowerPoint's named speeds: `(spd, duration in ms)`. An export picks the
+/// nearest; an import reads the duration back.
+pub(crate) const TRANSITION_SPEEDS: [(&str, u64); 3] =
+    [("fast", 500), ("med", 750), ("slow", 1000)];
 
 /// The slide's `<p:timing>` playing `effects` (`(shape id, entrance)`)
 /// as the slide starts. Empty for none.
@@ -151,10 +224,11 @@ fn write_effect(out: &mut String, spid: u32, entrance: &Entrance, next_id: &mut 
         *next_id += 1;
         id
     };
-    let (preset, subtype) = entrance.preset();
+    let (preset, subtype) = entrance.preset().ids();
     let repeat = if is_infinite_iterations(entrance.iterations) {
         " repeatCount=\"indefinite\"".to_string()
     } else if entrance.iterations > 1 {
+        // `repeatCount` counts thousandths of an iteration.
         format!(" repeatCount=\"{}\"", u64::from(entrance.iterations) * 1000)
     } else {
         String::new()
@@ -244,18 +318,17 @@ pub(super) fn transition_xml(transition: Option<&SlideTransition>) -> String {
     let Some(transition) = transition else {
         return String::new();
     };
-    let effect = match transition.kind {
-        SlideTransitionKind::None => return String::new(),
-        SlideTransitionKind::Fade => "<p:fade/>",
-        SlideTransitionKind::Slide => "<p:cover dir=\"l\"/>",
-        SlideTransitionKind::Push => "<p:push dir=\"l\"/>",
+    // `board_motion` already drops cuts, which have no element here.
+    let Some((_, effect)) = TRANSITION_ELEMENTS
+        .iter()
+        .find(|(kind, _)| *kind == transition.kind)
+    else {
+        return String::new();
     };
-    // PowerPoint's own speeds: fast 0.5 s, medium 0.75 s, slow 1 s.
-    let speed = match transition.duration_ms {
-        0..=625 => "fast",
-        626..=875 => "med",
-        _ => "slow",
-    };
+    let speed = TRANSITION_SPEEDS
+        .iter()
+        .min_by_key(|(_, ms)| ms.abs_diff(transition.duration_ms))
+        .map_or("med", |(speed, _)| speed);
     format!("<p:transition spd=\"{speed}\">{effect}</p:transition>")
 }
 

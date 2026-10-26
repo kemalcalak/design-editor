@@ -218,21 +218,11 @@ pub fn bake_transform(
         own: (own_width, own_height),
         definite,
     };
-    let mut matrix = Affine::IDENTITY;
-    let mut unsupported = false;
-    let mut dropped_percentage = false;
-    for (name, arguments) in &functions {
-        match function_matrix(
-            name,
-            arguments,
-            &function_ctx,
-            &mut unsupported,
-            &mut dropped_percentage,
-        ) {
-            Some(next) => matrix = matrix.multiply(next),
-            None => unsupported = true,
-        }
-    }
+    let Composed {
+        matrix,
+        unsupported,
+        dropped_percentage,
+    } = compose(&functions, &function_ctx);
     if unsupported {
         context.warn_once(ImportWarning::TransformUnsupportedFunction);
     }
@@ -298,19 +288,39 @@ pub(crate) fn list_matrix(
         own,
         definite,
     };
-    let mut matrix = Affine::IDENTITY;
-    let (mut unsupported, mut dropped_percentage) = (false, false);
-    for (name, arguments) in split_functions(value)? {
-        let next = function_matrix(
-            &name,
-            &arguments,
-            &function_ctx,
-            &mut unsupported,
-            &mut dropped_percentage,
-        )?;
-        matrix = matrix.multiply(next);
+    let composed = compose(&split_functions(value)?, &function_ctx);
+    (!composed.unsupported && !composed.dropped_percentage && composed.matrix.is_finite())
+        .then_some(composed.matrix)
+}
+
+/// A transform list multiplied out, plus what it could not express.
+struct Composed {
+    matrix: Affine,
+    /// A function had no 2-D reading (or did not parse) and was skipped.
+    unsupported: bool,
+    /// A percentage of an auto-sized axis was resolved as zero.
+    dropped_percentage: bool,
+}
+
+fn compose(functions: &[(String, Vec<String>)], ctx: &FunctionCtx<'_>) -> Composed {
+    let mut composed = Composed {
+        matrix: Affine::IDENTITY,
+        unsupported: false,
+        dropped_percentage: false,
+    };
+    for (name, arguments) in functions {
+        match function_matrix(
+            name,
+            arguments,
+            ctx,
+            &mut composed.unsupported,
+            &mut composed.dropped_percentage,
+        ) {
+            Some(next) => composed.matrix = composed.matrix.multiply(next),
+            None => composed.unsupported = true,
+        }
     }
-    (!unsupported && !dropped_percentage && matrix.is_finite()).then_some(matrix)
+    composed
 }
 
 /// `scale(0)` (the hidden-popover idiom) and non-finite factors have no node

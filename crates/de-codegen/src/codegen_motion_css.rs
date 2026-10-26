@@ -295,7 +295,8 @@ pub fn animation_name(node_id: &str, index: usize) -> String {
     format!("de-{}-{index}", css_identifier(node_id))
 }
 
-fn selector(node_id: &str) -> String {
+/// The attribute selector of an animated node's element.
+pub fn selector(node_id: &str) -> String {
     format!("[data-de-motion-node=\"{}\"]", css_identifier(node_id))
 }
 

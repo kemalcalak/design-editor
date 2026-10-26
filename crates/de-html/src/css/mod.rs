@@ -332,4 +332,4 @@ mod cascade_tests {
     }
 }
 
-mod declaration_syntax;
+pub(crate) mod declaration_syntax;

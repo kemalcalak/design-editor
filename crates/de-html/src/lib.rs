@@ -244,7 +244,7 @@ pub fn import_html_with_resources(
     // Kept before the parser is dropped; reported once the mapped nodes reveal
     // which of the declared families text actually asks for.
     let web_fonts = author_parser.web_fonts().to_vec();
-    let keyframes = author_parser.keyframes().clone();
+    let keyframes = author_parser.take_keyframes();
 
     let body = dom::DomElement {
         tag: "body".to_string(),

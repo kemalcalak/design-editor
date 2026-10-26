@@ -224,7 +224,7 @@ fn the_static_warning_carries_the_name_for_the_panel() {
 }
 
 #[test]
-fn unknown_names_none_and_zero_durations_are_silent() {
+fn unknown_names_none_zero_durations_and_still_keyframes_are_silent() {
     for css in [
         ".a{animation:missing 1s}",
         ".a{animation:none}",
@@ -270,4 +270,35 @@ fn keyframes_nested_in_media_and_webkit_prefixed_blocks_are_found() {
         BOX,
     );
     assert_eq!(only_animation(&result).duration_ms, 300);
+}
+
+#[test]
+fn a_full_turn_spins_instead_of_reading_back_as_still() {
+    let result = import(
+        ".a{animation:spin 1s linear infinite}\
+         @keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}",
+        BOX,
+    );
+    let animation = only_animation(&result);
+    assert_eq!(stop(animation, 0), json!({"rotation": 0.0}));
+    assert_eq!(stop(animation, 1), json!({"rotation": 360.0}));
+}
+
+#[test]
+fn reverse_plays_the_timing_curve_backwards_too() {
+    let result = import(
+        ".a{animation:fade 1s ease-in reverse}@keyframes fade{from{opacity:0}}",
+        BOX,
+    );
+    assert_eq!(only_animation(&result).easing, Easing::EaseOut);
+    let result = import(
+        ".a{animation:fade 1s cubic-bezier(.1,.2,.3,.4) reverse}@keyframes fade{from{opacity:0}}",
+        BOX,
+    );
+    let Easing::CubicBezier(x1, y1, x2, y2) = only_animation(&result).easing else {
+        panic!("a cubic-bezier stays one");
+    };
+    for (got, want) in [(x1, 0.7), (y1, 0.6), (x2, 0.9), (y2, 0.8)] {
+        assert!((got - want).abs() < 1e-6, "{got} != {want}");
+    }
 }

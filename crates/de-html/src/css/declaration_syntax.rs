@@ -166,7 +166,7 @@ pub(super) fn strip_comments(input: &str) -> String {
     out
 }
 
-pub(super) fn split_top_level(input: &str, delimiter: char) -> Vec<&str> {
+pub(crate) fn split_top_level(input: &str, delimiter: char) -> Vec<&str> {
     let mut parts = Vec::new();
     let mut start = 0;
     let mut paren = 0u32;
@@ -212,7 +212,7 @@ pub(super) fn split_top_level(input: &str, delimiter: char) -> Vec<&str> {
     parts
 }
 
-pub(super) fn split_whitespace_top_level(input: &str) -> Vec<String> {
+pub(crate) fn split_whitespace_top_level(input: &str) -> Vec<String> {
     let mut result = Vec::new();
     let mut start = None;
     let mut paren = 0u32;

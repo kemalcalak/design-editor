@@ -3,6 +3,7 @@
 //! walk the resolved scene for geometry, but the scene carries no motion,
 //! so the HTML player and the PPTX writer both start here.
 
+use de_editor_core::slide_transition::board_slide_transition;
 use de_editor_core::{EditorState, PenNodeExt};
 use jian_ops_schema::motion::{NodeAnimation, SlideTransition, SlideTransitionKind};
 use jian_ops_schema::node::PenNode;
@@ -28,10 +29,8 @@ pub(crate) fn board_motion(state: &EditorState, board_id: &str) -> BoardMotion {
     };
     let mut animations = Vec::new();
     collect(board, &mut animations);
-    let transition = board
-        .base()
-        .slide_transition
-        .clone()
+    // Cuts are dropped here, once, for every exporter.
+    let transition = board_slide_transition(state, board_id)
         .filter(|t| t.kind != SlideTransitionKind::None && t.duration_ms > 0);
     BoardMotion {
         animations,
@@ -40,7 +39,8 @@ pub(crate) fn board_motion(state: &EditorState, board_id: &str) -> BoardMotion {
 }
 
 fn collect(node: &PenNode, out: &mut Vec<(String, Vec<NodeAnimation>)>) {
-    if let Some(animations) = node.motion_declarations().1.filter(|list| !list.is_empty()) {
+    let (_, animations) = node.motion_declarations();
+    if let Some(animations) = animations.filter(|list| !list.is_empty()) {
         out.push((node.id_str().to_string(), animations.clone()));
     }
     for child in node.children_ref().into_iter().flatten() {
