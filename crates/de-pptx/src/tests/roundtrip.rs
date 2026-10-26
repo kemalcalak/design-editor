@@ -28,11 +28,11 @@ fn imported_deck_exports_back_to_pptx_and_reimports() {
     let (bytes, summary) =
         de_host_services::export_pptx::build_deck_pptx(&state).expect("pptx export");
     // The hidden third slide is not part of the deck.
-    assert_eq!(summary.slides, 2);
+    assert_eq!(summary.slides, 3);
     assert!(summary.structured_nodes > 10, "{summary:?}");
 
     let again = import_pptx(&bytes, "Again").expect("re-import");
-    assert_eq!(again.slides, 2);
+    assert_eq!(again.slides, 3);
     let doc = serde_json::to_value(&again.document).expect("serialize");
     let boards = boards(&doc);
     assert_eq!(boards[0]["width"], 1280.0);
@@ -63,6 +63,36 @@ fn imported_deck_exports_back_to_pptx_and_reimports() {
         find_where(boards[1], &|n| n["type"] == "image").is_some(),
         "pictures come back"
     );
+
+    // The animated slide keeps its transition and entrances. The export
+    // names three speeds, so 1200 ms goes out as "slow" (1000 ms).
+    let animated = boards[2];
+    assert_eq!(animated["slideTransition"]["kind"], "fade");
+    assert_eq!(animated["slideTransition"]["durationMs"], 1000);
+    let animated_node = |kind: &str| {
+        find_where(animated, &|n| {
+            n["type"] == kind && n["animations"].is_array()
+        })
+        .unwrap_or_else(|| panic!("a {kind} with an entrance"))["animations"]
+            .as_array()
+            .expect("animations")
+            .clone()
+    };
+    let title = animated_node("text");
+    assert_eq!(title.len(), 1, "{title:?}");
+    assert_eq!(title[0]["durationMs"], 500);
+    super::near(&title[0]["keyframes"][0]["values"]["opacity"], 0.0);
+    let floated = animated_node("rectangle");
+    assert_eq!(floated[0]["delayMs"], 500);
+    assert_eq!(floated[0]["durationMs"], 750);
+    super::near(&floated[0]["keyframes"][0]["values"]["translateX"], -320.0);
+    super::near(&floated[0]["keyframes"][0]["values"]["opacity"], 0.0);
+    let zoomed = animated_node("ellipse");
+    assert_eq!(zoomed[0]["delayMs"], 500);
+    super::near(&zoomed[0]["keyframes"][0]["values"]["scaleX"], 0.5);
+    super::near(&zoomed[0]["keyframes"][0]["values"]["scaleY"], 0.5);
+    assert_eq!(zoomed[0]["iterations"], 2);
+    assert_eq!(zoomed[0]["easing"], "ease_in_out");
 }
 
 /// Depth-first search by predicate.
@@ -82,7 +112,7 @@ fn imported_deck_exports_to_html_and_pdf() {
     let dir = temp("export");
     let html = dir.join("deck.html");
     let summary = de_host_services::export_html::export_deck_html(&state, &html).expect("html");
-    assert_eq!(summary.slides, 2);
+    assert_eq!(summary.slides, 3);
     let page = std::fs::read_to_string(&html).expect("html written");
     assert!(page.contains("Quarterly review"));
 
@@ -99,5 +129,5 @@ fn imported_document_is_a_valid_de_document() {
     let src = serde_json::to_string(&import.document).expect("serialize");
     let reloaded = jian_ops_schema::load_str(&src).expect("loads as .de").value;
     let value: Value = serde_json::to_value(&reloaded).expect("serialize");
-    assert_eq!(boards(&value).len(), 3);
+    assert_eq!(boards(&value).len(), 4);
 }

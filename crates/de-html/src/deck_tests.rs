@@ -272,3 +272,66 @@ fn slides_hidden_by_a_sibling_selector_still_show() {
     let result = import_html(html, &HtmlImportOptions::default());
     assert_eq!(names(&result.nodes), ["First", "Second"]);
 }
+
+#[test]
+fn slides_are_named_after_their_heading_not_their_position() {
+    let html =
+        "<div aria-roledescription='slide' aria-label='1 of 2' style='width:640px;height:360px'>\
+          <h2>Opening</h2></div>\
+        <div aria-roledescription='slide' aria-label='2 / 2' style='width:640px;height:360px'>\
+          <p>no heading</p></div>";
+    let result = import_html(html, &HtmlImportOptions::default());
+    assert_eq!(names(&result.nodes), ["Opening", "Slide 2"]);
+    for label in ["3/4", "Slide 3 of 4", "Page 03 / 04"] {
+        assert!(super::is_position_label(label), "{label}");
+    }
+    for label in ["Roadmap", "Q3 of FY26 plan", "2025"] {
+        assert!(!super::is_position_label(label), "{label}");
+    }
+}
+
+#[test]
+fn text_in_a_link_of_a_flex_row_still_hugs() {
+    // A row item sizes to its content, so its text stays on one line.
+    let html = "<nav style='display:flex;gap:16px;width:600px'>\
+        <a href='#a'>Pricing plans</a><a href='#b'>Docs</a></nav>";
+    let result = import_html(html, &HtmlImportOptions::default());
+    let mut growth = Vec::new();
+    fn walk(node: &PenNode, out: &mut Vec<Option<jian_ops_schema::node::text::TextGrowth>>) {
+        match node {
+            PenNode::Text(text) => out.push(text.text_growth.clone()),
+            PenNode::Frame(frame) => children(frame).iter().for_each(|c| walk(c, out)),
+            _ => {}
+        }
+    }
+    result.nodes.iter().for_each(|node| walk(node, &mut growth));
+    assert!(!growth.is_empty());
+    assert!(
+        growth
+            .iter()
+            .all(|g| *g == Some(jian_ops_schema::node::text::TextGrowth::Auto)),
+        "{growth:?}"
+    );
+}
+
+#[test]
+fn text_in_a_span_that_is_a_flex_item_wraps_at_its_width() {
+    // The `<span>` is an item of a flex column, so it is blockified and wraps.
+    let html = "<div style='display:flex;flex-direction:column;width:300px'>\
+        <b>Detect</b><span>aria-roledescription, print page breaks or sibling sections</span></div>";
+    let result = import_html(html, &HtmlImportOptions::default());
+    let mut wraps = Vec::new();
+    fn walk(node: &PenNode, out: &mut Vec<Option<jian_ops_schema::node::text::TextGrowth>>) {
+        match node {
+            PenNode::Text(text) => out.push(text.text_growth.clone()),
+            PenNode::Frame(frame) => children(frame).iter().for_each(|c| walk(c, out)),
+            _ => {}
+        }
+    }
+    result.nodes.iter().for_each(|node| walk(node, &mut wraps));
+    assert_eq!(
+        wraps.last().cloned().flatten(),
+        Some(jian_ops_schema::node::text::TextGrowth::FixedWidth),
+        "{wraps:?}"
+    );
+}

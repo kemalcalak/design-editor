@@ -83,3 +83,12 @@ pub fn text_of(node: Node<'_, '_>) -> String {
         .filter_map(|n| n.text())
         .collect()
 }
+
+/// The animated attribute an `anim` names (`cBhvr/attrNameLst/attrName`).
+pub fn anim_attribute(behaviour: Node<'_, '_>) -> String {
+    path(behaviour, &["cBhvr", "attrNameLst", "attrName"])
+        .and_then(|n| n.text())
+        .unwrap_or("")
+        .trim()
+        .to_string()
+}
