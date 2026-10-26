@@ -1,0 +1,27 @@
+[package]
+name = "de-pptx"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "Design Editor PowerPoint import — .pptx slides onto PenDocument boards"
+
+[lib]
+name = "de_pptx"
+path = "src/lib.rs"
+
+[dependencies]
+jian-ops-schema = { path = "../../vendor/jian/crates/jian-ops-schema" }
+# Pure Rust and wasm32-clean: the browser host parses decks in the bundle.
+# `zip` and `roxmltree` are already in the lock file (de-html, usvg), so the
+# importer adds no new crate to the build graph.
+zip = { version = "9", default-features = false, features = ["deflate-flate2"] }
+# `zip`'s deflate feature needs a flate2 backend; the pure-Rust one.
+flate2 = { version = "1", default-features = false, features = ["rust_backend"] }
+roxmltree = "0.21"
+base64 = "0.22"
+serde_json = { workspace = true }
+
+[dev-dependencies]
+de-editor-core = { path = "../de-editor-core" }
+de-host-services = { path = "../de-host-services" }

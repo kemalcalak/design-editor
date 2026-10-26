@@ -1703,6 +1703,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "de-pptx"
+version = "0.5.1"
+dependencies = [
+ "base64",
+ "de-editor-core",
+ "de-host-services",
+ "flate2",
+ "jian-ops-schema",
+ "roxmltree",
+ "serde_json",
+ "zip 9.0.4",
+]
+
+[[package]]
 name = "de-preview-contracts"
 version = "0.5.1"
 dependencies = [
