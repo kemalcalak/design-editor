@@ -125,8 +125,10 @@ fn master_artwork_sits_behind_the_slide_and_prompts_stay_out() {
     let (doc, _) = imported();
     let slide = boards(&doc)[0];
     let children = slide["children"].as_array().expect("children");
-    assert_eq!(children[0]["name"], "Accent bar");
-    assert_eq!(children[0]["fill"][0]["color"], "#4472C4");
+    // Canonical children are front-to-back: the master's artwork is last.
+    let last = children.last().expect("master artwork");
+    assert_eq!(last["name"], "Accent bar");
+    assert_eq!(last["fill"][0]["color"], "#4472C4");
     assert!(!all_text(slide).contains("Master"), "{}", all_text(slide));
 }
 

@@ -37,6 +37,17 @@ fn imported_deck_exports_back_to_pptx_and_reimports() {
     let boards = boards(&doc);
     assert_eq!(boards[0]["width"], 1280.0);
     assert_eq!(boards[0]["height"], 720.0);
+    // Z-order survives: the master's artwork stays behind the slide's text
+    // (canonical children are front-to-back).
+    let children = boards[0]["children"].as_array().expect("children");
+    let bar = children
+        .iter()
+        .position(|n| n["fill"][0]["color"] == "#4472C4");
+    let text = children.iter().position(|n| n["type"] == "text");
+    assert!(
+        matches!((text, bar), (Some(t), Some(b)) if t < b),
+        "text {text:?} must come before the accent bar {bar:?}"
+    );
     let first: String = all_text(boards[0]);
     assert!(first.contains("Quarterly review"), "{first}");
     assert!(first.contains("Revenue up"), "{first}");
