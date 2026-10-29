@@ -20,6 +20,7 @@ fn pump_applies_the_unplaced_write_when_the_document_moved_on() {
             last_mcp_epoch: 0,
             pending_design_md: VecDeque::new(),
             saved_documents: Vec::new(),
+            follow_target: None,
         };
         let src = r#"{"version":"1.0.0","children":[{"type":"frame","id":"seed","x":0,"y":0,
           "width":1200,"height":800,"children":[{"type":"text","id":"t","content":"Existing"}]}]}"#;

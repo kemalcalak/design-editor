@@ -88,6 +88,18 @@ pub struct McpLiveServer {
     /// Files a client wrote with `save_document`, for the host to list on
     /// Home. Their previews are already queued.
     saved_documents: Vec<std::path::PathBuf>,
+    /// The page root the last write added, for the host to bring into view
+    /// (#264). Taken by [`McpLiveServer::take_follow_target`].
+    follow_target: Option<McpFollowTarget>,
+}
+
+/// A page root an MCP write just added: where the canvas follows the agent.
+/// Desktop only: the web canvas has no live MCP pump, so nothing follows
+/// there.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct McpFollowTarget {
+    pub page_index: usize,
+    pub node_id: String,
 }
 
 struct ApplyAck {
@@ -241,6 +253,7 @@ impl McpLiveServer {
             last_mcp_epoch: 0,
             pending_design_md: VecDeque::new(),
             saved_documents: Vec::new(),
+            follow_target: None,
         })
     }
 
@@ -312,6 +325,11 @@ impl McpLiveServer {
                         .then(|| crate::design_agent_tools::collect_active_node_ids(state));
                     let revision_before = state.document_revision();
                     let baseline = crate::mcp_serve::baseline_for_tool(&tool_name, state);
+                    // Only content tools add boards worth following; page
+                    // tools (duplicate, reorder, delete) and document swaps
+                    // add or shuffle roots the agent is not working on.
+                    let roots_before = de_mcp::root_placement::places_new_roots(&tool_name)
+                        .then(|| page_root_ids(state));
                     let applied = state.apply(cmd);
                     if applied {
                         let write_repairs = baseline.is_some_and(|baseline| {
@@ -325,6 +343,12 @@ impl McpLiveServer {
                     }
                     let _ = ack.send(ApplyAck { applied });
                     if applied {
+                        if let Some(target) = roots_before
+                            .as_deref()
+                            .and_then(|before| new_page_root(before, state))
+                        {
+                            self.follow_target = Some(target);
+                        }
                         outcome.repaint = true;
                         outcome.layout_dirty |= layout_dirty;
                         outcome.document_edited |= state.document_revision() != revision_before;
@@ -401,6 +425,11 @@ impl McpLiveServer {
     /// call, oldest first.
     pub fn take_saved_documents(&mut self) -> Vec<std::path::PathBuf> {
         std::mem::take(&mut self.saved_documents)
+    }
+
+    /// The page root the latest write added, once (#264).
+    pub fn take_follow_target(&mut self) -> Option<McpFollowTarget> {
+        self.follow_target.take()
     }
 
     pub fn stop(&mut self) {
@@ -559,3 +588,37 @@ mod placement_tests;
 #[cfg(test)]
 #[path = "mcp_live_tests.rs"]
 mod tests;
+
+/// Root ids per page id, in page order.
+fn page_root_ids(state: &EditorState) -> Vec<(String, Vec<String>)> {
+    let roots = |children: &[PenNode]| -> Vec<String> {
+        children.iter().map(|n| n.id_str().to_string()).collect()
+    };
+    match state.doc.pages.as_ref() {
+        Some(pages) if !pages.is_empty() => pages
+            .iter()
+            .map(|p| (p.id.clone(), roots(&p.children)))
+            .collect(),
+        _ => vec![(String::new(), roots(&state.doc.children))],
+    }
+}
+
+/// A page root that is in `state` but not in `before`, on a page that
+/// existed before (pages are matched by id, so deleting or reordering pages
+/// adds nothing); the first one in paint order, which is where placement
+/// puts new roots (in front).
+fn new_page_root(before: &[(String, Vec<String>)], state: &EditorState) -> Option<McpFollowTarget> {
+    page_root_ids(state)
+        .into_iter()
+        .enumerate()
+        .find_map(|(page_index, (page_id, roots))| {
+            let (_, old) = before.iter().find(|(id, _)| *id == page_id)?;
+            roots
+                .into_iter()
+                .find(|id| !old.contains(id))
+                .map(|node_id| McpFollowTarget {
+                    page_index,
+                    node_id,
+                })
+        })
+}
