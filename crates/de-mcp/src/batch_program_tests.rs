@@ -690,3 +690,24 @@ mod image_tests;
 
 #[path = "batch_program_interactivity_tests.rs"]
 mod interactivity_tests;
+
+#[test]
+fn path_geometry_alias_inserts_its_outline_as_d() {
+    let state = sample();
+    let program = r#"p=I("n10", {"type":"path","name":"Logo","width":10,"height":10,"geometry":"M0 0L10 10"})"#;
+    let (envelope, cmd) = call_operations(&state, program);
+    assert!(envelope.get("errors").is_none(), "{envelope}");
+    let json = format!("{:?}", cmd.expect("insert command"));
+    assert!(json.contains("M0 0L10 10"), "outline dropped: {json}");
+}
+
+#[test]
+fn path_without_outline_is_refused_naming_d() {
+    let state = sample();
+    let program = r#"p=I("n10", {"type":"path","name":"Logo","width":10,"height":10})"#;
+    let (envelope, cmd) = call_operations(&state, program);
+    assert!(cmd.is_none(), "{envelope}");
+    let text = envelope.to_string();
+    assert!(text.contains("has no outline"), "{text}");
+    assert!(text.contains("`d`"), "{text}");
+}

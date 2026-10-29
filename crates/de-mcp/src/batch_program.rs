@@ -193,11 +193,6 @@ pub(crate) fn run_batch_design_program(
     }
 }
 
-/// The name the shipped blank starter frame carries
-/// (`de_editor_core::blank_starter`). Treated as "unnamed" below: it is the
-/// placeholder the auto-replace exists for, not an authored screen.
-const STARTER_FRAME_NAME: &str = "Frame";
-
 /// Whether an existing root may be consumed by a root-level `I(null, frame)`.
 ///
 /// Emptiness alone is not enough. The pre-program snapshot stops a batch from
@@ -210,17 +205,7 @@ const STARTER_FRAME_NAME: &str = "Frame";
 /// document-level twin of this question — an empty frame the user drew and has
 /// not filled in yet must not be treated as disposable.
 fn is_replaceable_starter_root(node: &PenNode) -> bool {
-    matches!(node, PenNode::Frame(_))
-        && node
-            .children()
-            .map(|children| children.is_empty())
-            .unwrap_or(true)
-        && node
-            .base()
-            .name
-            .as_deref()
-            .map(str::trim)
-            .is_none_or(|name| name.is_empty() || name == STARTER_FRAME_NAME)
+    de_editor_core::blank_starter::is_replaceable_starter_frame(node)
 }
 
 pub(crate) struct ProgramCtx {
@@ -619,6 +604,8 @@ fn execute_update(args: &str, ctx: &mut ProgramCtx) -> Result<()> {
     let path = resolve_path_expr(args[..comma].trim(), &ctx.bindings);
     let mut value = parse_json_arg(&args[comma + 1..])?;
     normalize_node_shape(&mut value);
+    crate::local_image::inline_local_images_in_patch(&mut value)
+        .map_err(|e| ProgramError::InvalidValue(e.to_string()))?;
     let Some(target) = find_node_by_path(ctx.sim.active_children(), &path, &ctx.alias) else {
         let Some(hit) = find_instance_descendant(&ctx.sim, &path, &ctx.alias) else {
             return Err(ProgramError::NotFound(format!(

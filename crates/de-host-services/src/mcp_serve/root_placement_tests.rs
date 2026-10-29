@@ -202,3 +202,31 @@ fn tool_search_serves_the_same_placement_wording_as_tools_list() {
     );
     assert!(response.contains("allowOverlap"), "{response}");
 }
+
+#[test]
+fn an_agent_page_starts_empty_so_its_first_board_stands_alone() {
+    // #270: `add_page` over MCP used to bring the canvas's blank 1200x800
+    // starter, and the agent's own board landed on top of it.
+    let mut state = seeded_state();
+    call(
+        &mut state,
+        "add_page",
+        serde_json::json!({"name":"Variants"}),
+    );
+    assert!(state.active_children().is_empty(), "{:?}", roots(&state));
+    call(
+        &mut state,
+        "batch_design",
+        serde_json::json!({"operations": r##"b=I(document,{"type":"frame","name":"Board","x":0,"y":0,"width":880,"height":1083})"##}),
+    );
+    assert_eq!(roots(&state), vec![("Board".into(), 0.0, 0.0)]);
+    call(
+        &mut state,
+        "batch_design",
+        serde_json::json!({"operations": r##"b=I(document,{"type":"frame","name":"Second","x":0,"y":0,"width":400,"height":300})"##}),
+    );
+    assert_eq!(
+        roots(&state),
+        vec![("Second".into(), 960.0, 0.0), ("Board".into(), 0.0, 0.0)]
+    );
+}

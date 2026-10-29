@@ -38,6 +38,7 @@ pub(super) enum UpdateDataError {
     FillHexNotString,
     /// `fill_hex` / `fillHex` is a string but not a supported hex spelling.
     InvalidFillHex(String),
+    LocalImage(crate::local_image::LocalImageError),
 }
 
 impl std::fmt::Display for UpdateDataError {
@@ -47,6 +48,7 @@ impl std::fmt::Display for UpdateDataError {
             UpdateDataError::InvalidFillHex(hex) => {
                 write!(f, "fill_hex must be #rgb/#rrggbb/#rrggbbaa, got {hex:?}")
             }
+            UpdateDataError::LocalImage(e) => e.fmt(f),
         }
     }
 }
@@ -70,6 +72,8 @@ pub(super) fn ts_update_patch_json_value(value: &Value) -> Result<Option<String>
     // Rich `fill` values stay on the canonical patch path. Normalize legacy
     // string/object spellings before `PatchNodeData` deserializes the node.
     super::batch_design::normalize_node_shape(&mut patch);
+    crate::local_image::inline_local_images_in_patch(&mut patch)
+        .map_err(UpdateDataError::LocalImage)?;
     Ok(Some(patch.to_string()))
 }
 

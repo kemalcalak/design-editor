@@ -93,6 +93,7 @@ fn content_tools_are_in_scope_and_offset_tools_are_not() {
         "upsert_component",
         "instantiate_component",
         "copy_node",
+        "execute",
     ] {
         assert!(places_new_roots(tool), "{tool} should place new roots");
     }

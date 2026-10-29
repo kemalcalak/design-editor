@@ -45,6 +45,12 @@ pub(crate) fn parse_insert_operations(input: &str) -> Result<InsertForest, Inser
                 detail: e.to_string(),
             })?;
         normalize_node_shape(&mut value);
+        if let Err(e) = super::batch_design::prepare_insert_payload(&mut value) {
+            return Err(InsertDslError::InvalidPenNode {
+                binding: binding.clone(),
+                detail: e.to_string(),
+            });
+        }
         ensure_node_ids(&mut value, &mut tmp_id);
         let mut node: PenNode =
             serde_json::from_value(value).map_err(|e| InsertDslError::InvalidPenNode {

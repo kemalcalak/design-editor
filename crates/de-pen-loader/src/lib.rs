@@ -84,6 +84,8 @@ mod widget_payload_tests;
 
 pub mod payload;
 pub mod pen_dev;
+/// Image type and `data:` url helpers shared with MCP's local image paths.
+pub use pen_dev::images::{data_url as image_data_url, mime_type as image_mime_type};
 pub mod variables;
 
 /// Build a paint-only, layout-resolved `LayoutScene` from an

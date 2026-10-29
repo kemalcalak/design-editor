@@ -157,21 +157,32 @@ I(null, {type: "text", content: "Already safe", height: "fit_content"});"#,
 }
 
 #[test]
-fn insert_repairs_only_low_contrast_text_and_icons_on_known_solid_backgrounds() {
-    let program = run_script_to_program(
-        r##"const light = I(null, {type: "frame", name: "Light", fill: [{type: "solid", color: "#FFFFFF"}]});
-I(light, {type: "text", content: "Faint", fill: [{type: "solid", color: "#F5F5F5"}]});
+fn insert_keeps_low_contrast_colours_and_notes_them() {
+    // #266: an explicit colour is never repainted; low contrast against a
+    // known solid background becomes a note for the result's warnings.
+    let out = run_script_to_program_with_notes(
+        r##"const light = I(null, {type: "frame", name: "Light", fill: [{type: "solid", color: "#FFF8EA"}]});
+I(light, {type: "text", name: "Headline", fontSize: 60, content: "Faint", fill: [{type: "solid", color: "#EB4F24"}]});
 const dark = I(null, {type: "frame", name: "Dark", fill: [{type: "solid", color: "#17191D"}]});
 I(dark, {type: "icon_font", name: "Faint icon", fill: [{type: "solid", color: "#303238"}]});"##,
     )
-    .expect("low-contrast foregrounds are normalized");
-    let lines: Vec<&str> = program.lines().collect();
+    .expect("low-contrast foregrounds are kept");
+    let lines: Vec<&str> = out.program.lines().collect();
 
-    assert_eq!(lines.len(), 4, "{program}");
-    assert!(lines[1].contains(r##""color":"#17191D""##), "{program}");
-    assert!(lines[3].contains(r##""color":"#FAF8F3""##), "{program}");
-    assert!(!lines[1].contains("#F5F5F5"), "{program}");
-    assert!(!lines[3].contains("#303238"), "{program}");
+    assert_eq!(lines.len(), 4, "{}", out.program);
+    assert!(lines[1].contains("#EB4F24"), "{}", out.program);
+    assert!(lines[3].contains("#303238"), "{}", out.program);
+    assert_eq!(out.notes.len(), 2, "{:?}", out.notes);
+    assert!(
+        out.notes[0].starts_with("Headline keeps #EB4F24 on #FFF8EA (contrast 3."),
+        "{:?}",
+        out.notes
+    );
+    assert!(
+        out.notes[1].starts_with("Faint icon keeps #303238 on #17191D"),
+        "{:?}",
+        out.notes
+    );
 }
 
 #[test]
@@ -214,18 +225,23 @@ I(light, {type: "icon_font", name: "Paint opacity", fill: [{type: "solid", color
 
 #[test]
 fn insert_inherits_known_background_through_unfilled_bindings() {
-    let program = run_script_to_program(
+    let out = run_script_to_program_with_notes(
         r##"const root = I(null, {type: "frame", fill: [{type: "solid", color: "#FFFFFF"}]});
 const section = I(root, {type: "frame", name: "Transparent section"});
 const row = I(section, {type: "frame", name: "Row", layout: "horizontal"});
 I(row, {type: "text", content: "Inherited", fill: [{type: "solid", color: "#FAFAFA"}]});"##,
     )
     .expect("background metadata follows the binding chain");
-    let lines: Vec<&str> = program.lines().collect();
+    let lines: Vec<&str> = out.program.lines().collect();
 
-    assert_eq!(lines.len(), 4, "{program}");
-    assert!(lines[3].contains(r##""color":"#17191D""##), "{program}");
-    assert!(!lines[3].contains("#FAFAFA"), "{program}");
+    assert_eq!(lines.len(), 4, "{}", out.program);
+    assert!(lines[3].contains("#FAFAFA"), "{}", out.program);
+    assert_eq!(out.notes.len(), 1, "{:?}", out.notes);
+    assert!(
+        out.notes[0].starts_with("text keeps #FAFAFA on #FFFFFF"),
+        "{:?}",
+        out.notes
+    );
 }
 
 #[test]
@@ -571,7 +587,9 @@ fn balances_glm_missing_outer_brace() {
 
     assert!(repaired.ends_with(r##""#EAD8C8"}]}});"##));
     assert_eq!(repaired.matches('{').count(), repaired.matches('}').count());
-    let program = eval_to_program(&repaired).expect("balanced GLM script evals");
+    let program = eval_to_program(&repaired)
+        .expect("balanced GLM script evals")
+        .program;
     assert!(program.contains(r#""name":"Profile Button""#));
 }
 

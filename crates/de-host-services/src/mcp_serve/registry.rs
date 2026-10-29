@@ -184,7 +184,10 @@ pub(super) fn rebuild_registry(doc: &EditorState, requested_tool: Option<&str>) 
     register_tool!("move_node", move_node_snapshot());
     register_tool!("copy_node", copy_node_snapshot());
     register_tool!("replace_node", replace_node_snapshot());
-    register_tool!("batch_design", batch_design_snapshot(doc));
+    register_tool!(
+        "batch_design",
+        batch_design_snapshot(doc).with_overlap_warnings()
+    );
     register_tool!("get_design_prompt", get_design_prompt_snapshot(doc));
     register_tool!("design_skeleton", design_skeleton_snapshot());
     register_tool!("design_content", design_content_snapshot());

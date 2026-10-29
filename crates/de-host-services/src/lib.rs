@@ -92,6 +92,7 @@ pub mod home_preview;
 pub mod image_relevance_judge;
 mod import_html_url;
 pub mod import_html_url_error;
+pub mod local_image_reader;
 pub mod loop_blocker_ledger;
 pub mod mcp_live;
 pub mod mcp_serve;

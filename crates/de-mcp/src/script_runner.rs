@@ -27,6 +27,15 @@ use prelude::PRELUDE;
 
 pub use error::ScriptError;
 
+/// A script's recorded `batch_design` program plus the notes the prelude
+/// made while recording it (low-contrast colours it kept, #266). The notes
+/// ride the result's `warnings` so the caller can decide.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ScriptProgram {
+    pub program: String,
+    pub notes: Vec<String>,
+}
+
 pub const MAX_SCRIPT_BYTES: usize = 262_144;
 pub const MAX_RECORDED_LINES: usize = 4096;
 /// Bounds recorded-line *bytes*, independent of the line-count cap: a script
@@ -38,12 +47,19 @@ pub const MAX_RECORDED_LINES: usize = 4096;
 pub const MAX_RECORDED_BYTES: usize = 8 * 1024 * 1024;
 pub(crate) const MEMORY_LIMIT_BYTES: usize = 64 * 1024 * 1024;
 const EVAL_BUDGET: Duration = Duration::from_secs(2);
+/// Notes kept per script; a loop of low-contrast text stays one screenful.
+const MAX_SCRIPT_NOTES: usize = 20;
 
 /// Strip fences, enforce caps, eval, and return the recorded program.
 /// Retries once with `repair_truncated_script` when the first eval fails,
 /// so a model-truncated script salvages its complete-statement prefix
 /// instead of losing the whole section to a trailing SyntaxError.
 pub fn run_script_to_program(text: &str) -> Result<String, ScriptError> {
+    run_script_to_program_with_notes(text).map(|p| p.program)
+}
+
+/// [`run_script_to_program`] keeping the prelude's notes.
+pub fn run_script_to_program_with_notes(text: &str) -> Result<ScriptProgram, ScriptError> {
     let script = strip_fences(text);
     if script.trim().is_empty() {
         return Err(ScriptError::EmptySource);
@@ -58,7 +74,7 @@ pub fn run_script_to_program(text: &str) -> Result<String, ScriptError> {
         Ok(p) => p,
         Err(first_err) => eval_after_initial_failure(&script, first_err)?,
     };
-    if program.trim().is_empty() {
+    if program.program.trim().is_empty() {
         return Err(ScriptError::NoOperations);
     }
     Ok(program)
@@ -90,7 +106,10 @@ fn truncate_duplicate_script(script: &str) -> Option<String> {
     Some(script[..after + second_rel].to_string())
 }
 
-fn eval_after_initial_failure(script: &str, first_err: ScriptError) -> Result<String, ScriptError> {
+fn eval_after_initial_failure(
+    script: &str,
+    first_err: ScriptError,
+) -> Result<ScriptProgram, ScriptError> {
     // gemini-3.6-flash writes schema property names with the separator it
     // reads in the docs — `justify.content:` instead of `justifyContent:`.
     // A bare dotted key is a SyntaxError at the first `.`, so QuickJS
@@ -271,7 +290,7 @@ fn escape_raw_newlines_in_quoted_strings(src: &str) -> Option<String> {
 /// the returned program transactionally, so returning a prefix here would
 /// turn an incomplete JavaScript transaction into a misleading success.
 /// Syntax-level truncation recovery remains in `eval_after_initial_failure`.
-fn eval_to_program(script: &str) -> Result<String, ScriptError> {
+fn eval_to_program(script: &str) -> Result<ScriptProgram, ScriptError> {
     let rt = Runtime::new().map_err(|e| ScriptError::RuntimeInit(e.to_string()))?;
     rt.set_memory_limit(MEMORY_LIMIT_BYTES);
     let deadline = Instant::now() + EVAL_BUDGET;
@@ -289,6 +308,8 @@ fn eval_to_program(script: &str) -> Result<String, ScriptError> {
     let bytes_rec_k = bytes_used.clone();
     let lines_rec_u = lines.clone();
     let bytes_rec_u = bytes_used.clone();
+    let notes: Rc<RefCell<Vec<String>>> = Rc::new(RefCell::new(Vec::new()));
+    let notes_rec = notes.clone();
 
     let outcome: Result<(), ScriptError> = ctx.with(|ctx| {
         let record = Function::new(ctx.clone(), move |parent: String, json: String| -> String {
@@ -327,6 +348,22 @@ fn eval_to_program(script: &str) -> Result<String, ScriptError> {
             name: "__recordU",
             detail: e.to_string(),
         })?;
+        let note = Function::new(ctx.clone(), move |text: String| {
+            let mut notes = notes_rec.borrow_mut();
+            if notes.len() < MAX_SCRIPT_NOTES {
+                notes.push(text);
+            }
+        })
+        .map_err(|e| ScriptError::BindHostFn {
+            name: "__note",
+            detail: e.to_string(),
+        })?;
+        ctx.globals()
+            .set("__note", note)
+            .map_err(|e| ScriptError::SetGlobal {
+                name: "__note",
+                detail: e.to_string(),
+            })?;
         ctx.globals()
             .set("__record", record)
             .map_err(|e| ScriptError::SetGlobal {
@@ -359,7 +396,10 @@ fn eval_to_program(script: &str) -> Result<String, ScriptError> {
         );
     }
     match outcome {
-        Ok(()) => Ok(program),
+        Ok(()) => Ok(ScriptProgram {
+            program,
+            notes: notes.take(),
+        }),
         // Matched on the rendered message (not the variant) so the guard
         // keeps the exact reach the `String` version had: the sentinel is
         // raised by the prelude's `__unsupported` thrower, so it can only

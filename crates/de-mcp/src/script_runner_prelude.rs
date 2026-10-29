@@ -2,7 +2,7 @@
 //! (split out of `script_runner.rs` at the 800-line cap). It defines the
 //! `I(parent, obj)` / `K(...)` / `U(nodeId, patch)` recorders plus their
 //! normalization helpers (centered-frame expansion, text defaults, icon-name
-//! canonicalization, divider re-parenting, foreground-contrast repair), and
+//! canonicalization, divider re-parenting, low-contrast notes), and
 //! stubs the unsupported ops + `console`.
 
 pub(super) const PRELUDE: &str = r##"
@@ -79,27 +79,17 @@ function __contrastRatio(a, b) {
   var l2 = __relativeLuminance(right.rgb);
   return (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05);
 }
-function __replaceSolidFill(fill, color) {
-  if (typeof fill === "string") return color;
-  if (Array.isArray(fill)) {
-    var items = fill.slice();
-    items[0] = Object.assign({}, items[0], {color: color});
-    return items;
-  }
-  return Object.assign({}, fill, {color: color});
-}
-function __normalizeForegroundContrast(obj, background) {
-  if (background == null || obj == null || typeof obj !== "object") return obj;
+function __noteForegroundContrast(obj, background) {
+  if (background == null || obj == null || typeof obj !== "object") return;
   var threshold = obj.type === "text" ? 4.5 : (obj.type === "icon_font" ? 3.0 : null);
-  if (threshold == null || !__hasOwn(obj, "fill")) return obj;
+  if (threshold == null || !__hasOwn(obj, "fill")) return;
   var foreground = __opaqueSolidFill(obj.fill, obj.opacity);
-  if (foreground == null) return obj;
+  if (foreground == null) return;
   var current = __contrastRatio(foreground.color, background);
-  if (current == null || current >= threshold) return obj;
-  var dark = __contrastRatio("#17191D", background);
-  var light = __contrastRatio("#FAF8F3", background);
-  var replacement = dark >= light ? "#17191D" : "#FAF8F3";
-  return Object.assign({}, obj, {fill: __replaceSolidFill(obj.fill, replacement)});
+  if (current == null || current >= threshold) return;
+  var label = typeof obj.name === "string" && obj.name !== "" ? obj.name : obj.type;
+  __note(label + " keeps " + foreground.color + " on " + background
+    + " (contrast " + current.toFixed(1) + ":1, below " + threshold + ":1)");
 }
 function __isDivider(obj) {
   if (obj == null || typeof obj !== "object" || typeof obj.name !== "string") return false;
@@ -157,7 +147,9 @@ globalThis.I = function (parent, obj) {
   }
   var effectiveParentMeta = __insertBindings[effectiveParent];
   var inheritedBackground = effectiveParentMeta == null ? null : effectiveParentMeta.background;
-  recorded = __normalizeForegroundContrast(recorded, inheritedBackground);
+  // An explicit colour is the caller's choice: low contrast is reported,
+  // never repainted (#266).
+  __noteForegroundContrast(recorded, inheritedBackground);
   var binding = __record(effectiveParent, JSON.stringify(recorded));
   var background = inheritedBackground;
   var isForegroundNode = recorded != null
