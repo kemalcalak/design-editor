@@ -86,6 +86,9 @@ struct CaptureBackend {
     fill_rects: Vec<Rect>,
     round_rects: Vec<Rect>,
     requested_baseline: Option<f32>,
+    /// Pair kern applied to every "Ya" in a measured string, like HarfBuzz
+    /// shortening the first glyph's advance (#269).
+    ya_kern: f32,
 }
 
 impl RenderBackend for CaptureBackend {
@@ -120,7 +123,7 @@ impl RenderBackend for CaptureBackend {
         1.0
     }
     fn measure_text_weighted(&mut self, text: &str, _: f32, _: u16) -> f32 {
-        text.chars().count() as f32 * 10.0
+        text.chars().count() as f32 * 10.0 + text.matches("Ya").count() as f32 * self.ya_kern
     }
     fn text_first_baseline(&mut self, request: &TextBaselineRequest<'_>) -> f32 {
         if let Some(baseline) = self.requested_baseline {
@@ -359,6 +362,31 @@ fn negative_letter_spacing_offsets_glyphs_and_line_alignment() {
     assert_eq!(
         backend.origins.iter().map(|p| p.x).collect::<Vec<_>>(),
         vec![33.0, 41.0, 49.0, 57.0]
+    );
+}
+
+#[test]
+fn letter_spaced_kerned_pair_places_second_glyph_at_the_kerned_advance() {
+    // "Yap": Y-a kerns by -3. With -1 letter spacing, "a" sits at
+    // 10 - 3 - 1 = 6 and "p" at 6 + 10 - 1 = 15 (#269); placing "a" after
+    // the unkerned "Y" put it at 9, over the "p".
+    let mut node = text_node("Yap");
+    node.letter_spacing = -1.0;
+    node.bounds.size.x = 100.0;
+    let mut backend = CaptureBackend {
+        ya_kern: -3.0,
+        ..CaptureBackend::default()
+    };
+    let mut cx = PaintCx {
+        backend: &mut backend,
+    };
+
+    paint_text_node(&mut cx, &node, node.bounds, 1.0, &None);
+
+    assert_eq!(backend.contents, vec!["Y", "a", "p"]);
+    assert_eq!(
+        backend.origins.iter().map(|p| p.x).collect::<Vec<_>>(),
+        vec![0.0, 6.0, 15.0]
     );
 }
 
