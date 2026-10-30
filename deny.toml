@@ -67,16 +67,6 @@ ignore = [
   "RUSTSEC-2026-0370",
   "RUSTSEC-2026-0371",
   "RUSTSEC-2026-0372",
-  # The only zip <9 edge is github-copilot-sdk 1.0.11's build dependency.
-  # Its downloader is disabled by COPILOT_SKIP_CLI_DOWNLOAD, and its ZIP
-  # reader uses by_index + io::copy, never ZipArchive/ZipStreamReader::extract
-  # or archive-supplied Unix permissions/symlink targets. The three advisories
-  # concern those unused filesystem extraction APIs. Product ZIP handling
-  # uses zip >=9; the wrapper ban below rejects any other old-ZIP consumer.
-  # Remove these exceptions when a stable SDK moves its build dependency to 9.
-  "RUSTSEC-2026-0367",
-  "RUSTSEC-2026-0368",
-  "RUSTSEC-2026-0369",
 ]
 
 [bans]
@@ -94,29 +84,23 @@ deny = [
   # tools/check-wasm-bundle.sh.
   "pen-agent-cli",
   "pen-server",
-  { crate = "zip:<9", wrappers = ["github-copilot-sdk"],
-    reason = "build-only SDK ZIP reader does not use the affected filesystem extraction APIs" },
-  # github-copilot-sdk 1.0.11 currently enables native-tls unconditionally
-  # for its build downloader plus HTTP/WebSocket handler transports. Permit
-  # exactly the audited version and direct wrapper set; all other versions
-  # remain banned.
+  # zip <9 carries RUSTSEC-2026-0367..0369; every consumer is on 9.
+  "zip:<9",
+  # github-copilot-sdk 1.0.28 reaches native-tls only from its build script
+  # (directly and through ureq) for the CLI downloader, skipped by
+  # COPILOT_SKIP_CLI_DOWNLOAD; its runtime TLS sits behind the disabled
+  # `network-forwarding` feature. Permit exactly the audited version and
+  # wrappers; all others stay banned.
   "native-tls:<0.2.18",
-  { crate = "native-tls@0.2.18", wrappers = [
-    "github-copilot-sdk",
-    "hyper-tls",
-    "reqwest",
-    "tokio-native-tls",
-    "tokio-tungstenite",
-    "tungstenite",
-    "ureq",
-  ], reason = "required by the official GitHub Copilot SDK 1.0.11" },
+  { crate = "native-tls@0.2.18", wrappers = ["github-copilot-sdk", "ureq"],
+    reason = "build-time downloader of the official GitHub Copilot SDK 1.0.28" },
   "native-tls:>0.2.18",
 ]
 
 [[bans.features]]
 name = "github-copilot-sdk"
-version = "=1.0.11"
-deny = ["default", "bundled-cli", "bundled-in-process"]
+version = "=1.0.28"
+deny = ["default", "bundled-cli", "bundled-in-process", "network-forwarding"]
 exact = true
 reason = "Design Editor must use the separately installed CLI without embedding SDK runtime artifacts"
 
