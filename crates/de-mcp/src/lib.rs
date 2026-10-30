@@ -119,11 +119,17 @@ mod import_snapshot_tool_tests;
 mod insert_node_args;
 mod insert_node_data;
 pub mod json_serializer;
+mod layout_overlaps;
+#[cfg(test)]
+mod layout_overlaps_tests;
 mod layout_problems;
 pub mod library_tools;
 pub mod lint_tools;
 #[cfg(test)]
 mod lint_tools_tests;
+pub mod local_image;
+#[cfg(test)]
+mod local_image_tests;
 pub mod node_attr_tools;
 #[cfg(test)]
 mod node_attr_tools_tests;

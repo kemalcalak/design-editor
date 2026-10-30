@@ -13,7 +13,7 @@ use de_editor_core::NodeId;
 use jian_ops_schema::node::PenNode;
 use serde_json::Value;
 
-use super::batch_design::normalize_node_shape;
+use super::batch_design::{normalize_node_shape, prepare_insert_payload};
 use super::write_tools::parse_node_id;
 use super::{EditorCommand, McpTool, NodeFlag, ToolErrorCode, ToolOutcome};
 
@@ -58,8 +58,14 @@ fn parse_children_arg(
             "children must be a JSON array".into(),
         ));
     };
-    for item in items {
+    for item in items.iter_mut() {
         normalize_node_shape(item);
+        if let Err(e) = prepare_insert_payload(item) {
+            return Err(ToolOutcome::Err(
+                ToolErrorCode::InvalidArgument,
+                e.to_string(),
+            ));
+        }
     }
     serde_json::from_value::<Vec<PenNode>>(value)
         .map(Some)
@@ -124,7 +130,8 @@ fn parse_page_index(
     parse_u32_arg(args, legacy_key)
 }
 
-/// First-party `add_page` tool — append a fresh empty page.
+/// First-party `add_page` tool — append a fresh page, empty unless
+/// `children` are given.
 pub struct AddPage;
 
 impl McpTool for AddPage {
@@ -146,6 +153,9 @@ impl McpTool for AddPage {
             Ok(children) => children,
             Err(e) => return e,
         };
+        // An agent's page starts empty: the canvas's blank starter frame is
+        // for a person, and an agent's first board landed on it (#270).
+        let children = Some(children.unwrap_or_default());
         let mut out = BTreeMap::new();
         out.insert("wrote".into(), "true".into());
         ToolOutcome::OkWithCommand(out, EditorCommand::AddPage { name, children })

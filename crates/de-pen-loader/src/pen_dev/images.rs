@@ -106,7 +106,7 @@ fn file_bytes(url: &str, assets: super::AssetReader<'_>) -> Option<(&'static str
     Some((mime, assets(relative)?))
 }
 
-pub(crate) fn data_url(mime: &str, bytes: &[u8]) -> String {
+pub fn data_url(mime: &str, bytes: &[u8]) -> String {
     let prefix = format!("data:{mime};base64,");
     let encoded_len = base64::encoded_len(bytes.len(), true).unwrap_or(0);
     let mut url = String::with_capacity(prefix.len().saturating_add(encoded_len));
@@ -129,7 +129,8 @@ pub(crate) fn is_inside_document_folder(relative: &str) -> bool {
 
 /// The image types read from and written to files, as
 /// `(extension, mime type)`. One list for the pen.dev reader, the `.de`
-/// asset folder writer and its prune, so they cannot drift apart.
+/// asset folder writer and its prune, and MCP's local image paths (#268),
+/// so they cannot drift apart.
 pub(crate) const IMAGE_TYPES: &[(&str, &str)] = &[
     ("png", "image/png"),
     ("jpg", "image/jpeg"),
@@ -138,7 +139,7 @@ pub(crate) const IMAGE_TYPES: &[(&str, &str)] = &[
     ("svg", "image/svg+xml"),
 ];
 
-pub(crate) fn mime_type(relative: &str) -> Option<&'static str> {
+pub fn mime_type(relative: &str) -> Option<&'static str> {
     let extension = relative.rsplit_once('.')?.1.to_ascii_lowercase();
     let extension = if extension == "jpeg" {
         "jpg"

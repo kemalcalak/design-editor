@@ -116,3 +116,27 @@ fn insert_authored_subtree_rejects_live_id_collision() {
         Some("Existing")
     );
 }
+
+#[test]
+fn a_named_empty_board_is_not_replaced_by_the_next_root_frame() {
+    // #270: an agent's own empty board is not the canvas starter.
+    let mut s = state_with(vec![frame(
+        "board",
+        "Variants",
+        0.0,
+        0.0,
+        880.0,
+        1083.0,
+        vec![],
+    )]);
+
+    assert!(s.apply(EditorCommand::InsertAuthoredSubtree {
+        nodes: vec![frame("next", "Next", 1000.0, 0.0, 400.0, 300.0, vec![])],
+        parent_id: NodeId::NONE,
+        page_id: None,
+    }));
+
+    let ids: Vec<&str> = s.active_children().iter().map(|n| n.id_str()).collect();
+    assert_eq!(ids.len(), 2, "{ids:?}");
+    assert!(ids.contains(&"board"), "{ids:?}");
+}

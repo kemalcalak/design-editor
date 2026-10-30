@@ -127,6 +127,52 @@ pub fn zoom_to_fit_node(
     state.viewport != before
 }
 
+/// Bring ONE node into view when it is not fully on screen: the live MCP
+/// pump follows the board an agent just added (#264). The zoom is kept
+/// unless the node does not fit at it; then the camera zooms out just far
+/// enough. Camera-only, like [`zoom_to_fit_node`]. Returns whether the
+/// camera moved.
+pub fn reveal_node(
+    state: &mut EditorState,
+    scene: &LayoutScene,
+    node_id: &str,
+    viewport_w: f32,
+    viewport_h: f32,
+) -> bool {
+    let Some(bounds) = scene
+        .active_page()
+        .and_then(|page| page.find(node_id))
+        .map(|node| node.aggregate_bounds())
+    else {
+        return false;
+    };
+    let area =
+        crate::widgets::floating_panels::uncovered_canvas_rect(state, viewport_w, viewport_h);
+    let top_left = crate::widgets::host_canvas_geometry::canvas_doc_point_unclamped(
+        state,
+        area.origin.x,
+        area.origin.y,
+    );
+    let bottom_right = crate::widgets::host_canvas_geometry::canvas_doc_point_unclamped(
+        state,
+        area.origin.x + area.size.x,
+        area.origin.y + area.size.y,
+    );
+    let visible = bounds.origin.x >= top_left.x
+        && bounds.origin.y >= top_left.y
+        && bounds.origin.x + bounds.size.x <= bottom_right.x
+        && bounds.origin.y + bounds.size.y <= bottom_right.y;
+    if visible {
+        return false;
+    }
+    let before = state.viewport;
+    let zoom = state.viewport.zoom;
+    crate::widgets::floating_panels::fit_into_uncovered(
+        state, bounds, viewport_w, viewport_h, 48.0, zoom,
+    );
+    state.viewport != before
+}
+
 /// Intrinsic height of the floating tool column for the current tool
 /// set, at `dpi`.
 fn toolbar_height(toolbar: &Toolbar, dpi: f32) -> f32 {

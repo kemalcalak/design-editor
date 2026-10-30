@@ -217,8 +217,10 @@ impl TextEditLayout {
     /// Horizontal advance of `line`'s first `byte_offset` bytes —
     /// the caret x relative to the line's left edge. Mirrors the
     /// painter's two advance models: substring measure when there is
-    /// no letter spacing (whole-line draw), per-char measure plus
-    /// spacing AFTER every char when there is (per-char draw).
+    /// no letter spacing (whole-line draw), and with spacing the per-char
+    /// draw's glyph origins: the next glyph sits at the kerned advance
+    /// through it minus its own advance, plus spacing after every glyph
+    /// before it (#269).
     fn prefix_width(&self, backend: &mut dyn RenderBackend, line: &str, byte_offset: usize) -> f32 {
         let offset = prev_char_boundary(line, byte_offset.min(line.len()));
         if offset == 0 {
@@ -226,24 +228,23 @@ impl TextEditLayout {
         }
         let prefix = &line[..offset];
         if self.letter_spacing.abs() < f32::EPSILON {
-            self.face().measure(backend, prefix, self.font_size)
-        } else {
-            let mut w = 0.0;
-            for ch in prefix.chars() {
-                let mut buf = [0u8; 4];
-                w += self
-                    .face()
-                    .measure(backend, ch.encode_utf8(&mut buf), self.font_size)
-                    + self.letter_spacing;
-            }
-            // Tracking belongs between glyphs. Internal caret boundaries
-            // include the following gap; the end boundary stops at the
-            // final glyph edge, matching paint and line measurement.
-            if offset == line.len() {
-                w -= self.letter_spacing;
-            }
-            w
+            return self.face().measure(backend, prefix, self.font_size);
         }
+        let gaps = prefix.chars().count() as f32;
+        // Tracking belongs between glyphs. Internal caret boundaries
+        // include the following gap; the end boundary stops at the
+        // final glyph edge, matching paint and line measurement.
+        let Some(next) = line[offset..].chars().next() else {
+            return self.face().measure(backend, prefix, self.font_size)
+                + (gaps - 1.0) * self.letter_spacing;
+        };
+        let through = &line[..offset + next.len_utf8()];
+        let mut buf = [0u8; 4];
+        self.face().measure(backend, through, self.font_size)
+            - self
+                .face()
+                .measure(backend, next.encode_utf8(&mut buf), self.font_size)
+            + gaps * self.letter_spacing
     }
 
     /// Doc-space caret position for byte `offset`: `(x, line_top_y)`.

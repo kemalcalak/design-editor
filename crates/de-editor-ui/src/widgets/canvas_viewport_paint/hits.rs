@@ -95,6 +95,35 @@ impl<'a> PaintNodeHits<'a> {
         }
     }
 
+    /// Trim the dashed child hints of a hovered `clipContent` node to its
+    /// own outline: a child the frame clips away paints
+    /// nothing there, so its hint must not draw on empty canvas either.
+    /// Hints under an extra rotation or flip of their own keep their rect.
+    pub(crate) fn clip_child_hints_to_hover(&mut self) {
+        // A sizeless clipping container paints unclipped; leave its hints.
+        let Some(clip) = self.hover_rect.filter(|r| r.size.x > 0.0 && r.size.y > 0.0) else {
+            return;
+        };
+        let parent_chain = &self.hover_transforms;
+        self.hover_child_rects.retain_mut(|(rect, chain)| {
+            if chain != parent_chain {
+                return true;
+            }
+            let left = rect.origin.x.max(clip.origin.x);
+            let top = rect.origin.y.max(clip.origin.y);
+            let right = (rect.origin.x + rect.size.x).min(clip.origin.x + clip.size.x);
+            let bottom = (rect.origin.y + rect.size.y).min(clip.origin.y + clip.size.y);
+            if right <= left || bottom <= top {
+                return false;
+            }
+            *rect = Rect {
+                origin: Point2D::new(left, top),
+                size: Point2D::new(right - left, bottom - top),
+            };
+            true
+        });
+    }
+
     pub(crate) fn merge_missing(&mut self, child: Self) {
         if self.hover_rect.is_none() {
             self.hover_rect = child.hover_rect;
@@ -123,4 +152,31 @@ fn node_outline_rect(node: &SceneNode, options: &PaintNodeOptions<'_, '_>) -> Op
         ),
         size: Point2D::new(bounds.size.x * options.zoom, bounds.size.y * options.zoom),
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn a_clipping_frames_child_hints_stop_at_its_outline() {
+        let mut hits = PaintNodeHits {
+            hover_rect: Some(Rect::xywh(0.0, 0.0, 880.0, 700.0)),
+            hover_child_rects: vec![
+                (Rect::xywh(40.0, 40.0, 291.0, 60.0), Vec::new()),
+                (Rect::xywh(900.0, 100.0, 500.0, 400.0), Vec::new()),
+                (Rect::xywh(800.0, 600.0, 200.0, 200.0), Vec::new()),
+            ],
+            ..PaintNodeHits::default()
+        };
+        hits.clip_child_hints_to_hover();
+        let rects: Vec<Rect> = hits.hover_child_rects.iter().map(|(r, _)| *r).collect();
+        assert_eq!(
+            rects,
+            vec![
+                Rect::xywh(40.0, 40.0, 291.0, 60.0),
+                Rect::xywh(800.0, 600.0, 80.0, 100.0),
+            ]
+        );
+    }
 }

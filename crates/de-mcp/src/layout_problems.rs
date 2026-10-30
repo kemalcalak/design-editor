@@ -26,6 +26,22 @@ pub(crate) struct Area {
 }
 
 impl Area {
+    pub(crate) fn width(self) -> f32 {
+        self.right - self.left
+    }
+
+    pub(crate) fn height(self) -> f32 {
+        self.bottom - self.top
+    }
+
+    /// Whether `other` lies inside this area, within the edge tolerance.
+    pub(crate) fn contains(self, other: Self) -> bool {
+        other.left >= self.left - TOLERANCE
+            && other.top >= self.top - TOLERANCE
+            && other.right <= self.right + TOLERANCE
+            && other.bottom <= self.bottom + TOLERANCE
+    }
+
     /// The node's own box. A line's bounds can have a negative size (it runs
     /// left or up from its origin), so the corners are sorted.
     fn of_bounds(node: &SceneNode) -> Self {
@@ -43,7 +59,7 @@ impl Area {
     /// The node's painted box: its bounds (the children's union for an
     /// unbounded container, whose own bounds are zero), or the axis-aligned
     /// box around them when rotated about their centre.
-    fn painted(node: &SceneNode) -> Self {
+    pub(crate) fn painted(node: &SceneNode) -> Self {
         let unbounded =
             node.bounds.size.x == 0.0 && node.bounds.size.y == 0.0 && !node.children.is_empty();
         let area = if unbounded {
@@ -75,7 +91,7 @@ impl Area {
 
     /// Overlap of two areas; an empty overlap collapses to a zero-size box,
     /// so everything checked against it reads as fully clipped.
-    fn intersect(self, other: Self) -> Self {
+    pub(crate) fn intersect(self, other: Self) -> Self {
         let left = self.left.max(other.left);
         let top = self.top.max(other.top);
         Self {

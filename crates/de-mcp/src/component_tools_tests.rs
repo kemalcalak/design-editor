@@ -113,7 +113,8 @@ fn add_page_tool_accepts_optional_name() {
     match tool.call(&args) {
         ToolOutcome::OkWithCommand(_, EditorCommand::AddPage { name, children }) => {
             assert_eq!(name.as_deref(), Some("Checkout"));
-            assert!(children.is_none());
+            // An agent's page starts empty, without the starter frame (#270).
+            assert_eq!(children, Some(Vec::new()));
         }
         other => panic!("expected AddPage command with name, got {other:?}"),
     }

@@ -47,8 +47,9 @@ struct LayoutRecord {
     w: f64,
     h: f64,
     /// `"partially clipped"` / `"fully clipped"` when a clipping ancestor
-    /// hides part or all of the node (#169, pen.dev `ctx.problems`).
-    problems: Option<&'static str>,
+    /// hides part or all of the node (#169, pen.dev `ctx.problems`), and
+    /// `"overlaps <id>"` for each sibling it covers (#265), comma-joined.
+    problems: Option<String>,
 }
 
 #[derive(Clone)]
@@ -165,7 +166,7 @@ fn layout_entry_value(
     obj.insert("y".into(), js_number(record.y - offset.1));
     obj.insert("width".into(), js_number(record.w));
     obj.insert("height".into(), js_number(record.h));
-    if let Some(problems) = record.problems {
+    if let Some(problems) = &record.problems {
         obj.insert("problems".into(), json!(problems));
     }
     let children = layout_children_values(selected, &record.id, offset);
@@ -399,9 +400,22 @@ fn scene_layout_records(
         depth: u32,
         out: &mut Vec<LayoutRecord>,
     ) {
+        // Page roots are placed apart by #37; overlaps are checked inside them.
+        let overlaps = if depth > 0 {
+            super::layout_overlaps::sibling_overlaps(nodes)
+        } else {
+            BTreeMap::new()
+        };
         for node in nodes {
             let id = node.id.clone();
             let node_meta = meta.get(&id);
+            let mut problems: Vec<String> = clip_problem(node, clip)
+                .map(str::to_string)
+                .into_iter()
+                .collect();
+            if let Some(others) = overlaps.get(&id) {
+                problems.extend(others.iter().map(|other| format!("overlaps {other}")));
+            }
             let bounds = node.aggregate_bounds();
             out.push(LayoutRecord {
                 id: id.clone(),
@@ -415,7 +429,7 @@ fn scene_layout_records(
                 y: f64::from(bounds.origin.y),
                 w: f64::from(bounds.size.x),
                 h: f64::from(bounds.size.y),
-                problems: clip_problem(node, clip),
+                problems: (!problems.is_empty()).then(|| problems.join(", ")),
             });
             let mut child_ancestors = ancestors.to_vec();
             child_ancestors.push(id);

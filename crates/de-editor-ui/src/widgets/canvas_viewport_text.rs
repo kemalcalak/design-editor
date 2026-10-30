@@ -272,11 +272,14 @@ fn draw_slice(
     }
     // Per-char path — letter spacing after every glyph (legacy painter
     // model) plus the justify share after each space. Each glyph sits at
-    // the kerned advance of the text before it, so the line spans what
-    // the wrap measured (#197). Advances are measured from the start of
-    // the current shaping token (a word, a space or a CJK character, where
-    // the backend's word shaper splits too), so each glyph costs one short
-    // measure.
+    // the kerned advance of the text up to and including it, minus its own
+    // advance, so the line spans what the wrap measured (#197). A pair kern
+    // shortens the first glyph's advance only once the second glyph is
+    // shaped with it, so the prefix without the glyph would place the
+    // second glyph of every kerned pair a whole kern too far (#269).
+    // Advances are measured from the start of the current shaping token (a
+    // word, a space or a CJK character, where the backend's word shaper
+    // splits too), so each glyph costs two short measures.
     let mut token_base = 0.0;
     let mut token_start = 0;
     let mut advance = 0.0;
@@ -290,8 +293,9 @@ fn draw_slice(
             token_base = advance;
             token_start = i;
         }
-        let at = x + advance + spacing;
         advance = token_base + measure_styled(backend, &slice[token_start..end], style, family);
+        let own = measure_styled(backend, &slice[i..end], style, family);
+        let at = x + (advance - own) + spacing;
         if own_token {
             token_base = advance;
             token_start = end;

@@ -382,6 +382,9 @@ fn update_instance_descendant(
     }
     let mut value = Value::Object(patch);
     super::batch_design::normalize_node_shape(&mut value);
+    if let Err(e) = crate::local_image::inline_local_images_in_patch(&mut value) {
+        return ToolOutcome::Err(ToolErrorCode::InvalidArgument, e.to_string());
+    }
     let page_id = args
         .get("pageId")
         .or_else(|| args.get("page_id"))

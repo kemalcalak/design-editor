@@ -18,6 +18,25 @@ use jian_ops_schema::style::PenFill;
 
 use crate::state::EditorState;
 
+/// The canvas starter frame's name.
+pub const STARTER_FRAME_NAME: &str = "Frame";
+
+/// An empty root frame a generated design may take the place of: no
+/// children, and the starter's name or none. A named empty frame is
+/// someone's board waiting for content (#270). Shared by the core subtree
+/// insert and `batch_design`'s program path.
+pub fn is_replaceable_starter_frame(node: &PenNode) -> bool {
+    use crate::pen_node_ext::PenNodeExt;
+    matches!(node, PenNode::Frame(_))
+        && node.children().map(|c| c.is_empty()).unwrap_or(true)
+        && node
+            .base()
+            .name
+            .as_deref()
+            .map(str::trim)
+            .is_none_or(|name| name.is_empty() || name == STARTER_FRAME_NAME)
+}
+
 /// Whether the active page holds nothing but the pristine starter frame.
 pub fn active_page_is_blank_starter(state: &EditorState) -> bool {
     let [only] = state.active_children() else {
@@ -30,7 +49,7 @@ fn is_blank_starter_frame(node: &PenNode) -> bool {
     let PenNode::Frame(frame) = node else {
         return false;
     };
-    if frame.base.id != "n10" || frame.base.name.as_deref() != Some("Frame") {
+    if frame.base.id != "n10" || frame.base.name.as_deref() != Some(STARTER_FRAME_NAME) {
         return false;
     }
     if frame

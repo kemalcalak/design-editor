@@ -162,6 +162,7 @@ fn pump_yields_after_ui_request_budget() {
         last_mcp_epoch: 0,
         pending_design_md: VecDeque::new(),
         saved_documents: Vec::new(),
+        follow_target: None,
     };
     let mut state = EditorState::new();
     let mut acks = Vec::new();
@@ -208,6 +209,7 @@ fn pump_fulfills_screenshot_requests_off_the_live_state() {
         last_mcp_epoch: 0,
         pending_design_md: VecDeque::new(),
         saved_documents: Vec::new(),
+        follow_target: None,
     };
     let mut state = EditorState::new();
     assert!(state.apply(EditorCommand::InsertNode {
@@ -257,6 +259,7 @@ fn pump_marks_layout_dirty_only_for_layout_affecting_commands() {
         last_mcp_epoch: 0,
         pending_design_md: VecDeque::new(),
         saved_documents: Vec::new(),
+        follow_target: None,
     };
     let mut state = EditorState::new();
     state.selection.anchor = de_editor_core::NodeId::new("n1");
@@ -329,6 +332,7 @@ fn pump_flags_document_replaced_only_for_replace_document_requests() {
         last_mcp_epoch: 0,
         pending_design_md: VecDeque::new(),
         saved_documents: Vec::new(),
+        follow_target: None,
     };
     let mut state = EditorState::new();
     let replacement_doc = de_pen_loader::load_canonical(
@@ -382,6 +386,45 @@ fn pump_flags_document_replaced_only_for_replace_document_requests() {
     assert!(!metadata.document_replaced);
     assert_eq!(state.ui.active_page_index, 0);
     assert!(!state.editor_ui.preserve_authored_geometry);
+}
+
+#[test]
+fn pump_hands_the_host_the_board_a_write_added() {
+    // #264: the canvas follows the agent to the page root it just added,
+    // and only once.
+    let (req_tx, req_rx) = mpsc::channel();
+    let (stop_tx, _stop_rx) = mpsc::channel();
+    let mut server = fresh_mcp_server(req_rx, stop_tx);
+    let mut state = EditorState::new();
+    let (ack_tx, _ack_rx) = mpsc::sync_channel(1);
+    req_tx
+        .send(UiRequest::Apply {
+            tool_name: "insert_node".to_string(),
+            cmd: EditorCommand::InsertNode {
+                kind: "frame".to_string(),
+                name: "Board".to_string(),
+                x: 0,
+                y: 1000,
+                width: 400,
+                height: 300,
+                fill_hex: None,
+                target_parent: de_editor_core::NodeId::NONE,
+                page_id: None,
+            },
+            unplaced: None,
+            ack: ack_tx,
+        })
+        .expect("queue insert request");
+    server.pump(&mut state);
+    let target = server.take_follow_target().expect("follow target");
+    assert_eq!(target.page_index, 0);
+    let board = state
+        .active_children()
+        .iter()
+        .find(|n| n.id_str() == target.node_id)
+        .expect("target is a page root");
+    assert_eq!(board.base().name.as_deref(), Some("Board"));
+    assert!(server.take_follow_target().is_none(), "handed over once");
 }
 
 /// `document_edited` is the host's cue to bring the canvas forward for an
@@ -493,6 +536,7 @@ fn fresh_mcp_server(req_rx: Receiver<UiRequest>, stop_tx: Sender<()>) -> McpLive
         last_mcp_epoch: 0,
         pending_design_md: VecDeque::new(),
         saved_documents: Vec::new(),
+        follow_target: None,
     }
 }
 
@@ -682,6 +726,7 @@ fn client_name_reports_the_initialize_identity() {
         last_mcp_epoch: 0,
         pending_design_md: VecDeque::new(),
         saved_documents: Vec::new(),
+        follow_target: None,
     };
     assert_eq!(server.client_name(), None);
     *identity.lock().unwrap() = Some(("Claude Code".to_string(), "#8A8F98".to_string()));

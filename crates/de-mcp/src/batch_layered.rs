@@ -416,6 +416,9 @@ fn parse_children(raw: &str) -> Result<ParsedChildren, LayeredError> {
     for child in children.iter_mut() {
         default_missing_type(child, &mut warnings);
         normalize_node_shape(child);
+        if let Err(e) = crate::batch_design::prepare_insert_payload(child) {
+            return Err(LayeredError::InvalidChildNodes(e.to_string()));
+        }
         ensure_child_node_ids(child, &mut next_id);
         collect_content_warnings(child, &mut warnings);
     }
