@@ -16,7 +16,9 @@ pub(crate) fn prepare_root_frame_replacement(
     if parent_id.is_real() || nodes.len() != 1 || !matches!(nodes[0], PenNode::Frame(_)) {
         return None;
     }
-    let empty = roots.iter().find(|node| is_empty_frame(node))?;
+    let empty = roots
+        .iter()
+        .find(|node| crate::blank_starter::is_replaceable_starter_frame(node))?;
     if let Some(x) = empty.base().x {
         nodes[0].base_mut().x = Some(x);
     }
@@ -44,8 +46,4 @@ pub(crate) fn remove_root_frame_replacement(
 
 pub(crate) fn replacement_node_id(replacement: &RootFrameReplacement) -> &NodeId {
     &replacement.node_id
-}
-
-fn is_empty_frame(node: &PenNode) -> bool {
-    matches!(node, PenNode::Frame(_)) && node.children().map(|c| c.is_empty()).unwrap_or(true)
 }

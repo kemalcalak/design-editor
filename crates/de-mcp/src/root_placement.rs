@@ -41,7 +41,17 @@ pub fn places_new_roots(tool: &str) -> bool {
                 | "upsert_component"
                 | "instantiate_component"
                 | "copy_node"
+                | "execute"
         )
+}
+
+/// Whether the call set `allowOverlap: true`: explicit root positions stay
+/// even where they overlap (#37) and `batch_design` skips its sibling
+/// overlap warnings (#265).
+pub(crate) fn allow_overlap(args: &BTreeMap<String, String>) -> bool {
+    ["allowOverlap", "allow_overlap"]
+        .iter()
+        .any(|key| args.get(*key).is_some_and(|v| v == "true"))
 }
 
 /// The command to apply instead of `cmd`, or `None` to apply it unchanged:
@@ -86,9 +96,7 @@ pub fn place_new_roots(
 
     let scene = de_pen_loader::editor_state_to_layout_scene(&trial);
     let has_pages = trial.doc.pages.as_ref().is_some_and(|p| !p.is_empty());
-    let allow_overlap = ["allowOverlap", "allow_overlap"]
-        .iter()
-        .any(|key| args.get(*key).is_some_and(|v| v == "true"));
+    let allow_overlap = allow_overlap(args);
     let origin_from_args =
         defaults_origin_when_unset(tool).then(|| args.contains_key("x") || args.contains_key("y"));
     let trial_pages = page_roots(&trial);
@@ -308,7 +316,7 @@ pub fn advertise_root_placement(schema: &str) -> String {
                 "allowOverlap".into(),
                 serde_json::json!({
                     "type": "boolean",
-                    "description": "Keep an explicit page-root x/y even where it overlaps existing roots (default false)"
+                    "description": "Keep an explicit page-root x/y even where it overlaps existing roots, and skip warnings about overlapping siblings the write creates (default false)"
                 }),
             );
         }

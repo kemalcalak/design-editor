@@ -26,7 +26,9 @@ use super::batch_design_wire::parse_batch_items;
 // Re-exported so the pre-split `crate::batch_design::<item>` paths that
 // the rest of the crate uses keep resolving after the carve-off.
 pub(crate) use super::batch_design_dsl::{find_top_level_char, split_operations};
-pub(crate) use super::batch_design_normalize::{ensure_node_ids, normalize_node_shape};
+pub(crate) use super::batch_design_normalize::{
+    ensure_node_ids, normalize_node_shape, prepare_insert_payload,
+};
 
 // First-party `batch_design` tool — insert N leaf nodes on the
 // active page in one atomic shot. Mirrors TS `batch_design` for
@@ -123,12 +125,16 @@ pub(crate) fn select_batch_input(
     }
 }
 
+/// `script` expanded into `operations` args, plus the script's notes.
+pub(crate) type ExpandedScript = (BTreeMap<String, String>, Vec<String>);
+
 /// Expand a `script` arg into the `operations` DSL program the rest of
 /// `batch_design` already understands. Returns:
 /// - `None` — the one active input is `operations` or `nodes_json`; an empty
 ///   `script` placeholder does not steal the route.
-/// - `Some(Ok(rewritten))` — `script` removed, `operations` set to the
-///   program the sandboxed runner recorded. Caller re-dispatches with the
+/// - `Some(Ok((rewritten, notes)))` — `script` removed, `operations` set to
+///   the program the sandboxed runner recorded; `notes` go to the result's
+///   `warnings` through [`with_warnings`]. Caller re-dispatches with the
 ///   rewritten args so BOTH the flat `dispatch_batch_design` path (used by
 ///   the `design_skeleton`/`design_content`/`design_refine` phase tools)
 ///   and the primary `batch_design` tool's richer `operations` handling
@@ -139,7 +145,7 @@ pub(crate) fn select_batch_input(
 ///   `script` input.
 pub(crate) fn expand_script_arg(
     args: &BTreeMap<String, String>,
-) -> Option<Result<BTreeMap<String, String>, ToolOutcome>> {
+) -> Option<Result<ExpandedScript, ToolOutcome>> {
     match select_batch_input(args) {
         Ok(BatchInputKind::Script) => {}
         Ok(BatchInputKind::Operations | BatchInputKind::NodesJson) => return None,
@@ -153,7 +159,7 @@ pub(crate) fn expand_script_arg(
     };
     #[cfg(feature = "script")]
     {
-        let program = match crate::script_runner::run_script_to_program(script) {
+        let program = match crate::script_runner::run_script_to_program_with_notes(script) {
             Ok(p) => p,
             Err(e) => {
                 return Some(Err(ToolOutcome::Err(
@@ -164,8 +170,8 @@ pub(crate) fn expand_script_arg(
         };
         let mut forwarded = args.clone();
         forwarded.remove("script");
-        forwarded.insert("operations".to_string(), program);
-        Some(Ok(forwarded))
+        forwarded.insert("operations".to_string(), program.program);
+        Some(Ok((forwarded, program.notes)))
     }
     #[cfg(not(feature = "script"))]
     {
@@ -177,13 +183,61 @@ pub(crate) fn expand_script_arg(
     }
 }
 
+/// Append `warnings` (a script's notes, overlap warnings) to a JSON
+/// result's `warnings` array. Flat results carry them as one `warnings`
+/// string; errors stay as they are.
+pub(crate) fn with_warnings(outcome: ToolOutcome, warnings: Vec<String>) -> ToolOutcome {
+    if warnings.is_empty() {
+        return outcome;
+    }
+    let merge_json = |json: String| -> String {
+        let Ok(mut value) = serde_json::from_str::<serde_json::Value>(&json) else {
+            return json;
+        };
+        let Some(obj) = value.as_object_mut() else {
+            return json;
+        };
+        let existing = obj
+            .entry("warnings")
+            .or_insert_with(|| serde_json::Value::Array(Vec::new()));
+        if !existing.is_array() {
+            *existing = serde_json::Value::Array(vec![existing.take()]);
+        }
+        if let Some(list) = existing.as_array_mut() {
+            list.extend(warnings.iter().cloned().map(serde_json::Value::String));
+        }
+        value.to_string()
+    };
+    let merge_flat = |mut map: BTreeMap<String, String>| {
+        let joined = warnings.join("; ");
+        map.entry("warnings".into())
+            .and_modify(|w| {
+                w.push_str("; ");
+                w.push_str(&joined);
+            })
+            .or_insert(joined);
+        map
+    };
+    match outcome {
+        ToolOutcome::OkJson(json) => ToolOutcome::OkJson(merge_json(json)),
+        ToolOutcome::OkJsonWithCommand(json, cmd) => {
+            ToolOutcome::OkJsonWithCommand(merge_json(json), cmd)
+        }
+        ToolOutcome::Ok(map) => ToolOutcome::Ok(merge_flat(map)),
+        ToolOutcome::OkWithCommand(map, cmd) => ToolOutcome::OkWithCommand(merge_flat(map), cmd),
+        other => other,
+    }
+}
+
 pub(crate) fn dispatch_batch_design(
     args: &BTreeMap<String, String>,
     phase: Option<&'static str>,
 ) -> ToolOutcome {
     if let Some(result) = expand_script_arg(args) {
         return match result {
-            Ok(forwarded) => dispatch_batch_design(&forwarded, phase),
+            Ok((forwarded, notes)) => {
+                with_warnings(dispatch_batch_design(&forwarded, phase), notes)
+            }
             Err(outcome) => outcome,
         };
     }

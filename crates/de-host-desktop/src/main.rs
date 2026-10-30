@@ -596,6 +596,9 @@ fn main() {
     // so a download here would report success the viewer never sees.
     if !std::env::args_os().any(|arg| arg == OsStr::new("--serve-web")) {
         font_host_desktop::install();
+        // Same split for local image paths in MCP writes (#268): read and
+        // embedded here, refused by the web daemon.
+        de_host_services::local_image_reader::install();
     }
     init_tracing();
     if let Some(modes) = conflicting_headless_modes(std::env::args_os().skip(1)) {

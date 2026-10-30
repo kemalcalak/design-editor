@@ -40,6 +40,12 @@ pub(super) fn ts_data_node(
 
     normalize_node_shape(&mut value);
     normalize_ts_data_node_type_aliases(&mut value);
+    if let Err(e) = super::batch_design::prepare_insert_payload(&mut value) {
+        return Err(ToolOutcome::Err(
+            ToolErrorCode::InvalidArgument,
+            e.to_string(),
+        ));
+    }
     let mut next_id = 1usize;
     ensure_ts_data_node_ids(&mut value, &mut next_id);
     let node: PenNode = serde_json::from_value(value).map_err(|e| {

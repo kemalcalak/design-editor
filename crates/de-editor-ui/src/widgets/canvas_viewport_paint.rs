@@ -130,7 +130,10 @@ fn paint_node_inner<'a>(
     transforms: &mut Vec<OverlayTransform>,
     parent_hovered: bool,
 ) -> PaintNodeHits<'a> {
-    let hits = paint_node_body(cx, node, options, transforms, parent_hovered);
+    let mut hits = paint_node_body(cx, node, options, transforms, parent_hovered);
+    if node.clip_content && options.hovered == Some(node.id.as_str()) {
+        hits.clip_child_hints_to_hover();
+    }
     // Leave the plain stroke style behind (#89): the next sibling, the
     // parent's after-children stroke and later chrome never inherit ours.
     cx.backend

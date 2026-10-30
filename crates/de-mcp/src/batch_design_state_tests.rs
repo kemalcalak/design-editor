@@ -395,6 +395,35 @@ fn batch_design_script_unavailable_without_feature() {
     }
 }
 
+/// #266: a script keeps an explicit low-contrast colour and the result's
+/// `warnings` say so, so the agent can decide.
+#[cfg(feature = "script")]
+#[test]
+fn batch_design_script_keeps_low_contrast_text_and_warns() {
+    let tool = batch_design_snapshot(&sample());
+    let mut args = BTreeMap::new();
+    args.insert(
+        "script".to_string(),
+        r##"const f = I(null, {type: "frame", name: "Board", width: 400, height: 300, fill: [{type: "solid", color: "#FFF8EA"}]});
+I(f, {type: "text", name: "Headline", fontSize: 60, content: "Hi", fill: [{type: "solid", color: "#EB4F24"}]});"##
+            .to_string(),
+    );
+    let (json, cmd) = match tool.call(&args) {
+        ToolOutcome::OkJsonWithCommand(json, cmd) => (json, cmd),
+        other => panic!("expected OkJsonWithCommand, got {other:?}"),
+    };
+    let result: serde_json::Value = serde_json::from_str(&json).expect("json");
+    let warnings = result["warnings"].as_array().expect("warnings array");
+    assert!(
+        warnings.iter().any(|w| w
+            .as_str()
+            .is_some_and(|w| w.starts_with("Headline keeps #EB4F24"))),
+        "{result}"
+    );
+    let cmd_json = format!("{cmd:?}");
+    assert!(cmd_json.contains("#EB4F24"), "colour replaced: {cmd_json}");
+}
+
 /// Models routinely send the unused input slots along as empty placeholders.
 /// Rejecting those killed a whole batch over a field the caller never meant
 /// to fill (measured 2026-07-12: a `script` batch died on "provide only one

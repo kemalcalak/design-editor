@@ -41,6 +41,11 @@ pub struct BatchDesign {
     active_page_id: String,
     existing_ids: HashSet<NodeId>,
     id_seed: Option<u64>,
+    /// Report overlapping siblings the write creates (#265). Off by
+    /// default: the MCP host turns it on; the in-app design agent has its
+    /// own collision check and calls this on the UI thread, where a trial
+    /// apply and two layout passes per write would stall frames.
+    overlap_warnings: bool,
 }
 
 impl McpTool for BatchDesign {
@@ -48,6 +53,23 @@ impl McpTool for BatchDesign {
         "batch_design"
     }
     fn call(&self, args: &BTreeMap<String, String>) -> ToolOutcome {
+        let outcome = self.call_without_overlap_warnings(args);
+        // Overlapping siblings the write creates come back as warnings
+        // (#265); script expansion re-enters `call_without_overlap_warnings`,
+        // so this runs once per call.
+        let check = self.overlap_warnings && !super::root_placement::allow_overlap(args);
+        match &outcome {
+            ToolOutcome::OkJsonWithCommand(_, cmd) if check => {
+                let warnings = super::layout_overlaps::new_overlap_warnings(&self.state, cmd);
+                super::batch_design::with_warnings(outcome, warnings)
+            }
+            _ => outcome,
+        }
+    }
+}
+
+impl BatchDesign {
+    fn call_without_overlap_warnings(&self, args: &BTreeMap<String, String>) -> ToolOutcome {
         // `script` must be gated BEFORE the `operations` shortcut below —
         // otherwise a caller that (invalidly) sends both `script` and
         // `operations` would silently run the `operations` path instead of
@@ -57,7 +79,10 @@ impl McpTool for BatchDesign {
         // `operations` program.
         if let Some(result) = expand_script_arg(args) {
             return match result {
-                Ok(forwarded) => self.call(&forwarded),
+                Ok((forwarded, notes)) => super::batch_design::with_warnings(
+                    self.call_without_overlap_warnings(&forwarded),
+                    notes,
+                ),
                 Err(outcome) => outcome,
             };
         }
@@ -113,6 +138,15 @@ pub fn batch_design_snapshot(state: &EditorState) -> BatchDesign {
         active_page_id,
         existing_ids: state.collect_node_ids(),
         id_seed: state.next_node_id_seed(),
+        overlap_warnings: false,
+    }
+}
+
+impl BatchDesign {
+    /// Also report overlapping siblings the write creates (#265).
+    pub fn with_overlap_warnings(mut self) -> Self {
+        self.overlap_warnings = true;
+        self
     }
 }
 

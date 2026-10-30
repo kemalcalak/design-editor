@@ -8,7 +8,7 @@ use jian_ops_schema::node::PenNode;
 use regex::Regex;
 use serde_json::Value;
 
-use super::batch_design::{ensure_node_ids, normalize_node_shape};
+use super::batch_design::{ensure_node_ids, normalize_node_shape, prepare_insert_payload};
 use super::batch_program::Result;
 use super::batch_program_error::ProgramError;
 
@@ -28,6 +28,7 @@ pub(crate) fn parse_node_json(
         return Err(ProgramError::Json("node data must be a JSON object".into()));
     }
     normalize_node_shape(&mut value);
+    prepare_insert_payload(&mut value).map_err(|e| ProgramError::InvalidNode(e.to_string()))?;
     let mut tmp = 1usize;
     ensure_node_ids(&mut value, &mut tmp);
     let mut node: PenNode = serde_json::from_value(value)

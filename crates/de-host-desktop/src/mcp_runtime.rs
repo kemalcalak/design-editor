@@ -163,7 +163,7 @@ impl DesktopApp {
     }
 
     pub(crate) fn poll_mcp_server(&mut self) -> bool {
-        let (outcome, pending_design_md, client) = {
+        let (outcome, pending_design_md, client, follow) = {
             let Some(server) = self.mcp_server.as_mut() else {
                 // No server, no connected agent.
                 return self.sync_home_mcp_client(None);
@@ -175,7 +175,8 @@ impl DesktopApp {
             for path in server.take_saved_documents() {
                 crate::settings_io::touch_recent(&mut self.host, &path);
             }
-            (outcome, pending_design_md, server.client_name())
+            let follow = server.take_follow_target();
+            (outcome, pending_design_md, server.client_name(), follow)
         };
         let client_changed = self.sync_home_mcp_client(client);
         // Provider execution is deliberately outside the UI/server borrow and
@@ -189,6 +190,9 @@ impl DesktopApp {
         }
         if outcome.document_edited {
             self.reveal_canvas_for_external_edit();
+        }
+        if let Some(target) = follow {
+            self.follow_agent_board(&target);
         }
         if outcome.document_replaced {
             mark_external_document_replacement_dirty(self.host.editor_state_mut());
@@ -241,6 +245,21 @@ impl DesktopApp {
             self.host.mark_editor_state_dirty();
         }
         revealed
+    }
+
+    /// Bring the board an agent just added into view (#264): switch to its
+    /// page when the write landed on another one, then pan to it, keeping
+    /// the zoom unless the board does not fit at it.
+    fn follow_agent_board(&mut self, target: &de_host_services::mcp_live::McpFollowTarget) {
+        let state = self.host.editor_state_mut();
+        if state.ui.active_page_index != target.page_index
+            && state.set_active_page(target.page_index)
+        {
+            self.last_painted_page = None;
+            self.host.mark_editor_state_dirty();
+        }
+        self.host
+            .reveal_node(&target.node_id, self.viewport_width, self.viewport_height);
     }
 
     pub(crate) fn mcp_server_active(&self) -> bool {

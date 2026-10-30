@@ -87,3 +87,41 @@ fn normalize_non_text_node_content_untouched() {
         "non-text nodes skip content normalization"
     );
 }
+
+#[test]
+fn path_geometry_alias_becomes_d() {
+    let mut node = serde_json::json!({
+        "type": "path",
+        "id": "logo",
+        "geometry": "M0 0L10 10"
+    });
+    super::normalize_node_shape(&mut node);
+    assert_eq!(node["d"], "M0 0L10 10");
+    assert!(node.get("geometry").is_none());
+}
+
+#[test]
+fn path_geometry_alias_never_overrides_d() {
+    let mut node = serde_json::json!({
+        "type": "path",
+        "d": "M1 1L2 2",
+        "geometry": "M0 0L10 10"
+    });
+    super::normalize_node_shape(&mut node);
+    assert_eq!(node["d"], "M1 1L2 2");
+}
+
+#[test]
+fn path_without_outline_is_found_in_nested_children() {
+    let node = serde_json::json!({
+        "type": "frame",
+        "children": [
+            {"type": "path", "id": "ok", "d": "M0 0L1 1"},
+            {"type": "path", "id": "icon", "iconId": "lucide:check"},
+            {"type": "path", "id": "empty", "width": 20, "height": 20}
+        ]
+    });
+    let missing = super::find_path_without_outline(&node).expect("empty path found");
+    assert_eq!(missing.node, "empty");
+    assert!(missing.to_string().contains("`d`"), "{missing}");
+}

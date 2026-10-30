@@ -1,13 +1,18 @@
 //! Lenient JSON node-shape normalization for `batch_design`: rename passes
 //! for the Figma / Pencil dialects, keyword canonicalization for layout /
-//! sizing / text fields, stroke + padding repair, and the temporary-id
-//! stamper.
+//! sizing / text fields, stroke + padding repair, the path `geometry`
+//! alias, the temporary-id stamper, and `prepare_insert_payload` (local
+//! image inlining, outline-less path refusal).
 //!
 //! Split out of `batch_design.rs` to stay under the 800-line cap.
 
 #[path = "batch_design_fill_normalize.rs"]
 mod fill_normalize;
+
+#[path = "batch_design_insert_error.rs"]
+mod insert_error;
 use fill_normalize::normalize_fill;
+pub(crate) use insert_error::{InsertPayloadError, MissingPathOutline};
 
 pub(crate) fn normalize_node_shape(value: &mut serde_json::Value) {
     // Canonicalize authoring-only video nodes before any shape normalizer or
@@ -36,6 +41,7 @@ fn normalize_node_shape_inner(value: &mut serde_json::Value) {
         return;
     };
     normalize_star_alias(obj);
+    normalize_path_geometry(obj);
     // Map Figma/Pencil auto-layout field names onto our schema FIRST — MiniMax-M3
     // (trained on Pencil's schema) emits `layoutMode`/`itemSpacing`/`strokeWeight`/
     // `primaryAxisAlignItems`/`counterAxisAlignItems`, which serde would silently
@@ -443,6 +449,62 @@ fn normalize_stroke(value: &mut serde_json::Value) {
             }
         }
         _ => {}
+    }
+}
+
+/// pen.dev's older dialect stores a path's outline under `geometry`; the
+/// schema reads `d`, so serde would drop it and the path would paint nothing
+/// (#267). Same rename as the file loader's `legacy_normalize`.
+fn normalize_path_geometry(obj: &mut serde_json::Map<String, serde_json::Value>) {
+    if obj.get("type").and_then(serde_json::Value::as_str) != Some("path") {
+        return;
+    }
+    if let Some(geometry) = obj.remove("geometry") {
+        if geometry.is_string() && !obj.contains_key("d") {
+            obj.insert("d".into(), geometry);
+        }
+    }
+}
+
+/// First path in a normalized insert payload with no outline. A path that
+/// only carries an `iconId` is left to the icon resolver.
+pub(crate) fn find_path_without_outline(value: &serde_json::Value) -> Option<MissingPathOutline> {
+    let obj = value.as_object()?;
+    if obj.get("type").and_then(serde_json::Value::as_str) == Some("path") {
+        let has_d = obj
+            .get("d")
+            .and_then(serde_json::Value::as_str)
+            .is_some_and(|d| !d.trim().is_empty());
+        let has_anchors = obj
+            .get("anchors")
+            .and_then(serde_json::Value::as_array)
+            .is_some_and(|a| !a.is_empty());
+        if !has_d && !has_anchors && !obj.contains_key("iconId") {
+            let node = ["id", "name"]
+                .iter()
+                .find_map(|k| obj.get(*k).and_then(serde_json::Value::as_str))
+                .unwrap_or("(unnamed)");
+            return Some(MissingPathOutline {
+                node: node.to_string(),
+            });
+        }
+    }
+    obj.get("children")?
+        .as_array()?
+        .iter()
+        .find_map(find_path_without_outline)
+}
+
+/// Last step before a normalized insert payload is parsed: local image
+/// paths become `data:` urls (#268) and a path with no outline is refused
+/// (#267).
+pub(crate) fn prepare_insert_payload(
+    value: &mut serde_json::Value,
+) -> Result<(), InsertPayloadError> {
+    crate::local_image::inline_local_images(value)?;
+    match find_path_without_outline(value) {
+        Some(missing) => Err(InsertPayloadError::MissingOutline(missing)),
+        None => Ok(()),
     }
 }
 
