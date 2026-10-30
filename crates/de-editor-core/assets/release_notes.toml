@@ -11,6 +11,96 @@
 # Write for users: short, plain, no issue numbers or technical terms.
 
 [[note]]
+version = "0.5.4"
+locale = "en-US"
+title = "Security update"
+item = "The libraries that read zip and tar archives are updated to close known security issues."
+
+[[note]]
+version = "0.5.4"
+locale = "tr"
+title = "Güvenlik güncellemesi"
+item = "Zip ve tar arşivlerini okuyan kitaplıklar, bilinen güvenlik açıklarını kapatmak için güncellendi."
+
+[[note]]
+version = "0.5.4"
+locale = "zh-CN"
+title = "安全更新"
+item = "读取 zip 和 tar 压缩包的库已更新,修复了已知的安全问题。"
+
+[[note]]
+version = "0.5.4"
+locale = "zh-TW"
+title = "安全性更新"
+item = "讀取 zip 和 tar 壓縮檔的程式庫已更新,修正了已知的安全性問題。"
+
+[[note]]
+version = "0.5.4"
+locale = "ja"
+title = "セキュリティ更新"
+item = "zip と tar アーカイブを読み込むライブラリを更新し、既知のセキュリティ問題を修正しました。"
+
+[[note]]
+version = "0.5.4"
+locale = "ko"
+title = "보안 업데이트"
+item = "zip 및 tar 압축 파일을 읽는 라이브러리를 업데이트해 알려진 보안 문제를 해결했습니다."
+
+[[note]]
+version = "0.5.4"
+locale = "fr"
+title = "Mise à jour de sécurité"
+item = "Les bibliothèques qui lisent les archives zip et tar sont mises à jour pour corriger des failles de sécurité connues."
+
+[[note]]
+version = "0.5.4"
+locale = "es"
+title = "Actualización de seguridad"
+item = "Las bibliotecas que leen archivos zip y tar se han actualizado para corregir problemas de seguridad conocidos."
+
+[[note]]
+version = "0.5.4"
+locale = "de"
+title = "Sicherheitsupdate"
+item = "Die Bibliotheken, die zip- und tar-Archive lesen, wurden aktualisiert, um bekannte Sicherheitslücken zu schließen."
+
+[[note]]
+version = "0.5.4"
+locale = "pt"
+title = "Atualização de segurança"
+item = "As bibliotecas que leem arquivos zip e tar foram atualizadas para corrigir problemas de segurança conhecidos."
+
+[[note]]
+version = "0.5.4"
+locale = "ru"
+title = "Обновление безопасности"
+item = "Библиотеки для чтения архивов zip и tar обновлены, чтобы устранить известные уязвимости."
+
+[[note]]
+version = "0.5.4"
+locale = "hi"
+title = "सुरक्षा अपडेट"
+item = "zip और tar संग्रह पढ़ने वाली लाइब्रेरी को ज्ञात सुरक्षा समस्याएँ ठीक करने के लिए अपडेट किया गया है।"
+
+[[note]]
+version = "0.5.4"
+locale = "th"
+title = "อัปเดตความปลอดภัย"
+item = "อัปเดตไลบรารีที่อ่านไฟล์ zip และ tar เพื่อแก้ไขปัญหาความปลอดภัยที่ทราบแล้ว"
+
+[[note]]
+version = "0.5.4"
+locale = "vi"
+title = "Bản cập nhật bảo mật"
+item = "Các thư viện đọc tệp nén zip và tar đã được cập nhật để khắc phục các lỗ hổng bảo mật đã biết."
+
+[[note]]
+version = "0.5.4"
+locale = "id"
+title = "Pembaruan keamanan"
+item = "Pustaka yang membaca arsip zip dan tar diperbarui untuk menutup masalah keamanan yang diketahui."
+
+[[note]]
 version = "0.5.3"
 locale = "en-US"
 title = "Smoother work with agents"
