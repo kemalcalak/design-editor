@@ -11,6 +11,156 @@
 # Write for users: short, plain, no issue numbers or technical terms.
 
 [[note]]
+version = "0.5.3"
+locale = "en-US"
+title = "Smoother work with agents"
+item = "When an agent adds a board, the canvas moves to it so you can watch it being designed."
+item = "Agents keep the colours you asked for and tell you when text may be hard to read or overlaps other text."
+item = "Images an agent picks from a file on your computer now show up, and vector shapes from older files are no longer lost."
+item = "Letter-spaced text no longer squeezes letter pairs like \"Ya\" into each other."
+item = "Content hidden by its frame can no longer be hovered or picked on empty canvas."
+
+[[note]]
+version = "0.5.3"
+locale = "tr"
+title = "Ajanlarla daha rahat çalışma"
+item = "Bir ajan pano eklediğinde tuval ona gider; tasarlanışını izleyebilirsiniz."
+item = "Ajanlar istediğiniz renkleri korur; metin zor okunabilecekse ya da başka bir metnin üstüne biniyorsa bunu söyler."
+item = "Ajanın bilgisayarınızdaki bir dosyadan seçtiği görseller artık görünür; eski dosyalardaki vektör şekiller de kaybolmaz."
+item = "Harf aralığı verilmiş metinlerde \"Ya\" gibi harf çiftleri artık birbirine girmez."
+item = "Çerçevesinin gizlediği içerik, boş tuval üzerinde artık vurgulanmaz ve seçilmez."
+
+[[note]]
+version = "0.5.3"
+locale = "zh-CN"
+title = "与智能体协作更顺畅"
+item = "智能体添加画板时,画布会移到那里,方便你观看设计过程。"
+item = "智能体会保留你要求的颜色,并在文字可能难以阅读或与其他文字重叠时告诉你。"
+item = "智能体从你电脑上的文件中选取的图片现在可以正常显示,旧文件中的矢量形状也不会再丢失。"
+item = "设置了字间距的文字中,像 \"Ya\" 这样的字母组合不再挤在一起。"
+item = "被画框裁切掉的内容,不会再在空白画布上被悬停高亮或选中。"
+
+[[note]]
+version = "0.5.3"
+locale = "zh-TW"
+title = "與智慧代理協作更順暢"
+item = "智慧代理新增畫板時,畫布會移到那裡,方便你觀看設計過程。"
+item = "智慧代理會保留你要求的顏色,並在文字可能難以閱讀或與其他文字重疊時告訴你。"
+item = "智慧代理從你電腦上的檔案選取的圖片現在可以正常顯示,舊檔案中的向量形狀也不會再遺失。"
+item = "設定了字距的文字中,像 \"Ya\" 這樣的字母組合不再擠在一起。"
+item = "被畫框裁切掉的內容,不會再在空白畫布上被懸停醒目提示或選取。"
+
+[[note]]
+version = "0.5.3"
+locale = "ja"
+title = "エージェントとの作業がスムーズに"
+item = "エージェントがボードを追加すると、キャンバスがそこへ移動し、デザインされる様子を見られます。"
+item = "エージェントは指定した色をそのまま使い、文字が読みにくいときや他の文字と重なるときは知らせます。"
+item = "エージェントがパソコン上のファイルから選んだ画像が表示されるようになり、古いファイルのベクター図形も失われなくなりました。"
+item = "字間を設定したテキストで、\"Ya\" のような文字の組み合わせが重ならなくなりました。"
+item = "フレームで隠れている内容は、何もないキャンバス上でハイライトされたり選択されたりしなくなりました。"
+
+[[note]]
+version = "0.5.3"
+locale = "ko"
+title = "에이전트와 더 매끄럽게 작업"
+item = "에이전트가 보드를 추가하면 캔버스가 그쪽으로 이동해 디자인되는 과정을 볼 수 있습니다."
+item = "에이전트가 요청한 색상을 그대로 유지하고, 글자가 읽기 어렵거나 다른 글자와 겹치면 알려 줍니다."
+item = "에이전트가 컴퓨터의 파일에서 고른 이미지가 이제 표시되며, 이전 파일의 벡터 도형도 사라지지 않습니다."
+item = "자간을 설정한 텍스트에서 \"Ya\" 같은 글자 쌍이 더 이상 서로 겹치지 않습니다."
+item = "프레임에 가려진 콘텐츠는 빈 캔버스에서 더 이상 강조 표시되거나 선택되지 않습니다."
+
+[[note]]
+version = "0.5.3"
+locale = "fr"
+title = "Travailler plus facilement avec les agents"
+item = "Quand un agent ajoute un plan de travail, le canevas s'y déplace pour que vous suiviez sa conception."
+item = "Les agents gardent les couleurs demandées et signalent un texte peu lisible ou qui en chevauche un autre."
+item = "Les images qu'un agent prend dans un fichier de votre ordinateur s'affichent désormais, et les formes vectorielles des anciens fichiers ne se perdent plus."
+item = "Avec un espacement des lettres, les paires comme \"Ya\" ne se chevauchent plus."
+item = "Le contenu masqué par son cadre ne peut plus être survolé ni sélectionné sur le canevas vide."
+
+[[note]]
+version = "0.5.3"
+locale = "es"
+title = "Trabajo más fluido con agentes"
+item = "Cuando un agente añade un tablero, el lienzo se desplaza hasta él para que veas cómo se diseña."
+item = "Los agentes mantienen los colores que pediste y avisan si un texto puede ser difícil de leer o se superpone a otro."
+item = "Las imágenes que un agente toma de un archivo de tu ordenador ahora se ven, y las formas vectoriales de archivos antiguos ya no se pierden."
+item = "En textos con espaciado entre letras, pares como \"Ya\" ya no se montan uno sobre otro."
+item = "El contenido que oculta su marco ya no se resalta ni se selecciona sobre el lienzo vacío."
+
+[[note]]
+version = "0.5.3"
+locale = "de"
+title = "Reibungsloser mit Agenten arbeiten"
+item = "Fügt ein Agent eine Zeichenfläche hinzu, springt die Ansicht dorthin, damit du beim Entwerfen zusehen kannst."
+item = "Agenten behalten die gewünschten Farben und melden, wenn Text schwer lesbar ist oder anderen Text überlappt."
+item = "Bilder, die ein Agent aus einer Datei auf deinem Computer nimmt, werden jetzt angezeigt, und Vektorformen aus älteren Dateien gehen nicht mehr verloren."
+item = "Bei Text mit Zeichenabstand überlappen Buchstabenpaare wie \"Ya\" nicht mehr."
+item = "Inhalte, die ihr Rahmen verdeckt, lassen sich auf leerer Fläche nicht mehr hervorheben oder auswählen."
+
+[[note]]
+version = "0.5.3"
+locale = "pt"
+title = "Trabalho mais fluido com agentes"
+item = "Quando um agente adiciona uma prancheta, a tela vai até ela para você acompanhar o design."
+item = "Os agentes mantêm as cores que você pediu e avisam quando um texto pode ficar difícil de ler ou se sobrepõe a outro."
+item = "Imagens que um agente pega de um arquivo do seu computador agora aparecem, e formas vetoriais de arquivos antigos não se perdem mais."
+item = "Em textos com espaçamento entre letras, pares como \"Ya\" não se sobrepõem mais."
+item = "Conteúdo oculto pelo seu quadro não é mais destacado nem selecionado na tela vazia."
+
+[[note]]
+version = "0.5.3"
+locale = "ru"
+title = "Удобнее работать с агентами"
+item = "Когда агент добавляет монтажную область, холст переходит к ней, и вы видите, как идёт работа."
+item = "Агенты сохраняют заданные вами цвета и сообщают, если текст плохо читается или наезжает на другой текст."
+item = "Изображения, которые агент берёт из файла на вашем компьютере, теперь отображаются, а векторные фигуры из старых файлов больше не теряются."
+item = "В тексте с межбуквенным интервалом пары вроде \"Ya\" больше не наползают друг на друга."
+item = "Содержимое, скрытое рамкой, больше не подсвечивается и не выбирается на пустом холсте."
+
+[[note]]
+version = "0.5.3"
+locale = "hi"
+title = "एजेंट के साथ आसान काम"
+item = "जब कोई एजेंट बोर्ड जोड़ता है, तो कैनवास वहीं चला जाता है ताकि आप डिज़ाइन बनते हुए देख सकें।"
+item = "एजेंट आपके चुने हुए रंग बनाए रखते हैं और बताते हैं जब टेक्स्ट पढ़ने में कठिन हो या किसी दूसरे टेक्स्ट पर चढ़ रहा हो।"
+item = "एजेंट आपके कंप्यूटर की किसी फ़ाइल से जो चित्र चुनता है, वे अब दिखते हैं, और पुरानी फ़ाइलों की वेक्टर आकृतियाँ अब नहीं खोतीं।"
+item = "अक्षर-अंतराल वाले टेक्स्ट में \"Ya\" जैसे अक्षर-जोड़े अब एक-दूसरे पर नहीं चढ़ते।"
+item = "फ़्रेम से छिपी सामग्री अब खाली कैनवास पर हाइलाइट या चुनी नहीं जाती।"
+
+[[note]]
+version = "0.5.3"
+locale = "th"
+title = "ทำงานร่วมกับเอเจนต์ได้ลื่นขึ้น"
+item = "เมื่อเอเจนต์เพิ่มบอร์ด แคนวาสจะเลื่อนไปที่บอร์ดนั้นให้คุณดูการออกแบบได้"
+item = "เอเจนต์จะคงสีที่คุณกำหนดไว้ และแจ้งเมื่อข้อความอาจอ่านยากหรือทับข้อความอื่น"
+item = "รูปภาพที่เอเจนต์เลือกจากไฟล์ในคอมพิวเตอร์ของคุณแสดงผลได้แล้ว และรูปทรงเวกเตอร์จากไฟล์เก่าไม่หายอีกต่อไป"
+item = "ข้อความที่ตั้งระยะห่างตัวอักษร คู่ตัวอักษรอย่าง \"Ya\" จะไม่ซ้อนกันอีกแล้ว"
+item = "เนื้อหาที่เฟรมซ่อนไว้จะไม่ถูกไฮไลต์หรือเลือกบนแคนวาสว่างอีกต่อไป"
+
+[[note]]
+version = "0.5.3"
+locale = "vi"
+title = "Làm việc với tác tử mượt mà hơn"
+item = "Khi tác tử thêm một bảng vẽ, khung vẽ sẽ chuyển tới đó để bạn theo dõi quá trình thiết kế."
+item = "Tác tử giữ đúng màu bạn yêu cầu và báo khi chữ có thể khó đọc hoặc chồng lên chữ khác."
+item = "Hình ảnh mà tác tử lấy từ một tệp trên máy tính của bạn nay đã hiển thị, và hình vector trong các tệp cũ không còn bị mất."
+item = "Với chữ có giãn cách ký tự, các cặp chữ như \"Ya\" không còn đè lên nhau."
+item = "Nội dung bị khung che đi không còn được tô sáng hay chọn trên vùng vẽ trống."
+
+[[note]]
+version = "0.5.3"
+locale = "id"
+title = "Bekerja dengan agen lebih lancar"
+item = "Saat agen menambahkan papan, kanvas berpindah ke sana agar Anda bisa melihat desainnya dibuat."
+item = "Agen mempertahankan warna yang Anda minta dan memberi tahu jika teks sulit dibaca atau menumpuk teks lain."
+item = "Gambar yang diambil agen dari file di komputer Anda kini tampil, dan bentuk vektor dari file lama tidak lagi hilang."
+item = "Pada teks dengan jarak huruf, pasangan huruf seperti \"Ya\" tidak lagi saling bertumpuk."
+item = "Konten yang disembunyikan bingkainya tidak lagi disorot atau dipilih di kanvas kosong."
+
+[[note]]
 version = "0.5.2"
 locale = "en-US"
 title = "Bring your slides in"
