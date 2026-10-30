@@ -39,12 +39,16 @@ pub fn read_local_image(url: &str) -> Result<String, LocalImageError> {
 
 /// The file system path of `url`: a plain path as given; a `file://` url
 /// without its scheme and `localhost` host, percent-decoded (`%20` is a
-/// space).
+/// space), and without the slash before a Windows drive (`/C:/…`).
 fn file_path(url: &str) -> String {
     let Some(rest) = url.strip_prefix("file://") else {
         return url.to_string();
     };
     let rest = rest.strip_prefix("localhost").unwrap_or(rest);
+    let rest = match rest.as_bytes() {
+        [b'/', drive, b':', ..] if drive.is_ascii_alphabetic() => &rest[1..],
+        _ => rest,
+    };
     let bytes = rest.as_bytes();
     let hex = |i: usize| bytes.get(i).and_then(|b| (*b as char).to_digit(16));
     let mut out = Vec::with_capacity(bytes.len());
@@ -101,5 +105,11 @@ mod tests {
             "data:image/png;base64,iVBORw=="
         );
         let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn a_windows_file_url_drops_the_slash_before_its_drive() {
+        assert_eq!(file_path("file:///C:/Shots/a%20b.png"), "C:/Shots/a b.png");
+        assert_eq!(file_path("file:///tmp/a.png"), "/tmp/a.png");
     }
 }

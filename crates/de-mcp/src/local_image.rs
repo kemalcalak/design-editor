@@ -28,10 +28,15 @@ pub fn install_local_image_reader(reader: LocalImageReader) {
     let _ = READER.set(reader);
 }
 
-/// An absolute file path or a `file://` url.
+/// An absolute file path or a `file://` url. A rooted `/…` path counts on
+/// every platform: Windows calls it relative (no drive), yet agents write
+/// POSIX paths there too.
 pub fn is_local_image_path(url: &str) -> bool {
     let url = url.trim();
-    url.starts_with("file://") || (!url.starts_with("//") && Path::new(url).is_absolute())
+    if url.starts_with("file://") {
+        return true;
+    }
+    !url.starts_with("//") && (url.starts_with('/') || Path::new(url).is_absolute())
 }
 
 /// Replace every local image path in an insert or patch payload with a
