@@ -33,6 +33,7 @@ pub(super) fn emit_text(out: &mut String, n: &SceneNode) {
         return;
     };
     let _ = write!(out, r#"<g id="{}">"#, xml_escape(&n.id));
+    super::text_outline::emit_outline_under(out, n, text);
     if text_needs_fill_stack(n) {
         emit_fill_stack(out, n);
     } else {
@@ -48,6 +49,7 @@ pub(super) fn emit_text(out: &mut String, n: &SceneNode) {
         };
         emit_text_lines(out, n, text, &fill_attr);
     }
+    super::text_outline::emit_outline_over(out, n, text);
     out.push_str("</g>");
 }
 
@@ -57,6 +59,7 @@ pub(super) fn emit_text_fill_defs(out: &mut String, n: &SceneNode, id: &str) {
     let Some(text) = n.text.as_deref().filter(|t| !t.is_empty()) else {
         return;
     };
+    super::text_outline::emit_outline_defs(out, n, text, id);
     if !text_needs_fill_stack(n) {
         return;
     }
@@ -219,7 +222,16 @@ fn blend_style(mode: ImageBlendMode) -> String {
 }
 
 /// One `<text>` per authored line, with `fill_attr` (empty inside a clip).
-fn emit_text_lines(out: &mut String, n: &SceneNode, text: &str, fill_attr: &str) {
+pub(super) fn emit_text_lines(out: &mut String, n: &SceneNode, text: &str, fill_attr: &str) {
+    emit_lines(out, n, text, fill_attr, text_decoration_attr(n));
+}
+
+/// [`emit_text_lines`] without underline / strikethrough, for an outline.
+pub(super) fn emit_text_outline_lines(out: &mut String, n: &SceneNode, text: &str, attrs: &str) {
+    emit_lines(out, n, text, attrs, "");
+}
+
+fn emit_lines(out: &mut String, n: &SceneNode, text: &str, fill_attr: &str, decoration: &str) {
     let r = normalize_rect(n.bounds);
     let base_size = if n.font_size > 0.0 {
         n.font_size
@@ -248,7 +260,7 @@ fn emit_text_lines(out: &mut String, n: &SceneNode, text: &str, fill_attr: &str)
             } else {
                 ""
             },
-            text_decoration_attr(n),
+            decoration,
             xml_escape(line),
         );
         baseline_y += line_h;

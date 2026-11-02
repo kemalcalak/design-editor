@@ -244,6 +244,7 @@ fn build_text_node_in_path(
         strikethrough: decoration(block_style, "line-through").then_some(true),
         fill: crate::mapper::text_paint_color(block_style, text_fill_override)
             .map(|color| vec![solid_fill(color)]),
+        stroke: None,
         effects,
         state: None,
         bindings: None,

@@ -28,6 +28,23 @@ pub(crate) struct BaselineAdjustingBackend<'a> {
     pub(crate) font_family: Option<&'a str>,
 }
 
+impl BaselineAdjustingBackend<'_> {
+    /// `layout`'s first run in the override face, when one is set.
+    fn restyled(&self, layout: &TextLayout) -> Option<TextLayout> {
+        let (family, run) = (self.font_family?, layout.runs().first()?);
+        Some(
+            TextLayout::single_run(
+                &run.content,
+                family,
+                run.font_size,
+                run.color,
+                Point2D::new(0.0, 0.0),
+            )
+            .with_font_weight(run.font_weight),
+        )
+    }
+}
+
 impl RenderBackend for BaselineAdjustingBackend<'_> {
     fn begin_frame(&mut self) {
         self.inner.begin_frame();
@@ -47,19 +64,17 @@ impl RenderBackend for BaselineAdjustingBackend<'_> {
 
     fn draw_text(&mut self, layout: &TextLayout, origin: Point2D) {
         let draw_origin = Point2D::new(origin.x, origin.y + self.baseline_delta_y);
-        match (self.font_family, layout.runs().first()) {
-            (Some(family), Some(run)) => {
-                let restyled = TextLayout::single_run(
-                    &run.content,
-                    family,
-                    run.font_size,
-                    run.color,
-                    Point2D::new(0.0, 0.0),
-                )
-                .with_font_weight(run.font_weight);
-                self.inner.draw_text(&restyled, draw_origin);
-            }
-            _ => self.inner.draw_text(layout, draw_origin),
+        match self.restyled(layout) {
+            Some(restyled) => self.inner.draw_text(&restyled, draw_origin),
+            None => self.inner.draw_text(layout, draw_origin),
+        }
+    }
+
+    fn stroke_text(&mut self, layout: &TextLayout, origin: Point2D, color: Color, width: f32) {
+        let draw_origin = Point2D::new(origin.x, origin.y + self.baseline_delta_y);
+        match self.restyled(layout) {
+            Some(restyled) => self.inner.stroke_text(&restyled, draw_origin, color, width),
+            None => self.inner.stroke_text(layout, draw_origin, color, width),
         }
     }
 

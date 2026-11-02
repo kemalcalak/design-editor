@@ -18,8 +18,8 @@ use super::value::{color, color_alpha, px, round2};
 use crate::{fmt_num, node_fills, node_stroke};
 use jian_ops_schema::node::{CornerRadius, NumberOrExpression, PenNode, ScriptNode};
 use jian_ops_schema::style::{
-    BlendMode, GradientStop, ImageFillMode, PenEffect, PenFill, ShaderUniformValue, StrokeAlign,
-    StrokeThickness,
+    BlendMode, GradientStop, ImageFillMode, PenEffect, PenFill, PenStroke, ShaderUniformValue,
+    StrokeAlign, StrokeThickness,
 };
 
 /// The node's effect list, when its variant carries one.
@@ -294,6 +294,68 @@ pub(crate) fn apply_text_fill(
     }
 }
 
+/// Outlined text (#282) as `-webkit-text-stroke`, which browsers centre on
+/// the glyph contours. Outside is twice the width under the fill
+/// (`paint-order: stroke fill`); CSS cannot clip a text stroke to the
+/// glyphs, so inside is written centred, and so is outside over a
+/// `background-clip: text` fill, which paints before any stroke. A
+/// gradient stroke takes its first stop's colour; a dash has no CSS
+/// equivalent. Call after the text fill.
+pub(crate) fn apply_text_stroke(decls: &mut Decls, stroke: Option<&PenStroke>) {
+    let Some(stroke) = stroke else {
+        return;
+    };
+    let width = match &stroke.thickness {
+        StrokeThickness::Uniform(w) => *w,
+        StrokeThickness::PerSide(sides) => sides.iter().copied().fold(0.0, f32::max),
+        StrokeThickness::Sided(s) => [s.top, s.right, s.bottom, s.left]
+            .into_iter()
+            .flatten()
+            .fold(0.0, f32::max),
+    };
+    if !(width.is_finite() && width > 0.0) {
+        return;
+    }
+    let Some(color) = stroke.fill.as_deref().and_then(stroke_fallback_css) else {
+        return;
+    };
+    let width = f64::from(width);
+    let clipped_fill = decls.get("background-clip") == Some("text");
+    if stroke.align == Some(StrokeAlign::Outside) && !clipped_fill {
+        decls.set(
+            "-webkit-text-stroke",
+            format!("{} {color}", px(width * 2.0)),
+        );
+        decls.set("paint-order", "stroke fill");
+    } else {
+        decls.set("-webkit-text-stroke", format!("{} {color}", px(width)));
+    }
+}
+
+/// One CSS colour for a stroke paint list: its first solid paint, else the
+/// first stop of its first linear, radial or angular gradient.
+fn stroke_fallback_css(fills: &[PenFill]) -> Option<String> {
+    first_solid_css(fills).or_else(|| {
+        fills.iter().find_map(|f| {
+            let stops = match f {
+                PenFill::LinearGradient(g) => &g.stops,
+                PenFill::RadialGradient(g) => &g.stops,
+                PenFill::AngularGradient(g) => &g.stops,
+                _ => return None,
+            };
+            stops.first().map(|stop| color(&stop.color))
+        })
+    })
+}
+
+/// The first solid paint of a fill list as a CSS colour.
+fn first_solid_css(fills: &[PenFill]) -> Option<String> {
+    fills.iter().find_map(|f| match f {
+        PenFill::Solid(b) => Some(color_alpha(&b.color, f64::from(b.opacity.unwrap_or(1.0)))),
+        _ => None,
+    })
+}
+
 /// The stroke as an `outline` (uniform) or inset shadows (per side), which
 /// leave the layout box alone. Per-side shadows are returned for the caller
 /// to merge into `box-shadow`.
@@ -304,14 +366,7 @@ pub(crate) fn apply_stroke(decls: &mut Decls, node: &PenNode) -> Vec<String> {
     let stroke_color = stroke
         .fill
         .as_deref()
-        .and_then(|fills| {
-            fills.iter().find_map(|f| match f {
-                PenFill::Solid(b) => {
-                    Some(color_alpha(&b.color, f64::from(b.opacity.unwrap_or(1.0))))
-                }
-                _ => None,
-            })
-        })
+        .and_then(first_solid_css)
         .unwrap_or_else(|| "rgb(0,0,0)".into());
     let sides = match &stroke.thickness {
         StrokeThickness::Uniform(w) => {

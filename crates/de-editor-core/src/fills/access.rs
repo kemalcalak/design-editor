@@ -100,8 +100,8 @@ pub(crate) fn node_stroke_mut(node: &mut PenNode) -> Option<&mut Option<PenStrok
         PenNode::NumberInput(n) => Some(&mut n.stroke),
         PenNode::Progress(n) => Some(&mut n.stroke),
         PenNode::Tabs(n) => Some(&mut n.stroke),
-        PenNode::Text(_)
-        | PenNode::Image(_)
+        PenNode::Text(n) => Some(&mut n.stroke),
+        PenNode::Image(_)
         | PenNode::Ref(_)
         | PenNode::Note(_)
         | PenNode::Context(_)
@@ -133,8 +133,8 @@ pub(crate) fn node_stroke(node: &PenNode) -> Option<&PenStroke> {
         PenNode::NumberInput(n) => n.stroke.as_ref(),
         PenNode::Progress(n) => n.stroke.as_ref(),
         PenNode::Tabs(n) => n.stroke.as_ref(),
-        PenNode::Text(_)
-        | PenNode::Image(_)
+        PenNode::Text(n) => n.stroke.as_ref(),
+        PenNode::Image(_)
         | PenNode::Ref(_)
         | PenNode::Note(_)
         | PenNode::Context(_)

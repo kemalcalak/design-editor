@@ -22,14 +22,37 @@ use crate::widgets::canvas_viewport_fill_layers::paint_fill_layers;
 use crate::widgets::canvas_viewport_text::{
     paint_text_node_pass, text_is_greeked, TextPass, DEFAULT_INK,
 };
+use crate::widgets::canvas_viewport_text_stroke::with_text_outline;
 use crate::widgets::PaintCx;
 use crate::{ImageBlendMode, Point2D, Rect};
 
 /// Paint a text node at `world_rect` (its bounds under the viewport
 /// transform `viewport_origin` + `zoom`). Plain-ink text takes the
 /// single [`TextPass::Full`] paint; a rich fill stack takes the masked
-/// path described in the module docs.
+/// path described in the module docs. A stroke outlines the glyphs
+/// (`canvas_viewport_text_stroke`).
 pub(super) fn paint_text_in_viewport(
+    cx: &mut PaintCx<'_>,
+    node: &SceneNode,
+    world_rect: Rect,
+    viewport_origin: Point2D,
+    zoom: f32,
+    edit_caret: &Option<EditCaret>,
+) {
+    with_text_outline(
+        cx,
+        node,
+        world_rect,
+        viewport_origin,
+        zoom,
+        edit_caret,
+        |cx| {
+            paint_text_fill(cx, node, world_rect, viewport_origin, zoom, edit_caret);
+        },
+    );
+}
+
+fn paint_text_fill(
     cx: &mut PaintCx<'_>,
     node: &SceneNode,
     world_rect: Rect,
@@ -80,7 +103,7 @@ pub(super) fn paint_text_in_viewport(
     }
 }
 
-fn inflate(rect: Rect, by: f32) -> Rect {
+pub(super) fn inflate(rect: Rect, by: f32) -> Rect {
     Rect {
         origin: Point2D::new(rect.origin.x - by, rect.origin.y - by),
         size: Point2D::new(rect.size.x + 2.0 * by, rect.size.y + 2.0 * by),
@@ -107,7 +130,7 @@ fn paint_overflow_band(cx: &mut PaintCx<'_>, node: &SceneNode, bx: Rect, layer: 
 }
 
 /// Run `paint` with document coordinates mapped onto the viewport.
-fn in_doc_space(
+pub(super) fn in_doc_space(
     cx: &mut PaintCx<'_>,
     viewport_origin: Point2D,
     zoom: f32,

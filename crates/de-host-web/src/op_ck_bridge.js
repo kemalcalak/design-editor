@@ -993,6 +993,36 @@ export async function opCkInit(canvasId) {
     }
     return p;
   };
+  // Outlined text (#282): while `strokeText` / `strokeShapedText` run, the
+  // glyph draws below stroke with this `{ paint, width, style }` instead of
+  // filling, and text the browser rasterizes is rastered as outlines. Emoji
+  // bitmaps are not outlined; they only advance the pen.
+  let textOutline = null;
+  // The `textOutline` for a stroke of `w` px: glyph outlines default to
+  // skia's butt cap and miter join, as on native; an authored style was
+  // already applied by `strokePaint`.
+  const glyphOutlinePaint = (r, g, b, a, w) => {
+    const paint = strokePaint(r, g, b, a, w);
+    if (!strokeStyle) {
+      paint.setStrokeCap(CK.StrokeCap.Butt);
+      paint.setStrokeJoin(CK.StrokeJoin.Miter);
+    }
+    return { paint, width: w, style: strokeStyle };
+  };
+  // The paint a text draw uses: the outline when one is set (widened for the
+  // synthetic bold the fill would add), else `fill` styled for `weight`.
+  const textPaint = (p, sz, weight) => {
+    const bold = weight >= 600 && isPaintStyle(CK.PaintStyle.StrokeAndFill);
+    if (textOutline) {
+      textOutline.paint.setStrokeWidth(textOutline.width + (bold ? sz * 0.06 : 0));
+      return textOutline.paint;
+    }
+    if (bold) {
+      setPaintStyle(p, CK.PaintStyle.StrokeAndFill);
+      p.setStrokeWidth(sz * 0.06);
+    }
+    return p;
+  };
   // Dedicated (allocated + `.delete()`d) fill paint for the one call site
   // that needs a SECOND live fill paint while `drawText`'s cached `p` (see
   // above) is already in scope: `drawScriptRun` is invoked both standalone
@@ -1049,9 +1079,16 @@ export async function opCkInit(canvasId) {
     const ss = browserTextRasterScale();
     // `family` participates in the key: the same string shaped in two
     // different families is two different bitmaps.
-    const key = emoji
+    // Outlined text (#282) rasters the glyph outlines instead of the glyphs;
+    // emoji are bitmaps and never reach here outlined.
+    const outline = textOutline && !emoji ? textOutline : null;
+    const outlineKey = outline
+      ? ['o', outline.width].concat(outline.style ? [outline.style.cap, outline.style.join, outline.style.dash.join(','), outline.style.offset] : []).join(' ')
+      : '';
+    const baseKey = emoji
       ? ['e', t, sz, weight, italic ? 1 : 0, r, g, b, a, ss, family].join('\n')
       : [t, sz, weight, italic ? 1 : 0, ss, family].join('\n');
+    const key = outline ? baseKey + '\n' + outlineKey : baseKey;
     const hit = browserTextCache.get(key);
     if (hit) {
       browserTextCache.delete(key);
@@ -1062,11 +1099,13 @@ export async function opCkInit(canvasId) {
     browserTextCtx.font = font;
     const metrics = browserTextCtx.measureText(t);
     // Logical (CSS-px) box the glyphs occupy; positioning stays in CSS units.
-    const width = Math.max(1, Math.ceil(metrics.width + 4));
+    // An outline reaches half its width past the glyphs (plus miter joins).
+    const left = outline ? 2 + Math.ceil(outline.width * 2) : 2;
+    const width = Math.max(1, Math.ceil(metrics.width + 2 * left));
     const ascent = Math.ceil(metrics.actualBoundingBoxAscent || sz * 0.8);
     const descent = Math.ceil(metrics.actualBoundingBoxDescent || sz * 0.25);
-    const baseline = ascent + 2;
-    const height = Math.max(1, baseline + descent + 2);
+    const baseline = ascent + left;
+    const height = Math.max(1, baseline + descent + left);
     // Back the offscreen canvas with `ss`x pixels and scale drawing so the
     // rasterized glyphs carry device-resolution detail. Setting canvas.width/
     // height resets the 2D context, so (re)apply font/baseline/fill + the
@@ -1082,11 +1121,23 @@ export async function opCkInit(canvasId) {
     browserTextCtx.fillStyle = emoji
       ? `rgba(${Math.round(r * 255)}, ${Math.round(g * 255)}, ${Math.round(b * 255)}, ${a})`
       : 'rgba(255, 255, 255, 1)';
-    browserTextCtx.fillText(t, 2, baseline);
+    if (outline) {
+      const style = outline.style;
+      browserTextCtx.strokeStyle = 'rgba(255, 255, 255, 1)';
+      browserTextCtx.lineWidth = outline.width;
+      browserTextCtx.lineCap = style ? ['butt', 'round', 'square'][style.cap] || 'butt' : 'butt';
+      browserTextCtx.lineJoin = style ? ['miter', 'round', 'bevel'][style.join] || 'miter' : 'miter';
+      browserTextCtx.setLineDash(style && style.dash.length >= 2 ? style.dash : []);
+      browserTextCtx.lineDashOffset = style ? style.offset : 0;
+      browserTextCtx.strokeText(t, left, baseline);
+      browserTextCtx.setLineDash([]);
+    } else {
+      browserTextCtx.fillText(t, left, baseline);
+    }
     browserTextCtx.setTransform(1, 0, 0, 1, 0, 0);
     const image = CK.MakeImageFromCanvasImageSource(browserTextCanvas);
     if (!image) return null;
-    const entry = { image, width: metrics.width, baseline, ss, emoji: Boolean(emoji) };
+    const entry = { image, width: metrics.width, baseline, left, ss, emoji: Boolean(emoji) };
     browserTextCache.set(key, entry);
     if (browserTextCache.size > 512) {
       const firstKey = browserTextCache.keys().next().value;
@@ -1155,15 +1206,15 @@ export async function opCkInit(canvasId) {
       // (x-2, y-baseline) then scale down by `ss` so its device footprint
       // matches the intended CSS box at native resolution.
       canvas.save();
-      canvas.translate(x - 2, y - entry.baseline);
+      canvas.translate(x - entry.left, y - entry.baseline);
       canvas.scale(1 / ss, 1 / ss);
       if (paint) canvas.drawImage(entry.image, 0, 0, paint);
       else canvas.drawImage(entry.image, 0, 0);
       canvas.restore();
     } else if (paint) {
-      canvas.drawImage(entry.image, x - 2, y - entry.baseline, paint);
+      canvas.drawImage(entry.image, x - entry.left, y - entry.baseline, paint);
     } else {
-      canvas.drawImage(entry.image, x - 2, y - entry.baseline);
+      canvas.drawImage(entry.image, x - entry.left, y - entry.baseline);
     }
     return entry.width;
   };
@@ -1464,8 +1515,68 @@ export async function opCkInit(canvasId) {
   const dropShapedBlobs = () => {
     for (const entry of shapedBlobCache.values()) {
       if (entry.blob && entry.blob.delete) entry.blob.delete();
+      if (entry.outline && entry.outline.delete) entry.outline.delete();
     }
     shapedBlobCache.clear();
+    for (const path of glyphOutlineCache.values()) {
+      if (path && path.delete) path.delete();
+    }
+    glyphOutlineCache.clear();
+  };
+  // One character's outline per (face, size, slant), its overlapping
+  // contours merged (#282): variable fonts build a letter from overlapping
+  // contours, which a fill hides and a plain stroke would show.
+  const glyphOutlineCache = new Map();
+  const glyphOutline = (alias, f, sz, italic, ch) => {
+    const key = alias + '\n' + sz + '\n' + (italic ? 1 : 0) + '\n' + ch;
+    if (glyphOutlineCache.has(key)) return glyphOutlineCache.get(key);
+    let path = CK.Path.MakeFromText ? CK.Path.MakeFromText(ch, 0, 0, f) : null;
+    if (path && path.simplify && !path.simplify()) {
+      path.delete();
+      path = CK.Path.MakeFromText(ch, 0, 0, f);
+    }
+    glyphOutlineCache.set(key, path);
+    return path;
+  };
+  // The merged outlines of `s` at the kerned positions `drawKerned` uses, or
+  // null when a token's glyphs do not map one-to-one onto its characters
+  // (a ligature), where the caller strokes the blob instead.
+  const kernedOutline = (alias, f, sz, italic, s) => {
+    const out = new CK.Path();
+    let advance = 0;
+    for (const token of shapeTokens(s)) {
+      const chars = Array.from(token);
+      const word = shapeWord(alias, sz, token);
+      let xs;
+      let ys;
+      let width;
+      if (word) {
+        if (word.glyphs.length !== chars.length) {
+          out.delete();
+          return null;
+        }
+        xs = word.xs;
+        ys = word.ys;
+        width = word.width;
+      } else {
+        const widths = f.getGlyphWidths(f.getGlyphIDs(token));
+        xs = [];
+        ys = [];
+        let at = 0;
+        for (let i = 0; i < chars.length; i++) {
+          xs.push(at);
+          ys.push(0);
+          at += widths[i] || 0;
+        }
+        width = at;
+      }
+      for (let i = 0; i < chars.length; i++) {
+        const glyph = glyphOutline(alias, f, sz, italic, chars[i]);
+        if (glyph) out.addPath(glyph, [1, 0, advance + xs[i], 0, 1, ys[i], 0, 0, 1]);
+      }
+      advance += width;
+    }
+    return out;
   };
   clearShapedCaches = () => {
     shapedWordCache.clear();
@@ -1581,9 +1692,19 @@ export async function opCkInit(canvasId) {
       const blob = glyphs.length
         ? CK.TextBlob.MakeFromRSXformGlyphs(Uint16Array.from(glyphs), Float32Array.from(xforms), f)
         : null;
-      entry = { blob, width: advance };
+      entry = { blob, width: advance, outline: undefined };
       if (shapedBlobCache.size >= SHAPED_BLOB_CACHE_CAP) dropShapedBlobs();
       shapedBlobCache.set(key, entry);
+    }
+    if (textOutline && entry.blob) {
+      if (entry.outline === undefined) entry.outline = kernedOutline(alias, f, sz, italic, s);
+      if (entry.outline) {
+        canvas.save();
+        canvas.translate(x, y);
+        canvas.drawPath(entry.outline, p);
+        canvas.restore();
+        return entry.width;
+      }
     }
     if (entry.blob) canvas.drawTextBlob(entry.blob, x, y, p);
     return entry.width;
@@ -1689,20 +1810,20 @@ export async function opCkInit(canvasId) {
   const drawScriptRun = (t, x, y, sz, weight, italic, r, g, b, a) => {
     const segs = segments(t);
     if (segs.length === 0) return 0;
+    const browserText = (seg, cx) => textOutline && seg.emoji
+      ? browserTextMeasure(seg.text, sz, weight, italic)
+      : drawBrowserText(seg.text, cx, y, sz, weight, italic, r, g, b, a, seg.emoji);
     if (allSegmentsUseBrowserTextFallback(segs)) {
       let cx = x;
-      for (const seg of segs) cx += drawBrowserText(seg.text, cx, y, sz, weight, italic, r, g, b, a, seg.emoji);
+      for (const seg of segs) cx += browserText(seg, cx);
       return cx - x;
     }
-    const p = allocFillPaint(r, g, b, a);
-    if (weight >= 600 && isPaintStyle(CK.PaintStyle.StrokeAndFill)) {
-      setPaintStyle(p, CK.PaintStyle.StrokeAndFill);
-      p.setStrokeWidth(sz * 0.06);
-    }
+    const fill = textOutline ? null : allocFillPaint(r, g, b, a);
+    const p = textPaint(fill, sz, weight);
     let cx = x;
     for (const seg of segs) {
       if (shouldUseBrowserTextFallback(seg.text, seg.emoji)) {
-        cx += drawBrowserText(seg.text, cx, y, sz, weight, italic, r, g, b, a, seg.emoji);
+        cx += browserText(seg, cx);
         continue;
       }
       const tf = tfFor(seg.text, seg.emoji);
@@ -1712,7 +1833,7 @@ export async function opCkInit(canvasId) {
       cx += drawKerned(tf, f, sz, skewed, seg.text, cx, y, p);
       f.delete();
     }
-    p.delete();
+    if (fill) fill.delete();
     return cx - x;
   };
   const pathIsFinite = (bounds) => bounds && bounds.length >= 4 && bounds.every((v) => Number.isFinite(v));
@@ -2051,7 +2172,7 @@ export async function opCkInit(canvasId) {
     setStrokeStyle(cap, join, dash, offset) {
       if (strokeStyle && strokeStyle.effect) strokeStyle.effect.delete();
       const effect = dash.length >= 2 ? CK.PathEffect.MakeDash(Array.from(dash), offset) : null;
-      strokeStyle = { cap, join, effect };
+      strokeStyle = { cap, join, effect, dash: Array.from(dash), offset };
     },
     clearStrokeStyle() {
       if (strokeStyle && strokeStyle.effect) strokeStyle.effect.delete();
@@ -2294,11 +2415,7 @@ export async function opCkInit(canvasId) {
         drawScriptRun(t, x, y, sz, weight, italic, r, g, b, a);
         return;
       }
-      const p = fillPaint(r, g, b, a);
-      if (weight >= 600 && isPaintStyle(CK.PaintStyle.StrokeAndFill)) {
-        setPaintStyle(p, CK.PaintStyle.StrokeAndFill);
-        p.setStrokeWidth(sz * 0.06);
-      }
+      const p = textPaint(textOutline ? null : fillPaint(r, g, b, a), sz, weight);
       let cx = x;
       for (const seg of covSegs) {
         if (seg.registered) {
@@ -2307,6 +2424,27 @@ export async function opCkInit(canvasId) {
         } else {
           cx += drawScriptRun(seg.text, cx, y, sz, weight, italic, r, g, b, a);
         }
+      }
+    },
+    // `drawText`'s glyphs outlined `w` px wide in (r, g, b, a), with the
+    // node's stroke style.
+    strokeText(t, family, x, y, sz, weight, italic, r, g, b, a, w) {
+      if (!t || !(w > 0)) return;
+      textOutline = glyphOutlinePaint(r, g, b, a, w);
+      try {
+        this.drawText(t, family, x, y, sz, weight, italic, r, g, b, a);
+      } finally {
+        textOutline = null;
+      }
+    },
+    // `drawShapedText`'s complex-script run outlined (browser raster).
+    strokeShapedText(t, family, x, y, sz, weight, italic, r, g, b, a, w) {
+      if (!t || !(w > 0)) return;
+      textOutline = glyphOutlinePaint(r, g, b, a, w);
+      try {
+        this.drawShapedText(t, family, x, y, sz, weight, italic, r, g, b, a);
+      } finally {
+        textOutline = null;
       }
     },
     drawShapedText(t, family, x, y, sz, weight, italic, r, g, b, a) {

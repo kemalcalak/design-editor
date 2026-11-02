@@ -69,6 +69,7 @@ pub fn text(id: &str, name: &str, x: f64, y: f64, w: f64, h: f64, content: &str)
         underline: None,
         strikethrough: None,
         fill: None,
+        stroke: None,
         effects: None,
         state: None,
         bindings: None,

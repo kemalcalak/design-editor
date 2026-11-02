@@ -51,6 +51,7 @@ pub use jian_scene::{layout_scene, layout_scene_hit};
 pub mod scene_bounds;
 pub mod svg_export;
 mod text_fill_stack;
+pub mod text_outline;
 pub mod theme;
 pub mod util;
 pub mod widgets;
