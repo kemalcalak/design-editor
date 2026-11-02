@@ -11,6 +11,156 @@
 # Write for users: short, plain, no issue numbers or technical terms.
 
 [[note]]
+version = "0.5.5"
+locale = "en-US"
+title = "Outlined text and local pages"
+item = "Text can have an outline: give it a stroke in the properties panel. Outlined text from pen.dev files now comes through, and it exports to PNG, PDF, SVG, HTML and PowerPoint."
+item = "Radial and angular gradients from pen.dev files keep their off-centre position."
+item = "A browser element can show a page from your project folder, such as ./video/player.html. Pages in pen.dev files are found next to the design, and a page that cannot load says why."
+item = "Importing a pen.dev file from its own folder on the command line brings in all its images and effects."
+item = "Starting the editor in the background waits for large files, and tells you when another one is already running."
+
+[[note]]
+version = "0.5.5"
+locale = "tr"
+title = "Konturlu metin ve yerel sayfalar"
+item = "Metne kontur verilebiliyor: özellikler panelinde ona bir kenarlık ekleyin. pen.dev dosyalarındaki konturlu metin artık korunuyor ve PNG, PDF, SVG, HTML ve PowerPoint'e aktarılıyor."
+item = "pen.dev dosyalarındaki radyal ve açısal gradyanlar merkez dışındaki konumlarını koruyor."
+item = "Tarayıcı öğesi proje klasörünüzdeki bir sayfayı gösterebiliyor, örneğin ./video/player.html. pen.dev dosyalarındaki sayfalar tasarımın yanında bulunuyor; yüklenemeyen bir sayfa nedenini söylüyor."
+item = "Komut satırında bir pen.dev dosyasını kendi klasöründen içe aktarmak tüm görsellerini ve efektlerini getiriyor."
+item = "Düzenleyiciyi arka planda başlatmak büyük dosyaları bekliyor ve zaten çalışan bir tane varsa bunu söylüyor."
+
+[[note]]
+version = "0.5.5"
+locale = "zh-CN"
+title = "描边文字与本地页面"
+item = "文字可以加描边:在属性面板中为它添加描边。pen.dev 文件中的描边文字现在会保留,并可导出为 PNG、PDF、SVG、HTML 和 PowerPoint。"
+item = "pen.dev 文件中的径向和角度渐变会保留偏离中心的位置。"
+item = "浏览器元素可以显示项目文件夹中的页面,例如 ./video/player.html。pen.dev 文件中的页面会在设计文件旁边查找,无法加载的页面会显示原因。"
+item = "在命令行中从 pen.dev 文件所在的文件夹导入时,会带上它的所有图片和效果。"
+item = "在后台启动编辑器时会等待大文件加载完成,如果已有一个在运行也会提示你。"
+
+[[note]]
+version = "0.5.5"
+locale = "zh-TW"
+title = "描邊文字與本機頁面"
+item = "文字可以加上描邊:在屬性面板中為它加上描邊。pen.dev 檔案中的描邊文字現在會保留,並可匯出為 PNG、PDF、SVG、HTML 和 PowerPoint。"
+item = "pen.dev 檔案中的放射狀和角度漸層會保留偏離中心的位置。"
+item = "瀏覽器元素可以顯示專案資料夾中的頁面,例如 ./video/player.html。pen.dev 檔案中的頁面會在設計檔旁邊尋找,無法載入的頁面會說明原因。"
+item = "在命令列中從 pen.dev 檔案所在的資料夾匯入時,會帶入它的所有圖片和效果。"
+item = "在背景啟動編輯器時會等待大型檔案載入完成,若已有一個在執行也會告訴你。"
+
+[[note]]
+version = "0.5.5"
+locale = "ja"
+title = "アウトライン文字とローカルページ"
+item = "テキストにアウトラインを付けられるようになりました。プロパティパネルで線を追加してください。pen.dev ファイルのアウトライン文字も保持され、PNG、PDF、SVG、HTML、PowerPoint に書き出せます。"
+item = "pen.dev ファイルの放射状・角度グラデーションが、中心からずれた位置を保つようになりました。"
+item = "ブラウザ要素でプロジェクトフォルダ内のページ（例: ./video/player.html）を表示できます。pen.dev ファイルのページはデザインの隣から探し、読み込めないページは理由を表示します。"
+item = "コマンドラインで pen.dev ファイルをそのフォルダから読み込むと、画像とエフェクトがすべて取り込まれます。"
+item = "エディタをバックグラウンドで起動すると大きなファイルの読み込みを待ち、すでに起動中のものがあればそれを知らせます。"
+
+[[note]]
+version = "0.5.5"
+locale = "ko"
+title = "윤곽선 텍스트와 로컬 페이지"
+item = "텍스트에 윤곽선을 줄 수 있습니다. 속성 패널에서 선을 추가하세요. pen.dev 파일의 윤곽선 텍스트도 유지되며 PNG, PDF, SVG, HTML, PowerPoint로 내보낼 수 있습니다."
+item = "pen.dev 파일의 방사형·각도 그라데이션이 중심에서 벗어난 위치를 유지합니다."
+item = "브라우저 요소에서 프로젝트 폴더의 페이지(예: ./video/player.html)를 표시할 수 있습니다. pen.dev 파일의 페이지는 디자인 옆에서 찾고, 불러올 수 없는 페이지는 이유를 알려 줍니다."
+item = "명령줄에서 pen.dev 파일을 해당 폴더에서 가져오면 모든 이미지와 효과가 함께 들어옵니다."
+item = "편집기를 백그라운드에서 시작하면 큰 파일을 기다리며, 이미 실행 중인 편집기가 있으면 알려 줍니다."
+
+[[note]]
+version = "0.5.5"
+locale = "fr"
+title = "Texte détouré et pages locales"
+item = "Le texte peut avoir un contour : ajoutez-lui un trait dans le panneau des propriétés. Le texte détouré des fichiers pen.dev est désormais conservé, et il s'exporte en PNG, PDF, SVG, HTML et PowerPoint."
+item = "Les dégradés radiaux et angulaires des fichiers pen.dev gardent leur centre décalé."
+item = "Un élément navigateur peut afficher une page de votre dossier de projet, comme ./video/player.html. Les pages des fichiers pen.dev sont recherchées à côté du design, et une page qui ne se charge pas indique pourquoi."
+item = "Importer un fichier pen.dev depuis son propre dossier en ligne de commande récupère toutes ses images et tous ses effets."
+item = "Lancer l'éditeur en arrière-plan attend le chargement des gros fichiers et vous prévient si un autre est déjà en cours d'exécution."
+
+[[note]]
+version = "0.5.5"
+locale = "es"
+title = "Texto con contorno y páginas locales"
+item = "El texto puede tener contorno: añádele un trazo en el panel de propiedades. El texto con contorno de los archivos pen.dev ahora se conserva y se exporta a PNG, PDF, SVG, HTML y PowerPoint."
+item = "Los degradados radiales y angulares de los archivos pen.dev mantienen su centro desplazado."
+item = "Un elemento de navegador puede mostrar una página de la carpeta de tu proyecto, como ./video/player.html. Las páginas de los archivos pen.dev se buscan junto al diseño y una página que no se puede cargar indica por qué."
+item = "Importar un archivo pen.dev desde su propia carpeta en la línea de comandos trae todas sus imágenes y efectos."
+item = "Al iniciar el editor en segundo plano, espera a que carguen los archivos grandes y te avisa si ya hay otro en ejecución."
+
+[[note]]
+version = "0.5.5"
+locale = "de"
+title = "Konturtext und lokale Seiten"
+item = "Text kann eine Kontur haben: Gib ihm im Eigenschaftenbereich eine Kontur. Konturtext aus pen.dev-Dateien bleibt jetzt erhalten und lässt sich als PNG, PDF, SVG, HTML und PowerPoint exportieren."
+item = "Radiale und Winkelverläufe aus pen.dev-Dateien behalten ihre außermittige Position."
+item = "Ein Browser-Element kann eine Seite aus deinem Projektordner anzeigen, etwa ./video/player.html. Seiten in pen.dev-Dateien werden neben dem Design gesucht, und eine Seite, die nicht lädt, nennt den Grund."
+item = "Wird eine pen.dev-Datei über die Befehlszeile aus ihrem eigenen Ordner importiert, kommen alle ihre Bilder und Effekte mit."
+item = "Beim Start des Editors im Hintergrund wird auf große Dateien gewartet, und du erfährst, wenn bereits einer läuft."
+
+[[note]]
+version = "0.5.5"
+locale = "pt"
+title = "Texto com contorno e páginas locais"
+item = "O texto pode ter contorno: adicione um traço no painel de propriedades. O texto com contorno dos arquivos pen.dev agora é mantido e pode ser exportado para PNG, PDF, SVG, HTML e PowerPoint."
+item = "Gradientes radiais e angulares dos arquivos pen.dev mantêm o centro deslocado."
+item = "Um elemento de navegador pode mostrar uma página da pasta do seu projeto, como ./video/player.html. As páginas dos arquivos pen.dev são procuradas ao lado do design, e uma página que não carrega diz por quê."
+item = "Importar um arquivo pen.dev a partir da própria pasta pela linha de comando traz todas as suas imagens e efeitos."
+item = "Iniciar o editor em segundo plano aguarda arquivos grandes e avisa quando outro já está em execução."
+
+[[note]]
+version = "0.5.5"
+locale = "ru"
+title = "Обводка текста и локальные страницы"
+item = "У текста может быть обводка: добавьте ему контур на панели свойств. Текст с обводкой из файлов pen.dev теперь сохраняется и экспортируется в PNG, PDF, SVG, HTML и PowerPoint."
+item = "Радиальные и угловые градиенты из файлов pen.dev сохраняют смещённый центр."
+item = "Элемент браузера может показывать страницу из папки проекта, например ./video/player.html. Страницы из файлов pen.dev ищутся рядом с макетом, а страница, которая не загрузилась, сообщает причину."
+item = "Импорт файла pen.dev из его собственной папки в командной строке переносит все его изображения и эффекты."
+item = "Запуск редактора в фоне дожидается загрузки больших файлов и сообщает, если другой уже запущен."
+
+[[note]]
+version = "0.5.5"
+locale = "hi"
+title = "आउटलाइन वाला टेक्स्ट और स्थानीय पेज"
+item = "टेक्स्ट पर आउटलाइन दी जा सकती है: प्रॉपर्टी पैनल में उसे स्ट्रोक दें। pen.dev फ़ाइलों का आउटलाइन वाला टेक्स्ट अब बना रहता है और PNG, PDF, SVG, HTML और PowerPoint में एक्सपोर्ट होता है।"
+item = "pen.dev फ़ाइलों के रेडियल और कोणीय ग्रेडिएंट अपनी केंद्र से हटी स्थिति बनाए रखते हैं।"
+item = "ब्राउज़र एलिमेंट आपके प्रोजेक्ट फ़ोल्डर का पेज दिखा सकता है, जैसे ./video/player.html। pen.dev फ़ाइलों के पेज डिज़ाइन के पास खोजे जाते हैं, और जो पेज लोड नहीं होता वह कारण बताता है।"
+item = "कमांड लाइन से pen.dev फ़ाइल को उसके अपने फ़ोल्डर से इम्पोर्ट करने पर उसकी सभी इमेज और इफ़ेक्ट आ जाते हैं।"
+item = "एडिटर को बैकग्राउंड में शुरू करने पर यह बड़ी फ़ाइलों का इंतज़ार करता है, और अगर कोई पहले से चल रहा हो तो बताता है।"
+
+[[note]]
+version = "0.5.5"
+locale = "th"
+title = "ข้อความแบบเส้นขอบและหน้าเว็บในเครื่อง"
+item = "ข้อความมีเส้นขอบได้แล้ว: เพิ่มเส้นขอบให้ในแผงคุณสมบัติ ข้อความแบบเส้นขอบจากไฟล์ pen.dev จะคงอยู่ และส่งออกเป็น PNG, PDF, SVG, HTML และ PowerPoint ได้"
+item = "ไล่ระดับสีแบบรัศมีและแบบมุมจากไฟล์ pen.dev คงตำแหน่งที่เยื้องจากกึ่งกลางไว้"
+item = "องค์ประกอบเบราว์เซอร์แสดงหน้าจากโฟลเดอร์โปรเจกต์ได้ เช่น ./video/player.html หน้าในไฟล์ pen.dev จะค้นหาข้างไฟล์ดีไซน์ และหน้าที่โหลดไม่ได้จะบอกสาเหตุ"
+item = "การนำเข้าไฟล์ pen.dev จากโฟลเดอร์ของไฟล์เองผ่านบรรทัดคำสั่ง จะนำรูปภาพและเอฟเฟกต์ทั้งหมดเข้ามาด้วย"
+item = "การเริ่มโปรแกรมแก้ไขในเบื้องหลังจะรอไฟล์ขนาดใหญ่ และแจ้งให้ทราบหากมีตัวหนึ่งทำงานอยู่แล้ว"
+
+[[note]]
+version = "0.5.5"
+locale = "vi"
+title = "Chữ viền và trang cục bộ"
+item = "Chữ có thể có viền: thêm nét viền trong bảng thuộc tính. Chữ viền trong tệp pen.dev giờ được giữ lại và xuất được sang PNG, PDF, SVG, HTML và PowerPoint."
+item = "Dải màu dạng tỏa tròn và dạng góc trong tệp pen.dev giữ nguyên vị trí lệch tâm."
+item = "Phần tử trình duyệt có thể hiển thị một trang trong thư mục dự án, như ./video/player.html. Các trang trong tệp pen.dev được tìm bên cạnh bản thiết kế, và trang không tải được sẽ cho biết lý do."
+item = "Nhập tệp pen.dev từ chính thư mục của nó bằng dòng lệnh sẽ mang theo tất cả hình ảnh và hiệu ứng."
+item = "Khởi động trình chỉnh sửa ở chế độ nền sẽ chờ các tệp lớn và báo cho bạn khi đã có một phiên đang chạy."
+
+[[note]]
+version = "0.5.5"
+locale = "id"
+title = "Teks bergaris tepi dan halaman lokal"
+item = "Teks bisa diberi garis tepi: tambahkan goresan di panel properti. Teks bergaris tepi dari file pen.dev kini tetap terbawa dan bisa diekspor ke PNG, PDF, SVG, HTML, dan PowerPoint."
+item = "Gradien radial dan sudut dari file pen.dev mempertahankan posisi tengahnya yang bergeser."
+item = "Elemen browser dapat menampilkan halaman dari folder proyek Anda, seperti ./video/player.html. Halaman dalam file pen.dev dicari di samping desain, dan halaman yang gagal dimuat menyebutkan alasannya."
+item = "Mengimpor file pen.dev dari foldernya sendiri lewat baris perintah membawa semua gambar dan efeknya."
+item = "Menjalankan editor di latar belakang akan menunggu file besar dan memberi tahu jika sudah ada yang berjalan."
+
+[[note]]
 version = "0.5.4"
 locale = "en-US"
 title = "Security update"
