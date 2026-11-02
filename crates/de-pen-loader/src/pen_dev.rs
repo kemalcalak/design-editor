@@ -57,10 +57,18 @@ const MAX_IMAGE_BYTES: u64 = 64 * 1024 * 1024;
 /// Reader for the image files a pen.dev document keeps next to itself
 /// (`images/x.png`). Paths resolving outside the document's folder (via a
 /// symlink) are refused; the converter already rejects `..` and absolute
-/// paths before asking.
+/// paths before asking. A bare file name (`design.pen`) resolves against the
+/// current directory, like `./design.pen`.
 pub fn folder_assets(document: &std::path::Path) -> impl Fn(&str) -> Option<Vec<u8>> {
     let folder = document
         .parent()
+        .map(|folder| {
+            if folder.as_os_str().is_empty() {
+                std::path::Path::new(".")
+            } else {
+                folder
+            }
+        })
         .and_then(|folder| folder.canonicalize().ok());
     move |relative: &str| {
         let folder = folder.as_ref()?;
