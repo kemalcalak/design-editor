@@ -156,6 +156,8 @@ mod property_panel_tests;
 pub mod property_panel_text;
 pub(crate) mod property_panel_text_input;
 #[cfg(test)]
+mod property_panel_text_stroke_tests;
+#[cfg(test)]
 mod property_panel_text_tests;
 pub mod property_panel_typography;
 #[cfg(test)]
