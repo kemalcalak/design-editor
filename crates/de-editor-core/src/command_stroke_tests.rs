@@ -118,3 +118,27 @@ fn commit_property_edit_single_stroke_mode_writes_all_edges() {
                 && sides.left == Some(3.0)
     ));
 }
+
+#[test]
+fn stroke_commands_outline_a_text_node() {
+    // Outlined text (#282): the stroke writes used to report success and
+    // change nothing on text.
+    let mut s = state_with(vec![crate::test_support::text(
+        "t", "Label", 0.0, 0.0, 120.0, 30.0, "Outlined",
+    )]);
+    assert!(s.apply(EditorCommand::SetNodeStrokeHex {
+        node_id: id("t"),
+        hex: "#FF00FF".into(),
+    }));
+    assert!(s.apply(EditorCommand::SetNodeStrokeWidth {
+        node_id: id("t"),
+        width: 2.0,
+    }));
+    let node = find_node(s.active_children(), &id("t")).unwrap();
+    assert_eq!(crate::fills::first_solid_stroke_hex(node), Some("#FF00FF"));
+    let PenNode::Text(text) = node else {
+        panic!("text");
+    };
+    let stroke = text.stroke.as_ref().expect("the text has a stroke");
+    assert!(matches!(stroke.thickness, StrokeThickness::Uniform(w) if w == 2.0));
+}

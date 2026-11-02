@@ -107,29 +107,40 @@ fn walk_text_corner_radius(node: &PenNode, _issues: &mut Vec<Issue>) {
 
 /// Port of `detectTextStroke` (`detectors.ts:506-535`).
 ///
-/// The TS detector flags `text` nodes carrying a stray `stroke`. jian's
-/// strict `TextNode` has no `stroke` field (T0 audit §3, decision (a)) — the
-/// bug class is structurally unrepresentable, so this detector is a correct
-/// no-op on jian-native documents. `serde_json` silently drops a `stroke`
-/// key on a text node at deserialize time. Kept for the 14-detector count
-/// and `detect_all` ordering parity.
+/// The TS detector flagged `text` nodes carrying a stray `stroke`, which an
+/// agent copying a frame's props adds to a label. Text strokes are real
+/// outlines now (#282, as on pen.dev), so this reports them as `Info`: the
+/// agent sees them and can remove an accidental one, and `apply_fixes`
+/// never strips an intended one.
 pub fn detect_text_stroke(root: &PenNode) -> Vec<Issue> {
     let mut issues = Vec::new();
     walk_text_stroke(root, &mut issues);
     issues
 }
 
-fn walk_text_stroke(node: &PenNode, _issues: &mut Vec<Issue>) {
-    // jian `TextNode` exposes no `stroke` — nothing to inspect. The `_issues`
-    // accumulator is threaded for shape-parity with the real detectors but is
-    // never written (clippy: `only_used_in_recursion`).
+fn walk_text_stroke(node: &PenNode, issues: &mut Vec<Issue>) {
+    if let PenNode::Text(text) = node {
+        if let Some(stroke) = text.stroke.as_ref() {
+            issues.push(Issue {
+                node_id: node_id(node).to_string(),
+                category: IssueCategory::TextStroke,
+                severity: IssueSeverity::Info,
+                property: FixProperty::Stroke,
+                current_value: serde_json::to_value(stroke).unwrap_or(Value::Null),
+                suggested_value: Value::Null,
+                reason: "text node carries a stroke, which outlines its glyphs — keep it \
+                         only if the outline is intended"
+                    .to_string(),
+            });
+        }
+    }
     for child in children(node) {
-        walk_text_stroke(child, _issues);
+        walk_text_stroke(child, issues);
     }
 }
 
 #[cfg(test)]
-mod structural_noop_tests {
+mod text_stroke_and_radius_tests {
     use super::*;
     use serde_json::json;
 
@@ -159,10 +170,22 @@ mod structural_noop_tests {
     }
 
     #[test]
-    fn text_stroke_is_structural_noop_on_jian_docs() {
-        // jian TextNode cannot carry stroke (audit §3 decision (a)).
+    fn text_without_a_stroke_reports_nothing() {
         let root = frame_with_text_children_fixture();
         assert!(detect_text_stroke(&root).is_empty());
+    }
+
+    #[test]
+    fn a_text_stroke_is_reported_as_info_only() {
+        let root = node(json!({
+            "type": "frame", "id": "root",
+            "children": [{"type": "text", "id": "t", "content": "x",
+                "stroke": {"thickness": 1, "fill": [{"type": "solid", "color": "#FF00FF"}]}}]
+        }));
+        let issues = detect_text_stroke(&root);
+        assert_eq!(issues.len(), 1);
+        assert_eq!(issues[0].node_id, "t");
+        assert_eq!(issues[0].severity, IssueSeverity::Info);
     }
 }
 

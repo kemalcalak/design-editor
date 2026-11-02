@@ -121,7 +121,7 @@ pub(crate) fn node_effects_slot(node: &mut PenNode) -> Option<&mut Option<Vec<Pe
 }
 
 /// Mutably borrow whatever variant's `stroke` field. Mirrors the
-/// `fills::node_stroke_mut` arm set. `None` for Text / Image / Ref.
+/// `fills::node_stroke_mut` arm set. `None` for Image / Ref.
 pub(super) fn node_stroke_slot(node: &mut PenNode) -> Option<&mut Option<PenStroke>> {
     match node {
         PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => {
@@ -144,8 +144,8 @@ pub(super) fn node_stroke_slot(node: &mut PenNode) -> Option<&mut Option<PenStro
         PenNode::NumberInput(n) => Some(&mut n.stroke),
         PenNode::Progress(n) => Some(&mut n.stroke),
         PenNode::Tabs(n) => Some(&mut n.stroke),
-        PenNode::Text(_)
-        | PenNode::Image(_)
+        PenNode::Text(n) => Some(&mut n.stroke),
+        PenNode::Image(_)
         | PenNode::Ref(_)
         | PenNode::Note(_)
         | PenNode::Context(_)

@@ -358,6 +358,7 @@ fn build_text_node(
         underline: None,
         strikethrough: None,
         fill,
+        stroke: None,
         effects: None,
         state,
         bindings,

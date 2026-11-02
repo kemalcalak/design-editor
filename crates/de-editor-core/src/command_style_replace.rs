@@ -470,8 +470,8 @@ fn node_stroke_mut(node: &mut PenNode) -> Option<&mut PenStroke> {
         PenNode::NumberInput(n) => n.stroke.as_mut(),
         PenNode::Progress(n) => n.stroke.as_mut(),
         PenNode::Tabs(n) => n.stroke.as_mut(),
-        PenNode::Text(_)
-        | PenNode::Image(_)
+        PenNode::Text(n) => n.stroke.as_mut(),
+        PenNode::Image(_)
         | PenNode::Ref(_)
         | PenNode::Note(_)
         | PenNode::Context(_)

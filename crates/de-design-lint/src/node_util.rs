@@ -457,7 +457,7 @@ pub fn node_fills(node: &PenNode) -> Option<&Vec<PenFill>> {
 }
 
 /// Borrow a node's `stroke` across the kinds that carry one. Container
-/// kinds carry it via `ContainerProps`; `Text` / `Group` / `Image` do not.
+/// kinds carry it via `ContainerProps`; `Image` does not.
 fn stroke(node: &PenNode) -> Option<&jian_ops_schema::style::PenStroke> {
     match node {
         PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => {
@@ -480,8 +480,8 @@ fn stroke(node: &PenNode) -> Option<&jian_ops_schema::style::PenStroke> {
         PenNode::NumberInput(n) => n.stroke.as_ref(),
         PenNode::Progress(n) => n.stroke.as_ref(),
         PenNode::Tabs(n) => n.stroke.as_ref(),
-        PenNode::Text(_)
-        | PenNode::Image(_)
+        PenNode::Text(n) => n.stroke.as_ref(),
+        PenNode::Image(_)
         | PenNode::Ref(_)
         | PenNode::Note(_)
         | PenNode::Context(_)

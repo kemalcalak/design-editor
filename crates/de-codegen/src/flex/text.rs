@@ -12,7 +12,7 @@
 
 use super::assets::Assets;
 use super::ir::{Decls, Inline};
-use super::paint::apply_text_fill;
+use super::paint::{apply_text_fill, apply_text_stroke};
 use super::value::{color, font_family, px, round2};
 use crate::fmt_num;
 use de_editor_core::pen_node_ext::PenNodeExt;
@@ -124,6 +124,7 @@ pub(crate) fn apply_text(decls: &mut Decls, t: &TextNode, assets: &mut Assets, h
     }
     let fills = t.fill.as_deref().unwrap_or(&[]);
     apply_text_fill(decls, fills, assets, hint);
+    apply_text_stroke(decls, t.stroke.as_ref());
 }
 
 /// True when the text element must wrap its runs in one inner span (a flex

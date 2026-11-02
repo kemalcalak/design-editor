@@ -519,6 +519,7 @@ fn build_node(variant: FigmaNodeVariant, base: PenNodeBase) -> PenNode {
             underline: None,
             strikethrough: None,
             fill: None,
+            stroke: None,
             effects: None,
             state: None,
             bindings: None,

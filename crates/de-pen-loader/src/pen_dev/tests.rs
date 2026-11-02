@@ -640,3 +640,19 @@ fn notes_context_and_prompts_import_as_annotations() {
     assert_eq!(body.text_align, Some(TextAlign::Center));
     assert_eq!(body.base.x, Some(10.0));
 }
+
+// Cargo runs unit tests from the crate root, so a bare `design.pen` stands
+// for `de import:pen design.pen` run from the document's own folder (#279).
+// The crate's own `Cargo.toml` and `src/lib.rs` serve as the sibling assets.
+#[test]
+fn folder_assets_reads_next_to_a_bare_file_name() {
+    let read = super::folder_assets(std::path::Path::new("design.pen"));
+    assert!(read("Cargo.toml").is_some());
+}
+
+#[test]
+fn folder_assets_reads_next_to_a_relative_path() {
+    let read = super::folder_assets(std::path::Path::new("src/design.pen"));
+    assert!(read("lib.rs").is_some());
+    assert!(read("Cargo.toml").is_none());
+}

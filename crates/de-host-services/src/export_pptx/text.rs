@@ -20,13 +20,13 @@
 //! roughly 1.44 em — visibly looser, and looser by a different amount
 //! per font. `spcPts` states the exact measure the canvas laid out with.
 
-use de_editor_ui::layout_scene::{SceneNode, SceneTextAlign, SceneTextRun};
+use de_editor_ui::layout_scene::{SceneNode, SceneStroke, SceneTextAlign, SceneTextRun};
 use de_editor_ui::{Color, Rect};
 use de_util::xml_escape::escape_xml;
 use std::fmt::Write as _;
 
 use super::units::{font_hundredths_pt, hundredths_pt, solid_fill};
-use super::xml::{nv_sp_pr, sp_pr, xfrm};
+use super::xml::{line_element, nv_sp_pr, sp_pr, xfrm};
 
 /// Painter default when a text node authored no size.
 const DEFAULT_FONT_SIZE: f32 = de_editor_core::text_defaults::FONT_SIZE;
@@ -196,6 +196,10 @@ struct RunStyle {
     letter_spacing: f32,
     color: Color,
     family: String,
+    /// Outlined text (#282). PowerPoint centres a run outline on the glyph
+    /// contours whatever the alignment, so an outside or inside outline is
+    /// written centred at its width.
+    outline: Option<SceneStroke>,
 }
 
 impl RunStyle {
@@ -209,6 +213,7 @@ impl RunStyle {
             letter_spacing: node.letter_spacing,
             color: node.fill.unwrap_or(DEFAULT_FILL),
             family: primary_family(&node.font_family),
+            outline: de_editor_ui::text_outline::text_outline_stroke(node),
         }
     }
 
@@ -232,6 +237,7 @@ impl RunStyle {
             letter_spacing: self.letter_spacing,
             color: run.fill.unwrap_or(self.color),
             family: self.family.clone(),
+            outline: self.outline,
         }
     }
 }
@@ -272,8 +278,13 @@ fn run(text: &str, style: &RunStyle, alpha: f32) -> String {
 <a:cs typeface=\"{family}\"/>"
         )
     };
+    // `a:ln` precedes the fill in `CT_TextCharacterProperties`.
+    let outline = style
+        .outline
+        .and_then(|stroke| line_element(stroke, alpha))
+        .unwrap_or_default();
     format!(
-        "<a:r><a:rPr lang=\"en-US\"{attrs} dirty=\"0\">{}{typefaces}</a:rPr><a:t>{}</a:t></a:r>",
+        "<a:r><a:rPr lang=\"en-US\"{attrs} dirty=\"0\">{outline}{}{typefaces}</a:rPr><a:t>{}</a:t></a:r>",
         solid_fill(style.color, alpha),
         escape_xml(&sanitize(text))
     )
