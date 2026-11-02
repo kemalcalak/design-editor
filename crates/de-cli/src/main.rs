@@ -86,12 +86,17 @@ fn run(args: &[String]) -> Result<String, CliError> {
             headless,
             web,
             host,
+            wait_secs,
         } => app_control_cli::run_start(
-            port,
+            app_control_cli::StartPort {
+                port,
+                explicit: port_explicit,
+            },
             document_path.as_deref(),
             headless,
             web,
             host.as_deref(),
+            wait_secs,
         )?,
         Command::StopMcp => app_control_cli::run_stop()?,
         Command::SkillExport { name, out_dir } => {
@@ -228,6 +233,9 @@ enum Command {
         web: bool,
         /// `--host` bind address for `--web` (e.g. `0.0.0.0` for LAN/Docker).
         host: Option<String>,
+        /// `--wait <seconds>`: how long `--headless` waits for the server to
+        /// answer (#281); `None` sizes the wait from the document.
+        wait_secs: Option<u64>,
     },
     StopMcp,
     SkillExport {
@@ -400,6 +408,20 @@ fn parse_args(args: &[String]) -> Result<Parsed, CliError> {
     })
 }
 
+/// `--wait`'s whole seconds, 1 to 600.
+fn parse_wait_secs(raw: Option<&str>) -> Result<u64, CliError> {
+    let raw =
+        raw.ok_or_else(|| CliError::usage("--wait needs a value in seconds (e.g. --wait 60)"))?;
+    raw.parse::<u64>()
+        .ok()
+        .filter(|secs| (1..=600).contains(secs))
+        .ok_or_else(|| {
+            CliError::Usage(format!(
+                "--wait must be whole seconds from 1 to 600, got {raw:?}"
+            ))
+        })
+}
+
 fn command_from_positionals(positionals: &[String], flags: &Flags) -> Result<Command, CliError> {
     match positionals[0].as_str() {
         "help" | "-h" | "--help" => Ok(Command::Help),
@@ -420,11 +442,19 @@ fn command_from_positionals(positionals: &[String], flags: &Flags) -> Result<Com
                     "--host requires --web (only the web daemon binds non-loopback)",
                 ));
             }
+            let wait_secs = match flags.get("wait") {
+                None => None,
+                Some(_) if !headless => {
+                    return Err(CliError::usage("--wait requires --headless"));
+                }
+                Some(raw) => Some(parse_wait_secs(raw.as_deref())?),
+            };
             Ok(Command::StartMcp {
                 document_path: flag_value(flags, "file"),
                 headless,
                 web,
                 host,
+                wait_secs,
             })
         }
         "stop" => Ok(Command::StopMcp),
