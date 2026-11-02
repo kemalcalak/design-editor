@@ -83,3 +83,24 @@ fn only_a_canvas_paint_records_the_node_for_the_page_renderer() {
     with_annotations(false, || paint_once(&node));
     assert!(seen());
 }
+
+#[test]
+fn a_page_that_cannot_load_says_why_under_the_address() {
+    let _guard = crate::widgets::browser_textures::lock_for_tests();
+    let node = browser(Some("./video/player.html"));
+    crate::widgets::browser_textures::set_failure(
+        &node.id,
+        Some(("browser.status.failed", "Page could not load")),
+    );
+    let backend = with_annotations(false, || paint_once(&node));
+    crate::widgets::browser_textures::set_failure(&node.id, None);
+    let texts: Vec<&str> = backend.texts.iter().map(|(t, _)| t.as_str()).collect();
+    assert!(texts.contains(&"./video/player.html"), "{texts:?}");
+    assert!(texts.contains(&"Page could not load"), "{texts:?}");
+    let backend = with_annotations(false, || paint_once(&node));
+    assert_eq!(
+        backend.texts.len(),
+        1,
+        "a cleared failure shows only the address"
+    );
+}

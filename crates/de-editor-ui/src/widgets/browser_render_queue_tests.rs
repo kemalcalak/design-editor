@@ -205,3 +205,37 @@ fn clearing_the_address_drops_the_old_page() {
     assert!(changed && requests.is_empty());
     assert!(browser_textures::ready(id).is_none());
 }
+
+#[test]
+fn relative_pages_resolve_and_a_failure_records_its_reason() {
+    let _lock = lock_for_tests();
+    let id = "rq-relative";
+    let mut state = state_with(serde_json::json!([{ "type": "browser", "id": id,
+        "width": 400, "height": 300, "url": "./video/player.html" }]));
+    state.editor_ui.document_folder = Some("/projects/site".into());
+    let mut queue = BrowserRenderQueue::new(2);
+    let requests = frame(&mut queue, &mut state, &[id], 0.0);
+    assert_eq!(requests[0].url, "file:///projects/site/video/player.html");
+    queue.finish(
+        &mut state,
+        id,
+        requests[0].key,
+        BrowserRenderOutcome::Failed,
+    );
+    assert!(
+        browser_textures::failure(id).is_some(),
+        "the canvas says why"
+    );
+    state.editor_ui.browser_live.reload(id);
+    let retry = frame(&mut queue, &mut state, &[id], 1.0);
+    queue.finish(
+        &mut state,
+        id,
+        retry[0].key,
+        BrowserRenderOutcome::Ready(PNG.to_vec()),
+    );
+    assert!(
+        browser_textures::failure(id).is_none(),
+        "a rendered page clears it"
+    );
+}

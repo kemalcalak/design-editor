@@ -119,6 +119,10 @@ pub struct EditorUiState {
     pub recent_files: Vec<RecentFile>,
     /// File pill display name; `None` = "Untitled".
     pub file_name_display: Option<String>,
+    /// Absolute folder document-relative browser pages (`./page.html`,
+    /// #283) resolve against: the open file's folder, or for an unbound
+    /// pen.dev import the folder of its `.pen`. `None` when there is none.
+    pub document_folder: Option<String>,
     /// Derived from `EditorState::revision != saved_revision`; painted
     /// by the file pill only, never serialized.
     pub document_dirty: bool,

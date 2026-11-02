@@ -27,6 +27,7 @@ use std::sync::Arc;
 use base64::Engine as _;
 use de_browser_render::{BrowserRenderError, ShotTarget, Viewport};
 use de_editor_core::browser_devices::normalize_browser_url;
+use de_editor_core::browser_live::resolve_page_url;
 use de_editor_core::browser_live::{browser_layout, browser_url};
 use de_editor_core::{EditorCommand, EditorState, NodeId};
 use de_mcp::{McpTool, ToolErrorCode, ToolOutcome};
@@ -60,6 +61,8 @@ pub(crate) type ToolError = (ToolErrorCode, String);
 pub struct BrowserTool {
     targets: BTreeMap<String, BrowserTarget>,
     pages_allowed: bool,
+    /// Where `./page.html` addresses resolve (#283).
+    document_folder: Option<String>,
     driver: Arc<dyn PageDriver>,
 }
 
@@ -86,6 +89,7 @@ impl BrowserTool {
         Self {
             targets: collect_targets(state),
             pages_allowed: state.editor_ui.browser_live.pages_allowed(),
+            document_folder: state.editor_ui.document_folder.clone(),
             driver,
         }
     }
@@ -99,9 +103,10 @@ impl BrowserTool {
             )));
         }
         let target = self.target(args)?;
+        let folder = self.document_folder.as_deref();
         let node_url = target
             .and_then(|t| browser_url(&t.node))
-            .map(str::to_string);
+            .map(|url| resolve_page_url(url, folder).into_owned());
         if let Some(url) = &node_url {
             ensure_permitted(url)?;
         }
@@ -115,11 +120,14 @@ impl BrowserTool {
         match action {
             "load-page" => {
                 let raw = required(args, "url")?;
-                let url = normalize_browser_url(raw)
+                // The node keeps the address as typed (a `./` path stays
+                // relative); the page loads its resolved form.
+                let typed = normalize_browser_url(raw)
                     .filter(|url| !url.is_empty())
                     .ok_or_else(|| {
                         invalid(format!("`{raw}` is not an http, https or file address"))
                     })?;
+                let url = resolve_page_url(&typed, folder).into_owned();
                 ensure_permitted(&url)?;
                 let done = run(PageOp::Load(url.clone()))?;
                 let PageReply::Loaded { url, title } = done.reply else {
@@ -130,16 +138,17 @@ impl BrowserTool {
                     return Ok(ToolOutcome::OkJson(result));
                 };
                 if let Some(png) = done.canvas {
-                    install_canvas_picture(&target.with_url(&url), target.reload, png);
+                    let shown = target.with_url(&typed);
+                    install_canvas_picture(&shown, target.reload, folder, png);
                 }
-                if node_url.as_deref() == Some(url.as_str()) {
+                if browser_url(&target.node) == Some(typed.as_str()) {
                     return Ok(ToolOutcome::OkJson(result));
                 }
                 Ok(ToolOutcome::OkJsonWithCommand(
                     result,
                     EditorCommand::PatchNodeData {
                         node_id: NodeId::new(&target.id),
-                        patch_json: json!({ "url": url }).to_string(),
+                        patch_json: json!({ "url": typed }).to_string(),
                         page_id: target.page_id.clone(),
                     },
                 ))
@@ -171,7 +180,7 @@ impl BrowserTool {
                 };
                 let done = run(PageOp::Cdp(method.clone(), params))?;
                 if let (Some(target), Some(png)) = (target, done.canvas) {
-                    install_canvas_picture(&target.node, target.reload, png);
+                    install_canvas_picture(&target.node, target.reload, folder, png);
                 }
                 let PageReply::Json(reply) = done.reply else {
                     return Err(internal());

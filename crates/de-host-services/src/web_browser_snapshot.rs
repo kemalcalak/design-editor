@@ -63,12 +63,17 @@ pub fn render_spec(spec: &BrowserSnapshotSpec) -> RenderSpec {
     }
 }
 
-/// Answer one snapshot request: `(HTTP status, JSON body)`.
-pub(crate) fn snapshot_reply(body: &str) -> (&'static str, String) {
-    let spec = match parse_spec(body) {
+/// Answer one snapshot request: `(HTTP status, JSON body)`. A
+/// document-relative address (`./page.html`, #283) resolves against
+/// `document_folder`, the daemon document's folder: the web editor has no
+/// folder of its own and sends it as typed.
+pub(crate) fn snapshot_reply(body: &str, document_folder: Option<&str>) -> (&'static str, String) {
+    let mut spec = match parse_spec(body) {
         Ok(spec) => spec,
         Err(error) => return ("400 Bad Request", error_body(&error.to_string(), None)),
     };
+    spec.url =
+        de_editor_core::browser_live::resolve_page_url(&spec.url, document_folder).into_owned();
     if !crate::browser_url_policy::url_permitted(&spec.url) {
         return (
             "403 Forbidden",

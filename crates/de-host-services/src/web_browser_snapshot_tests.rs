@@ -20,7 +20,7 @@ fn the_body_is_validated_before_anything_renders() {
     ] {
         assert!(parse_spec(body).is_err(), "{body}");
     }
-    let (status, reply) = snapshot_reply("nope");
+    let (status, reply) = snapshot_reply("nope", None);
     assert_eq!(status, "400 Bad Request");
     assert!(reply.contains("\"ok\":false"));
 }
@@ -47,6 +47,7 @@ fn a_blocked_address_never_reaches_the_browser() {
     crate::browser_url_policy::screen_for_daemon("0.0.0.0".parse().unwrap());
     let (status, reply) = snapshot_reply(
         r#"{"url":"http://169.254.169.254/","layoutWidth":100,"layoutHeight":100,"scale":1}"#,
+        None,
     );
     assert_eq!(status, "403 Forbidden");
     assert!(reply.contains("\"reason\":\"blocked\""));

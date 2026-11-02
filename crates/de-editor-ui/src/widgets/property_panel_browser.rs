@@ -285,7 +285,7 @@ fn paint_live_row(
 }
 
 /// The i18n key of a status worth showing (Ready shows nothing).
-fn status_key(status: BrowserPageStatus) -> Option<&'static str> {
+pub(crate) fn status_key(status: BrowserPageStatus) -> Option<&'static str> {
     match status {
         BrowserPageStatus::Loading => Some("browser.status.loading"),
         BrowserPageStatus::NoBrowser => Some("browser.status.noBrowser"),

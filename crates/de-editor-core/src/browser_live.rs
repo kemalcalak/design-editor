@@ -11,13 +11,16 @@
 //! unasked. Documents made in this session, and any node whose address
 //! the user types, load at once.
 
+use std::borrow::Cow;
 use std::collections::hash_map::DefaultHasher;
 use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
 
 use jian_ops_schema::node::PenNode;
 
-use crate::browser_devices::{browser_device, clamp_browser_scroll, clamp_browser_zoom};
+use crate::browser_devices::{
+    browser_device, clamp_browser_scroll, clamp_browser_zoom, is_document_relative,
+};
 use crate::pen_node_ext::PenNodeExt;
 
 /// Output pixels per CSS pixel of the node box (a 2× display).
@@ -148,12 +151,19 @@ pub fn browser_layout(node: &PenNode) -> Option<BrowserLayout> {
 }
 
 /// The snapshot `node` needs (laid out per [`browser_layout`]), `None`
-/// for a non-browser node, a blank address or an empty box.
-pub fn browser_render_request(node: &PenNode, reload: u32) -> Option<BrowserRenderRequest> {
+/// for a non-browser node, a blank address or an empty box. A
+/// document-relative address resolves against `document_folder`
+/// ([`resolve_page_url`]); without one it is sent as typed and fails to
+/// load, so the canvas says so.
+pub fn browser_render_request(
+    node: &PenNode,
+    reload: u32,
+    document_folder: Option<&str>,
+) -> Option<BrowserRenderRequest> {
     let PenNode::Browser(browser) = node else {
         return None;
     };
-    let url = browser_url(node)?;
+    let url = resolve_page_url(browser_url(node)?, document_folder);
     let layout = browser_layout(node)?;
     let mut request = BrowserRenderRequest {
         node_id: browser.base.id.clone(),
@@ -176,6 +186,57 @@ pub fn browser_render_request(node: &PenNode, reload: u32) -> Option<BrowserRend
     reload.hash(&mut hasher);
     request.key = hasher.finish();
     Some(request)
+}
+
+/// `url` with a document-relative path (`./…`, `../…`, #283) turned into a
+/// `file://` address under `document_folder`; any other address, or a
+/// relative one with no folder to resolve against, is returned as is. A
+/// query or fragment after the path is kept. The folder is a filesystem
+/// path, so its `%`, `#`, `?` and spaces are escaped; the typed path is
+/// already URL text and only its spaces are. A Windows share
+/// (`\\server\share\…`) keeps its host. Purely lexical: nothing is read
+/// from disk.
+pub fn resolve_page_url<'a>(url: &'a str, document_folder: Option<&str>) -> Cow<'a, str> {
+    let (Some(folder), true) = (document_folder, is_document_relative(url)) else {
+        return Cow::Borrowed(url);
+    };
+    let split = url.find(['?', '#']).unwrap_or(url.len());
+    let (path, rest) = url.split_at(split);
+    let folder = folder.replace('\\', "/");
+    // `\\?\C:\…` (a verbatim path) is the plain `C:\…`.
+    let folder = folder.strip_prefix("//?/").unwrap_or(&folder);
+    let (host, local) = match folder.strip_prefix("//") {
+        Some(share) => share.split_once('/').unwrap_or((share, "")),
+        None => ("", folder),
+    };
+    // A share's first segment (`share`) and a drive (`C:`) are roots too.
+    let floor = usize::from(!host.is_empty() || !local.starts_with('/'));
+    let mut segments: Vec<String> = local
+        .split('/')
+        .filter(|s| !s.is_empty())
+        .map(escape_path_segment)
+        .collect();
+    for segment in path.split('/') {
+        match segment {
+            "" | "." => {}
+            ".." => {
+                if segments.len() > floor {
+                    segments.pop();
+                }
+            }
+            segment => segments.push(segment.replace(' ', "%20")),
+        }
+    }
+    Cow::Owned(format!("file://{host}/{}{rest}", segments.join("/")))
+}
+
+/// A filesystem name as URL path text.
+pub fn escape_path_segment(segment: &str) -> String {
+    segment
+        .replace('%', "%25")
+        .replace(' ', "%20")
+        .replace('#', "%23")
+        .replace('?', "%3F")
 }
 
 /// A browser node's address, `None` for a blank one or another kind.

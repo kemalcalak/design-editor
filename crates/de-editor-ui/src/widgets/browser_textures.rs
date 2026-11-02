@@ -22,6 +22,9 @@ struct Registry {
     visible: HashSet<String>,
     /// node id → (request key, texture id) of its newest snapshot.
     ready: HashMap<String, (u64, u64)>,
+    /// node id → why its page could not load (#283): the i18n key and its
+    /// translation.
+    failures: HashMap<String, (&'static str, &'static str)>,
 }
 
 static REGISTRY: OnceLock<Mutex<Registry>> = OnceLock::new();
@@ -104,7 +107,32 @@ pub fn set_ready_notifier(notify: impl Fn() + Send + Sync + 'static) {
 
 /// Drop the snapshot of `node_id` (its address was cleared).
 pub fn forget(node_id: &str) -> bool {
-    registry().ready.remove(node_id).is_some()
+    let mut registry = registry();
+    registry.failures.remove(node_id);
+    registry.ready.remove(node_id).is_some()
+}
+
+/// Record why `node_id`'s page could not load (the queue's status line as
+/// `(i18n key, translation)`), or clear it once a new page is on its way.
+/// The canvas placeholder shows it under the address.
+pub fn set_failure(node_id: &str, reason: Option<(&'static str, &'static str)>) {
+    let mut registry = registry();
+    match reason {
+        Some(reason) => registry.failures.insert(node_id.to_string(), reason),
+        None => registry.failures.remove(node_id),
+    };
+}
+
+/// Translate every failure line again (the UI language changed).
+pub fn retranslate_failures(translate: impl Fn(&'static str) -> &'static str) {
+    for (key, label) in registry().failures.values_mut() {
+        *label = translate(key);
+    }
+}
+
+/// Why `node_id`'s page could not load, if it could not.
+pub fn failure(node_id: &str) -> Option<&'static str> {
+    registry().failures.get(node_id).map(|(_, label)| *label)
 }
 
 /// `(request key, texture id)` of the newest snapshot of `node_id`.
@@ -122,7 +150,9 @@ pub(crate) fn lock_for_tests() -> MutexGuard<'static, ()> {
 /// Forget every snapshot (the document was replaced). The visible set
 /// stays: it already describes the new document's frame.
 pub fn clear_snapshots() {
-    registry().ready.clear();
+    let mut registry = registry();
+    registry.ready.clear();
+    registry.failures.clear();
 }
 
 #[cfg(test)]
