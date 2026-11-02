@@ -44,6 +44,9 @@ pub(crate) struct ShapedRun<'a> {
     pub italic: bool,
     pub line_height: f32,
     pub color: skia_safe::Color,
+    /// Stroke paint to outline the glyphs with instead of filling them in
+    /// `color`. Shaping ignores it, so measure and paint still agree.
+    pub outline: Option<&'a skia_safe::Paint>,
 }
 
 pub(crate) struct ShapedText {
@@ -126,7 +129,14 @@ impl ShapedText {
 
         let mut text_style = TextStyle::new();
         text_style.set_font_size(run.font_size);
-        text_style.set_color(run.color);
+        match run.outline {
+            Some(paint) => {
+                text_style.set_foreground_paint(paint);
+            }
+            None => {
+                text_style.set_color(run.color);
+            }
+        }
         let families = font_resolver.font_families_for_shaping(if run.family.is_empty() {
             None
         } else {

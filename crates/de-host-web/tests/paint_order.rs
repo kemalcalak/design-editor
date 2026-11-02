@@ -687,7 +687,7 @@ fn canvaskit_text_tint_color_filter_cache_is_bounded_and_freed() {
         "paint.setColorFilter(tintColorFilter(r, g, b) || null);",
         "paint.setAlphaf(a < 0 ? 0 : a > 1 ? 1 : a);",
         "canvas.drawImage(entry.image, 0, 0, paint);",
-        "canvas.drawImage(entry.image, x - 2, y - entry.baseline, paint);",
+        "canvas.drawImage(entry.image, x - entry.left, y - entry.baseline, paint);",
     ] {
         assert!(
             source.contains(marker),

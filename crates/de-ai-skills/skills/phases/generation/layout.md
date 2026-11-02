@@ -41,7 +41,7 @@ STACKED CARD / DECK ("cards behind a card", swipeable stack peek): 1) BACK LAYER
 
 AESTHETIC HYGIENE — keep these silent (never emit, the post-pass also strips them):
 
-- TEXT NODES NEVER GET: cornerRadius, stroke, effects, rotation — text is filled glyphs, clip/border/shadow/tilt all render wrong. (Stroke is for icon-font nodes only.)
+- TEXT NODES NEVER GET: cornerRadius, stroke, effects, rotation — text is filled glyphs; a stroke outlines every glyph, so only for intended outlined lettering.
 - ROTATION on UI frames is almost always wrong — use rotation=0 (or omit) on cards/buttons/containers/labels. Only legitimate rotations: exact 90/180/270 (vertical text, rotated grid) and decorative geometry (path/line/polygon/image).
 - Keep same-role siblings consistent: cards in one row share a cornerRadius and padding rather than drifting (8/8/12 reads ragged) — pick one value, reuse it per group.
 - EXACT USER TOKENS OVERRIDE EXAMPLES. If the prompt specifies exact radius/spacing values, apply them to ordinary component cornerRadius, group gap, and repeated card spacing (e.g. "圆角 8px / 间距 12px" → cornerRadius=8, gap=12) unless a tiny inline icon pair clearly needs a smaller micro-gap.

@@ -287,3 +287,46 @@ fn vectors_are_inline_svg() {
     assert!(html.contains("<polygon points=\"50,0 "), "{html}");
     assert!(html.contains("<line x1=\"0\" y1=\"0\" x2=\"100\" y2=\"0\" stroke=\"rgb(255,0,0)\" stroke-width=\"2\""), "{html}");
 }
+
+fn outlined_text(align: &str) -> PenDocument {
+    load(&format!(
+        r##"{{"version":"1.0","children":[{{"type":"text","id":"t","content":"x",
+            "fill":[{{"type":"solid","color":"#111111"}}],
+            "stroke":{{"thickness":2,"align":"{align}","fill":[{{"type":"solid","color":"#FF00FF"}}]}}}}]}}"##
+    ))
+}
+
+#[test]
+fn text_strokes_export_as_webkit_text_stroke() {
+    let centred = css(&outlined_text("center"));
+    assert!(centred.contains("-webkit-text-stroke: 2px"), "{centred}");
+    assert!(!centred.contains("paint-order"), "{centred}");
+    // Text never gets the shape stroke's box outline or border.
+    assert!(
+        !centred.contains("outline:") && !centred.contains("border:"),
+        "{centred}"
+    );
+    let outside = css(&outlined_text("outside"));
+    assert!(outside.contains("-webkit-text-stroke: 4px"), "{outside}");
+    assert!(outside.contains("paint-order: stroke fill"), "{outside}");
+    let inside = css(&outlined_text("inside"));
+    assert!(inside.contains("-webkit-text-stroke: 2px"), "{inside}");
+}
+
+#[test]
+fn outside_text_strokes_stay_centred_over_a_clipped_fill() {
+    let doc = load(
+        r##"{"version":"1.0","children":[{"type":"text","id":"t","content":"x",
+            "fill":[{"type":"linear_gradient","angle":90,"stops":[{"offset":0,"color":"#FF0000"},{"offset":1,"color":"#0000FF"}]}],
+            "stroke":{"thickness":2,"align":"outside","fill":[{"type":"linear_gradient","angle":0,
+              "stops":[{"offset":0,"color":"#00FF00"},{"offset":1,"color":"#0000FF"}]}]}}]}"##,
+    );
+    let html = css(&doc);
+    assert!(html.contains("background-clip: text"), "{html}");
+    assert!(html.contains("-webkit-text-stroke: 2px"), "{html}");
+    assert!(!html.contains("paint-order"), "{html}");
+    assert!(
+        html.contains("rgb(0,255,0)") || html.contains("#00ff00") || html.contains("#00FF00"),
+        "{html}"
+    );
+}

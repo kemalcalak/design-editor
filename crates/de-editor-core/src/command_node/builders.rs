@@ -191,6 +191,7 @@ pub fn build_leaf_node(
             underline: None,
             strikethrough: None,
             fill: None,
+            stroke: None,
             effects: None,
             state: None,
             bindings: None,

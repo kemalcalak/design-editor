@@ -36,6 +36,8 @@ mod script;
 mod shader;
 #[cfg(test)]
 mod tests;
+#[cfg(test)]
+mod text_stroke_gradient_tests;
 mod variables;
 #[cfg(test)]
 mod variables_tests;

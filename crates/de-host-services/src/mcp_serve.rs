@@ -716,4 +716,7 @@ mod script_node_mcp_tests;
 #[cfg(test)]
 mod tests;
 #[cfg(test)]
+#[path = "mcp_serve/text_stroke_mcp_tests.rs"]
+mod text_stroke_mcp_tests;
+#[cfg(test)]
 mod wire_tests;

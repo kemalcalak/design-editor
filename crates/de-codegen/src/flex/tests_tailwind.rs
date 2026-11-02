@@ -63,3 +63,13 @@ fn links_are_anchors() {
         "{html}"
     );
 }
+
+#[test]
+fn text_strokes_become_arbitrary_properties() {
+    let doc = super::tests::load(
+        r##"{"version":"1.0","children":[{"type":"text","id":"t","content":"x",
+            "stroke":{"thickness":2,"fill":[{"type":"solid","color":"#FF00FF"}]}}]}"##,
+    );
+    let html = tw(&doc);
+    assert!(html.contains("[-webkit-text-stroke:2px_"), "{html}");
+}

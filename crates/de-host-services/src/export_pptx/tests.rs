@@ -458,3 +458,28 @@ fn the_written_file_is_a_zip_holding_the_same_parts() {
     assert_eq!(&written[..2], b"PK");
     let _ = std::fs::remove_file(&path);
 }
+
+#[test]
+fn outlined_text_writes_a_run_outline_before_its_fill() {
+    let state = deck_state(
+        r##"{"version":"1.0.0","children":[
+            {"type":"frame","id":"f1","name":"cover","x":0,"y":0,"width":1920,"height":1080,
+             "fill":[{"type":"solid","color":"#ffffff"}],"children":[
+               {"type":"text","id":"t","x":100,"y":100,"content":"Outlined","fontSize":64,
+                "fill":[{"type":"solid","color":"#111111"}],
+                "stroke":{"thickness":2,"fill":[{"type":"solid","color":"#FF00FF"}]}}
+             ]}
+        ]}"##,
+    );
+    let (bytes, _) = export(&state);
+    let slide = part(&bytes, "ppt/slides/slide1.xml");
+    let r_pr = slide
+        .split("<a:rPr")
+        .nth(1)
+        .and_then(|rest| rest.split("</a:rPr>").next())
+        .expect("a run");
+    let ln = r_pr.find("<a:ln w=").expect("a run outline");
+    let fill = r_pr.find("<a:solidFill>").expect("the run fill");
+    assert!(ln < fill, "a:ln precedes the fill: {r_pr}");
+    assert!(r_pr.contains("FF00FF"), "{r_pr}");
+}

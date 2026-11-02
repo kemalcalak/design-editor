@@ -11,6 +11,7 @@ mod image_metadata;
 #[path = "svg_export_rect.rs"]
 mod rect;
 mod text;
+mod text_outline;
 mod transform;
 
 use rect::{emit_rect, emit_rect_fill, emit_rect_stroke_overlay};

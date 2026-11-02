@@ -74,7 +74,10 @@ fn convert_fill(
         // Linear, radial and angular all map onto canonical gradients in
         // the legacy repair (`normalize_gradient_fill`), which reads
         // `rotation` as a clockwise CSS angle.
-        Some("gradient") => clockwise_rotation(&mut obj),
+        Some("gradient") => {
+            clockwise_rotation(&mut obj);
+            gradient_geometry(&mut obj, ctx.report);
+        }
         Some("image") => return images::convert_image_fill(obj, size, ctx),
         Some("shader") => return shader::convert(obj, Stage::Fill, size, theme, ctx),
         Some("mesh_gradient") => return mesh::convert(obj, theme, ctx),
@@ -91,6 +94,39 @@ fn clockwise_rotation(obj: &mut Map<String, Value>) {
         let clockwise = (360.0 - degrees.rem_euclid(360.0)).rem_euclid(360.0);
         obj.insert("rotation".to_owned(), json!(clockwise));
     }
+}
+
+/// pen.dev places a gradient with `center` and `size`, both normalized to
+/// the box (defaults 0.5, 0.5 and 1, 1). A radial or angular centre maps
+/// onto the canonical `cx` / `cy`. The canonical linear gradient has no
+/// centre and no gradient has a size, so a non-default value is reported.
+fn gradient_geometry(obj: &mut Map<String, Value>, report: &mut PenDevReport) {
+    let radial_or_angular = matches!(
+        obj.get("gradientType").and_then(Value::as_str),
+        Some("radial" | "angular")
+    );
+    if let Some(center) = obj.remove("center") {
+        let axis = |key: &str| center.get(key).and_then(Value::as_f64).unwrap_or(0.5);
+        let (x, y) = (axis("x"), axis("y"));
+        if radial_or_angular {
+            obj.insert("cx".to_owned(), json!(x));
+            obj.insert("cy".to_owned(), json!(y));
+        } else if !near(x, 0.5) || !near(y, 0.5) {
+            report.note("linear gradient center");
+        }
+    }
+    if let Some(size) = obj.get("size") {
+        let axis = |key: &str| size.get(key).and_then(Value::as_f64).unwrap_or(1.0);
+        // Linear ignores the width (the height is its length).
+        let width_matters = radial_or_angular && !near(axis("width"), 1.0);
+        if width_matters || !near(axis("height"), 1.0) {
+            report.note("gradient size");
+        }
+    }
+}
+
+fn near(value: f64, target: f64) -> bool {
+    (value - target).abs() < 1e-6
 }
 
 /// pen.dev stroke keys, folded into one canonical `stroke` object.

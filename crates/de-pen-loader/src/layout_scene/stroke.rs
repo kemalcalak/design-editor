@@ -17,7 +17,11 @@ pub(super) fn resolve_scene_stroke(
     var_table: &VariableTable,
     paint_opacity: f32,
 ) -> Option<SceneStroke> {
-    let stroke = if is_unpainted_widget_stroke(node, node_id, var_table) {
+    let stroke = if is_unpainted_text_stroke(node, node_id, var_table) {
+        // Outlined text (#282) with no paint at all outlines nothing; the
+        // fallback colour below would draw it black.
+        None
+    } else if is_unpainted_widget_stroke(node, node_id, var_table) {
         // A first-class widget's stroke is its *inactive track / border*
         // role paint, not a literal outline. When the author declared a
         // stroke with no resolvable colour, handing the painter a
@@ -130,5 +134,21 @@ fn is_unpainted_widget_stroke(
             .stroke
             .as_ref()
             .is_some_and(|stroke| stroke.color.is_none())
+        && var_table.stroke_color_for(node_id).is_none()
+}
+
+/// A plain text node whose stroke resolves to no colour and carries no
+/// paint stack (gradient, image): nothing to outline the glyphs with.
+fn is_unpainted_text_stroke(
+    node: &NodePayload,
+    node_id: &de_editor_core::NodeId,
+    var_table: &VariableTable,
+) -> bool {
+    node.kind == "text"
+        && node.widget.is_none()
+        && node
+            .stroke
+            .as_ref()
+            .is_some_and(|stroke| stroke.color.is_none() && stroke.fill_layers.is_empty())
         && var_table.stroke_color_for(node_id).is_none()
 }

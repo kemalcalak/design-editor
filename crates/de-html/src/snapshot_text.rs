@@ -164,6 +164,7 @@ impl SnapshotCtx<'_> {
             underline: None,
             strikethrough: None,
             fill,
+            stroke: None,
             effects: None,
             state: None,
             bindings: None,

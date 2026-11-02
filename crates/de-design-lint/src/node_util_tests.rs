@@ -140,9 +140,12 @@ fn has_stroke_false_for_missing_or_zero_stroke() {
     }));
     assert!(!has_stroke(&zero));
 
-    // A node kind that cannot carry a stroke (text) is always false.
+    // Text without a stroke has none; an outlined text does (#282).
     let text = node(json!({"type": "text", "id": "t", "content": "x"}));
     assert!(!has_stroke(&text));
+    let outlined = node(json!({"type": "text", "id": "t", "content": "x",
+        "stroke": {"thickness": 1, "fill": [{"type": "solid", "color": "#000000"}]}}));
+    assert!(has_stroke(&outlined));
 }
 
 #[test]

@@ -23,6 +23,8 @@ mod shader_preset;
 mod stroke_style;
 #[path = "layout_scene_tests/text.rs"]
 mod text;
+#[path = "layout_scene_tests/text_stroke.rs"]
+mod text_stroke;
 #[path = "layout_scene_tests/tokens_refs.rs"]
 mod tokens_refs;
 #[path = "layout_scene_tests/widget_stroke.rs"]

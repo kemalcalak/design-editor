@@ -215,7 +215,8 @@ impl SectionCapabilities {
                 image: false,
                 opacity: true,
                 fill: true,
-                stroke: false,
+                // Outlined text (#282).
+                stroke: true,
                 effects: true,
                 export: true,
                 interactions: true,
