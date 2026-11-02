@@ -74,10 +74,7 @@ fn outline_stroke(
     zoom: f32,
     edit_caret: &Option<EditCaret>,
 ) -> Option<SceneStroke> {
-    let stroke = node.stroke?;
-    if node.widget.is_some() || stroke.width.is_nan() || stroke.width <= 0.0 {
-        return None;
-    }
+    let stroke = crate::text_outline::text_outline_stroke(node)?;
     // An edited node paints its live buffer, which may hold text the
     // committed node does not yet.
     if is_editing(node, edit_caret) {
