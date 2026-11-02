@@ -13,8 +13,12 @@ COMMON COMMANDS:
                                            serve the browser editor (wasm bundle +
                                            MCP) and open http://127.0.0.1:PORT;
                                            --host 0.0.0.0 binds for LAN/Docker
-  de start --headless [--file path.de]     run the windowless file-backed MCP server
-                                           (CI / display-less agents)
+  de start --headless [--file path.de] [--wait SECONDS]
+                                           run the windowless file-backed MCP server
+                                           (CI / display-less agents); waits for it
+                                           to answer (10s + 10s per MiB, at most
+                                           120s, or --wait 1-600) and stops it if
+                                           it does not
   de stop                                  stop the running editor / MCP server
   de install [--target T]                  install design-editor-skill for AI agents
   de uninstall [--target T]                uninstall design-editor-skill

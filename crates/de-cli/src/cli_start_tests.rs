@@ -22,6 +22,7 @@ fn parse_args_maps_start_to_rust_mcp_server() {
             headless: false,
             web: false,
             host: None,
+            wait_secs: None,
         }
     );
 }
@@ -36,6 +37,7 @@ fn parse_args_maps_start_headless_to_file_backed_server() {
             headless: true,
             web: false,
             host: None,
+            wait_secs: None,
         }
     );
 }
@@ -50,6 +52,7 @@ fn parse_args_maps_start_web_to_browser_editor() {
             headless: false,
             web: true,
             host: None,
+            wait_secs: None,
         }
     );
 }
@@ -72,6 +75,7 @@ fn parse_args_start_web_threads_host_and_file() {
             headless: false,
             web: true,
             host: Some("0.0.0.0".to_string()),
+            wait_secs: None,
         }
     );
 }
@@ -92,4 +96,39 @@ fn parse_args_rejects_conflicting_or_dangling_start_flags() {
         "0.0.0.0".to_string(),
     ]);
     assert!(dangling.is_err(), "--host without --web must be rejected");
+}
+
+#[test]
+fn parse_args_reads_the_headless_readiness_wait() {
+    let args = |extra: &[&str]| {
+        let mut all = vec!["start".to_string(), "--headless".to_string()];
+        all.extend(extra.iter().map(|s| s.to_string()));
+        parse_args(&all)
+    };
+    let p = args(&["--wait", "90"]).expect("parse --wait");
+    assert!(matches!(
+        p.command,
+        Command::StartMcp {
+            wait_secs: Some(90),
+            ..
+        }
+    ));
+    let p = args(&["--wait=5"]).expect("parse --wait=");
+    assert!(matches!(
+        p.command,
+        Command::StartMcp {
+            wait_secs: Some(5),
+            ..
+        }
+    ));
+    assert!(args(&["--wait"]).is_err(), "--wait needs a value");
+    for bad in ["0", "601", "soon"] {
+        assert!(args(&["--wait", bad]).is_err(), "--wait {bad} is refused");
+    }
+}
+
+#[test]
+fn parse_args_refuses_wait_without_headless() {
+    let p = parse_args(&["start".to_string(), "--wait".to_string(), "30".to_string()]);
+    assert!(p.is_err());
 }

@@ -25,6 +25,15 @@ const MINIMAL_DOCUMENT: &str = concat!(
 /// with a JSON-RPC `ping` before trusting the advertised port.
 const LIVE_PORT_FILE_NAME: &str = de_config_store::well_known::LIVE_MCP_PORT;
 
+mod headless_start;
+
+/// The port `de start` was given, and whether `--port` named it.
+#[derive(Debug, Clone, Copy)]
+pub(crate) struct StartPort {
+    pub(crate) port: u16,
+    pub(crate) explicit: bool,
+}
+
 #[derive(Debug, Clone)]
 struct RunningMcp {
     pid: u32,
@@ -43,21 +52,25 @@ struct RunningMcp {
 /// sync + `/mcp`) is spawned headless and the URL is opened in the browser
 /// (TS `startWeb` parity).
 pub(crate) fn run_start(
-    port: u16,
+    start_port: StartPort,
     document_path: Option<&str>,
     headless: bool,
     web: bool,
     host: Option<&str>,
+    wait_secs: Option<u64>,
 ) -> Result<String, CliError> {
+    let port = start_port.port;
     if web {
         return run_start_web(port, document_path, host);
     }
     if headless {
-        // Reuse an already-running headless server; otherwise launch one.
+        // Reuse an already-running headless server, unless the caller asked
+        // for another port; otherwise launch one.
         if let Some(existing) = reachable_headless_server() {
+            headless_start::check_requested_port(start_port, existing.port, existing.pid)?;
             return Ok(start_json(existing.pid, existing.port, None));
         }
-        run_start_headless(port, document_path)
+        headless_start::run_start_headless(port, document_path, wait_secs)
     } else {
         // Reuse a live editor only — a headless file server is NOT a live
         // canvas, so `de start` must open the real GUI even if one runs.
@@ -278,57 +291,6 @@ fn start_web_json(pid: u32, port: u16, document_path: Option<&Path>, host: Optio
         value["documentPath"] = json!(path.display().to_string());
     }
     value.to_string()
-}
-
-/// Legacy windowless mode: spawn `--mcp-http` against a `.de` file and
-/// track it via the `$TMPDIR` pid/port manager files.
-fn run_start_headless(port: u16, document_path: Option<&str>) -> Result<String, CliError> {
-    let document = match document_path {
-        Some(path) => PathBuf::from(path),
-        None => default_document_path()?,
-    };
-    ensure_document_file(&document)?;
-    preflight_document(&document)?;
-
-    let binary = find_desktop_binary()?;
-    // Per-instance token passed to the server (echoed in its `ping`) so a
-    // later `de stop` can prove the pid in our manager file owns the port.
-    let token = make_token();
-    let mut command = Command::new(&binary);
-    command
-        .arg("--mcp-http")
-        .arg(port.to_string())
-        .arg(&document)
-        .env(de_config_store::env_vars::MCP_TOKEN, &token);
-    let mut child = spawn_null(&mut command)
-        .map_err(|e| CliError::Daemon(format!("spawn {} --mcp-http: {e}", binary.display())))?;
-
-    let pid = child.id();
-    write_manager_files(pid, port, &token)?;
-
-    // Confirm the MCP server actually answers WITH our token (not just
-    // an open port), so we never report success for a child that failed
-    // to bind or for an unrelated service on the port.
-    match wait_for_child_or(&mut child, 30, Duration::from_millis(100), || {
-        crate::mcp_http_cli::mcp_ping_headless(port, &token).then_some(())
-    })
-    .map_err(|e| CliError::Daemon(format!("wait for {} --mcp-http: {e}", binary.display())))?
-    {
-        WaitOutcome::Ready(()) => {
-            return Ok(start_json(pid, port, Some(&document)));
-        }
-        WaitOutcome::Exited(status) => {
-            remove_manager_files();
-            return Err(CliError::Daemon(format!(
-                "Design Editor MCP server exited before accepting connections: {status}"
-            )));
-        }
-        WaitOutcome::TimedOut => {}
-    }
-
-    Err(CliError::Daemon(format!(
-        "Design Editor MCP server did not respond on 127.0.0.1:{port} within 3s"
-    )))
 }
 
 pub(crate) fn run_stop() -> Result<String, CliError> {
