@@ -19,7 +19,9 @@ pub fn load_editor_state_with_report(
     locale: de_editor_core::Locale,
 ) -> Result<LoadedEditorState, DocIoError> {
     if de_util::document_file::is_pptx_path(path) {
-        return super::pptx::load_pptx(path, locale);
+        let mut loaded = super::pptx::load_pptx(path, locale)?;
+        loaded.state.editor_ui.document_folder = super::document_folder_of(path);
+        return Ok(loaded);
     }
     let pen_dev_path = de_util::document_file::is_pen_dev_path(path);
     if !pen_dev_path && !de_util::document_file::is_document_path(path) {
@@ -29,7 +31,10 @@ pub fn load_editor_state_with_report(
             path,
         )));
     }
-    let loaded = read_editor_state_with_report(path, locale)?;
+    let mut loaded = read_editor_state_with_report(path, locale)?;
+    // Relative browser pages resolve next to the file, an import included
+    // (it opens unbound, so `set_file_name_display` cannot tell).
+    loaded.state.editor_ui.document_folder = super::document_folder_of(path);
     if pen_dev_path && loaded.report.pen_dev_import.is_none() {
         return Err(DocIoError::NotPenDevDocument(localized_with_name(
             locale,

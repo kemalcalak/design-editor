@@ -69,10 +69,15 @@ pub fn clamp_browser_scroll(offset: f64) -> f64 {
     }
 }
 
-/// The address a typed `url` loads: trimmed, `https://` added when no
-/// scheme is given. `None` for a scheme other than http, https or file
-/// (a `javascript:` or `data:` address never reaches the page loader).
-/// An empty input normalizes to `Some("")`, which clears the address.
+/// The address a typed `url` loads: trimmed, with a scheme added when none
+/// is given, as pen.dev does: an absolute path (`/Users/me/a.html`) becomes
+/// a `file://` address, `localhost` or an IP address (with any port) gets
+/// `http://`, anything else `https://`. A document-relative path (`./a.html`,
+/// `../a.html`, #283) stays as typed; it resolves against the document's
+/// folder when the page loads (`browser_live::resolve_page_url`). `None` for
+/// a scheme other than http, https or file (a `javascript:` or `data:`
+/// address never reaches the page loader). An empty input normalizes to
+/// `Some("")`, which clears the address.
 pub fn normalize_browser_url(url: &str) -> Option<String> {
     let url = url.trim();
     if url.is_empty() {
@@ -82,6 +87,15 @@ pub fn normalize_browser_url(url: &str) -> Option<String> {
     if lower.starts_with("http://") || lower.starts_with("https://") || lower.starts_with("file://")
     {
         return Some(url.to_string());
+    }
+    if is_document_relative(url) {
+        return Some(url.to_string());
+    }
+    if url.starts_with('/') {
+        return Some(format!("file://{url}"));
+    }
+    if is_local_host(&lower) {
+        return Some(format!("http://{url}"));
     }
     if let Some(colon) = lower.find(':') {
         let scheme = &lower[..colon];
@@ -99,6 +113,54 @@ pub fn normalize_browser_url(url: &str) -> Option<String> {
         }
     }
     Some(format!("https://{url}"))
+}
+
+/// `./…` or `../…`: a page addressed from the document's folder (#283).
+pub fn is_document_relative(url: &str) -> bool {
+    url.starts_with("./") || url.starts_with("../")
+}
+
+/// `localhost`, a dotted IPv4 address or a bracketed IPv6 address, with an
+/// optional port, at the start of a schemeless `lower`-case address.
+fn is_local_host(lower: &str) -> bool {
+    let end = lower.find(['/', '?', '#']).unwrap_or(lower.len());
+    let authority = &lower[..end];
+    let host = if authority.starts_with('[') {
+        match authority.find(']') {
+            Some(close) => {
+                let (host, rest) = authority.split_at(close + 1);
+                if !rest.is_empty() && !is_port(rest) {
+                    return false;
+                }
+                return host.len() > 2
+                    && host[1..host.len() - 1]
+                        .bytes()
+                        .all(|b| b.is_ascii_hexdigit() || b == b':');
+            }
+            None => return false,
+        }
+    } else {
+        match authority.split_once(':') {
+            Some((host, port)) if is_port(&format!(":{port}")) => host,
+            Some(_) => return false,
+            None => authority,
+        }
+    };
+    host == "localhost" || is_ipv4(host)
+}
+
+/// `:` followed by one or more digits.
+fn is_port(rest: &str) -> bool {
+    rest.strip_prefix(':')
+        .is_some_and(|port| !port.is_empty() && port.bytes().all(|b| b.is_ascii_digit()))
+}
+
+fn is_ipv4(host: &str) -> bool {
+    let parts: Vec<&str> = host.split('.').collect();
+    parts.len() == 4
+        && parts
+            .iter()
+            .all(|p| (1..=3).contains(&p.len()) && p.bytes().all(|b| b.is_ascii_digit()))
 }
 
 #[cfg(test)]

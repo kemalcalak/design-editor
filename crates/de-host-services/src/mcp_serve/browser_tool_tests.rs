@@ -150,7 +150,7 @@ fn load_page_on_a_node_sets_its_address_and_shows_the_page_on_the_canvas() {
     // The canvas shows the loaded page under the patched node's key.
     let target = &tool.targets["b"];
     let patched = target.with_url("https://example.org");
-    let key = de_editor_core::browser_live::browser_render_request(&patched, 0)
+    let key = de_editor_core::browser_live::browser_render_request(&patched, 0, None)
         .unwrap()
         .key;
     assert_eq!(

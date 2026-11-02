@@ -45,6 +45,8 @@ pub mod atomic_file;
 mod canonical_save;
 mod clean_copy;
 #[cfg(test)]
+mod document_folder_tests;
+#[cfg(test)]
 mod editor_meta_roundtrip_tests;
 mod error;
 mod load;
@@ -209,8 +211,27 @@ pub fn set_file_name_display(state: &mut EditorState, path: Option<&std::path::P
     state.editor_ui.file_name_display = path
         .and_then(|p| p.file_name())
         .map(|n| n.to_string_lossy().into_owned());
+    // A bound file moves its relative browser pages with it; unbinding (an
+    // import) keeps the folder the load recorded.
+    if let Some(path) = path {
+        state.editor_ui.document_folder = document_folder_of(path);
+    }
     // Relative library links follow the document to its new folder.
     de_pen_loader::rebase_library_links(state, path);
+}
+
+/// The absolute folder of `document`, as `EditorUiState::document_folder`
+/// stores it.
+pub(crate) fn document_folder_of(document: &std::path::Path) -> Option<String> {
+    let folder = document.parent()?;
+    let folder = if folder.as_os_str().is_empty() {
+        std::path::Path::new(".")
+    } else {
+        folder
+    };
+    std::path::absolute(folder)
+        .ok()
+        .map(|folder| folder.to_string_lossy().into_owned())
 }
 
 /// Carry app-level preferences from the previously open document onto a

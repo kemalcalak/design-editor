@@ -194,7 +194,15 @@ pub(super) fn dispatch<S: Read + Write>(
     // Live browser pages (#20): render without the state lock; a slow page
     // only holds this connection.
     if req.method == "POST" && req.path == "/api/browser/snapshot" {
-        let (status, body) = crate::web_browser_snapshot::snapshot_reply(&req.body);
+        let folder = state
+            .lock()
+            .unwrap_or_else(|p| p.into_inner())
+            .editor
+            .editor_ui
+            .document_folder
+            .clone();
+        let (status, body) =
+            crate::web_browser_snapshot::snapshot_reply(&req.body, folder.as_deref());
         crate::mcp_serve::write_mcp_http_response_with_origin(stream, status, &body, cors_origin)?;
         return Ok(false);
     }

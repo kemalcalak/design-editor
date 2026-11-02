@@ -17,8 +17,8 @@ fn urls_gain_https_and_unsafe_schemes_are_refused() {
         Some("https://example.com".into())
     );
     assert_eq!(
-        normalize_browser_url("localhost:3000/a"),
-        Some("https://localhost:3000/a".into())
+        normalize_browser_url("example.com:8080/a"),
+        Some("https://example.com:8080/a".into())
     );
     assert_eq!(
         normalize_browser_url("http://x.test"),
@@ -45,4 +45,44 @@ fn zoom_and_scroll_clamp() {
     assert_eq!(clamp_browser_scroll(-5.0), 0.0);
     assert_eq!(clamp_browser_scroll(f64::INFINITY), 0.0);
     assert_eq!(clamp_browser_scroll(120.0), 120.0);
+}
+
+#[test]
+fn local_servers_get_http_like_pen_dev() {
+    for (typed, loaded) in [
+        ("localhost:3000/a", "http://localhost:3000/a"),
+        ("LOCALHOST", "http://LOCALHOST"),
+        ("127.0.0.1:8080", "http://127.0.0.1:8080"),
+        ("192.168.1.20/app?x=1", "http://192.168.1.20/app?x=1"),
+        ("[::1]:5173/", "http://[::1]:5173/"),
+    ] {
+        assert_eq!(normalize_browser_url(typed), Some(loaded.into()), "{typed}");
+    }
+    // Not a local host: a domain, a five-part number, a word with a port.
+    assert_eq!(
+        normalize_browser_url("localhost.example.com"),
+        Some("https://localhost.example.com".into())
+    );
+    assert_eq!(
+        normalize_browser_url("1.2.3.4.5"),
+        Some("https://1.2.3.4.5".into())
+    );
+}
+
+#[test]
+fn paths_load_as_files_and_relative_paths_stay_as_typed() {
+    assert_eq!(
+        normalize_browser_url("/Users/me/site/index.html"),
+        Some("file:///Users/me/site/index.html".into())
+    );
+    assert_eq!(
+        normalize_browser_url(" ./video/player.html "),
+        Some("./video/player.html".into())
+    );
+    assert_eq!(
+        normalize_browser_url("../shared/page.html"),
+        Some("../shared/page.html".into())
+    );
+    assert!(is_document_relative("./a.html"));
+    assert!(!is_document_relative("video/a.html"));
 }

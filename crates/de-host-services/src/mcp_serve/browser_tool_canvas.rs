@@ -104,8 +104,13 @@ fn walk(
 /// Show `png` as `node`'s canvas picture (shaped like the node, at its
 /// canvas scale). The render queue sees the key up to date and leaves it
 /// until the node changes or is reloaded.
-pub fn install_canvas_picture(node: &PenNode, reload: u32, png: Vec<u8>) {
-    let Some(request) = browser_render_request(node, reload) else {
+pub fn install_canvas_picture(
+    node: &PenNode,
+    reload: u32,
+    document_folder: Option<&str>,
+    png: Vec<u8>,
+) {
+    let Some(request) = browser_render_request(node, reload, document_folder) else {
         return;
     };
     browser_textures::install(&request.node_id, request.key, png);

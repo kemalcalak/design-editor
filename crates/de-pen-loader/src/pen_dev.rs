@@ -31,6 +31,7 @@ mod imports;
 mod instances;
 mod mesh;
 mod nodes;
+mod pages;
 mod paint;
 mod script;
 mod shader;
@@ -99,6 +100,9 @@ pub struct PenDevReport {
     pub unsupported: BTreeMap<&'static str, usize>,
     /// Relative image URLs that could not be read, in first-seen order.
     pub missing_images: Vec<String>,
+    /// Browser `file://` pages not found next to the document (#283), in
+    /// first-seen order.
+    pub missing_pages: Vec<String>,
     /// The document's `imports`, which open as linked libraries.
     pub imports: Vec<PenDevImport>,
 }
@@ -106,49 +110,67 @@ pub struct PenDevReport {
 impl PenDevReport {
     /// Whether anything was dropped, approximated or missing.
     pub fn has_losses(&self) -> bool {
-        !self.unsupported.is_empty() || !self.missing_images.is_empty()
+        !self.unsupported.is_empty()
+            || !self.missing_images.is_empty()
+            || !self.missing_pages.is_empty()
     }
 
     /// One-line English list for logs, MCP results and the open dialog's
     /// detail line, e.g. `shader fill ×1, note ×3; missing images: a.png`.
     pub fn summary(&self) -> String {
-        let images = if self.missing_images.is_empty() {
-            String::new()
-        } else {
-            format!("missing images: {}", self.missing_images.join(", "))
-        };
-        self.join_with_features(images)
+        let mut missing = Vec::new();
+        if !self.missing_images.is_empty() {
+            missing.push(format!(
+                "missing images: {}",
+                self.missing_images.join(", ")
+            ));
+        }
+        if !self.missing_pages.is_empty() {
+            missing.push(format!("missing pages: {}", self.missing_pages.join(", ")));
+        }
+        self.join_with_features(missing.join("; "))
     }
 
-    /// [`Self::summary`] with the missing images counted instead of named,
-    /// for one-line surfaces such as a toast (`shader fill ×1; 14 missing
-    /// images`).
+    /// [`Self::summary`] with the missing images and pages counted instead
+    /// of named, for one-line surfaces such as a toast (`shader fill ×1; 14
+    /// missing images; 1 missing page`).
     pub fn short_summary(&self) -> String {
-        let images = match self.missing_images.len() {
-            0 => String::new(),
-            1 => "1 missing image".to_owned(),
-            count => format!("{count} missing images"),
+        let count = |n: usize, one: &str, many: &str| match n {
+            0 => None,
+            1 => Some(format!("1 {one}")),
+            n => Some(format!("{n} {many}")),
         };
-        self.join_with_features(images)
+        let missing = [
+            count(self.missing_images.len(), "missing image", "missing images"),
+            count(self.missing_pages.len(), "missing page", "missing pages"),
+        ];
+        let missing: Vec<String> = missing.into_iter().flatten().collect();
+        self.join_with_features(missing.join("; "))
     }
 
-    fn join_with_features(&self, images: String) -> String {
+    fn join_with_features(&self, missing: String) -> String {
         let features = self
             .unsupported
             .iter()
             .map(|(feature, count)| format!("{feature} ×{count}"))
             .collect::<Vec<_>>()
             .join(", ");
-        match (features.is_empty(), images.is_empty()) {
-            (false, false) => format!("{features}; {images}"),
+        match (features.is_empty(), missing.is_empty()) {
+            (false, false) => format!("{features}; {missing}"),
             (false, true) => features,
-            (true, false) => images,
+            (true, false) => missing,
             (true, true) => String::new(),
         }
     }
 
     fn note(&mut self, feature: &'static str) {
         *self.unsupported.entry(feature).or_default() += 1;
+    }
+
+    fn note_missing_page(&mut self, url: &str) {
+        if !self.missing_pages.iter().any(|seen| seen == url) {
+            self.missing_pages.push(url.to_owned());
+        }
     }
 
     fn note_missing_image(&mut self, url: &str) {

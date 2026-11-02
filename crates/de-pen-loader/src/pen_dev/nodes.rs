@@ -184,6 +184,7 @@ fn convert_node(
         Some("frame") => apply_frame_defaults(map),
         Some("script") => super::script::convert_script(map, ctx),
         Some("path") => apply_path_view_box(map, in_flow && !absolute, ctx.report),
+        Some("browser") => super::pages::relocate_file_page(map, ctx),
         _ => {}
     }
     let is_frame = map.get("type").and_then(Value::as_str) == Some("frame");

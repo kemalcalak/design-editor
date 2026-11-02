@@ -58,6 +58,7 @@ pub(super) fn run_import_pen(pen_path: &str, out_path: &str) -> Result<String, C
         "nodeCount": document.children.len(),
         "unsupported": report.unsupported,
         "missingImages": report.missing_images,
+        "missingPages": report.missing_pages,
     })
     .to_string())
 }

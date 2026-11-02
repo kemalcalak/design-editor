@@ -64,6 +64,8 @@ pub struct BrowserRenderQueue {
     reloads_seen: HashMap<String, u32>,
     last_scan: Option<ScanStamp>,
     document_generation: u64,
+    /// The language the canvas failure lines were translated into.
+    locale: Option<de_editor_core::Locale>,
 }
 
 impl BrowserRenderQueue {
@@ -78,6 +80,7 @@ impl BrowserRenderQueue {
             reloads_seen: HashMap::new(),
             last_scan: None,
             document_generation: 0,
+            locale: None,
         }
     }
 
@@ -105,6 +108,10 @@ impl BrowserRenderQueue {
         state: &mut EditorState,
         now_ms: f64,
     ) -> (bool, Vec<BrowserRenderRequest>) {
+        let locale = state.editor_ui.locale;
+        if self.locale.replace(locale) != Some(locale) {
+            browser_textures::retranslate_failures(|key| crate::i18n::translate(locale, key));
+        }
         if state.document_generation() != self.document_generation {
             // A new document: its node ids name other nodes.
             self.document_generation = state.document_generation();
@@ -152,7 +159,8 @@ impl BrowserRenderQueue {
             };
             let reload = state.editor_ui.browser_live.reload_count(id);
             let reloaded = self.reloads_seen.insert(id.clone(), reload) != Some(reload);
-            let Some(request) = browser_render_request(node, reload) else {
+            let folder = state.editor_ui.document_folder.as_deref();
+            let Some(request) = browser_render_request(node, reload, folder) else {
                 // No address (or no box): the old page must not stay up.
                 forgot |= browser_textures::forget(id);
                 self.wanted.remove(id);
@@ -208,6 +216,8 @@ impl BrowserRenderQueue {
                 continue;
             };
             self.in_flight.insert(id.clone(), request.key);
+            // A new page is on its way: the last one's failure line goes.
+            browser_textures::set_failure(&id, None);
             state
                 .editor_ui
                 .browser_live
@@ -244,6 +254,9 @@ impl BrowserRenderQueue {
             }
         };
         state.editor_ui.browser_live.set_status(node_id, status);
+        let reason = super::property_panel_browser::status_key(status)
+            .map(|key| (key, crate::i18n::translate(state.editor_ui.locale, key)));
+        browser_textures::set_failure(node_id, reason);
         // Re-check the visible nodes: this one may already want a newer key.
         self.last_scan = None;
     }

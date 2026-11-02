@@ -39,6 +39,7 @@ impl Default for EditorUiState {
             pending_file_action: None,
             recent_files: Vec::new(),
             file_name_display: None,
+            document_folder: None,
             document_dirty: false,
             export_scale: 2.0,
             export_dialog_open: false,

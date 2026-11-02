@@ -114,9 +114,13 @@ fn paint_placeholder(
     let label = browser_url(node)
         .map(display_url)
         .filter(|_| world_rect.size.x >= MIN_LABEL_W);
+    // Why the page is missing (#283), under the address.
+    let reason = label.as_ref().and(browser_textures::failure(&node.id));
     let label_size = LABEL_SIZE * zoom;
     let gap = 8.0 * zoom;
-    let block_h = glyph + label.as_ref().map_or(0.0, |_| gap + label_size);
+    let block_h = glyph
+        + label.as_ref().map_or(0.0, |_| gap + label_size)
+        + reason.map_or(0.0, |_| gap * 0.5 + label_size);
     let top = world_rect.origin.y + (world_rect.size.y - block_h) * 0.5;
     let centre_x = world_rect.origin.x + world_rect.size.x * 0.5;
     draw_icon(
@@ -137,10 +141,24 @@ fn paint_placeholder(
         );
         let width =
             text_metrics::measure_chrome(cx.backend, &label, label_size).min(world_rect.size.x);
-        cx.backend.draw_text(
-            &layout,
-            Point2D::new(centre_x - width * 0.5, top + glyph + gap + label_size * 0.8),
-        );
+        let label_y = top + glyph + gap + label_size * 0.8;
+        cx.backend
+            .draw_text(&layout, Point2D::new(centre_x - width * 0.5, label_y));
+        if let Some(reason) = reason {
+            let layout = TextLayout::single_run(
+                reason,
+                text_metrics::CHROME_FONT_FAMILY,
+                label_size,
+                ink.to_jian(),
+                Point2D::ZERO,
+            );
+            let width =
+                text_metrics::measure_chrome(cx.backend, reason, label_size).min(world_rect.size.x);
+            cx.backend.draw_text(
+                &layout,
+                Point2D::new(centre_x - width * 0.5, label_y + gap * 0.5 + label_size),
+            );
+        }
     }
 }
 
