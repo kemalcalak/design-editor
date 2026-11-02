@@ -531,6 +531,42 @@ extern "C" {
         weight: i32,
         italic: bool,
     ) -> f32;
+    /// `drawText`'s glyphs outlined `w` px wide (#282).
+    #[wasm_bindgen(method, js_name = strokeText)]
+    #[allow(clippy::too_many_arguments)]
+    pub(super) fn stroke_text(
+        this: &OpCk,
+        t: &str,
+        family: &str,
+        x: f32,
+        y: f32,
+        sz: f32,
+        weight: i32,
+        italic: bool,
+        r: f32,
+        g: f32,
+        b: f32,
+        a: f32,
+        w: f32,
+    );
+    /// `drawShapedText`'s run outlined `w` px wide (#282).
+    #[wasm_bindgen(method, js_name = strokeShapedText)]
+    #[allow(clippy::too_many_arguments)]
+    pub(super) fn stroke_shaped_text(
+        this: &OpCk,
+        t: &str,
+        family: &str,
+        x: f32,
+        y: f32,
+        sz: f32,
+        weight: i32,
+        italic: bool,
+        r: f32,
+        g: f32,
+        b: f32,
+        a: f32,
+        w: f32,
+    );
     /// Paint a complex-script run (Arabic and friends) through the browser's
     /// own text engine, which resolves bidi and contextual joining that
     /// CanvasKit's `drawText` cmap lookup cannot. The run is passed whole —

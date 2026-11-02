@@ -166,6 +166,7 @@ fn text(id: &str, content: &str, x: i32, y: i32, w: i32, h: i32) -> PenNode {
         underline: None,
         strikethrough: None,
         fill: None,
+        stroke: None,
         effects: None,
         state: None,
         bindings: None,

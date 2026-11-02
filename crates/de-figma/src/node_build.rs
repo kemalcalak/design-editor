@@ -201,6 +201,7 @@ pub fn text_node(
         underline: props.underline,
         strikethrough: props.strikethrough,
         fill,
+        stroke: None,
         effects,
         state: None,
         bindings: None,

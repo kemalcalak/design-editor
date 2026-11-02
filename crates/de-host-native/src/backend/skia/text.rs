@@ -5,7 +5,7 @@
 //! struct, this sibling only houses the `impl` block.
 
 use de_editor_core::text_script::needs_complex_shaping;
-use de_editor_ui::{Point2D, TextBaselineRequest, TextLayout};
+use de_editor_ui::{Color, Point2D, TextBaselineRequest, TextLayout};
 
 use super::shaped_text::ShapedRun;
 use super::NativeBackend;
@@ -107,6 +107,7 @@ impl NativeBackend {
                     italic,
                     line_height: 0.0,
                     color: skia_safe::Color::BLACK,
+                    outline: None,
                 },
             );
         }
@@ -177,6 +178,42 @@ impl NativeBackend {
     /// synthetically (same philosophy as synthetic bold).
     #[tracing::instrument(skip(self, canvas, layout))]
     pub fn draw_text(&mut self, canvas: &skia_safe::Canvas, layout: &TextLayout, origin: Point2D) {
+        self.paint_text_runs(canvas, layout, origin, None);
+    }
+
+    /// Stroke the outlines of the glyphs [`Self::draw_text`] fills, `width`
+    /// px wide and centred on the contours, with the set stroke style.
+    pub fn stroke_text(
+        &mut self,
+        canvas: &skia_safe::Canvas,
+        layout: &TextLayout,
+        origin: Point2D,
+        color: Color,
+        width: f32,
+    ) {
+        if width.is_nan() || width <= 0.0 {
+            return;
+        }
+        let mut paint = skia_safe::Paint::new(
+            skia_safe::Color4f::new(color.r, color.g, color.b, color.a),
+            None,
+        );
+        paint.set_anti_alias(true);
+        paint.set_style(skia_safe::PaintStyle::Stroke);
+        paint.set_stroke_width(width);
+        self.apply_stroke_style(&mut paint);
+        self.paint_text_runs(canvas, layout, origin, Some(&paint));
+    }
+
+    /// The glyph loop behind `draw_text` (`outline: None`, filled in each
+    /// run's colour) and `stroke_text` (stroked with `outline`).
+    fn paint_text_runs(
+        &mut self,
+        canvas: &skia_safe::Canvas,
+        layout: &TextLayout,
+        origin: Point2D,
+        outline: Option<&skia_safe::Paint>,
+    ) {
         // Serialize the whole text-run paint — typeface resolution plus glyph
         // rasterization, both DirectWrite-backed on Windows —
         // with every other font user, so a concurrent design-worker layout
@@ -203,6 +240,7 @@ impl NativeBackend {
                             italic,
                             line_height: run.line_height,
                             color: skia_safe::Color::from_argb(jc.a(), jc.r(), jc.g(), jc.b()),
+                            outline,
                         },
                         origin.x + run.origin.x,
                         origin.y + run.origin.y,
@@ -219,6 +257,28 @@ impl NativeBackend {
                     run.font_weight,
                     italic,
                 );
+                if let Some(outline) = outline {
+                    let at = (origin.x + run.origin.x, origin.y + run.origin.y);
+                    for segment in &shaped.segments {
+                        // The merged glyph outlines, not the blob: a blob
+                        // strokes every overlapping contour of a variable
+                        // font, leaving lines inside the letters.
+                        let Some(path) = segment.outline_path() else {
+                            continue;
+                        };
+                        let mut paint = outline.clone();
+                        // A synthetic-bold face fills with an extra stroke;
+                        // widen the outline so it still reaches the edge.
+                        if run.font_weight >= 600 && segment.synthetic_bold {
+                            paint.set_stroke_width(paint.stroke_width() + run.font_size * 0.06);
+                        }
+                        canvas.save();
+                        canvas.translate(at);
+                        canvas.draw_path(path, &paint);
+                        canvas.restore();
+                    }
+                    continue;
+                }
                 let mut paint = skia_safe::Paint::new(
                     skia_safe::Color4f::new(
                         f32::from(jc.r()) / 255.0,

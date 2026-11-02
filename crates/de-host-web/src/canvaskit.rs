@@ -34,6 +34,7 @@ mod shader_textures;
 mod stroke_style;
 #[cfg(test)]
 mod tests;
+mod text;
 
 pub use backend::{init_backend, CanvasKitBackend};
 pub use bindings::OpCk;

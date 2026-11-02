@@ -224,6 +224,8 @@ pub(super) fn text_to_payload(n: &TextNode) -> NodePayload {
     // strikethrough — see `text_style.rs`.
     crate::text_style::apply_text_content(&mut p, n);
     assign_first_fill(&mut p, n.fill.as_deref());
+    // Outlined text: painted along the glyph contours, never a box.
+    p.stroke = stroke_to_payload(n.stroke.as_ref());
     p.font_family = n.font_family.clone().unwrap_or_default();
     p.font_size = n.font_size.unwrap_or(0.0) as f32;
     p.font_weight = resolve_font_weight(n.font_weight.as_ref());

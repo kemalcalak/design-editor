@@ -25,6 +25,11 @@ impl<'a> RenderBackend for NativeFrameBackend<'a> {
         self.inner.draw_text(self.canvas, layout, origin);
     }
 
+    fn stroke_text(&mut self, layout: &TextLayout, origin: Point2D, color: Color, width: f32) {
+        self.inner
+            .stroke_text(self.canvas, layout, origin, color, width);
+    }
+
     fn clip_rect(&mut self, rect: Rect) {
         self.inner.clip_rect(self.canvas, rect);
     }

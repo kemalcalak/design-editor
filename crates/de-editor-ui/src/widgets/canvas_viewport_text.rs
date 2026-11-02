@@ -43,7 +43,7 @@ struct SliceStyle {
 /// paints everything in one go; a node whose fill stack is clipped to
 /// its glyphs (#179, `canvas_viewport_text_fill`) splits the paint so the
 /// stack can sit between the selection wash and the overlay.
-#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+#[derive(Clone, Copy, PartialEq, Debug)]
 pub(crate) enum TextPass {
     /// Selection wash, glyphs in their solid ink, IME underline, caret.
     Full,
@@ -55,6 +55,15 @@ pub(crate) enum TextPass {
     /// Runs with their own fill (painted solid over the stack), the IME
     /// underline and the caret.
     Overlay,
+    /// Every glyph's outline in `color`, `width` doc px wide, centred on
+    /// the contours (outlined text). Decorations are not outlined.
+    Stroke { color: Color, width: f32 },
+    /// Every glyph in opaque white, own-fill runs included: the coverage an
+    /// inside outline is cut to.
+    Coverage,
+    /// The IME underline and the caret only, painted again over an outline
+    /// that would otherwise cover them.
+    Caret,
 }
 
 impl TextPass {
@@ -63,11 +72,11 @@ impl TextPass {
     }
 
     fn paints_lines(self) -> bool {
-        !matches!(self, Self::Selection)
+        !matches!(self, Self::Selection | Self::Caret)
     }
 
     fn paints_caret(self) -> bool {
-        matches!(self, Self::Full | Self::Overlay)
+        matches!(self, Self::Full | Self::Overlay | Self::Caret)
     }
 
     /// Whether a slice draws in this pass; `own_fill` = its run carries a
@@ -75,9 +84,18 @@ impl TextPass {
     fn paints_slice(self, own_fill: bool) -> bool {
         match self {
             Self::Full => true,
-            Self::Selection => false,
+            Self::Selection | Self::Caret => false,
             Self::FillMask => !own_fill,
             Self::Overlay => own_fill,
+            Self::Stroke { .. } | Self::Coverage => true,
+        }
+    }
+
+    /// The outline width when this pass strokes instead of filling.
+    fn stroke_width(self) -> Option<f32> {
+        match self {
+            Self::Stroke { width, .. } => Some(width),
+            _ => None,
         }
     }
 }
@@ -239,6 +257,42 @@ fn measure_line_slices(
     w + chars.saturating_sub(1) as f32 * letter_spacing
 }
 
+/// How a slice's glyphs are drawn: filled, or outlined `width` doc px wide.
+#[derive(Clone, Copy)]
+enum GlyphInk {
+    Fill,
+    Stroke(f32),
+}
+
+impl GlyphInk {
+    fn from_pass(pass: TextPass) -> Self {
+        pass.stroke_width().map_or(Self::Fill, Self::Stroke)
+    }
+}
+
+fn draw_glyphs(
+    backend: &mut dyn RenderBackend,
+    text: &str,
+    style: SliceStyle,
+    family: &str,
+    origin: Point2D,
+    ink: GlyphInk,
+) {
+    let layout = TextLayout::single_run(
+        text,
+        family,
+        style.font_size,
+        style.color.to_jian(),
+        Point2D::ZERO,
+    )
+    .with_font_weight(style.weight)
+    .with_italic(style.italic);
+    match ink {
+        GlyphInk::Fill => backend.draw_text(&layout, origin),
+        GlyphInk::Stroke(width) => backend.stroke_text(&layout, origin, style.color, width),
+    }
+}
+
 #[allow(clippy::too_many_arguments)]
 fn draw_slice(
     backend: &mut dyn RenderBackend,
@@ -249,16 +303,17 @@ fn draw_slice(
     baseline_y: f32,
     letter_spacing: f32,
     justify_extra: f32,
-    draw: bool,
+    ink: Option<GlyphInk>,
 ) -> (f32, f32) {
-    let jc = (style.color).to_jian();
     if letter_spacing.abs() < f32::EPSILON && justify_extra <= 0.0 {
-        if draw {
-            backend.draw_text(
-                &TextLayout::single_run(slice, family, style.font_size, jc, Point2D::ZERO)
-                    .with_font_weight(style.weight)
-                    .with_italic(style.italic),
+        if let Some(ink) = ink {
+            draw_glyphs(
+                backend,
+                slice,
+                style,
+                family,
                 Point2D::new(x, baseline_y),
+                ink,
             );
         }
         let advance = backend.measure_text_family_styled(
@@ -300,13 +355,9 @@ fn draw_slice(
             token_base = advance;
             token_start = end;
         }
-        if draw {
-            backend.draw_text(
-                &TextLayout::single_run(&slice[i..end], family, style.font_size, jc, Point2D::ZERO)
-                    .with_font_weight(style.weight)
-                    .with_italic(style.italic),
-                Point2D::new(at, baseline_y),
-            );
+        if let Some(ink) = ink {
+            let origin = Point2D::new(at, baseline_y);
+            draw_glyphs(backend, &slice[i..end], style, family, origin, ink);
         }
         glyph_end = x + advance + spacing;
         spacing += letter_spacing;
@@ -538,8 +589,10 @@ pub(crate) fn paint_text_node_pass(
                 |start, end, run| {
                     let run = run.map(|i| &paint_node.text_runs[i]);
                     let mut style = resolved_slice_style(paint_node, font_size, weight, ink, run);
-                    if pass == TextPass::FillMask {
-                        style.color = MASK_INK;
+                    match pass {
+                        TextPass::FillMask | TextPass::Coverage => style.color = MASK_INK,
+                        TextPass::Stroke { color, .. } => style.color = color,
+                        _ => {}
                     }
                     let draws = pass.paints_slice(run.is_some_and(|r| r.fill.is_some()));
                     let slice = &text[start..end];
@@ -553,9 +606,9 @@ pub(crate) fn paint_text_node_pass(
                         baseline_y,
                         letter_spacing,
                         justify_extra,
-                        draws,
+                        draws.then_some(GlyphInk::from_pass(pass)),
                     );
-                    if draws {
+                    if draws && !matches!(pass, TextPass::Stroke { .. }) {
                         decorate_slice(cx.backend, style, slice_x0, glyph_end, baseline_y);
                     }
                     x = next_x;
