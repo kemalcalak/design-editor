@@ -41,10 +41,13 @@ fn saving_elsewhere_moves_the_folder_and_unbinding_keeps_it() {
         state.editor_ui.document_folder.as_deref(),
         Some("/imported/from")
     );
-    set_file_name_display(&mut state, Some(std::path::Path::new("/saved/here/a.de")));
-    assert_eq!(
+    let saved = std::path::Path::new("/saved/here/a.de");
+    set_file_name_display(&mut state, Some(saved));
+    // Absolute on this platform (`D:\saved\here` on Windows).
+    assert_eq!(state.editor_ui.document_folder, document_folder_of(saved));
+    assert_ne!(
         state.editor_ui.document_folder.as_deref(),
-        Some("/saved/here")
+        Some("/imported/from")
     );
 }
 
