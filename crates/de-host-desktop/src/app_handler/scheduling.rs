@@ -149,7 +149,7 @@ impl DesktopApp {
     /// The next animation deadline, while the window is painted. Deadlines
     /// advance only when a frame paints, so a hidden window would re-arm
     /// the same 16 ms wake forever (#302).
-    fn visible_animation_deadline_ms(&self) -> Option<u64> {
+    pub(crate) fn visible_animation_deadline_ms(&self) -> Option<u64> {
         self.host
             .next_animation_deadline_ms()
             .filter(|_| !self.surface_hidden())
