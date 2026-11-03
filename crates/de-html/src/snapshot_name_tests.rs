@@ -63,6 +63,65 @@ fn ids_and_classes_name_only_when_meaningful() {
 }
 
 #[test]
+fn a_family_word_is_a_name_unless_a_value_follows() {
+    let named = json!({"tag": "div", "attrs": {"class": "content-center list-header"}});
+    assert_eq!(name(named).as_deref(), Some("List header"));
+    let utilities = json!({"tag": "div", "attrs": {"class": "row-span-2 col-start-1 select-none"}});
+    assert_eq!(name(utilities).as_deref(), Some("div"));
+    // A hash-shaped word is dropped, even a real one.
+    let step = json!({"tag": "div", "attrs": {"class": "step10"}});
+    assert_eq!(name(step).as_deref(), Some("div"));
+}
+
+#[test]
+fn generated_class_hashes_are_never_names() {
+    for class in [
+        "sc-bdVaJa kQxYzA",
+        "page_main__GQzVa",
+        "c-PJLV",
+        "css-1x2y3z",
+    ] {
+        let node = json!({"tag": "div", "attrs": {"class": class}});
+        assert_eq!(name(node).as_deref(), Some("div"), "{class}");
+    }
+    let ids = json!({"tag": "div", "attrs": {"id": "mat-select-2", "class": "grayscale"}});
+    assert_eq!(name(ids).as_deref(), Some("div"));
+}
+
+#[test]
+fn words_of_utility_families_still_name() {
+    for (class, expected) in [
+        ("top-bar", "Top bar"),
+        ("text-editor", "Text editor"),
+        ("left-panel", "Left panel"),
+        ("data-table", "Data table"),
+        ("text-muted-foreground order-summary", "Order summary"),
+    ] {
+        let node = json!({"tag": "div", "attrs": {"class": class}});
+        assert_eq!(name(node).as_deref(), Some(expected), "{class}");
+    }
+    for class in [
+        "top-0 left-1/2 table-cell font-semibold text-sm",
+        "container-fluid",
+    ] {
+        let node = json!({"tag": "div", "attrs": {"class": class}});
+        assert_eq!(name(node).as_deref(), Some("div"), "{class}");
+    }
+}
+
+#[test]
+fn camel_case_and_acronyms_split_into_words() {
+    for (id, expected) in [
+        ("URLInput", "Url input"),
+        ("FAQSection", "Faq section"),
+        ("sidebarNav", "Sidebar nav"),
+    ] {
+        let node = json!({"tag": "div", "attrs": {"id": id}});
+        assert_eq!(name(node).as_deref(), Some(expected), "{id}");
+    }
+}
+
+#[test]
 fn a_vector_icon_keeps_its_icon_name() {
     let svg = json!({"tag": "svg", "attrs": {"class": "lucide lucide-bell"},
         "icon": {"family": "lucide", "names": ["bell"]}});

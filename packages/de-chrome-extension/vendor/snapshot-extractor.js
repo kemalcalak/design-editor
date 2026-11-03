@@ -279,8 +279,14 @@
       if (typeof value !== "string") return;
       value = value.replace(/\s+/g, " ").trim();
       if (!value) return;
+      // A class list is cut at a word, so no half class can be the name.
+      if (value.length > 200) {
+        value = value.slice(0, 200);
+        if (key === "class") value = value.slice(0, Math.max(0, value.lastIndexOf(" ")));
+      }
+      if (!value) return;
       attrs = attrs || {};
-      attrs[key] = value.slice(0, 200);
+      attrs[key] = value;
     });
     return attrs;
   }

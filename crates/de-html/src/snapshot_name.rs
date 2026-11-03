@@ -145,27 +145,41 @@ fn shorten(text: &str) -> String {
 }
 
 /// An id a person chose, not one a framework generated (`:r1:`,
-/// `radix-:r2:`, `headlessui-menu-button-3`, `ember123`).
+/// `radix-:r2:`, `headlessui-menu-button-3`, `mat-select-2`, `ember123`).
 fn meaningful_id(id: &str) -> bool {
-    const GENERATED: [&str; 6] = ["radix-", "headlessui-", "react-aria", "mui-", "ember", "__"];
     id.chars().count() <= MAX_CHARS
         && !id.contains(':')
-        && !GENERATED.iter().any(|prefix| id.starts_with(prefix))
+        && !GENERATED_ID_PREFIXES
+            .iter()
+            .any(|prefix| id.starts_with(prefix))
         && id.chars().next().is_some_and(char::is_alphabetic)
         && !id.split(['-', '_']).any(looks_hashed)
 }
 
 /// A class that names the element rather than styling it.
 fn meaningful_class(class: &str) -> bool {
+    let mut segments = class.split(['-', '_']);
+    // `c-PJLV`, `e-1x2y`: one-letter scopes CSS-in-JS libraries emit.
+    let scoped = segments.next().is_some_and(|first| first.len() == 1);
     class.chars().next().is_some_and(char::is_alphabetic)
         && class
             .chars()
             .all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_')
+        && !scoped
         && !UTILITY_WORDS.contains(&class)
         && !UTILITY_PREFIXES.iter().any(|prefix| {
             class
                 .strip_prefix(prefix)
                 .is_some_and(|rest| rest.starts_with('-'))
+        })
+        && !VALUE_PREFIXES.iter().any(|prefix| {
+            class
+                .strip_prefix(prefix)
+                .and_then(|rest| rest.strip_prefix('-'))
+                .is_some_and(|value| {
+                    value.starts_with(|c: char| c.is_ascii_digit())
+                        || UTILITY_VALUES.contains(&value.split('-').next().unwrap_or(value))
+                })
         })
         && !GENERATED_CLASS_PREFIXES
             .iter()
@@ -173,41 +187,79 @@ fn meaningful_class(class: &str) -> bool {
         && !class.split(['-', '_']).any(looks_hashed)
 }
 
-/// A segment mixing letters and digits at hash length (`x1y2z`, `a8f3k`):
-/// CSS-module and CSS-in-JS class suffixes.
+/// A generated hash segment: letters and digits mixed at hash length
+/// (`x1y2z`, `a8f3k`), or a case pattern no word has (`kQxYzA`, `GQzVa`,
+/// styled-components and CSS-module suffixes). A real name of that shape
+/// (`step10`) is lost to the tag, which costs less than a hash as a name;
+/// camel case (`sidebarNav`) and acronyms (`FAQSection`) stay names.
 fn looks_hashed(segment: &str) -> bool {
-    segment.len() >= 5
+    let mixed = segment.len() >= 5
         && segment.chars().any(|c| c.is_ascii_digit())
-        && segment.chars().any(|c| c.is_ascii_alphabetic())
+        && segment.chars().any(|c| c.is_ascii_alphabetic());
+    let flips = segment
+        .chars()
+        .filter(char::is_ascii_alphabetic)
+        .map(|c| c.is_ascii_uppercase())
+        .collect::<Vec<_>>()
+        .windows(2)
+        .filter(|pair| pair[0] != pair[1])
+        .count();
+    mixed || (segment.len() >= 5 && flips >= 3)
 }
 
-/// "title-row" → "Title row", "sidebarNav" → "Sidebar nav".
+/// "title-row" → "Title row", "sidebarNav" → "Sidebar nav", "URLInput" →
+/// "Url input".
 fn humanize(name: &str) -> String {
+    let chars: Vec<char> = name.chars().collect();
     let mut words = String::new();
-    let mut previous_lower = false;
-    for c in name.chars() {
+    for (at, &c) in chars.iter().enumerate() {
         if c == '-' || c == '_' {
-            if !words.ends_with(' ') && !words.is_empty() {
+            if !words.is_empty() && !words.ends_with(' ') {
                 words.push(' ');
             }
-            previous_lower = false;
             continue;
         }
-        if c.is_uppercase() && previous_lower {
+        let previous = at.checked_sub(1).map(|before| chars[before]);
+        let next = chars.get(at + 1);
+        // A word starts at an upper-case letter after a lower-case one
+        // (`sidebarNav`), or at the last capital of an acronym (`URLInput`).
+        let starts_word = c.is_uppercase()
+            && previous.is_some_and(|p| {
+                p.is_lowercase()
+                    || p.is_ascii_digit()
+                    || (p.is_uppercase() && next.is_some_and(|n| n.is_lowercase()))
+            });
+        if starts_word && !words.ends_with(' ') {
             words.push(' ');
         }
-        previous_lower = c.is_lowercase() || c.is_ascii_digit();
         words.extend(c.to_lowercase());
     }
     let words = words.trim();
-    let mut chars = words.chars();
-    match chars.next() {
-        Some(first) => first.to_uppercase().chain(chars).collect(),
+    let mut first = words.chars();
+    match first.next() {
+        Some(letter) => letter.to_uppercase().chain(first).collect(),
         None => name.to_string(),
     }
 }
 
-/// Utility classes that stand alone (no value after a dash).
+/// Id prefixes frameworks generate.
+const GENERATED_ID_PREFIXES: &[&str] = &[
+    "radix-",
+    "headlessui-",
+    "react-aria",
+    "react-select-",
+    "mui-",
+    "mat-",
+    "cdk-",
+    "mantine-",
+    "downshift-",
+    "rc-",
+    "ember",
+    "__",
+];
+
+/// Utility classes that stand alone (no value after a dash): Tailwind,
+/// Bootstrap.
 const UTILITY_WORDS: &[&str] = &[
     "flex",
     "grid",
@@ -227,6 +279,7 @@ const UTILITY_WORDS: &[&str] = &[
     "peer",
     "italic",
     "underline",
+    "overline",
     "uppercase",
     "lowercase",
     "capitalize",
@@ -240,12 +293,18 @@ const UTILITY_WORDS: &[&str] = &[
     "transform",
     "visible",
     "invisible",
+    "collapse",
     "isolate",
     "grow",
     "shrink",
     "filter",
+    "blur",
+    "grayscale",
+    "invert",
+    "sepia",
     "prose",
     "dark",
+    "ordinal",
     "sr-only",
     "not-sr-only",
     "tabular-nums",
@@ -253,12 +312,20 @@ const UTILITY_WORDS: &[&str] = &[
     "no-underline",
     "not-italic",
     "normal-case",
+    "flow-root",
     "clearfix",
     "row",
     "col",
+    "container-fluid",
+    "visually-hidden",
+    "fixed-top",
+    "fixed-bottom",
+    "sticky-top",
+    "img-fluid",
+    "img-thumbnail",
 ];
 
-/// Utility families, matched as `<prefix>-<value>` (Tailwind, Bootstrap).
+/// Utility families, matched as `<prefix>-<value>`.
 const UTILITY_PREFIXES: &[&str] = &[
     "p",
     "px",
@@ -287,8 +354,6 @@ const UTILITY_PREFIXES: &[&str] = &[
     "size",
     "gap",
     "space",
-    "text",
-    "font",
     "leading",
     "tracking",
     "bg",
@@ -302,47 +367,31 @@ const UTILITY_PREFIXES: &[&str] = &[
     "outline",
     "opacity",
     "z",
-    "top",
-    "right",
-    "bottom",
-    "left",
     "inset",
-    "start",
-    "end",
     "flex",
     "grid",
-    "col",
-    "row",
     "items",
     "justify",
-    "content",
     "self",
     "place",
-    "order",
     "basis",
     "grow",
     "shrink",
     "overflow",
     "overscroll",
-    "object",
     "aspect",
     "columns",
     "break",
-    "box",
     "float",
     "clear",
     "decoration",
     "underline",
     "line-clamp",
-    "list",
     "whitespace",
     "align",
-    "fill",
     "stroke",
     "cursor",
-    "select",
     "resize",
-    "scroll",
     "snap",
     "touch",
     "pointer-events",
@@ -385,16 +434,134 @@ const UTILITY_PREFIXES: &[&str] = &[
     "fs",
     "fw",
     "lh",
-    "rounded",
-    "shadow",
     "position",
     "translate-middle",
     "align-items",
     "justify-content",
-    "data",
-    "aria",
-    "group",
-    "peer",
+];
+
+/// Families whose word is also a real name (`top-bar`, `text-editor`,
+/// `list-header`): a utility only when the rest is a value (`top-0`,
+/// `text-muted-foreground`, `row-span-2`).
+const VALUE_PREFIXES: &[&str] = &[
+    "text", "font", "top", "right", "bottom", "left", "start", "end", "order", "object", "scroll",
+    "fill", "content", "list", "box", "select", "row", "col", "table", "prose",
+];
+
+/// The values those families take: keywords, then the palette's colours.
+const UTILITY_VALUES: &[&str] = &[
+    "xs",
+    "sm",
+    "base",
+    "md",
+    "lg",
+    "xl",
+    "left",
+    "center",
+    "right",
+    "justify",
+    "start",
+    "end",
+    "top",
+    "bottom",
+    "between",
+    "around",
+    "evenly",
+    "baseline",
+    "stretch",
+    "normal",
+    "none",
+    "auto",
+    "full",
+    "px",
+    "span",
+    "all",
+    "text",
+    "first",
+    "last",
+    "white",
+    "black",
+    "transparent",
+    "current",
+    "inherit",
+    "muted",
+    "primary",
+    "secondary",
+    "foreground",
+    "background",
+    "destructive",
+    "accent",
+    "card",
+    "popover",
+    "wrap",
+    "nowrap",
+    "balance",
+    "pretty",
+    "ellipsis",
+    "clip",
+    "sans",
+    "serif",
+    "mono",
+    "thin",
+    "extralight",
+    "light",
+    "medium",
+    "semibold",
+    "bold",
+    "extrabold",
+    "contain",
+    "cover",
+    "fill",
+    "scale",
+    "smooth",
+    "m",
+    "mx",
+    "my",
+    "mt",
+    "mb",
+    "ml",
+    "mr",
+    "p",
+    "py",
+    "pt",
+    "pb",
+    "pl",
+    "pr",
+    "disc",
+    "decimal",
+    "inside",
+    "outside",
+    "image",
+    "border",
+    "content",
+    "decoration",
+    "cell",
+    "caption",
+    "column",
+    "fixed",
+    "invert",
+    "slate",
+    "gray",
+    "zinc",
+    "neutral",
+    "stone",
+    "red",
+    "orange",
+    "amber",
+    "yellow",
+    "lime",
+    "green",
+    "emerald",
+    "teal",
+    "cyan",
+    "sky",
+    "blue",
+    "indigo",
+    "violet",
+    "purple",
+    "fuchsia",
+    "pink",
+    "rose",
 ];
 
 /// Class names CSS-in-JS and component scoping generate.
