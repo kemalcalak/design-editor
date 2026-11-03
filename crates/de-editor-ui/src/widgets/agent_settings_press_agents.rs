@@ -11,7 +11,7 @@ use de_editor_core::host_settings_commit::{commit_settings_focus, SettingsCommit
 use de_editor_core::{BuiltinAgentPresetKey, BuiltinModelCatalogTarget, EditorState};
 
 use crate::widgets::agent_settings_panel::AgentSettingsHit;
-use crate::widgets::agent_settings_press_flow::SettingsPressOutcome;
+use crate::widgets::agent_settings_press_flow::{SettingsPress, SettingsPressOutcome};
 use crate::widgets::agent_settings_press_focus::{
     clear_focus, focus_acp_agent_draft, focus_builtin_agent_draft,
 };
@@ -55,6 +55,28 @@ pub(crate) fn begin_acp_draft(state: &mut EditorState) {
     let settings = &mut state.editor_ui.agent_settings;
     cancel_other_drafts(settings, &AgentsEntry::AcpDraft);
     settings.begin_acp_agent_draft();
+}
+
+/// The install command a copy button shows for an ACP agent (saved by
+/// index, or the draft), the text it puts on the clipboard (#304).
+fn acp_install_command(settings: &AgentSettings, index: Option<usize>) -> Option<String> {
+    use crate::widgets::agent_settings_acp_detail as acp;
+    let entry = match index {
+        Some(index) => AgentsEntry::Acp(settings.acp_agents.get(index)?.id.clone()),
+        None => AgentsEntry::AcpDraft,
+    };
+    let target = acp::acp_target(settings, &entry)?;
+    acp::install_hint(settings, target).map(str::to_string)
+}
+
+/// Start the copy button's check and hand the host the text to copy.
+fn copy_install_command(
+    state: &mut EditorState,
+    command: String,
+    now_ms: u64,
+) -> SettingsPressOutcome {
+    state.editor_ui.agent_settings.install_command_copied = Some((command.clone(), now_ms));
+    SettingsPressOutcome::effect(SettingsPress::CopyText(command))
 }
 
 /// The arms this module owns; `None` for every other hit.
@@ -182,6 +204,19 @@ pub(crate) fn apply_agents_hit(
             commit(state);
             begin_acp_draft(state);
             focus_acp_agent_draft(state, AcpAgentField::Command, now_ms);
+        }
+        AgentSettingsHit::CopyCliInstall(provider) => {
+            commit(state);
+            let settings = &state.editor_ui.agent_settings;
+            let command =
+                crate::widgets::agent_settings_cli_detail::install_command(settings, provider)
+                    .map(str::to_string);
+            return command.map(|command| copy_install_command(state, command, now_ms));
+        }
+        AgentSettingsHit::CopyAcpInstall(index) => {
+            commit(state);
+            let command = acp_install_command(&state.editor_ui.agent_settings, index);
+            return command.map(|command| copy_install_command(state, command, now_ms));
         }
         _ => return None,
     }
