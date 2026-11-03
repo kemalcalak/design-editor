@@ -98,9 +98,10 @@ fn stdio_eof_saves_an_imported_web_snapshot_unchanged() {
 fn browser_import_to_canvas_lands_verbatim_in_both_layouts() {
     let snapshot = std::fs::read_to_string(SNAPSHOT_FIXTURE).expect("read fixture");
     for auto_layout in [false, true] {
-        let ToolOutcome::OkWithCommand(_, command) =
-            browser_tool_canvas::import_command(&snapshot, None, auto_layout)
-        else {
+        let ToolOutcome::OkWithCommand(_, command) = browser_tool_canvas::place_import(
+            browser_tool_canvas::import_nodes(&snapshot, auto_layout),
+            None,
+        ) else {
             panic!("import-to-canvas produced no command (auto_layout={auto_layout})");
         };
         let imported = raw_import("reference", |state| {
