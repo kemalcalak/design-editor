@@ -47,36 +47,6 @@ fn laid_out(nodes: &[NodePayload], out: &mut Vec<Placed>) {
     }
 }
 
-/// The face this machine measures the fixture's `Arial, sans-serif` with,
-/// for a failure message: a label after measured text moves with it.
-fn font_report() -> String {
-    #[cfg(feature = "skia-measure")]
-    {
-        let resolver = jian_skia::FontResolver::new(skia_safe::FontMgr::new());
-        [400, 600]
-            .into_iter()
-            .map(|weight| {
-                match resolver.typeface_for_char(Some("Arial, sans-serif"), 'C', weight, false) {
-                    Some(face) => format!(
-                        "{weight} → {} {:?}{}",
-                        face.typeface.family_name(),
-                        face.typeface.font_style().weight(),
-                        if face.synthetic_bold {
-                            " synthetic bold"
-                        } else {
-                            ""
-                        }
-                    ),
-                    None => format!("{weight} → none"),
-                }
-            })
-            .collect::<Vec<_>>()
-            .join(", ")
-    }
-    #[cfg(not(feature = "skia-measure"))]
-    String::from("no skia measure")
-}
-
 #[test]
 fn auto_layout_import_lands_where_the_browser_drew_it() {
     let options = HtmlImportOptions {
@@ -96,6 +66,13 @@ fn auto_layout_import_lands_where_the_browser_drew_it() {
         &mut browser,
     );
 
+    // Windows CI lays text out with the character-count estimate instead
+    // of skia (`DE_TEST_ESTIMATE_TEXT_MEASURE`, see `adapter.rs`), so there
+    // a label after measured text (the chevron after a pill's label) or a
+    // centred one lands wherever the estimate's widths put it; only the
+    // rows (y) are checked.
+    let estimated =
+        cfg!(target_os = "windows") && std::env::var_os("DE_TEST_ESTIMATE_TEXT_MEASURE").is_some();
     let mut checked = 0;
     for (label, x, right, centre) in &placed {
         // Duplicated labels ("Overview" is a nav item and the heading, two
@@ -122,9 +99,8 @@ fn auto_layout_import_lands_where_the_browser_drew_it() {
                 || ((x + right) / 2.0 - (bx + b_right) / 2.0).abs() <= 2.0
                 || (right - b_right).abs() <= 2.0;
             assert!(
-                anchored,
-                "{label}: x {x}..{right} vs {bx}..{b_right} (Arial here: {})",
-                font_report()
+                anchored || estimated,
+                "{label}: x {x}..{right} vs {bx}..{b_right}"
             );
         }
         checked += 1;
