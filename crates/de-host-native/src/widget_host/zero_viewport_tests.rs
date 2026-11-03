@@ -60,7 +60,12 @@ fn must_finish(name: &'static str, body: impl FnOnce() + Send + 'static) {
                 std::panic::resume_unwind(panic);
             }
         }
-        Err(mpsc::RecvTimeoutError::Timeout) => panic!("{name} did not return within 60 s"),
+        Err(mpsc::RecvTimeoutError::Timeout) => {
+            // The spinning worker would keep its test locks, so a panic here
+            // could still hang the run: end the process instead.
+            eprintln!("{name} did not return within 60 s");
+            std::process::abort();
+        }
     }
 }
 
@@ -86,6 +91,8 @@ fn degenerate_viewports_paint_and_hit_test_without_spinning() {
     });
 }
 
+// Preview tests abort inside the Windows CI Skia stack, like their siblings.
+#[cfg(not(target_os = "windows"))]
 #[test]
 fn degenerate_viewports_in_preview_return() {
     must_finish("degenerate preview", || {

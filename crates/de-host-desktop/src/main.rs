@@ -416,9 +416,11 @@ struct DesktopApp {
     win_size: Option<(u32, u32)>,
     /// Whether the window is currently maximized.
     win_maximized: bool,
-    /// The window's client area is 0×0 (minimized on Windows, #302) or the
-    /// OS reports it fully occluded. Nothing paints while either holds.
+    /// The window's client area is 0×0 (minimized on Windows, #302).
+    /// Nothing paints while it holds.
     window_zero_size: bool,
+    /// The OS reports the window fully occluded (`WindowEvent::Occluded`).
+    /// Nothing paints while it holds.
     window_occluded: bool,
     /// In-app Git — the repository bound to the open document.
     /// Rebound whenever the document path changes; read by the

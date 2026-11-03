@@ -92,12 +92,13 @@ impl DesktopApp {
     }
 
     /// Record a `Resized` size: the logical viewport, the preview layout and
-    /// the persisted windowed size. Returns `false` for a 0×0 client area,
+    /// the persisted windowed size, then schedule a repaint. Returns `false`
+    /// and changes nothing else for a 0×0 client area,
     /// which Windows reports on minimize (#302): that size is never painted
     /// or saved, so the last real viewport stays and the restore's `Resized`
     /// rebuilds the surface at the real size.
     pub(crate) fn apply_window_size(&mut self, size: PhysicalSize<u32>) -> bool {
-        self.window_zero_size = size.width == 0 || size.height == 0;
+        self.window_zero_size = !has_area(size);
         if self.window_zero_size {
             return false;
         }
@@ -114,7 +115,7 @@ impl DesktopApp {
         if !self.win_maximized {
             self.win_size = Some((size.width, size.height));
         }
-        // The restore's first frame paints even if nothing else changed.
+        // Any real size repaints, the restore after a minimize included.
         self.request_redraw(true);
         true
     }
@@ -142,7 +143,7 @@ impl DesktopApp {
             .window
             .as_ref()
             .is_some_and(|w| w.is_maximized() || w.is_minimized().unwrap_or(false));
-        if !parked && !self.window_zero_size {
+        if !parked {
             self.win_pos = Some((pos.x, pos.y));
         }
     }
@@ -250,11 +251,16 @@ impl DesktopApp {
             .window
             .as_ref()
             .map(Window::inner_size)
-            .filter(|size| size.width > 0 && size.height > 0)
+            .filter(|size| has_area(*size))
         {
             self.viewport_width = size.width as f32 / self.dpi;
             self.viewport_height = size.height as f32 / self.dpi;
         }
         self.request_redraw(true);
     }
+}
+
+/// A client area that can be painted. Windows reports 0×0 while minimized.
+fn has_area(size: PhysicalSize<u32>) -> bool {
+    size.width > 0 && size.height > 0
 }
