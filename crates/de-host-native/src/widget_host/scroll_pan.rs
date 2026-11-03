@@ -1,6 +1,6 @@
 //! Wheel / trackpad pan routing — split from `scroll.rs` at the
 //! 800-line cap. Since #303 every unmodified mouse wheel arrives here
-//! too (`wheel_flow::route_wheel`), so this ladder must own every
+//! too (`host_wheel_routing::route_wheel`), so this ladder must own every
 //! surface `apply_wheel_inner` owns.
 
 use crate::widget_host::WidgetHostNative;

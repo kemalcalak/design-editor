@@ -270,7 +270,6 @@ pub mod press_flow;
 mod prompt_center_press_flow;
 mod scene_template_press_flow;
 pub mod scroll_flow;
-pub mod wheel_flow;
 
 // Step 4 — icon glyph drawer for editor chrome (lucide-flavored line art).
 pub mod icon_catalog;

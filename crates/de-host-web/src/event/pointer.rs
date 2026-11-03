@@ -20,7 +20,9 @@
 //! only the wheel mapper because that's the cross-axis-translation
 //! piece that benefits from being a pure helper.
 
-use de_editor_ui::widgets::wheel_flow::{route_wheel, shift_moves_to_x, WheelRoute, WHEEL_LINE_PX};
+use de_editor_core::host_wheel_routing::{
+    route_wheel, shift_moves_to_x, WheelRoute, WHEEL_LINE_PX,
+};
 use de_editor_ui::{Modifiers, ScrollMode, WheelEvent};
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -90,7 +92,7 @@ pub fn map_offset_to_logical(
 
 /// Classify a browser wheel into the editor action the web shell should run.
 ///
-/// Routing is the shared `wheel_flow::route_wheel` the desktop host uses
+/// Routing is the shared `host_wheel_routing::route_wheel` the desktop host uses
 /// (#303, Figma's mapping): an unmodified wheel or trackpad scroll pans
 /// (Shift = horizontal), Cmd/Ctrl/Alt zooms — a browser pinch arrives as
 /// Ctrl+wheel. Deltas are flipped to the shared positive-up convention.

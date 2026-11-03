@@ -1,5 +1,5 @@
 use super::*;
-use de_editor_ui::widgets::wheel_flow::{MACOS_WHEEL_LINE_PX, WHEEL_LINE_PX};
+use de_editor_core::host_wheel_routing::{MACOS_WHEEL_LINE_PX, WHEEL_LINE_PX};
 use winit::dpi::PhysicalPosition;
 
 const VIEWPORT: (f32, f32) = (1200.0, 800.0);

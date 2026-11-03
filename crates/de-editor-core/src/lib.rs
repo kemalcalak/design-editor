@@ -100,6 +100,7 @@ mod host_support_allocator;
 #[cfg(test)]
 mod host_support_tests;
 pub mod host_ui_transitions;
+pub mod host_wheel_routing;
 pub mod host_variables_commit;
 pub mod host_variables_transitions;
 pub mod html_import_diagnostics;

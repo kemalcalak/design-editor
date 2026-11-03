@@ -1,7 +1,7 @@
 //! Mouse-wheel / trackpad dispatch for `DesktopApp` (#303).
 //!
 //! Every `MouseScrollDelta` goes through the shared
-//! `de_editor_ui::widgets::wheel_flow` mapping, the same one the web host
+//! `de_editor_core::host_wheel_routing` mapping, the same one the web host
 //! uses: no modifier pans the canvas (Shift = horizontal) and scrolls
 //! panels, Cmd/Ctrl zooms. Line deltas become pixels first, so a Windows
 //! wheel notch or precision-touchpad stroke moves panels and the canvas
@@ -9,7 +9,7 @@
 //! here is the platform part: how many pixels one line is.
 
 use crate::DesktopApp;
-use de_editor_ui::widgets::wheel_flow::{
+use de_editor_core::host_wheel_routing::{
     line_delta_px, route_wheel, shift_moves_to_x, NotchScale, WheelRoute, WHEEL_ZOOM_PER_NOTCH,
 };
 use winit::event::MouseScrollDelta;
@@ -106,7 +106,7 @@ pub(crate) fn wheel_route(
 /// user's wheel speed, so one line is one `MACOS_WHEEL_LINE_PX`.
 #[cfg(target_os = "macos")]
 pub(crate) fn platform_notch_scale(_axis: WheelAxis) -> (NotchScale, f32) {
-    use de_editor_ui::widgets::wheel_flow::MACOS_WHEEL_LINE_PX;
+    use de_editor_core::host_wheel_routing::MACOS_WHEEL_LINE_PX;
     (NotchScale::Lines(1.0), MACOS_WHEEL_LINE_PX)
 }
 
@@ -115,7 +115,7 @@ pub(crate) fn platform_notch_scale(_axis: WheelAxis) -> (NotchScale, f32) {
 /// settings, read per event so a change applies at once.
 #[cfg(target_os = "windows")]
 pub(crate) fn platform_notch_scale(axis: WheelAxis) -> (NotchScale, f32) {
-    use de_editor_ui::widgets::wheel_flow::{DEFAULT_WHEEL_LINES_PER_NOTCH, WHEEL_LINE_PX};
+    use de_editor_core::host_wheel_routing::{DEFAULT_WHEEL_LINES_PER_NOTCH, WHEEL_LINE_PX};
     use windows_sys::Win32::UI::WindowsAndMessaging::{
         SystemParametersInfoW, SPI_GETWHEELSCROLLCHARS, SPI_GETWHEELSCROLLLINES,
     };
@@ -140,7 +140,7 @@ pub(crate) fn platform_notch_scale(axis: WheelAxis) -> (NotchScale, f32) {
 /// winit exposes; use the Windows / Chromium default of three lines.
 #[cfg(not(any(target_os = "macos", target_os = "windows")))]
 pub(crate) fn platform_notch_scale(_axis: WheelAxis) -> (NotchScale, f32) {
-    use de_editor_ui::widgets::wheel_flow::{DEFAULT_WHEEL_LINES_PER_NOTCH, WHEEL_LINE_PX};
+    use de_editor_core::host_wheel_routing::{DEFAULT_WHEEL_LINES_PER_NOTCH, WHEEL_LINE_PX};
     (
         NotchScale::Lines(DEFAULT_WHEEL_LINES_PER_NOTCH),
         WHEEL_LINE_PX,

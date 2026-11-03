@@ -253,7 +253,7 @@ impl WidgetHost {
 
     /// Wheel / trackpad pan — scroll the surface under the cursor, else
     /// translate the viewport by `(dx, dy)`. Same Figma-style routing as
-    /// the native host (`wheel_flow::route_wheel`): an unmodified wheel
+    /// the native host (`host_wheel_routing::route_wheel`): an unmodified wheel
     /// or swipe pans, pinch / Cmd+wheel zooms. Only the CanvasKit mount
     /// wires it, hence the allow for the non-canvaskit build.
     #[allow(dead_code)]

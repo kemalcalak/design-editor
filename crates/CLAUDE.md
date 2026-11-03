@@ -362,7 +362,7 @@ Entry and site (#223): Preview opens on the top-level board holding the selectio
 - DPI scale via `canvas.scale((dpi, dpi))` per frame (preceded by `reset_matrix()` so it doesn't compound)
 - LOGICAL viewport sizes (physical / dpi)
 - Cursor position cached on `CursorMoved`, dispatched on `MouseInput`
-- Wheel and trackpad both route through `widgets/wheel_flow.rs` (#303, Figma's mapping): no modifier pans (Shift = horizontal), Cmd/Ctrl zooms; `LineDelta` becomes pixels first (`line_delta_px`: Windows reads the system lines per notch, 100 px at the default 3; macOS 40 px per line). `PinchGesture` zooms
+- Wheel and trackpad both route through `de_editor_core::host_wheel_routing` (#303, Figma's mapping): no modifier pans (Shift = horizontal), Cmd/Ctrl zooms; `LineDelta` becomes pixels first (`line_delta_px`: Windows reads the system lines per notch, 100 px at the default 3; macOS 40 px per line). `PinchGesture` zooms
 - Cursor flips to `EwResize` when over a panel-resize gutter (`host.panel_resize_hover`)
 - `WaitUntil(host.next_animation_deadline_ms())` pumps the caret-blink redraw
 
@@ -504,6 +504,7 @@ Pure state transitions — no widget types, wasm32-clean — live in **`de-edito
 | `host_settings_commit.rs`          | Settings-modal draft commit                                                               |
 | `host_image_panel_transitions.rs`  | Image-node panel transitions (Search / Generate popovers)                                 |
 | `host_preset_name_draft.rs`        | The variables preset "save as name" input                                                 |
+| `host_wheel_routing.rs`            | Wheel / trackpad routing (pan vs zoom, Shift axis) + line → px per notch (#303)           |
 | `request_snapshot.rs`              | `narrowed_snapshot` — see below                                                           |
 | `agent_reveals.rs`                 | Before/after node-id diff + staggered reveal bookkeeping for freshly inserted subtrees; one batch's queue is capped at ~6 s (`REVEAL_QUEUE_CAP_MS`, #17) |
 | `agent_indicators_wake.rs`         | `reveal_wake`: the generation overlay's wake needs split by purpose (animating, next start, settle, erase frame) + the per-thread burst-smoothing switch |
@@ -522,7 +523,6 @@ Widget-typed shared logic lives in **`de-editor-ui/src/widgets/`**:
 | `image_crop_flow.rs`                                       | Figma-style image-fill crop gesture                                                |
 | `image_popover_input_flow.rs`                              | Mouse selection in the image Search / Generate text inputs                         |
 | `scroll_flow.rs`                                           | Panel wheel / trackpad-pan scrolling                                               |
-| `wheel_flow.rs`                                            | Wheel / trackpad routing (pan vs zoom, Shift axis) and line → px per notch (#303)  |
 | `cursor_hover_flow.rs`                                     | Cursor-move hover resolution                                                       |
 | `missing_fonts_flow.rs`                                    | Missing-font prompt: scroll, press dispatch, detection/refresh bookkeeping         |
 | `variables_panel_geometry_flow.rs`                         | Floating VariablesPanel placement + resize clamping                                |
