@@ -71,6 +71,21 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
+      # The Linux runner's disk is close to full once the workspace's debug
+      # `target/` and every test binary are built: on 2026-11-03 linking ran
+      # out of space ("No space left on device", then `ld` died with a Bus
+      # error, #296). Drop preinstalled toolchains this job never uses.
+      # Chrome stays: the browser tests drive it.
+      - name: Free disk space (Linux)
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          df -h /
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc \
+                      /usr/local/.ghcup /opt/hostedtoolcache/CodeQL \
+                      /usr/local/share/boost /usr/share/swift
+          sudo docker image prune --all --force > /dev/null || true
+          df -h /
       - uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: '1.94'
