@@ -47,6 +47,36 @@ fn laid_out(nodes: &[NodePayload], out: &mut Vec<Placed>) {
     }
 }
 
+/// The face this machine measures the fixture's `Arial, sans-serif` with,
+/// for a failure message: a label after measured text moves with it.
+fn font_report() -> String {
+    #[cfg(feature = "skia-measure")]
+    {
+        let resolver = jian_skia::FontResolver::new(skia_safe::FontMgr::new());
+        [400, 600]
+            .into_iter()
+            .map(|weight| {
+                match resolver.typeface_for_char(Some("Arial, sans-serif"), 'C', weight, false) {
+                    Some(face) => format!(
+                        "{weight} → {} {:?}{}",
+                        face.typeface.family_name(),
+                        face.typeface.font_style().weight(),
+                        if face.synthetic_bold {
+                            " synthetic bold"
+                        } else {
+                            ""
+                        }
+                    ),
+                    None => format!("{weight} → none"),
+                }
+            })
+            .collect::<Vec<_>>()
+            .join(", ")
+    }
+    #[cfg(not(feature = "skia-measure"))]
+    String::from("no skia measure")
+}
+
 #[test]
 fn auto_layout_import_lands_where_the_browser_drew_it() {
     let options = HtmlImportOptions {
@@ -91,7 +121,11 @@ fn auto_layout_import_lands_where_the_browser_drew_it() {
             let anchored = (x - bx).abs() <= 2.0
                 || ((x + right) / 2.0 - (bx + b_right) / 2.0).abs() <= 2.0
                 || (right - b_right).abs() <= 2.0;
-            assert!(anchored, "{label}: x {x}..{right} vs {bx}..{b_right}");
+            assert!(
+                anchored,
+                "{label}: x {x}..{right} vs {bx}..{b_right} (Arial here: {})",
+                font_report()
+            );
         }
         checked += 1;
     }
