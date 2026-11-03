@@ -143,31 +143,18 @@ fn process_message_with_auto_finalize(
     // File-backed mode has no live canvas for any tool call to animate; the
     // tool name only decides whether the write lands verbatim.
     let response = process_message_with_applier(state, line, |tool_name, state, cmd| {
-        let baseline = baseline_for_tool(tool_name, state);
-        // `EditorState::apply` runs the pre-validate-then-mutate
-        // discipline; `false` means the command rejected and the
-        // document was NOT changed.
-        if !state.apply(cmd.clone()) {
-            apply_rejected = true;
-            return false;
+        let outcome = apply_file_write(state, path, tool_name, cmd, auto_finalize.as_deref_mut());
+        match outcome {
+            FileWrite::Applied => true,
+            FileWrite::Rejected => {
+                apply_rejected = true;
+                false
+            }
+            FileWrite::SaveFailed(error) => {
+                applier_failed = Some(format!("save failed: {error}"));
+                false
+            }
         }
-        let scope = baseline.map(|baseline| baseline.scope_after(state));
-        if let Some(scope) = &scope {
-            run_write_repairs_after_apply(state, scope);
-        }
-        // No frame loop here: a script node the write made stale runs now,
-        // so the saved file holds its children (#19).
-        de_mcp::script_node::regenerate_stale_scripts(state);
-        if let Err(e) = save_editor_state(state, path) {
-            applier_failed = Some(format!("save failed: {e}"));
-            return false;
-        }
-        // A verbatim write does not arm auto-finalize: finalizing would run
-        // the same repairs over it at session end.
-        if let (Some(auto_finalize), Some(scope)) = (auto_finalize.as_deref_mut(), &scope) {
-            auto_finalize.note_write(Instant::now(), scope);
-        }
-        true
     })?;
     if let Some(ref msg) = applier_failed {
         eprintln!("design-editor mcp: {msg}");
@@ -182,6 +169,49 @@ fn process_message_with_auto_finalize(
         }
     }
     Ok(response)
+}
+
+/// How one file-backed write ended.
+enum FileWrite {
+    Applied,
+    /// The command rejected; the document was NOT changed.
+    Rejected,
+    SaveFailed(McpServeError),
+}
+
+/// Apply one write of `tool_name` to the file-backed document and save it.
+/// A generated write also gets the repairs over the part it touched and arms
+/// auto-finalize with the roots it created; a verbatim one (an import, an
+/// `execute`, a history step: `write_repairs::writes_verbatim`) gets neither.
+fn apply_file_write(
+    state: &mut EditorState,
+    path: &Path,
+    tool_name: &str,
+    cmd: &EditorCommand,
+    auto_finalize: Option<&mut auto_finalize::AutoFinalize>,
+) -> FileWrite {
+    let baseline = baseline_for_tool(tool_name, state);
+    // `EditorState::apply` runs the pre-validate-then-mutate discipline.
+    if !state.apply(cmd.clone()) {
+        return FileWrite::Rejected;
+    }
+    // `None` for a verbatim write: `baseline_for_tool` captured no baseline.
+    let scope = baseline.map(|baseline| baseline.scope_after(state));
+    if let Some(scope) = &scope {
+        run_write_repairs_after_apply(state, scope);
+    }
+    // No frame loop here: a script node the write made stale runs now,
+    // so the saved file holds its children (#19).
+    de_mcp::script_node::regenerate_stale_scripts(state);
+    if let Err(e) = save_editor_state(state, path) {
+        return FileWrite::SaveFailed(e);
+    }
+    // A verbatim write does not arm auto-finalize: finalizing would run
+    // the same repairs over it at session end.
+    if let (Some(auto_finalize), Some(scope)) = (auto_finalize, &scope) {
+        auto_finalize.note_write(Instant::now(), scope);
+    }
+    FileWrite::Applied
 }
 
 fn mcp_response_succeeded(response: &str) -> bool {
@@ -702,6 +732,8 @@ mod finalize_tool_tests;
 mod generate_tool_tests;
 #[cfg(test)]
 mod generate_tool_transforms_tests;
+#[cfg(test)]
+mod import_finalize_tests;
 #[cfg(test)]
 mod import_pen_dev_verbatim_tests;
 #[cfg(test)]

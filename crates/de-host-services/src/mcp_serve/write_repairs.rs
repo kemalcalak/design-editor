@@ -16,9 +16,11 @@ use de_editor_core::EditorState;
 
 /// Tools whose writes must land exactly as authored, so no repair runs after
 /// them:
-/// - `import_pen_dev` / `import_pptx` create new roots, which [`WriteScope`]
-///   would take for AI-generated screens; repairing them rewrites someone
-///   else's work.
+/// - every `import_*` tool and `browser` (import-to-canvas) create new roots,
+///   which [`WriteScope`] would take for AI-generated screens; repairing or
+///   finalizing them rewrites someone else's work (#299). `browser`'s other
+///   writes (a node's address, a screenshot image) are not generated work
+///   either.
 /// - `execute` (#168) already read back its layout and took its screenshots
 ///   in the same call; a repair after it would land a document the script
 ///   never saw.
@@ -27,7 +29,16 @@ use de_editor_core::EditorState;
 pub(crate) fn writes_verbatim(tool_name: &str) -> bool {
     matches!(
         tool_name,
-        "import_pen_dev" | "import_pptx" | "execute" | "undo" | "redo"
+        "browser"
+            | "import_web_snapshot"
+            | "import_html"
+            | "import_html_url"
+            | "import_svg"
+            | "import_pen_dev"
+            | "import_pptx"
+            | "execute"
+            | "undo"
+            | "redo"
     )
 }
 
