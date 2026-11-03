@@ -20,6 +20,7 @@
 //! only the wheel mapper because that's the cross-axis-translation
 //! piece that benefits from being a pure helper.
 
+use de_editor_ui::widgets::wheel_flow::{route_wheel, WheelRoute, WHEEL_LINE_PX};
 use de_editor_ui::{Modifiers, ScrollMode, WheelEvent};
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -36,8 +37,6 @@ pub enum WheelIntent {
     },
 }
 
-const WHEEL_LINE_PX: f32 = 40.0;
-const REGULAR_ZOOM_GAIN: f32 = 1.35;
 const MODIFIED_ZOOM_GAIN: f32 = 4.0;
 /// Caps one browser event to roughly a 30% viewport scale change.
 const MAX_CANVAS_ZOOM_DELTA: f32 = 175.0;
@@ -91,10 +90,10 @@ pub fn map_offset_to_logical(
 
 /// Classify a browser wheel into the editor action the web shell should run.
 ///
-/// Vertical mouse-wheel scroll keeps the existing zoom behavior. Horizontal
-/// trackpad deltas and Shift+wheel are pan gestures, matching desktop's
-/// `apply_pan_gesture` path. Cmd/Ctrl/Alt modified wheels are reserved for
-/// zoom so browser pinch/Cmd-wheel never turns into a pan.
+/// Routing is the shared `wheel_flow::route_wheel` the desktop host uses
+/// (#303, Figma's mapping): an unmodified wheel or trackpad scroll pans
+/// (Shift = horizontal), Cmd/Ctrl/Alt zooms — a browser pinch arrives as
+/// Ctrl+wheel. Deltas are flipped to the shared positive-up convention.
 pub fn classify_wheel_intent(
     delta_x: f32,
     delta_y: f32,
@@ -104,33 +103,21 @@ pub fn classify_wheel_intent(
     modifiers: Modifiers,
 ) -> WheelIntent {
     let modified_zoom = modifiers.intersects(Modifiers::CTRL | Modifiers::CMD | Modifiers::ALT);
-    let horizontal_delta_from_y = normalize_wheel_delta(delta_y, delta_mode, page_width);
-    let delta_x = normalize_wheel_delta(delta_x, delta_mode, page_width);
-    let delta_y = normalize_wheel_delta(delta_y, delta_mode, page_height);
-    if !modified_zoom && (delta_x != 0.0 || modifiers.contains(Modifiers::SHIFT)) {
-        if delta_x != 0.0 {
-            WheelIntent::Pan {
-                dx: -delta_x,
-                dy: -delta_y,
-            }
-        } else {
-            WheelIntent::Pan {
-                dx: -horizontal_delta_from_y,
-                dy: 0.0,
-            }
-        }
+    let shift = modifiers.contains(Modifiers::SHIFT);
+    let dx = -normalize_wheel_delta(delta_x, delta_mode, page_width);
+    // A Shift+wheel turned horizontal pages by the horizontal extent.
+    let dy = if shift && !modified_zoom && dx == 0.0 {
+        -normalize_wheel_delta(delta_y, delta_mode, page_width)
     } else {
-        let scroll_delta_y = -delta_y;
-        let gain = if modified_zoom {
-            MODIFIED_ZOOM_GAIN
-        } else {
-            REGULAR_ZOOM_GAIN
-        };
-        WheelIntent::Zoom {
-            scroll_delta_y,
-            canvas_delta_y: (scroll_delta_y * gain)
+        -normalize_wheel_delta(delta_y, delta_mode, page_height)
+    };
+    match route_wheel(dx, dy, shift, modified_zoom) {
+        WheelRoute::Pan { dx, dy } => WheelIntent::Pan { dx, dy },
+        WheelRoute::Zoom { delta_y } => WheelIntent::Zoom {
+            scroll_delta_y: delta_y,
+            canvas_delta_y: (delta_y * MODIFIED_ZOOM_GAIN)
                 .clamp(-MAX_CANVAS_ZOOM_DELTA, MAX_CANVAS_ZOOM_DELTA),
-        }
+        },
     }
 }
 

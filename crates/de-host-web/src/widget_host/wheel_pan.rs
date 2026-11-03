@@ -251,10 +251,11 @@ impl WidgetHost {
         true
     }
 
-    /// 2-finger trackpad pan — translate viewport by `(dx, dy)`.
-    /// Same Figma-style separation as the native host: trackpad
-    /// swipe pans, pinch / Cmd+wheel / mouse-wheel zooms. Public
-    /// host API — a future trackpad-gesture runner wires this.
+    /// Wheel / trackpad pan — scroll the surface under the cursor, else
+    /// translate the viewport by `(dx, dy)`. Same Figma-style routing as
+    /// the native host (`wheel_flow::route_wheel`): an unmodified wheel
+    /// or swipe pans, pinch / Cmd+wheel zooms. Only the CanvasKit mount
+    /// wires it, hence the allow for the non-canvaskit build.
     #[allow(dead_code)]
     pub fn apply_pan_gesture(
         &mut self,
@@ -265,6 +266,17 @@ impl WidgetHost {
         viewport_width: f32,
         viewport_height: f32,
     ) -> bool {
+        // A plain wheel pans since #303, so the device-frame preview must
+        // own this path too, exactly as it owns the zoom path above.
+        #[cfg(feature = "canvaskit")]
+        if self.editor_state.editor_ui.preview.mode
+            && self.preview.is_some()
+            && self.device_mode_active()
+        {
+            self.last_viewport_w = viewport_width;
+            self.last_viewport_h = viewport_height;
+            return self.apply_device_scroll(dy);
+        }
         if self.wheel_shader_source_editor(x, y, dy, viewport_width, viewport_height) {
             return true;
         }
