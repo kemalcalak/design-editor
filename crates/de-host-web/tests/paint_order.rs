@@ -305,7 +305,7 @@ fn canvaskit_bridge_registers_browser_system_fonts() {
 
     for marker in [
         "const systemTypefaces",
-        "registerSystemFont(family, bytes)",
+        "registerSystemFont(family, bytes, weight",
         "CK.Typeface.MakeFreeTypeFaceFromData(copyBytes(bytes))",
         "systemTypefaceFor(t, emojiRun)",
         "const hasSystemFallbackText",

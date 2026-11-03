@@ -617,8 +617,18 @@ extern "C" {
         max_width: f32,
         line_height: f32,
     ) -> js_sys::Float32Array;
+    /// Add one face of a browser system family, with its OS/2 weight, italic
+    /// flag and width class; text picks among a family's faces by CSS font
+    /// matching.
     #[wasm_bindgen(method, js_name = registerSystemFont)]
-    pub(super) fn register_system_font(this: &OpCk, family: &str, bytes: &[u8]) -> bool;
+    pub(super) fn register_system_font(
+        this: &OpCk,
+        family: &str,
+        bytes: &[u8],
+        weight: u16,
+        italic: bool,
+        width: u16,
+    ) -> bool;
     /// Register a user-imported font face; the family becomes selectable by
     /// name in `drawText` / `measureTextFamilyStyled`. Replaces any prior face
     /// under the same (case-insensitive) family key. Returns `false` on parse

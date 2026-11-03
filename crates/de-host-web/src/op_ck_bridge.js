@@ -110,26 +110,103 @@ export function opCkParseFontFamilyStack(family) {
 // already available through the browser canvas path, so it terminates
 // named-face lookup instead of skipping ahead in the stack.
 // `bundledTypefaces` is optional so a caller that predates the bundled registry
-// still resolves imported + system.
-export function opCkResolveRegisteredTypeface(family, importedTypefaces, systemTypefacesByFamily, bundledTypefaces) {
+// still resolves imported + system. Within the family the face for `weight` /
+// `italic` is picked by CSS font matching (`opCkMatchFontFace`).
+export function opCkResolveRegisteredTypeface(family, importedTypefaces, systemTypefacesByFamily, bundledTypefaces, weight = 400, italic = false) {
   for (const candidate of opCkParseFontFamilyStack(family)) {
     const familyKey = opCkNormalizeFontFamilyName(candidate);
     if (!familyKey) continue;
     if (CSS_GENERIC_FONT_FAMILIES.has(familyKey)) return null;
     const imported = importedTypefaces.get(familyKey);
-    if (imported) {
-      return { key: `imported:${familyKey}`, familyKey, source: 'imported', tf: imported.tf };
-    }
+    if (imported) return opCkRegisteredFace('imported', familyKey, imported, weight, italic);
     const system = systemTypefacesByFamily.get(familyKey);
-    if (system) {
-      return { key: `system:${familyKey}`, familyKey, source: 'system', tf: system.tf };
-    }
+    if (system) return opCkRegisteredFace('system', familyKey, system, weight, italic);
     const bundled = bundledTypefaces && bundledTypefaces.get(familyKey);
-    if (bundled) {
-      return { key: `bundled:${familyKey}`, familyKey, source: 'bundled', tf: bundled.tf };
-    }
+    if (bundled) return opCkRegisteredFace('bundled', familyKey, bundled, weight, italic);
   }
   return null;
+}
+
+// The face of a registry entry that CSS matching picks. An entry without a
+// `faces` list holds one face, taken as Regular. The key names the face, so
+// per-face caches (fonts, coverage) never mix two weights of one family.
+const opCkRegisteredFace = (source, familyKey, entry, weight, italic) => {
+  const faces = entry.faces;
+  const index = faces && faces.length > 0 ? opCkMatchFontFace(faces, weight, italic) : -1;
+  const face = index >= 0 ? faces[index] : { tf: entry.tf, weight: OP_CK_REGULAR_WEIGHT, italic: false };
+  // Faces are only ever appended, so an index names one face for good.
+  const faceKey = index >= 0 ? `@${index}` : '';
+  return {
+    key: `${source}:${familyKey}${faceKey}`,
+    familyKey,
+    source,
+    tf: face.tf,
+    faceWeight: face.weight,
+    // Skew only when no real italic face stands in (jian `synthetic_italic`).
+    syntheticItalic: Boolean(italic) && !face.italic,
+  };
+};
+
+// OS/2 width class of a normal-width face, the width text always asks for.
+const OP_CK_NORMAL_WIDTH = 5;
+const OP_CK_REGULAR_WEIGHT = 400;
+// jian-skia `BOLD_WEIGHT_MIN` / `SYNTHETIC_BOLD_FACE_WEIGHT_MAX`.
+const OP_CK_BOLD_WEIGHT_MIN = 600;
+const OP_CK_SYNTHETIC_BOLD_FACE_WEIGHT_MAX = 500;
+
+// CSS font matching (CSS Fonts 4 §5.2) over one family's `faces`
+// (`{ weight, italic, width }`): the closest width to normal (narrower
+// first), then slant, then weight. A desired weight of 400–500 tries itself,
+// heavier faces up to 500, lighter ones, then heavier ones; below 400 goes
+// lighter first, above 500 heavier first. Mirrors jian-skia
+// `font_match::css_match_style`, so 500 on a Regular + Bold family is Regular
+// on both hosts, as in browsers. Unlike native, oblique counts as italic (the
+// OS/2 flags give no order between them). Keep the rules in step with
+// `font_match.rs`; tests/font_weight_matching.rs repeats its cases.
+// Returns an index, -1 when `faces` is empty.
+export function opCkMatchFontFace(faces, weight, italic) {
+  const desired = Number(weight) || OP_CK_REGULAR_WEIGHT;
+  let best = -1;
+  let bestRank = null;
+  faces.forEach((face, index) => {
+    const width = Number(face.width) || OP_CK_NORMAL_WIDTH;
+    const rank = [
+      width === OP_CK_NORMAL_WIDTH ? 0 : width < OP_CK_NORMAL_WIDTH ? 1 : 2,
+      Math.abs(width - OP_CK_NORMAL_WIDTH),
+      Boolean(face.italic) === Boolean(italic) ? 0 : 1,
+      ...opCkWeightRank(desired, face.weight),
+    ];
+    if (!bestRank || opCkRankLess(rank, bestRank)) {
+      best = index;
+      bestRank = rank;
+    }
+  });
+  return best;
+}
+
+const opCkRankLess = (a, b) => {
+  for (let i = 0; i < a.length; i++) {
+    if (a[i] !== b[i]) return a[i] < b[i];
+  }
+  return false;
+};
+
+const opCkWeightRank = (desired, weight) => {
+  if (weight === desired) return [0, 0];
+  const distance = Math.abs(weight - desired);
+  if (desired >= 400 && desired <= 500) {
+    return [weight > desired && weight <= 500 ? 1 : weight < desired ? 2 : 3, distance];
+  }
+  if (desired < 400) return [weight < desired ? 1 : 2, distance];
+  return [weight > desired ? 1 : 2, distance];
+};
+
+// Synthetic bold (a stroked outline) only stands in for a missing bold face:
+// a 600+ request painted with a face lighter than 500. Mirrors jian-skia
+// `font_resolve::resolved`, whose `!is_bold()` the face-weight bound implies.
+export function opCkSyntheticBold(weight, faceWeight) {
+  return weight >= OP_CK_BOLD_WEIGHT_MIN
+    && (Number(faceWeight) || OP_CK_REGULAR_WEIGHT) < OP_CK_SYNTHETIC_BOLD_FACE_WEIGHT_MAX;
 }
 
 const opCkClampUnit = (value, fallback = 0) => {
@@ -816,7 +893,6 @@ export async function opCkInit(canvasId) {
 
 
   const systemTypefaces = [];
-  const systemTypefaceKeys = new Set();
   const systemTypefacesByFamily = new Map();
   // User-imported font faces, keyed by normalized family name -> { tf, family }.
   // A named family is a deliberate single-typeface choice (mirrors how native
@@ -830,14 +906,14 @@ export async function opCkInit(canvasId) {
   const bundledTypefaces = new Map();
   const coverageCache = new Map();
   // Per-CHARACTER coverage segments for explicitly selected family text,
-  // keyed on `(registry + family key, size, text)`. This used to
+  // keyed on `(registry + family key + face, size, text)`. This used to
   // rebuild a throwaway CK.Font + call getGlyphIDs over the whole string on
   // EVERY drawText/measureTextFamilyStyled call, every frame — bounded FIFO
   // cache like `browserTextCache` below (values are plain JS arrays, no
   // wasm handles, so eviction is a plain `.delete()` on the Map).
   const REGISTERED_COVERAGE_CACHE_CAP = 512;
   const registeredCoverageCache = new Map();
-  // Per-(registry + family key, size) CK.Font instances shared by the
+  // Per-(registry + family key + face, size) CK.Font instances shared by the
   // family-aware draw + measure paths (`registeredFamilyFont`). Bounded,
   // full-wipe eviction mirroring `svgPathCache` below (these ARE wasm
   // handles and must be `.delete()`d before the Map entry is dropped).
@@ -1010,9 +1086,11 @@ export async function opCkInit(canvasId) {
     return { paint, width: w, style: strokeStyle };
   };
   // The paint a text draw uses: the outline when one is set (widened for the
-  // synthetic bold the fill would add), else `fill` styled for `weight`.
-  const textPaint = (p, sz, weight) => {
-    const bold = weight >= 600 && isPaintStyle(CK.PaintStyle.StrokeAndFill);
+  // synthetic bold the fill would add), else `fill`, stroked when
+  // `syntheticBold` (see `opCkSyntheticBold`). Both paints are shared across
+  // a run's segments, so every call sets the stroke state outright.
+  const textPaint = (p, sz, syntheticBold) => {
+    const bold = syntheticBold && isPaintStyle(CK.PaintStyle.StrokeAndFill);
     if (textOutline) {
       textOutline.paint.setStrokeWidth(textOutline.width + (bold ? sz * 0.06 : 0));
       return textOutline.paint;
@@ -1020,6 +1098,9 @@ export async function opCkInit(canvasId) {
     if (bold) {
       setPaintStyle(p, CK.PaintStyle.StrokeAndFill);
       p.setStrokeWidth(sz * 0.06);
+    } else {
+      setPaintStyle(p, CK.PaintStyle.Fill);
+      p.setStrokeWidth(0);
     }
     return p;
   };
@@ -1719,8 +1800,8 @@ export async function opCkInit(canvasId) {
   };
   // Resolve an explicit imported/system face in authored stack order. Generic
   // candidates intentionally return null and continue through browser text.
-  const familyTypefaceEntry = (family) => {
-    return opCkResolveRegisteredTypeface(family, importedTypefaces, systemTypefacesByFamily, bundledTypefaces);
+  const familyTypefaceEntry = (family, weight, italic) => {
+    return opCkResolveRegisteredTypeface(family, importedTypefaces, systemTypefacesByFamily, bundledTypefaces, weight, italic);
   };
   // Shared "typeface + font for (family, sz)" so the family-aware draw and
   // measure paths build the SAME CK.Font and agree to sub-pixel. Cached per
@@ -1819,7 +1900,10 @@ export async function opCkInit(canvasId) {
       return cx - x;
     }
     const fill = textOutline ? null : allocFillPaint(r, g, b, a);
-    const p = textPaint(fill, sz, weight);
+    // Script fallback paints a family's Regular (`systemTypefaceFor`). It only
+    // runs without a 2D context; browsers otherwise raster these runs and
+    // match the weight themselves.
+    const p = textPaint(fill, sz, opCkSyntheticBold(weight, OP_CK_REGULAR_WEIGHT));
     let cx = x;
     for (const seg of segs) {
       if (shouldUseBrowserTextFallback(seg.text, seg.emoji)) {
@@ -2409,18 +2493,22 @@ export async function opCkInit(canvasId) {
       // keeps the named family where it applies and never renders tofu,
       // matching native. Draw + measure split on the SAME registeredCoverage
       // segments and share drawScriptRun/registeredFamilyFont, so advances agree.
-      const familyEntry = familyTypefaceEntry(family);
+      const familyEntry = familyTypefaceEntry(family, weight, italic);
       const covSegs = familyEntry ? registeredCoverageSegments(familyEntry.key, familyEntry.tf, sz, t) : null;
       if (!covSegs || (covSegs.length === 1 && !covSegs[0].registered)) {
         drawScriptRun(t, x, y, sz, weight, italic, r, g, b, a);
         return;
       }
-      const p = textPaint(textOutline ? null : fillPaint(r, g, b, a), sz, weight);
+      const syntheticBold = opCkSyntheticBold(weight, familyEntry.faceWeight);
+      const skew = familyEntry.syntheticItalic;
       let cx = x;
       for (const seg of covSegs) {
         if (seg.registered) {
-          const f = registeredFamilyFont(familyEntry.key, familyEntry.tf, sz, italic);
-          cx += drawKerned(familyEntry.tf, f, sz, italic, seg.text, cx, y, p);
+          // Per segment: a fallback segment in between restyles the shared
+          // outline paint for its own face.
+          const p = textPaint(textOutline ? null : fillPaint(r, g, b, a), sz, syntheticBold);
+          const f = registeredFamilyFont(familyEntry.key, familyEntry.tf, sz, skew);
+          cx += drawKerned(familyEntry.tf, f, sz, skew, seg.text, cx, y, p);
         } else {
           cx += drawScriptRun(seg.text, cx, y, sz, weight, italic, r, g, b, a);
         }
@@ -2471,7 +2559,7 @@ export async function opCkInit(canvasId) {
       return this.measureTextStyled(t, sz, 400, false);
     },
     textAscent(family, sz, weight) {
-      const familyEntry = familyTypefaceEntry(family);
+      const familyEntry = familyTypefaceEntry(family, weight, false);
       const font = new CK.Font(familyEntry ? familyEntry.tf : tfFor('M', false), sz);
       let ascent = sz * 0.8;
       if (font.getMetrics) {
@@ -2486,7 +2574,7 @@ export async function opCkInit(canvasId) {
       const firstBreak = String(t || '').search(/[\r\n]/);
       const line = firstBreak < 0 ? String(t || '') : String(t || '').slice(0, firstBreak);
       const sample = line || 'M';
-      const familyEntry = familyTypefaceEntry(family);
+      const familyEntry = familyTypefaceEntry(family, weight, italic);
       const covSegs = familyEntry
         ? registeredCoverageSegments(familyEntry.key, familyEntry.tf, sz, sample)
         : null;
@@ -2528,7 +2616,7 @@ export async function opCkInit(canvasId) {
       if (covSegs && covSegs.some((seg) => seg.registered)) {
         for (const seg of covSegs) {
           if (seg.registered) {
-            includeFontMetrics(registeredFamilyFont(familyEntry.key, familyEntry.tf, sz, italic));
+            includeFontMetrics(registeredFamilyFont(familyEntry.key, familyEntry.tf, sz, familyEntry.syntheticItalic));
           } else {
             includeFallback(seg.text);
           }
@@ -2544,7 +2632,7 @@ export async function opCkInit(canvasId) {
       return Number.isFinite(baseline) && baseline > 0 ? baseline : sz * 0.8;
     },
     measureTextFamilyStyled(t, family, sz, weight, italic) {
-      const familyEntry = familyTypefaceEntry(family);
+      const familyEntry = familyTypefaceEntry(family, weight, italic);
       const covSegs = familyEntry ? registeredCoverageSegments(familyEntry.key, familyEntry.tf, sz, t) : null;
       if (!covSegs || (covSegs.length === 1 && !covSegs[0].registered)) {
         // No registered family (or it covers nothing): the family-blind
@@ -2554,7 +2642,7 @@ export async function opCkInit(canvasId) {
       let w = 0;
       for (const seg of covSegs) {
         if (seg.registered) {
-          const f = registeredFamilyFont(familyEntry.key, familyEntry.tf, sz, italic);
+          const f = registeredFamilyFont(familyEntry.key, familyEntry.tf, sz, familyEntry.syntheticItalic);
           w += kernedWidth(familyEntry.tf, f, sz, seg.text);
         } else {
           w += this.measureTextStyled(seg.text, sz, weight, italic);
@@ -2742,23 +2830,41 @@ export async function opCkInit(canvasId) {
 
       return Float32Array.of(width, height, lineCount, baseline);
     },
-    registerSystemFont(family, bytes) {
+    // One face of a system family (`weight` / `italic` / `width` from its OS/2
+    // table); a family collects every face it is given, and text picks among
+    // them with `opCkMatchFontFace`.
+    registerSystemFont(family, bytes, weight = OP_CK_REGULAR_WEIGHT, italic = false, width = OP_CK_NORMAL_WIDTH) {
       const key = normalizedFamily(family);
-      if (!key || systemTypefaceKeys.has(key)) return Boolean(key);
+      if (!key) return false;
+      const style = {
+        weight: Number(weight) || OP_CK_REGULAR_WEIGHT,
+        italic: Boolean(italic),
+        width: Number(width) || OP_CK_NORMAL_WIDTH,
+      };
+      const known = systemTypefacesByFamily.get(key);
+      const sameStyle = (f) => f.weight === style.weight && f.italic === style.italic && f.width === style.width;
+      if (known && known.faces.some(sameStyle)) return true;
       const tf = CK.Typeface.MakeFreeTypeFaceFromData(copyBytes(bytes));
       if (!tf) return false;
       registerShapeFace(tf, bytes);
-      const entry = {
-        key,
-        family: String(family || ''),
-        tf,
-        cjk: isCjkFamily(family),
-        emoji: isEmojiFamily(family),
-        textFallback: isTextFallbackFamily(family),
-      };
-      systemTypefaceKeys.add(key);
-      systemTypefaces.push(entry);
-      systemTypefacesByFamily.set(key, entry);
+      const face = { tf, ...style };
+      if (known) {
+        known.faces.push(face);
+        // Script fallback (`systemTypefaceFor`) keeps the family's Regular.
+        known.tf = known.faces[opCkMatchFontFace(known.faces, OP_CK_REGULAR_WEIGHT, false)].tf;
+      } else {
+        const entry = {
+          key,
+          family: String(family || ''),
+          tf: face.tf,
+          faces: [face],
+          cjk: isCjkFamily(family),
+          emoji: isEmojiFamily(family),
+          textFallback: isTextFallbackFamily(family),
+        };
+        systemTypefaces.push(entry);
+        systemTypefacesByFamily.set(key, entry);
+      }
       coverageCache.clear();
       clearRegisteredFontCaches();
       return true;

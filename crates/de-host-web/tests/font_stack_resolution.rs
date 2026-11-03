@@ -102,7 +102,7 @@ fn canvaskit_named_font_stack_resolver_is_wired_to_system_registry() {
     for marker in [
         "const systemTypefacesByFamily = new Map()",
         "const bundledTypefaces = new Map()",
-        "opCkResolveRegisteredTypeface(family, importedTypefaces, systemTypefacesByFamily, bundledTypefaces)",
+        "opCkResolveRegisteredTypeface(family, importedTypefaces, systemTypefacesByFamily, bundledTypefaces, weight, italic)",
         "systemTypefacesByFamily.set(key, entry)",
         "registerBundledFont(family, bytes)",
         "bundledTypefaces.set(key, { tf, family: String(family || '') })",

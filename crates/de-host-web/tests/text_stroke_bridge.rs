@@ -19,8 +19,8 @@ fn stroke_text_draws_the_fill_glyphs_with_the_outline_paint() {
         "textOutline = glyphOutlinePaint(r, g, b, a, w);",
         "this.drawText(t, family, x, y, sz, weight, italic, r, g, b, a);",
         // Both glyph paths pick the outline over the fill.
-        "const p = textPaint(textOutline ? null : fillPaint(r, g, b, a), sz, weight);",
-        "const p = textPaint(fill, sz, weight);",
+        "const p = textPaint(textOutline ? null : fillPaint(r, g, b, a), sz, syntheticBold);",
+        "const p = textPaint(fill, sz, opCkSyntheticBold(weight, OP_CK_REGULAR_WEIGHT));",
         // Only an emoji bitmap merely advances the pen while outlining.
         "const browserText = (seg, cx) => textOutline && seg.emoji",
         // Browser-rastered text is rastered as outlines, keyed apart.

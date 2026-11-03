@@ -171,6 +171,12 @@ pub enum AgentSettingsHit {
     FetchBuiltinModels(Option<usize>),
     /// Probe a CLI agent again without disconnecting it first.
     RecheckProvider(AgentProvider),
+    /// Copy a missing CLI agent's install command (#304).
+    CopyCliInstall(AgentProvider),
+    /// Copy a missing ACP preset's install command: a saved agent by
+    /// index, or the draft (`None`) — like `ToggleAcpConnected` /
+    /// `SaveAcpAgentDraft`.
+    CopyAcpInstall(Option<usize>),
     /// Tick or untick a CLI agent's model — positional over the agent's
     /// discovered models for the same frame.
     ToggleCliModel {
@@ -341,6 +347,7 @@ impl<'a> AgentSettingsPanel<'a> {
                 &self.settings,
                 content.size.x,
             ),
+            AgentSettingsTab::Agents => self.agents_content_height_at(content.size.x),
             _ => self.content_total_height(),
         };
         (total - content.size.y).max(0.0)

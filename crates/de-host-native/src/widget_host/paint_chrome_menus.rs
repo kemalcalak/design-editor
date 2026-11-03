@@ -73,6 +73,16 @@ impl WidgetHostNative {
             &self.editor_state,
             viewport_height,
         );
+        // Full name of a hovered layer row whose name is cut (#306); the
+        // panel comes from the paint cache and is built only when needed.
+        de_editor_ui::widgets::layer_panel_name_tooltip::paint_layer_name_tooltip(
+            &mut cx,
+            &self.editor_state,
+            || self.layer_panel(),
+            self.layer_drag.as_ref().is_some_and(|d| d.active),
+            viewport_width,
+            viewport_height,
+        );
     }
 
     /// File-menu dropdown — anchored under the file pill.

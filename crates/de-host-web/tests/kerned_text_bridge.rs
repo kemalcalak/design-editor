@@ -21,7 +21,7 @@ fn registered_faces_measure_and_paint_through_the_word_shaper() {
         "const kernedWidth = (tf, f, sz, s) =>",
         "const drawKerned = (tf, f, sz, italic, s, x, y, p) =>",
         // Family-aware draw and measure.
-        "cx += drawKerned(familyEntry.tf, f, sz, italic, seg.text, cx, y, p);",
+        "cx += drawKerned(familyEntry.tf, f, sz, skew, seg.text, cx, y, p);",
         "w += kernedWidth(familyEntry.tf, f, sz, seg.text);",
         // Script-segmented draw and measure.
         "cx += drawKerned(tf, f, sz, skewed, seg.text, cx, y, p);",

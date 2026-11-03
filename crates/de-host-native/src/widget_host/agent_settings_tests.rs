@@ -22,6 +22,7 @@ pub(super) const VIEWPORT_H: f32 = 1000.0;
 mod agents;
 mod hover;
 mod images;
+mod install_copy;
 mod mcp_system;
 
 fn agent_settings_content_metrics(host: &WidgetHostNative) -> (f32, f32, f32) {

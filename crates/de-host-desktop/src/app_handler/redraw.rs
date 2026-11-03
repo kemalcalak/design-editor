@@ -29,6 +29,17 @@ impl DesktopApp {
         true
     }
 
+    /// A minimized (0×0) or occluded window is not painted (#302): the GL
+    /// surface still has its old size and presenting there every frame only
+    /// spins. The frame stays owed, so the restore / reveal repaints it.
+    pub(crate) fn hold_frame_while_hidden(&mut self, should_paint: bool) -> bool {
+        if should_paint && self.surface_hidden() {
+            self.redraw_dirty = true;
+            return false;
+        }
+        should_paint
+    }
+
     /// Returns `false` when the frame bailed before doing any work (no
     /// render context yet) — the dispatcher then skips its post-event
     /// epilogue, exactly as the inlined `return` did.
@@ -502,6 +513,7 @@ impl DesktopApp {
             self.redraw_dirty = true;
         }
         let should_paint = self.prepare_redraw();
+        let should_paint = self.hold_frame_while_hidden(should_paint);
         if should_paint {
             self.refresh_host_clock();
             let mut painted = false;
