@@ -13,7 +13,11 @@ fn route(delta: MouseScrollDelta, shift: bool, zoom: bool) -> WheelRoute {
 }
 
 fn assert_pan(route: WheelRoute, dx: f32, dy: f32) {
-    let WheelRoute::Pan { dx: got_x, dy: got_y } = route else {
+    let WheelRoute::Pan {
+        dx: got_x,
+        dy: got_y,
+    } = route
+    else {
         panic!("expected a pan, got {route:?}");
     };
     assert!((got_x - dx).abs() < 1e-3, "dx {got_x} != {dx}");
@@ -62,6 +66,50 @@ fn shift_wheel_pans_horizontally() {
         100.0,
         0.0,
     );
+}
+
+#[test]
+fn shift_wheel_uses_the_horizontal_setting_and_page() {
+    let per_axis = |axis: WheelAxis| match axis {
+        WheelAxis::Vertical => (NotchScale::Lines(3.0), WHEEL_LINE_PX),
+        WheelAxis::Horizontal => (NotchScale::Page, WHEEL_LINE_PX),
+    };
+    let route = wheel_route(
+        MouseScrollDelta::LineDelta(0.0, 1.0),
+        true,
+        false,
+        1.0,
+        VIEWPORT,
+        per_axis,
+    );
+    assert_pan(route, VIEWPORT.0, 0.0);
+}
+
+#[test]
+fn zoom_and_idle_axes_skip_the_settings_read() {
+    let reads = std::cell::Cell::new(0);
+    let counting = |axis: WheelAxis| {
+        reads.set(reads.get() + 1);
+        windows_default(axis)
+    };
+    wheel_route(
+        MouseScrollDelta::LineDelta(0.0, 1.0),
+        false,
+        true,
+        1.0,
+        VIEWPORT,
+        counting,
+    );
+    assert_eq!(reads.get(), 0, "zoom reads no lines setting");
+    wheel_route(
+        MouseScrollDelta::LineDelta(0.0, 1.0),
+        false,
+        false,
+        1.0,
+        VIEWPORT,
+        counting,
+    );
+    assert_eq!(reads.get(), 1, "only the moving axis is read");
 }
 
 #[test]

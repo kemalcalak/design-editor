@@ -20,7 +20,7 @@
 //! only the wheel mapper because that's the cross-axis-translation
 //! piece that benefits from being a pure helper.
 
-use de_editor_ui::widgets::wheel_flow::{route_wheel, WheelRoute, WHEEL_LINE_PX};
+use de_editor_ui::widgets::wheel_flow::{route_wheel, shift_moves_to_x, WheelRoute, WHEEL_LINE_PX};
 use de_editor_ui::{Modifiers, ScrollMode, WheelEvent};
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -106,7 +106,7 @@ pub fn classify_wheel_intent(
     let shift = modifiers.contains(Modifiers::SHIFT);
     let dx = -normalize_wheel_delta(delta_x, delta_mode, page_width);
     // A Shift+wheel turned horizontal pages by the horizontal extent.
-    let dy = if shift && !modified_zoom && dx == 0.0 {
+    let dy = if shift_moves_to_x(dx, shift, modified_zoom) {
         -normalize_wheel_delta(delta_y, delta_mode, page_width)
     } else {
         -normalize_wheel_delta(delta_y, delta_mode, page_height)

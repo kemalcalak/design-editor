@@ -10,7 +10,7 @@
 
 use crate::DesktopApp;
 use de_editor_ui::widgets::wheel_flow::{
-    line_delta_px, route_wheel, NotchScale, WheelRoute, WHEEL_ZOOM_PER_NOTCH,
+    line_delta_px, route_wheel, shift_moves_to_x, NotchScale, WheelRoute, WHEEL_ZOOM_PER_NOTCH,
 };
 use winit::event::MouseScrollDelta;
 
@@ -69,22 +69,34 @@ pub(crate) fn wheel_route(
     notch_scale: impl Fn(WheelAxis) -> (NotchScale, f32),
 ) -> WheelRoute {
     match delta {
+        // Zoom ignores the line height, so no settings read for it.
+        MouseScrollDelta::LineDelta(_, y) if zoom => WheelRoute::Zoom {
+            delta_y: y * WHEEL_ZOOM_PER_NOTCH,
+        },
         MouseScrollDelta::LineDelta(x, y) => {
             let px = |notches: f32, axis: WheelAxis, page: f32| {
+                if notches == 0.0 {
+                    return 0.0;
+                }
                 let (scale, line_px) = notch_scale(axis);
                 line_delta_px(notches, scale, line_px, page)
             };
             let dx = px(x, WheelAxis::Horizontal, viewport_width);
-            let dy = px(y, WheelAxis::Vertical, viewport_height);
-            match route_wheel(dx, dy, shift, zoom) {
-                WheelRoute::Zoom { .. } => WheelRoute::Zoom {
-                    delta_y: y * WHEEL_ZOOM_PER_NOTCH,
-                },
-                pan => pan,
-            }
+            // A Shift+wheel that becomes horizontal scrolls by the
+            // horizontal setting and page, as Windows apps do.
+            let dy = if shift_moves_to_x(dx, shift, zoom) {
+                px(y, WheelAxis::Horizontal, viewport_width)
+            } else {
+                px(y, WheelAxis::Vertical, viewport_height)
+            };
+            route_wheel(dx, dy, shift, zoom)
         }
         MouseScrollDelta::PixelDelta(p) => {
-            let dpi = if dpi.is_finite() && dpi > 0.0 { dpi } else { 1.0 };
+            let dpi = if dpi.is_finite() && dpi > 0.0 {
+                dpi
+            } else {
+                1.0
+            };
             route_wheel(p.x as f32 / dpi, p.y as f32 / dpi, shift, zoom)
         }
     }

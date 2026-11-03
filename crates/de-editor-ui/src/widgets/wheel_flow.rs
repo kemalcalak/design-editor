@@ -77,11 +77,18 @@ pub fn line_delta_px(notches: f32, scale: NotchScale, line_px: f32, page_px: f32
 pub fn route_wheel(dx: f32, dy: f32, shift: bool, zoom: bool) -> WheelRoute {
     if zoom {
         WheelRoute::Zoom { delta_y: dy }
-    } else if shift && dx == 0.0 {
+    } else if shift_moves_to_x(dx, shift, zoom) {
         WheelRoute::Pan { dx: dy, dy: 0.0 }
     } else {
         WheelRoute::Pan { dx, dy }
     }
+}
+
+/// Whether [`route_wheel`] turns this wheel's y delta into x. Hosts that
+/// convert units per axis (page width vs height, Windows lines vs chars)
+/// ask first so the y delta is converted as the axis it will move.
+pub fn shift_moves_to_x(dx: f32, shift: bool, zoom: bool) -> bool {
+    shift && !zoom && dx == 0.0
 }
 
 #[cfg(test)]
@@ -100,7 +107,10 @@ mod tests {
     fn notch_distance_follows_lines_setting_and_page_mode() {
         let px = line_delta_px(1.0, NotchScale::Lines(6.0), WHEEL_LINE_PX, 800.0);
         assert!((px - 200.0).abs() < 1e-3, "{px}");
-        assert_eq!(line_delta_px(1.0, NotchScale::Page, WHEEL_LINE_PX, 800.0), 800.0);
+        assert_eq!(
+            line_delta_px(1.0, NotchScale::Page, WHEEL_LINE_PX, 800.0),
+            800.0
+        );
         // A precision touchpad sends fractions of a notch.
         let fine = line_delta_px(0.25, NotchScale::Lines(3.0), WHEEL_LINE_PX, 800.0);
         assert!((fine - 25.0).abs() < 1e-3, "{fine}");

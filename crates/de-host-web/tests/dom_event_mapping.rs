@@ -387,7 +387,10 @@ fn plain_vertical_wheel_pans_and_modified_wheel_zooms() {
     // #303: Figma's mapping — no modifier pans, Ctrl/Cmd zooms.
     assert_eq!(
         classify_wheel_intent(0.0, 90.0, 0, 1200.0, 800.0, Modifiers::empty()),
-        WheelIntent::Pan { dx: -0.0, dy: -90.0 }
+        WheelIntent::Pan {
+            dx: -0.0,
+            dy: -90.0
+        }
     );
     assert_eq!(
         classify_wheel_intent(20.0, 90.0, 0, 1200.0, 800.0, Modifiers::CTRL),
@@ -397,7 +400,14 @@ fn plain_vertical_wheel_pans_and_modified_wheel_zooms() {
         }
     );
     assert_eq!(
-        classify_wheel_intent(0.0, 90.0, 0, 1200.0, 800.0, Modifiers::CMD | Modifiers::SHIFT),
+        classify_wheel_intent(
+            0.0,
+            90.0,
+            0,
+            1200.0,
+            800.0,
+            Modifiers::CMD | Modifiers::SHIFT
+        ),
         WheelIntent::Zoom {
             scroll_delta_y: -90.0,
             canvas_delta_y: -175.0,
