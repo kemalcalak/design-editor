@@ -1,12 +1,15 @@
-//! 2-finger trackpad pan routing — split from `scroll.rs` at the
-//! 800-line cap; pure code motion, the ladder order is unchanged.
+//! Wheel / trackpad pan routing — split from `scroll.rs` at the
+//! 800-line cap. Since #303 every unmodified mouse wheel arrives here
+//! too (`host_wheel_routing::route_wheel`), so this ladder must own every
+//! surface `apply_wheel_inner` owns.
 
 use crate::widget_host::WidgetHostNative;
 use de_editor_ui::widgets::GitPanel;
 use de_editor_ui::Point2D;
 
 impl WidgetHostNative {
-    /// 2-finger trackpad pan — translate viewport by (dx, dy).
+    /// Wheel or trackpad pan — scroll the surface under the cursor, else
+    /// translate the viewport by (dx, dy).
     pub fn apply_pan_gesture(
         &mut self,
         x: f32,
@@ -27,6 +30,23 @@ impl WidgetHostNative {
             return true;
         }
         if self.wheel_shader_source_editor(x, y, dy, viewport_width, viewport_height) {
+            return true;
+        }
+        // Workspace LongPage view: the long page pans vertically only —
+        // no horizontal drift from Shift, a tilt wheel or a sideways swipe.
+        if self.workspace_visible()
+            && self.editor_state.editor_ui.workspace.view == de_editor_core::WorkspaceView::LongPage
+            && self.over_canvas(x, y, viewport_width, viewport_height)
+        {
+            if dy != 0.0 {
+                self.editor_state.viewport.pan(0.0, dy);
+                self.mark_dirty();
+            }
+            return true;
+        }
+        // The Figma import modal owns every wheel while it is open (#303:
+        // a mouse wheel now takes this ladder, not `apply_wheel_inner`).
+        if self.try_scroll_figma_import(x, y, dy, viewport_width, viewport_height) {
             return true;
         }
         if self.try_scroll_missing_fonts_picker(x, y, dy, viewport_width, viewport_height) {

@@ -215,3 +215,29 @@ fn page_selector_wheel_scrolls_without_zooming_canvas() {
     assert_eq!(ui.figma_import_page_select.hover, None);
     assert_eq!(host.editor_state().viewport.zoom, zoom);
 }
+
+#[test]
+fn page_selector_owns_the_pan_path_too() {
+    // #303: an unmodified mouse wheel now arrives through
+    // `apply_pan_gesture`; the modal must still scroll and the canvas
+    // under it must not pan.
+    let mut host = page_selector_host(70);
+    let modal =
+        de_editor_ui::widgets::figma_import::FigmaImportModal::for_editor(host.editor_state());
+    let panel = modal.rect(VIEWPORT_W, VIEWPORT_H);
+    let list = modal.page_list_rect(panel).expect("page list");
+    let viewport = host.editor_state().viewport;
+
+    assert!(host.apply_pan_gesture(
+        list.origin.x + 20.0,
+        list.origin.y + 20.0,
+        0.0,
+        -100.0,
+        VIEWPORT_W,
+        VIEWPORT_H
+    ));
+
+    let ui = &host.editor_state().editor_ui;
+    assert_eq!(ui.figma_import_page_select.scroll.offset, 100.0);
+    assert_eq!(host.editor_state().viewport, viewport);
+}

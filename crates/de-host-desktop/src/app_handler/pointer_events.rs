@@ -1,4 +1,4 @@
-//! Pointer input handlers (cursor move, mouse buttons, wheel, pinch)
+//! Pointer input handlers (cursor move, mouse buttons, pinch)
 //! for `DesktopApp`'s `window_event` dispatcher. Carved out of the
 //! `app_handler.rs` spine to keep it under the 800-line cap; pure code
 //! motion.
@@ -9,7 +9,6 @@
 
 use crate::{chat_attachment, figma_import_session, frame, persistence, DesktopApp};
 use winit::dpi::PhysicalPosition;
-use winit::event::MouseScrollDelta;
 use winit::event_loop::ActiveEventLoop;
 
 impl DesktopApp {
@@ -381,45 +380,6 @@ impl DesktopApp {
             .host
             .apply_release_with_viewport(self.viewport_width, self.viewport_height);
         self.sync_native_ime();
-        if consumed {
-            self.request_redraw(true);
-        }
-    }
-
-    pub(super) fn on_mouse_wheel(&mut self, delta: MouseScrollDelta) {
-        // Figma-style routing: pixel-delta pans, line-delta zooms; Cmd promotes pixel→zoom for trackpad-only laptops
-        // a pinch sensor.
-        let consumed = match delta {
-            MouseScrollDelta::LineDelta(_, y) => self.host.apply_wheel(
-                self.cursor_x,
-                self.cursor_y,
-                y * 16.0,
-                self.viewport_width,
-                self.viewport_height,
-            ),
-            MouseScrollDelta::PixelDelta(p) => {
-                let dx = p.x as f32 / self.dpi;
-                let dy = p.y as f32 / self.dpi;
-                if self.zoom_modifier {
-                    self.host.apply_pinch_gesture(
-                        self.cursor_x,
-                        self.cursor_y,
-                        dy,
-                        self.viewport_width,
-                        self.viewport_height,
-                    )
-                } else {
-                    self.host.apply_pan_gesture(
-                        self.cursor_x,
-                        self.cursor_y,
-                        dx,
-                        dy,
-                        self.viewport_width,
-                        self.viewport_height,
-                    )
-                }
-            }
-        };
         if consumed {
             self.request_redraw(true);
         }

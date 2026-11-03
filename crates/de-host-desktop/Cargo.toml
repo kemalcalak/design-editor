@@ -326,6 +326,9 @@ accesskit_macos = "0.26"
 # Scaffolded + compiled here; on-device Narrator verification is pending.
 [target.'cfg(target_os = "windows")'.dependencies]
 accesskit_windows = "0.33"
+# Wheel lines / chars per notch (`SPI_GETWHEELSCROLLLINES`, #303). Same
+# 0.52 line casement already pulls in.
+windows-sys = { version = "0.52", features = ["Win32_UI_WindowsAndMessaging"] }
 
 # Accessibility (#67) — Linux AT-SPI (D-Bus) bridge. The Unix adapter is
 # windowless (`Adapter::new` takes only the handler trio, no window

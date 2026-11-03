@@ -9,6 +9,7 @@ mod keyboard_events;
 mod pointer_events;
 mod redraw;
 mod scheduling;
+mod wheel_events;
 mod window_events;
 
 use crate::{
