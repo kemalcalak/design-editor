@@ -11,6 +11,111 @@
 # Write for users: short, plain, no issue numbers or technical terms.
 
 [[note]]
+version = "0.5.6"
+locale = "en-US"
+title = "Web pages you can edit"
+item = "A web page brought in through the browser can now arrive as auto layout: change a label, a spacing or a size, and everything around it moves along, like a design made in the editor."
+item = "Lucide icons on imported pages come in as real icons you can swap and recolour, and scrolling areas stay clipped."
+
+[[note]]
+version = "0.5.6"
+locale = "tr"
+title = "Düzenlenebilir web sayfaları"
+item = "Tarayıcıdan getirilen bir web sayfası artık otomatik yerleşimle gelebiliyor: bir etiketi, boşluğu ya da boyutu değiştirin, çevresindeki her şey editörde yapılmış bir tasarımdaki gibi kayıyor."
+item = "İçe aktarılan sayfalardaki Lucide ikonları değiştirilip yeniden renklendirilebilen gerçek ikonlar olarak geliyor; kaydırılan alanlar kırpılı kalıyor."
+
+[[note]]
+version = "0.5.6"
+locale = "zh-CN"
+title = "可编辑的网页"
+item = "通过浏览器导入的网页现在可以采用自动布局:修改文字、间距或尺寸时,周围的内容会像在编辑器中做的设计一样随之移动。"
+item = "导入页面中的 Lucide 图标会成为可替换、可重新着色的真正图标,滚动区域也会保持裁剪。"
+
+[[note]]
+version = "0.5.6"
+locale = "zh-TW"
+title = "可編輯的網頁"
+item = "透過瀏覽器匯入的網頁現在可以使用自動版面:修改文字、間距或尺寸時,周圍的內容會像在編輯器中製作的設計一樣跟著移動。"
+item = "匯入頁面中的 Lucide 圖示會成為可替換、可重新上色的真正圖示,捲動區域也會維持裁切。"
+
+[[note]]
+version = "0.5.6"
+locale = "ja"
+title = "編集できるウェブページ"
+item = "ブラウザから取り込んだウェブページを自動レイアウトで取り込めるようになりました。ラベルや余白、サイズを変えると、エディタで作ったデザインと同じように周りも合わせて動きます。"
+item = "取り込んだページの Lucide アイコンは、差し替えや色の変更ができる本物のアイコンになり、スクロール領域は切り抜かれたままです。"
+
+[[note]]
+version = "0.5.6"
+locale = "ko"
+title = "편집할 수 있는 웹 페이지"
+item = "브라우저로 가져온 웹 페이지를 이제 자동 레이아웃으로 가져올 수 있습니다. 레이블, 간격, 크기를 바꾸면 편집기에서 만든 디자인처럼 주변 요소도 함께 움직입니다."
+item = "가져온 페이지의 Lucide 아이콘은 바꾸고 색을 다시 입힐 수 있는 실제 아이콘으로 들어오며, 스크롤 영역은 잘린 상태로 유지됩니다."
+
+[[note]]
+version = "0.5.6"
+locale = "fr"
+title = "Des pages web modifiables"
+item = "Une page web importée par le navigateur peut maintenant arriver en mise en page automatique : changez un libellé, un espacement ou une taille, et tout ce qui l'entoure suit, comme dans un design fait dans l'éditeur."
+item = "Les icônes Lucide des pages importées deviennent de vraies icônes que vous pouvez remplacer et recolorer, et les zones défilantes restent rognées."
+
+[[note]]
+version = "0.5.6"
+locale = "es"
+title = "Páginas web editables"
+item = "Una página web traída con el navegador ahora puede llegar con diseño automático: cambia una etiqueta, un espaciado o un tamaño y todo lo que la rodea se mueve con ella, como en un diseño hecho en el editor."
+item = "Los iconos de Lucide de las páginas importadas llegan como iconos reales que puedes cambiar y recolorear, y las zonas con desplazamiento siguen recortadas."
+
+[[note]]
+version = "0.5.6"
+locale = "de"
+title = "Bearbeitbare Webseiten"
+item = "Eine über den Browser geholte Webseite kann jetzt mit automatischem Layout ankommen: Ändern Sie eine Beschriftung, einen Abstand oder eine Größe, und alles darum herum rückt mit, wie bei einem im Editor erstellten Design."
+item = "Lucide-Symbole importierter Seiten kommen als echte Symbole an, die Sie austauschen und umfärben können, und scrollbare Bereiche bleiben beschnitten."
+
+[[note]]
+version = "0.5.6"
+locale = "pt"
+title = "Páginas web editáveis"
+item = "Uma página web trazida pelo navegador agora pode chegar com layout automático: mude um rótulo, um espaçamento ou um tamanho, e tudo ao redor acompanha, como num design feito no editor."
+item = "Os ícones Lucide das páginas importadas chegam como ícones reais que você pode trocar e recolorir, e as áreas com rolagem continuam recortadas."
+
+[[note]]
+version = "0.5.6"
+locale = "ru"
+title = "Веб-страницы, которые можно редактировать"
+item = "Веб-страницу, загруженную через браузер, теперь можно получить с автоматической раскладкой: измените подпись, отступ или размер, и всё вокруг сдвинется, как в макете, созданном в редакторе."
+item = "Иконки Lucide на импортированных страницах приходят как настоящие иконки, которые можно заменить и перекрасить, а прокручиваемые области остаются обрезанными."
+
+[[note]]
+version = "0.5.6"
+locale = "hi"
+title = "बदले जा सकने वाले वेब पेज"
+item = "ब्राउज़र से लाया गया वेब पेज अब ऑटो लेआउट के साथ आ सकता है: कोई लेबल, दूरी या आकार बदलें, और उसके आसपास का सब कुछ एडिटर में बने डिज़ाइन की तरह साथ में खिसकता है।"
+item = "आयात किए गए पेजों के Lucide आइकन असली आइकन बनकर आते हैं जिन्हें आप बदल और दोबारा रंग सकते हैं, और स्क्रॉल होने वाले हिस्से कटे हुए रहते हैं।"
+
+[[note]]
+version = "0.5.6"
+locale = "th"
+title = "หน้าเว็บที่แก้ไขได้"
+item = "หน้าเว็บที่นำเข้ามาผ่านเบราว์เซอร์สามารถมาพร้อมเลย์เอาต์อัตโนมัติได้แล้ว: เปลี่ยนป้ายกำกับ ระยะห่าง หรือขนาด แล้วทุกอย่างรอบ ๆ จะขยับตาม เหมือนงานออกแบบที่ทำในเอดิเตอร์"
+item = "ไอคอน Lucide ในหน้าที่นำเข้าจะเป็นไอคอนจริงที่เปลี่ยนและเปลี่ยนสีได้ และพื้นที่ที่เลื่อนได้ยังคงถูกตัดขอบไว้"
+
+[[note]]
+version = "0.5.6"
+locale = "vi"
+title = "Trang web có thể chỉnh sửa"
+item = "Trang web đưa vào qua trình duyệt giờ có thể đến với bố cục tự động: đổi một nhãn, khoảng cách hay kích thước, mọi thứ xung quanh sẽ dịch theo, giống như một thiết kế làm trong trình chỉnh sửa."
+item = "Biểu tượng Lucide trên các trang đã nhập trở thành biểu tượng thật mà bạn có thể thay và đổi màu, còn các vùng cuộn vẫn được cắt gọn."
+
+[[note]]
+version = "0.5.6"
+locale = "id"
+title = "Halaman web yang bisa diedit"
+item = "Halaman web yang dibawa lewat browser kini bisa datang dengan tata letak otomatis: ubah label, jarak, atau ukuran, dan semua di sekitarnya ikut bergeser, seperti desain yang dibuat di editor."
+item = "Ikon Lucide di halaman yang diimpor datang sebagai ikon sungguhan yang bisa Anda ganti dan warnai ulang, dan area yang bisa digulir tetap terpotong."
+
+[[note]]
 version = "0.5.5"
 locale = "en-US"
 title = "Outlined text and local pages"
