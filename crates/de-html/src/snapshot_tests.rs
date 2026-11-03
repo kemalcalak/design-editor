@@ -172,7 +172,7 @@ fn full_bleed_background_does_not_bury_the_hero_content() {
     };
     let children = root.children.as_ref().unwrap();
     assert!(
-        matches!(&children[0], PenNode::Frame(frame) if frame.base.name.as_deref() == Some("h1")),
+        matches!(&children[0], PenNode::Frame(frame) if frame.base.name.as_deref() == Some("hero heading")),
         "hero content must paint above the background: {:?}",
         children
             .iter()
