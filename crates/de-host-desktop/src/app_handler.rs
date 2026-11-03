@@ -493,6 +493,7 @@ impl ApplicationHandler<DesktopEvent> for DesktopApp {
         match event {
             WindowEvent::CloseRequested => self.on_close_requested(event_loop),
             WindowEvent::Resized(size) => self.on_resized(event_loop, size),
+            WindowEvent::Occluded(occluded) => self.on_occluded(occluded),
             WindowEvent::Moved(pos) => self.on_moved(pos),
             WindowEvent::HoveredFile(path) => self.on_hovered_file(&path),
             WindowEvent::HoveredFileCancelled => self.on_hovered_file_cancelled(),

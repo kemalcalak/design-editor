@@ -221,6 +221,10 @@ base64 = "0.22"
 # the Code panel's Export Bundle action. Only store/deflate is needed for
 # small text + image payloads.
 zip = { version = "9", default-features = false, features = ["deflate-flate2"] }
+# Decodes the WOFF / WOFF2 files a page's `@font-face` rules serve (MCP
+# `browser` import-to-canvas, #301) into the sfnt bytes skia parses.
+# Pure Rust (brotli-decompressor + flate2).
+wuff = "0.2"
 # 2D affine transforms used by PNG export's bounds walker so nested
 # rotated containers don't clip their children. Pinned to the same
 # version shell-core uses for `Point2D = glam::Vec2`.

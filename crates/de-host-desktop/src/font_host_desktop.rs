@@ -17,7 +17,7 @@ use de_editor_core::missing_fonts::{
 };
 use de_editor_core::EditorState;
 use de_host_services::font_host::{
-    FontHost, FontIssue, FontIssueStatus, FontLoadResult, FontLoadStatus,
+    FontHost, FontIssue, FontIssueStatus, FontLoadResult, FontLoadStatus, PageFaceError,
 };
 
 use crate::fonts::{FontOrigin, FontStore};
@@ -213,6 +213,16 @@ impl FontHost for DesktopFontHost {
             }
         })
         .collect()
+    }
+
+    fn register_page_faces(
+        &self,
+        family: &str,
+        faces: Vec<Vec<u8>>,
+    ) -> Result<String, PageFaceError> {
+        let registered = crate::page_fonts::register_page_faces(family, faces)?;
+        notify_fonts_changed();
+        Ok(registered)
     }
 }
 

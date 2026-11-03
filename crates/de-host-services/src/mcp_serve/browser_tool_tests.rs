@@ -49,6 +49,7 @@ impl PageDriver for FakeDriver {
             }
             PageOp::Cdp(_, _) => PageReply::Json(json!({ "ok": true })),
             PageOp::Extract(_) => PageReply::Snapshot(snapshot()),
+            PageOp::FetchFonts(urls) => PageReply::Json(json!(vec![None::<String>; urls.len()])),
         };
         let canvas = call.canvas_scale.filter(|_| changes_page).map(|_| png());
         Ok(PageResult { reply, canvas })
@@ -68,7 +69,8 @@ fn snapshot() -> String {
             "rect": { "x": 0, "y": 0, "w": 200, "h": 40 },
             "styles": {},
             "children": [{ "kind": "text", "rect": { "x": 8, "y": 8, "w": 96, "h": 20 },
-                           "text": "Hello", "lines": 1, "styles": { "font-size": "14px" } }]
+                           "text": "Hello", "lines": 1,
+                           "styles": { "font-size": "14px", "font-family": "Inter, sans-serif" } }]
         }
     })
     .to_string()
@@ -394,4 +396,62 @@ fn the_extractor_wrapper_catches_the_download_and_roots_at_a_selector() {
         crate::mcp_serve::browser_tool_driver::extractor_script(None)
             .contains("const selector = null;")
     );
+}
+
+/// Inter is available; nothing else is.
+struct InterOnly;
+
+impl crate::font_host::FontHost for InterOnly {
+    fn load(
+        &self,
+        families: &[String],
+        _wait: std::time::Duration,
+    ) -> Vec<crate::font_host::FontLoadResult> {
+        use crate::font_host::{FontLoadResult, FontLoadStatus};
+        families
+            .iter()
+            .map(|family| FontLoadResult {
+                family: family.clone(),
+                status: if family == "Inter" {
+                    FontLoadStatus::Downloaded
+                } else {
+                    FontLoadStatus::NotOnGoogle
+                },
+                faces: None,
+                detail: None,
+            })
+            .collect()
+    }
+
+    fn font_issues(&self, _state: &EditorState) -> Vec<crate::font_host::FontIssue> {
+        Vec::new()
+    }
+
+    fn register_page_faces(
+        &self,
+        _family: &str,
+        faces: Vec<Vec<u8>>,
+    ) -> Result<String, crate::font_host::PageFaceError> {
+        Err(crate::font_host::PageFaceError::Unreadable { files: faces.len() })
+    }
+}
+
+#[test]
+fn an_import_loads_the_fonts_its_text_uses_and_reports_them() {
+    let driver = Arc::new(FakeDriver::default());
+    let with_fonts = BrowserTool::with_driver(&state(), driver).with_font_host(Some(&InterOnly));
+    let outcome = call(&with_fonts, &[("action", "import-to-canvas")]);
+    let ToolOutcome::OkWithCommand(result, _) = outcome else {
+        panic!("expected an insert, got {outcome:?}");
+    };
+    assert_eq!(result["fontsLoaded"], "Inter");
+    assert!(!result.contains_key("fontsMissing"), "{result:?}");
+
+    // Without a font host (the web daemon) nothing loads, and it says so.
+    let (without, _) = tool();
+    let ToolOutcome::OkWithCommand(result, _) = call(&without, &[("action", "import-to-canvas")])
+    else {
+        panic!("expected an insert");
+    };
+    assert!(result["fonts"].contains("desktop app"), "{result:?}");
 }

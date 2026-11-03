@@ -85,6 +85,7 @@ pub mod export_pptx;
 mod figma_convert;
 mod figma_convert_error;
 pub mod font_host;
+mod font_host_error;
 pub mod generate_jobs;
 pub mod google_fonts;
 pub mod google_fonts_error;

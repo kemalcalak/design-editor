@@ -240,7 +240,10 @@ impl crate::repaint_ctx::RepaintContext for CkInner {
         self.backend.logical_size()
     }
     fn register_system_font(&mut self, family: &str, bytes: &[u8]) -> bool {
-        self.backend.ck.register_system_font(family, bytes)
+        let style = crate::font_meta::parse_style(bytes);
+        self.backend
+            .ck
+            .register_system_font(family, bytes, style.weight, style.italic, style.width)
     }
     fn register_imported_font(&mut self, family: &str, bytes: &[u8]) -> bool {
         self.backend.register_imported_font(family, bytes)

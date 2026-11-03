@@ -168,8 +168,13 @@ fn has_clip(backend: &LayerLabelBackend, expected: Rect) -> bool {
     })
 }
 
+/// Right edge of a resting row's label budget: the row's trailing pad.
+fn rest_edge(row: Rect) -> f32 {
+    row.origin.x + row.size.x - 8.0
+}
+
 #[test]
-fn long_layer_name_ellipsizes_before_stable_action_gutter() {
+fn long_layer_name_uses_the_full_row_at_rest_and_the_gutter_on_hover() {
     let state = state_with_layer_name(LONG_NAME);
     let panel = LayerPanel::from_editor(&state);
     let rect = panel_rect(&panel);
@@ -183,31 +188,44 @@ fn long_layer_name_ellipsizes_before_stable_action_gutter() {
     );
 
     let row = first_layer_row(&panel, rect);
-    let gutter_left = layer_action_gutter_left(row);
-    let content_clip = Rect::xywh(
+    let rest_clip = Rect::xywh(
         row.origin.x,
         row.origin.y,
-        gutter_left - row.origin.x,
+        rest_edge(row) - row.origin.x,
         row.size.y,
     );
     assert!(
-        has_clip(&backend, content_clip),
-        "layer content should be hard-clipped before the fixed action gutter"
+        has_clip(&backend, rest_clip),
+        "a resting row clips at its trailing edge, not before hidden actions"
     );
     let label_right = label.origin.x + approx_text_width(&label.content, ROW_FONT);
-    assert!(
-        label_right <= gutter_left + f32::EPSILON,
-        "layer label right edge {label_right} should stay before action gutter at {gutter_left}"
-    );
+    assert!(label_right <= rest_edge(row) + f32::EPSILON);
 
     let mut hovered_state = state;
     hovered_state.editor_ui.hovered_layer_id = Some(NodeId::new("n1"));
     let hovered_panel = LayerPanel::from_editor(&hovered_state);
     let hovered_backend = paint(&hovered_panel, rect);
     let hovered_label = captured_layer_label(&hovered_backend);
-    assert_eq!(
-        hovered_label.content, label.content,
-        "hover should not change the label width budget"
+    let gutter_left = layer_action_gutter_left(row);
+    let gutter_clip = Rect::xywh(
+        row.origin.x,
+        row.origin.y,
+        gutter_left - row.origin.x,
+        row.size.y,
+    );
+    assert!(
+        has_clip(&hovered_backend, gutter_clip),
+        "a hovered row hard-clips before its eye/lock gutter"
+    );
+    let hovered_right =
+        hovered_label.origin.x + approx_text_width(&hovered_label.content, ROW_FONT);
+    assert!(
+        hovered_right <= gutter_left + f32::EPSILON,
+        "hovered label right edge {hovered_right} should stay before the gutter at {gutter_left}"
+    );
+    assert!(
+        hovered_label.content.chars().count() < label.content.chars().count(),
+        "hover re-ellipsizes the name before the actions"
     );
     assert!(
         approx_point(hovered_label.origin, label.origin),
@@ -216,7 +234,7 @@ fn long_layer_name_ellipsizes_before_stable_action_gutter() {
 }
 
 #[test]
-fn horizontal_scroll_expands_label_budget_to_fixed_action_edge() {
+fn horizontal_scroll_expands_label_budget_to_fixed_trailing_edge() {
     let unscrolled_panel = LayerPanel::from_editor(&state_with_layer_name(LONG_NAME));
     let rect = panel_rect(&unscrolled_panel);
     let unscrolled_backend = paint(&unscrolled_panel, rect);
@@ -226,22 +244,22 @@ fn horizontal_scroll_expands_label_budget_to_fixed_action_edge() {
     scrolled_state.editor_ui.layer_layers_h_scroll.offset = 80.0;
     let scrolled_panel = LayerPanel::from_editor(&scrolled_state);
     let regions = scrolled_panel.regions(rect);
-    assert_eq!(regions.layers.horizontal_offset, 80.0);
+    assert!(regions.layers.horizontal_offset > 0.0);
     let scrolled_backend = paint(&scrolled_panel, rect);
     let scrolled_label = captured_layer_label(&scrolled_backend);
 
     assert!(
         scrolled_label.content.chars().count() > unscrolled_label.content.chars().count(),
-        "scrolling content left should expose more of the label without moving fixed actions"
+        "scrolling content left should expose more of the label"
     );
     let row = first_layer_row(&scrolled_panel, rect);
-    let gutter_left = layer_action_gutter_left(row);
     let label_right =
         scrolled_label.origin.x + approx_text_width(&scrolled_label.content, ROW_FONT);
     assert!(
-        label_right <= gutter_left + f32::EPSILON,
-        "translated label right edge {label_right} should stay before action gutter at \
-         {gutter_left}"
+        label_right <= rest_edge(row) + f32::EPSILON,
+        "translated label right edge {label_right} should stay before the trailing edge at \
+         {}",
+        rest_edge(row)
     );
 }
 
@@ -262,7 +280,7 @@ fn wide_layer_name_ellipsis_fits_backend_measured_width() {
     );
 
     let row = first_layer_row(&panel, rect);
-    let available_w = layer_action_gutter_left(row) - origin.x;
+    let available_w = rest_edge(row) - origin.x;
     let measured_w = backend.measure_text_family(&content, ROW_FONT, "system-ui");
     assert!(
         measured_w <= available_w + f32::EPSILON,

@@ -84,6 +84,7 @@ mod mcp_serve;
 mod menu;
 mod menu_action;
 mod message_dialog;
+mod page_fonts;
 mod persistence;
 mod persistence_error;
 mod persistence_export_batch;
@@ -416,6 +417,12 @@ struct DesktopApp {
     win_size: Option<(u32, u32)>,
     /// Whether the window is currently maximized.
     win_maximized: bool,
+    /// The window's client area is 0×0 (minimized on Windows, #302).
+    /// Nothing paints while it holds.
+    window_zero_size: bool,
+    /// The OS reports the window fully occluded (`WindowEvent::Occluded`).
+    /// Nothing paints while it holds.
+    window_occluded: bool,
     /// In-app Git — the repository bound to the open document.
     /// Rebound whenever the document path changes; read by the
     /// window title and the Git panel.
@@ -728,6 +735,9 @@ mod main_mcp_tests;
 
 #[cfg(test)]
 mod main_tests;
+
+#[cfg(test)]
+mod minimize_restore_tests;
 
 #[cfg(test)]
 mod page_paint_identity_tests;

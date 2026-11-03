@@ -246,6 +246,8 @@ impl DesktopApp {
             win_pos: None,
             win_size: None,
             win_maximized: false,
+            window_zero_size: false,
+            window_occluded: false,
             git_session: git_session::GitSession::new(),
             git_pull_job: None,
             git_push_job: None,

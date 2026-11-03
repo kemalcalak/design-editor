@@ -283,7 +283,7 @@ fn assert_longest_measured_ellipsis(
 }
 
 #[test]
-fn normal_and_hovered_rows_share_one_action_gutter() {
+fn hovered_row_reserves_the_action_gutter_without_moving_its_label() {
     let brand = NodeId::new("brand");
     let normal_panel = LayerPanel::from_editor(&fixture_state(false));
     let hovered_panel = LayerPanel::from_editor(&fixture_state(true));
@@ -311,15 +311,21 @@ fn normal_and_hovered_rows_share_one_action_gutter() {
     let hovered = paint(&hovered_panel);
     let normal_label = label_starting_with(&normal, "Google Brand").clone();
     let hovered_label = label_starting_with(&hovered, "Google Brand").clone();
-    assert!(normal_label.content.ends_with('…'));
-    assert_eq!(
-        normal_label, hovered_label,
-        "hover must not reflow the label"
+    // The resting row has room for the whole name; only the hover gutter
+    // cuts it.
+    assert_eq!(normal_label.content, BRAND_LABEL);
+    assert!(hovered_label.content.ends_with('…'));
+    assert!(
+        point_close(normal_label.origin, hovered_label.origin),
+        "hover must not move the label"
     );
 
+    // At rest the name runs to the trailing edge; hover reserves the
+    // eye/lock gutter (#306).
     let normal_clip = child_content_clip(&normal, row);
     let hovered_clip = child_content_clip(&hovered, row);
-    assert_eq!(normal_clip, hovered_clip, "hover must not move the clip");
+    assert!(close(rect_right(normal_clip), trailing_right));
+    assert!(close(rect_right(hovered_clip), intended_gutter_left));
     let backing = hovered
         .fill_rects
         .iter()
@@ -348,16 +354,20 @@ fn normal_and_hovered_rows_share_one_action_gutter() {
         Some(LayerPanelHit::ToggleLocked(brand))
     );
 
-    let measured_label_right = normal_label.origin.x
-        + normal.measure_text_family(&normal_label.content, ROW_FONT, "system-ui");
-    let clip_right = rect_right(normal_clip);
+    let mut hovered = hovered;
+    let measured_label_right = hovered_label.origin.x
+        + hovered.measure_text_family(&hovered_label.content, ROW_FONT, "system-ui");
+    let clip_right = rect_right(hovered_clip);
     let backing_left = backing.origin.x;
     assert_longest_measured_ellipsis(
-        &mut normal,
+        &mut hovered,
         BRAND_LABEL,
-        &normal_label.content,
-        backing_left - normal_label.origin.x,
+        &hovered_label.content,
+        backing_left - hovered_label.origin.x,
     );
+    let normal_right = normal_label.origin.x
+        + normal.measure_text_family(&normal_label.content, ROW_FONT, "system-ui");
+    assert!(normal_right <= trailing_right + f32::EPSILON);
     assert!(
         close(clip_right, backing_left)
             && close(backing_left, intended_gutter_left)
@@ -368,7 +378,7 @@ fn normal_and_hovered_rows_share_one_action_gutter() {
 }
 
 #[test]
-fn drag_ghost_clips_and_measured_truncates_at_the_action_gutter() {
+fn drag_ghost_clips_at_the_trailing_edge() {
     let state = fixture_state(false);
     let brand = NodeId::new("brand");
     let ghost = LayerPanel::ghost_item_for(&state, &brand).expect("brand ghost exists");
@@ -376,7 +386,8 @@ fn drag_ghost_clips_and_measured_truncates_at_the_action_gutter() {
     panel.drag_ghost = Some((ghost, 30.0));
 
     let ghost_row = Rect::xywh(6.0, 16.0, 168.0, 24.0);
-    let intended_gutter_left = 122.0;
+    // The ghost shows no actions, so its name runs to the trailing edge.
+    let trailing_edge = 166.0;
     let mut backend = paint(&panel);
     let ghost_label = backend
         .texts
@@ -424,18 +435,12 @@ fn drag_ghost_clips_and_measured_truncates_at_the_action_gutter() {
     let measured_label_right = ghost_label.origin.x
         + backend.measure_text_family(&ghost_label.content, ROW_FONT, "system-ui");
     let clip_right = rect_right(ghost_clip);
-    assert_longest_measured_ellipsis(
-        &mut backend,
-        BRAND_LABEL,
-        &ghost_label.content,
-        intended_gutter_left - ghost_label.origin.x,
-    );
     assert!(
-        close(clip_right, intended_gutter_left)
-            && ghost_label.content.ends_with('…')
-            && measured_label_right <= intended_gutter_left + f32::EPSILON,
-        "drag ghost must clip and truncate at {intended_gutter_left}: clip right={clip_right}, \
-         label={:?}, measured label right={measured_label_right}",
+        close(clip_right, trailing_edge)
+            && ghost_label.content == BRAND_LABEL
+            && measured_label_right <= trailing_edge + f32::EPSILON,
+        "drag ghost must clip at {trailing_edge} and keep the whole name: clip \
+         right={clip_right}, label={:?}, measured label right={measured_label_right}",
         ghost_label.content
     );
 }

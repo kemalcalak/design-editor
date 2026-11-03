@@ -10,12 +10,15 @@ use de_mcp::{McpTool, ToolErrorCode, ToolOutcome};
 use crate::font_host::{self, FontHost};
 
 /// How long one call waits for its downloads before reporting the rest as
-/// still `downloading`.
-const LOAD_WAIT: Duration = Duration::from_secs(20);
+/// still `downloading`. `browser` import-to-canvas waits as long.
+pub(crate) const LOAD_WAIT: Duration = Duration::from_secs(20);
 
 /// Cap on families per call, so one call cannot start an unbounded number
-/// of downloads.
-const MAX_FAMILIES: usize = 16;
+/// of downloads. `browser` import-to-canvas loads as many.
+pub(crate) const MAX_FAMILIES: usize = 16;
+
+/// Why a host without a font host loads nothing.
+pub(crate) const NO_FONT_HOST: &str = "font downloads are only available in the desktop app";
 
 pub struct LoadFonts {
     host: Option<&'static dyn FontHost>,
@@ -64,10 +67,7 @@ impl McpTool for LoadFonts {
             );
         }
         let Some(host) = self.host else {
-            return ToolOutcome::Err(
-                ToolErrorCode::ToolFailed,
-                "font downloads are only available in the desktop app".into(),
-            );
+            return ToolOutcome::Err(ToolErrorCode::ToolFailed, NO_FONT_HOST.into());
         };
         let fonts = host.load(&families, LOAD_WAIT);
         match serde_json::to_string(&serde_json::json!({ "fonts": fonts })) {
@@ -83,7 +83,7 @@ impl McpTool for LoadFonts {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::font_host::{FontIssue, FontLoadResult, FontLoadStatus};
+    use crate::font_host::{FontIssue, FontLoadResult, FontLoadStatus, PageFaceError};
     use de_editor_core::EditorState;
     use std::sync::Mutex;
 
@@ -111,6 +111,14 @@ mod tests {
 
         fn font_issues(&self, _state: &EditorState) -> Vec<FontIssue> {
             Vec::new()
+        }
+
+        fn register_page_faces(
+            &self,
+            _family: &str,
+            faces: Vec<Vec<u8>>,
+        ) -> Result<String, PageFaceError> {
+            Err(PageFaceError::Unreadable { files: faces.len() })
         }
     }
 

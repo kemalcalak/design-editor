@@ -1,6 +1,7 @@
 //! The Agents tab's CLI agent detail (#26): the probe status with Check
 //! again, the agent's discovered models as a checklist (unticked ones
-//! leave the chat picker, D6), and Connect / Disconnect.
+//! leave the chat picker, D6), and Connect / Disconnect. A missing agent's
+//! card carries its whole install command with a copy button (#304).
 
 use crate::theme::Theme;
 use crate::widgets::agent_settings_detail_chrome::{
@@ -9,8 +10,8 @@ use crate::widgets::agent_settings_detail_chrome::{
     BODY_TOP_GAP, BUTTON_H, FIELD_GAP, FOOTER_GAP, HEADER_H, LABEL_FONT, LABEL_H, VALUE_FONT,
 };
 use crate::widgets::agent_settings_i18n::t as t_settings;
+use crate::widgets::agent_settings_install_command::{self as install, CommandLayout};
 use crate::widgets::agent_settings_rows::{fit_text, SETTINGS_FONT_FAMILY};
-use crate::widgets::home_surface::MONO;
 use crate::widgets::icons::{draw_icon, Icon};
 use crate::widgets::PaintCx;
 use crate::{Point2D, Rect};
@@ -21,6 +22,18 @@ use de_editor_core::ModelEntry;
 
 const STATUS_H: f32 = 64.0;
 const EMPTY_H: f32 = 52.0;
+/// The not-installed card: the headline row above the command well.
+const HEAD_ROW_H: f32 = 52.0;
+const CARD_PAD: f32 = 14.0;
+/// The status glyph's inset and size, and the headline that follows it.
+const GLYPH_INSET: f32 = 16.0;
+const GLYPH: f32 = 18.0;
+const HEADLINE_X: f32 = GLYPH_INSET + GLYPH + 14.0;
+/// Space between the headline and a Check again on its row.
+const HEADLINE_GAP: f32 = 12.0;
+/// Check again stays on the headline row only while the headline keeps
+/// this much room; below it the button drops under the command.
+const MIN_HEADLINE_W: f32 = 96.0;
 
 /// The agent's discovered model ids, in discovery order.
 pub(crate) fn cli_model_rows(discovered: &[ModelEntry], provider: AgentProvider) -> Vec<&str> {
@@ -38,10 +51,28 @@ fn agent_models(
         .filter(move |entry| entry.provider == provider && entry.builtin_provider_id.is_none())
 }
 
+/// The command to show when `provider` is known to be missing: the
+/// not-installed state of [`status_lines`], with something to install.
+pub(crate) fn install_command(settings: &AgentSettings, provider: AgentProvider) -> Option<&str> {
+    let index = AgentSettings::provider_index(provider);
+    let connection = &settings.provider_connection[index];
+    let missing = !settings.provider_verified_connected_at(index)
+        && connection.phase != ProviderConnectPhase::Probing
+        && connection.not_installed;
+    connection
+        .install_command
+        .as_deref()
+        .filter(|command| missing && !command.trim().is_empty())
+}
+
 #[derive(Debug, Clone, Copy)]
 pub(crate) struct CliLayout {
     pub(crate) status: Rect,
     pub(crate) recheck: Rect,
+    /// Check again sits on the headline row (else under the card's body).
+    pub(crate) recheck_beside: bool,
+    /// The install command's well, when the agent is missing.
+    pub(crate) install: Option<CommandLayout>,
     pub(crate) models: Rect,
     pub(crate) model_rows: usize,
     pub(crate) footer: Rect,
@@ -67,15 +98,22 @@ pub(crate) fn cli_layout(
     let x = detail.origin.x;
     let w = detail.size.x;
     let mut y = detail.origin.y + HEADER_H + BODY_TOP_GAP + LABEL_H;
-    let status = Rect::xywh(x, y, w, STATUS_H);
-    let recheck_w = button_width_estimate(t_settings(ui, "settings.agents.checkAgain"), true);
-    let recheck = Rect::xywh(
-        x + w - 14.0 - recheck_w,
-        status.origin.y + (STATUS_H - BUTTON_H) / 2.0,
-        recheck_w,
-        BUTTON_H,
-    );
-    y += STATUS_H + FIELD_GAP + LABEL_H;
+    let recheck_w = button_width_estimate(t_settings(ui, "settings.agents.checkAgain"), true)
+        .min((w - CARD_PAD * 2.0).max(0.0));
+    let (status, recheck, recheck_beside, install) = match install_command(settings, provider) {
+        Some(text) => status_with_command(x, y, w, recheck_w, text),
+        None => {
+            let status = Rect::xywh(x, y, w, STATUS_H);
+            let recheck = Rect::xywh(
+                x + w - CARD_PAD - recheck_w,
+                y + (STATUS_H - BUTTON_H) / 2.0,
+                recheck_w,
+                BUTTON_H,
+            );
+            (status, recheck, true, None)
+        }
+    };
+    y += status.size.y + FIELD_GAP + LABEL_H;
     let model_rows = agent_models(discovered, provider).count();
     let models_h = if model_rows == 0 {
         EMPTY_H
@@ -91,6 +129,8 @@ pub(crate) fn cli_layout(
     CliLayout {
         status,
         recheck,
+        recheck_beside,
+        install,
         models,
         model_rows,
         footer,
@@ -99,9 +139,44 @@ pub(crate) fn cli_layout(
     }
 }
 
+/// The not-installed card at (`x`, `y`): headline row, then the command
+/// well across the card, with Check again on the headline row when it
+/// leaves the headline [`MIN_HEADLINE_W`], else under the well.
+fn status_with_command(
+    x: f32,
+    y: f32,
+    w: f32,
+    recheck_w: f32,
+    command: &str,
+) -> (Rect, Rect, bool, Option<CommandLayout>) {
+    let well = install::command_layout(
+        x + CARD_PAD,
+        y + HEAD_ROW_H,
+        (w - CARD_PAD * 2.0).max(0.0),
+        command,
+    );
+    let well_bottom = well.well.origin.y + well.well.size.y;
+    let beside = w - CARD_PAD - recheck_w - HEADLINE_GAP - HEADLINE_X >= MIN_HEADLINE_W;
+    let (recheck, bottom) = if beside {
+        let recheck = Rect::xywh(
+            x + w - CARD_PAD - recheck_w,
+            y + (HEAD_ROW_H - BUTTON_H) / 2.0,
+            recheck_w,
+            BUTTON_H,
+        );
+        (recheck, well_bottom)
+    } else {
+        let recheck = Rect::xywh(x + CARD_PAD, well_bottom + 10.0, recheck_w, BUTTON_H);
+        (recheck, well_bottom + 10.0 + BUTTON_H)
+    };
+    let status = Rect::xywh(x, y, w, bottom + CARD_PAD - y);
+    (status, recheck, beside, Some(well))
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum CliHit {
     Recheck,
+    CopyInstall,
     ToggleModel(usize),
     Connect,
     None,
@@ -110,6 +185,12 @@ pub(crate) enum CliHit {
 pub(crate) fn cli_hit(settings: &AgentSettings, layout: &CliLayout, point: Point2D) -> CliHit {
     if layout.recheck.contains(point) {
         return CliHit::Recheck;
+    }
+    if layout
+        .install
+        .is_some_and(|install| install.copy.contains(point))
+    {
+        return CliHit::CopyInstall;
     }
     if layout.model_rows > 0 {
         let scroll =
@@ -164,7 +245,8 @@ fn status_lines(
             Icon::Terminal,
             theme.muted_foreground,
             t_settings(ui, "settings.agents.notInstalled").to_string(),
-            connection.install_command.clone().unwrap_or_default(),
+            // The command itself is painted in the card's command well.
+            String::new(),
         ),
         ProviderConnectPhase::Error => (
             Icon::AlertTriangle,
@@ -190,6 +272,7 @@ pub(crate) fn paint_cli_detail(
     detail: Rect,
     discovered: &[ModelEntry],
     provider: AgentProvider,
+    now_ms: u64,
 ) {
     let layout = cli_layout(detail, settings, ui, discovered, provider);
     paint_header(
@@ -210,45 +293,7 @@ pub(crate) fn paint_cli_detail(
         .fill_round_rect(layout.status, 8.0, theme.background);
     cx.backend
         .stroke_round_rect(layout.status, 8.0, theme.border, 1.0);
-    let (icon, color, headline, detail_line) = status_lines(theme, ui, settings, provider);
-    let glyph = 18.0;
-    let x = layout.status.origin.x + 16.0;
-    draw_icon(
-        cx.backend,
-        icon,
-        Point2D::new(x, layout.status.origin.y + (STATUS_H - glyph) / 2.0),
-        glyph,
-        color,
-        1.7,
-    );
-    let text_x = x + glyph + 14.0;
-    let budget = (layout.recheck.origin.x - 12.0 - text_x).max(0.0);
-    let headline = fit_text(cx, &headline, budget, VALUE_FONT + 0.5);
-    text(
-        cx,
-        &headline,
-        VALUE_FONT + 0.5,
-        theme.foreground,
-        600,
-        SETTINGS_FONT_FAMILY,
-        text_x,
-        layout.status.origin.y + 27.0,
-    );
-    if !detail_line.is_empty() {
-        let line = fit_text(cx, &detail_line, budget, LABEL_FONT);
-        let mono = !settings.provider_verified_connected(provider)
-            && settings.provider_connection[AgentSettings::provider_index(provider)].not_installed;
-        text(
-            cx,
-            &line,
-            LABEL_FONT,
-            theme.muted_foreground,
-            400,
-            if mono { MONO } else { SETTINGS_FONT_FAMILY },
-            text_x,
-            layout.status.origin.y + 46.0,
-        );
-    }
+    paint_status_card(cx, theme, settings, ui, &layout, provider, now_ms);
     paint_button(
         cx,
         theme,
@@ -327,12 +372,171 @@ pub(crate) fn paint_cli_detail(
     );
 }
 
+/// The status card's glyph, headline and detail line (or command well).
+fn paint_status_card(
+    cx: &mut PaintCx<'_>,
+    theme: &Theme,
+    settings: &AgentSettings,
+    ui: &EditorUiState,
+    layout: &CliLayout,
+    provider: AgentProvider,
+    now_ms: u64,
+) {
+    let (icon, color, headline, detail_line) = status_lines(theme, ui, settings, provider);
+    let x = layout.status.origin.x + GLYPH_INSET;
+    let text_x = layout.status.origin.x + HEADLINE_X;
+    let row_h = if layout.install.is_some() {
+        HEAD_ROW_H
+    } else {
+        STATUS_H
+    };
+    // The headline runs up to Check again when they share a row.
+    let right = if layout.recheck_beside {
+        layout.recheck.origin.x - HEADLINE_GAP
+    } else {
+        layout.status.origin.x + layout.status.size.x - CARD_PAD
+    };
+    let budget = (right - text_x).max(0.0);
+    draw_icon(
+        cx.backend,
+        icon,
+        Point2D::new(x, layout.status.origin.y + (row_h - GLYPH) / 2.0),
+        GLYPH,
+        color,
+        1.7,
+    );
+    let headline = fit_text(cx, &headline, budget, VALUE_FONT + 0.5);
+    if let (Some(command_layout), Some(command)) =
+        (layout.install, install_command(settings, provider))
+    {
+        let row = Rect::xywh(
+            layout.status.origin.x,
+            layout.status.origin.y,
+            layout.status.size.x,
+            HEAD_ROW_H,
+        );
+        text(
+            cx,
+            &headline,
+            VALUE_FONT + 0.5,
+            theme.foreground,
+            600,
+            SETTINGS_FONT_FAMILY,
+            text_x,
+            chrome::centred_baseline(row, VALUE_FONT + 0.5),
+        );
+        let copied =
+            install::shows_copied(settings.install_command_copied.as_ref(), command, now_ms);
+        install::paint_command(cx, theme, &command_layout, command, copied);
+        return;
+    }
+    text(
+        cx,
+        &headline,
+        VALUE_FONT + 0.5,
+        theme.foreground,
+        600,
+        SETTINGS_FONT_FAMILY,
+        text_x,
+        layout.status.origin.y + 27.0,
+    );
+    if !detail_line.is_empty() {
+        let line = fit_text(cx, &detail_line, budget, LABEL_FONT);
+        text(
+            cx,
+            &line,
+            LABEL_FONT,
+            theme.muted_foreground,
+            400,
+            SETTINGS_FONT_FAMILY,
+            text_x,
+            layout.status.origin.y + 46.0,
+        );
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
     fn detail() -> Rect {
         Rect::xywh(300.0, 100.0, 460.0, 600.0)
+    }
+
+    fn overlaps(a: Rect, b: Rect) -> bool {
+        a.origin.x < b.origin.x + b.size.x
+            && b.origin.x < a.origin.x + a.size.x
+            && a.origin.y < b.origin.y + b.size.y
+            && b.origin.y < a.origin.y + a.size.y
+    }
+
+    fn inside(inner: Rect, outer: Rect) -> bool {
+        inner.origin.x >= outer.origin.x - 0.01
+            && inner.origin.y >= outer.origin.y - 0.01
+            && inner.origin.x + inner.size.x <= outer.origin.x + outer.size.x + 0.01
+            && inner.origin.y + inner.size.y <= outer.origin.y + outer.size.y + 0.01
+    }
+
+    /// #304: at every detail width down to the 620 px modal's (~96 px), in
+    /// every locale, Check again never covers the install command's well,
+    /// the well and button stay inside the card, the copy button resolves,
+    /// and the wrapped lines carry the whole command.
+    #[test]
+    fn the_install_command_is_never_covered_by_check_again() {
+        let commands = [
+            "npm install -g @anthropic-ai/claude-code",
+            "curl -fsSL https://antigravity.google/cli/install.sh | bash",
+            "irm https://antigravity.google/cli/install.ps1 | iex",
+            "brew install github/copilot/copilot",
+        ];
+        for locale in de_i18n::Locale::ALL {
+            let ui = EditorUiState {
+                locale,
+                ..EditorUiState::default()
+            };
+            for command in commands {
+                let mut settings = AgentSettings::default();
+                let connection =
+                    &mut settings.provider_connection[AgentProvider::ClaudeCode.index()];
+                connection.not_installed = true;
+                connection.install_command = Some(command.into());
+                for w in [96.0, 140.0, 220.0, 300.0, 460.0, 660.0] {
+                    let detail = Rect::xywh(300.0, 100.0, w, 600.0);
+                    let layout = cli_layout(detail, &settings, &ui, &[], AgentProvider::ClaudeCode);
+                    let well = layout.install.expect("a missing agent shows its command");
+                    let case = format!("{locale:?} {command} w={w}");
+                    assert!(!overlaps(layout.recheck, well.well), "{case}");
+                    assert!(inside(well.well, layout.status), "{case}");
+                    assert!(inside(layout.recheck, layout.status), "{case}");
+                    let lines = install::wrap_command(command, well.columns);
+                    assert_eq!(
+                        lines.concat().replace(' ', ""),
+                        command.replace(' ', ""),
+                        "{case}"
+                    );
+                    let centre = Point2D::new(
+                        well.copy.origin.x + well.copy.size.x / 2.0,
+                        well.copy.origin.y + well.copy.size.y / 2.0,
+                    );
+                    assert_eq!(cli_hit(&settings, &layout, centre), CliHit::CopyInstall);
+                    assert!(layout.models.origin.y > layout.status.origin.y + layout.status.size.y);
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn an_installed_agent_keeps_the_compact_card() {
+        let settings = AgentSettings::default();
+        let layout = cli_layout(
+            detail(),
+            &settings,
+            &EditorUiState::default(),
+            &[],
+            AgentProvider::ClaudeCode,
+        );
+        assert!(layout.install.is_none());
+        assert_eq!(layout.status.size.y, STATUS_H);
     }
 
     #[test]

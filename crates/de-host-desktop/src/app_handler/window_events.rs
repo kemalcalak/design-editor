@@ -65,6 +65,9 @@ impl DesktopApp {
     }
 
     pub(super) fn on_resized(&mut self, event_loop: &ActiveEventLoop, size: PhysicalSize<u32>) {
+        if !self.apply_window_size(size) {
+            return;
+        }
         if let Some(ctx) = self.ctx.as_mut() {
             if let Err(err) = ctx.resize(size.width, size.height) {
                 eprintln!("design-editor: resize failed: {err}");
@@ -73,6 +76,31 @@ impl DesktopApp {
             }
         } else {
             self.try_init_render_context(event_loop);
+        }
+        // Fullscreen enter / exit arrives as a `Resized` on
+        // macOS — refresh the flag so the chrome drops its
+        // traffic-light reservation when the native lights
+        // hide in fullscreen.
+        let fullscreen = self
+            .window
+            .as_ref()
+            .is_some_and(|w| w.fullscreen().is_some());
+        if self.host.editor_state().editor_ui.window_fullscreen != fullscreen {
+            self.host.editor_state_mut().editor_ui.window_fullscreen = fullscreen;
+            self.host.mark_editor_state_dirty();
+        }
+    }
+
+    /// Record a `Resized` size: the logical viewport, the preview layout and
+    /// the persisted windowed size, then schedule a repaint. Returns `false`
+    /// and changes nothing else for a 0×0 client area,
+    /// which Windows reports on minimize (#302): that size is never painted
+    /// or saved, so the last real viewport stays and the restore's `Resized`
+    /// rebuilds the surface at the real size.
+    pub(crate) fn apply_window_size(&mut self, size: PhysicalSize<u32>) -> bool {
+        self.window_zero_size = !has_area(size);
+        if self.window_zero_size {
+            return false;
         }
         self.viewport_width = size.width as f32 / self.dpi;
         self.viewport_height = size.height as f32 / self.dpi;
@@ -87,26 +115,35 @@ impl DesktopApp {
         if !self.win_maximized {
             self.win_size = Some((size.width, size.height));
         }
-        // Fullscreen enter / exit arrives as a `Resized` on
-        // macOS — refresh the flag so the chrome drops its
-        // traffic-light reservation when the native lights
-        // hide in fullscreen.
-        let fullscreen = self
-            .window
-            .as_ref()
-            .is_some_and(|w| w.fullscreen().is_some());
-        if self.host.editor_state().editor_ui.window_fullscreen != fullscreen {
-            self.host.editor_state_mut().editor_ui.window_fullscreen = fullscreen;
-            self.host.mark_editor_state_dirty();
-        }
+        // Any real size repaints, the restore after a minimize included.
         self.request_redraw(true);
+        true
+    }
+
+    /// Nothing paints while the client area is 0×0 or fully occluded.
+    pub(crate) fn surface_hidden(&self) -> bool {
+        self.window_zero_size || self.window_occluded
+    }
+
+    /// The OS hid or revealed the whole window (macOS minimize, another
+    /// Space). Painting pauses while hidden; the reveal repaints.
+    pub(crate) fn on_occluded(&mut self, occluded: bool) {
+        self.window_occluded = occluded;
+        if !occluded {
+            self.request_redraw(true);
+        }
     }
 
     pub(super) fn on_moved(&mut self, pos: PhysicalPosition<i32>) {
         // Remember the windowed position for window-state
         // persistence; skip while maximized so the restored
-        // position is the user's chosen spot.
-        if !self.window.as_ref().is_some_and(Window::is_maximized) {
+        // position is the user's chosen spot, and while minimized:
+        // Windows parks an iconic window at (-32000, -32000).
+        let parked = self
+            .window
+            .as_ref()
+            .is_some_and(|w| w.is_maximized() || w.is_minimized().unwrap_or(false));
+        if !parked {
             self.win_pos = Some((pos.x, pos.y));
         }
     }
@@ -208,11 +245,22 @@ impl DesktopApp {
             backend.set_dpi(scale_factor as f32);
         }
         // Logical = physical / dpi; refresh to keep input + paint coords in sync after a DPI flip.
-        if let Some(window) = self.window.as_ref() {
-            let size = window.inner_size();
+        // A minimized window's inner size is 0×0; keep the last real
+        // viewport until the restore's `Resized` (#302).
+        if let Some(size) = self
+            .window
+            .as_ref()
+            .map(Window::inner_size)
+            .filter(|size| has_area(*size))
+        {
             self.viewport_width = size.width as f32 / self.dpi;
             self.viewport_height = size.height as f32 / self.dpi;
         }
         self.request_redraw(true);
     }
+}
+
+/// A client area that can be painted. Windows reports 0×0 while minimized.
+fn has_area(size: PhysicalSize<u32>) -> bool {
+    size.width > 0 && size.height > 0
 }
