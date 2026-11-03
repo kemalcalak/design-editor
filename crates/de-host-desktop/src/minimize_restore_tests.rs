@@ -71,10 +71,12 @@ fn a_hidden_window_does_not_keep_an_animation_wake_due() {
     // Home's focused input blinks its caret: an animation deadline.
     app.host.editor_state_mut().editor_ui.home.visible = true;
     assert!(app.host.next_animation_deadline_ms().is_some());
-    assert!(app.resume_time_needs_redraw());
+    assert!(app.visible_animation_deadline_ms().is_some());
     assert!(!app.apply_window_size(PhysicalSize::new(0, 0)));
+    // Asked of the deadline itself, not `resume_time_needs_redraw`: that
+    // also reads process-wide image queues other tests fill in parallel.
     assert!(
-        !app.resume_time_needs_redraw(),
+        app.visible_animation_deadline_ms().is_none(),
         "only painted frames advance animation deadlines"
     );
 }
