@@ -91,7 +91,13 @@ impl DesktopApp {
             || self.update_job.as_ref().is_some_and(|job| job.is_pending())
         {
             event_loop.set_control_flow(ControlFlow::WaitUntil(self.periodic_wake_instant(100)));
-        } else if let Some(deadline_ms) = self.host.next_animation_deadline_ms() {
+        } else if let Some(deadline_ms) = self
+            .host
+            .next_animation_deadline_ms()
+            // Animation deadlines advance only when a frame paints, so a
+            // hidden window would re-arm the same 16 ms wake forever (#302).
+            .filter(|_| !self.surface_hidden())
+        {
             let deadline = self.clock_start + Duration::from_millis(deadline_ms);
             event_loop.set_control_flow(ControlFlow::WaitUntil(deadline));
         } else if self.update_probe.is_pending()
@@ -170,7 +176,7 @@ impl DesktopApp {
             || self.current_html_import.is_some()
             || self.pending_figma_paste.is_some()
             || self.pending_html_paste.is_some()
-            || self.host.next_animation_deadline_ms().is_some()
+            || (self.host.next_animation_deadline_ms().is_some() && !self.surface_hidden())
             // The chrome tooltip's dwell deadline retires the moment it
             // elapses, so by the time this wake runs the clock has
             // already moved past it and the deadline above reports
