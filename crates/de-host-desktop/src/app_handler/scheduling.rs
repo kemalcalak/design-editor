@@ -91,7 +91,7 @@ impl DesktopApp {
             || self.update_job.as_ref().is_some_and(|job| job.is_pending())
         {
             event_loop.set_control_flow(ControlFlow::WaitUntil(self.periodic_wake_instant(100)));
-        } else if let Some(deadline_ms) = self.host.next_animation_deadline_ms() {
+        } else if let Some(deadline_ms) = self.visible_animation_deadline_ms() {
             let deadline = self.clock_start + Duration::from_millis(deadline_ms);
             event_loop.set_control_flow(ControlFlow::WaitUntil(deadline));
         } else if self.update_probe.is_pending()
@@ -102,7 +102,7 @@ impl DesktopApp {
             // paint recorded (the next pump picks them up).
             || self.remote_images.is_pending()
             || de_editor_ui::widgets::canvas_viewport_image::has_pending_remote_image_requests()
-            || self.browser_renders.is_waiting()
+            || self.browser_render_due()
             || self.image_decodes.is_pending()
             || de_editor_ui::widgets::canvas_viewport_image::has_pending_decodes()
             || self
@@ -146,6 +146,21 @@ impl DesktopApp {
         }
     }
 
+    /// The next animation deadline, while the window is painted. Deadlines
+    /// advance only when a frame paints, so a hidden window would re-arm
+    /// the same 16 ms wake forever (#302).
+    fn visible_animation_deadline_ms(&self) -> Option<u64> {
+        self.host
+            .next_animation_deadline_ms()
+            .filter(|_| !self.surface_hidden())
+    }
+
+    /// A debounced browser render waits for its send. The queue is pumped
+    /// after a painted frame, so a hidden window has nothing to wake for.
+    fn browser_render_due(&self) -> bool {
+        !self.surface_hidden() && self.browser_renders.is_waiting()
+    }
+
     pub(super) fn timed_wake_needs_redraw(&self, cause: &StartCause) -> bool {
         match cause {
             StartCause::ResumeTimeReached { .. } => true,
@@ -170,7 +185,7 @@ impl DesktopApp {
             || self.current_html_import.is_some()
             || self.pending_figma_paste.is_some()
             || self.pending_html_paste.is_some()
-            || self.host.next_animation_deadline_ms().is_some()
+            || self.visible_animation_deadline_ms().is_some()
             // The chrome tooltip's dwell deadline retires the moment it
             // elapses, so by the time this wake runs the clock has
             // already moved past it and the deadline above reports
@@ -185,7 +200,7 @@ impl DesktopApp {
             || self.image_decodes.is_pending()
             || de_editor_ui::widgets::canvas_viewport_image::has_pending_decodes()
             // A debounced browser render comes due (#20).
-            || self.browser_renders.is_waiting()
+            || self.browser_render_due()
             || self
                 .iconify_job
                 .as_ref()
