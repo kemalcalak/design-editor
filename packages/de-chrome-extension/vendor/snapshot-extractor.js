@@ -267,6 +267,24 @@
     return names;
   }
 
+  // The attributes a layer is named from (`snapshot_name.rs` picks the
+  // name), each only when present. Values are capped: a utility-class page
+  // repeats long class lists on every element, and a name needs only the
+  // first meaningful class.
+  var NAME_ATTRIBUTES = ["aria-label", "title", "alt", "role", "id", "class"];
+  function nameAttributes(element) {
+    var attrs;
+    NAME_ATTRIBUTES.forEach(function (key) {
+      var value = element.getAttribute && element.getAttribute(key);
+      if (typeof value !== "string") return;
+      value = value.replace(/\s+/g, " ").trim();
+      if (!value) return;
+      attrs = attrs || {};
+      attrs[key] = value.slice(0, 200);
+    });
+    return attrs;
+  }
+
   function childHasVisibleBox(element) {
     return Array.prototype.some.call(element.children, function (child) {
       var style = window.getComputedStyle(child);
@@ -857,13 +875,16 @@
         if (fragments[at].fillRule) piece.fillRule = fragments[at].fillRule;
         children.push(piece);
       }
-      return {
+      var artwork = {
         kind: "element",
         tag: "svg",
         rect: pageRect(rect),
         styles: elementStyles(computed),
         children: children,
       };
+      var artworkAttrs = nameAttributes(element);
+      if (artworkAttrs) artwork.attrs = artworkAttrs;
+      return artwork;
     }
     var captured;
     if (tag === "img") captured = rasterizeImage(element);
@@ -880,6 +901,8 @@
     if (captured.tainted) result.tainted = true;
     var box = layoutBox(computed);
     if (box) result.layout = box;
+    var attrs = nameAttributes(element);
+    if (attrs) result.attrs = attrs;
     if (tag === "svg") {
       var icons = lucideNames(element);
       if (icons.length) {
@@ -1300,6 +1323,8 @@
     };
     var box = layoutBox(computed);
     if (box) result.layout = box;
+    var attrs = nameAttributes(element);
+    if (attrs) result.attrs = attrs;
     return result;
   }
 
