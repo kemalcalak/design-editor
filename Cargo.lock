@@ -1192,7 +1192,7 @@ checksum = "be1e0bca6c3637f992fc1cc7cbc52a78c1ef6db076dbf1059c4323d6a2048376"
 
 [[package]]
 name = "de-acp"
-version = "0.5.6"
+version = "0.5.7"
 dependencies = [
  "agent-client-protocol",
  "de-ai",
@@ -1212,14 +1212,14 @@ dependencies = [
 
 [[package]]
 name = "de-ai"
-version = "0.5.6"
+version = "0.5.7"
 dependencies = [
  "serde_json",
 ]
 
 [[package]]
 name = "de-ai-skills"
-version = "0.5.6"
+version = "0.5.7"
 dependencies = [
  "de-util",
  "include_dir",
@@ -1230,7 +1230,7 @@ dependencies = [
 
 [[package]]
 name = "de-browser-render"
-version = "0.5.6"
+version = "0.5.7"
 dependencies = [
  "base64 0.22.1",
  "de-process-io",
@@ -1241,7 +1241,7 @@ dependencies = [
 
 [[package]]
 name = "de-builtin-model-discovery"
-version = "0.5.6"
+version = "0.5.7"
 dependencies = [
  "de-editor-core",
  "futures",
@@ -1252,7 +1252,7 @@ dependencies = [
 
 [[package]]
 name = "de-chat-agent"
-version = "0.5.6"
+version = "0.5.7"
 dependencies = [
  "base64 0.22.1",
  "de-ai",
@@ -1275,7 +1275,7 @@ dependencies = [
 
 [[package]]
 name = "de-chrome-extension-core"
-version = "0.5.6"
+version = "0.5.7"
 dependencies = [
  "de-html",
  "de-util",
@@ -1287,7 +1287,7 @@ dependencies = [
 
 [[package]]
 name = "de-cli"
-version = "0.5.6"
+version = "0.5.7"
 dependencies = [
  "base64 0.22.1",
  "de-ai-skills",
@@ -1306,7 +1306,7 @@ dependencies = [
 
 [[package]]
 name = "de-codegen"
-version = "0.5.6"
+version = "0.5.7"
 dependencies = [
  "base64 0.22.1",
  "de-ai",
@@ -1320,7 +1320,7 @@ dependencies = [
 
 [[package]]
 name = "de-config-store"
-version = "0.5.6"
+version = "0.5.7"
 dependencies = [
  "serde",
  "serde_json",
@@ -1328,7 +1328,7 @@ dependencies = [
 
 [[package]]
 name = "de-design-lint"
-version = "0.5.6"
+version = "0.5.7"
 dependencies = [
  "de-util",
  "jian-ops-schema",
@@ -1338,7 +1338,7 @@ dependencies = [
 
 [[package]]
 name = "de-editor-core"
-version = "0.5.6"
+version = "0.5.7"
 dependencies = [
  "base64 0.22.1",
  "de-ai",
@@ -1356,7 +1356,7 @@ dependencies = [
 
 [[package]]
 name = "de-editor-host-core"
-version = "0.5.6"
+version = "0.5.7"
 dependencies = [
  "de-ai",
  "de-ai-skills",
@@ -1377,7 +1377,7 @@ dependencies = [
 
 [[package]]
 name = "de-editor-ui"
-version = "0.5.6"
+version = "0.5.7"
 dependencies = [
  "accesskit",
  "base64 0.22.1",
@@ -1399,7 +1399,7 @@ dependencies = [
 
 [[package]]
 name = "de-figma"
-version = "0.5.6"
+version = "0.5.7"
 dependencies = [
  "base64 0.22.1",
  "de-editor-core",
@@ -1414,7 +1414,7 @@ dependencies = [
 
 [[package]]
 name = "de-git"
-version = "0.5.6"
+version = "0.5.7"
 dependencies = [
  "de-config-store",
  "de-util",
@@ -1426,7 +1426,7 @@ dependencies = [
 
 [[package]]
 name = "de-host-desktop"
-version = "0.5.6"
+version = "0.5.7"
 dependencies = [
  "accesskit",
  "accesskit_macos",
@@ -1490,7 +1490,7 @@ dependencies = [
 
 [[package]]
 name = "de-host-native"
-version = "0.5.6"
+version = "0.5.7"
 dependencies = [
  "accesskit",
  "casement",
@@ -1522,7 +1522,7 @@ dependencies = [
 
 [[package]]
 name = "de-host-services"
-version = "0.5.6"
+version = "0.5.7"
 dependencies = [
  "agent",
  "anthropic-agent-sdk",
@@ -1575,7 +1575,7 @@ dependencies = [
 
 [[package]]
 name = "de-host-web"
-version = "0.5.6"
+version = "0.5.7"
 dependencies = [
  "accesskit",
  "base64 0.22.1",
@@ -1608,7 +1608,7 @@ dependencies = [
 
 [[package]]
 name = "de-host-web-server"
-version = "0.5.6"
+version = "0.5.7"
 dependencies = [
  "de-host-services",
  "serde_json",
@@ -1616,7 +1616,7 @@ dependencies = [
 
 [[package]]
 name = "de-html"
-version = "0.5.6"
+version = "0.5.7"
 dependencies = [
  "base64 0.22.1",
  "de-util",
@@ -1632,14 +1632,14 @@ dependencies = [
 
 [[package]]
 name = "de-i18n"
-version = "0.5.6"
+version = "0.5.7"
 dependencies = [
  "de-html",
 ]
 
 [[package]]
 name = "de-image-enrich"
-version = "0.5.6"
+version = "0.5.7"
 dependencies = [
  "base64 0.22.1",
  "de-editor-core",
@@ -1655,7 +1655,7 @@ dependencies = [
 
 [[package]]
 name = "de-mcp"
-version = "0.5.6"
+version = "0.5.7"
 dependencies = [
  "base64 0.22.1",
  "de-ai-skills",
@@ -1678,7 +1678,7 @@ dependencies = [
 
 [[package]]
 name = "de-opmerge"
-version = "0.5.6"
+version = "0.5.7"
 dependencies = [
  "jian-ops-schema",
  "serde_json",
@@ -1687,7 +1687,7 @@ dependencies = [
 
 [[package]]
 name = "de-orchestrator"
-version = "0.5.6"
+version = "0.5.7"
 dependencies = [
  "de-ai-skills",
  "de-design-lint",
@@ -1710,7 +1710,7 @@ dependencies = [
 
 [[package]]
 name = "de-pen-loader"
-version = "0.5.6"
+version = "0.5.7"
 dependencies = [
  "base64 0.22.1",
  "de-editor-core",
@@ -1729,7 +1729,7 @@ dependencies = [
 
 [[package]]
 name = "de-pptx"
-version = "0.5.6"
+version = "0.5.7"
 dependencies = [
  "base64 0.22.1",
  "de-editor-core",
@@ -1746,7 +1746,7 @@ dependencies = [
 
 [[package]]
 name = "de-preview-contracts"
-version = "0.5.6"
+version = "0.5.7"
 dependencies = [
  "serde",
  "serde_json",
@@ -1755,7 +1755,7 @@ dependencies = [
 
 [[package]]
 name = "de-preview-core"
-version = "0.5.6"
+version = "0.5.7"
 dependencies = [
  "de-editor-core",
  "de-editor-ui",
@@ -1772,7 +1772,7 @@ dependencies = [
 
 [[package]]
 name = "de-process-io"
-version = "0.5.6"
+version = "0.5.7"
 dependencies = [
  "libc",
  "tokio",
@@ -1780,7 +1780,7 @@ dependencies = [
 
 [[package]]
 name = "de-render-export"
-version = "0.5.6"
+version = "0.5.7"
 dependencies = [
  "base64 0.22.1",
  "de-codegen",
@@ -1796,7 +1796,7 @@ dependencies = [
 
 [[package]]
 name = "de-rpc-transport"
-version = "0.5.6"
+version = "0.5.7"
 dependencies = [
  "serde",
  "serde_json",
@@ -1804,7 +1804,7 @@ dependencies = [
 
 [[package]]
 name = "de-smoke"
-version = "0.5.6"
+version = "0.5.7"
 dependencies = [
  "agent",
  "de-ai",
@@ -1826,7 +1826,7 @@ dependencies = [
 
 [[package]]
 name = "de-util"
-version = "0.5.6"
+version = "0.5.7"
 
 [[package]]
 name = "defmt"
