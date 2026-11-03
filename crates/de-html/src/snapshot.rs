@@ -21,6 +21,8 @@ use crate::{
 mod auto_layout;
 #[path = "snapshot_icon.rs"]
 mod icon;
+#[path = "snapshot_name.rs"]
+mod layer_name;
 #[path = "snapshot_stack.rs"]
 mod snapshot_stack;
 #[path = "snapshot_text.rs"]
@@ -355,12 +357,9 @@ impl<'a> SnapshotCtx<'a> {
                 .unwrap_or_else(|| "#ffffff".into());
             container.fill = Some(vec![solid_fill(backdrop)]);
         }
-        let name = root_name.map(str::to_string).or_else(|| {
-            object
-                .get("tag")
-                .and_then(Value::as_str)
-                .map(str::to_string)
-        });
+        let name = root_name
+            .map(str::to_string)
+            .or_else(|| layer_name::element_name(object));
         let mut base = self.base(id, name, rect, parent_rect);
         self.apply_base_styles(&mut base, &styles);
         // `z-index` takes effect on a flex / grid item even while it stays
@@ -449,11 +448,7 @@ impl<'a> SnapshotCtx<'a> {
         }
         let mut base = self.base(
             id,
-            object
-                .get("tag")
-                .and_then(Value::as_str)
-                .map(str::to_string)
-                .or_else(|| Some("img".into())),
+            layer_name::element_name(object).or_else(|| Some("img".into())),
             rect,
             Some(parent_rect),
         );
@@ -518,7 +513,8 @@ impl<'a> SnapshotCtx<'a> {
             .unwrap_or(rect);
         let id = self.allocate_id()?;
         let styles = style_map(object);
-        let mut base = self.base(id, Some("svg".into()), rect, Some(parent_rect));
+        let name = layer_name::element_name(object).or_else(|| Some("svg".into()));
+        let mut base = self.base(id, name, rect, Some(parent_rect));
         // Opacity only, deliberately: `rect` came out of the capture's root
         // CTM, which already carries every transform between the artwork and
         // the page. Re-applying the element's CSS `transform` on top would

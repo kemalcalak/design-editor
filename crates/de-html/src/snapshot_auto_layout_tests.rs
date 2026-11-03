@@ -108,13 +108,13 @@ fn app_shell_imports_as_auto_layout() {
     );
     assert_eq!(frame(&root).container.height, Some(HUG));
 
-    let sidebar = named(&root, "aside");
+    let sidebar = named(&root, "Sidebar");
     assert_eq!(
         frame(sidebar).container.width,
         Some(SizingBehavior::Number(352.0))
     );
     assert_eq!(frame(sidebar).container.layout, Some(LayoutMode::Vertical));
-    let main = named(&root, "main");
+    let main = named(&root, "Main");
     assert_eq!(
         frame(main).container.width,
         Some(FILL),
@@ -122,7 +122,7 @@ fn app_shell_imports_as_auto_layout() {
     );
 
     // The scrolling list fills the sidebar's rest and clips.
-    let list = named(&root, "ul");
+    let list = named(&root, "List");
     assert_eq!(frame(list).container.height, Some(FILL));
     assert_eq!(frame(list).container.clip_content, Some(true));
     assert_eq!(
@@ -131,7 +131,7 @@ fn app_shell_imports_as_auto_layout() {
         "space-y margins become the gap"
     );
 
-    let item = holder(&root, "Overview", "li");
+    let item = holder(&root, "Overview", "Overview");
     let item = frame(item);
     assert_eq!(item.container.layout, Some(LayoutMode::Horizontal));
     assert_eq!(
@@ -150,19 +150,19 @@ fn app_shell_imports_as_auto_layout() {
 #[test]
 fn ml_auto_becomes_a_filling_spacer() {
     let root: PenNode = import(&serde_json::from_str(TAILWIND_APP).unwrap());
-    let header = named(&root, "header");
+    let header = named(&root, "Header");
     let names: Vec<_> = kids(header)
         .iter()
         .map(|child| frame(child).base.name.clone().unwrap_or_default())
         .collect();
-    assert_eq!(names, ["div", "spacer", "div"]);
+    assert_eq!(names, ["Search", "spacer", "Actions"]);
     assert_eq!(frame(&kids(header)[1]).container.width, Some(FILL));
 }
 
 #[test]
 fn space_between_row_and_hugging_button() {
     let root: PenNode = import(&serde_json::from_str(TAILWIND_APP).unwrap());
-    let button = holder(&root, "New report", "button");
+    let button = holder(&root, "New report", "New report");
     assert_eq!(
         frame(button).container.width,
         Some(HUG),
@@ -240,7 +240,7 @@ fn icons_need_a_known_name() {
 fn absolute_mode_is_unchanged_by_the_layout_box() {
     let result = import_snapshot(TAILWIND_APP, &HtmlImportOptions::default());
     let root = &result.nodes[0];
-    let header = named(root, "header");
+    let header = named(root, "Header");
     assert_eq!(frame(header).container.layout, Some(LayoutMode::None));
     assert!(kids(header)
         .iter()
@@ -351,7 +351,7 @@ fn absolute_mode_also_imports_known_lucide_icons() {
     )
     .is_some());
     assert_eq!(
-        frame(named(root, "header")).container.layout,
+        frame(named(root, "Header")).container.layout,
         Some(LayoutMode::None)
     );
 }

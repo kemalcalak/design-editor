@@ -161,10 +161,10 @@ fn holder<'a>(nodes: &'a [NodePayload], name: &str, label: &str) -> &'a NodePayl
 fn frames_keep_the_browser_widths() {
     let nodes = laid(&auto_import());
     for (name, width) in [
-        ("aside", 352.0),
-        ("main", 1568.0),
-        ("header", 1568.0),
-        ("section", 1568.0),
+        ("Sidebar", 352.0),
+        ("Main", 1568.0),
+        ("Header", 1568.0),
+        ("Content", 1568.0),
     ] {
         let node = find(&nodes, &|node| node.name == name).unwrap_or_else(|| panic!("{name}"));
         assert!(
@@ -173,9 +173,9 @@ fn frames_keep_the_browser_widths() {
             node.w
         );
     }
-    let card = holder(&nodes, "div", "Revenue");
+    let card = holder(&nodes, "Card", "Revenue");
     assert!((card.w - 280.0).abs() <= 2.0, "card: {}", card.w);
-    let item = holder(&nodes, "li", "Overview");
+    let item = holder(&nodes, "Overview", "Overview");
     assert!((item.w - 335.0).abs() <= 2.0 && (item.h - 40.0).abs() <= 2.0);
 }
 
@@ -201,7 +201,7 @@ fn edited(
 fn a_longer_label_and_a_larger_padding_reflow_their_parents() {
     let doc = auto_import();
     let before = laid(&doc);
-    let button = holder(&before, "button", "New report");
+    let button = holder(&before, "New report", "New report");
     let (x, w) = (button.x, button.w);
 
     let longer = edited(&doc, &|node| {
@@ -210,22 +210,22 @@ fn a_longer_label_and_a_larger_padding_reflow_their_parents() {
         }
     });
     let after = laid(&longer);
-    let grown = holder(&after, "button", "Create a new quarterly report");
+    let grown = holder(&after, "New report", "Create a new quarterly report");
     assert!(grown.w > w + 40.0, "button grew: {} -> {}", w, grown.w);
     // The title row is space-between: the button keeps its right edge.
     assert!(((grown.x + grown.w) - (x + w)).abs() <= 1.0);
 
-    let item = holder(&before, "li", "Reports");
+    let item = holder(&before, "Reports", "Reports");
     let label_x = holder(&before, "span", "Reports").x;
     let padded = edited(&doc, &|node| {
-        if node["name"] == "li" {
+        if node["name"] == "Reports" {
             node["padding"] = serde_json::json!([0, 40, 0, 40]);
         }
     });
     let after = laid(&padded);
     assert!((holder(&after, "span", "Reports").x - (label_x + 28.0)).abs() <= 1.0);
     assert!(
-        (holder(&after, "li", "Reports").w - item.w).abs() <= 1.0,
+        (holder(&after, "Reports", "Reports").w - item.w).abs() <= 1.0,
         "the item keeps filling"
     );
 }
@@ -298,7 +298,7 @@ fn content_sized_pills_grow_with_their_label() {
         ("Web search", "Web search and news"),
     ] {
         let after = laid(&relabel(&doc, label, longer));
-        let grown = holder(&after, "button", longer).w - holder(&before, "button", label).w;
+        let grown = holder(&after, label, longer).w - holder(&before, label, label).w;
         let text = text_node(&after, longer).w - text_node(&before, label).w;
         assert!(text > 20.0, "{longer} is longer");
         assert!(
@@ -306,8 +306,8 @@ fn content_sized_pills_grow_with_their_label() {
             "{label}: pill +{grown}, label +{text}"
         );
         // The next pill moves along instead of being overlapped.
-        let attach = holder(&after, "button", "Attach");
-        let pill = holder(&after, "button", longer);
+        let attach = holder(&after, "Attach", "Attach");
+        let pill = holder(&after, label, longer);
         assert!(
             attach.x >= pill.x + pill.w + 7.0,
             "{label}: Attach at {}",
@@ -322,7 +322,7 @@ fn a_truncated_row_keeps_its_ellipsis() {
     let doc = auto_import();
     let check = |doc: &jian_ops_schema::PenDocument, label: &str| {
         let nodes = laid(doc);
-        let row = holder(&nodes, "div", label);
+        let row = holder(&nodes, "Thread", label);
         let text = text_node(&nodes, label);
         assert!(text.text_ellipsis, "{label} truncates with an ellipsis");
         // Inside the row's 8 px padding, whatever the label's length.
@@ -376,4 +376,44 @@ fn form_fields_show_their_placeholder() {
         "ends at {}",
         amount.x + amount.w
     );
+}
+
+// #305: layers are named for what they are, not by their tag.
+#[test]
+fn layers_are_named_for_what_they_are() {
+    let nodes = laid(&auto_import());
+    let named = |name: &str| find(&nodes, &|node| node.name == name).is_some();
+    // Landmarks, buttons by their text, a text-less button and boxes by
+    // their class.
+    for name in [
+        "Sidebar",
+        "Main",
+        "Header",
+        "New report",
+        "Icon button",
+        "Brand",
+        "Title row",
+        "Search",
+        "Cards",
+    ] {
+        assert!(named(name), "no layer named {name}");
+    }
+    // Every nav item by its label.
+    for label in ["Overview", "Customers", "Reports", "Legal"] {
+        assert_eq!(holder(&nodes, label, label).kind, "frame", "{label}");
+    }
+    // The cards by their class.
+    let cards = nodes_named(&nodes, "Card");
+    assert_eq!(cards, 5, "cards");
+    // Nothing that has a better name keeps a tag.
+    for tag in ["aside", "main", "header", "button", "li"] {
+        assert!(!named(tag), "a layer is still named {tag}");
+    }
+}
+
+fn nodes_named(nodes: &[NodePayload], name: &str) -> usize {
+    nodes
+        .iter()
+        .map(|node| usize::from(node.name == name) + nodes_named(&node.children, name))
+        .sum()
 }
