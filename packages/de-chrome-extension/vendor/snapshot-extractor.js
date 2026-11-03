@@ -1378,6 +1378,71 @@
     return "rgb(255, 255, 255)";
   }
 
+  // The page's `@font-face` files, so a host can make the families the
+  // capture names available. Only stylesheets the page lets script read
+  // (same-origin or CORS) are visible; one http(s) file per face, the first
+  // `url()` in a format the host can decode.
+  var MAX_FONT_FACES = 200;
+  var FONT_FORMATS = { woff2: true, woff: true, truetype: true, opentype: true };
+  function fontFaceSource(src, base) {
+    var pattern = /url\(\s*(['"]?)([^'")]*)\1\s*\)(\s*format\(\s*['"]?([\w-]+)['"]?\s*\))?/gi;
+    var match;
+    while ((match = pattern.exec(src))) {
+      // `woff2-variations` and friends are the old spelling of a variable
+      // font in the same container.
+      var format = match[4] ? match[4].toLowerCase().replace(/-variations$/, "") : null;
+      if (format && !FONT_FORMATS[format]) continue;
+      try {
+        var url = new URL(match[2], base);
+        if (url.protocol === "http:" || url.protocol === "https:") return url.href;
+      } catch (error) {
+        // An unparseable URL is not a font the host can fetch.
+      }
+    }
+    return null;
+  }
+  function collectFontFaces(rules, base, faces) {
+    for (var index = 0; rules && index < rules.length; index += 1) {
+      if (faces.length >= MAX_FONT_FACES) return;
+      var rule = rules[index];
+      if (typeof CSSFontFaceRule !== "undefined" && rule instanceof CSSFontFaceRule) {
+        var family = rule.style
+          .getPropertyValue("font-family")
+          .trim()
+          .replace(/^(['"])(.*)\1$/, "$2");
+        var src = fontFaceSource(rule.style.getPropertyValue("src"), base);
+        if (family && src) {
+          var face = { family: family, src: src };
+          // A subset's range lets the host keep the Latin file.
+          var range = rule.style.getPropertyValue("unicode-range");
+          if (range) face.unicodeRange = range;
+          faces.push(face);
+        }
+      } else if (rule.styleSheet) {
+        collectFontFaces(readRules(rule.styleSheet), rule.styleSheet.href || base, faces);
+      } else if (rule.cssRules) {
+        collectFontFaces(rule.cssRules, base, faces);
+      }
+    }
+  }
+  function readRules(sheet) {
+    try {
+      return sheet.cssRules;
+    } catch (error) {
+      // A cross-origin sheet without CORS: its faces stay out of reach.
+      return null;
+    }
+  }
+  function pageFontFaces() {
+    var faces = [];
+    var sheets = document.styleSheets;
+    for (var index = 0; index < sheets.length; index += 1) {
+      var sheet = sheets[index];
+      collectFontFaces(readRules(sheet), sheet.href || document.baseURI, faces);
+    }
+    return faces;
+  }
+
   var snapshot = {
     version: 1,
     source: window.location.href,
@@ -1389,6 +1454,8 @@
     },
     root: root,
   };
+  var fontFaces = pageFontFaces();
+  if (fontFaces.length) snapshot.fontFaces = fontFaces;
   if (truncated) snapshot.truncated = true;
   var output = JSON.stringify(snapshot, null, 2);
 

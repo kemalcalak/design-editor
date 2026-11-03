@@ -9,7 +9,7 @@ use crate::widgets::icons::{draw_icon, Icon};
 use crate::widgets::layer_panel_cache::{self, CachedLayerRows};
 use crate::widgets::layer_panel_metrics::{
     add_page_target, collapse_target, delete_page_target, glyph_rect_in, layer_action_targets,
-    layer_node_icon_x, LayerPanelMetrics,
+    layer_indent, layer_label_x, layer_node_icon_x, LayerPanelMetrics,
 };
 use crate::widgets::layer_panel_walkers::{
     apply_layer_rename, icon_for_node, kind_label, layer_regions, layers_content_width,
@@ -519,11 +519,7 @@ impl Widget for LayerPanel {
             // Live styling overlay — never baked into the cached item.
             let selected = self.is_row_selected(&item.node_id);
             let hovered = self.is_row_hovered(&item.node_id);
-            y = r.layers_rows_top - r.layers.offset + index as f32 * self.metrics.layer_row_height;
-            let row = Rect {
-                origin: Point2D::new(rect.origin.x + 6.0, y + 2.0),
-                size: Point2D::new(rect.size.x - 12.0, self.metrics.layer_row_height - 4.0),
-            };
+            let row = self.layer_row_rect(rect, &r, index);
             if selected {
                 // TS uses bg-blue-500/15 + primary text + primary
                 // icon for the selected layer row.
@@ -534,7 +530,8 @@ impl Widget for LayerPanel {
                     .fill_round_rect(row, ROW_RADIUS, self.theme.button_hover);
             }
 
-            let indent = self.metrics.row_pad_x + item.depth as f32 * 12.0;
+            let indent = layer_indent(item.depth, row.size.x, self.metrics);
+            let actions_visible = hovered && !item.renaming;
             let dim = |c: Color, factor: f32| -> Color {
                 Color {
                     r: c.r,
@@ -561,7 +558,7 @@ impl Widget for LayerPanel {
             } else {
                 dim(self.theme.muted_foreground, dim_factor)
             };
-            let content_clip = layer_content_clip_rect_with_metrics(row, item.renaming);
+            let content_clip = layer_content_clip_rect_with_metrics(row, actions_visible);
             cx.backend.save();
             cx.backend.clip_rect(content_clip);
             cx.backend
@@ -602,11 +599,12 @@ impl Widget for LayerPanel {
             } else {
                 dim(self.theme.card_foreground, dim_factor)
             };
-            let label_x = icon_x + self.metrics.glyph_size + 6.0;
+            let label_x = layer_label_x(row, indent, self.metrics);
             let available_w = layer_label_available_width_with_metrics(
                 row,
                 label_x,
                 r.layers.horizontal_offset,
+                actions_visible,
                 item.renaming,
             );
             if item.renaming {
@@ -668,17 +666,8 @@ impl Widget for LayerPanel {
             let trailing_stroke = 1.2;
             let eye_glyph = glyph_rect_in(eye_target, trailing_size);
             let lock_glyph = glyph_rect_in(lock_target, trailing_size);
-            let show_eye = hovered && !item.renaming;
-            let show_lock = hovered && !item.renaming;
-            paint_layer_action_backing(
-                cx,
-                row,
-                &self.theme,
-                selected,
-                hovered,
-                show_eye || show_lock,
-            );
-            if show_eye {
+            paint_layer_action_backing(cx, row, &self.theme, selected, hovered, actions_visible);
+            if actions_visible {
                 draw_icon(
                     cx.backend,
                     eye_icon,
@@ -688,7 +677,7 @@ impl Widget for LayerPanel {
                     trailing_stroke,
                 );
             }
-            if show_lock {
+            if actions_visible {
                 draw_icon(
                     cx.backend,
                     lock_icon,

@@ -5,12 +5,24 @@
 
 use super::layer_panel::*;
 use super::layer_panel_metrics::{
-    add_page_target, collapse_target, delete_page_target, layer_action_targets,
+    add_page_target, collapse_target, delete_page_target, layer_action_targets, layer_indent,
+    ROW_INSET_X,
 };
-use super::layer_panel_walkers::row_index_at;
+use super::layer_panel_walkers::{row_index_at, LayerRegions};
 use crate::{Point2D, Rect};
 
 impl LayerPanel {
+    /// Screen rect of layer row `index` as paint fills it: inset 6 px either
+    /// side of the panel and 2 px top and bottom inside its row slot.
+    pub(super) fn layer_row_rect(&self, rect: Rect, r: &LayerRegions, index: usize) -> Rect {
+        let h = self.metrics.layer_row_height;
+        let y = r.layers_rows_top - r.layers.offset + index as f32 * h;
+        Rect {
+            origin: Point2D::new(rect.origin.x + ROW_INSET_X, y + 2.0),
+            size: Point2D::new(rect.size.x - 2.0 * ROW_INSET_X, h - 4.0),
+        }
+    }
+
     /// Drop target for a drag-in-progress. Over a row: top-25 %
     /// Before, middle 50 % Into (container rows only), bottom 25 %
     /// After. Below-rows area: After-last. Outside / above rows:
@@ -139,23 +151,19 @@ impl LayerPanel {
             if !(row).contains(point) {
                 return None;
             }
-            // Match the paint geometry — same 14 px icon boxes with
-            // 4 px slop so small mouse offsets still register.
-            let inner = Rect {
-                origin: Point2D::new(row.origin.x + 6.0, y + 2.0),
-                size: Point2D::new(row.size.x - 12.0, self.metrics.layer_row_height - 4.0),
-            };
+            // The painted row rect: the same 14 px icon boxes with 4 px slop
+            // so small mouse offsets still register.
+            let inner = self.layer_row_rect(rect, &r, index);
             let (eye_target, lock_target) = layer_action_targets(inner, self.metrics);
-            let row_hovered = self.is_row_hovered(&item.node_id);
-            let actions_visible = row_hovered;
-            if actions_visible && !item.renaming && lock_target.contains(point) {
+            let actions_visible = self.is_row_hovered(&item.node_id) && !item.renaming;
+            if actions_visible && lock_target.contains(point) {
                 return Some(LayerPanelHit::ToggleLocked(item.node_id.clone()));
             }
-            if actions_visible && !item.renaming && eye_target.contains(point) {
+            if actions_visible && eye_target.contains(point) {
                 return Some(LayerPanelHit::ToggleHidden(item.node_id.clone()));
             }
             if item.has_children {
-                let indent = self.metrics.row_pad_x + item.depth as f32 * 12.0;
+                let indent = layer_indent(item.depth, inner.size.x, self.metrics);
                 if collapse_target(inner, indent, r.layers.horizontal_offset, self.metrics)
                     .contains(point)
                 {

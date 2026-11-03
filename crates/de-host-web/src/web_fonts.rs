@@ -100,7 +100,7 @@ fn is_text_fallback_font_family(family: &str) -> bool {
 
 thread_local! {
     static QUERY_IN_FLIGHT: Cell<bool> = const { Cell::new(false) };
-    static FONT_DATA_BY_FAMILY: RefCell<HashMap<String, JsValue>> = RefCell::new(HashMap::new());
+    static FONT_DATA_BY_FAMILY: RefCell<HashMap<String, Vec<JsValue>>> = RefCell::new(HashMap::new());
     static LOADING_FAMILIES: RefCell<HashSet<String>> = RefCell::new(HashSet::new());
     static LOADED_FAMILIES: RefCell<HashSet<String>> = RefCell::new(HashSet::new());
 }
@@ -311,56 +311,108 @@ fn request_font_bytes<C: RepaintContext + 'static>(inner: &InnerRc<C>, family: S
     if !should_start {
         return;
     }
-    let Some(font_data) = FONT_DATA_BY_FAMILY.with(|slot| slot.borrow().get(&key).cloned()) else {
+    let faces = FONT_DATA_BY_FAMILY
+        .with(|slot| slot.borrow().get(&key).cloned())
+        .unwrap_or_default();
+    if faces.is_empty() {
         LOADING_FAMILIES.with(|loading| {
             loading.borrow_mut().remove(&key);
         });
         return;
-    };
-    let Some(blob_promise) = call_promise_method(&font_data, "blob") else {
-        mark_font_load_finished(&key, false);
-        return;
-    };
-    let inner_blob = inner.clone();
-    let key_blob = key.clone();
-    let family_blob = family.clone();
-    let on_blob = Closure::<dyn FnMut(JsValue)>::once(move |blob: JsValue| {
-        let Some(bytes_promise) = call_promise_method(&blob, "arrayBuffer") else {
-            mark_font_load_finished(&key_blob, false);
+    }
+    // Every face of the family loads, so text can pick its weight the way
+    // CSS font matching does (#300). The family counts as loaded once every
+    // face settled and the first-listed (Regular) one registered; a family
+    // left without it is retried on a later drain.
+    let load = Rc::new(FamilyLoad {
+        inner: inner.clone(),
+        key,
+        pending: Cell::new(faces.len()),
+        primary_registered: Cell::new(false),
+        any_registered: Cell::new(false),
+    });
+    for (index, face) in faces.iter().enumerate() {
+        load_font_face(&family, face, index == 0, load.clone());
+    }
+}
+
+/// One family's in-flight face loads; finished when `pending` reaches 0.
+struct FamilyLoad<C: RepaintContext + 'static> {
+    inner: InnerRc<C>,
+    key: String,
+    pending: Cell<usize>,
+    primary_registered: Cell<bool>,
+    any_registered: Cell<bool>,
+}
+
+impl<C: RepaintContext + 'static> FamilyLoad<C> {
+    fn face_finished(&self, primary: bool, registered: bool) {
+        if registered {
+            self.any_registered.set(true);
+            if primary {
+                self.primary_registered.set(true);
+            }
+        }
+        let pending = self.pending.get().saturating_sub(1);
+        self.pending.set(pending);
+        if pending > 0 {
+            return;
+        }
+        mark_font_load_finished(&self.key, self.primary_registered.get());
+        if !self.any_registered.get() {
+            return;
+        }
+        // One rebuild for the whole family, not one per face.
+        let Ok(mut b) = self.inner.try_borrow_mut() else {
             return;
         };
-        let inner_bytes = inner_blob.clone();
-        let key_bytes = key_blob.clone();
+        b.host_mut().mark_editor_state_dirty();
+        // New system-font faces change text metrics without touching the
+        // doc; the web scene cache has no font-generation signal, so force
+        // the rebuild or the layout scene stays shaped/measured against the
+        // fallback glyphs.
+        b.host_mut().invalidate_layout_scene();
+        let _ = b.repaint();
+    }
+}
+
+fn load_font_face<C: RepaintContext + 'static>(
+    family: &str,
+    font_data: &JsValue,
+    primary: bool,
+    load: Rc<FamilyLoad<C>>,
+) {
+    let Some(blob_promise) = call_promise_method(font_data, "blob") else {
+        load.face_finished(primary, false);
+        return;
+    };
+    let load_blob = load.clone();
+    let family_blob = family.to_string();
+    let on_blob = Closure::<dyn FnMut(JsValue)>::once(move |blob: JsValue| {
+        let Some(bytes_promise) = call_promise_method(&blob, "arrayBuffer") else {
+            load_blob.face_finished(primary, false);
+            return;
+        };
+        let load_bytes = load_blob.clone();
         let family_bytes = family_blob.clone();
         let on_bytes = Closure::<dyn FnMut(JsValue)>::once(move |buffer: JsValue| {
             let bytes = Uint8Array::new(&buffer).to_vec();
-            let Ok(mut b) = inner_bytes.try_borrow_mut() else {
-                mark_font_load_finished(&key_bytes, false);
-                return;
+            let registered = match load_bytes.inner.try_borrow_mut() {
+                Ok(mut b) => b.register_system_font(&family_bytes, &bytes),
+                Err(_) => false,
             };
-            let ok = b.register_system_font(&family_bytes, &bytes);
-            mark_font_load_finished(&key_bytes, ok);
-            if ok {
-                b.host_mut().mark_editor_state_dirty();
-                // A newly-registered system-font face changes text metrics
-                // without touching the doc; the web scene cache has no
-                // font-generation signal, so force the rebuild or the layout
-                // scene stays shaped/measured against the fallback glyphs.
-                b.host_mut().invalidate_layout_scene();
-                let _ = b.repaint();
-            }
+            load_bytes.face_finished(primary, registered);
         });
-        let key_err = key_blob.clone();
+        let load_err = load_blob.clone();
         let on_err = Closure::<dyn FnMut(JsValue)>::once(move |_err: JsValue| {
-            mark_font_load_finished(&key_err, false);
+            load_err.face_finished(primary, false);
         });
         let _ = bytes_promise.then2(&on_bytes, &on_err);
         on_bytes.forget();
         on_err.forget();
     });
-    let key_err = key;
     let on_err = Closure::<dyn FnMut(JsValue)>::once(move |_err: JsValue| {
-        mark_font_load_finished(&key_err, false);
+        load.face_finished(primary, false);
     });
     let _ = blob_promise.then2(&on_blob, &on_err);
     on_blob.forget();
@@ -386,10 +438,13 @@ fn mark_font_load_finished(key: &str, loaded: bool) {
     }
 }
 
-fn parse_font_data_list(value: &JsValue) -> (Vec<String>, HashMap<String, JsValue>) {
+/// Family names plus every face handle per family key, the Regular face first
+/// (the face a family's load must register to count as loaded; the bridge
+/// re-picks the Regular for script fallback whatever order faces land in).
+fn parse_font_data_list(value: &JsValue) -> (Vec<String>, HashMap<String, Vec<JsValue>>) {
     let array = Array::from(value);
     let mut families = Vec::new();
-    let mut handles = HashMap::<String, JsValue>::new();
+    let mut handles = HashMap::<String, Vec<JsValue>>::new();
     for entry in array.iter() {
         let Some(family) = string_prop(&entry, "family").and_then(|s| normalized_family_name(&s))
         else {
@@ -399,9 +454,11 @@ fn parse_font_data_list(value: &JsValue) -> (Vec<String>, HashMap<String, JsValu
             continue;
         };
         families.push(family.clone());
-        let replace = !handles.contains_key(&key) || is_regular_face(&entry);
-        if replace {
-            handles.insert(key, entry);
+        let faces = handles.entry(key).or_default();
+        if is_regular_face(&entry) {
+            faces.insert(0, entry);
+        } else {
+            faces.push(entry);
         }
     }
     (families, handles)

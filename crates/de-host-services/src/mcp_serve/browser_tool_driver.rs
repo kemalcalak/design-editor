@@ -16,6 +16,9 @@ pub(crate) enum PageOp {
     Cdp(String, Value),
     /// The web snapshot extractor, rooted at a selector or the whole page.
     Extract(Option<String>),
+    /// Fetch these font files from inside the page (its cache, cookies and
+    /// CORS), each as base64 or `null`.
+    FetchFonts(Vec<String>),
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -100,6 +103,7 @@ fn run_in_session(
                 }
             }
         }
+        PageOp::FetchFonts(urls) => PageReply::Json(session.evaluate(&fetch_fonts_script(urls))?),
     };
     let changes_page = matches!(op, PageOp::Load(_) | PageOp::Cdp(..));
     let canvas = match call.canvas_scale.filter(|_| changes_page) {
@@ -156,5 +160,42 @@ pub(crate) fn extractor_script(selector: Option<&str>) -> String {
   return await captured.text();
 }})()"#,
         extractor = de_html::snapshot::SNAPSHOT_EXTRACTOR_JS,
+    )
+}
+
+/// Largest font file the page hands back; a bigger one comes back `null`.
+const MAX_FETCHED_FONT_BYTES: usize = 8 * 1024 * 1024;
+
+/// Bytes one fetch hands back in all; files past it come back `null`, so
+/// a hostile page cannot fill the reply.
+const MAX_FETCHED_FONTS_TOTAL: usize = 32 * 1024 * 1024;
+
+/// Fetch `urls` in the page, all at once, as base64 strings (`null` for a
+/// failed, refused or oversized file).
+pub(crate) fn fetch_fonts_script(urls: &[String]) -> String {
+    let urls = serde_json::to_string(urls).unwrap_or_else(|_| "[]".into());
+    format!(
+        r#"(async () => {{
+  const files = await Promise.all({urls}.map(async (url) => {{
+    try {{
+      const response = await fetch(url);
+      if (!response.ok) return null;
+      const bytes = new Uint8Array(await response.arrayBuffer());
+      return bytes.length > {MAX_FETCHED_FONT_BYTES} ? null : bytes;
+    }} catch (error) {{
+      return null;
+    }}
+  }}));
+  let total = 0;
+  return files.map((bytes) => {{
+    if (!bytes || total + bytes.length > {MAX_FETCHED_FONTS_TOTAL}) return null;
+    total += bytes.length;
+    let binary = "";
+    for (let at = 0; at < bytes.length; at += 0x8000) {{
+      binary += String.fromCharCode.apply(null, bytes.subarray(at, at + 0x8000));
+    }}
+    return btoa(binary);
+  }});
+}})()"#
     )
 }

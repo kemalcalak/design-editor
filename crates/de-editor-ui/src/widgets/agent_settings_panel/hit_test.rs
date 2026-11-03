@@ -15,9 +15,10 @@ pub(super) fn agents_body(content: Rect) -> Rect {
     )
 }
 
-/// The Agents body width the content-height walk assumes: the detail
-/// pane's field heights do not depend on width, only the list column
-/// is fixed, so any full-size width gives the same height.
+/// The Agents body width [`AgentSettingsPanel::content_total_height`]
+/// assumes, since it is given no panel rect: a full-size modal's. Most detail fields
+/// keep their height at any width, but an install command wraps (#304),
+/// so scrolling measures at the real width instead.
 const AGENTS_BODY_REFERENCE_W: f32 = 704.0;
 use crate::widgets::agent_settings_panel_geometry::SECONDARY_HEADING_HAS_DESC;
 use de_editor_core::agent_settings::SettingsFocus;
@@ -340,14 +341,16 @@ impl AgentSettingsPanel<'_> {
         )
     }
 
+    /// The Agents tab's content height when its body is `width` wide.
+    pub(crate) fn agents_content_height_at(&self, width: f32) -> f32 {
+        // Only the body's width matters for the walk.
+        let body = Rect::xywh(0.0, 0.0, width, 0.0);
+        AGENTS_HERO_HEIGHT + self.agents_tab().body_height(body) + CONTENT_TAIL_PAD
+    }
+
     pub fn content_total_height(&self) -> f32 {
         match self.mode.active_tab(&self.settings) {
-            AgentSettingsTab::Agents => {
-                let tab = self.agents_tab();
-                // Only the body's width matters for the walk.
-                let body = Rect::xywh(0.0, 0.0, AGENTS_BODY_REFERENCE_W, 0.0);
-                AGENTS_HERO_HEIGHT + tab.body_height(body) + CONTENT_TAIL_PAD
-            }
+            AgentSettingsTab::Agents => self.agents_content_height_at(AGENTS_BODY_REFERENCE_W),
             AgentSettingsTab::Mcp => agent_settings_mcp::content_height(&self.settings),
             AgentSettingsTab::Images => {
                 secondary_hero_height()
