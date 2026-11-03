@@ -18,7 +18,7 @@ use crate::fmt_num;
 use de_editor_core::pen_node_ext::PenNodeExt;
 use jian_ops_schema::node::{
     FontWeight, PenNode, TextAlign, TextAlignVertical, TextContent, TextFontStyle, TextGrowth,
-    TextNode,
+    TextNode, TextOverflow,
 };
 use jian_ops_schema::sizing::SizingBehavior;
 use jian_ops_schema::style::FontStyleKind;
@@ -102,11 +102,19 @@ pub(crate) fn apply_text(decls: &mut Decls, t: &TextNode, assets: &mut Assets, h
         // A link keeps the design's look: no browser underline.
         decls.set("text-decoration", "none");
     }
-    let wraps = matches!(
-        t.text_growth,
-        Some(TextGrowth::FixedWidth | TextGrowth::FixedWidthHeight)
-    );
+    // A cut line stays on one line and ends in "…" at its box, as the
+    // canvas paints it.
+    let ellipsis = t.text_overflow == Some(TextOverflow::Ellipsis);
+    let wraps = !ellipsis
+        && matches!(
+            t.text_growth,
+            Some(TextGrowth::FixedWidth | TextGrowth::FixedWidthHeight)
+        );
     decls.set("white-space", if wraps { "pre-wrap" } else { "pre" });
+    if ellipsis {
+        decls.set("overflow", "hidden");
+        decls.set("text-overflow", "ellipsis");
+    }
     if wraps {
         decls.set("overflow-wrap", "break-word");
     }

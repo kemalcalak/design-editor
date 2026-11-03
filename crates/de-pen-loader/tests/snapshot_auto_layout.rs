@@ -340,4 +340,20 @@ fn form_fields_show_their_placeholder() {
             assert!((channel - want).abs() < 0.01, "{label}: {fill:?}");
         }
     }
+    // A value longer than its field is cut with "…" inside it.
+    const LINK: &str = "https://acme.example.com/reports/quarterly/2026/revenue-by-region";
+    let link = text_node(&nodes, LINK);
+    assert!(link.text_ellipsis, "{LINK} truncates");
+    assert!(
+        link.x + link.w <= 376.0 + 320.0 - 13.0 + 1.0,
+        "ends at {}",
+        link.x + link.w
+    );
+    // A `text-align: right` field keeps its value at the right edge.
+    let amount = text_node(&nodes, "1,284.00");
+    assert!(
+        (amount.x + amount.w - 523.0).abs() <= 2.0,
+        "ends at {}",
+        amount.x + amount.w
+    );
 }

@@ -16,9 +16,9 @@ pub(super) struct Cross {
     pub hug: bool,
     /// Every item that does not fill sits at the chosen alignment.
     pub aligned: bool,
-    /// Per item: it spanned a box its content was shrink-wrapped to, so it
-    /// hugs its own content instead (`shrink_wrapped`).
-    pub hugs: Vec<bool>,
+    /// Per item: it only spanned a box shrink-wrapped around the widest
+    /// item, so it hugs its own content instead (`shrink_wrapped`).
+    pub unstretched: Vec<bool>,
 }
 
 impl SnapshotCtx<'_> {
@@ -57,9 +57,11 @@ impl SnapshotCtx<'_> {
                 }
             })
             .collect();
-        let mut hugs = vec![false; items.len()];
+        let mut unstretched = vec![false; items.len()];
         if let Some(natural) = self.shrink_wrapped(cross, content, items, &fills) {
-            hugs = std::mem::replace(&mut fills, vec![false; items.len()]);
+            // The items that filled hug instead, and none fills.
+            unstretched = fills;
+            fills = vec![false; items.len()];
             rects = natural;
             offsets = offsets_of(&rects);
         }
@@ -84,7 +86,10 @@ impl SnapshotCtx<'_> {
         let preferred = match model.align.as_deref() {
             Some("center") => AlignItems::Center,
             Some("flex-end" | "end") => AlignItems::End,
-            _ => text_alignment(cross, items).unwrap_or(AlignItems::Start),
+            None | Some("normal" | "stretch") => {
+                text_alignment(cross, items).unwrap_or(AlignItems::Start)
+            }
+            _ => AlignItems::Start,
         };
         let mut best = preferred.clone();
         for candidate in [AlignItems::Start, AlignItems::Center, AlignItems::End] {
@@ -112,7 +117,7 @@ impl SnapshotCtx<'_> {
             fills,
             hug,
             aligned,
-            hugs,
+            unstretched,
         }
     }
 
@@ -148,15 +153,15 @@ impl SnapshotCtx<'_> {
             {
                 return None;
             }
-            let (natural, free) = self.auto_natural.get(&frame.base.id)?;
+            let natural = self.auto_natural.get(&frame.base.id)?;
             let can_hug = match cross {
-                Axis::Horizontal => free.0,
-                Axis::Vertical => free.1,
+                Axis::Horizontal => natural.can_hug.0,
+                Axis::Vertical => natural.can_hug.1,
             };
             if !can_hug {
                 return None;
             }
-            rects.push(*natural);
+            rects.push(natural.rect);
         }
         let widest = rects.iter().map(|r| cross.size(r)).fold(0.0, f64::max);
         ((widest - cross.size(&content)).abs() <= EPS).then_some(rects)

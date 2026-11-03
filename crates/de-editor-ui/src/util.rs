@@ -181,7 +181,9 @@ pub fn truncate_ellipsis(s: &str, max: usize) -> String {
     format!("{kept}…")
 }
 
-/// Width-aware sibling of [`truncate_ellipsis`]: shorten `s` until it (plus a
+/// Width-aware sibling of [`truncate_ellipsis`] for chrome labels (canvas
+/// text cuts through `canvas_text_edit::ellipsis_cut`, which keeps a byte
+/// offset for the caret): shorten `s` until it (plus a
 /// trailing `…`) measures within `max_w`, using the caller-supplied `measure`
 /// (typically the render backend's `measure_text`). Character-aware, so
 /// multibyte glyphs are never split. Returns `s` unchanged when it already

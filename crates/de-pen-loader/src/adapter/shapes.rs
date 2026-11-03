@@ -246,17 +246,17 @@ pub(super) fn text_to_payload(n: &TextNode) -> NodePayload {
         .map(text_vertical_align_keyword)
         .unwrap_or("")
         .to_string();
+    // An ellipsis keeps the text on one line and cuts it at the box.
+    p.text_ellipsis = matches!(
+        n.text_overflow,
+        Some(jian_ops_schema::node::text::TextOverflow::Ellipsis)
+    );
     // Only wrap text when the schema explicitly authored
     // `textGrowth: fixed-width` (or fixed-width-and-height) —
     // matches canonical paint behaviour. Default-growth text was
     // authored against the TS app's measureText for a font we
     // may not have bundled; wrapping it would mis-break lines
     // the TS app shows on one line.
-    // An ellipsis keeps the text on one line and cuts it at the box.
-    p.text_ellipsis = matches!(
-        n.text_overflow,
-        Some(jian_ops_schema::node::text::TextOverflow::Ellipsis)
-    );
     p.text_wrap = text_wraps(n) && !p.text_ellipsis;
     p
 }

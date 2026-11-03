@@ -21,9 +21,12 @@
 //! - Justify distributes the residual width across ASCII-space gaps on
 //!   every line except the last (TS `ck.TextAlign.Justify` behaviour);
 //!   gap-free (e.g. CJK) lines are left-aligned.
+//! - An ellipsis (`text_ellipsis`) cuts the painted line only, measured
+//!   in the node-level face; while the node is edited the whole line
+//!   shows, so the caret can reach the hidden tail.
 
 use crate::layout_scene::{SceneNode, SceneTextAlign, SceneTextRun};
-use crate::widgets::canvas_text_edit::ELLIPSIS;
+use crate::widgets::canvas_text_edit::{ellipsis_width, ELLIPSIS};
 use crate::widgets::canvas_text_wrap::TextFace;
 use crate::widgets::canvas_viewport::EditCaret;
 use crate::widgets::PaintCx;
@@ -221,6 +224,17 @@ fn resolved_slice_style(
             color: r.fill.unwrap_or(ink),
         },
     }
+}
+
+/// `style` with the colour `pass` paints in: mask ink for a mask pass, the
+/// outline colour for a stroke pass.
+fn pass_style(mut style: SliceStyle, pass: TextPass) -> SliceStyle {
+    match pass {
+        TextPass::FillMask | TextPass::Coverage => style.color = MASK_INK,
+        TextPass::Stroke { color, .. } => style.color = color,
+        _ => {}
+    }
+    style
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -556,24 +570,19 @@ pub(crate) fn paint_text_node_pass(
             // it is edited the whole line shows, so the caret stays in it.
             let cut = layout.ellipsis_cuts[idx].filter(|_| editing.is_none());
             let line_end = line_start + cut.unwrap_or(line.len());
-            let ellipsis_w = if cut.is_some() {
-                super::canvas_text_edit::measure_line_width(
+            let ellipsis_w = match cut {
+                Some(kept) => ellipsis_width(
                     cx.backend,
-                    ELLIPSIS,
+                    kept,
                     font_size,
                     TextFace {
                         family,
                         weight,
                         italic: paint_node.italic,
                     },
-                    0.0,
-                ) + if line_end > line_start {
-                    letter_spacing
-                } else {
-                    0.0
-                }
-            } else {
-                0.0
+                    letter_spacing,
+                ),
+                None => 0.0,
             };
             let line_w = ellipsis_w
                 + measure_line_slices(
@@ -614,12 +623,10 @@ pub(crate) fn paint_text_node_pass(
                 line_end,
                 |start, end, run| {
                     let run = run.map(|i| &paint_node.text_runs[i]);
-                    let mut style = resolved_slice_style(paint_node, font_size, weight, ink, run);
-                    match pass {
-                        TextPass::FillMask | TextPass::Coverage => style.color = MASK_INK,
-                        TextPass::Stroke { color, .. } => style.color = color,
-                        _ => {}
-                    }
+                    let style = pass_style(
+                        resolved_slice_style(paint_node, font_size, weight, ink, run),
+                        pass,
+                    );
                     let draws = pass.paints_slice(run.is_some_and(|r| r.fill.is_some()));
                     last_style = Some((style, draws));
                     let slice = &text[start..end];
@@ -644,13 +651,8 @@ pub(crate) fn paint_text_node_pass(
             // The mark takes the style of the text it follows.
             if cut.is_some() {
                 let (style, draws) = last_style.unwrap_or_else(|| {
-                    let mut style = resolved_slice_style(paint_node, font_size, weight, ink, None);
-                    match pass {
-                        TextPass::FillMask | TextPass::Coverage => style.color = MASK_INK,
-                        TextPass::Stroke { color, .. } => style.color = color,
-                        _ => {}
-                    }
-                    (style, pass.paints_slice(false))
+                    let style = resolved_slice_style(paint_node, font_size, weight, ink, None);
+                    (pass_style(style, pass), pass.paints_slice(false))
                 });
                 if draws {
                     draw_slice(

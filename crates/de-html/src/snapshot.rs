@@ -211,8 +211,10 @@ struct SnapshotCtx<'a> {
     /// Auto-layout pass only: whether each laid-out frame's content decides
     /// its `(width, height)`, keyed by node id (read by its parent).
     auto_hug: HashMap<String, (bool, bool)>,
-    /// Auto-layout pass only: each laid-out frame's `Laid::natural`.
-    auto_natural: HashMap<String, (Rect, (bool, bool))>,
+    /// Auto-layout pass only: the box each laid-out frame's content would
+    /// take if it hugged (`Laid::natural`), keyed by node id (read by its
+    /// parent).
+    auto_natural: HashMap<String, auto_layout::Natural>,
     /// Counter for the `row` / `spacer` frames the auto-layout pass adds.
     auxiliary_ids: usize,
 }

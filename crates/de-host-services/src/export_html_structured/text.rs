@@ -100,6 +100,11 @@ pub fn emit(out: &mut String, n: &SceneNode, rect: Rect) {
         "white-space",
         if n.text_wrap { "pre-wrap" } else { "pre" },
     );
+    // A cut line ends in "…" at its box, as the canvas paints it.
+    if n.text_ellipsis {
+        css::decl(&mut style, "overflow", "hidden");
+        css::decl(&mut style, "text-overflow", "ellipsis");
+    }
 
     let _ = write!(
         out,

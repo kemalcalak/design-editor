@@ -1188,14 +1188,29 @@
       computed.fontFamily,
     ].join(" ");
     var advance = context.measureText(text).width;
+    // A textarea wraps inside its box and scrolls the rest away.
     var lines = isInput || advance <= width ? 1 : Math.ceil(advance / Math.max(width, 1));
+    lines = Math.max(1, Math.min(lines, Math.floor(height / lineHeight) || 1));
     var styles = copyStyles(computed, TEXT_STYLE_KEYS);
     styles.color = paint.color;
-    if (isInput) styles["white-space"] = "nowrap";
+    var runWidth = Math.max(0, Math.min(advance, width));
+    if (isInput) {
+      styles["white-space"] = "nowrap";
+      // An input scrolls a value longer than the box; the run keeps its
+      // whole width and is cut there, as the field clips it.
+      if (advance > width) {
+        styles["text-overflow"] = "ellipsis";
+        runWidth = advance;
+      }
+    }
+    // The field's own `text-align` places a shorter run (amount, OTP).
+    var align = computed.textAlign;
+    var slack = Math.max(0, width - runWidth);
+    var shift = align === "center" ? slack / 2 : align === "right" || align === "end" ? slack : 0;
     var box = {
-      left: left,
+      left: left + shift,
       top: isInput ? top + (height - lineHeight) / 2 : top,
-      width: Math.max(0, Math.min(advance, width)),
+      width: runWidth,
       height: lineHeight * lines,
     };
     return [

@@ -107,9 +107,9 @@ pub fn text_edit_layout(backend: &mut dyn RenderBackend, node: &SceneNode) -> Te
     // text in ITS font. A wider fallback font overflows that box (and
     // gets clipped by the parent frame). Scale the font down so the
     // widest line fits, preserving the imported layout. Wrapping text
-    // breaks lines instead, so it is left untouched.
+    // breaks lines instead and ellipsis text cuts them (`ellipsis_cut`),
+    // so both are left untouched.
     let box_w = node.bounds.size.x;
-    // An ellipsis cuts the line where the box ends instead.
     if !node.text_wrap && !node.text_ellipsis && box_w > 0.0 {
         let widest = lines
             .iter()
@@ -150,9 +150,25 @@ pub fn text_edit_layout(backend: &mut dyn RenderBackend, node: &SceneNode) -> Te
 /// The closing mark of a cut line.
 pub(crate) const ELLIPSIS: &str = "\u{2026}";
 
+/// Width a closing "…" adds after `prefix_len` bytes of kept text: the mark
+/// plus, after any text, the tracking that separates it. The painter sizes
+/// and places the mark with this too.
+pub(crate) fn ellipsis_width(
+    backend: &mut dyn RenderBackend,
+    prefix_len: usize,
+    font_size: f32,
+    face: TextFace<'_>,
+    letter_spacing: f32,
+) -> f32 {
+    let gap = if prefix_len > 0 { letter_spacing } else { 0.0 };
+    face.measure(backend, ELLIPSIS, font_size) + gap
+}
+
 /// Where `line` is cut so that it and a closing "…" fit `width` (CSS
 /// `text-overflow: ellipsis`): the byte length of the longest prefix
 /// that fits, trailing spaces dropped. `None` when the whole line fits.
+/// The prefix and the mark are measured apart, so probing never shapes
+/// (and caches) a throwaway "prefix…" run.
 fn ellipsis_cut(
     backend: &mut dyn RenderBackend,
     line: &str,
@@ -161,18 +177,20 @@ fn ellipsis_cut(
     letter_spacing: f32,
     width: f32,
 ) -> Option<usize> {
-    let mut fits =
-        |text: &str| measure_line_width(backend, text, font_size, face, letter_spacing) <= width;
-    if fits(line) {
+    if measure_line_width(backend, line, font_size, face, letter_spacing) <= width {
         return None;
     }
+    let mark = ellipsis_width(backend, 1, font_size, face, letter_spacing);
+    let mut fits = |prefix: &str| {
+        measure_line_width(backend, prefix, font_size, face, letter_spacing) + mark <= width
+    };
     // Char boundaries a cut may fall on; the widths grow with the prefix,
     // so the longest one that fits is found by bisection.
     let ends: Vec<usize> = line.char_indices().map(|(at, _)| at).collect();
     let (mut lo, mut hi) = (0, ends.len().saturating_sub(1));
     while lo < hi {
-        let mid = (lo + hi + 1) / 2;
-        if fits(&format!("{}{ELLIPSIS}", &line[..ends[mid]])) {
+        let mid = (lo + hi).div_ceil(2);
+        if fits(&line[..ends[mid]]) {
             lo = mid;
         } else {
             hi = mid - 1;

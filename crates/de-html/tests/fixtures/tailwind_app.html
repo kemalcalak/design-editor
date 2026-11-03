@@ -64,6 +64,7 @@
     .composer { display: block; height: 80px; padding: 12px; border-radius: 8px; resize: none; }
     .field { width: 320px; height: 36px; padding: 0 12px; border-radius: 6px; }
     .composer::placeholder, .field::placeholder { color: #94a3b8; }
+    .amount { width: 160px; text-align: right; }
 
     svg.lucide { width: 16px; height: 16px; flex-shrink: 0; }
   </style>
@@ -142,6 +143,8 @@
           <div class="thread"><svg class="lucide lucide-message-square" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span class="truncate">Jira Ekip Kanalına Mesaj Gönderme Talimatları ve Örnekleri</span></div>
           <textarea class="composer" placeholder="Send a message…"></textarea>
           <input class="field" placeholder="Search threads">
+          <input class="field" value="https://acme.example.com/reports/quarterly/2026/revenue-by-region">
+          <input class="field amount" value="1,284.00">
         </div>
       </section>
     </main>
