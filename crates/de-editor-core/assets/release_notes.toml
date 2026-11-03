@@ -11,6 +11,171 @@
 # Write for users: short, plain, no issue numbers or technical terms.
 
 [[note]]
+version = "0.5.7"
+locale = "en-US"
+title = "Smoother scrolling and better web imports"
+item = "On Windows the editor no longer freezes after you minimize the window and bring it back."
+item = "The mouse wheel now scrolls the canvas: hold Shift to scroll sideways and Ctrl or Cmd to zoom. Side panels scroll one line per notch."
+item = "Imported web pages stay editable: centred text stays centred, buttons grow with their label, cut-off text keeps its \"…\", empty fields keep their placeholder, and layers are named after what they are."
+item = "A web page brings its own fonts along, and medium-weight text looks the same as in your browser."
+item = "In the agent settings, the install command is shown in full and has a copy button."
+item = "Layer names stay readable in deeply nested designs."
+
+[[note]]
+version = "0.5.7"
+locale = "tr"
+title = "Daha akıcı kaydırma ve daha iyi web içe aktarma"
+item = "Windows'ta pencereyi simge durumuna küçültüp geri açınca düzenleyici artık donmuyor."
+item = "Fare tekerleği artık tuvali kaydırıyor: yana kaydırmak için Shift'e, yakınlaştırmak için Ctrl ya da Cmd'ye basılı tutun. Yan paneller her çentikte bir satır kayıyor."
+item = "İçe aktarılan web sayfaları düzenlenebilir kalıyor: ortalanmış metin ortada kalıyor, butonlar etiketleriyle birlikte büyüyor, kesilen metin \"…\" ile bitiyor, boş alanlar yer tutucu metinlerini koruyor ve katmanlar ne olduklarına göre adlandırılıyor."
+item = "Web sayfası kendi fontlarını da getiriyor; orta kalınlıktaki metin tarayıcınızdakiyle aynı görünüyor."
+item = "Ajan ayarlarında kurulum komutu tamamı görünecek şekilde gösteriliyor ve bir kopyalama butonu var."
+item = "Çok iç içe tasarımlarda katman adları okunur kalıyor."
+
+[[note]]
+version = "0.5.7"
+locale = "zh-CN"
+title = "更顺畅的滚动与更好的网页导入"
+item = "在 Windows 上,最小化窗口后再恢复,编辑器不再卡死。"
+item = "鼠标滚轮现在会滚动画布:按住 Shift 横向滚动,按住 Ctrl 或 Cmd 缩放。侧边面板每格滚动一行。"
+item = "导入的网页保持可编辑:居中的文字保持居中,按钮随文字变长,被截断的文字保留「…」,空输入框保留占位文字,图层按其内容命名。"
+item = "网页会一并带来自己的字体,中等粗细的文字与浏览器中显示一致。"
+item = "在代理设置中,安装命令会完整显示,并带有复制按钮。"
+item = "在层级很深的设计中,图层名称依然清晰可读。"
+
+[[note]]
+version = "0.5.7"
+locale = "zh-TW"
+title = "更流暢的捲動與更好的網頁匯入"
+item = "在 Windows 上,將視窗最小化後再還原,編輯器不再當住。"
+item = "滑鼠滾輪現在會捲動畫布:按住 Shift 橫向捲動,按住 Ctrl 或 Cmd 縮放。側邊面板每格捲動一行。"
+item = "匯入的網頁保持可編輯:置中的文字維持置中,按鈕隨文字變長,被截斷的文字保留「…」,空白欄位保留預留文字,圖層依其內容命名。"
+item = "網頁會一併帶來自己的字型,中等粗細的文字與瀏覽器中顯示一致。"
+item = "在代理設定中,安裝指令會完整顯示,並附有複製按鈕。"
+item = "在層級很深的設計中,圖層名稱依然清楚易讀。"
+
+[[note]]
+version = "0.5.7"
+locale = "ja"
+title = "なめらかなスクロールと Web 取り込みの改善"
+item = "Windows でウィンドウを最小化して元に戻しても、エディタが固まらなくなりました。"
+item = "マウスホイールでキャンバスがスクロールするようになりました。Shift で横方向、Ctrl または Cmd でズームします。サイドパネルは 1 目盛りで 1 行ずつスクロールします。"
+item = "取り込んだ Web ページは編集しやすいままです。中央揃えのテキストは中央のまま、ボタンはラベルに合わせて広がり、切れたテキストは「…」を保ち、空の入力欄はプレースホルダーを保ち、レイヤーは中身に合った名前になります。"
+item = "Web ページは自分のフォントも一緒に持ち込み、中くらいの太さの文字がブラウザと同じに見えます。"
+item = "エージェント設定のインストールコマンドが全文表示され、コピーボタンが付きました。"
+item = "深く入れ子になったデザインでもレイヤー名が読みやすくなりました。"
+
+[[note]]
+version = "0.5.7"
+locale = "ko"
+title = "더 매끄러운 스크롤과 더 나은 웹 가져오기"
+item = "Windows에서 창을 최소화했다가 다시 열어도 편집기가 더 이상 멈추지 않습니다."
+item = "이제 마우스 휠로 캔버스를 스크롤합니다. Shift를 누르면 가로로, Ctrl 또는 Cmd를 누르면 확대/축소합니다. 사이드 패널은 한 칸에 한 줄씩 스크롤됩니다."
+item = "가져온 웹 페이지가 편집하기 쉬운 상태로 유지됩니다. 가운데 정렬된 텍스트는 가운데에 남고, 버튼은 레이블에 맞춰 늘어나며, 잘린 텍스트는 \"…\"를 유지하고, 빈 입력란은 자리 표시자를 유지하며, 레이어는 내용에 맞는 이름을 갖습니다."
+item = "웹 페이지가 자신의 글꼴도 함께 가져오며, 중간 굵기의 텍스트가 브라우저와 똑같이 보입니다."
+item = "에이전트 설정에서 설치 명령이 전부 표시되고 복사 버튼이 생겼습니다."
+item = "깊게 중첩된 디자인에서도 레이어 이름을 읽기 쉽습니다."
+
+[[note]]
+version = "0.5.7"
+locale = "fr"
+title = "Un défilement plus fluide et de meilleurs imports web"
+item = "Sous Windows, l'éditeur ne se fige plus quand vous réduisez la fenêtre puis la rouvrez."
+item = "La molette fait maintenant défiler le canevas : maintenez Maj pour défiler horizontalement et Ctrl ou Cmd pour zoomer. Les panneaux latéraux défilent d'une ligne par cran."
+item = "Les pages web importées restent modifiables : le texte centré reste centré, les boutons s'agrandissent avec leur libellé, le texte coupé garde ses « … », les champs vides gardent leur texte indicatif et les calques portent un nom qui dit ce qu'ils sont."
+item = "Une page web apporte ses propres polices, et le texte de graisse moyenne s'affiche comme dans votre navigateur."
+item = "Dans les réglages des agents, la commande d'installation s'affiche en entier, avec un bouton pour la copier."
+item = "Les noms de calques restent lisibles dans les designs très imbriqués."
+
+[[note]]
+version = "0.5.7"
+locale = "es"
+title = "Desplazamiento más fluido y mejores importaciones web"
+item = "En Windows, el editor ya no se congela al minimizar la ventana y volver a abrirla."
+item = "La rueda del ratón ahora desplaza el lienzo: mantén Mayús para desplazarte en horizontal y Ctrl o Cmd para hacer zoom. Los paneles laterales avanzan una línea por muesca."
+item = "Las páginas web importadas siguen siendo editables: el texto centrado se mantiene centrado, los botones crecen con su etiqueta, el texto recortado conserva sus «…», los campos vacíos conservan su texto de ejemplo y las capas se nombran según lo que son."
+item = "Una página web trae sus propias fuentes, y el texto de grosor medio se ve igual que en tu navegador."
+item = "En los ajustes de agentes, el comando de instalación se muestra completo y tiene un botón para copiarlo."
+item = "Los nombres de las capas siguen siendo legibles en diseños muy anidados."
+
+[[note]]
+version = "0.5.7"
+locale = "de"
+title = "Flüssigeres Scrollen und bessere Web-Importe"
+item = "Unter Windows friert der Editor nicht mehr ein, wenn Sie das Fenster minimieren und wiederherstellen."
+item = "Das Mausrad scrollt jetzt die Arbeitsfläche: Halten Sie Umschalt für seitliches Scrollen und Strg oder Cmd zum Zoomen. Seitenleisten scrollen eine Zeile pro Raste."
+item = "Importierte Webseiten bleiben bearbeitbar: Zentrierter Text bleibt zentriert, Schaltflächen wachsen mit ihrer Beschriftung, abgeschnittener Text behält sein „…“, leere Felder behalten ihren Platzhalter, und Ebenen heißen nach dem, was sie sind."
+item = "Eine Webseite bringt ihre eigenen Schriften mit, und Text in mittlerer Stärke sieht aus wie in Ihrem Browser."
+item = "In den Agenten-Einstellungen wird der Installationsbefehl vollständig angezeigt und hat eine Schaltfläche zum Kopieren."
+item = "Ebenennamen bleiben auch in tief verschachtelten Designs lesbar."
+
+[[note]]
+version = "0.5.7"
+locale = "pt"
+title = "Rolagem mais suave e importações web melhores"
+item = "No Windows, o editor não trava mais ao minimizar a janela e abri-la de novo."
+item = "A roda do mouse agora rola a tela: segure Shift para rolar na horizontal e Ctrl ou Cmd para dar zoom. Os painéis laterais rolam uma linha por clique."
+item = "Páginas web importadas continuam editáveis: texto centralizado fica centralizado, botões crescem com o rótulo, texto cortado mantém as \"…\", campos vazios mantêm o texto de exemplo e as camadas recebem nomes que dizem o que são."
+item = "Uma página web traz as próprias fontes, e o texto de peso médio aparece igual ao do seu navegador."
+item = "Nas configurações de agentes, o comando de instalação aparece inteiro e tem um botão para copiar."
+item = "Os nomes das camadas continuam legíveis em designs muito aninhados."
+
+[[note]]
+version = "0.5.7"
+locale = "ru"
+title = "Плавная прокрутка и улучшенный импорт веб-страниц"
+item = "В Windows редактор больше не зависает, если свернуть окно и снова его открыть."
+item = "Колесо мыши теперь прокручивает холст: удерживайте Shift для прокрутки по горизонтали и Ctrl или Cmd для масштабирования. Боковые панели прокручиваются на одну строку за щелчок."
+item = "Импортированные веб-страницы остаются редактируемыми: текст по центру остаётся по центру, кнопки растут вместе с подписью, обрезанный текст сохраняет «…», пустые поля сохраняют подсказку, а слои называются по тому, что они собой представляют."
+item = "Веб-страница приносит с собой свои шрифты, а текст средней насыщенности выглядит так же, как в браузере."
+item = "В настройках агентов команда установки показана полностью и имеет кнопку копирования."
+item = "Названия слоёв остаются читаемыми в глубоко вложенных макетах."
+
+[[note]]
+version = "0.5.7"
+locale = "hi"
+title = "ज़्यादा सहज स्क्रॉलिंग और बेहतर वेब आयात"
+item = "Windows पर विंडो को छोटा करके दोबारा खोलने पर एडिटर अब नहीं अटकता।"
+item = "माउस व्हील अब कैनवास को स्क्रॉल करता है: बगल में स्क्रॉल करने के लिए Shift और ज़ूम के लिए Ctrl या Cmd दबाए रखें। साइड पैनल हर क्लिक पर एक पंक्ति खिसकते हैं।"
+item = "आयात किए गए वेब पेज बदले जा सकते हैं: बीच में रखा टेक्स्ट बीच में रहता है, बटन अपने लेबल के साथ बढ़ते हैं, कटा हुआ टेक्स्ट \"…\" बनाए रखता है, खाली फ़ील्ड अपना संकेत टेक्स्ट रखते हैं, और लेयर का नाम उसकी सामग्री के हिसाब से होता है।"
+item = "वेब पेज अपने फ़ॉन्ट भी साथ लाता है, और मध्यम मोटाई का टेक्स्ट आपके ब्राउज़र जैसा ही दिखता है।"
+item = "एजेंट सेटिंग्स में इंस्टॉल कमांड पूरी दिखती है और उसे कॉपी करने का बटन है।"
+item = "बहुत गहराई तक नेस्ट किए गए डिज़ाइनों में भी लेयर के नाम पढ़ने में आसान रहते हैं।"
+
+[[note]]
+version = "0.5.7"
+locale = "th"
+title = "เลื่อนลื่นขึ้นและนำเข้าเว็บได้ดีขึ้น"
+item = "บน Windows เอดิเตอร์ไม่ค้างอีกต่อไปเมื่อย่อหน้าต่างแล้วเปิดกลับมา"
+item = "ตอนนี้ล้อเมาส์เลื่อนแคนวาส: กด Shift ค้างไว้เพื่อเลื่อนแนวนอน และ Ctrl หรือ Cmd เพื่อซูม แผงด้านข้างเลื่อนทีละหนึ่งบรรทัดต่อหนึ่งจังหวะ"
+item = "หน้าเว็บที่นำเข้ายังแก้ไขได้ง่าย: ข้อความที่จัดกึ่งกลางยังคงอยู่ตรงกลาง ปุ่มขยายตามป้ายกำกับ ข้อความที่ถูกตัดยังคงมี \"…\" ช่องว่างยังคงมีข้อความตัวอย่าง และเลเยอร์มีชื่อตามสิ่งที่มันเป็น"
+item = "หน้าเว็บนำฟอนต์ของตัวเองมาด้วย และข้อความน้ำหนักปานกลางดูเหมือนในเบราว์เซอร์ของคุณ"
+item = "ในการตั้งค่าเอเจนต์ คำสั่งติดตั้งแสดงเต็มบรรทัดและมีปุ่มคัดลอก"
+item = "ชื่อเลเยอร์ยังอ่านได้ง่ายในงานออกแบบที่ซ้อนกันหลายชั้น"
+
+[[note]]
+version = "0.5.7"
+locale = "vi"
+title = "Cuộn mượt hơn và nhập trang web tốt hơn"
+item = "Trên Windows, trình chỉnh sửa không còn bị treo khi bạn thu nhỏ cửa sổ rồi mở lại."
+item = "Con lăn chuột giờ cuộn khung vẽ: giữ Shift để cuộn ngang và Ctrl hoặc Cmd để thu phóng. Các bảng bên cuộn một dòng mỗi nấc."
+item = "Trang web đã nhập vẫn dễ chỉnh sửa: chữ căn giữa vẫn ở giữa, nút dài ra theo nhãn, chữ bị cắt vẫn giữ dấu \"…\", ô trống vẫn giữ chữ gợi ý, và các lớp được đặt tên theo đúng nội dung."
+item = "Trang web mang theo phông chữ của riêng nó, và chữ đậm vừa trông giống như trong trình duyệt của bạn."
+item = "Trong phần cài đặt tác nhân, lệnh cài đặt hiển thị đầy đủ và có nút sao chép."
+item = "Tên lớp vẫn dễ đọc trong các thiết kế lồng nhau nhiều tầng."
+
+[[note]]
+version = "0.5.7"
+locale = "id"
+title = "Gulir lebih mulus dan impor web lebih baik"
+item = "Di Windows, editor tidak lagi macet saat jendela diperkecil lalu dibuka kembali."
+item = "Roda mouse kini menggulir kanvas: tahan Shift untuk menggulir ke samping dan Ctrl atau Cmd untuk zoom. Panel samping bergulir satu baris per takik."
+item = "Halaman web yang diimpor tetap bisa diedit: teks di tengah tetap di tengah, tombol melebar mengikuti labelnya, teks yang terpotong tetap berakhiran \"…\", kolom kosong tetap menampilkan teks petunjuk, dan lapisan diberi nama sesuai isinya."
+item = "Halaman web membawa fontnya sendiri, dan teks berketebalan sedang tampak sama seperti di browser Anda."
+item = "Di pengaturan agen, perintah instalasi ditampilkan utuh dan punya tombol salin."
+item = "Nama lapisan tetap mudah dibaca dalam desain yang sangat bertingkat."
+
+[[note]]
 version = "0.5.6"
 locale = "en-US"
 title = "Web pages you can edit"
