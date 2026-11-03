@@ -240,6 +240,7 @@ fn build_text_node_in_path(
         text_align: block_style.get("text-align").and_then(parse_text_align),
         text_align_vertical: None,
         text_growth: text_box.growth,
+        text_overflow: None,
         underline: decoration(block_style, "underline").then_some(true),
         strikethrough: decoration(block_style, "line-through").then_some(true),
         fill: crate::mapper::text_paint_color(block_style, text_fill_override)

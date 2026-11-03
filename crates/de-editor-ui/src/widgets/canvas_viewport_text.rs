@@ -23,6 +23,8 @@
 //!   gap-free (e.g. CJK) lines are left-aligned.
 
 use crate::layout_scene::{SceneNode, SceneTextAlign, SceneTextRun};
+use crate::widgets::canvas_text_edit::ELLIPSIS;
+use crate::widgets::canvas_text_wrap::TextFace;
 use crate::widgets::canvas_viewport::EditCaret;
 use crate::widgets::PaintCx;
 use crate::{Color, Point2D, Rect, RenderBackend, TextBaselineRequest, TextLayout};
@@ -550,19 +552,42 @@ pub(crate) fn paint_text_node_pass(
                 continue;
             }
             let line_start = layout.line_starts[idx];
-            let line_end = line_start + line.len();
-            let line_w = measure_line_slices(
-                cx.backend,
-                paint_node,
-                text,
-                line_start,
-                line_end,
-                font_size,
-                weight,
-                ink,
-                family,
-                letter_spacing,
-            );
+            // A cut line paints its kept prefix and a closing "…"; while
+            // it is edited the whole line shows, so the caret stays in it.
+            let cut = layout.ellipsis_cuts[idx].filter(|_| editing.is_none());
+            let line_end = line_start + cut.unwrap_or(line.len());
+            let ellipsis_w = if cut.is_some() {
+                super::canvas_text_edit::measure_line_width(
+                    cx.backend,
+                    ELLIPSIS,
+                    font_size,
+                    TextFace {
+                        family,
+                        weight,
+                        italic: paint_node.italic,
+                    },
+                    0.0,
+                ) + if line_end > line_start {
+                    letter_spacing
+                } else {
+                    0.0
+                }
+            } else {
+                0.0
+            };
+            let line_w = ellipsis_w
+                + measure_line_slices(
+                    cx.backend,
+                    paint_node,
+                    text,
+                    line_start,
+                    line_end,
+                    font_size,
+                    weight,
+                    ink,
+                    family,
+                    letter_spacing,
+                );
             let x0 = match paint_node.text_align {
                 SceneTextAlign::Center => {
                     world_rect.origin.x + (layout.align_width - line_w).max(0.0) / 2.0
@@ -582,6 +607,7 @@ pub(crate) fn paint_text_node_pass(
                 };
             let baseline_y = first_baseline_y + idx as f32 * layout.line_h;
             let mut x = x0;
+            let mut last_style = None;
             for_each_slice_range(
                 &paint_node.text_runs,
                 line_start,
@@ -595,6 +621,7 @@ pub(crate) fn paint_text_node_pass(
                         _ => {}
                     }
                     let draws = pass.paints_slice(run.is_some_and(|r| r.fill.is_some()));
+                    last_style = Some((style, draws));
                     let slice = &text[start..end];
                     let slice_x0 = x;
                     let (next_x, glyph_end) = draw_slice(
@@ -614,6 +641,31 @@ pub(crate) fn paint_text_node_pass(
                     x = next_x;
                 },
             );
+            // The mark takes the style of the text it follows.
+            if cut.is_some() {
+                let (style, draws) = last_style.unwrap_or_else(|| {
+                    let mut style = resolved_slice_style(paint_node, font_size, weight, ink, None);
+                    match pass {
+                        TextPass::FillMask | TextPass::Coverage => style.color = MASK_INK,
+                        TextPass::Stroke { color, .. } => style.color = color,
+                        _ => {}
+                    }
+                    (style, pass.paints_slice(false))
+                });
+                if draws {
+                    draw_slice(
+                        cx.backend,
+                        ELLIPSIS,
+                        style,
+                        family,
+                        x,
+                        baseline_y,
+                        letter_spacing,
+                        0.0,
+                        Some(GlyphInk::from_pass(pass)),
+                    );
+                }
+            }
         }
     }
     if let (Some((start, end, _)), true) = (composition_range, pass.paints_caret()) {

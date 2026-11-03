@@ -211,6 +211,8 @@ struct SnapshotCtx<'a> {
     /// Auto-layout pass only: whether each laid-out frame's content decides
     /// its `(width, height)`, keyed by node id (read by its parent).
     auto_hug: HashMap<String, (bool, bool)>,
+    /// Auto-layout pass only: each laid-out frame's `Laid::natural`.
+    auto_natural: HashMap<String, (Rect, (bool, bool))>,
     /// Counter for the `row` / `spacer` frames the auto-layout pass adds.
     auxiliary_ids: usize,
 }
@@ -228,6 +230,7 @@ impl<'a> SnapshotCtx<'a> {
             page_background: None,
             text_fill_override: None,
             auto_hug: HashMap::new(),
+            auto_natural: HashMap::new(),
             auxiliary_ids: 0,
         }
     }
@@ -369,12 +372,16 @@ impl<'a> SnapshotCtx<'a> {
             let laid = self.auto_children(object, &styles, rect, flex_or_grid_parent);
             self.text_fill_override = saved_text_fill;
             let hug = laid.hug;
+            let natural = laid.natural;
             let children = laid.apply(&mut container);
             if parent_rect.is_none() && hug.1 {
                 // The page root keeps its width and grows downward.
                 container.height = Some(SizingBehavior::Keyword(
                     jian_ops_schema::sizing::SizingKeyword::FitContent,
                 ));
+            }
+            if let Some(natural) = natural {
+                self.auto_natural.insert(node_id.clone(), natural);
             }
             self.auto_hug.insert(node_id, hug);
             return Some(frame_with(base, container, children));

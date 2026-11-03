@@ -46,6 +46,11 @@ pub struct TextEditLayout {
     /// Node bounds origin (doc space) — the first line's top-left.
     pub origin: Point2D,
     pub text_align: SceneTextAlign,
+    /// Per line, how many bytes paint before a closing "…" when the line
+    /// runs past the box of a `text_ellipsis` node; `None` paints it
+    /// whole. Paint only: caret and selection keep the whole line, so an
+    /// edit reaches the hidden tail.
+    pub ellipsis_cuts: Vec<Option<usize>>,
 }
 
 /// Resolve the painted line layout for `node` — the shared
@@ -104,7 +109,8 @@ pub fn text_edit_layout(backend: &mut dyn RenderBackend, node: &SceneNode) -> Te
     // widest line fits, preserving the imported layout. Wrapping text
     // breaks lines instead, so it is left untouched.
     let box_w = node.bounds.size.x;
-    if !node.text_wrap && box_w > 0.0 {
+    // An ellipsis cuts the line where the box ends instead.
+    if !node.text_wrap && !node.text_ellipsis && box_w > 0.0 {
         let widest = lines
             .iter()
             .map(|l| measure_line_width(backend, l, font_size, face, letter_spacing))
@@ -117,6 +123,14 @@ pub fn text_edit_layout(backend: &mut dyn RenderBackend, node: &SceneNode) -> Te
         }
     }
     let line_starts = line_start_offsets(text, &lines);
+    let ellipsis_cuts = lines
+        .iter()
+        .map(|line| {
+            (node.text_ellipsis && box_w > 0.0)
+                .then(|| ellipsis_cut(backend, line, font_size, face, letter_spacing, box_w))
+                .flatten()
+        })
+        .collect();
     TextEditLayout {
         line_starts,
         font_size,
@@ -129,7 +143,43 @@ pub fn text_edit_layout(backend: &mut dyn RenderBackend, node: &SceneNode) -> Te
         origin: node.bounds.origin,
         text_align: node.text_align,
         lines,
+        ellipsis_cuts,
     }
+}
+
+/// The closing mark of a cut line.
+pub(crate) const ELLIPSIS: &str = "\u{2026}";
+
+/// Where `line` is cut so that it and a closing "…" fit `width` (CSS
+/// `text-overflow: ellipsis`): the byte length of the longest prefix
+/// that fits, trailing spaces dropped. `None` when the whole line fits.
+fn ellipsis_cut(
+    backend: &mut dyn RenderBackend,
+    line: &str,
+    font_size: f32,
+    face: TextFace<'_>,
+    letter_spacing: f32,
+    width: f32,
+) -> Option<usize> {
+    let mut fits =
+        |text: &str| measure_line_width(backend, text, font_size, face, letter_spacing) <= width;
+    if fits(line) {
+        return None;
+    }
+    // Char boundaries a cut may fall on; the widths grow with the prefix,
+    // so the longest one that fits is found by bisection.
+    let ends: Vec<usize> = line.char_indices().map(|(at, _)| at).collect();
+    let (mut lo, mut hi) = (0, ends.len().saturating_sub(1));
+    while lo < hi {
+        let mid = (lo + hi + 1) / 2;
+        if fits(&format!("{}{ELLIPSIS}", &line[..ends[mid]])) {
+            lo = mid;
+        } else {
+            hi = mid - 1;
+        }
+    }
+    let kept = ends.get(lo).copied().unwrap_or(0);
+    Some(line[..kept].trim_end().len())
 }
 
 /// Auto-width text never shrinks below this fraction of its authored
@@ -498,6 +548,26 @@ mod tests {
         node.text_align = SceneTextAlign::Center;
         let layout = text_edit_layout(&mut b, &node);
         assert_eq!(layout.caret_position(&mut b, 0), (140.0, 50.0));
+    }
+
+    #[test]
+    fn an_ellipsis_cuts_the_line_instead_of_shrinking_it() {
+        // 10 px a char: "hello world" is 110 px in a 60 px box. "hello"
+        // plus "…" is 60 px; the space before the cut is dropped.
+        let mut b = UniformBackend;
+        let mut node = text_node("hello world", 60.0);
+        node.text_ellipsis = true;
+        let layout = text_edit_layout(&mut b, &node);
+        assert_eq!(layout.font_size, 20.0);
+        assert_eq!(layout.ellipsis_cuts, vec![Some(5)]);
+        // The caret still walks the whole line.
+        assert_eq!(layout.line_ranges(), vec![(0, 11)]);
+        // A line that fits is painted whole, and a box too narrow for
+        // anything but the mark keeps nothing before it.
+        node.bounds.size.x = 110.0;
+        assert_eq!(text_edit_layout(&mut b, &node).ellipsis_cuts, vec![None]);
+        node.bounds.size.x = 12.0;
+        assert_eq!(text_edit_layout(&mut b, &node).ellipsis_cuts, vec![Some(0)]);
     }
 
     #[test]

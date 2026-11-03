@@ -265,6 +265,7 @@ pub(crate) fn node_payload_to_scene(
         text_align: text_align_to_scene(&node.text_align),
         text_vertical_align: text_vertical_align_to_scene(&node.text_vertical_align),
         text_wrap: node.text_wrap,
+        text_ellipsis: node.text_ellipsis,
         points: node
             .points
             .iter()

@@ -38,6 +38,7 @@ struct LayoutKey {
     letter_spacing: f32,
     italic: bool,
     text_wrap: bool,
+    text_ellipsis: bool,
     bounds: Rect,
     text_align: SceneTextAlign,
 }
@@ -52,6 +53,7 @@ impl LayoutKey {
             && same_f32(self.letter_spacing, node.letter_spacing)
             && self.italic == node.italic
             && self.text_wrap == node.text_wrap
+            && self.text_ellipsis == node.text_ellipsis
             && same_rect(self.bounds, node.bounds)
             && self.text_align == node.text_align
     }
@@ -66,6 +68,7 @@ impl LayoutKey {
             letter_spacing: node.letter_spacing,
             italic: node.italic,
             text_wrap: node.text_wrap,
+            text_ellipsis: node.text_ellipsis,
             bounds: node.bounds,
             text_align: node.text_align,
         }

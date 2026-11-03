@@ -20,11 +20,14 @@
 //! - **padding** — CSS padding plus border widths, shrunk on any side the
 //!   children reach into, plus the space a line leaves at its ends when that
 //!   space is not free space (an offset first child, a filling item);
-//! - **alignment** — whichever of start / center / end the children share;
+//! - **alignment** — whichever of start / center / end the children share,
+//!   the CSS `align-items` or the text's `text-align` breaking a tie;
 //! - **sizing** — `fill_container` for a flex item that grew past its content
 //!   (a content-sized `flex-1` item hugs) or a child that spans its parent's
-//!   cross axis, `fit_content` for a box whose content decides its size, a
-//!   number for everything else.
+//!   cross axis, `fit_content` for a box whose content decides its size (one
+//!   that left no free space, whatever its `justify-content`, and a block
+//!   shrink-wrapped around its widest child), a number for everything else.
+//!   A `truncate` run the browser cut fills its box and ends in "…" there.
 //!
 //! A container whose children overlap along the axis (a negative-margin
 //! avatar stack) keeps `layout: none`, and `position: absolute | fixed`
@@ -50,7 +53,7 @@ mod items;
 #[path = "snapshot_auto_layout_lines.rs"]
 mod lines;
 use flow::lines_of;
-use items::{hug_of, set_size};
+use items::{cut_at, hug_of, set_size, union_of};
 
 /// Within this many CSS px two edges count as the same edge: the capture
 /// rounds every rect to hundredths, and sub-pixel layout differs by less.
@@ -73,6 +76,10 @@ pub(super) struct Item {
     /// `flex-grow` above zero (meaningful in a flex parent only).
     pub grow: bool,
     pub kind: ItemKind,
+    /// One line of text the browser cut short with "…": it ran past its
+    /// parent's content box, which clips it (`truncate`). It fills that
+    /// box and keeps cutting there after an edit.
+    pub cut: bool,
 }
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -133,6 +140,9 @@ pub(super) struct Laid {
     pub children: Vec<PenNode>,
     /// `(width, height)`: the frame may be `fit_content` on that axis.
     pub hug: (bool, bool),
+    /// The box the content would take if the frame hugged it, and on which
+    /// axes it can (no child fills there): `(rect, (width, height))`.
+    pub natural: Option<(Rect, (bool, bool))>,
 }
 
 impl Laid {
@@ -240,12 +250,16 @@ impl SnapshotCtx<'_> {
             .and_then(|layout| layout.get("grow"))
             .and_then(Value::as_f64)
             .is_some_and(|grow| grow > 0.0);
+        let mut cut = false;
         let (kind, rect) = match &node {
             PenNode::Frame(_) => (ItemKind::Frame, rect),
             PenNode::Text(_) => {
                 let lines = object.get("lines").and_then(Value::as_u64).unwrap_or(1);
                 let nowrap = style(object, "white-space") == Some("nowrap");
                 let single_line = lines <= 1 || nowrap;
+                // Whether it actually ran past the box is decided against
+                // the content box (`cut_at`).
+                cut = single_line && style(object, "text-overflow") == Some("ellipsis");
                 let rect = line_box(object, rect, self.opts.base_font_size);
                 (ItemKind::Text { single_line }, rect)
             }
@@ -265,6 +279,7 @@ impl SnapshotCtx<'_> {
             overlay,
             grow,
             kind,
+            cut,
         })
     }
 
@@ -277,6 +292,12 @@ impl SnapshotCtx<'_> {
         if flow.is_empty() {
             return absolute(overlays, Vec::new());
         }
+        let content = Rect {
+            x: rect.x + model.inset[3],
+            w: (rect.w - model.inset[1] - model.inset[3]).max(0.0),
+            ..rect
+        };
+        cut_at(&mut flow, content);
         let inset = fitted_inset(model.inset, rect, &flow);
         let content = Rect {
             x: rect.x + inset[3],
@@ -320,6 +341,21 @@ impl SnapshotCtx<'_> {
         };
         match self.arrange(model, axis, content, flow_items) {
             Ok(mut laid) => {
+                let extra = match laid.padding {
+                    Some(Padding::LtrB(values)) => values,
+                    _ => [0.0; 4],
+                };
+                laid.natural = laid.natural.map(|(union, free)| {
+                    let before = [inset[0] + extra[0], inset[3] + extra[3]];
+                    let after = [inset[2] + extra[2], inset[1] + extra[1]];
+                    let natural = Rect {
+                        x: union.x - before[1],
+                        y: union.y - before[0],
+                        w: union.w + before[1] + after[1],
+                        h: union.h + before[0] + after[0],
+                    };
+                    (natural, free)
+                });
                 laid.padding = padding_of(inset, laid.padding.take());
                 laid.children = with_overlays(overlays, laid.children);
                 laid
@@ -370,6 +406,7 @@ impl SnapshotCtx<'_> {
             overlay: false,
             grow: false,
             kind: ItemKind::Frame,
+            cut: false,
         }
     }
 
@@ -412,19 +449,30 @@ impl SnapshotCtx<'_> {
         let fills_main: Vec<bool> = items
             .iter()
             .zip(&hugs)
-            .map(|(item, (hug_main, _))| model.flex && item.grow && !hug_main)
+            .map(|(item, (hug_main, _))| {
+                (model.flex && item.grow && !hug_main) || (item.cut && axis == Axis::Horizontal)
+            })
             .collect();
         let any_fill = fills_main.iter().any(|fill| *fill);
-        let space_between =
-            !any_fill && model.justify.as_deref() == Some("space-between") && items.len() > 1;
-        let mut base_gap = gaps.iter().copied().fold(f64::INFINITY, f64::min).max(0.0);
-        // Two items, flush with both ends, far wider apart than the CSS gap:
-        // the space between them is the free space (`ml-auto`, `mr-auto`),
-        // not a gap, and has to stay free when either side changes.
         let css_gap = match axis {
             Axis::Horizontal => model.gap[1],
             Axis::Vertical => model.gap[0],
         };
+        // Items flush with both ends and spaced by exactly the CSS gap left
+        // no free space to distribute: the box is as wide as its content
+        // (`w-fit`), so its `justify-content` decided nothing and the box
+        // hugs, as it would grow in the page.
+        let packed = leading <= EPS
+            && trailing.abs() <= EPS
+            && gaps.iter().all(|gap| (gap - css_gap).abs() <= EPS);
+        let space_between = !any_fill
+            && !packed
+            && model.justify.as_deref() == Some("space-between")
+            && items.len() > 1;
+        let mut base_gap = gaps.iter().copied().fold(f64::INFINITY, f64::min).max(0.0);
+        // Two items, flush with both ends, far wider apart than the CSS gap:
+        // the space between them is the free space (`ml-auto`, `mr-auto`),
+        // not a gap, and has to stay free when either side changes.
         if gaps.len() == 1
             && model.flex
             && leading <= EPS
@@ -471,6 +519,14 @@ impl SnapshotCtx<'_> {
             && !soaks_free_space
             && leading <= EPS
             && trailing.abs() <= EPS;
+        let union = union_of(&items);
+        // Could the frame hug its content on each axis: along the line only
+        // when no free space was shared out, across it unless a child fills.
+        let cross_free = !cross.fills.contains(&true);
+        let free = match axis {
+            Axis::Horizontal => (hug_main, cross_free),
+            Axis::Vertical => (cross_free, hug_main),
+        };
         let mut children = Vec::with_capacity(items.len() * 2);
         let count = items.len();
         for (index, item) in items.into_iter().enumerate() {
@@ -486,7 +542,7 @@ impl SnapshotCtx<'_> {
             };
             let cross_fit = if fill_cross {
                 Fit::Fill
-            } else if hug_cross_axis {
+            } else if hug_cross_axis || cross.hugs[index] {
                 Fit::Hug
             } else {
                 Fit::Fixed
@@ -498,6 +554,9 @@ impl SnapshotCtx<'_> {
                 cross_fit,
                 axis.cross().size(&item.rect),
             );
+            if item.cut {
+                items::truncate(&mut node);
+            }
             items::into_flow(&mut node);
             children.push(node);
             if !space_between && index + 1 < count && extras[index] > EPS {
@@ -530,6 +589,7 @@ impl SnapshotCtx<'_> {
             align: cross.align,
             children,
             hug,
+            natural: Some((union, free)),
         })
     }
 
@@ -546,6 +606,7 @@ impl SnapshotCtx<'_> {
                 align: None,
                 children: Vec::new(),
                 hug: (false, false),
+                natural: None,
             },
         ));
         set_size(&mut node, axis, fit, round(size));
@@ -627,6 +688,7 @@ fn absolute(overlays: Vec<Item>, flow: Vec<Item>) -> Laid {
         align: None,
         children: super::snapshot_stack::to_front_to_back(entries),
         hug: (false, false),
+        natural: None,
     }
 }
 

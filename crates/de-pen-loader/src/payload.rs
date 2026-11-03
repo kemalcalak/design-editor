@@ -217,6 +217,10 @@ pub struct NodePayload {
     pub text_vertical_align: String,
     #[serde(default)]
     pub text_wrap: bool,
+    /// One line cut to the box with "…" (`textOverflow: ellipsis`).
+    /// Text-only; such text never wraps.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub text_ellipsis: bool,
     /// Drop-shadow effects.
     #[serde(default)]
     pub effects: Vec<crate::effects::ShadowPayload>,

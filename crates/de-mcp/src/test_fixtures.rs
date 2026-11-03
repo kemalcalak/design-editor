@@ -66,6 +66,7 @@ pub fn text(id: &str, name: &str, x: f64, y: f64, w: f64, h: f64, content: &str)
         text_align: None,
         text_align_vertical: None,
         text_growth: None,
+        text_overflow: None,
         underline: None,
         strikethrough: None,
         fill: None,

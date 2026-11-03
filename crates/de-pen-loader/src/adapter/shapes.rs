@@ -252,7 +252,12 @@ pub(super) fn text_to_payload(n: &TextNode) -> NodePayload {
     // authored against the TS app's measureText for a font we
     // may not have bundled; wrapping it would mis-break lines
     // the TS app shows on one line.
-    p.text_wrap = text_wraps(n);
+    // An ellipsis keeps the text on one line and cuts it at the box.
+    p.text_ellipsis = matches!(
+        n.text_overflow,
+        Some(jian_ops_schema::node::text::TextOverflow::Ellipsis)
+    );
+    p.text_wrap = text_wraps(n) && !p.text_ellipsis;
     p
 }
 

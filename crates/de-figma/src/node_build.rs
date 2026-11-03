@@ -198,6 +198,7 @@ pub fn text_node(
         text_align: props.text_align,
         text_align_vertical: props.text_align_vertical,
         text_growth: props.text_growth,
+        text_overflow: None,
         underline: props.underline,
         strikethrough: props.strikethrough,
         fill,

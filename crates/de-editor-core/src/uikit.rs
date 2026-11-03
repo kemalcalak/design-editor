@@ -163,6 +163,7 @@ fn text(id: &str, content: &str, x: i32, y: i32, w: i32, h: i32) -> PenNode {
         text_align: None,
         text_align_vertical: None,
         text_growth: None,
+        text_overflow: None,
         underline: None,
         strikethrough: None,
         fill: None,

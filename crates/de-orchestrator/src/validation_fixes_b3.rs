@@ -355,6 +355,7 @@ fn build_text_node(
         text_align: None,
         text_align_vertical: None,
         text_growth: None,
+        text_overflow: None,
         underline: None,
         strikethrough: None,
         fill,
