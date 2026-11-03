@@ -476,22 +476,16 @@ impl WidgetHost {
                 &self.editor_state,
                 viewport_height,
             );
-            // Full name of a hovered layer row whose name is cut (#306). The
-            // row model comes from the paint cache; a drag paints its own ghost.
-            if self.editor_state.editor_ui.hovered_layer_id.is_some()
-                && !self.layer_drag.as_ref().is_some_and(|d| d.active)
-            {
-                de_editor_ui::widgets::layer_panel_name_tooltip::paint_layer_name_tooltip(
-                    &mut cx,
-                    &self.editor_state,
-                    &self.layer_panel(),
-                    de_editor_ui::widgets::host_canvas_geometry::layer_panel_rect(
-                        &self.editor_state,
-                        viewport_height,
-                    ),
-                    viewport_width,
-                );
-            }
+            // Full name of a hovered layer row whose name is cut (#306); the
+            // panel comes from the paint cache and is built only when needed.
+            de_editor_ui::widgets::layer_panel_name_tooltip::paint_layer_name_tooltip(
+                &mut cx,
+                &self.editor_state,
+                || self.layer_panel(),
+                self.layer_drag.as_ref().is_some_and(|d| d.active),
+                viewport_width,
+                viewport_height,
+            );
         }
 
         // Bound here rather than at the top of the pass: the rail section

@@ -11,14 +11,10 @@ use jian_core::text_input::TextInputState;
 use super::layer_panel::LayerItem;
 use super::layer_panel_metrics::{
     glyph_rect_in, layer_action_targets, layer_indent, layer_label_x, layer_node_icon_x,
-    LayerPanelMetrics, ROW_TRAILING_PAD,
+    LayerPanelMetrics, ROW_TRAILING_PAD, TEXT_WIDTH_FACTOR,
 };
 
 pub(super) const ROW_FONT: f32 = 13.0;
-/// Heuristic avg-char-width factor for the chrome face (Manrope) at the
-/// row font — a touch wider than the old system face, so a page label
-/// ellipsizes before it runs under the delete glyph.
-pub(super) const TEXT_WIDTH_FACTOR: f32 = 0.56;
 /// Corner radius of a row's selection / hover fill.
 pub(super) const ROW_RADIUS: f32 = 8.0;
 

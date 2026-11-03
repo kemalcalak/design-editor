@@ -4,20 +4,23 @@
 use super::layer_panel::{LayerPanel, LayerPanelHit, LAYER_PANEL_WIDTH};
 use super::layer_panel_metrics::{
     collapse_target, glyph_rect_in, layer_indent, layer_label_x, LayerPanelMetrics,
-    DEEP_INDENT_STEP, FULL_INDENT_LEVELS, INDENT_STEP, MIN_LABEL_CHARS,
+    DEEP_INDENT_STEP, FULL_INDENT_LEVELS, INDENT_STEP, MIN_LABEL_CHARS, ROW_INSET_X,
+    ROW_TRAILING_PAD, TEXT_WIDTH_FACTOR,
 };
+use super::layer_panel_name_tooltip::paint_layer_name_tooltip;
 use super::layer_panel_paint::{layer_action_gutter_left, ROW_FONT};
+use super::tooltip::TOOLTIP_ANCHOR_GAP;
 use super::{PaintCx, Widget};
 use crate::{Color, Point2D, Rect, RenderBackend, TextLayout};
 use de_editor_core::{EditorState, NodeId};
 
 const M: LayerPanelMetrics = LayerPanelMetrics::DESKTOP;
-/// Matches the paint heuristic (13 px × 0.56), so "12 characters" means the
+/// The paint heuristic's average character, so "12 characters" means the
 /// same width here as in the indent cap.
-const CHAR_W: f32 = 7.28;
+const CHAR_W: f32 = ROW_FONT * TEXT_WIDTH_FACTOR;
 const DEPTH: usize = 15;
 /// Row width inside the default 240 px left card.
-const ROW_W: f32 = LAYER_PANEL_WIDTH - 12.0;
+const ROW_W: f32 = LAYER_PANEL_WIDTH - 2.0 * ROW_INSET_X;
 
 #[derive(Default)]
 struct Recorder {
@@ -144,9 +147,9 @@ fn indent_cap_keeps_the_label_budget_at_any_depth() {
     for depth in [DEPTH, 30, 200] {
         let row = Rect::xywh(6.0, 0.0, ROW_W, 24.0);
         let label_x = layer_label_x(row, layer_indent(depth, ROW_W, M), M);
-        let budget = row.origin.x + row.size.x - 8.0 - label_x;
+        let budget = row.origin.x + row.size.x - ROW_TRAILING_PAD - label_x;
         assert!(
-            budget + 0.01 >= MIN_LABEL_CHARS * ROW_FONT * 0.56,
+            budget + 0.01 >= MIN_LABEL_CHARS * CHAR_W,
             "depth {depth}: {budget} px is under the minimum label budget"
         );
     }
@@ -172,7 +175,7 @@ fn every_row_of_a_fifteen_level_tree_shows_twelve_characters() {
 }
 
 #[test]
-fn hovered_deep_row_keeps_its_name_and_its_origin() {
+fn hovered_deep_row_keeps_part_of_its_name_and_its_origin() {
     let deepest = format!("d{}", DEPTH - 1);
     let mut state = nested_state(DEPTH);
     let rest = paint(&LayerPanel::from_editor(&state));
@@ -185,6 +188,7 @@ fn hovered_deep_row_keeps_its_name_and_its_origin() {
     let (hover_label, hover_origin) = label_in_row(&hovered, row);
     assert_eq!(rest_origin, hover_origin, "hover must not move the label");
     assert!(visible_chars(rest_label) >= 12);
+    // The 44 px eye/lock gutter costs six characters of the rest budget.
     assert!(
         visible_chars(hover_label) >= 5,
         "hover icons left only {hover_label:?}"
@@ -246,4 +250,46 @@ fn truncated_hovered_name_gets_a_tooltip_anchor() {
         None,
         "a name that fits gets no tooltip"
     );
+}
+
+#[test]
+fn host_tooltip_hangs_under_the_row_painted_in_the_rail_body() {
+    let deepest = format!("d{}", DEPTH - 1);
+    let mut state = nested_state(DEPTH);
+    state.editor_ui.sidebar_open = true;
+    state.editor_ui.hovered_layer_id = Some(NodeId::new(&deepest));
+    let (viewport_w, viewport_h) = (1440.0, 900.0);
+    let mut backend = Recorder::default();
+    let mut cx = PaintCx {
+        backend: &mut backend,
+    };
+    let painted = paint_layer_name_tooltip(
+        &mut cx,
+        &state,
+        || LayerPanel::from_editor(&state),
+        false,
+        viewport_w,
+        viewport_h,
+    )
+    .expect("the cut deep name gets a tooltip");
+
+    // The rail paints the tree under its tab row, not at the card's top.
+    let body = super::host_canvas_geometry::rail_body_rect(&state, viewport_h);
+    let panel = LayerPanel::from_editor(&state);
+    let index = panel.items.len() - 1;
+    let row = panel.layer_row_rect(body, &panel.regions(body), index);
+    assert!(
+        (painted.origin.y - (row.origin.y + row.size.y + TOOLTIP_ANCHOR_GAP)).abs() < 0.01,
+        "tooltip at {painted:?} should hang under row {row:?}"
+    );
+
+    let dragging = paint_layer_name_tooltip(
+        &mut cx,
+        &state,
+        || LayerPanel::from_editor(&state),
+        true,
+        viewport_w,
+        viewport_h,
+    );
+    assert_eq!(dragging, None, "no tooltip while a layer drags");
 }

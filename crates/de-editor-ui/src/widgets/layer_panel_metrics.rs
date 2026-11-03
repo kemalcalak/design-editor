@@ -117,9 +117,14 @@ pub(crate) fn layer_node_icon_x(row: Rect, indent: f32) -> f32 {
     row.origin.x + indent + LAYER_ICON_OFFSET
 }
 
-/// Where a layer row's label starts: after the chevron column and icon.
+/// From a row's indent to its label: chevron column, node icon, gap.
+pub(crate) fn layer_label_offset(m: LayerPanelMetrics) -> f32 {
+    LAYER_ICON_OFFSET + m.glyph_size + ICON_LABEL_GAP
+}
+
+/// Where a layer row's label starts.
 pub(crate) fn layer_label_x(row: Rect, indent: f32, m: LayerPanelMetrics) -> f32 {
-    layer_node_icon_x(row, indent) + m.glyph_size + 6.0
+    row.origin.x + indent + layer_label_offset(m)
 }
 
 /// Indent step of the shallow levels, where the hierarchy is read most.
@@ -133,10 +138,16 @@ pub(crate) const DEEP_INDENT_STEP: f32 = 4.0;
 /// far as the row width allows: 12 of the name plus the ellipsis. Deeper
 /// levels stop indenting once this budget is reached.
 pub(crate) const MIN_LABEL_CHARS: f32 = 13.0;
+/// Heuristic avg-char-width factor for the chrome face (Manrope) at the
+/// row font — a touch wider than the old system face, so a page label
+/// ellipsizes before it runs under the delete glyph.
+pub(crate) const TEXT_WIDTH_FACTOR: f32 = 0.56;
 /// Chevron column: from the indent to the node icon.
 const LAYER_ICON_OFFSET: f32 = 18.0;
-/// Node icon plus its gap: from the icon to the label.
-pub(crate) const LAYER_LABEL_OFFSET: f32 = 20.0;
+/// Gap between the node icon and the label.
+const ICON_LABEL_GAP: f32 = 6.0;
+/// Horizontal inset of a layer row inside the panel, either side.
+pub(crate) const ROW_INSET_X: f32 = 6.0;
 /// Gap between the label's budget and the row's trailing edge at rest.
 pub(crate) const ROW_TRAILING_PAD: f32 = 8.0;
 
@@ -144,17 +155,13 @@ pub(crate) const ROW_TRAILING_PAD: f32 = 8.0;
 /// the row padding plus a depth term that compresses past
 /// [`FULL_INDENT_LEVELS`] and is capped so the label keeps
 /// [`MIN_LABEL_CHARS`]. Paint, hit testing, the drag ghost and the
-/// horizontal content width all read it, so they cannot drift apart.
+/// tooltip all read it, so they cannot drift apart; the horizontal
+/// content width takes the uncapped indent (see `layer_item_content_w`).
 pub(crate) fn layer_indent(depth: usize, row_w: f32, m: LayerPanelMetrics) -> f32 {
     let full = depth.min(FULL_INDENT_LEVELS) as f32 * INDENT_STEP;
     let deep = depth.saturating_sub(FULL_INDENT_LEVELS) as f32 * DEEP_INDENT_STEP;
-    let min_label_w = MIN_LABEL_CHARS * m.row_font * super::layer_panel_paint::TEXT_WIDTH_FACTOR;
-    let cap = row_w
-        - m.row_pad_x
-        - LAYER_ICON_OFFSET
-        - LAYER_LABEL_OFFSET
-        - ROW_TRAILING_PAD
-        - min_label_w;
+    let min_label_w = MIN_LABEL_CHARS * m.row_font * TEXT_WIDTH_FACTOR;
+    let cap = row_w - m.row_pad_x - layer_label_offset(m) - ROW_TRAILING_PAD - min_label_w;
     // However narrow the card, the first level still steps in.
     let cap = cap.max(INDENT_STEP);
     m.row_pad_x + (full + deep).min(cap)

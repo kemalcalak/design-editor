@@ -6,6 +6,7 @@
 use super::layer_panel::*;
 use super::layer_panel_metrics::{
     add_page_target, collapse_target, delete_page_target, layer_action_targets, layer_indent,
+    ROW_INSET_X,
 };
 use super::layer_panel_walkers::{row_index_at, LayerRegions};
 use crate::{Point2D, Rect};
@@ -17,8 +18,8 @@ impl LayerPanel {
         let h = self.metrics.layer_row_height;
         let y = r.layers_rows_top - r.layers.offset + index as f32 * h;
         Rect {
-            origin: Point2D::new(rect.origin.x + 6.0, y + 2.0),
-            size: Point2D::new(rect.size.x - 12.0, h - 4.0),
+            origin: Point2D::new(rect.origin.x + ROW_INSET_X, y + 2.0),
+            size: Point2D::new(rect.size.x - 2.0 * ROW_INSET_X, h - 4.0),
         }
     }
 
@@ -150,19 +151,15 @@ impl LayerPanel {
             if !(row).contains(point) {
                 return None;
             }
-            // Match the paint geometry — same 14 px icon boxes with
-            // 4 px slop so small mouse offsets still register.
-            let inner = Rect {
-                origin: Point2D::new(row.origin.x + 6.0, y + 2.0),
-                size: Point2D::new(row.size.x - 12.0, self.metrics.layer_row_height - 4.0),
-            };
+            // The painted row rect: the same 14 px icon boxes with 4 px slop
+            // so small mouse offsets still register.
+            let inner = self.layer_row_rect(rect, &r, index);
             let (eye_target, lock_target) = layer_action_targets(inner, self.metrics);
-            let row_hovered = self.is_row_hovered(&item.node_id);
-            let actions_visible = row_hovered;
-            if actions_visible && !item.renaming && lock_target.contains(point) {
+            let actions_visible = self.is_row_hovered(&item.node_id) && !item.renaming;
+            if actions_visible && lock_target.contains(point) {
                 return Some(LayerPanelHit::ToggleLocked(item.node_id.clone()));
             }
-            if actions_visible && !item.renaming && eye_target.contains(point) {
+            if actions_visible && eye_target.contains(point) {
                 return Some(LayerPanelHit::ToggleHidden(item.node_id.clone()));
             }
             if item.has_children {
