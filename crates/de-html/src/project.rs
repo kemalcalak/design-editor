@@ -352,6 +352,7 @@ pub(crate) fn import_html_entry_with_fetcher(
         base_font_size: options.base_font_size,
         document_name: options.document_name.clone(),
         base_url: Some(virtual_url(entry_path)),
+        ..HtmlImportOptions::default()
     };
     let mut imported = import_html_with_resources(
         html.strip_prefix('\u{feff}').unwrap_or(html),

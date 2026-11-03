@@ -211,6 +211,58 @@
     return result;
   }
 
+  // The box model an auto-layout import rebuilds the page from: flex
+  // direction, wrapping, alignment, growth, padding, border widths and gaps,
+  // each only when it differs from the initial value. It rides beside
+  // `styles` (not in it) so the visual mapping, which reads `styles`, sees
+  // exactly what it always saw; the absolute import ignores it.
+  function layoutBox(computed) {
+    var box = {};
+    var direction = computed.flexDirection;
+    if (direction && direction !== "row") box.direction = direction;
+    if (computed.flexWrap && computed.flexWrap !== "nowrap") box.wrap = computed.flexWrap;
+    var justify = computed.justifyContent;
+    if (justify && justify !== "normal" && justify !== "flex-start" && justify !== "start") {
+      box.justify = justify;
+    }
+    if (computed.alignItems && computed.alignItems !== "normal") box.align = computed.alignItems;
+    var grow = parseFloat(computed.flexGrow);
+    if (grow > 0) box.grow = grow;
+    var sides = function (prefix, suffix, drawn) {
+      var values = BORDER_SIDES.map(function (side) {
+        if (drawn) {
+          var style = computed.getPropertyValue("border-" + side + "-style");
+          if (!style || style === "none" || style === "hidden") return 0;
+        }
+        return round(parseFloat(computed.getPropertyValue(prefix + side + suffix)) || 0);
+      });
+      return values.some(function (value) { return value !== 0; }) ? values : null;
+    };
+    var padding = sides("padding-", "", false);
+    if (padding) box.padding = padding;
+    var border = sides("border-", "-width", true);
+    if (border) box.border = border;
+    var rowGap = parseFloat(computed.rowGap) || 0;
+    var columnGap = parseFloat(computed.columnGap) || 0;
+    if (rowGap || columnGap) box.gap = [round(rowGap), round(columnGap)];
+    for (var key in box) return box;
+    return undefined;
+  }
+
+  // The lucide icon an `<svg>` is, read from the class names lucide's
+  // framework packages stamp on it (`lucide lucide-house`). Every candidate
+  // is kept, in class order: a renamed icon carries its old and new names,
+  // and the importer picks the first its catalog knows.
+  function lucideNames(element) {
+    var classes = (element.getAttribute && element.getAttribute("class")) || "";
+    var names = [];
+    classes.split(/\s+/).forEach(function (name) {
+      var match = /^lucide-([a-z0-9-]+)$/.exec(name);
+      if (match && match[1] !== "icon") names.push(match[1]);
+    });
+    return names;
+  }
+
   function childHasVisibleBox(element) {
     return Array.prototype.some.call(element.children, function (child) {
       var style = window.getComputedStyle(child);
@@ -822,6 +874,18 @@
       styles: elementStyles(computed),
     };
     if (captured.tainted) result.tainted = true;
+    var box = layoutBox(computed);
+    if (box) result.layout = box;
+    if (tag === "svg") {
+      var icons = lucideNames(element);
+      if (icons.length) {
+        result.icon = {
+          family: "lucide",
+          names: icons,
+          color: computed.stroke && computed.stroke !== "none" ? computed.stroke : computed.color,
+        };
+      }
+    }
     // Single-colour vector geometry rides ALONGSIDE the image serialization
     // rather than replacing it, and the node keeps `kind: "image"`. An
     // importer that predates the vector fields reads exactly the node it
@@ -1149,13 +1213,16 @@
     }
     Array.prototype.forEach.call(element.childNodes, collect);
     flushRun();
-    return {
+    var result = {
       kind: "element",
       tag: tag,
       rect: pageRect(rect),
       styles: elementStyles(computed),
       children: children,
     };
+    var box = layoutBox(computed);
+    if (box) result.layout = box;
+    return result;
   }
 
   // A picked element can itself be an <img>/<svg>/<canvas>/<video>, which

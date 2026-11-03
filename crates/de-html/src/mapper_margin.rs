@@ -703,14 +703,7 @@ fn is_out_of_flow(node: &PenNode) -> bool {
 }
 
 fn padding_from(edges: Edges) -> Option<Padding> {
-    let values = [edges.top, edges.right, edges.bottom, edges.left];
-    if values.iter().all(|value| value.abs() <= f64::EPSILON) {
-        None
-    } else if values.iter().all(|value| *value == values[0]) {
-        Some(Padding::Uniform(values[0]))
-    } else {
-        Some(Padding::LtrB(values))
-    }
+    super::padding_from_sides([edges.top, edges.right, edges.bottom, edges.left])
 }
 
 fn padding_edges(padding: Option<&Padding>) -> Edges {

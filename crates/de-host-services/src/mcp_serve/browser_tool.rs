@@ -204,10 +204,19 @@ impl BrowserTool {
                     ShotTarget::Query(selector) => Some(selector),
                     ShotTarget::FullPage => None,
                 };
+                let auto_layout = match arg(args, "layout").unwrap_or("absolute") {
+                    "absolute" => false,
+                    "auto" => true,
+                    other => {
+                        return Err(invalid(format!(
+                            "unknown layout `{other}` (absolute, auto)"
+                        )))
+                    }
+                };
                 let PageReply::Snapshot(snapshot) = run(PageOp::Extract(selector))?.reply else {
                     return Err(internal());
                 };
-                Ok(import_command(&snapshot, target))
+                Ok(import_command(&snapshot, target, auto_layout))
             }
         }
     }

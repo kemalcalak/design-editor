@@ -19,6 +19,12 @@ use serde_json::json;
 
 use super::browser_tool::ToolError;
 
+/// Can the canvas paint this icon? Lucide `<svg>`s the catalog knows import
+/// as icon nodes.
+fn icon_known(family: &str, name: &str) -> bool {
+    de_editor_ui::widgets::icon_catalog::lookup_icon(family, name).is_some()
+}
+
 /// Gap between a browser node and what is placed beside it (doc px).
 const PLACE_GAP: f64 = 80.0;
 
@@ -169,8 +175,17 @@ pub fn screenshot_command(
 }
 
 /// Turn the extractor's `snapshot` into editable layers beside `target`.
-pub fn import_command(snapshot: &str, target: Option<&BrowserTarget>) -> ToolOutcome {
-    let result = import_snapshot(snapshot, &HtmlImportOptions::default());
+pub fn import_command(
+    snapshot: &str,
+    target: Option<&BrowserTarget>,
+    auto_layout: bool,
+) -> ToolOutcome {
+    let options = HtmlImportOptions {
+        snapshot_auto_layout: auto_layout,
+        icon_known: Some(icon_known),
+        ..HtmlImportOptions::default()
+    };
+    let result = import_snapshot(snapshot, &options);
     let (x, y) = target.and_then(|t| t.beside).unwrap_or((0.0, 0.0));
     import_result_to_outcome(
         result,

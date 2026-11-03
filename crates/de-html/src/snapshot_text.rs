@@ -117,7 +117,9 @@ impl SnapshotCtx<'_> {
             .and_then(|value| parse_px(value))
             .filter(|_| font_size > 0.0)
             .map(|height| height / font_size);
-        let line_height = if is_single_line(lines, nowrap) {
+        // The auto-layout pass lays text out by its line box instead (see
+        // `snapshot_auto_layout::line_box`), so it keeps the page's leading.
+        let line_height = if is_single_line(lines, nowrap) && !self.opts.snapshot_auto_layout {
             clamp_single_line_leading(line_height, font_size, rect.h)
         } else {
             line_height
