@@ -409,16 +409,18 @@ pub fn hit_test(
 }
 
 /// Whether a copy acknowledgement started at `copied_at` still shows.
-pub(super) fn copy_feedback_active(copied_at: Option<u64>, now_ms: u64) -> bool {
+pub(crate) fn copy_feedback_active(copied_at: Option<u64>, now_ms: u64) -> bool {
     copied_at.is_some_and(|at| now_ms.saturating_sub(at) < COPY_FEEDBACK_MS)
 }
 
-/// When the Settings ▸ MCP "Copied" chips revert, so the frame loop wakes
-/// for it instead of waiting on the next input event.
+/// When the Settings copy acknowledgements (the MCP "Copied" chips and
+/// the Agents tab's install-command check) revert, so the frame loop
+/// wakes for it instead of waiting on the next input event.
 pub fn copy_feedback_deadline_ms(settings: &AgentSettings, now_ms: u64) -> Option<u64> {
     [
         settings.mcp_client_config_copied_at_ms,
         settings.mcp_snippet_copied_at_ms,
+        settings.install_command_copied.as_ref().map(|(_, at)| *at),
     ]
     .into_iter()
     .flatten()

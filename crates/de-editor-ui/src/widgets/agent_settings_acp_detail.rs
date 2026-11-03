@@ -12,8 +12,8 @@ use crate::widgets::agent_settings_detail_chrome::{
     FOOTER_GAP, HEADER_H, INPUT_H, INPUT_PAD_X, LABEL_FONT, VALUE_FONT,
 };
 use crate::widgets::agent_settings_i18n::t as t_settings;
-use crate::widgets::agent_settings_rows::fit_text;
-use crate::widgets::home_surface::MONO;
+use crate::widgets::agent_settings_install_command::{self as install, CommandLayout};
+use crate::widgets::agent_settings_rows::{fit_text, SETTINGS_FONT_FAMILY};
 use crate::widgets::icons::{draw_icon, Icon};
 use crate::widgets::PaintCx;
 use crate::{Point2D, Rect};
@@ -26,7 +26,8 @@ use de_editor_core::agent_settings::{
 };
 use de_editor_core::editor_ui_state::EditorUiState;
 
-const HINT_H: f32 = 40.0;
+/// The install hint's label line, above its command well.
+const HINT_LABEL_H: f32 = 28.0;
 /// Space between the Command and Arguments inputs.
 const ARGS_GAP: f32 = 16.0;
 
@@ -101,6 +102,8 @@ pub(crate) struct AcpLayout {
     pub(crate) command: Option<Rect>,
     pub(crate) args: Option<Rect>,
     pub(crate) hint: Option<Rect>,
+    /// The install command's well under the hint's label line.
+    pub(crate) install: Option<CommandLayout>,
     pub(crate) env: Option<Rect>,
     pub(crate) url: Option<Rect>,
     pub(crate) footer: Rect,
@@ -109,13 +112,16 @@ pub(crate) struct AcpLayout {
     pub(crate) height: f32,
 }
 
-/// Whether to show the install line: a preset agent whose binary is not
-/// known to be on PATH (a host that cannot look reports nothing).
-fn shows_install_hint(settings: &AgentSettings, target: AcpTarget<'_>) -> bool {
-    target.agent.connection_type == AcpConnectionType::Local
-        && target
-            .preset()
-            .is_some_and(|preset| settings.acp_preset_installed.get(preset.id) == Some(&false))
+/// The install command to show: a preset agent whose binary is not known
+/// to be on PATH (a host that cannot look reports nothing).
+pub(crate) fn install_hint(settings: &AgentSettings, target: AcpTarget<'_>) -> Option<&'static str> {
+    if target.agent.connection_type != AcpConnectionType::Local {
+        return None;
+    }
+    target
+        .preset()
+        .filter(|preset| settings.acp_preset_installed.get(preset.id) == Some(&false))
+        .map(|preset| preset.install_hint)
 }
 
 fn primary_label<'a>(
@@ -163,11 +169,13 @@ pub(crate) fn acp_layout(
             let args = Rect::xywh(x + half + ARGS_GAP, command.origin.y, half, INPUT_H);
             // The install line hangs under the command row, closer than a
             // field gap: it explains that row, it is not a field of its own.
-            let hint = shows_install_hint(settings, target).then(|| {
+            let hint = install_hint(settings, target).map(|command| {
                 y -= FIELD_GAP / 2.0;
-                let rect = Rect::xywh(x, y, w, HINT_H);
-                y += HINT_H + FIELD_GAP;
-                rect
+                let well = install::command_layout(x, y + HINT_LABEL_H, w, command);
+                let h = HINT_LABEL_H + well.well.size.y;
+                let rect = Rect::xywh(x, y, w, h);
+                y += h + FIELD_GAP;
+                (rect, well)
             });
             let env = next_field(x, &mut y, w, INPUT_H);
             (Some(command), Some(args), hint, Some(env), None)
@@ -179,6 +187,10 @@ pub(crate) fn acp_layout(
             None,
             Some(next_field(x, &mut y, w, INPUT_H)),
         ),
+    };
+    let (hint, install) = match hint {
+        Some((rect, well)) => (Some(rect), Some(well)),
+        None => (None, None),
     };
     let footer = Rect::xywh(x, y - FIELD_GAP + FOOTER_GAP, w, BUTTON_H);
     let primary_w = button_width_estimate(primary_label(ui, settings, target), false);
@@ -200,6 +212,7 @@ pub(crate) fn acp_layout(
         command,
         args,
         hint,
+        install,
         env,
         url,
         footer,
@@ -217,6 +230,7 @@ pub(crate) enum AcpHit {
     Focus(AcpAgentField),
     Primary,
     Secondary,
+    CopyInstall,
     None,
 }
 
@@ -243,6 +257,12 @@ pub(crate) fn acp_hit(layout: &AcpLayout, point: Point2D) -> AcpHit {
         if rect.is_some_and(|rect| rect.contains(point)) {
             return AcpHit::Focus(field);
         }
+    }
+    if layout
+        .install
+        .is_some_and(|install| install.copy.contains(point))
+    {
+        return AcpHit::CopyInstall;
     }
     if layout.primary.contains(point) {
         return AcpHit::Primary;
@@ -387,32 +407,39 @@ pub(crate) fn paint_acp_detail(
             );
         }
     }
-    if let (Some(hint), Some(preset)) = (layout.hint, target.preset()) {
-        cx.backend.fill_round_rect(hint, 8.0, theme.muted);
+    if let (Some(hint), Some(well), Some(command)) =
+        (layout.hint, layout.install, install_hint(settings, target))
+    {
+        let label_row = Rect::xywh(hint.origin.x, hint.origin.y, hint.size.x, HINT_LABEL_H);
         draw_icon(
             cx.backend,
             Icon::Terminal,
-            Point2D::new(hint.origin.x + 12.0, hint.origin.y + (HINT_H - 15.0) / 2.0),
+            Point2D::new(
+                hint.origin.x,
+                label_row.origin.y + (HINT_LABEL_H - 15.0) / 2.0,
+            ),
             15.0,
             theme.muted_foreground,
             1.6,
         );
-        let line = format!(
-            "{} {}",
+        let label = fit_text(
+            cx,
             t_settings(ui, "settings.agents.notInstalledHint"),
-            preset.install_hint
+            (hint.size.x - 24.0).max(0.0),
+            LABEL_FONT,
         );
-        let line = fit_text(cx, &line, hint.size.x - 48.0, LABEL_FONT);
         text(
             cx,
-            &line,
+            &label,
             LABEL_FONT,
             theme.muted_foreground,
             400,
-            MONO,
-            hint.origin.x + 36.0,
-            chrome::centred_baseline(hint, LABEL_FONT),
+            SETTINGS_FONT_FAMILY,
+            hint.origin.x + 24.0,
+            chrome::centred_baseline(label_row, LABEL_FONT),
         );
+        let copied = install::copied(settings.install_command_copied.as_ref(), command, now_ms);
+        install::paint_command(cx, theme, &well, command, copied);
     }
     paint_footer(cx, theme, settings, ui, &layout, target);
 }

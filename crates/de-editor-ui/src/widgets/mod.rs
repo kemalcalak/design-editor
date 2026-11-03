@@ -301,6 +301,7 @@ mod agent_settings_agents_list;
 mod agent_settings_api_detail;
 mod agent_settings_caret;
 mod agent_settings_cli_detail;
+mod agent_settings_install_command;
 #[cfg(test)]
 mod agent_settings_connect_tests;
 #[cfg(test)]

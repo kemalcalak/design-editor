@@ -297,6 +297,10 @@ pub struct AgentSettings {
     pub mcp_show_all_agents: bool,
     /// MCP tab: when a row's snippet was last copied (for "Copied").
     pub mcp_snippet_copied_at_ms: Option<u64>,
+    /// Agents tab: the install command last copied and when (for the copy
+    /// button's check). Keyed by the command so another agent's card does
+    /// not show a stale acknowledgement.
+    pub install_command_copied: Option<(String, u64)>,
     pub hover_agent_settings_close: bool,
     pub hover_mcp_server_button: bool,
     pub hover_mcp_client_config_copy: bool,
@@ -379,6 +383,7 @@ impl Default for AgentSettings {
             mcp_expanded_agent: None,
             mcp_show_all_agents: false,
             mcp_snippet_copied_at_ms: None,
+            install_command_copied: None,
             hover_agent_settings_close: false,
             hover_mcp_server_button: false,
             hover_mcp_client_config_copy: false,

@@ -11,7 +11,7 @@ use de_editor_core::host_settings_commit::{commit_settings_focus, SettingsCommit
 use de_editor_core::{BuiltinAgentPresetKey, BuiltinModelCatalogTarget, EditorState};
 
 use crate::widgets::agent_settings_panel::AgentSettingsHit;
-use crate::widgets::agent_settings_press_flow::SettingsPressOutcome;
+use crate::widgets::agent_settings_press_flow::{SettingsPress, SettingsPressOutcome};
 use crate::widgets::agent_settings_press_focus::{
     clear_focus, focus_acp_agent_draft, focus_builtin_agent_draft,
 };
@@ -55,6 +55,21 @@ pub(crate) fn begin_acp_draft(state: &mut EditorState) {
     let settings = &mut state.editor_ui.agent_settings;
     cancel_other_drafts(settings, &AgentsEntry::AcpDraft);
     settings.begin_acp_agent_draft();
+}
+
+/// The install command the selected CLI or ACP agent's card shows, if
+/// any — the text its copy button puts on the clipboard (#304). Only the
+/// desktop lists those agents, so the selection is resolved as there.
+fn selected_install_command(settings: &AgentSettings) -> Option<String> {
+    use crate::widgets::{agent_settings_acp_detail as acp, agent_settings_cli_detail as cli};
+    let entry = settings.resolved_agents_entry(true)?;
+    match &entry {
+        AgentsEntry::Cli(provider) => cli::install_command(settings, *provider).map(str::to_string),
+        AgentsEntry::Acp(_) | AgentsEntry::AcpDraft => acp::acp_target(settings, &entry)
+            .and_then(|target| acp::install_hint(settings, target))
+            .map(str::to_string),
+        AgentsEntry::Builtin(_) | AgentsEntry::BuiltinDraft => None,
+    }
 }
 
 /// The arms this module owns; `None` for every other hit.
@@ -182,6 +197,15 @@ pub(crate) fn apply_agents_hit(
             commit(state);
             begin_acp_draft(state);
             focus_acp_agent_draft(state, AcpAgentField::Command, now_ms);
+        }
+        AgentSettingsHit::CopyInstallCommand => {
+            commit(state);
+            let settings = &mut state.editor_ui.agent_settings;
+            let command = selected_install_command(settings)?;
+            settings.install_command_copied = Some((command.clone(), now_ms));
+            return Some(SettingsPressOutcome::effect(SettingsPress::CopyText(
+                command,
+            )));
         }
         _ => return None,
     }

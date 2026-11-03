@@ -171,6 +171,9 @@ pub enum AgentSettingsHit {
     FetchBuiltinModels(Option<usize>),
     /// Probe a CLI agent again without disconnecting it first.
     RecheckProvider(AgentProvider),
+    /// Copy the selected agent's install command (#304). Resolved from
+    /// the selection by the press arm so this enum stays `Copy`.
+    CopyInstallCommand,
     /// Tick or untick a CLI agent's model — positional over the agent's
     /// discovered models for the same frame.
     ToggleCliModel {
@@ -341,6 +344,7 @@ impl<'a> AgentSettingsPanel<'a> {
                 &self.settings,
                 content.size.x,
             ),
+            AgentSettingsTab::Agents => self.agents_content_height_at(content.size.x),
             _ => self.content_total_height(),
         };
         (total - content.size.y).max(0.0)

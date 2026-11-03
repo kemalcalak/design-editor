@@ -110,6 +110,7 @@ impl<'a> AgentsTab<'a> {
                 detail,
                 self.discovered,
                 provider,
+                now_ms,
             ),
             Some(Detail::Acp(target)) => {
                 acp::paint_acp_detail(cx, theme, self.settings, self.ui, detail, target, now_ms)
@@ -147,6 +148,7 @@ impl<'a> AgentsTab<'a> {
                     cli::cli_layout(detail, self.settings, self.ui, self.discovered, provider);
                 match cli::cli_hit(self.settings, &layout, point) {
                     CliHit::Recheck => AgentSettingsHit::RecheckProvider(provider),
+                    CliHit::CopyInstall => AgentSettingsHit::CopyInstallCommand,
                     CliHit::ToggleModel(row) => AgentSettingsHit::ToggleCliModel { provider, row },
                     CliHit::Connect => AgentSettingsHit::Connect(provider),
                     CliHit::None => AgentSettingsHit::Inside,
@@ -167,6 +169,7 @@ impl<'a> AgentsTab<'a> {
                     (AcpHit::Primary, None) => AgentSettingsHit::SaveAcpAgentDraft,
                     (AcpHit::Secondary, Some(index)) => AgentSettingsHit::RemoveAcpAgent(index),
                     (AcpHit::Secondary, None) => AgentSettingsHit::CancelAcpAgentDraft,
+                    (AcpHit::CopyInstall, _) => AgentSettingsHit::CopyInstallCommand,
                     (AcpHit::None, _) => AgentSettingsHit::Inside,
                 }
             }

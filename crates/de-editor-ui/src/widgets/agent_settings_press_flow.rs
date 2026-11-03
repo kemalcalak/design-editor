@@ -37,7 +37,8 @@ pub enum SettingsPress {
     /// Modal chrome that hit no control — a blank press. The host
     /// commits + blurs every chrome text input under the modal.
     BlankPress,
-    /// Put `0` on the platform clipboard (the MCP client-config JSON).
+    /// Put `0` on the platform clipboard (the MCP endpoint or snippet, an
+    /// agent's install command).
     CopyText(String),
     /// Open this help link in the user's browser.
     OpenUrl(&'static str),
