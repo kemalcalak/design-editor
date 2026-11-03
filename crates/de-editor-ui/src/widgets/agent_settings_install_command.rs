@@ -10,6 +10,7 @@
 
 use crate::theme::Theme;
 use crate::widgets::agent_settings_detail_chrome::{paint_icon_button, text, LABEL_FONT};
+use crate::widgets::agent_settings_mcp::copy_feedback_active;
 use crate::widgets::home_surface::MONO;
 use crate::widgets::icons::Icon;
 use crate::widgets::PaintCx;
@@ -49,7 +50,12 @@ fn columns_in(width: f32) -> usize {
 /// `command` broken into lines of at most `columns` characters: at
 /// spaces where it can, mid-token only when one token is longer than a
 /// line. Joining the lines with single spaces where a space was dropped
-/// gives the command back, but the copy action never reads the lines.
+/// gives the command back (runs of spaces collapse), but the copy action
+/// never reads the lines.
+///
+/// `de_editor_core::home_mcp_setup::wrap_snippet` hard-wraps a JSON
+/// snippet at the column; a shell command reads better broken at its
+/// arguments, hence this word-wrapping sibling.
 pub(crate) fn wrap_command(command: &str, columns: usize) -> Vec<String> {
     let columns = columns.max(1);
     let mut lines = Vec::new();
@@ -149,12 +155,10 @@ pub(crate) fn paint_command(
     paint_icon_button(cx, theme, layout.copy, icon, color);
 }
 
-/// Whether the copy button should show its check for `command`.
-pub(crate) fn copied(copied: Option<&(String, u64)>, command: &str, now_ms: u64) -> bool {
-    copied.is_some_and(|(text, at)| {
-        text == command
-            && crate::widgets::agent_settings_mcp::copy_feedback_active(Some(*at), now_ms)
-    })
+/// Whether the copy button should show its check for `command`, given the
+/// last copy (`AgentSettings::install_command_copied`).
+pub(crate) fn shows_copied(last_copy: Option<&(String, u64)>, command: &str, now_ms: u64) -> bool {
+    last_copy.is_some_and(|(text, at)| text == command && copy_feedback_active(Some(*at), now_ms))
 }
 
 #[cfg(test)]

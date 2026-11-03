@@ -26,8 +26,10 @@ use de_editor_core::agent_settings::{
 };
 use de_editor_core::editor_ui_state::EditorUiState;
 
-/// The install hint's label line, above its command well.
+/// The install hint's label line, above its command well, and where its
+/// text starts after the terminal glyph.
 const HINT_LABEL_H: f32 = 28.0;
+const HINT_LABEL_X: f32 = 24.0;
 /// Space between the Command and Arguments inputs.
 const ARGS_GAP: f32 = 16.0;
 
@@ -114,7 +116,10 @@ pub(crate) struct AcpLayout {
 
 /// The install command to show: a preset agent whose binary is not known
 /// to be on PATH (a host that cannot look reports nothing).
-pub(crate) fn install_hint(settings: &AgentSettings, target: AcpTarget<'_>) -> Option<&'static str> {
+pub(crate) fn install_hint(
+    settings: &AgentSettings,
+    target: AcpTarget<'_>,
+) -> Option<&'static str> {
     if target.agent.connection_type != AcpConnectionType::Local {
         return None;
     }
@@ -188,10 +193,7 @@ pub(crate) fn acp_layout(
             Some(next_field(x, &mut y, w, INPUT_H)),
         ),
     };
-    let (hint, install) = match hint {
-        Some((rect, well)) => (Some(rect), Some(well)),
-        None => (None, None),
-    };
+    let (hint, install) = hint.unzip();
     let footer = Rect::xywh(x, y - FIELD_GAP + FOOTER_GAP, w, BUTTON_H);
     let primary_w = button_width_estimate(primary_label(ui, settings, target), false);
     let primary = Rect::xywh(x + w - primary_w, footer.origin.y, primary_w, BUTTON_H);
@@ -425,7 +427,7 @@ pub(crate) fn paint_acp_detail(
         let label = fit_text(
             cx,
             t_settings(ui, "settings.agents.notInstalledHint"),
-            (hint.size.x - 24.0).max(0.0),
+            (hint.size.x - HINT_LABEL_X).max(0.0),
             LABEL_FONT,
         );
         text(
@@ -435,10 +437,11 @@ pub(crate) fn paint_acp_detail(
             theme.muted_foreground,
             400,
             SETTINGS_FONT_FAMILY,
-            hint.origin.x + 24.0,
+            hint.origin.x + HINT_LABEL_X,
             chrome::centred_baseline(label_row, LABEL_FONT),
         );
-        let copied = install::copied(settings.install_command_copied.as_ref(), command, now_ms);
+        let copied =
+            install::shows_copied(settings.install_command_copied.as_ref(), command, now_ms);
         install::paint_command(cx, theme, &well, command, copied);
     }
     paint_footer(cx, theme, settings, ui, &layout, target);
@@ -521,6 +524,44 @@ mod tests {
 
     fn detail() -> Rect {
         Rect::xywh(300.0, 100.0, 460.0, 600.0)
+    }
+
+    /// #304: a missing preset's install command wraps inside the hint at
+    /// every detail width down to the narrowest modal's, sits above the
+    /// Environment field's label, and its copy button resolves.
+    #[test]
+    fn a_missing_presets_install_command_stays_inside_its_hint() {
+        let mut settings = AgentSettings::default();
+        settings.begin_acp_agent_draft();
+        let ui = EditorUiState::default();
+        for preset in ACP_AGENT_PRESETS.iter() {
+            settings
+                .acp_preset_installed
+                .insert(preset.id.into(), false);
+            settings.fill_acp_draft_from_preset(Some(preset.id));
+            let target = acp_target(&settings, &AgentsEntry::AcpDraft).expect("draft");
+            for w in [96.0, 140.0, 220.0, 300.0, 460.0, 660.0] {
+                let layout = acp_layout(Rect::xywh(300.0, 100.0, w, 600.0), &settings, &ui, target);
+                let case = format!("{} w={w}", preset.id);
+                let (hint, well) = (layout.hint.expect(&case), layout.install.expect(&case));
+                let bottom = |rect: Rect| rect.origin.y + rect.size.y;
+                assert!(bottom(well.well) <= bottom(hint) + 0.01, "{case}");
+                assert!(bottom(well.copy) <= bottom(well.well) + 0.01, "{case}");
+                let env = layout.env.expect(&case);
+                assert!(bottom(hint) <= env.origin.y - chrome::LABEL_H, "{case}");
+                let lines = install::wrap_command(preset.install_hint, well.columns);
+                assert_eq!(
+                    lines.concat().replace(' ', ""),
+                    preset.install_hint.replace(' ', ""),
+                    "{case}"
+                );
+                let centre = Point2D::new(
+                    well.copy.origin.x + well.copy.size.x / 2.0,
+                    well.copy.origin.y + well.copy.size.y / 2.0,
+                );
+                assert_eq!(acp_hit(&layout, centre), AcpHit::CopyInstall, "{case}");
+            }
+        }
     }
 
     #[test]

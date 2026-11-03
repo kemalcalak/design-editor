@@ -171,9 +171,12 @@ pub enum AgentSettingsHit {
     FetchBuiltinModels(Option<usize>),
     /// Probe a CLI agent again without disconnecting it first.
     RecheckProvider(AgentProvider),
-    /// Copy the selected agent's install command (#304). Resolved from
-    /// the selection by the press arm so this enum stays `Copy`.
-    CopyInstallCommand,
+    /// Copy a missing CLI agent's install command (#304).
+    CopyCliInstall(AgentProvider),
+    /// Copy a missing ACP preset's install command: a saved agent by
+    /// index, or the draft (`None`) — like `ToggleAcpConnected` /
+    /// `SaveAcpAgentDraft`.
+    CopyAcpInstall(Option<usize>),
     /// Tick or untick a CLI agent's model — positional over the agent's
     /// discovered models for the same frame.
     ToggleCliModel {

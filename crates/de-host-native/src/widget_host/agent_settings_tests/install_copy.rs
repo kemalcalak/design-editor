@@ -51,7 +51,8 @@ fn copying_a_missing_cli_agents_install_command_queues_the_exact_text() {
     // Full-size modal, then the 640 px window floor (the modal's minimum).
     for (w, h) in [(1200.0, 1000.0), (640.0, 400.0)] {
         let mut host = missing_claude();
-        assert!(press_at(&mut host, AgentSettingsHit::CopyInstallCommand, w, h));
+        let copy = AgentSettingsHit::CopyCliInstall(AgentProvider::ClaudeCode);
+        assert!(press_at(&mut host, copy, w, h));
         let state = host.editor_state();
         assert_eq!(
             state.chat.pending_copy_text.as_deref(),
@@ -75,14 +76,20 @@ fn copying_a_missing_cli_agents_install_command_queues_the_exact_text() {
 #[test]
 fn an_installed_agent_offers_no_copy_button() {
     let mut host = missing_claude();
-    let connection = &mut host.editor_state_mut().editor_ui.agent_settings.provider_connection
-        [AgentProvider::ClaudeCode.index()];
+    let connection = &mut host
+        .editor_state_mut()
+        .editor_ui
+        .agent_settings
+        .provider_connection[AgentProvider::ClaudeCode.index()];
     connection.not_installed = false;
     connection.phase = ProviderConnectPhase::Idle;
     let panel = AgentSettingsPanel::for_editor(host.editor_state());
     let rect = panel.rect(1200.0, 1000.0);
     assert_eq!(
-        panel.point_for_hit(rect, AgentSettingsHit::CopyInstallCommand),
+        panel.point_for_hit(
+            rect,
+            AgentSettingsHit::CopyCliInstall(AgentProvider::ClaudeCode)
+        ),
         None
     );
 }
@@ -99,7 +106,8 @@ fn copying_a_missing_acp_presets_install_hint_queues_the_exact_text() {
     settings.select_agents_entry(AgentsEntry::AcpDraft);
     for (w, h) in [(1200.0, 1000.0), (640.0, 400.0)] {
         host.editor_state_mut().chat.pending_copy_text = None;
-        assert!(press_at(&mut host, AgentSettingsHit::CopyInstallCommand, w, h));
+        let copy = AgentSettingsHit::CopyAcpInstall(None);
+        assert!(press_at(&mut host, copy, w, h));
         assert_eq!(
             host.editor_state().chat.pending_copy_text.as_deref(),
             Some(KIMI_INSTALL),

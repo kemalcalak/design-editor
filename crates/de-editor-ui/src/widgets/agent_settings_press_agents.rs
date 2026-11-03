@@ -57,19 +57,26 @@ pub(crate) fn begin_acp_draft(state: &mut EditorState) {
     settings.begin_acp_agent_draft();
 }
 
-/// The install command the selected CLI or ACP agent's card shows, if
-/// any — the text its copy button puts on the clipboard (#304). Only the
-/// desktop lists those agents, so the selection is resolved as there.
-fn selected_install_command(settings: &AgentSettings) -> Option<String> {
-    use crate::widgets::{agent_settings_acp_detail as acp, agent_settings_cli_detail as cli};
-    let entry = settings.resolved_agents_entry(true)?;
-    match &entry {
-        AgentsEntry::Cli(provider) => cli::install_command(settings, *provider).map(str::to_string),
-        AgentsEntry::Acp(_) | AgentsEntry::AcpDraft => acp::acp_target(settings, &entry)
-            .and_then(|target| acp::install_hint(settings, target))
-            .map(str::to_string),
-        AgentsEntry::Builtin(_) | AgentsEntry::BuiltinDraft => None,
-    }
+/// The install command a copy button shows for an ACP agent (saved by
+/// index, or the draft), the text it puts on the clipboard (#304).
+fn acp_install_command(settings: &AgentSettings, index: Option<usize>) -> Option<String> {
+    use crate::widgets::agent_settings_acp_detail as acp;
+    let entry = match index {
+        Some(index) => AgentsEntry::Acp(settings.acp_agents.get(index)?.id.clone()),
+        None => AgentsEntry::AcpDraft,
+    };
+    let target = acp::acp_target(settings, &entry)?;
+    acp::install_hint(settings, target).map(str::to_string)
+}
+
+/// Start the copy button's check and hand the host the text to copy.
+fn copy_install_command(
+    state: &mut EditorState,
+    command: String,
+    now_ms: u64,
+) -> SettingsPressOutcome {
+    state.editor_ui.agent_settings.install_command_copied = Some((command.clone(), now_ms));
+    SettingsPressOutcome::effect(SettingsPress::CopyText(command))
 }
 
 /// The arms this module owns; `None` for every other hit.
@@ -198,14 +205,18 @@ pub(crate) fn apply_agents_hit(
             begin_acp_draft(state);
             focus_acp_agent_draft(state, AcpAgentField::Command, now_ms);
         }
-        AgentSettingsHit::CopyInstallCommand => {
+        AgentSettingsHit::CopyCliInstall(provider) => {
             commit(state);
-            let settings = &mut state.editor_ui.agent_settings;
-            let command = selected_install_command(settings)?;
-            settings.install_command_copied = Some((command.clone(), now_ms));
-            return Some(SettingsPressOutcome::effect(SettingsPress::CopyText(
-                command,
-            )));
+            let settings = &state.editor_ui.agent_settings;
+            let command =
+                crate::widgets::agent_settings_cli_detail::install_command(settings, provider)
+                    .map(str::to_string);
+            return command.map(|command| copy_install_command(state, command, now_ms));
+        }
+        AgentSettingsHit::CopyAcpInstall(index) => {
+            commit(state);
+            let command = acp_install_command(&state.editor_ui.agent_settings, index);
+            return command.map(|command| copy_install_command(state, command, now_ms));
         }
         _ => return None,
     }

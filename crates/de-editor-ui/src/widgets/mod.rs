@@ -301,7 +301,6 @@ mod agent_settings_agents_list;
 mod agent_settings_api_detail;
 mod agent_settings_caret;
 mod agent_settings_cli_detail;
-mod agent_settings_install_command;
 #[cfg(test)]
 mod agent_settings_connect_tests;
 #[cfg(test)]
@@ -318,6 +317,7 @@ pub mod agent_settings_images;
 mod agent_settings_images_parts;
 #[cfg(test)]
 mod agent_settings_images_profile_tests;
+mod agent_settings_install_command;
 pub mod agent_settings_mcp;
 mod agent_settings_metrics;
 pub mod agent_settings_panel;

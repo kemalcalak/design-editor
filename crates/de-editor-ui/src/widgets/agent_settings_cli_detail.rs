@@ -25,8 +25,12 @@ const EMPTY_H: f32 = 52.0;
 /// The not-installed card: the headline row above the command well.
 const HEAD_ROW_H: f32 = 52.0;
 const CARD_PAD: f32 = 14.0;
-/// Glyph and gap before the headline text.
-const HEADLINE_X: f32 = 16.0 + 18.0 + 14.0;
+/// The status glyph's inset and size, and the headline that follows it.
+const GLYPH_INSET: f32 = 16.0;
+const GLYPH: f32 = 18.0;
+const HEADLINE_X: f32 = GLYPH_INSET + GLYPH + 14.0;
+/// Space between the headline and a Check again on its row.
+const HEADLINE_GAP: f32 = 12.0;
 /// Check again stays on the headline row only while the headline keeps
 /// this much room; below it the button drops under the command.
 const MIN_HEADLINE_W: f32 = 96.0;
@@ -65,8 +69,10 @@ pub(crate) fn install_command(settings: &AgentSettings, provider: AgentProvider)
 pub(crate) struct CliLayout {
     pub(crate) status: Rect,
     pub(crate) recheck: Rect,
+    /// Check again sits on the headline row (else under the card's body).
+    pub(crate) recheck_beside: bool,
     /// The install command's well, when the agent is missing.
-    pub(crate) command: Option<CommandLayout>,
+    pub(crate) install: Option<CommandLayout>,
     pub(crate) models: Rect,
     pub(crate) model_rows: usize,
     pub(crate) footer: Rect,
@@ -94,7 +100,7 @@ pub(crate) fn cli_layout(
     let mut y = detail.origin.y + HEADER_H + BODY_TOP_GAP + LABEL_H;
     let recheck_w = button_width_estimate(t_settings(ui, "settings.agents.checkAgain"), true)
         .min((w - CARD_PAD * 2.0).max(0.0));
-    let (status, recheck, command) = match install_command(settings, provider) {
+    let (status, recheck, recheck_beside, install) = match install_command(settings, provider) {
         Some(text) => status_with_command(x, y, w, recheck_w, text),
         None => {
             let status = Rect::xywh(x, y, w, STATUS_H);
@@ -104,7 +110,7 @@ pub(crate) fn cli_layout(
                 recheck_w,
                 BUTTON_H,
             );
-            (status, recheck, None)
+            (status, recheck, true, None)
         }
     };
     y += status.size.y + FIELD_GAP + LABEL_H;
@@ -123,7 +129,8 @@ pub(crate) fn cli_layout(
     CliLayout {
         status,
         recheck,
-        command,
+        recheck_beside,
+        install,
         models,
         model_rows,
         footer,
@@ -141,7 +148,7 @@ fn status_with_command(
     w: f32,
     recheck_w: f32,
     command: &str,
-) -> (Rect, Rect, Option<CommandLayout>) {
+) -> (Rect, Rect, bool, Option<CommandLayout>) {
     let well = install::command_layout(
         x + CARD_PAD,
         y + HEAD_ROW_H,
@@ -149,7 +156,7 @@ fn status_with_command(
         command,
     );
     let well_bottom = well.well.origin.y + well.well.size.y;
-    let beside = w - CARD_PAD - recheck_w - 12.0 - HEADLINE_X >= MIN_HEADLINE_W;
+    let beside = w - CARD_PAD - recheck_w - HEADLINE_GAP - HEADLINE_X >= MIN_HEADLINE_W;
     let (recheck, bottom) = if beside {
         let recheck = Rect::xywh(
             x + w - CARD_PAD - recheck_w,
@@ -163,7 +170,7 @@ fn status_with_command(
         (recheck, well_bottom + 10.0 + BUTTON_H)
     };
     let status = Rect::xywh(x, y, w, bottom + CARD_PAD - y);
-    (status, recheck, Some(well))
+    (status, recheck, beside, Some(well))
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -180,8 +187,8 @@ pub(crate) fn cli_hit(settings: &AgentSettings, layout: &CliLayout, point: Point
         return CliHit::Recheck;
     }
     if layout
-        .command
-        .is_some_and(|command| command.copy.contains(point))
+        .install
+        .is_some_and(|install| install.copy.contains(point))
     {
         return CliHit::CopyInstall;
     }
@@ -238,7 +245,8 @@ fn status_lines(
             Icon::Terminal,
             theme.muted_foreground,
             t_settings(ui, "settings.agents.notInstalled").to_string(),
-            connection.install_command.clone().unwrap_or_default(),
+            // The command itself is painted in the card's command well.
+            String::new(),
         ),
         ProviderConnectPhase::Error => (
             Icon::AlertTriangle,
@@ -365,7 +373,6 @@ pub(crate) fn paint_cli_detail(
 }
 
 /// The status card's glyph, headline and detail line (or command well).
-#[allow(clippy::too_many_arguments)]
 fn paint_status_card(
     cx: &mut PaintCx<'_>,
     theme: &Theme,
@@ -376,18 +383,16 @@ fn paint_status_card(
     now_ms: u64,
 ) {
     let (icon, color, headline, detail_line) = status_lines(theme, ui, settings, provider);
-    let glyph = 18.0;
-    let x = layout.status.origin.x + 16.0;
+    let x = layout.status.origin.x + GLYPH_INSET;
     let text_x = layout.status.origin.x + HEADLINE_X;
-    // The headline runs up to Check again when they share a row.
-    let row_h = if layout.command.is_some() {
+    let row_h = if layout.install.is_some() {
         HEAD_ROW_H
     } else {
         STATUS_H
     };
-    let shares_row = layout.recheck.origin.y < layout.status.origin.y + row_h;
-    let right = if shares_row {
-        layout.recheck.origin.x - 12.0
+    // The headline runs up to Check again when they share a row.
+    let right = if layout.recheck_beside {
+        layout.recheck.origin.x - HEADLINE_GAP
     } else {
         layout.status.origin.x + layout.status.size.x - CARD_PAD
     };
@@ -395,14 +400,14 @@ fn paint_status_card(
     draw_icon(
         cx.backend,
         icon,
-        Point2D::new(x, layout.status.origin.y + (row_h - glyph) / 2.0),
-        glyph,
+        Point2D::new(x, layout.status.origin.y + (row_h - GLYPH) / 2.0),
+        GLYPH,
         color,
         1.7,
     );
     let headline = fit_text(cx, &headline, budget, VALUE_FONT + 0.5);
     if let (Some(command_layout), Some(command)) =
-        (layout.command, install_command(settings, provider))
+        (layout.install, install_command(settings, provider))
     {
         let row = Rect::xywh(
             layout.status.origin.x,
@@ -420,7 +425,8 @@ fn paint_status_card(
             text_x,
             chrome::centred_baseline(row, VALUE_FONT + 0.5),
         );
-        let copied = install::copied(settings.install_command_copied.as_ref(), command, now_ms);
+        let copied =
+            install::shows_copied(settings.install_command_copied.as_ref(), command, now_ms);
         install::paint_command(cx, theme, &command_layout, command, copied);
         return;
     }
@@ -496,9 +502,8 @@ mod tests {
                 connection.install_command = Some(command.into());
                 for w in [96.0, 140.0, 220.0, 300.0, 460.0, 660.0] {
                     let detail = Rect::xywh(300.0, 100.0, w, 600.0);
-                    let layout =
-                        cli_layout(detail, &settings, &ui, &[], AgentProvider::ClaudeCode);
-                    let well = layout.command.expect("a missing agent shows its command");
+                    let layout = cli_layout(detail, &settings, &ui, &[], AgentProvider::ClaudeCode);
+                    let well = layout.install.expect("a missing agent shows its command");
                     let case = format!("{locale:?} {command} w={w}");
                     assert!(!overlaps(layout.recheck, well.well), "{case}");
                     assert!(inside(well.well, layout.status), "{case}");
@@ -530,7 +535,7 @@ mod tests {
             &[],
             AgentProvider::ClaudeCode,
         );
-        assert!(layout.command.is_none());
+        assert!(layout.install.is_none());
         assert_eq!(layout.status.size.y, STATUS_H);
     }
 

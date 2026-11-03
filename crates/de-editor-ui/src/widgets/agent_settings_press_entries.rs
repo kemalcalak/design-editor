@@ -397,7 +397,8 @@ pub(crate) fn apply_entry_hit(
         | AgentSettingsHit::ToggleApiKeyReveal
         | AgentSettingsHit::FetchBuiltinModels(_)
         | AgentSettingsHit::RecheckProvider(_)
-        | AgentSettingsHit::CopyInstallCommand
+        | AgentSettingsHit::CopyCliInstall(_)
+        | AgentSettingsHit::CopyAcpInstall(_)
         | AgentSettingsHit::ToggleCliModel { .. }
         | AgentSettingsHit::SelectAcpPreset(_)
         | AgentSettingsHit::SetAcpConnection { .. } => {

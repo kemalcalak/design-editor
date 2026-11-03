@@ -16,7 +16,7 @@ pub(super) fn agents_body(content: Rect) -> Rect {
 }
 
 /// The Agents body width [`AgentSettingsPanel::content_total_height`]
-/// assumes when it has no panel: a full-size modal's. Most detail fields
+/// assumes, since it is given no panel rect: a full-size modal's. Most detail fields
 /// keep their height at any width, but an install command wraps (#304),
 /// so scrolling measures at the real width instead.
 const AGENTS_BODY_REFERENCE_W: f32 = 704.0;
