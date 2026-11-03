@@ -42,7 +42,7 @@ mod stack;
 
 #[path = "mapper_box.rs"]
 mod box_model;
-pub(crate) use box_model::{box_insets, enter_box};
+pub(crate) use box_model::{box_insets, enter_box, padding_from_sides};
 
 #[path = "mapper_node_access.rs"]
 pub(crate) mod node_access;

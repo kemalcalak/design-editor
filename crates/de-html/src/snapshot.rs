@@ -1,4 +1,4 @@
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::{BTreeMap, BTreeSet, HashMap};
 
 use jian_ops_schema::constraints::{Constraints, HConstraint, VConstraint};
 use jian_ops_schema::node::base::{NumberOrExpression, PenNodeBase};
@@ -17,6 +17,10 @@ use crate::{
     HtmlImportResult, MAX_OUTPUT_NODES,
 };
 
+#[path = "snapshot_auto_layout.rs"]
+mod auto_layout;
+#[path = "snapshot_icon.rs"]
+mod icon;
 #[path = "snapshot_stack.rs"]
 mod snapshot_stack;
 #[path = "snapshot_text.rs"]
@@ -204,6 +208,11 @@ struct SnapshotCtx<'a> {
     /// whose own colour is transparent picks this up instead (see
     /// `map_element`).
     text_fill_override: Option<String>,
+    /// Auto-layout pass only: whether each laid-out frame's content decides
+    /// its `(width, height)`, keyed by node id (read by its parent).
+    auto_hug: HashMap<String, (bool, bool)>,
+    /// Counter for the `row` / `spacer` frames the auto-layout pass adds.
+    auxiliary_ids: usize,
 }
 
 impl<'a> SnapshotCtx<'a> {
@@ -218,6 +227,8 @@ impl<'a> SnapshotCtx<'a> {
             tainted_images: 0,
             page_background: None,
             text_fill_override: None,
+            auto_hug: HashMap::new(),
+            auxiliary_ids: 0,
         }
     }
 
@@ -254,7 +265,9 @@ impl<'a> SnapshotCtx<'a> {
             // every importer understands and, when the capture could reduce it
             // to one flat fill, native path data. `"vector"` is an interim
             // capture shape that carried the path data alone.
-            Some("image") | Some("vector") => self.map_vector_or_image(object, rect, parent_rect),
+            Some("image") | Some("vector") => self
+                .map_icon(object, rect, parent_rect)
+                .or_else(|| self.map_vector_or_image(object, rect, parent_rect)),
             _ => {
                 self.warn_once(ImportWarning::SnapshotUnknownKind);
                 None
@@ -286,6 +299,7 @@ impl<'a> SnapshotCtx<'a> {
         root_name: Option<&str>,
     ) -> Option<PenNode> {
         let id = self.allocate_id()?;
+        let node_id = id.clone();
         let styles = style_map(object);
         let mut container = self.container_from_styles(&styles, rect, true);
         container.layout = Some(LayoutMode::None);
@@ -306,6 +320,7 @@ impl<'a> SnapshotCtx<'a> {
         }
         if container.clip_content == Some(true)
             && !has_corner_radius(&container)
+            && !is_scroll_container(&styles)
             && clip_is_inert(object, rect)
         {
             // `overflow: hidden` on a box that nothing overflowed clips
@@ -347,6 +362,23 @@ impl<'a> SnapshotCtx<'a> {
         // `position: static`, so the children's stacking depends on *this*
         // element's `display`.
         let flex_or_grid_parent = snapshot_stack::is_flex_or_grid(styles.get("display"));
+        // A multi-colour `<svg>` arrives as an element of path fragments:
+        // artwork, not flow, so it stays pinned.
+        let artwork = object.get("tag").and_then(Value::as_str) == Some("svg");
+        if self.opts.snapshot_auto_layout && !artwork {
+            let laid = self.auto_children(object, &styles, rect, flex_or_grid_parent);
+            self.text_fill_override = saved_text_fill;
+            let hug = laid.hug;
+            let children = laid.apply(&mut container);
+            if parent_rect.is_none() && hug.1 {
+                // The page root keeps its width and grows downward.
+                container.height = Some(SizingBehavior::Keyword(
+                    jian_ops_schema::sizing::SizingKeyword::FitContent,
+                ));
+            }
+            self.auto_hug.insert(node_id, hug);
+            return Some(frame_with(base, container, children));
+        }
         // Map in DOM order (id allocation and the node budget must follow the
         // capture), then re-lay the survivors into canonical front-to-back
         // order. Snapshot frames position every child explicitly, so this
@@ -366,24 +398,7 @@ impl<'a> SnapshotCtx<'a> {
             .unwrap_or_default();
         let children = snapshot_stack::to_front_to_back(ordered);
         self.text_fill_override = saved_text_fill;
-        Some(PenNode::Frame(FrameNode {
-            base,
-            container,
-            breakpoint: None,
-            placeholder: None,
-            children: Some(children),
-            image_search_query: None,
-            reusable: None,
-            slot: None,
-            state: None,
-            bindings: None,
-            events: None,
-            lifecycle: None,
-            semantics: None,
-            gestures: None,
-            route: None,
-            screen: None,
-        }))
+        Some(frame_with(base, container, children))
     }
 
     fn map_image(
@@ -643,9 +658,40 @@ impl<'a> SnapshotCtx<'a> {
     }
 }
 
+fn frame_with(base: PenNodeBase, container: ContainerProps, children: Vec<PenNode>) -> PenNode {
+    PenNode::Frame(FrameNode {
+        base,
+        container,
+        breakpoint: None,
+        placeholder: None,
+        children: Some(children),
+        image_search_query: None,
+        reusable: None,
+        slot: None,
+        state: None,
+        bindings: None,
+        events: None,
+        lifecycle: None,
+        semantics: None,
+        gestures: None,
+        route: None,
+        screen: None,
+    })
+}
+
 /// Half a CSS pixel: the rounding the capture applies to every rect, so
 /// anything smaller is noise rather than real overflow.
 const OVERFLOW_EPSILON: f64 = 0.5;
+
+/// `overflow: auto | scroll`: a scroll container clips whatever it holds
+/// once its content grows, even if everything fit when it was captured.
+fn is_scroll_container(styles: &BTreeMap<String, String>) -> bool {
+    styles.get("overflow").is_some_and(|value| {
+        value
+            .split_whitespace()
+            .any(|axis| matches!(axis, "auto" | "scroll" | "overlay"))
+    })
+}
 
 /// Does this container round any of its corners?
 fn has_corner_radius(container: &ContainerProps) -> bool {

@@ -96,6 +96,15 @@ pub struct HtmlImportOptions {
     pub base_font_size: f64,
     pub document_name: Option<String>,
     pub base_url: Option<String>,
+    /// Browser snapshots only: rebuild flex / block flow as auto-layout
+    /// frames (`horizontal` / `vertical`, gap, padding, sizing modes) instead
+    /// of absolutely positioned boxes, so editing a label or a padding
+    /// reflows its parent. See `snapshot_auto_layout`.
+    pub snapshot_auto_layout: bool,
+    /// Which icon names the host's catalog can paint, by `(family, name)`.
+    /// A captured lucide `<svg>` becomes an `icon_font` node only for a name
+    /// this accepts; without it the vector / image fallback stays.
+    pub icon_known: Option<fn(&str, &str) -> bool>,
 }
 
 /// The 16:10 fallback applied when the caller does not pin a viewport height.
@@ -120,6 +129,8 @@ impl Default for HtmlImportOptions {
             base_font_size: 16.0,
             document_name: None,
             base_url: None,
+            snapshot_auto_layout: false,
+            icon_known: None,
         }
     }
 }
@@ -319,6 +330,7 @@ pub fn import_html_with_resources(
         base_font_size: root_font_size,
         document_name: opts.document_name.clone(),
         base_url: resource_base.clone(),
+        ..HtmlImportOptions::default()
     };
     let mut image_cache = resources::ImageResourceCache::default();
     if !body_display_none {

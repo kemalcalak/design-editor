@@ -319,6 +319,25 @@ fn canvas_actions_insert_beside_a_root_node_and_let_placement_handle_nested_ones
         ),
         "got {imported:?}"
     );
+    let auto = call(
+        &tool,
+        &[
+            ("action", "import-to-canvas"),
+            ("nodeId", "b"),
+            ("layout", "auto"),
+        ],
+    );
+    assert!(
+        matches!(
+            auto,
+            ToolOutcome::OkWithCommand(_, EditorCommand::InsertSubtree { .. })
+        ),
+        "got {auto:?}"
+    );
+    assert!(matches!(
+        call(&tool, &[("action", "import-to-canvas"), ("layout", "flex")]),
+        ToolOutcome::Err(ToolErrorCode::InvalidArgument, m) if m.contains("unknown layout")
+    ));
 }
 
 #[test]

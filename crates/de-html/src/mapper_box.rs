@@ -20,7 +20,14 @@ pub(super) fn clips_content(style: &ComputedStyle, context: &mut MapCtx<'_>) -> 
     let clips = ["overflow-x", "overflow-y", "overflow"]
         .into_iter()
         .filter_map(|name| style.get(name))
-        .map(|value| value.trim().to_ascii_lowercase())
+        // A computed `overflow` with different axes serializes as two
+        // values ("hidden auto"); each counts.
+        .flat_map(|value| {
+            value
+                .split_whitespace()
+                .map(str::to_ascii_lowercase)
+                .collect::<Vec<_>>()
+        })
         .filter(|value| {
             matches!(
                 value.as_str(),
@@ -52,10 +59,15 @@ pub(super) fn map_padding(
     ];
     let padding_values = padding_names.map(|name| resolve(style, name, context));
     let values = std::array::from_fn(|index| padding_values[index].unwrap_or(0.0) + border[index]);
+    padding_from_sides(values)
+}
+
+/// `[top, right, bottom, left]` as the shortest `Padding`: none, uniform or
+/// per side.
+pub(crate) fn padding_from_sides(values: [f64; 4]) -> Option<Padding> {
     if values.iter().all(|value| value.abs() <= f64::EPSILON) {
-        return None;
-    }
-    if values.iter().all(|value| *value == values[0]) {
+        None
+    } else if values.iter().all(|value| *value == values[0]) {
         Some(Padding::Uniform(values[0]))
     } else {
         Some(Padding::LtrB(values))
