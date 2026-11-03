@@ -175,6 +175,18 @@ fn strokes_and_shadows_leave_the_layout_box_alone() {
 }
 
 #[test]
+fn an_ellipsis_keeps_the_text_on_one_cut_line() {
+    let doc = load(
+        r#"{"version":"1.0","children":[{"type":"text","id":"t","content":"A long label","textGrowth":"fixed-width-height","textOverflow":"ellipsis","width":80,"height":20}]}"#,
+    );
+    let html = css(&doc);
+    assert!(html.contains("white-space: pre;"), "{html}");
+    assert!(!html.contains("pre-wrap"), "{html}");
+    assert!(html.contains("text-overflow: ellipsis;"), "{html}");
+    assert!(html.contains("overflow: hidden;"), "{html}");
+}
+
+#[test]
 fn text_growth_controls_wrapping() {
     let html = css(&fixture("card"));
     assert!(

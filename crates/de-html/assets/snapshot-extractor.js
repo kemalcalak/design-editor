@@ -81,6 +81,9 @@
     "letter-spacing",
     "text-align",
     "white-space",
+    // Read off the run's own element (the `truncate` span), so a run the
+    // browser cut short with "…" keeps cutting after an edit.
+    "text-overflow",
   ];
   // Per-run overrides carried on a folded inline block's `segments` (see
   // `buildInlineText`). These are the properties an inline `<a>` / `<code>` /
@@ -118,6 +121,7 @@
     position: "static",
     "z-index": "auto",
     "white-space": "normal",
+    "text-overflow": "clip",
     "text-decoration-line": "none",
     display: "block",
   };
@@ -1144,6 +1148,76 @@
     return out;
   }
 
+  // `<input>` types that draw a line of text the user typed.
+  var TEXT_INPUT_TYPES = {
+    text: true, search: true, email: true, url: true, tel: true, number: true,
+  };
+
+  // A form field draws its text (the value, else the placeholder) with no
+  // DOM text node behind it, so walking the children found nothing and the
+  // field imported as an empty box. Returns that text as a run placed in
+  // the content box the way the browser draws it: a one-line input centres
+  // its line vertically, a textarea starts at the top. The width is the
+  // run's measured advance, kept inside the content box.
+  function buildFieldText(element, tag, computed, rect) {
+    var isInput =
+      tag === "input" && TEXT_INPUT_TYPES[(element.type || "text").toLowerCase()];
+    if (!isInput && tag !== "textarea") return [];
+    var text = element.value || "";
+    var paint = computed;
+    if (!text) {
+      text = element.placeholder || "";
+      paint = window.getComputedStyle(element, "::placeholder");
+    }
+    text = text.replace(/\s+/g, " ").trim();
+    if (!text || !takeNode()) return [];
+    var px = function (key) {
+      return parseFloat(computed.getPropertyValue(key)) || 0;
+    };
+    var left = rect.left + px("border-left-width") + px("padding-left");
+    var top = rect.top + px("border-top-width") + px("padding-top");
+    var width = rect.right - px("border-right-width") - px("padding-right") - left;
+    var height = rect.bottom - px("border-bottom-width") - px("padding-bottom") - top;
+    var fontSize = px("font-size");
+    var lineHeight = px("line-height") || fontSize * 1.2;
+    var context = document.createElement("canvas").getContext("2d");
+    context.font = [
+      computed.fontStyle,
+      computed.fontWeight,
+      computed.fontSize,
+      computed.fontFamily,
+    ].join(" ");
+    var advance = context.measureText(text).width;
+    // A textarea wraps inside its box and scrolls the rest away.
+    var lines = isInput || advance <= width ? 1 : Math.ceil(advance / Math.max(width, 1));
+    lines = Math.max(1, Math.min(lines, Math.floor(height / lineHeight) || 1));
+    var styles = copyStyles(computed, TEXT_STYLE_KEYS);
+    styles.color = paint.color;
+    var runWidth = Math.max(0, Math.min(advance, width));
+    if (isInput) {
+      styles["white-space"] = "nowrap";
+      // An input scrolls a value longer than the box; the run keeps its
+      // whole width and is cut there, as the field clips it.
+      if (advance > width) {
+        styles["text-overflow"] = "ellipsis";
+        runWidth = advance;
+      }
+    }
+    // The field's own `text-align` places a shorter run (amount, OTP).
+    var align = computed.textAlign;
+    var slack = Math.max(0, width - runWidth);
+    var shift = align === "center" ? slack / 2 : align === "right" || align === "end" ? slack : 0;
+    var box = {
+      left: left + shift,
+      top: isInput ? top + (height - lineHeight) / 2 : top,
+      width: runWidth,
+      height: lineHeight * lines,
+    };
+    return [
+      { kind: "text", rect: pageRect(box), text: text, lines: lines, styles: styles },
+    ];
+  }
+
   function buildElement(element) {
     var tag = tagOf(element);
     if (SKIP_TAGS[tag]) return null;
@@ -1211,8 +1285,12 @@
       Array.prototype.forEach.call(element.shadowRoot.childNodes, collect);
       flushRun();
     }
-    Array.prototype.forEach.call(element.childNodes, collect);
+    // A textarea's child text is its default value, which `buildFieldText`
+    // already reads (as the current value).
+    if (tag !== "textarea") Array.prototype.forEach.call(element.childNodes, collect);
     flushRun();
+    var field = buildFieldText(element, tag, computed, rect);
+    for (var f = 0; f < field.length; f += 1) children.push(field[f]);
     var result = {
       kind: "element",
       tag: tag,

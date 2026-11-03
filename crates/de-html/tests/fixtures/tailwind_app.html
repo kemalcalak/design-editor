@@ -43,6 +43,29 @@
     .card h2 { font-size: 16px; line-height: 24px; font-weight: 600; }
     .card p { color: #64748b; }
 
+    /* #298: what an auto-layout import must keep editable — a centred
+       empty state, content-sized pills (one `w-fit justify-between`, the
+       shadcn select trigger), a `truncate` row and form placeholders. */
+    .assistant { width: 640px; display: flex; flex-direction: column; gap: 12px; }
+    .empty { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 24px; border-width: 1px; border-radius: 8px; }
+    .empty-title { font-size: 20px; line-height: 28px; font-weight: 600; }
+    .empty-sub { color: #64748b; }
+    .note { text-align: center; color: #64748b; }
+    .blank { display: flex; height: 96px; align-items: center; justify-content: center; border-width: 1px; border-style: dashed; border-radius: 8px; }
+    .blank-text { text-align: center; }
+    .blank-text h2 { font-size: 16px; line-height: 24px; font-weight: 600; }
+    .blank-text p { color: #64748b; }
+    .toolbar { display: flex; gap: 8px; }
+    .pill { display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 12px; border-width: 1px; border-radius: 9999px; }
+    .select { display: flex; width: fit-content; align-items: center; justify-content: space-between; gap: 8px; height: 32px; padding: 0 12px; border-width: 1px; border-radius: 6px; }
+    .thread { display: flex; align-items: center; gap: 8px; width: 240px; height: 36px; padding: 0 8px; border-radius: 6px; background: #f1f5f9; }
+    .truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+    .composer, .field { font: inherit; color: inherit; margin: 0; border-width: 1px; }
+    .composer { display: block; height: 80px; padding: 12px; border-radius: 8px; resize: none; }
+    .field { width: 320px; height: 36px; padding: 0 12px; border-radius: 6px; }
+    .composer::placeholder, .field::placeholder { color: #94a3b8; }
+    .amount { width: 160px; text-align: right; }
+
     svg.lucide { width: 16px; height: 16px; flex-shrink: 0; }
   </style>
 </head>
@@ -103,6 +126,25 @@
           <div class="card"><h2>Customers</h2><p>312 new customers</p></div>
           <div class="card"><h2>Refunds</h2><p>14 refunds</p></div>
           <div class="card"><h2>Conversion</h2><p>3.2% of visits</p></div>
+        </div>
+        <div class="assistant">
+          <div class="empty">
+            <svg class="lucide lucide-message-square" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            <h2 class="empty-title">How can I help you today?</h2>
+            <p class="empty-sub">Ask about orders, customers or refunds</p>
+          </div>
+          <p class="note">Answers use the last thirty days of data</p>
+          <div class="blank"><div class="blank-text"><h2>Nothing here yet</h2><p>Start a new chat</p></div></div>
+          <div class="toolbar">
+            <button class="pill"><svg class="lucide lucide-sparkles" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/></svg><span>Claude Sonnet</span><svg class="lucide lucide-chevron-down" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
+            <button class="select"><svg class="lucide lucide-globe" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg><span>Web search</span><svg class="lucide lucide-chevron-down" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
+            <button class="pill"><svg class="lucide lucide-paperclip" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg><span>Attach</span></button>
+          </div>
+          <div class="thread"><svg class="lucide lucide-message-square" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span class="truncate">Jira Ekip Kanalına Mesaj Gönderme Talimatları ve Örnekleri</span></div>
+          <textarea class="composer" placeholder="Send a message…"></textarea>
+          <input class="field" placeholder="Search threads">
+          <input class="field" value="https://acme.example.com/reports/quarterly/2026/revenue-by-region">
+          <input class="field amount" value="1,284.00">
         </div>
       </section>
     </main>

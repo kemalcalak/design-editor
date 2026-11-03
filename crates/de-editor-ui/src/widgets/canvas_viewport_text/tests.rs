@@ -422,3 +422,45 @@ fn segment_boundary_maps_onto_wrapped_lines() {
     // "rld" starts after "wo"'s 2-glyph advance on line 1.
     assert_eq!(backend.origins[2].x, 20.0);
 }
+
+#[test]
+fn an_ellipsis_node_paints_its_kept_prefix_and_the_mark() {
+    // 10 px a char: "hello world" is 110 px in a 60 px box, so "hello"
+    // and "…" paint, the mark right after the prefix.
+    let mut node = text_node("hello world");
+    node.bounds = Rect::xywh(0.0, 0.0, 60.0, 20.0);
+    node.text_ellipsis = true;
+    let mut backend = CaptureBackend::default();
+    let mut cx = PaintCx {
+        backend: &mut backend,
+    };
+
+    paint_text_node(&mut cx, &node, node.bounds, 1.0, &None);
+
+    assert_eq!(
+        backend.contents,
+        vec!["hello".to_string(), ELLIPSIS.to_string()]
+    );
+    assert_eq!(backend.origins[1].x, 50.0);
+}
+
+#[test]
+fn an_edited_ellipsis_node_paints_its_whole_line() {
+    let mut node = text_node("hello world");
+    node.bounds = Rect::xywh(0.0, 0.0, 60.0, 20.0);
+    node.text_ellipsis = true;
+    let edit = EditCaret {
+        editing: "t".to_string(),
+        input: jian_core::text_input::TextInputState::with_text("hello world"),
+        now_ms: 0,
+        selection_color: Color::BLUE,
+    };
+    let mut backend = CaptureBackend::default();
+    let mut cx = PaintCx {
+        backend: &mut backend,
+    };
+
+    paint_text_node(&mut cx, &node, node.bounds, 1.0, &Some(edit));
+
+    assert_eq!(backend.contents, vec!["hello world".to_string()]);
+}

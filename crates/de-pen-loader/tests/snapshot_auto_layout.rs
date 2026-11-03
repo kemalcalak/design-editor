@@ -8,27 +8,31 @@ use serde_json::Value;
 
 const SNAPSHOT: &str = include_str!("../../de-html/tests/fixtures/tailwind_app_snapshot.json");
 
-/// Captured text runs and lucide icons: `(label, x, centre y)`.
-fn captured(node: &Value, out: &mut Vec<(String, f64, f64)>) {
+/// A placed label: `(label, left x, right x, centre y)`.
+type Placed = (String, f64, f64, f64);
+
+/// Captured text runs and lucide icons.
+fn captured(node: &Value, out: &mut Vec<Placed>) {
     let rect = &node["rect"];
-    let (x, y, h) = (
+    let (x, y, w, h) = (
         rect["x"].as_f64().unwrap_or(0.0),
         rect["y"].as_f64().unwrap_or(0.0),
+        rect["w"].as_f64().unwrap_or(0.0),
         rect["h"].as_f64().unwrap_or(0.0),
     );
     if let Some(text) = node["text"].as_str() {
-        out.push((text.to_string(), x, y + h / 2.0));
+        out.push((text.to_string(), x, x + w, y + h / 2.0));
     }
     if let Some(name) = node["icon"]["names"][0].as_str() {
-        out.push((name.to_string(), x, y + h / 2.0));
+        out.push((name.to_string(), x, x + w, y + h / 2.0));
     }
     for child in node["children"].as_array().into_iter().flatten() {
         captured(child, out);
     }
 }
 
-/// Laid-out text runs and icons: `(label, x, centre y)`.
-fn laid_out(nodes: &[NodePayload], out: &mut Vec<(String, f64, f64)>) {
+/// Laid-out text runs and icons.
+fn laid_out(nodes: &[NodePayload], out: &mut Vec<Placed>) {
     for node in nodes {
         let label = match node.kind.as_str() {
             "text" => node.text.clone(),
@@ -36,7 +40,8 @@ fn laid_out(nodes: &[NodePayload], out: &mut Vec<(String, f64, f64)>) {
             _ => None,
         };
         if let Some(label) = label {
-            out.push((label, node.x as f64, (node.y + node.h / 2.0) as f64));
+            let (x, w) = (node.x as f64, node.w as f64);
+            out.push((label, x, x + w, (node.y + node.h / 2.0) as f64));
         }
         laid_out(&node.children, out);
     }
@@ -61,14 +66,22 @@ fn auto_layout_import_lands_where_the_browser_drew_it() {
         &mut browser,
     );
 
+    // Windows CI lays text out with the character-count estimate instead
+    // of skia (`DE_TEST_ESTIMATE_TEXT_MEASURE`, see `adapter.rs`), so there
+    // a label after measured text (the chevron after a pill's label) or a
+    // centred one lands wherever the estimate's widths put it; only the
+    // rows (y) are checked.
+    let estimated =
+        cfg!(target_os = "windows") && std::env::var_os("DE_TEST_ESTIMATE_TEXT_MEASURE").is_some();
     let mut checked = 0;
-    for (label, x, centre) in &placed {
-        // Duplicated labels ("Overview" is a nav item and the heading) pair
-        // with the nearest capture.
-        let Some((_, bx, by)) = browser
+    for (label, x, right, centre) in &placed {
+        // Duplicated labels ("Overview" is a nav item and the heading, two
+        // pills end in a chevron) pair with the nearest capture.
+        let distance = |(_, cx, _, cy): &&Placed| (cy - centre).abs() + (cx - x).abs();
+        let Some((_, bx, b_right, by)) = browser
             .iter()
-            .filter(|(captured, _, _)| captured == label)
-            .min_by(|a, b| ((a.2 - centre).abs()).total_cmp(&(b.2 - centre).abs()))
+            .filter(|(captured, _, _, _)| captured == label)
+            .min_by(|a, b| distance(a).total_cmp(&distance(b)))
         else {
             continue; // the folded paragraph has no single-line twin
         };
@@ -79,8 +92,16 @@ fn auto_layout_import_lands_where_the_browser_drew_it() {
         // Right of the title row everything hangs off the "New report"
         // button's width, which depends on the fonts of the machine running
         // the test; left-anchored positions do not.
+        // A centred or right-aligned label is anchored by its centre or
+        // its right edge, and its left edge moves with the font's width.
         if *bx < 1700.0 {
-            assert!((x - bx).abs() <= 2.0, "{label}: x {x} vs {bx}");
+            let anchored = (x - bx).abs() <= 2.0
+                || ((x + right) / 2.0 - (bx + b_right) / 2.0).abs() <= 2.0
+                || (right - b_right).abs() <= 2.0;
+            assert!(
+                anchored || estimated,
+                "{label}: x {x}..{right} vs {bx}..{b_right}"
+            );
         }
         checked += 1;
     }
@@ -206,5 +227,153 @@ fn a_longer_label_and_a_larger_padding_reflow_their_parents() {
     assert!(
         (holder(&after, "li", "Reports").w - item.w).abs() <= 1.0,
         "the item keeps filling"
+    );
+}
+
+// #298: the `.assistant` block of the fixture — what has to stay editable
+// after an import, beyond landing in the right place.
+
+/// The laid-out text node reading `label`.
+fn text_node<'a>(nodes: &'a [NodePayload], label: &str) -> &'a NodePayload {
+    find(nodes, &|node| {
+        node.kind == "text" && node.text.as_deref() == Some(label)
+    })
+    .unwrap_or_else(|| panic!("text {label}"))
+}
+
+/// `doc` with the text reading `from` changed to `to`.
+fn relabel(
+    doc: &jian_ops_schema::PenDocument,
+    from: &str,
+    to: &str,
+) -> jian_ops_schema::PenDocument {
+    edited(doc, &|node| {
+        if node["content"] == from {
+            node["content"] = Value::from(to);
+        }
+    })
+}
+
+#[test]
+fn centred_content_stays_centred_after_a_label_edit() {
+    let doc = auto_import();
+    let before = laid(&doc);
+    for (label, longer) in [
+        // `items-center` on a flex column.
+        (
+            "How can I help you today?",
+            "How can I help you plan the next quarter?",
+        ),
+        // `text-align: center` on a block.
+        (
+            "Answers use the last thirty days of data",
+            "Answers use the last thirty days of data from every store",
+        ),
+        // ...on a content-sized block the heading sizes, centred by a
+        // `justify-center` flex box.
+        ("Nothing here yet", "Nothing here yet, start one below"),
+        ("Start a new chat", "Start a new chat with the assistant"),
+    ] {
+        let old = text_node(&before, label);
+        let after = laid(&relabel(&doc, label, longer));
+        let new = text_node(&after, longer);
+        assert!(new.w > old.w + 20.0, "{longer}: {} -> {}", old.w, new.w);
+        let centre = |node: &NodePayload| node.x + node.w / 2.0;
+        assert!(
+            (centre(new) - centre(old)).abs() <= 1.0,
+            "{label}: centre {} -> {}",
+            centre(old),
+            centre(new)
+        );
+    }
+}
+
+#[test]
+fn content_sized_pills_grow_with_their_label() {
+    let doc = auto_import();
+    let before = laid(&doc);
+    // An `inline-flex` pill, and a `w-fit justify-between` select trigger.
+    for (label, longer) in [
+        ("Claude Sonnet", "Claude Sonnet 4.5 Thinking"),
+        ("Web search", "Web search and news"),
+    ] {
+        let after = laid(&relabel(&doc, label, longer));
+        let grown = holder(&after, "button", longer).w - holder(&before, "button", label).w;
+        let text = text_node(&after, longer).w - text_node(&before, label).w;
+        assert!(text > 20.0, "{longer} is longer");
+        assert!(
+            (grown - text).abs() <= 1.0,
+            "{label}: pill +{grown}, label +{text}"
+        );
+        // The next pill moves along instead of being overlapped.
+        let attach = holder(&after, "button", "Attach");
+        let pill = holder(&after, "button", longer);
+        assert!(
+            attach.x >= pill.x + pill.w + 7.0,
+            "{label}: Attach at {}",
+            attach.x
+        );
+    }
+}
+
+#[test]
+fn a_truncated_row_keeps_its_ellipsis() {
+    const LABEL: &str = "Jira Ekip Kanalına Mesaj Gönderme Talimatları ve Örnekleri";
+    let doc = auto_import();
+    let check = |doc: &jian_ops_schema::PenDocument, label: &str| {
+        let nodes = laid(doc);
+        let row = holder(&nodes, "div", label);
+        let text = text_node(&nodes, label);
+        assert!(text.text_ellipsis, "{label} truncates with an ellipsis");
+        // Inside the row's 8 px padding, whatever the label's length.
+        assert!(
+            text.x + text.w <= row.x + row.w - 8.0 + 1.0,
+            "{label}: ends at {} in a row ending at {}",
+            text.x + text.w,
+            row.x + row.w
+        );
+    };
+    check(&doc, LABEL);
+    let longer = format!("{LABEL} için ayrıntılı bir rehber");
+    check(&relabel(&doc, LABEL, &longer), &longer);
+}
+
+#[test]
+fn form_fields_show_their_placeholder() {
+    let nodes = laid(&auto_import());
+    // `(label, x, centre y)` where Chrome drew the placeholder.
+    for (label, x, centre) in [
+        ("Send a message…", 389.0, 679.0),
+        ("Search threads", 389.0, 766.0),
+    ] {
+        let text = text_node(&nodes, label);
+        assert!((text.x - x).abs() <= 2.0, "{label}: x {}", text.x);
+        assert!(
+            (text.y + text.h / 2.0 - centre).abs() <= 2.0,
+            "{label}: centre y {}",
+            text.y + text.h / 2.0
+        );
+        // `::placeholder` colour: #94a3b8.
+        let fill = text.fill.expect("placeholder colour");
+        let expected = [148.0 / 255.0, 163.0 / 255.0, 184.0 / 255.0];
+        for (channel, want) in fill.iter().zip(expected) {
+            assert!((channel - want).abs() < 0.01, "{label}: {fill:?}");
+        }
+    }
+    // A value longer than its field is cut with "…" inside it.
+    const LINK: &str = "https://acme.example.com/reports/quarterly/2026/revenue-by-region";
+    let link = text_node(&nodes, LINK);
+    assert!(link.text_ellipsis, "{LINK} truncates");
+    assert!(
+        link.x + link.w <= 376.0 + 320.0 - 13.0 + 1.0,
+        "ends at {}",
+        link.x + link.w
+    );
+    // A `text-align: right` field keeps its value at the right edge.
+    let amount = text_node(&nodes, "1,284.00");
+    assert!(
+        (amount.x + amount.w - 523.0).abs() <= 2.0,
+        "ends at {}",
+        amount.x + amount.w
     );
 }

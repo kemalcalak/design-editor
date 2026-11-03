@@ -191,6 +191,18 @@ fn a_non_wrapping_text_node_keeps_its_newlines_without_wrapping() {
 }
 
 #[test]
+fn an_ellipsis_text_node_cuts_its_line_at_the_box() {
+    let mut node = text_node("t", 0.0, 0.0, "A long label");
+    node.text_ellipsis = true;
+
+    let body = body_of(board(vec![node]));
+
+    assert!(body.contains("white-space:pre;"), "{body}");
+    assert!(body.contains("overflow:hidden"), "{body}");
+    assert!(body.contains("text-overflow:ellipsis"), "{body}");
+}
+
+#[test]
 fn styled_runs_become_spans_without_breaking_the_flat_text() {
     let mut node = text_node("t", 0.0, 0.0, "plain BOLD plain");
     node.text_runs = vec![de_editor_ui::layout_scene::SceneTextRun {

@@ -21,8 +21,13 @@
 //! - Justify distributes the residual width across ASCII-space gaps on
 //!   every line except the last (TS `ck.TextAlign.Justify` behaviour);
 //!   gap-free (e.g. CJK) lines are left-aligned.
+//! - An ellipsis (`text_ellipsis`) cuts the painted line only, measured
+//!   in the node-level face; while the node is edited the whole line
+//!   shows, so the caret can reach the hidden tail.
 
 use crate::layout_scene::{SceneNode, SceneTextAlign, SceneTextRun};
+use crate::widgets::canvas_text_edit::{ellipsis_width, ELLIPSIS};
+use crate::widgets::canvas_text_wrap::TextFace;
 use crate::widgets::canvas_viewport::EditCaret;
 use crate::widgets::PaintCx;
 use crate::{Color, Point2D, Rect, RenderBackend, TextBaselineRequest, TextLayout};
@@ -219,6 +224,17 @@ fn resolved_slice_style(
             color: r.fill.unwrap_or(ink),
         },
     }
+}
+
+/// `style` with the colour `pass` paints in: mask ink for a mask pass, the
+/// outline colour for a stroke pass.
+fn pass_style(mut style: SliceStyle, pass: TextPass) -> SliceStyle {
+    match pass {
+        TextPass::FillMask | TextPass::Coverage => style.color = MASK_INK,
+        TextPass::Stroke { color, .. } => style.color = color,
+        _ => {}
+    }
+    style
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -550,19 +566,37 @@ pub(crate) fn paint_text_node_pass(
                 continue;
             }
             let line_start = layout.line_starts[idx];
-            let line_end = line_start + line.len();
-            let line_w = measure_line_slices(
-                cx.backend,
-                paint_node,
-                text,
-                line_start,
-                line_end,
-                font_size,
-                weight,
-                ink,
-                family,
-                letter_spacing,
-            );
+            // A cut line paints its kept prefix and a closing "…"; while
+            // it is edited the whole line shows, so the caret stays in it.
+            let cut = layout.ellipsis_cuts[idx].filter(|_| editing.is_none());
+            let line_end = line_start + cut.unwrap_or(line.len());
+            let ellipsis_w = match cut {
+                Some(kept) => ellipsis_width(
+                    cx.backend,
+                    kept,
+                    font_size,
+                    TextFace {
+                        family,
+                        weight,
+                        italic: paint_node.italic,
+                    },
+                    letter_spacing,
+                ),
+                None => 0.0,
+            };
+            let line_w = ellipsis_w
+                + measure_line_slices(
+                    cx.backend,
+                    paint_node,
+                    text,
+                    line_start,
+                    line_end,
+                    font_size,
+                    weight,
+                    ink,
+                    family,
+                    letter_spacing,
+                );
             let x0 = match paint_node.text_align {
                 SceneTextAlign::Center => {
                     world_rect.origin.x + (layout.align_width - line_w).max(0.0) / 2.0
@@ -582,19 +616,19 @@ pub(crate) fn paint_text_node_pass(
                 };
             let baseline_y = first_baseline_y + idx as f32 * layout.line_h;
             let mut x = x0;
+            let mut last_style = None;
             for_each_slice_range(
                 &paint_node.text_runs,
                 line_start,
                 line_end,
                 |start, end, run| {
                     let run = run.map(|i| &paint_node.text_runs[i]);
-                    let mut style = resolved_slice_style(paint_node, font_size, weight, ink, run);
-                    match pass {
-                        TextPass::FillMask | TextPass::Coverage => style.color = MASK_INK,
-                        TextPass::Stroke { color, .. } => style.color = color,
-                        _ => {}
-                    }
+                    let style = pass_style(
+                        resolved_slice_style(paint_node, font_size, weight, ink, run),
+                        pass,
+                    );
                     let draws = pass.paints_slice(run.is_some_and(|r| r.fill.is_some()));
+                    last_style = Some((style, draws));
                     let slice = &text[start..end];
                     let slice_x0 = x;
                     let (next_x, glyph_end) = draw_slice(
@@ -614,6 +648,26 @@ pub(crate) fn paint_text_node_pass(
                     x = next_x;
                 },
             );
+            // The mark takes the style of the text it follows.
+            if cut.is_some() {
+                let (style, draws) = last_style.unwrap_or_else(|| {
+                    let style = resolved_slice_style(paint_node, font_size, weight, ink, None);
+                    (pass_style(style, pass), pass.paints_slice(false))
+                });
+                if draws {
+                    draw_slice(
+                        cx.backend,
+                        ELLIPSIS,
+                        style,
+                        family,
+                        x,
+                        baseline_y,
+                        letter_spacing,
+                        0.0,
+                        Some(GlyphInk::from_pass(pass)),
+                    );
+                }
+            }
         }
     }
     if let (Some((start, end, _)), true) = (composition_range, pass.paints_caret()) {
