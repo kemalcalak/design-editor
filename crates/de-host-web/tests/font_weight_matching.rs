@@ -31,6 +31,7 @@ const weights = (list) => list.map((weight) => ({ tf: weight, weight, italic: fa
 assert(picked(weights([300, 500, 600]), 400).tf === 500, '400 tries 500 before lighter faces');
 assert(picked(weights([300, 600]), 450).tf === 300, '450 tries lighter faces before heavier ones');
 assert(picked(weights([200, 400]), 300).tf === 200, 'below 400 goes lighter first');
+assert(picked(weights([400, 500]), 300).tf === 400, 'below 400 with no lighter face takes the nearest heavier one');
 assert(picked(weights([500, 800]), 600).tf === 800, 'above 500 goes heavier first');
 assert(picked(weights([400, 500]), 600).tf === 500, 'above 500 falls back to the heaviest lighter face');
 
@@ -38,6 +39,11 @@ const slanted = [...regularBold,
   { tf: 'italic', weight: 400, italic: true, width: 5 },
   { tf: 'bold-italic', weight: 700, italic: true, width: 5 }];
 assert(picked(slanted, 500, true).tf === 'italic', 'an italic request keeps to italic faces');
+const slantedSystem = new Map([['arial', { tf: 'regular', faces: slanted }]]);
+assert(!opCkResolveRegisteredTypeface('Arial', new Map(), slantedSystem, new Map(), 400, true).syntheticItalic,
+  'a real italic face is not skewed again');
+assert(opCkResolveRegisteredTypeface('Arial', new Map(), new Map([['arial', { tf: 'regular', faces: regularBold }]]), new Map(), 400, true).syntheticItalic,
+  'an upright-only family skews italic text');
 assert(picked(slanted, 700, false).tf === 'bold', 'an upright request keeps to upright faces');
 const condensedBold = [{ tf: 'condensed-bold', weight: 700, italic: false, width: 3 }, ...regularBold];
 assert(picked(condensedBold, 700).tf === 'bold', 'a normal-width face wins over a condensed one');
@@ -52,7 +58,7 @@ let resolved = opCkResolveRegisteredTypeface('Arial', new Map(), system, new Map
 assert(resolved.tf === 'regular' && resolved.faceWeight === 400, 'Arial 500 resolves to Regular');
 const regularKey = resolved.key;
 resolved = opCkResolveRegisteredTypeface('Arial', new Map(), system, new Map(), 600, false);
-assert(resolved.tf === 'bold' && resolved.faceWeight === 700, 'Arial 600 resolves to Bold');
+assert(resolved.tf === 'bold' && resolved.faceWeight === 700 && !resolved.syntheticItalic, 'Arial 600 resolves to Bold');
 assert(resolved.key !== regularKey, 'each face gets its own cache key');
 resolved = opCkResolveRegisteredTypeface('Inter', new Map([['inter', { tf: 'inter' }]]), system, new Map(), 700, false);
 assert(resolved.tf === 'inter' && resolved.faceWeight === 400 && resolved.key === 'imported:inter',

@@ -93,7 +93,7 @@ mod tests {
     }
 
     #[test]
-    fn reads_weight_and_italic_from_os2() {
+    fn reads_os2_weight_and_defaults_unparseable_bytes_to_regular() {
         let style = |weight| FaceStyle {
             weight,
             italic: false,
