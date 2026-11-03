@@ -10,14 +10,11 @@ use jian_core::text_input::TextInputState;
 
 use super::layer_panel::LayerItem;
 use super::layer_panel_metrics::{
-    glyph_rect_in, layer_action_targets, layer_node_icon_x, LayerPanelMetrics,
+    glyph_rect_in, layer_action_targets, layer_indent, layer_label_x, layer_node_icon_x,
+    LayerPanelMetrics, ROW_TRAILING_PAD, TEXT_WIDTH_FACTOR,
 };
 
 pub(super) const ROW_FONT: f32 = 13.0;
-/// Heuristic avg-char-width factor for the chrome face (Manrope) at the
-/// row font — a touch wider than the old system face, so a page label
-/// ellipsizes before it runs under the delete glyph.
-const TEXT_WIDTH_FACTOR: f32 = 0.56;
 /// Corner radius of a row's selection / hover fill.
 pub(super) const ROW_RADIUS: f32 = 8.0;
 
@@ -150,11 +147,14 @@ pub(super) fn paint_layer_action_backing(
     }
 }
 
-pub(super) fn layer_content_clip_rect_with_metrics(row: Rect, renaming: bool) -> Rect {
-    let right_edge = if renaming {
-        row.origin.x + row.size.x - 8.0
-    } else {
+/// Clip for a layer row's content. The eye/lock gutter is reserved only
+/// while those actions show (`actions_visible`: hovered and not renaming);
+/// at rest the name runs to the row's trailing edge (#306).
+pub(super) fn layer_content_clip_rect_with_metrics(row: Rect, actions_visible: bool) -> Rect {
+    let right_edge = if actions_visible {
         layer_action_gutter_left(row)
+    } else {
+        row.origin.x + row.size.x - ROW_TRAILING_PAD
     };
     Rect {
         origin: row.origin,
@@ -166,10 +166,11 @@ pub(super) fn layer_label_available_width_with_metrics(
     row: Rect,
     label_x: f32,
     horizontal_offset: f32,
+    actions_visible: bool,
     renaming: bool,
 ) -> f32 {
     let screen_label_x = label_x - horizontal_offset;
-    let clip = layer_content_clip_rect_with_metrics(row, renaming);
+    let clip = layer_content_clip_rect_with_metrics(row, actions_visible);
     let right_edge = clip.origin.x + clip.size.x - if renaming { 2.0 } else { 0.0 };
     (right_edge - screen_label_x).max(0.0)
 }
@@ -201,7 +202,7 @@ pub(super) fn paint_drag_ghost(
     cx.backend.save();
     cx.backend
         .clip_rect(layer_content_clip_rect_with_metrics(row, false));
-    let indent = metrics.row_pad_x + ghost.depth as f32 * 12.0;
+    let indent = layer_indent(ghost.depth, row.size.x, metrics);
     let icon_x = layer_node_icon_x(row, indent);
     let icon_y = row.origin.y + 6.0;
     draw_icon(
@@ -212,8 +213,8 @@ pub(super) fn paint_drag_ghost(
         fg,
         1.4,
     );
-    let label_x = icon_x + metrics.glyph_size + 6.0;
-    let available_w = layer_label_available_width_with_metrics(row, label_x, 0.0, false);
+    let label_x = layer_label_x(row, indent, metrics);
+    let available_w = layer_label_available_width_with_metrics(row, label_x, 0.0, false, false);
     let display = truncate_to_fit_measured(cx.backend, &ghost.label, metrics.row_font, available_w);
     let label = TextLayout::single_run(
         &display,
