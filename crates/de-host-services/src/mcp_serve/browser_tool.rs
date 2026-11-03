@@ -14,7 +14,8 @@
 //! - `cdp` sends one DevTools command (`de_browser_render::CDP_DOMAINS`).
 //! - `screenshot-to-canvas` / `import-to-canvas` put the page into the
 //!   document as an image or as editable layers (the Chrome extension's
-//!   snapshot path).
+//!   snapshot path). An import also makes the fonts its text names
+//!   available where the host can (`browser_tool_fonts`, #301).
 //!
 //! A document whose pages the user has not let load (`browser_live`) keeps
 //! its nodes out of reach; addresses follow `browser_url_policy`. Calls
@@ -34,9 +35,13 @@ use de_mcp::{McpTool, ToolErrorCode, ToolOutcome};
 use serde_json::{json, Value};
 
 use super::browser_tool_canvas::{
-    collect_targets, import_command, install_canvas_picture, screenshot_command, BrowserTarget,
+    collect_targets, import_nodes, install_canvas_picture, place_import, screenshot_command,
+    BrowserTarget,
 };
 use super::browser_tool_driver::{PageCall, PageDriver, PageOp, PageReply, SessionDriver};
+use super::browser_tool_fonts::{decode_fetched, load_import_fonts, FontReport};
+use super::font_tools::NO_FONT_HOST;
+use crate::font_host::{self, FontHost};
 
 /// Every action, in the schema's order.
 pub(crate) const ACTIONS: [&str; 6] = [
@@ -64,6 +69,9 @@ pub struct BrowserTool {
     /// Where `./page.html` addresses resolve (#283).
     document_folder: Option<String>,
     driver: Arc<dyn PageDriver>,
+    /// Makes an import's fonts available; `None` where the host installs
+    /// no font host (the `--serve-web` daemon).
+    font_host: Option<&'static dyn FontHost>,
 }
 
 impl McpTool for BrowserTool {
@@ -81,7 +89,7 @@ impl McpTool for BrowserTool {
 
 /// Snapshot constructor: the document's browser nodes and the load gate.
 pub fn browser_tool_snapshot(state: &EditorState) -> BrowserTool {
-    BrowserTool::with_driver(state, Arc::new(SessionDriver))
+    BrowserTool::with_driver(state, Arc::new(SessionDriver)).with_font_host(font_host::installed())
 }
 
 impl BrowserTool {
@@ -91,7 +99,13 @@ impl BrowserTool {
             pages_allowed: state.editor_ui.browser_live.pages_allowed(),
             document_folder: state.editor_ui.document_folder.clone(),
             driver,
+            font_host: None,
         }
+    }
+
+    pub(crate) fn with_font_host(mut self, font_host: Option<&'static dyn FontHost>) -> Self {
+        self.font_host = font_host;
+        self
     }
 
     fn run(&self, args: &BTreeMap<String, String>) -> Result<ToolOutcome, ToolError> {
@@ -216,7 +230,18 @@ impl BrowserTool {
                 let PageReply::Snapshot(snapshot) = run(PageOp::Extract(selector))?.reply else {
                     return Err(internal());
                 };
-                Ok(import_command(&snapshot, target, auto_layout))
+                let mut result = import_nodes(&snapshot, auto_layout);
+                let fonts = self.font_host.map(|host| {
+                    let fetch = |urls: Vec<String>| {
+                        let count = urls.len();
+                        match run(PageOp::FetchFonts(urls)).map(|done| done.reply) {
+                            Ok(PageReply::Json(reply)) => decode_fetched(&reply, count),
+                            _ => vec![None; count],
+                        }
+                    };
+                    load_import_fonts(host, &mut result.nodes, &snapshot, &fetch)
+                });
+                Ok(with_font_report(place_import(result, target), fonts))
             }
         }
     }
@@ -239,6 +264,21 @@ impl BrowserTool {
         }
         Ok(Some(target))
     }
+}
+
+/// Add what the import did about fonts to its result. Without a font host
+/// nothing was loaded, and the result says so.
+fn with_font_report(outcome: ToolOutcome, fonts: Option<FontReport>) -> ToolOutcome {
+    let ToolOutcome::OkWithCommand(mut output, command) = outcome else {
+        return outcome;
+    };
+    match fonts {
+        Some(report) => report.write(&mut output),
+        None => {
+            output.insert("fonts".into(), format!("not loaded: {NO_FONT_HOST}"));
+        }
+    }
+    ToolOutcome::OkWithCommand(output, command)
 }
 
 /// `target`: `full-page` (default) or `query` (one element). There is no
