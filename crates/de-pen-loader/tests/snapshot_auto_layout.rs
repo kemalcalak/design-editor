@@ -8,27 +8,31 @@ use serde_json::Value;
 
 const SNAPSHOT: &str = include_str!("../../de-html/tests/fixtures/tailwind_app_snapshot.json");
 
-/// Captured text runs and lucide icons: `(label, x, centre y)`.
-fn captured(node: &Value, out: &mut Vec<(String, f64, f64)>) {
+/// A placed label: `(label, left x, right x, centre y)`.
+type Placed = (String, f64, f64, f64);
+
+/// Captured text runs and lucide icons.
+fn captured(node: &Value, out: &mut Vec<Placed>) {
     let rect = &node["rect"];
-    let (x, y, h) = (
+    let (x, y, w, h) = (
         rect["x"].as_f64().unwrap_or(0.0),
         rect["y"].as_f64().unwrap_or(0.0),
+        rect["w"].as_f64().unwrap_or(0.0),
         rect["h"].as_f64().unwrap_or(0.0),
     );
     if let Some(text) = node["text"].as_str() {
-        out.push((text.to_string(), x, y + h / 2.0));
+        out.push((text.to_string(), x, x + w, y + h / 2.0));
     }
     if let Some(name) = node["icon"]["names"][0].as_str() {
-        out.push((name.to_string(), x, y + h / 2.0));
+        out.push((name.to_string(), x, x + w, y + h / 2.0));
     }
     for child in node["children"].as_array().into_iter().flatten() {
         captured(child, out);
     }
 }
 
-/// Laid-out text runs and icons: `(label, x, centre y)`.
-fn laid_out(nodes: &[NodePayload], out: &mut Vec<(String, f64, f64)>) {
+/// Laid-out text runs and icons.
+fn laid_out(nodes: &[NodePayload], out: &mut Vec<Placed>) {
     for node in nodes {
         let label = match node.kind.as_str() {
             "text" => node.text.clone(),
@@ -36,7 +40,8 @@ fn laid_out(nodes: &[NodePayload], out: &mut Vec<(String, f64, f64)>) {
             _ => None,
         };
         if let Some(label) = label {
-            out.push((label, node.x as f64, (node.y + node.h / 2.0) as f64));
+            let (x, w) = (node.x as f64, node.w as f64);
+            out.push((label, x, x + w, (node.y + node.h / 2.0) as f64));
         }
         laid_out(&node.children, out);
     }
@@ -62,13 +67,13 @@ fn auto_layout_import_lands_where_the_browser_drew_it() {
     );
 
     let mut checked = 0;
-    for (label, x, centre) in &placed {
+    for (label, x, right, centre) in &placed {
         // Duplicated labels ("Overview" is a nav item and the heading, two
         // pills end in a chevron) pair with the nearest capture.
-        let distance = |(_, cx, cy): &&(String, f64, f64)| (cy - centre).abs() + (cx - x).abs();
-        let Some((_, bx, by)) = browser
+        let distance = |(_, cx, _, cy): &&Placed| (cy - centre).abs() + (cx - x).abs();
+        let Some((_, bx, b_right, by)) = browser
             .iter()
-            .filter(|(captured, _, _)| captured == label)
+            .filter(|(captured, _, _, _)| captured == label)
             .min_by(|a, b| distance(a).total_cmp(&distance(b)))
         else {
             continue; // the folded paragraph has no single-line twin
@@ -80,8 +85,13 @@ fn auto_layout_import_lands_where_the_browser_drew_it() {
         // Right of the title row everything hangs off the "New report"
         // button's width, which depends on the fonts of the machine running
         // the test; left-anchored positions do not.
+        // A centred or right-aligned label is anchored by its centre or
+        // its right edge, and its left edge moves with the font's width.
         if *bx < 1700.0 {
-            assert!((x - bx).abs() <= 2.0, "{label}: x {x} vs {bx}");
+            let anchored = (x - bx).abs() <= 2.0
+                || ((x + right) / 2.0 - (bx + b_right) / 2.0).abs() <= 2.0
+                || (right - b_right).abs() <= 2.0;
+            assert!(anchored, "{label}: x {x}..{right} vs {bx}..{b_right}");
         }
         checked += 1;
     }
