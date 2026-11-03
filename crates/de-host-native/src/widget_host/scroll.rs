@@ -448,6 +448,9 @@ impl WidgetHostNative {
         true
     }
 
+    /// Line-delta wheel through the zoom ladder. The desktop app no longer
+    /// calls it (#303 routes wheels through `apply_pan_gesture` /
+    /// `apply_pinch_gesture`); it stays as the tests' wheel seam.
     pub fn apply_wheel(
         &mut self,
         x: f32,
