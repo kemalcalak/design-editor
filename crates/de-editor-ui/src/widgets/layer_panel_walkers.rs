@@ -10,7 +10,7 @@
 //! conversion at the walk boundary is lossless).
 
 use crate::widgets::icons::Icon;
-use crate::widgets::layer_panel_metrics::LayerPanelMetrics;
+use crate::widgets::layer_panel_metrics::{layer_indent, LayerPanelMetrics};
 use crate::widgets::layer_panel_paint::{approx_text_width, ROW_FONT};
 use crate::Rect;
 use de_editor_core::NodeId;
@@ -211,8 +211,9 @@ pub(super) fn walk_excluding(
     }
 }
 
-fn layer_item_content_w(item: &LayerItem, metrics: LayerPanelMetrics) -> f32 {
-    let indent = metrics.row_pad_x + item.depth as f32 * 12.0;
+fn layer_item_content_w(item: &LayerItem, viewport_w: f32, metrics: LayerPanelMetrics) -> f32 {
+    // Rows inset 6 px either side of the panel (see `LayerPanel::paint`).
+    let indent = layer_indent(item.depth, viewport_w - 12.0, metrics);
     let label_w = approx_text_width(&item.label, metrics.row_font);
     6.0 + indent + 18.0 + 20.0 + label_w + 24.0
 }
@@ -224,7 +225,7 @@ pub(super) fn layers_content_width(
 ) -> f32 {
     items
         .iter()
-        .map(|item| layer_item_content_w(item, metrics))
+        .map(|item| layer_item_content_w(item, viewport_w, metrics))
         .fold(viewport_w, f32::max)
 }
 
