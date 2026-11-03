@@ -11,7 +11,7 @@ use de_editor_core::browser_live::{browser_layout, browser_render_request};
 use de_editor_core::pen_node_ext::PenNodeExt;
 use de_editor_core::{EditorCommand, EditorState, NodeId};
 use de_editor_ui::widgets::browser_textures;
-use de_html::{import_snapshot, HtmlImportOptions};
+use de_html::{import_snapshot, HtmlImportOptions, HtmlImportResult};
 use de_mcp::import_common::{import_result_to_outcome, ImportPlacement};
 use de_mcp::{ToolErrorCode, ToolOutcome};
 use jian_ops_schema::node::PenNode;
@@ -174,18 +174,18 @@ pub fn screenshot_command(
     ))
 }
 
-/// Turn the extractor's `snapshot` into editable layers beside `target`.
-pub fn import_command(
-    snapshot: &str,
-    target: Option<&BrowserTarget>,
-    auto_layout: bool,
-) -> ToolOutcome {
+/// The extractor's `snapshot` as editable layers.
+pub fn import_nodes(snapshot: &str, auto_layout: bool) -> HtmlImportResult {
     let options = HtmlImportOptions {
         snapshot_auto_layout: auto_layout,
         icon_known: Some(icon_known),
         ..HtmlImportOptions::default()
     };
-    let result = import_snapshot(snapshot, &options);
+    import_snapshot(snapshot, &options)
+}
+
+/// Insert imported layers beside `target`.
+pub fn place_import(result: HtmlImportResult, target: Option<&BrowserTarget>) -> ToolOutcome {
     let (x, y) = target.and_then(|t| t.beside).unwrap_or((0.0, 0.0));
     import_result_to_outcome(
         result,

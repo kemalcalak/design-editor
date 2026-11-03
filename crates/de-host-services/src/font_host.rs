@@ -13,6 +13,8 @@ use std::time::Duration;
 use de_editor_core::EditorState;
 use serde::Serialize;
 
+pub use crate::font_host_error::PageFaceError;
+
 /// What `load_fonts` did for one family (wire: camelCase).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -75,6 +77,17 @@ pub trait FontHost: Send + Sync {
 
     /// The document's families that render with a fallback face.
     fn font_issues(&self, state: &EditorState) -> Vec<FontIssue>;
+
+    /// Register the files a page's `@font-face` rules serve for `family`
+    /// (TTF, OTF, WOFF or WOFF2) for this session only: their license is
+    /// unknown, so they never enter the user's font store. Returns the
+    /// family the faces paint under, which is the file's own name and may
+    /// differ from the CSS one.
+    fn register_page_faces(
+        &self,
+        family: &str,
+        faces: Vec<Vec<u8>>,
+    ) -> Result<String, PageFaceError>;
 }
 
 static HOST: OnceLock<Box<dyn FontHost>> = OnceLock::new();
