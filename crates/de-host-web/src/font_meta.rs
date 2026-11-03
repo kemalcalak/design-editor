@@ -44,15 +44,44 @@ pub(crate) fn parse_family(bytes: &[u8]) -> Option<String> {
     typographic.or(family)
 }
 
+/// A face's style within its family, as CSS font matching reads it
+/// (`opCkMatchFontFace`).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) struct FaceStyle {
+    /// OS/2 weight class, 100–900.
+    pub weight: u16,
+    /// Italic or oblique.
+    pub italic: bool,
+    /// OS/2 width class, 1 (ultra-condensed) to 9; 5 is normal.
+    pub width: u16,
+}
+
+/// The OS/2 style of a face. Unparseable bytes read as Regular.
+pub(crate) fn parse_style(bytes: &[u8]) -> FaceStyle {
+    ttf_parser::Face::parse(bytes, 0)
+        .map(|face| FaceStyle {
+            weight: face.weight().to_number(),
+            italic: face.is_italic() || face.is_oblique(),
+            width: face.width().to_number(),
+        })
+        .unwrap_or(FaceStyle {
+            weight: 400,
+            italic: false,
+            width: 5,
+        })
+}
+
 #[cfg(test)]
 mod tests {
-    use super::parse_family;
+    use super::{parse_family, parse_style, FaceStyle};
 
     // A real bundled OFL font (shared with de-host-desktop). include_bytes from
     // a sibling crate's assets is a compile-time file read, not a dep edge.
     const INSTRUMENT_SERIF: &[u8] =
         include_bytes!("../../de-host-desktop/assets/fonts/InstrumentSerif-Regular.ttf");
     const OUTFIT_VF: &[u8] = include_bytes!("../../de-host-desktop/assets/fonts/Outfit-VF.ttf");
+    const DM_MONO_MEDIUM: &[u8] =
+        include_bytes!("../../de-host-desktop/assets/fonts/DMMono-Medium.ttf");
 
     #[test]
     fn extracts_family_from_real_fonts() {
@@ -61,6 +90,18 @@ mod tests {
             Some("Instrument Serif")
         );
         assert_eq!(parse_family(OUTFIT_VF).as_deref(), Some("Outfit"));
+    }
+
+    #[test]
+    fn reads_weight_and_italic_from_os2() {
+        let style = |weight| FaceStyle {
+            weight,
+            italic: false,
+            width: 5,
+        };
+        assert_eq!(parse_style(INSTRUMENT_SERIF), style(400));
+        assert_eq!(parse_style(DM_MONO_MEDIUM), style(500));
+        assert_eq!(parse_style(b"not a font"), style(400));
     }
 
     #[test]
