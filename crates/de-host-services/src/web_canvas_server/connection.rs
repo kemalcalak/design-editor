@@ -214,6 +214,13 @@ pub(super) fn dispatch<S: Read + Write>(
     {
         return serve_browser_live(stream, req, state, cors_origin).map(|()| false);
     }
+    // Input for a live page in interaction mode (#324): screened above like
+    // the live channel; never takes the state lock.
+    if req.method == "POST" && req.path == de_editor_core::browser_input::BROWSER_INPUT_PATH {
+        let (status, body) = crate::web_browser_input::input_reply(&req.body);
+        crate::mcp_serve::write_mcp_http_response_with_origin(stream, status, &body, cors_origin)?;
+        return Ok(false);
+    }
     // The web editor's script runs (#219): pure like the conversion above,
     // so the program never runs under the state lock.
     if req.method == "POST" && req.path == "/api/scripts/run" {

@@ -419,6 +419,8 @@ fn sensitive_browser_posts_include_credentials_and_ai_routes() {
         "/api/ai/stream",
         // A page on another origin must not run programs on the daemon (#219).
         "/api/scripts/run",
+        // Nor drive a live page (#324).
+        de_editor_core::browser_input::BROWSER_INPUT_PATH,
     ] {
         let request = crate::mcp_serve::HttpRequest {
             method: "POST".into(),

@@ -12,6 +12,8 @@ pub(super) fn is_sensitive_browser_post(request: &crate::mcp_serve::HttpRequest)
             || request.path.starts_with("/api/figma/")
             || request.path == "/api/browser/snapshot"
             || request.path == de_editor_core::browser_live_wire::BROWSER_LIVE_PATH
+            // Driving a page is as sensitive as watching it (#324).
+            || request.path == de_editor_core::browser_input::BROWSER_INPUT_PATH
             // A page on another origin must not run programs here (#219).
             || request.path.starts_with("/api/scripts/"))
 }
