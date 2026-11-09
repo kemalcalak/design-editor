@@ -11,6 +11,171 @@
 # Write for users: short, plain, no issue numbers or technical terms.
 
 [[note]]
+version = "0.6.0"
+locale = "en-US"
+title = "Live web pages on the canvas"
+item = "Click a browser node to play its page live, animations and video included."
+item = "Double-click a browser node to use the page right on the canvas: click, scroll and type. Press Escape to leave."
+item = "In Preview, browser nodes play live and respond to clicks and typing straight away."
+item = "Imported web pages look closer to the original: gradient text keeps its colours, uppercase labels stay uppercase, open menus and moved elements stay where they were, and 3D canvases come in with their picture."
+item = "Full-screen pages import at full size, and scrolling areas can be imported fully expanded."
+item = "A new Live pages switch in Settings turns live playback off."
+
+[[note]]
+version = "0.6.0"
+locale = "tr"
+title = "Tuvalde canlı web sayfaları"
+item = "Bir tarayıcı düğümüne tıklayınca sayfası canlı oynuyor; animasyonlar ve videolar dahil."
+item = "Bir tarayıcı düğümüne çift tıklayıp sayfayı doğrudan tuvalde kullanabilirsiniz: tıklayın, kaydırın, yazın. Çıkmak için Escape'e basın."
+item = "Önizlemede tarayıcı düğümleri canlı oynuyor ve tıklamalara ve yazmaya hemen yanıt veriyor."
+item = "İçe aktarılan web sayfaları asıllarına daha çok benziyor: gradyan metin renklerini koruyor, büyük harfli etiketler büyük harf kalıyor, açık menüler ve kaydırılmış öğeler yerinde duruyor, 3B tuvaller görüntüleriyle geliyor."
+item = "Tam ekran sayfalar tam boyutta içe aktarılıyor; kaydırılan alanlar isterseniz tamamen açılmış olarak geliyor."
+item = "Ayarlar'daki yeni Canlı sayfalar anahtarı canlı oynatmayı kapatıyor."
+
+[[note]]
+version = "0.6.0"
+locale = "zh-CN"
+title = "画布上的实时网页"
+item = "点击浏览器节点即可实时播放其网页,包括动画和视频。"
+item = "双击浏览器节点即可直接在画布上使用网页:点击、滚动和输入。按 Esc 退出。"
+item = "在预览中,浏览器节点会实时播放,并立即响应点击和输入。"
+item = "导入的网页更接近原貌:渐变文字保留颜色,大写标签保持大写,展开的菜单和移动过的元素保持原位,3D 画布带着画面一起导入。"
+item = "全屏页面以完整尺寸导入,滚动区域可以完全展开后导入。"
+item = "设置中新增的「实时页面」开关可以关闭实时播放。"
+
+[[note]]
+version = "0.6.0"
+locale = "zh-TW"
+title = "畫布上的即時網頁"
+item = "點選瀏覽器節點即可即時播放其網頁,包括動畫和影片。"
+item = "雙擊瀏覽器節點即可直接在畫布上使用網頁:點選、捲動和輸入。按 Esc 離開。"
+item = "在預覽中,瀏覽器節點會即時播放,並立即回應點選和輸入。"
+item = "匯入的網頁更接近原貌:漸層文字保留顏色,大寫標籤維持大寫,展開的選單和移動過的元素維持原位,3D 畫布連同畫面一起匯入。"
+item = "全螢幕頁面以完整尺寸匯入,捲動區域可以完全展開後匯入。"
+item = "設定中新增的「即時頁面」開關可以關閉即時播放。"
+
+[[note]]
+version = "0.6.0"
+locale = "ja"
+title = "キャンバス上のライブ Web ページ"
+item = "ブラウザーノードをクリックすると、アニメーションや動画も含めてページがライブで再生されます。"
+item = "ブラウザーノードをダブルクリックすると、キャンバス上でそのままページを操作できます。クリック、スクロール、入力ができ、Esc で終了します。"
+item = "プレビューでは、ブラウザーノードがライブで再生され、クリックや入力にすぐ反応します。"
+item = "読み込んだ Web ページが元の見た目に近づきました。グラデーションの文字は色を保ち、大文字のラベルは大文字のまま、開いたメニューや移動した要素は元の位置に、3D キャンバスは画像付きで取り込まれます。"
+item = "全画面のページは実際のサイズで取り込まれ、スクロール領域はすべて展開した状態で取り込めます。"
+item = "設定の新しい「ライブページ」スイッチでライブ再生をオフにできます。"
+
+[[note]]
+version = "0.6.0"
+locale = "ko"
+title = "캔버스 위의 라이브 웹 페이지"
+item = "브라우저 노드를 클릭하면 애니메이션과 동영상을 포함해 페이지가 실시간으로 재생됩니다."
+item = "브라우저 노드를 더블클릭하면 캔버스에서 바로 페이지를 사용할 수 있습니다. 클릭, 스크롤, 입력이 가능하며 Esc로 나갑니다."
+item = "미리보기에서는 브라우저 노드가 실시간으로 재생되고 클릭과 입력에 바로 반응합니다."
+item = "가져온 웹 페이지가 원본에 더 가까워졌습니다. 그라데이션 텍스트는 색을 유지하고, 대문자 라벨은 대문자로 남으며, 열린 메뉴와 이동된 요소는 제자리에 있고, 3D 캔버스는 그림과 함께 들어옵니다."
+item = "전체 화면 페이지는 실제 크기로 가져오고, 스크롤 영역은 모두 펼친 상태로 가져올 수 있습니다."
+item = "설정의 새 라이브 페이지 스위치로 실시간 재생을 끌 수 있습니다."
+
+[[note]]
+version = "0.6.0"
+locale = "fr"
+title = "Des pages web en direct sur le canevas"
+item = "Cliquez sur un nœud navigateur pour lire sa page en direct, animations et vidéos comprises."
+item = "Double-cliquez sur un nœud navigateur pour utiliser la page directement sur le canevas : cliquez, faites défiler et tapez. Appuyez sur Échap pour quitter."
+item = "Dans l'aperçu, les nœuds navigateur sont lus en direct et réagissent tout de suite aux clics et à la saisie."
+item = "Les pages web importées ressemblent davantage à l'original : le texte en dégradé garde ses couleurs, les libellés en majuscules restent en majuscules, les menus ouverts et les éléments déplacés restent à leur place, et les canevas 3D arrivent avec leur image."
+item = "Les pages plein écran sont importées à leur taille réelle, et les zones défilantes peuvent être importées entièrement dépliées."
+item = "Un nouvel interrupteur Pages en direct dans les réglages désactive la lecture en direct."
+
+[[note]]
+version = "0.6.0"
+locale = "es"
+title = "Páginas web en vivo en el lienzo"
+item = "Haz clic en un nodo de navegador para reproducir su página en vivo, con animaciones y vídeo incluidos."
+item = "Haz doble clic en un nodo de navegador para usar la página directamente en el lienzo: haz clic, desplázate y escribe. Pulsa Escape para salir."
+item = "En la vista previa, los nodos de navegador se reproducen en vivo y responden al instante a los clics y a la escritura."
+item = "Las páginas web importadas se parecen más al original: el texto con degradado conserva sus colores, las etiquetas en mayúsculas siguen en mayúsculas, los menús abiertos y los elementos desplazados se quedan en su sitio, y los lienzos 3D llegan con su imagen."
+item = "Las páginas a pantalla completa se importan a tamaño completo, y las zonas con desplazamiento pueden importarse totalmente desplegadas."
+item = "Un nuevo interruptor Páginas en vivo en Ajustes desactiva la reproducción en vivo."
+
+[[note]]
+version = "0.6.0"
+locale = "de"
+title = "Live-Webseiten auf der Arbeitsfläche"
+item = "Klicken Sie auf einen Browser-Knoten, um seine Seite live abzuspielen, samt Animationen und Videos."
+item = "Doppelklicken Sie auf einen Browser-Knoten, um die Seite direkt auf der Arbeitsfläche zu bedienen: klicken, scrollen und tippen. Mit Esc verlassen Sie den Modus."
+item = "In der Vorschau laufen Browser-Knoten live und reagieren sofort auf Klicks und Eingaben."
+item = "Importierte Webseiten sehen dem Original ähnlicher: Text mit Farbverlauf behält seine Farben, Beschriftungen in Großbuchstaben bleiben groß, geöffnete Menüs und verschobene Elemente bleiben an ihrem Platz, und 3D-Canvas kommen mit ihrem Bild."
+item = "Vollbildseiten werden in voller Größe importiert, und scrollbare Bereiche lassen sich vollständig aufgeklappt importieren."
+item = "Ein neuer Schalter Live-Seiten in den Einstellungen schaltet die Live-Wiedergabe aus."
+
+[[note]]
+version = "0.6.0"
+locale = "pt"
+title = "Páginas web ao vivo na tela"
+item = "Clique em um nó de navegador para reproduzir a página ao vivo, com animações e vídeos."
+item = "Clique duas vezes em um nó de navegador para usar a página direto na tela: clique, role e digite. Pressione Esc para sair."
+item = "Na pré-visualização, os nós de navegador são reproduzidos ao vivo e respondem na hora a cliques e digitação."
+item = "Páginas web importadas ficam mais parecidas com o original: texto em degradê mantém as cores, rótulos em maiúsculas continuam em maiúsculas, menus abertos e elementos deslocados ficam no lugar, e telas 3D chegam com a imagem."
+item = "Páginas em tela cheia são importadas no tamanho completo, e áreas com rolagem podem ser importadas totalmente expandidas."
+item = "Um novo botão Páginas ao vivo nas Configurações desativa a reprodução ao vivo."
+
+[[note]]
+version = "0.6.0"
+locale = "ru"
+title = "Живые веб-страницы на холсте"
+item = "Щёлкните узел браузера, чтобы его страница воспроизводилась вживую, включая анимации и видео."
+item = "Дважды щёлкните узел браузера, чтобы пользоваться страницей прямо на холсте: нажимать, прокручивать и вводить текст. Чтобы выйти, нажмите Esc."
+item = "В предпросмотре узлы браузера воспроизводятся вживую и сразу отвечают на щелчки и ввод."
+item = "Импортированные веб-страницы ближе к оригиналу: градиентный текст сохраняет цвета, подписи заглавными буквами остаются заглавными, открытые меню и смещённые элементы остаются на месте, а 3D-холсты переносятся вместе с изображением."
+item = "Полноэкранные страницы импортируются в полном размере, а прокручиваемые области можно импортировать полностью развёрнутыми."
+item = "Новый переключатель «Живые страницы» в настройках отключает живое воспроизведение."
+
+[[note]]
+version = "0.6.0"
+locale = "hi"
+title = "कैनवस पर लाइव वेब पेज"
+item = "किसी ब्राउज़र नोड पर क्लिक करें और उसका पेज लाइव चलेगा, एनिमेशन और वीडियो समेत।"
+item = "किसी ब्राउज़र नोड पर डबल-क्लिक करके पेज को सीधे कैनवस पर इस्तेमाल करें: क्लिक करें, स्क्रॉल करें और टाइप करें। बाहर निकलने के लिए Esc दबाएँ।"
+item = "प्रीव्यू में ब्राउज़र नोड लाइव चलते हैं और क्लिक व टाइपिंग पर तुरंत प्रतिक्रिया देते हैं।"
+item = "इम्पोर्ट किए गए वेब पेज मूल के और करीब दिखते हैं: ग्रेडिएंट टेक्स्ट अपने रंग रखता है, बड़े अक्षरों वाले लेबल बड़े ही रहते हैं, खुले मेनू और खिसकाए गए एलिमेंट अपनी जगह पर रहते हैं, और 3D कैनवस अपनी तस्वीर के साथ आते हैं।"
+item = "फ़ुल-स्क्रीन पेज पूरे आकार में इम्पोर्ट होते हैं, और स्क्रॉल होने वाले हिस्से पूरी तरह खुले हुए इम्पोर्ट किए जा सकते हैं।"
+item = "सेटिंग्स में नया लाइव पेज स्विच लाइव चलना बंद करता है।"
+
+[[note]]
+version = "0.6.0"
+locale = "th"
+title = "หน้าเว็บสดบนแคนวาส"
+item = "คลิกโหนดเบราว์เซอร์เพื่อเล่นหน้าเว็บแบบสด รวมถึงแอนิเมชันและวิดีโอ"
+item = "ดับเบิลคลิกโหนดเบราว์เซอร์เพื่อใช้หน้าเว็บบนแคนวาสได้ทันที ทั้งคลิก เลื่อน และพิมพ์ กด Esc เพื่อออก"
+item = "ในการแสดงตัวอย่าง โหนดเบราว์เซอร์จะเล่นแบบสดและตอบสนองการคลิกและการพิมพ์ทันที"
+item = "หน้าเว็บที่นำเข้ามีหน้าตาใกล้ต้นฉบับมากขึ้น ข้อความไล่สียังคงสีเดิม ป้ายตัวพิมพ์ใหญ่ยังเป็นตัวพิมพ์ใหญ่ เมนูที่เปิดอยู่และองค์ประกอบที่ถูกเลื่อนอยู่ที่เดิม และแคนวาส 3D มาพร้อมภาพของมัน"
+item = "หน้าแบบเต็มหน้าจอนำเข้าในขนาดเต็ม และพื้นที่ที่เลื่อนได้สามารถนำเข้าแบบขยายเต็มได้"
+item = "สวิตช์หน้าสดใหม่ในการตั้งค่าใช้ปิดการเล่นแบบสด"
+
+[[note]]
+version = "0.6.0"
+locale = "vi"
+title = "Trang web trực tiếp trên canvas"
+item = "Nhấp vào một nút trình duyệt để phát trang của nó trực tiếp, kể cả hoạt ảnh và video."
+item = "Nhấp đúp vào một nút trình duyệt để dùng trang ngay trên canvas: nhấp, cuộn và gõ. Nhấn Esc để thoát."
+item = "Trong bản xem trước, các nút trình duyệt phát trực tiếp và phản hồi ngay khi bạn nhấp hoặc gõ."
+item = "Trang web được nhập trông gần với bản gốc hơn: chữ chuyển màu giữ nguyên màu, nhãn viết hoa vẫn viết hoa, menu đang mở và phần tử bị dịch chuyển giữ đúng vị trí, và canvas 3D được nhập kèm hình ảnh."
+item = "Trang toàn màn hình được nhập ở kích thước đầy đủ, và vùng cuộn có thể được nhập ở dạng mở rộng hoàn toàn."
+item = "Công tắc Trang trực tiếp mới trong Cài đặt dùng để tắt phát trực tiếp."
+
+[[note]]
+version = "0.6.0"
+locale = "id"
+title = "Halaman web langsung di kanvas"
+item = "Klik node browser untuk memutar halamannya secara langsung, termasuk animasi dan video."
+item = "Klik dua kali node browser untuk memakai halaman langsung di kanvas: klik, gulir, dan ketik. Tekan Esc untuk keluar."
+item = "Di pratinjau, node browser diputar secara langsung dan langsung merespons klik serta ketikan."
+item = "Halaman web yang diimpor terlihat lebih mirip aslinya: teks gradien mempertahankan warnanya, label huruf kapital tetap kapital, menu yang terbuka dan elemen yang digeser tetap di tempatnya, dan kanvas 3D masuk bersama gambarnya."
+item = "Halaman layar penuh diimpor dalam ukuran penuh, dan area yang dapat digulir bisa diimpor dalam keadaan terbuka penuh."
+item = "Sakelar Halaman langsung yang baru di Pengaturan mematikan pemutaran langsung."
+
+[[note]]
 version = "0.5.7"
 locale = "en-US"
 title = "Smoother scrolling and better web imports"
