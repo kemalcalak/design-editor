@@ -6,11 +6,15 @@ use std::collections::{BTreeMap, HashSet};
 use de_browser_render::{StreamSettings, Viewport};
 use de_editor_core::browser_live_wire::{BrowserLiveEntry, WEB_LIVE_MAX_FPS, WEB_LIVE_MAX_STREAMS};
 
-/// Frames are never wider or taller than this, whatever a client asks.
-const MAX_FRAME_WIDTH: u32 = 1024;
+// Frames are never wider or taller than these, whatever a client asks
+// (a selected node gets up to 2048 px, by its zoom).
+const MAX_FRAME_WIDTH: u32 = 2048;
 const MAX_FRAME_HEIGHT: u32 = 2048;
 /// Longest node key a client may send.
 const MAX_KEY_LEN: usize = 256;
+/// Entries of a set looked at; the rest are dropped unchecked, so a huge
+/// set costs no screening and no notices.
+const MAX_SET_ENTRIES: usize = 4 * WEB_LIVE_MAX_STREAMS;
 
 /// One stream as the daemon runs it.
 #[derive(Debug, Clone, PartialEq)]
@@ -45,7 +49,11 @@ pub(crate) fn select(
 ) -> Selection {
     let mut selection = Selection::default();
     let mut seen = HashSet::new();
-    for entry in entries {
+    for (index, entry) in entries.into_iter().enumerate() {
+        if index >= MAX_SET_ENTRIES {
+            selection.dropped.push(entry.key);
+            continue;
+        }
         if !seen.insert(entry.key.clone()) {
             continue;
         }

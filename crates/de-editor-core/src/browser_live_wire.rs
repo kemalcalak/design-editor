@@ -60,7 +60,8 @@ pub struct BrowserLiveSetReply {
     /// Keys whose address this server may not load.
     #[serde(default)]
     pub blocked: Vec<String>,
-    /// Keys whose entry was malformed or whose stream failed to start.
+    /// Keys whose entry was malformed, or whose stream failed to start or
+    /// ended and was not changed since (it is not retried until it is).
     #[serde(default)]
     pub failed: Vec<String>,
     /// Keys over [`WEB_LIVE_MAX_STREAMS`].

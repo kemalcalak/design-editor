@@ -223,8 +223,21 @@ fn the_selection_screens_checks_and_caps() {
     let mut zero = entry("z", "https://example.com", 1280);
     zero.frame_height = 0;
     let selection = select(vec![huge, zero], None, |_| true);
-    assert_eq!(selection.wanted[0].settings.max_width, 1024);
+    assert_eq!(selection.wanted[0].settings.max_width, 2048);
     assert_eq!(selection.invalid[0].0, "z");
+
+    // A huge set is not screened past its first entries.
+    let screened = AtomicUsize::new(0);
+    let many: Vec<_> = (0..100)
+        .map(|i| entry(&format!("k{i}"), "http://10.0.0.1/", 1280))
+        .collect();
+    let selection = select(many, None, |_| {
+        screened.fetch_add(1, Ordering::SeqCst);
+        false
+    });
+    assert_eq!(screened.load(Ordering::SeqCst), 12);
+    assert_eq!(selection.blocked.len(), 12);
+    assert_eq!(selection.dropped.len(), 88);
 }
 
 #[test]
@@ -267,7 +280,7 @@ fn the_plan_opens_resizes_and_stops() {
 }
 
 #[test]
-fn a_set_call_runs_at_most_three_streams_and_follows_changes() {
+fn a_set_call_runs_at_most_the_cap_and_follows_changes() {
     let (source, hub) = hub();
     let lease = hub.connect().unwrap();
     let id = lease.client.id.clone();

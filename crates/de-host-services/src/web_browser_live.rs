@@ -80,7 +80,8 @@ struct ClientState {
     /// The event stream ended; nothing may be added.
     closed: bool,
     streams: BTreeMap<String, Running>,
-    /// Specs whose stream failed; not reopened until the spec changes.
+    /// Specs whose stream failed to open or ended; not reopened until the
+    /// spec changes.
     failed: BTreeMap<String, LiveSpec>,
     /// Events for the writer besides frames.
     notices: Vec<BrowserLiveEvent>,
@@ -233,17 +234,7 @@ impl LiveLease<'_> {
         out: &mut S,
         cors_origin: Option<&str>,
     ) -> io::Result<()> {
-        let cors_line = cors_origin
-            .map(|origin| format!("Access-Control-Allow-Origin: {origin}\r\n"))
-            .unwrap_or_default();
-        let headers = format!(
-            "HTTP/1.1 200 OK\r\n\
-             Content-Type: text/event-stream\r\n\
-             Cache-Control: no-cache\r\n\
-             Connection: keep-alive\r\n\
-             {cors_line}\r\n"
-        );
-        out.write_all(headers.as_bytes())?;
+        crate::ai_proxy::write_sse_headers(out, cors_origin)?;
         let hello = BrowserLiveEvent::Hello {
             client: self.client.id.clone(),
         };
@@ -265,6 +256,9 @@ impl LiveLease<'_> {
         }
     }
 }
+
+/// How an open came out.
+type Opened = Result<Arc<dyn LiveStream>, BrowserRenderError>;
 
 /// What a set change does once its stops ran.
 struct Changes {
@@ -342,11 +336,7 @@ impl LiveClient {
             result = result.and_then(|()| stream.set_settings(spec.settings));
         }
         let mut state = lock(&self.state);
-        if state
-            .streams
-            .get(key)
-            .is_none_or(|running| running.id != id)
-        {
+        if !state.is_current(key, id) {
             return;
         }
         match result {
@@ -365,16 +355,14 @@ impl LiveClient {
     }
 
     /// Install the streams that opened; note the ones that did not.
-    fn finish_opens(
-        &self,
-        opens: Vec<(LiveSpec, Result<Arc<dyn LiveStream>, BrowserRenderError>)>,
-    ) {
-        let mut late = Vec::new();
+    fn finish_opens(&self, opens: Vec<(LiveSpec, Opened)>) {
+        // Opened after the client left, or replaced: stopped outside the lock.
+        let mut to_stop = Vec::new();
         {
             let mut state = lock(&self.state);
             for (spec, opened) in opens {
                 match opened {
-                    Ok(stream) if state.closed => late.push(stream),
+                    Ok(stream) if state.closed => to_stop.push(stream),
                     Ok(stream) => {
                         state.next_id += 1;
                         let running = Running {
@@ -383,55 +371,56 @@ impl LiveClient {
                             stream,
                         };
                         if let Some(old) = state.streams.insert(spec.key, running) {
-                            late.push(old.stream);
+                            to_stop.push(old.stream);
                         }
                     }
                     Err(error) => state.end(&spec.key, &spec, &error),
                 }
             }
         }
-        drop(late);
+        drop(to_stop);
     }
 
     /// The pending notices and the newest frame of each stream. Taking a
     /// frame here, right before it is written, is what paces the streams.
     fn drain(&self) -> Vec<BrowserLiveEvent> {
-        let (mut events, streams) = {
+        let streams: Vec<_> = lock(&self.state)
+            .streams
+            .iter()
+            .map(|(key, running)| (key.clone(), running.id, Arc::clone(&running.stream)))
+            .collect();
+        let taken: Vec<_> = streams
+            .into_iter()
+            .map(|(key, id, stream)| (key, id, stream.take_frame()))
+            .collect();
+        let (mut events, frames, removed) = {
             let mut state = lock(&self.state);
-            let streams: Vec<_> = state
-                .streams
-                .iter()
-                .map(|(key, running)| (key.clone(), running.id, Arc::clone(&running.stream)))
-                .collect();
-            (std::mem::take(&mut state.notices), streams)
-        };
-        let mut ended = Vec::new();
-        for (key, id, stream) in streams {
-            match stream.take_frame() {
-                Ok(Some(frame)) => events.push(frame_event(key, frame)),
-                Ok(None) => {}
-                Err(error) => ended.push((key, id, error)),
-            }
-        }
-        if !ended.is_empty() {
+            let mut frames = Vec::new();
             let mut removed = Vec::new();
-            let mut state = lock(&self.state);
-            for (key, id, error) in ended {
-                if state
-                    .streams
-                    .get(&key)
-                    .is_some_and(|running| running.id == id)
-                {
-                    if let Some(running) = state.streams.remove(&key) {
-                        state.end(&key, &running.spec, &error);
-                        removed.push(running);
+            for (key, id, taken) in taken {
+                // A set call may have stopped or reopened the key since:
+                // the old stream's frame must not go out under the key.
+                if !state.is_current(&key, id) {
+                    continue;
+                }
+                match taken {
+                    Ok(Some(frame)) => frames.push((key, frame)),
+                    Ok(None) => {}
+                    Err(error) => {
+                        if let Some(running) = state.streams.remove(&key) {
+                            state.end(&key, &running.spec, &error);
+                            removed.push(running);
+                        }
                     }
                 }
             }
-            events.append(&mut state.notices);
-            drop(state);
-            drop(removed);
-        }
+            (std::mem::take(&mut state.notices), frames, removed)
+        };
+        drop(removed);
+        let frames = frames
+            .into_iter()
+            .map(|(key, frame)| frame_event(key, frame));
+        events.extend(frames);
         events
     }
 
@@ -458,6 +447,13 @@ impl LiveClient {
 }
 
 impl ClientState {
+    /// Whether `key` still runs the stream `id`.
+    fn is_current(&self, key: &str, id: u64) -> bool {
+        self.streams
+            .get(key)
+            .is_some_and(|running| running.id == id)
+    }
+
     /// `key`'s stream ended or failed to start with `error`.
     fn end(&mut self, key: &str, spec: &LiveSpec, error: &BrowserRenderError) {
         self.failed.insert(key.to_string(), spec.clone());
