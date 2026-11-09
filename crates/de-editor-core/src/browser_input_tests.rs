@@ -149,3 +149,121 @@ fn the_batch_round_trips_as_camel_case_json() {
         serde_json::from_str(r#"{"type":"mouseMove","x":1,"y":2}"#).unwrap();
     assert_eq!(lean, mv(1.0, 2.0, 0));
 }
+
+fn down(button: MouseButton) -> BrowserInputEvent {
+    BrowserInputEvent::MouseDown {
+        x: 1.0,
+        y: 1.0,
+        button,
+        click_count: 1,
+        buttons: 0,
+        modifiers: InputModifiers::default(),
+    }
+}
+
+fn up(button: MouseButton) -> BrowserInputEvent {
+    BrowserInputEvent::MouseUp {
+        x: 1.0,
+        y: 1.0,
+        button,
+        click_count: 1,
+        buttons: 0,
+        modifiers: InputModifiers::default(),
+    }
+}
+
+fn key_down(code: &str) -> BrowserInputEvent {
+    BrowserInputEvent::KeyDown {
+        key: code.into(),
+        code: code.into(),
+        text: None,
+        modifiers: InputModifiers::default(),
+    }
+}
+
+fn key_up(code: &str) -> BrowserInputEvent {
+    BrowserInputEvent::KeyUp {
+        key: code.into(),
+        code: code.into(),
+        modifiers: InputModifiers::default(),
+    }
+}
+
+#[test]
+fn held_state_keeps_releases_and_presses_still_held() {
+    use MouseButton::{Left, Right};
+    let events = vec![
+        // Released here, pressed before: kept.
+        up(Left),
+        mv(1.0, 1.0, 0),
+        // A whole click: dropped.
+        down(Right),
+        up(Right),
+        // Pressed and still held (with a repeat): kept once, for its
+        // later release.
+        key_down("ShiftLeft"),
+        key_down("ShiftLeft"),
+        BrowserInputEvent::InsertText { text: "x".into() },
+        wheel(3.0, false),
+        // Released, its press sent earlier: kept once.
+        key_up("KeyA"),
+        key_up("KeyA"),
+    ];
+    assert_eq!(
+        keep_held_state(events),
+        vec![up(Left), key_down("ShiftLeft"), key_up("KeyA")]
+    );
+}
+
+#[test]
+fn a_release_after_a_kept_press_drops_both() {
+    use MouseButton::Left;
+    assert_eq!(
+        keep_held_state([up(Left), down(Left), up(Left)]),
+        vec![up(Left)]
+    );
+    assert!(keep_held_state([key_down("KeyB"), key_up("KeyB")]).is_empty());
+}
+
+#[test]
+fn a_full_queue_keeps_every_release() {
+    use MouseButton::Left;
+    let mut batch = InputBatch::new();
+    assert!(batch.extend_within(vec![down(Left), key_down("KeyQ")], 4));
+    assert!(batch.extend_within(vec![key_up("KeyQ")], 4));
+    // Over the limit: only what keeps held state right stays, the queued
+    // events included (each press goes with its release).
+    let more = vec![
+        wheel(1.0, false),
+        BrowserInputEvent::InsertText { text: "y".into() },
+        up(Left),
+    ];
+    assert!(!batch.extend_within(more, 4));
+    assert!(batch.is_empty(), "{:?}", batch.events());
+    // A release whose press already went out is kept past the limit.
+    let mut batch = InputBatch::new();
+    batch.extend([mv(1.0, 1.0, 1), wheel(1.0, false), wheel(1.0, true)]);
+    let more = vec![mv(2.0, 2.0, 0), up(Left), key_up("KeyZ")];
+    assert!(!batch.extend_within(more, 4));
+    assert_eq!(batch.events(), &[up(Left), key_up("KeyZ")]);
+}
+
+#[test]
+fn restored_events_go_back_in_front_as_held_state() {
+    use MouseButton::Left;
+    let mut batch = InputBatch::new();
+    batch.push(mv(9.0, 9.0, 0));
+    batch.restore_held_state(vec![mv(1.0, 1.0, 1), up(Left), key_down("KeyC")]);
+    assert_eq!(
+        batch.events(),
+        &[up(Left), key_down("KeyC"), mv(9.0, 9.0, 0)]
+    );
+    // Nothing held: nothing restored.
+    batch.restore_held_state(vec![mv(1.0, 1.0, 0)]);
+    assert_eq!(batch.len(), 3);
+}
+
+#[test]
+fn the_queue_limit_is_four_batches() {
+    assert_eq!(MAX_QUEUED_INPUT_EVENTS, 4 * MAX_INPUT_EVENTS);
+}

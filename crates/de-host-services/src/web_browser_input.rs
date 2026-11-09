@@ -32,7 +32,8 @@ pub(crate) enum InputRefusal {
     Malformed(String),
     /// The client does not stream that node (or no such client).
     NotLive,
-    /// The page is not keeping up: too many events wait for it.
+    /// The page is not keeping up: too many events wait for it. Only the
+    /// batch's releases and still-held presses were queued.
     Busy,
     /// The input could not be sent (no worker could start).
     Failed(String),

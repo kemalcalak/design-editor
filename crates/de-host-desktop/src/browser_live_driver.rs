@@ -16,14 +16,12 @@ use std::sync::mpsc::{RecvTimeoutError, TryRecvError};
 use std::thread;
 use std::time::{Duration, Instant};
 
-use de_browser_render::{
-    BrowserRenderError, PageInput, PageSessions, PageStream, StreamSettings, Viewport,
-};
-use de_editor_core::browser_input::{BrowserInputEvent, InputBatch};
-use de_editor_core::browser_input_cdp::cdp_calls;
+use de_browser_render::{BrowserRenderError, PageSessions, PageStream, StreamSettings, Viewport};
+use de_editor_core::browser_input::BrowserInputEvent;
 use de_editor_core::browser_stream::{node_page_session_key, BrowserStreamSpec};
 use skia_safe::ConditionallySend;
 
+use super::input::InputSender;
 use super::{DriverArgs, LiveFrame};
 use crate::DesktopEvent;
 
@@ -98,8 +96,11 @@ enum Exit {
 fn run(mut args: DriverArgs) {
     de_browser_render::start_idle_reaper();
     let key = node_page_session_key(&args.node_id);
+    // Outlives a reopen: a release still waiting goes to the next stream's
+    // tab (the same MCP tab, or a fresh page where it does nothing).
+    let mut input = InputSender::default();
     loop {
-        let stream = match open(&args, &key) {
+        let stream = match open(&args, &key, &mut input) {
             Ok(Some(stream)) => stream,
             Ok(None) => return,
             Err(error) => {
@@ -112,7 +113,8 @@ fn run(mut args: DriverArgs) {
                             args.spec = spec;
                             break;
                         }
-                        Ok(DriverControl::Taken | DriverControl::Input(_)) => {}
+                        Ok(DriverControl::Input(events)) => input.queue(events),
+                        Ok(DriverControl::Taken) => {}
                         Err(_) => return,
                     }
                 }
@@ -120,8 +122,10 @@ fn run(mut args: DriverArgs) {
             }
         };
         set_interrupt(&args, Some(stream.interrupt_handle()));
-        let exit = stream_frames(&mut args, &key, &stream);
+        let exit = stream_frames(&mut args, &key, &stream, &mut input);
         set_interrupt(&args, None);
+        // The connection was on this stream's tab.
+        input.disconnect();
         // Waits for the tab to close (or detach) on this thread.
         stream.stop();
         match exit {
@@ -133,8 +137,12 @@ fn run(mut args: DriverArgs) {
 
 /// Open the node's stream: on the MCP tab when one is kept for the node,
 /// else on a tab of its own. `Ok(None)` when the UI stopped the driver
-/// meanwhile.
-fn open(args: &DriverArgs, key: &str) -> Result<Option<PageStream>, BrowserRenderError> {
+/// meanwhile. Input that comes while it waits is queued on `input`.
+fn open(
+    args: &DriverArgs,
+    key: &str,
+    input: &mut InputSender,
+) -> Result<Option<PageStream>, BrowserRenderError> {
     let sessions = PageSessions::shared();
     while sessions.is_kept(key) {
         if let Some(stream) = sessions.stream(key, settings(&args.spec))? {
@@ -158,6 +166,7 @@ fn open(args: &DriverArgs, key: &str) -> Result<Option<PageStream>, BrowserRende
         // A call holds the tab right now: try again shortly.
         match args.control.recv_timeout(SHARE_CHECK) {
             Err(RecvTimeoutError::Disconnected) => return Ok(None),
+            Ok(DriverControl::Input(events)) => input.queue(events),
             _ => continue,
         }
     }
@@ -171,9 +180,13 @@ fn open(args: &DriverArgs, key: &str) -> Result<Option<PageStream>, BrowserRende
 }
 
 /// Hand frames to the UI until the stream must stop or reopen.
-fn stream_frames(args: &mut DriverArgs, key: &str, stream: &PageStream) -> Exit {
+fn stream_frames(
+    args: &mut DriverArgs,
+    key: &str,
+    stream: &PageStream,
+    input: &mut InputSender,
+) -> Exit {
     let mut share_checked = Instant::now();
-    let mut input = InputSender::default();
     loop {
         loop {
             match args.control.try_recv() {
@@ -189,7 +202,7 @@ fn stream_frames(args: &mut DriverArgs, key: &str, stream: &PageStream) -> Exit 
             }
         }
         // Everything queued meanwhile goes out as one coalesced batch.
-        input.send(&args.node_id, stream);
+        input.send(&args.node_id, || stream.input());
         if !stream.is_shared_tab()
             && share_checked.elapsed() >= SHARE_CHECK
             && PageSessions::shared().is_kept(key)
@@ -235,7 +248,7 @@ fn stream_frames(args: &mut DriverArgs, key: &str, stream: &PageStream) -> Exit 
             Ok(None) => {}
             Err(error) => {
                 eprintln!("[browser-live] {} stream ended: {error}", args.node_id);
-                return if wait_for_change(args, RETRY) {
+                return if wait_for_change(args, RETRY, input) {
                     Exit::Reopen
                 } else {
                     Exit::Stopped
@@ -292,8 +305,9 @@ fn apply_update(
 }
 
 /// Wait up to `delay` for an update (applied to `args.spec`). Returns
-/// false when the UI stopped the driver.
-fn wait_for_change(args: &mut DriverArgs, delay: Duration) -> bool {
+/// false when the UI stopped the driver. Input that comes meanwhile is
+/// queued on `input`.
+fn wait_for_change(args: &mut DriverArgs, delay: Duration, input: &mut InputSender) -> bool {
     let deadline = Instant::now() + delay;
     loop {
         let left = deadline.saturating_duration_since(Instant::now());
@@ -302,50 +316,10 @@ fn wait_for_change(args: &mut DriverArgs, delay: Duration) -> bool {
                 args.spec = spec;
                 return true;
             }
-            Ok(DriverControl::Taken | DriverControl::Input(_)) => {}
+            Ok(DriverControl::Input(events)) => input.queue(events),
+            Ok(DriverControl::Taken) => {}
             Err(RecvTimeoutError::Timeout) => return true,
             Err(RecvTimeoutError::Disconnected) => return false,
-        }
-    }
-}
-
-/// Page input waiting to go out, and the connection it goes out on (one
-/// of its own on the stream's tab, opened at the first input).
-#[derive(Default)]
-struct InputSender {
-    pending: InputBatch,
-    connection: Option<PageInput>,
-}
-
-impl InputSender {
-    fn queue(&mut self, events: Vec<BrowserInputEvent>) {
-        self.pending.extend(events);
-    }
-
-    /// Send what is pending, in order. A failed call drops the rest of the
-    /// batch (the page moved on) and the connection, which reopens with
-    /// the next input.
-    fn send(&mut self, node_id: &str, stream: &PageStream) {
-        if self.pending.is_empty() {
-            return;
-        }
-        let calls = cdp_calls(&self.pending.take(), cfg!(target_os = "macos"));
-        let connection = match self.connection.as_mut() {
-            Some(connection) => connection,
-            None => match stream.input() {
-                Ok(connection) => self.connection.insert(connection),
-                Err(error) => {
-                    eprintln!("[browser-live] {node_id} input: {error}");
-                    return;
-                }
-            },
-        };
-        for call in calls {
-            if let Err(error) = connection.dispatch(call.method, call.params) {
-                eprintln!("[browser-live] {node_id} input: {error}");
-                self.connection = None;
-                return;
-            }
         }
     }
 }
