@@ -223,3 +223,38 @@ fn a_new_document_stops_the_old_streams() {
     assert_eq!(rig.pump(true), [stop("sq-old", false)]);
     assert_eq!(rig.streams.running(), 0);
 }
+
+#[test]
+fn the_preview_streams_its_pages_without_a_selection_at_most_three() {
+    let _lock = lock_for_tests();
+    let ids = ["sq-pa", "sq-pb", "sq-pc", "sq-pd"];
+    let mut rig = Rig::new(&ids);
+    rig.state.editor_ui.preview.mode = true;
+    let shown = [
+        ("sq-pa", 100.0, 75.0),
+        ("sq-pb", 400.0, 300.0),
+        ("sq-pc", 300.0, 200.0),
+        ("sq-pd", 50.0, 40.0),
+    ];
+    let commands = rig.frame(&shown, true);
+    assert_eq!(started(&commands), ["sq-pa", "sq-pb", "sq-pc"]);
+    let BrowserStreamCommand::Start { spec, .. } = &commands[0] else {
+        unreachable!()
+    };
+    assert_eq!(spec.max_fps, DESKTOP_STREAM_FPS, "same tier as the canvas");
+    assert!(rig.pump(true).is_empty(), "a quiet frame does nothing");
+}
+
+#[test]
+fn leaving_the_preview_stops_its_streams_and_the_setting_off_keeps_stills() {
+    let _lock = lock_for_tests();
+    let mut rig = Rig::new(&["sq-prev"]);
+    let shown = [("sq-prev", 200.0, 150.0)];
+    rig.state.editor_ui.preview.mode = true;
+    rig.state.editor_ui.browser_live.set_live_pages(false);
+    assert!(rig.frame(&shown, true).is_empty(), "stills only");
+    rig.state.editor_ui.browser_live.set_live_pages(true);
+    assert_eq!(started(&rig.frame(&shown, true)), ["sq-prev"]);
+    rig.state.editor_ui.preview.mode = false;
+    assert_eq!(rig.frame(&shown, true), [stop("sq-prev", true)]);
+}

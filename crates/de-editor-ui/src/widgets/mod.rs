@@ -219,6 +219,8 @@ mod canvas_shader_images;
 mod canvas_shader_textures;
 // Interaction mode of a browser node (#324): routing both hosts share.
 pub mod browser_interact_flow;
+// Browser nodes as embedded pages in Preview (#324): paint record + input.
+pub mod browser_preview;
 // `pub` so both hosts can track the pointer for pointer-reactive shaders.
 pub mod browser_render_queue;
 pub mod browser_stream_queue;

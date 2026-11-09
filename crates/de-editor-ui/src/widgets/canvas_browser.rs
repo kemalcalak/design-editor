@@ -10,16 +10,18 @@
 //!
 //! Browsers are canvas-only, like annotations: they paint only while
 //! `canvas_viewport` paints the page (inside
-//! `canvas_annotation::with_annotations`); PNG and PDF exports,
-//! screenshots and mask sources leave them out.
+//! `canvas_annotation::with_annotations`) or the preview paints its
+//! scene (inside `browser_preview::with_clip`, #324: there a page is an
+//! embedded page, in the light look); PNG and PDF exports, screenshots
+//! and mask sources leave them out.
 
 use crate::layout_scene::{NodeKind, SceneNode};
-use crate::widgets::browser_textures;
 use crate::widgets::canvas_annotation::editor_canvas_dark;
 use crate::widgets::canvas_viewport_image::{cached_bytes_for, paint_cached_raster};
 use crate::widgets::icons::{draw_icon, Icon};
 use crate::widgets::text_metrics;
 use crate::widgets::PaintCx;
+use crate::widgets::{browser_preview, browser_textures};
 use crate::{Color, Point2D, Rect, TextLayout};
 
 /// Globe glyph and address label size (doc px), capped on screen.
@@ -35,10 +37,25 @@ pub fn is_browser_tag(tag: &str) -> bool {
     tag == "browser"
 }
 
-/// Whether `node` is a browser the editor canvas is painting now.
+/// Whether `node` is a browser the editor canvas or the preview is
+/// painting now.
 pub(super) fn is_painted(node: &SceneNode) -> bool {
-    matches!(&node.kind, NodeKind::Other(tag) if is_browser_tag(tag))
-        && editor_canvas_dark().is_some()
+    matches!(&node.kind, NodeKind::Other(tag) if is_browser_tag(tag)) && surface().is_some()
+}
+
+/// The surface that shows pages, while one paints.
+#[derive(Clone, Copy)]
+enum Surface {
+    /// The editor canvas, in its theme (`true`: dark).
+    Canvas(bool),
+    /// The preview: always the light look (a page is white).
+    Preview,
+}
+
+fn surface() -> Option<Surface> {
+    editor_canvas_dark()
+        .map(Surface::Canvas)
+        .or_else(|| browser_preview::painting().map(|_| Surface::Preview))
 }
 
 /// The address the node shows, `None` when it has none.
@@ -63,11 +80,15 @@ fn display_url(url: &str) -> String {
     cut
 }
 
-/// Paint `node` as a page box when the editor canvas is painting. Outside
-/// the canvas nothing paints (the node is canvas-only).
+/// Paint `node` as a page box when the editor canvas or the preview is
+/// painting. Elsewhere nothing paints (the node is canvas-only).
 pub(super) fn paint(cx: &mut PaintCx<'_>, node: &SceneNode, world_rect: Rect, zoom: f32) {
-    let Some(dark) = editor_canvas_dark() else {
+    let Some(surface) = surface() else {
         return;
+    };
+    let (dark, preview) = match surface {
+        Surface::Canvas(dark) => (dark, false),
+        Surface::Preview => (false, true),
     };
     if world_rect.size.x <= 0.0 || world_rect.size.y <= 0.0 {
         return;
@@ -91,8 +112,13 @@ pub(super) fn paint(cx: &mut PaintCx<'_>, node: &SceneNode, world_rect: Rect, zo
     cx.backend.fill_rect(world_rect, page);
     // Recorded only here, where the node is on screen: a culled browser
     // never reaches the host's render queue.
-    browser_textures::note_visible(&node.id, [world_rect.size.x, world_rect.size.y]);
-    let drawn = paint_live_frame(cx, node, world_rect)
+    let live = paint_live_frame(cx, node, world_rect);
+    if preview {
+        browser_preview::note(&node.id, world_rect, live == Some(true));
+    } else {
+        browser_textures::note_visible(&node.id, [world_rect.size.x, world_rect.size.y]);
+    }
+    let drawn = live.is_some()
         || browser_textures::ready(&node.id)
             .and_then(|(_, texture)| Some((texture, cached_bytes_for(texture)?)))
             .is_some_and(|(texture, bytes)| {
@@ -108,13 +134,12 @@ pub(super) fn paint(cx: &mut PaintCx<'_>, node: &SceneNode, world_rect: Rect, zo
 /// The newest frame of the node's live stream (#324), or the last one kept
 /// after the stream stopped, when its raster is resident. A running
 /// stream's box is recorded so a host that keeps the canvas in a retained
-/// layer repaints only this node when the next frame lands.
-fn paint_live_frame(cx: &mut PaintCx<'_>, node: &SceneNode, world_rect: Rect) -> bool {
-    let Some((texture, streaming)) = browser_textures::live_for_paint(&node.id) else {
-        return false;
-    };
+/// layer repaints only this node when the next frame lands. Returns
+/// whether its stream still runs, `None` when no frame was drawn.
+fn paint_live_frame(cx: &mut PaintCx<'_>, node: &SceneNode, world_rect: Rect) -> Option<bool> {
+    let (texture, streaming) = browser_textures::live_for_paint(&node.id)?;
     if !cx.backend.image_resident(texture) {
-        return false;
+        return None;
     }
     cx.backend
         .draw_image_with_options_transform_blend_and_tile_scale(
@@ -133,7 +158,7 @@ fn paint_live_frame(cx: &mut PaintCx<'_>, node: &SceneNode, world_rect: Rect) ->
     if streaming {
         super::canvas_animation_regions::record_live(world_rect);
     }
-    true
+    Some(streaming)
 }
 
 /// The globe and the address, centred in the box.

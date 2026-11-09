@@ -23,7 +23,7 @@
 
 use super::PreviewSession;
 use de_editor_ui::layout_scene::{LayoutScene, SceneNode, ScenePage};
-use de_editor_ui::widgets::{paint_scene_page_with, PaintCx, PaintSceneOptions};
+use de_editor_ui::widgets::{browser_preview, paint_scene_page_with, PaintCx, PaintSceneOptions};
 use de_editor_ui::{Point2D, Rect, RenderBackend};
 
 pub(crate) const PUSH_POP_DURATION_MS: u64 = 240;
@@ -254,17 +254,20 @@ fn paint_content_layer(
     backend.clip_rect(content_clip);
     {
         let mut cx = PaintCx { backend };
-        paint_scene_page_with(
-            &mut cx,
-            page_ref,
-            origin,
-            fit,
-            cull,
-            PaintSceneOptions {
-                only_root: Some(root_id),
-                skip_node: None,
-            },
-        );
+        // Browser nodes show their pages through the slide too (#324).
+        browser_preview::with_clip(content_clip, || {
+            paint_scene_page_with(
+                &mut cx,
+                page_ref,
+                origin,
+                fit,
+                cull,
+                PaintSceneOptions {
+                    only_root: Some(root_id),
+                    skip_node: None,
+                },
+            );
+        });
     }
     backend.restore();
 }
@@ -446,13 +449,15 @@ impl PreviewSession {
                 let mut cx = PaintCx {
                     backend: &mut *backend,
                 };
-                de_editor_ui::widgets::paint_scene_subtree(
-                    &mut cx,
-                    entering_page,
-                    &paint.node_id,
-                    paint.paint_origin,
-                    fit,
-                );
+                browser_preview::with_clip(paint.strip_clip, || {
+                    de_editor_ui::widgets::paint_scene_subtree(
+                        &mut cx,
+                        entering_page,
+                        &paint.node_id,
+                        paint.paint_origin,
+                        fit,
+                    );
+                });
             }
             backend.restore();
         }

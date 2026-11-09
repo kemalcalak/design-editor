@@ -44,6 +44,9 @@ mod boolean_op;
 mod browser_interact;
 #[cfg(test)]
 mod browser_interact_tests;
+mod browser_preview_input;
+#[cfg(test)]
+mod browser_preview_input_tests;
 #[cfg(test)]
 mod canvas_drag_transition_tests;
 mod canvas_pan_cache;
