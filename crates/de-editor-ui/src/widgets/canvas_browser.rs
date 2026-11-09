@@ -3,8 +3,8 @@
 //! The scene carries a browser as `NodeKind::Other("browser")` with its
 //! frame, corner radius and stroke, and the address in the widget's
 //! `value_str` (`de-pen-loader`'s `browser_to_payload`). The editor canvas
-//! paints a page box clipped to the node's corners: the page snapshot a
-//! host rendered (`browser_textures`), else a blank page with a globe and
+//! paints a page box clipped to the node's corners: the live frame a host
+//! streams, else the page snapshot a host rendered (`browser_textures`), else a blank page with a globe and
 //! the address; then the node's stroke. Drop shadows paint in the node
 //! painter's shared shadow pass ([`is_painted`] opts the node in).
 //!
@@ -91,15 +91,49 @@ pub(super) fn paint(cx: &mut PaintCx<'_>, node: &SceneNode, world_rect: Rect, zo
     cx.backend.fill_rect(world_rect, page);
     // Recorded only here, where the node is on screen: a culled browser
     // never reaches the host's render queue.
-    browser_textures::note_visible(&node.id);
-    let drawn = browser_textures::ready(&node.id)
-        .and_then(|(_, texture)| Some((texture, cached_bytes_for(texture)?)))
-        .is_some_and(|(texture, bytes)| paint_cached_raster(cx, world_rect, texture, &bytes, 0.0));
+    browser_textures::note_visible(&node.id, [world_rect.size.x, world_rect.size.y]);
+    let drawn = paint_live_frame(cx, node, world_rect)
+        || browser_textures::ready(&node.id)
+            .and_then(|(_, texture)| Some((texture, cached_bytes_for(texture)?)))
+            .is_some_and(|(texture, bytes)| {
+                paint_cached_raster(cx, world_rect, texture, &bytes, 0.0)
+            });
     if !drawn {
         paint_placeholder(cx, node, world_rect, zoom, ink);
     }
     cx.backend.restore();
     super::canvas_viewport_stroke_paint::paint_node_stroke(cx, node, world_rect, zoom);
+}
+
+/// The newest frame of the node's live stream (#324), or the last one kept
+/// after the stream stopped, when its raster is resident. A running
+/// stream's box is recorded so a host that keeps the canvas in a retained
+/// layer repaints only this node when the next frame lands.
+fn paint_live_frame(cx: &mut PaintCx<'_>, node: &SceneNode, world_rect: Rect) -> bool {
+    let Some((texture, streaming)) = browser_textures::live_for_paint(&node.id) else {
+        return false;
+    };
+    if !cx.backend.image_resident(texture) {
+        return false;
+    }
+    cx.backend
+        .draw_image_with_options_transform_blend_and_tile_scale(
+            world_rect,
+            texture,
+            &[],
+            crate::ImageDrawMode::Stretch,
+            crate::ImageAdjustments::default(),
+            1.0,
+            0.0,
+            None,
+            crate::ImageBlendMode::Normal,
+            None,
+            1.0,
+        );
+    if streaming {
+        super::canvas_animation_regions::record_live(world_rect);
+    }
+    true
 }
 
 /// The globe and the address, centred in the box.

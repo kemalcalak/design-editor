@@ -46,10 +46,13 @@ impl WidgetHostNative {
     }
 
     /// Whether this rest frame should paint the canvas into a fresh layer:
-    /// the last paint animated, and all of it was located.
+    /// the last paint animated or showed a live browser page (#324), and
+    /// all of it was located. A live page's frames land as events, so its
+    /// node's region repaints only when one did.
     pub(in crate::widget_host) fn rest_animation_layer_wanted(&self) -> bool {
         let animated = de_editor_ui::widgets::canvas_shader_clock::animated_shader_painted()
-            || de_editor_ui::widgets::canvas_shader_pointer::pointer_shader_painted();
+            || de_editor_ui::widgets::canvas_shader_pointer::pointer_shader_painted()
+            || self.canvas_animation.live;
         !self.fast_interaction_active()
             && animated
             && self.canvas_animation.located

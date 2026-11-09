@@ -104,3 +104,25 @@ fn a_page_that_cannot_load_says_why_under_the_address() {
         "a cleared failure shows only the address"
     );
 }
+
+#[test]
+fn a_live_frame_replaces_the_placeholder_and_records_its_box() {
+    use crate::widgets::browser_textures::{forget_live, lock_for_tests, set_live_frame};
+    use crate::widgets::{canvas_animation_regions, canvas_shader_pointer};
+    let _lock = lock_for_tests();
+    let mut node = browser(Some("https://example.com"));
+    node.id = "cb-live".into();
+    // The capture backend reports every raster resident.
+    set_live_frame("cb-live", 3);
+    canvas_shader_pointer::begin_frame(None, false);
+    canvas_animation_regions::begin_frame();
+    let backend = with_annotations(false, || paint_once(&node));
+    let recorded = canvas_animation_regions::snapshot();
+    canvas_shader_pointer::end_frame();
+    forget_live("cb-live");
+    assert!(backend.svg_strokes.is_empty(), "no globe over a live page");
+    assert!(recorded.live);
+    assert_eq!(recorded.rects, vec![node.bounds]);
+    let still = with_annotations(false, || paint_once(&node));
+    assert!(!still.svg_strokes.is_empty(), "the placeholder is back");
+}

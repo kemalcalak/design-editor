@@ -49,6 +49,30 @@ impl NativeBackend {
         self.evict_images_over(IMAGE_CACHE_BYTE_BUDGET, IMAGE_CACHE_MAX_ENTRIES);
     }
 
+    /// Install a live browser frame (#324) under its node's stable `id`,
+    /// replacing the last one. A replacement keeps the raster generation:
+    /// the canvas repaints only the node's recorded region for it, so a
+    /// retained canvas layer must not restart its full restore on every
+    /// frame. The first frame of a slot (or one after an eviction) bumps
+    /// it, so a layer painted with the still snapshot picks the frame up.
+    pub fn install_live_raster(&mut self, id: u64, image: skia_safe::Image) {
+        let generation = self.raster_generation;
+        let resident = self.image_cache.contains_key(&id);
+        self.install_raster_image(id, image, u32::MAX);
+        if resident {
+            self.raster_generation = generation;
+        }
+    }
+
+    /// Drop the live frame `id` (its node stopped streaming), so the
+    /// painter falls back to the snapshot and cached layers repaint.
+    pub fn drop_live_raster(&mut self, id: u64) {
+        if let Some(old) = self.image_cache.remove(&id) {
+            self.image_cache_bytes = self.image_cache_bytes.saturating_sub(old.bytes);
+            self.raster_generation = self.raster_generation.wrapping_add(1);
+        }
+    }
+
     /// Readiness hook used by `NativeFrameBackend`; never decodes.
     /// A cached raster that is too coarse for the requested size reports
     /// `false` so paint queues a sharper decode — the existing raster

@@ -38,7 +38,8 @@ fn begin_frame_clears_the_record() {
         snapshot(),
         AnimationRegions {
             rects: Vec::new(),
-            located: true
+            located: true,
+            live: false,
         }
     );
 }
@@ -139,4 +140,16 @@ fn overlapping_rects_merge_and_separate_ones_stay() {
     assert_eq!(merged.len(), 2);
     assert!(merged.contains(&rect(0.0, 0.0, 15.0, 15.0)));
     assert!(merged.contains(&rect(100.0, 100.0, 5.0, 5.0)));
+}
+
+#[test]
+fn a_live_page_records_its_box_and_marks_the_frame_live() {
+    start_canvas_frame();
+    assert!(!snapshot().live);
+    record_live(rect(10.0, 20.0, 30.0, 40.0));
+    let recorded = snapshot();
+    assert!(recorded.live && recorded.located);
+    assert_eq!(recorded.rects.len(), 1);
+    begin_frame();
+    assert!(!snapshot().live);
 }

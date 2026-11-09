@@ -35,7 +35,7 @@ fn frame(
 ) -> Vec<de_editor_core::browser_live::BrowserRenderRequest> {
     browser_textures::begin_frame(false);
     for id in ids {
-        browser_textures::note_visible(id);
+        browser_textures::note_visible(id, [100.0, 100.0]);
     }
     queue.pump(state, now).1
 }
@@ -200,7 +200,7 @@ fn clearing_the_address_drops_the_old_page() {
     state.set_single_selection(de_editor_core::NodeId::new(id));
     assert!(state.set_selected_browser_url(""));
     browser_textures::begin_frame(false);
-    browser_textures::note_visible(id);
+    browser_textures::note_visible(id, [100.0, 100.0]);
     let (changed, requests) = queue.pump(&mut state, 1.0);
     assert!(changed && requests.is_empty());
     assert!(browser_textures::ready(id).is_none());

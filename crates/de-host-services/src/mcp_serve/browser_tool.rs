@@ -128,7 +128,9 @@ impl BrowserTool {
             ensure_permitted(url)?;
         }
         let call = PageCall {
-            key: target.map_or(OWN_PAGE_KEY.to_string(), |t| format!("node:{}", t.id)),
+            key: target.map_or(OWN_PAGE_KEY.to_string(), |t| {
+                de_editor_core::browser_stream::node_page_session_key(&t.id)
+            }),
             viewport: target.map_or(OWN_PAGE_VIEWPORT, |t| node_viewport(&t.node)),
             node_url: node_url.clone(),
             canvas_scale: target.and_then(BrowserTarget::canvas_scale),
