@@ -317,6 +317,8 @@ fn js_string(text: &str) -> String {
 pub struct PageSessions {
     pool: BrowserPool,
     sessions: Mutex<HashMap<String, PageSession>>,
+    /// Keys whose tab a call holds right now (taken out of `sessions`).
+    calls: Mutex<HashMap<String, usize>>,
 }
 
 impl PageSessions {
@@ -324,7 +326,20 @@ impl PageSessions {
         Self {
             pool,
             sessions: Mutex::new(HashMap::new()),
+            calls: Mutex::new(HashMap::new()),
         }
+    }
+
+    /// Whether a tab is kept for `key`, including while a call holds it. A
+    /// stream of a node uses that tab ([`Self::stream`]) rather than
+    /// opening a second one for the same page.
+    pub fn is_kept(&self, key: &str) -> bool {
+        self.lock().contains_key(key)
+            || self
+                .calls
+                .lock()
+                .unwrap_or_else(|e| e.into_inner())
+                .contains_key(key)
     }
 
     /// The process-wide tabs, on [`BrowserPool::shared`].
@@ -343,6 +358,19 @@ impl PageSessions {
         f: impl FnMut(&mut PageSession) -> Result<R, BrowserRenderError>,
     ) -> Result<R, BrowserRenderError> {
         self.run_on(key, viewport, true, f)
+    }
+
+    /// Like [`Self::with`], but only on a tab already kept for `key`: none
+    /// (or one a call holds right now) is [`BrowserRenderError::TabClosed`]
+    /// and nothing is opened, so a stream never makes a second tab for a
+    /// page the agent drives.
+    pub fn with_kept<R>(
+        &self,
+        key: &str,
+        viewport: Viewport,
+        f: impl FnMut(&mut PageSession) -> Result<R, BrowserRenderError>,
+    ) -> Result<R, BrowserRenderError> {
+        self.run_on(key, viewport, false, f)
     }
 
     /// Stream the tab kept for `key` over a second connection (the canvas
@@ -393,6 +421,7 @@ impl PageSessions {
         mut f: impl FnMut(&mut PageSession) -> Result<R, BrowserRenderError>,
     ) -> Result<R, BrowserRenderError> {
         self.close_idle();
+        let _call = CallMark::new(&self.calls, key);
         let existing = self.take(key);
         let reopen_at = existing.as_ref().and_then(|s| s.url.clone());
         let mut session = match existing {
@@ -488,6 +517,39 @@ impl PageSessions {
 
 #[path = "rect_shot.rs"]
 mod rect_shot;
+
+/// Marks `key` as held by a call until dropped (see
+/// [`PageSessions::is_kept`]).
+struct CallMark<'a> {
+    calls: &'a Mutex<HashMap<String, usize>>,
+    key: String,
+}
+
+impl<'a> CallMark<'a> {
+    fn new(calls: &'a Mutex<HashMap<String, usize>>, key: &str) -> Self {
+        *calls
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .entry(key.to_string())
+            .or_default() += 1;
+        Self {
+            calls,
+            key: key.to_string(),
+        }
+    }
+}
+
+impl Drop for CallMark<'_> {
+    fn drop(&mut self) {
+        let mut calls = self.calls.lock().unwrap_or_else(|e| e.into_inner());
+        if let Some(count) = calls.get_mut(&self.key) {
+            *count -= 1;
+            if *count == 0 {
+                calls.remove(&self.key);
+            }
+        }
+    }
+}
 
 #[cfg(test)]
 #[path = "page_session_tests.rs"]

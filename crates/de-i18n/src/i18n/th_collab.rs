@@ -392,6 +392,8 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "whatsNew.gotIt" => "รับทราบ",
         "whatsNew.previous" => "ก่อนหน้า",
         "whatsNew.next" => "ถัดไป",
+        "settings.system.livePages" => "หน้าเว็บสด",
+        "settings.system.livePagesDesc" => "โหนดเบราว์เซอร์ที่เลือกจะเล่นเหมือนหน้าเว็บจริง เมื่อปิดจะแสดงภาพนิ่ง",
         _ => return None,
     })
 }

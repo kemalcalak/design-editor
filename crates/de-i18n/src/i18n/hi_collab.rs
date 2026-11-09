@@ -392,6 +392,8 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "whatsNew.gotIt" => "समझ गया",
         "whatsNew.previous" => "पिछला",
         "whatsNew.next" => "अगला",
+        "settings.system.livePages" => "लाइव पेज",
+        "settings.system.livePagesDesc" => "चुना हुआ ब्राउज़र नोड असली पेज की तरह चलता है। बंद होने पर स्थिर स्नैपशॉट दिखता है।",
         _ => return None,
     })
 }

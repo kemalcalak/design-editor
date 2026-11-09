@@ -425,6 +425,7 @@ pub(crate) fn apply_entry_hit(
         | AgentSettingsHit::UpdateButton
         | AgentSettingsHit::SelectPencilCursor(_)
         | AgentSettingsHit::SelectPencilSmoothing(_)
+        | AgentSettingsHit::ToggleLivePages
         | AgentSettingsHit::SelectThemeMode(_)
         | AgentSettingsHit::ToggleExperimental
         | AgentSettingsHit::FocusMcpPort => {

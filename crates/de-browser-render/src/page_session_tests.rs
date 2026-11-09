@@ -140,3 +140,19 @@ fn a_kept_tab_loads_reads_clicks_and_captures() {
     std::thread::sleep(Duration::from_millis(10));
     let _ = std::fs::remove_dir_all(dir);
 }
+
+#[test]
+fn a_key_counts_as_kept_while_a_call_holds_its_tab() {
+    let sessions = PageSessions::new(BrowserPool::new());
+    assert!(!sessions.is_kept("node:a"));
+    {
+        let _first = CallMark::new(&sessions.calls, "node:a");
+        let _second = CallMark::new(&sessions.calls, "node:a");
+        assert!(sessions.is_kept("node:a"));
+        assert!(!sessions.is_kept("node:b"));
+    }
+    assert!(
+        !sessions.is_kept("node:a"),
+        "the marks are gone with the calls"
+    );
+}

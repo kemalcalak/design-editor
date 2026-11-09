@@ -392,6 +392,8 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "whatsNew.gotIt" => "Понятно",
         "whatsNew.previous" => "Назад",
         "whatsNew.next" => "Далее",
+        "settings.system.livePages" => "Живые страницы",
+        "settings.system.livePagesDesc" => "Выбранный узел браузера воспроизводится как настоящая страница. Если выключено, показывается статичный снимок.",
         _ => return None,
     })
 }

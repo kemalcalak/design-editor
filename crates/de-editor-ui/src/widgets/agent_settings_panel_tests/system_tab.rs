@@ -10,12 +10,13 @@ use crate::widgets::agent_settings_rows::{row_height, tab_intro_height, RowLines
 /// Row order and shape on the System tab: Appearance (one line),
 /// Auto-update (two), Experimental (two), Pencil cursor (one), Pencil
 /// smoothing (one).
-const SYSTEM_ROWS: [RowLines; 5] = [
+const SYSTEM_ROWS: [RowLines; 6] = [
     RowLines::One,
     RowLines::Two,
     RowLines::Two,
     RowLines::One,
     RowLines::One,
+    RowLines::Two,
 ];
 
 /// Centre-y of System row `index`, below the tab's compact heading.
@@ -66,7 +67,7 @@ fn system_tab_reserves_space_for_update_status() {
             + FOOTNOTE_H
             + CONTENT_TAIL_PAD,
         "System tab = heading + Appearance/Auto-update/Experimental/Pencil-cursor/\
-         Pencil-smoothing rows + version footnote + bottom pad"
+         Pencil-smoothing/Live-pages rows + version footnote + bottom pad"
     );
 }
 
@@ -94,6 +95,27 @@ fn system_pencil_smoothing_segments_pick_their_level() {
         panel.hit_test(rect, crate::Point2D::new(right - 18.0 - 2.0 * seg, y)),
         AgentSettingsHit::SelectPencilSmoothing(PencilSmoothing::Precise)
     );
+}
+
+#[test]
+fn system_live_pages_switch_toggles_streaming() {
+    let mut state = EditorState::default();
+    state.editor_ui.agent_settings.tab = AgentSettingsTab::System;
+    let panel = AgentSettingsPanel::for_editor(&state);
+    let rect = panel.rect(1200.0, 800.0);
+    let content = crate::widgets::agent_settings_panel::content_viewport(rect);
+    let y = system_row_mid_y(rect, 5);
+    let right = content.origin.x + content.size.x;
+    let hit = panel.hit_test(rect, crate::Point2D::new(right - 18.0, y));
+    assert_eq!(hit, AgentSettingsHit::ToggleLivePages);
+    assert!(state.editor_ui.browser_live.live_pages(), "on by default");
+    crate::widgets::agent_settings_press_flow::apply_agent_settings_hit(
+        &mut state,
+        hit,
+        de_editor_core::host_settings_commit::SettingsCommitScope::Operator,
+        0,
+    );
+    assert!(!state.editor_ui.browser_live.live_pages());
 }
 
 #[test]

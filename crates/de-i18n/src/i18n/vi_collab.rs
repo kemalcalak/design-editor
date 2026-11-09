@@ -392,6 +392,8 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "whatsNew.gotIt" => "Đã hiểu",
         "whatsNew.previous" => "Trước",
         "whatsNew.next" => "Tiếp",
+        "settings.system.livePages" => "Trang trực tiếp",
+        "settings.system.livePagesDesc" => "Nút trình duyệt được chọn chạy như trang thật. Khi tắt sẽ hiện ảnh chụp tĩnh.",
         _ => return None,
     })
 }

@@ -49,6 +49,13 @@ pub struct BrowserLiveState {
     /// Bumped by every reload, so a host can tell nothing changed cheaply.
     reload_generation: u64,
     status: HashMap<String, BrowserPageStatus>,
+    /// The "Live pages" setting turned off: pages show their still
+    /// snapshot instead of streaming (#324). A preference, kept across
+    /// documents.
+    live_pages_off: bool,
+    /// The browser node the user drives (interaction mode, phase 4 of
+    /// #324); interactive implies live.
+    interactive: Option<String>,
 }
 
 impl BrowserLiveState {
@@ -62,6 +69,26 @@ impl BrowserLiveState {
 
     pub fn hold_pages(&mut self) {
         self.pages_held = true;
+    }
+
+    /// Whether selected browser nodes stream live (the "Live pages" setting, on by
+    /// default).
+    pub fn live_pages(&self) -> bool {
+        !self.live_pages_off
+    }
+
+    pub fn set_live_pages(&mut self, on: bool) {
+        self.live_pages_off = !on;
+    }
+
+    /// The node in interaction mode, if any. It streams live whether or
+    /// not it is selected (`browser_stream::LiveCandidate::interactive`).
+    pub fn interactive_node(&self) -> Option<&str> {
+        self.interactive.as_deref()
+    }
+
+    pub fn set_interactive_node(&mut self, node_id: Option<&str>) {
+        self.interactive = node_id.map(str::to_string);
     }
 
     /// Ask for a fresh snapshot of `node_id` (changes its request key).
@@ -91,6 +118,7 @@ impl BrowserLiveState {
     pub fn clear_nodes(&mut self) {
         self.reloads.clear();
         self.status.clear();
+        self.interactive = None;
     }
 }
 

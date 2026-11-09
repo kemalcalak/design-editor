@@ -392,6 +392,8 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "whatsNew.gotIt" => "Anladım",
         "whatsNew.previous" => "Önceki",
         "whatsNew.next" => "Sonraki",
+        "settings.system.livePages" => "Canlı sayfalar",
+        "settings.system.livePagesDesc" => "Seçili tarayıcı düğümü gerçek sayfa gibi oynar. Kapalıyken durağan bir anlık görüntü gösterilir.",
         _ => return None,
     })
 }

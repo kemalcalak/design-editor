@@ -392,6 +392,8 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "whatsNew.gotIt" => "Mengerti",
         "whatsNew.previous" => "Sebelumnya",
         "whatsNew.next" => "Berikutnya",
+        "settings.system.livePages" => "Halaman langsung",
+        "settings.system.livePagesDesc" => "Node browser yang dipilih berjalan seperti halaman aslinya. Jika mati, tampil cuplikan diam.",
         _ => return None,
     })
 }
