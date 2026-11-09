@@ -1,6 +1,7 @@
 //! The stream against a scripted websocket peer standing in for Chrome's
 //! screencast: it sends `initial` frames on start and one more per ack,
-//! and records every command with the time it came.
+//! and records every command with the time it came. A reply and the
+//! frames it brings go out in one write, as Chrome sends them.
 
 use std::io::ErrorKind;
 use std::net::TcpListener;
@@ -85,6 +86,9 @@ fn peer_with(initial: i64, budget: i64) -> Peer {
     let record = Arc::clone(&log);
     std::thread::spawn(move || {
         let (stream, _) = listener.accept().unwrap();
+        // Without this a frame written right behind its reply can wait
+        // for the client's delayed ACK (~40 ms on Linux).
+        stream.set_nodelay(true).unwrap();
         let mut socket = tungstenite::accept(stream).unwrap();
         socket
             .get_ref()
@@ -129,9 +133,12 @@ fn peer_with(initial: i64, budget: i64) -> Peer {
                 out.push(frame_event(next_frame));
             }
             for message in out {
-                if socket.send(Message::Text(message.to_string())).is_err() {
+                if socket.write(Message::Text(message.to_string())).is_err() {
                     return;
                 }
+            }
+            if socket.flush().is_err() {
+                return;
             }
         }
     });
@@ -171,6 +178,22 @@ fn jpeg_text(frame: &StreamFrame) -> String {
     String::from_utf8(frame.jpeg.clone()).unwrap()
 }
 
+/// A signal per frame handed out (or the stream's end), from the waker.
+fn handed_out(stream: &PageStream) -> mpsc::Receiver<()> {
+    let (tx, rx) = mpsc::channel();
+    let tx = Mutex::new(tx);
+    stream.set_frame_waker(move || {
+        let _ = tx.lock().unwrap().send(());
+    });
+    rx
+}
+
+fn wait_handed_out(signal: &mpsc::Receiver<()>) {
+    signal
+        .recv_timeout(Duration::from_secs(2))
+        .expect("a frame was handed out");
+}
+
 #[test]
 fn settings_default_to_a_1024_wide_jpeg_at_ten_fps() {
     let settings = StreamSettings::default();
@@ -193,9 +216,12 @@ fn settings_default_to_a_1024_wide_jpeg_at_ten_fps() {
 fn a_frame_is_acked_only_after_the_consumer_took_it() {
     let peer = peer(1);
     let stream = stream_on(&peer, TabMode::Owned, uncapped());
+    let signal = handed_out(&stream);
     let started = peer.wait_calls("Emulation.setFocusEmulationEnabled", 1);
     assert_eq!(started[0].0["enabled"], true, "headless tabs are focused");
-    std::thread::sleep(Duration::from_millis(150));
+    wait_handed_out(&signal);
+    // Give the worker time it would need to ack, were it allowed to.
+    std::thread::sleep(Duration::from_millis(100));
     assert!(peer.calls("Page.screencastFrameAck").is_empty(), "untaken");
     let frame = stream.take_frame().unwrap().expect("the first frame");
     assert_eq!((frame.seq, jpeg_text(&frame).as_str()), (1, "frame-1"));
@@ -238,18 +264,25 @@ fn acks_keep_to_the_frame_rate_cap() {
 #[test]
 fn the_newest_frame_wins_and_frames_are_acked_one_at_a_time() {
     // Frame 1 is handed out; 2 and 3 arrive while it waits, 3 replaces 2.
+    // Capped, as the desktop runs: the cap gives the frame an ack brings
+    // time to arrive before the next owed frame could be acked.
     let peer = peer(3);
-    let stream = stream_on(&peer, TabMode::Owned, uncapped());
-    std::thread::sleep(Duration::from_millis(150));
+    let stream = stream_on(&peer, TabMode::Owned, StreamSettings::default());
+    let interval = StreamSettings::default().min_interval();
+    let signal = handed_out(&stream);
+    wait_handed_out(&signal);
+    // Frames 2 and 3 came in the same write as frame 1; let the worker
+    // read them before frame 1 is taken.
+    std::thread::sleep(Duration::from_millis(100));
     let first = stream.take_frame().unwrap().expect("a frame");
     assert_eq!((first.seq, jpeg_text(&first).as_str()), (1, "frame-1"));
     let newest = stream.wait_frame(Duration::from_secs(2)).unwrap().unwrap();
     assert_eq!((newest.seq, jpeg_text(&newest).as_str()), (2, "frame-3"));
     // One ack lets one new frame come; the next owed frame waits until
-    // that one was taken too.
+    // that one was taken too, past the cap as well.
     let acks = peer.wait_calls("Page.screencastFrameAck", 1);
     assert_eq!(acks[0].0["sessionId"], 1);
-    std::thread::sleep(Duration::from_millis(100));
+    std::thread::sleep(interval * 2);
     assert_eq!(peer.calls("Page.screencastFrameAck").len(), 1);
     let next = stream.wait_frame(Duration::from_secs(2)).unwrap().unwrap();
     assert_eq!(jpeg_text(&next), "frame-4");
@@ -264,6 +297,12 @@ fn a_quiet_page_after_a_burst_is_restarted_once_for_its_final_picture() {
     // dropped its last repaint, so the stream asks for the picture again.
     let peer = peer_with(2, 2);
     let stream = stream_on(&peer, TabMode::Owned, uncapped());
+    let signal = handed_out(&stream);
+    wait_handed_out(&signal);
+    // Both frames came in one write; hold frame 1 until the worker read
+    // frame 2, so both are unacked at once (a consumer that takes frame 1
+    // at once lets it be acked first, and nothing was dropped).
+    std::thread::sleep(Duration::from_millis(100));
     for _ in 0..2 {
         stream.wait_frame(Duration::from_secs(2)).unwrap().unwrap();
     }
@@ -377,9 +416,7 @@ fn a_shared_tab_is_detached_not_closed_and_keeps_its_viewport() {
 fn a_detached_tab_ends_the_stream_with_a_typed_error() {
     let peer = peer(0);
     let stream = stream_on(&peer, TabMode::Shared, uncapped());
-    let woken = Arc::new(std::sync::atomic::AtomicBool::new(false));
-    let flag = Arc::clone(&woken);
-    stream.set_frame_waker(move || flag.store(true, std::sync::atomic::Ordering::SeqCst));
+    let signal = handed_out(&stream);
     peer.push
         .send(json!({ "method": "Target.detachedFromTarget", "params": { "sessionId": "s1" } }))
         .unwrap();
@@ -388,8 +425,10 @@ fn a_detached_tab_ends_the_stream_with_a_typed_error() {
         Err(BrowserRenderError::TabClosed)
     ));
     assert!(stream.is_ended());
+    // The waker runs after the end is visible, so it may still be on its
+    // way when `wait_frame` returns.
     assert!(
-        woken.load(std::sync::atomic::Ordering::SeqCst),
+        signal.recv_timeout(Duration::from_secs(2)).is_ok(),
         "the waker ran"
     );
     assert!(matches!(
@@ -397,6 +436,20 @@ fn a_detached_tab_ends_the_stream_with_a_typed_error() {
         Err(BrowserRenderError::Closed)
     ));
     assert!(stream.restart().is_err());
+}
+
+#[test]
+fn a_waker_set_after_a_frame_came_is_called_at_once() {
+    let peer = peer(1);
+    let stream = stream_on(&peer, TabMode::Owned, uncapped());
+    wait_handed_out(&handed_out(&stream));
+    // Frame 1 waits untaken: a waker set now must not miss it.
+    let called = Arc::new(std::sync::atomic::AtomicBool::new(false));
+    let flag = Arc::clone(&called);
+    stream.set_frame_waker(move || flag.store(true, std::sync::atomic::Ordering::SeqCst));
+    assert!(called.load(std::sync::atomic::Ordering::SeqCst));
+    assert!(stream.take_frame().unwrap().is_some());
+    stream.stop();
 }
 
 #[test]
