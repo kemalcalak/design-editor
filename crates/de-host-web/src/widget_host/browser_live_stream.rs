@@ -219,7 +219,7 @@ fn close(connection: &mut Connection) -> bool {
 }
 
 /// Run `f` after `delay_ms`; false when no timer could be armed.
-fn after(delay_ms: u32, f: impl FnOnce() + 'static) -> bool {
+pub(crate) fn after(delay_ms: u32, f: impl FnOnce() + 'static) -> bool {
     let Some(window) = web_sys::window() else {
         return false;
     };

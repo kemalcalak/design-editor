@@ -25,7 +25,7 @@ use wasm_bindgen::JsCast;
 use web_sys::{CompositionEvent, Event, KeyboardEvent, MouseEvent, WheelEvent};
 
 use super::inner::CkInner;
-use crate::listener::{now_ms_perf, now_unix_secs, Listener};
+use crate::listener::{add_listener_with_options, now_ms_perf, now_unix_secs, Listener};
 use crate::widget_host::browser_input_post;
 use crate::widget_host::PageRoute;
 
@@ -68,13 +68,24 @@ pub(super) fn register_browser_interaction_listeners(
         })?;
     }
     {
-        // Typing reaches the page through its keys and IME commits; the
-        // hidden input's own text must not type into the editor too.
+        // Typing reaches the page through its keys (their default is
+        // prevented, so they open no `beforeinput`) and IME commits; text an
+        // IME resolves without a composition (CJK punctuation) arrives only
+        // here. Nothing of it types into the editor.
         let inner = Rc::clone(inner);
-        add_capture::<Event, _>(window, "beforeinput", listeners, move |evt| {
-            if with_active(&inner, |_| ()).is_some() {
-                taken(&evt);
+        add_capture::<web_sys::InputEvent, _>(window, "beforeinput", listeners, move |evt| {
+            if !interaction_active(&inner) {
+                return;
             }
+            let text = crate::event::ime::beforeinput_text(
+                &evt.input_type(),
+                evt.data().as_deref(),
+                evt.is_composing(),
+            );
+            if let Some(text) = text {
+                with_active(&inner, |b| b.host.browser_insert_text(&text));
+            }
+            taken(&evt);
         })?;
     }
     {
@@ -98,31 +109,24 @@ fn add_capture<E, F>(
     window: &web_sys::Window,
     name: &'static str,
     listeners: &mut Vec<Listener>,
-    mut handler: F,
+    handler: F,
 ) -> Result<(), JsValue>
 where
     E: JsCast + 'static,
     F: FnMut(E) + 'static,
 {
-    let closure: Closure<dyn FnMut(JsValue)> = Closure::new(move |raw: JsValue| {
-        if let Ok(event) = raw.dyn_into::<E>() {
-            handler(event);
-        }
-    });
-    let options = web_sys::AddEventListenerOptions::new();
-    options.set_capture(true);
-    options.set_passive(false);
-    window.add_event_listener_with_callback_and_add_event_listener_options(
-        name,
-        closure.as_ref().unchecked_ref(),
-        &options,
-    )?;
-    listeners.push(Listener { closure });
-    Ok(())
+    add_listener_with_options(window, name, listeners, true, false, handler)
+}
+
+/// Whether a node is interactive (and the shell is free).
+fn interaction_active(inner: &Rc<RefCell<CkInner>>) -> bool {
+    inner
+        .try_borrow()
+        .is_ok_and(|b| b.host.browser_interaction_active())
 }
 
 /// Run `f` while a node is interactive (and the shell is free), then send
-/// what the page took. `None` when no node is interactive.
+/// what it queued for the page. `None` when no node is interactive.
 fn with_active<T>(inner: &Rc<RefCell<CkInner>>, f: impl FnOnce(&mut CkInner) -> T) -> Option<T> {
     let mut b = inner.try_borrow_mut().ok()?;
     if !b.host.browser_interaction_active() {
@@ -148,6 +152,15 @@ fn modifiers(alt: bool, ctrl: bool, meta: bool, shift: bool) -> InputModifiers {
         meta,
         shift,
     }
+}
+
+fn key_modifiers(evt: &KeyboardEvent) -> InputModifiers {
+    modifiers(
+        evt.alt_key(),
+        evt.ctrl_key(),
+        evt.meta_key(),
+        evt.shift_key(),
+    )
 }
 
 fn mouse_modifiers(evt: &MouseEvent) -> InputModifiers {
@@ -246,24 +259,26 @@ fn typed_text(key: &str) -> Option<String> {
     }
 }
 
+/// A key an IME or a dead key owns: its result arrives as
+/// `compositionend` (or `beforeinput`). Safari sends the Enter that commits
+/// a composition with key code 229 and `isComposing` false.
+fn composing_key(evt: &KeyboardEvent, key: &str) -> bool {
+    evt.is_composing() || evt.key_code() == 229 || matches!(key, "Process" | "Dead")
+}
+
 fn on_key(inner: &Rc<RefCell<CkInner>>, evt: &KeyboardEvent, pressed: bool) {
-    // A composition owns its keys; its commit arrives as `compositionend`.
-    // They still must not reach the editor's shortcuts.
-    if evt.is_composing() || evt.key() == "Process" {
-        if with_active(inner, |_| ()).is_some() {
-            evt.stop_immediate_propagation();
-        }
+    if !interaction_active(inner) {
+        return;
+    }
+    let key = evt.key();
+    if composing_key(evt, &key) {
+        // Left to the IME (no `preventDefault`), but never the editor's.
+        evt.stop_immediate_propagation();
         return;
     }
     let route = with_active(inner, |b| {
-        let key = evt.key();
         let text = typed_text(&key);
-        let mods = modifiers(
-            evt.alt_key(),
-            evt.ctrl_key(),
-            evt.meta_key(),
-            evt.shift_key(),
-        );
+        let mods = key_modifiers(evt);
         b.host.browser_key(key, evt.code(), text, mods, pressed)
     });
     match route {

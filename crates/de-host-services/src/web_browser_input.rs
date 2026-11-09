@@ -14,9 +14,10 @@
 //! node's stream and a worker sends it on that stream's tab with
 //! [`dispatch_events`] (`web_browser_live/input.rs`).
 //!
-//! The web client (`de-host-web/src/widget_host/browser_interact_web.rs`)
-//! feeds the shared `BrowserInteraction` from its DOM events and posts
-//! what it queued, one request in flight per node.
+//! The web client (`de-host-web/src/canvaskit/mount_browser_interaction.rs`
+//! and `widget_host/browser_interact.rs`) feeds the shared
+//! `BrowserInteraction` from its DOM events; `widget_host/
+//! browser_input_post.rs` posts what it queued, one request in flight.
 
 use de_browser_render::{BrowserRenderError, PageInput};
 use de_editor_core::browser_input::{

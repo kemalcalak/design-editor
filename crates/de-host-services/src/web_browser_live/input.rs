@@ -94,10 +94,10 @@ fn run(shared: &LaneShared, stream: &Weak<dyn LiveStream>, key: &str) {
             state.pending.take()
         };
         if connection.is_none() {
-            let Some(stream) = stream.upgrade() else {
+            let Some(live) = stream.upgrade() else {
                 return;
             };
-            match stream.input() {
+            match live.input() {
                 Ok(opened) => connection = Some(opened),
                 Err(error) => {
                     eprintln!("[browser-live] {key} input: {error}");
