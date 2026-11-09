@@ -79,6 +79,14 @@ pub(in crate::snapshot) fn into_flow(node: &mut PenNode) {
     base.constraints = None;
 }
 
+/// Move a placed node's position back by `(dx, dy)`: it was placed against
+/// its element and now sits in a frame offset by that much inside it.
+pub(in crate::snapshot) fn shift_back(node: &mut PenNode, dx: f64, dy: f64) {
+    let base = node_base_mut(node);
+    base.x = base.x.map(|x| x - dx);
+    base.y = base.y.map(|y| y - dy);
+}
+
 /// The box the items cover together.
 pub(in crate::snapshot) fn union_of(items: &[Item]) -> Rect {
     let low_x = items.iter().map(|i| i.rect.x).fold(f64::INFINITY, f64::min);

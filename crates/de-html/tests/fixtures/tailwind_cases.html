@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Tailwind cases</title>
+  <style>
+    /* #322: what an auto-layout import of a Tailwind page got wrong — a
+       `leading-none` heading in an `items-center` column (caught mid-way
+       through its entrance animation), an avatar pulled up over a banner by
+       a negative margin with the form below it, and `text-transform`
+       labels. Preflight as in `tailwind_app.html`. */
+    *, ::before, ::after { box-sizing: border-box; border: 0 solid #e5e7eb; }
+    html, body { margin: 0; height: 100%; }
+    body { font-family: Arial, sans-serif; font-size: 14px; line-height: 20px; color: #0f172a; }
+    h1, p { margin: 0; padding: 0; }
+
+    .page { display: flex; align-items: flex-start; gap: 24px; padding: 24px; }
+
+    .hero { display: flex; flex-direction: column; align-items: center; gap: 8px; width: 640px; padding: 32px; border-width: 1px; border-radius: 8px; }
+    .display { font-size: 48px; line-height: 1; font-weight: 800; animation: rise 60s both; }
+    .hero-sub { color: #64748b; }
+    @keyframes rise { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: none; } }
+
+    .profile { width: 400px; border-width: 1px; border-radius: 8px; overflow: hidden; }
+    .banner { height: 80px; background-image: linear-gradient(to right, #6366f1, #ec4899); }
+    .avatar { width: 64px; height: 64px; margin: -32px 0 0 16px; border: 4px solid #ffffff; border-radius: 9999px; background: #cbd5e1; }
+    .fields { display: flex; flex-direction: column; gap: 8px; padding: 16px; }
+    .label { font-weight: 600; }
+    .field { font: inherit; color: inherit; margin: 0; width: 100%; height: 36px; padding: 0 12px; border-width: 1px; border-radius: 6px; }
+
+    .labels { display: flex; flex-direction: column; gap: 8px; width: 320px; }
+    .eyebrow { font-size: 12px; line-height: 16px; letter-spacing: 0.05em; text-transform: uppercase; color: #64748b; }
+    .title-case { text-transform: capitalize; }
+    .upper { text-transform: uppercase; }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="hero">
+      <h1 class="display">Welcome back</h1>
+      <p class="hero-sub">Pick up where you left off</p>
+    </div>
+    <div class="profile">
+      <div class="banner"></div>
+      <div class="avatar"></div>
+      <div class="fields">
+        <p class="label">Başlık</p>
+        <input class="field" value="Quarterly review">
+        <p class="label">Açıklama</p>
+        <input class="field" value="Numbers for the board">
+      </div>
+    </div>
+    <div class="labels">
+      <p class="eyebrow">Overview</p>
+      <p class="title-case">recent threads</p>
+      <p>Plan: <strong class="upper">pro</strong> tier</p>
+    </div>
+  </div>
+</body>
+</html>

@@ -28,6 +28,7 @@ use serde_json::{Map, Value};
 
 use super::{parse_px, parse_text_align, solid_fill, Rect, SnapshotCtx};
 use crate::color::parse_css_color;
+use crate::text::{transform_char, TextTransformMode};
 
 /// Sizing decided for one captured run.
 struct TextBox {
@@ -78,12 +79,17 @@ impl SnapshotCtx<'_> {
         rect: Rect,
         parent_rect: Rect,
     ) -> Option<PenNode> {
-        let text = object.get("text").and_then(Value::as_str)?.to_string();
+        let text = object.get("text").and_then(Value::as_str)?;
         if text.trim().is_empty() {
             return None;
         }
         let id = self.allocate_id()?;
         let styles = super::style_map(object);
+        let text = transform_text(
+            text,
+            styles.get("text-transform").map(String::as_str),
+            &mut true,
+        );
         let font_size = styles
             .get("font-size")
             .and_then(|value| parse_px(value))
@@ -118,7 +124,7 @@ impl SnapshotCtx<'_> {
             .filter(|_| font_size > 0.0)
             .map(|height| height / font_size);
         // The auto-layout pass lays text out by its line box instead (see
-        // `snapshot_auto_layout::line_box`), so it keeps the page's leading.
+        // `snapshot_auto_layout_lines::line_box`), so it keeps the page's leading.
         let line_height = if is_single_line(lines, nowrap) && !self.opts.snapshot_auto_layout {
             clamp_single_line_leading(line_height, font_size, rect.h)
         } else {
@@ -197,6 +203,7 @@ fn styled_content(
         return TextContent::Plain(plain);
     };
     let mut segments = Vec::new();
+    let mut capitalize_next = true;
     for item in items {
         let Some(segment) = item.as_object() else {
             continue;
@@ -211,7 +218,7 @@ fn styled_content(
         let style = |key: &str| styles.and_then(|map| map.get(key)).and_then(Value::as_str);
         let decoration = style("text-decoration-line").unwrap_or("");
         segments.push(StyledTextSegment {
-            text: text.to_string(),
+            text: transform_text(text, style("text-transform"), &mut capitalize_next),
             font_family: style("font-family").map(str::to_string),
             font_size: style("font-size")
                 .and_then(parse_px)
@@ -252,11 +259,34 @@ fn styled_content(
                 && segment.strikethrough.is_none()
                 && segment.href.is_none()
         });
-    if segments.is_empty() || trivial {
+    if segments.is_empty() {
         TextContent::Plain(plain)
+    } else if trivial {
+        // The segments' text, which carries their own `text-transform`.
+        TextContent::Plain(segments.into_iter().map(|segment| segment.text).collect())
     } else {
         TextContent::Styled(segments)
     }
+}
+
+/// CSS `text-transform` (`value`) applied to captured text. The page paints
+/// (and the capture measured) the transformed text while the DOM keeps the
+/// source casing, so the case is baked into the content, as the HTML import
+/// and the Figma import (`textCase`) do. `capitalize_next` carries
+/// `capitalize` across a block's segments, so a word split by a style
+/// change keeps one capital.
+fn transform_text(text: &str, value: Option<&str>, capitalize_next: &mut bool) -> String {
+    let mode = TextTransformMode::from_css(value, TextTransformMode::None);
+    if mode == TextTransformMode::None {
+        // Nothing changes; only where the next word starts does.
+        if let Some(last) = text.chars().last() {
+            *capitalize_next = !last.is_alphanumeric();
+        }
+        return text.to_string();
+    }
+    text.chars()
+        .map(|ch| transform_char(ch, mode, capitalize_next))
+        .collect()
 }
 
 /// Line-box count recorded by the extractor. Payloads captured before the
@@ -393,6 +423,41 @@ mod tests {
         assert_eq!(clamp_single_line_leading(None, 14.0, 15.5), None);
         // Degenerate geometry never divides by zero.
         assert_eq!(clamp_single_line_leading(Some(2.0), 0.0, 15.5), Some(2.0));
+    }
+
+    #[test]
+    fn text_transform_is_baked_into_the_content() {
+        let case = |value: &str, text: &str| transform_text(text, Some(value), &mut true);
+        assert_eq!(case("uppercase", "Overview"), "OVERVIEW");
+        assert_eq!(case("lowercase", "New Report"), "new report");
+        // The HTML import's rule: a word starts after any non-alphanumeric.
+        assert_eq!(
+            case("capitalize", "recent threads (jean-luc) ölçüm"),
+            "Recent Threads (Jean-Luc) Ölçüm"
+        );
+        assert_eq!(case("none", "Overview"), "Overview");
+        assert_eq!(transform_text("Overview", None, &mut true), "Overview");
+    }
+
+    #[test]
+    fn segments_take_their_own_text_transform() {
+        let object = serde_json::json!({
+            "text": "plan: pro tier",
+            "segments": [
+                { "text": "plan: ", "styles": { "text-transform": "capitalize" } },
+                { "text": "pro", "styles": { "text-transform": "uppercase", "font-weight": "700" } },
+                { "text": " ti", "styles": { "text-transform": "capitalize" } },
+                // A style change inside a word does not start a new one.
+                { "text": "er", "styles": { "text-transform": "capitalize", "font-style": "italic" } },
+            ],
+        });
+        let TextContent::Styled(segments) =
+            styled_content(object.as_object().unwrap(), "Plan: Pro Tier".into(), None)
+        else {
+            panic!("styled content");
+        };
+        let texts: Vec<&str> = segments.iter().map(|s| s.text.as_str()).collect();
+        assert_eq!(texts, ["Plan: ", "PRO", " Ti", "er"]);
     }
 
     #[test]

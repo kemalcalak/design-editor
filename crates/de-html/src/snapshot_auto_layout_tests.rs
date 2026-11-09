@@ -263,6 +263,34 @@ fn overlapping_children_keep_absolute_layout() {
         .all(|child| frame(child).base.x.is_some()));
 }
 
+/// #322: an avatar pulled up over a banner (`-mt-8`) shares the banner's
+/// line. That line stays a `layout: none` layer the size of the line, with
+/// its children placed inside it, so the content below keeps its place.
+#[test]
+fn an_overlapping_line_is_a_fixed_layer_in_the_stack() {
+    let root = import(&snapshot(element(
+        [10.0, 20.0, 200.0, 200.0],
+        json!({}),
+        vec![
+            boxed([10.0, 20.0, 200.0, 80.0]),
+            boxed([26.0, 68.0, 64.0, 64.0]),
+            boxed([10.0, 140.0, 200.0, 80.0]),
+        ],
+    )));
+    assert_eq!(frame(&root).container.layout, Some(LayoutMode::Vertical));
+    let layer = frame(&kids(&root)[0]);
+    assert_eq!(layer.container.layout, Some(LayoutMode::None));
+    assert_eq!(layer.container.height, Some(SizingBehavior::Number(112.0)));
+    let placed: Vec<(Option<f64>, Option<f64>)> = layer
+        .children
+        .iter()
+        .flatten()
+        .map(|child| (frame(child).base.x, frame(child).base.y))
+        .collect();
+    assert!(placed.contains(&(Some(0.0), Some(0.0))), "{placed:?}");
+    assert!(placed.contains(&(Some(16.0), Some(48.0))), "{placed:?}");
+}
+
 #[test]
 fn wrapped_flex_rows_become_row_frames() {
     let root = import(&snapshot(element(
