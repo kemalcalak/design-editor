@@ -18,8 +18,7 @@ const PNG: &[u8] = b"\x89PNG\r\n\x1a\nfake";
 
 /// The paint registry's visible set is process-wide: one test at a time.
 fn serial() -> std::sync::MutexGuard<'static, ()> {
-    static LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
-    LOCK.lock().unwrap_or_else(|e| e.into_inner())
+    crate::browser_live_host::browser_registry_test_lock()
 }
 
 fn state_with_browser(id: &str) -> EditorState {
@@ -39,7 +38,7 @@ fn run(host: &mut BrowserRenderHost, state: &mut EditorState, id: &str) {
     let deadline = Instant::now() + Duration::from_secs(5);
     loop {
         browser_textures::begin_frame(false);
-        browser_textures::note_visible(id);
+        browser_textures::note_visible(id, [390.0, 844.0]);
         host.pump(state);
         if !host.is_pending() {
             return;

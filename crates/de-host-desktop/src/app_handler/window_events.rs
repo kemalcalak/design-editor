@@ -100,6 +100,7 @@ impl DesktopApp {
     pub(crate) fn apply_window_size(&mut self, size: PhysicalSize<u32>) -> bool {
         self.window_zero_size = !has_area(size);
         if self.window_zero_size {
+            self.pump_browser_live();
             return false;
         }
         self.viewport_width = size.width as f32 / self.dpi;
@@ -129,9 +130,37 @@ impl DesktopApp {
     /// Space). Painting pauses while hidden; the reveal repaints.
     pub(crate) fn on_occluded(&mut self, occluded: bool) {
         self.window_occluded = occluded;
+        // Nothing paints while hidden, so stop live pages now (#324).
+        self.pump_browser_live();
         if !occluded {
             self.request_redraw(true);
         }
+    }
+
+    /// The window gained or lost keyboard focus: live pages pause without
+    /// it (#324) and resume with it.
+    pub(crate) fn on_focused(&mut self, focused: bool) {
+        self.window_focused = focused;
+        if self.pump_browser_live() || focused {
+            self.request_redraw(true);
+        }
+    }
+
+    /// Start, change or stop live page streams for the last painted frame.
+    /// Returns whether the canvas must repaint (a stream stopped and its
+    /// snapshot shows again).
+    pub(crate) fn pump_browser_live(&mut self) -> bool {
+        let active = self.window_focused && !self.surface_hidden();
+        let Some(backend) = self.backend.as_mut() else {
+            return false;
+        };
+        self.browser_live.pump(
+            self.host.editor_state(),
+            self.browser_renders.snapshot_queue(),
+            self.dpi,
+            active,
+            backend,
+        )
     }
 
     pub(super) fn on_moved(&mut self, pos: PhysicalPosition<i32>) {

@@ -374,6 +374,13 @@ impl DesktopApp {
                 self.redraw_dirty = true;
             }
         }
+        // Live browser frames (#324) decoded since the last frame go in
+        // before paint; each repaints only its node's region.
+        if let Some(backend) = self.backend.as_mut() {
+            if self.browser_live.install_frames(backend) {
+                self.redraw_dirty = true;
+            }
+        }
         // Land finished script-node runs and start the ones the document
         // needs; a scan only happens when the revision moved (#19).
         let epoch = self.host.document_epoch();
@@ -540,6 +547,10 @@ impl DesktopApp {
             // landed snapshots and statuses repaint.
             if self.browser_renders.pump(self.host.editor_state_mut()) {
                 self.host.mark_editor_state_dirty();
+                self.request_redraw(true);
+            }
+            // Live streams follow what this frame showed (#324).
+            if self.pump_browser_live() {
                 self.request_redraw(true);
             }
             if let (Some(start), Some((blits0, scrolls0, builds0))) = (frame_start, stats_before) {

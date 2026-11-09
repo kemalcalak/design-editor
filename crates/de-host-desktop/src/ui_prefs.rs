@@ -12,6 +12,9 @@ struct UiPrefs {
     /// Pencil tool smoothing level (#88).
     #[serde(default)]
     pencil_smoothing: Option<String>,
+    /// "Live pages": selected browser nodes stream (#324).
+    #[serde(default)]
+    live_pages: Option<bool>,
 }
 
 /// The preferences this file carries, as the editor holds them.
@@ -20,6 +23,7 @@ pub(crate) struct UiPrefValues {
     /// The AI generation overlay's cursor silhouette (not the Pencil tool).
     pub(crate) pencil_cursor: PencilCursorStyle,
     pub(crate) pencil_smoothing: PencilSmoothing,
+    pub(crate) live_pages: bool,
 }
 
 pub(crate) fn save_ui_prefs(values: UiPrefValues) {
@@ -27,6 +31,7 @@ pub(crate) fn save_ui_prefs(values: UiPrefValues) {
     let value = UiPrefs {
         pencil_cursor: Some(values.pencil_cursor.id().to_string()),
         pencil_smoothing: Some(values.pencil_smoothing.id().to_string()),
+        live_pages: Some(values.live_pages),
     };
     if let Err(err) = de_config_store::write_json(FILE, &value) {
         eprintln!("[ui-prefs] write failed: {err}");
@@ -35,10 +40,14 @@ pub(crate) fn save_ui_prefs(values: UiPrefValues) {
 
 /// Saved values; a field missing from the file (or an unknown id) is
 /// `None`, so the caller keeps its default.
-pub(crate) fn load_ui_prefs() -> (Option<PencilCursorStyle>, Option<PencilSmoothing>) {
+pub(crate) fn load_ui_prefs() -> (
+    Option<PencilCursorStyle>,
+    Option<PencilSmoothing>,
+    Option<bool>,
+) {
     crate::test_config_root::guard_user_config();
     let Some(value) = de_config_store::read_json::<UiPrefs>(FILE).ok().flatten() else {
-        return (None, None);
+        return (None, None, None);
     };
     (
         value
@@ -49,6 +58,7 @@ pub(crate) fn load_ui_prefs() -> (Option<PencilCursorStyle>, Option<PencilSmooth
             .pencil_smoothing
             .as_deref()
             .and_then(PencilSmoothing::from_id),
+        value.live_pages,
     )
 }
 
@@ -71,5 +81,6 @@ mod tests {
         let old: UiPrefs = serde_json::from_str(r#"{"pencil_cursor":"chubby"}"#).unwrap();
         assert_eq!(old.pencil_cursor.as_deref(), Some("chubby"));
         assert_eq!(old.pencil_smoothing, None);
+        assert_eq!(old.live_pages, None, "live pages keep their default (on)");
     }
 }

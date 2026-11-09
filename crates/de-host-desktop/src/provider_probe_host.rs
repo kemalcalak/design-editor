@@ -204,6 +204,7 @@ impl DesktopApp {
         let values = crate::ui_prefs::UiPrefValues {
             pencil_cursor: ui.pencil_cursor_style,
             pencil_smoothing: ui.pencil_smoothing,
+            live_pages: ui.browser_live.live_pages(),
         };
         if self.last_saved_ui_prefs == Some(values) {
             return;
