@@ -2395,6 +2395,17 @@ export async function opCkInit(canvasId) {
       return imageCaches.installFullImage(imageIdLo, imageIdHi, encoded, maxEdgePx);
     },
 
+    // Live browser frames (#324): `bitmap` is a decoded `ImageBitmap`; the
+    // cache owns it from here (closed on failure, after the pixel copy when
+    // there is no lazy texture image, else when the image is replaced).
+    installLiveImage(imageIdLo, imageIdHi, bitmap) {
+      return imageCaches.installLiveImage(imageIdLo, imageIdHi, bitmap);
+    },
+
+    dropLiveImage(imageIdLo, imageIdHi) {
+      imageCaches.dropLiveImage(imageIdLo, imageIdHi);
+    },
+
     drawImageThumb(imageIdLo, imageIdHi, x, y, w, h, jpeg) {
       imageCaches.drawThumbnailCover(canvas, imageIdLo, imageIdHi, jpeg, x, y, w, h);
     },

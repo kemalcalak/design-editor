@@ -89,3 +89,28 @@ fn a_reply_reads_with_missing_lists() {
     .unwrap();
     assert!(!ok.contains("error"), "{ok}");
 }
+
+#[test]
+fn a_stream_entry_keeps_the_snapshot_layout_at_the_stream_scale() {
+    let node: jian_ops_schema::node::PenNode = serde_json::from_str(
+        r#"{"type":"browser","id":"b","width":390,"height":844,"url":"https://example.com","deviceId":"phone"}"#,
+    )
+    .unwrap();
+    let request = crate::browser_live::browser_render_request(&node, 0, None).unwrap();
+    let tier = crate::browser_stream::stream_tier(crate::browser_stream::StreamHost::Web);
+    let spec = crate::browser_stream::BrowserStreamSpec::for_request(&request, 512, tier);
+    let entry = BrowserLiveEntry::for_stream("b#1".into(), &spec);
+    assert_eq!(entry.key, "b#1");
+    assert_eq!(entry.page.url, request.url);
+    assert_eq!(
+        (entry.page.layout_width, entry.page.layout_height),
+        (request.layout_width, request.layout_height)
+    );
+    assert_eq!(entry.page.mobile, request.mobile);
+    assert_eq!(entry.page.scale, spec.page_scale);
+    assert_eq!((entry.page.scroll_x, entry.page.scroll_y), (0.0, 0.0));
+    assert_eq!(
+        (entry.frame_width, entry.frame_height),
+        (spec.frame_width, spec.frame_height)
+    );
+}

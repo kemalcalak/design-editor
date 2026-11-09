@@ -74,6 +74,12 @@ pub(crate) fn pump(host: &mut WidgetHost) -> bool {
     changed
 }
 
+/// Run `f` with the snapshot queue pumped this repaint (its visible set
+/// drives the live streams, `browser_live_stream`).
+pub(crate) fn with_queue<R>(f: impl FnOnce(&BrowserRenderQueue) -> R) -> R {
+    QUEUE.with(|queue| f(&queue.borrow()))
+}
+
 /// POST one request to the daemon. False when the request never left.
 fn request_snapshot(request: &BrowserRenderRequest) -> bool {
     let Ok(body) = serde_json::to_string(&request.snapshot_spec()) else {

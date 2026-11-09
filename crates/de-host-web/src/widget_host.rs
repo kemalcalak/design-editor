@@ -61,6 +61,10 @@ mod boolean_op_tests;
 #[cfg(test)]
 mod boolean_toolbar_tests;
 #[cfg(feature = "canvaskit")]
+mod browser_live_client;
+#[cfg(feature = "canvaskit")]
+pub(crate) mod browser_live_stream;
+#[cfg(feature = "canvaskit")]
 pub(crate) mod browser_snapshot_fetch;
 #[cfg(test)]
 mod canvas_hierarchy_tests;
