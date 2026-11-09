@@ -180,6 +180,9 @@ impl WidgetHostNative {
         let canvas_h = canvas_rect.size.y;
         if canvas_w > 0.0 && canvas_h > 0.0 {
             if self.preview.is_some() {
+                // The browser pages this frame shows feed the live queues
+                // and take input (#324).
+                de_editor_ui::widgets::browser_preview::begin_frame();
                 // PREVIEW path — paint the canvas background, then the
                 // live document rendered through the SAME design-canvas
                 // scene painter (`paint_scene`), with widget runtime
@@ -216,6 +219,7 @@ impl WidgetHostNative {
                     self.paint_preview_browser_bar(&mut *frame, canvas_rect);
                     self.paint_screen_switcher(&mut *frame, canvas_rect);
                 }
+                de_editor_ui::widgets::browser_preview::end_frame();
             } else if !self.serve_canvas_from_pan_cache(frame, canvas_rect) {
                 // PAINT path — the canvas reads editor state + the
                 // layout-resolved render scene (`refresh_layout_scene`).

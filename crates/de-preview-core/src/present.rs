@@ -9,7 +9,7 @@ use super::PreviewSession;
 use de_editor_core::PenNodeExt;
 use de_editor_ui::layout_scene::SceneNode;
 use de_editor_ui::widgets::{
-    paint_scene_page_with, paint_scene_subtree, PaintCx, PaintSceneOptions,
+    browser_preview, paint_scene_page_with, paint_scene_subtree, PaintCx, PaintSceneOptions,
 };
 use de_editor_ui::{Color, Point2D, Rect, RenderBackend};
 
@@ -326,40 +326,33 @@ impl PreviewSession {
             let mut cx = PaintCx {
                 backend: &mut *backend,
             };
-            paint_scene_page_with(
-                &mut cx,
-                page,
-                content_origin,
-                fit,
-                cull,
-                PaintSceneOptions {
-                    only_root: Some(only_root),
-                    skip_node: pinned.map(|paint| paint.node_id.as_str()),
-                },
-            );
+            // Browser nodes show their pages, clipped to each pass (#324).
+            browser_preview::with_clip(content_clip, || {
+                paint_scene_page_with(
+                    &mut cx,
+                    page,
+                    content_origin,
+                    fit,
+                    cull,
+                    PaintSceneOptions {
+                        only_root: Some(only_root),
+                        skip_node: pinned.map(|paint| paint.node_id.as_str()),
+                    },
+                );
+            });
         }
         backend.restore();
 
-        if let Some(paint) = pinned {
+        for paint in [pinned, pinned_top].into_iter().flatten() {
             backend.save();
             backend.clip_rect(paint.strip_clip);
             {
                 let mut cx = PaintCx {
                     backend: &mut *backend,
                 };
-                paint_scene_subtree(&mut cx, page, &paint.node_id, paint.paint_origin, fit);
-            }
-            backend.restore();
-        }
-
-        if let Some(paint) = pinned_top {
-            backend.save();
-            backend.clip_rect(paint.strip_clip);
-            {
-                let mut cx = PaintCx {
-                    backend: &mut *backend,
-                };
-                paint_scene_subtree(&mut cx, page, &paint.node_id, paint.paint_origin, fit);
+                browser_preview::with_clip(paint.strip_clip, || {
+                    paint_scene_subtree(&mut cx, page, &paint.node_id, paint.paint_origin, fit);
+                });
             }
             backend.restore();
         }

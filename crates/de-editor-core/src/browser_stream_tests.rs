@@ -150,3 +150,27 @@ fn a_stream_spec_keeps_the_snapshot_layout() {
     assert!(json.contains("\"pageScale\":1.5"), "{json}");
     assert_eq!(node_page_session_key("b"), "node:b");
 }
+
+#[test]
+fn every_preview_page_is_live_and_interactive_the_largest_first() {
+    let page = LiveCandidate::in_preview("page", 10.0);
+    assert!(page.wants_live() && page.interactive && !page.selected);
+    let candidates = [
+        LiveCandidate::in_preview("small", 100.0),
+        LiveCandidate::in_preview("big", 900.0),
+        LiveCandidate::in_preview("mid", 400.0),
+        LiveCandidate::in_preview("tiny", 1.0),
+        LiveCandidate::in_preview("hidden", 0.0),
+    ];
+    assert_eq!(
+        pick_live_pages(&candidates, MAX_LIVE_PAGES),
+        ["big", "mid", "small"]
+    );
+}
+
+#[test]
+fn the_host_tiers_are_the_same_for_canvas_and_preview_streams() {
+    assert_eq!(stream_tier(StreamHost::Desktop).max_fps, 30.0);
+    assert_eq!(stream_tier(StreamHost::Web).max_fps, 10.0);
+    assert_eq!(stream_tier(StreamHost::Web).max_width, MAX_STREAM_WIDTH);
+}

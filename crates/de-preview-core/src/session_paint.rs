@@ -17,7 +17,7 @@ use de_editor_ui::layout_scene::{
     BlurEffect, DropShadow, Effect, LayoutScene, SceneNode, SceneStroke, SceneStrokeAlign,
     SceneVideo,
 };
-use de_editor_ui::widgets::{paint_scene_page_without_video_badge, PaintCx};
+use de_editor_ui::widgets::{browser_preview, paint_scene_page_without_video_badge, PaintCx};
 use de_editor_ui::{Color, Point2D, Rect, RenderBackend};
 use jian_core::render::widget_style::{
     active_override, derived_overlay, resolve_authored_widget_visual, with_visual_opacity,
@@ -146,7 +146,10 @@ impl PreviewSession {
             let mut cx = PaintCx {
                 backend: &mut *backend,
             };
-            paint_scene_page_without_video_badge(&mut cx, page, viewport_origin, zoom, cull);
+            // Browser nodes show their pages here (#324).
+            browser_preview::with_clip(canvas_region, || {
+                paint_scene_page_without_video_badge(&mut cx, page, viewport_origin, zoom, cull);
+            });
         }
         self.paint_focus_caret(backend, scene, viewport_origin, zoom, now_ms);
         backend.restore();

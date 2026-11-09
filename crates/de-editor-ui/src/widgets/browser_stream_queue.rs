@@ -1,9 +1,9 @@
 //! Which browser nodes stream live (#324): the scheduling both hosts share,
 //! next to the snapshot queue (`browser_render_queue`).
 //!
-//! Like pen.dev, a browser node plays live only while it is selected (or
-//! interactive, phase 4); every other node keeps the snapshot queue's
-//! still picture. A host calls [`BrowserStreamQueue::pump`] once per
+//! Like pen.dev, a browser node on the canvas plays live only while it is
+//! selected (or interactive, phase 4); in Preview every page on screen
+//! does; every other node keeps the snapshot queue's still picture. A host calls [`BrowserStreamQueue::pump`] once per
 //! frame, after the snapshot queue's pump, and carries out the returned
 //! commands with its own transport (desktop: CDP screencasts; web: the
 //! daemon's stream). Each landed frame goes into the node's live slot
@@ -17,7 +17,10 @@
 //! - Only selected (or interactive) nodes the last painted page frame
 //!   showed stream, at most [`MAX_LIVE_PAGES`] of a multi-selection, the
 //!   larger ones on screen first
-//!   (`de_editor_core::browser_stream::pick_live_pages`).
+//!   (`de_editor_core::browser_stream::pick_live_pages`). In Preview every
+//!   page the preview frame showed is a candidate, live and interactive
+//!   (`LiveCandidate::in_preview`), under the same cap; leaving the
+//!   preview stops the ones the canvas does not keep live.
 //! - Nothing streams while the host is inactive (unfocused or hidden
 //!   window), with the "Live pages" setting off, or while an opened
 //!   document's pages are held.
@@ -68,7 +71,7 @@ struct Stamp {
     revision: u64,
     reload_generation: u64,
     visible_frames: u64,
-    selection: u64,
+    live_scope: u64,
     enabled: bool,
     dpi_bits: u32,
 }
@@ -142,7 +145,7 @@ impl BrowserStreamQueue {
             revision: state.document_revision(),
             reload_generation: live.reload_generation(),
             visible_frames: snapshots.visible_frames(),
-            selection: selection_hash(state),
+            live_scope: live_scope_hash(state),
             enabled: active && live.live_pages() && live.pages_allowed(),
             dpi_bits: dpi.to_bits(),
         };
@@ -169,11 +172,14 @@ impl BrowserStreamQueue {
     ) {
         let folder = state.editor_ui.document_folder.as_deref();
         let interactive = state.editor_ui.browser_live.interactive_node();
+        // Preview (▶) has no selection: every page it shows is live and
+        // interactive, like an embedded page.
+        let preview = state.editor_ui.preview.mode;
         let mut wanted: Vec<Wanted<'_>> = Vec::new();
         for id in visible {
             let node_id = NodeId::new(id);
-            let selected = state.selection.set.contains(&node_id);
-            let is_interactive = interactive == Some(id.as_str());
+            let selected = !preview && state.selection.set.contains(&node_id);
+            let is_interactive = preview || interactive == Some(id.as_str());
             // Unselected nodes keep their still: nothing to look up.
             if !selected && !is_interactive {
                 continue;
@@ -184,13 +190,18 @@ impl BrowserStreamQueue {
             let Some([width, height]) = browser_textures::visible_size(id) else {
                 continue;
             };
-            wanted.push(Wanted {
-                candidate: LiveCandidate {
+            let candidate = if preview {
+                LiveCandidate::in_preview(id.as_str(), width * height)
+            } else {
+                LiveCandidate {
                     node_id: id.as_str(),
                     screen_area: width * height,
                     selected,
                     interactive: is_interactive,
-                },
+                }
+            };
+            wanted.push(Wanted {
+                candidate,
                 request,
                 reload,
                 screen_width: width,
@@ -274,9 +285,10 @@ fn request_for(
     browser_render_request(node, reload, folder).map(|request| (request, reload))
 }
 
-/// Identity of the selection and the interactive node.
-fn selection_hash(state: &EditorState) -> u64 {
+/// Identity of the selection, the interactive node and the preview.
+fn live_scope_hash(state: &EditorState) -> u64 {
     let mut hasher = DefaultHasher::new();
+    state.editor_ui.preview.mode.hash(&mut hasher);
     for id in state.selection.set.iter() {
         id.as_str().hash(&mut hasher);
     }

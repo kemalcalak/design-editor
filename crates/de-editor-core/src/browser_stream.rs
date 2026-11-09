@@ -4,8 +4,11 @@
 //! Like pen.dev, a browser node plays live only while the user works with
 //! it: while it is selected, or interactive (phase 4 drives the page;
 //! interactive implies live). Every other browser node shows its still
-//! snapshot. These functions decide which nodes stream
-//! ([`pick_live_pages`]: at most [`MAX_LIVE_PAGES`] of a multi-selection),
+//! snapshot. Preview (▶) has no selection: there every browser node on
+//! screen behaves like an embedded page, live and interactive at once
+//! ([`LiveCandidate::in_preview`]), under the same cap and tiers. These
+//! functions decide which nodes stream
+//! ([`pick_live_pages`]: at most [`MAX_LIVE_PAGES`] of the candidates),
 //! the host's rate and size caps ([`stream_tier`]), how large a stream's
 //! frames are ([`stream_frame_width`]) and how its page is laid out
 //! ([`BrowserStreamSpec`], derived from the node's snapshot request so a
@@ -13,7 +16,8 @@
 
 use crate::browser_live::BrowserRenderRequest;
 
-/// At most this many browser nodes of a selection stream at once.
+/// At most this many browser nodes stream at once (of a selection, or of
+/// the pages a preview shows).
 pub const MAX_LIVE_PAGES: usize = 3;
 /// Frame-rate cap of a desktop stream.
 pub const DESKTOP_STREAM_FPS: f64 = 30.0;
@@ -73,7 +77,19 @@ pub struct LiveCandidate<'a> {
     pub interactive: bool,
 }
 
-impl LiveCandidate<'_> {
+impl<'a> LiveCandidate<'a> {
+    /// A browser node the preview shows. Preview has no selection: every
+    /// page on screen counts as live and interactive, like an embedded
+    /// page, so the larger ones on screen win the cap.
+    pub fn in_preview(node_id: &'a str, screen_area: f32) -> Self {
+        Self {
+            node_id,
+            screen_area,
+            selected: false,
+            interactive: true,
+        }
+    }
+
     /// Whether the node wants to stream: selected or interactive.
     pub fn wants_live(&self) -> bool {
         self.selected || self.interactive

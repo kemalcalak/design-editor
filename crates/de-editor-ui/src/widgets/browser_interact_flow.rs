@@ -15,6 +15,10 @@
 //! ([`BrowserInteraction::take`]) and sends it with its own transport
 //! (desktop: the node's stream tab over CDP; web: the daemon's
 //! `/api/browser/input`).
+//!
+//! In Preview a browser node is an embedded page and needs no mode: the
+//! `preview_*` methods (`browser_interact_preview.rs`) route events over
+//! any live page the preview frame showed (`browser_preview`).
 
 use de_editor_core::browser_input::{BrowserInputEvent, InputBatch, InputModifiers, MouseButton};
 use de_editor_core::browser_interact::{browser_in_hit_path, PageMapping};
@@ -83,6 +87,12 @@ pub struct BrowserInteraction {
     /// Where the page last saw the pointer (CSS px), for releases sent
     /// when the mode ends mid-press.
     last_point: (f64, f64),
+    /// The preview page the keys go to: the last one pressed (#324,
+    /// `browser_interact_preview.rs`).
+    preview_focus: Option<String>,
+    /// A preview page was pressed since the preview last let go: the
+    /// held buttons and focus are the preview's to release.
+    preview_owns: bool,
 }
 
 impl BrowserInteraction {
@@ -224,6 +234,20 @@ impl BrowserInteraction {
             self.end();
             return ButtonOutcome::Left;
         };
+        self.press_on_page(node, button, (px, py), modifiers, now_ms);
+        ButtonOutcome::Page
+    }
+
+    /// Queue a press at page point `(px, py)` of `node`, with the page's
+    /// own click count.
+    fn press_on_page(
+        &mut self,
+        node: String,
+        button: MouseButton,
+        (px, py): (f64, f64),
+        modifiers: InputModifiers,
+        now_ms: u64,
+    ) {
         let count = match self.last_press {
             Some(last)
                 if last.button == button
@@ -255,7 +279,6 @@ impl BrowserInteraction {
                 modifiers,
             },
         );
-        ButtonOutcome::Page
     }
 
     /// A wheel or trackpad scroll over the page. `dx` / `dy` move content
@@ -438,6 +461,11 @@ fn page_point_at(
     let inside = over_canvas(state, x, y, viewport_w, viewport_h) && mapping.contains(doc.x, doc.y);
     (captured || inside).then(|| (node, mapping, mapping.page_point(doc.x, doc.y)))
 }
+
+// Preview pages (#324): the same routing for the embedded pages of the
+// preview, which needs no interaction mode.
+#[path = "browser_interact_preview.rs"]
+mod preview;
 
 #[cfg(test)]
 #[path = "browser_interact_flow_tests.rs"]

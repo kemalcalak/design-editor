@@ -183,3 +183,24 @@ fn an_empty_box_has_no_mapping() {
     assert!(PageMapping::new([0.0, 0.0, 0.0, 10.0], &layout(10, 10)).is_none());
     assert!(PageMapping::new([f32::NAN, 0.0, 10.0, 10.0], &layout(10, 10)).is_none());
 }
+
+#[test]
+fn opening_the_preview_ends_the_canvas_mode() {
+    let mut state = page();
+    state.enter_browser_interaction(b1());
+    state.editor_ui.preview.mode = true;
+    assert!(state.sync_browser_interaction());
+    assert_eq!(state.interactive_browser(), None);
+}
+
+#[test]
+fn the_preview_drives_every_page_it_may_load() {
+    let mut state = page();
+    assert_eq!(state.preview_page_layout(&b1()), None, "not previewing");
+    state.editor_ui.preview.mode = true;
+    let layout = state.preview_page_layout(&b1()).expect("drivable");
+    assert_eq!((layout.width, layout.height), (1440, 900));
+    assert_eq!(state.preview_page_layout(&NodeId::new("r1")), None);
+    state.editor_ui.browser_live.set_live_pages(false);
+    assert_eq!(state.preview_page_layout(&b1()), None, "live pages off");
+}

@@ -19,14 +19,24 @@ use super::wheel_events::{platform_notch_scale, wheel_route};
 use crate::browser_input_keys::{input_modifiers, key_input};
 use crate::DesktopApp;
 
+#[path = "browser_preview_events.rs"]
+mod preview;
+
 impl DesktopApp {
-    /// Route `event` to the interactive browser page. True when the page
-    /// took it (the editor must not see it).
+    /// Route `event` to a preview page (in Preview) or to the interactive
+    /// browser page (canvas interaction mode). True when the page took it
+    /// (the editor must not see it).
     pub(super) fn intercept_browser_interaction(&mut self, event: &WindowEvent) -> bool {
         if let WindowEvent::ModifiersChanged(mods) = event {
             // Tracked always; never consumed (the editor tracks its own).
             self.page_modifiers = input_modifiers(mods.state());
             return false;
+        }
+        if self.host.preview_pages_active() {
+            // Preview pages are embedded pages: no mode (#324).
+            let consumed = self.intercept_preview_page(event);
+            self.flush_browser_input();
+            return consumed;
         }
         if !self.host.browser_interaction_active() {
             return false;

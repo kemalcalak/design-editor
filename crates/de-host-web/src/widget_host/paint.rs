@@ -194,6 +194,9 @@ impl WidgetHost {
                 // necessarily covers the whole canvas rect, and the previous
                 // frame's design content must not show through around it.
                 backend.fill_rect(canvas_rect, self.theme.canvas_surface);
+                // The browser pages this frame shows feed the live queues
+                // (#324); page input on web is a follow-up.
+                de_editor_ui::widgets::browser_preview::begin_frame();
 
                 // Slideshow presentation paints the board letterboxed in the full viewport.
                 if self.preview_slideshow_active() {
@@ -225,6 +228,7 @@ impl WidgetHost {
                 self.paint_preview_switcher(backend, canvas_rect);
                 self.paint_preview_browser_bar(backend, canvas_rect);
                 self.paint_screen_switcher(backend, canvas_rect);
+                de_editor_ui::widgets::browser_preview::end_frame();
             } else {
                 // NORMAL PAINT path — the canvas reads editor state + the
                 // layout-resolved render scene (`refresh_layout_scene`).

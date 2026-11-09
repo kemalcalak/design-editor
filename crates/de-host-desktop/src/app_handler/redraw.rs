@@ -380,6 +380,10 @@ impl DesktopApp {
             self.flush_browser_input();
             self.redraw_dirty = true;
         }
+        // A closed preview's pages let go of the pointer and keys (#324).
+        if self.host.sync_preview_pages() {
+            self.flush_browser_input();
+        }
         // Live browser frames (#324) decoded since the last frame go in
         // before paint; each repaints only its node's region.
         if let Some(backend) = self.backend.as_mut() {
