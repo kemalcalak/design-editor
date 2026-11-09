@@ -62,28 +62,41 @@ impl Tab {
             COMMAND_TIMEOUT,
         )?;
         let target_id = string_field(&target, "targetId", "Target.createTarget")?;
+        Self::attach(client, &target_id).inspect_err(|_| {
+            let _ = close_target(client, &target_id);
+        })
+    }
+
+    /// A session of `client`'s own on the existing tab `target_id` (a
+    /// second connection may attach to a tab another one drives).
+    pub(crate) fn attach(
+        client: &mut CdpClient,
+        target_id: &str,
+    ) -> Result<Self, BrowserRenderError> {
         let attached = client.call(
             None,
             "Target.attachToTarget",
             json!({ "targetId": target_id, "flatten": true }),
             COMMAND_TIMEOUT,
-        );
-        let session = match attached
-            .and_then(|reply| string_field(&reply, "sessionId", "Target.attachToTarget"))
-        {
-            Ok(session) => session,
-            Err(error) => {
-                let _ = close_target(client, &target_id);
-                return Err(error);
-            }
-        };
+        )?;
+        let session = string_field(&attached, "sessionId", "Target.attachToTarget")?;
         let tab = Self {
-            target_id,
+            target_id: target_id.to_string(),
             session,
             default_user_agent: None,
         };
         tab.command(client, "Page.enable", json!({}))?;
         Ok(tab)
+    }
+
+    /// The tab's target id, for a second connection to attach to.
+    pub(crate) fn target_id(&self) -> &str {
+        &self.target_id
+    }
+
+    /// This connection's session on the tab.
+    pub(crate) fn session(&self) -> &str {
+        &self.session
     }
 
     /// Send `method` to this tab.
@@ -267,6 +280,18 @@ impl Tab {
 
     pub(crate) fn close(self, client: &mut CdpClient) {
         let _ = close_target(client, &self.target_id);
+        client.drop_session_events(&self.session);
+    }
+
+    /// Leave the tab open and end only this connection's session on it
+    /// (its emulation and screencast end with it).
+    pub(crate) fn detach(self, client: &mut CdpClient) {
+        let _ = client.call(
+            None,
+            "Target.detachFromTarget",
+            json!({ "sessionId": self.session }),
+            COMMAND_TIMEOUT,
+        );
         client.drop_session_events(&self.session);
     }
 }

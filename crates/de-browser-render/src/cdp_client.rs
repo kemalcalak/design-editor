@@ -14,7 +14,7 @@ use tungstenite::{Message, WebSocket};
 use crate::BrowserRenderError;
 
 /// Read slice: a blocked read returns this often so deadlines are honoured.
-const READ_SLICE: Duration = Duration::from_millis(200);
+pub(crate) const READ_SLICE: Duration = Duration::from_millis(200);
 const CONNECT_TIMEOUT: Duration = Duration::from_secs(5);
 /// Events kept while waiting for a command reply; older ones are dropped.
 const EVENT_BUFFER: usize = 256;
@@ -133,6 +133,41 @@ impl CdpClient {
             self.buffer_event(message);
         }
         Ok(false)
+    }
+
+    /// Wake from a blocked read this often (default [`READ_SLICE`]). A
+    /// screencast connection uses a short slice so it notices a taken
+    /// frame quickly.
+    pub(crate) fn set_read_slice(&mut self, slice: Duration) -> Result<(), BrowserRenderError> {
+        self.socket
+            .get_ref()
+            .set_read_timeout(Some(slice.max(Duration::from_millis(1))))
+            .map_err(|e| BrowserRenderError::Connect(e.to_string()))
+    }
+
+    /// The next event of any kind (buffered ones first), `None` once
+    /// `deadline` passes. Stray command replies are skipped.
+    pub(crate) fn next_event(
+        &mut self,
+        deadline: Instant,
+    ) -> Result<Option<Value>, BrowserRenderError> {
+        if let Some(event) = self.events.pop_front() {
+            return Ok(Some(event));
+        }
+        while let Some(message) = self.read_until(deadline)? {
+            if message.get("method").is_some() {
+                return Ok(Some(message));
+            }
+        }
+        Ok(None)
+    }
+
+    /// Forget buffered `method` events of `session`.
+    pub(crate) fn drop_method_events(&mut self, session: &str, method: &str) {
+        self.events.retain(|event| {
+            event.get("sessionId").and_then(Value::as_str) != Some(session)
+                || event.get("method").and_then(Value::as_str) != Some(method)
+        });
     }
 
     /// Forget buffered events of `session` (its target was closed).
