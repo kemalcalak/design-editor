@@ -377,6 +377,9 @@ pub struct HttpRequest {
     /// this is captured alongside so a route that accepts no parameters
     /// (e.g. the live design.md route) can refuse one explicitly.
     pub query: Option<String>,
+    /// `Sec-Fetch-Site` header value, when present: which site made the
+    /// request (browsers set it on every fetch; a page cannot forge it).
+    pub sec_fetch_site: Option<String>,
 }
 
 /// Parse a capped HTTP header and then read exactly its declared body length.
@@ -537,6 +540,7 @@ pub fn read_http_request<S: std::io::Read>(stream: &mut S) -> Result<HttpRequest
     let origin = header_value("origin");
     let token = header_value("x-design-editor-token");
     let content_type = header_value("content-type");
+    let sec_fetch_site = header_value("sec-fetch-site");
     if method == "POST" && path == crate::mcp_live::design_md_route::DESIGN_MD_PATH {
         let content_type_count = headers
             .lines()
@@ -595,6 +599,7 @@ pub fn read_http_request<S: std::io::Read>(stream: &mut S) -> Result<HttpRequest
         token,
         content_type,
         query,
+        sec_fetch_site,
     })
 }
 

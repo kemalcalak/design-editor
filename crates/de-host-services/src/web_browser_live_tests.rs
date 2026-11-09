@@ -2,6 +2,7 @@ use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::Weak;
 use std::time::Instant;
 
+use base64::Engine as _;
 use de_browser_render::{FrameMetadata, StreamSettings, Viewport};
 use de_editor_core::browser_live::BrowserSnapshotSpec;
 use de_editor_core::browser_live_wire::{BrowserLiveEntry, WEB_LIVE_MAX_FPS};
@@ -188,6 +189,16 @@ fn hub() -> (Arc<FakeSource>, LiveHub) {
     (source, hub)
 }
 
+/// What the writer would send next, written and read back as events.
+fn drained(client: &LiveClient) -> Vec<BrowserLiveEvent> {
+    let pipe = Pipe::default();
+    let mut out = pipe.clone();
+    for item in client.drain() {
+        item.write_to(&mut out).unwrap();
+    }
+    pipe.events()
+}
+
 fn set(client: &str, nodes: Vec<BrowserLiveEntry>) -> BrowserLiveSet {
     BrowserLiveSet {
         client: client.into(),
@@ -320,7 +331,7 @@ fn a_refused_address_is_blocked_and_never_opened() {
     assert_eq!(reply.blocked, ["meta"]);
     assert!(reply.live.is_empty());
     assert_eq!(source.opens.load(Ordering::SeqCst), 0);
-    let events = lease.client.drain();
+    let events = drained(&lease.client);
     assert_eq!(events, [BrowserLiveEvent::Blocked { key: "meta".into() }]);
 }
 
@@ -332,7 +343,7 @@ fn a_failed_open_is_reported_once_and_not_retried() {
     let nodes = || vec![entry("x", "https://broken.example", 1280)];
     let (_, reply) = hub.apply(set(&id, nodes()), None, |_| true);
     assert_eq!(reply.failed, ["x"]);
-    let events = lease.client.drain();
+    let events = drained(&lease.client);
     assert!(matches!(
         &events[..],
         [BrowserLiveEvent::Ended {
@@ -362,7 +373,7 @@ fn a_slow_client_gets_only_the_newest_frame() {
     for _ in 0..3 {
         stream.publish();
     }
-    let events = lease.client.drain();
+    let events = drained(&lease.client);
     let [BrowserLiveEvent::Frame {
         key,
         seq,
@@ -379,7 +390,46 @@ fn a_slow_client_gets_only_the_newest_frame() {
         .decode(jpeg_base64)
         .unwrap();
     assert!(jpeg.starts_with(&[0xFF, 0xD8]));
-    assert!(lease.client.drain().is_empty(), "nothing queued behind it");
+    assert!(
+        drained(&lease.client).is_empty(),
+        "nothing queued behind it"
+    );
+}
+
+#[test]
+fn a_streamed_frame_event_is_the_json_serde_would_write() {
+    let frame = StreamFrame {
+        seq: 7,
+        jpeg: tiny_jpeg(),
+        metadata: FrameMetadata::default(),
+    };
+    // A key that needs escaping, and a payload whose base64 needs padding.
+    for (key, jpeg) in [
+        ("a \"quoted\" \\ key\n", frame.jpeg.clone()),
+        ("ü", vec![0xFF, 0xD8, 0x01]),
+        ("empty", Vec::new()),
+    ] {
+        let frame = StreamFrame {
+            jpeg,
+            ..frame.clone()
+        };
+        let mut streamed = Vec::new();
+        write_frame_event(&mut streamed, key, &frame).unwrap();
+        let (width, height) = jpeg_size(&frame.jpeg).unwrap_or((0, 0));
+        let event = BrowserLiveEvent::Frame {
+            key: key.into(),
+            seq: frame.seq,
+            width,
+            height,
+            jpeg_base64: base64::engine::general_purpose::STANDARD.encode(&frame.jpeg),
+        };
+        let mut built = Vec::new();
+        write_event(&mut built, &event).unwrap();
+        assert_eq!(
+            String::from_utf8(streamed).unwrap(),
+            String::from_utf8(built).unwrap()
+        );
+    }
 }
 
 #[test]
@@ -389,7 +439,7 @@ fn an_ended_stream_is_reported_and_removed() {
     let nodes = vec![entry("n", "https://example.com", 1280)];
     hub.apply(set(&lease.client.id, nodes), None, |_| true);
     source.stream("https://example.com").unwrap().end();
-    let events = lease.client.drain();
+    let events = drained(&lease.client);
     assert!(matches!(
         &events[..],
         [BrowserLiveEvent::Ended {

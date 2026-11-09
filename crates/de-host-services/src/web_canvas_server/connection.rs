@@ -400,7 +400,9 @@ pub(super) fn dispatch<S: Read + Write>(
 
 /// `GET` / `POST /api/browser/live` (`crate::web_browser_live`). The event
 /// stream is screened like a sensitive POST (the POST already was): a page
-/// on another origin must not watch the frames.
+/// on another origin must not watch the frames. Both refuse a cross-site
+/// request first (`fetch_site_allowed`), so another site cannot fill the
+/// client slots with requests that carry no `Origin`.
 fn serve_browser_live<S: Write>(
     stream: &mut S,
     req: &crate::mcp_serve::HttpRequest,
@@ -408,7 +410,12 @@ fn serve_browser_live<S: Write>(
     cors_origin: Option<&str>,
 ) -> Result<()> {
     let hub = crate::web_browser_live::LiveHub::shared();
-    let (status, body) = if req.method == "GET" {
+    let (status, body) = if !super::origin_guard::fetch_site_allowed(req) {
+        (
+            "403 Forbidden",
+            crate::mcp_serve::rest_error_body("cross-site live stream is forbidden"),
+        )
+    } else if req.method == "GET" {
         if !credential_request_origin_allowed(req) {
             (
                 "403 Forbidden",

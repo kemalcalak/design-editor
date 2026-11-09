@@ -429,6 +429,7 @@ fn sensitive_browser_posts_include_credentials_and_ai_routes() {
             token: None,
             content_type: None,
             query: None,
+            sec_fetch_site: None,
         };
         assert!(is_sensitive_browser_post(&request), "path={path}");
     }

@@ -531,3 +531,7 @@ fn document_post_route_409s_on_stale_base_version_without_mutating() {
 /// stream and the `serve` helpers.
 #[path = "web_canvas_server_args_tests.rs"]
 mod args_tests;
+
+/// The live browser channel's cross-site guard (#324).
+#[path = "web_canvas_server_live_guard_tests.rs"]
+mod live_guard_tests;
