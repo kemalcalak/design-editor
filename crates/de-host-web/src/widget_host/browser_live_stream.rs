@@ -131,6 +131,12 @@ pub(crate) fn install_landed(mut install: impl FnMut(u64, &JsValue) -> bool) {
     }
 }
 
+/// Where page input for `node_id` goes: this client's id and the node's
+/// live key, once the daemon streams it (`browser_input_post`).
+pub(crate) fn input_target(node_id: &str) -> Option<(String, String)> {
+    CLIENT.with(|client| client.borrow().input_target(node_id))
+}
+
 /// Live images whose node no longer shows a live picture (forgotten, or
 /// replaced by a newer still): the host frees them.
 pub(crate) fn textures_to_release() -> Vec<u64> {

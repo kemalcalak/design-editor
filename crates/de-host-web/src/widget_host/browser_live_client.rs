@@ -231,6 +231,20 @@ impl LiveClientState {
         delay
     }
 
+    /// Where page input for `node_id` goes (interaction mode): this
+    /// client's id and the node's key, once the daemon holds the set that
+    /// streams it (no set call on its way, so its page is open).
+    pub(crate) fn input_target(&self, node_id: &str) -> Option<(String, String)> {
+        let client = self.client.as_ref()?;
+        let key = &self.streams.get(node_id)?.key;
+        let held = !self.post_in_flight
+            && self
+                .posted
+                .as_ref()
+                .is_some_and(|set| set.iter().any(|entry| &entry.key == key));
+        held.then(|| (client.clone(), key.clone()))
+    }
+
     /// Whether `node_id` streams now.
     pub(crate) fn streams_node(&self, node_id: &str) -> bool {
         self.streams.contains_key(node_id)

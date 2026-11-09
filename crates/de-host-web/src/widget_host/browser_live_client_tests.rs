@@ -231,3 +231,26 @@ fn a_reload_mid_decode_does_not_stall_the_new_stream() {
     assert!(!state.streams_node("a"));
     assert!(!state.wants_connection());
 }
+
+#[test]
+fn input_goes_to_the_key_the_daemon_holds() {
+    let mut state = LiveClientState::default();
+    start(&mut state, "a", "https://example.com/a");
+    assert_eq!(state.input_target("a"), None, "no client yet");
+    state.on_hello("c1".into());
+    state.next_post().unwrap();
+    assert_eq!(state.input_target("a"), None, "the set call is on its way");
+    state.post_done(true);
+    assert_eq!(state.input_target("a"), Some(("c1".into(), "a#1".into())));
+    assert_eq!(state.input_target("b"), None, "not streamed");
+
+    // Hidden: the daemon holds the empty set, then a new key on return.
+    state.set_active(false);
+    state.next_post().unwrap();
+    state.post_done(true);
+    assert_eq!(state.input_target("a"), None);
+    state.set_active(true);
+    state.next_post().unwrap();
+    state.post_done(true);
+    assert_eq!(state.input_target("a"), Some(("c1".into(), "a#2".into())));
+}

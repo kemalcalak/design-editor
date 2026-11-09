@@ -92,6 +92,8 @@ version = "0.3"
 features = [
   "Blob",
   "BlobPropertyBag",
+  # Capture-phase, non-passive window listeners for interaction mode (#324).
+  "AddEventListenerOptions",
   "CanvasRenderingContext2d",
   "Clipboard",
   # Browser file-IO P0 (paste / drag-drop / hidden file input): the
