@@ -17,6 +17,7 @@ mod cdp_client;
 mod chrome_discovery;
 mod chrome_process;
 mod error;
+mod page_input;
 mod page_session;
 mod render_job;
 mod screencast;
@@ -29,9 +30,10 @@ use std::time::{Duration, Instant};
 
 pub use chrome_discovery::{find_browser, BROWSER_PATH_ENV};
 pub use error::BrowserRenderError;
+pub use page_input::PageInput;
 pub use page_session::{check_cdp_method, PageSession, PageSessions, ShotTarget, CDP_DOMAINS};
 pub use render_job::RenderSpec;
-pub use screencast::{FrameMetadata, PageStream, StreamFrame, StreamSettings};
+pub use screencast::{FrameMetadata, PageStream, StreamFrame, StreamInterrupt, StreamSettings};
 pub use tab::Viewport;
 
 use cdp_client::CdpClient;

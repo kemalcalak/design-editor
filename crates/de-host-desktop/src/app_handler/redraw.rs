@@ -374,6 +374,12 @@ impl DesktopApp {
                 self.redraw_dirty = true;
             }
         }
+        // A browser node that lost the selection (or its page) leaves
+        // interaction mode (#324).
+        if self.host.sync_browser_interaction() {
+            self.flush_browser_input();
+            self.redraw_dirty = true;
+        }
         // Live browser frames (#324) decoded since the last frame go in
         // before paint; each repaints only its node's region.
         if let Some(backend) = self.backend.as_mut() {

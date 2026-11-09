@@ -5,6 +5,7 @@
 //! sibling modules under `app_handler/`; this file keeps the
 //! `ApplicationHandler` impl plus the dispatch skeleton.
 
+mod browser_interaction_events;
 mod keyboard_events;
 mod pointer_events;
 mod redraw;
@@ -495,6 +496,10 @@ impl ApplicationHandler<DesktopEvent> for DesktopApp {
         // The update modal (#111) owns input while shown: keys, wheel and the
         // other buttons must not reach the document hidden under it.
         if self.update_modal_blocks(&event) {
+            return;
+        }
+        // A browser node in interaction mode drives its page (#324).
+        if self.intercept_browser_interaction(&event) {
             return;
         }
         match event {

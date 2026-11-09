@@ -186,6 +186,7 @@ impl DesktopApp {
             ime_window_sync: ime_window::ImeWindowSync::default(),
             zoom_modifier: false,
             alt_modifier: false,
+            page_modifiers: Default::default(),
             shift_modifier: false,
             pending_cursor_move: None,
             redraw_pending: false,

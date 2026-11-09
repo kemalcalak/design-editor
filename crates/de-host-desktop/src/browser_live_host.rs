@@ -1,7 +1,7 @@
 //! Live browser pages on the desktop canvas (#324).
 //!
 //! The shared [`BrowserStreamQueue`] decides once per redraw which browser
-//! nodes stream: the selected ones on screen (at most
+//! nodes stream: the selected (or interactive) ones on screen (at most
 //! `browser_stream::MAX_LIVE_PAGES`, at `DESKTOP_STREAM_FPS`); the others
 //! keep their still snapshot. This host
 //! runs one driver thread per streaming node (`browser_live_driver`). A
@@ -29,6 +29,7 @@ use std::sync::mpsc::{self, Receiver, Sender};
 use std::sync::{Arc, Mutex};
 
 use de_browser_render::BrowserPool;
+use de_editor_core::browser_input::BrowserInputEvent;
 use de_editor_core::browser_stream::{BrowserStreamSpec, StreamHost};
 use de_editor_core::EditorState;
 use de_editor_ui::widgets::browser_render_queue::BrowserRenderQueue;
@@ -63,7 +64,12 @@ pub(crate) struct DriverArgs {
     pub taken: Arc<AtomicBool>,
     pub wake: WakeProxy,
     pub pool: BrowserPool,
+    /// Wakes the driver's frame wait when the UI sends page input.
+    pub interrupt: InterruptSlot,
 }
+
+/// The running stream's wake handle, set by its driver.
+pub(crate) type InterruptSlot = Arc<Mutex<Option<de_browser_render::StreamInterrupt>>>;
 
 /// Starts a driver; a test seam.
 type Spawn = Arc<dyn Fn(DriverArgs) + Send + Sync>;
@@ -72,6 +78,7 @@ struct Running {
     stream: u64,
     control: Sender<DriverControl>,
     taken: Arc<AtomicBool>,
+    interrupt: InterruptSlot,
 }
 
 pub struct BrowserLiveHost {
@@ -200,12 +207,14 @@ impl BrowserLiveHost {
         self.next_stream += 1;
         let (control, inbox) = mpsc::channel();
         let taken = Arc::new(AtomicBool::new(true));
+        let interrupt = InterruptSlot::default();
         self.running.insert(
             node_id.clone(),
             Running {
                 stream: self.next_stream,
                 control,
                 taken: taken.clone(),
+                interrupt: interrupt.clone(),
             },
         );
         (self.spawn)(DriverArgs {
@@ -217,7 +226,24 @@ impl BrowserLiveHost {
             taken,
             wake: self.wake.clone(),
             pool: self.pool.clone(),
+            interrupt,
         });
+    }
+
+    /// Hand page input (interaction mode) to `node_id`'s driver, which
+    /// sends it on the node's stream tab. False when the node does not
+    /// stream (the input is dropped: the page is not on screen).
+    pub fn send_input(&self, node_id: &str, events: Vec<BrowserInputEvent>) -> bool {
+        let Some(running) = self.running.get(node_id) else {
+            return false;
+        };
+        if running.control.send(DriverControl::Input(events)).is_err() {
+            return false;
+        }
+        if let Some(handle) = running.interrupt.lock().ok().and_then(|slot| slot.clone()) {
+            handle.interrupt();
+        }
+        true
     }
 
     /// End every stream (app exit).

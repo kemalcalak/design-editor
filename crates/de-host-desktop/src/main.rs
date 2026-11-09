@@ -17,6 +17,7 @@ mod app_handler;
 mod app_poll;
 mod app_state;
 mod asset_fetch_error;
+mod browser_input_keys;
 mod browser_live_host;
 mod browser_render_host;
 mod builtin_model_refresh_host;
@@ -213,6 +214,8 @@ struct DesktopApp {
     /// Cmd / Ctrl held — promotes scroll to zoom + gates editor shortcuts.
     zoom_modifier: bool,
     alt_modifier: bool,
+    /// Every held modifier, for a browser page in interaction mode (#324).
+    page_modifiers: de_editor_core::browser_input::InputModifiers,
     /// Shift held — arrow-key nudge 1→10 px.
     shift_modifier: bool,
     /// Cursor moves coalesced between paints; drained on RedrawRequested

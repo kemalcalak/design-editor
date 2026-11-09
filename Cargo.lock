@@ -1233,6 +1233,7 @@ name = "de-browser-render"
 version = "0.5.7"
 dependencies = [
  "base64 0.22.1",
+ "de-editor-core",
  "de-process-io",
  "serde_json",
  "thiserror 1.0.69",

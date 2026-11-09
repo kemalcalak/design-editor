@@ -213,6 +213,29 @@ fn settings_default_to_a_1024_wide_jpeg_at_ten_fps() {
 }
 
 #[test]
+fn an_interrupt_wakes_a_waiting_consumer_without_a_frame() {
+    let peer = peer(0);
+    let stream = stream_on(&peer, TabMode::Owned, uncapped());
+    let interrupt = stream.interrupt_handle();
+    let waker = std::thread::spawn(move || {
+        std::thread::sleep(Duration::from_millis(50));
+        interrupt.interrupt();
+    });
+    let started = Instant::now();
+    assert!(stream.wait_frame(Duration::from_secs(5)).unwrap().is_none());
+    assert!(started.elapsed() < Duration::from_secs(2), "woken early");
+    waker.join().unwrap();
+    // The interrupt is spent: the next wait runs its course.
+    let started = Instant::now();
+    assert!(stream
+        .wait_frame(Duration::from_millis(80))
+        .unwrap()
+        .is_none());
+    assert!(started.elapsed() >= Duration::from_millis(80));
+    stream.stop();
+}
+
+#[test]
 fn a_frame_is_acked_only_after_the_consumer_took_it() {
     let peer = peer(1);
     let stream = stream_on(&peer, TabMode::Owned, uncapped());

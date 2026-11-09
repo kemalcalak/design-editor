@@ -18,6 +18,17 @@ pub(crate) const READ_SLICE: Duration = Duration::from_millis(200);
 const CONNECT_TIMEOUT: Duration = Duration::from_secs(5);
 /// Events kept while waiting for a command reply; older ones are dropped.
 const EVENT_BUFFER: usize = 256;
+/// Replies to other commands kept while waiting for one (a command sent
+/// while another is still out, [`CdpClient::await_reply`]).
+const REPLY_BUFFER: usize = 16;
+
+/// What [`CdpClient::await_reply`] waited for.
+pub(crate) enum Awaited {
+    /// The command's `result`.
+    Reply(Value),
+    /// The watched event came first; the reply is still out.
+    Event,
+}
 
 /// Page snapshots and screenshots arrive as one large message; allow up to
 /// 256 MiB instead of tungstenite's 16 MiB frame default.
@@ -31,8 +42,12 @@ fn socket_config() -> tungstenite::protocol::WebSocketConfig {
 
 pub(crate) struct CdpClient {
     socket: WebSocket<TcpStream>,
+    /// The address this connected to, for a second connection to the
+    /// same browser.
+    url: String,
     next_id: u64,
     events: VecDeque<Value>,
+    replies: VecDeque<Value>,
 }
 
 impl CdpClient {
@@ -62,9 +77,16 @@ impl CdpClient {
             .map_err(|e| connect(e.to_string()))?;
         Ok(Self {
             socket,
+            url: ws_url.to_string(),
             next_id: 0,
             events: VecDeque::new(),
+            replies: VecDeque::new(),
         })
+    }
+
+    /// The `ws://` address of this connection's browser.
+    pub(crate) fn url(&self) -> &str {
+        &self.url
     }
 
     /// Send `method` (to `session` when given) and wait up to `timeout` for
@@ -76,6 +98,21 @@ impl CdpClient {
         params: Value,
         timeout: Duration,
     ) -> Result<Value, BrowserRenderError> {
+        let id = self.send(session, method, params)?;
+        match self.await_reply(id, method, Instant::now() + timeout, None)? {
+            Awaited::Reply(result) => Ok(result),
+            Awaited::Event => unreachable!("no event is watched"),
+        }
+    }
+
+    /// Send `method` (to `session` when given) without waiting; the reply
+    /// is read by [`Self::await_reply`] with the returned id.
+    pub(crate) fn send(
+        &mut self,
+        session: Option<&str>,
+        method: &str,
+        params: Value,
+    ) -> Result<u64, BrowserRenderError> {
         self.next_id += 1;
         let id = self.next_id;
         let mut message = json!({ "id": id, "method": method, "params": params });
@@ -85,29 +122,65 @@ impl CdpClient {
         self.socket
             .send(Message::Text(message.to_string()))
             .map_err(|_| BrowserRenderError::Closed)?;
-        let deadline = Instant::now() + timeout;
-        loop {
-            let Some(reply) = self.read_until(deadline)? else {
-                return Err(BrowserRenderError::Timeout {
-                    method: method.to_string(),
+        Ok(id)
+    }
+
+    /// Wait until `deadline` for the reply to command `id` (sent as
+    /// `method`), or for the event `watch` = (session, method) when it
+    /// comes first. Replies to other commands are kept for their own wait.
+    pub(crate) fn await_reply(
+        &mut self,
+        id: u64,
+        method: &str,
+        deadline: Instant,
+        watch: Option<(&str, &str)>,
+    ) -> Result<Awaited, BrowserRenderError> {
+        let is_ours = |reply: &Value| reply.get("id").and_then(Value::as_u64) == Some(id);
+        let reply = match self.replies.iter().position(is_ours) {
+            Some(at) => self.replies.remove(at),
+            None => None,
+        };
+        let reply = match reply {
+            Some(reply) => reply,
+            None => loop {
+                let Some(message) = self.read_until(deadline)? else {
+                    return Err(BrowserRenderError::Timeout {
+                        method: method.to_string(),
+                    });
+                };
+                if is_ours(&message) {
+                    break message;
+                }
+                if message.get("id").is_some() {
+                    if self.replies.len() == REPLY_BUFFER {
+                        self.replies.pop_front();
+                    }
+                    self.replies.push_back(message);
+                    continue;
+                }
+                let watched = watch.is_some_and(|(session, event)| {
+                    message.get("method").and_then(Value::as_str) == Some(event)
+                        && message.get("sessionId").and_then(Value::as_str) == Some(session)
                 });
-            };
-            if reply.get("id").and_then(Value::as_u64) != Some(id) {
-                self.buffer_event(reply);
-                continue;
-            }
-            if let Some(error) = reply.get("error") {
-                return Err(BrowserRenderError::Protocol {
-                    method: method.to_string(),
-                    message: error
-                        .get("message")
-                        .and_then(Value::as_str)
-                        .unwrap_or("unknown error")
-                        .to_string(),
-                });
-            }
-            return Ok(reply.get("result").cloned().unwrap_or(Value::Null));
+                if watched {
+                    return Ok(Awaited::Event);
+                }
+                self.buffer_event(message);
+            },
+        };
+        if let Some(error) = reply.get("error") {
+            return Err(BrowserRenderError::Protocol {
+                method: method.to_string(),
+                message: error
+                    .get("message")
+                    .and_then(Value::as_str)
+                    .unwrap_or("unknown error")
+                    .to_string(),
+            });
         }
+        Ok(Awaited::Reply(
+            reply.get("result").cloned().unwrap_or(Value::Null),
+        ))
     }
 
     /// Wait until `deadline` for the event `method` on `session`. True when
