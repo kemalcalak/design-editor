@@ -22,24 +22,22 @@ fn clip(x: f64, y: f64, width: f64, height: f64) -> Clip {
 }
 
 #[test]
-fn a_rect_is_cut_to_the_page_and_capped() {
+fn a_rect_is_taken_whole_or_refused() {
     assert_eq!(
         rect_clip(10.0, 20.0, 30.5, 40.0).unwrap(),
         clip(10.0, 20.0, 30.5, 40.0)
     );
     assert_eq!(
-        rect_clip(-10.0, -5.0, 30.0, 40.0).unwrap(),
-        clip(0.0, 0.0, 20.0, 35.0),
-        "the part left of and above the page is dropped"
+        rect_clip(0.0, 0.0, MAX_FULL_PAGE_WIDTH, MAX_FULL_PAGE_HEIGHT).unwrap(),
+        clip(0.0, 0.0, MAX_FULL_PAGE_WIDTH, MAX_FULL_PAGE_HEIGHT)
     );
-    let huge = rect_clip(0.0, 0.0, 1e6, 1e6).unwrap();
-    assert_eq!(
-        (huge.width, huge.height),
-        (MAX_FULL_PAGE_WIDTH, MAX_FULL_PAGE_HEIGHT)
-    );
+    // A cropped picture would be stretched over the whole node.
     for (x, y, w, h) in [
+        (-10.0, 0.0, 30.0, 40.0),
+        (0.0, -5.0, 30.0, 40.0),
+        (0.0, 0.0, MAX_FULL_PAGE_WIDTH + 1.0, 10.0),
+        (0.0, 0.0, 10.0, MAX_FULL_PAGE_HEIGHT + 1.0),
         (0.0, 0.0, 0.0, 10.0),
-        (-50.0, 0.0, 40.0, 10.0),
         (f64::NAN, 0.0, 10.0, 10.0),
         (0.0, 0.0, f64::INFINITY, 10.0),
     ] {

@@ -15,13 +15,20 @@ use de_browser_render::ShotTarget;
 use de_mcp::ToolOutcome;
 use serde_json::{Map, Value};
 
+use super::browser_tool::ToolError;
+
 /// Most canvases one import screenshots.
 pub(crate) const MAX_CANVAS_SHOTS: usize = 16;
 /// Most data-URL bytes the shots add to one snapshot.
 pub(crate) const MAX_CANVAS_SHOT_BYTES: usize = 24 * 1024 * 1024;
 
+/// The extractor's tag (`snapshot-extractor.js`, `result.canvasShot`).
 const SHOT_KEY: &str = "canvasShot";
 const DATA_URL_PREFIX: &str = "data:image/png;base64,";
+const KEEPS_READ_BACK: &str = "it keeps the page's own read-back";
+/// Styles a screenshot already shows, which the image node must not apply
+/// again.
+const BAKED_STYLES: [&str; 3] = ["opacity", "filter", "mix-blend-mode"];
 
 /// What the shots did, for the tool's result.
 #[derive(Debug, Default, PartialEq)]
@@ -68,10 +75,12 @@ struct Tagged {
 }
 
 /// Put `shoot`'s PNG into every canvas `snapshot` tags, as its `src`. A
-/// snapshot without tags comes back unchanged without being parsed.
+/// snapshot without tags comes back unchanged without being parsed. After a
+/// failed shot the rest are not tried: a hung page or a lost browser would
+/// otherwise cost every canvas its own timeout.
 pub(crate) fn patch_canvas_shots(
     snapshot: String,
-    shoot: &mut dyn FnMut(ShotTarget) -> Result<Vec<u8>, String>,
+    shoot: &mut dyn FnMut(ShotTarget) -> Result<Vec<u8>, ToolError>,
 ) -> (String, CanvasShotReport) {
     let mut report = CanvasShotReport::default();
     if !snapshot.contains(&format!("\"{SHOT_KEY}\"")) {
@@ -91,40 +100,49 @@ pub(crate) fn patch_canvas_shots(
     let mut budget = MAX_CANVAS_SHOT_BYTES
         .min(de_html::snapshot::MAX_SNAPSHOT_BYTES.saturating_sub(snapshot.len()));
     let mut images = BTreeMap::new();
+    let mut tried = 0;
+    let mut failed = false;
     for canvas in tagged.iter().take(MAX_CANVAS_SHOTS) {
+        tried += 1;
         let png = match shoot(canvas.target.clone()) {
             Ok(png) => png,
-            Err(error) => {
+            Err((_, error)) => {
                 report.warnings.push(format!(
-                    "canvas {} could not be captured ({error}); it keeps the page's own read-back",
+                    "canvas {} could not be captured ({error}); {KEEPS_READ_BACK}",
                     canvas.id
                 ));
-                continue;
+                failed = true;
+                break;
             }
         };
-        let url = format!(
-            "{DATA_URL_PREFIX}{}",
-            base64::engine::general_purpose::STANDARD.encode(png)
-        );
-        if url.len() > budget {
+        let size = DATA_URL_PREFIX.len() + png.len().div_ceil(3) * 4;
+        if size > budget {
             report.warnings.push(format!(
-                "canvas {} is too large to embed; it keeps the page's own read-back",
+                "canvas {} is too large to embed; {KEEPS_READ_BACK}",
                 canvas.id
             ));
             continue;
         }
-        budget -= url.len();
+        budget -= size;
+        let url = format!(
+            "{DATA_URL_PREFIX}{}",
+            base64::engine::general_purpose::STANDARD.encode(png)
+        );
         images.insert(canvas.id, url);
     }
-    if tagged.len() > MAX_CANVAS_SHOTS {
+    if tagged.len() > tried {
+        let why = if failed {
+            "after a failed shot".to_string()
+        } else {
+            format!("at most {MAX_CANVAS_SHOTS} per import")
+        };
         report.warnings.push(format!(
-            "{} more canvases were not captured (at most {MAX_CANVAS_SHOTS} per import); \
-             they keep the page's own read-back",
-            tagged.len() - MAX_CANVAS_SHOTS
+            "{} more canvases were not captured ({why}); they keep the page's own read-back",
+            tagged.len() - tried
         ));
     }
     report.captured = images.len();
-    apply(&mut value, &images);
+    apply(&mut value, &mut images);
     let patched = serde_json::to_string(&value).unwrap_or(snapshot);
     (patched, report)
 }
@@ -159,9 +177,10 @@ fn tagged(node: &Map<String, Value>) -> Option<Tagged> {
     })
 }
 
-/// Give each captured canvas its image (no longer tainted: the shot is
-/// what the page showed) and drop every tag.
-fn apply(value: &mut Value, images: &BTreeMap<u64, String>) {
+/// Give each captured canvas its image and drop every tag. The shot is
+/// what the page showed, so the node is no longer tainted, and the canvas's
+/// own opacity, filter and blend are already in its pixels.
+fn apply(value: &mut Value, images: &mut BTreeMap<u64, String>) {
     match value {
         Value::Object(node) => {
             let shot = node.remove(SHOT_KEY);
@@ -169,9 +188,14 @@ fn apply(value: &mut Value, images: &BTreeMap<u64, String>) {
                 .as_ref()
                 .and_then(|s| s.get("id"))
                 .and_then(Value::as_u64);
-            if let Some(url) = id.and_then(|id| images.get(&id)) {
-                node.insert("src".into(), Value::String(url.clone()));
+            if let Some(url) = id.and_then(|id| images.remove(&id)) {
+                node.insert("src".into(), Value::String(url));
                 node.remove("tainted");
+                if let Some(styles) = node.get_mut("styles").and_then(Value::as_object_mut) {
+                    for baked in BAKED_STYLES {
+                        styles.remove(baked);
+                    }
+                }
             }
             for child in node.values_mut() {
                 apply(child, images);

@@ -402,8 +402,9 @@ fn the_extractor_wrapper_catches_the_download_and_roots_at_a_selector() {
 fn the_extractor_wrapper_hands_the_page_its_options() {
     use crate::mcp_serve::browser_tool_driver::extractor_script;
     let options = "globalThis.designEditorSnapshotOptions = { root, expandScroll: ";
-    assert!(extractor_script(None, true).contains(&format!("{options}true }};")));
-    assert!(extractor_script(Some("main"), false).contains(&format!("{options}false }};")));
+    assert!(extractor_script(None, true).contains(&format!("{options}true, canvasShots: true }};")));
+    assert!(extractor_script(Some("main"), false)
+        .contains(&format!("{options}false, canvasShots: true }};")));
     // The extractor reads the flag and tells the importer it was applied.
     for marker in [
         "options && options.expandScroll",

@@ -41,9 +41,7 @@ use super::browser_tool_canvas::{
     BrowserTarget,
 };
 use super::browser_tool_canvas_shots::patch_canvas_shots;
-use super::browser_tool_driver::{
-    PageCall, PageDriver, PageOp, PageReply, PageResult, SessionDriver,
-};
+use super::browser_tool_driver::{PageCall, PageDriver, PageOp, PageReply, SessionDriver};
 use super::browser_tool_fonts::{decode_fetched, load_import_fonts, FontReport};
 use super::font_tools::NO_FONT_HOST;
 use crate::font_host::{self, FontHost};
@@ -182,7 +180,7 @@ impl BrowserTool {
                 // Without a query the whole body: prefer a specific selector.
                 let selector = match shot_target(args)? {
                     ShotTarget::Query(selector) => selector,
-                    _ => "body".to_string(),
+                    ShotTarget::FullPage | ShotTarget::Rect { .. } => "body".to_string(),
                 };
                 let PageReply::Json(value) = run(PageOp::Element(selector))?.reply else {
                     return Err(internal());
@@ -221,7 +219,7 @@ impl BrowserTool {
                 // import-to-canvas
                 let selector = match shot_target(args)? {
                     ShotTarget::Query(selector) => Some(selector),
-                    _ => None,
+                    ShotTarget::FullPage | ShotTarget::Rect { .. } => None,
                 };
                 let auto_layout = match arg(args, "layout").unwrap_or("absolute") {
                     "absolute" => false,
@@ -239,15 +237,11 @@ impl BrowserTool {
                 let PageReply::Snapshot(snapshot) = run(extract)?.reply else {
                     return Err(internal());
                 };
-                let (snapshot, shots) =
-                    patch_canvas_shots(snapshot, &mut |rect| match run(PageOp::Screenshot(rect)) {
-                        Ok(PageResult {
-                            reply: PageReply::Png(png),
-                            ..
-                        }) => Ok(png),
-                        Ok(_) => Err(internal().1),
-                        Err((_, message)) => Err(message),
-                    });
+                let mut shoot = |rect| match run(PageOp::Screenshot(rect))?.reply {
+                    PageReply::Png(png) => Ok(png),
+                    _ => Err(internal()),
+                };
+                let (snapshot, shots) = patch_canvas_shots(snapshot, &mut shoot);
                 let mut result = import_nodes(&snapshot, auto_layout);
                 let fonts = self.font_host.map(|host| {
                     let fetch = |urls: Vec<String>| {

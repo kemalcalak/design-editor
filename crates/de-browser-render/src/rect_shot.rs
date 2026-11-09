@@ -44,25 +44,24 @@ pub(super) enum RectPlan {
     BeyondViewport,
 }
 
-/// The capture region for a rect at `x, y` sized `w × h`: the part inside
-/// the page (no negative origin), capped like a full-page capture. A rect
-/// with nothing left is refused.
+/// The capture region for a rect at `x, y` sized `w × h`. A rect reaching
+/// past the page's top or left edge, or past the full-page capture caps, is
+/// refused rather than cropped: the importer would stretch a cropped
+/// picture over the whole node.
 pub(super) fn rect_clip(x: f64, y: f64, w: f64, h: f64) -> Result<Clip, BrowserRenderError> {
     let finite = [x, y, w, h].iter().all(|value| value.is_finite());
-    let (left, top) = (x.max(0.0), y.max(0.0));
-    let width = (x + w - left).min(MAX_FULL_PAGE_WIDTH);
-    let height = (y + h - top).min(MAX_FULL_PAGE_HEIGHT);
-    if !finite || width < 1.0 || height < 1.0 {
+    let inside = x >= 0.0 && y >= 0.0 && w <= MAX_FULL_PAGE_WIDTH && h <= MAX_FULL_PAGE_HEIGHT;
+    if !finite || !inside || w < 1.0 || h < 1.0 {
         return Err(BrowserRenderError::Protocol {
-            method: "Page.captureScreenshot".into(),
-            message: format!("the rect {x}, {y}, {w} × {h} holds nothing of the page"),
+            method: "ShotTarget::Rect".into(),
+            message: format!("the rect {x}, {y}, {w} × {h} is empty or not wholly inside the page"),
         });
     }
     Ok(Clip {
-        x: left,
-        y: top,
-        width,
-        height,
+        x,
+        y,
+        width: w,
+        height: h,
         scale: 1.0,
     })
 }
@@ -86,7 +85,8 @@ pub(super) fn plan_rect_shot(clip: Clip, view: View) -> RectPlan {
 }
 
 /// The page script that scrolls to `x, y` without smooth scrolling and
-/// answers the view once two animation frames passed (or the wait ran out).
+/// answers the view: with `wait_frames` once two animation frames passed
+/// (or the wait ran out), otherwise at once.
 pub(super) fn scroll_script(x: f64, y: f64, wait_frames: bool) -> String {
     let wait = if wait_frames {
         format!(
@@ -104,6 +104,7 @@ pub(super) fn scroll_script(x: f64, y: f64, wait_frames: bool) -> String {
     )
 }
 
+/// Answers the view as it is.
 const VIEW_SCRIPT: &str = "[scrollX, scrollY, innerWidth, innerHeight]";
 
 fn parse_view(value: &Value) -> Option<View> {
@@ -128,14 +129,14 @@ impl PageSession {
         h: f64,
     ) -> Result<Vec<u8>, BrowserRenderError> {
         let clip = rect_clip(x, y, w, h)?;
-        let Some(view) = self.read_view(VIEW_SCRIPT)? else {
+        let Some(view) = self.run_view_script(VIEW_SCRIPT)? else {
             return self.tab.screenshot(&mut self.client, Some(clip));
         };
         match plan_rect_shot(clip, view) {
             RectPlan::InView => self.tab.screenshot_in_view(&mut self.client, clip),
             RectPlan::BeyondViewport => self.tab.screenshot(&mut self.client, Some(clip)),
             RectPlan::ScrollTo { x, y } => {
-                let shot = match self.read_view(&scroll_script(x, y, true)) {
+                let shot = match self.run_view_script(&scroll_script(x, y, true)) {
                     Ok(Some(now)) if plan_rect_shot(clip, now) == RectPlan::InView => {
                         self.tab.screenshot_in_view(&mut self.client, clip)
                     }
@@ -145,13 +146,14 @@ impl PageSession {
                     Err(error) => Err(error),
                 };
                 // Best effort: the capture is what was asked for.
-                let _ = self.read_view(&scroll_script(view.x, view.y, false));
+                let _ = self.run_view_script(&scroll_script(view.x, view.y, false));
                 shot
             }
         }
     }
 
-    fn read_view(&mut self, script: &str) -> Result<Option<View>, BrowserRenderError> {
+    /// Run a script that answers the view (and may scroll the page first).
+    fn run_view_script(&mut self, script: &str) -> Result<Option<View>, BrowserRenderError> {
         let value = self
             .tab
             .evaluate(&mut self.client, script, SCRIPT_TIMEOUT)?;

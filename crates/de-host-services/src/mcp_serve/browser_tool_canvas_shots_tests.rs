@@ -6,7 +6,7 @@ use std::sync::{Arc, Mutex};
 
 use de_browser_render::{BrowserRenderError, ShotTarget};
 use de_editor_core::{EditorCommand, EditorState};
-use de_mcp::{McpTool, ToolOutcome};
+use de_mcp::{McpTool, ToolErrorCode, ToolOutcome};
 use serde_json::{json, Value};
 
 use super::*;
@@ -120,25 +120,48 @@ fn each_tagged_canvas_gets_the_screenshot_of_its_rect() {
 }
 
 #[test]
-fn a_failed_shot_keeps_the_read_back_and_warns() {
-    let original = snapshot(vec![canvas(1, 0.0, true), canvas(2, 50.0, false)]);
+fn a_failed_shot_keeps_the_read_back_warns_and_ends_the_shots() {
+    let original = snapshot(vec![
+        canvas(1, 0.0, false),
+        canvas(2, 50.0, true),
+        canvas(3, 90.0, false),
+    ]);
     let (patched, report) = patch_canvas_shots(original, &mut |target| match target {
-        ShotTarget::Rect { y: 0.0, .. } => Err("Page.captureScreenshot timed out".into()),
+        ShotTarget::Rect { y: 50.0, .. } => Err((
+            ToolErrorCode::ToolFailed,
+            "Page.captureScreenshot timed out".into(),
+        )),
         _ => Ok(png()),
     });
     let nodes = children(&patched);
-    assert_eq!(nodes[0]["src"], json!(BLANK));
-    assert_eq!(nodes[0]["tainted"], json!(true), "still counted as unread");
-    assert!(nodes[0].get("canvasShot").is_none());
-    assert_eq!(nodes[1]["src"], json!(shot_url()));
-    assert_eq!((report.tagged, report.captured), (2, 1));
+    assert_eq!(nodes[0]["src"], json!(shot_url()));
+    assert_eq!(nodes[1]["src"], json!(BLANK));
+    assert_eq!(nodes[1]["tainted"], json!(true), "still counted as unread");
+    assert!(nodes[1].get("canvasShot").is_none());
+    assert_eq!(nodes[2]["src"], json!(BLANK), "not tried after the failure");
+    assert_eq!((report.tagged, report.captured), (3, 1));
     assert_eq!(
         report.warnings,
         vec![
-            "canvas 1 could not be captured (Page.captureScreenshot timed out); \
+            "canvas 2 could not be captured (Page.captureScreenshot timed out); \
              it keeps the page's own read-back"
-                .to_string()
+                .to_string(),
+            "1 more canvases were not captured (after a failed shot); \
+             they keep the page's own read-back"
+                .to_string(),
         ]
+    );
+}
+
+#[test]
+fn styles_the_shot_already_shows_are_not_applied_again() {
+    let mut faded = canvas(1, 0.0, false);
+    faded["styles"] = json!({ "opacity": "0.5", "filter": "blur(2px)",
+        "mix-blend-mode": "multiply", "border-radius": "8px" });
+    let (patched, _) = patch_canvas_shots(snapshot(vec![faded]), &mut |_| Ok(png()));
+    assert_eq!(
+        children(&patched)[0]["styles"],
+        json!({ "border-radius": "8px" })
     );
 }
 
@@ -155,7 +178,7 @@ fn shots_stop_at_the_count_cap() {
     assert_eq!(calls, MAX_CANVAS_SHOTS);
     assert_eq!(report.captured, MAX_CANVAS_SHOTS);
     assert_eq!(report.tagged, MAX_CANVAS_SHOTS + 2);
-    assert!(report.warnings[0].starts_with("2 more canvases were not captured"));
+    assert!(report.warnings[0].starts_with("2 more canvases were not captured (at most 16"));
     let nodes = children(&patched);
     assert_eq!(nodes[MAX_CANVAS_SHOTS]["src"], json!(BLANK));
 }
@@ -195,16 +218,29 @@ fn the_report_joins_the_import_warnings() {
 }
 
 #[test]
-fn the_extractor_tags_unreadable_canvases() {
+fn the_extractor_writes_the_tag_this_module_reads() {
     let js = de_html::snapshot::SNAPSHOT_EXTRACTOR_JS;
-    for marker in [
-        "captured.canvasShot = { id: canvasShotCount }",
-        "return !!canvas.getContext(\"2d\");",
-        "if (captured.canvasShot) result.canvasShot = captured.canvasShot;",
-        "entry.shot.y = round(box.top + window.scrollY);",
+    let tag = format!("result.{SHOT_KEY} = {{ id: canvasShotCount }}");
+    let mut markers = vec![
+        tag,
+        "var canvasShots = !!(options && options.canvasShots);".to_string(),
+        "dataUrl === blankCanvasUrl(canvas.width, canvas.height)".to_string(),
+    ];
+    for (field, value) in [
+        ("x", "box.left + window.scrollX"),
+        ("y", "box.top + window.scrollY"),
+        ("w", "box.width"),
+        ("h", "box.height"),
     ] {
-        assert!(js.contains(marker), "extractor is missing {marker}");
+        markers.push(format!("shot.{field} = round({value});"));
     }
+    for marker in markers {
+        assert!(js.contains(&marker), "extractor is missing {marker}");
+    }
+    assert!(
+        !js.contains("!!canvas.getContext("),
+        "probing a context would give a context-less canvas one for good"
+    );
 }
 
 /// A page whose extractor run tags one canvas; its screenshot fails when
