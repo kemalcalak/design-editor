@@ -23,11 +23,12 @@ use std::collections::BTreeMap;
 use jian_ops_schema::node::text::{FontStyleKind, FontWeight, TextContent, TextGrowth, TextNode};
 use jian_ops_schema::node::PenNode;
 use jian_ops_schema::sizing::{SizeLimits, SizingBehavior};
-use jian_ops_schema::style::{FontStyleKind as SegmentFontStyle, StyledTextSegment};
+use jian_ops_schema::style::{FontStyleKind as SegmentFontStyle, PenFill, StyledTextSegment};
 use serde_json::{Map, Value};
 
 use super::{parse_px, parse_text_align, solid_fill, Rect, SnapshotCtx};
 use crate::color::parse_css_color;
+use crate::mapper::fill_glyph_color;
 use crate::text::{transform_char, TextTransformMode};
 
 /// Sizing decided for one captured run.
@@ -137,29 +138,29 @@ impl SnapshotCtx<'_> {
         let text_align = styles
             .get("text-align")
             .and_then(|value| parse_text_align(value));
-        // Transparent glyphs under a `background-clip: text` ancestor take
-        // the colour that ancestor's background moved onto the context (the
-        // gradient-text idiom — see `map_element`). Transparent text WITHOUT
-        // such an ancestor stays transparent: that is what the page shows.
+        // Transparent glyphs under a `background-clip: text` ancestor are
+        // painted with the background that ancestor moved onto the context
+        // (the gradient-text idiom — see `map_element`). Transparent text
+        // WITHOUT such an ancestor stays transparent: that is what the page
+        // shows.
         let fill = match styles.get("color") {
             Some(value) if is_transparent_color(value) => self
                 .text_fill_override
                 .clone()
-                .or_else(|| parse_css_color(value))
-                .map(|color| vec![solid_fill(color)]),
+                .or_else(|| parse_css_color(value).map(|color| vec![solid_fill(color)])),
             Some(value) => parse_css_color(value).map(|color| vec![solid_fill(color)]),
-            None => self
-                .text_fill_override
-                .clone()
-                .map(|color| vec![solid_fill(color)]),
+            None => self.text_fill_override.clone(),
         };
+        let clips = self.segment_clips(object, rect);
+        let run = styled_content(object, text, self.text_fill_override.as_deref(), &clips);
+        let fill = run.fill.or(fill);
         let sizing = text_box(rect, lines, nowrap);
         Some(PenNode::Text(TextNode {
             base: self.base(id, Some("Text".into()), rect, Some(parent_rect)),
             limits: sizing.limits,
             width: sizing.width,
             height: sizing.height,
-            content: styled_content(object, text, self.text_fill_override.as_deref()),
+            content: run.content,
             font_family: styles.get("font-family").cloned(),
             font_size: Some(font_size),
             font_weight,
@@ -186,6 +187,39 @@ impl SnapshotCtx<'_> {
     }
 }
 
+impl SnapshotCtx<'_> {
+    /// The `background-clip: text` background each of a folded run's
+    /// `segments` carries (an inline gradient `<span>` inside a block), as
+    /// fills its glyphs can take.
+    fn segment_clips(
+        &mut self,
+        object: &Map<String, Value>,
+        rect: Rect,
+    ) -> Vec<Option<Vec<PenFill>>> {
+        let Some(items) = object.get("segments").and_then(Value::as_array) else {
+            return Vec::new();
+        };
+        items
+            .iter()
+            .map(|item| {
+                let image = item.get("styles")?.get("background-image")?.as_str()?;
+                let styles = BTreeMap::from([("background-image".to_string(), image.to_string())]);
+                self.container_from_styles(&styles, rect, false)
+                    .fill
+                    .filter(|fills| fill_glyph_color(fills).is_some())
+            })
+            .collect()
+    }
+}
+
+/// A folded run's content, and the fill its glyphs take as a whole.
+struct StyledRun {
+    content: TextContent,
+    /// Every segment is painted by the same clipped background: the node
+    /// takes it, gradient and all.
+    fill: Option<Vec<PenFill>>,
+}
+
 /// Build the text node's content from a folded inline block's `segments`.
 ///
 /// The extractor collapses a block whose children are all inline (bare text
@@ -194,17 +228,29 @@ impl SnapshotCtx<'_> {
 /// instead of each inline child stacking at the block origin (the overlap this
 /// fixes). A payload with no `segments` (an older capture) or one that reduces
 /// to a single unstyled run falls back to plain text.
+///
+/// A transparent segment is painted by the `background-clip: text`
+/// background it carries (`clips`, by segment index), else by the one the
+/// block inherited (`fill_override`). When every segment is painted by the
+/// same one, the whole node takes it, gradient included. Otherwise each such
+/// segment takes the background's first stop: a styled segment has one
+/// solid colour, so a gradient across part of a line cannot be kept.
 fn styled_content(
     object: &Map<String, Value>,
     plain: String,
-    fill_override: Option<&str>,
-) -> TextContent {
+    fill_override: Option<&[PenFill]>,
+    clips: &[Option<Vec<PenFill>>],
+) -> StyledRun {
     let Some(items) = object.get("segments").and_then(Value::as_array) else {
-        return TextContent::Plain(plain);
+        return StyledRun {
+            content: TextContent::Plain(plain),
+            fill: None,
+        };
     };
     let mut segments = Vec::new();
+    let mut paints = Vec::new();
     let mut capitalize_next = true;
-    for item in items {
+    for (index, item) in items.iter().enumerate() {
         let Some(segment) = item.as_object() else {
             continue;
         };
@@ -217,6 +263,16 @@ fn styled_content(
         let styles = segment.get("styles").and_then(Value::as_object);
         let style = |key: &str| styles.and_then(|map| map.get(key)).and_then(Value::as_str);
         let decoration = style("text-decoration-line").unwrap_or("");
+        let transparent = style("color").is_some_and(is_transparent_color);
+        let paint = transparent
+            .then(|| {
+                clips
+                    .get(index)
+                    .and_then(Option::as_deref)
+                    .or(fill_override)
+            })
+            .flatten();
+        paints.push(paint);
         segments.push(StyledTextSegment {
             text: transform_text(text, style("text-transform"), &mut capitalize_next),
             font_family: style("font-family").map(str::to_string),
@@ -229,14 +285,9 @@ fn styled_content(
                 Some("normal") => Some(SegmentFontStyle::Normal),
                 _ => None,
             },
-            // Transparent segments under a `background-clip: text` ancestor
-            // take the moved background colour, like the node-level fill.
-            fill: match style("color") {
-                Some(value) if is_transparent_color(value) => fill_override
-                    .map(str::to_string)
-                    .or_else(|| parse_css_color(value)),
-                other => other.and_then(parse_css_color),
-            },
+            fill: paint
+                .and_then(fill_glyph_color)
+                .or_else(|| style("color").and_then(parse_css_color)),
             underline: decoration.contains("underline").then_some(true),
             strikethrough: decoration.contains("line-through").then_some(true),
             href: segment
@@ -245,6 +296,15 @@ fn styled_content(
                 .map(str::to_string),
         });
     }
+    let whole = match paints.split_first() {
+        Some((Some(first), rest)) if rest.iter().all(|paint| *paint == Some(*first)) => {
+            for segment in &mut segments {
+                segment.fill = None;
+            }
+            Some(first.to_vec())
+        }
+        _ => None,
+    };
     // A lone run carrying no overrides is indistinguishable from plain text —
     // keep the node simple so the common single-`<span>` block does not pay for
     // styled content it does not use.
@@ -259,13 +319,17 @@ fn styled_content(
                 && segment.strikethrough.is_none()
                 && segment.href.is_none()
         });
-    if segments.is_empty() {
+    let content = if segments.is_empty() {
         TextContent::Plain(plain)
     } else if trivial {
         // The segments' text, which carries their own `text-transform`.
         TextContent::Plain(segments.into_iter().map(|segment| segment.text).collect())
     } else {
         TextContent::Styled(segments)
+    };
+    StyledRun {
+        content,
+        fill: whole,
     }
 }
 
@@ -451,8 +515,13 @@ mod tests {
                 { "text": "er", "styles": { "text-transform": "capitalize", "font-style": "italic" } },
             ],
         });
-        let TextContent::Styled(segments) =
-            styled_content(object.as_object().unwrap(), "Plan: Pro Tier".into(), None)
+        let TextContent::Styled(segments) = styled_content(
+            object.as_object().unwrap(),
+            "Plan: Pro Tier".into(),
+            None,
+            &[],
+        )
+        .content
         else {
             panic!("styled content");
         };

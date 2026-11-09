@@ -1120,6 +1120,21 @@
   // document order into styled runs, collapsing whitespace across inline
   // boundaries as CSS does: `\s+` -> one space, a straddling boundary space
   // -> one, run-edge space dropped.
+  // The background a `background-clip: text` element between `owner` and
+  // the run's `stop` parent paints through the glyphs: a gradient `<span>`
+  // folded into its block's run has only its transparent colour otherwise.
+  function clippedBackground(owner, stop) {
+    for (var element = owner; element; element = element.parentElement) {
+      var computed = window.getComputedStyle(element);
+      var clip = computed.backgroundClip || computed.webkitBackgroundClip;
+      if (clip === "text" && computed.backgroundImage !== "none") {
+        return computed.backgroundImage;
+      }
+      if (element === stop) break;
+    }
+    return null;
+  }
+
   function inlineSegments(parent, nodes) {
     var segments = [];
     var spaceOpen = true;
@@ -1132,6 +1147,8 @@
       spaceOpen = text.charAt(text.length - 1) === " ";
       var href = nearestHref(owner, parent);
       var styles = textPaintStyles(window.getComputedStyle(owner), SEGMENT_STYLE_KEYS);
+      var clip = clippedBackground(owner, parent);
+      if (clip) styles["background-image"] = clip;
       var key = JSON.stringify(styles) + " " + (href || "");
       var previous = segments[segments.length - 1];
       if (previous && previous.key === key) {
@@ -1305,6 +1322,51 @@
     ];
   }
 
+  // Whether `computed` makes its element the containing block of a
+  // descendant placed with `position` (`absolute` or `fixed`).
+  function containsPositioned(computed, position) {
+    if (position === "absolute" && computed.position !== "static") return true;
+    // Tailwind v4 writes `translate` / `scale` / `rotate`, not `transform`.
+    var set = function (value) {
+      return !!value && value !== "none";
+    };
+    if (
+      set(computed.transform) ||
+      set(computed.translate) ||
+      set(computed.scale) ||
+      set(computed.rotate) ||
+      set(computed.perspective) ||
+      set(computed.filter) ||
+      set(computed.backdropFilter) ||
+      computed.transformStyle === "preserve-3d"
+    ) {
+      return true;
+    }
+    if (/paint|layout|strict|content/.test(computed.contain || "")) return true;
+    return /transform|translate|scale|rotate|perspective|filter/.test(computed.willChange || "");
+  }
+
+  // A fixed / absolute box escapes an `overflow` clip that sits between it
+  // and its containing block: an open submenu's popper inside the main
+  // menu's `overflow-hidden` panel paints beside the panel, not cut by it.
+  // The document tree keeps it under the clipper, so the importer has to
+  // be told to hoist it out.
+  function escapesClip(element, computed) {
+    var position = computed.position;
+    if (position !== "absolute" && position !== "fixed") return false;
+    for (
+      var ancestor = element.parentElement;
+      ancestor && ancestor !== document.body && ancestor !== document.documentElement;
+      ancestor = ancestor.parentElement
+    ) {
+      var style = window.getComputedStyle(ancestor);
+      // Clips at or above the containing block do apply to the box: stop.
+      if (containsPositioned(style, position)) return false;
+      if (style.overflowX !== "visible" || style.overflowY !== "visible") return true;
+    }
+    return false;
+  }
+
   function buildElement(element) {
     var tag = tagOf(element);
     if (SKIP_TAGS[tag]) return null;
@@ -1389,6 +1451,7 @@
     if (box) result.layout = box;
     var attrs = nameAttributes(element);
     if (attrs) result.attrs = attrs;
+    if (escapesClip(element, computed)) result.escapesClip = true;
     return result;
   }
 
