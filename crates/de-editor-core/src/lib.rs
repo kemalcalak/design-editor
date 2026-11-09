@@ -27,6 +27,8 @@ pub mod browser_devices;
 mod browser_edit;
 pub mod browser_live;
 pub mod browser_live_wire;
+
+pub mod browser_stream;
 pub mod button_press_state;
 mod catalog_toml;
 pub mod chat;

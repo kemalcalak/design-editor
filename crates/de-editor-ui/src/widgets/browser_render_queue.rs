@@ -54,6 +54,9 @@ pub struct BrowserRenderQueue {
     max_in_flight: usize,
     /// The browser nodes the last painted page frame showed.
     visible: Vec<String>,
+    /// Counts drained page frames that moved the visible set or its
+    /// on-screen sizes (see [`Self::visible_frames`]).
+    visible_frames: u64,
     /// Requests waiting for their debounce, by node, with their due time.
     wanted: HashMap<String, (BrowserRenderRequest, f64)>,
     /// Key being rendered, by node.
@@ -74,6 +77,7 @@ impl BrowserRenderQueue {
         Self {
             max_in_flight: max_in_flight.max(1),
             visible: Vec::new(),
+            visible_frames: 0,
             wanted: HashMap::new(),
             in_flight: HashMap::new(),
             failed: HashMap::new(),
@@ -93,6 +97,18 @@ impl BrowserRenderQueue {
     /// other input (renders in flight wake the host when they land).
     pub fn is_waiting(&self) -> bool {
         !self.wanted.is_empty()
+    }
+
+    /// The browser nodes the last painted page frame showed, sorted; their
+    /// on-screen sizes are `browser_textures::visible_size`.
+    pub fn visible(&self) -> &[String] {
+        &self.visible
+    }
+
+    /// Counts the drained page frames that moved the visible nodes or their
+    /// on-screen sizes: unchanged, a scan of them can be skipped.
+    pub fn visible_frames(&self) -> u64 {
+        self.visible_frames
     }
 
     /// Renders running now.
@@ -124,6 +140,9 @@ impl BrowserRenderQueue {
         }
         let mut visible_changed = false;
         if let Some(visible) = browser_textures::take_visible() {
+            if visible != self.visible || browser_textures::visible_sizes_changed() {
+                self.visible_frames = self.visible_frames.wrapping_add(1);
+            }
             if visible != self.visible {
                 self.visible = visible;
                 self.wanted

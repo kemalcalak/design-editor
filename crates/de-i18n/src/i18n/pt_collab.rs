@@ -392,6 +392,8 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "whatsNew.gotIt" => "Entendi",
         "whatsNew.previous" => "Anterior",
         "whatsNew.next" => "Próximo",
+        "settings.system.livePages" => "Páginas ao vivo",
+        "settings.system.livePagesDesc" => "Um nó de navegador selecionado roda como a página real. Desligado, mostra uma captura estática.",
         _ => return None,
     })
 }

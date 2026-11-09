@@ -17,6 +17,7 @@ mod app_handler;
 mod app_poll;
 mod app_state;
 mod asset_fetch_error;
+mod browser_live_host;
 mod browser_render_host;
 mod builtin_model_refresh_host;
 mod bundled_fonts;
@@ -145,7 +146,8 @@ enum DesktopEvent {
     McpWake,
     /// A background image decode completed and can be installed.
     ImageDecodeReady,
-    /// A live browser page snapshot finished rendering (#20).
+    /// A live browser page snapshot finished rendering (#20), or a live
+    /// stream decoded a frame (#324).
     BrowserFrameReady,
     /// A second launch forwarded a document to this instance (see
     /// `single_instance`). Wakes the loop to drain the forward queue + raise
@@ -341,6 +343,8 @@ struct DesktopApp {
     remote_images: remote_image_host::RemoteImageSession,
     /// Headless-Chrome snapshots of the visible browser nodes (#20).
     browser_renders: browser_render_host::BrowserRenderHost,
+    /// Live streams of the selected browser nodes (#324).
+    browser_live: browser_live_host::BrowserLiveHost,
     /// Two-thread local image raster decode pool.
     image_decodes: image_decode_host::ImageDecodeHost,
     /// Script-node runs on a worker thread (#19).
@@ -423,6 +427,8 @@ struct DesktopApp {
     /// The OS reports the window fully occluded (`WindowEvent::Occluded`).
     /// Nothing paints while it holds.
     window_occluded: bool,
+    /// The window has keyboard focus; live pages pause without it.
+    window_focused: bool,
     /// In-app Git — the repository bound to the open document.
     /// Rebound whenever the document path changes; read by the
     /// window title and the Git panel.
@@ -665,6 +671,7 @@ fn main() {
     app.image_decodes.set_wake_proxy(mcp_wake_proxy.clone());
     app.script_nodes.set_wake_proxy(mcp_wake_proxy.clone());
     app.browser_renders.set_wake_proxy(mcp_wake_proxy.clone());
+    app.browser_live.set_wake_proxy(mcp_wake_proxy.clone());
     // A snapshot an MCP `browser` call put on a node repaints the canvas.
     let browser_proxy = std::sync::Mutex::new(mcp_wake_proxy.clone());
     de_editor_ui::widgets::browser_textures::set_ready_notifier(move || {

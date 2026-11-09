@@ -187,6 +187,28 @@ fn image_cache_evicts_least_recently_used_over_byte_budget() {
 }
 
 #[test]
+fn live_frames_replace_in_place_without_restarting_cached_layers() {
+    let mut be = NativeBackend::with_dpi(1.0);
+    let png = encode_test_png(4, 3);
+    let start = be.raster_generation();
+    be.install_live_raster(9, decode_raster(&png).unwrap());
+    let first = be.raster_generation();
+    assert_ne!(first, start, "a new slot repaints cached layers once");
+    for _ in 0..5 {
+        be.install_live_raster(9, decode_raster(&png).unwrap());
+    }
+    assert_eq!(be.raster_generation(), first, "later frames keep it");
+    assert_eq!(be.image_cache_len(), 1, "one entry per node");
+    assert!(be.image_resident(9));
+    be.drop_live_raster(9);
+    assert!(!be.image_resident(9));
+    assert_ne!(be.raster_generation(), first, "the snapshot shows again");
+    let dropped = be.raster_generation();
+    be.drop_live_raster(9);
+    assert_eq!(be.raster_generation(), dropped, "nothing left to drop");
+}
+
+#[test]
 fn image_cache_entry_cap_bounds_small_rasters() {
     let mut be = NativeBackend::with_dpi(1.0);
     let png = encode_test_png(1, 1);

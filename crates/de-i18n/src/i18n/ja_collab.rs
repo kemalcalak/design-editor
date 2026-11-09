@@ -392,6 +392,8 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "whatsNew.gotIt" => "OK",
         "whatsNew.previous" => "前へ",
         "whatsNew.next" => "次へ",
+        "settings.system.livePages" => "ライブページ",
+        "settings.system.livePagesDesc" => "選択中のブラウザノードを実際のページのように再生します。オフにすると静止スナップショットを表示します。",
         _ => return None,
     })
 }

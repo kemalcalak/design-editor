@@ -80,6 +80,12 @@ impl BrowserRenderHost {
         }
     }
 
+    /// The snapshot queue: its visible set drives the live streams too
+    /// (`browser_live_host`).
+    pub fn snapshot_queue(&self) -> &BrowserRenderQueue {
+        &self.queue
+    }
+
     /// A render waits out its debounce: the loop must wake to send it.
     /// Renders in flight wake it themselves (`BrowserFrameReady`).
     pub fn is_waiting(&self) -> bool {

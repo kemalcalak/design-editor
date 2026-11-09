@@ -392,6 +392,8 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "whatsNew.gotIt" => "Verstanden",
         "whatsNew.previous" => "Zurück",
         "whatsNew.next" => "Weiter",
+        "settings.system.livePages" => "Live-Seiten",
+        "settings.system.livePagesDesc" => "Ein ausgewählter Browser-Knoten läuft wie die echte Seite. Aus zeigt einen Standbild-Schnappschuss.",
         _ => return None,
     })
 }

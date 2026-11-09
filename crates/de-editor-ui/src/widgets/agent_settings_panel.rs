@@ -258,6 +258,8 @@ pub enum AgentSettingsHit {
     SelectPencilCursor(de_editor_core::PencilCursorStyle),
     /// System tab Pencil smoothing segment (#88).
     SelectPencilSmoothing(de_editor_core::PencilSmoothing),
+    /// System tab Live pages switch (#324).
+    ToggleLivePages,
     FocusMcpPort,
     Outside,
     Inside,

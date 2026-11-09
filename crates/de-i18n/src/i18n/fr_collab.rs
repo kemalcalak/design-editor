@@ -392,6 +392,8 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "whatsNew.gotIt" => "Compris",
         "whatsNew.previous" => "Précédent",
         "whatsNew.next" => "Suivant",
+        "settings.system.livePages" => "Pages en direct",
+        "settings.system.livePagesDesc" => "Un nœud navigateur sélectionné s'anime comme la page réelle. Désactivé, un instantané fixe s'affiche.",
         _ => return None,
     })
 }

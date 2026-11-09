@@ -2,7 +2,8 @@
 //!
 //! Appearance, the auto-update preference plus its live release-probe
 //! status, the experimental-features opt-in, the generation-overlay
-//! pencil-cursor picker and the Pencil tool's smoothing level (#88) —
+//! pencil-cursor picker, the Pencil tool's smoothing level (#88) and the
+//! Live pages switch (#324) —
 //! each on one borderless row in the modal's shared row
 //! language (`agent_settings_rows`), separated by hairlines.
 
@@ -58,6 +59,8 @@ pub enum SystemHit {
     SelectPencilCursor(de_editor_core::PencilCursorStyle),
     /// Click on one of the Pencil smoothing segments (#88).
     SelectPencilSmoothing(de_editor_core::PencilSmoothing),
+    /// The Live pages switch (#324).
+    ToggleLivePages,
     None,
 }
 
@@ -90,6 +93,7 @@ enum SystemRow {
     Experimental,
     PencilCursor,
     PencilSmoothing,
+    LivePages,
 }
 
 fn visible_rows() -> &'static [SystemRow] {
@@ -100,6 +104,7 @@ fn visible_rows() -> &'static [SystemRow] {
             SystemRow::Experimental,
             SystemRow::PencilCursor,
             SystemRow::PencilSmoothing,
+            SystemRow::LivePages,
         ]
     } else {
         &[
@@ -107,17 +112,18 @@ fn visible_rows() -> &'static [SystemRow] {
             SystemRow::Experimental,
             SystemRow::PencilCursor,
             SystemRow::PencilSmoothing,
+            SystemRow::LivePages,
         ]
     }
 }
 
 impl SystemRow {
     /// How many lines the row carries — and therefore how tall its box
-    /// is. Auto-update rides a probe-status line and Experimental a
-    /// description; the other two are label-only.
+    /// is. Auto-update rides a probe-status line, Experimental and Live
+    /// pages a description; the others are label-only.
     fn lines(self) -> RowLines {
         match self {
-            SystemRow::AutoUpdate | SystemRow::Experimental => RowLines::Two,
+            SystemRow::AutoUpdate | SystemRow::Experimental | SystemRow::LivePages => RowLines::Two,
             SystemRow::Appearance | SystemRow::PencilCursor | SystemRow::PencilSmoothing => {
                 RowLines::One
             }
@@ -293,6 +299,9 @@ pub fn hit_test(content: Rect, ui: &EditorUiState, scrolled: Point2D) -> SystemH
             return SystemHit::SelectPencilSmoothing(*level);
         }
     }
+    if switch_rect_for(content, SystemRow::LivePages).contains(scrolled) {
+        return SystemHit::ToggleLivePages;
+    }
     SystemHit::None
 }
 
@@ -340,6 +349,22 @@ pub(super) fn paint_system_tab(
             }
             SystemRow::PencilCursor => paint_cursor_row(cx, theme, ui, content, rect),
             SystemRow::PencilSmoothing => paint_smoothing_row(cx, theme, ui, content, rect),
+            SystemRow::LivePages => {
+                paint_row_label(
+                    cx,
+                    theme,
+                    rect,
+                    t_settings(ui, "settings.system.livePages"),
+                    Some(t_settings(ui, "settings.system.livePagesDesc")),
+                    SETTINGS_SWITCH_W + 16.0,
+                );
+                paint_settings_switch(
+                    cx,
+                    theme,
+                    switch_rect_for(content, SystemRow::LivePages),
+                    ui.browser_live.live_pages(),
+                );
+            }
         }
         if index != last {
             paint_row_hairline(cx, theme, rect);

@@ -206,7 +206,14 @@ impl ApplicationHandler<DesktopEvent> for DesktopApp {
         // replay probes themselves wait until the user opens the chat
         // model picker or Settings → Agents (`start_cli_probes_on_demand`).
         self.load_remembered_connections();
-        let (cursor, smoothing) = crate::ui_prefs::load_ui_prefs();
+        let (cursor, smoothing, live_pages) = crate::ui_prefs::load_ui_prefs();
+        if let Some(on) = live_pages {
+            self.host
+                .editor_state_mut()
+                .editor_ui
+                .browser_live
+                .set_live_pages(on);
+        }
         if let Some(style) = cursor {
             self.host.editor_state_mut().editor_ui.pencil_cursor_style = style;
         }
@@ -494,6 +501,7 @@ impl ApplicationHandler<DesktopEvent> for DesktopApp {
             WindowEvent::CloseRequested => self.on_close_requested(event_loop),
             WindowEvent::Resized(size) => self.on_resized(event_loop, size),
             WindowEvent::Occluded(occluded) => self.on_occluded(occluded),
+            WindowEvent::Focused(focused) => self.on_focused(focused),
             WindowEvent::Moved(pos) => self.on_moved(pos),
             WindowEvent::HoveredFile(path) => self.on_hovered_file(&path),
             WindowEvent::HoveredFileCancelled => self.on_hovered_file_cancelled(),
@@ -632,6 +640,7 @@ impl ApplicationHandler<DesktopEvent> for DesktopApp {
         self.host.flush_settings_input();
         de_host_services::settings_io::save(self.host.editor_state());
         crate::prompt_center_store::flush_user_prompts_if_dirty(&mut self.host);
+        self.browser_live.shutdown();
         self.browser_renders.shutdown();
         if let Some(mut server) = self.mcp_server.take() {
             server.stop();

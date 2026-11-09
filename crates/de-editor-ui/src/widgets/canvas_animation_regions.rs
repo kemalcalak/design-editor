@@ -21,6 +21,11 @@
 //! Either makes the frame [`AnimationRegions::located`] `false`, and the host
 //! must repaint the whole canvas as before.
 //!
+//! Live browser pages (#324) record their box the same way through
+//! [`record_live`]: their frames arrive as events rather than on a clock,
+//! so nothing asks for a next frame, but the box tells the host which
+//! region a landed frame changes ([`AnimationRegions::live`]).
+//!
 //! Only paints inside a canvas frame record (exports, thumbnails and preview
 //! never do), and [`begin_frame`] starts every canvas paint, partial ones
 //! included, from an empty record: the host reads it after each paint.
@@ -33,6 +38,7 @@ thread_local! {
     static RECTS: RefCell<Vec<Rect>> = const { RefCell::new(Vec::new()) };
     static UNLOCATED: Cell<bool> = const { Cell::new(false) };
     static BACKDROP: Cell<bool> = const { Cell::new(false) };
+    static LIVE: Cell<bool> = const { Cell::new(false) };
 }
 
 /// What one canvas paint recorded.
@@ -43,6 +49,8 @@ pub struct AnimationRegions {
     /// Whether repainting only `rects` reproduces the next frame: no
     /// animation without a box, no backdrop reads.
     pub located: bool,
+    /// A live browser frame was painted (its box is in `rects`).
+    pub live: bool,
 }
 
 /// Start a canvas paint with an empty record.
@@ -50,6 +58,7 @@ pub fn begin_frame() {
     RECTS.with(|rects| rects.borrow_mut().clear());
     UNLOCATED.with(|flag| flag.set(false));
     BACKDROP.with(|flag| flag.set(false));
+    LIVE.with(|flag| flag.set(false));
 }
 
 /// What the canvas paint since [`begin_frame`] recorded.
@@ -57,6 +66,7 @@ pub fn snapshot() -> AnimationRegions {
     AnimationRegions {
         rects: RECTS.with(|rects| rects.borrow().clone()),
         located: !UNLOCATED.with(Cell::get) && !BACKDROP.with(Cell::get),
+        live: LIVE.with(Cell::get),
     }
 }
 
@@ -70,6 +80,15 @@ pub(crate) fn record(rect: Rect) {
         Some(mapped) => RECTS.with(|rects| rects.borrow_mut().push(mapped)),
         None => mark_unlocated(),
     }
+}
+
+/// Record a live browser frame painted into `rect` (current paint space).
+pub(crate) fn record_live(rect: Rect) {
+    if !super::canvas_shader_pointer::in_canvas_frame() {
+        return;
+    }
+    record(rect);
+    LIVE.with(|flag| flag.set(true));
 }
 
 /// Note animated content whose box is not known.

@@ -266,6 +266,11 @@ pub fn apply_agent_settings_hit(
             state.editor_ui.pencil_smoothing = level;
             SettingsPressOutcome::handled()
         }
+        AgentSettingsHit::ToggleLivePages => {
+            let live = &mut state.editor_ui.browser_live;
+            live.set_live_pages(!live.live_pages());
+            SettingsPressOutcome::handled()
+        }
         AgentSettingsHit::ToggleExperimental => {
             let settings = &mut state.editor_ui.agent_settings;
             settings.experimental_features_enabled ^= true;

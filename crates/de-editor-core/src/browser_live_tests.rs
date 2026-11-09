@@ -132,3 +132,24 @@ fn folder_characters_are_escaped_and_shares_keep_their_host() {
         "file:///C:/work/x.html"
     );
 }
+
+#[test]
+fn live_pages_are_on_by_default_and_survive_a_document_change() {
+    let mut live = BrowserLiveState::default();
+    assert!(live.live_pages());
+    live.set_live_pages(false);
+    live.clear_nodes();
+    assert!(!live.live_pages());
+    live.set_live_pages(true);
+    assert!(live.live_pages());
+}
+
+#[test]
+fn an_interactive_node_is_dropped_with_the_document() {
+    let mut live = BrowserLiveState::default();
+    assert_eq!(live.interactive_node(), None);
+    live.set_interactive_node(Some("b"));
+    assert_eq!(live.interactive_node(), Some("b"));
+    live.clear_nodes();
+    assert_eq!(live.interactive_node(), None);
+}
