@@ -16,6 +16,26 @@ pub(super) fn is_sensitive_browser_post(request: &crate::mcp_serve::HttpRequest)
             || request.path.starts_with("/api/scripts/"))
 }
 
+/// Whether the request may proceed: false when the browser says another
+/// site made it (`Sec-Fetch-Site: cross-site`). Only `cross-site` is refused: `same-origin`,
+/// `same-site` and `none` (typed into the address bar) pass, and the Origin
+/// check still runs after. A request without the header is not from a
+/// current browser; like a request without `Origin`, it passes, but only on
+/// a loopback daemon (`Host`), so a remote daemon does not open slots to
+/// anything that leaves the header out. Guards routes a page on another
+/// site could otherwise use up, such as the live browser channel's client
+/// slots, which a cross-site `<img>` or `<script>` GET (no `Origin`) fills.
+pub(super) fn fetch_site_allowed(request: &crate::mcp_serve::HttpRequest) -> bool {
+    match request.sec_fetch_site.as_deref() {
+        Some(site) => !site.trim().eq_ignore_ascii_case("cross-site"),
+        None => request
+            .host
+            .as_deref()
+            .and_then(|host| reqwest::Url::parse(&format!("http://{host}/")).ok())
+            .is_some_and(|url| url.host_str().is_some_and(is_loopback_web_host)),
+    }
+}
+
 /// `application/json` (optionally with parameters, e.g. `; charset=utf-8`).
 pub(super) fn content_type_is_json(value: Option<&str>) -> bool {
     value.is_some_and(|value| {

@@ -40,6 +40,28 @@ pub struct BrowserLiveEntry {
     pub frame_height: u32,
 }
 
+impl BrowserLiveEntry {
+    /// The entry for a stream the shared queue started (`spec`), under the
+    /// client's `key`: its page laid out like the node's still snapshot, at
+    /// the stream's device scale, from the top.
+    pub fn for_stream(key: String, spec: &crate::browser_stream::BrowserStreamSpec) -> Self {
+        Self {
+            key,
+            page: BrowserSnapshotSpec {
+                url: spec.url.clone(),
+                layout_width: spec.layout_width,
+                layout_height: spec.layout_height,
+                scale: spec.page_scale,
+                mobile: spec.mobile,
+                scroll_x: 0.0,
+                scroll_y: 0.0,
+            },
+            frame_width: spec.frame_width,
+            frame_height: spec.frame_height,
+        }
+    }
+}
+
 /// The body of `POST` [`BROWSER_LIVE_PATH`]: a client's whole live set.
 #[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]

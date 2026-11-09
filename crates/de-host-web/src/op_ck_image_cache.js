@@ -69,6 +69,10 @@ const deleteImage = (image) => {
   if (image && image.delete) image.delete();
 };
 
+const closeBitmap = (bitmap) => {
+  if (bitmap && bitmap.close) bitmap.close();
+};
+
 // SVG has no magic bytes — sniff the markup (first 4 KiB decode as text and
 // contain an `<svg` tag). Mirrors the native seam's sniff in
 // `de-editor-ui/.../svg_raster.rs`.
@@ -100,6 +104,53 @@ export function createWebImageCaches(CK) {
   // in `fullImageCache`.
   const svgPending = new Set();
   const svgFailures = new Set();
+  // Live browser frames (#324): one image per streamed node under its
+  // stable texture id, replaced in place by each frame. Kept apart from the
+  // LRU caches (never evicted, never counted against their budget); the
+  // host drops a slot once the node stops showing it.
+  const liveImages = new Map();
+
+  const releaseLive = (entry) => {
+    deleteImage(entry.image);
+    closeBitmap(entry.bitmap);
+  };
+
+  // `bitmap` is an `ImageBitmap` the browser decoded off the main thread.
+  // A lazy texture image uploads it straight to the GPU when drawn (the
+  // bitmap must then live as long as the image); without that API the
+  // pixels are copied out once and the bitmap is closed at once.
+  const installLiveImage = (lo, hi, bitmap) => {
+    const key = imageKey(lo, hi);
+    let image = null;
+    let kept = null;
+    try {
+      if (CK.MakeLazyImageFromTextureSource) {
+        image = CK.MakeLazyImageFromTextureSource(bitmap);
+        kept = bitmap;
+      } else if (CK.MakeImageFromCanvasImageSource) {
+        image = CK.MakeImageFromCanvasImageSource(bitmap);
+      }
+    } catch (_error) {
+      image = null;
+    }
+    if (!image) {
+      closeBitmap(bitmap);
+      return false;
+    }
+    if (!kept) closeBitmap(bitmap);
+    const old = liveImages.get(key);
+    liveImages.set(key, { image, bitmap: kept });
+    if (old) releaseLive(old);
+    return true;
+  };
+
+  const dropLiveImage = (lo, hi) => {
+    const key = imageKey(lo, hi);
+    const old = liveImages.get(key);
+    if (!old) return;
+    liveImages.delete(key);
+    releaseLive(old);
+  };
 
   const rememberSvgFailure = (key) => {
     if (svgFailures.size >= SVG_FAILURE_CAP) {
@@ -227,6 +278,7 @@ export function createWebImageCaches(CK) {
   // size is what made a zoomed-out image-dense page evict and re-decode
   // continuously; sizing to the view keeps hundreds of thumbnails cheap.
   const hasFullImage = (lo, hi, maxEdgePx) => {
+    if (liveImages.has(imageKey(lo, hi))) return true;
     const hit = fullImageCache.get(imageKey(lo, hi));
     if (!hit) return false;
     if (!(maxEdgePx > 0)) return true;
@@ -235,6 +287,8 @@ export function createWebImageCaches(CK) {
 
   const fullImage = (lo, hi) => {
     const key = imageKey(lo, hi);
+    const live = liveImages.get(key);
+    if (live) return live.image;
     const hit = fullImageCache.get(key);
     if (!hit) return null;
     fullImageCache.delete(key);
@@ -393,6 +447,8 @@ export function createWebImageCaches(CK) {
     fullImage,
     installFullImage,
     drawThumbnailCover,
+    installLiveImage,
+    dropLiveImage,
   };
 }
 

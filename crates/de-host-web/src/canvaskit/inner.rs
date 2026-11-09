@@ -101,14 +101,22 @@ impl CkInner {
         de_editor_core::shader_check::refresh(self.host.editor_state_mut(), |sksl| {
             ck.shader_compile_error(sksl)
         });
+        // Live browser frames (#324) decoded since the last paint.
+        super::live_frames::install_landed(&self.backend.ck);
         self.backend.begin_frame();
         self.host.paint_dyn(&mut self.backend, w, h);
         self.backend.end_frame();
         // Live browser pages (#20), right after the paint that noted the
-        // visible browser nodes; a landed snapshot or status repaints.
+        // visible browser nodes; a landed snapshot or status repaints. The
+        // live streams (#324) follow the snapshot queue's visible set.
         if crate::widget_host::browser_snapshot_fetch::pump(&mut self.host) {
             crate::repaint_coalescer::request();
         }
+        let dpi = self.backend.dpi_scale();
+        if crate::widget_host::browser_live_stream::pump(&self.host, dpi) {
+            crate::repaint_coalescer::request();
+        }
+        super::live_frames::release(&self.backend.ck);
         let placements = self.host.preview_video_overlay_placements(w, h);
         self.video_overlay.sync(&self.canvas, w, h, &placements);
         self.sync_a11y();

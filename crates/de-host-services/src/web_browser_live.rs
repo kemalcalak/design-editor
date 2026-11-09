@@ -24,7 +24,6 @@ use std::io::{self, Write};
 use std::sync::{Arc, Condvar, Mutex, MutexGuard, OnceLock};
 use std::time::Duration;
 
-use base64::Engine as _;
 use de_browser_render::{BrowserPool, BrowserRenderError, StreamFrame};
 use de_editor_core::browser_live_wire::{
     BrowserLiveEndReason, BrowserLiveEvent, BrowserLiveSet, BrowserLiveSetReply,
@@ -35,6 +34,8 @@ use source::{BrowserSource, LiveSource, LiveStream};
 
 /// Event streams open at once; a stream more is refused as busy.
 const MAX_CLIENTS: usize = 8;
+/// The event writer's buffer: about one mid-size frame.
+const WRITE_BUFFER: usize = 64 * 1024;
 /// Keep-alive cadence of an idle event stream, also how soon a client that
 /// left without a frame to write is noticed.
 const LIVE_HEARTBEAT: Duration = Duration::from_secs(5);
@@ -234,25 +235,45 @@ impl LiveLease<'_> {
         out: &mut S,
         cors_origin: Option<&str>,
     ) -> io::Result<()> {
-        crate::ai_proxy::write_sse_headers(out, cors_origin)?;
+        // Frames are base64-encoded straight into this buffer in small
+        // pieces; it turns them into a few large socket writes.
+        let mut out = io::BufWriter::with_capacity(WRITE_BUFFER, out);
+        crate::ai_proxy::write_sse_headers(&mut out, cors_origin)?;
         let hello = BrowserLiveEvent::Hello {
             client: self.client.id.clone(),
         };
-        write_event(out, &hello)?;
+        write_event(&mut out, &hello)?;
         out.flush()?;
         loop {
-            let events = self.client.drain();
-            if events.is_empty() {
+            let outgoing = self.client.drain();
+            if outgoing.is_empty() {
                 if !self.client.wake.wait(self.hub.heartbeat) {
                     out.write_all(b": ping\n\n")?;
                     out.flush()?;
                 }
                 continue;
             }
-            for event in &events {
-                write_event(out, event)?;
+            for item in &outgoing {
+                item.write_to(&mut out)?;
             }
             out.flush()?;
+        }
+    }
+}
+
+/// One item for the writer: a notice, or a node's newest frame, which is
+/// written straight from its JPEG bytes ([`write_frame_event`]).
+#[derive(Debug)]
+enum Outgoing {
+    Event(BrowserLiveEvent),
+    Frame { key: String, frame: StreamFrame },
+}
+
+impl Outgoing {
+    fn write_to<S: Write>(&self, out: &mut S) -> io::Result<()> {
+        match self {
+            Outgoing::Event(event) => write_event(out, event),
+            Outgoing::Frame { key, frame } => write_frame_event(out, key, frame),
         }
     }
 }
@@ -383,7 +404,7 @@ impl LiveClient {
 
     /// The pending notices and the newest frame of each stream. Taking a
     /// frame here, right before it is written, is what paces the streams.
-    fn drain(&self) -> Vec<BrowserLiveEvent> {
+    fn drain(&self) -> Vec<Outgoing> {
         let streams: Vec<_> = lock(&self.state)
             .streams
             .iter()
@@ -393,7 +414,7 @@ impl LiveClient {
             .into_iter()
             .map(|(key, id, stream)| (key, id, stream.take_frame()))
             .collect();
-        let (mut events, frames, removed) = {
+        let (notices, frames, removed) = {
             let mut state = lock(&self.state);
             let mut frames = Vec::new();
             let mut removed = Vec::new();
@@ -417,11 +438,13 @@ impl LiveClient {
             (std::mem::take(&mut state.notices), frames, removed)
         };
         drop(removed);
-        let frames = frames
-            .into_iter()
-            .map(|(key, frame)| frame_event(key, frame));
-        events.extend(frames);
-        events
+        let mut outgoing: Vec<Outgoing> = notices.into_iter().map(Outgoing::Event).collect();
+        outgoing.extend(
+            frames
+                .into_iter()
+                .map(|(key, frame)| Outgoing::Frame { key, frame }),
+        );
+        outgoing
     }
 
     /// The reply to the set call that just ran.
@@ -481,15 +504,25 @@ fn new_client_id() -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
 }
 
-fn frame_event(key: String, frame: StreamFrame) -> BrowserLiveEvent {
+/// Write `frame` as a [`BrowserLiveEvent::Frame`] event, the same JSON
+/// serde makes, with the JPEG base64-encoded straight into `out`: a frame
+/// is never held as a base64 string, nor copied into a JSON one.
+fn write_frame_event<S: Write>(out: &mut S, key: &str, frame: &StreamFrame) -> io::Result<()> {
     let (width, height) = jpeg_size(&frame.jpeg).unwrap_or((0, 0));
-    BrowserLiveEvent::Frame {
-        key,
-        seq: frame.seq,
-        width,
-        height,
-        jpeg_base64: base64::engine::general_purpose::STANDARD.encode(&frame.jpeg),
+    out.write_all(br#"data: {"type":"frame","key":"#)?;
+    serde_json::to_writer(&mut *out, key).map_err(io::Error::other)?;
+    write!(
+        out,
+        r#","seq":{},"width":{width},"height":{height},"jpegBase64":""#,
+        frame.seq
+    )?;
+    {
+        let engine = &base64::engine::general_purpose::STANDARD;
+        let mut encoder = base64::write::EncoderWriter::new(&mut *out, engine);
+        encoder.write_all(&frame.jpeg)?;
+        encoder.finish()?;
     }
+    out.write_all(b"\"}\n\n")
 }
 
 /// The JPEG's size from its header (nothing is decoded).

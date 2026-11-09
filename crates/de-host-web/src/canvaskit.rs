@@ -26,6 +26,7 @@ mod backend_state;
 mod bindings;
 mod convert;
 mod inner;
+mod live_frames;
 mod measure;
 mod mount;
 mod mount_keyboard;

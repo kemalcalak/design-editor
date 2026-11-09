@@ -52,6 +52,7 @@ fn request_for(
         token: None,
         content_type: content_type.map(str::to_string),
         query: None,
+        sec_fetch_site: None,
     }
 }
 

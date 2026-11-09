@@ -17,8 +17,10 @@ use crate::browser_live::BrowserRenderRequest;
 pub const MAX_LIVE_PAGES: usize = 3;
 /// Frame-rate cap of a desktop stream.
 pub const DESKTOP_STREAM_FPS: f64 = 30.0;
-/// Frame-rate cap of a web stream (every frame crosses the network).
-pub const WEB_STREAM_FPS: f64 = 4.0;
+/// Frame-rate cap of a web stream: every frame crosses the network, so it
+/// runs at the daemon's own cap
+/// ([`crate::browser_live_wire::WEB_LIVE_MAX_FPS`]).
+pub const WEB_STREAM_FPS: f64 = crate::browser_live_wire::WEB_LIVE_MAX_FPS;
 /// Frame width steps, in device px: the smallest and the largest.
 pub const MIN_STREAM_WIDTH: u32 = 128;
 pub const MAX_STREAM_WIDTH: u32 = 2048;

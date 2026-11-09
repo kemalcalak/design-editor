@@ -111,12 +111,14 @@ fn zooming_restarts_only_at_a_step_and_shrinks_with_slack() {
 #[test]
 fn hosts_cap_rate_and_size() {
     let desktop = stream_tier(StreamHost::Desktop);
-    assert_eq!(desktop.max_fps, DESKTOP_STREAM_FPS);
+    assert_eq!(desktop.max_fps, 30.0);
     assert_eq!(
         (desktop.max_width, desktop.max_height),
         (MAX_STREAM_WIDTH, MAX_STREAM_HEIGHT)
     );
-    assert_eq!(stream_tier(StreamHost::Web).max_fps, WEB_STREAM_FPS);
+    // A selected node on the web runs at 10 fps, the daemon's cap.
+    assert_eq!(stream_tier(StreamHost::Web).max_fps, 10.0);
+    assert_eq!(WEB_STREAM_FPS, crate::browser_live_wire::WEB_LIVE_MAX_FPS);
 }
 
 #[test]
