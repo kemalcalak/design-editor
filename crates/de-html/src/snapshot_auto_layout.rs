@@ -16,7 +16,9 @@
 //!   `space-x-*` / `space-y-*` are margins, not `gap`, so the CSS value only
 //!   breaks the tie of two items pushed apart; a larger space becomes a fixed
 //!   `spacer` frame, and the single one that soaks up all the free space
-//!   (`ml-auto`) a filling spacer;
+//!   (`ml-auto`, at least `FREE_SPACE` past the gap) a filling spacer. A
+//!   vector icon is spaced by its element box, its inset artwork riding in a
+//!   frame of that box;
 //! - **padding** — CSS padding plus border widths, shrunk on any side the
 //!   children reach into, plus the space a line leaves at its ends when that
 //!   space is not free space (an offset first child, a filling item);
@@ -32,8 +34,11 @@
 //! A container whose children overlap along the axis (a negative-margin
 //! avatar stack) keeps `layout: none`; in a stack of lines only the
 //! overlapping line does, as a fixed-size layer that keeps its place in the
-//! stack (an avatar pulled up over a banner). `position: absolute | fixed`
-//! children stay absolutely placed inside any frame.
+//! stack (an avatar pulled up over a banner), and so does a flex column's
+//! band of overlapping items. A box a CSS transform moved is laid out by
+//! its untransformed box (the capture's `flowRect`) and drawn where the
+//! transform put it, inside a slot of that box. `position: absolute |
+//! fixed` children stay absolutely placed inside any frame.
 
 use std::collections::BTreeMap;
 
@@ -55,8 +60,7 @@ mod items;
 #[path = "snapshot_auto_layout_lines.rs"]
 mod lines;
 use flow::lines_of;
-use items::{cut_at, hug_of, set_size, union_of};
-use lines::line_box;
+use items::{cut_at, fitted_inset, hug_of, set_size, union_of};
 
 /// Within this many CSS px two edges count as the same edge: the capture
 /// rounds every rect to hundredths, and sub-pixel layout differs by less.
@@ -243,59 +247,16 @@ impl SnapshotCtx<'_> {
         let mut items = Vec::with_capacity(children.len());
         for child in children.iter().map(|child| child.as_ref()) {
             let bucket = super::snapshot_stack::paint_bucket(child, flex_or_grid);
-            if let Some(node) = self.map_child(child, rect) {
+            let node = self
+                .map_child(child, rect)
+                .and_then(|node| self.unless_escaping(child, node, bucket));
+            if let Some(node) = node {
                 if let Some(item) = self.item(child, node, bucket) {
                     items.push(item);
                 }
             }
         }
         self.auto_layout(&model, rect, items)
-    }
-
-    /// The geometry and role of one mapped child.
-    fn item(&self, child: &Value, node: PenNode, bucket: PaintBucket) -> Option<Item> {
-        let object = child.as_object()?;
-        let rect = Rect::from_node(object)?;
-        let overlay = matches!(
-            style(object, "position").map(str::trim),
-            Some("absolute" | "fixed")
-        );
-        let grow = object
-            .get("layout")
-            .and_then(|layout| layout.get("grow"))
-            .and_then(Value::as_f64)
-            .is_some_and(|grow| grow > 0.0);
-        let mut cut = false;
-        let (kind, rect) = match &node {
-            PenNode::Frame(_) => (ItemKind::Frame, rect),
-            PenNode::Text(_) => {
-                let lines = object.get("lines").and_then(Value::as_u64).unwrap_or(1);
-                let nowrap = style(object, "white-space") == Some("nowrap");
-                let single_line = lines <= 1 || nowrap;
-                // Whether it actually ran past the box is decided against
-                // the content box (`cut_at`).
-                cut = single_line && style(object, "text-overflow") == Some("ellipsis");
-                let rect = line_box(object, rect, self.opts.base_font_size);
-                (ItemKind::Text { single_line }, rect)
-            }
-            // A vector path is sized to its artwork, not the element box.
-            PenNode::Path(_) => (
-                ItemKind::Media,
-                Rect::from_field(object, "vectorRect")
-                    .filter(|r| r.w > 0.0 && r.h > 0.0)
-                    .unwrap_or(rect),
-            ),
-            _ => (ItemKind::Media, rect),
-        };
-        Some(Item {
-            node,
-            bucket,
-            rect,
-            overlay,
-            grow,
-            kind,
-            cut,
-        })
     }
 
     /// Lay `items` out inside `rect`. Overlays keep their placement; the
@@ -326,13 +287,15 @@ impl SnapshotCtx<'_> {
         };
         // The stack of rows is not the flex line: its spacing is the rows'
         // own geometry, never the items' `justify-content` / `align-items`
-        // (`align-content` is not captured).
+        // (`align-content` is not captured). A column's bands are its own
+        // line, so a flex column keeps them.
+        let column = model.direction == Some(Axis::Vertical);
         let stack = BoxModel {
-            flex: false,
+            flex: column && model.flex,
             direction: Some(Axis::Vertical),
             wrap: false,
-            justify: None,
-            align: None,
+            justify: model.justify.clone().filter(|_| column),
+            align: model.align.clone().filter(|_| column),
             inset: model.inset,
             gap: model.gap,
         };
@@ -345,14 +308,20 @@ impl SnapshotCtx<'_> {
             (axis, flow, model)
         } else {
             // Several rows: each becomes a horizontal `row` frame spanning
-            // the content width, stacked vertically.
+            // the content width, stacked vertically (a column's band of
+            // overlapping items a layer).
             let mut rows = Vec::new();
             let mut rest = flow.into_iter();
-            for (_, count) in &lines {
+            for (line_axis, count) in &lines {
                 let row: Vec<Item> = rest.by_ref().take(*count).collect();
-                rows.push(self.row_frame(model, rect, content, row));
+                let layer = *line_axis == Axis::Vertical && *count > 1;
+                rows.push(self.row_frame(model, rect, content, row, layer));
             }
             (Axis::Vertical, rows, &stack)
+        };
+        let flow_items = match axis {
+            Axis::Vertical => self.band_strays(model, rect, content, flow_items),
+            Axis::Horizontal => flow_items,
         };
         match self.arrange(model, axis, content, flow_items) {
             Ok(mut laid) => {
@@ -381,10 +350,44 @@ impl SnapshotCtx<'_> {
         }
     }
 
+    /// A stack item that keeps a cross offset of its own (an avatar's
+    /// `ml-4` beside full-width siblings) cannot share the stack's
+    /// alignment: it rides in a fixed layer the width of the content box,
+    /// at its own offset, as an overlapping line does, and the rest of the
+    /// stack stays in flow.
+    fn band_strays(
+        &mut self,
+        model: &BoxModel,
+        rect: Rect,
+        content: Rect,
+        items: Vec<Item>,
+    ) -> Vec<Item> {
+        let cross = self.cross_alignment(model, Axis::Vertical, content, &items);
+        if cross.aligned {
+            return items;
+        }
+        items
+            .into_iter()
+            .zip(cross.strays)
+            .map(|(item, stray)| match stray {
+                true => self.row_frame(model, rect, content, vec![item], /* layer */ true),
+                false => item,
+            })
+            .collect()
+    }
+
     /// Wrap one line of a multi-line container (`rect`) in a horizontal
-    /// frame that spans the container's content width.
-    fn row_frame(&mut self, model: &BoxModel, rect: Rect, content: Rect, row: Vec<Item>) -> Item {
-        if row.len() == 1 {
+    /// frame that spans the container's content width; `layer` keeps the
+    /// line's items placed instead (a column's overlapping band, a stray).
+    fn row_frame(
+        &mut self,
+        model: &BoxModel,
+        rect: Rect,
+        content: Rect,
+        row: Vec<Item>,
+        layer: bool,
+    ) -> Item {
+        if row.len() == 1 && !layer {
             return row.into_iter().next().expect("one item");
         }
         let top = row.iter().map(|i| i.rect.y).fold(f64::INFINITY, f64::min);
@@ -411,7 +414,12 @@ impl SnapshotCtx<'_> {
         // Where the row sits in the element: read only if the element itself
         // falls back to `layout: none` (flow clears it, `into_flow`).
         let (dx, dy) = (line.x - rect.x, line.y - rect.y);
-        let (mut frame, height) = match self.arrange(&row_model, Axis::Horizontal, line, row) {
+        let arranged = if layer {
+            Err(row)
+        } else {
+            self.arrange(&row_model, Axis::Horizontal, line, row)
+        };
+        let (mut frame, height) = match arranged {
             Ok(laid) => (frame_node(id, "row", laid), Fit::Hug),
             // Overlapping items (an avatar pulled up over a banner by a
             // negative margin): a `layout: none` layer the size of the line
@@ -422,7 +430,10 @@ impl SnapshotCtx<'_> {
                 for item in &mut row {
                     items::shift_back(&mut item.node, dx, dy);
                 }
-                (frame_node(id, "row", absolute(Vec::new(), row)), Fit::Fixed)
+                (
+                    frame_node(id, "layer", absolute(Vec::new(), row)),
+                    Fit::Fixed,
+                )
             }
         };
         (frame.base.x, frame.base.y) = (Some(dx), Some(dy));
@@ -513,13 +524,24 @@ impl SnapshotCtx<'_> {
         {
             base_gap = css_gap;
         }
-        let extras: Vec<f64> = gaps.iter().map(|gap| gap - base_gap).collect();
+        let mut extras: Vec<f64> = gaps.iter().map(|gap| gap - base_gap).collect();
         let wide: Vec<usize> = (0..extras.len()).filter(|&i| extras[i] > EPS).collect();
+        // Only space well past the gap is free space: a smaller step is a
+        // margin (`mr-2` before a label, `ml-1` before a chevron) and stays
+        // a fixed spacer.
         let soaks_free_space = !any_fill
             && !space_between
             && wide.len() == 1
+            && extras[wide[0]] >= FREE_SPACE
             && leading <= EPS
             && trailing.abs() <= EPS;
+        // A fixed spacer sits between two gaps, so it takes its extra space
+        // less one gap; a step narrower than that (`mr-2` next to `ml-1`)
+        // has no such spacer, and every space becomes one instead.
+        if !space_between && !soaks_free_space && wide.iter().any(|&i| extras[i] < base_gap - EPS) {
+            base_gap = 0.0;
+            extras.clone_from(&gaps);
+        }
         let mut lead_pad = 0.0;
         let mut trail_pad = 0.0;
         let justify = if any_fill {
@@ -594,12 +616,12 @@ impl SnapshotCtx<'_> {
             items::into_flow(&mut node);
             children.push(node);
             if !space_between && index + 1 < count && extras[index] > EPS {
-                let fit = if soaks_free_space {
-                    Fit::Fill
+                let (fit, size) = if soaks_free_space {
+                    (Fit::Fill, extras[index])
                 } else {
-                    Fit::Fixed
+                    (Fit::Fixed, extras[index] - base_gap)
                 };
-                children.push(self.spacer(axis, fit, extras[index]));
+                children.push(self.spacer(axis, fit, size));
             }
         }
         let mut padding = [0.0; 4];
@@ -673,28 +695,6 @@ impl Fit {
             Fit::Fill => SizingBehavior::Keyword(SizingKeyword::FillContainer),
         }
     }
-}
-
-/// The element's padding and border, shrunk on any side its flow children
-/// reach into. Content that overflows its padding box (a 20 px label in a
-/// 32 px button with 8 px padding and a border) still sits inside the box
-/// in the browser; keeping the full padding there makes the editor grow
-/// the box around it, and that growth travels up every hugging ancestor.
-fn fitted_inset(inset: [f64; 4], rect: Rect, flow: &[Item]) -> [f64; 4] {
-    let union = union_of(flow);
-    let reach = [
-        union.y - rect.y,
-        rect.x + rect.w - (union.x + union.w),
-        rect.y + rect.h - (union.y + union.h),
-        union.x - rect.x,
-    ];
-    let mut fitted = inset;
-    for side in 0..4 {
-        if reach[side] < inset[side] - EPS {
-            fitted[side] = reach[side].max(0.0);
-        }
-    }
-    fitted
 }
 
 /// Keep the element absolutely laid out: every child stays where the

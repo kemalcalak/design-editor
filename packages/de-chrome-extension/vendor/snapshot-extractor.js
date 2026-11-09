@@ -830,13 +830,56 @@
     }
   }
 
+  // A WebGL / WebGPU canvas made without `preserveDrawingBuffer` reads back
+  // blank through `toDataURL` (nothing throws), and a tainted 2D canvas does
+  // not read back at all. With `options.canvasShots` (a host that can
+  // screenshot the page: the MCP `browser` tool) such a canvas keeps that
+  // result and is tagged `canvasShot` with its document rect as the page
+  // shows it once the capture is done (measured after the walk), so the
+  // host puts in what the browser drew. The test compares the read-back
+  // with a blank canvas of the same size rather than probing contexts:
+  // `getContext` would give a canvas with none yet a context for good.
+  // Inside a scroll container laid out for the capture the rect is not
+  // where the page shows it afterwards, so those stay untagged; so does a
+  // fixed canvas not wholly on screen, which no scroll brings into view.
+  var canvasShots = !!(options && options.canvasShots);
+  var canvasShotCount = 0;
+  var canvasShotEntries = [];
+  var blankCanvasUrls = {};
+
+  function blankCanvasUrl(width, height) {
+    var key = width + "x" + height;
+    if (!(key in blankCanvasUrls)) {
+      var blank = document.createElement("canvas");
+      blank.width = width;
+      blank.height = height;
+      blankCanvasUrls[key] = blank.toDataURL("image/png");
+    }
+    return blankCanvasUrls[key];
+  }
+
+  function insideExpandedScroller(element) {
+    for (var index = 0; index < expandedScrollers.length; index += 1) {
+      if (expandedScrollers[index].element.contains(element)) return true;
+    }
+    return false;
+  }
+
   function captureCanvas(canvas) {
+    var dataUrl = null;
+    var captured;
     try {
-      return keepDataUrl(canvas.toDataURL("image/png"), GRAY_PLACEHOLDER);
+      dataUrl = canvas.toDataURL("image/png");
+      captured = keepDataUrl(dataUrl, GRAY_PLACEHOLDER);
     } catch (_error) {
       remoteImageCount += 1;
-      return { src: GRAY_PLACEHOLDER, tainted: true };
+      captured = { src: GRAY_PLACEHOLDER, tainted: true };
     }
+    if (!canvasShots || insideExpandedScroller(canvas)) return captured;
+    if (captured.tainted || dataUrl === blankCanvasUrl(canvas.width, canvas.height)) {
+      captured.shot = true;
+    }
+    return captured;
   }
 
   function captureVideo(video) {
@@ -915,6 +958,11 @@
       styles: elementStyles(computed),
     };
     if (captured.tainted) result.tainted = true;
+    if (captured.shot) {
+      canvasShotCount += 1;
+      result.canvasShot = { id: canvasShotCount };
+      canvasShotEntries.push({ node: result, element: element, fixed: fixedDepth > 0 });
+    }
     var box = layoutBox(computed);
     if (box) result.layout = box;
     var attrs = nameAttributes(element);
@@ -1072,6 +1120,21 @@
   // document order into styled runs, collapsing whitespace across inline
   // boundaries as CSS does: `\s+` -> one space, a straddling boundary space
   // -> one, run-edge space dropped.
+  // The background a `background-clip: text` element between `owner` and
+  // the run's `stop` parent paints through the glyphs: a gradient `<span>`
+  // folded into its block's run has only its transparent colour otherwise.
+  function clippedBackground(owner, stop) {
+    for (var element = owner; element; element = element.parentElement) {
+      var computed = window.getComputedStyle(element);
+      var clip = computed.backgroundClip || computed.webkitBackgroundClip;
+      if (clip === "text" && computed.backgroundImage !== "none") {
+        return computed.backgroundImage;
+      }
+      if (element === stop) break;
+    }
+    return null;
+  }
+
   function inlineSegments(parent, nodes) {
     var segments = [];
     var spaceOpen = true;
@@ -1084,6 +1147,8 @@
       spaceOpen = text.charAt(text.length - 1) === " ";
       var href = nearestHref(owner, parent);
       var styles = textPaintStyles(window.getComputedStyle(owner), SEGMENT_STYLE_KEYS);
+      var clip = clippedBackground(owner, parent);
+      if (clip) styles["background-image"] = clip;
       var key = JSON.stringify(styles) + " " + (href || "");
       var previous = segments[segments.length - 1];
       if (previous && previous.key === key) {
@@ -1257,6 +1322,144 @@
     ];
   }
 
+  // Whether `computed` makes its element the containing block of a
+  // descendant placed with `position` (`absolute` or `fixed`).
+  function containsPositioned(computed, position) {
+    if (position === "absolute" && computed.position !== "static") return true;
+    // Tailwind v4 writes `translate` / `scale` / `rotate`, not `transform`.
+    var set = function (value) {
+      return !!value && value !== "none";
+    };
+    if (
+      set(computed.transform) ||
+      set(computed.translate) ||
+      set(computed.scale) ||
+      set(computed.rotate) ||
+      set(computed.perspective) ||
+      set(computed.filter) ||
+      set(computed.backdropFilter) ||
+      computed.transformStyle === "preserve-3d"
+    ) {
+      return true;
+    }
+    if (/paint|layout|strict|content/.test(computed.contain || "")) return true;
+    return /transform|translate|scale|rotate|perspective|filter/.test(computed.willChange || "");
+  }
+
+  // The properties that move a box without moving its layout box. Tailwind
+  // v3 writes `transform`, v4 the individual `translate` / `scale` /
+  // `rotate`.
+  var TRANSFORM_PROPERTIES = ["transform", "translate", "scale", "rotate"];
+
+  // Put back a style attribute saved before inline writes (`null`: there
+  // was none).
+  function restoreStyle(element, saved) {
+    // Read it first: Chrome syncs CSSOM writes into the attribute lazily,
+    // and a removal before that sync came back later as `style=""`.
+    element.getAttribute("style");
+    if (saved === null) element.removeAttribute("style");
+    else element.setAttribute("style", saved);
+  }
+
+  // The untransformed layout box of an element a transform moved, in page
+  // coordinates, or null when it has none (or the transform left it in
+  // place). `getBoundingClientRect` reports the painted box, while the
+  // siblings were laid out around this one: an avatar pulled up over a
+  // banner with `-translate-y-1/2` still holds its place below it.
+  //
+  // Measured by clearing the element's own transform for one read and
+  // putting its style attribute back. `offsetLeft` / `offsetTop` would
+  // avoid the write, but they are whole pixels, relative to an
+  // `offsetParent` that is null for a fixed box and whose own transform
+  // they ignore, and SVG elements lack them; the cleared read keeps every
+  // ancestor's transform, so the box lands in the space its siblings'
+  // rects were measured in.
+  function untransformedRect(element, computed, rect) {
+    var moved = TRANSFORM_PROPERTIES.some(function (property) {
+      var value = computed.getPropertyValue(property);
+      if (!value || value === "none") return false;
+      // Tailwind v3's `.transform` and `translateZ(0)` hacks compute to an
+      // identity matrix: nothing moved, so the measure is skipped.
+      if (property === "transform" && typeof DOMMatrixReadOnly === "function") {
+        try {
+          return !new DOMMatrixReadOnly(value).isIdentity;
+        } catch (error) {
+          return true;
+        }
+      }
+      return true;
+    });
+    if (!moved || !element.style) return null;
+    var saved = element.getAttribute("style");
+    var style = element.style;
+    // Clearing the transform can shrink a scroller's overflow, and a
+    // scroller at its end then clamps its offset: put every offset back.
+    var scrolled = [];
+    for (var up = element.parentElement; up; up = up.parentElement) {
+      if (up.scrollTop || up.scrollLeft) {
+        scrolled.push({ element: up, top: up.scrollTop, left: up.scrollLeft });
+      }
+    }
+    var flow;
+    try {
+      // `important` outranks an animation running on the property, and
+      // `transition: none` keeps the write from starting a transition.
+      style.setProperty("transition", "none", "important");
+      TRANSFORM_PROPERTIES.forEach(function (property) {
+        style.setProperty(property, "none", "important");
+      });
+      flow = element.getBoundingClientRect();
+    } finally {
+      // The transform comes back while transitions are still off (the
+      // style read applies it), then the attribute as it was: restoring
+      // both in one write would animate the box back from its cleared place.
+      restoreStyle(element, saved);
+      style.setProperty("transition", "none", "important");
+      window.getComputedStyle(element).getPropertyValue("transform");
+      restoreStyle(element, saved);
+      scrolled.forEach(function (entry) {
+        entry.element.scrollTop = entry.top;
+        entry.element.scrollLeft = entry.left;
+      });
+    }
+    var same =
+      Math.abs(flow.left - rect.left) < 0.5 &&
+      Math.abs(flow.top - rect.top) < 0.5 &&
+      Math.abs(flow.width - rect.width) < 0.5 &&
+      Math.abs(flow.height - rect.height) < 0.5;
+    return same ? null : pageRect(flow);
+  }
+
+  // `node` with its element's untransformed layout box as `flowRect`, when a
+  // transform moved it (`untransformedRect`).
+  function withFlowRect(node, element, computed, rect) {
+    if (!node || !node.rect) return node;
+    var flow = untransformedRect(element, computed, rect);
+    if (flow) node.flowRect = flow;
+    return node;
+  }
+
+  // A fixed / absolute box escapes an `overflow` clip that sits between it
+  // and its containing block: an open submenu's popper inside the main
+  // menu's `overflow-hidden` panel paints beside the panel, not cut by it.
+  // The document tree keeps it under the clipper, so the importer has to
+  // be told to hoist it out.
+  function escapesClip(element, computed) {
+    var position = computed.position;
+    if (position !== "absolute" && position !== "fixed") return false;
+    for (
+      var ancestor = element.parentElement;
+      ancestor && ancestor !== document.body && ancestor !== document.documentElement;
+      ancestor = ancestor.parentElement
+    ) {
+      var style = window.getComputedStyle(ancestor);
+      // Clips at or above the containing block do apply to the box: stop.
+      if (containsPositioned(style, position)) return false;
+      if (style.overflowX !== "visible" || style.overflowY !== "visible") return true;
+    }
+    return false;
+  }
+
   function buildElement(element) {
     var tag = tagOf(element);
     if (SKIP_TAGS[tag]) return null;
@@ -1283,7 +1486,7 @@
 
   function buildElementBody(element, tag, computed, rect) {
     if (MEDIA_TAGS[tag]) {
-      return buildImage(element, computed, rect);
+      return withFlowRect(buildImage(element, computed, rect), element, computed, rect);
     }
     if (!takeNode()) return null;
     // Consecutive inline-flow children of a block-like parent fold into one
@@ -1341,7 +1544,8 @@
     if (box) result.layout = box;
     var attrs = nameAttributes(element);
     if (attrs) result.attrs = attrs;
-    return result;
+    if (escapesClip(element, computed)) result.escapesClip = true;
+    return withFlowRect(result, element, computed, rect);
   }
 
   // A picked element can itself be an <img>/<svg>/<canvas>/<video>, which
@@ -1438,14 +1642,7 @@
   function restoreScrollContainers(expanded) {
     // Styles first, offsets after: an offset write lays the page out.
     expanded.forEach(function (entry) {
-      if (entry.style === null) {
-        // Read it first: Chrome syncs CSSOM writes into the attribute lazily,
-        // and a removal before that sync came back later as `style=""`.
-        entry.element.getAttribute("style");
-        entry.element.removeAttribute("style");
-      } else {
-        entry.element.setAttribute("style", entry.style);
-      }
+      restoreStyle(entry.element, entry.style);
     });
     expanded.forEach(function (entry) {
       entry.element.scrollTop = entry.top;
@@ -1460,6 +1657,25 @@
   } finally {
     restoreScrollContainers(expandedScrollers);
   }
+  // Measured once the page is back as it shows: putting the scroll
+  // containers back moves whatever followed them.
+  canvasShotEntries.forEach(function (entry) {
+    var box = entry.element.getBoundingClientRect();
+    var onScreen =
+      box.left >= 0 &&
+      box.top >= 0 &&
+      box.right <= window.innerWidth &&
+      box.bottom <= window.innerHeight;
+    if (entry.fixed && !onScreen) {
+      delete entry.node.canvasShot;
+      return;
+    }
+    var shot = entry.node.canvasShot;
+    shot.x = round(box.left + window.scrollX);
+    shot.y = round(box.top + window.scrollY);
+    shot.w = round(box.width);
+    shot.h = round(box.height);
+  });
   if (!root) {
     console.error(
       requestedRoot
@@ -1592,5 +1808,6 @@
   // global is undefined and this captures the whole page, exactly as before;
   // a host that wants a subtree sets `{ root: <element> }` on the global
   // first (the Chrome extension does, in its own isolated world), and may
-  // add `expandScroll: true` (the MCP `browser` tool's `expandScroll`).
+  // add `expandScroll: true` (the MCP `browser` tool's `expandScroll`) and
+  // `canvasShots: true` (that tool screenshots the canvases it tags).
 })(typeof globalThis === "undefined" ? null : globalThis.designEditorSnapshotOptions);

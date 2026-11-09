@@ -7,7 +7,7 @@ use jian_ops_schema::node::image::{ImageFitMode, ImageNode};
 use jian_ops_schema::node::path::{PathFillRule, PathNode};
 use jian_ops_schema::node::{FrameNode, ImageSrc, PenNode};
 use jian_ops_schema::sizing::SizingBehavior;
-use jian_ops_schema::style::BlendMode;
+use jian_ops_schema::style::{BlendMode, PenFill};
 use serde_json::{Map, Value};
 
 use crate::color::parse_css_color;
@@ -19,6 +19,8 @@ use crate::{
 
 #[path = "snapshot_auto_layout.rs"]
 mod auto_layout;
+#[path = "snapshot_escape.rs"]
+mod escape;
 #[path = "snapshot_icon.rs"]
 mod icon;
 #[path = "snapshot_name.rs"]
@@ -33,7 +35,8 @@ mod text_run;
 mod values;
 use values::{computed_style, matrix_rotation, parse_px, parse_text_align, solid_fill, style_map};
 
-const MAX_SNAPSHOT_BYTES: usize = 48 * 1024 * 1024;
+/// Largest snapshot JSON the importer reads.
+pub const MAX_SNAPSHOT_BYTES: usize = 48 * 1024 * 1024;
 
 pub const SNAPSHOT_EXTRACTOR_JS: &str = include_str!("../assets/snapshot-extractor.js");
 
@@ -215,12 +218,12 @@ struct SnapshotCtx<'a> {
     /// The page's own backdrop colour, used for the root frame when the
     /// captured root has no background of its own.
     page_background: Option<String>,
-    /// Glyph colour inherited from a `background-clip: text` ancestor. The
+    /// Glyph paint inherited from a `background-clip: text` ancestor. The
     /// gradient-text idiom paints the ancestor's background *through* the
     /// glyphs and makes the glyph colour itself transparent; descendant text
     /// whose own colour is transparent picks this up instead (see
     /// `map_element`).
-    text_fill_override: Option<String>,
+    text_fill_override: Option<Vec<PenFill>>,
     /// Auto-layout pass only: whether each laid-out frame's content decides
     /// its `(width, height)`, keyed by node id (read by its parent).
     auto_hug: HashMap<String, (bool, bool)>,
@@ -230,6 +233,8 @@ struct SnapshotCtx<'a> {
     auto_natural: HashMap<String, auto_layout::Natural>,
     /// Counter for the `row` / `spacer` frames the auto-layout pass adds.
     auxiliary_ids: usize,
+    /// Boxes that escaped a clip, waiting for their holder (`escape`).
+    escaped: Vec<escape::Escaped>,
     /// The snapshot says its scroll containers were expanded before capture,
     /// so the "scroll content is clipped" warning does not apply.
     scroll_expanded: bool,
@@ -250,6 +255,7 @@ impl<'a> SnapshotCtx<'a> {
             auto_hug: HashMap::new(),
             auto_natural: HashMap::new(),
             auxiliary_ids: 0,
+            escaped: Vec::new(),
             scroll_expanded: false,
         }
     }
@@ -322,6 +328,7 @@ impl<'a> SnapshotCtx<'a> {
     ) -> Option<PenNode> {
         let id = self.allocate_id()?;
         let node_id = id.clone();
+        let escaped_mark = self.escaped.len();
         let styles = style_map(object);
         let mut container = self.container_from_styles(&styles, rect, true);
         container.layout = Some(LayoutMode::None);
@@ -331,14 +338,18 @@ impl<'a> SnapshotCtx<'a> {
         // background *through* its glyphs, and the glyph colour itself is
         // transparent. Painting the background as an ordinary fill produced a
         // solid gradient bar over invisible text — so the fill moves off the
-        // box and becomes the descendants' glyph colour instead (the first
-        // gradient stop; per-glyph gradients are not paintable text fills).
+        // box and becomes the descendants' glyph fill instead (a text node
+        // paints a gradient fill clipped to its glyphs; a styled segment
+        // takes its first stop, see `styled_content`).
         let saved_text_fill = self.text_fill_override.clone();
-        if styles.get("background-clip").map(String::as_str) == Some("text") {
-            if let Some(color) = container.fill.as_deref().and_then(fill_glyph_color) {
-                container.fill = None;
-                self.text_fill_override = Some(color);
-            }
+        if styles.get("background-clip").map(String::as_str) == Some("text")
+            && container
+                .fill
+                .as_deref()
+                .and_then(fill_glyph_color)
+                .is_some()
+        {
+            self.text_fill_override = container.fill.take();
         }
         if container.clip_content == Some(true)
             && !has_corner_radius(&container)
@@ -389,7 +400,8 @@ impl<'a> SnapshotCtx<'a> {
             self.text_fill_override = saved_text_fill;
             let hug = laid.hug;
             let natural = laid.natural;
-            let children = laid.apply(&mut container);
+            let mut children = self.hoisted(escaped_mark, object, rect, parent_rect.is_none());
+            children.extend(laid.apply(&mut container));
             if parent_rect.is_none() && hug.1 {
                 // The page root keeps its width and grows downward.
                 container.height = Some(SizingBehavior::Keyword(
@@ -414,12 +426,15 @@ impl<'a> SnapshotCtx<'a> {
                     .iter()
                     .filter_map(|child| {
                         let bucket = snapshot_stack::paint_bucket(child, flex_or_grid_parent);
-                        self.map_child(child, rect).map(|node| (bucket, node))
+                        self.map_child(child, rect)
+                            .and_then(|node| self.unless_escaping(child, node, bucket))
+                            .map(|node| (bucket, node))
                     })
                     .collect()
             })
             .unwrap_or_default();
-        let children = snapshot_stack::to_front_to_back(ordered);
+        let mut children = self.hoisted(escaped_mark, object, rect, parent_rect.is_none());
+        children.extend(snapshot_stack::to_front_to_back(ordered));
         self.text_fill_override = saved_text_fill;
         Some(frame_with(base, container, children))
     }

@@ -2,13 +2,19 @@
 //! auto-layout lays out, through the editor's own layout engine, where the
 //! browser drew it. The fixtures are real Chrome captures (1920×1080) of
 //! `de-html/tests/fixtures/tailwind_app.html`, a compiled-Tailwind app shell,
-//! and `tailwind_cases.html`, the cases #322 found on a real page.
+//! `tailwind_cases.html`, the cases #322 found on a real page, and
+//! `tailwind_overlays.html`, the icon pills, open submenu and gradient text
+//! #322 / #323 found after those, and `tailwind_transforms.html`, boxes a
+//! transform moved and a flex column with an overlap (#322).
 use de_html::{import_snapshot_document, HtmlImportOptions};
 use de_pen_loader::payload::NodePayload;
 use serde_json::Value;
 
 const SNAPSHOT: &str = include_str!("../../de-html/tests/fixtures/tailwind_app_snapshot.json");
 const CASES: &str = include_str!("../../de-html/tests/fixtures/tailwind_cases_snapshot.json");
+const OVERLAYS: &str = include_str!("../../de-html/tests/fixtures/tailwind_overlays_snapshot.json");
+const TRANSFORMS: &str =
+    include_str!("../../de-html/tests/fixtures/tailwind_transforms_snapshot.json");
 
 /// A placed label: `(label, left x, right x, centre y)`.
 type Placed = (String, f64, f64, f64);
@@ -482,4 +488,190 @@ fn text_transform_reads_as_the_page_shows_it() {
     for label in ["OVERVIEW", "Recent Threads", "Plan: PRO tier"] {
         text_node(&nodes, label);
     }
+}
+
+// #322 / #323: pills spaced by margins around icons, a dropdown's open
+// submenu, gradient text inside a block.
+
+#[test]
+fn the_overlay_cases_land_where_the_browser_drew_them() {
+    let checked = lands_where_drawn(OVERLAYS);
+    assert!(checked >= 9, "only {checked} labels matched");
+}
+
+#[test]
+fn icon_pills_grow_with_their_label() {
+    let doc = auto_import_of(OVERLAYS);
+    let before = laid(&doc);
+    // `gap` around non-lucide icons, margins around lucide icons, margins
+    // around non-lucide icons.
+    for label in ["Gap pill", "Margin pill", "Mixed pill"] {
+        let longer = format!("{label} with a much longer label");
+        let after = laid(&relabel(&doc, label, &longer));
+        let grown = holder(&after, label, &longer).w - holder(&before, label, label).w;
+        let text = text_node(&after, &longer).w - text_node(&before, label).w;
+        assert!(text > 40.0, "{longer} is longer");
+        assert!(
+            (grown - text).abs() <= 1.0,
+            "{label}: pill +{grown}, label +{text}"
+        );
+    }
+}
+
+/// The part of the text reading `label` that its `clipContent` ancestors
+/// let show, as `[x, y, w, h]`.
+fn shown_box(nodes: &[NodePayload], label: &str) -> Option<[f32; 4]> {
+    fn walk(nodes: &[NodePayload], label: &str, clip: [f32; 4]) -> Option<[f32; 4]> {
+        nodes.iter().find_map(|node| {
+            let [left, top, right, bottom] = clip;
+            if node.kind == "text" && node.text.as_deref() == Some(label) {
+                let x = left.max(node.x);
+                let y = top.max(node.y);
+                let w = (right.min(node.x + node.w) - x).max(0.0);
+                let h = (bottom.min(node.y + node.h) - y).max(0.0);
+                return Some([x, y, w, h]);
+            }
+            let clip = if node.clip_content {
+                [
+                    left.max(node.x),
+                    top.max(node.y),
+                    right.min(node.x + node.w),
+                    bottom.min(node.y + node.h),
+                ]
+            } else {
+                clip
+            };
+            walk(&node.children, label, clip)
+        })
+    }
+    walk(nodes, label, [f32::MIN, f32::MIN, f32::MAX, f32::MAX])
+}
+
+#[test]
+fn an_open_submenu_shows_beside_its_menu() {
+    let nodes = laid(&auto_import_of(OVERLAYS));
+    for label in ["New tab", "Share", "Email link", "Messages", "Notes"] {
+        let text = text_node(&nodes, label);
+        let shown = shown_box(&nodes, label).expect(label);
+        assert!(
+            (shown[2] - text.w).abs() <= 0.5 && (shown[3] - text.h).abs() <= 0.5,
+            "{label}: {shown:?} of {}x{} shows",
+            text.w,
+            text.h
+        );
+    }
+    // The submenu is not inside the menu that clips, and paints above it.
+    let menu = holder(&nodes, "Menu", "New tab");
+    assert!(
+        find(&menu.children, &|node| node.text.as_deref()
+            == Some("Email link"))
+        .is_none(),
+        "the submenu is still inside the clipping menu"
+    );
+}
+
+/// The text node whose content (its styled runs joined) reads `label`.
+fn run_text<'a>(nodes: &'a [NodePayload], label: &str) -> &'a NodePayload {
+    find(nodes, &|node| {
+        node.kind == "text"
+            && (node.text.as_deref() == Some(label)
+                || node
+                    .text_runs
+                    .iter()
+                    .map(|run| run.text.as_str())
+                    .collect::<String>()
+                    == label)
+    })
+    .unwrap_or_else(|| panic!("text {label}"))
+}
+
+#[test]
+fn gradient_words_inside_a_block_stay_visible() {
+    let nodes = laid(&auto_import_of(OVERLAYS));
+    // An inline gradient span, and per-word inline-block chips under one.
+    for (label, word) in [
+        ("Build faster today", "faster"),
+        ("Ship every single week", "every single week"),
+    ] {
+        let text = run_text(&nodes, label);
+        let run = text
+            .text_runs
+            .iter()
+            .find(|run| run.text == word)
+            .unwrap_or_else(|| panic!("{label}: run {word}"));
+        let fill = run.fill.or(text.fill).expect("a paint");
+        // The gradient's first stop, #6366f1, not transparent.
+        assert!(fill[3] > 0.99, "{word}: {fill:?}");
+        assert!((fill[0] - 99.0 / 255.0).abs() < 0.01, "{word}: {fill:?}");
+    }
+    // Words caught at `opacity: 0` mid-way through their entrance are
+    // captured where they land.
+    let plain = run_text(&nodes, "Then plain solid words");
+    assert!(plain.w > 300.0 && plain.h > 30.0, "{}x{}", plain.w, plain.h);
+}
+
+// #322: boxes a transform moved off their layout box, and a flex column
+// with an overlap.
+
+#[test]
+fn the_transform_cases_land_where_the_browser_drew_them() {
+    let checked = lands_where_drawn(TRANSFORMS);
+    assert!(checked >= 7, "only {checked} labels matched");
+}
+
+/// The laid-out frame with the given box, within a pixel.
+fn frame_at(nodes: &[NodePayload], at: [f32; 4]) -> Option<&NodePayload> {
+    find(nodes, &|node| {
+        node.kind == "frame"
+            && [node.x, node.y, node.w, node.h]
+                .iter()
+                .zip(at)
+                .all(|(a, b)| (a - b).abs() <= 1.0)
+    })
+}
+
+#[test]
+fn translated_and_pulled_up_avatars_stay_where_drawn() {
+    let nodes = laid(&auto_import_of(TRANSFORMS));
+    // `-translate-y-1/2` over the banner, and `-mt-9` over the cover.
+    for at in [[41.0, 85.0, 72.0, 72.0], [781.0, 93.0, 56.0, 56.0]] {
+        assert!(frame_at(&nodes, at).is_some(), "no avatar at {at:?}");
+    }
+}
+
+#[test]
+fn a_translated_badge_follows_a_longer_label() {
+    let doc = auto_import_of(TRANSFORMS);
+    let before = laid(&doc);
+    let after = laid(&relabel(&doc, "Inbox", "Inbox and drafts"));
+    let grew = text_node(&after, "Inbox and drafts").w - text_node(&before, "Inbox").w;
+    assert!(grew > 40.0, "the label grew by {grew}");
+    for label in ["12", "Archive"] {
+        let (old, new) = (text_node(&before, label), text_node(&after, label));
+        assert!(
+            (new.x - old.x - grew).abs() <= 1.0 && (new.y - old.y).abs() <= 0.5,
+            "{label}: {},{} -> {},{}",
+            old.x,
+            old.y,
+            new.x,
+            new.y
+        );
+    }
+}
+
+#[test]
+fn a_flex_column_flows_past_its_overlap() {
+    let doc = auto_import_of(TRANSFORMS);
+    let before = laid(&doc);
+    // A larger name pushes the bio down: the column below the layer flows.
+    let after = laid(&edited(&doc, &|node| {
+        if node["content"] == "Grace Hopper" {
+            node["fontSize"] = Value::from(28);
+        }
+    }));
+    let (old, new) = (
+        text_node(&before, "Compilers, COBOL and nanoseconds"),
+        text_node(&after, "Compilers, COBOL and nanoseconds"),
+    );
+    assert!(new.y >= old.y + 15.0, "bio {} -> {}", old.y, new.y);
 }

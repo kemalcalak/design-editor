@@ -174,15 +174,75 @@ fn background_clip_text_moves_the_gradient_onto_the_glyphs() {
     let PenNode::Text(text) = &heading.children.as_ref().unwrap()[0] else {
         panic!("text child")
     };
-    let fill = text.fill.as_ref().expect("glyphs take the moved colour");
-    let jian_ops_schema::style::PenFill::Solid(solid) = &fill[0] else {
-        panic!("solid glyph colour")
+    let fill = text
+        .fill
+        .as_ref()
+        .expect("glyphs take the moved background");
+    let jian_ops_schema::style::PenFill::LinearGradient(gradient) = &fill[0] else {
+        panic!("the gradient paints the glyphs: {fill:?}")
     };
-    assert!(
-        !solid.color.starts_with("#000000"),
-        "glyphs must not stay transparent black, got {}",
-        solid.color
-    );
+    assert_eq!(gradient.stops.len(), 2);
+}
+
+/// A gradient `<span>` folded into its block's run (`Build <span>faster</span>
+/// today`): its segment carries the clipped background, and with a solid
+/// neighbour it takes the first stop instead of staying transparent. A run
+/// the gradient paints whole keeps the gradient on the node.
+#[test]
+fn a_folded_gradient_span_takes_its_clipped_background() {
+    let segment = |text: &str, color: &str, clip: bool| {
+        let mut styles = serde_json::json!({ "color": color });
+        if clip {
+            styles["background-image"] =
+                "linear-gradient(to right, rgb(99, 102, 241), rgb(236, 72, 153))".into();
+        }
+        serde_json::json!({ "text": text, "styles": styles })
+    };
+    let run = |segments: Vec<serde_json::Value>| {
+        let text: String = segments
+            .iter()
+            .map(|segment| segment["text"].as_str().unwrap())
+            .collect();
+        let json = serde_json::json!({
+            "version": 1,
+            "root": { "kind": "element", "tag": "h2",
+              "rect": { "x": 0, "y": 0, "w": 400, "h": 40 },
+              "children": [ { "kind": "text",
+                "rect": { "x": 0, "y": 2, "w": 300, "h": 36 },
+                "text": text, "lines": 1,
+                "styles": { "font-size": "32px", "color": "rgb(15, 23, 42)" },
+                "segments": segments } ] }
+        });
+        let result = import_snapshot(&json.to_string(), &HtmlImportOptions::default());
+        let PenNode::Frame(root) = &result.nodes[0] else {
+            panic!()
+        };
+        let PenNode::Text(text) = root.children.as_ref().unwrap()[0].clone() else {
+            panic!("text")
+        };
+        text
+    };
+    let transparent = "rgba(0, 0, 0, 0)";
+    let mixed = run(vec![
+        segment("Build ", "rgb(15, 23, 42)", false),
+        segment("faster", transparent, true),
+        segment(" today", "rgb(15, 23, 42)", false),
+    ]);
+    use jian_ops_schema::node::text::TextContent;
+    let TextContent::Styled(segments) = &mixed.content else {
+        panic!("styled")
+    };
+    assert_eq!(segments[1].fill.as_deref(), Some("#6366f1"));
+
+    let whole = run(vec![
+        segment("every ", transparent, true),
+        segment("week", transparent, true),
+    ]);
+    let fill = whole.fill.expect("the node takes the gradient");
+    assert!(matches!(
+        fill[0],
+        jian_ops_schema::style::PenFill::LinearGradient(_)
+    ));
 }
 
 /// The Google-footer regression: a one-line run inside a `line-height: 40px`
