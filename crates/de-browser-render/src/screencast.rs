@@ -351,8 +351,19 @@ impl PageStream {
 
     /// Call `waker` (on the stream's thread) whenever a frame arrives or
     /// the stream ends, so a consumer can wake its loop instead of polling.
+    /// The stream runs before the waker can be set, so when a frame is
+    /// already waiting (or the stream already ended) it is called once at
+    /// once, on the caller's thread; otherwise that wake-up would be lost.
     pub fn set_frame_waker(&self, waker: impl Fn() + Send + Sync + 'static) {
-        self.shared.lock().waker = Some(Arc::new(waker));
+        let waker: Waker = Arc::new(waker);
+        let missed = {
+            let mut state = self.shared.lock();
+            state.waker = Some(Arc::clone(&waker));
+            state.latest.is_some() || state.ended
+        };
+        if missed {
+            wake(Some(waker));
+        }
     }
 
     /// Lay the tab out at `viewport` and restart the screencast. Refused on

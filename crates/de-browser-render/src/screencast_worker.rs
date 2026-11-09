@@ -183,14 +183,14 @@ impl Worker {
             }
             let now = Instant::now();
             let mut wake = now + slice;
-            if let Some(due) = self.publish_due() {
+            if let Some(due) = self.publish_due(now) {
                 if due <= now {
                     self.publish();
                 } else {
                     wake = wake.min(due);
                 }
             }
-            if let Some(due) = self.ack_due() {
+            if let Some(due) = self.ack_due(now) {
                 if due <= now {
                     self.ack_one()?;
                 } else {
@@ -212,11 +212,15 @@ impl Worker {
 
     /// When the pending frame may be handed out: once the consumer took
     /// the last one, and no sooner than the rate cap after it.
-    fn publish_due(&self) -> Option<Instant> {
+    fn publish_due(&self, now: Instant) -> Option<Instant> {
         if self.pending.is_none() || !self.shared.is_taken() {
             return None;
         }
-        Some(self.after(self.last_publish))
+        Some(due_after(
+            self.last_publish,
+            self.settings.min_interval(),
+            now,
+        ))
     }
 
     fn publish(&mut self) {
@@ -229,11 +233,11 @@ impl Worker {
     /// When the oldest owed frame may be acked: once every frame received
     /// was handed out and taken, and no sooner than the rate cap after the
     /// previous ack. A consumer that does not take frames stops the page.
-    fn ack_due(&self) -> Option<Instant> {
+    fn ack_due(&self, now: Instant) -> Option<Instant> {
         if self.owed.is_empty() || self.pending.is_some() || !self.shared.is_taken() {
             return None;
         }
-        Some(self.after(self.last_ack))
+        Some(due_after(self.last_ack, self.settings.min_interval(), now))
     }
 
     fn ack_one(&mut self) -> Result<(), BrowserRenderError> {
@@ -264,11 +268,6 @@ impl Worker {
     fn refresh(&mut self) -> Result<(), BrowserRenderError> {
         self.maybe_dropped = false;
         self.restart(None, None).map(drop)
-    }
-
-    /// `since` plus the rate cap, or now.
-    fn after(&self, since: Option<Instant>) -> Instant {
-        since.map_or_else(Instant::now, |at| at + self.settings.min_interval())
     }
 
     fn handle(&mut self, event: &Value) -> Result<(), BrowserRenderError> {
@@ -376,5 +375,27 @@ impl Worker {
             drop(lease);
         }
         drop(session);
+    }
+}
+
+/// `since` plus `interval`, or `now` when nothing happened yet. `now` is
+/// the instant the pump loop compares the result against: reading the
+/// clock afresh here would give a time just past it, so a first frame (or
+/// the first ack after a start) would never be due and the loop would spin
+/// on an already-passed read deadline (#324, Linux CI).
+fn due_after(since: Option<Instant>, interval: Duration, now: Instant) -> Instant {
+    since.map_or(now, |at| at + interval)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn nothing_yet_is_due_at_the_loops_own_now() {
+        let now = Instant::now();
+        let interval = Duration::from_millis(100);
+        assert_eq!(due_after(None, interval, now), now);
+        assert_eq!(due_after(Some(now), interval, now), now + interval);
     }
 }
