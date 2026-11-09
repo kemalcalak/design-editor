@@ -830,13 +830,49 @@
     }
   }
 
-  function captureCanvas(canvas) {
+  // A WebGL / WebGPU canvas made without `preserveDrawingBuffer` reads back
+  // blank through `toDataURL` (nothing throws), and a tainted 2D canvas does
+  // not read back at all. Such a canvas keeps that result and is tagged
+  // `canvasShot` with its document rect as the page shows it once the
+  // capture is done (measured after the walk), so a host that can
+  // screenshot the page (the MCP `browser` tool) puts in what the browser
+  // drew. Inside a scroll container laid out for the capture the rect is
+  // not where the page shows it afterwards, so those stay untagged.
+  var canvasShotCount = 0;
+  var canvasShotElements = [];
+
+  function canvasReadable(canvas) {
     try {
-      return keepDataUrl(canvas.toDataURL("image/png"), GRAY_PLACEHOLDER);
+      // `null` while the canvas holds another kind of context. One with no
+      // context yet gets a 2D one: it reads back blank either way.
+      return !!canvas.getContext("2d");
+    } catch (_error) {
+      // Handed to an OffscreenCanvas.
+      return false;
+    }
+  }
+
+  function insideExpandedScroller(element) {
+    for (var index = 0; index < expandedScrollers.length; index += 1) {
+      if (expandedScrollers[index].element.contains(element)) return true;
+    }
+    return false;
+  }
+
+  function captureCanvas(canvas) {
+    var captured;
+    try {
+      captured = keepDataUrl(canvas.toDataURL("image/png"), GRAY_PLACEHOLDER);
     } catch (_error) {
       remoteImageCount += 1;
-      return { src: GRAY_PLACEHOLDER, tainted: true };
+      captured = { src: GRAY_PLACEHOLDER, tainted: true };
     }
+    if ((captured.tainted || !canvasReadable(canvas)) && !insideExpandedScroller(canvas)) {
+      canvasShotCount += 1;
+      captured.canvasShot = { id: canvasShotCount };
+      canvasShotElements.push({ shot: captured.canvasShot, element: canvas });
+    }
+    return captured;
   }
 
   function captureVideo(video) {
@@ -915,6 +951,7 @@
       styles: elementStyles(computed),
     };
     if (captured.tainted) result.tainted = true;
+    if (captured.canvasShot) result.canvasShot = captured.canvasShot;
     var box = layoutBox(computed);
     if (box) result.layout = box;
     var attrs = nameAttributes(element);
@@ -1460,6 +1497,15 @@
   } finally {
     restoreScrollContainers(expandedScrollers);
   }
+  // Measured once the page is back as it shows: putting the scroll
+  // containers back moves whatever followed them.
+  canvasShotElements.forEach(function (entry) {
+    var box = entry.element.getBoundingClientRect();
+    entry.shot.x = round(box.left + window.scrollX);
+    entry.shot.y = round(box.top + window.scrollY);
+    entry.shot.w = round(box.width);
+    entry.shot.h = round(box.height);
+  });
   if (!root) {
     console.error(
       requestedRoot

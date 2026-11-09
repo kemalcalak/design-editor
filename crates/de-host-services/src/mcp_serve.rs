@@ -678,6 +678,7 @@ pub(crate) mod capture_preview_tool;
 use capture_preview_tool::capture_preview_snapshot;
 pub(crate) mod browser_tool;
 mod browser_tool_canvas;
+mod browser_tool_canvas_shots;
 mod browser_tool_driver;
 mod browser_tool_fonts;
 use browser_tool::browser_tool_snapshot;

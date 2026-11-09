@@ -33,7 +33,8 @@ mod text_run;
 mod values;
 use values::{computed_style, matrix_rotation, parse_px, parse_text_align, solid_fill, style_map};
 
-const MAX_SNAPSHOT_BYTES: usize = 48 * 1024 * 1024;
+/// Largest snapshot JSON the importer reads.
+pub const MAX_SNAPSHOT_BYTES: usize = 48 * 1024 * 1024;
 
 pub const SNAPSHOT_EXTRACTOR_JS: &str = include_str!("../assets/snapshot-extractor.js");
 
