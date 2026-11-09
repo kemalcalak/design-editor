@@ -48,7 +48,7 @@ impl PageDriver for FakeDriver {
                 PageReply::Json(json!({ "data": base64_png() }))
             }
             PageOp::Cdp(_, _) => PageReply::Json(json!({ "ok": true })),
-            PageOp::Extract(_) => PageReply::Snapshot(snapshot()),
+            PageOp::Extract { .. } => PageReply::Snapshot(snapshot()),
             PageOp::FetchFonts(urls) => PageReply::Json(json!(vec![None::<String>; urls.len()])),
         };
         let canvas = call.canvas_scale.filter(|_| changes_page).map(|_| png());
@@ -388,14 +388,59 @@ fn the_schema_lists_the_actions_and_cdp_domains_the_tool_has() {
 
 #[test]
 fn the_extractor_wrapper_catches_the_download_and_roots_at_a_selector() {
-    let script = crate::mcp_serve::browser_tool_driver::extractor_script(Some("main .hero"));
+    let script = crate::mcp_serve::browser_tool_driver::extractor_script(Some("main .hero"), false);
     assert!(script.contains(r#"const selector = "main .hero";"#));
     assert!(script.contains("URL.createObjectURL = (blob)"));
     assert!(script.contains(de_html::snapshot::SNAPSHOT_EXTRACTOR_JS));
     assert!(
-        crate::mcp_serve::browser_tool_driver::extractor_script(None)
+        crate::mcp_serve::browser_tool_driver::extractor_script(None, false)
             .contains("const selector = null;")
     );
+}
+
+#[test]
+fn the_extractor_wrapper_hands_the_page_its_options() {
+    use crate::mcp_serve::browser_tool_driver::extractor_script;
+    let options = "globalThis.designEditorSnapshotOptions = { root, expandScroll: ";
+    assert!(extractor_script(None, true).contains(&format!("{options}true }};")));
+    assert!(extractor_script(Some("main"), false).contains(&format!("{options}false }};")));
+    // The extractor reads the flag and tells the importer it was applied.
+    for marker in [
+        "options && options.expandScroll",
+        "snapshot.expandedScroll = true",
+    ] {
+        assert!(
+            de_html::snapshot::SNAPSHOT_EXTRACTOR_JS.contains(marker),
+            "{marker}"
+        );
+    }
+}
+
+#[test]
+fn import_to_canvas_reads_expand_scroll() {
+    let (tool, driver) = tool();
+    let expand = |value: Option<&str>| {
+        let mut args = vec![("action", "import-to-canvas")];
+        if let Some(value) = value {
+            args.push(("expandScroll", value));
+        }
+        let outcome = call(&tool, &args);
+        assert!(
+            matches!(outcome, ToolOutcome::OkWithCommand(..)),
+            "{outcome:?}"
+        );
+        match driver.calls.lock().unwrap().last().unwrap().1.clone() {
+            PageOp::Extract { expand_scroll, .. } => expand_scroll,
+            op => panic!("expected an extract, got {op:?}"),
+        }
+    };
+    assert!(!expand(None));
+    assert!(!expand(Some("false")));
+    assert!(expand(Some("true")));
+    assert!(matches!(
+        call(&tool, &[("action", "import-to-canvas"), ("expandScroll", "yes")]),
+        ToolOutcome::Err(ToolErrorCode::InvalidArgument, m) if m.contains("expandScroll")
+    ));
 }
 
 /// Inter is available; nothing else is.

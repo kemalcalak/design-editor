@@ -9,6 +9,11 @@
   // finds there at the document origin with its descendants relative to it.
   var requestedRoot =
     options && options.root && options.root.nodeType === 1 ? options.root : null;
+  // `options.expandScroll` lays every scroll container under the root that
+  // holds more than it shows out at its full height for the capture, so the
+  // content behind the scroll is imported instead of clipped. The live page
+  // gets its inline styles and scroll offsets back once the walk is done.
+  var expandScroll = !!(options && options.expandScroll);
 
   var MAX_NODES = 40000;
   var MAX_IMAGE_EDGE = 2048;
@@ -1378,7 +1383,83 @@
   } catch (error) {
     // Capture whatever is on screen.
   }
-  var root = buildRoot(target);
+
+  // Every container is measured (and its scroll offset read) before any is
+  // touched: expanding an outer one cannot hide an inner one that also
+  // scrolls, and the page lays out once instead of once per container.
+  function scrolls(value) {
+    return value === "auto" || value === "scroll" || value === "overlay";
+  }
+  function expandScrollContainers(rootElement) {
+    var expanded = [];
+    if (!expandScroll) return expanded;
+    var elements = [rootElement].concat(
+      Array.prototype.slice.call(rootElement.querySelectorAll("*")),
+    );
+    elements.forEach(function (element) {
+      var computed = window.getComputedStyle(element);
+      if (!scrolls(computed.overflowY)) return;
+      if (element.scrollHeight - element.clientHeight <= 1) return;
+      // A horizontal scroller (a carousel) would spill its off-screen cards
+      // across the page: `overflow` cannot be visible on one axis only.
+      if (scrolls(computed.overflowX) && element.scrollWidth - element.clientWidth > 1) return;
+      var parent = element.parentElement;
+      var parentStyle = parent ? window.getComputedStyle(parent) : null;
+      expanded.push({
+        element: element,
+        style: element.getAttribute("style"),
+        top: element.scrollTop,
+        left: element.scrollLeft,
+        // A `flex-1 min-h-0` item of a column takes its height from the
+        // flex line, not from `height`.
+        columnItem:
+          !!parentStyle &&
+          /flex/.test(parentStyle.display) &&
+          /column/.test(parentStyle.flexDirection),
+        // An `inset: 0` scroller takes its height from `top` and `bottom`.
+        pinned: computed.position === "absolute" || computed.position === "fixed",
+      });
+    });
+    expanded.forEach(function (entry) {
+      var style = entry.element.style;
+      // `important` so a stylesheet rule marked important cannot keep the
+      // clip; the original attribute is restored verbatim afterwards.
+      style.setProperty("overflow", "visible", "important");
+      style.setProperty("max-height", "none", "important");
+      style.setProperty("height", "auto", "important");
+      if (entry.columnItem) {
+        style.setProperty("flex-shrink", "0", "important");
+        style.setProperty("flex-basis", "auto", "important");
+      }
+      if (entry.pinned) style.setProperty("bottom", "auto", "important");
+    });
+    return expanded;
+  }
+  function restoreScrollContainers(expanded) {
+    // Styles first, offsets after: an offset write lays the page out.
+    expanded.forEach(function (entry) {
+      if (entry.style === null) {
+        // Read it first: Chrome syncs CSSOM writes into the attribute lazily,
+        // and a removal before that sync came back later as `style=""`.
+        entry.element.getAttribute("style");
+        entry.element.removeAttribute("style");
+      } else {
+        entry.element.setAttribute("style", entry.style);
+      }
+    });
+    expanded.forEach(function (entry) {
+      entry.element.scrollTop = entry.top;
+      entry.element.scrollLeft = entry.left;
+    });
+  }
+
+  var expandedScrollers = expandScrollContainers(target);
+  var root;
+  try {
+    root = buildRoot(target);
+  } finally {
+    restoreScrollContainers(expandedScrollers);
+  }
   if (!root) {
     console.error(
       requestedRoot
@@ -1480,6 +1561,9 @@
   var fontFaces = pageFontFaces();
   if (fontFaces.length) snapshot.fontFaces = fontFaces;
   if (truncated) snapshot.truncated = true;
+  // Tells the importer the scroll containers were laid out in full, so it
+  // does not report their content as clipped.
+  if (expandScroll) snapshot.expandedScroll = true;
   var output = JSON.stringify(snapshot, null, 2);
 
   if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -1507,5 +1591,6 @@
   // The argument is optional on purpose. Pasted into a devtools console the
   // global is undefined and this captures the whole page, exactly as before;
   // a host that wants a subtree sets `{ root: <element> }` on the global
-  // first (the Chrome extension does, in its own isolated world).
+  // first (the Chrome extension does, in its own isolated world), and may
+  // add `expandScroll: true` (the MCP `browser` tool's `expandScroll`).
 })(typeof globalThis === "undefined" ? null : globalThis.designEditorSnapshotOptions);
