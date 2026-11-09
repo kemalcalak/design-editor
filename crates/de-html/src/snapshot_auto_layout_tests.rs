@@ -489,3 +489,130 @@ fn a_placed_vector_icon_keeps_its_box() {
         "{x}, {y}"
     );
 }
+
+const TRANSFORMS: &str = include_str!("../tests/fixtures/tailwind_transforms_snapshot.json");
+
+/// `child` with the untransformed layout box the capture adds when a
+/// transform moved the element (`flowRect`).
+fn moved(mut child: Value, flow: [f64; 4]) -> Value {
+    child["flowRect"] = json!({ "x": flow[0], "y": flow[1], "w": flow[2], "h": flow[3] });
+    child
+}
+
+/// The node a slot frame holds.
+fn held(slot: &PenNode) -> &FrameNode {
+    frame(&kids(slot)[0])
+}
+
+/// #322: an avatar pulled up over a banner by `-translate-y-1/2` still holds
+/// its layout box below the banner. The stack is laid out by that box, and
+/// the avatar keeps its painted place inside a slot of it.
+#[test]
+fn a_translated_box_flows_by_its_layout_box() {
+    let root = import(&snapshot(element(
+        [0.0, 0.0, 200.0, 200.0],
+        json!({}),
+        vec![
+            boxed([0.0, 0.0, 200.0, 80.0]),
+            moved(boxed([0.0, 48.0, 64.0, 64.0]), [0.0, 80.0, 64.0, 64.0]),
+            boxed([0.0, 144.0, 200.0, 56.0]),
+        ],
+    )));
+    assert_eq!(frame(&root).container.layout, Some(LayoutMode::Vertical));
+    let children = kids(&root);
+    assert_eq!(children.len(), 3, "no layer, no spacer");
+    let slot = frame(&children[1]);
+    assert_eq!(slot.container.layout, Some(LayoutMode::None));
+    assert_eq!(slot.container.height, Some(SizingBehavior::Number(64.0)));
+    let avatar = held(&children[1]);
+    assert_eq!((avatar.base.x, avatar.base.y), (Some(0.0), Some(-32.0)));
+}
+
+/// A stack item with a cross offset of its own (the avatar's `ml-4`) rides
+/// in a fixed layer the width of the stack, where it was drawn, instead of
+/// sending the whole stack back to absolute placement.
+#[test]
+fn a_stack_item_with_its_own_offset_rides_in_a_layer() {
+    let root = import(&snapshot(element(
+        [0.0, 0.0, 200.0, 200.0],
+        json!({}),
+        vec![
+            boxed([0.0, 0.0, 200.0, 80.0]),
+            moved(boxed([16.0, 48.0, 64.0, 64.0]), [16.0, 80.0, 64.0, 64.0]),
+            boxed([0.0, 144.0, 200.0, 56.0]),
+        ],
+    )));
+    assert_eq!(frame(&root).container.layout, Some(LayoutMode::Vertical));
+    let children = kids(&root);
+    assert_eq!(children.len(), 3);
+    let layer = frame(&children[1]);
+    assert_eq!(layer.container.layout, Some(LayoutMode::None));
+    assert_eq!(layer.container.width, Some(FILL));
+    assert_eq!(layer.container.height, Some(SizingBehavior::Number(64.0)));
+    let slot = held(&children[1]);
+    assert_eq!((slot.base.x, slot.base.y), (Some(16.0), Some(0.0)));
+    let avatar = frame(&slot.children.as_deref().unwrap_or_default()[0]);
+    assert_eq!((avatar.base.x, avatar.base.y), (Some(0.0), Some(-32.0)));
+}
+
+/// A count badge nudged up beside its label (v4 `translate: 2px -6px`) left
+/// the row's `items-center` line intact: the row stays a row.
+#[test]
+fn a_translated_badge_keeps_its_row() {
+    let root = import(&snapshot(element(
+        [0.0, 0.0, 200.0, 20.0],
+        json!({ "display": "flex", "align": "center", "gap": [8.0, 8.0] }),
+        vec![
+            boxed([0.0, 0.0, 40.0, 20.0]),
+            moved(boxed([50.0, -4.0, 20.0, 16.0]), [48.0, 2.0, 20.0, 16.0]),
+            boxed([76.0, 0.0, 40.0, 20.0]),
+        ],
+    )));
+    assert_eq!(frame(&root).container.layout, Some(LayoutMode::Horizontal));
+    assert_eq!(frame(&root).container.gap, Some(gap(8.0)));
+    let badge = held(&kids(&root)[1]);
+    assert_eq!((badge.base.x, badge.base.y), (Some(2.0), Some(-6.0)));
+}
+
+/// A flex column whose avatar a negative margin pulls up over its cover:
+/// the overlapping band is a fixed layer, the rest of the column flows.
+#[test]
+fn an_overlapping_band_of_a_flex_column_is_a_layer() {
+    let root = import(&snapshot(element(
+        [0.0, 0.0, 200.0, 156.0],
+        json!({ "display": "flex", "direction": "column", "gap": [8.0, 8.0] }),
+        vec![
+            boxed([0.0, 0.0, 200.0, 80.0]),
+            boxed([12.0, 44.0, 56.0, 56.0]),
+            boxed([0.0, 108.0, 200.0, 20.0]),
+            boxed([0.0, 136.0, 200.0, 20.0]),
+        ],
+    )));
+    assert_eq!(frame(&root).container.layout, Some(LayoutMode::Vertical));
+    assert_eq!(frame(&root).container.gap, Some(gap(8.0)));
+    let children = kids(&root);
+    assert_eq!(children.len(), 3);
+    let layer = frame(&children[0]);
+    assert_eq!(layer.container.layout, Some(LayoutMode::None));
+    assert_eq!(layer.container.height, Some(SizingBehavior::Number(100.0)));
+}
+
+/// The same three cases captured from Chrome (`tailwind_transforms.html`).
+#[test]
+fn the_captured_transform_cases_keep_their_layout() {
+    let root = import(&serde_json::from_str(TRANSFORMS).unwrap());
+    let page = &kids(&root)[0];
+    let [profile, tabs, card] = kids(page) else {
+        panic!("three cases")
+    };
+    // The profile stacks banner, avatar slot and details: no layer.
+    assert_eq!(frame(profile).container.layout, Some(LayoutMode::Vertical));
+    assert_eq!(kids(profile).len(), 3);
+    assert!(kids(profile)
+        .iter()
+        .all(|child| frame(child).base.y.is_none()));
+    assert_eq!(frame(tabs).container.layout, Some(LayoutMode::Horizontal));
+    assert_eq!(frame(card).container.layout, Some(LayoutMode::Vertical));
+    let layer = frame(&kids(card)[0]);
+    assert_eq!(layer.container.layout, Some(LayoutMode::None));
+}
