@@ -18,6 +18,8 @@ pub(crate) struct CaptureBackend {
     pub(crate) rect_fills: Vec<(Rect, Color)>,
     /// `(path, top-left, size, color, stroke)` for canonical 24×24 icons.
     pub(crate) svg_strokes: Vec<(String, Point2D, f32, Color, f32)>,
+    /// `(rect, radius, color, width)` of every `stroke_round_rect`.
+    pub(crate) round_strokes: Vec<(Rect, f32, Color, f32)>,
 }
 
 impl RenderBackend for CaptureBackend {
@@ -45,7 +47,9 @@ impl RenderBackend for CaptureBackend {
         self.round_fills.push((rect, radius, color));
     }
 
-    fn stroke_round_rect(&mut self, _rect: Rect, _radius: f32, _color: Color, _width: f32) {}
+    fn stroke_round_rect(&mut self, rect: Rect, radius: f32, color: Color, width: f32) {
+        self.round_strokes.push((rect, radius, color, width));
+    }
 
     fn stroke_svg_path(&mut self, d: &str, top_left: Point2D, size: f32, color: Color, width: f32) {
         self.svg_strokes

@@ -35,6 +35,7 @@ impl WidgetHostNative {
             drag: None,
             space_pan: false,
             last_hover_probe: None,
+            browser_interaction: Default::default(),
             shader_pointer: None,
             chat_drag: None,
             chat_resize: None,

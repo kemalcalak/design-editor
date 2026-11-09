@@ -41,6 +41,9 @@ mod blur_inputs;
 #[cfg(test)]
 mod blur_inputs_tests;
 mod boolean_op;
+mod browser_interact;
+#[cfg(test)]
+mod browser_interact_tests;
 #[cfg(test)]
 mod canvas_drag_transition_tests;
 mod canvas_pan_cache;
@@ -347,6 +350,9 @@ pub struct WidgetHostNative {
     /// Last cursor position the canvas-hover hit-test ran at —
     /// sub-3px moves skip the tree walk (cost guard).
     pub(in crate::widget_host) last_hover_probe: Option<(f32, f32)>,
+    /// Routing of a browser node in interaction mode (#324).
+    pub(in crate::widget_host) browser_interaction:
+        de_editor_ui::widgets::browser_interact_flow::BrowserInteraction,
     /// Pointer over the canvas (logical px) for `uniform float2 mouse;`
     /// shader fills; `None` while it is over chrome or outside the window.
     pub(in crate::widget_host) shader_pointer: Option<de_editor_ui::Point2D>,

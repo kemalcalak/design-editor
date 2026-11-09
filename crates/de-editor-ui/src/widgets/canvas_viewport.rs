@@ -109,6 +109,9 @@ pub struct CanvasViewport<'a> {
     /// The selection outline remains visible, but resize/rotate chrome is
     /// hidden so dragging inside the frame clearly pans the bitmap.
     pub(super) image_crop_edit_active: bool,
+    /// The selected node is a browser in interaction mode (#324): its
+    /// handles hide and an accent ring marks it.
+    pub(super) browser_interacting: bool,
     /// Optional floating copy of the dragged node. The base scene can
     /// still be reflowed to preview sibling avoidance while this copy
     /// follows the cursor.
@@ -202,6 +205,7 @@ impl<'a> Widget for CanvasViewport<'a> {
         let selection_chrome_visible = !self.node_drag_active;
         let show_handles = selection_chrome_visible
             && !self.image_crop_edit_active
+            && !self.browser_interacting
             && self.selected_set.len() == 1;
         let single_selected_id = self.selected_set.first().map(String::as_str);
         let selected_lookup = if show_handles {
@@ -493,6 +497,14 @@ impl<'a> Widget for CanvasViewport<'a> {
                         cx,
                         &page.children,
                         &self.selected_set,
+                        &selection_input,
+                    );
+                }
+                if self.browser_interacting {
+                    super::canvas_selection_overlay::paint_interaction_ring(
+                        cx,
+                        &page.children,
+                        &self.selected,
                         &selection_input,
                     );
                 }
