@@ -370,7 +370,7 @@ impl SnapshotCtx<'_> {
             .into_iter()
             .zip(cross.strays)
             .map(|(item, stray)| match stray {
-                true => self.row_frame(model, rect, content, vec![item], true),
+                true => self.row_frame(model, rect, content, vec![item], /* layer */ true),
                 false => item,
             })
             .collect()
@@ -430,7 +430,10 @@ impl SnapshotCtx<'_> {
                 for item in &mut row {
                     items::shift_back(&mut item.node, dx, dy);
                 }
-                (frame_node(id, "row", absolute(Vec::new(), row)), Fit::Fixed)
+                (
+                    frame_node(id, "layer", absolute(Vec::new(), row)),
+                    Fit::Fixed,
+                )
             }
         };
         (frame.base.x, frame.base.y) = (Some(dx), Some(dy));

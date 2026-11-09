@@ -1303,9 +1303,11 @@
   // `rotate`.
   var TRANSFORM_PROPERTIES = ["transform", "translate", "scale", "rotate"];
 
+  // Put back a style attribute saved before inline writes (`null`: there
+  // was none).
   function restoreStyle(element, saved) {
-    // Read it first: Chrome syncs CSSOM writes into the attribute lazily
-    // (see `restoreScrollContainers`).
+    // Read it first: Chrome syncs CSSOM writes into the attribute lazily,
+    // and a removal before that sync came back later as `style=""`.
     element.getAttribute("style");
     if (saved === null) element.removeAttribute("style");
     else element.setAttribute("style", saved);
@@ -1327,11 +1329,29 @@
   function untransformedRect(element, computed, rect) {
     var moved = TRANSFORM_PROPERTIES.some(function (property) {
       var value = computed.getPropertyValue(property);
-      return !!value && value !== "none";
+      if (!value || value === "none") return false;
+      // Tailwind v3's `.transform` and `translateZ(0)` hacks compute to an
+      // identity matrix: nothing moved, so the measure is skipped.
+      if (property === "transform" && typeof DOMMatrixReadOnly === "function") {
+        try {
+          return !new DOMMatrixReadOnly(value).isIdentity;
+        } catch (error) {
+          return true;
+        }
+      }
+      return true;
     });
     if (!moved || !element.style) return null;
     var saved = element.getAttribute("style");
     var style = element.style;
+    // Clearing the transform can shrink a scroller's overflow, and a
+    // scroller at its end then clamps its offset: put every offset back.
+    var scrolled = [];
+    for (var up = element.parentElement; up; up = up.parentElement) {
+      if (up.scrollTop || up.scrollLeft) {
+        scrolled.push({ element: up, top: up.scrollTop, left: up.scrollLeft });
+      }
+    }
     var flow;
     try {
       // `important` outranks an animation running on the property, and
@@ -1349,6 +1369,10 @@
       style.setProperty("transition", "none", "important");
       window.getComputedStyle(element).getPropertyValue("transform");
       restoreStyle(element, saved);
+      scrolled.forEach(function (entry) {
+        entry.element.scrollTop = entry.top;
+        entry.element.scrollLeft = entry.left;
+      });
     }
     var same =
       Math.abs(flow.left - rect.left) < 0.5 &&
@@ -1570,14 +1594,7 @@
   function restoreScrollContainers(expanded) {
     // Styles first, offsets after: an offset write lays the page out.
     expanded.forEach(function (entry) {
-      if (entry.style === null) {
-        // Read it first: Chrome syncs CSSOM writes into the attribute lazily,
-        // and a removal before that sync came back later as `style=""`.
-        entry.element.getAttribute("style");
-        entry.element.removeAttribute("style");
-      } else {
-        entry.element.setAttribute("style", entry.style);
-      }
+      restoreStyle(entry.element, entry.style);
     });
     expanded.forEach(function (entry) {
       entry.element.scrollTop = entry.top;

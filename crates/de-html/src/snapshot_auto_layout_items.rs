@@ -256,16 +256,23 @@ impl SnapshotCtx<'_> {
         // that, and the box keeps its painted place inside a slot of it.
         // A rotation or scale is still drawn as the import always drew it
         // (`apply_base_styles`), only spaced by its layout box. Overlays
-        // are placed, not laid out.
+        // are placed, not laid out; text runs carry no element box.
         let moved = match kind {
             ItemKind::Text { .. } => None,
             _ if overlay => None,
             _ => moved_from(object, rect),
         };
+        // The slot is a fixed box, sized like media: it never hugs (its
+        // child is placed, so it has no content to hug) and never fills
+        // (the node it holds keeps the size it was drawn at).
         let (node, rect, kind) = match moved {
             Some(flow) => {
-                let id = self.auxiliary_id("slot");
-                (held_at(id, "slot", node, flow, rect), flow, ItemKind::Frame)
+                let (id, painted) = (self.auxiliary_id("slot"), rect);
+                (
+                    held_at(id, "slot", node, flow, painted),
+                    flow,
+                    ItemKind::Media,
+                )
             }
             None => (node, rect, kind),
         };
