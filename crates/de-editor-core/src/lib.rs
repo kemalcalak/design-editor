@@ -25,6 +25,9 @@ pub mod blank_starter;
 pub mod bridge_protocol;
 pub mod browser_devices;
 mod browser_edit;
+pub mod browser_input;
+pub mod browser_input_cdp;
+pub mod browser_interact;
 pub mod browser_live;
 pub mod browser_live_wire;
 

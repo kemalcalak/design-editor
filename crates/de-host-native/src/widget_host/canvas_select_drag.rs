@@ -71,6 +71,11 @@ impl WidgetHostNative {
             self.exit_image_crop_edit();
         }
         if resolved.is_double && !text_edit_was_active {
+            // A browser node's page takes the mouse and keyboard (#324).
+            if self.enter_browser_interaction_at(&hit_path) {
+                self.scroll_layer_panel_selection_into_view(viewport_height);
+                return true;
+            }
             if resolved.selected_crop_is_deepest && self.enter_selected_image_crop_edit() {
                 return true;
             }

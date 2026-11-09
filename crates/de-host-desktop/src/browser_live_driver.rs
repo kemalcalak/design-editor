@@ -1,6 +1,8 @@
 //! One streaming browser node's thread (#324): opens its
 //! `de_browser_render::PageStream`, follows the queue's updates, decodes
-//! each JPEG and hands the raster to the UI thread. Everything that can
+//! each JPEG and hands the raster to the UI thread, and sends the page
+//! input of interaction mode (phase 4) on a connection of its own to the
+//! stream's tab, between frame waits. Everything that can
 //! block (page loads, screencast restarts, decodes) runs here, never on
 //! the UI thread.
 //!
@@ -14,7 +16,11 @@ use std::sync::mpsc::{RecvTimeoutError, TryRecvError};
 use std::thread;
 use std::time::{Duration, Instant};
 
-use de_browser_render::{BrowserRenderError, PageSessions, PageStream, StreamSettings, Viewport};
+use de_browser_render::{
+    BrowserRenderError, PageInput, PageSessions, PageStream, StreamSettings, Viewport,
+};
+use de_editor_core::browser_input::{BrowserInputEvent, InputBatch};
+use de_editor_core::browser_input_cdp::cdp_calls;
 use de_editor_core::browser_stream::{node_page_session_key, BrowserStreamSpec};
 use skia_safe::ConditionallySend;
 
@@ -31,6 +37,8 @@ pub(crate) enum DriverControl {
     },
     /// The UI installed the last frame: the next one may follow at once.
     Taken,
+    /// Input for the page (interaction mode); queued ones coalesce.
+    Input(Vec<BrowserInputEvent>),
 }
 
 /// Longest wait for a frame before the driver looks at its inbox again.
@@ -104,14 +112,16 @@ fn run(mut args: DriverArgs) {
                             args.spec = spec;
                             break;
                         }
-                        Ok(DriverControl::Taken) => {}
+                        Ok(DriverControl::Taken | DriverControl::Input(_)) => {}
                         Err(_) => return,
                     }
                 }
                 continue;
             }
         };
+        set_interrupt(&args, Some(stream.interrupt_handle()));
         let exit = stream_frames(&mut args, &key, &stream);
+        set_interrupt(&args, None);
         // Waits for the tab to close (or detach) on this thread.
         stream.stop();
         match exit {
@@ -163,16 +173,23 @@ fn open(args: &DriverArgs, key: &str) -> Result<Option<PageStream>, BrowserRende
 /// Hand frames to the UI until the stream must stop or reopen.
 fn stream_frames(args: &mut DriverArgs, key: &str, stream: &PageStream) -> Exit {
     let mut share_checked = Instant::now();
+    let mut input = InputSender::default();
     loop {
-        match args.control.try_recv() {
-            Ok(DriverControl::Update { spec, reload }) => {
-                if let Some(exit) = apply_update(args, key, stream, spec, reload) {
-                    return exit;
+        loop {
+            match args.control.try_recv() {
+                Ok(DriverControl::Update { spec, reload }) => {
+                    if let Some(exit) = apply_update(args, key, stream, spec, reload) {
+                        return exit;
+                    }
                 }
+                Ok(DriverControl::Input(events)) => input.queue(events),
+                Ok(DriverControl::Taken) => {}
+                Err(TryRecvError::Empty) => break,
+                Err(TryRecvError::Disconnected) => return Exit::Stopped,
             }
-            Ok(DriverControl::Taken) | Err(TryRecvError::Empty) => {}
-            Err(TryRecvError::Disconnected) => return Exit::Stopped,
         }
+        // Everything queued meanwhile goes out as one coalesced batch.
+        input.send(&args.node_id, stream);
         if !stream.is_shared_tab()
             && share_checked.elapsed() >= SHARE_CHECK
             && PageSessions::shared().is_kept(key)
@@ -192,6 +209,7 @@ fn stream_frames(args: &mut DriverArgs, key: &str, stream: &PageStream) -> Exit 
                         return exit;
                     }
                 }
+                Ok(DriverControl::Input(events)) => input.queue(events),
                 Ok(DriverControl::Taken) | Err(RecvTimeoutError::Timeout) => {}
                 Err(RecvTimeoutError::Disconnected) => return Exit::Stopped,
             }
@@ -284,10 +302,59 @@ fn wait_for_change(args: &mut DriverArgs, delay: Duration) -> bool {
                 args.spec = spec;
                 return true;
             }
-            Ok(DriverControl::Taken) => {}
+            Ok(DriverControl::Taken | DriverControl::Input(_)) => {}
             Err(RecvTimeoutError::Timeout) => return true,
             Err(RecvTimeoutError::Disconnected) => return false,
         }
+    }
+}
+
+/// Page input waiting to go out, and the connection it goes out on (one
+/// of its own on the stream's tab, opened at the first input).
+#[derive(Default)]
+struct InputSender {
+    pending: InputBatch,
+    connection: Option<PageInput>,
+}
+
+impl InputSender {
+    fn queue(&mut self, events: Vec<BrowserInputEvent>) {
+        self.pending.extend(events);
+    }
+
+    /// Send what is pending, in order. A failed call drops the rest of the
+    /// batch (the page moved on) and the connection, which reopens with
+    /// the next input.
+    fn send(&mut self, node_id: &str, stream: &PageStream) {
+        if self.pending.is_empty() {
+            return;
+        }
+        let calls = cdp_calls(&self.pending.take(), cfg!(target_os = "macos"));
+        let connection = match self.connection.as_mut() {
+            Some(connection) => connection,
+            None => match stream.input() {
+                Ok(connection) => self.connection.insert(connection),
+                Err(error) => {
+                    eprintln!("[browser-live] {node_id} input: {error}");
+                    return;
+                }
+            },
+        };
+        for call in calls {
+            if let Err(error) = connection.dispatch(call.method, call.params) {
+                eprintln!("[browser-live] {node_id} input: {error}");
+                self.connection = None;
+                return;
+            }
+        }
+    }
+}
+
+/// Publish (or clear) the running stream's wake handle, so input sent from
+/// the UI does not wait out a frame wait.
+fn set_interrupt(args: &DriverArgs, handle: Option<de_browser_render::StreamInterrupt>) {
+    if let Ok(mut slot) = args.interrupt.lock() {
+        *slot = handle;
     }
 }
 

@@ -119,6 +119,7 @@ mod browser_url_policy;
 mod test_config_root;
 pub mod user_scene_template_store;
 pub mod validation_providers;
+mod web_browser_input;
 mod web_browser_live;
 pub mod web_browser_snapshot;
 pub mod web_canvas_server;

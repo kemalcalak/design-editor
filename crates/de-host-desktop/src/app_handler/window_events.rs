@@ -141,6 +141,11 @@ impl DesktopApp {
     /// it (#324) and resume with it.
     pub(crate) fn on_focused(&mut self, focused: bool) {
         self.window_focused = focused;
+        if !focused {
+            // A page mid-drag gets its release (#324).
+            self.host.browser_release_pointer();
+            self.flush_browser_input();
+        }
         if self.pump_browser_live() || focused {
             self.request_redraw(true);
         }

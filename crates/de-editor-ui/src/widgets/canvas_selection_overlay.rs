@@ -57,6 +57,38 @@ pub(super) fn paint_selected_node(
     }
 }
 
+/// Width and outset of the ring that marks a browser node in interaction
+/// mode (#324): thicker than the selection outline, so the mode reads at
+/// a glance.
+const INTERACTION_RING_W: f32 = 3.0;
+const INTERACTION_RING_GAP: f32 = 2.0;
+
+/// The interaction-mode ring around the browser node `node_id` (#324,
+/// phase 4): an accent outline just outside its box, like the text-edit
+/// session's focus. Resize handles are hidden meanwhile (the canvas
+/// passes no handles), since the node cannot be moved from inside.
+pub(super) fn paint_interaction_ring(
+    cx: &mut PaintCx<'_>,
+    roots: &[SceneNode],
+    node_id: &str,
+    input: &SelectionPaintInput<'_>,
+) {
+    let Some(node) = roots.iter().find_map(|root| root.find(node_id)) else {
+        return;
+    };
+    let Some(rect) = selection_world_rect(node, input) else {
+        return;
+    };
+    let outset = INTERACTION_RING_GAP + INTERACTION_RING_W / 2.0;
+    let ring = Rect {
+        origin: Point2D::new(rect.origin.x - outset, rect.origin.y - outset),
+        size: Point2D::new(rect.size.x + outset * 2.0, rect.size.y + outset * 2.0),
+    };
+    let radius = (node.corner_radius * input.viewport.zoom).max(0.0) + outset;
+    cx.backend
+        .stroke_round_rect(ring, radius, input.theme.primary, INTERACTION_RING_W);
+}
+
 fn replay_legacy_node_rotation(
     cx: &mut PaintCx<'_>,
     node: &SceneNode,

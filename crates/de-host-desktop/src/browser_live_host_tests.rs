@@ -196,3 +196,29 @@ fn the_setting_off_drops_the_frame_for_the_snapshot() {
     assert_eq!(browser_textures::live_frame(rig.id), None);
     assert!(!rig.backend.image_resident(rig.texture()));
 }
+
+#[test]
+fn page_input_reaches_the_streaming_driver_and_wakes_it() {
+    use de_editor_core::browser_input::{BrowserInputEvent, InputModifiers};
+    let _serial = serial();
+    let mut rig = Rig::new("lh-input", 1.0);
+    let event = BrowserInputEvent::MouseMove {
+        x: 1.0,
+        y: 2.0,
+        buttons: 0,
+        modifiers: InputModifiers::default(),
+    };
+    assert!(
+        !rig.host.send_input(rig.id, vec![event.clone()]),
+        "no stream yet: dropped"
+    );
+    rig.frame(SHOWN, 1.0, true);
+    assert_eq!(rig.host.streaming(), 1);
+    assert!(rig.host.send_input(rig.id, vec![event.clone()]));
+    assert!(matches!(
+        rig.next_control(0),
+        Ok(DriverControl::Input(events)) if events == vec![event]
+    ));
+    assert!(!rig.host.send_input("other", Vec::new()));
+    browser_textures::forget_live(rig.id);
+}

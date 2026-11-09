@@ -67,6 +67,11 @@ impl<'a> CanvasViewport<'a> {
                 .image_crop_editing
                 .as_ref()
                 .is_some_and(|id| id == &state.selection.anchor),
+            browser_interacting: state
+                .editor_ui
+                .browser_live
+                .interactive_node()
+                .is_some_and(|id| id == state.selection.anchor.as_str()),
             node_drag_overlay: None,
             text_editing: state
                 .ui
@@ -136,6 +141,7 @@ impl<'a> CanvasViewport<'a> {
             drop_indicator: None,
             node_drag_active: false,
             image_crop_edit_active: false,
+            browser_interacting: false,
             node_drag_overlay: None,
             text_editing: None,
             text_edit_input: Default::default(),

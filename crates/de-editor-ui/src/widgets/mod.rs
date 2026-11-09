@@ -217,6 +217,8 @@ pub mod canvas_shader_clock;
 mod canvas_shader_decls;
 mod canvas_shader_images;
 mod canvas_shader_textures;
+// Interaction mode of a browser node (#324): routing both hosts share.
+pub mod browser_interact_flow;
 // `pub` so both hosts can track the pointer for pointer-reactive shaders.
 pub mod browser_render_queue;
 pub mod browser_stream_queue;

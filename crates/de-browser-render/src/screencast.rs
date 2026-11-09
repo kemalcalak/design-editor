@@ -25,6 +25,7 @@ use std::time::{Duration, Instant};
 use serde_json::{json, Value};
 
 use crate::cdp_client::CdpClient;
+use crate::page_input::PageInput;
 use crate::page_session::TabStreamClaim;
 use crate::screencast_worker::{Control, Holds, TabMode, Worker};
 use crate::tab::{Tab, Viewport};
@@ -150,6 +151,9 @@ pub(crate) struct SlotState {
     ended: bool,
     error: Option<BrowserRenderError>,
     waker: Option<Waker>,
+    /// A [`StreamInterrupt`] fired: the next (or a running)
+    /// [`PageStream::wait_frame`] returns at once.
+    interrupted: bool,
 }
 
 #[derive(Default)]
@@ -197,12 +201,30 @@ impl StreamShared {
     }
 }
 
+/// Wakes a thread blocked in [`PageStream::wait_frame`] (it returns no
+/// frame), so a consumer that also has other work (input for the page)
+/// does not wait out the frame timeout. Cheap to clone; outlives nothing.
+#[derive(Clone)]
+pub struct StreamInterrupt {
+    shared: Arc<StreamShared>,
+}
+
+impl StreamInterrupt {
+    pub fn interrupt(&self) {
+        self.shared.lock().interrupted = true;
+        self.shared.ready.notify_all();
+    }
+}
+
 /// A running screencast. See the module docs.
 pub struct PageStream {
     shared: Arc<StreamShared>,
     control: Sender<Control>,
     worker: JoinHandle<()>,
     shared_tab: bool,
+    /// The browser and tab, for an input connection ([`Self::input`]).
+    ws_url: String,
+    target_id: String,
 }
 
 impl PageStream {
@@ -290,6 +312,8 @@ impl PageStream {
         let shared = Arc::new(StreamShared::default());
         let (control, inbox) = mpsc::channel();
         let shared_tab = mode == TabMode::Shared;
+        let ws_url = client.url().to_string();
+        let target_id = tab.target_id().to_string();
         let worker = Worker::start(
             client,
             tab,
@@ -308,6 +332,8 @@ impl PageStream {
             control,
             worker,
             shared_tab,
+            ws_url,
+            target_id,
         })
     }
 
@@ -332,6 +358,9 @@ impl PageStream {
         loop {
             if let Some(frame) = state.latest.take() {
                 return Ok(Some(frame));
+            }
+            if std::mem::take(&mut state.interrupted) {
+                return Ok(None);
             }
             if state.ended {
                 return Err(state.error.take().unwrap_or(BrowserRenderError::Closed));
@@ -385,6 +414,19 @@ impl PageStream {
     /// Restart the screencast as it is (after the tab's viewport changed).
     pub fn restart(&self) -> Result<(), BrowserRenderError> {
         self.request_restart(None, None)
+    }
+
+    /// A handle that wakes [`Self::wait_frame`] from another thread.
+    pub fn interrupt_handle(&self) -> StreamInterrupt {
+        StreamInterrupt {
+            shared: Arc::clone(&self.shared),
+        }
+    }
+
+    /// A connection of its own for mouse and keyboard input on this
+    /// stream's tab (the page the frames show). Blocks while it attaches.
+    pub fn input(&self) -> Result<PageInput, BrowserRenderError> {
+        PageInput::connect(&self.ws_url, &self.target_id)
     }
 
     /// Whether this streams a kept-open MCP tab rather than its own.
