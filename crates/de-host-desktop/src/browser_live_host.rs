@@ -22,6 +22,8 @@
 
 #[path = "browser_live_driver.rs"]
 mod driver;
+#[path = "browser_live_input.rs"]
+mod input;
 
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicBool, Ordering};

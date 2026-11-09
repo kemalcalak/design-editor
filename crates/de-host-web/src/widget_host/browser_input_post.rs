@@ -12,19 +12,24 @@
 //! goes with the next one. Until the daemon streams the node (its set call
 //! still opening the page) the events wait and the send is retried on a
 //! short timer; a node that never streams drops them after
-//! [`MAX_WAIT_MS`]. A refused batch is dropped (the page moved on), as on
-//! desktop.
+//! [`MAX_WAIT_MS`] (no page shows it, so nothing is held there). A
+//! refused batch is not sent again: a 404 means the node's stream is gone
+//! with its page, so nothing is held there either, and on a 429 (the page
+//! is behind) the daemon already queued the batch's releases and
+//! still-held presses. Past [`MAX_QUEUED_INPUT_EVENTS`] the outbox keeps
+//! only those too (`InputBatch::extend_within`). A post that fails
+//! outright (network, 5xx) is dropped with its events: the web host is
+//! being retired, so it gets no retry of its own.
 
 use std::cell::{Cell, RefCell};
 
 use de_editor_core::browser_input::{
     BrowserInputBatch, BrowserInputEvent, InputBatch, BROWSER_INPUT_PATH, MAX_INPUT_EVENTS,
+    MAX_QUEUED_INPUT_EVENTS,
 };
 
 use super::WidgetHost;
 
-/// Events kept for a page that does not take them yet; more are dropped.
-const MAX_PENDING: usize = 4 * MAX_INPUT_EVENTS;
 /// How soon a send that had nowhere to go is tried again.
 const RETRY_MS: u32 = 100;
 /// How long events wait for their node to stream before they are dropped
@@ -65,10 +70,7 @@ impl InputOutbox {
             self.node = Some(node);
             self.waiting_since_ms = None;
         }
-        if self.pending.len() + events.len() > MAX_PENDING {
-            return;
-        }
-        self.pending.extend(events);
+        self.pending.extend_within(events, MAX_QUEUED_INPUT_EVENTS);
     }
 
     /// The next batch to post at `now_ms`, given where the node's input

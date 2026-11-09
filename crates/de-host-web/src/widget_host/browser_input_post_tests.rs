@@ -101,3 +101,21 @@ fn a_batch_never_exceeds_the_daemons_cap_and_a_new_node_drops_stale_input() {
     outbox.queue("b2".into(), vec![key("new")]);
     assert_eq!(posted(outbox.next(200, live)).events, [key("new")]);
 }
+
+#[test]
+fn a_full_outbox_still_takes_a_release() {
+    let mut outbox = InputOutbox::default();
+    let typing: Vec<_> = (0..MAX_QUEUED_INPUT_EVENTS)
+        .map(|i| BrowserInputEvent::InsertText {
+            text: i.to_string(),
+        })
+        .collect();
+    outbox.queue("b1".into(), typing);
+    let release = BrowserInputEvent::KeyUp {
+        key: "Shift".into(),
+        code: "ShiftLeft".into(),
+        modifiers: InputModifiers::default(),
+    };
+    outbox.queue("b1".into(), vec![mv(1.0), release.clone()]);
+    assert_eq!(posted(outbox.next(0, live)).events, [release]);
+}

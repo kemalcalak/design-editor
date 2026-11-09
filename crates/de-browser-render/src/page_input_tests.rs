@@ -1,5 +1,5 @@
-//! Page input against a scripted websocket peer, plus a real-Chrome test
-//! (`--ignored`) that clicks a button and types into a field.
+//! Page input against a scripted websocket peer. The real-Chrome tests
+//! (`--ignored`) are in `page_input_chrome_tests.rs`.
 
 use std::io::ErrorKind;
 use std::net::TcpListener;
@@ -48,15 +48,23 @@ fn peer() -> (String, Log) {
                 .push((method.clone(), command["params"].clone(), session));
             let result = match method.as_str() {
                 "Target.attachToTarget" => json!({ "sessionId": "in1" }),
+                // A page shown at half scale, scrolled 10, 20 inside.
+                "Page.getLayoutMetrics" => json!({
+                    "cssVisualViewport": { "offsetX": 10.0, "offsetY": 20.0, "scale": 0.5 },
+                }),
                 _ => json!({}),
             };
             let reply = json!({ "id": command["id"], "result": result });
-            // A press at x 99 opens an alert, one at x 98 a confirm: like
-            // Chrome, its reply waits until the dialog is handled.
-            let dialog = match command["params"]["x"].as_i64() {
-                Some(99) => Some("alert"),
-                Some(98) => Some("confirm"),
-                _ => None,
+            // A press at frame x 99 (page x 208) opens an alert, one at
+            // frame x 98 (page x 206) a confirm: like Chrome, its reply
+            // waits until the dialog is handled.
+            let x = command["params"]["x"].as_f64();
+            let dialog = if x == Some(208.0) {
+                Some("alert")
+            } else if x == Some(206.0) {
+                Some("confirm")
+            } else {
+                None
             };
             if let (true, Some(kind)) = (method == "Input.dispatchMouseEvent", dialog) {
                 let opening = json!({
@@ -115,8 +123,65 @@ fn input_attaches_to_the_tab_and_sends_on_its_session() {
     assert_eq!(calls[0].1["targetId"], "t1");
     let (method, params, session) = calls.last().unwrap();
     assert_eq!(method, "Input.dispatchMouseEvent");
-    assert_eq!(params["x"], 3);
     assert_eq!(session.as_deref(), Some("in1"));
+    // Frame px through the half-scale visual viewport at 10, 20.
+    assert_eq!(params["x"], 16.0);
+    assert_eq!(params["y"], 28.0);
+}
+
+#[test]
+fn a_press_reads_the_visual_viewport_and_moves_reuse_it() {
+    let (url, log) = peer();
+    let mut input = PageInput::connect(&url, "t1").unwrap();
+    let press = json!({ "type": "mousePressed", "x": 1, "y": 1, "button": "left" });
+    let moved = json!({ "type": "mouseMoved", "x": 2, "y": 2, "button": "left" });
+    input
+        .dispatch("Input.dispatchMouseEvent", moved.clone())
+        .unwrap();
+    input.dispatch("Input.dispatchMouseEvent", moved).unwrap();
+    input.dispatch("Input.dispatchMouseEvent", press).unwrap();
+    input
+        .dispatch("Input.insertText", json!({ "text": "x" }))
+        .unwrap();
+    let reads = |log: &Log| {
+        methods(log)
+            .iter()
+            .filter(|m| *m == "Page.getLayoutMetrics")
+            .count()
+    };
+    assert_eq!(
+        reads(&log),
+        2,
+        "the first move reads, the second reuses, the press reads again"
+    );
+    // A wheel step (which can pan a zoomed-in view) makes the next move
+    // read again.
+    let wheel = json!({ "type": "mouseWheel", "x": 1, "y": 1, "deltaX": 0, "deltaY": 5 });
+    let moved = json!({ "type": "mouseMoved", "x": 2, "y": 2, "button": "none" });
+    input.dispatch("Input.dispatchMouseEvent", wheel).unwrap();
+    assert_eq!(reads(&log), 2, "the wheel step reuses the fresh read");
+    input.dispatch("Input.dispatchMouseEvent", moved).unwrap();
+    assert_eq!(reads(&log), 3);
+}
+
+#[test]
+fn the_visual_viewport_maps_frame_px_to_page_px() {
+    let metrics = json!({ "cssVisualViewport": { "offsetX": 5.0, "offsetY": 0.0, "scale": 0.8 } });
+    let viewport = VisualViewport::from_metrics(&metrics);
+    let mut wheel =
+        json!({ "type": "mouseWheel", "x": 80.0, "y": 40.0, "deltaX": 0.0, "deltaY": 8.0 });
+    viewport.map_mouse_params(&mut wheel);
+    assert_eq!(wheel["x"], 105.0);
+    assert_eq!(wheel["y"], 50.0);
+    assert_eq!(wheel["deltaY"], 8.0, "deltas stay in frame px");
+    assert_eq!(wheel["type"], "mouseWheel");
+    // Nothing usable reads as an unscaled page, which maps nothing.
+    for bad in [json!({}), json!({ "cssVisualViewport": { "scale": 0.0 } })] {
+        assert_eq!(VisualViewport::from_metrics(&bad), VisualViewport::IDENTITY);
+    }
+    let mut press = json!({ "x": 3, "y": 4 });
+    VisualViewport::IDENTITY.map_mouse_params(&mut press);
+    assert_eq!(press, json!({ "x": 3, "y": 4 }));
 }
 
 #[test]
@@ -189,100 +254,4 @@ fn dropping_detaches_and_leaves_the_tab_open() {
         .cloned()
         .unwrap();
     assert_eq!(detach.1["sessionId"], "in1");
-}
-
-/// A click and typing through a real stream's input connection reach the
-/// page: run with an installed Chromium-based browser (or
-/// `DE_BROWSER_PATH`): `cargo test -p de-browser-render -- --ignored`.
-#[test]
-#[ignore = "needs an installed Chromium-based browser"]
-fn a_click_and_typing_reach_the_page() {
-    use de_editor_core::browser_input::{BrowserInputEvent, InputModifiers, MouseButton};
-    use de_editor_core::browser_input_cdp::cdp_calls;
-
-    let html = "<button id=b style='position:absolute;left:10px;top:10px;width:100px;height:40px'\
-                onclick=\"alert('hi');document.title='clicked'\">Go</button>\
-                <input id=f style='position:absolute;left:10px;top:80px;width:200px'>";
-    let url = format!(
-        "data:text/html,{}",
-        html.replace(' ', "%20").replace('#', "%23")
-    );
-    let pool = crate::BrowserPool::default();
-    let stream = crate::PageStream::open(
-        &pool,
-        &url,
-        crate::Viewport {
-            width: 400,
-            height: 300,
-            scale: 1.0,
-            mobile: false,
-        },
-        crate::StreamSettings::default(),
-    )
-    .expect("stream opens");
-    let mut input = stream.input().expect("input attaches");
-    let none = InputModifiers::default();
-    let click = |x: f64, y: f64| {
-        [
-            BrowserInputEvent::MouseDown {
-                x,
-                y,
-                button: MouseButton::Left,
-                click_count: 1,
-                buttons: 0,
-                modifiers: none,
-            },
-            BrowserInputEvent::MouseUp {
-                x,
-                y,
-                button: MouseButton::Left,
-                click_count: 1,
-                buttons: 1,
-                modifiers: none,
-            },
-        ]
-    };
-    let mut events: Vec<BrowserInputEvent> = click(50.0, 30.0).into();
-    events.extend(click(60.0, 90.0));
-    for (key, code) in [("h", "KeyH"), ("i", "KeyI")] {
-        events.push(BrowserInputEvent::KeyDown {
-            key: key.into(),
-            code: code.into(),
-            text: Some(key.into()),
-            modifiers: none,
-        });
-        events.push(BrowserInputEvent::KeyUp {
-            key: key.into(),
-            code: code.into(),
-            modifiers: none,
-        });
-    }
-    events.push(BrowserInputEvent::KeyDown {
-        key: "Backspace".into(),
-        code: "Backspace".into(),
-        text: None,
-        modifiers: none,
-    });
-    events.push(BrowserInputEvent::InsertText { text: "!".into() });
-    for call in cdp_calls(&events, cfg!(target_os = "macos")) {
-        input
-            .dispatch(call.method, call.params)
-            .expect("dispatched");
-    }
-    let read = |input: &mut PageInput, expression: &str| {
-        input
-            .tab_command(
-                "Runtime.evaluate",
-                json!({ "expression": expression, "returnByValue": true }),
-            )
-            .expect("evaluates")["result"]["value"]
-            .clone()
-    };
-    assert_eq!(read(&mut input, "document.title"), json!("clicked"));
-    assert_eq!(
-        read(&mut input, "document.getElementById('f').value"),
-        json!("h!")
-    );
-    drop(input);
-    stream.stop();
 }

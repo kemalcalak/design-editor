@@ -720,5 +720,51 @@ fn a_page_that_falls_behind_refuses_more_input() {
     let answers: Vec<_> = (0..6).map(|_| hub.dispatch(&id, "n", batch())).collect();
     assert!(answers.contains(&Err(InputRefusal::Busy)), "{answers:?}");
     stream.input.hold(false);
-    stream.input.wait_events(4 * MAX_INPUT_EVENTS);
+    // The batch the worker held goes out; what piled up behind it was cut
+    // down to its still-held presses (one per key).
+    stream.input.wait_events(2 * MAX_INPUT_EVENTS);
+}
+
+#[test]
+fn a_page_that_falls_behind_still_gets_its_releases() {
+    let (source, hub) = hub();
+    let (_lease, id) = streaming(&hub);
+    let stream = source.stream("https://example.com").unwrap();
+    stream.input.hold(true);
+    // The press goes to the (slow) page; typing piles up behind it.
+    hub.dispatch(&id, "n", vec![key("a")]).unwrap();
+    // The worker took the press and waits on the page with it.
+    wait_until(|| stream.input.open.load(Ordering::SeqCst) == 1);
+    std::thread::sleep(Duration::from_millis(50));
+    let typing = || {
+        (0..MAX_INPUT_EVENTS)
+            .map(|i| BrowserInputEvent::InsertText {
+                text: i.to_string(),
+            })
+            .collect::<Vec<_>>()
+    };
+    for _ in 0..4 {
+        let _ = hub.dispatch(&id, "n", typing());
+    }
+    let mut last = typing();
+    last.push(BrowserInputEvent::KeyUp {
+        key: "a".into(),
+        code: String::new(),
+        modifiers: InputModifiers::default(),
+    });
+    assert_eq!(
+        hub.dispatch(&id, "n", last),
+        Err(InputRefusal::Busy),
+        "the page is behind"
+    );
+    stream.input.hold(false);
+    let deadline = Instant::now() + Duration::from_secs(5);
+    loop {
+        let events = lock(&stream.input.events).clone();
+        if events.last().is_some_and(BrowserInputEvent::is_release) {
+            break;
+        }
+        assert!(Instant::now() < deadline, "no release: {events:?}");
+        std::thread::sleep(Duration::from_millis(2));
+    }
 }
