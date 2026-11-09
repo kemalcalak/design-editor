@@ -137,8 +137,6 @@ fn import_snapshot_inner(
         .filter(|title| !title.is_empty())
         .unwrap_or("Web Snapshot");
     let mut context = SnapshotCtx::new(opts);
-    // The capture laid its scroll containers out at full height (the
-    // `expandScroll` option), so nothing is left behind a clip to report.
     context.scroll_expanded = object
         .get("expandedScroll")
         .and_then(Value::as_bool)

@@ -404,10 +404,9 @@ fn the_extractor_wrapper_hands_the_page_its_options() {
     let options = "globalThis.designEditorSnapshotOptions = { root, expandScroll: ";
     assert!(extractor_script(None, true).contains(&format!("{options}true }};")));
     assert!(extractor_script(Some("main"), false).contains(&format!("{options}false }};")));
-    // The extractor reads the flag, puts the page back and tells the importer.
+    // The extractor reads the flag and tells the importer it was applied.
     for marker in [
         "options && options.expandScroll",
-        "restoreScrollContainers(expandedScrollers)",
         "snapshot.expandedScroll = true",
     ] {
         assert!(

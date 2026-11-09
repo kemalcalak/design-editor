@@ -1360,44 +1360,73 @@
     console.error("Design Editor snapshot: document.body is not available");
     return;
   }
-  // Every container is measured before any is touched, so expanding an
-  // outer one cannot hide an inner one that also scrolls.
+  // Every container is measured (and its scroll offset read) before any is
+  // touched: expanding an outer one cannot hide an inner one that also
+  // scrolls, and the page lays out once instead of once per container.
+  function scrolls(value) {
+    return value === "auto" || value === "scroll" || value === "overlay";
+  }
   function expandScrollContainers(rootElement) {
     var expanded = [];
     if (!expandScroll) return expanded;
     var elements = [rootElement].concat(
       Array.prototype.slice.call(rootElement.querySelectorAll("*")),
     );
-    var scrollers = elements.filter(function (element) {
-      var overflowY = window.getComputedStyle(element).overflowY;
-      return (
-        (overflowY === "auto" || overflowY === "scroll" || overflowY === "overlay") &&
-        element.scrollHeight > element.clientHeight
-      );
-    });
-    scrollers.forEach(function (element) {
+    elements.forEach(function (element) {
+      var computed = window.getComputedStyle(element);
+      if (!scrolls(computed.overflowY)) return;
+      if (element.scrollHeight - element.clientHeight <= 1) return;
+      // A horizontal scroller (a carousel) would spill its off-screen cards
+      // across the page: `overflow` cannot be visible on one axis only.
+      if (scrolls(computed.overflowX) && element.scrollWidth - element.clientWidth > 1) return;
+      var parent = element.parentElement;
+      var parentStyle = parent ? window.getComputedStyle(parent) : null;
       expanded.push({
         element: element,
         style: element.getAttribute("style"),
         top: element.scrollTop,
         left: element.scrollLeft,
+        // A `flex-1 min-h-0` item of a column takes its height from the
+        // flex line, not from `height`.
+        columnItem:
+          !!parentStyle &&
+          /flex/.test(parentStyle.display) &&
+          /column/.test(parentStyle.flexDirection),
+        // An `inset: 0` scroller takes its height from `top` and `bottom`.
+        pinned: computed.position === "absolute" || computed.position === "fixed",
       });
+    });
+    expanded.forEach(function (entry) {
+      var style = entry.element.style;
       // `important` so a stylesheet rule marked important cannot keep the
       // clip; the original attribute is restored verbatim afterwards.
-      element.style.setProperty("overflow", "visible", "important");
-      element.style.setProperty("max-height", "none", "important");
-      element.style.setProperty("height", "auto", "important");
+      style.setProperty("overflow", "visible", "important");
+      style.setProperty("max-height", "none", "important");
+      style.setProperty("height", "auto", "important");
+      if (entry.columnItem) {
+        style.setProperty("flex-shrink", "0", "important");
+        style.setProperty("flex-basis", "auto", "important");
+      }
+      if (entry.pinned) style.setProperty("bottom", "auto", "important");
     });
     return expanded;
   }
   function restoreScrollContainers(expanded) {
-    for (var index = expanded.length - 1; index >= 0; index -= 1) {
-      var entry = expanded[index];
-      if (entry.style === null) entry.element.removeAttribute("style");
-      else entry.element.setAttribute("style", entry.style);
+    // Styles first, offsets after: an offset write lays the page out.
+    expanded.forEach(function (entry) {
+      if (entry.style === null) {
+        // Read it first: Chrome syncs CSSOM writes into the attribute lazily,
+        // and a removal before that sync came back later as `style=""`.
+        entry.element.getAttribute("style");
+        entry.element.removeAttribute("style");
+      } else {
+        entry.element.setAttribute("style", entry.style);
+      }
+    });
+    expanded.forEach(function (entry) {
       entry.element.scrollTop = entry.top;
       entry.element.scrollLeft = entry.left;
-    }
+    });
   }
 
   var expandedScrollers = expandScrollContainers(target);

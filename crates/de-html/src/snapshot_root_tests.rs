@@ -69,7 +69,11 @@ fn a_fixed_overlay_page_gives_the_root_and_its_wrapper_the_viewport() {
             wrapper.container.width,
             Some(SizingBehavior::Keyword(SizingKeyword::FillContainer))
         );
-        assert!(size(wrapper).0 == Some(1280.0) || (auto_layout && fills));
+        if auto_layout {
+            assert!(fills, "auto layout: the wrapper fills the page's width");
+        } else {
+            assert_eq!(size(wrapper).0, Some(1280.0));
+        }
         assert_eq!(size(wrapper).1, Some(800.0), "auto: {auto_layout}");
         let overlay = frame(&wrapper.children.as_ref().unwrap()[0]);
         assert_eq!(
@@ -112,6 +116,44 @@ fn absolute_content_below_the_body_extends_the_page() {
     assert_eq!(size(root), (Some(1000.0), Some(1000.0)));
 }
 
+/// A body with content keeps its own box: the viewport is not the page's
+/// width (scrollbar, body margin), and a short page still hugs its content.
+#[test]
+fn a_page_with_content_keeps_its_body_box() {
+    let json = r#"{
+      "version": 1,
+      "viewport": { "width": 1440, "height": 900 },
+      "root": {
+        "kind": "element", "tag": "body",
+        "rect": { "x": 8, "y": 8, "w": 1409, "h": 200 },
+        "children": [
+          { "kind": "element", "tag": "main",
+            "rect": { "x": 8, "y": 8, "w": 1409, "h": 200 }, "children": [] },
+          { "kind": "element", "tag": "div",
+            "rect": { "x": 8, "y": 208, "w": 1409, "h": 0 },
+            "children": [
+              { "kind": "element", "tag": "div",
+                "rect": { "x": 0, "y": 0, "w": 1440, "h": 900 },
+                "styles": { "position": "fixed" }, "children": [] }
+            ] }
+        ]
+      }
+    }"#;
+    let result = import_snapshot(json, &HtmlImportOptions::default());
+    let root = frame(&result.nodes[0]);
+    assert_eq!(size(root), (Some(1409.0), Some(200.0)));
+    // The overlay's mount sits beside `main`, not alone, so it keeps 0.
+    let mount = root
+        .children
+        .as_ref()
+        .unwrap()
+        .iter()
+        .map(frame)
+        .find(|child| child.children.as_ref().is_some_and(|kids| !kids.is_empty()))
+        .unwrap();
+    assert_eq!(size(mount).1, Some(0.0));
+}
+
 #[test]
 fn a_subtree_capture_keeps_the_picked_elements_box() {
     let json = FIXED_SHELL.replace(r#""tag": "body""#, r#""tag": "main""#);
@@ -146,7 +188,7 @@ fn an_expanded_scroll_capture_does_not_warn_about_clipped_scroll_content() {
         )
         .warnings
         .iter()
-        .any(|warning| warning.to_string().contains("overflow: auto / scroll"))
+        .any(|warning| *warning == ImportWarning::OverflowScrollClipped)
     };
     assert!(warns(""), "a clipped scroll container is reported");
     assert!(!warns(r#""expandedScroll": true,"#));
