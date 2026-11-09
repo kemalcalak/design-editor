@@ -60,7 +60,7 @@ fn a_batch_for_a_live_node_is_coalesced_and_dispatched() {
     events.push(json!({ "type": "mouseDown", "x": 2, "y": 1, "button": "left", "clickCount": 1 }));
     events.push(json!({ "type": "keyDown", "key": "a", "code": "KeyA", "text": "a" }));
     let body = json!({ "client": "c1", "key": "n1", "events": events }).to_string();
-    let (status, answer) = reply(input_reply_with(&body, Some(&sink)));
+    let (status, answer) = reply(input_reply_with(&body, &sink));
     assert_eq!(status, "200 OK");
     assert!(answer.ok);
     assert_eq!(answer.dispatched, 3, "three moves fold into one");
@@ -73,7 +73,7 @@ fn a_batch_for_a_live_node_is_coalesced_and_dispatched() {
 fn another_clients_node_is_not_live() {
     let sink = FakeSink::new();
     let body = json!({ "client": "c2", "key": "n1", "events": moves(1) }).to_string();
-    let (status, answer) = reply(input_reply_with(&body, Some(&sink)));
+    let (status, answer) = reply(input_reply_with(&body, &sink));
     assert_eq!(status, "404 Not Found");
     assert!(!answer.ok);
     assert!(sink.got.lock().unwrap().is_empty());
@@ -94,7 +94,7 @@ fn malformed_batches_are_refused_before_the_sink() {
         .to_string(),
     ];
     for body in cases {
-        let (status, answer) = reply(input_reply_with(&body, Some(&sink)));
+        let (status, answer) = reply(input_reply_with(&body, &sink));
         assert_eq!(status, "400 Bad Request", "{body}");
         assert!(answer.error.is_some());
     }
@@ -102,17 +102,9 @@ fn malformed_batches_are_refused_before_the_sink() {
 }
 
 #[test]
-fn without_a_sink_the_route_is_unavailable() {
-    let body = json!({ "client": "c1", "key": "n1", "events": moves(1) }).to_string();
-    let (status, answer) = reply(input_reply_with(&body, None));
-    assert_eq!(status, "503 Service Unavailable");
-    assert_eq!(answer.error.as_deref(), Some("page input is not available"));
-}
-
-#[test]
 fn an_empty_batch_is_fine() {
     let sink = FakeSink::new();
     let body = json!({ "client": "c1", "key": "n1", "events": [] }).to_string();
-    let (status, answer) = reply(input_reply_with(&body, Some(&sink)));
+    let (status, answer) = reply(input_reply_with(&body, &sink));
     assert_eq!((status, answer.dispatched), ("200 OK", 0));
 }

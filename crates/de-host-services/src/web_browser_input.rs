@@ -8,33 +8,15 @@
 //! node that client streams right now takes input, so a page can only be
 //! driven by the client that shows it.
 //!
-//! The batch is checked and coalesced here, then handed to the process's
-//! [`InputSink`]: the live channel's hub, which owns the streams and sends
-//! each batch on the node's stream tab with [`dispatch_events`]. Until a
-//! sink is installed ([`set_input_sink`]) the route answers `503`.
+//! The batch is checked and coalesced here, then handed to the live
+//! channel's hub (`web_browser_live::LiveHub`, the process's
+//! [`InputSink`]), which owns the streams: it queues the batch for the
+//! node's stream and a worker sends it on that stream's tab with
+//! [`dispatch_events`] (`web_browser_live/input.rs`).
 //!
-//! Binding the hub (after the web live client lands): give
-//! `web_browser_live::source::LiveStream` an `input()` that returns
-//! `PageStream::input`, keep one `de_browser_render::PageInput` per running
-//! (client, key) in the hub (opened at the first batch, dropped with the
-//! stream), implement [`InputSink`] for a small `Copy` handle wrapping
-//! `&'static LiveHub` (`NotLive` when the client does not stream the key,
-//! `Failed` when the page refused a call), and install it with
-//! `set_input_sink(Arc::new(handle))` where the hub starts.
-//!
-//! The wasm client then needs: a `BrowserInteraction`
-//! (`de_editor_ui::widgets::browser_interact_flow`) fed from its DOM
-//! pointer / wheel / key events (DOM `key` / `code` / `text` as they come)
-//! exactly like the native arm (`de-host-native/src/widget_host/
-//! browser_interact.rs`: `enter_at` on a canvas double-click, `sync` once
-//! per frame, the press / move / wheel / key outcomes deciding whether the
-//! editor sees an event); then, once per frame, `take()` the queue, map the
-//! node id to its key in the live set it posted, and post a
-//! `BrowserInputBatch { client, key, events }` here with the `hello`
-//! client id (one request in flight per node; batches queued meanwhile
-//! fold together through `InputBatch`).
-
-use std::sync::{Arc, Mutex, OnceLock};
+//! The web client (`de-host-web/src/widget_host/browser_interact_web.rs`)
+//! feeds the shared `BrowserInteraction` from its DOM events and posts
+//! what it queued, one request in flight per node.
 
 use de_browser_render::{BrowserRenderError, PageInput};
 use de_editor_core::browser_input::{
@@ -48,12 +30,10 @@ pub(crate) enum InputRefusal {
     /// The body is not a well-formed batch.
     Malformed(String),
     /// The client does not stream that node (or no such client).
-    #[allow(dead_code)] // the hub's sink answers it, see the module docs
     NotLive,
-    /// Input is not wired up in this daemon.
-    Unavailable,
-    /// The page did not take the events.
-    #[allow(dead_code)] // the hub's sink answers it, see the module docs
+    /// The page is not keeping up: too many events wait for it.
+    Busy,
+    /// The input could not be sent (no worker could start).
     Failed(String),
 }
 
@@ -62,8 +42,8 @@ impl std::fmt::Display for InputRefusal {
         match self {
             Self::Malformed(detail) => f.write_str(detail),
             Self::NotLive => f.write_str("that node is not live for this client"),
-            Self::Unavailable => f.write_str("page input is not available"),
-            Self::Failed(detail) => write!(f, "the page did not take the input: {detail}"),
+            Self::Busy => f.write_str("the page is not keeping up with its input"),
+            Self::Failed(detail) => write!(f, "page input failed: {detail}"),
         }
     }
 }
@@ -73,16 +53,16 @@ impl InputRefusal {
         match self {
             InputRefusal::Malformed(_) => "400 Bad Request",
             InputRefusal::NotLive => "404 Not Found",
-            InputRefusal::Unavailable => "503 Service Unavailable",
-            InputRefusal::Failed(_) => "502 Bad Gateway",
+            InputRefusal::Busy => "429 Too Many Requests",
+            InputRefusal::Failed(_) => "500 Internal Server Error",
         }
     }
 }
 
 /// Where checked batches go: the owner of the live streams.
 pub(crate) trait InputSink: Send + Sync {
-    /// Send `events` to `client`'s live node `key`, in order. Returns how
-    /// many went out.
+    /// Queue `events` for `client`'s live node `key`, in order, without
+    /// waiting for the page. Returns how many were taken.
     fn dispatch(
         &self,
         client: &str,
@@ -91,34 +71,17 @@ pub(crate) trait InputSink: Send + Sync {
     ) -> Result<usize, InputRefusal>;
 }
 
-fn sink_slot() -> &'static Mutex<Option<Arc<dyn InputSink>>> {
-    static SINK: OnceLock<Mutex<Option<Arc<dyn InputSink>>>> = OnceLock::new();
-    SINK.get_or_init(|| Mutex::new(None))
-}
-
-/// Install the process's sink (the live channel's hub).
-#[allow(dead_code)] // bound once the web live client lands, see the module docs
-pub(crate) fn set_input_sink(sink: Arc<dyn InputSink>) {
-    *sink_slot().lock().unwrap_or_else(|e| e.into_inner()) = Some(sink);
-}
-
 /// Status and JSON body for a `POST` [`BROWSER_INPUT_PATH`] body.
 ///
 /// [`BROWSER_INPUT_PATH`]: de_editor_core::browser_input::BROWSER_INPUT_PATH
 pub(crate) fn input_reply(body: &str) -> (&'static str, String) {
-    let sink = sink_slot()
-        .lock()
-        .unwrap_or_else(|e| e.into_inner())
-        .clone();
-    input_reply_with(body, sink.as_deref())
+    input_reply_with(body, crate::web_browser_live::LiveHub::shared())
 }
 
 /// [`input_reply`] against `sink` (tests pass a fake).
-pub(crate) fn input_reply_with(body: &str, sink: Option<&dyn InputSink>) -> (&'static str, String) {
-    let result = checked_batch(body).and_then(|batch| {
-        let sink = sink.ok_or(InputRefusal::Unavailable)?;
-        sink.dispatch(&batch.client, &batch.key, batch.events)
-    });
+pub(crate) fn input_reply_with(body: &str, sink: &dyn InputSink) -> (&'static str, String) {
+    let result = checked_batch(body)
+        .and_then(|batch| sink.dispatch(&batch.client, &batch.key, batch.events));
     let (status, reply) = match result {
         Ok(dispatched) => (
             "200 OK",
@@ -167,7 +130,6 @@ fn checked_batch(body: &str) -> Result<BrowserInputBatch, InputRefusal> {
 
 /// Send `events` on a stream tab's input connection, in order; the
 /// browser runs in this process's OS. Returns how many went out.
-#[allow(dead_code)] // the hub's sink calls it, see the module docs
 pub(crate) fn dispatch_events(
     input: &mut PageInput,
     events: &[BrowserInputEvent],
