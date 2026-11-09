@@ -73,7 +73,10 @@ impl EditorState {
         let Some(id) = self.interactive_browser() else {
             return false;
         };
-        let still = self.selection_count() == 1
+        // Preview drives its pages on its own (`preview_page_layout`): the
+        // canvas mode ends when the preview opens.
+        let still = !self.editor_ui.preview.mode
+            && self.selection_count() == 1
             && self.selection.anchor == id
             && self.can_interact_with_browser(&id);
         !still && self.leave_browser_interaction()
@@ -84,6 +87,20 @@ impl EditorState {
         let id = self.interactive_browser()?;
         let layout = browser_layout(find_node(self.active_children(), &id)?)?;
         Some((id, layout))
+    }
+
+    /// The page layout of browser node `id` when the preview may drive it
+    /// (#324): in Preview, with an address, its pages allowed and live
+    /// pages on, like [`Self::can_interact_with_browser`] on the canvas.
+    /// Runs per pointer move over a page, so the tree is walked once.
+    pub fn preview_page_layout(&self, id: &NodeId) -> Option<BrowserLayout> {
+        let live = &self.editor_ui.browser_live;
+        if !self.editor_ui.preview.mode || !live.pages_allowed() || !live.live_pages() {
+            return None;
+        }
+        let node = find_node(self.active_children(), id)?;
+        browser_url(node)?;
+        browser_layout(node)
     }
 }
 
