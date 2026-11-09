@@ -26,8 +26,9 @@ const REPLY_BUFFER: usize = 16;
 pub(crate) enum Awaited {
     /// The command's `result`.
     Reply(Value),
-    /// The watched event came first; the reply is still out.
-    Event,
+    /// The watched event came first, with its `params`; the reply is still
+    /// out.
+    Event(Value),
 }
 
 /// Page snapshots and screenshots arrive as one large message; allow up to
@@ -101,7 +102,7 @@ impl CdpClient {
         let id = self.send(session, method, params)?;
         match self.await_reply(id, method, Instant::now() + timeout, None)? {
             Awaited::Reply(result) => Ok(result),
-            Awaited::Event => unreachable!("no event is watched"),
+            Awaited::Event(_) => unreachable!("no event is watched"),
         }
     }
 
@@ -163,7 +164,8 @@ impl CdpClient {
                         && message.get("sessionId").and_then(Value::as_str) == Some(session)
                 });
                 if watched {
-                    return Ok(Awaited::Event);
+                    let params = message.get("params").cloned().unwrap_or(Value::Null);
+                    return Ok(Awaited::Event(params));
                 }
                 self.buffer_event(message);
             },

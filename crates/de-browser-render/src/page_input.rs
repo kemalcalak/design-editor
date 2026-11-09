@@ -8,7 +8,9 @@
 //! callers send from a worker thread. A JavaScript dialog the input opens
 //! (`alert`, `confirm`, `prompt`, `beforeunload`) would hold that call
 //! until it closes, and a headless tab shows no dialog to close, so it is
-//! accepted at once. Dropping it detaches from the tab (the tab stays
+//! answered at once: an `alert` or `beforeunload` is accepted, a `confirm`
+//! or `prompt` is cancelled, so a click never says yes to a question the
+//! user did not see. Dropping it detaches from the tab (the tab stays
 //! open).
 
 use std::time::Instant;
@@ -61,13 +63,13 @@ impl PageInput {
             let watch = Some((session.as_str(), DIALOG_OPENING));
             match self.client.await_reply(id, method, deadline, watch)? {
                 Awaited::Reply(_) => return Ok(()),
-                Awaited::Event => {
+                Awaited::Event(params) => {
                     // The reply to `id` arrives once the dialog closed and
                     // is kept for the next wait.
                     self.client.call(
                         Some(&session),
                         "Page.handleJavaScriptDialog",
-                        json!({ "accept": true }),
+                        json!({ "accept": accepts_dialog(&params) }),
                         COMMAND_TIMEOUT,
                     )?;
                 }
@@ -85,6 +87,15 @@ impl PageInput {
         let tab = self.tab.as_ref().ok_or(BrowserRenderError::TabClosed)?;
         tab.command(&mut self.client, method, params)
     }
+}
+
+/// Whether a page dialog (`Page.javascriptDialogOpening` params) is
+/// accepted: only one that asks nothing (`alert`, `beforeunload`).
+fn accepts_dialog(params: &Value) -> bool {
+    matches!(
+        params.get("type").and_then(Value::as_str),
+        Some("alert" | "beforeunload")
+    )
 }
 
 impl Drop for PageInput {

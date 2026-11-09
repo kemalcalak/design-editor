@@ -51,13 +51,18 @@ fn peer() -> (String, Log) {
                 _ => json!({}),
             };
             let reply = json!({ "id": command["id"], "result": result });
-            // A press at x 99 opens a dialog: like Chrome, its reply waits
-            // until the dialog is handled.
-            if method == "Input.dispatchMouseEvent" && command["params"]["x"] == 99 {
+            // A press at x 99 opens an alert, one at x 98 a confirm: like
+            // Chrome, its reply waits until the dialog is handled.
+            let dialog = match command["params"]["x"].as_i64() {
+                Some(99) => Some("alert"),
+                Some(98) => Some("confirm"),
+                _ => None,
+            };
+            if let (true, Some(kind)) = (method == "Input.dispatchMouseEvent", dialog) {
                 let opening = json!({
                     "method": "Page.javascriptDialogOpening",
                     "sessionId": "in1",
-                    "params": { "type": "alert", "message": "hi" },
+                    "params": { "type": kind, "message": "hi" },
                 });
                 let _ = socket.send(Message::Text(opening.to_string()));
                 held = Some(reply);
@@ -137,6 +142,24 @@ fn a_dialog_the_input_opens_is_accepted() {
     input
         .dispatch("Input.insertText", json!({ "text": "x" }))
         .unwrap();
+}
+
+#[test]
+fn a_confirm_the_input_opens_is_cancelled() {
+    let (url, log) = peer();
+    let mut input = PageInput::connect(&url, "t1").unwrap();
+    input
+        .dispatch(
+            "Input.dispatchMouseEvent",
+            json!({ "type": "mousePressed", "x": 98, "y": 1, "button": "left" }),
+        )
+        .expect("the press completes once the dialog is handled");
+    let calls = log.lock().unwrap().clone();
+    let handled = calls
+        .iter()
+        .find(|(m, ..)| m == "Page.handleJavaScriptDialog")
+        .expect("the dialog was handled");
+    assert_eq!(handled.1["accept"], false, "never say yes for the user");
 }
 
 #[test]
