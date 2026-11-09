@@ -206,6 +206,14 @@ pub(super) fn dispatch<S: Read + Write>(
         crate::mcp_serve::write_mcp_http_response_with_origin(stream, status, &body, cors_origin)?;
         return Ok(false);
     }
+    // Live browser pages (#324): a web client's one event stream and the
+    // call that sets what it streams. Neither holds the state lock past
+    // reading the document folder.
+    if req.path == de_editor_core::browser_live_wire::BROWSER_LIVE_PATH
+        && matches!(req.method.as_str(), "GET" | "POST")
+    {
+        return serve_browser_live(stream, req, state, cors_origin).map(|()| false);
+    }
     // The web editor's script runs (#219): pure like the conversion above,
     // so the program never runs under the state lock.
     if req.method == "POST" && req.path == "/api/scripts/run" {
@@ -388,6 +396,46 @@ pub(super) fn dispatch<S: Read + Write>(
     };
     crate::mcp_serve::write_mcp_http_response_with_origin(stream, status, &response, cors_origin)?;
     Ok(false)
+}
+
+/// `GET` / `POST /api/browser/live` (`crate::web_browser_live`). The event
+/// stream is screened like a sensitive POST (the POST already was): a page
+/// on another origin must not watch the frames.
+fn serve_browser_live<S: Write>(
+    stream: &mut S,
+    req: &crate::mcp_serve::HttpRequest,
+    state: &Mutex<WebCanvasState>,
+    cors_origin: Option<&str>,
+) -> Result<()> {
+    let hub = crate::web_browser_live::LiveHub::shared();
+    let (status, body) = if req.method == "GET" {
+        if !credential_request_origin_allowed(req) {
+            (
+                "403 Forbidden",
+                crate::mcp_serve::rest_error_body("cross-origin live stream is forbidden"),
+            )
+        } else if let Some(lease) = hub.connect() {
+            return lease
+                .serve_events(stream, cors_origin)
+                .map_err(|e| WebCanvasError::Transport(format!("live events: {e}")));
+        } else {
+            (
+                "503 Service Unavailable",
+                crate::mcp_serve::rest_error_body("too many live clients"),
+            )
+        }
+    } else {
+        let folder = state
+            .lock()
+            .unwrap_or_else(|p| p.into_inner())
+            .editor
+            .editor_ui
+            .document_folder
+            .clone();
+        hub.set_reply(&req.body, folder.as_deref())
+    };
+    crate::mcp_serve::write_mcp_http_response_with_origin(stream, status, &body, cors_origin)?;
+    Ok(())
 }
 
 /// Run the script nodes a write left stale (#19) without holding the state

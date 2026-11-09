@@ -116,8 +116,16 @@ fn error_body(message: &str, reason: Option<&str>) -> String {
 }
 
 fn parse_spec(body: &str) -> Result<RenderSpec, SnapshotRequestError> {
-    let mut wire: BrowserSnapshotSpec =
+    let wire: BrowserSnapshotSpec =
         serde_json::from_str(body).map_err(|e| SnapshotRequestError::Body(e.to_string()))?;
+    checked_spec(wire).map(|wire| render_spec(&wire))
+}
+
+/// `wire` with its address normalized, or why it may not render; the live
+/// channel (`web_browser_live`) checks its entries the same way.
+pub(crate) fn checked_spec(
+    mut wire: BrowserSnapshotSpec,
+) -> Result<BrowserSnapshotSpec, SnapshotRequestError> {
     wire.url = de_editor_core::browser_devices::normalize_browser_url(&wire.url)
         .filter(|url| !url.is_empty())
         .ok_or(SnapshotRequestError::Url)?;
@@ -128,7 +136,7 @@ fn parse_spec(body: &str) -> Result<RenderSpec, SnapshotRequestError> {
     if !(wire.scale > 0.0 && wire.scale <= MAX_SCALE) {
         return Err(SnapshotRequestError::Scale);
     }
-    Ok(render_spec(&wire))
+    Ok(wire)
 }
 
 /// One of [`MAX_RENDERS`] render slots, held for the render.

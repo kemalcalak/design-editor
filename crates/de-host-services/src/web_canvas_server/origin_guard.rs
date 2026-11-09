@@ -11,6 +11,7 @@ pub(super) fn is_sensitive_browser_post(request: &crate::mcp_serve::HttpRequest)
             || request.path.starts_with("/api/ai/")
             || request.path.starts_with("/api/figma/")
             || request.path == "/api/browser/snapshot"
+            || request.path == de_editor_core::browser_live_wire::BROWSER_LIVE_PATH
             // A page on another origin must not run programs here (#219).
             || request.path.starts_with("/api/scripts/"))
 }
