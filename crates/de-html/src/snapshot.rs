@@ -23,6 +23,8 @@ mod auto_layout;
 mod icon;
 #[path = "snapshot_name.rs"]
 mod layer_name;
+#[path = "snapshot_root.rs"]
+mod page_root;
 #[path = "snapshot_stack.rs"]
 mod snapshot_stack;
 #[path = "snapshot_text.rs"]
@@ -110,14 +112,19 @@ fn import_snapshot_inner(
     if json.len() > MAX_SNAPSHOT_BYTES {
         return Err(SnapshotError::TooLarge);
     }
-    let value: Value = serde_json::from_str(json)
+    let mut value: Value = serde_json::from_str(json)
         .map_err(|error| SnapshotError::InvalidJson(error.to_string()))?;
-    let object = value.as_object().ok_or(SnapshotError::NotAnObject)?;
+    let object = value.as_object_mut().ok_or(SnapshotError::NotAnObject)?;
     match object.get("version").and_then(Value::as_u64) {
         Some(1) => {}
         Some(version) => return Err(SnapshotError::UnsupportedVersion(version)),
         None => return Err(SnapshotError::MissingVersion),
     }
+    let viewport = page_root::snapshot_viewport(object);
+    if let Some(root) = object.get_mut("root").and_then(Value::as_object_mut) {
+        page_root::grow_page_root(root, viewport);
+    }
+    let object = &*object;
     let root = object
         .get("root")
         .and_then(Value::as_object)
@@ -130,6 +137,12 @@ fn import_snapshot_inner(
         .filter(|title| !title.is_empty())
         .unwrap_or("Web Snapshot");
     let mut context = SnapshotCtx::new(opts);
+    // The capture laid its scroll containers out at full height (the
+    // `expandScroll` option), so nothing is left behind a clip to report.
+    context.scroll_expanded = object
+        .get("expandedScroll")
+        .and_then(Value::as_bool)
+        .unwrap_or(false);
     // A picked subtree usually starts below the element carrying the page
     // backdrop, so the capture reports it separately. Without it a dark-theme
     // page lands on the importer's white default and every light-on-dark run
@@ -219,6 +232,9 @@ struct SnapshotCtx<'a> {
     auto_natural: HashMap<String, auto_layout::Natural>,
     /// Counter for the `row` / `spacer` frames the auto-layout pass adds.
     auxiliary_ids: usize,
+    /// The snapshot says its scroll containers were expanded before capture,
+    /// so the "scroll content is clipped" warning does not apply.
+    scroll_expanded: bool,
 }
 
 impl<'a> SnapshotCtx<'a> {
@@ -236,6 +252,7 @@ impl<'a> SnapshotCtx<'a> {
             auto_hug: HashMap::new(),
             auto_natural: HashMap::new(),
             auxiliary_ids: 0,
+            scroll_expanded: false,
         }
     }
 
@@ -634,6 +651,9 @@ impl<'a> SnapshotCtx<'a> {
             container_props_from(&computed, &mut map_context)
         };
         for warning in map_context.warnings {
+            if self.scroll_expanded && warning == ImportWarning::OverflowScrollClipped {
+                continue;
+            }
             self.warn_once(warning);
         }
         container
@@ -748,3 +768,7 @@ mod tests;
 #[cfg(test)]
 #[path = "snapshot_inline_tests.rs"]
 mod inline_tests;
+
+#[cfg(test)]
+#[path = "snapshot_root_tests.rs"]
+mod root_tests;

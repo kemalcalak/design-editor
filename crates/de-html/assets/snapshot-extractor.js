@@ -9,6 +9,11 @@
   // finds there at the document origin with its descendants relative to it.
   var requestedRoot =
     options && options.root && options.root.nodeType === 1 ? options.root : null;
+  // `options.expandScroll` lays every scroll container under the root that
+  // holds more than it shows out at its full height for the capture, so the
+  // content behind the scroll is imported instead of clipped. The live page
+  // gets its inline styles and scroll offsets back once the walk is done.
+  var expandScroll = !!(options && options.expandScroll);
 
   var MAX_NODES = 40000;
   var MAX_IMAGE_EDGE = 2048;
@@ -1355,7 +1360,53 @@
     console.error("Design Editor snapshot: document.body is not available");
     return;
   }
-  var root = buildRoot(target);
+  // Every container is measured before any is touched, so expanding an
+  // outer one cannot hide an inner one that also scrolls.
+  function expandScrollContainers(rootElement) {
+    var expanded = [];
+    if (!expandScroll) return expanded;
+    var elements = [rootElement].concat(
+      Array.prototype.slice.call(rootElement.querySelectorAll("*")),
+    );
+    var scrollers = elements.filter(function (element) {
+      var overflowY = window.getComputedStyle(element).overflowY;
+      return (
+        (overflowY === "auto" || overflowY === "scroll" || overflowY === "overlay") &&
+        element.scrollHeight > element.clientHeight
+      );
+    });
+    scrollers.forEach(function (element) {
+      expanded.push({
+        element: element,
+        style: element.getAttribute("style"),
+        top: element.scrollTop,
+        left: element.scrollLeft,
+      });
+      // `important` so a stylesheet rule marked important cannot keep the
+      // clip; the original attribute is restored verbatim afterwards.
+      element.style.setProperty("overflow", "visible", "important");
+      element.style.setProperty("max-height", "none", "important");
+      element.style.setProperty("height", "auto", "important");
+    });
+    return expanded;
+  }
+  function restoreScrollContainers(expanded) {
+    for (var index = expanded.length - 1; index >= 0; index -= 1) {
+      var entry = expanded[index];
+      if (entry.style === null) entry.element.removeAttribute("style");
+      else entry.element.setAttribute("style", entry.style);
+      entry.element.scrollTop = entry.top;
+      entry.element.scrollLeft = entry.left;
+    }
+  }
+
+  var expandedScrollers = expandScrollContainers(target);
+  var root;
+  try {
+    root = buildRoot(target);
+  } finally {
+    restoreScrollContainers(expandedScrollers);
+  }
   if (!root) {
     console.error(
       requestedRoot
@@ -1457,6 +1508,9 @@
   var fontFaces = pageFontFaces();
   if (fontFaces.length) snapshot.fontFaces = fontFaces;
   if (truncated) snapshot.truncated = true;
+  // Tells the importer the scroll containers were laid out in full, so it
+  // does not report their content as clipped.
+  if (expandScroll) snapshot.expandedScroll = true;
   var output = JSON.stringify(snapshot, null, 2);
 
   if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -1484,5 +1538,6 @@
   // The argument is optional on purpose. Pasted into a devtools console the
   // global is undefined and this captures the whole page, exactly as before;
   // a host that wants a subtree sets `{ root: <element> }` on the global
-  // first (the Chrome extension does, in its own isolated world).
+  // first (the Chrome extension does, in its own isolated world), and may
+  // add `expandScroll: true` (the MCP `browser` tool's `expandScroll`).
 })(typeof globalThis === "undefined" ? null : globalThis.designEditorSnapshotOptions);

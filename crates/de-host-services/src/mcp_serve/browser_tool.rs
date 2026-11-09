@@ -227,7 +227,11 @@ impl BrowserTool {
                         )))
                     }
                 };
-                let PageReply::Snapshot(snapshot) = run(PageOp::Extract(selector))?.reply else {
+                let extract = PageOp::Extract {
+                    selector,
+                    expand_scroll: expand_scroll(args)?,
+                };
+                let PageReply::Snapshot(snapshot) = run(extract)?.reply else {
                     return Err(internal());
                 };
                 let mut result = import_nodes(&snapshot, auto_layout);
@@ -324,6 +328,18 @@ fn node_viewport(node: &jian_ops_schema::node::PenNode) -> Viewport {
         scale: 1.0,
         mobile: layout.mobile,
     })
+}
+
+/// `expandScroll` (import-to-canvas): lay scroll containers out in full for
+/// the capture instead of importing them as a clip. Off unless `true`.
+fn expand_scroll(args: &BTreeMap<String, String>) -> Result<bool, ToolError> {
+    match arg(args, "expandScroll") {
+        None | Some("false") => Ok(false),
+        Some("true") => Ok(true),
+        Some(other) => Err(invalid(format!(
+            "expandScroll must be true or false, not `{other}`"
+        ))),
+    }
 }
 
 fn arg<'a>(args: &'a BTreeMap<String, String>, key: &str) -> Option<&'a str> {

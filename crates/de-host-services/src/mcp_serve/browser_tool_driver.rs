@@ -15,7 +15,11 @@ pub(crate) enum PageOp {
     Element(String),
     Cdp(String, Value),
     /// The web snapshot extractor, rooted at a selector or the whole page.
-    Extract(Option<String>),
+    Extract {
+        selector: Option<String>,
+        /// Lay scroll containers out at full height for the capture.
+        expand_scroll: bool,
+    },
     /// Fetch these font files from inside the page (its cache, cookies and
     /// CORS), each as base64 or `null`.
     FetchFonts(Vec<String>),
@@ -92,17 +96,18 @@ fn run_in_session(
         PageOp::Screenshot(target) => PageReply::Png(session.screenshot(target)?),
         PageOp::Element(selector) => PageReply::Json(session.element(selector)?),
         PageOp::Cdp(method, params) => PageReply::Json(session.cdp(method, params.clone())?),
-        PageOp::Extract(selector) => {
-            match session.evaluate(&extractor_script(selector.as_deref()))? {
-                Value::String(snapshot) => PageReply::Snapshot(snapshot),
-                _ => {
-                    return Err(BrowserRenderError::Protocol {
-                        method: "import-to-canvas".into(),
-                        message: "the page snapshot came back empty".into(),
-                    })
-                }
+        PageOp::Extract {
+            selector,
+            expand_scroll,
+        } => match session.evaluate(&extractor_script(selector.as_deref(), *expand_scroll))? {
+            Value::String(snapshot) => PageReply::Snapshot(snapshot),
+            _ => {
+                return Err(BrowserRenderError::Protocol {
+                    method: "import-to-canvas".into(),
+                    message: "the page snapshot came back empty".into(),
+                })
             }
-        }
+        },
         PageOp::FetchFonts(urls) => PageReply::Json(session.evaluate(&fetch_fonts_script(urls))?),
     };
     let changes_page = matches!(op, PageOp::Load(_) | PageOp::Cdp(..));
@@ -129,8 +134,10 @@ fn loaded(session: &mut PageSession, url: &str) -> PageReply {
 /// The snapshot extractor (`de_html::snapshot::SNAPSHOT_EXTRACTOR_JS`, the
 /// Chrome extension's capture engine) wrapped to run headless: its
 /// download and clipboard hand-off are caught and the JSON is returned
-/// instead, rooted at `selector` when given.
-pub(crate) fn extractor_script(selector: Option<&str>) -> String {
+/// instead, rooted at `selector` when given. `expand_scroll` lays the
+/// page's scroll containers out in full for the capture (the extractor
+/// puts them back afterwards).
+pub(crate) fn extractor_script(selector: Option<&str>, expand_scroll: bool) -> String {
     let selector = selector.map_or("null".to_string(), |s| {
         serde_json::to_string(s).unwrap_or_else(|_| "null".into())
     });
@@ -139,7 +146,7 @@ pub(crate) fn extractor_script(selector: Option<&str>) -> String {
   const selector = {selector};
   const root = selector ? document.querySelector(selector) : null;
   if (selector && !root) throw new Error("no element matches " + selector);
-  globalThis.designEditorSnapshotOptions = root ? {{ root }} : undefined;
+  globalThis.designEditorSnapshotOptions = {{ root, expandScroll: {expand_scroll} }};
   let captured = null;
   const createObjectURL = URL.createObjectURL;
   const click = HTMLAnchorElement.prototype.click;
