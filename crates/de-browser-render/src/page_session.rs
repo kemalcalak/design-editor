@@ -43,6 +43,10 @@ pub enum ShotTarget {
     FullPage,
     /// The first element matching a CSS selector.
     Query(String),
+    /// A rectangle of the page in CSS px (document coordinates), at 1×:
+    /// what the browser drew there, such as a WebGL canvas whose own
+    /// read-back is blank (see `rect_shot`).
+    Rect { x: f64, y: f64, w: f64, h: f64 },
 }
 
 /// One kept-open tab.
@@ -172,6 +176,7 @@ impl PageSession {
                 }
             }
             ShotTarget::Query(selector) => self.element_box(selector)?,
+            ShotTarget::Rect { x, y, w, h } => return self.rect_shot(*x, *y, *w, *h),
         };
         self.tab.screenshot(&mut self.client, Some(clip))
     }
@@ -480,6 +485,9 @@ impl PageSessions {
         self.sessions.lock().unwrap_or_else(|e| e.into_inner())
     }
 }
+
+#[path = "rect_shot.rs"]
+mod rect_shot;
 
 #[cfg(test)]
 #[path = "page_session_tests.rs"]

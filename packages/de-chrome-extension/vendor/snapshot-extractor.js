@@ -830,13 +830,56 @@
     }
   }
 
+  // A WebGL / WebGPU canvas made without `preserveDrawingBuffer` reads back
+  // blank through `toDataURL` (nothing throws), and a tainted 2D canvas does
+  // not read back at all. With `options.canvasShots` (a host that can
+  // screenshot the page: the MCP `browser` tool) such a canvas keeps that
+  // result and is tagged `canvasShot` with its document rect as the page
+  // shows it once the capture is done (measured after the walk), so the
+  // host puts in what the browser drew. The test compares the read-back
+  // with a blank canvas of the same size rather than probing contexts:
+  // `getContext` would give a canvas with none yet a context for good.
+  // Inside a scroll container laid out for the capture the rect is not
+  // where the page shows it afterwards, so those stay untagged; so does a
+  // fixed canvas not wholly on screen, which no scroll brings into view.
+  var canvasShots = !!(options && options.canvasShots);
+  var canvasShotCount = 0;
+  var canvasShotEntries = [];
+  var blankCanvasUrls = {};
+
+  function blankCanvasUrl(width, height) {
+    var key = width + "x" + height;
+    if (!(key in blankCanvasUrls)) {
+      var blank = document.createElement("canvas");
+      blank.width = width;
+      blank.height = height;
+      blankCanvasUrls[key] = blank.toDataURL("image/png");
+    }
+    return blankCanvasUrls[key];
+  }
+
+  function insideExpandedScroller(element) {
+    for (var index = 0; index < expandedScrollers.length; index += 1) {
+      if (expandedScrollers[index].element.contains(element)) return true;
+    }
+    return false;
+  }
+
   function captureCanvas(canvas) {
+    var dataUrl = null;
+    var captured;
     try {
-      return keepDataUrl(canvas.toDataURL("image/png"), GRAY_PLACEHOLDER);
+      dataUrl = canvas.toDataURL("image/png");
+      captured = keepDataUrl(dataUrl, GRAY_PLACEHOLDER);
     } catch (_error) {
       remoteImageCount += 1;
-      return { src: GRAY_PLACEHOLDER, tainted: true };
+      captured = { src: GRAY_PLACEHOLDER, tainted: true };
     }
+    if (!canvasShots || insideExpandedScroller(canvas)) return captured;
+    if (captured.tainted || dataUrl === blankCanvasUrl(canvas.width, canvas.height)) {
+      captured.shot = true;
+    }
+    return captured;
   }
 
   function captureVideo(video) {
@@ -915,6 +958,11 @@
       styles: elementStyles(computed),
     };
     if (captured.tainted) result.tainted = true;
+    if (captured.shot) {
+      canvasShotCount += 1;
+      result.canvasShot = { id: canvasShotCount };
+      canvasShotEntries.push({ node: result, element: element, fixed: fixedDepth > 0 });
+    }
     var box = layoutBox(computed);
     if (box) result.layout = box;
     var attrs = nameAttributes(element);
@@ -1523,6 +1571,25 @@
   } finally {
     restoreScrollContainers(expandedScrollers);
   }
+  // Measured once the page is back as it shows: putting the scroll
+  // containers back moves whatever followed them.
+  canvasShotEntries.forEach(function (entry) {
+    var box = entry.element.getBoundingClientRect();
+    var onScreen =
+      box.left >= 0 &&
+      box.top >= 0 &&
+      box.right <= window.innerWidth &&
+      box.bottom <= window.innerHeight;
+    if (entry.fixed && !onScreen) {
+      delete entry.node.canvasShot;
+      return;
+    }
+    var shot = entry.node.canvasShot;
+    shot.x = round(box.left + window.scrollX);
+    shot.y = round(box.top + window.scrollY);
+    shot.w = round(box.width);
+    shot.h = round(box.height);
+  });
   if (!root) {
     console.error(
       requestedRoot
@@ -1655,5 +1722,6 @@
   // global is undefined and this captures the whole page, exactly as before;
   // a host that wants a subtree sets `{ root: <element> }` on the global
   // first (the Chrome extension does, in its own isolated world), and may
-  // add `expandScroll: true` (the MCP `browser` tool's `expandScroll`).
+  // add `expandScroll: true` (the MCP `browser` tool's `expandScroll`) and
+  // `canvasShots: true` (that tool screenshots the canvases it tags).
 })(typeof globalThis === "undefined" ? null : globalThis.designEditorSnapshotOptions);
