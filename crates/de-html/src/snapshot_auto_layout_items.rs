@@ -87,6 +87,71 @@ pub(in crate::snapshot) fn shift_back(node: &mut PenNode, dx: f64, dy: f64) {
     base.y = base.y.map(|y| y - dy);
 }
 
+/// A vector `path` whose artwork (`art`) sits inset in its element's box
+/// (`rect`), wrapped in a fixed frame of that box with the path placed where
+/// the art is. The line's spacing was measured between element boxes, and
+/// the path cannot carry the inset itself: the renderer fits path data to
+/// the node by its bounds.
+pub(in crate::snapshot) fn artwork_box(
+    id: String,
+    mut path: PenNode,
+    rect: Rect,
+    art: Rect,
+) -> PenNode {
+    let base = node_base_mut(&mut path);
+    let name = base.name.clone();
+    // The frame takes the path's place (an overlay, or a child of a frame
+    // that falls back to `layout: none`, keeps it): the box, not the art.
+    let placed = (
+        base.x.map(|x| x - (art.x - rect.x)),
+        base.y.map(|y| y - (art.y - rect.y)),
+        base.constraints,
+    );
+    base.x = Some(art.x - rect.x);
+    base.y = Some(art.y - rect.y);
+    let mut node = PenNode::Frame(super::frame_node(
+        id,
+        name.as_deref().unwrap_or("icon"),
+        super::Laid {
+            layout: jian_ops_schema::node::container::LayoutMode::None,
+            gap: None,
+            padding: None,
+            justify: None,
+            align: None,
+            children: vec![path],
+            hug: (false, false),
+            natural: None,
+        },
+    ));
+    let frame = node_base_mut(&mut node);
+    (frame.x, frame.y, frame.constraints) = placed;
+    set_size(&mut node, Axis::Horizontal, Fit::Fixed, rect.w);
+    set_size(&mut node, Axis::Vertical, Fit::Fixed, rect.h);
+    node
+}
+
+/// The element's padding and border, shrunk on any side its flow children
+/// reach into. Content that overflows its padding box (a 20 px label in a
+/// 32 px button with 8 px padding and a border) still sits inside the box
+/// in the browser; keeping the full padding there makes the editor grow
+/// the box around it, and that growth travels up every hugging ancestor.
+pub(in crate::snapshot) fn fitted_inset(inset: [f64; 4], rect: Rect, flow: &[Item]) -> [f64; 4] {
+    let union = union_of(flow);
+    let reach = [
+        union.y - rect.y,
+        rect.x + rect.w - (union.x + union.w),
+        rect.y + rect.h - (union.y + union.h),
+        union.x - rect.x,
+    ];
+    let mut fitted = inset;
+    for side in 0..4 {
+        if reach[side] < inset[side] - EPS {
+            fitted[side] = reach[side].max(0.0);
+        }
+    }
+    fitted
+}
+
 /// The box the items cover together.
 pub(in crate::snapshot) fn union_of(items: &[Item]) -> Rect {
     let low_x = items.iter().map(|i| i.rect.x).fold(f64::INFINITY, f64::min);

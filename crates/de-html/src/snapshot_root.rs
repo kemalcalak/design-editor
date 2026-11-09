@@ -134,7 +134,7 @@ fn holds_fixed(object: &Map<String, Value>) -> bool {
 /// Any `overflow` other than `visible` (the snapshot records only the
 /// shorthand). Unlike `is_scroll_container`, a plain `hidden` counts too:
 /// both keep their overflow out of the page.
-fn clips(object: &Map<String, Value>) -> bool {
+pub(super) fn clips(object: &Map<String, Value>) -> bool {
     object
         .get("styles")
         .and_then(|styles| styles.get("overflow"))
