@@ -444,3 +444,48 @@ fn a_line_with_its_own_cross_offset_stays_absolute() {
     )));
     assert_eq!(frame(&root).container.layout, Some(LayoutMode::None));
 }
+
+/// A vector icon placed absolutely (a search glyph inside a field) keeps its
+/// place: the frame that carries its inset artwork takes the element box.
+#[test]
+fn a_placed_vector_icon_keeps_its_box() {
+    let icon = json!({
+        "kind": "image", "tag": "svg",
+        "rect": { "x": 112, "y": 58, "w": 16, "h": 16 },
+        "styles": { "position": "absolute" },
+        "d": "M4 12a8 8 0 1 1 16 0a8 8 0 1 1 -16 0Z",
+        "fill": "rgb(99, 102, 241)",
+        "vectorRect": { "x": 114.67, "y": 60.67, "w": 10.67, "h": 10.67 },
+    });
+    let field = element(
+        [100.0, 50.0, 200.0, 32.0],
+        json!({ "display": "flex" }),
+        vec![boxed([140.0, 56.0, 100.0, 20.0]), icon],
+    );
+    let PenNode::Frame(root) = import(&snapshot(field)) else {
+        panic!("frame")
+    };
+    let frame = root
+        .children
+        .as_deref()
+        .unwrap_or_default()
+        .iter()
+        .find_map(|node| match node {
+            PenNode::Frame(frame)
+                if matches!(frame.children.as_deref(), Some([PenNode::Path(_)])) =>
+            {
+                Some(frame)
+            }
+            _ => None,
+        })
+        .expect("the icon's frame");
+    assert_eq!((frame.base.x, frame.base.y), (Some(12.0), Some(8.0)));
+    let Some([PenNode::Path(path)]) = frame.children.as_deref() else {
+        unreachable!()
+    };
+    let (x, y) = (path.base.x.unwrap(), path.base.y.unwrap());
+    assert!(
+        (x - 2.67).abs() < 0.01 && (y - 2.67).abs() < 0.01,
+        "{x}, {y}"
+    );
+}

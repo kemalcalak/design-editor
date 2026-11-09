@@ -4,8 +4,9 @@ use crate::color::parse_css_color;
 use crate::css::cascade::ComputedStyle;
 
 /// Collapse a paintable `background-clip: text` background to the single
-/// colour the schema can put on glyphs. Per-glyph gradients are not supported,
-/// so gradients contribute their first stop, matching snapshot import.
+/// colour a styled text segment can carry, so gradients contribute their
+/// first stop. (Snapshot import keeps a gradient that paints a whole run as
+/// the text node's fill and uses this for single segments.)
 pub(crate) fn fill_glyph_color(fills: &[PenFill]) -> Option<String> {
     if fills.iter().any(|fill| {
         matches!(

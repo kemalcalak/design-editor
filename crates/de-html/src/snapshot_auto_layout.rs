@@ -16,7 +16,9 @@
 //!   `space-x-*` / `space-y-*` are margins, not `gap`, so the CSS value only
 //!   breaks the tie of two items pushed apart; a larger space becomes a fixed
 //!   `spacer` frame, and the single one that soaks up all the free space
-//!   (`ml-auto`) a filling spacer;
+//!   (`ml-auto`, at least `FREE_SPACE` past the gap) a filling spacer. A
+//!   vector icon is spaced by its element box, its inset artwork riding in a
+//!   frame of that box;
 //! - **padding** — CSS padding plus border widths, shrunk on any side the
 //!   children reach into, plus the space a line leaves at its ends when that
 //!   space is not free space (an offset first child, a filling item);
@@ -55,7 +57,7 @@ mod items;
 #[path = "snapshot_auto_layout_lines.rs"]
 mod lines;
 use flow::lines_of;
-use items::{cut_at, hug_of, set_size, union_of};
+use items::{cut_at, fitted_inset, hug_of, set_size, union_of};
 use lines::line_box;
 
 /// Within this many CSS px two edges count as the same edge: the capture
@@ -243,7 +245,10 @@ impl SnapshotCtx<'_> {
         let mut items = Vec::with_capacity(children.len());
         for child in children.iter().map(|child| child.as_ref()) {
             let bucket = super::snapshot_stack::paint_bucket(child, flex_or_grid);
-            if let Some(node) = self.map_child(child, rect) {
+            let node = self
+                .map_child(child, rect)
+                .and_then(|node| self.unless_escaping(child, node, bucket));
+            if let Some(node) = node {
                 if let Some(item) = self.item(child, node, bucket) {
                     items.push(item);
                 }
@@ -253,7 +258,7 @@ impl SnapshotCtx<'_> {
     }
 
     /// The geometry and role of one mapped child.
-    fn item(&self, child: &Value, node: PenNode, bucket: PaintBucket) -> Option<Item> {
+    fn item(&mut self, child: &Value, node: PenNode, bucket: PaintBucket) -> Option<Item> {
         let object = child.as_object()?;
         let rect = Rect::from_node(object)?;
         let overlay = matches!(
@@ -278,14 +283,17 @@ impl SnapshotCtx<'_> {
                 let rect = line_box(object, rect, self.opts.base_font_size);
                 (ItemKind::Text { single_line }, rect)
             }
-            // A vector path is sized to its artwork, not the element box.
-            PenNode::Path(_) => (
-                ItemKind::Media,
-                Rect::from_field(object, "vectorRect")
-                    .filter(|r| r.w > 0.0 && r.h > 0.0)
-                    .unwrap_or(rect),
-            ),
             _ => (ItemKind::Media, rect),
+        };
+        // A vector path is sized to its artwork, which sits inset in the
+        // element box (a 16 px icon drawing 10 px of art): the box is what
+        // the line spaced, so the path rides in a frame of that box.
+        let art = Rect::from_field(object, "vectorRect").filter(|r| r.w > 0.0 && r.h > 0.0);
+        let node = match (node, art) {
+            (PenNode::Path(path), Some(art)) => {
+                items::artwork_box(self.auxiliary_id("icon"), PenNode::Path(path), rect, art)
+            }
+            (node, _) => node,
         };
         Some(Item {
             node,
@@ -513,13 +521,24 @@ impl SnapshotCtx<'_> {
         {
             base_gap = css_gap;
         }
-        let extras: Vec<f64> = gaps.iter().map(|gap| gap - base_gap).collect();
+        let mut extras: Vec<f64> = gaps.iter().map(|gap| gap - base_gap).collect();
         let wide: Vec<usize> = (0..extras.len()).filter(|&i| extras[i] > EPS).collect();
+        // Only space well past the gap is free space: a smaller step is a
+        // margin (`mr-2` before a label, `ml-1` before a chevron) and stays
+        // a fixed spacer.
         let soaks_free_space = !any_fill
             && !space_between
             && wide.len() == 1
+            && extras[wide[0]] >= FREE_SPACE
             && leading <= EPS
             && trailing.abs() <= EPS;
+        // A fixed spacer sits between two gaps, so it takes its extra space
+        // less one gap; a step narrower than that (`mr-2` next to `ml-1`)
+        // has no such spacer, and every space becomes one instead.
+        if !space_between && !soaks_free_space && wide.iter().any(|&i| extras[i] < base_gap - EPS) {
+            base_gap = 0.0;
+            extras.clone_from(&gaps);
+        }
         let mut lead_pad = 0.0;
         let mut trail_pad = 0.0;
         let justify = if any_fill {
@@ -594,12 +613,12 @@ impl SnapshotCtx<'_> {
             items::into_flow(&mut node);
             children.push(node);
             if !space_between && index + 1 < count && extras[index] > EPS {
-                let fit = if soaks_free_space {
-                    Fit::Fill
+                let (fit, size) = if soaks_free_space {
+                    (Fit::Fill, extras[index])
                 } else {
-                    Fit::Fixed
+                    (Fit::Fixed, extras[index] - base_gap)
                 };
-                children.push(self.spacer(axis, fit, extras[index]));
+                children.push(self.spacer(axis, fit, size));
             }
         }
         let mut padding = [0.0; 4];
@@ -673,28 +692,6 @@ impl Fit {
             Fit::Fill => SizingBehavior::Keyword(SizingKeyword::FillContainer),
         }
     }
-}
-
-/// The element's padding and border, shrunk on any side its flow children
-/// reach into. Content that overflows its padding box (a 20 px label in a
-/// 32 px button with 8 px padding and a border) still sits inside the box
-/// in the browser; keeping the full padding there makes the editor grow
-/// the box around it, and that growth travels up every hugging ancestor.
-fn fitted_inset(inset: [f64; 4], rect: Rect, flow: &[Item]) -> [f64; 4] {
-    let union = union_of(flow);
-    let reach = [
-        union.y - rect.y,
-        rect.x + rect.w - (union.x + union.w),
-        rect.y + rect.h - (union.y + union.h),
-        union.x - rect.x,
-    ];
-    let mut fitted = inset;
-    for side in 0..4 {
-        if reach[side] < inset[side] - EPS {
-            fitted[side] = reach[side].max(0.0);
-        }
-    }
-    fitted
 }
 
 /// Keep the element absolutely laid out: every child stays where the

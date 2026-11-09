@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Tailwind overlays</title>
+  <style>
+    /* #322 / #323: more cases an auto-layout import of a Tailwind page got
+       wrong — `inline-flex` pills spaced by `gap` or by margins around
+       non-lucide and lucide icons, a Radix dropdown whose open submenu sits
+       in a fixed popper inside the main menu's `overflow-hidden` panel, and
+       gradient text inside a block (an inline span, and per-word
+       inline-block chips caught mid-way through their entrance animation).
+       Preflight as in `tailwind_app.html`. */
+    *, ::before, ::after { box-sizing: border-box; border: 0 solid #e5e7eb; }
+    html, body { margin: 0; height: 100%; }
+    body { font-family: Arial, sans-serif; font-size: 14px; line-height: 20px; color: #0f172a; }
+    h2, p { margin: 0; padding: 0; }
+    svg { display: block; vertical-align: middle; }
+
+    .page { display: flex; align-items: flex-start; gap: 48px; padding: 24px; }
+
+    .pills { display: flex; flex-direction: column; align-items: flex-start; gap: 12px; width: 320px; }
+    .pill { display: inline-flex; align-items: center; height: 32px; padding: 0 12px; border-width: 1px; border-radius: 9999px; font-weight: 500; }
+    .gap-2 { gap: 8px; }
+    .mr-2 { margin-right: 8px; }
+    .ml-1 { margin-left: 4px; }
+    .size-4 { width: 16px; height: 16px; flex-shrink: 0; }
+
+    .headlines { display: flex; flex-direction: column; gap: 16px; width: 520px; }
+    .headline { font-size: 32px; line-height: 40px; font-weight: 700; }
+    .gradient { background-image: linear-gradient(to right, #6366f1, #ec4899); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .word { display: inline-block; animation: word-in 60s both; }
+    .word:nth-child(2) { animation-delay: 1s; }
+    .word:nth-child(3) { animation-delay: 2s; }
+    @keyframes word-in { from { opacity: 0; transform: translateY(100%); } to { opacity: 1; transform: none; } }
+
+    .dropdown { position: absolute; left: 24px; top: 240px; }
+    .menu { width: 224px; padding: 4px; overflow: hidden; border-width: 1px; border-radius: 6px; background: #ffffff; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); animation: menu-in 60s both; }
+    @keyframes menu-in { from { opacity: 0; } to { opacity: 1; } }
+    .item { display: flex; align-items: center; height: 32px; padding: 0 8px; border-radius: 4px; }
+    .item.open { background: #f1f5f9; }
+    .popper { position: fixed; left: 252px; top: 280px; }
+    .submenu { width: 192px; padding: 4px; overflow: hidden; border-width: 1px; border-radius: 6px; background: #ffffff; box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1); animation: menu-in 60s both; }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="pills">
+      <!-- `gap` between non-lucide icons and the label. -->
+      <button class="pill gap-2">
+        <svg class="size-4" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" fill="#6366f1"/></svg>
+        <span>Gap pill</span>
+        <svg class="size-4" viewBox="0 0 24 24"><path d="M6 9h12l-6 6z" fill="#64748b"/></svg>
+      </button>
+      <!-- Margins (`mr-2`, `ml-1`) around lucide icons. -->
+      <button class="pill">
+        <svg class="lucide lucide-sparkles size-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l2 5 5 2-5 2-2 5-2-5-5-2 5-2z"/></svg>
+        <span>Margin pill</span>
+        <svg class="lucide lucide-chevron-down size-4 ml-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+      </button>
+      <!-- Margins around non-lucide icons. -->
+      <button class="pill">
+        <svg class="size-4 mr-2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" fill="#ec4899"/></svg>
+        <span>Mixed pill</span>
+        <svg class="size-4 ml-1" viewBox="0 0 24 24"><path d="M6 9h12l-6 6z" fill="#64748b"/></svg>
+      </button>
+    </div>
+    <div class="headlines">
+      <h2 class="headline">Build <span class="gradient">faster</span> today</h2>
+      <h2 class="headline">Ship <span class="gradient"><span class="word">every</span> <span class="word">single</span> <span class="word">week</span></span></h2>
+      <h2 class="headline">Then <span class="word">plain</span> <span class="word">solid</span> <span class="word">words</span></h2>
+    </div>
+  </div>
+  <div class="dropdown">
+    <div class="menu" role="menu">
+      <div class="item" role="menuitem">New tab</div>
+      <div class="item open" role="menuitem">Share</div>
+      <div class="item" role="menuitem">Print</div>
+      <div class="popper">
+        <div class="submenu" role="menu">
+          <div class="item" role="menuitem">Email link</div>
+          <div class="item" role="menuitem">Messages</div>
+          <div class="item" role="menuitem">Notes</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
