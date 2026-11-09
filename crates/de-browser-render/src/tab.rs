@@ -259,15 +259,20 @@ impl Tab {
         client: &mut CdpClient,
         clip: Option<Clip>,
     ) -> Result<Vec<u8>, BrowserRenderError> {
-        let mut params = json!({ "format": "png", "fromSurface": true });
-        if let Some(clip) = clip {
-            params["clip"] = json!({
-                "x": clip.x, "y": clip.y,
-                "width": clip.width.max(1.0), "height": clip.height.max(1.0),
-                "scale": clip.scale,
-            });
-            params["captureBeyondViewport"] = json!(true);
-        }
+        let params = screenshot_params(clip, clip.is_some());
+        let shot = self.command(client, "Page.captureScreenshot", params)?;
+        decode_png(&shot)
+    }
+
+    /// Capture `clip` of the page from what the viewport shows, without
+    /// laying the page out at full size first (the caller made sure `clip`
+    /// is on screen). A page that redraws its canvases on resize keeps them.
+    pub(crate) fn screenshot_in_view(
+        &self,
+        client: &mut CdpClient,
+        clip: Clip,
+    ) -> Result<Vec<u8>, BrowserRenderError> {
+        let params = screenshot_params(Some(clip), false);
         let shot = self.command(client, "Page.captureScreenshot", params)?;
         decode_png(&shot)
     }
@@ -294,6 +299,24 @@ impl Tab {
         );
         client.drop_session_events(&self.session);
     }
+}
+
+/// `Page.captureScreenshot` parameters: the viewport, or `clip` of the page
+/// (document CSS px); `beyond_viewport` lays the page out at full size so a
+/// clip off screen is drawn too.
+pub(crate) fn screenshot_params(clip: Option<Clip>, beyond_viewport: bool) -> Value {
+    let mut params = json!({ "format": "png", "fromSurface": true });
+    if let Some(clip) = clip {
+        params["clip"] = json!({
+            "x": clip.x, "y": clip.y,
+            "width": clip.width.max(1.0), "height": clip.height.max(1.0),
+            "scale": clip.scale,
+        });
+        if beyond_viewport {
+            params["captureBeyondViewport"] = json!(true);
+        }
+    }
+    params
 }
 
 /// The PNG in a `Page.captureScreenshot` reply.

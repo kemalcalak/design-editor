@@ -136,7 +136,8 @@ fn loaded(session: &mut PageSession, url: &str) -> PageReply {
 /// download and clipboard hand-off are caught and the JSON is returned
 /// instead, rooted at `selector` when given. `expand_scroll` lays the
 /// page's scroll containers out in full for the capture (the extractor
-/// puts them back afterwards).
+/// puts them back afterwards). Canvases that do not read back are tagged
+/// for a screenshot (`browser_tool_canvas_shots`).
 pub(crate) fn extractor_script(selector: Option<&str>, expand_scroll: bool) -> String {
     let selector = selector.map_or("null".to_string(), |s| {
         serde_json::to_string(s).unwrap_or_else(|_| "null".into())
@@ -146,7 +147,7 @@ pub(crate) fn extractor_script(selector: Option<&str>, expand_scroll: bool) -> S
   const selector = {selector};
   const root = selector ? document.querySelector(selector) : null;
   if (selector && !root) throw new Error("no element matches " + selector);
-  globalThis.designEditorSnapshotOptions = {{ root, expandScroll: {expand_scroll} }};
+  globalThis.designEditorSnapshotOptions = {{ root, expandScroll: {expand_scroll}, canvasShots: true }};
   let captured = null;
   const createObjectURL = URL.createObjectURL;
   const click = HTMLAnchorElement.prototype.click;
