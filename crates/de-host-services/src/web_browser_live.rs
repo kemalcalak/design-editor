@@ -15,7 +15,12 @@
 //! it misses is replaced, never sent late. When the client goes away (a
 //! write fails), its streams stop and the browser pool's idle reaper takes
 //! it from there. Nothing here takes the daemon's state lock.
+//!
+//! The hub is also where page input goes (`POST /api/browser/input`,
+//! interaction mode): `input.rs` sends a client's batches to its stream's
+//! own tab from a worker per stream.
 
+mod input;
 mod plan;
 mod source;
 
@@ -74,6 +79,9 @@ struct Running {
     id: u64,
     spec: LiveSpec,
     stream: Arc<dyn LiveStream>,
+    /// Page input for interaction mode, started at the first batch; it
+    /// ends with this entry (`input.rs`).
+    input: Option<Arc<input::InputLane>>,
 }
 
 #[derive(Default)]
@@ -390,6 +398,7 @@ impl LiveClient {
                             id: state.next_id,
                             spec: spec.clone(),
                             stream,
+                            input: None,
                         };
                         if let Some(old) = state.streams.insert(spec.key, running) {
                             to_stop.push(old.stream);

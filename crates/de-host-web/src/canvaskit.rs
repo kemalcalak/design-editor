@@ -29,6 +29,7 @@ mod inner;
 mod live_frames;
 mod measure;
 mod mount;
+mod mount_browser_interaction;
 mod mount_keyboard;
 mod ops;
 mod shader_textures;

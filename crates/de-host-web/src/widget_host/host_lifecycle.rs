@@ -20,6 +20,7 @@ impl WidgetHost {
         Self {
             editor_state,
             layout_scene,
+            browser_interaction: Default::default(),
             layout_transition: None,
             scene_cache: de_pen_loader::SceneBuildCache::new(),
             editor_state_dirty: false,

@@ -60,6 +60,10 @@ mod blur_inputs_tests;
 mod boolean_op_tests;
 #[cfg(test)]
 mod boolean_toolbar_tests;
+mod browser_interact;
+pub(crate) use browser_interact::PageRoute;
+#[cfg(feature = "canvaskit")]
+pub(crate) mod browser_input_post;
 #[cfg(feature = "canvaskit")]
 mod browser_live_client;
 #[cfg(feature = "canvaskit")]
@@ -450,6 +454,9 @@ pub struct WidgetHost {
     /// -font detection is a one-shot modal, so completing it while these are in
     /// flight would accuse every bundled family of being missing.
     pub(in crate::widget_host) bundled_fonts_pending: bool,
+    /// A browser node's interaction mode: page input routing (#324).
+    pub(in crate::widget_host) browser_interaction:
+        de_editor_ui::widgets::browser_interact_flow::BrowserInteraction,
 }
 
 impl WidgetHost {

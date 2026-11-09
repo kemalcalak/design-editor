@@ -1,11 +1,15 @@
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::Weak;
+use std::thread::ThreadId;
 use std::time::Instant;
 
 use base64::Engine as _;
 use de_browser_render::{FrameMetadata, StreamSettings, Viewport};
+use de_editor_core::browser_input::{BrowserInputEvent, InputModifiers, MAX_INPUT_EVENTS};
 use de_editor_core::browser_live::BrowserSnapshotSpec;
 use de_editor_core::browser_live_wire::{BrowserLiveEntry, WEB_LIVE_MAX_FPS};
+
+use crate::web_browser_input::{InputRefusal, InputSink};
 
 use super::*;
 
@@ -18,6 +22,61 @@ struct FakeStream {
     resizes: AtomicUsize,
     wake: source::Waker,
     alive: Arc<AtomicUsize>,
+    input: Arc<FakeInputLog>,
+}
+
+/// What a stream's input connections got, and on which threads.
+#[derive(Default)]
+struct FakeInputLog {
+    events: Mutex<Vec<BrowserInputEvent>>,
+    threads: Mutex<Vec<ThreadId>>,
+    /// Connections open now.
+    open: AtomicUsize,
+    /// While set, a dispatch waits (a slow page).
+    held: Mutex<bool>,
+    released: Condvar,
+}
+
+impl FakeInputLog {
+    fn hold(&self, held: bool) {
+        *lock(&self.held) = held;
+        self.released.notify_all();
+    }
+
+    fn wait_events(&self, count: usize) -> Vec<BrowserInputEvent> {
+        let deadline = Instant::now() + Duration::from_secs(5);
+        loop {
+            let events = lock(&self.events).clone();
+            if events.len() >= count {
+                return events;
+            }
+            assert!(Instant::now() < deadline, "timed out: {events:?}");
+            std::thread::sleep(Duration::from_millis(2));
+        }
+    }
+}
+
+struct FakeInput(Arc<FakeInputLog>);
+
+impl source::LiveInput for FakeInput {
+    fn dispatch(&mut self, events: &[BrowserInputEvent]) -> Result<usize, BrowserRenderError> {
+        let held = lock(&self.0.held);
+        drop(
+            self.0
+                .released
+                .wait_while(held, |held| *held)
+                .unwrap_or_else(|e| e.into_inner()),
+        );
+        lock(&self.0.threads).push(std::thread::current().id());
+        lock(&self.0.events).extend_from_slice(events);
+        Ok(events.len())
+    }
+}
+
+impl Drop for FakeInput {
+    fn drop(&mut self) {
+        self.0.open.fetch_sub(1, Ordering::SeqCst);
+    }
 }
 
 impl FakeStream {
@@ -63,6 +122,11 @@ impl LiveStream for FakeStream {
         self.resizes.fetch_add(1, Ordering::SeqCst);
         Ok(())
     }
+
+    fn input(&self) -> Result<Box<dyn source::LiveInput>, BrowserRenderError> {
+        self.input.open.fetch_add(1, Ordering::SeqCst);
+        Ok(Box::new(FakeInput(Arc::clone(&self.input))))
+    }
 }
 
 #[derive(Default)]
@@ -102,6 +166,7 @@ impl LiveSource for FakeSource {
             resizes: AtomicUsize::new(0),
             wake,
             alive: Arc::clone(&self.alive),
+            input: Arc::default(),
         });
         lock(&self.opened).push(Arc::downgrade(&stream));
         Ok(stream)
@@ -560,4 +625,100 @@ fn a_real_page_streams_at_the_web_cap_and_stops_with_its_client() {
         std::thread::sleep(Duration::from_millis(50));
     }
     let _ = std::fs::remove_dir_all(dir);
+}
+
+fn key(name: &str) -> BrowserInputEvent {
+    BrowserInputEvent::KeyDown {
+        key: name.into(),
+        code: String::new(),
+        text: Some(name.into()),
+        modifiers: InputModifiers::default(),
+    }
+}
+
+/// A connected client streaming `https://example.com` as `n`.
+fn streaming(hub: &LiveHub) -> (LiveLease<'_>, String) {
+    let lease = hub.connect().unwrap();
+    let id = lease.client.id.clone();
+    let nodes = vec![entry("n", "https://example.com", 1280)];
+    hub.apply(set(&id, nodes), None, |_| true);
+    (lease, id)
+}
+
+fn wait_until(what: impl Fn() -> bool) {
+    let deadline = Instant::now() + Duration::from_secs(5);
+    while !what() {
+        assert!(Instant::now() < deadline, "timed out");
+        std::thread::sleep(Duration::from_millis(2));
+    }
+}
+
+#[test]
+fn input_goes_to_the_streams_tab_from_a_worker_in_order() {
+    let (source, hub) = hub();
+    let (_lease, id) = streaming(&hub);
+    let stream = source.stream("https://example.com").unwrap();
+    assert_eq!(hub.dispatch(&id, "n", vec![key("a"), key("b")]), Ok(2));
+    assert_eq!(hub.dispatch(&id, "n", vec![key("c")]), Ok(1));
+    let events = stream.input.wait_events(3);
+    assert_eq!(events, [key("a"), key("b"), key("c")]);
+    let threads = lock(&stream.input.threads).clone();
+    assert!(threads.iter().all(|t| *t != std::thread::current().id()));
+    assert_eq!(
+        stream.input.open.load(Ordering::SeqCst),
+        1,
+        "one connection"
+    );
+}
+
+#[test]
+fn input_for_a_node_the_client_does_not_stream_is_refused() {
+    let (source, hub) = hub();
+    let (_lease, id) = streaming(&hub);
+    let other = hub.connect().unwrap();
+    let refused = |client: &str, key_name: &str| hub.dispatch(client, key_name, vec![key("a")]);
+    assert_eq!(refused(&other.client.id, "n"), Err(InputRefusal::NotLive));
+    assert_eq!(refused(&id, "elsewhere"), Err(InputRefusal::NotLive));
+    assert_eq!(refused("nobody", "n"), Err(InputRefusal::NotLive));
+    let stream = source.stream("https://example.com").unwrap();
+    assert_eq!(stream.input.open.load(Ordering::SeqCst), 0, "never opened");
+}
+
+#[test]
+fn the_input_connection_ends_with_its_stream_or_client() {
+    let (source, hub) = hub();
+    let (lease, id) = streaming(&hub);
+    let stream = source.stream("https://example.com").unwrap();
+    hub.dispatch(&id, "n", vec![key("a")]).unwrap();
+    stream.input.wait_events(1);
+    // The set drops the node: the stream stops, and its input with it.
+    hub.apply(set(&id, vec![]), None, |_| true);
+    wait_until(|| stream.input.open.load(Ordering::SeqCst) == 0);
+    let after = hub.dispatch(&id, "n", vec![key("b")]);
+    assert_eq!(after, Err(InputRefusal::NotLive));
+    drop(stream);
+    let alive = source.alive.load(Ordering::SeqCst);
+    assert_eq!(alive, 0, "the lane kept no stream alive");
+
+    // A client that leaves takes its streams' input along.
+    let nodes = vec![entry("n", "https://example.com", 1280)];
+    hub.apply(set(&id, nodes), None, |_| true);
+    let stream = source.stream("https://example.com").unwrap();
+    hub.dispatch(&id, "n", vec![key("c")]).unwrap();
+    stream.input.wait_events(1);
+    drop(lease);
+    wait_until(|| stream.input.open.load(Ordering::SeqCst) == 0);
+}
+
+#[test]
+fn a_page_that_falls_behind_refuses_more_input() {
+    let (source, hub) = hub();
+    let (_lease, id) = streaming(&hub);
+    let stream = source.stream("https://example.com").unwrap();
+    stream.input.hold(true);
+    let batch = || (0..MAX_INPUT_EVENTS).map(|i| key(&i.to_string())).collect();
+    let answers: Vec<_> = (0..6).map(|_| hub.dispatch(&id, "n", batch())).collect();
+    assert!(answers.contains(&Err(InputRefusal::Busy)), "{answers:?}");
+    stream.input.hold(false);
+    stream.input.wait_events(4 * MAX_INPUT_EVENTS);
 }

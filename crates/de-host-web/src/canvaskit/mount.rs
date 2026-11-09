@@ -683,6 +683,13 @@ pub(super) async fn mount_ck(canvas_id: String) -> Result<(), JsValue> {
         }
     }
     super::mount_keyboard::register_keyboard_listeners(&inner, &win_target, &mut listeners)?;
+    // A browser node in interaction mode (#324) takes pointer, wheel and
+    // keys first: its listeners capture on the window.
+    super::mount_browser_interaction::register_browser_interaction_listeners(
+        &inner,
+        &window,
+        &mut listeners,
+    )?;
 
     {
         let inner = inner.clone();

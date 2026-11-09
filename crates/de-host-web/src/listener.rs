@@ -56,6 +56,41 @@ where
     Ok(())
 }
 
+/// [`add_listener`] with listener options: `capture` registers for the
+/// capture phase, `passive: false` keeps `preventDefault` working where the
+/// browser defaults to passive (a window `wheel` listener).
+pub(crate) fn add_listener_with_options<E, F, T>(
+    target: &T,
+    name: &'static str,
+    listeners: &mut Vec<Listener>,
+    capture: bool,
+    passive: bool,
+    mut handler: F,
+) -> Result<(), JsValue>
+where
+    E: wasm_bindgen::JsCast + 'static,
+    F: FnMut(E) + 'static,
+    T: Clone + Into<web_sys::EventTarget>,
+{
+    let target_owned: web_sys::EventTarget = target.clone().into();
+    // Runtime-checked like `add_listener`.
+    let closure: Closure<dyn FnMut(JsValue)> = Closure::new(move |raw: JsValue| {
+        if let Ok(event) = raw.dyn_into::<E>() {
+            handler(event);
+        }
+    });
+    let options = web_sys::AddEventListenerOptions::new();
+    options.set_capture(capture);
+    options.set_passive(passive);
+    target_owned.add_event_listener_with_callback_and_add_event_listener_options(
+        name,
+        closure.as_ref().unchecked_ref(),
+        &options,
+    )?;
+    listeners.push(Listener { closure });
+    Ok(())
+}
+
 /// Wall-clock ms since navigation. Falls back to 0 if either
 /// `window` or `performance` is unavailable (e.g. WebWorker).
 pub(crate) fn now_ms_perf() -> u64 {

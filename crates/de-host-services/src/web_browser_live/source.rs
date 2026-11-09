@@ -4,8 +4,9 @@
 use std::sync::Arc;
 
 use de_browser_render::{
-    BrowserPool, BrowserRenderError, PageStream, StreamFrame, StreamSettings, Viewport,
+    BrowserPool, BrowserRenderError, PageInput, PageStream, StreamFrame, StreamSettings, Viewport,
 };
+use de_editor_core::browser_input::BrowserInputEvent;
 
 use super::plan::LiveSpec;
 
@@ -19,6 +20,16 @@ pub(crate) trait LiveStream: Send + Sync {
     fn take_frame(&self) -> Result<Option<StreamFrame>, BrowserRenderError>;
     fn set_viewport(&self, viewport: Viewport) -> Result<(), BrowserRenderError>;
     fn set_settings(&self, settings: StreamSettings) -> Result<(), BrowserRenderError>;
+    /// A connection of its own for page input on the stream's tab (the
+    /// page the frames show). Blocks while it attaches.
+    fn input(&self) -> Result<Box<dyn LiveInput>, BrowserRenderError>;
+}
+
+/// Mouse and keyboard input for one stream's page (interaction mode).
+pub(crate) trait LiveInput: Send {
+    /// Send `events` in order, each waiting for the page; returns how many
+    /// calls went out.
+    fn dispatch(&mut self, events: &[BrowserInputEvent]) -> Result<usize, BrowserRenderError>;
 }
 
 /// Opens streams.
@@ -40,6 +51,16 @@ impl LiveStream for PageStream {
 
     fn set_settings(&self, settings: StreamSettings) -> Result<(), BrowserRenderError> {
         PageStream::set_settings(self, settings)
+    }
+
+    fn input(&self) -> Result<Box<dyn LiveInput>, BrowserRenderError> {
+        Ok(Box::new(PageStream::input(self)?))
+    }
+}
+
+impl LiveInput for PageInput {
+    fn dispatch(&mut self, events: &[BrowserInputEvent]) -> Result<usize, BrowserRenderError> {
+        crate::web_browser_input::dispatch_events(self, events)
     }
 }
 

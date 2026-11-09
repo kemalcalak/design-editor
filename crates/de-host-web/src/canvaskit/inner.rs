@@ -101,6 +101,10 @@ impl CkInner {
         de_editor_core::shader_check::refresh(self.host.editor_state_mut(), |sksl| {
             ck.shader_compile_error(sksl)
         });
+        // Interaction mode (#324) ends when its node lost the selection or
+        // its page; what the page still holds is released and sent.
+        self.host.sync_browser_interaction();
+        crate::widget_host::browser_input_post::flush(&mut self.host);
         // Live browser frames (#324) decoded since the last paint.
         super::live_frames::install_landed(&self.backend.ck);
         self.backend.begin_frame();
@@ -123,7 +127,10 @@ impl CkInner {
         // #54: focus the hidden IME input only while a text field owns the
         // keyboard, so CJK composition works when editing and no soft keyboard
         // appears otherwise. Cheap — toggles only on a focus transition.
-        let ime_focus = self.host.text_input_focus_active();
+        // A node in interaction mode (#324) types through it too, so an IME
+        // can compose for the page.
+        let ime_focus =
+            self.host.text_input_focus_active() || self.host.browser_interaction_active();
         let ime_anchor = self.host.ime_anchor_rect().map(|anchor| {
             let bounds = self.canvas.get_bounding_client_rect();
             let scale_x = if w == 0.0 {

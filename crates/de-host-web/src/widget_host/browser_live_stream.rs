@@ -131,6 +131,12 @@ pub(crate) fn install_landed(mut install: impl FnMut(u64, &JsValue) -> bool) {
     }
 }
 
+/// Where page input for `node_id` goes: this client's id and the node's
+/// live key, once the daemon streams it (`browser_input_post`).
+pub(crate) fn input_target(node_id: &str) -> Option<(String, String)> {
+    CLIENT.with(|client| client.borrow().input_target(node_id))
+}
+
 /// Live images whose node no longer shows a live picture (forgotten, or
 /// replaced by a newer still): the host frees them.
 pub(crate) fn textures_to_release() -> Vec<u64> {
@@ -213,7 +219,7 @@ fn close(connection: &mut Connection) -> bool {
 }
 
 /// Run `f` after `delay_ms`; false when no timer could be armed.
-fn after(delay_ms: u32, f: impl FnOnce() + 'static) -> bool {
+pub(crate) fn after(delay_ms: u32, f: impl FnOnce() + 'static) -> bool {
     let Some(window) = web_sys::window() else {
         return false;
     };
