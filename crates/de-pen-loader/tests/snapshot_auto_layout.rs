@@ -4,7 +4,8 @@
 //! `de-html/tests/fixtures/tailwind_app.html`, a compiled-Tailwind app shell,
 //! `tailwind_cases.html`, the cases #322 found on a real page, and
 //! `tailwind_overlays.html`, the icon pills, open submenu and gradient text
-//! #322 / #323 found after those.
+//! #322 / #323 found after those, and `tailwind_transforms.html`, boxes a
+//! transform moved and a flex column with an overlap (#322).
 use de_html::{import_snapshot_document, HtmlImportOptions};
 use de_pen_loader::payload::NodePayload;
 use serde_json::Value;
@@ -12,6 +13,8 @@ use serde_json::Value;
 const SNAPSHOT: &str = include_str!("../../de-html/tests/fixtures/tailwind_app_snapshot.json");
 const CASES: &str = include_str!("../../de-html/tests/fixtures/tailwind_cases_snapshot.json");
 const OVERLAYS: &str = include_str!("../../de-html/tests/fixtures/tailwind_overlays_snapshot.json");
+const TRANSFORMS: &str =
+    include_str!("../../de-html/tests/fixtures/tailwind_transforms_snapshot.json");
 
 /// A placed label: `(label, left x, right x, centre y)`.
 type Placed = (String, f64, f64, f64);
@@ -605,4 +608,70 @@ fn gradient_words_inside_a_block_stay_visible() {
     // captured where they land.
     let plain = run_text(&nodes, "Then plain solid words");
     assert!(plain.w > 300.0 && plain.h > 30.0, "{}x{}", plain.w, plain.h);
+}
+
+// #322: boxes a transform moved off their layout box, and a flex column
+// with an overlap.
+
+#[test]
+fn the_transform_cases_land_where_the_browser_drew_them() {
+    let checked = lands_where_drawn(TRANSFORMS);
+    assert!(checked >= 7, "only {checked} labels matched");
+}
+
+/// The laid-out frame with the given box, within a pixel.
+fn frame_at(nodes: &[NodePayload], at: [f32; 4]) -> Option<&NodePayload> {
+    find(nodes, &|node| {
+        node.kind == "frame"
+            && [node.x, node.y, node.w, node.h]
+                .iter()
+                .zip(at)
+                .all(|(a, b)| (a - b).abs() <= 1.0)
+    })
+}
+
+#[test]
+fn translated_and_pulled_up_avatars_stay_where_drawn() {
+    let nodes = laid(&auto_import_of(TRANSFORMS));
+    // `-translate-y-1/2` over the banner, and `-mt-9` over the cover.
+    for at in [[41.0, 85.0, 72.0, 72.0], [781.0, 93.0, 56.0, 56.0]] {
+        assert!(frame_at(&nodes, at).is_some(), "no avatar at {at:?}");
+    }
+}
+
+#[test]
+fn a_translated_badge_follows_a_longer_label() {
+    let doc = auto_import_of(TRANSFORMS);
+    let before = laid(&doc);
+    let after = laid(&relabel(&doc, "Inbox", "Inbox and drafts"));
+    let grew = text_node(&after, "Inbox and drafts").w - text_node(&before, "Inbox").w;
+    assert!(grew > 40.0, "the label grew by {grew}");
+    for label in ["12", "Archive"] {
+        let (old, new) = (text_node(&before, label), text_node(&after, label));
+        assert!(
+            (new.x - old.x - grew).abs() <= 1.0 && (new.y - old.y).abs() <= 0.5,
+            "{label}: {},{} -> {},{}",
+            old.x,
+            old.y,
+            new.x,
+            new.y
+        );
+    }
+}
+
+#[test]
+fn a_flex_column_flows_past_its_overlap() {
+    let doc = auto_import_of(TRANSFORMS);
+    let before = laid(&doc);
+    // A larger name pushes the bio down: the column below the layer flows.
+    let after = laid(&edited(&doc, &|node| {
+        if node["content"] == "Grace Hopper" {
+            node["fontSize"] = Value::from(28);
+        }
+    }));
+    let (old, new) = (
+        text_node(&before, "Compilers, COBOL and nanoseconds"),
+        text_node(&after, "Compilers, COBOL and nanoseconds"),
+    );
+    assert!(new.y >= old.y + 15.0, "bio {} -> {}", old.y, new.y);
 }

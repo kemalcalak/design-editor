@@ -1346,6 +1346,99 @@
     return /transform|translate|scale|rotate|perspective|filter/.test(computed.willChange || "");
   }
 
+  // The properties that move a box without moving its layout box. Tailwind
+  // v3 writes `transform`, v4 the individual `translate` / `scale` /
+  // `rotate`.
+  var TRANSFORM_PROPERTIES = ["transform", "translate", "scale", "rotate"];
+
+  // Put back a style attribute saved before inline writes (`null`: there
+  // was none).
+  function restoreStyle(element, saved) {
+    // Read it first: Chrome syncs CSSOM writes into the attribute lazily,
+    // and a removal before that sync came back later as `style=""`.
+    element.getAttribute("style");
+    if (saved === null) element.removeAttribute("style");
+    else element.setAttribute("style", saved);
+  }
+
+  // The untransformed layout box of an element a transform moved, in page
+  // coordinates, or null when it has none (or the transform left it in
+  // place). `getBoundingClientRect` reports the painted box, while the
+  // siblings were laid out around this one: an avatar pulled up over a
+  // banner with `-translate-y-1/2` still holds its place below it.
+  //
+  // Measured by clearing the element's own transform for one read and
+  // putting its style attribute back. `offsetLeft` / `offsetTop` would
+  // avoid the write, but they are whole pixels, relative to an
+  // `offsetParent` that is null for a fixed box and whose own transform
+  // they ignore, and SVG elements lack them; the cleared read keeps every
+  // ancestor's transform, so the box lands in the space its siblings'
+  // rects were measured in.
+  function untransformedRect(element, computed, rect) {
+    var moved = TRANSFORM_PROPERTIES.some(function (property) {
+      var value = computed.getPropertyValue(property);
+      if (!value || value === "none") return false;
+      // Tailwind v3's `.transform` and `translateZ(0)` hacks compute to an
+      // identity matrix: nothing moved, so the measure is skipped.
+      if (property === "transform" && typeof DOMMatrixReadOnly === "function") {
+        try {
+          return !new DOMMatrixReadOnly(value).isIdentity;
+        } catch (error) {
+          return true;
+        }
+      }
+      return true;
+    });
+    if (!moved || !element.style) return null;
+    var saved = element.getAttribute("style");
+    var style = element.style;
+    // Clearing the transform can shrink a scroller's overflow, and a
+    // scroller at its end then clamps its offset: put every offset back.
+    var scrolled = [];
+    for (var up = element.parentElement; up; up = up.parentElement) {
+      if (up.scrollTop || up.scrollLeft) {
+        scrolled.push({ element: up, top: up.scrollTop, left: up.scrollLeft });
+      }
+    }
+    var flow;
+    try {
+      // `important` outranks an animation running on the property, and
+      // `transition: none` keeps the write from starting a transition.
+      style.setProperty("transition", "none", "important");
+      TRANSFORM_PROPERTIES.forEach(function (property) {
+        style.setProperty(property, "none", "important");
+      });
+      flow = element.getBoundingClientRect();
+    } finally {
+      // The transform comes back while transitions are still off (the
+      // style read applies it), then the attribute as it was: restoring
+      // both in one write would animate the box back from its cleared place.
+      restoreStyle(element, saved);
+      style.setProperty("transition", "none", "important");
+      window.getComputedStyle(element).getPropertyValue("transform");
+      restoreStyle(element, saved);
+      scrolled.forEach(function (entry) {
+        entry.element.scrollTop = entry.top;
+        entry.element.scrollLeft = entry.left;
+      });
+    }
+    var same =
+      Math.abs(flow.left - rect.left) < 0.5 &&
+      Math.abs(flow.top - rect.top) < 0.5 &&
+      Math.abs(flow.width - rect.width) < 0.5 &&
+      Math.abs(flow.height - rect.height) < 0.5;
+    return same ? null : pageRect(flow);
+  }
+
+  // `node` with its element's untransformed layout box as `flowRect`, when a
+  // transform moved it (`untransformedRect`).
+  function withFlowRect(node, element, computed, rect) {
+    if (!node || !node.rect) return node;
+    var flow = untransformedRect(element, computed, rect);
+    if (flow) node.flowRect = flow;
+    return node;
+  }
+
   // A fixed / absolute box escapes an `overflow` clip that sits between it
   // and its containing block: an open submenu's popper inside the main
   // menu's `overflow-hidden` panel paints beside the panel, not cut by it.
@@ -1393,7 +1486,7 @@
 
   function buildElementBody(element, tag, computed, rect) {
     if (MEDIA_TAGS[tag]) {
-      return buildImage(element, computed, rect);
+      return withFlowRect(buildImage(element, computed, rect), element, computed, rect);
     }
     if (!takeNode()) return null;
     // Consecutive inline-flow children of a block-like parent fold into one
@@ -1452,7 +1545,7 @@
     var attrs = nameAttributes(element);
     if (attrs) result.attrs = attrs;
     if (escapesClip(element, computed)) result.escapesClip = true;
-    return result;
+    return withFlowRect(result, element, computed, rect);
   }
 
   // A picked element can itself be an <img>/<svg>/<canvas>/<video>, which
@@ -1549,14 +1642,7 @@
   function restoreScrollContainers(expanded) {
     // Styles first, offsets after: an offset write lays the page out.
     expanded.forEach(function (entry) {
-      if (entry.style === null) {
-        // Read it first: Chrome syncs CSSOM writes into the attribute lazily,
-        // and a removal before that sync came back later as `style=""`.
-        entry.element.getAttribute("style");
-        entry.element.removeAttribute("style");
-      } else {
-        entry.element.setAttribute("style", entry.style);
-      }
+      restoreStyle(entry.element, entry.style);
     });
     expanded.forEach(function (entry) {
       entry.element.scrollTop = entry.top;

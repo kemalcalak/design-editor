@@ -16,6 +16,9 @@ pub(super) struct Cross {
     pub hug: bool,
     /// Every item that does not fill sits at the chosen alignment.
     pub aligned: bool,
+    /// Per item: it does not fill and keeps a cross offset of its own (a
+    /// left margin in a stack), off the chosen alignment.
+    pub strays: Vec<bool>,
     /// Per item: it only spanned a box shrink-wrapped around the widest
     /// item, so it hugs its own content instead (`shrink_wrapped`).
     pub unstretched: Vec<bool>,
@@ -69,17 +72,14 @@ impl SnapshotCtx<'_> {
             .filter(|&index| !fills[index])
             .map(|index| offsets[index])
             .collect();
-        let fits = |align: &AlignItems| {
-            placed
-                .iter()
-                .filter(|(before, after)| match align {
-                    AlignItems::Start => before.abs() <= EPS,
-                    AlignItems::Center => (before - after).abs() <= 2.0 * EPS,
-                    AlignItems::End => after.abs() <= EPS,
-                    AlignItems::Stretch => false,
-                })
-                .count()
+        let sits = |align: &AlignItems, (before, after): &(f64, f64)| match align {
+            AlignItems::Start => before.abs() <= EPS,
+            AlignItems::Center => (before - after).abs() <= 2.0 * EPS,
+            AlignItems::End => after.abs() <= EPS,
+            AlignItems::Stretch => false,
         };
+        let fits =
+            |align: &AlignItems| placed.iter().filter(|offsets| sits(align, offsets)).count();
         // The geometry cannot tell the alignments apart when the items are
         // as wide as the box (a heading its text sizes): the CSS intent
         // decides, so the line stays put when a label changes.
@@ -101,6 +101,9 @@ impl SnapshotCtx<'_> {
         // offset (`self-end`, a top margin) cannot be expressed, so the line
         // stays absolute rather than moving it.
         let aligned = fits(&best) == placed.len();
+        let strays = (0..items.len())
+            .map(|index| !fills[index] && !sits(&best, &offsets[index]))
+            .collect();
         let low = rects
             .iter()
             .map(|r| cross.start(r))
@@ -117,6 +120,7 @@ impl SnapshotCtx<'_> {
             fills,
             hug,
             aligned,
+            strays,
             unstretched,
         }
     }
@@ -187,49 +191,66 @@ fn text_alignment(cross: Axis, items: &[Item]) -> Option<AlignItems> {
 }
 
 /// Group flow items into lines along the container's flow, sorted, or
-/// `None` when they cannot be read as lines (a flex column whose items do
-/// not stack). Returns each line's axis and item count, in order; `items`
-/// is reordered to match.
+/// `None` when they cannot be read as lines (a flex row that does not
+/// wrap yet holds several, a flex column all of whose items overlap).
+/// Returns each line's axis and item count, in order; `items` is reordered
+/// to match. A line of a column is `Axis::Vertical`: items there share a
+/// band only by overlapping (an avatar pulled up over its cover by a
+/// negative margin), so such a band is a layer, never a row.
 pub(super) fn lines_of(model: &BoxModel, items: &mut [Item]) -> Option<Vec<(Axis, usize)>> {
     if model.direction == Some(Axis::Vertical) {
-        return stacks(items).then(|| vec![(Axis::Vertical, items.len())]);
+        if stacks(items) {
+            return Some(vec![(Axis::Vertical, items.len())]);
+        }
+        let bands = bands(items);
+        return (bands.len() > 1).then(|| {
+            bands
+                .into_iter()
+                .map(|count| (Axis::Vertical, count))
+                .collect()
+        });
     }
     if model.direction.is_none() && stacks(items) {
         return Some(vec![(Axis::Vertical, items.len())]);
     }
-    // Rows: an item joins the current line while it overlaps the line's
-    // vertical band.
-    items.sort_by(|a, b| {
-        a.rect
-            .y
-            .total_cmp(&b.rect.y)
-            .then(a.rect.x.total_cmp(&b.rect.x))
-    });
-    let mut lines: Vec<(f64, f64, usize)> = Vec::new();
-    for item in items.iter() {
-        let (top, bottom) = (item.rect.y, item.rect.y + item.rect.h);
-        match lines.last_mut() {
-            Some(line) if top < line.1 - EPS => {
-                line.1 = line.1.max(bottom);
-                line.2 += 1;
-            }
-            _ => lines.push((top, bottom, 1)),
-        }
-    }
+    let lines = bands(items);
     if lines.len() > 1 && model.flex && !model.wrap {
         return None;
     }
     let mut start = 0;
-    for (_, _, count) in &lines {
+    for count in &lines {
         items[start..start + count].sort_by(|a, b| a.rect.x.total_cmp(&b.rect.x));
         start += count;
     }
     Some(
         lines
             .into_iter()
-            .map(|(_, _, count)| (Axis::Horizontal, count))
+            .map(|count| (Axis::Horizontal, count))
             .collect(),
     )
+}
+
+/// Sort the items top to bottom and count them into bands: an item joins
+/// the current band while it overlaps the band's vertical extent.
+fn bands(items: &mut [Item]) -> Vec<usize> {
+    items.sort_by(|a, b| {
+        a.rect
+            .y
+            .total_cmp(&b.rect.y)
+            .then(a.rect.x.total_cmp(&b.rect.x))
+    });
+    let mut bands: Vec<(f64, usize)> = Vec::new();
+    for item in items.iter() {
+        let (top, bottom) = (item.rect.y, item.rect.y + item.rect.h);
+        match bands.last_mut() {
+            Some(band) if top < band.0 - EPS => {
+                band.0 = band.0.max(bottom);
+                band.1 += 1;
+            }
+            _ => bands.push((bottom, 1)),
+        }
+    }
+    bands.into_iter().map(|(_, count)| count).collect()
 }
 
 /// Do the items, in document order, sit one below the other?

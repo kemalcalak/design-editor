@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Tailwind transforms</title>
+  <style>
+    /* #322: boxes a transform moved off their layout box — an avatar
+       pulled up over a banner with `-translate-y-1/2` (v3 `transform`), a
+       count badge nudged up beside its label in a flex row (v4 `translate`)
+       — and a flex column whose avatar a negative margin pulls up over its
+       cover. Preflight as in `tailwind_app.html`. */
+    *, ::before, ::after { box-sizing: border-box; border: 0 solid #e5e7eb; }
+    html, body { margin: 0; height: 100%; }
+    body { font-family: Arial, sans-serif; font-size: 14px; line-height: 20px; color: #0f172a; }
+    p { margin: 0; padding: 0; }
+
+    .page { display: flex; align-items: flex-start; gap: 24px; padding: 24px; }
+
+    .profile { width: 360px; border-width: 1px; border-radius: 8px; }
+    .banner { height: 96px; background-image: linear-gradient(to right, #6366f1, #ec4899); border-radius: 8px 8px 0 0; }
+    .avatar { width: 72px; height: 72px; margin-left: 16px; border: 4px solid #ffffff; border-radius: 9999px; background: #cbd5e1; }
+    .-translate-y-1\/2 { transform: translateY(-50%); }
+    .details { padding: 0 16px 16px; }
+    .name { font-weight: 600; font-size: 16px; line-height: 24px; }
+    .handle { color: #64748b; }
+
+    .tabs { display: flex; align-items: center; gap: 8px; width: 320px; padding: 8px 12px; border-width: 1px; border-radius: 8px; }
+    .badge { display: inline-flex; align-items: center; height: 18px; padding: 0 6px; border-radius: 9999px; font-size: 11px; line-height: 16px; font-weight: 600; color: #ffffff; background: #ef4444; translate: 2px -6px; }
+
+    .card { display: flex; flex-direction: column; gap: 8px; width: 320px; padding: 16px; border-width: 1px; border-radius: 8px; }
+    .cover { height: 80px; border-radius: 6px; background: #e0e7ff; }
+    .pull { width: 56px; height: 56px; margin-top: -36px; margin-left: 12px; border: 3px solid #ffffff; border-radius: 9999px; background: #94a3b8; }
+    .title { font-weight: 600; }
+    .bio { color: #64748b; }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="profile">
+      <div class="banner"></div>
+      <div class="avatar -translate-y-1/2"></div>
+      <div class="details">
+        <p class="name">Ada Lovelace</p>
+        <p class="handle">@ada</p>
+      </div>
+    </div>
+    <div class="tabs">
+      <span>Inbox</span>
+      <span class="badge">12</span>
+      <span>Archive</span>
+    </div>
+    <div class="card">
+      <div class="cover"></div>
+      <div class="pull"></div>
+      <p class="title">Grace Hopper</p>
+      <p class="bio">Compilers, COBOL and nanoseconds</p>
+    </div>
+  </div>
+</body>
+</html>
