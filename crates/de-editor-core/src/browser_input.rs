@@ -19,6 +19,9 @@ pub const MAX_INPUT_EVENTS: usize = 256;
 /// only what keeps the page's held buttons and keys right is queued
 /// ([`InputBatch::extend_within`]).
 pub const MAX_QUEUED_INPUT_EVENTS: usize = 4 * MAX_INPUT_EVENTS;
+/// Pause before input that failed to reach the page is tried again on a
+/// new connection (the desktop driver, the daemon's lane).
+pub const INPUT_RETRY_AFTER_MS: u64 = 250;
 /// Longest text one key or insert event may carry, in chars.
 pub const MAX_INPUT_TEXT_CHARS: usize = 4096;
 
@@ -161,9 +164,7 @@ impl BrowserInputEvent {
             Self::InsertText { text } => !text.is_empty() && short(text),
         }
     }
-}
 
-impl BrowserInputEvent {
     /// What a press or release acts on: a mouse button, or a key by its
     /// physical `code` (its `key` when it has none). `None` for the rest.
     fn held_target(&self) -> Option<HeldTarget<'_>> {
@@ -192,11 +193,13 @@ enum HeldTarget<'a> {
 }
 
 /// What of `events` must still reach the page when the rest are dropped,
-/// in order: every release, and every press whose release is not among
-/// them (it comes later and must find the press). A press and its release
-/// go together; a repeated press or release of the same button or key is
-/// kept once. So the page never keeps a button or key held that the user
-/// let go of, and at most two events per button or key are kept.
+/// in order: the last release of each button or key (one release clears
+/// it, whatever came before), and every press with no release after it
+/// (that release comes later and must find the press). A dropped click
+/// leaves its release alone, which a page that never got the press
+/// ignores, so a press that may already have reached the page is safe
+/// too. The page never keeps a button or key held that the user let go
+/// of, and at most two events per button or key are kept.
 pub fn keep_held_state(
     events: impl IntoIterator<Item = BrowserInputEvent>,
 ) -> Vec<BrowserInputEvent> {
@@ -205,20 +208,18 @@ pub fn keep_held_state(
         let Some(target) = event.held_target() else {
             continue;
         };
-        // The last kept event on the same button or key.
-        let last = kept.iter().rposition(|k| k.held_target() == Some(target));
-        let last_is_press = last.is_some_and(|at| !kept[at].is_release());
-        match (event.is_release(), last) {
-            // Its press is kept too: the click is dropped whole.
-            (true, Some(at)) if last_is_press => {
-                kept.remove(at);
-            }
-            // Released already: once is enough.
-            (true, Some(_)) => {}
+        if event.is_release() {
+            kept.retain(|k| k.held_target() != Some(target));
+        } else if kept
+            .iter()
+            .rev()
+            .find(|k| k.held_target() == Some(target))
+            .is_some_and(|last| !last.is_release())
+        {
             // Pressed already (a key repeat): once is enough.
-            (false, Some(_)) if last_is_press => {}
-            _ => kept.push(event),
+            continue;
         }
+        kept.push(event);
     }
     kept
 }
@@ -227,11 +228,11 @@ pub fn keep_held_state(
 /// folded together: a pointer move replaces a move before it (same buttons
 /// and modifiers) and wheel steps at the same modifiers add up, so a busy
 /// pointer or a fast trackpad costs one call per batch instead of one per
-/// OS event. Presses, releases and keys are never reordered, and a
-/// release is never dropped: a queue past its limit
+/// OS event. Presses, releases and keys are never reordered, and no
+/// button or key is left held: a queue past its limit
 /// ([`Self::extend_within`]) or input that did not reach the page
-/// ([`Self::restore_held_state`]) keeps every release and every press
-/// still waiting for one.
+/// ([`Self::restore_held_state`]) keeps the releases and every press
+/// still waiting for one ([`keep_held_state`]).
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct InputBatch {
     events: Vec<BrowserInputEvent>,
@@ -305,8 +306,7 @@ impl InputBatch {
 
     /// Queue `events` when the batch stays within `max`. Past it the page
     /// is far behind: the queued and the new events are cut down to what
-    /// keeps its held buttons and keys right ([`keep_held_state`]), so a
-    /// release is never dropped. Returns whether every event was queued.
+    /// keeps its held buttons and keys right ([`keep_held_state`]). Returns whether every event was queued.
     pub fn extend_within(&mut self, events: Vec<BrowserInputEvent>, max: usize) -> bool {
         if self.events.len() + events.len() <= max {
             self.extend(events);

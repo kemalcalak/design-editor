@@ -15,14 +15,14 @@
 
 use std::sync::{Arc, Condvar, Mutex, Weak};
 
-use de_editor_core::browser_input::{BrowserInputEvent, InputBatch, MAX_QUEUED_INPUT_EVENTS};
+use de_browser_render::BrowserRenderError;
+use de_editor_core::browser_input::{
+    BrowserInputEvent, InputBatch, INPUT_RETRY_AFTER_MS, MAX_QUEUED_INPUT_EVENTS,
+};
 
 use super::source::{LiveInput, LiveStream};
 use super::{lock, LiveHub};
 use crate::web_browser_input::{InputRefusal, InputSink};
-
-/// Pause after a failed send before the next try.
-const RETRY_AFTER: std::time::Duration = std::time::Duration::from_millis(250);
 
 #[derive(Default)]
 struct LaneState {
@@ -77,10 +77,11 @@ impl Drop for InputLane {
 }
 
 /// The worker: send what is queued, in order, until the lane closes. A
-/// failed call drops the connection, which reopens for the next try; the
-/// batch's releases and still-held presses are tried again (as the
-/// desktop driver does). Once the stream is gone nothing is held on its
-/// page any more, so the worker just ends.
+/// call that did not get through drops the connection, which reopens for
+/// the next try, and the batch's releases and still-held presses are
+/// tried again; a call Chrome refused is not (it would fail again). Once
+/// the stream is gone nothing is held on its page any more, so the worker
+/// just ends.
 fn run(shared: &LaneShared, stream: &Weak<dyn LiveStream>, key: &str) {
     let mut connection: Option<Box<dyn LiveInput>> = None;
     loop {
@@ -111,19 +112,25 @@ fn run(shared: &LaneShared, stream: &Weak<dyn LiveStream>, key: &str) {
         if let Some(open) = connection.as_mut() {
             if let Err(error) = open.dispatch(&events) {
                 eprintln!("[browser-live] {key} input: {error}");
-                connection = None;
-                retry_later(shared, events);
+                if !matches!(error, BrowserRenderError::Protocol { .. }) {
+                    connection = None;
+                    retry_later(shared, events);
+                }
             }
         }
     }
 }
 
 /// Put a batch that failed back in front of the queue as its releases and
-/// still-held presses (a release already sent is sent again, which does
-/// nothing), and pause before the next try on a new connection.
+/// still-held presses, and pause before the next try on a new connection.
+/// `LiveInput::dispatch` does not say which call failed, so the whole
+/// batch goes back (unlike the desktop driver, which resends from the
+/// failed call): an event that already got through may go out again,
+/// which `keep_held_state` keeps harmless (a press followed by its
+/// release leaves only the release).
 fn retry_later(shared: &LaneShared, events: Vec<BrowserInputEvent>) {
     lock(&shared.state).pending.restore_held_state(events);
-    std::thread::sleep(RETRY_AFTER);
+    std::thread::sleep(std::time::Duration::from_millis(INPUT_RETRY_AFTER_MS));
 }
 
 impl InputSink for LiveHub {

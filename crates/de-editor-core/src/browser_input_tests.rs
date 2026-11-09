@@ -196,7 +196,7 @@ fn held_state_keeps_releases_and_presses_still_held() {
         // Released here, pressed before: kept.
         up(Left),
         mv(1.0, 1.0, 0),
-        // A whole click: dropped.
+        // A whole click: only its release is left.
         down(Right),
         up(Right),
         // Pressed and still held (with a repeat): kept once, for its
@@ -205,41 +205,50 @@ fn held_state_keeps_releases_and_presses_still_held() {
         key_down("ShiftLeft"),
         BrowserInputEvent::InsertText { text: "x".into() },
         wheel(3.0, false),
-        // Released, its press sent earlier: kept once.
+        // Released twice: the last release is enough.
         key_up("KeyA"),
         key_up("KeyA"),
     ];
     assert_eq!(
         keep_held_state(events),
-        vec![up(Left), key_down("ShiftLeft"), key_up("KeyA")]
+        vec![up(Left), up(Right), key_down("ShiftLeft"), key_up("KeyA")]
     );
 }
 
 #[test]
-fn a_release_after_a_kept_press_drops_both() {
+fn a_release_after_a_kept_press_replaces_it() {
     use MouseButton::Left;
     assert_eq!(
         keep_held_state([up(Left), down(Left), up(Left)]),
         vec![up(Left)]
     );
-    assert!(keep_held_state([key_down("KeyB"), key_up("KeyB")]).is_empty());
+    // The press may have reached the page already: its release stays.
+    assert_eq!(
+        keep_held_state([key_down("KeyB"), key_up("KeyB")]),
+        vec![key_up("KeyB")]
+    );
+    // A press again after a release is still held.
+    assert_eq!(
+        keep_held_state([key_up("KeyB"), key_down("KeyB")]),
+        vec![key_up("KeyB"), key_down("KeyB")]
+    );
 }
 
 #[test]
-fn a_full_queue_keeps_every_release() {
+fn a_full_queue_keeps_only_what_holds_state() {
     use MouseButton::Left;
     let mut batch = InputBatch::new();
     assert!(batch.extend_within(vec![down(Left), key_down("KeyQ")], 4));
     assert!(batch.extend_within(vec![key_up("KeyQ")], 4));
     // Over the limit: only what keeps held state right stays, the queued
-    // events included (each press goes with its release).
+    // events included (a press followed by its release leaves the release).
     let more = vec![
         wheel(1.0, false),
         BrowserInputEvent::InsertText { text: "y".into() },
         up(Left),
     ];
     assert!(!batch.extend_within(more, 4));
-    assert!(batch.is_empty(), "{:?}", batch.events());
+    assert_eq!(batch.events(), &[key_up("KeyQ"), up(Left)]);
     // A release whose press already went out is kept past the limit.
     let mut batch = InputBatch::new();
     batch.extend([mv(1.0, 1.0, 1), wheel(1.0, false), wheel(1.0, true)]);

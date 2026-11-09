@@ -2,22 +2,23 @@
 //! phase 4): what waits for the page, and the connection it goes out on
 //! (one of its own on the stream's tab, opened at the first input).
 //!
-//! A release never gets lost on the way: the queue keeps every release
-//! past its limit (`InputBatch::extend_within`), and when a call fails
-//! (the connection broke, the tab is busy) the rest of the batch goes
-//! back as its releases and still-held presses
-//! (`InputBatch::restore_held_state`), tried again on a new connection
-//! after [`RETRY_AFTER`]. When the stream itself ends the driver keeps
+//! No button or key is left held on the page: past its limit the queue
+//! keeps the releases and still-held presses (`InputBatch::extend_within`),
+//! and when a call does not get through (the connection broke, the page
+//! did not answer in time) the rest of the batch, that call included,
+//! goes back the same way (`InputBatch::restore_held_state`) and is tried
+//! again on a new connection after `INPUT_RETRY_AFTER_MS`. A call Chrome
+//! refuses is skipped: sending it again would fail the same way and hold
+//! up everything behind it. When the stream itself ends the driver keeps
 //! the queue for the next stream on the node.
 
 use std::time::{Duration, Instant};
 
 use de_browser_render::{BrowserRenderError, PageInput};
-use de_editor_core::browser_input::{BrowserInputEvent, InputBatch, MAX_QUEUED_INPUT_EVENTS};
+use de_editor_core::browser_input::{
+    BrowserInputEvent, InputBatch, INPUT_RETRY_AFTER_MS, MAX_QUEUED_INPUT_EVENTS,
+};
 use de_editor_core::browser_input_cdp::cdp_call;
-
-/// Pause after a failed send before the next try.
-pub(crate) const RETRY_AFTER: Duration = Duration::from_millis(250);
 
 /// Where calls go: a stream tab's input connection (a fake in tests).
 pub(crate) trait InputConnection {
@@ -57,7 +58,8 @@ impl<C> Default for InputSender<C> {
 }
 
 impl<C: InputConnection> InputSender<C> {
-    /// Queue `events` behind what waits (coalesced).
+    /// Queue `events` behind what waits (coalesced; past
+    /// `MAX_QUEUED_INPUT_EVENTS` only the held state is kept).
     pub(crate) fn queue(&mut self, events: Vec<BrowserInputEvent>) {
         self.pending.extend_within(events, MAX_QUEUED_INPUT_EVENTS);
     }
@@ -101,6 +103,10 @@ impl<C: InputConnection> InputSender<C> {
             let call = cdp_call(event, mac_editing);
             if let Err(error) = connection.dispatch(call.method, call.params) {
                 eprintln!("[browser-live] {node_id} input: {error}");
+                if matches!(error, BrowserRenderError::Protocol { .. }) {
+                    // Chrome answered and refused this one call.
+                    continue;
+                }
                 // The failed call may not have reached the page either.
                 let unsent = events.into_iter().skip(at).collect();
                 self.connection = None;
@@ -113,7 +119,7 @@ impl<C: InputConnection> InputSender<C> {
 
     fn failed(&mut self, unsent: Vec<BrowserInputEvent>) {
         self.pending.restore_held_state(unsent);
-        self.retry_at = Some(Instant::now() + RETRY_AFTER);
+        self.retry_at = Some(Instant::now() + Duration::from_millis(INPUT_RETRY_AFTER_MS));
     }
 }
 

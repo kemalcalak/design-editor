@@ -3,9 +3,10 @@
 //! connection of its own, attached to the stream's tab
 //! ([`crate::PageStream::input`]), so the page that gets the input is
 //! exactly the one the canvas shows and the stream's own connection keeps
-//! reading frames meanwhile. Only `Input.*` methods pass; each call blocks
-//! until Chrome handled the event (about a millisecond locally), so
-//! callers send from a worker thread. A JavaScript dialog the input opens
+//! reading frames meanwhile. Callers may send only `Input.*` methods (it
+//! reads `Page.getLayoutMetrics` itself, see below); each call blocks
+//! until Chrome handled the event (about a millisecond locally, a press
+//! two round trips), so callers send from a worker thread. A JavaScript dialog the input opens
 //! (`alert`, `confirm`, `prompt`, `beforeunload`) would hold that call
 //! until it closes, and a headless tab shows no dialog to close, so it is
 //! answered at once: an `alert` or `beforeunload` is accepted, a `confirm`
@@ -21,7 +22,8 @@
 //! aimed at a field would land beside it and never focus it. Each mouse
 //! event is mapped through the tab's visual viewport
 //! ([`VisualViewport`], read with `Page.getLayoutMetrics`, at most
-//! [`VIEWPORT_TTL`] old and fresh for every press). On an unscaled page
+//! [`VIEWPORT_TTL`] old, fresh for every press and after a wheel step).
+//! On an unscaled page
 //! the mapping is the identity.
 
 use std::time::{Duration, Instant};
@@ -122,10 +124,27 @@ impl PageInput {
                 })
             }
         }
+        let kind = params.get("type").and_then(Value::as_str).unwrap_or("");
+        let (pressed, wheel) = (kind == "mousePressed", kind == "mouseWheel");
         if method == MOUSE_EVENT {
-            let pressed = params.get("type").and_then(Value::as_str) == Some("mousePressed");
             self.visual_viewport(pressed)?.map_mouse_params(&mut params);
         }
+        self.call_answering_dialogs(method, params)?;
+        if method == MOUSE_EVENT && wheel {
+            // A wheel step can pan a zoomed-in visual viewport.
+            self.viewport = None;
+        }
+        Ok(())
+    }
+
+    /// Send `method` on the tab and wait for its result, answering any page
+    /// dialog that opens meanwhile (see the module docs): the reply to a
+    /// call that opened one only comes once it is closed.
+    fn call_answering_dialogs(
+        &mut self,
+        method: &str,
+        params: Value,
+    ) -> Result<Value, BrowserRenderError> {
         let tab = self.tab.as_ref().ok_or(BrowserRenderError::TabClosed)?;
         let session = tab.session().to_string();
         let id = self.client.send(Some(&session), method, params)?;
@@ -133,7 +152,7 @@ impl PageInput {
         loop {
             let watch = Some((session.as_str(), DIALOG_OPENING));
             match self.client.await_reply(id, method, deadline, watch)? {
-                Awaited::Reply(_) => return Ok(()),
+                Awaited::Reply(result) => return Ok(result),
                 Awaited::Event(params) => {
                     // The reply to `id` arrives once the dialog closed and
                     // is kept for the next wait.
@@ -157,8 +176,7 @@ impl PageInput {
                 return Ok(viewport);
             }
         }
-        let tab = self.tab.as_ref().ok_or(BrowserRenderError::TabClosed)?;
-        let viewport = match tab.command(&mut self.client, "Page.getLayoutMetrics", json!({})) {
+        let viewport = match self.call_answering_dialogs("Page.getLayoutMetrics", json!({})) {
             Ok(metrics) => VisualViewport::from_metrics(&metrics),
             Err(BrowserRenderError::Protocol { .. }) => VisualViewport::IDENTITY,
             Err(error) => return Err(error),

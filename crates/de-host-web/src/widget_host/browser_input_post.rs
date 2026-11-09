@@ -17,8 +17,9 @@
 //! with its page, so nothing is held there either, and on a 429 (the page
 //! is behind) the daemon already queued the batch's releases and
 //! still-held presses. Past [`MAX_QUEUED_INPUT_EVENTS`] the outbox keeps
-//! only those too (`InputBatch::extend_within`), so a release is never
-//! dropped on the way.
+//! only those too (`InputBatch::extend_within`). A post that fails
+//! outright (network, 5xx) is dropped with its events: the web host is
+//! being retired, so it gets no retry of its own.
 
 use std::cell::{Cell, RefCell};
 

@@ -143,14 +143,25 @@ fn a_press_reads_the_visual_viewport_and_moves_reuse_it() {
     input
         .dispatch("Input.insertText", json!({ "text": "x" }))
         .unwrap();
-    let reads = methods(&log)
-        .iter()
-        .filter(|m| *m == "Page.getLayoutMetrics")
-        .count();
+    let reads = |log: &Log| {
+        methods(log)
+            .iter()
+            .filter(|m| *m == "Page.getLayoutMetrics")
+            .count()
+    };
     assert_eq!(
-        reads, 2,
+        reads(&log),
+        2,
         "the first move reads, the second reuses, the press reads again"
     );
+    // A wheel step (which can pan a zoomed-in view) makes the next move
+    // read again.
+    let wheel = json!({ "type": "mouseWheel", "x": 1, "y": 1, "deltaX": 0, "deltaY": 5 });
+    let moved = json!({ "type": "mouseMoved", "x": 2, "y": 2, "button": "none" });
+    input.dispatch("Input.dispatchMouseEvent", wheel).unwrap();
+    assert_eq!(reads(&log), 2, "the wheel step reuses the fresh read");
+    input.dispatch("Input.dispatchMouseEvent", moved).unwrap();
+    assert_eq!(reads(&log), 3);
 }
 
 #[test]
