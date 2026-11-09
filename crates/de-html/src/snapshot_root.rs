@@ -6,21 +6,22 @@
 //! modal-only page) reports a body 0 px tall, and so does every empty
 //! wrapper between the body and the overlay. Imported as is, the page lands
 //! in a 0-tall frame. In the browser such a page fills the viewport, and
-//! absolutely placed content past the body's bottom still scrolls into
-//! view, so the root is grown to cover both before anything is mapped.
+//! absolutely placed content below it still scrolls into view, so the root
+//! is grown to cover both before anything is mapped.
 
 use serde_json::{Map, Value};
 
 use super::Rect;
 
-/// Grow a whole-page root (`tag: "body"`) to the bottom of its non-fixed
-/// descendants and, on an axis where the body box is empty, to the
-/// viewport; then give the single-child chain of empty wrappers above a
-/// fixed overlay the same box. A body with content keeps its own extent on
-/// that axis: `innerWidth` counts a classic scrollbar and the body margin
-/// is not the page's, and a short page hugs its content in an auto-layout
-/// import. A subtree capture is left alone: its box is the picked
-/// element's, which the viewport says nothing about.
+/// Grow a whole-page root (`tag: "body"`) on an axis where its box is
+/// empty: to the viewport and, for the height, to the bottom of its
+/// non-fixed descendants. Then give the single-child chain of empty
+/// wrappers above a fixed overlay the same box. A body with content keeps
+/// its own box: `innerWidth` counts a classic scrollbar, the body margin is
+/// not the page's, a short page hugs its content in an auto-layout import,
+/// and what overflows it stays overflow, as before. A subtree capture is
+/// left alone: its box is the picked element's, which the viewport says
+/// nothing about.
 pub(super) fn grow_page_root(root: &mut Map<String, Value>, viewport: Option<(f64, f64)>) {
     if root.get("tag").and_then(Value::as_str) != Some("body") {
         return;
@@ -38,9 +39,11 @@ pub(super) fn grow_page_root(root: &mut Map<String, Value>, viewport: Option<(f6
             bottom = bottom.max(height);
         }
     }
-    if let Some(children) = root.get("children").and_then(Value::as_array) {
-        for child in children {
-            bottom = bottom.max(reach_bottom(child));
+    if rect.h <= 0.0 {
+        if let Some(children) = root.get("children").and_then(Value::as_array) {
+            for child in children {
+                bottom = bottom.max(reach_bottom(child));
+            }
         }
     }
     let grown = Rect {
@@ -79,8 +82,8 @@ fn reach_bottom(node: &Value) -> f64 {
 }
 
 /// Walk down from the root while each box holds exactly one element that
-/// is itself empty in one axis and holds a fixed overlay (`#app` > `#root`
-/// > the overlay), and give it the parent's extent. Only a lone child: a
+/// is itself empty in one axis and holds a fixed overlay (`#app`, then
+/// `#root`, then the overlay), and give it the parent's extent. Only a lone child: a
 /// 0-tall box beside siblings takes no room in the flow, and growing it
 /// would push them in an auto-layout import. A clipping one (a collapsed
 /// accordion) stays shut, and an empty portal mount stays empty.

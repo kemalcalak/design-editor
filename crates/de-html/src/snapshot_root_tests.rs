@@ -85,20 +85,20 @@ fn a_fixed_overlay_page_gives_the_root_and_its_wrapper_the_viewport() {
 }
 
 #[test]
-fn absolute_content_below_the_body_extends_the_page() {
+fn absolute_content_below_an_empty_body_extends_the_page() {
     let json = r#"{
       "version": 1,
       "viewport": { "width": 1000, "height": 600 },
       "root": {
         "kind": "element", "tag": "body",
-        "rect": { "x": 0, "y": 0, "w": 1000, "h": 300 },
+        "rect": { "x": 0, "y": 0, "w": 1000, "h": 0 },
         "children": [
           { "kind": "element", "tag": "footer",
             "rect": { "x": 0, "y": 900, "w": 1000, "h": 100 },
             "styles": { "position": "absolute" }, "children": [] },
           { "kind": "element", "tag": "nav",
             "rect": { "x": 0, "y": 0, "w": 200, "h": 300 },
-            "styles": { "overflow": "hidden auto" },
+            "styles": { "position": "absolute", "overflow": "hidden auto" },
             "children": [
               { "kind": "element", "tag": "ul",
                 "rect": { "x": 0, "y": 0, "w": 200, "h": 5000 }, "children": [] }
@@ -188,7 +188,7 @@ fn an_expanded_scroll_capture_does_not_warn_about_clipped_scroll_content() {
         )
         .warnings
         .iter()
-        .any(|warning| *warning == ImportWarning::OverflowScrollClipped)
+        .any(|warning| *warning == ImportWarning::OverflowScrollClipped.to_string())
     };
     assert!(warns(""), "a clipped scroll container is reported");
     assert!(!warns(r#""expandedScroll": true,"#));
