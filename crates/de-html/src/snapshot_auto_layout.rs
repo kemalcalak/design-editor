@@ -30,7 +30,9 @@
 //!   A `truncate` run the browser cut fills its box and ends in "…" there.
 //!
 //! A container whose children overlap along the axis (a negative-margin
-//! avatar stack) keeps `layout: none`, and `position: absolute | fixed`
+//! avatar stack) keeps `layout: none`; in a stack of lines only the
+//! overlapping line does, as a fixed-size layer that keeps its place in the
+//! stack (an avatar pulled up over a banner). `position: absolute | fixed`
 //! children stay absolutely placed inside any frame.
 
 use std::collections::BTreeMap;
@@ -44,7 +46,7 @@ use jian_ops_schema::sizing::{SizingBehavior, SizingKeyword};
 use serde_json::{Map, Value};
 
 use super::snapshot_stack::PaintBucket;
-use super::{parse_px, Rect, SnapshotCtx};
+use super::{Rect, SnapshotCtx};
 
 #[path = "snapshot_auto_layout_flow.rs"]
 mod flow;
@@ -54,6 +56,7 @@ mod items;
 mod lines;
 use flow::lines_of;
 use items::{cut_at, hug_of, set_size, union_of};
+use lines::line_box;
 
 /// Within this many CSS px two edges count as the same edge: the capture
 /// rounds every rect to hundredths, and sub-pixel layout differs by less.
@@ -347,7 +350,7 @@ impl SnapshotCtx<'_> {
             let mut rest = flow.into_iter();
             for (_, count) in &lines {
                 let row: Vec<Item> = rest.by_ref().take(*count).collect();
-                rows.push(self.row_frame(model, content, row));
+                rows.push(self.row_frame(model, rect, content, row));
             }
             (Axis::Vertical, rows, &stack)
         };
@@ -378,9 +381,9 @@ impl SnapshotCtx<'_> {
         }
     }
 
-    /// Wrap one line of a multi-line container in a horizontal frame that
-    /// spans the container's content width.
-    fn row_frame(&mut self, model: &BoxModel, content: Rect, row: Vec<Item>) -> Item {
+    /// Wrap one line of a multi-line container (`rect`) in a horizontal
+    /// frame that spans the container's content width.
+    fn row_frame(&mut self, model: &BoxModel, rect: Rect, content: Rect, row: Vec<Item>) -> Item {
         if row.len() == 1 {
             return row.into_iter().next().expect("one item");
         }
@@ -405,14 +408,29 @@ impl SnapshotCtx<'_> {
             inset: [0.0; 4],
             gap: model.gap,
         };
-        let frame = match self.arrange(&row_model, Axis::Horizontal, line, row) {
-            Ok(laid) => frame_node(id, "row", laid),
-            Err(row) => frame_node(id, "row", absolute(Vec::new(), row)),
+        // Where the row sits in the element: read only if the element itself
+        // falls back to `layout: none` (flow clears it, `into_flow`).
+        let (dx, dy) = (line.x - rect.x, line.y - rect.y);
+        let (mut frame, height) = match self.arrange(&row_model, Axis::Horizontal, line, row) {
+            Ok(laid) => (frame_node(id, "row", laid), Fit::Hug),
+            // Overlapping items (an avatar pulled up over a banner by a
+            // negative margin): a `layout: none` layer the size of the line
+            // keeps them where the page put them, and its fixed height keeps
+            // the lines after it in place. Absolute children size nothing,
+            // so a hugging layer would collapse to 0 and let them ride up.
+            Err(mut row) => {
+                for item in &mut row {
+                    items::shift_back(&mut item.node, dx, dy);
+                }
+                (frame_node(id, "row", absolute(Vec::new(), row)), Fit::Fixed)
+            }
         };
+        (frame.base.x, frame.base.y) = (Some(dx), Some(dy));
         let mut node = PenNode::Frame(frame);
         set_size(&mut node, Axis::Horizontal, Fit::Fill, line.w);
-        set_size(&mut node, Axis::Vertical, Fit::Hug, line.h);
-        self.auto_hug.insert(node_id(&node), (false, true));
+        set_size(&mut node, Axis::Vertical, height, line.h);
+        self.auto_hug
+            .insert(node_id(&node), (false, height == Fit::Hug));
         Item {
             node,
             bucket: PaintBucket::Flow,
@@ -750,30 +768,8 @@ fn node_id(node: &PenNode) -> String {
     }
 }
 
-/// Text line box: the glyph box the capture measured, grown to the run's
-/// line-height (the height the editor gives the text node), centred on it.
-pub(super) fn line_box(object: &Map<String, Value>, rect: Rect, default_font: f64) -> Rect {
-    let font_size = style(object, "font-size")
-        .and_then(parse_px)
-        .unwrap_or(default_font);
-    let line_height = style(object, "line-height")
-        .and_then(parse_px)
-        .unwrap_or(font_size * 1.2);
-    let lines = object
-        .get("lines")
-        .and_then(Value::as_u64)
-        .unwrap_or(1)
-        .max(1) as f64;
-    let height = (line_height * lines).max(rect.h);
-    Rect {
-        y: rect.y - (height - rect.h) / 2.0,
-        h: height,
-        ..rect
-    }
-}
-
 /// One captured style value, read without building the whole style map.
-fn style<'a>(object: &'a Map<String, Value>, key: &str) -> Option<&'a str> {
+pub(super) fn style<'a>(object: &'a Map<String, Value>, key: &str) -> Option<&'a str> {
     object.get("styles")?.get(key)?.as_str()
 }
 

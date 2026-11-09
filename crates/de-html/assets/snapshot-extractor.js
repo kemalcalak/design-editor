@@ -89,6 +89,9 @@
     // Read off the run's own element (the `truncate` span), so a run the
     // browser cut short with "…" keeps cutting after an edit.
     "text-overflow",
+    // `uppercase` labels: the DOM text keeps its source casing, the page
+    // paints (and measured) the transformed one.
+    "text-transform",
   ];
   // Per-run overrides carried on a folded inline block's `segments` (see
   // `buildInlineText`). These are the properties an inline `<a>` / `<code>` /
@@ -101,6 +104,7 @@
     "font-weight",
     "font-style",
     "text-decoration-line",
+    "text-transform",
   ];
   // Computed values that carry no information: the importer's own defaults
   // are identical, so emitting them only inflates the payload (they are the
@@ -128,6 +132,7 @@
     "white-space": "normal",
     "text-overflow": "clip",
     "text-decoration-line": "none",
+    "text-transform": "none",
     display: "block",
   };
 
@@ -1360,6 +1365,25 @@
     console.error("Design Editor snapshot: document.body is not available");
     return;
   }
+  // Capture the page at rest: an entrance animation caught mid-flight (a
+  // heading fading up, a card sliding in) reports where it happened to be,
+  // not where it lands. Finishing jumps every finite animation and
+  // transition to its end state; an infinite one cannot finish and throws,
+  // so it stays where it is.
+  try {
+    if (typeof document.getAnimations === "function") {
+      document.getAnimations().forEach(function (animation) {
+        try {
+          animation.finish();
+        } catch (error) {
+          // Infinite iterations, or an animation without a timeline.
+        }
+      });
+    }
+  } catch (error) {
+    // Capture whatever is on screen.
+  }
+
   // Every container is measured (and its scroll offset read) before any is
   // touched: expanding an outer one cannot hide an inner one that also
   // scrolls, and the page lays out once instead of once per container.

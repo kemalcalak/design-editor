@@ -1,12 +1,14 @@
 //! Regression for design-editor #292: a browser snapshot imported with
 //! auto-layout lays out, through the editor's own layout engine, where the
-//! browser drew it. The fixture is a real Chrome capture (1920×1080) of
-//! `de-html/tests/fixtures/tailwind_app.html`, a compiled-Tailwind app shell.
+//! browser drew it. The fixtures are real Chrome captures (1920×1080) of
+//! `de-html/tests/fixtures/tailwind_app.html`, a compiled-Tailwind app shell,
+//! and `tailwind_cases.html`, the cases #322 found on a real page.
 use de_html::{import_snapshot_document, HtmlImportOptions};
 use de_pen_loader::payload::NodePayload;
 use serde_json::Value;
 
 const SNAPSHOT: &str = include_str!("../../de-html/tests/fixtures/tailwind_app_snapshot.json");
+const CASES: &str = include_str!("../../de-html/tests/fixtures/tailwind_cases_snapshot.json");
 
 /// A placed label: `(label, left x, right x, centre y)`.
 type Placed = (String, f64, f64, f64);
@@ -49,20 +51,18 @@ fn laid_out(nodes: &[NodePayload], out: &mut Vec<Placed>) {
 
 #[test]
 fn auto_layout_import_lands_where_the_browser_drew_it() {
-    let options = HtmlImportOptions {
-        snapshot_auto_layout: true,
-        icon_known: Some(|family, _| family == "lucide"),
-        ..HtmlImportOptions::default()
-    };
-    let imported = import_snapshot_document(SNAPSHOT, &options);
-    let payload = de_pen_loader::pen_document_to_payload(&imported.document);
+    let checked = lands_where_drawn(SNAPSHOT);
+    assert!(checked >= 40, "only {checked} labels matched");
+}
+
+/// Import `snapshot` with auto-layout and check that every label the
+/// browser drew lands where it did; returns how many were checked.
+fn lands_where_drawn(snapshot: &str) -> usize {
     let mut placed = Vec::new();
-    for page in &payload.payload.pages {
-        laid_out(&page.children, &mut placed);
-    }
+    laid_out(&laid(&auto_import_of(snapshot)), &mut placed);
     let mut browser = Vec::new();
     captured(
-        &serde_json::from_str::<Value>(SNAPSHOT).unwrap()["root"],
+        &serde_json::from_str::<Value>(snapshot).unwrap()["root"],
         &mut browser,
     );
 
@@ -105,16 +105,20 @@ fn auto_layout_import_lands_where_the_browser_drew_it() {
         }
         checked += 1;
     }
-    assert!(checked >= 40, "only {checked} labels matched");
+    checked
 }
 
 fn auto_import() -> jian_ops_schema::PenDocument {
+    auto_import_of(SNAPSHOT)
+}
+
+fn auto_import_of(snapshot: &str) -> jian_ops_schema::PenDocument {
     let options = HtmlImportOptions {
         snapshot_auto_layout: true,
         icon_known: Some(|family, _| family == "lucide"),
         ..HtmlImportOptions::default()
     };
-    import_snapshot_document(SNAPSHOT, &options).document
+    import_snapshot_document(snapshot, &options).document
 }
 
 fn find<'a>(
@@ -416,4 +420,66 @@ fn nodes_named(nodes: &[NodePayload], name: &str) -> usize {
         .iter()
         .map(|node| usize::from(node.name == name) + nodes_named(&node.children, name))
         .sum()
+}
+
+// #322: the cases a real Tailwind page still got wrong.
+
+#[test]
+fn the_cases_land_where_the_browser_drew_them() {
+    let checked = lands_where_drawn(CASES);
+    assert!(checked >= 6, "only {checked} labels matched");
+}
+
+#[test]
+fn a_tight_heading_stays_centred_after_a_label_edit() {
+    // `leading-none`: the 53 px glyph box overhangs the 48 px line box the
+    // page lays the heading out by. Captured at the end of its entrance
+    // animation, which had it 24 px low and transparent.
+    let doc = auto_import_of(CASES);
+    let before = laid(&doc);
+    let old = text_node(&before, "Welcome back");
+    let centre_y = old.y + old.h / 2.0;
+    assert!((centre_y - 81.0).abs() <= 2.0, "centre y {centre_y}");
+    let after = laid(&relabel(&doc, "Welcome back", "Welcome back, Ada"));
+    let new = text_node(&after, "Welcome back, Ada");
+    assert!(
+        new.w > old.w + 60.0,
+        "the heading hugs: {} -> {}",
+        old.w,
+        new.w
+    );
+    let centre = |node: &NodePayload| node.x + node.w / 2.0;
+    assert!(
+        (centre(new) - centre(old)).abs() <= 1.0,
+        "centre {} -> {}",
+        centre(old),
+        centre(new)
+    );
+}
+
+#[test]
+fn a_pulled_up_avatar_keeps_the_form_below_it() {
+    let nodes = laid(&auto_import_of(CASES));
+    // Where Chrome drew them: the avatar over the banner's lower half, the
+    // form under the avatar.
+    let avatar = find(&nodes, &|node| node.name == "Avatar").expect("avatar");
+    assert!(
+        (avatar.x - 705.0).abs() <= 1.0 && (avatar.y - 73.0).abs() <= 1.0,
+        "avatar at {}, {}",
+        avatar.x,
+        avatar.y
+    );
+    for (label, centre) in [("Başlık", 163.0), ("Açıklama", 235.0)] {
+        let text = text_node(&nodes, label);
+        let y = text.y + text.h / 2.0;
+        assert!((y - centre).abs() <= 2.0, "{label}: centre y {y}");
+    }
+}
+
+#[test]
+fn text_transform_reads_as_the_page_shows_it() {
+    let nodes = laid(&auto_import_of(CASES));
+    for label in ["OVERVIEW", "Recent Threads", "Plan: PRO tier"] {
+        text_node(&nodes, label);
+    }
 }

@@ -80,8 +80,9 @@ impl WhiteSpaceMode {
     }
 }
 
+/// CSS `text-transform`; the snapshot import (`snapshot_text.rs`) shares it.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum TextTransformMode {
+pub(crate) enum TextTransformMode {
     None,
     Uppercase,
     Lowercase,
@@ -89,8 +90,9 @@ enum TextTransformMode {
 }
 
 impl TextTransformMode {
-    fn from_style(style: &ComputedStyle, inherited: Self) -> Self {
-        match style.get("text-transform") {
+    /// A `text-transform` value; anything else keeps `inherited`.
+    pub(crate) fn from_css(value: Option<&str>, inherited: Self) -> Self {
+        match value.map(str::trim) {
             Some("none") => Self::None,
             Some("uppercase") => Self::Uppercase,
             Some("lowercase") => Self::Lowercase,
@@ -110,14 +112,17 @@ impl InlineTextContext {
     fn root(style: &ComputedStyle) -> Self {
         Self {
             white_space: WhiteSpaceMode::from_style(style, WhiteSpaceMode::Normal),
-            transform: TextTransformMode::from_style(style, TextTransformMode::None),
+            transform: TextTransformMode::from_css(
+                style.get("text-transform"),
+                TextTransformMode::None,
+            ),
         }
     }
 
     fn child(self, style: &ComputedStyle) -> Self {
         Self {
             white_space: WhiteSpaceMode::from_style(style, self.white_space),
-            transform: TextTransformMode::from_style(style, self.transform),
+            transform: TextTransformMode::from_css(style.get("text-transform"), self.transform),
         }
     }
 }
@@ -425,16 +430,16 @@ fn is_css_whitespace(ch: char) -> bool {
     matches!(ch, ' ' | '\t' | '\n')
 }
 
-fn transform_char(ch: char, mode: TextTransformMode, capitalize_next: &mut bool) -> String {
+pub(crate) fn transform_char(ch: char, mode: TextTransformMode, cap_next: &mut bool) -> String {
     let transformed = match mode {
         TextTransformMode::Uppercase => ch.to_uppercase().collect(),
         TextTransformMode::Lowercase => ch.to_lowercase().collect(),
-        TextTransformMode::Capitalize if *capitalize_next && ch.is_alphabetic() => {
+        TextTransformMode::Capitalize if *cap_next && ch.is_alphabetic() => {
             ch.to_uppercase().collect()
         }
         _ => ch.to_string(),
     };
-    *capitalize_next = !ch.is_alphanumeric();
+    *cap_next = !ch.is_alphanumeric();
     transformed
 }
 

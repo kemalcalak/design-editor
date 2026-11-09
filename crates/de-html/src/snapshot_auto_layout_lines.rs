@@ -1,4 +1,5 @@
-//! Wrapped paragraphs back as one text node, for the auto-layout pass.
+//! Text lines for the auto-layout pass: wrapped paragraphs back as one text
+//! node, and the line box a run takes in its parent's flow (`line_box`).
 //!
 //! The capture splits a bare text run the browser wrapped into one node per
 //! line box (see `buildText` in the extractor): exact for an absolute
@@ -13,7 +14,8 @@ use std::borrow::Cow;
 
 use serde_json::{Map, Value};
 
-use super::Rect;
+use super::super::parse_px;
+use super::{style, Rect};
 
 /// A line ending this close to the content box's right edge was wrapped.
 const WRAPPED_FILL: f64 = 0.7;
@@ -109,4 +111,36 @@ fn fold(run: &[&Map<String, Value>]) -> Map<String, Value> {
         serde_json::json!({ "x": left, "y": top, "w": right - left, "h": bottom - top }),
     );
     merged
+}
+
+/// Text line box: the run's line-height times its lines (the height the
+/// editor gives the text node), centred on the glyph box the capture
+/// measured. A tight line-height (`leading-none` on a large heading) makes
+/// the line box shorter than the glyphs; the page lays the run out by its
+/// line box all the same, so the glyphs' overhang must not count as the
+/// run reaching past its parent's edge.
+pub(in crate::snapshot) fn line_box(
+    object: &Map<String, Value>,
+    rect: Rect,
+    default_font: f64,
+) -> Rect {
+    let font_size = style(object, "font-size")
+        .and_then(parse_px)
+        .unwrap_or(default_font);
+    let line_height = style(object, "line-height").and_then(parse_px);
+    let lines = object.get("lines").and_then(Value::as_u64);
+    let height = match (line_height, lines) {
+        (Some(line_height), Some(lines)) => line_height * lines.max(1) as f64,
+        // `line-height: normal` (the line box is the font's own, which is
+        // what the glyph box measured) or a capture without a line count:
+        // the estimate only ever grows the measured box.
+        (line_height, lines) => {
+            (line_height.unwrap_or(font_size * 1.2) * lines.unwrap_or(1).max(1) as f64).max(rect.h)
+        }
+    };
+    Rect {
+        y: rect.y - (height - rect.h) / 2.0,
+        h: height,
+        ..rect
+    }
 }
