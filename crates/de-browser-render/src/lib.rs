@@ -7,7 +7,9 @@
 //! Each worker thread takes its own [`PageRenderer`]: a DevTools connection
 //! of its own to the shared process, so two slow pages load side by side.
 //! [`PageSessions`] keep tabs open between calls for the MCP `browser`
-//! tool (load a page, click in it, look at it). Every caller in the app
+//! tool (load a page, click in it, look at it). A [`PageStream`] streams a
+//! tab's repaints as JPEG frames (CDP screencast) for a live canvas node,
+//! on a fresh tab or on a kept-open one. Every caller in the app
 //! shares one process through [`BrowserPool::shared`]. Everything here
 //! blocks; callers run it off the UI thread.
 
@@ -17,6 +19,8 @@ mod chrome_process;
 mod error;
 mod page_session;
 mod render_job;
+mod screencast;
+mod screencast_worker;
 mod tab;
 
 use std::path::PathBuf;
@@ -27,12 +31,14 @@ pub use chrome_discovery::{find_browser, BROWSER_PATH_ENV};
 pub use error::BrowserRenderError;
 pub use page_session::{check_cdp_method, PageSession, PageSessions, ShotTarget, CDP_DOMAINS};
 pub use render_job::RenderSpec;
+pub use screencast::{FrameMetadata, PageStream, StreamFrame, StreamSettings};
 pub use tab::Viewport;
 
 use cdp_client::CdpClient;
 use chrome_process::ChromeProcess;
 
-/// The shared browser ends after this long without renders or open tabs.
+/// The shared browser ends after this long without renders, open tabs or
+/// streams.
 pub const IDLE_SHUTDOWN: Duration = Duration::from_secs(60);
 
 /// Start (once per process) the thread that closes kept-open tabs unused
@@ -65,7 +71,8 @@ struct PoolState {
     /// Bumped per started process, so renderers drop stale connections.
     generation: u64,
     busy: usize,
-    /// Open [`PageSession`]s: the browser stays up while any exists.
+    /// Open [`PageSession`]s and running [`PageStream`]s: the browser
+    /// stays up while any exists.
     holders: usize,
     last_used: Option<Instant>,
 }
@@ -99,7 +106,8 @@ impl BrowserPool {
     }
 
     /// End the browser process when no render is running, no
-    /// [`PageSession`] is open and none ran for `idle`. Returns whether it
+    /// [`PageSession`] is open, no [`PageStream`] runs and none ran for
+    /// `idle`. Returns whether it
     /// was ended.
     pub fn shutdown_if_idle(&self, idle: Duration) -> bool {
         let mut state = self.lock();
@@ -115,6 +123,12 @@ impl BrowserPool {
     /// a render in progress fails with a closed connection).
     pub fn shutdown(&self) {
         self.lock().process = None;
+    }
+
+    /// The running browser process's generation, if one runs.
+    pub(crate) fn running_generation(&self) -> Option<u64> {
+        let state = self.lock();
+        state.process.as_ref().map(|_| state.generation)
     }
 
     /// Whether a browser process is running.
@@ -185,6 +199,54 @@ impl BrowserPool {
         if broken_generation == Some(state.generation) {
             state.process = None;
         }
+    }
+}
+
+/// A hold on the pool's browser for a [`PageStream`]: while one exists,
+/// [`BrowserPool::shutdown_if_idle`] leaves the browser running. Dropping
+/// it releases the hold; a lease marked broken also ends the browser it
+/// was taken on (not a newer one).
+pub(crate) struct PoolLease {
+    pool: BrowserPool,
+    generation: u64,
+    broken: bool,
+}
+
+impl PoolLease {
+    /// Hold the browser (starting it when none runs) and hand out its
+    /// endpoint.
+    pub(crate) fn acquire(pool: &BrowserPool) -> Result<(Self, String), BrowserRenderError> {
+        let (generation, ws_url) = pool.hold()?;
+        let lease = Self {
+            pool: pool.clone(),
+            generation,
+            broken: false,
+        };
+        Ok((lease, ws_url))
+    }
+
+    /// The browser process this lease holds.
+    pub(crate) fn generation(&self) -> u64 {
+        self.generation
+    }
+
+    /// The connection to this browser broke: end it on release.
+    pub(crate) fn mark_broken(&mut self) {
+        self.broken = true;
+    }
+
+    /// Note a failure on this browser: one that lost the connection
+    /// marks the lease broken.
+    pub(crate) fn fail(&mut self, error: &BrowserRenderError) {
+        if error.needs_restart() {
+            self.mark_broken();
+        }
+    }
+}
+
+impl Drop for PoolLease {
+    fn drop(&mut self) {
+        self.pool.release(self.broken.then_some(self.generation));
     }
 }
 

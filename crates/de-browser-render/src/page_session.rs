@@ -1,18 +1,19 @@
 //! Tabs kept open between calls, for the MCP `browser` tool: a page loaded
 //! once is clicked, read and captured by later calls. One tab per key (a
 //! browser node's id, or the tool's own page); a tab unused for
-//! [`SESSION_IDLE`] is closed. While any tab is open the shared browser
-//! stays up.
+//! [`SESSION_IDLE`] is closed, unless a [`PageStream`] streams it (the
+//! idle time then counts from the stream's end). While any tab is open the
+//! shared browser stays up.
 
 use std::collections::HashMap;
-use std::sync::{Mutex, OnceLock};
+use std::sync::{Arc, Mutex, OnceLock};
 use std::time::{Duration, Instant};
 
 use serde_json::Value;
 
 use crate::cdp_client::CdpClient;
 use crate::tab::{decode_png, Clip, Tab, Viewport, MAX_FULL_PAGE_HEIGHT};
-use crate::{BrowserPool, BrowserRenderError};
+use crate::{BrowserPool, BrowserRenderError, PageStream, StreamSettings};
 
 /// A tab unused this long is closed.
 pub const SESSION_IDLE: Duration = Duration::from_secs(5 * 60);
@@ -53,6 +54,53 @@ pub struct PageSession {
     viewport: Viewport,
     url: Option<String>,
     last_used: Instant,
+    /// Streams of this tab; the tab is not idle while one runs.
+    streams: TabStreams,
+}
+
+/// The streams running on one kept-open tab.
+#[derive(Clone, Default)]
+pub(crate) struct TabStreams(Arc<Mutex<LeaseState>>);
+
+#[derive(Default)]
+struct LeaseState {
+    live: usize,
+    /// When the last stream ended.
+    released_at: Option<Instant>,
+}
+
+impl TabStreams {
+    fn lock(&self) -> std::sync::MutexGuard<'_, LeaseState> {
+        self.0.lock().unwrap_or_else(|e| e.into_inner())
+    }
+
+    pub(crate) fn acquire(&self) -> TabStreamClaim {
+        self.lock().live += 1;
+        TabStreamClaim(self.clone())
+    }
+}
+
+/// One stream's claim on a kept-open tab; dropping it restarts the tab's
+/// idle clock.
+pub(crate) struct TabStreamClaim(TabStreams);
+
+impl Drop for TabStreamClaim {
+    fn drop(&mut self) {
+        let mut state = self.0.lock();
+        state.live = state.live.saturating_sub(1);
+        state.released_at = Some(Instant::now());
+    }
+}
+
+/// Whether a tab last used at `last_used` is idle: no stream runs on it
+/// and `idle` passed since its last use or its last stream's end.
+pub(crate) fn session_is_idle(last_used: Instant, streams: &TabStreams, idle: Duration) -> bool {
+    let state = streams.lock();
+    if state.live > 0 {
+        return false;
+    }
+    let since = state.released_at.map_or(last_used, |at| at.max(last_used));
+    since.elapsed() >= idle
 }
 
 /// How a session leaves [`PageSessions`].
@@ -80,6 +128,7 @@ impl PageSession {
                 viewport,
                 url: None,
                 last_used: Instant::now(),
+                streams: TabStreams::default(),
             }),
             Err(error) => {
                 pool.release(error.needs_restart().then_some(generation));
@@ -286,6 +335,56 @@ impl PageSessions {
         &self,
         key: &str,
         viewport: Viewport,
+        f: impl FnMut(&mut PageSession) -> Result<R, BrowserRenderError>,
+    ) -> Result<R, BrowserRenderError> {
+        self.run_on(key, viewport, true, f)
+    }
+
+    /// Stream the tab kept for `key` over a second connection (the canvas
+    /// shows what the MCP `browser` tool drives). `None` when no tab is
+    /// kept for `key`, or a call holds it right now (try again later). The
+    /// tab is not closed for idleness while the stream runs. Its viewport
+    /// stays the session's: after a [`Self::with`] that may change it, use
+    /// [`Self::resize_stream`] so the stream restarts at the new size.
+    pub fn stream(
+        &self,
+        key: &str,
+        settings: StreamSettings,
+    ) -> Result<Option<PageStream>, BrowserRenderError> {
+        let (target_id, generation, lease) = {
+            let sessions = self.lock();
+            let Some(session) = sessions.get(key) else {
+                return Ok(None);
+            };
+            (
+                session.tab.target_id().to_string(),
+                session.generation,
+                session.streams.acquire(),
+            )
+        };
+        PageStream::attach(&self.pool, &target_id, generation, settings, lease).map(Some)
+    }
+
+    /// Lay the tab kept for `key` out at `viewport` and restart `stream`
+    /// on it. No tab kept for `key` (or one busy with a call right now) is
+    /// [`BrowserRenderError::TabClosed`] and nothing is opened; a tab whose
+    /// browser broke is reopened at its address like [`Self::with`] does,
+    /// and the stream, left on the old browser, ends.
+    pub fn resize_stream(
+        &self,
+        key: &str,
+        viewport: Viewport,
+        stream: &PageStream,
+    ) -> Result<(), BrowserRenderError> {
+        self.run_on(key, viewport, false, |_| Ok(()))?;
+        stream.restart()
+    }
+
+    fn run_on<R>(
+        &self,
+        key: &str,
+        viewport: Viewport,
+        open_missing: bool,
         mut f: impl FnMut(&mut PageSession) -> Result<R, BrowserRenderError>,
     ) -> Result<R, BrowserRenderError> {
         self.close_idle();
@@ -293,7 +392,8 @@ impl PageSessions {
         let reopen_at = existing.as_ref().and_then(|s| s.url.clone());
         let mut session = match existing {
             Some(session) => session,
-            None => PageSession::open(&self.pool, viewport)?,
+            None if open_missing => PageSession::open(&self.pool, viewport)?,
+            None => return Err(BrowserRenderError::TabClosed),
         };
         let mut result = session
             .set_viewport(viewport)
@@ -345,13 +445,13 @@ impl PageSessions {
         self.len() == 0
     }
 
-    /// Close tabs unused for [`SESSION_IDLE`].
+    /// Close tabs unused for [`SESSION_IDLE`] and not streamed.
     pub fn close_idle(&self) {
         let idle: Vec<PageSession> = {
             let mut sessions = self.lock();
             let keys: Vec<String> = sessions
                 .iter()
-                .filter(|(_, s)| s.last_used.elapsed() >= SESSION_IDLE)
+                .filter(|(_, s)| session_is_idle(s.last_used, &s.streams, SESSION_IDLE))
                 .map(|(key, _)| key.clone())
                 .collect();
             keys.iter().filter_map(|key| sessions.remove(key)).collect()

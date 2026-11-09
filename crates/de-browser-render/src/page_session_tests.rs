@@ -1,4 +1,4 @@
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 use serde_json::json;
 
@@ -28,6 +28,32 @@ fn cdp_reaches_only_the_page_domains() {
 fn selectors_become_safe_script_strings() {
     assert_eq!(js_string("a[href=\"x\"]"), r#""a[href=\"x\"]""#);
     assert_eq!(js_string("</script>"), r#""</script>""#);
+}
+
+#[test]
+fn a_streamed_tab_is_never_idle_and_its_clock_restarts_when_the_stream_ends() {
+    let idle = Duration::from_millis(50);
+    let long_ago = Instant::now() - Duration::from_secs(600);
+    let streams = TabStreams::default();
+    assert!(
+        session_is_idle(long_ago, &streams, idle),
+        "unused, unstreamed"
+    );
+    let lease = streams.acquire();
+    let second = streams.acquire();
+    assert!(!session_is_idle(long_ago, &streams, idle), "streaming");
+    drop(lease);
+    assert!(
+        !session_is_idle(long_ago, &streams, idle),
+        "one stream left"
+    );
+    drop(second);
+    assert!(
+        !session_is_idle(long_ago, &streams, idle),
+        "idle time counts from the stream's end"
+    );
+    std::thread::sleep(idle);
+    assert!(session_is_idle(long_ago, &streams, idle));
 }
 
 /// Drives a kept-open tab with the installed browser:

@@ -149,6 +149,8 @@ fn launch_args(profile: &Path) -> Vec<String> {
         "--disable-background-networking".into(),
         "--disable-sync".into(),
         "--mute-audio".into(),
+        // Live nodes stream pages whose muted videos start on their own.
+        "--autoplay-policy=no-user-gesture-required".into(),
         "--hide-scrollbars".into(),
         "about:blank".into(),
     ]
@@ -189,5 +191,12 @@ mod tests {
         assert!(args.contains(&"--remote-debugging-port=0".to_string()));
         assert!(args.contains(&"--remote-debugging-address=127.0.0.1".to_string()));
         assert!(args.contains(&"--user-data-dir=/tmp/de-browser-x".to_string()));
+    }
+
+    #[test]
+    fn streamed_pages_autoplay_muted_video() {
+        let args = launch_args(Path::new("/tmp/de-browser-x"));
+        assert!(args.contains(&"--mute-audio".to_string()));
+        assert!(args.contains(&"--autoplay-policy=no-user-gesture-required".to_string()));
     }
 }
