@@ -717,8 +717,18 @@ fn a_page_that_falls_behind_refuses_more_input() {
     let stream = source.stream("https://example.com").unwrap();
     stream.input.hold(true);
     let batch = || (0..MAX_INPUT_EVENTS).map(|i| key(&i.to_string())).collect();
-    let answers: Vec<_> = (0..6).map(|_| hub.dispatch(&id, "n", batch())).collect();
-    assert!(answers.contains(&Err(InputRefusal::Busy)), "{answers:?}");
+    // The worker takes the first batch and waits on the page with it;
+    // only then is the queue's size up to the batches sent after it (a
+    // worker that took two at once never let the queue fill).
+    hub.dispatch(&id, "n", batch()).unwrap();
+    wait_until(|| stream.input.open.load(Ordering::SeqCst) == 1);
+    std::thread::sleep(Duration::from_millis(50));
+    let answers: Vec<_> = (0..5).map(|_| hub.dispatch(&id, "n", batch())).collect();
+    assert_eq!(
+        answers.last(),
+        Some(&Err(InputRefusal::Busy)),
+        "{answers:?}"
+    );
     stream.input.hold(false);
     // The batch the worker held goes out; what piled up behind it was cut
     // down to its still-held presses (one per key).
