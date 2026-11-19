@@ -243,6 +243,10 @@ impl DesktopApp {
                 }
                 false
             }
+            A::CheckUpdates if crate::packaged::is_msix_packaged() => {
+                update_check::open_url(update_check::STORE_UPDATES_URL);
+                false
+            }
             A::CheckUpdates => {
                 // Make every manual check visible immediately. An automatic
                 // startup probe may already be running, so reveal that same

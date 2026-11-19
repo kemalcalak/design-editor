@@ -27,6 +27,10 @@ use de_editor_core::UpdateStatus;
 const GITHUB_OWNER: &str = "kemalcalak";
 const GITHUB_REPO: &str = "design-editor";
 
+/// Where the Microsoft Store build sends "Check for Updates": the Store's
+/// own updates page, since the GitHub installer cannot replace a package.
+pub const STORE_UPDATES_URL: &str = "ms-windows-store://downloadsandupdates";
+
 /// Releases page a found-update notice opens in the browser.
 pub fn releases_url() -> String {
     format!("https://github.com/{GITHUB_OWNER}/{GITHUB_REPO}/releases")
@@ -68,9 +72,10 @@ impl UpdateProbe {
     }
 
     /// The launch-time probe: one release check when the user's
-    /// "automatic updates" setting is on, otherwise idle.
+    /// "automatic updates" setting is on, otherwise idle. Always idle in
+    /// the Microsoft Store (MSIX) build, which the Store updates.
     pub fn for_auto_check(enabled: bool) -> Self {
-        if enabled {
+        if enabled && !crate::packaged::is_msix_packaged() {
             Self::spawn()
         } else {
             Self::idle()
