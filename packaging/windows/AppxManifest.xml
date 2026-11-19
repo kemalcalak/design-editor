@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  MSIX manifest for the Microsoft Store build of Design Editor.
+
+  `tools/package-msix.ps1` fills the @TOKENS@ before `makeappx pack`:
+    @IDENTITY_NAME@             Package/Identity/Name     (Partner Center > Product identity)
+    @PUBLISHER@                 Package/Identity/Publisher (CN=... from Partner Center)
+    @PUBLISHER_DISPLAY_NAME@    Publisher display name    (Partner Center)
+    @VERSION@                   Four-part version, last part 0 (Store rule)
+    @ARCH@                      x64 | arm64
+
+  The Store re-signs the package with its own certificate, so the Store
+  upload is unsigned; only the sideload test copy is signed with a
+  throwaway certificate whose subject equals @PUBLISHER@.
+
+  The app is a plain Win32 binary: full trust, no AppContainer. That is
+  why the only capability is `runFullTrust`; network capabilities such as
+  `internetClient` do not restrict a full-trust process.
+-->
+<Package
+  xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+  xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
+  xmlns:uap3="http://schemas.microsoft.com/appx/manifest/uap/windows10/3"
+  xmlns:desktop="http://schemas.microsoft.com/appx/manifest/desktop/windows10"
+  xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
+  IgnorableNamespaces="uap uap3 desktop rescap">
+
+  <Identity
+    Name="@IDENTITY_NAME@"
+    Publisher="@PUBLISHER@"
+    Version="@VERSION@"
+    ProcessorArchitecture="@ARCH@" />
+
+  <Properties>
+    <DisplayName>Design Editor</DisplayName>
+    <PublisherDisplayName>@PUBLISHER_DISPLAY_NAME@</PublisherDisplayName>
+    <Logo>Assets\StoreLogo.png</Logo>
+    <Description>Open-source, AI-native vector design tool.</Description>
+  </Properties>
+
+  <Dependencies>
+    <!-- 17763 = Windows 10 1809; 26100 = Windows 11 24H2. -->
+    <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.17763.0" MaxVersionTested="10.0.26100.0" />
+  </Dependencies>
+
+  <Resources>
+    <Resource Language="en-us" />
+  </Resources>
+
+  <Applications>
+    <Application Id="DesignEditor" Executable="design-editor.exe" EntryPoint="Windows.FullTrustApplication">
+      <uap:VisualElements
+        DisplayName="Design Editor"
+        Description="Open-source, AI-native vector design tool."
+        BackgroundColor="transparent"
+        Square150x150Logo="Assets\Square150x150Logo.png"
+        Square44x44Logo="Assets\Square44x44Logo.png" />
+      <Extensions>
+        <!-- Same associations as scripts/package-windows.nsi: .de documents,
+             and pen.dev .pen files opened as an untitled import. -->
+        <uap:Extension Category="windows.fileTypeAssociation">
+          <uap:FileTypeAssociation Name="design-editor-document">
+            <uap:DisplayName>Design Editor Document</uap:DisplayName>
+            <uap:SupportedFileTypes>
+              <uap:FileType ContentType="application/x-design-editor">.de</uap:FileType>
+            </uap:SupportedFileTypes>
+          </uap:FileTypeAssociation>
+        </uap:Extension>
+        <uap:Extension Category="windows.fileTypeAssociation">
+          <uap:FileTypeAssociation Name="pen-dev-import">
+            <uap:DisplayName>pen.dev Document (import)</uap:DisplayName>
+            <uap:SupportedFileTypes>
+              <uap:FileType ContentType="application/x-pen-dev">.pen</uap:FileType>
+            </uap:SupportedFileTypes>
+          </uap:FileTypeAssociation>
+        </uap:Extension>
+        <!-- `design-editor` on PATH, e.g. for `design-editor --mcp`. -->
+        <uap3:Extension Category="windows.appExecutionAlias">
+          <uap3:AppExecutionAlias>
+            <desktop:ExecutionAlias Alias="design-editor.exe" />
+          </uap3:AppExecutionAlias>
+        </uap3:Extension>
+      </Extensions>
+    </Application>
+
+    <!-- The `de` CLI: no Start menu entry, reachable only through its alias.
+         The NSIS installer never put it on PATH; the package can. -->
+    <Application Id="DesignEditorCli" Executable="de.exe" EntryPoint="Windows.FullTrustApplication">
+      <uap:VisualElements
+        DisplayName="Design Editor CLI"
+        Description="Design Editor command-line tool."
+        BackgroundColor="transparent"
+        Square150x150Logo="Assets\Square150x150Logo.png"
+        Square44x44Logo="Assets\Square44x44Logo.png"
+        AppListEntry="none" />
+      <Extensions>
+        <uap3:Extension Category="windows.appExecutionAlias">
+          <uap3:AppExecutionAlias>
+            <desktop:ExecutionAlias Alias="de.exe" />
+          </uap3:AppExecutionAlias>
+        </uap3:Extension>
+      </Extensions>
+    </Application>
+  </Applications>
+
+  <Capabilities>
+    <rescap:Capability Name="runFullTrust" />
+  </Capabilities>
+</Package>

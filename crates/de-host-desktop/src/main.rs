@@ -86,6 +86,7 @@ mod mcp_serve;
 mod menu;
 mod menu_action;
 mod message_dialog;
+mod packaged;
 mod page_fonts;
 mod persistence;
 mod persistence_error;

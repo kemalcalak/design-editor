@@ -17,6 +17,15 @@ name: Release
 #   de-cli-linux-x86_64.tar.gz            standalone Linux `de` CLI
 #   SHA256SUMS.txt
 #
+# Microsoft Store: the Windows leg also packs `Design-Editor-<v>-x64.msix`
+# (unsigned; the Store re-signs it) and a sideload copy signed with a throwaway
+# certificate (`-test.msix` + `.cer`, identity `DesignEditor.Test`). Both are
+# workflow artifacts (`msix-windows-x86_64`), not release assets. The Store
+# package takes its identity from the repository variables
+# MSSTORE_IDENTITY_NAME / MSSTORE_PUBLISHER / MSSTORE_PUBLISHER_DISPLAY_NAME
+# (Partner Center > Product identity); `store-publish` submits it only when
+# MSSTORE_PRODUCT_ID is set and the MSSTORE_* API secrets exist.
+#
 # The two Linux archives hold the bare binary at the archive root. The
 # in-app update on Linux unpacks `design-editor` from the first one and
 # renames it over the running binary (update_install_platform.rs). Before
@@ -47,6 +56,8 @@ on:
       - 'scripts/build-rust-release-host.sh'
       - 'scripts/bundle-macos.sh'
       - 'scripts/package-windows.nsi'
+      - 'tools/package-msix.ps1'
+      - 'packaging/windows/**'
       - 'scripts/workspace-version.sh'
       - 'crates/de-host-desktop/assets/icon.*'
       - '.github/ci/rust-check-apt-packages.txt'
@@ -300,6 +311,46 @@ jobs:
             "/DVC_REDIST_FILE=$env:VC_REDIST_FILE" `
             scripts\package-windows.nsi
 
+      # Windows: MSIX for the Microsoft Store plus a test-signed sideload copy.
+      - name: Package MSIX (windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        env:
+          MSSTORE_IDENTITY_NAME: ${{ vars.MSSTORE_IDENTITY_NAME }}
+          MSSTORE_PUBLISHER: ${{ vars.MSSTORE_PUBLISHER }}
+          MSSTORE_PUBLISHER_DISPLAY_NAME: ${{ vars.MSSTORE_PUBLISHER_DISPLAY_NAME }}
+        run: |
+          $common = @{
+            BinDir  = "target\${{ matrix.target }}\release"
+            Version = $env:DE_VERSION
+            Arch    = '${{ matrix.arch }}'
+          }
+          # Until Partner Center has reserved the name, the Store package
+          # carries the test identity too; it is only uploadable once the
+          # three variables are set.
+          $store = @{}
+          if ($env:MSSTORE_IDENTITY_NAME -and $env:MSSTORE_PUBLISHER -and $env:MSSTORE_PUBLISHER_DISPLAY_NAME) {
+            $store = @{
+              IdentityName         = $env:MSSTORE_IDENTITY_NAME
+              Publisher            = $env:MSSTORE_PUBLISHER
+              PublisherDisplayName = $env:MSSTORE_PUBLISHER_DISPLAY_NAME
+            }
+          } else {
+            Write-Host '::notice::MSSTORE_* identity variables are not set; the Store MSIX uses the test identity'
+          }
+          & tools/package-msix.ps1 @common @store `
+            -OutFile "msix\Design-Editor-$env:DE_VERSION-${{ matrix.arch }}.msix"
+          & tools/package-msix.ps1 @common -TestSign `
+            -OutFile "msix\Design-Editor-$env:DE_VERSION-${{ matrix.arch }}-test.msix"
+      - name: Upload MSIX packages (windows)
+        if: runner.os == 'Windows'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: msix-${{ matrix.label }}
+          path: msix/
+          if-no-files-found: error
+          retention-days: ${{ github.event_name == 'pull_request' && 7 || 90 }}
+
       - name: Upload release assets
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
@@ -432,3 +483,53 @@ jobs:
             --notes-file release-notes.md \
             --generate-notes \
             --latest
+
+  # Submit the release's MSIX to the Microsoft Store. The first submission is
+  # made by hand in Partner Center (the product must already be live); this
+  # job only updates it. It runs once MSSTORE_PRODUCT_ID (repository
+  # variable) is set; without the four API secrets it stops with an error
+  # rather than silently skipping a configured Store release.
+  store-publish:
+    name: Submit v${{ needs.version.outputs.version }} to the Microsoft Store
+    needs: [version, publish]
+    if: >-
+      needs.version.outputs.release == 'true' && github.event_name != 'pull_request' &&
+      vars.MSSTORE_PRODUCT_ID != ''
+    runs-on: windows-latest
+    permissions:
+      contents: read
+    env:
+      DE_VERSION: ${{ needs.version.outputs.version }}
+      MSSTORE_PRODUCT_ID: ${{ vars.MSSTORE_PRODUCT_ID }}
+      MSSTORE_TENANT_ID: ${{ secrets.MSSTORE_TENANT_ID }}
+      MSSTORE_SELLER_ID: ${{ secrets.MSSTORE_SELLER_ID }}
+      MSSTORE_CLIENT_ID: ${{ secrets.MSSTORE_CLIENT_ID }}
+      MSSTORE_CLIENT_SECRET: ${{ secrets.MSSTORE_CLIENT_SECRET }}
+    steps:
+      - name: Check the Store credentials
+        shell: pwsh
+        run: |
+          foreach ($name in 'MSSTORE_TENANT_ID', 'MSSTORE_SELLER_ID', 'MSSTORE_CLIENT_ID', 'MSSTORE_CLIENT_SECRET') {
+            if (-not [Environment]::GetEnvironmentVariable($name)) {
+              Write-Host "::error::secret $name is not set"
+              exit 1
+            }
+          }
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: msix-windows-x86_64
+          path: msix
+      - uses: microsoft/microsoft-store-apppublisher@cc9910a8d59f2eb55cbb83df0a3800cf3b5300e0 # v1.4
+      - name: Submit the package
+        shell: pwsh
+        run: |
+          $package = "msix\Design-Editor-$env:DE_VERSION-x64.msix"
+          if (-not (Test-Path -LiteralPath $package)) { throw "missing $package" }
+          msstore reconfigure `
+            --tenantId $env:MSSTORE_TENANT_ID `
+            --sellerId $env:MSSTORE_SELLER_ID `
+            --clientId $env:MSSTORE_CLIENT_ID `
+            --clientSecret $env:MSSTORE_CLIENT_SECRET
+          if ($LASTEXITCODE -ne 0) { throw "msstore reconfigure failed ($LASTEXITCODE)" }
+          msstore publish $package -id $env:MSSTORE_PRODUCT_ID
+          if ($LASTEXITCODE -ne 0) { throw "msstore publish failed ($LASTEXITCODE)" }
