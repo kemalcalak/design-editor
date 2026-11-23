@@ -196,12 +196,22 @@ fn parse_editor_state_source(
         rewrite_blocked_by_schema_warning,
         pen_dev_import: canonical.compatibility.pen_dev,
         pptx_import: None,
+        motion_repairs: motion_repair_lines(&loaded.warnings),
     };
     Ok((
         EditorState::from_document(loaded.value),
         embedded.map(|extraction| extraction.meta),
         report,
     ))
+}
+
+/// The user-facing lines for the animation data a load dropped.
+fn motion_repair_lines(warnings: &[jian_ops_schema::LoadWarning]) -> Vec<String> {
+    warnings
+        .iter()
+        .filter(|warning| warning.is_motion_repair())
+        .map(ToString::to_string)
+        .collect()
 }
 
 fn finish_loaded_state_with_report(

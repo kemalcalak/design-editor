@@ -29,9 +29,10 @@ pub(super) fn ts_update_patch_json(
         .map_err(|error| ToolOutcome::Err(ToolErrorCode::InvalidArgument, error.to_string()))
 }
 
-/// A rich-patch normalization failure. Both variants are malformed-`fill_hex`
-/// reports; `Display` reproduces the previous message byte-for-byte (the
-/// `U()` program path re-labels them as `ProgramError::Json`).
+/// A rich-patch normalization failure: a malformed `fill_hex`, an unreadable
+/// local image or an invalid animation. `Display` keeps the previous
+/// `fill_hex` messages byte-for-byte (the `U()` program path re-labels them
+/// as `ProgramError::Json`).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) enum UpdateDataError {
     /// `fill_hex` / `fillHex` is present but is not a JSON string.
@@ -39,6 +40,8 @@ pub(super) enum UpdateDataError {
     /// `fill_hex` / `fillHex` is a string but not a supported hex spelling.
     InvalidFillHex(String),
     LocalImage(crate::local_image::LocalImageError),
+    /// `animations` would store an animation the loader does not accept.
+    Motion(de_editor_core::motion_guard::MotionWriteError),
 }
 
 impl std::fmt::Display for UpdateDataError {
@@ -49,6 +52,7 @@ impl std::fmt::Display for UpdateDataError {
                 write!(f, "fill_hex must be #rgb/#rrggbb/#rrggbbaa, got {hex:?}")
             }
             UpdateDataError::LocalImage(e) => e.fmt(f),
+            UpdateDataError::Motion(e) => e.fmt(f),
         }
     }
 }
@@ -74,6 +78,8 @@ pub(super) fn ts_update_patch_json_value(value: &Value) -> Result<Option<String>
     super::batch_design::normalize_node_shape(&mut patch);
     crate::local_image::inline_local_images_in_patch(&mut patch)
         .map_err(UpdateDataError::LocalImage)?;
+    de_editor_core::motion_guard::prepare_motion_json(&mut patch)
+        .map_err(UpdateDataError::Motion)?;
     Ok(Some(patch.to_string()))
 }
 

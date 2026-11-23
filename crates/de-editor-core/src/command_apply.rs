@@ -1,7 +1,6 @@
 //! [`EditorState::apply`] — apply one [`EditorCommand`] against the
 //! editor state.
 //!
-//! Ported from `design-editor-shell-core::document::apply_mcp_command`.
 //! Preserves the two shell-core invariants:
 //!
 //!   - **Pre-validate-then-mutate.** Every argument (id space, target
@@ -23,7 +22,6 @@
 //!
 //! The `apply` match is the spine; enum parsers, page resolution, and app-state
 //! merging live in sibling modules to keep this file under the 800-line cap.
-//!
 use crate::align::AlignAction;
 use crate::command::{EditorCommand, VariableScalarPayload};
 use crate::id_allocator::{IdAllocError, IdAllocator};
@@ -55,9 +53,12 @@ impl EditorState {
     /// so the host can report it instead of minting a fallback id.
     pub fn apply_with_allocator(
         &mut self,
-        cmd: EditorCommand,
+        mut cmd: EditorCommand,
         allocator: &mut dyn IdAllocator,
     ) -> Result<bool, IdAllocError> {
+        if crate::motion_guard::prepare_command(&mut cmd).is_err() {
+            return Ok(false);
+        }
         let marks_document_dirty = command_marks_document_dirty(&cmd);
         let revision_before = self.revision;
         let changed = match cmd {

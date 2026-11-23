@@ -488,3 +488,21 @@ fn export_download_file_name_joins_document_and_selected_node() {
     state.editor_ui.file_name_display = Some("re:port/v2.de".to_string());
     assert_eq!(export_download_file_name(&state), "re-port-v2-星图.png");
 }
+
+#[test]
+fn dropped_animation_data_is_reported_by_node_and_scale_expands_silently() {
+    let previous = EditorState::new();
+    let source = r#"{"version":"1.0.0","children":[
+      {"type":"rectangle","id":"hero","animations":[{"trigger":"mount","durationMs":200,"keyframes":[
+        {"offset":0,"values":{"scale":0.5,"blur":2}},{"offset":1,"values":{"scale":1}}]}]}
+    ]}"#;
+    let ingested = ingest_document_source(source, &previous).expect("document opens");
+    assert_eq!(
+        ingested.motion_repairs.len(),
+        1,
+        "{:?}",
+        ingested.motion_repairs
+    );
+    assert!(ingested.motion_repairs[0].contains("hero"));
+    assert!(ingested.motion_repairs[0].contains("blur"));
+}

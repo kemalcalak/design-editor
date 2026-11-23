@@ -385,6 +385,9 @@ fn update_instance_descendant(
     if let Err(e) = crate::local_image::inline_local_images_in_patch(&mut value) {
         return ToolOutcome::Err(ToolErrorCode::InvalidArgument, e.to_string());
     }
+    if let Err(e) = de_editor_core::motion_guard::prepare_motion_json(&mut value) {
+        return ToolOutcome::Err(ToolErrorCode::InvalidArgument, e.to_string());
+    }
     let page_id = args
         .get("pageId")
         .or_else(|| args.get("page_id"))

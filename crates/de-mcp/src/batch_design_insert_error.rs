@@ -1,5 +1,6 @@
 //! Why an insert payload is refused before it is parsed: a path with no
-//! outline (#267) or a local image path that cannot be read (#268).
+//! outline (#267), a local image path that cannot be read (#268) or an
+//! animation the loader would not accept (#351).
 
 use crate::local_image::LocalImageError;
 
@@ -25,6 +26,7 @@ impl std::fmt::Display for MissingPathOutline {
 pub(crate) enum InsertPayloadError {
     MissingOutline(MissingPathOutline),
     LocalImage(LocalImageError),
+    Motion(de_editor_core::motion_guard::MotionWriteError),
 }
 
 impl std::fmt::Display for InsertPayloadError {
@@ -32,6 +34,7 @@ impl std::fmt::Display for InsertPayloadError {
         match self {
             Self::MissingOutline(e) => e.fmt(f),
             Self::LocalImage(e) => e.fmt(f),
+            Self::Motion(e) => e.fmt(f),
         }
     }
 }

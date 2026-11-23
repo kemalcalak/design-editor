@@ -73,11 +73,16 @@ impl McpTool for CopyNode {
             Err(e) => return e,
         };
         let page_id = optional_page_id(args);
-        let overrides_json = args
+        let overrides_json = match args
             .get("overrides")
             .map(|s| s.trim())
             .filter(|s| !s.is_empty())
-            .map(str::to_string);
+            .map(copy_overrides_with_motion)
+        {
+            Some(Err(e)) => return e,
+            Some(Ok(json)) => Some(json),
+            None => None,
+        };
         let mut out = BTreeMap::new();
         out.insert("wrote".into(), "true".into());
         ToolOutcome::OkWithCommand(
@@ -89,6 +94,25 @@ impl McpTool for CopyNode {
                 page_id,
             },
         )
+    }
+}
+
+/// Expand the `scale` alias in copy overrides and refuse an animation the
+/// loader would not accept (#351), so the caller learns why instead of
+/// a bare host rejection. Text that is not JSON is passed on unchanged
+/// for the applier to reject as before.
+#[allow(clippy::result_large_err)]
+fn copy_overrides_with_motion(raw: &str) -> Result<String, ToolOutcome> {
+    let Ok(mut value) = serde_json::from_str::<serde_json::Value>(raw) else {
+        return Ok(raw.to_string());
+    };
+    match de_editor_core::motion_guard::prepare_motion_json(&mut value) {
+        Ok(true) => Ok(value.to_string()),
+        Ok(false) => Ok(raw.to_string()),
+        Err(e) => Err(ToolOutcome::Err(
+            ToolErrorCode::InvalidArgument,
+            format!("overrides: {e}"),
+        )),
     }
 }
 

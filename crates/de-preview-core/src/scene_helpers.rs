@@ -78,6 +78,12 @@ pub(super) fn format_warning(w: &LoadWarning) -> Option<String> {
         LoadWarning::ViewportWrite { path } => Some(format!(
             "ViewportWrite: '{path}' authors a reserved $viewport field (engine-computed, not user-writable)"
         )),
+        LoadWarning::AnimationPropertyDropped { path, .. } => {
+            Some(format!("AnimationPropertyDropped: '{path}': {w}"))
+        }
+        LoadWarning::InvalidAnimationDropped { path, .. } => {
+            Some(format!("InvalidAnimationDropped: '{path}': {w}"))
+        }
         LoadWarning::UnknownField { .. } => None,
     }
 }

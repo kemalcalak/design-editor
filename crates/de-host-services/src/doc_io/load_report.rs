@@ -14,6 +14,9 @@ pub struct DocumentLoadReport {
     /// The file was a PowerPoint deck converted on open (#246): what could
     /// not come over as-is. Like a pen.dev import it binds no path.
     pub pptx_import: Option<Vec<String>>,
+    /// Animation data the loader dropped (#351), one line per drop naming
+    /// the node. Saving makes the loss permanent, so hosts show it.
+    pub motion_repairs: Vec<String>,
 }
 
 impl DocumentLoadReport {

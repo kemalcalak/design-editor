@@ -200,6 +200,7 @@ fn load_into_host(
     state.hold_browser_pages_if_any();
     let pen_dev_import = loaded.report.pen_dev_import.clone();
     let pptx_import = loaded.report.pptx_import.clone();
+    let motion_repairs = loaded.report.motion_repairs.clone();
     let bound_path = (!loaded.report.is_import()).then(|| path.to_path_buf());
     set_file_name_display(&mut state, bound_path.as_deref());
     state.clear_selection();
@@ -223,6 +224,15 @@ fn load_into_host(
             path,
             ("dialog.pptxImportTitle", "dialog.pptxImportBody"),
             &warnings.join("\n"),
+        );
+    }
+    if !motion_repairs.is_empty() {
+        // Dropped animation data (#351) is gone once the file is saved.
+        alert_import_losses(
+            host,
+            path,
+            ("dialog.motionRepairTitle", "dialog.motionRepairBody"),
+            &motion_repairs.join("\n"),
         );
     }
     Ok(Some(OpenedDocument {
