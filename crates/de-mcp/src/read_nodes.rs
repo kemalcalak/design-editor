@@ -2,6 +2,7 @@
 //! pen.dev's `Get` options (#169): `resolveVariables`, `resolveInstances`
 //! and `includePathGeometry`.
 
+use std::borrow::Cow;
 use std::collections::BTreeMap;
 
 use de_editor_core::instance_path::{expand_instances_with_paths, INSTANCE_PATH_SEPARATOR};
@@ -14,7 +15,7 @@ use serde_json::{json, Value};
 
 use super::{McpTool, ToolErrorCode, ToolOutcome};
 
-type ToolCallError = (ToolErrorCode, String);
+pub(crate) type ToolCallError = (ToolErrorCode, String);
 
 pub struct ReadNodes {
     /// The whole document: `resolveInstances` looks components up on any
@@ -62,9 +63,41 @@ impl McpTool for ReadNodes {
     }
 
     fn call(&self, args: &BTreeMap<String, String>) -> ToolOutcome {
-        match self.read(args) {
+        match self.view().read(args) {
             Ok(json) => ToolOutcome::OkJson(json.to_string()),
             Err((code, msg)) => ToolOutcome::Err(code, msg),
+        }
+    }
+}
+
+/// `read_nodes` straight off `state`, without the snapshot's document copy:
+/// what `execute`'s `Get` calls, once per read (#350).
+pub(crate) fn read_nodes_on(
+    state: &EditorState,
+    args: &BTreeMap<String, String>,
+) -> Result<Value, ToolCallError> {
+    ReadView {
+        doc: &state.doc,
+        active_page_index: state.ui.active_page_index,
+        active_theme: &state.ui.variables.active_theme,
+    }
+    .read(args)
+}
+
+/// What a read needs, borrowed: the tool reads its own snapshot through it,
+/// `execute` reads its simulation state through it.
+struct ReadView<'a> {
+    doc: &'a PenDocument,
+    active_page_index: usize,
+    active_theme: &'a BTreeMap<String, String>,
+}
+
+impl ReadNodes {
+    fn view(&self) -> ReadView<'_> {
+        ReadView {
+            doc: &self.doc,
+            active_page_index: self.active_page_index,
+            active_theme: &self.active_theme,
         }
     }
 }
@@ -77,24 +110,30 @@ pub fn read_nodes_snapshot(state: &EditorState) -> ReadNodes {
     }
 }
 
-impl ReadNodes {
+impl ReadView<'_> {
     fn read(&self, args: &BTreeMap<String, String>) -> Result<Value, ToolCallError> {
         let roots = self.page_roots(args)?;
         let depth = parse_depth(args)?;
         let options = ReadOptions::parse(args)?;
         let node_ids = parse_node_ids(args)?;
 
-        let mut selected: Vec<PenNode> = match node_ids {
+        // Borrowed until a resolve option has to rewrite the nodes: a plain
+        // read of a page or subtree serializes straight from the document.
+        let mut selected: Vec<Cow<'_, PenNode>> = match node_ids {
             Some(ids) if !ids.is_empty() => {
                 ids.iter().filter_map(|id| self.find(roots, id)).collect()
             }
-            _ => roots.to_vec(),
+            _ => roots.iter().map(Cow::Borrowed).collect(),
         };
-        if options.resolve_instances {
-            selected = expand_instances_with_paths(&selected, &self.doc);
-        }
-        if options.resolve_variables {
-            resolve_roots_for_canvas(&mut selected, &self.doc, &self.active_theme);
+        if options.resolve_instances || options.resolve_variables {
+            let mut owned: Vec<PenNode> = selected.into_iter().map(Cow::into_owned).collect();
+            if options.resolve_instances {
+                owned = expand_instances_with_paths(&owned, self.doc);
+            }
+            if options.resolve_variables {
+                resolve_roots_for_canvas(&mut owned, self.doc, self.active_theme);
+            }
+            selected = owned.into_iter().map(Cow::Owned).collect();
         }
         let nodes: Vec<Value> = selected
             .iter()
@@ -157,15 +196,15 @@ impl ReadNodes {
     /// An authored node by id, or a node inside a component instance by its
     /// `instance/child` path (expanded on demand, as pen.dev's `Get` reads
     /// instance paths).
-    fn find(&self, roots: &[PenNode], id: &str) -> Option<PenNode> {
+    fn find<'r>(&self, roots: &'r [PenNode], id: &str) -> Option<Cow<'r, PenNode>> {
         let node_id = NodeId::new_opt(id)?;
         if let Some(node) = find_node(roots, &node_id) {
-            return Some(node.clone());
+            return Some(Cow::Borrowed(node));
         }
         let (instance, _) = id.split_once(INSTANCE_PATH_SEPARATOR)?;
         let instance = find_node(roots, &NodeId::new_opt(instance)?)?;
-        let expanded = expand_instances_with_paths(std::slice::from_ref(instance), &self.doc);
-        find_node(&expanded, &node_id).cloned()
+        let expanded = expand_instances_with_paths(std::slice::from_ref(instance), self.doc);
+        find_node(&expanded, &node_id).cloned().map(Cow::Owned)
     }
 }
 
