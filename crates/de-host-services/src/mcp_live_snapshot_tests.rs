@@ -18,9 +18,9 @@ fn a_timed_out_snapshot_request_is_not_copied_by_the_ui() {
     };
     assert!(abandoned.load(Ordering::Acquire), "the timeout marks it");
     let mut state = EditorState::new();
-    assert!(snapshot_unless_abandoned(&abandoned, &mut state).is_none());
+    assert!(snapshot_unless_abandoned(&abandoned, &mut state, None).is_none());
     let live = AtomicBool::new(false);
-    assert!(snapshot_unless_abandoned(&live, &mut state).is_some());
+    assert!(snapshot_unless_abandoned(&live, &mut state, None).is_some());
 }
 
 #[test]

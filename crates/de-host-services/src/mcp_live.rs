@@ -11,9 +11,11 @@ use std::sync::atomic::{AtomicBool, AtomicU64, AtomicUsize, Ordering};
 use std::sync::mpsc::{self, Receiver, RecvTimeoutError, Sender, SyncSender, TryRecvError};
 use std::sync::{Arc, Mutex};
 use std::thread;
-use std::time::{Duration, SystemTime, UNIX_EPOCH};
+use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
+use de_editor_core::history_snapshot::SharedDoc;
 use de_editor_core::pen_node_ext::PenNodeExt;
+use de_editor_core::request_snapshot::SharedRequestSnapshot;
 use de_editor_core::{EditorCommand, EditorState};
 use jian_ops_schema::node::PenNode;
 
@@ -52,6 +54,11 @@ const MCP_CLIENT_FALLBACK_NAME: &str = "MCP Client";
 /// external MCP client isn't one of the app's own named agents.
 const MCP_CLIENT_COLOR: &str = "#8A8F98";
 
+/// How long `McpLiveServer::last_snapshot_doc` outlives the last snapshot
+/// request. Agents call in bursts, so the anchor covers a burst and is
+/// dropped once the client goes quiet, freeing nodes no edit still shares.
+const SNAPSHOT_ANCHOR_IDLE: Duration = Duration::from_secs(30);
+
 pub struct McpLiveServer {
     port: u16,
     /// Per-instance identity token, reported in the live `ping` reply and
@@ -81,6 +88,14 @@ pub struct McpLiveServer {
     /// the previous one's tail animation. UI-thread-only (`pump` takes
     /// `&mut self`), so a plain field — no interior mutability needed.
     last_mcp_epoch: u64,
+    /// The document of the last snapshot handed to a connection, the
+    /// sharing anchor for the next one (#352): unchanged top-level nodes
+    /// reuse its `Arc`s, so a read call does not copy the document on
+    /// the UI thread. Stamped with when it was handed out: `pump` lets go
+    /// of it after `SNAPSHOT_ANCHOR_IDLE`, so a document the host replaced
+    /// (File > Open, revert) is not kept alive by a client that went quiet.
+    /// UI-thread-only, like `last_mcp_epoch`.
+    last_snapshot_doc: Option<(SharedDoc, Instant)>,
     /// Validated extension evidence waiting for the desktop's asynchronous
     /// provider worker. Kept separate from `EditorState`: this route neither
     /// reads nor mutates the live document.
@@ -134,9 +149,9 @@ struct UnplacedWrite {
 
 enum UiRequest {
     Snapshot {
-        ack: SyncSender<EditorState>,
+        ack: SyncSender<SharedRequestSnapshot>,
         /// Set by the connection once it stopped waiting (`UI_ACK_TIMEOUT`):
-        /// the pump then skips the copy nobody will read (#350).
+        /// the pump then skips the capture nobody will read (#350).
         abandoned: Arc<AtomicBool>,
     },
     /// Lightweight read snapshot for `list_pages`. Copying only page metadata
@@ -254,6 +269,7 @@ impl McpLiveServer {
             stop_tx,
             client_identity,
             last_mcp_epoch: 0,
+            last_snapshot_doc: None,
             pending_design_md: VecDeque::new(),
             saved_documents: Vec::new(),
             follow_target: None,
@@ -287,10 +303,23 @@ impl McpLiveServer {
 
     pub fn pump(&mut self, state: &mut EditorState) -> McpPumpOutcome {
         let mut outcome = McpPumpOutcome::default();
+        if self
+            .last_snapshot_doc
+            .as_ref()
+            .is_some_and(|(_, at)| at.elapsed() > SNAPSHOT_ANCHOR_IDLE)
+        {
+            self.last_snapshot_doc = None;
+        }
         for _ in 0..UI_PUMP_REQUEST_BUDGET {
             match self.req_rx.try_recv() {
                 Ok(UiRequest::Snapshot { ack, abandoned }) => {
-                    if let Some(snapshot) = snapshot_unless_abandoned(&abandoned, state) {
+                    if let Some(snapshot) = snapshot_unless_abandoned(
+                        &abandoned,
+                        state,
+                        self.last_snapshot_doc.as_ref().map(|(doc, _)| doc),
+                    ) {
+                        self.last_snapshot_doc =
+                            Some((snapshot.shared_doc().clone(), Instant::now()));
                         let _ = ack.send(snapshot);
                     }
                 }
@@ -359,6 +388,9 @@ impl McpLiveServer {
                     // by the renderer at paint, so the swap + dirty flag
                     // repaints the new document with no extra layout pass here.
                     state.replace_document(*doc);
+                    // Nothing in the old document can be shared any more;
+                    // do not keep it alive until the next snapshot.
+                    self.last_snapshot_doc = None;
                     de_pen_loader::apply_editor_meta(state, editor_meta);
                     let _ = ack.send(());
                     outcome.repaint = true;
@@ -548,30 +580,31 @@ impl Drop for McpLiveServer {
 /// The state a `UiRequest::Snapshot` asked for, or `None` when its
 /// connection already gave up waiting.
 ///
-/// Narrowed clone: the MCP registry + applier never read `chat` /
-/// `codegen` / `theme_presets`, and those are the sub-states that grow with
-/// SESSION length (transcripts, generated source, saved preset tables)
-/// rather than with the document — so copying them into every tool call's
-/// snapshot is pure UI-thread stall. See `de_editor_core::request_snapshot`
-/// for the field audit and for why an `Arc` can't replace this clone (the
-/// connection thread re-applies the ack'd command to its own copy, and the
-/// live state keeps mutating here).
+/// Narrowed: the MCP registry + applier never read `chat` / `codegen` /
+/// `theme_presets`, and those are the sub-states that grow with SESSION
+/// length rather than with the document. See `de_editor_core::request_snapshot`
+/// for the field audit.
 ///
-/// The document copy is the expensive part (hundreds of MB and ~150 ms on a
-/// 180k-node document), and a slow UI frame lets timed-out requests pile up
-/// in the queue: answering them would stall every later call behind copies
-/// that are thrown away on arrival.
+/// The document is shared against `anchor` rather than copied (#352): a
+/// deep copy cost hundreds of MB and ~150 ms per call on a 180k-node
+/// document. The connection materializes its own owned copy off the UI
+/// thread (`ui_requests::request_snapshot`). A request that timed out
+/// before the UI got to it is still skipped, so stale requests piling up
+/// behind a slow frame cost nothing.
 fn snapshot_unless_abandoned(
     abandoned: &AtomicBool,
     state: &mut EditorState,
-) -> Option<EditorState> {
-    // A timeout that lands while the copy below runs still costs that one
-    // copy; the flag only stops requests that were stale before the UI got
+    anchor: Option<&SharedDoc>,
+) -> Option<SharedRequestSnapshot> {
+    // A timeout that lands while the capture below runs still costs that
+    // one capture; the flag only stops requests that were stale before the UI got
     // to them, which is where the queue piled up.
     if abandoned.load(Ordering::Acquire) {
         return None;
     }
-    Some(de_editor_core::request_snapshot::narrowed_snapshot(state))
+    Some(de_editor_core::request_snapshot::shared_snapshot(
+        state, anchor,
+    ))
 }
 
 fn command_invalidates_layout(cmd: &EditorCommand) -> bool {

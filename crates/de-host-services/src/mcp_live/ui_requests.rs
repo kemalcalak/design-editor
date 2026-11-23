@@ -35,7 +35,9 @@ pub(super) fn request_snapshot_within(
     if result.is_err() {
         abandoned.store(true, Ordering::Release);
     }
-    recv_with_timeout(result, "snapshot")
+    // The document-sized copy happens here, on the connection thread,
+    // not on the UI thread that shared it (#352).
+    recv_with_timeout(result, "snapshot").map(SharedRequestSnapshot::into_state)
 }
 
 pub(super) fn request_list_pages(

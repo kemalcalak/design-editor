@@ -89,6 +89,35 @@ impl SharedDoc {
         }
     }
 
+    /// [`capture`](Self::capture) against an anchor, with the deep-equal
+    /// checks spread over the machine's cores (#352).
+    ///
+    /// The live MCP server captures the document on the UI thread for
+    /// every tool call; on a large unchanged document the compare pass is
+    /// the whole cost (~40 ms single-threaded on 184k nodes). Each
+    /// top-level node is matched exactly as `capture` matches it (same
+    /// slot, else same id, and always deep-equal), so the result is the
+    /// same `SharedDoc` with the same reuse decisions. Without an anchor, or on a
+    /// single core / wasm, it is `capture`.
+    pub fn capture_parallel(doc: &PenDocument, anchor: Option<&SharedDoc>) -> SharedDoc {
+        #[cfg(not(target_arch = "wasm32"))]
+        if let Some(anchor) = anchor {
+            let workers = std::thread::available_parallelism().map_or(1, |n| n.get());
+            // One top-level node leaves nothing to split.
+            let roots = doc.children.len()
+                + doc
+                    .pages
+                    .iter()
+                    .flatten()
+                    .map(|p| p.children.len())
+                    .sum::<usize>();
+            if workers > 1 && roots > 1 {
+                return capture_on_workers(doc, anchor, workers.min(MAX_CAPTURE_WORKERS));
+            }
+        }
+        Self::capture(doc, anchor)
+    }
+
     /// Rebuild an owned [`PenDocument`] — deep-clones every shared node
     /// back into place. The materialized document is byte-identical to
     /// the one that was captured.
@@ -105,6 +134,11 @@ impl SharedDoc {
             }
         }
         doc
+    }
+
+    /// The document with every node-children vector emptied.
+    pub(crate) fn skeleton(&self) -> &PenDocument {
+        &self.skeleton
     }
 
     /// The document's variable table, as carried by the skeleton.
@@ -346,6 +380,104 @@ fn strip_page_children(page: &PenPage) -> PenPage {
     }
 }
 
+/// Upper bound on [`SharedDoc::capture_parallel`]'s threads: the compare
+/// is memory-bound, and more threads mostly add spawn cost.
+#[cfg(not(target_arch = "wasm32"))]
+const MAX_CAPTURE_WORKERS: usize = 8;
+
+/// [`SharedDoc::capture_parallel`]'s body: workers pull top-level nodes
+/// one at a time from a shared counter (boards differ wildly in size, so
+/// fixed chunks would leave cores idle) and match each against the
+/// anchor with [`reuse_or_clone`], the same rule `share_children` uses.
+///
+/// The calling thread works the queue too, so a helper the OS refuses to
+/// start only costs speed: the capture still completes on the UI thread
+/// instead of panicking there.
+#[cfg(not(target_arch = "wasm32"))]
+pub(crate) fn capture_on_workers(
+    doc: &PenDocument,
+    anchor: &SharedDoc,
+    workers: usize,
+) -> SharedDoc {
+    use std::sync::atomic::{AtomicUsize, Ordering};
+    use std::sync::OnceLock;
+
+    // (current top-level nodes, the anchor's) for the root, then each page.
+    let mut lists: Vec<(&[PenNode], &[Arc<PenNode>])> =
+        vec![(doc.children.as_slice(), anchor.root_children.as_slice())];
+    for (i, page) in doc.pages.iter().flatten().enumerate() {
+        let prev = anchor.page_children.get(i).map_or(&[][..], Vec::as_slice);
+        lists.push((page.children.as_slice(), prev));
+    }
+    // Id-keyed fallback maps, built on first miss like `share_children`'s,
+    // so an unchanged document never hashes its ids.
+    let by_id: Vec<OnceLock<HashMap<&str, &Arc<PenNode>>>> =
+        lists.iter().map(|_| OnceLock::new()).collect();
+    let slots: Vec<(usize, usize)> = lists
+        .iter()
+        .enumerate()
+        .flat_map(|(l, (current, _))| (0..current.len()).map(move |i| (l, i)))
+        .collect();
+    let results: Vec<OnceLock<Arc<PenNode>>> = slots.iter().map(|_| OnceLock::new()).collect();
+    let next = AtomicUsize::new(0);
+    let work = || loop {
+        let k = next.fetch_add(1, Ordering::Relaxed);
+        let Some(&(l, i)) = slots.get(k) else {
+            break;
+        };
+        let (current, prev) = lists[l];
+        let node = &current[i];
+        let shared = reuse_or_clone(node, prev.get(i), || {
+            by_id[l]
+                .get_or_init(|| prev.iter().map(|a| (a.id_str(), a)).collect())
+                .get(node.id_str())
+                .copied()
+        });
+        let _ = results[k].set(shared);
+    };
+    std::thread::scope(|scope| {
+        for _ in 1..workers.min(slots.len()) {
+            // A refused spawn leaves its share to the others.
+            let _ = std::thread::Builder::new().spawn_scoped(scope, work);
+        }
+        work();
+    });
+    let mut results = results.into_iter().map(|slot| {
+        slot.into_inner()
+            .expect("every slot is filled before the scope ends")
+    });
+    let mut take = |len: usize| results.by_ref().take(len).collect::<Vec<_>>();
+    let root_children = take(lists[0].0.len());
+    let page_children = lists[1..]
+        .iter()
+        .map(|(current, _)| take(current.len()))
+        .collect();
+    SharedDoc {
+        skeleton: strip_children(doc),
+        root_children,
+        page_children,
+    }
+}
+
+/// The anchor's `Arc` for `node` when one is deep-equal — first the one at
+/// the same slot with the same id, then the one `by_id` finds — else a
+/// fresh clone. The equality check gates every reuse.
+fn reuse_or_clone<'a>(
+    node: &PenNode,
+    at_slot: Option<&'a Arc<PenNode>>,
+    by_id: impl FnOnce() -> Option<&'a Arc<PenNode>>,
+) -> Arc<PenNode> {
+    if let Some(prev) = at_slot {
+        if prev.id_str() == node.id_str() && prev.as_ref() == node {
+            return Arc::clone(prev);
+        }
+    }
+    match by_id() {
+        Some(prev) if prev.as_ref() == node => Arc::clone(prev),
+        _ => Arc::new(node.clone()),
+    }
+}
+
 /// Build the shared top-level vector for `current`, reusing `prev`'s
 /// `Arc`s for equal entries. Index fast path (same slot + same id +
 /// deep-equal) with a lazily-allocated id-keyed fallback map. The
@@ -360,21 +492,14 @@ fn share_children(current: &[PenNode], prev: Option<&[Arc<PenNode>]>) -> Vec<Arc
         .iter()
         .enumerate()
         .map(|(i, node)| {
-            // Index fast path: same slot, same id, deep-equal.
-            if let Some(prev_arc) = prev.get(i) {
-                if prev_arc.id_str() == node.id_str() && prev_arc.as_ref() == node {
-                    return Arc::clone(prev_arc);
-                }
-            }
-            // Id-keyed fallback (allocates a small map — the
-            // allocation-free claim applies to the index walk only).
-            let map = id_map.get_or_insert_with(|| prev.iter().map(|a| (a.id_str(), a)).collect());
-            if let Some(&prev_arc) = map.get(node.id_str()) {
-                if prev_arc.as_ref() == node {
-                    return Arc::clone(prev_arc);
-                }
-            }
-            Arc::new(node.clone())
+            // Index fast path, then the id-keyed fallback (allocates a
+            // small map — the allocation-free claim applies to the index
+            // walk only).
+            reuse_or_clone(node, prev.get(i), || {
+                let map =
+                    id_map.get_or_insert_with(|| prev.iter().map(|a| (a.id_str(), a)).collect());
+                map.get(node.id_str()).copied()
+            })
         })
         .collect()
 }
