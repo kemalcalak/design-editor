@@ -52,6 +52,7 @@ impl IngestedDoc {
                 de_html::diagnostic_parts(typed),
             ),
             pen_dev: None,
+            motion_repairs: Vec::new(),
         }
     }
 }
