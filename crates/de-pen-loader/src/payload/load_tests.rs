@@ -558,3 +558,69 @@ fn unsupported_legacy_version_and_fill_load_in_one_preprocessed_dom() {
     };
     assert_eq!(frame.container.fill.as_ref().map(Vec::len), Some(1));
 }
+
+const BAD_ANIMATION: &str = r#""animations":[{"trigger":"mount","durationMs":200,"keyframes":[{"offset":0,"values":{"scale":0.5,"blur":2}},{"offset":1,"values":{"scale":1}}]},{"trigger":"mount","durationMs":200,"keyframes":[{"offset":0.3,"values":{"opacity":0}},{"offset":1,"values":{"opacity":1}}]}]"#;
+
+fn assert_motion_repaired(
+    loaded: &jian_ops_schema::LoadResult<jian_ops_schema::PenDocument>,
+    leaf: &PenNode,
+) {
+    let animations = leaf
+        .motion_declarations()
+        .1
+        .expect("the valid animation stays");
+    assert_eq!(
+        animations.len(),
+        1,
+        "the offset-broken animation is dropped"
+    );
+    let first = &animations[0].keyframes[0].values;
+    assert_eq!(first.get("scaleX"), Some(&serde_json::json!(0.5)));
+    assert_eq!(first.get("scaleY"), Some(&serde_json::json!(0.5)));
+    assert!(!first.contains_key("scale") && !first.contains_key("blur"));
+    assert!(loaded.warnings.iter().any(|w| matches!(
+        w,
+        jian_ops_schema::LoadWarning::AnimationPropertyDropped { property, .. } if property == "blur"
+    )));
+    assert!(loaded.warnings.iter().any(|w| matches!(
+        w,
+        jian_ops_schema::LoadWarning::InvalidAnimationDropped { .. }
+    )));
+}
+
+#[test]
+fn normal_and_fast_paths_repair_bad_animations_instead_of_refusing() {
+    for editor_meta in ["", r#","editorMeta":{"preserveAuthoredGeometry":true}"#] {
+        let src = format!(
+            r#"{{"version":"1.0.0","formatVersion":"1.1","children":[{{"type":"rectangle","id":"hero","width":10,"height":10,{BAD_ANIMATION}}}]{editor_meta}}}"#
+        );
+        let loaded = load_canonical(&src).expect("a bad animation never refuses the document");
+        assert_motion_repaired(&loaded, &loaded.value.children[0]);
+    }
+}
+
+#[test]
+fn deep_path_repairs_bad_animations_instead_of_refusing() {
+    on_deep_test_stack("deep-motion-repair-test", || {
+        let depth = 200;
+        let mut src = String::from(r#"{"version":"1.0.0","children":["#);
+        for i in 0..depth {
+            src.push_str(&format!(r#"{{"type":"frame","id":"d-{i}","children":["#));
+        }
+        src.push_str(&format!(
+            r#"{{"type":"rectangle","id":"leaf",{BAD_ANIMATION}}}"#
+        ));
+        for _ in 0..depth {
+            src.push_str("]}");
+        }
+        src.push_str("]}");
+        assert!(looks_deeply_nested(&src));
+        let loaded = load_canonical(&src).expect("deep document with a bad animation loads");
+        let mut node = &loaded.value.children[0];
+        while let Some(child) = children(node).and_then(|c| c.first()) {
+            node = child;
+        }
+        assert_eq!(node_id(node), "leaf");
+        assert_motion_repaired(&loaded, node);
+    });
+}

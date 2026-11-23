@@ -502,6 +502,7 @@ pub(crate) fn prepare_insert_payload(
     value: &mut serde_json::Value,
 ) -> Result<(), InsertPayloadError> {
     crate::local_image::inline_local_images(value)?;
+    de_editor_core::motion_guard::prepare_motion_json(value).map_err(InsertPayloadError::Motion)?;
     match find_path_without_outline(value) {
         Some(missing) => Err(InsertPayloadError::MissingOutline(missing)),
         None => Ok(()),

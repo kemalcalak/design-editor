@@ -126,3 +126,20 @@ fn loading_collapses_top_level_frames_but_not_leaves() {
         "a leaf has nothing to collapse"
     );
 }
+
+#[test]
+fn dropped_animation_data_is_reported_by_node() {
+    let path = temp_path("motion-repair");
+    std::fs::write(
+        &path,
+        r#"{"version":"1.0","children":[{"type":"rectangle","id":"hero","animations":[
+            {"trigger":"mount","durationMs":200,"keyframes":[
+                {"offset":0.4,"values":{"opacity":0}},{"offset":1,"values":{"opacity":1}}]}]}]}"#,
+    )
+    .expect("write fixture");
+    let loaded = load_editor_state_with_report(&path, de_editor_core::Locale::EnUs)
+        .expect("a broken animation never refuses the document");
+    assert_eq!(loaded.report.motion_repairs.len(), 1);
+    assert!(loaded.report.motion_repairs[0].contains("hero"));
+    let _ = std::fs::remove_file(path);
+}

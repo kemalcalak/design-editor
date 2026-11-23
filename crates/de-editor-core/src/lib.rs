@@ -130,6 +130,7 @@ pub mod interaction_edit;
 pub mod mesh_lattice;
 pub mod missing_fonts;
 pub mod motion_edit;
+pub mod motion_guard;
 pub mod mutators;
 pub mod node_defaults;
 pub mod node_id;

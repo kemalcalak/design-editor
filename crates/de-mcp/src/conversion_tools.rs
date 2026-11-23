@@ -140,7 +140,7 @@ fn missing(name: &str) -> ToolOutcome {
 pub struct NodeParseError {
     /// The wire name of the offending argument.
     pub arg_name: String,
-    /// The serde error text.
+    /// The serde or animation error text.
     pub detail: String,
 }
 
@@ -153,11 +153,20 @@ impl std::fmt::Display for NodeParseError {
 
 impl std::error::Error for NodeParseError {}
 
+/// Parse a component / screen root, expanding the `scale` animation alias
+/// and refusing an animation the loader would not accept (#351).
 fn parse_node(raw: &str, arg_name: &str) -> Result<PenNode, NodeParseError> {
-    serde_json::from_str(raw).map_err(|e| NodeParseError {
+    let mut node: PenNode = serde_json::from_str(raw).map_err(|e| NodeParseError {
         arg_name: arg_name.to_string(),
         detail: e.to_string(),
-    })
+    })?;
+    de_editor_core::motion_guard::prepare_nodes_motion(std::slice::from_mut(&mut node)).map_err(
+        |e| NodeParseError {
+            arg_name: arg_name.to_string(),
+            detail: e.to_string(),
+        },
+    )?;
+    Ok(node)
 }
 
 fn wrote(key: &str) -> BTreeMap<String, String> {

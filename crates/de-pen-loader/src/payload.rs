@@ -729,13 +729,14 @@ fn load_canonical_deep(
     if let Some(found) = patched_legacy_version.as_deref() {
         log_best_effort_version(found);
     }
-    let warnings = deep_load_warnings(&raw);
+    let mut warnings = deep_load_warnings(&raw);
     let pending_thumbs = jian_ops_schema::image_thumbs::take_pending_from_document(&mut raw);
     let table = jian_ops_schema::image_table::take_image_table(&mut raw);
     let mut doc = jian_ops_schema::node::image_src::intern::with_load_scope(table, || {
         deserialize_deep_value(raw)
     })?;
     jian_ops_schema::image_thumbs::attach_to_document(&mut doc, pending_thumbs);
+    warnings.extend(jian_ops_schema::motion_repair::repair_document(&mut doc));
     Ok(CanonicalLoad {
         loaded: jian_ops_schema::LoadResult {
             value: doc,

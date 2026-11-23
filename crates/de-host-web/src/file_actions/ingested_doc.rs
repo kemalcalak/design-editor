@@ -21,6 +21,9 @@ pub struct IngestedDoc {
     /// opens untitled, and anything it lost (image files included — a
     /// browser upload carries no folder) is shown to the user.
     pub pen_dev: Option<de_pen_loader::pen_dev::PenDevReport>,
+    /// Animation data the loader dropped (#351), one line per drop naming
+    /// the node; shown to the user because a save makes it permanent.
+    pub motion_repairs: Vec<String>,
 }
 
 impl IngestedDoc {
@@ -31,6 +34,7 @@ impl IngestedDoc {
             warnings,
             diagnostics: Vec::new(),
             pen_dev: None,
+            motion_repairs: Vec::new(),
         }
     }
 
@@ -48,6 +52,7 @@ impl IngestedDoc {
                 de_html::diagnostic_parts(typed),
             ),
             pen_dev: None,
+            motion_repairs: Vec::new(),
         }
     }
 }
