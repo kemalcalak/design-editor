@@ -11,9 +11,13 @@
 //! Both need an **owned, mutable** `EditorState`: the MCP connection
 //! thread re-applies the ack'd command to its local copy so a tool's
 //! post-apply read is consistent, and the design worker mutates its
-//! mirror. So neither can share an `Arc` with the live UI state, which
-//! keeps mutating underneath them. What they *can* skip is the part of
-//! the state their consumers never look at.
+//! mirror. What they *can* skip is the part of the state their consumers
+//! never look at ([`narrowed_snapshot`]).
+//!
+//! The MCP path also avoids copying the document on the UI thread (#352):
+//! [`shared_snapshot`] shares unchanged top-level nodes with the previous
+//! capture by `Arc`, and the connection thread materializes its owned copy
+//! with [`SharedRequestSnapshot::into_state`].
 //!
 //! ### Field audit (workspace grep over the consumer crates)
 //!
@@ -51,6 +55,7 @@
 //! either, so re-applying a command against the narrowed copy behaves
 //! exactly as it does against a full clone.
 
+use crate::history_snapshot::SharedDoc;
 use crate::state::EditorState;
 
 /// Clone `state` for an off-thread consumer, leaving out the
@@ -74,6 +79,68 @@ pub fn narrowed_snapshot(state: &mut EditorState) -> EditorState {
     state.codegen = codegen;
     state.theme_presets = theme_presets;
     snapshot
+}
+
+/// A request snapshot whose document is structurally shared with the
+/// live editor instead of deep-copied (#352).
+///
+/// The UI thread builds it with [`shared_snapshot`] — a pointer bump per
+/// unchanged top-level node — and the consumer thread turns it into the
+/// owned, mutable state it needs with [`Self::into_state`], so the
+/// document-sized copy happens off the UI thread.
+#[derive(Debug, Clone)]
+pub struct SharedRequestSnapshot {
+    /// The narrowed state with a children-stripped document.
+    rest: EditorState,
+    /// The document, shared at top-level-node granularity.
+    doc: SharedDoc,
+}
+
+impl SharedRequestSnapshot {
+    /// Materialize the owned state a consumer can read and mutate. The
+    /// result equals what [`narrowed_snapshot`] would have returned at
+    /// capture time.
+    pub fn into_state(self) -> EditorState {
+        let mut state = self.rest;
+        state.doc = self.doc.materialize();
+        state
+    }
+
+    /// The shared document, to pass back as the next capture's anchor.
+    pub fn shared_doc(&self) -> &SharedDoc {
+        &self.doc
+    }
+}
+
+/// [`narrowed_snapshot`] with the document shared instead of copied.
+///
+/// `anchor` is the previous capture's document (see
+/// [`SharedRequestSnapshot::shared_doc`]): every top-level node that is
+/// deep-equal to the anchor's reuses its `Arc`, so a repeated read call
+/// costs one compare pass and no document-sized allocation. Without an
+/// anchor the newest undo snapshot stands in, which already shares
+/// everything untouched since the last edit; only a document with no
+/// history and no previous capture is copied in full.
+pub fn shared_snapshot(
+    state: &mut EditorState,
+    anchor: Option<&SharedDoc>,
+) -> SharedRequestSnapshot {
+    let anchor = anchor.or_else(|| {
+        state
+            .history
+            .future
+            .back()
+            .or_else(|| state.history.past.back())
+            .map(|snapshot| &snapshot.doc)
+    });
+    let doc = SharedDoc::capture_parallel(&state.doc, anchor);
+    // Clone the rest of the state around a children-stripped stand-in so
+    // the node tree is not copied a second time; same straight-line
+    // take/clone/restore as `narrowed_snapshot`.
+    let live_doc = std::mem::replace(&mut state.doc, doc.skeleton().clone());
+    let rest = narrowed_snapshot(state);
+    state.doc = live_doc;
+    SharedRequestSnapshot { rest, doc }
 }
 
 #[cfg(test)]

@@ -75,7 +75,11 @@ fn snapshot_request_wakes_ui_event_loop_after_queueing() {
     let UiRequest::Snapshot { ack, .. } = request else {
         panic!("expected snapshot request");
     };
-    ack.send(EditorState::new()).expect("ack snapshot");
+    ack.send(de_editor_core::request_snapshot::shared_snapshot(
+        &mut EditorState::new(),
+        None,
+    ))
+    .expect("ack snapshot");
     requester
         .join()
         .expect("requester thread should not panic")
@@ -160,6 +164,7 @@ fn pump_yields_after_ui_request_budget() {
         stop_tx,
         client_identity: Arc::new(Mutex::new(None)),
         last_mcp_epoch: 0,
+        last_snapshot_doc: None,
         pending_design_md: VecDeque::new(),
         saved_documents: Vec::new(),
         follow_target: None,
@@ -207,6 +212,7 @@ fn pump_fulfills_screenshot_requests_off_the_live_state() {
         stop_tx,
         client_identity: Arc::new(Mutex::new(None)),
         last_mcp_epoch: 0,
+        last_snapshot_doc: None,
         pending_design_md: VecDeque::new(),
         saved_documents: Vec::new(),
         follow_target: None,
@@ -257,6 +263,7 @@ fn pump_marks_layout_dirty_only_for_layout_affecting_commands() {
         stop_tx,
         client_identity: Arc::new(Mutex::new(None)),
         last_mcp_epoch: 0,
+        last_snapshot_doc: None,
         pending_design_md: VecDeque::new(),
         saved_documents: Vec::new(),
         follow_target: None,
@@ -330,6 +337,7 @@ fn pump_flags_document_replaced_only_for_replace_document_requests() {
         stop_tx,
         client_identity: Arc::new(Mutex::new(None)),
         last_mcp_epoch: 0,
+        last_snapshot_doc: None,
         pending_design_md: VecDeque::new(),
         saved_documents: Vec::new(),
         follow_target: None,
@@ -534,6 +542,7 @@ pub(super) fn fresh_mcp_server(req_rx: Receiver<UiRequest>, stop_tx: Sender<()>)
         stop_tx,
         client_identity: Arc::new(Mutex::new(None)),
         last_mcp_epoch: 0,
+        last_snapshot_doc: None,
         pending_design_md: VecDeque::new(),
         saved_documents: Vec::new(),
         follow_target: None,
@@ -724,6 +733,7 @@ fn client_name_reports_the_initialize_identity() {
         stop_tx,
         client_identity: Arc::clone(&identity),
         last_mcp_epoch: 0,
+        last_snapshot_doc: None,
         pending_design_md: VecDeque::new(),
         saved_documents: Vec::new(),
         follow_target: None,

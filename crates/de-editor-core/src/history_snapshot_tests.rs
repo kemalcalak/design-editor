@@ -523,3 +523,78 @@ fn batch_collapse_resets_pre_batch_revision_before_the_bump() {
     assert_eq!(state.document_revision(), saved);
     assert!(!state.is_dirty());
 }
+
+// --- Parallel capture (#352) -----------------------------------------
+
+/// Every top-level `Arc` of `a` is the very same allocation as `b`'s.
+#[cfg(not(target_arch = "wasm32"))]
+fn same_arcs(a: &[Arc<PenNode>], b: &[Arc<PenNode>]) -> bool {
+    a.len() == b.len() && a.iter().zip(b).all(|(x, y)| Arc::ptr_eq(x, y))
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+#[test]
+fn parallel_capture_shares_exactly_what_capture_shares() {
+    let mut doc = empty();
+    doc.children = many_roots(3);
+    doc.pages = Some(vec![
+        PenPage {
+            id: "p0".into(),
+            name: "One".into(),
+            children: many_roots(6),
+            background_color: None,
+            state: None,
+            lifecycle: None,
+        },
+        PenPage {
+            id: "p1".into(),
+            name: "Two".into(),
+            children: many_roots(4),
+            background_color: None,
+            state: None,
+            lifecycle: None,
+        },
+    ]);
+    let mut anchor = SharedDoc::capture(&doc, None);
+    let mut seed = 0x5eed_u64;
+    for _ in 0..200 {
+        edit_doc(&mut doc, next_rand(&mut seed));
+        let serial = SharedDoc::capture(&doc, Some(&anchor));
+        // The worker path itself, so a single-core runner still tests it.
+        let parallel = crate::history_snapshot::capture_on_workers(&doc, &anchor, 4);
+        assert_eq!(parallel, serial);
+        assert_eq!(parallel.materialize(), doc);
+        // Same reuse decisions: a slot reuses an anchor `Arc` in one
+        // capture exactly when it reuses the same one in the other.
+        let from_anchor = |x: &Arc<PenNode>| {
+            anchor
+                .root_children()
+                .iter()
+                .chain((0..2).flat_map(|i| anchor.page_children(i).unwrap()))
+                .any(|a| Arc::ptr_eq(a, x))
+        };
+        let lists = |d: &SharedDoc| {
+            let mut all: Vec<Arc<PenNode>> = d.root_children().to_vec();
+            for i in 0..2 {
+                all.extend(d.page_children(i).unwrap().iter().cloned());
+            }
+            all
+        };
+        for (x, y) in lists(&parallel).iter().zip(&lists(&serial)) {
+            assert_eq!(from_anchor(x), from_anchor(y));
+            if from_anchor(x) {
+                assert!(Arc::ptr_eq(x, y));
+            }
+        }
+        anchor = parallel;
+    }
+    // Nothing changed: the whole capture is the anchor's `Arc`s.
+    let again = SharedDoc::capture_parallel(&doc, Some(&anchor));
+    assert!(same_arcs(again.root_children(), anchor.root_children()));
+    for i in 0..2 {
+        assert!(same_arcs(
+            again.page_children(i).unwrap(),
+            anchor.page_children(i).unwrap()
+        ));
+    }
+}

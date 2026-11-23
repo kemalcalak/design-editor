@@ -337,7 +337,10 @@ fn extension_snapshot_ingress_inserts_without_a_token() {
         while let Ok(request) = req_rx.recv_timeout(Duration::from_secs(5)) {
             match request {
                 UiRequest::Snapshot { ack, .. } => {
-                    let _ = ack.send(EditorState::starter());
+                    let _ = ack.send(de_editor_core::request_snapshot::shared_snapshot(
+                        &mut EditorState::starter(),
+                        None,
+                    ));
                 }
                 UiRequest::Apply { ack, .. } => {
                     applied += 1;

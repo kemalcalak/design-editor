@@ -18,6 +18,7 @@ fn pump_applies_the_unplaced_write_when_the_document_moved_on() {
             stop_tx,
             client_identity: Arc::new(Mutex::new(None)),
             last_mcp_epoch: 0,
+            last_snapshot_doc: None,
             pending_design_md: VecDeque::new(),
             saved_documents: Vec::new(),
             follow_target: None,
