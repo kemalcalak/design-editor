@@ -8,7 +8,7 @@
 //! step). Screenshots and exports only record a copy of the state they were
 //! asked at; they are rendered after the script succeeds.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashMap};
 use std::rc::Rc;
 
 use de_editor_core::walkers::find_parent_and_index;
@@ -34,6 +34,17 @@ pub const MAX_EXPORT_NODES: usize = 32;
 pub const MAX_PRINT_BYTES: usize = 256 * 1024;
 
 type Result<T> = std::result::Result<T, ExecuteError>;
+
+/// What one cached layout covers.
+#[derive(Clone, PartialEq, Eq, Hash)]
+enum LayoutScope {
+    /// The whole active page.
+    Page,
+    /// One page root (by id) and its subtree.
+    Root(String),
+}
+
+type LayoutCache = HashMap<LayoutScope, Rc<LayoutIndex>>;
 
 /// A screenshot to render once the script has succeeded.
 pub(crate) struct PendingShot {
@@ -65,16 +76,17 @@ pub(crate) struct ExecSession {
     can_render: bool,
     /// [`MAX_WRITES`]; a field so tests can reach the cap cheaply.
     pub(crate) max_writes: usize,
-    /// The layout of the sim at `layout_revision`; rebuilt after writes.
-    layout: Option<(u64, Rc<LayoutIndex>)>,
+    /// Layouts of the sim at one document revision, dropped after writes.
+    layout: Option<(u64, LayoutCache)>,
     /// A copy of the sim shared by screenshots taken with no write between.
     frozen: Option<(u64, Rc<EditorState>)>,
 }
 
 impl ExecSession {
-    pub(crate) fn new(snapshot: &EditorState, page_id: Option<String>, can_render: bool) -> Self {
+    /// A session simulating on `snapshot` itself (moved in, not copied).
+    pub(crate) fn new(snapshot: EditorState, page_id: Option<String>, can_render: bool) -> Self {
         Self {
-            ctx: ProgramCtx::new(snapshot, page_id),
+            ctx: ProgramCtx::from_owned(snapshot, page_id),
             seq: 0,
             writes: 0,
             failed_write: None,
@@ -345,7 +357,11 @@ impl ExecSession {
         let first_index = path
             .and_then(|path| self.place_of(path))
             .map_or(0, |(_, index)| index);
-        let layout = self.layout();
+        let scope = match path.and_then(|path| self.page_root_of(path)) {
+            Some(root) => LayoutScope::Root(root),
+            None => LayoutScope::Page,
+        };
+        let layout = self.layout(scope);
         Ok(visitor_entries(nodes, &layout, max_depth, first_index))
     }
 
@@ -376,7 +392,15 @@ impl ExecSession {
                 args.insert(key.to_string(), "true".to_string());
             }
         }
-        let value = tool_json(&super::read_nodes_snapshot(&self.ctx.sim), &args, "Get")?;
+        // Read the sim in place: the tool's snapshot would copy the whole
+        // document on every `Get` (#350).
+        let value =
+            super::read_nodes::read_nodes_on(&self.ctx.sim, &args).map_err(|(_, message)| {
+                ExecuteError::BadArgument {
+                    call: "Get",
+                    detail: message,
+                }
+            })?;
         Ok(match value {
             Value::Object(mut map) => match map.remove("nodes") {
                 Some(Value::Array(nodes)) => nodes,
@@ -386,16 +410,39 @@ impl ExecSession {
         })
     }
 
-    fn layout(&mut self) -> Rc<LayoutIndex> {
+    /// The resolved boxes a visitor needs: of one page root when the walk
+    /// stays inside that board, else of the whole active page. A whole-page
+    /// layout already built at this revision serves any root.
+    fn layout(&mut self, scope: LayoutScope) -> Rc<LayoutIndex> {
         let revision = self.ctx.sim.document_revision();
-        if let Some((at, index)) = &self.layout {
-            if *at == revision {
-                return index.clone();
-            }
+        let cache = match &mut self.layout {
+            Some((at, cache)) if *at == revision => cache,
+            slot => &mut slot.insert((revision, HashMap::new())).1,
+        };
+        if let Some(index) = cache.get(&LayoutScope::Page).or_else(|| cache.get(&scope)) {
+            return index.clone();
         }
-        let index = Rc::new(LayoutIndex::build(&self.ctx.sim));
-        self.layout = Some((revision, index.clone()));
+        let index = Rc::new(match &scope {
+            LayoutScope::Root(id) => LayoutIndex::build_for_root(&self.ctx.sim, id),
+            LayoutScope::Page => LayoutIndex::build(&self.ctx.sim),
+        });
+        cache.insert(scope, index.clone());
         index
+    }
+
+    /// The id of the active-page root holding `path` (an id, an alias, or an
+    /// `instance/child` path, resolved through its instance).
+    fn page_root_of(&self, path: &str) -> Option<String> {
+        let roots = self.ctx.sim.active_children();
+        let head = path.split('/').next().unwrap_or(path);
+        let node = find_node_by_path(roots, head, &self.ctx.alias)?;
+        let id = NodeId::new(node.id_str());
+        roots
+            .iter()
+            .find(|root| {
+                de_editor_core::walkers::find_node(std::slice::from_ref(*root), &id).is_some()
+            })
+            .map(|root| root.id_str().to_string())
     }
 
     fn get_variables(&self) -> Value {

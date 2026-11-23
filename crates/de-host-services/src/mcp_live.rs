@@ -135,6 +135,9 @@ struct UnplacedWrite {
 enum UiRequest {
     Snapshot {
         ack: SyncSender<EditorState>,
+        /// Set by the connection once it stopped waiting (`UI_ACK_TIMEOUT`):
+        /// the pump then skips the copy nobody will read (#350).
+        abandoned: Arc<AtomicBool>,
     },
     /// Lightweight read snapshot for `list_pages`. Copying only page metadata
     /// avoids cloning every node in a large live document just to report page
@@ -286,18 +289,10 @@ impl McpLiveServer {
         let mut outcome = McpPumpOutcome::default();
         for _ in 0..UI_PUMP_REQUEST_BUDGET {
             match self.req_rx.try_recv() {
-                Ok(UiRequest::Snapshot { ack }) => {
-                    // Narrowed clone: the MCP registry + applier never read
-                    // `chat` / `codegen` / `theme_presets`, and those are the
-                    // sub-states that grow with SESSION length (transcripts,
-                    // generated source, saved preset tables) rather than with
-                    // the document — so copying them into every tool call's
-                    // snapshot is pure UI-thread stall. See
-                    // `de_editor_core::request_snapshot` for the field audit
-                    // and for why an `Arc` can't replace this clone (the
-                    // connection thread re-applies the ack'd command to its
-                    // own copy, and the live state keeps mutating here).
-                    let _ = ack.send(de_editor_core::request_snapshot::narrowed_snapshot(state));
+                Ok(UiRequest::Snapshot { ack, abandoned }) => {
+                    if let Some(snapshot) = snapshot_unless_abandoned(&abandoned, state) {
+                        let _ = ack.send(snapshot);
+                    }
                 }
                 Ok(UiRequest::ListPages { ack }) => {
                     let _ = ack.send(de_mcp::list_pages_snapshot(state));
@@ -550,6 +545,35 @@ impl Drop for McpLiveServer {
     }
 }
 
+/// The state a `UiRequest::Snapshot` asked for, or `None` when its
+/// connection already gave up waiting.
+///
+/// Narrowed clone: the MCP registry + applier never read `chat` /
+/// `codegen` / `theme_presets`, and those are the sub-states that grow with
+/// SESSION length (transcripts, generated source, saved preset tables)
+/// rather than with the document — so copying them into every tool call's
+/// snapshot is pure UI-thread stall. See `de_editor_core::request_snapshot`
+/// for the field audit and for why an `Arc` can't replace this clone (the
+/// connection thread re-applies the ack'd command to its own copy, and the
+/// live state keeps mutating here).
+///
+/// The document copy is the expensive part (hundreds of MB and ~150 ms on a
+/// 180k-node document), and a slow UI frame lets timed-out requests pile up
+/// in the queue: answering them would stall every later call behind copies
+/// that are thrown away on arrival.
+fn snapshot_unless_abandoned(
+    abandoned: &AtomicBool,
+    state: &mut EditorState,
+) -> Option<EditorState> {
+    // A timeout that lands while the copy below runs still costs that one
+    // copy; the flag only stops requests that were stale before the UI got
+    // to them, which is where the queue piled up.
+    if abandoned.load(Ordering::Acquire) {
+        return None;
+    }
+    Some(de_editor_core::request_snapshot::narrowed_snapshot(state))
+}
+
 fn command_invalidates_layout(cmd: &EditorCommand) -> bool {
     match cmd {
         EditorCommand::ClearSelection
@@ -585,6 +609,9 @@ use ui_requests::*;
 #[cfg(test)]
 #[path = "mcp_live_placement_tests.rs"]
 mod placement_tests;
+#[cfg(test)]
+#[path = "mcp_live_snapshot_tests.rs"]
+mod snapshot_tests;
 #[cfg(test)]
 #[path = "mcp_live_tests.rs"]
 mod tests;

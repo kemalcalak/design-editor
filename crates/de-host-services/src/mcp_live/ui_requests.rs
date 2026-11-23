@@ -9,14 +9,33 @@ pub(super) fn request_snapshot(
     req_tx: &Sender<UiRequest>,
     wake_ui: &UiWake,
 ) -> Result<EditorState, McpLiveError> {
+    request_snapshot_within(req_tx, wake_ui, UI_ACK_TIMEOUT)
+}
+
+/// [`request_snapshot`] with its wait as a parameter (tests). A request
+/// that times out is marked abandoned, so the UI does not copy the state
+/// for it once it gets to the queue.
+pub(super) fn request_snapshot_within(
+    req_tx: &Sender<UiRequest>,
+    wake_ui: &UiWake,
+    timeout: Duration,
+) -> Result<EditorState, McpLiveError> {
     let (ack_tx, ack_rx) = mpsc::sync_channel(1);
+    let abandoned = Arc::new(AtomicBool::new(false));
     req_tx
-        .send(UiRequest::Snapshot { ack: ack_tx })
+        .send(UiRequest::Snapshot {
+            ack: ack_tx,
+            abandoned: Arc::clone(&abandoned),
+        })
         .map_err(|_| {
             McpLiveError::UiThread("UI thread is not accepting MCP snapshot requests".to_string())
         })?;
     wake_ui();
-    recv_with_timeout(ack_rx.recv_timeout(UI_ACK_TIMEOUT), "snapshot")
+    let result = ack_rx.recv_timeout(timeout);
+    if result.is_err() {
+        abandoned.store(true, Ordering::Release);
+    }
+    recv_with_timeout(result, "snapshot")
 }
 
 pub(super) fn request_list_pages(

@@ -164,7 +164,7 @@ fn a_caught_read_failure_does_not_fail_the_run() {
 #[test]
 fn a_runaway_script_times_out() {
     let outcome = super::run(
-        &empty(),
+        empty(),
         "while (true) {}",
         None,
         None,
@@ -199,6 +199,129 @@ Get(col, (n, c) => Print(n.name, c.depth, c.index, c.bounds.x, c.bounds.y, c.bou
         ],
         "children flow down the column; bounds are parent-relative"
     );
+}
+
+#[test]
+fn a_visitor_inside_one_board_sees_the_whole_page_layout() {
+    // #350: a visitor rooted in a board lays out that board only. Its
+    // boxes and clipping must match the whole-page layout.
+    let state = empty();
+    let ran = run_ok(
+        &state,
+        r#"
+const a = Insert(document, {type: "frame", name: "A", x: 0, y: 0, width: 200, height: 120,
+  layout: "vertical", gap: 8, padding: 12});
+Insert(a, {type: "rectangle", name: "A1", width: 60, height: 40});
+const b = Insert(document, {type: "frame", name: "B", x: 400, y: 30, width: 160, height: 100,
+  layout: "horizontal", gap: 6, padding: 10, clipContent: true});
+const col = Insert(b, {type: "frame", name: "Col", width: 90, height: 70, layout: "vertical", gap: 4});
+Insert(col, {type: "rectangle", name: "B1", width: 30, height: 20});
+Insert(b, {type: "rectangle", name: "Wide", width: 120, height: 20});
+const line = (n, c) => [n.name, c.depth, c.bounds.x, c.bounds.y, c.bounds.width, c.bounds.height,
+  c.problems || "-"].join(" ");
+const scoped = Get(b, line);
+const page = [];
+Get((n, c) => {
+  if (n.name === "A") { c.skipChildren(); return; }
+  if (n.name === "B") { page.push(line(n, c)); return; }
+  page.push(line(n, c));
+});
+Print(scoped.join("|"));
+Print(page.join("|"));
+const again = Get(col, line);
+Print(again.join("|"));
+"#,
+    );
+    let lines = printed(&ran);
+    assert_eq!(lines[0], lines[1], "one board's boxes = the page's boxes");
+    assert!(lines[0].contains("Wide"), "{}", lines[0]);
+    assert!(
+        lines[0].contains("clipped"),
+        "clipping comes through: {}",
+        lines[0]
+    );
+    assert!(
+        lines[2].starts_with("Col 0 10 10"),
+        "a nested root reuses the page layout: {}",
+        lines[2]
+    );
+}
+
+/// Board `b` holds an instance of a component that lives on the hidden
+/// Components page and a rectangle filled from a themed colour, in a
+/// horizontal stack whose gap follows a themed number, so a wrongly
+/// resolved instance or token moves the siblings after it. (A `$var` width
+/// is not resolved by the layout at all, on the page or per board.)
+const THEMED_INSTANCE_DOC: &str = r##"{
+  "version":"1.0.0",
+  "variables":{
+    "g":{"type":"number","value":[{"value":10,"theme":{"mode":"light"}},{"value":30,"theme":{"mode":"dark"}}]},
+    "accent":{"type":"color","value":[{"value":"#ff0000","theme":{"mode":"light"}},{"value":"#00ff00","theme":{"mode":"dark"}}]}
+  },
+  "themes":{"mode":["light","dark"]},
+  "pages":[
+    {"id":"main","name":"Main","children":[
+      {"type":"frame","id":"a","name":"A","x":0,"y":0,"width":100,"height":100},
+      {"type":"frame","id":"b","name":"B","x":300,"y":0,"width":600,"height":160,
+       "layout":"horizontal","gap":"$g","padding":10,"clipContent":true,"children":[
+         {"type":"ref","id":"inst","name":"Inst","ref":"card"},
+         {"type":"rectangle","id":"themed","name":"Themed","width":140,"height":30,
+          "fill":[{"type":"solid","color":"$accent"}]},
+         {"type":"rectangle","id":"after","name":"After","width":500,"height":20}
+       ]}
+    ]},
+    {"id":"components","name":"Components","children":[
+      {"type":"frame","id":"card","name":"Card","reusable":true,"x":0,"y":0,"width":200,"height":100,
+       "layout":"vertical","padding":8,"children":[
+         {"type":"text","id":"title","name":"Title","content":"Hello"}
+       ]}
+    ]}
+  ]
+}"##;
+
+#[test]
+fn one_board_layout_resolves_instances_and_themed_variables_like_the_page() {
+    // #350: a board's own layout must resolve a component from another
+    // page and theme-bound sizes exactly as the whole-page layout does;
+    // without them its boxes could come out silently wrong.
+    let doc = jian_ops_schema::load_str(THEMED_INSTANCE_DOC)
+        .expect("fixture parses")
+        .value;
+    let mut state = EditorState::from_document(doc);
+    state
+        .ui
+        .variables
+        .active_theme
+        .insert("mode".into(), "dark".into());
+    let mut call = args(
+        r#"
+const line = (n, c) => [n.name, c.bounds.x, c.bounds.y, c.bounds.width, c.bounds.height,
+  c.problems || "-"].join(" ");
+const scoped = Get("b", line);
+const page = [];
+Get((n, c) => {
+  if (n.name === "A") { c.skipChildren(); return; }
+  page.push(line(n, c));
+});
+Print(scoped.join("|"));
+Print(page.join("|"));
+"#,
+    );
+    call.insert("pageId".into(), "main".into());
+    let ran = unwrap_ok(execute_snapshot(&state).call(&call));
+    let lines = printed(&ran);
+    assert_eq!(lines[0], lines[1], "one board's boxes = the page's boxes");
+    assert!(
+        lines[0].contains("Inst 10 10 200 100"),
+        "the instance takes the component's size: {}",
+        lines[0]
+    );
+    assert!(
+        lines[0].contains("Themed 240 10 140 30"),
+        "the gap follows the dark theme: {}",
+        lines[0]
+    );
+    assert!(lines[0].contains("After 410"), "{}", lines[0]);
 }
 
 #[test]
@@ -484,7 +607,7 @@ fn empty_and_oversized_scripts_are_invalid_arguments() {
 
 #[test]
 fn a_write_past_the_cap_counts_as_a_failed_write() {
-    let mut session = crate::script_execute_session::ExecSession::new(&sample(), None, false);
+    let mut session = crate::script_execute_session::ExecSession::new(sample(), None, false);
     session.max_writes = 2;
     let patch = serde_json::json!({"path": "n11", "data": {"name": "T"}});
     assert!(session.dispatch("update", &patch).is_ok());

@@ -61,6 +61,25 @@ pub fn editor_state_to_layout_scene(state: &de_editor_core::EditorState) -> Layo
 pub fn editor_state_to_active_page_layout_scene(
     state: &de_editor_core::EditorState,
 ) -> LayoutScene {
+    active_page_layout_scene(state, None)
+}
+
+/// [`editor_state_to_active_page_layout_scene`] with only the page root
+/// `root_id` laid out (the active page's other roots are left out; a root
+/// id the page does not hold lays out nothing). Page roots are laid out
+/// one by one, so the root's boxes match the whole-page scene; reads that
+/// look at one board pay for that board instead of the page (#350).
+pub fn editor_state_to_active_page_root_layout_scene(
+    state: &de_editor_core::EditorState,
+    root_id: &str,
+) -> LayoutScene {
+    active_page_layout_scene(state, Some(root_id))
+}
+
+fn active_page_layout_scene(
+    state: &de_editor_core::EditorState,
+    only_root: Option<&str>,
+) -> LayoutScene {
     let (mut pages, active_page_index, roots): (
         Vec<ScenePage>,
         usize,
@@ -106,6 +125,14 @@ pub fn editor_state_to_active_page_layout_scene(
         )
     };
 
+    let roots: &[jian_ops_schema::node::PenNode] = match only_root {
+        None => roots,
+        Some(id) => roots
+            .iter()
+            .find(|root| de_editor_core::pen_node_ext::PenNodeExt::id_str(*root) == id)
+            .map(std::slice::from_ref)
+            .unwrap_or_default(),
+    };
     let mut prepared = std::borrow::Cow::Borrowed(roots);
     if de_editor_core::ref_resolve::roots_have_refs(prepared.as_ref()) {
         prepared = std::borrow::Cow::Owned(if state.document_revision() == 0 {

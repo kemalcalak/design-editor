@@ -72,7 +72,7 @@ fn snapshot_request_wakes_ui_event_loop_after_queueing() {
         1,
         "queueing a UI request must wake winit instead of relying on idle polling"
     );
-    let UiRequest::Snapshot { ack } = request else {
+    let UiRequest::Snapshot { ack, .. } = request else {
         panic!("expected snapshot request");
     };
     ack.send(EditorState::new()).expect("ack snapshot");
@@ -525,7 +525,7 @@ fn pump_flags_document_edited_only_when_the_document_changes() {
 // also touches it lock-free). Each test clears on entry AND exit so
 // it starts and leaves the registry empty regardless of ordering.
 
-fn fresh_mcp_server(req_rx: Receiver<UiRequest>, stop_tx: Sender<()>) -> McpLiveServer {
+pub(super) fn fresh_mcp_server(req_rx: Receiver<UiRequest>, stop_tx: Sender<()>) -> McpLiveServer {
     McpLiveServer {
         port: 0,
         token: "test-token".to_string(),

@@ -36,7 +36,20 @@ struct NodeBox {
 
 impl LayoutIndex {
     pub(crate) fn build(state: &EditorState) -> Self {
-        let scene = de_pen_loader::editor_state_to_active_page_layout_scene(state);
+        Self::from_scene(de_pen_loader::editor_state_to_active_page_layout_scene(
+            state,
+        ))
+    }
+
+    /// The boxes of one page root's subtree only: what a visitor rooted
+    /// inside that board needs, without laying out the rest of the page.
+    pub(crate) fn build_for_root(state: &EditorState, root_id: &str) -> Self {
+        Self::from_scene(
+            de_pen_loader::editor_state_to_active_page_root_layout_scene(state, root_id),
+        )
+    }
+
+    fn from_scene(scene: jian_scene::layout_scene::LayoutScene) -> Self {
         let mut index = Self::default();
         if let Some(page) = scene.active_page() {
             index.walk(&page.children, (0.0, 0.0), None);

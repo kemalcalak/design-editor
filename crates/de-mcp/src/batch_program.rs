@@ -245,7 +245,12 @@ impl ProgramCtx {
     /// unknown page id is left to per-command apply rejection (consistent
     /// per-line errors).
     pub(crate) fn new(snapshot: &EditorState, page_id: Option<String>) -> Self {
-        let mut sim = snapshot.clone();
+        Self::from_owned(snapshot.clone(), page_id)
+    }
+
+    /// [`Self::new`] on a state the caller hands over: `execute` moves its
+    /// snapshot in rather than paying for one more document copy (#350).
+    pub(crate) fn from_owned(mut sim: EditorState, page_id: Option<String>) -> Self {
         if let Some(index) = page_id
             .as_deref()
             .and_then(|raw| resolve_page_index(&sim, raw))

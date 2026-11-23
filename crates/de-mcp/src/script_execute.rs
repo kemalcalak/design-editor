@@ -26,7 +26,7 @@
 use std::cell::RefCell;
 use std::collections::BTreeMap;
 use std::rc::Rc;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
 use de_editor_core::EditorState;
@@ -88,15 +88,20 @@ pub trait ScriptRenderer: Send + Sync {
 }
 
 /// The `execute` MCP tool over a document snapshot.
+///
+/// The snapshot is the run's simulation state: the first `call` moves it
+/// into the session instead of copying it again (#350: on a large document
+/// each copy is hundreds of MB). A registry is built per request and calls
+/// each tool once, so a second call on the same tool is refused.
 pub struct Execute {
-    state: EditorState,
+    state: Mutex<Option<EditorState>>,
     renderer: Option<Arc<dyn ScriptRenderer>>,
 }
 
 /// `execute` without rendering: `TakeScreenshot` / `Export` throw.
 pub fn execute_snapshot(state: &EditorState) -> Execute {
     Execute {
-        state: state.clone(),
+        state: Mutex::new(Some(state.clone())),
         renderer: None,
     }
 }
@@ -107,7 +112,7 @@ pub fn execute_snapshot_with_renderer(
     renderer: Arc<dyn ScriptRenderer>,
 ) -> Execute {
     Execute {
-        state: state.clone(),
+        state: Mutex::new(Some(state.clone())),
         renderer: Some(renderer),
     }
 }
@@ -122,8 +127,19 @@ impl McpTool for Execute {
             return ToolOutcome::Err(ToolErrorCode::MissingArgument, "script is required".into());
         };
         let page_id = optional_page_id(args);
+        let taken = self
+            .state
+            .lock()
+            .unwrap_or_else(|poison| poison.into_inner())
+            .take();
+        let Some(state) = taken else {
+            return ToolOutcome::Err(
+                ToolErrorCode::Internal,
+                "execute tool called twice on one registry snapshot".into(),
+            );
+        };
         match run(
-            &self.state,
+            state,
             script,
             page_id,
             self.renderer.as_deref(),
@@ -146,7 +162,7 @@ impl McpTool for Execute {
 
 /// Run `script` against `snapshot` and build the tool result.
 fn run(
-    snapshot: &EditorState,
+    snapshot: EditorState,
     script: &str,
     page_id: Option<String>,
     renderer: Option<&dyn ScriptRenderer>,
