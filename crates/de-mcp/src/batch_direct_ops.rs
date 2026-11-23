@@ -196,6 +196,8 @@ fn parse_copy_operation(body: &str) -> Result<EditorCommand> {
                 "C() overrides JSON must be an object".into(),
             ));
         }
+        de_editor_core::motion_guard::prepare_motion_json(&mut value)
+            .map_err(|e| ProgramError::Json(e.to_string()))?;
         (rest[..overrides_comma].trim(), Some(value.to_string()))
     } else {
         (rest, None)

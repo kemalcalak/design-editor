@@ -331,6 +331,12 @@ pub fn ingest_document_source(
             .map_err(|e| DocumentIngestError::LoadCanonical(e.to_string()))?;
     let loaded = canonical.loaded;
     let warnings = loaded.warnings.iter().map(|w| format!("{w:?}")).collect();
+    let motion_repairs = loaded
+        .warnings
+        .iter()
+        .filter(|w| w.is_motion_repair())
+        .map(ToString::to_string)
+        .collect();
     let mut state = EditorState::from_document(loaded.value);
     de_pen_loader::apply_editor_meta_or_legacy_fallback(&mut state, editor_meta);
     preserve_app_preferences(previous, &mut state);
@@ -338,6 +344,7 @@ pub fn ingest_document_source(
     state.hold_browser_pages_if_any();
     let mut ingested = IngestedDoc::new(state, warnings);
     ingested.pen_dev = canonical.compatibility.pen_dev;
+    ingested.motion_repairs = motion_repairs;
     Ok(ingested)
 }
 

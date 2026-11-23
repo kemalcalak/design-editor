@@ -590,6 +590,22 @@ fn apply_opened_document<C: RepaintContext + 'static>(
                     crate::listener::now_ms_perf(),
                 );
             }
+            // Dropped animation data (#351) is gone once the file is saved;
+            // the desktop shows the full list in a dialog.
+            if let Some(first) = ingested.motion_repairs.first() {
+                b.host_mut().editor_state_mut().editor_ui.show_toast(
+                    "dialog.motionRepairToast",
+                    vec![
+                        (
+                            "count".to_owned(),
+                            ingested.motion_repairs.len().to_string(),
+                        ),
+                        ("details".to_owned(), first.clone()),
+                    ],
+                    de_editor_core::editor_toast::EditorToastLevel::Warn,
+                    crate::listener::now_ms_perf(),
+                );
+            }
             let (w, h) = b.viewport_size();
             b.host_mut().fit_content_to_viewport(w, h);
             let _ = b.repaint();

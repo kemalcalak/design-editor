@@ -100,7 +100,7 @@ pub(super) fn try_load_preserve(
         return None;
     }
 
-    let warnings = header_warnings(&header);
+    let mut warnings = header_warnings(&header);
     let image_table: HashMap<String, Arc<str>> = header
         .images
         .0
@@ -115,6 +115,11 @@ pub(super) fn try_load_preserve(
         })
         .ok()?;
     jian_ops_schema::image_thumbs::attach_to_document(&mut document, pending_thumbs);
+    // Same motion repair as the compat loader: a bad animation is dropped
+    // with a warning instead of reaching the host.
+    warnings.extend(jian_ops_schema::motion_repair::repair_document(
+        &mut document,
+    ));
 
     Some(jian_ops_schema::LoadResult {
         value: document,

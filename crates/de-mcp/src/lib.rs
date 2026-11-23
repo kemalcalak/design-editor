@@ -130,6 +130,8 @@ mod lint_tools_tests;
 pub mod local_image;
 #[cfg(test)]
 mod local_image_tests;
+#[cfg(test)]
+mod motion_write_tests;
 pub mod node_attr_tools;
 #[cfg(test)]
 mod node_attr_tools_tests;

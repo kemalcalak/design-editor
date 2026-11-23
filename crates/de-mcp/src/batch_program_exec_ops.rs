@@ -126,12 +126,14 @@ pub(crate) fn execute_kit_instantiate(
     let overrides_json = match parts.get(2) {
         None => None,
         Some(raw) => {
-            let value = parse_json_arg(raw)?;
+            let mut value = parse_json_arg(raw)?;
             if !value.is_object() {
                 return Err(ProgramError::Syntax(
                     "K() overrides JSON must be an object".into(),
                 ));
             }
+            de_editor_core::motion_guard::prepare_motion_json(&mut value)
+                .map_err(|e| ProgramError::Json(e.to_string()))?;
             Some(value.to_string())
         }
     };
