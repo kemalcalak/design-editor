@@ -249,6 +249,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "dialog.loadErrorNotPptx" => "{{name}} को PowerPoint प्रस्तुति के रूप में नहीं खोला जा सका: {{detail}}",
         "settings.system.updateButton" => "अपडेट करें",
         "settings.system.restartButton" => "फिर से शुरू करें",
+        "settings.system.checkButton" => "अभी जाँचें",
         "updateModal.title" => "Design Editor {{version}} पर अपडेट करें",
         "updateModal.offerBody" => "आपके पास {{current}} है। अभी डाउनलोड करके इंस्टॉल करें?",
         "updateModal.downloading" => "डाउनलोड हो रहा है…",

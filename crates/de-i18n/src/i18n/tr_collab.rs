@@ -249,6 +249,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "dialog.loadErrorNotPptx" => "{{name}} bir PowerPoint sunumu olarak açılamadı: {{detail}}",
         "settings.system.updateButton" => "Güncelle",
         "settings.system.restartButton" => "Yeniden başlat",
+        "settings.system.checkButton" => "Şimdi denetle",
         "updateModal.title" => "Design Editor {{version}} sürümüne güncelle",
         "updateModal.offerBody" => "Sizde {{current}} var. Şimdi indirilip kurulsun mu?",
         "updateModal.downloading" => "İndiriliyor…",

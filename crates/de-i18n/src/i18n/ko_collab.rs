@@ -251,6 +251,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "dialog.loadErrorNotPptx" => "{{name}}을(를) PowerPoint 덱으로 열 수 없습니다: {{detail}}",
         "settings.system.updateButton" => "업데이트",
         "settings.system.restartButton" => "다시 시작",
+        "settings.system.checkButton" => "지금 확인",
         "updateModal.title" => "Design Editor {{version}}(으)로 업데이트",
         "updateModal.offerBody" => "현재 버전은 {{current}}입니다. 지금 다운로드하여 설치할까요?",
         "updateModal.downloading" => "다운로드 중…",

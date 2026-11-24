@@ -156,3 +156,69 @@ fn system_tab_paints_each_update_probe_result() {
         );
     }
 }
+
+/// Where the System tab painted `label`, if it did.
+fn painted_at(state: &EditorState, label: &str) -> Option<(Rect, crate::Point2D)> {
+    let panel = AgentSettingsPanel::for_editor(state);
+    let rect = panel.rect(1200.0, 800.0);
+    let mut backend = CaptureBackend::default();
+    let mut cx = PaintCx {
+        backend: &mut backend,
+    };
+    panel.paint(&mut cx, rect);
+    backend
+        .text_effective_points
+        .iter()
+        .find(|(text, _)| text == label)
+        .map(|(_, point)| (rect, *point))
+}
+
+#[test]
+fn system_check_now_runs_the_release_probe_while_no_update_is_known() {
+    for status in [
+        de_editor_core::UpdateStatus::Idle,
+        de_editor_core::UpdateStatus::UpToDate,
+        de_editor_core::UpdateStatus::Error,
+    ] {
+        let mut state = EditorState::default();
+        state.editor_ui.locale = de_editor_core::Locale::EnUs;
+        state.editor_ui.agent_settings.tab = AgentSettingsTab::System;
+        state.editor_ui.update_status = status.clone();
+        let (rect, text) = painted_at(&state, "Check now")
+            .unwrap_or_else(|| panic!("Check now is offered for {status:?}"));
+        // The label's baseline sits inside the button; aim just above it.
+        let point = crate::Point2D::new(text.x + 4.0, text.y - 4.0);
+        let hit = AgentSettingsPanel::for_editor(&state).hit_test(rect, point);
+        assert_eq!(hit, AgentSettingsHit::CheckUpdatesButton);
+
+        crate::widgets::agent_settings_press_flow::apply_agent_settings_hit(
+            &mut state,
+            hit,
+            de_editor_core::host_settings_commit::SettingsCommitScope::Operator,
+            0,
+        );
+        assert_eq!(
+            state.editor_ui.update_status,
+            de_editor_core::UpdateStatus::Checking
+        );
+        assert_eq!(
+            state.editor_ui.pending_update_action,
+            Some(de_editor_core::UpdateAction::Check)
+        );
+        assert!(
+            painted_at(&state, "Check now").is_none(),
+            "hidden while the check runs"
+        );
+    }
+}
+
+#[test]
+fn system_check_now_is_hidden_once_an_update_is_known() {
+    let mut state = EditorState::default();
+    state.editor_ui.locale = de_editor_core::Locale::EnUs;
+    state.editor_ui.agent_settings.tab = AgentSettingsTab::System;
+    state.editor_ui.update_status = de_editor_core::UpdateStatus::Available {
+        version: "9.8.7".to_string(),
+    };
+    assert!(painted_at(&state, "Check now").is_none());
+}

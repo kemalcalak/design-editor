@@ -249,6 +249,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "dialog.loadErrorNotPptx" => "Không thể mở {{name}} dưới dạng bản trình bày PowerPoint: {{detail}}",
         "settings.system.updateButton" => "Cập nhật",
         "settings.system.restartButton" => "Khởi động lại",
+        "settings.system.checkButton" => "Kiểm tra ngay",
         "updateModal.title" => "Cập nhật lên Design Editor {{version}}",
         "updateModal.offerBody" => "Bạn đang dùng {{current}}. Tải xuống và cài đặt ngay?",
         "updateModal.downloading" => "Đang tải xuống…",

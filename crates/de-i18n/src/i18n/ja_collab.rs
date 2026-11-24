@@ -249,6 +249,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "dialog.loadErrorNotPptx" => "{{name}} を PowerPoint デッキとして開けませんでした: {{detail}}",
         "settings.system.updateButton" => "アップデート",
         "settings.system.restartButton" => "再起動",
+        "settings.system.checkButton" => "今すぐ確認",
         "updateModal.title" => "Design Editor {{version}} にアップデート",
         "updateModal.offerBody" => "現在のバージョンは {{current}} です。今すぐダウンロードしてインストールしますか？",
         "updateModal.downloading" => "ダウンロード中…",
