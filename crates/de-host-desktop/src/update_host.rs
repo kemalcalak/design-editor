@@ -7,7 +7,10 @@ use winit::event::{KeyEvent, MouseButton, WindowEvent};
 use winit::event_loop::ActiveEventLoop;
 use winit::keyboard::{Key, NamedKey};
 
-use crate::{update_check, update_install, DesktopApp};
+use crate::{update_check, update_install, update_pending, DesktopApp};
+
+/// How long a quit into an update may take before the process ends anyway.
+const EXIT_GRACE: std::time::Duration = std::time::Duration::from_secs(10);
 
 impl DesktopApp {
     /// Whether `event` must be dropped because the update modal or the
@@ -87,9 +90,34 @@ impl DesktopApp {
         if !self.confirm_close() {
             return;
         }
+        // Record what the restart should start, so the next launch can tell
+        // a helper that never installed it (#362).
+        let marker = update_pending::marker_path();
+        let version = self
+            .host
+            .editor_state()
+            .editor_ui
+            .update_modal
+            .as_ref()
+            .map(|modal| modal.version.clone());
+        if let Some(version) = &version {
+            let _ = update_pending::record(&marker, version);
+        }
         match update_install::apply_and_relaunch(&staged) {
-            Ok(()) => event_loop.exit(),
-            Err(failure) => self.set_update_phase(UpdatePhase::Failed(failure)),
+            Ok(()) => {
+                // The helper waits for this process to exit. Teardown that
+                // hangs (a worker thread that never joins) must not hold the
+                // update back, so leave for certain after a grace period.
+                std::thread::spawn(|| {
+                    std::thread::sleep(EXIT_GRACE);
+                    std::process::exit(0);
+                });
+                event_loop.exit();
+            }
+            Err(failure) => {
+                update_pending::clear(&marker);
+                self.set_update_phase(UpdatePhase::Failed(failure));
+            }
         }
     }
 

@@ -5,9 +5,13 @@
 //! - **macOS**: mount the DMG, copy its `.app` next to the installed bundle,
 //!   then a detached `sh` waits for this process to exit, swaps the bundles
 //!   (rolling back if the second move fails) and `open`s the new one.
-//! - **Windows**: a hidden PowerShell waits for this process to exit, runs
-//!   the NSIS setup with `/S` elevated (one UAC prompt — the installer is
-//!   per-machine), then starts the installed exe again.
+//! - **Windows** (#362): the installer is per-user, so an update needs no
+//!   administrator rights (unless the machine's Visual C++ runtime is older
+//!   than the bundled one). A hidden PowerShell waits (bounded) for this
+//!   process to exit, runs the NSIS setup with `/S` into the running copy's
+//!   folder, logs each step and the setup's exit code, and starts the exe
+//!   again. A copy in a folder this user cannot write to (an older
+//!   per-machine install under Program Files) cannot update itself.
 //! - **Linux** (#51): unpack the bare `design-editor` binary from the release
 //!   tarball next to the running one, then a detached `sh` waits for this
 //!   process to exit, renames it over the old binary and starts it.
@@ -60,7 +64,7 @@ fn platform_target(exe: &Path) -> Result<PathBuf, UpdateFailure> {
 
 /// Probe write access with a throwaway dir: finding out after a 40 MB
 /// download is worse.
-#[cfg(any(target_os = "macos", target_os = "linux"))]
+#[cfg(any(target_os = "macos", target_os = "linux", target_os = "windows"))]
 fn probe_writable(dir: &Path) -> Result<(), UpdateFailure> {
     let probe = dir.join(format!(
         ".design-editor-update-probe-{}",
@@ -73,16 +77,19 @@ fn probe_writable(dir: &Path) -> Result<(), UpdateFailure> {
 
 /// Only an NSIS install can take the silent setup: the installer writes
 /// `Uninstall.exe` next to the app, a `cargo run` build or a copied exe has
-/// none, and running the per-machine setup for those would install a second
-/// copy and relaunch the wrong one.
+/// none, and running the setup for those would install a second copy and
+/// relaunch the wrong one. The folder must also be writable without
+/// elevation: the per-user setup never asks for it, so an older
+/// per-machine install under Program Files has to be replaced by hand once
+/// (the new installer offers to remove it).
 #[cfg(target_os = "windows")]
 fn platform_target(exe: &Path) -> Result<PathBuf, UpdateFailure> {
-    let installed = exe
-        .parent()
-        .is_some_and(|dir| dir.join("Uninstall.exe").is_file());
-    installed
-        .then(|| exe.to_path_buf())
-        .ok_or(UpdateFailure::Unsupported)
+    let dir = exe.parent().ok_or(UpdateFailure::Unsupported)?;
+    if !dir.join("Uninstall.exe").is_file() {
+        return Err(UpdateFailure::Unsupported);
+    }
+    probe_writable(dir)?;
+    Ok(exe.to_path_buf())
 }
 
 /// The release ships a bare binary, so any copy can update itself, except a
@@ -296,21 +303,61 @@ open "$target""#;
 
 /// PowerShell single-quoted literal: `'` doubles, nothing else is special.
 #[cfg_attr(not(target_os = "windows"), allow(dead_code))]
+fn ps_quote_str(text: &str) -> String {
+    format!("'{}'", text.replace('\'', "''"))
+}
+
+#[cfg_attr(not(target_os = "windows"), allow(dead_code))]
 fn ps_quote(path: &Path) -> String {
-    format!("'{}'", path.display().to_string().replace('\'', "''"))
+    ps_quote_str(&path.display().to_string())
+}
+
+/// How long the helper waits for the app to exit before stopping it. The
+/// installer waits the same 30 s for the exe to unlock
+/// (`WaitForAppClosed` in `scripts/package-windows.nsi`).
+#[cfg_attr(not(target_os = "windows"), allow(dead_code))]
+const WINDOWS_EXIT_WAIT_MS: u32 = 30_000;
+
+/// Where the Windows helper writes its steps (the user's temp folder).
+#[cfg_attr(not(target_os = "windows"), allow(dead_code))]
+fn windows_update_log() -> PathBuf {
+    std::env::temp_dir().join("design-editor-update.log")
 }
 
 /// The hidden PowerShell program that installs a staged setup.
+///
+/// Nothing here asks for elevation (the installer is per-user; only a
+/// Visual C++ runtime older than the bundled one makes its redistributable
+/// ask), and no step can wait forever: the app gets `WINDOWS_EXIT_WAIT_MS` to exit before it is
+/// stopped, then the setup runs silently into the running copy's folder
+/// (`/D=` must be the last argument and unquoted, even with spaces). Every
+/// step and the setup's exit code go to `log`. The exe is started whatever
+/// happened, so a failed install reopens the old build, which then reports
+/// the failure (`update_pending`).
 #[cfg_attr(not(target_os = "windows"), allow(dead_code))]
-fn windows_relaunch_command(pid: u32, setup: &Path, exe: &Path) -> String {
+fn windows_relaunch_command(pid: u32, setup: &Path, exe: &Path, log: &Path) -> String {
+    let dir = exe.parent().unwrap_or(exe);
+    let args = format!("/S /D={}", dir.display());
     format!(
-        "$ErrorActionPreference='SilentlyContinue'; Wait-Process -Id {pid}; \
-         Start-Process -FilePath {} -ArgumentList '/S' -Verb RunAs -Wait; \
-         Remove-Item -LiteralPath {} -Recurse; Start-Process -FilePath {}",
-        ps_quote(setup),
+        "$ErrorActionPreference='Stop'; $log={log}; \
+         function Log($m) {{ try {{ Add-Content -LiteralPath $log -Value ((Get-Date -Format o) + ' ' + $m) }} catch {{ }} }}; \
+         Log 'waiting for the app (pid {pid}) to exit'; \
+         try {{ \
+         $app = Get-Process -Id {pid} -ErrorAction SilentlyContinue; \
+         if ($app -and -not $app.WaitForExit({WINDOWS_EXIT_WAIT_MS})) {{ Log 'the app is still running; stopping it'; Stop-Process -Id {pid} -Force -ErrorAction SilentlyContinue; Start-Sleep -Seconds 1 }}; \
+         Log ('running ' + {setup}); \
+         $setup = Start-Process -FilePath {setup} -ArgumentList {args} -Wait -PassThru; \
+         Log ('installer exit code ' + $setup.ExitCode) \
+         }} catch {{ Log ('failed: ' + $_) }}; \
+         Remove-Item -LiteralPath {job} -Recurse -Force -ErrorAction SilentlyContinue; \
+         Log ('starting ' + {exe}); \
+         try {{ Start-Process -FilePath {exe} }} catch {{ Log ('could not start the app: ' + $_) }}",
+        log = ps_quote(log),
+        setup = ps_quote(setup),
+        args = ps_quote_str(&args),
         // The setup sits alone in its job folder; drop the folder with it.
-        ps_quote(setup.parent().unwrap_or(setup)),
-        ps_quote(exe)
+        job = ps_quote(setup.parent().unwrap_or(setup)),
+        exe = ps_quote(exe),
     )
 }
 
@@ -361,7 +408,12 @@ fn spawn_helper(staged: &StagedUpdate, pid: u32) -> std::io::Result<()> {
                 "Hidden",
                 "-Command",
             ])
-            .arg(windows_relaunch_command(pid, setup, exe))
+            .arg(windows_relaunch_command(
+                pid,
+                setup,
+                exe,
+                &windows_update_log(),
+            ))
             .creation_flags(flags)
             .spawn()
             .map(drop)
@@ -427,16 +479,64 @@ mod tests {
 
     #[test]
     fn windows_command_quotes_paths_and_runs_setup_silently() {
+        // Forward slashes: Windows takes them, and the folder is found on
+        // every host the unit tests run on.
         let cmd = windows_relaunch_command(
             42,
-            Path::new(r"C:\Users\O'Neil\AppData\Local\Temp\setup.exe"),
-            Path::new(r"C:\Program Files\Design Editor\design-editor.exe"),
+            Path::new(r"C:/Users/O'Neil/AppData/Local/Temp/job/setup.exe"),
+            Path::new(r"C:/Users/O'Neil/AppData/Local/Programs/Design Editor/design-editor.exe"),
+            Path::new(r"C:/Users/O'Neil/AppData/Local/Temp/design-editor-update.log"),
         );
-        assert!(cmd.contains("Wait-Process -Id 42;"));
-        assert!(cmd.contains(r"-FilePath 'C:\Users\O''Neil\AppData\Local\Temp\setup.exe' -ArgumentList '/S' -Verb RunAs -Wait"));
-        assert!(cmd.ends_with(
-            r"Start-Process -FilePath 'C:\Program Files\Design Editor\design-editor.exe'"
+        assert!(cmd.contains("$app.WaitForExit(30000)"), "bounded wait");
+        assert!(cmd.contains("Stop-Process -Id 42 -Force"));
+        assert!(cmd.contains(
+            r"Start-Process -FilePath 'C:/Users/O''Neil/AppData/Local/Temp/job/setup.exe' -ArgumentList '/S /D=C:/Users/O''Neil/AppData/Local/Programs/Design Editor' -Wait -PassThru"
         ));
+        assert!(cmd.contains("'installer exit code ' + $setup.ExitCode"));
+        assert!(
+            cmd.contains(r"$log='C:/Users/O''Neil/AppData/Local/Temp/design-editor-update.log'")
+        );
+        assert!(!cmd.contains("RunAs"), "the per-user setup never elevates");
+        assert!(cmd.contains(
+            r"Start-Process -FilePath 'C:/Users/O''Neil/AppData/Local/Programs/Design Editor/design-editor.exe'"
+        ));
+    }
+
+    /// Runs the real helper program in PowerShell (Windows CI): it waits for
+    /// a short-lived process, runs a stand-in setup that fails, logs its exit
+    /// code, removes the job folder and starts the exe anyway.
+    #[cfg(target_os = "windows")]
+    #[test]
+    fn windows_helper_logs_the_setup_exit_code_and_relaunches() {
+        let root = std::env::temp_dir().join(format!("de-update-helper-{}", std::process::id()));
+        let job = root.join("job");
+        std::fs::create_dir_all(&job).unwrap();
+        let system =
+            std::path::PathBuf::from(std::env::var("SystemRoot").unwrap()).join("System32");
+        // A setup that fails with exit code 3.
+        let setup = job.join("setup.cmd");
+        std::fs::write(&setup, "@exit /b 3\r\n").unwrap();
+        let exe = system.join("hostname.exe");
+        let log = root.join("update.log");
+        let mut waited = std::process::Command::new(system.join("PING.EXE"))
+            .args(["-n", "2", "127.0.0.1"])
+            .stdout(std::process::Stdio::null())
+            .spawn()
+            .unwrap();
+        let status = std::process::Command::new("powershell.exe")
+            .args(["-NoProfile", "-NonInteractive", "-Command"])
+            .arg(windows_relaunch_command(waited.id(), &setup, &exe, &log))
+            .status()
+            .unwrap();
+        let _ = waited.wait();
+        assert!(status.success());
+        let text = std::fs::read_to_string(&log).unwrap();
+        assert!(text.contains("waiting for the app"), "{text}");
+        assert!(text.contains("installer exit code 3"), "{text}");
+        assert!(text.contains("starting "), "{text}");
+        assert!(!text.contains("failed:"), "{text}");
+        assert!(!job.exists(), "the job folder is removed");
+        let _ = std::fs::remove_dir_all(&root);
     }
 
     #[test]
