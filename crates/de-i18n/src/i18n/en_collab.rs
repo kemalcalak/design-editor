@@ -249,6 +249,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "dialog.loadErrorNotPptx" => "{{name}} could not be opened as a PowerPoint deck: {{detail}}",
         "settings.system.updateButton" => "Update",
         "settings.system.restartButton" => "Restart",
+        "settings.system.checkButton" => "Check now",
         "updateModal.title" => "Update to Design Editor {{version}}",
         "updateModal.offerBody" => "You have {{current}}. Download and install it now?",
         "updateModal.downloading" => "Downloading…",

@@ -200,6 +200,7 @@ impl AgentSettingsPanel<'_> {
                     }
                     SystemHit::ToggleAutoUpdate => return AgentSettingsHit::ToggleAutoUpdate,
                     SystemHit::UpdateButton => return AgentSettingsHit::UpdateButton,
+                    SystemHit::CheckUpdatesButton => return AgentSettingsHit::CheckUpdatesButton,
                     SystemHit::ToggleExperimental => return AgentSettingsHit::ToggleExperimental,
                     SystemHit::SelectPencilCursor(style) => {
                         return AgentSettingsHit::SelectPencilCursor(style)

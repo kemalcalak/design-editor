@@ -254,6 +254,10 @@ pub fn apply_agent_settings_hit(
             }
             SettingsPressOutcome::handled()
         }
+        AgentSettingsHit::CheckUpdatesButton => {
+            state.editor_ui.request_update_check();
+            SettingsPressOutcome::handled()
+        }
         AgentSettingsHit::SelectThemeMode(mode) => {
             state.editor_ui.theme_mode = mode;
             SettingsPressOutcome::handled()

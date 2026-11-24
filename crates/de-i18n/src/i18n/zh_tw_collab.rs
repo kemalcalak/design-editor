@@ -249,6 +249,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "dialog.loadErrorNotPptx" => "無法將 {{name}} 作為 PowerPoint 簡報開啟：{{detail}}",
         "settings.system.updateButton" => "更新",
         "settings.system.restartButton" => "重新啟動",
+        "settings.system.checkButton" => "立即檢查",
         "updateModal.title" => "更新至 Design Editor {{version}}",
         "updateModal.offerBody" => "目前版本為 {{current}}。現在下載並安裝嗎？",
         "updateModal.downloading" => "正在下載…",

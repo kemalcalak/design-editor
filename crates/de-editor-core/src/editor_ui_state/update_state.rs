@@ -64,6 +64,9 @@ pub enum UpdateAction {
     Restart,
     /// Open the releases page in the browser.
     OpenReleases,
+    /// Ask the release API whether a newer build exists (the System tab's
+    /// Check now button; the app menu's Check for Updates does the same).
+    Check,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -149,6 +152,24 @@ impl super::EditorUiState {
             .is_some_and(|m| m.phase == UpdatePhase::ReadyToRestart)
     }
 
+    /// Whether the System tab offers Check now: no newer release is known
+    /// and no check is running. Hidden while the Update / Restart button
+    /// holds the slot.
+    pub fn can_check_for_update(&self) -> bool {
+        self.update_button_version().is_none()
+            && !matches!(self.update_status, super::UpdateStatus::Checking)
+    }
+
+    /// Check now: show the row as checking at once and queue the release
+    /// probe for the host.
+    pub fn request_update_check(&mut self) {
+        if !self.can_check_for_update() {
+            return;
+        }
+        self.update_status = super::UpdateStatus::Checking;
+        self.pending_update_action = Some(UpdateAction::Check);
+    }
+
     /// Settings row "Update" / "Restart": reveal a staged or running job,
     /// otherwise start downloading `version` straight away.
     pub fn start_update(&mut self, version: &str) {
@@ -228,7 +249,7 @@ impl super::EditorUiState {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::editor_ui_state::EditorUiState;
+    use crate::editor_ui_state::{EditorUiState, UpdateStatus};
 
     fn with_modal(modal: UpdateModalState) -> EditorUiState {
         EditorUiState {
@@ -271,6 +292,45 @@ mod tests {
         ui.press_update_button(UpdateModalButton::Later);
         assert!(ui.update_modal.is_some());
         assert!(!ui.update_modal_visible());
+    }
+
+    #[test]
+    fn check_now_queues_a_probe_and_shows_checking() {
+        for status in [
+            UpdateStatus::Idle,
+            UpdateStatus::UpToDate,
+            UpdateStatus::Error,
+        ] {
+            let mut ui = EditorUiState {
+                update_status: status,
+                ..EditorUiState::default()
+            };
+            assert!(ui.can_check_for_update());
+            ui.request_update_check();
+            assert_eq!(ui.update_status, UpdateStatus::Checking);
+            assert_eq!(ui.pending_update_action, Some(UpdateAction::Check));
+        }
+    }
+
+    #[test]
+    fn check_now_is_not_offered_while_checking_or_with_an_update_known() {
+        let mut checking = EditorUiState {
+            update_status: UpdateStatus::Checking,
+            ..EditorUiState::default()
+        };
+        assert!(!checking.can_check_for_update());
+        checking.request_update_check();
+        assert_eq!(checking.pending_update_action, None);
+
+        let available = EditorUiState {
+            update_status: UpdateStatus::Available {
+                version: "1.0.0".into(),
+            },
+            ..EditorUiState::default()
+        };
+        assert!(!available.can_check_for_update());
+        let staged = with_modal(UpdateModalState::new("1.0.0", UpdatePhase::ReadyToRestart));
+        assert!(!staged.can_check_for_update());
     }
 
     #[test]

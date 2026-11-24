@@ -14,17 +14,33 @@
 ;   design-editor.ico          icon used by shortcuts + the .de/.pen ProgIDs
 ;   Uninstall.exe           uninstaller (registered in Add/Remove Programs)
 ;
-; File association: ProgID "DesignEditor.Document" under HKCR with DefaultIcon
-; and an open command, claimed by .de; a separate ProgID
-; "DesignEditor.PenDevImport" (same icon + command) is claimed by .pen
-; (pen.dev files, which open as an untitled import and are never written
-; back). Writing the machine hive
-; requires elevation, hence RequestExecutionLevel admin + $PROGRAMFILES64 —
-; an intentional divergence from electron-builder's per-user install
-; (perMachine: false): a per-user HKCU\Software\Classes claim silently loses
-; to any pre-existing machine-level registration. `.fig` is deliberately not
-; claimed on Windows (macOS-only association, parity with electron-builder's
-; fileAssociations list which only covered the document extension).
+; Per-user install (#362), like VS Code's user setup, Slack or Discord:
+; $LOCALAPPDATA\Programs\Design Editor, current-user shortcuts and registry
+; (HKCU), RequestExecutionLevel user. An install or in-app update needs no
+; administrator rights, so the app's silent update does not wait on a UAC
+; prompt nobody sees. The exception is a missing Visual C++ runtime or one
+; older than the bundled redistributable: that runtime is per-machine and
+; its redistributable asks for elevation itself.
+;
+; Earlier releases installed per-machine under Program Files. An interactive
+; install finds that copy (HKLM uninstall key) and offers to remove it; its
+; uninstaller asks for elevation once. A silent install from an older app's
+; update helper runs elevated (that helper used RunAs): it removes the old
+; copy without asking and starts the new one unelevated, since the old
+; helper would relaunch the removed Program Files exe. A silent install
+; without elevation leaves the old copy alone.
+;
+; File association: ProgID "DesignEditor.Document" under
+; HKCU\Software\Classes with DefaultIcon and an open command, claimed by .de;
+; a separate ProgID "DesignEditor.PenDevImport" (same icon + command) is
+; claimed by .pen (pen.dev files, which open as an untitled import and are
+; never written back). HKCU classes take precedence over machine-level ones
+; in the merged HKCR view. `.fig` is deliberately not claimed on Windows
+; (macOS-only association).
+;
+; Updates: the app's helper runs `setup.exe /S /D=<its folder>` after the app
+; quits. If the app is still running the installer waits up to 30 s for it
+; (asks to close it when interactive) instead of failing on a locked file.
 ;
 ; Compile (relative paths resolve against this script's directory, so the
 ; workflow passes absolute /D defines):
@@ -48,6 +64,7 @@
 Unicode true
 
 !include "MUI2.nsh"
+!include "LogicLib.nsh"
 
 !ifndef VERSION
   !define VERSION "0.0.0"
@@ -87,6 +104,7 @@ Unicode true
 !define PEN_PROG_ID "DesignEditor.PenDevImport"
 !define REG_APP_KEY "Software\${PRODUCT_NAME}"
 !define UNINST_KEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT_NAME}"
+!define CLASSES_KEY "Software\Classes"
 !define VC_RUNTIME_REG_KEY "SOFTWARE\Microsoft\VisualStudio\14.0\VC\Runtimes\${ARCH}"
 !define VC_REDIST_EXE "vc_redist.${ARCH}.exe"
 !define VC_REDIST_LOG "$TEMP\Design-Editor-vc-redist-${ARCH}.log"
@@ -106,12 +124,13 @@ Var VCRuntimeRequiredBuild
 Var VCRuntimeRequiredRevision
 Var VCRuntimeRequiredVersion
 Var VCRuntimeExitCode
+Var MigratedFromMachine
 
 Name "${PRODUCT_NAME}"
 OutFile "${OUT_FILE}"
-InstallDir "$PROGRAMFILES64\${PRODUCT_NAME}"
-InstallDirRegKey HKLM "${REG_APP_KEY}" "InstallDir"
-RequestExecutionLevel admin
+InstallDir "$LOCALAPPDATA\Programs\${PRODUCT_NAME}"
+InstallDirRegKey HKCU "${REG_APP_KEY}" "InstallDir"
+RequestExecutionLevel user
 SetCompressor /SOLID lzma
 
 !define MUI_ICON "${ICON_FILE}"
@@ -182,10 +201,96 @@ Function CheckVCRuntime
     SetRegView default
 FunctionEnd
 
+;-- Per-user context for shortcuts ($SMPROGRAMS, $DESKTOP).
+Function .onInit
+  SetShellVarContext current
+FunctionEnd
+
+Function un.onInit
+  SetShellVarContext current
+FunctionEnd
+
+; Offer to remove a per-machine copy left by an earlier release, so the
+; Start menu and file associations do not point at two installs. Its
+; uninstaller asks for elevation (ExecShellWait "runas"); it copies itself
+; to %TEMP% and returns at once, so wait for the app file to go.
+Function RemoveMachineInstall
+  ClearErrors
+  ReadRegStr $0 HKLM "${UNINST_KEY}" "InstallLocation"
+  ${If} ${Errors}
+  ${OrIf} $0 == ""
+    Return
+  ${EndIf}
+  ${If} $0 == $INSTDIR
+    Return
+  ${EndIf}
+  IfFileExists "$0\Uninstall.exe" 0 machine_done
+  IfSilent 0 machine_ask
+  ; Silent: only when this process may write there (elevated).
+  ClearErrors
+  CreateDirectory "$0\.design-editor-probe"
+  IfErrors machine_done
+  RMDir "$0\.design-editor-probe"
+  ExecWait '"$0\Uninstall.exe" /S _?=$0'
+  Delete "$0\Uninstall.exe"
+  RMDir "$0"
+  StrCpy $MigratedFromMachine "1"
+  Goto machine_done
+  machine_ask:
+  MessageBox MB_YESNO|MB_ICONQUESTION \
+    "An earlier Design Editor is installed for all users in:$\r$\n$0$\r$\n$\r$\nRemove it now? Updates then install without administrator approval. Windows asks for permission once." \
+    IDNO machine_done
+  ClearErrors
+  ExecShellWait "runas" "$0\Uninstall.exe" "/S"
+  IfErrors machine_done
+  StrCpy $1 0
+  machine_wait:
+    IfFileExists "$0\${EXE_NAME}" 0 machine_done
+    IntOp $1 $1 + 1
+    IntCmp $1 120 machine_done
+    Sleep 500
+    Goto machine_wait
+  machine_done:
+FunctionEnd
+
+; An update runs while the app may still be closing; a manual install may
+; run while it is open. Writing over a running exe fails, so wait for it:
+; up to 30 s when silent (the app's update helper waits the same before it
+; stops the app, WINDOWS_EXIT_WAIT_MS), else ask the user to close it.
+Function WaitForAppClosed
+  StrCpy $1 0
+  app_check:
+    IfFileExists "$INSTDIR\${EXE_NAME}" 0 app_closed
+    ClearErrors
+    FileOpen $2 "$INSTDIR\${EXE_NAME}" a
+    IfErrors app_locked
+    FileClose $2
+    Goto app_closed
+  app_locked:
+    IfSilent app_wait
+    MessageBox MB_RETRYCANCEL|MB_ICONEXCLAMATION \
+      "Design Editor is running. Close it, then press Retry." \
+      IDRETRY app_check
+    Abort "Design Editor is still running."
+  app_wait:
+    IntOp $1 $1 + 1
+    IntCmp $1 60 app_give_up
+    Sleep 500
+    Goto app_check
+  app_give_up:
+    Abort "Design Editor is still running."
+  app_closed:
+FunctionEnd
+
 ; Propagate the standard Windows success-with-reboot-required status to silent
 ; installers and callers that inspect the process exit code. The interactive
 ; MUI flow also uses the reboot flag to tell the user a restart is required.
 Function .onInstSuccess
+  ; A silent elevated update from an older per-machine copy removed that
+  ; copy, which its helper is about to relaunch: start the new one through
+  ; Explorer instead, so it runs unelevated.
+  StrCmp $MigratedFromMachine "1" 0 +2
+    Exec '"$WINDIR\explorer.exe" "$INSTDIR\${EXE_NAME}"'
   IfRebootFlag 0 vc_runtime_no_reboot_exit
   SetErrorLevel 3010
   vc_runtime_no_reboot_exit:
@@ -283,6 +388,9 @@ Section "Design Editor" SecMain
     DetailPrint \
       "Microsoft Visual C++ runtime $VCRuntimeInstalledVersion satisfies $VCRuntimeRequiredVersion"
 
+  Call RemoveMachineInstall
+  Call WaitForAppClosed
+
   SetOutPath "$INSTDIR"
 
   File "${BIN_DIR}\${EXE_NAME}"
@@ -305,7 +413,7 @@ Section "Design Editor" SecMain
   File /nonfatal "${BIN_DIR}\d3dcompiler_47.dll"
 
   WriteUninstaller "$INSTDIR\Uninstall.exe"
-  WriteRegStr HKLM "${REG_APP_KEY}" "InstallDir" "$INSTDIR"
+  WriteRegStr HKCU "${REG_APP_KEY}" "InstallDir" "$INSTDIR"
 
   ; Shortcuts — createDesktopShortcut / createStartMenuShortcut parity.
   CreateDirectory "$SMPROGRAMS\${PRODUCT_NAME}"
@@ -315,32 +423,32 @@ Section "Design Editor" SecMain
     "$INSTDIR\${EXE_NAME}" "" "$INSTDIR\design-editor.ico"
 
   ; Add/Remove Programs entry.
-  WriteRegStr HKLM "${UNINST_KEY}" "DisplayName" "${PRODUCT_NAME}"
-  WriteRegStr HKLM "${UNINST_KEY}" "DisplayVersion" "${VERSION}"
-  WriteRegStr HKLM "${UNINST_KEY}" "DisplayIcon" "$INSTDIR\design-editor.ico"
-  WriteRegStr HKLM "${UNINST_KEY}" "Publisher" "Design Editor contributors"
-  WriteRegStr HKLM "${UNINST_KEY}" "URLInfoAbout" "https://github.com/kemalcalak/design-editor"
-  WriteRegStr HKLM "${UNINST_KEY}" "InstallLocation" "$INSTDIR"
-  WriteRegStr HKLM "${UNINST_KEY}" "UninstallString" '"$INSTDIR\Uninstall.exe"'
-  WriteRegDWORD HKLM "${UNINST_KEY}" "NoModify" 1
-  WriteRegDWORD HKLM "${UNINST_KEY}" "NoRepair" 1
+  WriteRegStr HKCU "${UNINST_KEY}" "DisplayName" "${PRODUCT_NAME}"
+  WriteRegStr HKCU "${UNINST_KEY}" "DisplayVersion" "${VERSION}"
+  WriteRegStr HKCU "${UNINST_KEY}" "DisplayIcon" "$INSTDIR\design-editor.ico"
+  WriteRegStr HKCU "${UNINST_KEY}" "Publisher" "Design Editor contributors"
+  WriteRegStr HKCU "${UNINST_KEY}" "URLInfoAbout" "https://github.com/kemalcalak/design-editor"
+  WriteRegStr HKCU "${UNINST_KEY}" "InstallLocation" "$INSTDIR"
+  WriteRegStr HKCU "${UNINST_KEY}" "UninstallString" '"$INSTDIR\Uninstall.exe"'
+  WriteRegDWORD HKCU "${UNINST_KEY}" "NoModify" 1
+  WriteRegDWORD HKCU "${UNINST_KEY}" "NoRepair" 1
 
   ; File association: .de documents get their own ProgID.
-  WriteRegStr HKCR "${PROG_ID}" "" "Design Editor Document"
-  WriteRegStr HKCR "${PROG_ID}\DefaultIcon" "" "$INSTDIR\design-editor.ico"
-  WriteRegStr HKCR "${PROG_ID}\shell" "" "open"
-  WriteRegStr HKCR "${PROG_ID}\shell\open\command" "" '"$INSTDIR\${EXE_NAME}" "%1"'
+  WriteRegStr HKCU "${CLASSES_KEY}\${PROG_ID}" "" "Design Editor Document"
+  WriteRegStr HKCU "${CLASSES_KEY}\${PROG_ID}\DefaultIcon" "" "$INSTDIR\design-editor.ico"
+  WriteRegStr HKCU "${CLASSES_KEY}\${PROG_ID}\shell" "" "open"
+  WriteRegStr HKCU "${CLASSES_KEY}\${PROG_ID}\shell\open\command" "" '"$INSTDIR\${EXE_NAME}" "%1"'
 
   ; pen.dev .pen files are a separate, import-only type with their own ProgID.
-  WriteRegStr HKCR "${PEN_PROG_ID}" "" "pen.dev Document (import)"
-  WriteRegStr HKCR "${PEN_PROG_ID}\DefaultIcon" "" "$INSTDIR\design-editor.ico"
-  WriteRegStr HKCR "${PEN_PROG_ID}\shell" "" "open"
-  WriteRegStr HKCR "${PEN_PROG_ID}\shell\open\command" "" '"$INSTDIR\${EXE_NAME}" "%1"'
+  WriteRegStr HKCU "${CLASSES_KEY}\${PEN_PROG_ID}" "" "pen.dev Document (import)"
+  WriteRegStr HKCU "${CLASSES_KEY}\${PEN_PROG_ID}\DefaultIcon" "" "$INSTDIR\design-editor.ico"
+  WriteRegStr HKCU "${CLASSES_KEY}\${PEN_PROG_ID}\shell" "" "open"
+  WriteRegStr HKCU "${CLASSES_KEY}\${PEN_PROG_ID}\shell\open\command" "" '"$INSTDIR\${EXE_NAME}" "%1"'
 
-  WriteRegStr HKCR ".de" "" "${PROG_ID}"
-  WriteRegStr HKCR ".de" "Content Type" "application/x-design-editor"
-  WriteRegStr HKCR ".pen" "" "${PEN_PROG_ID}"
-  WriteRegStr HKCR ".pen" "Content Type" "application/x-pen-dev"
+  WriteRegStr HKCU "${CLASSES_KEY}\.de" "" "${PROG_ID}"
+  WriteRegStr HKCU "${CLASSES_KEY}\.de" "Content Type" "application/x-design-editor"
+  WriteRegStr HKCU "${CLASSES_KEY}\.pen" "" "${PEN_PROG_ID}"
+  WriteRegStr HKCU "${CLASSES_KEY}\.pen" "Content Type" "application/x-pen-dev"
 
   ; SHCNE_ASSOCCHANGED — tell the shell to refresh icon/association caches.
   System::Call 'shell32::SHChangeNotify(i 0x08000000, i 0, i 0, i 0)'
@@ -350,6 +458,9 @@ Section "Uninstall"
   Delete "$INSTDIR\${EXE_NAME}"
   Delete "$INSTDIR\${CLI_NAME}"
   Delete "$INSTDIR\design-editor.ico"
+  Delete "$INSTDIR\libEGL.dll"
+  Delete "$INSTDIR\libGLESv2.dll"
+  Delete "$INSTDIR\d3dcompiler_47.dll"
   Delete "$INSTDIR\Uninstall.exe"
   RMDir "$INSTDIR"
 
@@ -359,17 +470,17 @@ Section "Uninstall"
 
   ; Only unclaim the extensions if they still point at our ProgID — never
   ; clobber an association another app took over after us.
-  ReadRegStr $0 HKCR ".de" ""
+  ReadRegStr $0 HKCU "${CLASSES_KEY}\.de" ""
   StrCmp $0 "${PROG_ID}" 0 +2
-    DeleteRegKey HKCR ".de"
-  ReadRegStr $0 HKCR ".pen" ""
+    DeleteRegKey HKCU "${CLASSES_KEY}\.de"
+  ReadRegStr $0 HKCU "${CLASSES_KEY}\.pen" ""
   StrCmp $0 "${PEN_PROG_ID}" 0 +2
-    DeleteRegKey HKCR ".pen"
-  DeleteRegKey HKCR "${PROG_ID}"
-  DeleteRegKey HKCR "${PEN_PROG_ID}"
+    DeleteRegKey HKCU "${CLASSES_KEY}\.pen"
+  DeleteRegKey HKCU "${CLASSES_KEY}\${PROG_ID}"
+  DeleteRegKey HKCU "${CLASSES_KEY}\${PEN_PROG_ID}"
 
-  DeleteRegKey HKLM "${UNINST_KEY}"
-  DeleteRegKey HKLM "${REG_APP_KEY}"
+  DeleteRegKey HKCU "${UNINST_KEY}"
+  DeleteRegKey HKCU "${REG_APP_KEY}"
 
   System::Call 'shell32::SHChangeNotify(i 0x08000000, i 0, i 0, i 0)'
 SectionEnd

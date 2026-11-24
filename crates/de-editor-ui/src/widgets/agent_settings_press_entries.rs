@@ -423,6 +423,7 @@ pub(crate) fn apply_entry_hit(
         | AgentSettingsHit::TestImageSearch
         | AgentSettingsHit::ToggleAutoUpdate
         | AgentSettingsHit::UpdateButton
+        | AgentSettingsHit::CheckUpdatesButton
         | AgentSettingsHit::SelectPencilCursor(_)
         | AgentSettingsHit::SelectPencilSmoothing(_)
         | AgentSettingsHit::ToggleLivePages

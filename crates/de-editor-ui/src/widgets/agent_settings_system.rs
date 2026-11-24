@@ -41,11 +41,11 @@ const SEGMENT_PAD_X: f32 = 6.0;
 pub(crate) const SMOOTHING_SEGMENT_W: f32 = 84.0;
 const CURSOR_SWATCH: f32 = 38.0;
 const CURSOR_SWATCH_GAP: f32 = 8.0;
-/// The Auto-update row's Update / Restart button (#111), left of the switch;
+/// The Auto-update row's Update / Restart / Check now button (#111, #360), left of the switch;
 /// it grows with its label (`Перезапустить`) from this floor.
-const UPDATE_BUTTON_MIN_W: f32 = 96.0;
-const UPDATE_BUTTON_H: f32 = 30.0;
-const UPDATE_BUTTON_GAP: f32 = 12.0;
+const ROW_BUTTON_MIN_W: f32 = 96.0;
+const ROW_BUTTON_H: f32 = 30.0;
+const ROW_BUTTON_GAP: f32 = 12.0;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum SystemHit {
@@ -54,6 +54,9 @@ pub enum SystemHit {
     /// The Update button (starts the download) or, once a build is staged,
     /// the Restart button (reopens the modal on it).
     UpdateButton,
+    /// Check now: run the release probe (#360). Shares the Update
+    /// button's slot while no newer release is known.
+    CheckUpdatesButton,
     ToggleExperimental,
     /// Click on one of the pencil-cursor swatches.
     SelectPencilCursor(de_editor_core::PencilCursorStyle),
@@ -81,6 +84,27 @@ const IN_APP_UPDATE_AVAILABLE: bool = cfg!(any(
 /// Whether the Auto-update row carries its Update / Restart button now.
 fn shows_update_button(ui: &EditorUiState) -> bool {
     IN_APP_UPDATE_AVAILABLE && ui.update_button_version().is_some()
+}
+
+/// The button left of the Auto-update switch, if any. Check now runs the
+/// release probe on every desktop platform, so it does not need the
+/// in-app installer the Update button does.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum RowButton {
+    Update,
+    Check,
+}
+
+fn row_button(ui: &EditorUiState) -> Option<RowButton> {
+    if !AUTO_UPDATE_AVAILABLE {
+        None
+    } else if shows_update_button(ui) {
+        Some(RowButton::Update)
+    } else if ui.can_check_for_update() {
+        Some(RowButton::Check)
+    } else {
+        None
+    }
 }
 
 /// Row order. Auto-update drops out on the web, and every row below it
@@ -204,6 +228,21 @@ pub(super) fn auto_update_switch_rect(content: Rect) -> Rect {
     switch_rect_for(content, SystemRow::AutoUpdate)
 }
 
+/// Label, icon and style of the row's button.
+fn row_button_face(ui: &EditorUiState, button: RowButton) -> (&'static str, Icon, ButtonKind) {
+    match button {
+        RowButton::Check => (
+            t_settings(ui, "settings.system.checkButton"),
+            Icon::RefreshCw,
+            ButtonKind::Outline,
+        ),
+        RowButton::Update => {
+            let (label, icon) = update_button_face(ui);
+            (label, icon, ButtonKind::Primary)
+        }
+    }
+}
+
 /// Label and icon of the Update / Restart button.
 fn update_button_face(ui: &EditorUiState) -> (&'static str, Icon) {
     if ui.update_staged() {
@@ -219,16 +258,17 @@ fn update_button_face(ui: &EditorUiState) -> (&'static str, Icon) {
     }
 }
 
-/// The Update / Restart button, between the row label and the switch.
-fn update_button_rect(content: Rect, ui: &EditorUiState) -> Rect {
+/// The row's Update / Restart / Check now button, between the row label
+/// and the switch.
+fn row_button_rect(content: Rect, ui: &EditorUiState, button: RowButton) -> Rect {
     let switch = switch_rect_for(content, SystemRow::AutoUpdate);
-    let width = button_width_estimate(update_button_face(ui).0, true).max(UPDATE_BUTTON_MIN_W);
+    let width = button_width_estimate(row_button_face(ui, button).0, true).max(ROW_BUTTON_MIN_W);
     Rect {
         origin: Point2D::new(
-            switch.origin.x - UPDATE_BUTTON_GAP - width,
-            switch.origin.y + (switch.size.y - UPDATE_BUTTON_H) / 2.0,
+            switch.origin.x - ROW_BUTTON_GAP - width,
+            switch.origin.y + (switch.size.y - ROW_BUTTON_H) / 2.0,
         ),
-        size: Point2D::new(width, UPDATE_BUTTON_H),
+        size: Point2D::new(width, ROW_BUTTON_H),
     }
 }
 
@@ -280,11 +320,13 @@ pub fn hit_test(content: Rect, ui: &EditorUiState, scrolled: Point2D) -> SystemH
     if AUTO_UPDATE_AVAILABLE && switch_rect_for(content, SystemRow::AutoUpdate).contains(scrolled) {
         return SystemHit::ToggleAutoUpdate;
     }
-    if AUTO_UPDATE_AVAILABLE
-        && shows_update_button(ui)
-        && update_button_rect(content, ui).contains(scrolled)
-    {
-        return SystemHit::UpdateButton;
+    if let Some(button) = row_button(ui) {
+        if row_button_rect(content, ui, button).contains(scrolled) {
+            return match button {
+                RowButton::Update => SystemHit::UpdateButton,
+                RowButton::Check => SystemHit::CheckUpdatesButton,
+            };
+        }
     }
     if switch_rect_for(content, SystemRow::Experimental).contains(scrolled) {
         return SystemHit::ToggleExperimental;
@@ -475,13 +517,12 @@ fn paint_auto_update_row(
     row: Rect,
     enabled: bool,
 ) {
-    let show_button = shows_update_button(ui);
+    let button = row_button(ui);
     let switch = switch_rect_for(content, SystemRow::AutoUpdate);
     // Reserve from the leftmost control to the switch's right edge.
-    let controls_left = if show_button {
-        update_button_rect(content, ui).origin.x
-    } else {
-        switch.origin.x
+    let controls_left = match button {
+        Some(button) => row_button_rect(content, ui, button).origin.x,
+        None => switch.origin.x,
     };
     let control_w = switch.origin.x + switch.size.x - controls_left + 16.0;
     paint_row_label_above_status(
@@ -499,15 +540,15 @@ fn paint_auto_update_row(
         _ => t_settings(ui, status_key).to_string(),
     };
     paint_row_status_line(cx, row, &status_text, color);
-    if show_button {
-        let (label, icon) = update_button_face(ui);
+    if let Some(button) = button {
+        let (label, icon, kind) = row_button_face(ui, button);
         paint_button(
             cx,
             theme,
-            update_button_rect(content, ui),
+            row_button_rect(content, ui, button),
             label,
             Some(icon),
-            ButtonKind::Primary,
+            kind,
         );
     }
     paint_settings_switch(
