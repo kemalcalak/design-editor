@@ -11,8 +11,8 @@ $ErrorActionPreference = 'Stop'
 # Microsoft documents that the x64 bundle contains both x64 and ARM64 payloads.
 $PinnedUrl = 'https://download.visualstudio.microsoft.com/download/pr/78d061c5-9ef3-42ab-98ed-3309d1095dc4/9C02C9ED120F671B900E6B9471D890E3B2414117A7E53F4AE2E855466FA2B7C9/VC_redist.x64.exe'
 $PinnedSha256 = '9c02c9ed120f671b900e6b9471d890e3b2414117a7e53f4ae2e855466fa2b7c9'
-$PinnedFileVersion = '14.52.37025.0'
-$PinnedProductVersion = '14.52.37025.0'
+$PinnedFileVersion = '14.52.37029.0'
+$PinnedProductVersion = '14.52.37029.0'
 
 function Assert-RegularFile {
   param([string]$Path)
