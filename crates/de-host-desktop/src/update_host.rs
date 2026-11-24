@@ -58,9 +58,22 @@ impl DesktopApp {
             }
             UpdateAction::OpenReleases => update_check::open_url(&update_check::releases_url()),
             UpdateAction::Restart => self.restart_into_update(event_loop),
+            // Settings' Check now (#360): the same probe as the menu's
+            // Check for Updates, reusing a check already in flight.
+            UpdateAction::Check => self.start_update_check(),
         }
         self.host.mark_editor_state_dirty();
         true
+    }
+
+    /// Run the release probe unless one is already in flight. A newer
+    /// release it finds opens the update offer again (`poll_update_probe`),
+    /// even if one was shown earlier this session.
+    pub(crate) fn start_update_check(&mut self) {
+        if !self.update_probe.is_pending() {
+            self.update_probe = update_check::UpdateProbe::spawn();
+            self.update_prompt_shown = false;
+        }
     }
 
     /// Quit through the unsaved-changes prompt (Cancel there keeps the

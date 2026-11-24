@@ -253,10 +253,7 @@ impl DesktopApp {
                 self.host.editor_state_mut().editor_ui.update_status =
                     de_editor_core::UpdateStatus::Checking;
                 self.host.mark_editor_state_dirty();
-                if !self.update_probe.is_pending() {
-                    self.update_probe = update_check::UpdateProbe::spawn();
-                    self.update_prompt_shown = false;
-                }
+                self.start_update_check();
                 true
             }
             A::OpenGithub => {

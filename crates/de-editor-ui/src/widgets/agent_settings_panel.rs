@@ -253,6 +253,8 @@ pub enum AgentSettingsHit {
     ToggleAutoUpdate,
     /// System tab Update / Restart button (#111).
     UpdateButton,
+    /// System tab Check now button (#360).
+    CheckUpdatesButton,
     ToggleExperimental,
     SelectThemeMode(de_editor_core::editor_ui_state::ThemeMode),
     SelectPencilCursor(de_editor_core::PencilCursorStyle),

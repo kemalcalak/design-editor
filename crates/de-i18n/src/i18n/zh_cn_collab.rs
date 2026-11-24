@@ -249,6 +249,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "dialog.loadErrorNotPptx" => "无法将 {{name}} 作为 PowerPoint 演示文稿打开：{{detail}}",
         "settings.system.updateButton" => "更新",
         "settings.system.restartButton" => "重新启动",
+        "settings.system.checkButton" => "立即检查",
         "updateModal.title" => "更新到 Design Editor {{version}}",
         "updateModal.offerBody" => "当前版本为 {{current}}。现在下载并安装吗？",
         "updateModal.downloading" => "正在下载…",
