@@ -5,8 +5,9 @@
 //! - **macOS**: mount the DMG, copy its `.app` next to the installed bundle,
 //!   then a detached `sh` waits for this process to exit, swaps the bundles
 //!   (rolling back if the second move fails) and `open`s the new one.
-//! - **Windows** (#362): the installer is per-user, so no step needs
-//!   administrator rights. A hidden PowerShell waits (bounded) for this
+//! - **Windows** (#362): the installer is per-user, so an update needs no
+//!   administrator rights (unless the machine's Visual C++ runtime is older
+//!   than the bundled one). A hidden PowerShell waits (bounded) for this
 //!   process to exit, runs the NSIS setup with `/S` into the running copy's
 //!   folder, logs each step and the setup's exit code, and starts the exe
 //!   again. A copy in a folder this user cannot write to (an older
@@ -311,7 +312,9 @@ fn ps_quote(path: &Path) -> String {
     ps_quote_str(&path.display().to_string())
 }
 
-/// How long the helper waits for the app to exit before stopping it.
+/// How long the helper waits for the app to exit before stopping it. The
+/// installer waits the same 30 s for the exe to unlock
+/// (`WaitForAppClosed` in `scripts/package-windows.nsi`).
 #[cfg_attr(not(target_os = "windows"), allow(dead_code))]
 const WINDOWS_EXIT_WAIT_MS: u32 = 30_000;
 
@@ -323,8 +326,9 @@ fn windows_update_log() -> PathBuf {
 
 /// The hidden PowerShell program that installs a staged setup.
 ///
-/// No step needs elevation (the installer is per-user), and none can wait
-/// forever: the app gets `WINDOWS_EXIT_WAIT_MS` to exit before it is
+/// Nothing here asks for elevation (the installer is per-user; only a
+/// Visual C++ runtime older than the bundled one makes its redistributable
+/// ask), and no step can wait forever: the app gets `WINDOWS_EXIT_WAIT_MS` to exit before it is
 /// stopped, then the setup runs silently into the running copy's folder
 /// (`/D=` must be the last argument and unquoted, even with spaces). Every
 /// step and the setup's exit code go to `log`. The exe is started whatever
@@ -340,7 +344,7 @@ fn windows_relaunch_command(pid: u32, setup: &Path, exe: &Path, log: &Path) -> S
          Log 'waiting for the app (pid {pid}) to exit'; \
          try {{ \
          $app = Get-Process -Id {pid} -ErrorAction SilentlyContinue; \
-         if ($app -and -not $app.WaitForExit({WINDOWS_EXIT_WAIT_MS})) {{ Log 'the app is still running; stopping it'; Stop-Process -Id {pid} -Force; Start-Sleep -Seconds 1 }}; \
+         if ($app -and -not $app.WaitForExit({WINDOWS_EXIT_WAIT_MS})) {{ Log 'the app is still running; stopping it'; Stop-Process -Id {pid} -Force -ErrorAction SilentlyContinue; Start-Sleep -Seconds 1 }}; \
          Log ('running ' + {setup}); \
          $setup = Start-Process -FilePath {setup} -ArgumentList {args} -Wait -PassThru; \
          Log ('installer exit code ' + $setup.ExitCode) \
@@ -509,9 +513,9 @@ mod tests {
         std::fs::create_dir_all(&job).unwrap();
         let system =
             std::path::PathBuf::from(std::env::var("SystemRoot").unwrap()).join("System32");
-        // `hostname` refuses any argument and exits 1: a setup that failed.
-        let setup = job.join("setup.exe");
-        std::fs::copy(system.join("hostname.exe"), &setup).unwrap();
+        // A setup that fails with exit code 3.
+        let setup = job.join("setup.cmd");
+        std::fs::write(&setup, "@exit /b 3\r\n").unwrap();
         let exe = system.join("hostname.exe");
         let log = root.join("update.log");
         let mut waited = std::process::Command::new(system.join("PING.EXE"))
@@ -528,7 +532,7 @@ mod tests {
         assert!(status.success());
         let text = std::fs::read_to_string(&log).unwrap();
         assert!(text.contains("waiting for the app"), "{text}");
-        assert!(text.contains("installer exit code 1"), "{text}");
+        assert!(text.contains("installer exit code 3"), "{text}");
         assert!(text.contains("starting "), "{text}");
         assert!(!text.contains("failed:"), "{text}");
         assert!(!job.exists(), "the job folder is removed");

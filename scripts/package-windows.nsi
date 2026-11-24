@@ -16,15 +16,19 @@
 ;
 ; Per-user install (#362), like VS Code's user setup, Slack or Discord:
 ; $LOCALAPPDATA\Programs\Design Editor, current-user shortcuts and registry
-; (HKCU), RequestExecutionLevel user. No step of an install or an in-app
-; update needs administrator rights, so the app's silent update never waits
-; on a UAC prompt nobody sees. The one exception is a missing or outdated
-; Visual C++ runtime: its redistributable is per-machine and asks for
-; elevation itself.
+; (HKCU), RequestExecutionLevel user. An install or in-app update needs no
+; administrator rights, so the app's silent update does not wait on a UAC
+; prompt nobody sees. The exception is a missing Visual C++ runtime or one
+; older than the bundled redistributable: that runtime is per-machine and
+; its redistributable asks for elevation itself.
 ;
 ; Earlier releases installed per-machine under Program Files. An interactive
 ; install finds that copy (HKLM uninstall key) and offers to remove it; its
-; uninstaller asks for elevation once. A silent install leaves it alone.
+; uninstaller asks for elevation once. A silent install from an older app's
+; update helper runs elevated (that helper used RunAs): it removes the old
+; copy without asking and starts the new one unelevated, since the old
+; helper would relaunch the removed Program Files exe. A silent install
+; without elevation leaves the old copy alone.
 ;
 ; File association: ProgID "DesignEditor.Document" under
 ; HKCU\Software\Classes with DefaultIcon and an open command, claimed by .de;
@@ -120,6 +124,7 @@ Var VCRuntimeRequiredBuild
 Var VCRuntimeRequiredRevision
 Var VCRuntimeRequiredVersion
 Var VCRuntimeExitCode
+Var MigratedFromMachine
 
 Name "${PRODUCT_NAME}"
 OutFile "${OUT_FILE}"
@@ -220,7 +225,18 @@ Function RemoveMachineInstall
     Return
   ${EndIf}
   IfFileExists "$0\Uninstall.exe" 0 machine_done
-  IfSilent machine_done
+  IfSilent 0 machine_ask
+  ; Silent: only when this process may write there (elevated).
+  ClearErrors
+  CreateDirectory "$0\.design-editor-probe"
+  IfErrors machine_done
+  RMDir "$0\.design-editor-probe"
+  ExecWait '"$0\Uninstall.exe" /S _?=$0'
+  Delete "$0\Uninstall.exe"
+  RMDir "$0"
+  StrCpy $MigratedFromMachine "1"
+  Goto machine_done
+  machine_ask:
   MessageBox MB_YESNO|MB_ICONQUESTION \
     "An earlier Design Editor is installed for all users in:$\r$\n$0$\r$\n$\r$\nRemove it now? Updates then install without administrator approval. Windows asks for permission once." \
     IDNO machine_done
@@ -239,7 +255,8 @@ FunctionEnd
 
 ; An update runs while the app may still be closing; a manual install may
 ; run while it is open. Writing over a running exe fails, so wait for it:
-; up to 30 s when silent, else ask the user to close it.
+; up to 30 s when silent (the app's update helper waits the same before it
+; stops the app, WINDOWS_EXIT_WAIT_MS), else ask the user to close it.
 Function WaitForAppClosed
   StrCpy $1 0
   app_check:
@@ -269,6 +286,11 @@ FunctionEnd
 ; installers and callers that inspect the process exit code. The interactive
 ; MUI flow also uses the reboot flag to tell the user a restart is required.
 Function .onInstSuccess
+  ; A silent elevated update from an older per-machine copy removed that
+  ; copy, which its helper is about to relaunch: start the new one through
+  ; Explorer instead, so it runs unelevated.
+  StrCmp $MigratedFromMachine "1" 0 +2
+    Exec '"$WINDIR\explorer.exe" "$INSTDIR\${EXE_NAME}"'
   IfRebootFlag 0 vc_runtime_no_reboot_exit
   SetErrorLevel 3010
   vc_runtime_no_reboot_exit:

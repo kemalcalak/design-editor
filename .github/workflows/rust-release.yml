@@ -304,7 +304,9 @@ jobs:
         shell: pwsh
         run: |
           # Install, update over it (what the in-app update runs) and
-          # uninstall, all as the runner user without elevation (#362).
+          # uninstall as the runner user (#362). The runner is an
+          # administrator with UAC off, so this checks the per-user layout
+          # and silent flags, not the absence of a UAC prompt.
           $setup = "$env:GITHUB_WORKSPACE\Design-Editor-$env:DE_VERSION-${{ matrix.arch }}-win-setup.exe"
           $dir = Join-Path $env:LOCALAPPDATA 'Programs\Design Editor'
           $p = Start-Process -FilePath $setup -ArgumentList '/S' -Wait -PassThru
