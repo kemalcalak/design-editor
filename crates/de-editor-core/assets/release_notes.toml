@@ -11,6 +11,171 @@
 # Write for users: short, plain, no issue numbers or technical terms.
 
 [[note]]
+version = "0.6.1"
+locale = "en-US"
+title = "Smoother work with agents"
+item = "Agents that read your design no longer make the canvas stutter, even in very large documents."
+item = "Files with a broken animation still open: the broken part is left out and listed, so you can see what changed before you save."
+item = "Animations an agent writes are checked first, so a mistake can no longer break the file."
+item = "Settings ▸ System has a Check now button, so you can look for updates even with automatic checks turned off."
+item = "Windows: updates install without asking for administrator approval, and if an update could not be installed, the app now tells you. Install this version once by hand; later updates install on their own."
+item = "Security updates."
+
+[[note]]
+version = "0.6.1"
+locale = "tr"
+title = "Ajanlarla daha akıcı çalışma"
+item = "Tasarımınızı okuyan ajanlar artık çok büyük belgelerde bile tuvali takıltmıyor."
+item = "Bozuk animasyon içeren dosyalar yine açılıyor: bozuk kısım dışarıda bırakılıp listeleniyor, böylece kaydetmeden önce neyin değiştiğini görebiliyorsunuz."
+item = "Bir ajanın yazdığı animasyonlar önce denetleniyor; bir hata artık dosyayı bozamıyor."
+item = "Ayarlar ▸ Sistem'de bir Şimdi denetle düğmesi var; otomatik denetim kapalıyken de güncellemeleri kontrol edebilirsiniz."
+item = "Windows: güncellemeler artık yönetici onayı istemeden kuruluyor ve bir güncelleme kurulamazsa uygulama bunu söylüyor. Bu sürümü bir kez elle kurun; sonraki güncellemeler kendiliğinden kurulur."
+item = "Güvenlik güncellemeleri."
+
+[[note]]
+version = "0.6.1"
+locale = "zh-CN"
+title = "与智能体协作更流畅"
+item = "读取设计的智能体不再让画布卡顿,即使文档非常大。"
+item = "含有损坏动画的文件依然可以打开:损坏的部分会被移除并列出,保存前即可看到改动。"
+item = "智能体写入的动画会先经过检查,出错也不会再损坏文件。"
+item = "设置 ▸ 系统中新增“立即检查”按钮,即使关闭自动检查也能查找更新。"
+item = "Windows:更新安装不再需要管理员批准;如果更新未能安装,应用会告诉你。请手动安装此版本一次,之后的更新会自动安装。"
+item = "安全更新。"
+
+[[note]]
+version = "0.6.1"
+locale = "zh-TW"
+title = "與智慧代理協作更流暢"
+item = "讀取設計的智慧代理不再讓畫布卡頓,即使文件非常大。"
+item = "含有損壞動畫的檔案依然可以開啟:損壞的部分會被移除並列出,儲存前即可看到變更。"
+item = "智慧代理寫入的動畫會先經過檢查,出錯也不會再損壞檔案。"
+item = "設定 ▸ 系統新增「立即檢查」按鈕,即使關閉自動檢查也能尋找更新。"
+item = "Windows:更新安裝不再需要系統管理員核准;若更新未能安裝,應用程式會告訴你。請手動安裝此版本一次,之後的更新會自動安裝。"
+item = "安全性更新。"
+
+[[note]]
+version = "0.6.1"
+locale = "ja"
+title = "エージェントとの作業がよりスムーズに"
+item = "デザインを読み取るエージェントが、非常に大きなドキュメントでもキャンバスをカクつかせなくなりました。"
+item = "壊れたアニメーションを含むファイルも開けます。壊れた部分は除外して一覧表示されるので、保存前に変更内容を確認できます。"
+item = "エージェントが書き込むアニメーションは先にチェックされるため、ミスでファイルが壊れることはなくなりました。"
+item = "設定 ▸ システムに「今すぐ確認」ボタンを追加しました。自動確認をオフにしていてもアップデートを確認できます。"
+item = "Windows:アップデートは管理者の承認なしでインストールされ、インストールできなかった場合はアプリが知らせます。このバージョンは一度だけ手動でインストールしてください。以降のアップデートは自動でインストールされます。"
+item = "セキュリティアップデート。"
+
+[[note]]
+version = "0.6.1"
+locale = "ko"
+title = "에이전트와 더 매끄럽게 작업"
+item = "디자인을 읽는 에이전트가 아주 큰 문서에서도 더 이상 캔버스를 버벅이게 하지 않습니다."
+item = "손상된 애니메이션이 있는 파일도 열립니다. 손상된 부분은 빠지고 목록으로 표시되어 저장하기 전에 무엇이 바뀌었는지 확인할 수 있습니다."
+item = "에이전트가 작성한 애니메이션은 먼저 검사되므로 실수로 파일이 손상되지 않습니다."
+item = "설정 ▸ 시스템에 지금 확인 버튼이 추가되어, 자동 확인을 꺼 두어도 업데이트를 확인할 수 있습니다."
+item = "Windows: 업데이트가 관리자 승인 없이 설치되며, 업데이트를 설치하지 못하면 앱이 알려 줍니다. 이 버전은 한 번만 직접 설치하세요. 이후 업데이트는 자동으로 설치됩니다."
+item = "보안 업데이트."
+
+[[note]]
+version = "0.6.1"
+locale = "fr"
+title = "Un travail plus fluide avec les agents"
+item = "Les agents qui lisent votre design ne font plus saccader le canevas, même dans de très grands documents."
+item = "Les fichiers contenant une animation défectueuse s'ouvrent quand même : la partie défectueuse est retirée et listée, pour que vous voyiez ce qui a changé avant d'enregistrer."
+item = "Les animations écrites par un agent sont d'abord vérifiées : une erreur ne peut plus abîmer le fichier."
+item = "Réglages ▸ Système propose un bouton Vérifier : vous pouvez chercher les mises à jour même quand la vérification automatique est désactivée."
+item = "Windows : les mises à jour s'installent sans demander d'autorisation administrateur, et l'app vous prévient si une mise à jour n'a pas pu s'installer. Installez cette version une fois à la main ; les suivantes s'installeront seules."
+item = "Mises à jour de sécurité."
+
+[[note]]
+version = "0.6.1"
+locale = "es"
+title = "Trabajo más fluido con agentes"
+item = "Los agentes que leen tu diseño ya no hacen que el lienzo se trabe, incluso en documentos muy grandes."
+item = "Los archivos con una animación dañada se abren igualmente: la parte dañada se omite y se muestra en una lista, para que veas qué cambió antes de guardar."
+item = "Las animaciones que escribe un agente se comprueban primero, así que un error ya no puede dañar el archivo."
+item = "Ajustes ▸ Sistema tiene un botón Comprobar ahora para buscar actualizaciones aunque la comprobación automática esté desactivada."
+item = "Windows: las actualizaciones se instalan sin pedir aprobación de administrador y, si una no se pudo instalar, la app te lo indica. Instala esta versión una vez a mano; las siguientes se instalarán solas."
+item = "Actualizaciones de seguridad."
+
+[[note]]
+version = "0.6.1"
+locale = "de"
+title = "Flüssigeres Arbeiten mit Agenten"
+item = "Agenten, die Ihr Design lesen, lassen die Arbeitsfläche nicht mehr ruckeln, auch bei sehr großen Dokumenten."
+item = "Dateien mit einer fehlerhaften Animation öffnen sich trotzdem: Der fehlerhafte Teil wird weggelassen und aufgelistet, damit Sie vor dem Speichern sehen, was sich geändert hat."
+item = "Animationen, die ein Agent schreibt, werden zuerst geprüft, sodass ein Fehler die Datei nicht mehr beschädigen kann."
+item = "Einstellungen ▸ System hat eine Schaltfläche Jetzt prüfen, damit du auch bei ausgeschalteter automatischer Prüfung nach Updates suchen kannst."
+item = "Windows: Updates werden ohne Administratorfreigabe installiert, und die App sagt dir, wenn ein Update nicht installiert werden konnte. Installiere diese Version einmal von Hand; spätere Updates installieren sich selbst."
+item = "Sicherheitsupdates."
+
+[[note]]
+version = "0.6.1"
+locale = "pt"
+title = "Trabalho mais fluido com agentes"
+item = "Os agentes que leem o seu design já não fazem a tela travar, mesmo em documentos muito grandes."
+item = "Arquivos com uma animação com defeito abrem mesmo assim: a parte com defeito é removida e listada, para que você veja o que mudou antes de salvar."
+item = "As animações que um agente escreve são verificadas antes, então um erro não consegue mais danificar o arquivo."
+item = "Configurações ▸ Sistema tem um botão Verificar agora, para procurar atualizações mesmo com a verificação automática desligada."
+item = "Windows: as atualizações são instaladas sem pedir aprovação de administrador e, se uma não puder ser instalada, o app avisa. Instale esta versão uma vez manualmente; as próximas serão instaladas sozinhas."
+item = "Atualizações de segurança."
+
+[[note]]
+version = "0.6.1"
+locale = "ru"
+title = "Более плавная работа с агентами"
+item = "Агенты, читающие ваш дизайн, больше не вызывают подтормаживания холста даже в очень больших документах."
+item = "Файлы с повреждённой анимацией всё равно открываются: повреждённая часть отбрасывается и показывается в списке, чтобы вы видели изменения до сохранения."
+item = "Анимации, которые пишет агент, сначала проверяются, поэтому ошибка больше не может испортить файл."
+item = "В разделе Настройки ▸ Система появилась кнопка «Проверить»: обновления можно искать, даже если автоматическая проверка выключена."
+item = "Windows: обновления устанавливаются без запроса прав администратора, а если обновление не удалось установить, приложение сообщит об этом. Установите эту версию один раз вручную — следующие обновления установятся сами."
+item = "Обновления безопасности."
+
+[[note]]
+version = "0.6.1"
+locale = "hi"
+title = "एजेंटों के साथ ज़्यादा सहज काम"
+item = "आपका डिज़ाइन पढ़ने वाले एजेंट अब बहुत बड़े दस्तावेज़ों में भी कैनवास को अटकाते नहीं हैं।"
+item = "टूटे एनिमेशन वाली फ़ाइलें भी खुलती हैं: टूटा हिस्सा हटा दिया जाता है और सूची में दिखाया जाता है, ताकि सहेजने से पहले आप देख सकें कि क्या बदला।"
+item = "एजेंट जो एनिमेशन लिखता है उनकी पहले जाँच होती है, इसलिए कोई गलती अब फ़ाइल को खराब नहीं कर सकती।"
+item = "सेटिंग्स ▸ सिस्टम में अभी जाँचें बटन है, ताकि स्वचालित जाँच बंद होने पर भी आप अपडेट देख सकें।"
+item = "Windows: अपडेट अब व्यवस्थापक की अनुमति माँगे बिना इंस्टॉल होते हैं, और कोई अपडेट इंस्टॉल न हो पाए तो ऐप बताता है। यह संस्करण एक बार खुद इंस्टॉल करें; आगे के अपडेट अपने आप इंस्टॉल होंगे।"
+item = "सुरक्षा अपडेट।"
+
+[[note]]
+version = "0.6.1"
+locale = "th"
+title = "ทำงานกับเอเจนต์ได้ลื่นไหลขึ้น"
+item = "เอเจนต์ที่อ่านงานออกแบบของคุณไม่ทำให้แคนวาสกระตุกอีกต่อไป แม้ในเอกสารขนาดใหญ่มาก"
+item = "ไฟล์ที่มีแอนิเมชันเสียยังเปิดได้: ส่วนที่เสียจะถูกตัดออกและแสดงเป็นรายการ คุณจึงเห็นได้ว่ามีอะไรเปลี่ยนไปก่อนบันทึก"
+item = "แอนิเมชันที่เอเจนต์เขียนจะถูกตรวจสอบก่อน ข้อผิดพลาดจึงไม่ทำให้ไฟล์เสียอีกต่อไป"
+item = "การตั้งค่า ▸ ระบบ มีปุ่มตรวจสอบตอนนี้ คุณจึงหาอัปเดตได้แม้ปิดการตรวจสอบอัตโนมัติไว้"
+item = "Windows: การอัปเดตติดตั้งได้โดยไม่ต้องขอสิทธิ์ผู้ดูแลระบบ และหากติดตั้งอัปเดตไม่สำเร็จ แอปจะแจ้งให้ทราบ ติดตั้งเวอร์ชันนี้ด้วยตนเองหนึ่งครั้ง จากนั้นอัปเดตครั้งต่อไปจะติดตั้งเอง"
+item = "อัปเดตด้านความปลอดภัย"
+
+[[note]]
+version = "0.6.1"
+locale = "vi"
+title = "Làm việc với tác tử mượt mà hơn"
+item = "Các tác tử đọc thiết kế của bạn không còn làm canvas bị giật, kể cả với tài liệu rất lớn."
+item = "Tệp có hoạt ảnh bị lỗi vẫn mở được: phần bị lỗi được bỏ ra và liệt kê, để bạn thấy những gì đã thay đổi trước khi lưu."
+item = "Hoạt ảnh do tác tử ghi được kiểm tra trước, nên một lỗi không còn làm hỏng tệp."
+item = "Cài đặt ▸ Hệ thống có nút Kiểm tra ngay để bạn tìm bản cập nhật ngay cả khi đã tắt kiểm tra tự động."
+item = "Windows: bản cập nhật được cài mà không cần quyền quản trị, và nếu một bản cập nhật không cài được, ứng dụng sẽ báo cho bạn. Hãy tự cài phiên bản này một lần; các bản cập nhật sau sẽ tự cài."
+item = "Cập nhật bảo mật."
+
+[[note]]
+version = "0.6.1"
+locale = "id"
+title = "Bekerja dengan agen lebih lancar"
+item = "Agen yang membaca desain Anda tidak lagi membuat kanvas tersendat, bahkan di dokumen yang sangat besar."
+item = "File dengan animasi yang rusak tetap terbuka: bagian yang rusak dihapus dan dicantumkan, sehingga Anda bisa melihat apa yang berubah sebelum menyimpan."
+item = "Animasi yang ditulis agen diperiksa terlebih dahulu, sehingga kesalahan tidak lagi bisa merusak file."
+item = "Pengaturan ▸ Sistem punya tombol Periksa sekarang, jadi Anda bisa mencari pembaruan meski pemeriksaan otomatis dimatikan."
+item = "Windows: pembaruan terpasang tanpa meminta izin administrator, dan aplikasi memberi tahu jika pembaruan gagal dipasang. Pasang versi ini sekali secara manual; pembaruan berikutnya terpasang sendiri."
+item = "Pembaruan keamanan."
+
+[[note]]
 version = "0.6.0"
 locale = "en-US"
 title = "Live web pages on the canvas"
