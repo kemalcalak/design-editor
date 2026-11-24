@@ -52,17 +52,17 @@ mod tests {
     #[test]
     fn a_restart_that_did_not_install_is_reported_once() {
         let path = temp_marker("failed");
-        record(&path, "0.6.2").unwrap();
-        assert_eq!(take_failed(&path, "0.6.1").as_deref(), Some("0.6.2"));
+        record(&path, "1.0.1").unwrap();
+        assert_eq!(take_failed(&path, "1.0.0").as_deref(), Some("1.0.1"));
         assert!(!path.exists(), "the marker is consumed");
-        assert_eq!(take_failed(&path, "0.6.1"), None);
+        assert_eq!(take_failed(&path, "1.0.0"), None);
     }
 
     #[test]
     fn a_restart_that_installed_is_silent() {
         let path = temp_marker("installed");
-        record(&path, "0.6.2\n").unwrap();
-        assert_eq!(take_failed(&path, "0.6.2"), None);
+        record(&path, "1.0.1\n").unwrap();
+        assert_eq!(take_failed(&path, "1.0.1"), None);
         assert!(!path.exists());
     }
 
@@ -70,6 +70,6 @@ mod tests {
     fn no_marker_means_nothing_to_report() {
         let path = temp_marker("absent");
         clear(&path);
-        assert_eq!(take_failed(&path, "0.6.1"), None);
+        assert_eq!(take_failed(&path, "1.0.0"), None);
     }
 }
