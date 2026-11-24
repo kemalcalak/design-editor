@@ -115,6 +115,7 @@ mod update_check;
 mod update_host;
 mod update_install;
 mod update_install_platform;
+mod update_pending;
 mod user_style_store;
 mod user_template_save;
 mod user_template_store;

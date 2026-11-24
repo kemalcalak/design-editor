@@ -299,6 +299,28 @@ jobs:
             "/DOUT_FILE=$env:GITHUB_WORKSPACE\Design-Editor-$env:DE_VERSION-${{ matrix.arch }}-win-setup.exe" `
             "/DVC_REDIST_FILE=$env:VC_REDIST_FILE" `
             scripts\package-windows.nsi
+      - name: Smoke-test the per-user installer (windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          # Install, update over it (what the in-app update runs) and
+          # uninstall, all as the runner user without elevation (#362).
+          $setup = "$env:GITHUB_WORKSPACE\Design-Editor-$env:DE_VERSION-${{ matrix.arch }}-win-setup.exe"
+          $dir = Join-Path $env:LOCALAPPDATA 'Programs\Design Editor'
+          $p = Start-Process -FilePath $setup -ArgumentList '/S' -Wait -PassThru
+          if ($p.ExitCode -ne 0) { throw "install exited $($p.ExitCode)" }
+          foreach ($f in 'design-editor.exe', 'de.exe', 'Uninstall.exe') {
+            if (-not (Test-Path (Join-Path $dir $f))) { throw "install is missing $f" }
+          }
+          $claim = (Get-ItemProperty 'HKCU:\Software\Classes\.de').'(default)'
+          if ($claim -ne 'DesignEditor.Document') { throw ".de is claimed by '$claim'" }
+          $p = Start-Process -FilePath $setup -ArgumentList "/S /D=$dir" -Wait -PassThru
+          if ($p.ExitCode -ne 0) { throw "update install exited $($p.ExitCode)" }
+          Start-Process -FilePath (Join-Path $dir 'Uninstall.exe') -ArgumentList '/S' -Wait
+          $exe = Join-Path $dir 'design-editor.exe'
+          for ($i = 0; $i -lt 60 -and (Test-Path $exe); $i++) { Start-Sleep -Milliseconds 500 }
+          if (Test-Path $exe) { throw 'uninstall left the app behind' }
+          if (Test-Path 'HKCU:\Software\Classes\.de') { throw 'uninstall left the .de claim' }
 
       - name: Upload release assets
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2

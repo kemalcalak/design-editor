@@ -34,6 +34,20 @@ fn open_whats_new(host: &mut WidgetHostNative, had_settings: bool) {
     }
 }
 
+/// Open the update modal on its failure page when the last restart did not
+/// install the release it was meant to (#362). Retry downloads it again.
+fn report_failed_install(host: &mut WidgetHostNative) {
+    let marker = crate::update_pending::marker_path();
+    let Some(version) = crate::update_pending::take_failed(&marker, env!("CARGO_PKG_VERSION"))
+    else {
+        return;
+    };
+    host.editor_state_mut().editor_ui.update_modal = Some(de_editor_core::UpdateModalState::new(
+        &version,
+        de_editor_core::UpdatePhase::Failed(de_editor_core::UpdateFailure::Install),
+    ));
+}
+
 /// Where the window's close button leads.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum CloseTarget {
@@ -161,6 +175,12 @@ impl DesktopApp {
                 .editor_ui
                 .agent_settings
                 .auto_update_enabled;
+        // A restart that was meant to install an update but came back on
+        // another build: say so instead of silently running the old one
+        // (#362). Unit tests never read the user's temp folder.
+        if !cfg!(test) {
+            report_failed_install(&mut host);
+        }
         let update_probe = update_check::UpdateProbe::for_auto_check(auto_update);
         if update_probe.is_pending() {
             host.editor_state_mut().editor_ui.update_status =
