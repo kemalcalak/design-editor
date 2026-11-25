@@ -523,6 +523,12 @@ impl McpLiveServer {
         self.host_document_epoch = epoch;
     }
 
+    /// Record the file the open document is bound to (`None` while it is
+    /// untitled), where pen.dev's pathless `save` writes (#392).
+    pub fn set_document_path(&mut self, path: Option<&std::path::Path>) {
+        self.ui_side.document_path(path);
+    }
+
     /// The page root the latest write added, once (#264).
     pub fn take_follow_target(&mut self) -> Option<McpFollowTarget> {
         self.follow_target.take()

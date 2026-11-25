@@ -138,6 +138,22 @@ impl McpTool for CodegenExport {
 }
 
 impl CodegenExport {
+    /// The HTML export of the nodes `args` target (`nodeIds`, `pageId`,
+    /// else the selection, else the active page), with how many roots it
+    /// holds. `export_html` (pen.dev's name) writes it to a file.
+    pub(crate) fn html(
+        &self,
+        args: &BTreeMap<String, String>,
+        target: HtmlTarget,
+        options: &HtmlExportOptions,
+    ) -> Result<(de_codegen::HtmlExport, usize), String> {
+        let roots: Vec<PenNode> = self.target_nodes(args)?.into_iter().cloned().collect();
+        Ok((
+            export_html_roots(&self.doc, &roots, target, options),
+            roots.len(),
+        ))
+    }
+
     fn pages(&self) -> Vec<(&str, &[PenNode])> {
         match self.doc.pages.as_deref() {
             Some(pages) if !pages.is_empty() => pages
@@ -189,7 +205,11 @@ impl CodegenExport {
 }
 
 /// A boolean argument (`"true"` / `"false"`), `default` when absent.
-fn flag(args: &BTreeMap<String, String>, key: &str, default: bool) -> Result<bool, String> {
+pub(crate) fn flag(
+    args: &BTreeMap<String, String>,
+    key: &str,
+    default: bool,
+) -> Result<bool, String> {
     match args
         .get(key)
         .map(|v| v.trim().to_ascii_lowercase())

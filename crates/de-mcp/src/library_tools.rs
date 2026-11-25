@@ -92,6 +92,9 @@ impl LibraryTool {
     fn row_json(&self, row: &LinkRow) -> Value {
         let file = de_pen_loader::resolve_library_path(self.base_dir.as_deref(), &row.link.path);
         let mut out = json!({
+            // pen.dev's `id` / `uri`: `remove_library { id }` takes it back.
+            "id": row.link.path,
+            "uri": de_util::display_path::display_path(&file),
             "path": row.link.path,
             "name": row.link.display_name(),
             "file": de_util::display_path::display_path(&file),

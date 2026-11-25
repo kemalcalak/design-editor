@@ -11,6 +11,171 @@
 # Write for users: short, plain, no issue numbers or technical terms.
 
 [[note]]
+version = "0.6.2"
+locale = "en-US"
+title = "Steadier agents and linked components"
+item = "Agents load their tools right away, even while a large document is opening or another agent is busy. If the editor is still loading, they are told so instead of waiting."
+item = "Components placed by agents stay linked to their main component, so one change updates every copy. Agents can also detach or swap them."
+item = "Agents can add content inside components without creating duplicate layers. Files that already have duplicates show a warning with a one-click repair."
+item = "When an agent saves your document, the editor now shows the file name and that it is saved."
+item = "Frames can be exported as layered SVG, with text and groups kept, to bring them into other design tools."
+item = "Smaller fixes for agents, including cleaner file paths on Windows."
+
+[[note]]
+version = "0.6.2"
+locale = "tr"
+title = "Daha kararlı ajanlar ve bağlantılı bileşenler"
+item = "Ajanlar araçlarını hemen yüklüyor; büyük bir belge açılırken ya da başka bir ajan çalışırken bile. Editör hâlâ yükleniyorsa beklemek yerine bunu öğreniyorlar."
+item = "Ajanların yerleştirdiği bileşenler ana bileşene bağlı kalıyor; tek bir değişiklik bütün kopyaları güncelliyor. Ajanlar bağlantıyı koparabilir ya da bileşeni değiştirebilir."
+item = "Ajanlar bileşenlerin içine içerik eklerken artık yinelenen katman oluşturmuyor. Zaten yinelenen katman içeren dosyalar tek tıkla onarım sunan bir uyarı gösteriyor."
+item = "Bir ajan belgenizi kaydettiğinde editör artık dosya adını ve kaydedildiğini gösteriyor."
+item = "Çerçeveler metinleri ve grupları korunarak katmanlı SVG olarak dışa aktarılabiliyor; böylece başka tasarım araçlarına taşınabiliyor."
+item = "Ajanlar için küçük düzeltmeler; Windows'ta daha temiz dosya yolları dahil."
+
+[[note]]
+version = "0.6.2"
+locale = "zh-CN"
+title = "更稳定的智能体与关联组件"
+item = "即使大型文档正在打开或其他智能体正忙,智能体也能立即加载工具。如果编辑器仍在加载,它们会收到提示而不是一直等待。"
+item = "智能体放置的组件会与主组件保持关联,一次修改即可更新所有副本。智能体也可以分离或替换它们。"
+item = "智能体在组件内部添加内容时不再产生重复图层。已有重复图层的文件会显示警告,并提供一键修复。"
+item = "智能体保存文档后,编辑器现在会显示文件名和已保存状态。"
+item = "画框可导出为分层 SVG,保留文本和分组,便于导入其他设计工具。"
+item = "针对智能体的小修复,包括 Windows 上更干净的文件路径。"
+
+[[note]]
+version = "0.6.2"
+locale = "zh-TW"
+title = "更穩定的智慧代理與連結元件"
+item = "即使大型文件正在開啟或其他代理正忙,代理也能立即載入工具。若編輯器仍在載入,它們會收到提示而不是一直等待。"
+item = "代理放置的元件會與主元件保持連結,一次修改即可更新所有副本。代理也可以分離或替換它們。"
+item = "代理在元件內部新增內容時不再產生重複圖層。已有重複圖層的檔案會顯示警告,並提供一鍵修復。"
+item = "代理儲存文件後,編輯器現在會顯示檔名與已儲存狀態。"
+item = "畫框可匯出為分層 SVG,保留文字與群組,方便匯入其他設計工具。"
+item = "針對代理的小修正,包括 Windows 上更乾淨的檔案路徑。"
+
+[[note]]
+version = "0.6.2"
+locale = "ja"
+title = "より安定したエージェントとリンクされたコンポーネント"
+item = "大きなドキュメントを開いている間や別のエージェントが作業中でも、エージェントはすぐにツールを読み込めます。エディターが読み込み中なら、待たずにそのことが伝えられます。"
+item = "エージェントが配置したコンポーネントはメインコンポーネントとリンクしたままになり、一度の変更ですべてのコピーが更新されます。エージェントはリンク解除や入れ替えもできます。"
+item = "エージェントがコンポーネントの中に内容を追加しても、重複したレイヤーが作られなくなりました。すでに重複があるファイルでは、ワンクリックで修復できる警告が表示されます。"
+item = "エージェントがドキュメントを保存すると、エディターにファイル名と保存済みの状態が表示されるようになりました。"
+item = "フレームをテキストとグループを保ったままレイヤー付き SVG として書き出せるようになり、他のデザインツールに持ち込めます。"
+item = "エージェント向けの細かな修正。Windows でのファイルパスもすっきりしました。"
+
+[[note]]
+version = "0.6.2"
+locale = "ko"
+title = "더 안정적인 에이전트와 연결된 컴포넌트"
+item = "큰 문서를 여는 중이거나 다른 에이전트가 작업 중이어도 에이전트가 도구를 바로 불러옵니다. 편집기가 아직 로드 중이면 기다리는 대신 그 사실을 알려 줍니다."
+item = "에이전트가 배치한 컴포넌트는 메인 컴포넌트와 연결된 상태로 남아, 한 번의 변경으로 모든 사본이 업데이트됩니다. 에이전트는 연결을 해제하거나 교체할 수도 있습니다."
+item = "에이전트가 컴포넌트 안에 내용을 추가해도 더 이상 중복 레이어가 생기지 않습니다. 이미 중복이 있는 파일은 한 번의 클릭으로 고칠 수 있는 경고를 보여 줍니다."
+item = "에이전트가 문서를 저장하면 이제 편집기에 파일 이름과 저장됨 상태가 표시됩니다."
+item = "프레임을 텍스트와 그룹을 유지한 레이어 SVG로 내보내 다른 디자인 도구로 가져갈 수 있습니다."
+item = "에이전트를 위한 작은 수정, Windows의 더 깔끔한 파일 경로 포함."
+
+[[note]]
+version = "0.6.2"
+locale = "fr"
+title = "Des agents plus stables et des composants liés"
+item = "Les agents chargent leurs outils tout de suite, même pendant l'ouverture d'un gros document ou quand un autre agent travaille. Si l'éditeur charge encore, ils en sont informés au lieu d'attendre."
+item = "Les composants placés par les agents restent liés à leur composant principal : une seule modification met à jour toutes les copies. Les agents peuvent aussi les détacher ou les remplacer."
+item = "Les agents peuvent ajouter du contenu dans les composants sans créer de calques en double. Les fichiers qui en contiennent déjà affichent un avertissement avec une réparation en un clic."
+item = "Quand un agent enregistre votre document, l'éditeur affiche maintenant le nom du fichier et qu'il est enregistré."
+item = "Les cadres s'exportent en SVG à calques, texte et groupes conservés, pour les reprendre dans d'autres outils de design."
+item = "Petites corrections pour les agents, dont des chemins de fichiers plus propres sous Windows."
+
+[[note]]
+version = "0.6.2"
+locale = "es"
+title = "Agentes más estables y componentes vinculados"
+item = "Los agentes cargan sus herramientas al instante, incluso mientras se abre un documento grande o mientras otro agente trabaja. Si el editor aún está cargando, se les avisa en lugar de esperar."
+item = "Los componentes que colocan los agentes siguen vinculados a su componente principal: un solo cambio actualiza todas las copias. Los agentes también pueden desvincularlos o cambiarlos."
+item = "Los agentes pueden añadir contenido dentro de los componentes sin crear capas duplicadas. Los archivos que ya las tienen muestran un aviso con reparación en un clic."
+item = "Cuando un agente guarda tu documento, el editor ahora muestra el nombre del archivo y que está guardado."
+item = "Los marcos se pueden exportar como SVG por capas, conservando textos y grupos, para llevarlos a otras herramientas de diseño."
+item = "Pequeñas correcciones para agentes, incluidas rutas de archivo más limpias en Windows."
+
+[[note]]
+version = "0.6.2"
+locale = "de"
+title = "Stabilere Agenten und verknüpfte Komponenten"
+item = "Agenten laden ihre Werkzeuge sofort, auch während ein großes Dokument geöffnet wird oder ein anderer Agent arbeitet. Lädt der Editor noch, erfahren sie das, statt zu warten."
+item = "Von Agenten platzierte Komponenten bleiben mit ihrer Hauptkomponente verknüpft, sodass eine Änderung alle Kopien aktualisiert. Agenten können sie auch lösen oder austauschen."
+item = "Agenten können Inhalte in Komponenten einfügen, ohne doppelte Ebenen zu erzeugen. Dateien, die bereits Duplikate enthalten, zeigen eine Warnung mit Reparatur per Klick."
+item = "Speichert ein Agent dein Dokument, zeigt der Editor jetzt den Dateinamen und den gespeicherten Zustand an."
+item = "Rahmen lassen sich als SVG mit Ebenen exportieren, mit erhaltenem Text und Gruppen, um sie in andere Design-Tools zu übernehmen."
+item = "Kleinere Korrekturen für Agenten, darunter sauberere Dateipfade unter Windows."
+
+[[note]]
+version = "0.6.2"
+locale = "pt"
+title = "Agentes mais estáveis e componentes vinculados"
+item = "Os agentes carregam as ferramentas na hora, mesmo enquanto um documento grande abre ou outro agente está trabalhando. Se o editor ainda estiver carregando, eles são avisados em vez de esperar."
+item = "Os componentes colocados por agentes continuam vinculados ao componente principal, então uma única alteração atualiza todas as cópias. Os agentes também podem desvinculá-los ou trocá-los."
+item = "Os agentes podem adicionar conteúdo dentro de componentes sem criar camadas duplicadas. Arquivos que já têm duplicatas mostram um aviso com reparo em um clique."
+item = "Quando um agente salva seu documento, o editor agora mostra o nome do arquivo e que ele está salvo."
+item = "Os quadros podem ser exportados como SVG em camadas, mantendo textos e grupos, para levá-los a outras ferramentas de design."
+item = "Pequenas correções para agentes, incluindo caminhos de arquivo mais limpos no Windows."
+
+[[note]]
+version = "0.6.2"
+locale = "ru"
+title = "Стабильнее агенты и связанные компоненты"
+item = "Агенты сразу загружают инструменты, даже пока открывается большой документ или работает другой агент. Если редактор ещё загружается, они узнают об этом, а не ждут."
+item = "Компоненты, размещённые агентами, остаются связанными с главным компонентом: одно изменение обновляет все копии. Агенты также могут отвязывать и заменять их."
+item = "Агенты могут добавлять содержимое внутрь компонентов, не создавая повторяющихся слоёв. Файлы, где они уже есть, показывают предупреждение с исправлением в один клик."
+item = "Когда агент сохраняет документ, редактор теперь показывает имя файла и то, что он сохранён."
+item = "Фреймы можно экспортировать в SVG со слоями, сохраняя текст и группы, чтобы перенести их в другие инструменты дизайна."
+item = "Небольшие исправления для агентов, включая более чистые пути к файлам в Windows."
+
+[[note]]
+version = "0.6.2"
+locale = "hi"
+title = "ज़्यादा स्थिर एजेंट और जुड़े हुए कॉम्पोनेंट"
+item = "एजेंट अपने टूल तुरंत लोड कर लेते हैं, तब भी जब कोई बड़ा दस्तावेज़ खुल रहा हो या दूसरा एजेंट काम कर रहा हो। अगर एडिटर अभी लोड हो रहा है, तो इंतज़ार करने के बजाय उन्हें बता दिया जाता है।"
+item = "एजेंट जो कॉम्पोनेंट रखते हैं, वे अपने मुख्य कॉम्पोनेंट से जुड़े रहते हैं, इसलिए एक बदलाव सभी कॉपियों को अपडेट कर देता है। एजेंट उन्हें अलग या बदल भी सकते हैं।"
+item = "एजेंट कॉम्पोनेंट के अंदर सामग्री जोड़ते समय अब दोहराई गई लेयर नहीं बनाते। जिन फ़ाइलों में पहले से दोहराव है, वे एक क्लिक में ठीक करने वाली चेतावनी दिखाती हैं।"
+item = "जब कोई एजेंट आपका दस्तावेज़ सेव करता है, तो एडिटर अब फ़ाइल का नाम और सेव होने की स्थिति दिखाता है।"
+item = "फ़्रेम को लेयर वाले SVG के रूप में एक्सपोर्ट किया जा सकता है, टेक्स्ट और समूह बने रहते हैं, ताकि उन्हें दूसरे डिज़ाइन टूल में ले जाया जा सके।"
+item = "एजेंट के लिए छोटे सुधार, जिनमें Windows पर साफ़ फ़ाइल पाथ भी शामिल हैं।"
+
+[[note]]
+version = "0.6.2"
+locale = "th"
+title = "เอเจนต์เสถียรขึ้นและคอมโพเนนต์ที่เชื่อมกัน"
+item = "เอเจนต์โหลดเครื่องมือได้ทันที แม้ขณะเปิดเอกสารขนาดใหญ่หรือมีเอเจนต์อื่นทำงานอยู่ ถ้าเอดิเตอร์ยังโหลดอยู่ เอเจนต์จะได้รับแจ้งแทนการรอ"
+item = "คอมโพเนนต์ที่เอเจนต์วางจะเชื่อมกับคอมโพเนนต์หลัก แก้ไขครั้งเดียวก็อัปเดตทุกสำเนา เอเจนต์ยังยกเลิกการเชื่อมหรือสลับคอมโพเนนต์ได้"
+item = "เอเจนต์เพิ่มเนื้อหาในคอมโพเนนต์ได้โดยไม่สร้างเลเยอร์ซ้ำ ไฟล์ที่มีเลเยอร์ซ้ำอยู่แล้วจะแสดงคำเตือนพร้อมการซ่อมในคลิกเดียว"
+item = "เมื่อเอเจนต์บันทึกเอกสาร เอดิเตอร์จะแสดงชื่อไฟล์และสถานะว่าบันทึกแล้ว"
+item = "ส่งออกเฟรมเป็น SVG แบบมีเลเยอร์ได้ โดยคงข้อความและกลุ่มไว้ เพื่อนำไปใช้ในเครื่องมือออกแบบอื่น"
+item = "การแก้ไขเล็กน้อยสำหรับเอเจนต์ รวมถึงพาธไฟล์ที่สะอาดขึ้นบน Windows"
+
+[[note]]
+version = "0.6.2"
+locale = "vi"
+title = "Tác nhân ổn định hơn và thành phần liên kết"
+item = "Tác nhân tải công cụ ngay lập tức, kể cả khi đang mở tài liệu lớn hoặc khi tác nhân khác đang làm việc. Nếu trình chỉnh sửa vẫn đang tải, chúng được báo thay vì phải chờ."
+item = "Thành phần do tác nhân đặt vẫn liên kết với thành phần chính, nên một thay đổi sẽ cập nhật mọi bản sao. Tác nhân cũng có thể tách hoặc thay thế chúng."
+item = "Tác nhân có thể thêm nội dung vào bên trong thành phần mà không tạo lớp trùng lặp. Tệp đã có lớp trùng sẽ hiện cảnh báo kèm cách sửa bằng một lần nhấp."
+item = "Khi tác nhân lưu tài liệu, trình chỉnh sửa giờ hiển thị tên tệp và trạng thái đã lưu."
+item = "Có thể xuất khung thành SVG nhiều lớp, giữ nguyên chữ và nhóm, để đưa sang công cụ thiết kế khác."
+item = "Các sửa lỗi nhỏ cho tác nhân, gồm đường dẫn tệp gọn hơn trên Windows."
+
+[[note]]
+version = "0.6.2"
+locale = "id"
+title = "Agen lebih stabil dan komponen tertaut"
+item = "Agen langsung memuat alatnya, bahkan saat dokumen besar sedang dibuka atau agen lain sedang bekerja. Jika editor masih memuat, mereka diberi tahu alih-alih menunggu."
+item = "Komponen yang ditempatkan agen tetap tertaut ke komponen utamanya, jadi satu perubahan memperbarui semua salinan. Agen juga bisa melepas atau menukarnya."
+item = "Agen bisa menambahkan konten di dalam komponen tanpa membuat lapisan ganda. File yang sudah memilikinya menampilkan peringatan dengan perbaikan sekali klik."
+item = "Saat agen menyimpan dokumen Anda, editor kini menampilkan nama file dan status tersimpan."
+item = "Frame bisa diekspor sebagai SVG berlapis, dengan teks dan grup tetap utuh, untuk dibawa ke alat desain lain."
+item = "Perbaikan kecil untuk agen, termasuk jalur file yang lebih rapi di Windows."
+
+[[note]]
 version = "0.6.1"
 locale = "en-US"
 title = "Smoother work with agents"

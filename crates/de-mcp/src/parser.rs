@@ -55,6 +55,9 @@ pub fn parse_tool_call(line: &str) -> Option<ToolCall> {
         };
         (method, arguments)
     };
+    // pen.dev's tool names resolve to ours here, so every consumer of the
+    // parsed call sees the canonical tool (#392).
+    let (tool, arguments) = super::pen_dev_aliases::resolve(tool, arguments);
     Some(ToolCall {
         id,
         tool,
@@ -532,6 +535,9 @@ fn structured_arg_allowed(tool: &str, key: &str) -> bool {
             | ("design_skeleton", "styleGuide")
             | ("design_content", "children")
             | ("get_style_guide", "tags")
+            // pen.dev's names (#392), checked before they resolve.
+            | ("get_style", "tags")
+            | ("export_html", "nodeIds")
             | ("finalize_design", "root_ids")
             | ("enrich_images", "root_ids")
             | ("capture_preview", "actions")
