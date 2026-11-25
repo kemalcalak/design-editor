@@ -70,7 +70,6 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "home.mcp.port" => "Puerto {{port}}",
         "home.mcp.settings" => "Ajustes de MCP",
         "home.mcp.start" => "Iniciar servidor",
-        "icon.catalogLoading" => "Cargando el catálogo de iconos…",
         "sceneTemplate.documentUnavailable" => "No se pudo cargar el documento de esa plantilla. Inténtalo de nuevo.",
         "sceneTemplate.deleteFailed" => "No se pudo eliminar esa plantilla. Inténtalo de nuevo.",
         "sceneTemplate.item.soundingNavyDeck.title" => "Carta de sondeo · deck de estrategia",

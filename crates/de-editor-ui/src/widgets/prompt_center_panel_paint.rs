@@ -422,15 +422,7 @@ impl PromptCenterPanel<'_> {
             return;
         };
         let image_id = asset.image_id;
-        let Some(encoded) = asset.bytes else {
-            // Web only: the JPEG is not in the bundle and has not been fetched
-            // yet. Ask the host for it and paint the same fallback an
-            // unknown-id card gets — the card is readable either way, and a
-            // failed fetch simply leaves it that way rather than blocking.
-            de_editor_core::web_assets::request(asset.route);
-            self.paint_preview_fallback(cx, preview, card);
-            return;
-        };
+        let encoded = asset.bytes;
         if !has_cached_image_bytes(image_id) {
             store_remote_image_bytes(image_id, encoded.to_vec());
         }

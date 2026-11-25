@@ -365,15 +365,7 @@ impl<'a> IconPickerPanel<'a> {
     }
 
     fn paint_empty(&self, cx: &mut PaintCx<'_>, panel: Rect) {
-        // "Nothing matched" and "the catalog has not arrived yet" are different
-        // answers, and on web the second is a real state: the core catalog is
-        // fetched when this panel first opens. Reporting the first would tell
-        // the user their query failed when in fact nothing has been searched.
-        let key = if crate::widgets::icon_catalog::core_catalog_loaded() {
-            "icon.noIconsFound"
-        } else {
-            "icon.catalogLoading"
-        };
+        let key = "icon.noIconsFound";
         let empty = TextLayout::single_run(
             self.t(key),
             "system-ui",

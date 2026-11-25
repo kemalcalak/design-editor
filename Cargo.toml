@@ -45,8 +45,8 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 
 # 2026-06-17: the `vendor/skia-safe-op` fork (rust-skia 0.97.0 + a
 # `wasm_unknown` platform target) is RETIRED. Its only purpose was the
-# from-scratch wasm32-unknown-unknown skia web build, which CanvasKit now
-# replaces. With no wasm32 skia consumer left, `skia-safe` / `skia-bindings`
+# from-scratch wasm32-unknown-unknown skia web build (the browser editor
+# itself was removed in #401). With no wasm32 skia consumer left, `skia-safe` / `skia-bindings`
 # resolve to upstream crates.io 0.97.0 — used only by the native desktop host
 # (`de-host-desktop`) + `jian-skia`, where the fork was byte-identical anyway.
 # No `[patch.crates-io]` needed.
@@ -57,7 +57,7 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 # own [profile.release] blocks are inert — only the build-root profile applies).
 [profile.release]
 # `strip` removes the symbol table — measured ~7.5 MB off the native binary, and
-# trims the wasm too (the production web bundle never needs symbol names).
+# trims the Chrome extension's wasm too.
 strip = true
 # Cross-crate inlining + dedup of monomorphized generics (e.g. PenNode::clone is
 # duplicated ~20× without it). "thin" gets most of the win at a fraction of the
@@ -67,8 +67,8 @@ lto = "thin"
 # build time (single-threaded codegen of the big crates) — acceptable for the
 # infrequent shippable/CI builds this profile targets.
 codegen-units = 1
-# opt-level is intentionally LEFT AT 3 (the default), NOT "s"/"z": both the
-# native and the wasm builds run the hot paint/layout/hit-test loop, and
+# opt-level is intentionally LEFT AT 3 (the default), NOT "s"/"z": the
+# native build runs the hot paint/layout/hit-test loop, and
 # size-opt levels measurably slow it. panic = "abort" is also intentionally NOT
 # set yet — it needs a thread-isolation audit of the chat/codegen workers, some
 # of which rely on unwinding to contain a panicking task.

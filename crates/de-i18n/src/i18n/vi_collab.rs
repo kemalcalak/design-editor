@@ -70,7 +70,6 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "home.mcp.port" => "Cổng {{port}}",
         "home.mcp.settings" => "Cài đặt MCP",
         "home.mcp.start" => "Khởi động máy chủ",
-        "icon.catalogLoading" => "Đang tải danh mục biểu tượng…",
         "sceneTemplate.documentUnavailable" => "Không tải được tài liệu của mẫu này. Hãy thử lại.",
         "sceneTemplate.deleteFailed" => "Không thể xóa mẫu đó. Hãy thử lại.",
         "sceneTemplate.item.soundingNavyDeck.title" => "Hải đồ đo sâu · deck chiến lược",

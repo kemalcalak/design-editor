@@ -6,9 +6,6 @@ rust-version.workspace = true
 license.workspace = true
 description = "Design Editor i18n — Locale enum + 15-locale string tables"
 
-[features]
-runtime-locale-catalog = []
-
 [dependencies]
 
 [dev-dependencies]
