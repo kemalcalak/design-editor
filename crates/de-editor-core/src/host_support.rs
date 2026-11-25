@@ -51,10 +51,7 @@ impl EditorState {
                ]}
             ]
         }"##;
-        let src = src.replace(
-            "__DESIGN_EDITOR_VERSION__",
-            crate::document_version::PRODUCT_VERSION,
-        );
+        let src = src.replace("__DESIGN_EDITOR_VERSION__", env!("CARGO_PKG_VERSION"));
         let doc = jian_ops_schema::load_str(&src)
             .expect("EditorState::sample() fixture parses")
             .value;
@@ -76,10 +73,7 @@ impl EditorState {
                "children":[]}
             ]
         }"##;
-        let src = src.replace(
-            "__DESIGN_EDITOR_VERSION__",
-            crate::document_version::PRODUCT_VERSION,
-        );
+        let src = src.replace("__DESIGN_EDITOR_VERSION__", env!("CARGO_PKG_VERSION"));
         let doc = jian_ops_schema::load_str(&src)
             .expect("EditorState::starter() fixture parses")
             .value;

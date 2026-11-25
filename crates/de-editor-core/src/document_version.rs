@@ -21,6 +21,8 @@ use crate::EditorState;
 use jian_ops_schema::PenDocument;
 
 /// The Design Editor release this build is (the workspace version).
+/// `EditorState::new` / `starter` spell `env!("CARGO_PKG_VERSION")` out
+/// instead, because `tools/check-version-sync.sh` checks those sites literally.
 pub const PRODUCT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 /// Record this build as the release that writes `doc` from now on.

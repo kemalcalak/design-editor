@@ -366,7 +366,7 @@ impl Default for EditorState {
 /// An empty canonical document — `version` set, no nodes, no pages.
 fn empty_document() -> jian_ops_schema::PenDocument {
     jian_ops_schema::PenDocument {
-        version: crate::document_version::PRODUCT_VERSION.to_owned(),
+        version: env!("CARGO_PKG_VERSION").to_owned(),
         name: None,
         themes: None,
         variables: None,
