@@ -100,7 +100,7 @@ fn is_exported(n: &SceneNode) -> bool {
 /// Whether the node is written at all: part of the design, and not a group
 /// left with nothing to hold.
 pub(super) fn is_written(n: &SceneNode) -> bool {
-    is_exported(n) && !(n.kind == NodeKind::Group && !n.children.iter().any(is_exported))
+    is_exported(n) && (n.kind != NodeKind::Group || n.children.iter().any(is_exported))
 }
 
 /// Whether the node clips its children (to `clip-…`).
