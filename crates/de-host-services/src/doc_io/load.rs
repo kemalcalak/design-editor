@@ -200,7 +200,7 @@ fn parse_editor_state_source(
         duplicate_ids: de_editor_core::duplicate_ids::find_duplicate_ids(&loaded.value),
     };
     Ok((
-        EditorState::from_document(loaded.value),
+        EditorState::from_opened_document(loaded.value),
         embedded.map(|extraction| extraction.meta),
         report,
     ))

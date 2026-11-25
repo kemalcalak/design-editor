@@ -70,6 +70,7 @@ pub mod design_md;
 pub mod design_md_button_state;
 pub mod document_images;
 pub mod document_install;
+pub mod document_version;
 pub mod drag_mutators;
 pub mod editor_toast;
 pub mod home_mcp_setup;

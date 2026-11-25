@@ -86,7 +86,7 @@ impl ExportFrames {
             .collect();
         ToolOutcome::OkJson(
             serde_json::json!({
-                "directory": directory.display().to_string(),
+                "directory": de_util::display_path::display_path(&directory),
                 "format": extension,
                 "attempted": report.attempted(),
                 "written": report.written,

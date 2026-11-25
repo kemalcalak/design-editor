@@ -64,7 +64,10 @@ impl McpTool for SaveThemePreset {
         }
         let mut out = BTreeMap::new();
         out.insert("ok".into(), "true".into());
-        out.insert("path".into(), preset_path.display().to_string());
+        out.insert(
+            "path".into(),
+            de_util::display_path::display_path(&preset_path),
+        );
         ToolOutcome::Ok(out)
     }
 }
@@ -142,7 +145,7 @@ impl McpTool for ListThemePresets {
                 .unwrap_or_else(|| file_stem(&path));
             presets.push(json!({
                 "name": name,
-                "path": path.display().to_string(),
+                "path": de_util::display_path::display_path(&path),
             }));
         }
 

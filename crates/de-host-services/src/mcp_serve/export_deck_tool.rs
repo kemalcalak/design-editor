@@ -148,7 +148,7 @@ fn deck_result(
 ) -> serde_json::Value {
     let mut result = serde_json::json!({
         "format": format,
-        "path": path.display().to_string(),
+        "path": de_util::display_path::display_path(path),
         "slides": slides,
     });
     // The PDF writer reports no structural split, so those keys are absent
@@ -170,8 +170,10 @@ fn hyperframes_result(dir: &Path, written: &HyperframesExport) -> serde_json::Va
         composition.scenes,
         Some((composition.structured_nodes, composition.raster_fallbacks)),
     );
-    result["compositionPath"] = written.composition_path.display().to_string().into();
-    result["renderNotesPath"] = written.render_notes_path.display().to_string().into();
+    result["compositionPath"] =
+        de_util::display_path::display_path(&written.composition_path).into();
+    result["renderNotesPath"] =
+        de_util::display_path::display_path(&written.render_notes_path).into();
     // From the integer tick count in f64, not `total_seconds()`: an f32
     // 6.6 widens to 6.599999904632568 on the wire.
     result["durationSeconds"] =
