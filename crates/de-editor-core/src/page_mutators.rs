@@ -23,6 +23,11 @@ use jian_ops_schema::page::PenPage;
 /// role/cleanup passes and page scoring never see the masters.
 pub const COMPONENTS_PAGE_NAME: &str = "Components";
 
+/// Whether `page` is the hidden side page library and kit masters live on.
+pub fn is_components_page(page: &jian_ops_schema::page::PenPage) -> bool {
+    page.name == COMPONENTS_PAGE_NAME
+}
+
 /// Build a bare page with id / name / children. State + lifecycle
 /// default to `None`.
 fn make_page(id: String, name: String, children: Vec<PenNode>) -> PenPage {

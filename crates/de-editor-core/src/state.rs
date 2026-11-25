@@ -603,6 +603,7 @@ mod tests {
             fill_refs: std::collections::HashMap::new(),
             stroke_refs: std::collections::HashMap::new(),
             preserve_authored_geometry: false,
+            kit_masters: Default::default(),
             revision: s.revision,
         });
         s.ui.pen_in_progress = Some(crate::NodeId::new("n7"));

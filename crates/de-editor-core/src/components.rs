@@ -519,8 +519,10 @@ impl EditorState {
     /// TS `detachComponent`. A reusable component sheds its flag
     /// (and registry entry); a `Ref` instance materializes into an
     /// independent subtree — `descendants` overrides applied,
-    /// instance props overlaid, fresh ids — replacing the Ref in
-    /// place. Returns the surviving node's id.
+    /// instance props overlaid — replacing the Ref in place. The root
+    /// keeps the instance's id (#365), so links and bindings that name it
+    /// still hold; inner nodes get fresh ids. Returns the surviving
+    /// node's id.
     pub fn detach_component(&mut self, node_id: &NodeId) -> Option<NodeId> {
         let mut allocator = SequentialIdAllocator::for_document(&self.doc, 1).ok()?;
         self.detach_component_with_allocator(node_id, &mut allocator)
@@ -550,26 +552,21 @@ impl EditorState {
         }
 
         match &node {
-            PenNode::Ref(reference) => {
-                let Some(component) =
-                    crate::ref_resolve::find_component_node(&self.doc, &reference.target)
-                else {
-                    return Ok(None);
-                };
-                let Some(merged) = crate::ref_resolve::materialize_instance(&node, &component)
-                else {
-                    return Ok(None);
-                };
+            PenNode::Ref(_) => {
                 let mut taken = self.collect_node_ids();
-                let detached = walkers::deep_clone_with_allocator(&merged, allocator, &mut taken)?;
-                let new_id = NodeId::new(detached.base().id.clone());
+                let Some(detached) = self
+                    .instance_view()
+                    .detached_instance(&node, allocator, &mut taken)?
+                else {
+                    return Ok(None);
+                };
                 let snap = self.snapshot_for_history();
                 if !replace_node_in_children(self.active_children_mut(), node_id, detached) {
                     return Ok(None);
                 }
-                self.set_single_selection(new_id.clone());
+                self.set_single_selection(node_id.clone());
                 self.history_push_past(snap);
-                Ok(Some(new_id))
+                Ok(Some(node_id.clone()))
             }
             _ => Ok(None),
         }

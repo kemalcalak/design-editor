@@ -7,11 +7,13 @@
 //! Each tool returns `ToolOutcome::OkWithCommand(map,
 //! EditorCommand::InstantiateKitComponent { … })` so the host's
 //! applier runs the same `EditorState::instantiate_kit_component`
-//! path the Component-Browser panel uses — deep-clone, fresh-id,
-//! subtree-translate, select, history-snapshot.
+//! path the Component-Browser panel uses: a linked instance of a master
+//! installed once on the `Components` page (#365), selected, one undo
+//! step; `detach: true` drops an independent copy instead.
 
 use std::collections::BTreeMap;
 
+use de_editor_core::uikit::KitComponent;
 use de_editor_core::{EditorCommand, EditorState, NodeId, UIKit};
 
 use super::{McpTool, ToolErrorCode, ToolOutcome};
@@ -48,6 +50,9 @@ pub struct InsertKitComponent {
     name: String,
     kit_id: String,
     component_id: String,
+    /// Only a frame template can become a master; any other kit
+    /// component (the starter divider is a rectangle) is always copied.
+    linkable: bool,
 }
 
 impl InsertKitComponent {
@@ -57,6 +62,7 @@ impl InsertKitComponent {
             name: element_tool_name(&component_id),
             kit_id: kit_id.into(),
             component_id,
+            linkable: true,
         }
     }
 }
@@ -76,19 +82,31 @@ impl McpTool for InsertKitComponent {
             Ok(v) => v,
             Err(e) => return e,
         };
+        let detach = match args.get("detach").map(String::as_str) {
+            None | Some("") | Some("false") => false,
+            Some("true") => true,
+            Some(other) => {
+                return ToolOutcome::Err(
+                    ToolErrorCode::InvalidArgument,
+                    format!("detach must be true or false, got {other}"),
+                )
+            }
+        };
         let mut result = BTreeMap::new();
         result.insert("kit_id".into(), self.kit_id.clone());
         result.insert("component_id".into(), self.component_id.clone());
+        result.insert("linked".into(), (!detach && self.linkable).to_string());
         ToolOutcome::OkWithCommand(
             result,
             EditorCommand::InstantiateKitComponent {
-                kit_id: self.kit_id.clone(),
-                component_id: self.component_id.clone(),
+                kit_id: self.kit_id.as_str().into(),
+                component_id: self.component_id.as_str().into(),
                 doc_x,
                 doc_y,
                 target_parent: NodeId::NONE,
                 page_id: None,
                 overrides_json: None,
+                detach,
             },
         )
     }
@@ -122,7 +140,10 @@ fn parse_optional_f64(
 /// `ToolRegistry`.
 pub fn insert_kit_component_tools(state: &EditorState) -> Vec<InsertKitComponent> {
     kit_components(&state.ui_kits)
-        .map(|c| InsertKitComponent::new(c.kit_id, c.id))
+        .map(|c| InsertKitComponent {
+            linkable: c.linkable,
+            ..InsertKitComponent::new(c.kit_id, c.id)
+        })
         .collect()
 }
 
@@ -131,12 +152,23 @@ pub fn insert_kit_component_tools(state: &EditorState) -> Vec<InsertKitComponent
 /// `TOOL_SCHEMAS`.
 pub fn element_tool_schema(component_name: &str, component_id: &str) -> String {
     let tool = element_tool_name(component_id);
-    canonical_element_tool_schema(&tool, component_name)
+    canonical_element_tool_schema(&tool, component_name, true)
 }
 
-fn canonical_element_tool_schema(tool: &str, component_name: &str) -> String {
+/// Whether a kit component inserts as a linked instance (its template can
+/// be a master).
+fn kit_component_linkable(component: &KitComponent) -> bool {
+    matches!(component.template, jian_ops_schema::node::PenNode::Frame(_))
+}
+
+fn canonical_element_tool_schema(tool: &str, component_name: &str, linkable: bool) -> String {
+    let how = if linkable {
+        "as a linked instance: the first use installs the component as a master on the hidden Components page, every use is a ref to it, so editing that master changes every instance (the new instance is selected; get_selection gives its id). detach: true inserts an independent copy instead."
+    } else {
+        "as an independent copy (this component is not a frame, so it cannot be a master)."
+    };
     format!(
-        r#"{{"name":"{tool}","description":"Insert a {component_name} from the built-in UIKit onto the active page. Optional x/y doc-px floats place the top-left; defaults to (0, 0).","inputSchema":{{"type":"object","properties":{{"x":{{"type":"string","description":"top-left doc-px (float)"}},"y":{{"type":"string","description":"top-left doc-px (float)"}}}}}}}}"#
+        r#"{{"name":"{tool}","description":"Insert a {component_name} from the built-in UIKit onto the active page {how} Optional x/y doc-px floats place the top-left; defaults to (0, 0). See get_guidelines topic components.","inputSchema":{{"type":"object","properties":{{"x":{{"type":"string","description":"top-left doc-px (float)"}},"y":{{"type":"string","description":"top-left doc-px (float)"}},"detach":{{"type":"boolean","description":"insert an independent copy instead of a linked instance (default false)"}}}}}}}}"#
     )
 }
 
@@ -154,14 +186,15 @@ pub fn element_tool_schemas(state: &EditorState) -> Vec<String> {
 /// answers `tools/list` from it, never waiting for a document snapshot.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct KitToolCatalog {
-    components: Vec<(String, String)>,
+    /// `(id, name, linkable)` per component.
+    components: Vec<(String, String, bool)>,
 }
 
 impl KitToolCatalog {
     pub fn of(kits: &[UIKit]) -> Self {
         Self {
             components: kit_components(kits)
-                .map(|c| (c.id.to_string(), c.name.to_string()))
+                .map(|c| (c.id.to_string(), c.name.to_string(), c.linkable))
                 .collect(),
         }
     }
@@ -177,8 +210,9 @@ impl KitToolCatalog {
     pub fn matches(&self, kits: &[UIKit]) -> bool {
         let mut ours = self.components.iter();
         kit_components(kits).all(|c| {
-            ours.next()
-                .is_some_and(|(our_id, our_name)| our_id == c.id && our_name == c.name)
+            ours.next().is_some_and(|(our_id, our_name, our_linkable)| {
+                our_id == c.id && our_name == c.name && *our_linkable == c.linkable
+            })
         }) && ours.next().is_none()
     }
 
@@ -186,7 +220,9 @@ impl KitToolCatalog {
     pub fn schemas(&self) -> Vec<String> {
         self.components
             .iter()
-            .map(|(id, name)| element_tool_schema(name, id))
+            .map(|(id, name, linkable)| {
+                canonical_element_tool_schema(&element_tool_name(id), name, *linkable)
+            })
             .collect()
     }
 
@@ -204,6 +240,8 @@ struct KitComponentRef<'a> {
     kit_id: &'a str,
     id: &'a str,
     name: &'a str,
+    /// Whether it inserts as a linked instance (#365).
+    linkable: bool,
 }
 
 /// Every component of `kits` in tool order: the one walk both the tools
@@ -215,6 +253,7 @@ fn kit_components(kits: &[UIKit]) -> impl Iterator<Item = KitComponentRef<'_>> {
             kit_id: &kit.id,
             id: &c.id,
             name: &c.name,
+            linkable: kit_component_linkable(c),
         })
     })
 }

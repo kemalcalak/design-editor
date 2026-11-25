@@ -204,9 +204,14 @@ fn component_conversion_uikit_and_refine_commands_use_the_supplied_allocator() {
     let mut component_allocator = supplied();
     assert!(component_state
         .apply_with_allocator(
-            EditorCommand::InstantiateComponent {
+            EditorCommand::Instance(Box::new(crate::InstanceCommand::Insert {
                 component_id: NodeId::new("n10"),
-            },
+                parent: NodeId::NONE,
+                x: None,
+                y: None,
+                descendants_json: None,
+                page_id: None,
+            })),
             &mut component_allocator,
         )
         .unwrap());
@@ -218,13 +223,14 @@ fn component_conversion_uikit_and_refine_commands_use_the_supplied_allocator() {
     assert!(kit_state
         .apply_with_allocator(
             EditorCommand::InstantiateKitComponent {
-                kit_id: "design-editor-starter".to_string(),
-                component_id: "btn-primary".to_string(),
+                kit_id: "design-editor-starter".into(),
+                component_id: "btn-primary".into(),
                 doc_x: Some(10.0),
                 doc_y: Some(20.0),
                 target_parent: NodeId::NONE,
                 page_id: None,
                 overrides_json: None,
+                detach: false,
             },
             &mut kit_allocator,
         )
@@ -370,6 +376,7 @@ fn command_dispatch_has_no_legacy_allocator_escape_hatch() {
         include_str!("command_apply/helpers.rs"),
         include_str!("command_apply/clipboard.rs"),
         include_str!("command_apply/boolean.rs"),
+        include_str!("command_apply/instance.rs"),
     ]
     .concat();
     for required in [
@@ -389,7 +396,9 @@ fn command_dispatch_has_no_legacy_allocator_escape_hatch() {
         "paste_clipboard_with_allocator",
         "apply_import_svg_on_active_page",
         "instantiate_component_with_allocator",
-        "apply_kit_component_on_page",
+        "insert_component_instance_with_allocator",
+        "detach_component_with_allocator",
+        "instantiate_kit_component_under_parent_with_allocator",
         "cmd_batch_with_allocator",
         "replace_paths_with_polyline_with_allocator",
     ] {

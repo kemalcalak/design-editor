@@ -1,5 +1,7 @@
-//! Component MCP tools — `instantiate_component` / `create_component`
-//! / `delete_component` / `rename_component` — plus `set_node_collapsed`.
+//! Component MCP tools — `create_component` / `delete_component` /
+//! `rename_component` — plus `set_node_collapsed`. The instance tools
+//! (`instantiate_component`, `detach_instance`, …) live in
+//! `instance_tools.rs`.
 //!
 //! The remaining write tools that lived here in shell-core (pages /
 //! selection / viewport / tool / flags / undo) moved to `page_tools.rs`.
@@ -14,38 +16,6 @@ fn wrote() -> BTreeMap<String, String> {
     let mut out = BTreeMap::new();
     out.insert("wrote".into(), "true".into());
     out
-}
-
-/// First-party `instantiate_component` tool.
-pub struct InstantiateComponent;
-
-impl McpTool for InstantiateComponent {
-    fn name(&self) -> &str {
-        "instantiate_component"
-    }
-    fn call(&self, args: &BTreeMap<String, String>) -> ToolOutcome {
-        // Still validate the argument shape so the contract is honest.
-        if args
-            .get("component_id")
-            .map(String::is_empty)
-            .unwrap_or(true)
-        {
-            return ToolOutcome::Err(
-                ToolErrorCode::MissingArgument,
-                "component_id is required".into(),
-            );
-        }
-        ToolOutcome::OkWithCommand(
-            wrote(),
-            EditorCommand::InstantiateComponent {
-                component_id: NodeId::new(args["component_id"].clone()),
-            },
-        )
-    }
-}
-
-pub fn instantiate_component_snapshot() -> InstantiateComponent {
-    InstantiateComponent
 }
 
 /// First-party `create_component` tool.

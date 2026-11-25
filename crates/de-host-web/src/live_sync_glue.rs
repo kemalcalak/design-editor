@@ -310,6 +310,8 @@ fn apply_document_response<C: RepaintContext + 'static>(
                      preserve_authored_geometry,
                      wire_scenario| {
                         let host = inner_ref.host_mut();
+                        // Same document: keep its kit masters across the sync.
+                        let kit_masters = host.editor_state().editor_ui.kit_masters.clone();
                         host.replace_document_from_sync(doc, undoable);
                         // A daemon new enough to send `scenario` is the
                         // authority (the browser boots with `None`, and a deck
@@ -328,6 +330,7 @@ fn apply_document_response<C: RepaintContext + 'static>(
                                 scenario,
                                 pinned_style_guide,
                                 libraries,
+                                kit_masters,
                             },
                         );
                         inner_ref.repaint().is_ok()

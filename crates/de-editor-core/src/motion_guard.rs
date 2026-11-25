@@ -144,6 +144,7 @@ pub(crate) fn prepare_command(cmd: &mut EditorCommand) -> Result<(), MotionWrite
         C::CopyNode { overrides_json, .. } | C::InstantiateKitComponent { overrides_json, .. } => {
             overrides_json.as_mut().map_or(Ok(()), prepare_json_string)
         }
+        C::Instance(command) => command.node_json_mut().map_or(Ok(()), prepare_json_string),
         C::ReplaceSubtree { node, .. } => prepare_nodes_motion(std::slice::from_mut(node)),
         C::UpsertComponent { root, .. } | C::UpsertScreen { root, .. } => {
             prepare_nodes_motion(std::slice::from_mut(root))
@@ -185,7 +186,6 @@ pub(crate) fn prepare_command(cmd: &mut EditorCommand) -> Result<(), MotionWrite
         | C::MergeAppState { .. }
         | C::SetDesignMd { .. }
         | C::Library(_)
-        | C::InstantiateComponent { .. }
         | C::CreateComponent { .. }
         | C::DeleteComponent { .. }
         | C::RenameComponent { .. }

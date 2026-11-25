@@ -27,19 +27,6 @@ fn state_with_two_pages() -> EditorState {
 // --- Component commands ----------------------------------------------
 
 #[test]
-fn instantiate_component_emits_command() {
-    let tool = instantiate_component_snapshot();
-    let mut args = BTreeMap::new();
-    args.insert("component_id".into(), "n5".into());
-    match tool.call(&args) {
-        ToolOutcome::OkWithCommand(_, EditorCommand::InstantiateComponent { component_id }) => {
-            assert_eq!(component_id.as_str(), "n5");
-        }
-        other => panic!("expected InstantiateComponent command, got {other:?}"),
-    }
-}
-
-#[test]
 fn create_component_emits_command() {
     let tool = create_component_snapshot();
     let mut args = BTreeMap::new();

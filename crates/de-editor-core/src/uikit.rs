@@ -535,11 +535,11 @@ mod tests {
     }
 
     #[test]
-    fn instantiate_clones_template_with_fresh_ids_and_selects() {
+    fn copy_clones_template_with_fresh_ids_and_selects() {
         let mut state = EditorState::new();
         let before = state.active_children_mut().len();
         let id = state
-            .instantiate_kit_component("design-editor-starter", "btn-primary", 100.0, 200.0)
+            .copy_kit_component("design-editor-starter", "btn-primary", 100.0, 200.0)
             .expect("instantiated");
         assert_eq!(state.active_children_mut().len(), before + 1);
         let inserted = state.active_children_mut().last().unwrap();
@@ -558,7 +558,7 @@ mod tests {
     }
 
     #[test]
-    fn instantiate_keeps_descendants_parent_relative() {
+    fn copy_keeps_descendants_parent_relative() {
         // The Primary Button template has a child label at (32, 12)
         // relative to its (0, 0) root. After instantiating at
         // (200, 300), only the ROOT origin moves — the label keeps
@@ -567,7 +567,7 @@ mod tests {
         // absolute coords would double-shift it at layout time.
         let mut state = EditorState::new();
         let _ = state
-            .instantiate_kit_component("design-editor-starter", "btn-primary", 200.0, 300.0)
+            .copy_kit_component("design-editor-starter", "btn-primary", 200.0, 300.0)
             .expect("instantiated");
         let root = state.active_children_mut().last().expect("root").clone();
         assert_eq!(root.base().x, Some(200.0));

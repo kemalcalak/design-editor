@@ -746,12 +746,22 @@ fn page_root_ids(state: &EditorState) -> Vec<(String, Vec<String>)> {
 /// A page root that is in `state` but not in `before`, on a page that
 /// existed before (pages are matched by id, so deleting or reordering pages
 /// adds nothing); the first one in paint order, which is where placement
-/// puts new roots (in front).
+/// puts new roots (in front). Masters a write installs on the hidden
+/// `Components` page (kit components, #365) are not followed.
 fn new_page_root(before: &[(String, Vec<String>)], state: &EditorState) -> Option<McpFollowTarget> {
     page_root_ids(state)
         .into_iter()
         .enumerate()
         .find_map(|(page_index, (page_id, roots))| {
+            let components_page = state
+                .doc
+                .pages
+                .as_ref()
+                .and_then(|pages| pages.get(page_index))
+                .is_some_and(de_editor_core::page_mutators::is_components_page);
+            if components_page {
+                return None;
+            }
             let (_, old) = before.iter().find(|(id, _)| *id == page_id)?;
             roots
                 .into_iter()

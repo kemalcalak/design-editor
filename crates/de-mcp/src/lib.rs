@@ -118,6 +118,7 @@ pub mod import_snapshot_tool;
 mod import_snapshot_tool_tests;
 mod insert_node_args;
 mod insert_node_data;
+pub mod instance_tools;
 pub mod json_serializer;
 mod layout_overlaps;
 #[cfg(test)]
@@ -237,9 +238,9 @@ pub use codegen_tools::{
     codegen_submit_chunk_snapshot, CodegenAssemble, CodegenClean, CodegenPlan, CodegenSubmitChunk,
 };
 pub use component_tools::{
-    create_component_snapshot, delete_component_snapshot, instantiate_component_snapshot,
-    rename_component_snapshot, set_node_collapsed_snapshot, CreateComponent, DeleteComponent,
-    InstantiateComponent, RenameComponent, SetNodeCollapsed,
+    create_component_snapshot, delete_component_snapshot, rename_component_snapshot,
+    set_node_collapsed_snapshot, CreateComponent, DeleteComponent, RenameComponent,
+    SetNodeCollapsed,
 };
 pub use conversion_status::{conversion_status_snapshot, ConversionStatus};
 pub use conversion_tools::{
@@ -251,6 +252,10 @@ pub use debug_tools::{
     debug_logs_tail_snapshot, debug_screenshot_snapshot, debug_tools_enabled,
     debug_validation_report_snapshot, parse_screenshot_args, DebugLogsTail, DebugScreenshot,
     DebugValidationReport, ScreenshotRequest, ScreenshotTarget,
+};
+pub use instance_tools::{
+    detach_instance_snapshot, instantiate_component_snapshot, list_instances_snapshot,
+    swap_instance_snapshot, DetachInstance, InstantiateComponent, ListInstances, SwapInstance,
 };
 #[cfg(not(feature = "debug-tools"))]
 pub fn debug_tools_enabled() -> bool {
