@@ -423,7 +423,8 @@ fn logs_tail_out(path: Option<&Path>, lines: Vec<String>) -> ToolOutcome {
     out.insert("source".into(), "server".into());
     out.insert(
         "path".into(),
-        path.map(|p| p.display().to_string()).unwrap_or_default(),
+        path.map(de_util::display_path::display_path)
+            .unwrap_or_default(),
     );
     out.insert("totalLines".into(), lines.len().to_string());
     out.insert("lines".into(), lines_json);

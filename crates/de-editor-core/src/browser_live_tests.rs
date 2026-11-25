@@ -131,6 +131,10 @@ fn folder_characters_are_escaped_and_shares_keep_their_host() {
         resolve_page_url("./x.html", Some("\\\\?\\C:\\work")),
         "file:///C:/work/x.html"
     );
+    assert_eq!(
+        resolve_page_url("./x.html", Some("\\\\?\\UNC\\server\\share\\site")),
+        "file://server/share/site/x.html"
+    );
 }
 
 #[test]

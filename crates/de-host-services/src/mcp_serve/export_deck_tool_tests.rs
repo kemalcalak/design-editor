@@ -214,3 +214,9 @@ fn an_imported_html_deck_exports_back_as_html_pptx_and_pdf() {
     );
     let _ = std::fs::remove_dir_all(&dir);
 }
+
+#[test]
+fn deck_result_paths_drop_the_windows_verbatim_prefix() {
+    let result = deck_result("pptx", Path::new(r"\\?\C:\x\deck.pptx"), 3, None);
+    assert_eq!(result["path"], r"C:\x\deck.pptx");
+}

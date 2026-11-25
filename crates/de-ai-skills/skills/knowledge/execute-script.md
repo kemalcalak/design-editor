@@ -38,7 +38,7 @@ FindEmptySpace({width, height, direction?: "right", padding?: 0, nodeId?}): {x, 
 
 Print(...values)                 // strings raw, the rest as JSON, joined with spaces
 TakeScreenshot(ids | "document") // PNG of the state at this point, attached to the result
-Export(ids, "png" | "jpeg" | "webp" | "pdf", outputDir, {scale?})  // files on disk
+Export(ids, "png" | "jpeg" | "webp" | "svg" | "pdf", outputDir, {scale?})  // files on disk; svg = one layered <id>.svg per node (no scale)
 ```
 
 A visitor is `(node, ctx) => value`. `ctx.bounds` is the resolved box `{x, y, width, height}` in the parent's coordinate space (the same space as the node's own `x` / `y`), `ctx.depth`, `ctx.index` (position among siblings), `ctx.parentCtx` (follow it for ancestors), `ctx.problems` (`"partially clipped"` / `"fully clipped"` when a `clipContent` ancestor cuts the node off), `ctx.skipChildren()`. Every value other than `undefined` is collected into the returned array, so `cond && Update(...)` works as a one-pass query-and-fix. The visited `node` has its children elided to `"..."`; they are visited as their own entries.

@@ -123,7 +123,7 @@ fn parse_path(path: &Path) -> Result<HtmlPrepared, HtmlImportError> {
         ));
     }
     let diagnostics = diagnostic_rows(&result.diagnostics);
-    let mut state = EditorState::from_document(result.document);
+    let mut state = EditorState::from_opened_document(result.document);
     if result.slides > 0 {
         // A slide deck opens as a deck, like a `.pptx`: Preview presents it.
         state.tag_as_deck();

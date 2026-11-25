@@ -59,7 +59,8 @@ fn snapshot_request_wakes_ui_event_loop_after_queueing() {
         })
     };
 
-    let requester = thread::spawn(move || request_snapshot(&req_tx, &wake_ui));
+    let requester =
+        thread::spawn(move || request_snapshot(&req_tx, &wake_ui, &LiveShared::default()));
     let request = req_rx
         .recv_timeout(Duration::from_secs(1))
         .expect("snapshot request should be queued");
@@ -92,7 +93,9 @@ fn set_active_page_fast_path_sends_apply_without_full_snapshot() {
     let wake_ui: UiWake = Arc::new(|| {});
     let line = r#"{"jsonrpc":"2.0","id":7,"method":"tools/call","params":{"name":"set_active_page","arguments":{"index":"1"}}}"#;
 
-    let requester = thread::spawn(move || process_lightweight_live_tool(line, &req_tx, &wake_ui));
+    let requester = thread::spawn(move || {
+        process_lightweight_live_tool(line, &req_tx, &wake_ui, &LiveShared::default())
+    });
     let request = req_rx
         .recv_timeout(Duration::from_secs(1))
         .expect("fast path should queue an apply request");
@@ -123,7 +126,9 @@ fn list_pages_fast_path_requests_only_page_metadata() {
     let wake_ui: UiWake = Arc::new(|| {});
     let line = r#"{"jsonrpc":"2.0","id":8,"method":"tools/call","params":{"name":"list_pages","arguments":{}}}"#;
 
-    let requester = thread::spawn(move || process_lightweight_live_tool(line, &req_tx, &wake_ui));
+    let requester = thread::spawn(move || {
+        process_lightweight_live_tool(line, &req_tx, &wake_ui, &LiveShared::default())
+    });
     let request = req_rx
         .recv_timeout(Duration::from_secs(1))
         .expect("fast path should request page metadata");
@@ -164,6 +169,7 @@ fn pump_yields_after_ui_request_budget() {
         stop_tx,
         client_identity: Arc::new(Mutex::new(None)),
         last_mcp_epoch: 0,
+        ui_side: LiveUiSide::default(),
         last_snapshot_doc: None,
         pending_design_md: VecDeque::new(),
         saved_documents: Vec::new(),
@@ -213,6 +219,7 @@ fn pump_fulfills_screenshot_requests_off_the_live_state() {
         stop_tx,
         client_identity: Arc::new(Mutex::new(None)),
         last_mcp_epoch: 0,
+        ui_side: LiveUiSide::default(),
         last_snapshot_doc: None,
         pending_design_md: VecDeque::new(),
         saved_documents: Vec::new(),
@@ -265,6 +272,7 @@ fn pump_marks_layout_dirty_only_for_layout_affecting_commands() {
         stop_tx,
         client_identity: Arc::new(Mutex::new(None)),
         last_mcp_epoch: 0,
+        ui_side: LiveUiSide::default(),
         last_snapshot_doc: None,
         pending_design_md: VecDeque::new(),
         saved_documents: Vec::new(),
@@ -340,6 +348,7 @@ fn pump_flags_document_replaced_only_for_replace_document_requests() {
         stop_tx,
         client_identity: Arc::new(Mutex::new(None)),
         last_mcp_epoch: 0,
+        ui_side: LiveUiSide::default(),
         last_snapshot_doc: None,
         pending_design_md: VecDeque::new(),
         saved_documents: Vec::new(),
@@ -549,6 +558,7 @@ pub(super) fn fresh_mcp_server(req_rx: Receiver<UiRequest>, stop_tx: Sender<()>)
         stop_tx,
         client_identity: Arc::new(Mutex::new(None)),
         last_mcp_epoch: 0,
+        ui_side: LiveUiSide::default(),
         last_snapshot_doc: None,
         pending_design_md: VecDeque::new(),
         saved_documents: Vec::new(),
@@ -741,6 +751,7 @@ fn client_name_reports_the_initialize_identity() {
         stop_tx,
         client_identity: Arc::clone(&identity),
         last_mcp_epoch: 0,
+        ui_side: LiveUiSide::default(),
         last_snapshot_doc: None,
         pending_design_md: VecDeque::new(),
         saved_documents: Vec::new(),

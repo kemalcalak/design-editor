@@ -17,7 +17,7 @@ pub(super) fn serve_document_sync<S: std::io::Read + std::io::Write>(
     stream: &mut S,
     req_tx: &Sender<UiRequest>,
     wake_ui: &UiWake,
-    stateful_lock: &Mutex<()>,
+    shared: &LiveShared,
     body: &str,
 ) -> Result<(), McpLiveError> {
     let request = match crate::mcp_serve::parse_document_sync_request(body) {
@@ -35,20 +35,16 @@ pub(super) fn serve_document_sync<S: std::io::Read + std::io::Write>(
     };
     let editor_meta = request.resolved_editor_meta(request.embedded_editor_meta.clone());
     if request.metadata_only {
-        let _guard = stateful_lock
-            .lock()
-            .unwrap_or_else(|poison| poison.into_inner());
-        return match request_update_editor_meta(req_tx, wake_ui, editor_meta) {
+        let result = shared
+            .lock_state("document metadata sync")
+            .and_then(|_guard| request_update_editor_meta(req_tx, wake_ui, editor_meta));
+        return match result {
             Ok(()) => write_http(
                 stream,
                 "200 OK",
                 &crate::mcp_serve::document_sync_ok(LIVE_SYNC_VERSION.load(Ordering::Relaxed)),
             ),
-            Err(transport_err) => write_http(
-                stream,
-                "500 Internal Server Error",
-                &crate::mcp_serve::rest_error_body(&transport_err.to_string()),
-            ),
+            Err(e) => write_sync_failure(stream, &e),
         };
     }
     // Load OFF the UI thread (parse only — no skia; layout runs at paint) so a
@@ -72,26 +68,38 @@ pub(super) fn serve_document_sync<S: std::io::Read + std::io::Write>(
     // apply path takes). The lock is now held only for the fast in-memory
     // replace, not the parse — so a huge document can't time out mid-load while
     // still eventually mutating the doc.
-    let _guard = stateful_lock
-        .lock()
-        .unwrap_or_else(|poison| poison.into_inner());
-    match request_replace(req_tx, wake_ui, loaded.value, editor_meta) {
-        Ok(()) => {
-            let version = LIVE_SYNC_VERSION.fetch_add(1, Ordering::Relaxed) + 1;
-            write_http(
-                stream,
-                "200 OK",
-                &crate::mcp_serve::document_sync_ok(version),
-            )
-        }
-        // The UI thread is gone or didn't ack in time — a server fault, mapped
-        // to 500 (TS throws → 500 for server-side failures).
-        Err(transport_err) => write_http(
+    // The version is minted under the lock so it follows the apply order;
+    // the reply is written after the lock is released.
+    let result = shared.lock_state("document sync").and_then(|_guard| {
+        request_replace(req_tx, wake_ui, loaded.value, editor_meta)
+            .map(|()| LIVE_SYNC_VERSION.fetch_add(1, Ordering::Relaxed) + 1)
+    });
+    match result {
+        Ok(version) => write_http(
             stream,
-            "500 Internal Server Error",
-            &crate::mcp_serve::rest_error_body(&transport_err.to_string()),
+            "200 OK",
+            &crate::mcp_serve::document_sync_ok(version),
         ),
+        Err(e) => write_sync_failure(stream, &e),
     }
+}
+
+/// A sync the editor could not take: busy (#406) is 503, telling the
+/// client to send it again; a UI thread that is gone or did not ack is a
+/// server fault, 500 (TS throws → 500 for server-side failures).
+fn write_sync_failure<S: std::io::Write>(
+    stream: &mut S,
+    error: &McpLiveError,
+) -> Result<(), McpLiveError> {
+    let status = match error {
+        McpLiveError::Busy(_) => "503 Service Unavailable",
+        _ => "500 Internal Server Error",
+    };
+    write_http(
+        stream,
+        status,
+        &crate::mcp_serve::rest_error_body(&error.to_string()),
+    )
 }
 
 pub(super) fn write_json_rpc_response<S: std::io::Write>(

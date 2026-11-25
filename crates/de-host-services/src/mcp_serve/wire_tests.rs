@@ -95,6 +95,11 @@ fn classify_stateless_routes_handshake_methods() {
         classify_stateless(r#"{"jsonrpc":"2.0","method":"notifications/initialized"}"#),
         Stateless::Swallow
     ));
+    // tools/list is answered from the kit catalog, not the document (#406).
+    assert!(matches!(
+        classify_stateless(r#"{"jsonrpc":"2.0","id":7,"method":"tools/list"}"#),
+        Stateless::ToolsList(id) if id == "7"
+    ));
     // tools/call needs document state — must NOT be short-circuited.
     assert!(matches!(
         classify_stateless(r#"{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{}}"#),

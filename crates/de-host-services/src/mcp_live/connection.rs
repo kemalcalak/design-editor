@@ -16,6 +16,7 @@ impl Drop for ConnGuard {
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 pub(super) fn server_loop(
     listener: TcpListener,
     req_tx: Sender<UiRequest>,
@@ -24,11 +25,12 @@ pub(super) fn server_loop(
     quit_flag: Arc<AtomicBool>,
     wake_ui: UiWake,
     client_identity: Arc<Mutex<Option<(String, String)>>>,
+    shared: Arc<LiveShared>,
 ) {
-    // Serializes only *stateful* requests so a concurrent multi-apply batch
-    // can't interleave. Stateless probes (`ping`/`initialize`) bypass it, so
-    // `de`'s liveness probe is never blocked behind an in-flight write.
-    let stateful_lock = Arc::new(Mutex::new(()));
+    // `shared` holds the lock that serializes only *stateful* requests, so a
+    // concurrent multi-apply batch can't interleave. Stateless probes
+    // (`ping`/`initialize`/`tools/list`) bypass it, so `de`'s liveness probe
+    // and a client loading its tools are never blocked behind a call.
     // Bounds the number of in-flight connection threads.
     let conn_count = Arc::new(AtomicUsize::new(0));
     loop {
@@ -36,6 +38,8 @@ pub(super) fn server_loop(
             Ok(()) | Err(TryRecvError::Disconnected) => break,
             Err(TryRecvError::Empty) => {}
         }
+        // Name a request that holds the editor too long (#406).
+        shared.watchdog();
         match listener.accept() {
             Ok((mut stream, _addr)) => {
                 if let Err(e) = stream.set_nonblocking(false) {
@@ -58,7 +62,7 @@ pub(super) fn server_loop(
                 conn_count.fetch_add(1, Ordering::AcqRel);
                 let req_tx = req_tx.clone();
                 let admission = Arc::clone(&admission);
-                let lock = Arc::clone(&stateful_lock);
+                let shared = Arc::clone(&shared);
                 let quit = Arc::clone(&quit_flag);
                 let conns = Arc::clone(&conn_count);
                 let wake = Arc::clone(&wake_ui);
@@ -79,15 +83,20 @@ pub(super) fn server_loop(
                             &mut stream,
                             &req_tx,
                             &admission,
-                            &lock,
+                            &shared,
                             &quit,
                             &wake,
                             &identity,
                         ) {
                             eprintln!("design-editor mcp: {e}");
+                            // Busy on a REST route is not a server fault.
+                            let status = match e {
+                                McpLiveError::Busy(_) => "503 Service Unavailable",
+                                _ => "500 Internal Server Error",
+                            };
                             let _ = crate::mcp_serve::write_mcp_http_response(
                                 &mut stream,
-                                "500 Internal Server Error",
+                                status,
                                 &error_json(&e.to_string()),
                             );
                         }
@@ -114,7 +123,7 @@ pub(super) fn serve_connection<S: std::io::Read + std::io::Write>(
     stream: &mut S,
     req_tx: &Sender<UiRequest>,
     admission: &LiveAdmission,
-    stateful_lock: &Mutex<()>,
+    shared: &LiveShared,
     quit_flag: &AtomicBool,
     wake_ui: &UiWake,
     client_identity: &Mutex<Option<(String, String)>>,
@@ -170,11 +179,11 @@ pub(super) fn serve_connection<S: std::io::Read + std::io::Write>(
         // caller that clears the `Host`/`Origin` boundary above, so no
         // per-instance token is demanded here. The
         // REST route answers `{ok,error}`, not JSON-RPC.
-        return serve_document_sync(stream, req_tx, wake_ui, stateful_lock, &req.body);
+        return serve_document_sync(stream, req_tx, wake_ui, shared, &req.body);
     }
     // Content-free design-token evidence from the Chrome extension. This
     // route queues an asynchronous LLM request only; it never snapshots or
-    // mutates the live document and therefore does not take `stateful_lock`.
+    // mutates the live document and therefore does not take the state lock.
     if design_md_route::is_design_md_path(&req.path) {
         return design_md_route::serve_design_md(stream, req_tx, wake_ui, &req, cors_origin);
     }
@@ -187,7 +196,7 @@ pub(super) fn serve_connection<S: std::io::Read + std::io::Write>(
             stream,
             req_tx,
             wake_ui,
-            stateful_lock,
+            shared,
             &req,
             cors_origin,
         );
@@ -237,8 +246,46 @@ pub(super) fn serve_connection<S: std::io::Read + std::io::Write>(
         crate::mcp_serve::Stateless::Ping(id) => {
             return write_json_rpc_response(stream, &live_ping_response(&id, token));
         }
+        // The catalog is not the document: answered from the kit catalog the
+        // UI thread last published, with no lock and no snapshot (#406).
+        crate::mcp_serve::Stateless::ToolsList(id) => {
+            let response = crate::mcp_serve::tools_list_response_for(
+                &id,
+                &shared.kit_catalog(),
+                de_mcp::debug_tools_enabled(),
+            );
+            return write_json_rpc_response(stream, &response);
+        }
         crate::mcp_serve::Stateless::NeedsState => {}
     }
+    match serve_stateful(&req.body, req_tx, shared, wake_ui) {
+        Ok(response) => write_json_rpc_response(stream, &response),
+        // Loading, painting or behind another request: tell the client to
+        // send it again rather than hold it until its own timeout (#406).
+        Err(McpLiveError::Busy(busy)) => {
+            eprintln!("design-editor mcp: {busy}");
+            let response = crate::mcp_serve::busy_error_response(
+                &req.body,
+                &busy.to_string(),
+                busy.reason(),
+                BUSY_RETRY_AFTER.as_millis() as u64,
+            );
+            write_json_rpc_response(stream, &response.unwrap_or_default())
+        }
+        Err(e) => Err(e),
+    }
+}
+
+/// A JSON-RPC request that reads or writes the live document, answered
+/// under the state lock. Returns the response body; the caller writes it
+/// once the lock is released, so a slow or dead client never holds the
+/// editor while its socket drains.
+fn serve_stateful(
+    body: &str,
+    req_tx: &Sender<UiRequest>,
+    shared: &LiveShared,
+    wake_ui: &UiWake,
+) -> Result<String, McpLiveError> {
     // Gate 2 (see `admission.rs`): everything from here down reads or writes
     // the live document — every `tools/call`, not just the write ones. The
     // `Host`/`Origin` boundary above is the only gate the local desktop and a
@@ -246,19 +293,18 @@ pub(super) fn serve_connection<S: std::io::Read + std::io::Write>(
     // Everything below observes or mutates shared state — the live
     // `EditorState` OR a `--file` document on disk (a read-modify-write).
     // Serialize it under one lock so snapshots stay coherent, concurrent live
-    // applies cannot interleave, and file-backed writes cannot race. Tolerate a
-    // poisoned lock (a panicked sibling connection) rather than cascade.
-    let _guard = stateful_lock
-        .lock()
-        .unwrap_or_else(|poison| poison.into_inner());
+    // applies cannot interleave, and file-backed writes cannot race. The wait
+    // is bounded (`STATE_LOCK_WAIT`, then busy naming the holder), and a
+    // poisoned lock (a panicked sibling connection) is tolerated.
+    let _guard = shared.lock_state(&request_label(body))?;
     // File-backed path (`--file` arg): handle the whole read-modify-write
     // while holding the lock.
     if let Some(response) =
-        crate::mcp_serve::file_path::process_message_for_file_path_arg(None, &req.body)?
+        crate::mcp_serve::file_path::process_message_for_file_path_arg(None, body)?
     {
         // A file-backed save copies another file, not the live document.
-        report_saved_document(&req.body, &response, None, req_tx, wake_ui);
-        return write_json_rpc_response(stream, &response);
+        report_saved_document(body, &response, None, req_tx, wake_ui);
+        return Ok(response);
     }
     // `debug_screenshot` against the LIVE canvas: route through the
     // raster export pipeline on the UI thread instead of the generic
@@ -268,22 +314,22 @@ pub(super) fn serve_connection<S: std::io::Read + std::io::Write>(
     // headless registry that never registered the tool.
     #[cfg(feature = "mcp-debug-tools")]
     if let Some(response) =
-        screenshot::maybe_serve(&req.body, de_mcp::debug_tools_enabled(), |shot_req| {
+        screenshot::maybe_serve(body, de_mcp::debug_tools_enabled(), |shot_req| {
             request_screenshot(req_tx, wake_ui, shot_req)
         })
     {
-        return write_json_rpc_response(stream, &response);
+        return Ok(response);
     }
     // These tools need either no editor snapshot (`set_active_page`) or only
     // page metadata (`list_pages`). Keep them on the normal MCP
     // parser/registry/serializer path, but do not deep-clone the live document.
-    if let Some(response) = process_lightweight_live_tool(&req.body, req_tx, wake_ui)? {
-        return write_json_rpc_response(stream, &response);
+    if let Some(response) = process_lightweight_live_tool(body, req_tx, wake_ui, shared)? {
+        return Ok(response);
     }
-    let (mut state, document_epoch) = request_snapshot_with_epoch(req_tx, wake_ui)?;
+    let (mut state, document_epoch) = request_snapshot_with_epoch(req_tx, wake_ui, shared)?;
     let response = crate::mcp_serve::process_message_with_write_applier(
         &mut state,
-        &req.body,
+        body,
         |tool_name, local_state, write| match request_apply(
             req_tx,
             wake_ui,
@@ -311,8 +357,55 @@ pub(super) fn serve_connection<S: std::io::Read + std::io::Write>(
         generation: state.document_generation(),
         revision: state.document_revision(),
     };
-    report_saved_document(&req.body, &response, Some(saved_from), req_tx, wake_ui);
-    write_json_rpc_response(stream, &response)
+    report_saved_document(body, &response, Some(saved_from), req_tx, wake_ui);
+    Ok(response)
+}
+
+/// What the watchdog and busy answers call a request: its tool, and the
+/// file it targets when it is not the live document (a `filePath` call
+/// loads and saves that file under the lock). Reads only those fields:
+/// serde skips the rest of a multi-MB body without copying it.
+pub(super) fn request_label(body: &str) -> String {
+    #[derive(serde::Deserialize)]
+    struct Request<'a> {
+        #[serde(borrow)]
+        params: Option<Params<'a>>,
+    }
+    #[derive(serde::Deserialize)]
+    struct Params<'a> {
+        #[serde(borrow)]
+        name: Option<std::borrow::Cow<'a, str>>,
+        #[serde(borrow)]
+        arguments: Option<FileArgs<'a>>,
+    }
+    #[derive(serde::Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    struct FileArgs<'a> {
+        #[serde(borrow)]
+        file_path: Option<std::borrow::Cow<'a, str>>,
+        #[serde(borrow)]
+        source_file_path: Option<std::borrow::Cow<'a, str>>,
+    }
+    let params = serde_json::from_str::<Request>(body)
+        .ok()
+        .and_then(|request| request.params);
+    let Some(tool) = params.as_ref().and_then(|params| params.name.as_deref()) else {
+        return "MCP request".to_string();
+    };
+    let file = params
+        .as_ref()
+        .and_then(|params| params.arguments.as_ref())
+        .and_then(|args| {
+            args.file_path
+                .as_deref()
+                .or(args.source_file_path.as_deref())
+        })
+        .map(str::trim)
+        .filter(|path| !path.is_empty() && !path.starts_with("live://"));
+    match file {
+        Some(path) => format!("{tool} on {path}"),
+        None => tool.to_string(),
+    }
 }
 
 /// Tell the UI about a file a client just wrote with `save_document`, so
@@ -339,6 +432,7 @@ pub(super) fn process_lightweight_live_tool(
     line: &str,
     req_tx: &Sender<UiRequest>,
     wake_ui: &UiWake,
+    shared: &LiveShared,
 ) -> Result<Option<String>, McpLiveError> {
     let Some(call) = de_mcp::parse_tool_call(line) else {
         return Ok(None);
@@ -349,11 +443,17 @@ pub(super) fn process_lightweight_live_tool(
         _ => return Ok(None),
     };
 
+    // A write cannot be withdrawn once queued, so it waits the full apply
+    // ack; while the UI is known to be stuck it is not queued at all.
+    if is_write && shared.ui_stalled() {
+        wake_ui();
+        return Err(McpLiveError::Busy(EditorBusy::UiStalled));
+    }
     let mut registry = de_mcp::ToolRegistry::default();
     if is_write {
         registry.register(Box::new(de_mcp::set_active_page_snapshot()));
     } else {
-        registry.register(Box::new(request_list_pages(req_tx, wake_ui)?));
+        registry.register(Box::new(request_list_pages(req_tx, wake_ui, shared)?));
     }
     Ok(crate::mcp_serve::process_tool_message_with_registry(
         &registry,

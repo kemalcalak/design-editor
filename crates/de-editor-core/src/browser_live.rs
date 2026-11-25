@@ -230,12 +230,17 @@ pub fn resolve_page_url<'a>(url: &'a str, document_folder: Option<&str>) -> Cow<
     };
     let split = url.find(['?', '#']).unwrap_or(url.len());
     let (path, rest) = url.split_at(split);
-    let folder = folder.replace('\\', "/");
-    // `\\?\C:\…` (a verbatim path) is the plain `C:\…`.
-    let folder = folder.strip_prefix("//?/").unwrap_or(&folder);
+    // A verbatim path names the plain one (`\\?\UNC\srv\share` is the share
+    // `\\srv\share`). One the shared rule keeps verbatim (too long, odd
+    // names) still loses its prefix here: a URL has no verbatim form.
+    let folder = de_util::display_path::strip_verbatim_prefix(folder).replace('\\', "/");
+    let folder = match folder.strip_prefix("//?/UNC/") {
+        Some(share) => format!("//{share}"),
+        None => folder.strip_prefix("//?/").unwrap_or(&folder).to_owned(),
+    };
     let (host, local) = match folder.strip_prefix("//") {
         Some(share) => share.split_once('/').unwrap_or((share, "")),
-        None => ("", folder),
+        None => ("", folder.as_str()),
     };
     // A share's first segment (`share`) and a drive (`C:`) are roots too.
     let floor = usize::from(!host.is_empty() || !local.starts_with('/'));

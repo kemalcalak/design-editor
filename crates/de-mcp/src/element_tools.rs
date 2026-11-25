@@ -65,13 +65,6 @@ impl InsertKitComponent {
             linkable: true,
         }
     }
-
-    fn for_component(kit: &UIKit, component: &KitComponent) -> Self {
-        Self {
-            linkable: kit_component_linkable(component),
-            ..Self::new(kit.id.clone(), component.id.clone())
-        }
-    }
 }
 
 impl McpTool for InsertKitComponent {
@@ -146,13 +139,10 @@ fn parse_optional_f64(
 /// component. The host's `rebuild_registry` chains this into the live
 /// `ToolRegistry`.
 pub fn insert_kit_component_tools(state: &EditorState) -> Vec<InsertKitComponent> {
-    state
-        .ui_kits
-        .iter()
-        .flat_map(|kit: &UIKit| {
-            kit.components
-                .iter()
-                .map(|c| InsertKitComponent::for_component(kit, c))
+    kit_components(&state.ui_kits)
+        .map(|c| InsertKitComponent {
+            linkable: c.linkable,
+            ..InsertKitComponent::new(c.kit_id, c.id)
         })
         .collect()
 }
@@ -186,17 +176,120 @@ fn canonical_element_tool_schema(tool: &str, component_name: &str, linkable: boo
 /// matches the iterator order of [`insert_kit_component_tools`] so
 /// counts agree.
 pub fn element_tool_schemas(state: &EditorState) -> Vec<String> {
-    state
-        .ui_kits
-        .iter()
-        .flat_map(|kit| {
-            kit.components.iter().map(|c| {
-                canonical_element_tool_schema(
-                    &element_tool_name(&c.id),
-                    &c.name,
-                    kit_component_linkable(c),
-                )
+    KitToolCatalog::of(&state.ui_kits).schemas()
+}
+
+/// What the element tools of a kit set are built from: each component's
+/// `(id, name)`, in [`insert_kit_component_tools`] order. It lets a host
+/// describe the kit tools without holding an [`EditorState`] (#406): the
+/// live MCP server keeps the catalog its UI thread last published and
+/// answers `tools/list` from it, never waiting for a document snapshot.
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct KitToolCatalog {
+    /// `(id, name, linkable)` per component.
+    components: Vec<(String, String, bool)>,
+}
+
+impl KitToolCatalog {
+    pub fn of(kits: &[UIKit]) -> Self {
+        Self {
+            components: kit_components(kits)
+                .map(|c| (c.id.to_string(), c.name.to_string(), c.linkable))
+                .collect(),
+        }
+    }
+
+    /// The catalog of the kits every [`EditorState`] starts with.
+    pub fn builtin() -> &'static KitToolCatalog {
+        static BUILTIN: std::sync::OnceLock<KitToolCatalog> = std::sync::OnceLock::new();
+        BUILTIN.get_or_init(|| KitToolCatalog::of(&de_editor_core::uikit::builtin_kits()))
+    }
+
+    /// Whether `kits` would build this catalog, without allocating, so a
+    /// host can check it on every frame and republish only on a change.
+    pub fn matches(&self, kits: &[UIKit]) -> bool {
+        let mut ours = self.components.iter();
+        kit_components(kits).all(|c| {
+            ours.next().is_some_and(|(our_id, our_name, our_linkable)| {
+                our_id == c.id && our_name == c.name && *our_linkable == c.linkable
             })
+        }) && ours.next().is_none()
+    }
+
+    /// One JSON schema per element tool, as [`element_tool_schemas`].
+    pub fn schemas(&self) -> Vec<String> {
+        self.components
+            .iter()
+            .map(|(id, name, linkable)| {
+                canonical_element_tool_schema(&element_tool_name(id), name, *linkable)
+            })
+            .collect()
+    }
+
+    pub fn len(&self) -> usize {
+        self.components.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.components.is_empty()
+    }
+}
+
+/// One kit component as its element tool sees it.
+struct KitComponentRef<'a> {
+    kit_id: &'a str,
+    id: &'a str,
+    name: &'a str,
+    /// Whether it inserts as a linked instance (#365).
+    linkable: bool,
+}
+
+/// Every component of `kits` in tool order: the one walk both the tools
+/// ([`insert_kit_component_tools`]) and their schemas ([`KitToolCatalog`])
+/// take, so what `tools/list` describes is what dispatch accepts.
+fn kit_components(kits: &[UIKit]) -> impl Iterator<Item = KitComponentRef<'_>> {
+    kits.iter().flat_map(|kit| {
+        kit.components.iter().map(|c| KitComponentRef {
+            kit_id: &kit.id,
+            id: &c.id,
+            name: &c.name,
+            linkable: kit_component_linkable(c),
         })
-        .collect()
+    })
+}
+
+#[cfg(test)]
+mod catalog_tests {
+    use super::*;
+
+    #[test]
+    fn the_catalog_matches_the_kits_it_was_built_from() {
+        let mut kits = de_editor_core::builtin_kits();
+        let catalog = KitToolCatalog::of(&kits);
+        assert!(catalog.matches(&kits));
+        assert_eq!(&catalog, KitToolCatalog::builtin());
+        // Schemas and tools come out in the same order.
+        let tool_names: Vec<String> = insert_kit_component_tools(&EditorState::new())
+            .iter()
+            .map(|tool| tool.name().to_string())
+            .collect();
+        let schema_names: Vec<String> = catalog
+            .schemas()
+            .iter()
+            .map(|schema| {
+                let value: serde_json::Value = serde_json::from_str(schema).expect("schema JSON");
+                value["name"].as_str().expect("name").to_string()
+            })
+            .collect();
+        assert_eq!(tool_names, schema_names);
+
+        kits[0].components[0].name = "Renamed".into();
+        assert!(
+            !catalog.matches(&kits),
+            "a renamed component changes its schema"
+        );
+        kits.pop();
+        assert!(!catalog.matches(&kits), "fewer components");
+        assert!(!catalog.matches(&[]), "no kits");
+    }
 }

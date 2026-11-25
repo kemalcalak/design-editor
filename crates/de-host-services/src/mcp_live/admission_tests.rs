@@ -37,7 +37,7 @@ impl std::io::Write for MockStream {
 /// response. Shared with the `save_document` routing tests.
 pub(in crate::mcp_live) fn drive(request: &str, req_tx: &Sender<UiRequest>) -> String {
     let admission = LiveAdmission::new(TOKEN.to_string(), PORT);
-    let stateful_lock = Mutex::new(());
+    let shared = LiveShared::default();
     let quit_flag = AtomicBool::new(false);
     let wake_ui: UiWake = Arc::new(|| {});
     let client_identity = Mutex::new(None);
@@ -49,7 +49,7 @@ pub(in crate::mcp_live) fn drive(request: &str, req_tx: &Sender<UiRequest>) -> S
         &mut stream,
         req_tx,
         &admission,
-        &stateful_lock,
+        &shared,
         &quit_flag,
         &wake_ui,
         &client_identity,

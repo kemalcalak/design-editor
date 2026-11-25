@@ -21,7 +21,7 @@ pub(super) fn load_pptx(
                 .replace("{{detail}}", &error.to_string()),
         )
     })?;
-    let mut state = EditorState::from_document(import.document);
+    let mut state = EditorState::from_opened_document(import.document);
     state.tag_as_deck();
     Ok(LoadedEditorState {
         state: finish_loaded_state(state, None),

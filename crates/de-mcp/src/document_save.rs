@@ -59,7 +59,10 @@ impl McpTool for SaveDocument {
         }
         let mut out = BTreeMap::new();
         out.insert("ok".into(), "true".into());
-        out.insert("filePath".into(), path.display().to_string());
+        out.insert(
+            "filePath".into(),
+            de_util::display_path::display_path(&path),
+        );
         ToolOutcome::Ok(out)
     }
 }

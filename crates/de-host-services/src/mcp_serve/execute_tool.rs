@@ -2,16 +2,16 @@
 //! `de_mcp::script_execute`; this file is its render half, which needs the
 //! skia export stack `de-mcp` cannot link. `TakeScreenshot` renders through
 //! the same capture `debug_screenshot` uses, `Export` through the
-//! `export_nodes` raster / PDF writers, both from the state the script had
-//! when it asked.
+//! `export_nodes` raster / SVG / PDF writers, both from the state the script
+//! had when it asked.
 
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 use de_editor_core::EditorState;
 use de_mcp::script_execute::{
-    execute_snapshot_with_renderer, Execute, ExportFormat, ExportRequest, ScriptRenderError,
-    ScriptRenderer,
+    execute_snapshot_with_renderer, Execute, ExportFormat, ExportRequest, ExportWritten,
+    ScriptRenderError, ScriptRenderer,
 };
 use de_mcp::ImageContent;
 
@@ -48,25 +48,32 @@ impl ScriptRenderer for HostScriptRenderer {
         &self,
         state: &EditorState,
         request: &ExportRequest,
-    ) -> Result<Vec<String>, ScriptRenderError> {
+    ) -> Result<ExportWritten, ScriptRenderError> {
         let _ = de_editor_ui::set_brand_catalog(crate::web_static::ICONIFY_BRANDS_JSON);
-        let scene = de_pen_loader::editor_state_to_active_page_layout_scene(state);
         let dir = PathBuf::from(request.output_path.trim());
         std::fs::create_dir_all(&dir)
             .map_err(|e| ScriptRenderError(format!("create {}: {e}", dir.display())))?;
         let scale = request.scale.clamp(0.5, 8.0);
         let (format, ext) = match request.format {
+            // The SVG writer builds its own scene, with layer names.
+            ExportFormat::Svg => return export_layered_svg(state, request, &dir),
             ExportFormat::Pdf => {
+                let scene = de_pen_loader::editor_state_to_active_page_layout_scene(state);
                 let ids: Vec<&str> = request.node_ids.iter().map(String::as_str).collect();
                 let bytes = render_nodes_pdf_bytes(&scene, &ids, scale)
                     .map_err(|e| ScriptRenderError(e.to_string()))?;
-                return write(&dir.join("export.pdf"), &bytes).map(|path| vec![path]);
+                let path = write(&dir.join("export.pdf"), &bytes)?;
+                return Ok(ExportWritten {
+                    paths: vec![path],
+                    warnings: Vec::new(),
+                });
             }
             ExportFormat::Png => (RasterFormat::Png, "png"),
             ExportFormat::Jpeg => (RasterFormat::Jpeg, "jpeg"),
             ExportFormat::Webp => (RasterFormat::Webp, "webp"),
         };
-        request
+        let scene = de_pen_loader::editor_state_to_active_page_layout_scene(state);
+        let paths = request
             .node_ids
             .iter()
             .map(|id| {
@@ -74,8 +81,39 @@ impl ScriptRenderer for HostScriptRenderer {
                     .map_err(|e| ScriptRenderError(format!("{id}: {e}")))?;
                 write(&dir.join(format!("{}.{ext}", file_stem(id))), &bytes)
             })
-            .collect()
+            .collect::<Result<Vec<_>, _>>()?;
+        Ok(ExportWritten {
+            paths,
+            warnings: Vec::new(),
+        })
     }
+}
+
+/// One layered `<nodeId>.svg` per node (#407); each file's left-out
+/// features come back as warnings prefixed with the node id.
+fn export_layered_svg(
+    state: &EditorState,
+    request: &ExportRequest,
+    dir: &Path,
+) -> Result<ExportWritten, ScriptRenderError> {
+    let (scene, names) = de_pen_loader::editor_state_to_active_page_layout_scene_with_names(state);
+    let mut written = ExportWritten::default();
+    for id in &request.node_ids {
+        let export = crate::export_svg::render_layered_node_svg(&scene, &names, id)
+            .map_err(|e| ScriptRenderError(format!("{id}: {e}")))?;
+        let path = write(
+            &dir.join(format!("{}.svg", file_stem(id))),
+            export.svg.as_bytes(),
+        )?;
+        written.paths.push(path);
+        written.warnings.extend(
+            export
+                .warnings
+                .into_iter()
+                .map(|w| format!("{id}.svg: {w}")),
+        );
+    }
+    Ok(written)
 }
 
 /// A node id as a file name: instance paths (`a/b`) must not make folders.
@@ -86,10 +124,11 @@ fn file_stem(id: &str) -> String {
 fn write(path: &Path, bytes: &[u8]) -> Result<String, ScriptRenderError> {
     std::fs::write(path, bytes)
         .map_err(|e| ScriptRenderError(format!("write {}: {e}", path.display())))?;
-    Ok(std::fs::canonicalize(path)
-        .unwrap_or_else(|_| path.to_path_buf())
-        .display()
-        .to_string())
+    // Canonical, so the caller gets an absolute path; without the Windows
+    // verbatim prefix `canonicalize` adds there (#408).
+    Ok(de_util::display_path::display_path(
+        &std::fs::canonicalize(path).unwrap_or_else(|_| path.to_path_buf()),
+    ))
 }
 
 pub(crate) fn execute_snapshot(state: &EditorState) -> Execute {
