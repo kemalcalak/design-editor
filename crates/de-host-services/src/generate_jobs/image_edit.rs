@@ -65,13 +65,8 @@ pub fn edit_prompt(kind: &EditKind, provider: ImageGenProvider) -> String {
 }
 
 /// Refuse a transform the configured provider cannot do, before anything is
-/// written: Replicate / Atlas have no generic edit call, and the web daemon
-/// (`screening`) cannot screen a custom endpoint for these direct calls.
-pub fn check_supported(
-    kind: &EditKind,
-    profile: &ImageGenProfile,
-    screening: bool,
-) -> Result<(), GenerateJobError> {
+/// written: Replicate / Atlas have no generic edit call.
+pub fn check_supported(kind: &EditKind, profile: &ImageGenProfile) -> Result<(), GenerateJobError> {
     if matches!(
         profile.provider,
         ImageGenProvider::Replicate | ImageGenProvider::Atlas
@@ -80,13 +75,6 @@ pub fn check_supported(
             operation: kind.operation(),
             provider: profile.provider.label(),
         });
-    }
-    let custom = profile
-        .base_url
-        .as_deref()
-        .is_some_and(|base| !base.trim().is_empty());
-    if screening && custom {
-        return Err(GenerateJobError::CustomEndpointRefused);
     }
     Ok(())
 }
@@ -98,7 +86,7 @@ pub async fn edit_image(
     kind: &EditKind,
     profile: &ImageGenProfile,
 ) -> Result<String, GenerateJobError> {
-    check_supported(kind, profile, false)?;
+    check_supported(kind, profile)?;
     match profile.provider {
         ImageGenProvider::OpenAi | ImageGenProvider::Custom => {
             openai_edit(client, source, kind, profile).await

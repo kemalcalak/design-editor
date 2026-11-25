@@ -70,7 +70,6 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "home.mcp.port" => "พอร์ต {{port}}",
         "home.mcp.settings" => "การตั้งค่า MCP",
         "home.mcp.start" => "เริ่มเซิร์ฟเวอร์",
-        "icon.catalogLoading" => "กำลังโหลดแคตตาล็อกไอคอน…",
         "sceneTemplate.documentUnavailable" => "โหลดเอกสารของเทมเพลตนี้ไม่สำเร็จ ลองอีกครั้ง",
         "sceneTemplate.deleteFailed" => "ลบเทมเพลตนั้นไม่สำเร็จ ลองอีกครั้ง",
         "sceneTemplate.item.soundingNavyDeck.title" => "แผนที่หยั่งความลึก · เด็คกลยุทธ์",

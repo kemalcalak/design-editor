@@ -50,9 +50,6 @@ fn collect(dir: &Dir, out: &mut Vec<SkillEntry>) {
 
 fn build_registry() -> Vec<SkillEntry> {
     let mut out = Vec::new();
-    // A slim build embeds no phase corpus: the registry is honestly
-    // empty rather than panicking, because its consumers (prompt
-    // composition) never run in that build.
     if let Some(dir) = crate::phase_corpus_dir() {
         collect(dir, &mut out);
     }

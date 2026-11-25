@@ -144,26 +144,6 @@ impl ConfiguredBuiltinProvider {
         })
     }
 
-    /// Build a provider from a browser-supplied credential. The endpoint is
-    /// dialed `PublicOnly` (connect-time DNS screening + address pinning)
-    /// unless the operator explicitly allowlisted it.
-    pub fn from_builtin_agent_for_web(config: &BuiltinAgentConfig) -> Option<Self> {
-        let model = config.first_model()?;
-        Self::from_builtin_agent_for_web_with_model(config, model)
-    }
-
-    /// Browser-dial-policy variant of [`Self::from_builtin_agent_with_model`].
-    pub fn from_builtin_agent_for_web_with_model(
-        config: &BuiltinAgentConfig,
-        selected_model: &str,
-    ) -> Option<Self> {
-        let mut provider = Self::from_builtin_agent_with_model(config, selected_model)?;
-        let allowlist = std::env::var(crate::web_credentials::WEB_AI_ENDPOINT_ALLOWLIST_ENV).ok();
-        provider.dial_policy =
-            crate::provider_dial::web_dial_policy_for(&provider.base_url, allowlist.as_deref());
-        Some(provider)
-    }
-
     /// Per-request client honoring this provider's dial policy. `Trusted`
     /// reuses the eagerly-built client; `PublicOnly` resolves + pins.
     async fn dial_client(&self, url: &str) -> Result<reqwest::Client, BuiltinHttpError> {

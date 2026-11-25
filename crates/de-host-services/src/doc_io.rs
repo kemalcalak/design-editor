@@ -2,7 +2,7 @@
 //! carved out of `de-host-desktop`'s `persistence.rs` (Phase 2, Task
 //! 2.3). The rfd / winit dialog flow (`handle_open` / `handle_save` /
 //! `run_action` / `show_error_dialog`) stays desktop-side and imports
-//! these functions back; the web daemon and any other headless caller
+//! these functions back; the MCP servers and any other headless caller
 //! reach the same serializer the GUI uses.
 //!
 //! Save serializes `EditorState::doc` straight to canonical `.de` JSON

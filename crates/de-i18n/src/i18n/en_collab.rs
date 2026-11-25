@@ -70,7 +70,6 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "home.mcp.port" => "Port {{port}}",
         "home.mcp.settings" => "MCP settings",
         "home.mcp.start" => "Start server",
-        "icon.catalogLoading" => "Icon catalog is still loading…",
         "sceneTemplate.documentUnavailable" => "That template's document could not be loaded. Try again.",
         "sceneTemplate.deleteFailed" => "That template could not be deleted. Try again.",
         "sceneTemplate.item.soundingNavyDeck.title" => "Sounding Chart · Strategy Deck",

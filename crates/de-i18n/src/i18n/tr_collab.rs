@@ -70,7 +70,6 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "home.mcp.port" => "Port {{port}}",
         "home.mcp.settings" => "MCP ayarları",
         "home.mcp.start" => "Sunucuyu başlat",
-        "icon.catalogLoading" => "Simge kataloğu yükleniyor…",
         "sceneTemplate.documentUnavailable" => "Bu şablonun belgesi yüklenemedi. Tekrar deneyin.",
         "sceneTemplate.deleteFailed" => "Bu şablon silinemedi. Tekrar deneyin.",
         "sceneTemplate.item.soundingNavyDeck.title" => "İskandil haritası · strateji sunumu",

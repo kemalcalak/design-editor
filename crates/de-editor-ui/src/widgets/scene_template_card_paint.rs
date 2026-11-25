@@ -163,15 +163,7 @@ impl SceneTemplatePanel<'_> {
             return;
         };
         let image_id = asset.image_id;
-        let Some(encoded) = asset.bytes else {
-            // Web only: not in the bundle and not fetched yet. Ask the host
-            // and paint the plain block meanwhile — the card's title, palette
-            // band and metadata are already readable, so a slow or failed
-            // fetch costs the picture and nothing else.
-            de_editor_core::web_assets::request(asset.route);
-            cx.backend.fill_rect(picture, self.theme.muted);
-            return;
-        };
+        let encoded = asset.bytes;
         // Same decode handshake the Prompt Center uses: register the bytes,
         // request the raster at the size actually painted, and fall back to a
         // plain block until the decode lands so the first frame never blocks.

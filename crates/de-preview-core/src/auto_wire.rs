@@ -57,8 +57,7 @@
 //!
 //! ## Why de-host-native can depend on de-orchestrator
 //!
-//! `de-host-native` is not a wasm32 crate (`de-host-web` does not depend on
-//! it), and `de-orchestrator`'s own dependency graph never reaches back to
+//! `de-host-native` is not a wasm32 crate, and `de-orchestrator`'s own dependency graph never reaches back to
 //! `de-host-native` (verified: `de-editor-core` / `de-design-lint` /
 //! `de-mcp` / `de-ai-skills` / `de-pen-loader` / jian schema-only crates —
 //! no cycle). The dependency is gated in the same

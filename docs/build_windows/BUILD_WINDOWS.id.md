@@ -64,12 +64,6 @@
         rustup default 1.94-x86_64-pc-windows-msvc
         ```
 
-    - 2.4 Instal wasm-bindgen-cli untuk pembuatan binding WASM-JS. Eksekusi perintah berikut di PowerShell:
-
-        ```powershell
-        cargo install -f wasm-bindgen-cli --version 0.2.117
-        ```
-
 ## 3. Build
 
 1. Di root repositori, buka PowerShell dan eksekusi:
@@ -90,44 +84,6 @@
     
     - 1.3 Jalankan lagi langkah 3.1 untuk kompilasi ulang
 
-2. Build Web Bundle
-
-    - 2.1 Kompilasi library WASM. Di root repositori, buka PowerShell dan eksekusi:
-
-        ```powershell
-        cargo build -p de-host-web --target wasm32-unknown-unknown --release --no-default-features --features "web canvaskit"
-        ```
-
-    - 2.2 Generate file binding JS
-
-        ```powershell
-        wasm-bindgen target\wasm32-unknown-unknown\release\de_host_web.wasm --out-dir target\release\web-bundle --target web
-        ```
-
-    - 2.3 Salin aset rendering CanvasKit dari `crates\de-host-web\assets\canvaskit` ke `web-bundle`:
-
-        ```powershell
-        Copy-Item -Recurse "crates\de-host-web\assets\canvaskit" -Destination "target\release\web-bundle\canvaskit" -Force
-        ```
-
-    - 2.4 Struktur direktori akhir
-
-        ```plaintext
-        target\release\
-        ├── design-editor.exe
-        ├── de-host-web-server.exe
-        ├── de.exe
-        └── web-bundle\
-            ├── canvaskit\
-            │   ├── canvaskit.js
-            │   └── canvaskit.wasm
-            ├── snippets\
-            ├── op_host-web.d.ts
-            ├── de_host_web.js
-            ├── de_host_web_bg.wasm
-            └── de_host_web_bg.wasm.d.ts
-        ```
-
 ## 4. Konfigurasi Environment Variable untuk Plugin dsh-design-editor
 
 1. Jalankan PowerShell sebagai administrator dan eksekusi perintah berikut (ganti path dengan root repositori yang sebenarnya):
@@ -143,38 +99,12 @@
 
     ```powershell
     cd target\release
-    ./design-editor.exe --serve-web 3100
+    ./design-editor.exe --mcp-http 3100 demo.de
     # Jendela muncul sebentar lalu menutup — layanan berjalan di latar belakang dan mendengarkan port 3100
-    ```
-
-2. de-host-web-server.exe  <i>` (tidak diperlukan untuk plugin dsh) `</i>
-
-    ```powershell
-    cd target\release
-    ./de-host-web-server.exe --serve-web 3100
-    # Anda akan melihat dua baris "design-editor --serve-web:" dan port 3100 di PowerShell
     ```
 
 ---
 
 # Pemecahan Masalah
 
-1. Perhatikan parameter `--features` saat kompilasi WASM
-
-    ```powershell
-    cargo build -p de-host-web --target wasm32-unknown-unknown --release --no-default-features --features "web canvaskit"
-    ```
-
-    > Gunakan `--features "web canvaskit"` bukan `--features "web"`.
-    > 
-    > `--features "web"` bisa kompilasi berhasil, tetapi file JS yang dihasilkan tidak mengekspor fungsi `mount_ck`.
-    > 
-    >
-
-2. Server memetakan seluruh direktori `web-bundle` ke rute HTTP `/pkg/`
-
-    > Path disk `web-bundle/de_host_web.js` → URL browser `/pkg/de_host_web.js`
-    > 
-    > Jika halaman melaporkan `/pkg/de_host_web.js` tidak ditemukan, file tersebut tidak ada di `web-bundle/`.
-
-3. Toolchain rustup `1.94`, wasm-bindgen-cli `0.2.117` dan skia-bindings `0.97.2` sesuai dengan versi yang dipatok di `rust-toolchain.toml` dan `Cargo.lock`. Jika berkas tersebut menyebut versi lain, gunakan versi itu.
+1. Toolchain rustup `1.94` dan skia-bindings `0.97.2` sesuai dengan versi yang dipatok di `rust-toolchain.toml` dan `Cargo.lock`. Jika berkas tersebut menyebut versi lain, gunakan versi itu.

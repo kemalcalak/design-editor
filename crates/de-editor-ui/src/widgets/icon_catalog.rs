@@ -6,12 +6,6 @@ use std::sync::OnceLock;
 
 use serde::Deserialize;
 
-/// Daemon route serving the brand-logo catalog (simple-icons). The wasm
-/// bundle omits the ~4.8 MB asset to keep the first load small; the
-/// serve-web daemon embeds it and serves it here, and the web shell
-/// fetches it at mount. One const so client and server can't drift.
-pub const ICONIFY_BRANDS_ROUTE: &str = "/assets/iconify-catalog-brands.json";
-
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum IconRenderStyle {
@@ -42,23 +36,11 @@ pub struct ParsedIconBody {
     pub d: String,
 }
 
-// Two catalogs, and NEITHER is embedded in the browser bundle.
-//
-// The ~3700 simple-icons brand logos (~4.83 MB) have always been runtime-loaded
-// via `set_brand_catalog` — embedded at startup on desktop, fetched from the
-// daemon on web. The general-purpose UI sets (lucide + feather, ~0.46 MB) now
-// follow the same rule on `wasm32` only: they are `include_str!`-embedded on
-// native, where the binary is already local, and fetched from
-// `ICONIFY_CORE_ROUTE` when the icon panel first opens on web. Both stores
-// yield `'static` references.
-#[cfg(not(all(target_arch = "wasm32", feature = "runtime-icon-catalog")))]
+// Two catalogs. The general-purpose UI sets (lucide + feather, ~0.46 MB) are
+// `include_str!`-embedded here; the ~3700 simple-icons brand logos (~4.83 MB)
+// are installed at startup via `set_brand_catalog` by the host that embeds
+// them. Both stores yield `'static` references.
 const CORE_CATALOG_JSON: &str = include_str!("../../assets/iconify-catalog-core.json");
-
-/// Daemon route carrying the core (lucide + feather) catalog.
-///
-/// Only a `runtime-icon-catalog` wasm build fetches it; every other build has
-/// the bytes in the binary.
-pub const ICONIFY_CORE_ROUTE: &str = "/pkg/assets/iconify-catalog-core.json";
 
 /// Brand-logo catalog (simple-icons): set once at runtime. `None` until loaded;
 /// lookups / searches simply skip it while it is absent.
@@ -147,21 +129,18 @@ fn lookup_icon_exact(collection: &str, name: &str) -> Option<&'static IconCatalo
 /// Identity of a cached [`search_icons`] result. The catalog itself
 /// (`core_catalog` + `BRAND_CATALOG` + the extended sets) is process-global
 /// and immutable once loaded, so `(query, limit, brand_catalog_loaded(),
-/// core_catalog_loaded(), extended mask)` fully determines the result — comparing it by value
+/// extended mask)` fully determines the result — comparing it by value
 /// (never a pointer/length shortcut) makes a stale-serving collision
 /// impossible regardless of which caller or document triggered the
-/// search, so this cache needs no per-document owner-scoping.
-///
-/// `core_loaded` joined `brand_loaded` when the core catalog stopped being
-/// embedded on web: a search run before that fetch lands returns nothing, and
-/// without this the empty answer would be served for the rest of the session.
+/// search, so this cache needs no per-document owner-scoping. The load
+/// flags are in the key because a search run before a catalog loads would
+/// otherwise keep serving the smaller answer.
 #[derive(PartialEq)]
 struct SearchCacheKey {
     query: String,
     limit: usize,
     brand_loaded: bool,
-    core_loaded: bool,
-    /// `icon_catalog_extended::loaded_mask` — same reason as `core_loaded`.
+    /// `icon_catalog_extended::loaded_mask` — same reason as `brand_loaded`.
     extended_loaded: u8,
 }
 
@@ -182,18 +161,16 @@ thread_local! {
 
 pub fn search_icons(query: &str, limit: usize) -> Vec<&'static IconCatalogEntry> {
     let query = query.trim().to_lowercase();
-    // The picker searches every family: load (native) or request (web) the
-    // extended sets. A no-op once they are in.
+    // The picker searches every family: load the extended sets. A no-op
+    // once they are in.
     super::icon_catalog_extended::request_all_extended_icon_catalogs();
     let brand_loaded = brand_catalog_loaded();
-    let core_loaded = core_catalog_loaded();
     let extended_loaded = super::icon_catalog_extended::loaded_mask();
     let hit = SEARCH_CACHE.with(|cell| {
         cell.borrow().as_ref().and_then(|(key, result)| {
             (key.query == query
                 && key.limit == limit
                 && key.brand_loaded == brand_loaded
-                && key.core_loaded == core_loaded
                 && key.extended_loaded == extended_loaded)
                 .then(|| result.clone())
         })
@@ -209,7 +186,6 @@ pub fn search_icons(query: &str, limit: usize) -> Vec<&'static IconCatalogEntry>
                 query,
                 limit,
                 brand_loaded,
-                core_loaded,
                 extended_loaded,
             },
             result.clone(),
@@ -285,93 +261,18 @@ pub fn parse_iconify_body(body: &str, width: f32, height: f32) -> Option<ParsedI
     })
 }
 
-/// Whether the core catalog is available to search and look up.
-///
-/// Always `true` on native. On web it is `false` until the fetch lands, which
-/// is what the icon panel's empty state reads — an empty result and "not
-/// loaded yet" are different answers and the panel must not show the first
-/// when it means the second.
-pub fn core_catalog_loaded() -> bool {
-    #[cfg(not(all(target_arch = "wasm32", feature = "runtime-icon-catalog")))]
-    {
-        true
-    }
-    #[cfg(all(target_arch = "wasm32", feature = "runtime-icon-catalog"))]
-    {
-        CORE_CATALOG_WEB.get().is_some()
-    }
-}
-
-/// Web only: the catalog fetched from the daemon. Set once.
-#[cfg(all(target_arch = "wasm32", feature = "runtime-icon-catalog"))]
-static CORE_CATALOG_WEB: OnceLock<Catalog> = OnceLock::new();
-
-/// Install the core catalog from JSON.
-///
-/// Returns `true` when this call installed it. Invalid JSON returns `false`
-/// and leaves the catalog absent, so the panel keeps its retryable empty state
-/// rather than silently serving nothing forever.
-///
-/// Present on every target but a no-op on native, where the catalog is already
-/// embedded — `de-host-web` compiles for the host too (its tests), and one
-/// unconditional function keeps the cfg out of the host's call site.
-pub fn set_core_catalog(json: &str) -> bool {
-    #[cfg(not(all(target_arch = "wasm32", feature = "runtime-icon-catalog")))]
-    {
-        let _ = json;
-        false
-    }
-    #[cfg(all(target_arch = "wasm32", feature = "runtime-icon-catalog"))]
-    {
-        if CORE_CATALOG_WEB.get().is_some() {
-            return false;
-        }
-        let Ok(catalog) = serde_json::from_str::<Catalog>(json) else {
-            return false;
-        };
-        CORE_CATALOG_WEB.set(catalog).is_ok()
-    }
-}
-
 fn core_catalog() -> &'static [IconCatalogEntry] {
-    #[cfg(not(all(target_arch = "wasm32", feature = "runtime-icon-catalog")))]
-    {
-        static CATALOG: OnceLock<Catalog> = OnceLock::new();
-        &CATALOG
-            .get_or_init(|| {
-                serde_json::from_str(CORE_CATALOG_JSON).expect("bundled core icon catalog is valid")
-            })
-            .icons
-    }
-    #[cfg(all(target_arch = "wasm32", feature = "runtime-icon-catalog"))]
-    {
-        // Empty until the fetch lands. Every lookup and search degrades to
-        // "no core icons" meanwhile, which the panel reports as a loading /
-        // retryable state rather than as an empty search.
-        CORE_CATALOG_WEB
-            .get()
-            .map(|catalog| catalog.icons.as_slice())
-            .unwrap_or(&[])
-    }
+    static CATALOG: OnceLock<Catalog> = OnceLock::new();
+    &CATALOG
+        .get_or_init(|| {
+            serde_json::from_str(CORE_CATALOG_JSON).expect("bundled core icon catalog is valid")
+        })
+        .icons
 }
 
 fn core_index() -> &'static HashMap<String, usize> {
-    #[cfg(not(all(target_arch = "wasm32", feature = "runtime-icon-catalog")))]
-    {
-        static INDEX: OnceLock<HashMap<String, usize>> = OnceLock::new();
-        INDEX.get_or_init(build_core_index)
-    }
-    #[cfg(all(target_arch = "wasm32", feature = "runtime-icon-catalog"))]
-    {
-        // Built once the catalog is installed, not at first call: an index
-        // built over the empty pre-fetch catalog would be cached forever.
-        static INDEX: OnceLock<HashMap<String, usize>> = OnceLock::new();
-        static EMPTY: OnceLock<HashMap<String, usize>> = OnceLock::new();
-        if CORE_CATALOG_WEB.get().is_none() {
-            return EMPTY.get_or_init(HashMap::new);
-        }
-        INDEX.get_or_init(build_core_index)
-    }
+    static INDEX: OnceLock<HashMap<String, usize>> = OnceLock::new();
+    INDEX.get_or_init(build_core_index)
 }
 
 fn build_core_index() -> HashMap<String, usize> {
@@ -621,54 +522,32 @@ mod tests {
             "a changed limit must invalidate the cache and rebuild"
         );
     }
-    #[test]
-    fn the_core_catalog_route_matches_the_staged_bundle_layout() {
-        // `tools/stage-web-assets.sh` copies the file to `<bundle>/assets/` under
-        // exactly this name; a mismatch is a silent 404 that leaves the icon
-        // panel permanently on its loading state.
-        assert_eq!(
-            ICONIFY_CORE_ROUTE,
-            format!(
-                "{}iconify-catalog-core.json",
-                de_editor_core::web_assets::WEB_ASSET_ROUTE_PREFIX
-            )
-        );
-        assert_ne!(
-            ICONIFY_CORE_ROUTE, ICONIFY_BRANDS_ROUTE,
-            "the two catalogs must not collide on one route"
-        );
-    }
 
     #[test]
-    fn native_always_has_its_core_catalog_and_refuses_a_runtime_install() {
-        // Desktop embeds the catalog, so it is loaded before anything asks and
-        // `set_core_catalog` is inert — the web install path must never be able
-        // to swap what a native build already resolved against.
-        assert!(core_catalog_loaded());
+    fn the_core_catalog_is_embedded() {
         assert!(!core_catalog().is_empty());
-        assert!(!set_core_catalog(r#"{"icons":[]}"#));
-        assert!(!core_catalog().is_empty(), "the embedded catalog stands");
     }
 
     #[test]
     fn the_search_cache_is_keyed_on_whether_each_catalog_has_loaded() {
-        // Web fetches the core catalog after the panel opens, so a search run
-        // before it lands returns nothing. Without `core_loaded` in the key
-        // that empty answer would be served for the rest of the session.
+        // A search run before the brand catalog lands lacks its logos.
+        // Without `brand_loaded` in the key that smaller answer would be
+        // served for the rest of the session.
         let a = SearchCacheKey {
             query: "arrow".into(),
             limit: 20,
             brand_loaded: false,
-            core_loaded: false,
             extended_loaded: 0,
         };
         let b = SearchCacheKey {
             query: "arrow".into(),
             limit: 20,
-            brand_loaded: false,
-            core_loaded: true,
+            brand_loaded: true,
             extended_loaded: 0,
         };
-        assert!(a != b, "loading the core catalog must invalidate the cache");
+        assert!(
+            a != b,
+            "loading the brand catalog must invalidate the cache"
+        );
     }
 }

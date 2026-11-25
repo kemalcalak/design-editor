@@ -70,7 +70,6 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "home.mcp.port" => "Порт {{port}}",
         "home.mcp.settings" => "Настройки MCP",
         "home.mcp.start" => "Запустить сервер",
-        "icon.catalogLoading" => "Загрузка каталога значков…",
         "sceneTemplate.documentUnavailable" => "Не удалось загрузить документ этого шаблона. Попробуйте снова.",
         "sceneTemplate.deleteFailed" => "Не удалось удалить этот шаблон. Попробуйте снова.",
         "sceneTemplate.item.soundingNavyDeck.title" => "Карта промеров · стратегическая презентация",

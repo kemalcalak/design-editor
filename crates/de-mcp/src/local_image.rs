@@ -4,8 +4,8 @@
 //! `file://` url) is read once at write time and stored as a `data:` url.
 //!
 //! de-mcp does no file IO itself. A native host installs the reader with
-//! [`install_local_image_reader`]; where none is installed (the web daemon,
-//! wasm) a local path is refused with an error naming the url.
+//! [`install_local_image_reader`]; where none is installed a local path is
+//! refused with an error naming the url.
 
 use std::collections::HashMap;
 use std::path::Path;

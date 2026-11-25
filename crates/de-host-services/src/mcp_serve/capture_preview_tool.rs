@@ -36,7 +36,7 @@ impl McpTool for CapturePreview {
     }
 
     fn call(&self, args: &BTreeMap<String, String>) -> ToolOutcome {
-        let _ = de_editor_ui::set_brand_catalog(crate::web_static::ICONIFY_BRANDS_JSON);
+        let _ = de_editor_ui::set_brand_catalog(crate::brand_catalog::ICONIFY_BRANDS_JSON);
         match self.capture(args) {
             Ok(outcome) => outcome,
             Err((code, message)) => ToolOutcome::Err(code, message),

@@ -13,8 +13,8 @@
 //! non-browser clients (the `de` CLI, the VS Code MCP proxy, a local agent
 //! runner) and pass.
 //!
-//! No per-instance `X-Design-Editor-Token` is demanded: the local desktop and
-//! a self-hosted serve-web daemon trust every local process that clears the
+//! No per-instance `X-Design-Editor-Token` is demanded: the local desktop
+//! trusts every local process that clears the
 //! boundary — the token it published in `~/.design-editor/.de-mcp-port` and the
 //! `ping` reply was readable by any such process anyway, so it only added
 //! friction for a caller that had only the URL (a bare MCP client).

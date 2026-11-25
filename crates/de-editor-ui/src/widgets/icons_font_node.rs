@@ -55,17 +55,6 @@ pub fn paint_icon_font_node_weighted(
             );
         }
     } else {
-        // Web only: the core catalog is fetched lazily, and historically only
-        // the icon picker asked for it — a document full of `icon_font` nodes
-        // painted unresolved dots forever unless the picker was opened. The
-        // paint that misses the catalog now requests the fetch itself (same
-        // seam the prompt-center and scene-template paints use); the install
-        // wakes a repaint and the glyphs resolve. Extended families request
-        // their own catalog inside the lookup.
-        #[cfg(all(target_arch = "wasm32", feature = "runtime-icon-catalog"))]
-        if !super::icon_catalog::core_catalog_loaded() {
-            de_editor_core::web_assets::request(super::icon_catalog::ICONIFY_CORE_ROUTE);
-        }
         if family == "lucide" {
             if let Some(icon) = Icon::from_name(name) {
                 draw_icon(backend, icon, top_left, size, color, stroke_width);

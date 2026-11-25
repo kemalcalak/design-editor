@@ -71,35 +71,6 @@ fn zero_result_retry_keeps_the_core_product_phrase() {
 }
 
 #[test]
-fn parse_search_request_reads_query_and_prefers_request_credentials() {
-    let mut state = de_editor_core::EditorState::default();
-    state.editor_ui.agent_settings.openverse_client_id = "persisted-id".into();
-    state.editor_ui.agent_settings.openverse_client_secret = "persisted-secret".into();
-    let (query, cred) = parse_search_request(
-        r#"{"query":"cat","openverse":{"client_id":"req-id","client_secret":"req-secret"}}"#,
-        &state,
-    )
-    .expect("parses");
-    assert_eq!(query, "cat");
-    assert_eq!(cred.expect("cred").client_id, "req-id");
-    // No request credential → daemon-persisted fallback.
-    let (_, cred) = parse_search_request(r#"{"query":"cat"}"#, &state).expect("parses");
-    assert_eq!(cred.expect("cred").client_id, "persisted-id");
-    // Neither → anonymous.
-    let empty = de_editor_core::EditorState::default();
-    let (_, cred) = parse_search_request(r#"{"query":"cat"}"#, &empty).expect("parses");
-    assert!(cred.is_none());
-}
-
-#[test]
-fn parse_search_request_rejects_bad_bodies() {
-    let state = de_editor_core::EditorState::default();
-    assert!(parse_search_request("", &state).is_err());
-    assert!(parse_search_request("{}", &state).is_err());
-    assert!(parse_search_request(r#"{"query":"  "}"#, &state).is_err());
-}
-
-#[test]
 fn parse_openverse_results_maps_thumbnail_license_and_candidate_cap() {
     let mut results = vec![
         serde_json::json!({"id": "a", "thumbnail": "https://x/a.jpg", "attribution": "By A"}),
@@ -204,34 +175,6 @@ fn parse_wikimedia_results_rejects_pdf_page_thumbnails() {
         crate::net::fetch::wikimedia_image_candidates(pdf_page).is_empty(),
         "the shared desktop provider must reject the same PDF thumbnail"
     );
-}
-
-#[test]
-fn search_outcome_json_shape() {
-    let outcome = WebImageSearchOutcome {
-        results: vec![WebImageSearchHit {
-            id: "a".into(),
-            thumb_data_url: "data:image/png;base64,AA==".into(),
-            attribution: "By A".into(),
-        }],
-        source: Some("openverse"),
-    };
-    let json: serde_json::Value =
-        serde_json::from_str(&search_outcome_to_json(&outcome)).expect("valid json");
-    assert_eq!(json["ok"], true);
-    assert_eq!(json["source"], "openverse");
-    assert_eq!(json["results"][0]["id"], "a");
-    assert_eq!(
-        json["results"][0]["thumb_data_url"],
-        "data:image/png;base64,AA=="
-    );
-    let empty = WebImageSearchOutcome {
-        results: Vec::new(),
-        source: None,
-    };
-    let json: serde_json::Value =
-        serde_json::from_str(&search_outcome_to_json(&empty)).expect("valid json");
-    assert!(json["source"].is_null());
 }
 
 #[test]

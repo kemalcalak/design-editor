@@ -5,8 +5,7 @@
 //! stubs with implementations backed by the live render pipeline and a
 //! real multimodal chat provider — but they are only injected when the
 //! per-request `validation_enabled` flag is ON (see
-//! [`design_session`](crate::design_session) +
-//! [`web_chat_standard`](crate::web_chat_standard)). With the flag OFF
+//! [`design_session`](crate::design_session)). With the flag OFF
 //! (the default) the stubs are used exactly as before, so the default
 //! generation path is byte-for-byte unchanged.
 //!

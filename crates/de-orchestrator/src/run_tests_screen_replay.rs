@@ -337,8 +337,8 @@ fn concurrent_run_confirms_primary_group_identity_as_cursor_agent() {
     de_editor_core::agent_indicators::end_if_epoch(epoch);
 }
 
-/// Web-streaming half of the dual-cursor-identity fix (2026-07-17):
-/// `web_chat_standard.rs` confirms + announces an identity to its SSE client
+/// Pre-confirmed half of the dual-cursor-identity fix (2026-07-17): a caller
+/// (the retired web chat route did) may confirm + announce an identity
 /// BEFORE calling `Orchestrator::run()` at all (the transcript needs a
 /// persona immediately, well before groups/concurrency is known). This test
 /// simulates exactly that — pre-confirm a `cursor_agent`, THEN run a

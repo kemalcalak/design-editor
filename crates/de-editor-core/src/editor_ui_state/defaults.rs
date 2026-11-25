@@ -27,8 +27,6 @@ impl Default for EditorUiState {
             home: HomeState::default(),
             workspace: WorkspaceState::default(),
             locale: Locale::EnUs,
-            pending_locale: None,
-            locale_persistence_override: None,
             host_locale_override: None,
             locale_picker: jian_widgets::components::select::SelectState::default(),
             preferred_agent_team_size: 1,

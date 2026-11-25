@@ -93,7 +93,7 @@ impl BrowserPool {
     }
 
     /// The pool every caller in the process shares (canvas snapshots, the
-    /// MCP `browser` tool, the web daemon), so one browser serves them all.
+    /// MCP `browser` tool), so one browser serves them all.
     pub fn shared() -> BrowserPool {
         static SHARED: std::sync::OnceLock<BrowserPool> = std::sync::OnceLock::new();
         SHARED.get_or_init(BrowserPool::new).clone()

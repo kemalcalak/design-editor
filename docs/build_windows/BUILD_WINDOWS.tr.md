@@ -64,12 +64,6 @@
         rustup default 1.94-x86_64-pc-windows-msvc
         ```
 
-    - 2.4 WASM-JS bağımlılık oluşturma için wasm-bindgen-cli'yi yükleyin. PowerShell'de aşağıdaki komutu çalıştırın:
-
-        ```powershell
-        cargo install -f wasm-bindgen-cli --version 0.2.117
-        ```
-
 ## 3. Derleme
 
 1. Depo kök dizininde PowerShell'i açın ve çalıştırın:
@@ -90,44 +84,6 @@
     
     - 1.3 Yeniden derlemek için 3.1 adımını tekrar çalıştırın
 
-2. Web Bundle derlemesi
-
-    - 2.1 Kütüphaneyi derleyin. Depo kök dizininde PowerShell'i açın ve çalıştırın:
-
-        ```powershell
-        cargo build -p de-host-web --target wasm32-unknown-unknown --release --no-default-features --features "web canvaskit"
-        ```
-
-    - 2.2 JS bağımlılık dosyalarını oluşturun
-
-        ```powershell
-        wasm-bindgen target\wasm32-unknown-unknown\release\de_host_web.wasm --out-dir target\release\web-bundle --target web
-        ```
-
-    - 2.3 CanvasKit işleme varlıklarını `crates\de-host-web\assets\canvaskit` dizininden `web-bundle` dizinine kopyalayın:
-
-        ```powershell
-        Copy-Item -Recurse "crates\de-host-web\assets\canvaskit" -Destination "target\release\web-bundle\canvaskit" -Force
-        ```
-
-    - 2.4 Son dizin yapısı
-
-        ```plaintext
-        target\release\
-        ├── design-editor.exe
-        ├── de-host-web-server.exe
-        ├── de.exe
-        └── web-bundle\
-            ├── canvaskit\
-            │   ├── canvaskit.js
-            │   └── canvaskit.wasm
-            ├── snippets\
-            ├── op_host-web.d.ts
-            ├── de_host_web.js
-            ├── de_host_web_bg.wasm
-            └── de_host_web_bg.wasm.d.ts
-        ```
-
 ## 4. dsh-design-editor eklentisi için ortam değişkenlerini yapılandırma
 
 1. Yönetici olarak PowerShell'i çalıştırın ve aşağıdaki komutları çalıştırın (yolu gerçek depo kök dizinyle değiştirin):
@@ -143,38 +99,12 @@
 
     ```powershell
     cd target\release
-    ./design-editor.exe --serve-web 3100
+    ./design-editor.exe --mcp-http 3100 demo.de
     # Pencere kısa süre görünür ve kapanır — arka planda 3100 portunu dinleyen servis çalışır
-    ```
-
-2. de-host-web-server.exe  <i>` (dsh eklentisi için gerekli değildir) `</i>
-
-    ```powershell
-    cd target\release
-    ./de-host-web-server.exe --serve-web 3100
-    # PowerShell'de iki "design-editor --serve-web:" satırı ve 3100 portunu göreceksiniz
     ```
 
 ---
 
 # Sorun giderme
 
-1. WASM derlerken `--features` parametresine dikkat edin
-
-    ```powershell
-    cargo build -p de-host-web --target wasm32-unknown-unknown --release --no-default-features --features "web canvaskit"
-    ```
-
-    > `--features "web"` yerine `--features "web canvaskit"` kullanın.
-    > 
-    > `--features "web"` ile derleme başarılı olur, ancak oluşturulan JS dosyası `mount_ck` fonksiyonunu dışa aktarmaz.
-    > 
-    >
-
-2. Sunucu, tüm `web-bundle` dizinini HTTP `/pkg/` rotasına eşler
-
-    > Disk yolu `web-bundle/de_host_web.js` → Tarayıcı URL'si `/pkg/de_host_web.js`
-    > 
-    > Sayfa `/pkg/de_host_web.js` bulunamadığını belirtiyorsa, `web-bundle/` dizininde dosya eksiktir.
-
-3. Rustup araç zinciri `1.94`, wasm-bindgen-cli `0.2.117` ve skia-bindings `0.97.2`, `rust-toolchain.toml` ile `Cargo.lock` dosyalarında sabitlenen sürümlerdir. Bu dosyalarda farklı bir sürüm yazıyorsa onu kullanın.
+1. Rustup araç zinciri `1.94` ve skia-bindings `0.97.2`, `rust-toolchain.toml` ile `Cargo.lock` dosyalarında sabitlenen sürümlerdir. Bu dosyalarda farklı bir sürüm yazıyorsa onu kullanın.

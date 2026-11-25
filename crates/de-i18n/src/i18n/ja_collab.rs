@@ -70,7 +70,6 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "home.mcp.port" => "ポート {{port}}",
         "home.mcp.settings" => "MCP 設定",
         "home.mcp.start" => "サーバーを起動",
-        "icon.catalogLoading" => "アイコンカタログを読み込んでいます…",
         "sceneTemplate.documentUnavailable" => "このテンプレートのドキュメントを読み込めませんでした。もう一度お試しください。",
         "sceneTemplate.deleteFailed" => "このテンプレートを削除できませんでした。もう一度お試しください。",
         "sceneTemplate.item.soundingNavyDeck.title" => "測深海図 · 戦略提案デッキ",

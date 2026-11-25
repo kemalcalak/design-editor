@@ -1,7 +1,7 @@
 # Leaf utility crate — MUST stay dependency-free and wasm32-clean.
-# It is depped by wasm-facing crates (de-editor-core / de-editor-ui via
-# de-host-web) as well as native-only ones, so nothing platform-specific
-# may ever land here.
+# It is depped by wasm32-clean crates (de-editor-core / de-editor-ui, the
+# Chrome extension core) as well as native-only ones, so nothing
+# platform-specific may ever land here.
 [package]
 name = "de-util"
 version.workspace = true
