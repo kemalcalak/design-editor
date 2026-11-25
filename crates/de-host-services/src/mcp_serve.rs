@@ -71,6 +71,7 @@ use de_mcp::{
 pub(crate) mod auto_finalize;
 pub mod error;
 pub mod file_path;
+pub(crate) mod pen_dev_save;
 mod preview_hook;
 mod sniff;
 mod write_repairs;
@@ -132,6 +133,12 @@ fn process_message_with_auto_finalize(
     line: &str,
     mut auto_finalize: Option<&mut auto_finalize::AutoFinalize>,
 ) -> Result<Option<String>, McpServeError> {
+    // pen.dev's pathless `save` saves this file (#392).
+    let line = match pen_dev_save::bind_save(line, Some(path)) {
+        pen_dev_save::SaveDispatch::Line(line) => line,
+        pen_dev_save::SaveDispatch::Reply(reply) => return Ok(Some(reply)),
+    };
+    let line = line.as_ref();
     if let Some(response) = file_path::process_message_for_file_path_arg(Some(path), line)? {
         return Ok(Some(response));
     }
@@ -756,6 +763,8 @@ mod import_pen_dev_verbatim_tests;
 mod import_pptx_tool_tests;
 #[cfg(test)]
 mod kit_insert_tools_tests;
+#[cfg(test)]
+mod pen_dev_alias_tests;
 #[cfg(test)]
 mod root_placement_tests;
 #[cfg(test)]

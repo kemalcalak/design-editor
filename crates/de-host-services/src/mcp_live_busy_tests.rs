@@ -113,6 +113,12 @@ fn cached_tools_list_equals_the_document_built_one() {
             .iter()
             .map(|schema| de_mcp::root_placement::advertise_root_placement(schema)),
     );
+    // pen.dev's names (#392) close the catalog.
+    entries.extend(
+        de_mcp::pen_dev_aliases::PEN_DEV_ALIAS_SCHEMAS
+            .iter()
+            .map(|schema| (*schema).to_string()),
+    );
     let before = format!(
         r#"{{"jsonrpc":"2.0","id":4,"result":{{"tools":[{}]}}}}"#,
         entries.join(",")

@@ -122,6 +122,13 @@ fn build_tools(catalog: &KitToolCatalog, debug_enabled: bool) -> String {
             .iter()
             .map(|schema| de_mcp::root_placement::advertise_root_placement(schema)),
     );
+    // pen.dev's names (#392): MCP clients only, never the in-app agent's
+    // `TOOL_SCHEMAS`.
+    entries.extend(
+        de_mcp::pen_dev_aliases::PEN_DEV_ALIAS_SCHEMAS
+            .iter()
+            .map(|s| (*s).to_string()),
+    );
     #[cfg(not(feature = "mcp-debug-tools"))]
     let _ = debug_enabled;
     #[cfg(feature = "mcp-debug-tools")]

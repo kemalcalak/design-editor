@@ -100,6 +100,7 @@ mod document_save_tests;
 pub mod editor_state_tool;
 pub mod effect_normalize;
 pub mod element_tools;
+pub mod export_html_tool;
 pub mod extra_read_tools;
 #[cfg(test)]
 mod extra_read_tools_tests;
@@ -142,6 +143,7 @@ pub mod open_document;
 mod open_document_tests;
 pub mod page_tools;
 pub mod parser;
+pub mod pen_dev_aliases;
 pub mod read_nodes;
 #[cfg(test)]
 mod read_nodes_resolve_tests;
@@ -269,6 +271,7 @@ pub use design_md_tools::{
 pub use design_prompt::{get_design_prompt_snapshot, GetDesignPrompt};
 pub use design_refine_result::{design_refine_snapshot, DesignRefine};
 pub use document_save::{save_document_snapshot_to, SaveDocument};
+pub use export_html_tool::{export_html_snapshot, ExportHtml};
 pub use extra_read_tools::{get_node_children_snapshot, ChildRecord, GetNodeChildren};
 pub use guidelines_tools::{get_guidelines_snapshot, GetGuidelines};
 pub use json_serializer::{response_to_json, tool_response_to_json};

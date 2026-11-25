@@ -36,8 +36,16 @@ impl std::io::Write for MockStream {
 /// Run one raw HTTP request through the live router and return the raw
 /// response. Shared with the `save_document` routing tests.
 pub(in crate::mcp_live) fn drive(request: &str, req_tx: &Sender<UiRequest>) -> String {
+    drive_with(request, req_tx, &LiveShared::default())
+}
+
+/// [`drive`] against a given shared state.
+pub(in crate::mcp_live) fn drive_with(
+    request: &str,
+    req_tx: &Sender<UiRequest>,
+    shared: &LiveShared,
+) -> String {
     let admission = LiveAdmission::new(TOKEN.to_string(), PORT);
-    let shared = LiveShared::default();
     let quit_flag = AtomicBool::new(false);
     let wake_ui: UiWake = Arc::new(|| {});
     let client_identity = Mutex::new(None);
@@ -49,7 +57,7 @@ pub(in crate::mcp_live) fn drive(request: &str, req_tx: &Sender<UiRequest>) -> S
         &mut stream,
         req_tx,
         &admission,
-        &shared,
+        shared,
         &quit_flag,
         &wake_ui,
         &client_identity,
