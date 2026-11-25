@@ -237,6 +237,7 @@ mod tests {
             screen: None,
             breakpoint: None,
             placeholder: None,
+            component_properties: None,
         })
     }
 

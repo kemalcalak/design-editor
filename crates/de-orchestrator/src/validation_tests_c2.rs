@@ -58,6 +58,7 @@ fn make_frame_node(id: &str) -> PenNode {
         route: None,
         breakpoint: None,
         placeholder: None,
+        component_properties: None,
     })
 }
 

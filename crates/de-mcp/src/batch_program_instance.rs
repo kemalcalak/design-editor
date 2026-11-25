@@ -145,8 +145,47 @@ pub(crate) fn retarget_program_instances(
     super::import_ids::retarget_instances(nodes, &ids);
 }
 
+/// The instances an `I()` line inserts must name their masters'
+/// properties with values of the right type (#367). Masters inserted
+/// earlier in the program count: the sim already holds them.
+pub(crate) fn check_program_props(nodes: &[PenNode], ctx: &ProgramCtx) -> Result<()> {
+    let context = de_editor_core::PropsContext {
+        doc: &ctx.sim.doc,
+        components: &ctx.sim.components,
+    };
+    super::component_property_tools::check_inserted_props(context, nodes)
+        .map_err(|error| ProgramError::InvalidValue(error.to_string()))
+}
+
+/// `U(instance, {props:{…}})`: the values merge into the instance's own by
+/// name (`null` clears one) as their own command. True when the patch held
+/// nothing else.
+pub(crate) fn emit_props_update(
+    node_id: &str,
+    value: &mut serde_json::Value,
+    ctx: &mut ProgramCtx,
+) -> Result<bool> {
+    let context = de_editor_core::PropsContext {
+        doc: &ctx.sim.doc,
+        components: &ctx.sim.components,
+    };
+    let command = super::component_property_tools::take_props_update(Some(context), node_id, value)
+        .map_err(|error| ProgramError::InvalidValue(error.to_string()))?;
+    let Some(command) = command else {
+        return Ok(false);
+    };
+    ctx.emit(
+        de_editor_core::EditorCommand::ComponentProperty(Box::new(command)),
+        &format!("Update failed for: {node_id}"),
+    )?;
+    Ok(value.as_object().is_none_or(serde_json::Map::is_empty))
+}
+
+/// Whether `node`'s subtree holds what retargeting rewrites: an instance,
+/// or a master whose properties bind its own children (#367).
 pub(crate) fn subtree_has_instance(node: &PenNode) -> bool {
     matches!(node, PenNode::Ref(_))
+        || matches!(node, PenNode::Frame(frame) if frame.component_properties.is_some())
         || node
             .children()
             .is_some_and(|children| children.iter().any(subtree_has_instance))

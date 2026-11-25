@@ -186,6 +186,7 @@ pub(crate) fn prepare_command(cmd: &mut EditorCommand) -> Result<(), MotionWrite
         | C::MergeAppState { .. }
         | C::SetDesignMd { .. }
         | C::Library(_)
+        | C::ComponentProperty(_)
         | C::CreateComponent { .. }
         | C::DeleteComponent { .. }
         | C::RenameComponent { .. }

@@ -268,6 +268,58 @@ fn example_3_tiers_nest_the_button_instance() {
 }
 
 #[test]
+fn example_4_instances_set_properties_by_name() {
+    let mut state = EditorState::new();
+    run_example(&mut state, 4);
+    assert_linked_only(&mut state, &["Badge/Status"], "Badge/Status", 3);
+
+    let badges = rendered_instances(&state, "Badge/Status");
+    assert_eq!(
+        child_field(&badges, "Label", "content"),
+        ["Live", "Paused", "Archived"].map(Value::from),
+        "label reaches each instance's text"
+    );
+    let dots: Vec<Value> = child_field(&badges, "Dot", "fill")
+        .iter()
+        .map(|fill| fill[0]["color"].clone())
+        .collect();
+    assert_eq!(dots, [json!("#16A34A"), json!("#F59E0B"), json!("#9CA3AF")]);
+    assert_eq!(child_field(&badges, "Dot", "visible")[2], json!(false));
+
+    let badge = id_of(&doc_json(&state), "Badge/Status");
+    let listed = call(&mut state, "list_components", json!({}));
+    assert!(
+        listed["components"]
+            .as_str()
+            .is_some_and(|all| all.contains("|dotColor:color,label:text,showDot:boolean")),
+        "{listed}"
+    );
+    let detail = call(&mut state, "get_component", json!({"component_id": badge}));
+    let properties: Value =
+        serde_json::from_str(detail["properties"].as_str().expect("properties")).unwrap();
+    let label_node = id_of(&doc_json(&state), "Label");
+    assert_eq!(properties[1]["name"], "label");
+    assert_eq!(properties[1]["default"], "Status");
+    assert_eq!(
+        properties[1]["bind"][0]["node"],
+        label_node.as_str(),
+        "bind follows the id"
+    );
+
+    // Renaming the property keeps every instance's value.
+    call(
+        &mut state,
+        "upsert_component_property",
+        json!({"component_id": badge, "name": "label", "newName": "text"}),
+    );
+    let badges = rendered_instances(&state, "Badge/Status");
+    assert_eq!(
+        child_field(&badges, "Label", "content"),
+        ["Live", "Paused", "Archived"].map(Value::from)
+    );
+}
+
+#[test]
 fn get_editor_state_points_at_the_components_topic() {
     let mut state = EditorState::new();
     let empty = call(&mut state, "get_editor_state", json!({}));

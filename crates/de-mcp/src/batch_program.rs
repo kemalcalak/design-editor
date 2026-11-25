@@ -558,6 +558,7 @@ fn execute_insert(binding: &str, args: &str, ctx: &mut ProgramCtx) -> Result<()>
     let mut nodes = vec![node];
     let map = ctx.remap(&mut nodes)?;
     super::batch_program_instance::retarget_program_instances(&mut nodes, &map, ctx);
+    super::batch_program_instance::check_program_props(&nodes, ctx)?;
     let root_id = map
         .first()
         .map(|(_, new)| new.clone())
@@ -625,6 +626,9 @@ fn execute_update(args: &str, ctx: &mut ProgramCtx) -> Result<()> {
         return ctx.emit(cmd, &format!("Update failed for: {path}"));
     };
     let node_id = NodeId::new(target.id_str());
+    if super::batch_program_instance::emit_props_update(node_id.as_str(), &mut value, ctx)? {
+        return Ok(());
+    }
     // `batch_direct_ops` is shared with the non-program write paths and is
     // outside this conversion's scope; adapt its `String` at the boundary
     // rather than rippling the change into it.

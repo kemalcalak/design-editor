@@ -233,10 +233,12 @@ fn expand_ref(
 ) -> Option<PenNode> {
     let component_value = serde_json::to_value(component).ok()?;
     let ref_value = serde_json::to_value(ref_node).ok()?;
-    let (Value::Object(component_map), Value::Object(ref_map)) = (component_value, ref_value)
+    let (Value::Object(component_map), Value::Object(mut ref_map)) = (component_value, ref_value)
     else {
         return None;
     };
+    // Component properties (#367) ride the `descendants` path below.
+    crate::component_props::fold_props_into_descendants(&component_map, &mut ref_map);
 
     let mut merged = component_map.clone();
     // `descendants[ref.target]` carries the instance's TOP-LEVEL
@@ -269,6 +271,7 @@ fn expand_ref(
     }
     // An expanded instance is not itself a component definition.
     merged.remove("reusable");
+    merged.remove("componentProperties");
 
     // Children: clone the component's subtree into the instance's
     // virtual id space with `descendants` overrides applied.
@@ -360,10 +363,11 @@ fn remap_ids(child: &Value, ref_id: &str, overrides: Option<&Map<String, Value>>
 pub(crate) fn materialize_instance(ref_node: &PenNode, component: &PenNode) -> Option<PenNode> {
     let component_value = serde_json::to_value(component).ok()?;
     let ref_value = serde_json::to_value(ref_node).ok()?;
-    let (Value::Object(component_map), Value::Object(ref_map)) = (component_value, ref_value)
+    let (Value::Object(component_map), Value::Object(mut ref_map)) = (component_value, ref_value)
     else {
         return None;
     };
+    crate::component_props::fold_props_into_descendants(&component_map, &mut ref_map);
     let mut merged = component_map.clone();
     // TS detach (case 2) applies `descendants[node.ref]` onto the
     // source BEFORE the instance's direct props: top-level overrides
@@ -389,6 +393,7 @@ pub(crate) fn materialize_instance(ref_node: &PenNode, component: &PenNode) -> O
         }
     }
     merged.remove("reusable");
+    merged.remove("componentProperties");
     let overrides = ref_map.get("descendants").and_then(Value::as_object);
     if let Some(Value::Array(children)) = component_map.get("children") {
         let with_overrides: Vec<Value> = children

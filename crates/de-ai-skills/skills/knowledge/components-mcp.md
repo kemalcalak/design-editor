@@ -5,7 +5,7 @@ phase: [maintenance]
 trigger:
   keywords: [linked component, component instance, reusable master]
 priority: 20
-budget: 2800
+budget: 3600
 category: knowledge
 ---
 
@@ -20,9 +20,10 @@ changes every instance.
 ## Find and make masters
 
 - `get_editor_state` reports `component_count`; `list_components` returns
-  `count` and `components` as `name|id` pairs; `get_component {component_id}`
-  returns `descendants` as `id|name|kind` records of every node inside the
-  master: the keys an instance's `descendants` overrides use.
+  `count` and `components` as `name|id` pairs (plus `|label:text,…` when the
+  master declares properties); `get_component {component_id}` returns
+  `descendants` as `id|name|kind` records of every node inside the master
+  (the keys an instance's `descendants` overrides use) and `properties`.
 - New master: a frame with `"reusable": true` and a slash name
   (`Button/Primary`, `Card/Product`) in a `batch_design` script; it is listed
   at once. An existing frame or group on the active page:
@@ -47,8 +48,27 @@ any number of instances in one call: a 12-row table is the loop of example 1
 with 12 entries. A key into a nested instance is `nestedId/childId`
 (`[cta + "/" + label]`).
 
-The instance node itself takes only position (`x`, `y`), `name`, `theme` and
-`descendants`; its look and size come from the master. Every field an
+The instance node itself takes only position (`x`, `y`), `name`, `theme`,
+`props` and `descendants`; its look and size come from the master.
+
+## Properties: set instances by name
+
+A master can declare `componentProperties`, named inputs bound to its own
+children: `text` (a text's `content`), `boolean` (a node's `visible`),
+`instance` (a nested instance's `ref`; `preferred` lists the suggested
+components) and `color` (a node's solid `fill`, `#hex` or `$variable`). An
+instance then sets `"props":{"label":"Save","showIcon":false}`: no child ids
+to look up, and a wrong name or type is refused with the allowed list. An
+explicit `descendants` entry for the same field still wins. A binding field
+`props.<name>` on a nested instance exposes that instance's own property.
+
+- Declare them in the master's node (example 4), or later with
+  `upsert_component_property {component_id, name, type, bind, default?,
+  preferred?}`; `newName` renames one and every instance follows.
+  `remove_component_property` keeps each instance's look as an override.
+- Change one instance: `U("<instanceId>", {"props":{"label":"Send"}})` or
+  `update_node {nodeId, data:{props:{…}}}` (merged; `null` clears a value).
+- `batch_get` on an instance returns `ref` + `props`, not the expanded tree. Every field an
 instance does not override follows the master.
 
 ## Change all, or one
@@ -156,3 +176,23 @@ Editing the Button master (`U("<buttonId>", {"cornerRadius":999})`) changes
 the button in every tier and every other Button instance in the document.
 Cost: about 370 tokens for three tiers against about 700 hand-built, and the
 same Button master serves every other button on the page.
+
+### 4. Properties ("status badges: live, paused, archived")
+
+```js
+// Example 4: a master with properties; instances set them by name
+const badge = I(null, {"type":"frame","name":"Badge/Status","reusable":true,"layout":"horizontal","gap":6,"padding":6,"cornerRadius":999,"width":"fit_content","height":"fit_content","fill":[{"type":"solid","color":"#F3F4F6"}],
+  "componentProperties":{"label":{"type":"text","bind":[{"node":"text","field":"content"}]},"showDot":{"type":"boolean","bind":[{"node":"dot","field":"visible"}]},"dotColor":{"type":"color","bind":[{"node":"dot","field":"fill"}]}},
+  "children":[{"type":"ellipse","id":"dot","name":"Dot","width":8,"height":8,"fill":[{"type":"solid","color":"#9CA3AF"}]},{"type":"text","id":"text","name":"Label","content":"Status","fontSize":13,"fill":[{"type":"solid","color":"#111827"}]}]});
+const row = I(null, {"type":"frame","name":"Statuses","layout":"horizontal","gap":8,"width":"fit_content","height":"fit_content"});
+const statuses = [["Live", "#16A34A"], ["Paused", "#F59E0B"], ["Archived", null]];
+for (const [label, color] of statuses) {
+  I(row, {"type":"ref","ref":badge,"props":color ? {"label":label,"dotColor":color} : {"label":label,"showDot":false}});
+}
+```
+
+The children's authored ids (`dot`, `text`) in `bind` follow the ids they
+get. `list_components` returns `Badge/Status|<badgeId>|dotColor:color,
+label:text,showDot:boolean`. Cost: each badge is about 20 tokens with
+`props` against about 30 with `descendants` keyed by child ids, and reading
+the screen back is as small.

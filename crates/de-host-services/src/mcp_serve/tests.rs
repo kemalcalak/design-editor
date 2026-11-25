@@ -171,6 +171,8 @@ fn tools_list_response_includes_all_registered_tools() {
         "detach_instance",
         "swap_instance",
         "list_instances",
+        "upsert_component_property",
+        "remove_component_property",
         "create_component",
         "delete_component",
         "rename_component",

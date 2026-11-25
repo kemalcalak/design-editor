@@ -523,6 +523,8 @@ fn structured_arg_allowed(tool: &str, key: &str) -> bool {
             | ("codegen_submit_chunk", "result")
             | ("copy_node", "overrides")
             | ("instantiate_component", "descendants")
+            | ("upsert_component_property", "bind")
+            | ("upsert_component_property", "preferred")
             | ("instantiate_component", "overrides")
             | ("insert_node", "data")
             | ("update_node", "data")

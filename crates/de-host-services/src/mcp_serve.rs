@@ -60,8 +60,8 @@ use de_mcp::{
     set_variable_color_snapshot, set_variable_number_snapshot, set_variable_string_snapshot,
     set_variables_snapshot, set_viewport_snapshot, snapshot_layout_snapshot, spawn_agents_snapshot,
     toggle_node_selection_snapshot, tool_search_snapshot, undo_snapshot, ungroup_selected_snapshot,
-    update_node_snapshot, upsert_component_snapshot, upsert_screen_snapshot,
-    upsert_variables_snapshot, McpTool, ToolRegistry,
+    upsert_component_snapshot, upsert_screen_snapshot, upsert_variables_snapshot, McpTool,
+    ToolRegistry,
 };
 #[cfg(feature = "mcp-debug-tools")]
 use de_mcp::{

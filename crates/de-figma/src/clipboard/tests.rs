@@ -305,6 +305,7 @@ fn fix_unresolved_images_recurses_into_frame_children() {
         route: None,
         breakpoint: None,
         placeholder: None,
+        component_properties: None,
     })];
     fix_unresolved_images(&mut nodes);
     let kids = if let PenNode::Frame(f) = &nodes[0] {
