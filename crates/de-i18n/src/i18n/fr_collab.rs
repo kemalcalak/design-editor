@@ -400,6 +400,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "whatsNew.next" => "Suivant",
         "settings.system.livePages" => "Pages en direct",
         "settings.system.livePagesDesc" => "Un nœud navigateur sélectionné s'anime comme la page réelle. Désactivé, un instantané fixe s'affiche.",
+        "menu.snapPixelGrid" => "Aligner sur la grille de pixels",
+        "vectorEdit.pixelSnapOn" => "Alignement sur la grille de pixels activé",
+        "vectorEdit.pixelSnapOff" => "Alignement sur la grille de pixels désactivé",
         _ => return None,
     })
 }

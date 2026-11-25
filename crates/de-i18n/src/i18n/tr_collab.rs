@@ -400,6 +400,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "whatsNew.next" => "Sonraki",
         "settings.system.livePages" => "Canlı sayfalar",
         "settings.system.livePagesDesc" => "Seçili tarayıcı düğümü gerçek sayfa gibi oynar. Kapalıyken durağan bir anlık görüntü gösterilir.",
+        "menu.snapPixelGrid" => "Piksel Izgarasına Yasla",
+        "vectorEdit.pixelSnapOn" => "Piksel ızgarasına yaslama açık",
+        "vectorEdit.pixelSnapOff" => "Piksel ızgarasına yaslama kapalı",
         _ => return None,
     })
 }

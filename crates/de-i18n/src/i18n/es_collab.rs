@@ -400,6 +400,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "whatsNew.next" => "Siguiente",
         "settings.system.livePages" => "Páginas en vivo",
         "settings.system.livePagesDesc" => "Un nodo de navegador seleccionado se reproduce como la página real. Desactivado, se muestra una captura fija.",
+        "menu.snapPixelGrid" => "Ajustar a la cuadrícula de píxeles",
+        "vectorEdit.pixelSnapOn" => "Ajuste a la cuadrícula de píxeles activado",
+        "vectorEdit.pixelSnapOff" => "Ajuste a la cuadrícula de píxeles desactivado",
         _ => return None,
     })
 }

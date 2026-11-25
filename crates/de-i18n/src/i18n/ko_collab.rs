@@ -402,6 +402,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "whatsNew.next" => "다음",
         "settings.system.livePages" => "라이브 페이지",
         "settings.system.livePagesDesc" => "선택한 브라우저 노드를 실제 페이지처럼 재생합니다. 끄면 정지된 스냅샷을 표시합니다.",
+        "menu.snapPixelGrid" => "픽셀 그리드에 스냅",
+        "vectorEdit.pixelSnapOn" => "픽셀 그리드 스냅 켜짐",
+        "vectorEdit.pixelSnapOff" => "픽셀 그리드 스냅 꺼짐",
         _ => return None,
     })
 }

@@ -400,6 +400,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "whatsNew.next" => "Berikutnya",
         "settings.system.livePages" => "Halaman langsung",
         "settings.system.livePagesDesc" => "Node browser yang dipilih berjalan seperti halaman aslinya. Jika mati, tampil cuplikan diam.",
+        "menu.snapPixelGrid" => "Jepret ke Kisi Piksel",
+        "vectorEdit.pixelSnapOn" => "Jepret ke kisi piksel aktif",
+        "vectorEdit.pixelSnapOff" => "Jepret ke kisi piksel nonaktif",
         _ => return None,
     })
 }

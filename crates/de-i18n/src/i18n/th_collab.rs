@@ -400,6 +400,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "whatsNew.next" => "ถัดไป",
         "settings.system.livePages" => "หน้าเว็บสด",
         "settings.system.livePagesDesc" => "โหนดเบราว์เซอร์ที่เลือกจะเล่นเหมือนหน้าเว็บจริง เมื่อปิดจะแสดงภาพนิ่ง",
+        "menu.snapPixelGrid" => "จัดชิดกริดพิกเซล",
+        "vectorEdit.pixelSnapOn" => "เปิดการจัดชิดกริดพิกเซลแล้ว",
+        "vectorEdit.pixelSnapOff" => "ปิดการจัดชิดกริดพิกเซลแล้ว",
         _ => return None,
     })
 }

@@ -400,6 +400,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "whatsNew.next" => "Weiter",
         "settings.system.livePages" => "Live-Seiten",
         "settings.system.livePagesDesc" => "Ein ausgewählter Browser-Knoten läuft wie die echte Seite. Aus zeigt einen Standbild-Schnappschuss.",
+        "menu.snapPixelGrid" => "Am Pixelraster ausrichten",
+        "vectorEdit.pixelSnapOn" => "Am Pixelraster ausrichten: an",
+        "vectorEdit.pixelSnapOff" => "Am Pixelraster ausrichten: aus",
         _ => return None,
     })
 }

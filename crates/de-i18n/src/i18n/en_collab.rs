@@ -400,6 +400,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "whatsNew.next" => "Next",
         "settings.system.livePages" => "Live pages",
         "settings.system.livePagesDesc" => "A selected browser node plays like the live page. Off shows a still snapshot.",
+        "menu.snapPixelGrid" => "Snap to Pixel Grid",
+        "vectorEdit.pixelSnapOn" => "Pixel grid snapping on",
+        "vectorEdit.pixelSnapOff" => "Pixel grid snapping off",
         _ => return None,
     })
 }

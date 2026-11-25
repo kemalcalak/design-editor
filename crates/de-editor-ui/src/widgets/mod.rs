@@ -212,6 +212,7 @@ pub mod canvas_layout_transition;
 pub mod canvas_overlay_transform;
 mod canvas_path_overlay;
 mod canvas_selection_overlay;
+mod canvas_vector_edit_overlay;
 // `pub` so both hosts can read the animated-shader flag after paint.
 pub mod canvas_shader_clock;
 mod canvas_shader_decls;
@@ -278,6 +279,7 @@ pub mod press_flow;
 mod prompt_center_press_flow;
 mod scene_template_press_flow;
 pub mod scroll_flow;
+pub mod vector_edit_view;
 
 // Step 4 — icon glyph drawer for editor chrome (lucide-flavored line art).
 pub mod icon_catalog;

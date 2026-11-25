@@ -291,7 +291,11 @@ impl DesktopApp {
                         "z" => consumed = self.host.apply_undo(),
                         "y" => consumed = self.host.apply_redo(),
                         "g" => consumed = self.host.apply_group(),
-                        "j" => consumed = self.host.apply_toggle_chat(),
+                        // Cmd+J joins end points in vector edit mode (#387).
+                        "j" => {
+                            consumed =
+                                self.host.apply_vector_join() || self.host.apply_toggle_chat()
+                        }
                         // Cmd/Ctrl+\ — open / close the left panel (#86).
                         "\\" => consumed = self.host.apply_toggle_panel(),
                         // Cmd/Ctrl+T — open a fresh chat tab (MT.3). Preserves
@@ -381,6 +385,8 @@ impl DesktopApp {
                     "y" => self.host.apply_set_tool(de_editor_core::Tool::Polygon),
                     "h" => self.host.apply_set_tool(de_editor_core::Tool::Hand),
                     "n" => self.host.apply_set_tool(de_editor_core::Tool::Note),
+                    // Q toggles lasso selection in vector edit mode (#387).
+                    "q" => handled = self.host.apply_vector_lasso_toggle(),
                     "[" => {
                         consumed = self.host.apply_reorder(ReorderDirection::Down);
                         handled = false;

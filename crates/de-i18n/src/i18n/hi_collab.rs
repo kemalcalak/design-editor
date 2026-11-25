@@ -400,6 +400,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "whatsNew.next" => "अगला",
         "settings.system.livePages" => "लाइव पेज",
         "settings.system.livePagesDesc" => "चुना हुआ ब्राउज़र नोड असली पेज की तरह चलता है। बंद होने पर स्थिर स्नैपशॉट दिखता है।",
+        "menu.snapPixelGrid" => "पिक्सेल ग्रिड पर स्नैप करें",
+        "vectorEdit.pixelSnapOn" => "पिक्सेल ग्रिड स्नैपिंग चालू",
+        "vectorEdit.pixelSnapOff" => "पिक्सेल ग्रिड स्नैपिंग बंद",
         _ => return None,
     })
 }

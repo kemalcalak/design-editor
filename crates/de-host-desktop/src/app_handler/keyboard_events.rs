@@ -44,6 +44,7 @@ impl DesktopApp {
         // multi-select.
         self.host.set_modifier_shift(self.shift_modifier);
         self.host.set_modifier_alt(self.alt_modifier);
+        self.host.set_modifier_cmd(self.zoom_modifier);
     }
 
     pub(super) fn on_space_released(&mut self) {

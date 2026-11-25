@@ -289,6 +289,10 @@ impl WidgetHostNative {
         if let Some(consumed) = self.apply_node_drag_cursor_move(x, y) {
             return Some(consumed);
         }
+        // The pen's rubber band inside vector edit mode.
+        if let Some(consumed) = self.apply_vector_pen_hover(x, y) {
+            return Some(consumed);
+        }
         // Pen handle-drag minting + rubber-band (`pen_press.rs`).
         if let Some(consumed) = self.apply_pen_cursor_move(x, y) {
             return Some(consumed);

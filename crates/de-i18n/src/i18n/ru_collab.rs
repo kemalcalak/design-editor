@@ -400,6 +400,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "whatsNew.next" => "Далее",
         "settings.system.livePages" => "Живые страницы",
         "settings.system.livePagesDesc" => "Выбранный узел браузера воспроизводится как настоящая страница. Если выключено, показывается статичный снимок.",
+        "menu.snapPixelGrid" => "Привязка к пиксельной сетке",
+        "vectorEdit.pixelSnapOn" => "Привязка к пиксельной сетке включена",
+        "vectorEdit.pixelSnapOff" => "Привязка к пиксельной сетке выключена",
         _ => return None,
     })
 }

@@ -400,6 +400,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "whatsNew.next" => "下一个",
         "settings.system.livePages" => "实时页面",
         "settings.system.livePagesDesc" => "选中的浏览器节点像真实页面一样实时播放。关闭后显示静态快照。",
+        "menu.snapPixelGrid" => "对齐像素网格",
+        "vectorEdit.pixelSnapOn" => "已开启像素网格吸附",
+        "vectorEdit.pixelSnapOff" => "已关闭像素网格吸附",
         _ => return None,
     })
 }

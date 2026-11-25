@@ -73,6 +73,9 @@ impl<'a> CanvasViewport<'a> {
                 .interactive_node()
                 .is_some_and(|id| id == state.selection.anchor.as_str()),
             node_drag_overlay: None,
+            vector_edit: super::super::canvas_vector_edit_overlay::VectorEditPaint::build(
+                state, scene,
+            ),
             text_editing: state
                 .ui
                 .text_editing
@@ -143,6 +146,7 @@ impl<'a> CanvasViewport<'a> {
             image_crop_edit_active: false,
             browser_interacting: false,
             node_drag_overlay: None,
+            vector_edit: None,
             text_editing: None,
             text_edit_input: Default::default(),
             canvas_background,

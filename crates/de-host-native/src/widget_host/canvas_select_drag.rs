@@ -99,6 +99,11 @@ impl WidgetHostNative {
                 self.mark_dirty();
                 return true;
             }
+            // A path at the current level (nothing deeper to drill into)
+            // enters vector edit mode (#387).
+            if self.try_enter_vector_edit_on_double(&resolved.targets.primary) {
+                return true;
+            }
             if self
                 .editor_state
                 .start_text_edit(resolved.targets.primary.clone())

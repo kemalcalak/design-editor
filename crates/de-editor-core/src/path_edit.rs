@@ -147,7 +147,7 @@ fn normalize(x: f64, y: f64) -> Option<(f64, f64)> {
 
 /// TS `buildDefaultHandles` — tangent-aligned default handles at 1/3
 /// of the neighbor distances. Returns `(handle_in, handle_out)`.
-fn build_default_handles(
+pub(crate) fn build_default_handles(
     anchors: &[PenPathAnchor],
     idx: usize,
     closed: bool,
@@ -210,7 +210,7 @@ fn handle_length(handle: Option<&PenPathHandle>) -> f64 {
 /// out → inverted in → default out → inverted default in → +x), an
 /// averaged mirror length (fallback 40), then emit symmetric handles
 /// on whichever sides exist.
-fn apply_mirrored_point_type(
+pub(crate) fn apply_mirrored_point_type(
     anchor: &mut PenPathAnchor,
     defaults: (Option<PenPathHandle>, Option<PenPathHandle>),
 ) {

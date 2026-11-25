@@ -400,6 +400,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "whatsNew.next" => "次へ",
         "settings.system.livePages" => "ライブページ",
         "settings.system.livePagesDesc" => "選択中のブラウザノードを実際のページのように再生します。オフにすると静止スナップショットを表示します。",
+        "menu.snapPixelGrid" => "ピクセルグリッドにスナップ",
+        "vectorEdit.pixelSnapOn" => "ピクセルグリッドへのスナップ: オン",
+        "vectorEdit.pixelSnapOff" => "ピクセルグリッドへのスナップ: オフ",
         _ => return None,
     })
 }

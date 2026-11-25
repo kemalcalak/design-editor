@@ -400,6 +400,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "whatsNew.next" => "Próximo",
         "settings.system.livePages" => "Páginas ao vivo",
         "settings.system.livePagesDesc" => "Um nó de navegador selecionado roda como a página real. Desligado, mostra uma captura estática.",
+        "menu.snapPixelGrid" => "Ajustar à grade de pixels",
+        "vectorEdit.pixelSnapOn" => "Ajuste à grade de pixels ativado",
+        "vectorEdit.pixelSnapOff" => "Ajuste à grade de pixels desativado",
         _ => return None,
     })
 }
