@@ -297,6 +297,13 @@ fn serve_stateful(
     // is bounded (`STATE_LOCK_WAIT`, then busy naming the holder), and a
     // poisoned lock (a panicked sibling connection) is tolerated.
     let _guard = shared.lock_state(&request_label(body))?;
+    // pen.dev's pathless `save` saves the open document to its file (#392).
+    let body =
+        match crate::mcp_serve::pen_dev_save::bind_save(body, shared.document_path().as_deref()) {
+            Ok(body) => body,
+            Err(reply) => return Ok(reply),
+        };
+    let body = body.as_ref();
     // File-backed path (`--file` arg): handle the whole read-modify-write
     // while holding the lock.
     if let Some(response) =

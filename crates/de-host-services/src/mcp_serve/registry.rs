@@ -95,6 +95,8 @@ pub(super) fn rebuild_registry(
     register_tool!("batch_get", batch_get_snapshot(doc));
     register_tool!("read_nodes", read_nodes_snapshot(doc));
     register_tool!("codegen_export", codegen_export_snapshot(doc));
+    // pen.dev's name for the HTML export (#392); listed with the aliases.
+    register_tool!("export_html", de_mcp::export_html_snapshot(doc));
     register_tool!("codegen_plan", codegen_plan_snapshot(doc));
     register_tool!("codegen_submit_chunk", codegen_submit_chunk_snapshot());
     register_tool!("codegen_assemble", codegen_assemble_snapshot());

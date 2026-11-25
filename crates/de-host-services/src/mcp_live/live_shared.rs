@@ -9,6 +9,7 @@
 //! the holder), and `server_loop` runs [`LiveShared::watchdog`] so a hold
 //! past [`LOCK_HOLD_WARN`] is logged with its tool and request number.
 
+use std::path::{Path, PathBuf};
 use std::sync::{Condvar, MutexGuard};
 
 use de_mcp::element_tools::KitToolCatalog;
@@ -45,6 +46,10 @@ pub(super) struct LiveShared {
     /// What `tools/list` describes: the built-in kits until the host
     /// publishes the editor's own ([`LiveUiSide::pumped`]).
     kit_catalog: Mutex<Arc<KitToolCatalog>>,
+    /// The file the open document is bound to, as the host last said
+    /// ([`LiveUiSide::document_path`]): where pen.dev's pathless `save`
+    /// writes (#392).
+    document_path: Mutex<Option<PathBuf>>,
     next_request: AtomicU64,
 }
 
@@ -55,6 +60,7 @@ impl Default for LiveShared {
             released: Condvar::new(),
             ui_stalled: AtomicBool::new(false),
             kit_catalog: Mutex::new(Arc::new(KitToolCatalog::builtin().clone())),
+            document_path: Mutex::new(None),
             next_request: AtomicU64::new(0),
         }
     }
@@ -174,6 +180,10 @@ impl LiveShared {
     pub(super) fn kit_catalog(&self) -> Arc<KitToolCatalog> {
         Arc::clone(&lock_ignoring_poison(&self.kit_catalog))
     }
+
+    pub(super) fn document_path(&self) -> Option<PathBuf> {
+        lock_ignoring_poison(&self.document_path).clone()
+    }
 }
 
 /// The UI thread's side of [`LiveShared`], kept on `McpLiveServer`.
@@ -204,6 +214,15 @@ impl LiveUiSide {
         let catalog = Arc::new(KitToolCatalog::of(kits));
         *lock_ignoring_poison(&self.shared.kit_catalog) = Arc::clone(&catalog);
         self.published_kits = catalog;
+    }
+
+    /// Publish the file the open document is bound to; a no-op when it did
+    /// not change, so the host may call it every pump.
+    pub(super) fn document_path(&mut self, path: Option<&Path>) {
+        let mut current = lock_ignoring_poison(&self.shared.document_path);
+        if current.as_deref() != path {
+            *current = path.map(Path::to_path_buf);
+        }
     }
 
     #[cfg(test)]

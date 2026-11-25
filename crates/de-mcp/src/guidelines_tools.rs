@@ -59,14 +59,16 @@ fn guideline_topics_hint() -> String {
 fn call_guide(args: &BTreeMap<String, String>) -> ToolOutcome {
     let topic = match args.get("topic").map(String::as_str) {
         Some(t) if !t.trim().is_empty() => t.trim(),
+        // No topic lists them, as pen.dev's `get_guidelines()` and
+        // `read_skill()` do (#392).
         _ => {
-            return ToolOutcome::Err(
-                ToolErrorCode::MissingArgument,
-                format!(
-                    "topic is required. Supported topics: {}.",
-                    guideline_topics_hint()
-                ),
-            )
+            let mut out = BTreeMap::new();
+            out.insert("topics".into(), guideline_topics_hint());
+            out.insert(
+                "hint".into(),
+                "Pass topic to read one, e.g. get_guidelines { topic: \"web-app\" }.".into(),
+            );
+            return ToolOutcome::Ok(out);
         }
     };
 
@@ -462,18 +464,19 @@ mod tests {
     }
 
     #[test]
-    fn missing_topic_arg_returns_err() {
+    fn missing_topic_lists_every_topic() {
         let out = get_guidelines_snapshot().call(&BTreeMap::new());
         match &out {
-            ToolOutcome::Err(ToolErrorCode::MissingArgument, msg) => {
+            ToolOutcome::Ok(map) => {
+                let topics = map.get("topics").expect("topics");
                 for topic in de_ai_skills::guideline_topics() {
                     assert!(
-                        msg.contains(topic),
-                        "missing-arg hint must name every real topic, missing {topic:?}: {msg}"
+                        topics.contains(topic),
+                        "the listing must name every real topic, missing {topic:?}: {topics}"
                     );
                 }
             }
-            other => panic!("missing topic must return MissingArgument: {other:?}"),
+            other => panic!("missing topic must list the topics: {other:?}"),
         }
     }
 
