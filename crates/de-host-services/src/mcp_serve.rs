@@ -681,6 +681,7 @@ pub use schemas::TOOL_SCHEMAS;
 #[cfg(feature = "mcp-debug-tools")]
 pub use schemas::{DEBUG_TOOL_SCHEMAS, TOOL_SCHEMAS};
 use tools_list::tools_list_response;
+pub use tools_list::tools_list_response_for;
 
 mod capture_time;
 pub(crate) mod screenshot_tool;

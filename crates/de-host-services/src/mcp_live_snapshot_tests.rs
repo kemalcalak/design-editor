@@ -11,7 +11,8 @@ fn a_timed_out_snapshot_request_is_not_copied_by_the_ui() {
     // document for each and stalling the calls behind them.
     let (req_tx, req_rx) = mpsc::channel();
     let wake_ui: UiWake = Arc::new(|| {});
-    let outcome = request_snapshot_within(&req_tx, &wake_ui, Duration::from_millis(10));
+    let shared = LiveShared::default();
+    let outcome = request_snapshot_within(&req_tx, &wake_ui, &shared, Duration::from_millis(10));
     assert!(outcome.is_err(), "nobody answered, so the wait times out");
     let Ok(UiRequest::Snapshot { abandoned, .. }) = req_rx.try_recv() else {
         panic!("the request stays queued for the UI");

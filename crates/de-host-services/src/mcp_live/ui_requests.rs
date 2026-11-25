@@ -5,11 +5,15 @@
 
 use super::*;
 
+/// Ask the UI thread for a snapshot, waiting at most [`UI_BUSY_WAIT`]
+/// (less while the UI is known to be stalled): past it the call is answered
+/// busy (#406) instead of holding its client.
 pub(super) fn request_snapshot(
     req_tx: &Sender<UiRequest>,
     wake_ui: &UiWake,
+    shared: &LiveShared,
 ) -> Result<EditorState, McpLiveError> {
-    request_snapshot_with_epoch(req_tx, wake_ui).map(|(state, _)| state)
+    request_snapshot_with_epoch(req_tx, wake_ui, shared).map(|(state, _)| state)
 }
 
 /// [`request_snapshot`] plus the host document epoch it was taken in, for
@@ -17,8 +21,9 @@ pub(super) fn request_snapshot(
 pub(super) fn request_snapshot_with_epoch(
     req_tx: &Sender<UiRequest>,
     wake_ui: &UiWake,
+    shared: &LiveShared,
 ) -> Result<(EditorState, u64), McpLiveError> {
-    request_snapshot_within(req_tx, wake_ui, UI_ACK_TIMEOUT)
+    request_snapshot_within(req_tx, wake_ui, shared, UI_BUSY_WAIT)
 }
 
 /// [`request_snapshot`] with its wait as a parameter (tests). A request
@@ -27,8 +32,10 @@ pub(super) fn request_snapshot_with_epoch(
 pub(super) fn request_snapshot_within(
     req_tx: &Sender<UiRequest>,
     wake_ui: &UiWake,
+    shared: &LiveShared,
     timeout: Duration,
 ) -> Result<(EditorState, u64), McpLiveError> {
+    let timeout = shared.ui_wait(timeout);
     let (ack_tx, ack_rx) = mpsc::sync_channel(1);
     let abandoned = Arc::new(AtomicBool::new(false));
     req_tx
@@ -44,16 +51,50 @@ pub(super) fn request_snapshot_within(
     if result.is_err() {
         abandoned.store(true, Ordering::Release);
     }
+    let live = recv_read_ack(result, "snapshot", shared, timeout)?;
     // The document-sized copy happens here, on the connection thread,
     // not on the UI thread that shared it (#352).
-    recv_with_timeout(result, "snapshot")
-        .map(|live| (live.snapshot.into_state(), live.document_epoch))
+    let started = Instant::now();
+    let state = live.snapshot.into_state();
+    note_snapshot_copy(started.elapsed());
+    Ok((state, live.document_epoch))
+}
+
+/// Snapshot copies made by this process, and their total time in ms.
+static SNAPSHOT_COPIES: AtomicU64 = AtomicU64::new(0);
+static SNAPSHOT_COPY_MS: AtomicU64 = AtomicU64::new(0);
+/// A copy slower than this is logged, with the running totals (#406):
+/// on a large document every snapshot call copies the whole node tree,
+/// which is where its time and transient memory go.
+const SLOW_SNAPSHOT_COPY: Duration = Duration::from_millis(500);
+
+fn note_snapshot_copy(took: Duration) {
+    let copies = SNAPSHOT_COPIES.fetch_add(1, Ordering::Relaxed) + 1;
+    let total_ms = SNAPSHOT_COPY_MS.fetch_add(took.as_millis() as u64, Ordering::Relaxed)
+        + took.as_millis() as u64;
+    if took >= SLOW_SNAPSHOT_COPY {
+        eprintln!(
+            "design-editor mcp: copying the document for a call took {} ms ({copies} copies, {total_ms} ms in all since start)",
+            took.as_millis()
+        );
+    }
+}
+
+/// `(copies, total ms)` so far.
+#[cfg(test)]
+pub(super) fn snapshot_copy_stats() -> (u64, u64) {
+    (
+        SNAPSHOT_COPIES.load(Ordering::Relaxed),
+        SNAPSHOT_COPY_MS.load(Ordering::Relaxed),
+    )
 }
 
 pub(super) fn request_list_pages(
     req_tx: &Sender<UiRequest>,
     wake_ui: &UiWake,
+    shared: &LiveShared,
 ) -> Result<de_mcp::ListPages, McpLiveError> {
+    let timeout = shared.ui_wait(UI_BUSY_WAIT);
     let (ack_tx, ack_rx) = mpsc::sync_channel(1);
     req_tx
         .send(UiRequest::ListPages { ack: ack_tx })
@@ -61,7 +102,22 @@ pub(super) fn request_list_pages(
             McpLiveError::UiThread("UI thread is not accepting MCP page-list requests".to_string())
         })?;
     wake_ui();
-    recv_with_timeout(ack_rx.recv_timeout(UI_ACK_TIMEOUT), "page-list")
+    recv_read_ack(ack_rx.recv_timeout(timeout), "page-list", shared, timeout)
+}
+
+/// [`recv_with_timeout`] for a read: a timeout is the editor being busy,
+/// not a fault, and marks the UI stalled so the next read waits less.
+fn recv_read_ack<T>(
+    result: Result<T, RecvTimeoutError>,
+    label: &str,
+    shared: &LiveShared,
+    waited: Duration,
+) -> Result<T, McpLiveError> {
+    if matches!(result, Err(RecvTimeoutError::Timeout)) {
+        shared.mark_ui_stalled();
+        return Err(McpLiveError::Busy(EditorBusy::UiThread { waited }));
+    }
+    recv_with_timeout(result, label)
 }
 
 /// The live UI applies `write.unplaced` instead of the placed command when
