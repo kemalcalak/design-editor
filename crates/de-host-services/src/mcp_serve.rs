@@ -135,8 +135,8 @@ fn process_message_with_auto_finalize(
 ) -> Result<Option<String>, McpServeError> {
     // pen.dev's pathless `save` saves this file (#392).
     let line = match pen_dev_save::bind_save(line, Some(path)) {
-        Ok(line) => line,
-        Err(reply) => return Ok(Some(reply)),
+        pen_dev_save::SaveDispatch::Line(line) => line,
+        pen_dev_save::SaveDispatch::Reply(reply) => return Ok(Some(reply)),
     };
     let line = line.as_ref();
     if let Some(response) = file_path::process_message_for_file_path_arg(Some(path), line)? {

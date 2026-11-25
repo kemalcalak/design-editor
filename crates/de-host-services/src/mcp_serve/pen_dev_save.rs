@@ -16,13 +16,21 @@ pub(crate) enum SaveWithoutPath {
     Unbound(String),
 }
 
-/// `line` as the transport should dispatch it, or the error reply for a
-/// pathless `save` of a document with no file.
-pub(crate) fn bind_save<'a>(line: &'a str, bound: Option<&Path>) -> Result<Cow<'a, str>, String> {
+/// What a transport does with a request after [`bind_save`].
+pub(crate) enum SaveDispatch<'a> {
+    /// Dispatch this line: the request itself, or a pathless `save` naming
+    /// the bound file.
+    Line(Cow<'a, str>),
+    /// Answer with this reply: a pathless `save` of a document with no file.
+    Reply(String),
+}
+
+/// `line` with a pathless pen.dev `save` bound to `bound`.
+pub(crate) fn bind_save<'a>(line: &'a str, bound: Option<&Path>) -> SaveDispatch<'a> {
     match save_without_path(line, bound) {
-        None => Ok(Cow::Borrowed(line)),
-        Some(SaveWithoutPath::Bound(line)) => Ok(Cow::Owned(line)),
-        Some(SaveWithoutPath::Unbound(reply)) => Err(reply),
+        None => SaveDispatch::Line(Cow::Borrowed(line)),
+        Some(SaveWithoutPath::Bound(line)) => SaveDispatch::Line(Cow::Owned(line)),
+        Some(SaveWithoutPath::Unbound(reply)) => SaveDispatch::Reply(reply),
     }
 }
 
