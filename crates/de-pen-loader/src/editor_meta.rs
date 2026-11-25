@@ -5,6 +5,8 @@
 //! This scanner finds only the top-level value and deserializes that small
 //! slice; it never materializes or rewrites the document-sized JSON tree.
 
+use std::collections::BTreeMap;
+
 use crate::editor_meta_error::EditorMetaWriteError;
 use de_editor_core::scene_template_catalog::TemplateScene;
 
@@ -45,6 +47,10 @@ pub struct EditorMeta {
     /// Linked component library files (#15), relative to the document.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub libraries: Vec<de_editor_core::LibraryLink>,
+    /// Kit components whose master was installed under fresh ids (#365):
+    /// `"<kit>/<component>"` → master id. See `de_editor_core::kit_master`.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub kit_masters: BTreeMap<String, String>,
 }
 
 impl EditorMeta {
@@ -60,6 +66,7 @@ impl EditorMeta {
             scenario: state.editor_ui.scenario,
             pinned_style_guide: state.editor_ui.pinned_style_guide.clone(),
             libraries: state.editor_ui.libraries.links(),
+            kit_masters: state.editor_ui.kit_masters.clone(),
         }
     }
 
@@ -152,6 +159,9 @@ struct WireEditorMeta {
     /// Kept as raw JSON so one malformed entry drops only itself.
     #[serde(default)]
     libraries: Vec<serde_json::Value>,
+    /// Kept as raw JSON so a non-string entry drops only itself.
+    #[serde(default)]
+    kit_masters: BTreeMap<String, serde_json::Value>,
 }
 
 /// Parsed metadata plus compatibility inference used for migration decisions.
@@ -195,6 +205,14 @@ pub fn extract_editor_meta_with_report(src: &str) -> Option<EditorMetaExtraction
                 .libraries
                 .into_iter()
                 .filter_map(|entry| serde_json::from_value(entry).ok())
+                .collect(),
+            kit_masters: wire
+                .kit_masters
+                .into_iter()
+                .filter_map(|(key, id)| match id {
+                    serde_json::Value::String(id) if !id.is_empty() => Some((key, id)),
+                    _ => None,
+                })
                 .collect(),
         },
         inferred_preserve_authored_geometry,
@@ -343,6 +361,8 @@ pub fn apply_editor_meta(state: &mut de_editor_core::EditorState, meta: EditorMe
     if !meta.libraries.is_empty() {
         state.editor_ui.libraries.set_links(meta.libraries);
     }
+    // Ids only mean something in the document they came with.
+    state.editor_ui.kit_masters = meta.kit_masters;
 }
 
 /// Apply saved metadata, or use the legacy reopen policy when it is absent.
@@ -365,6 +385,7 @@ pub fn apply_editor_meta_or_legacy_fallback(
     state.editor_ui.scenario = None;
     state.editor_ui.pinned_style_guide = None;
     state.editor_ui.libraries.set_links(Vec::new());
+    state.editor_ui.kit_masters.clear();
     state.ui.active_page_index = state
         .doc
         .pages

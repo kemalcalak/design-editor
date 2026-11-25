@@ -100,6 +100,7 @@ mod document_save_tests;
 pub mod editor_state_tool;
 pub mod effect_normalize;
 pub mod element_tools;
+pub mod instance_tools;
 pub mod extra_read_tools;
 #[cfg(test)]
 mod extra_read_tools_tests;
@@ -237,9 +238,13 @@ pub use codegen_tools::{
     codegen_submit_chunk_snapshot, CodegenAssemble, CodegenClean, CodegenPlan, CodegenSubmitChunk,
 };
 pub use component_tools::{
-    create_component_snapshot, delete_component_snapshot, instantiate_component_snapshot,
-    rename_component_snapshot, set_node_collapsed_snapshot, CreateComponent, DeleteComponent,
-    InstantiateComponent, RenameComponent, SetNodeCollapsed,
+    create_component_snapshot, delete_component_snapshot, rename_component_snapshot,
+    set_node_collapsed_snapshot, CreateComponent, DeleteComponent, RenameComponent,
+    SetNodeCollapsed,
+};
+pub use instance_tools::{
+    detach_instance_snapshot, instantiate_component_snapshot, list_instances_snapshot,
+    swap_instance_snapshot, DetachInstance, InstantiateComponent, ListInstances, SwapInstance,
 };
 pub use conversion_status::{conversion_status_snapshot, ConversionStatus};
 pub use conversion_tools::{

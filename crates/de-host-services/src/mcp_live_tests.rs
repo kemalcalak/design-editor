@@ -363,6 +363,7 @@ fn pump_flags_document_replaced_only_for_replace_document_requests() {
                 scenario: None,
                 pinned_style_guide: None,
                 libraries: Vec::new(),
+                kit_masters: Default::default(),
             },
             ack: ack_tx,
         })
@@ -387,6 +388,7 @@ fn pump_flags_document_replaced_only_for_replace_document_requests() {
                 scenario: None,
                 pinned_style_guide: None,
                 libraries: Vec::new(),
+                kit_masters: Default::default(),
             },
             ack: ack_tx,
         })
@@ -521,6 +523,7 @@ fn pump_flags_document_edited_only_when_the_document_changes() {
                 scenario: None,
                 pinned_style_guide: None,
                 libraries: Vec::new(),
+                kit_masters: Default::default(),
             },
             ack: replace_ack_tx,
         })

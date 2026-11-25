@@ -608,7 +608,7 @@ mod tests {
     }
 
     #[test]
-    fn instantiate_strips_the_reusable_flag_from_the_clone() {
+    fn copy_strips_the_reusable_flag_from_the_clone() {
         // TS `component-browser-card.tsx:36-40` deletes `reusable` on
         // the inserted clone so a later kit export does not re-collect
         // instantiated copies.
@@ -617,7 +617,7 @@ mod tests {
         let kit = import_kit_from_document(&doc, "imp-1".to_string()).expect("kit");
         state.import_kit(kit);
         let _ = state
-            .instantiate_kit_component("imp-1", "c1", 0.0, 0.0)
+            .copy_kit_component("imp-1", "c1", 0.0, 0.0)
             .expect("instantiated");
         let inserted = state.active_children().last().expect("inserted").clone();
         match inserted {

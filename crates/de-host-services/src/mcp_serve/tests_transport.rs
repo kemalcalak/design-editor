@@ -374,6 +374,7 @@ fn document_sync_metadata_overrides_nested_fields_independently() {
         scenario: None,
         pinned_style_guide: None,
         libraries: Vec::new(),
+        kit_masters: Default::default(),
     };
 
     let page_override = parse_document_sync_request(
@@ -388,6 +389,7 @@ fn document_sync_metadata_overrides_nested_fields_independently() {
             scenario: None,
             pinned_style_guide: None,
             libraries: Vec::new(),
+            kit_masters: Default::default(),
         }
     );
 
@@ -403,6 +405,7 @@ fn document_sync_metadata_overrides_nested_fields_independently() {
             scenario: None,
             pinned_style_guide: None,
             libraries: Vec::new(),
+            kit_masters: Default::default(),
         }
     );
 
@@ -427,6 +430,7 @@ fn document_sync_metadata_overrides_nested_fields_independently() {
             scenario: None,
             pinned_style_guide: None,
             libraries: Vec::new(),
+            kit_masters: Default::default(),
         }
     );
 }

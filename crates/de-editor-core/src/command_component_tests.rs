@@ -73,9 +73,9 @@ fn instantiate_component_clones_registered_root_with_fresh_ids() {
         node_id: id("n10"),
         name: "Hero".into(),
     }));
-    assert!(s.apply(EditorCommand::InstantiateComponent {
+    assert!(s.apply(EditorCommand::Instance(crate::InstanceCommand::Copy {
         component_id: id("n10"),
-    }));
+    })));
     assert_eq!(s.active_children().len(), 2);
     assert!(s.find_duplicate_id().is_none());
     let clone = s.active_children().last().expect("inserted clone");

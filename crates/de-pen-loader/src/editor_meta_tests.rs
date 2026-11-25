@@ -14,6 +14,7 @@ fn extracts_camel_and_legacy_snake_case_fields() {
             scenario: None,
             pinned_style_guide: None,
             libraries: Vec::new(),
+            kit_masters: Default::default(),
         })
     );
     assert_eq!(
@@ -26,6 +27,7 @@ fn extracts_camel_and_legacy_snake_case_fields() {
             scenario: None,
             pinned_style_guide: None,
             libraries: Vec::new(),
+            kit_masters: Default::default(),
         })
     );
 }
@@ -40,6 +42,7 @@ fn absent_preserve_field_keeps_legacy_false_semantics() {
             scenario: None,
             pinned_style_guide: None,
             libraries: Vec::new(),
+            kit_masters: Default::default(),
         })
     );
 }
@@ -56,6 +59,7 @@ fn missing_preserve_field_recovers_figma_geometry_from_canonical_page_id() {
             scenario: None,
             pinned_style_guide: None,
             libraries: Vec::new(),
+            kit_masters: Default::default(),
         })
     );
     assert_eq!(
@@ -68,6 +72,7 @@ fn missing_preserve_field_recovers_figma_geometry_from_canonical_page_id() {
             scenario: None,
             pinned_style_guide: None,
             libraries: Vec::new(),
+            kit_masters: Default::default(),
         })
     );
 }
@@ -89,6 +94,7 @@ fn explicit_false_overrides_figma_page_migration_for_both_spellings() {
                 scenario: None,
                 pinned_style_guide: None,
                 libraries: Vec::new(),
+                kit_masters: Default::default(),
             })
         );
     }
@@ -120,6 +126,7 @@ fn figma_like_but_noncanonical_page_id_does_not_trigger_migration() {
             scenario: None,
             pinned_style_guide: None,
             libraries: Vec::new(),
+            kit_masters: Default::default(),
         })
     );
 }
@@ -141,6 +148,7 @@ fn applying_metadata_clamps_page_and_restores_geometry_mode() {
             scenario: None,
             pinned_style_guide: None,
             libraries: Vec::new(),
+            kit_masters: Default::default(),
         },
     );
 
@@ -186,6 +194,7 @@ fn escaped_strings_nested_values_and_duplicate_keys_are_bounded_correctly() {
             scenario: None,
             pinned_style_guide: None,
             libraries: Vec::new(),
+            kit_masters: Default::default(),
         })
     );
 }
@@ -224,6 +233,7 @@ fn streaming_rewrite_preserves_legacy_document_bytes_outside_editor_meta() {
             scenario: None,
             pinned_style_guide: None,
             libraries: Vec::new(),
+            kit_masters: Default::default(),
         },
     )
     .expect("streaming metadata rewrite");
@@ -242,6 +252,7 @@ fn streaming_rewrite_preserves_legacy_document_bytes_outside_editor_meta() {
             scenario: None,
             pinned_style_guide: None,
             libraries: Vec::new(),
+            kit_masters: Default::default(),
         })
     );
 }
@@ -268,6 +279,7 @@ fn streaming_rewrite_appends_metadata_to_empty_and_nonempty_roots() {
                 scenario: None,
                 pinned_style_guide: None,
                 libraries: Vec::new(),
+                kit_masters: Default::default(),
             },
         )
         .expect("append metadata");
@@ -297,6 +309,7 @@ fn current_schema_rewrite_preserves_nested_unknown_fields() {
             scenario: None,
             pinned_style_guide: None,
             libraries: Vec::new(),
+            kit_masters: Default::default(),
         },
     )
     .expect("current-schema rewrite");
@@ -412,4 +425,31 @@ fn a_file_without_metadata_reopens_unpinned() {
     apply_editor_meta_or_legacy_fallback(&mut state, extract_editor_meta(src));
 
     assert_eq!(state.editor_ui.pinned_style_guide, None);
+}
+
+#[test]
+fn kit_masters_round_trip_and_drop_non_string_ids() {
+    let source = r#"{"children":[],"editorMeta":{"kitMasters":{"shadcn-ui/shadcn-btn-primary":"n42","bad":7,"empty":""}}}"#;
+    let meta = extract_editor_meta(source).expect("meta");
+    assert_eq!(meta.kit_masters.len(), 1);
+    assert_eq!(
+        meta.kit_masters.get("shadcn-ui/shadcn-btn-primary").map(String::as_str),
+        Some("n42")
+    );
+    let written = serde_json::to_value(&meta).expect("serialize");
+    assert_eq!(
+        written["kitMasters"]["shadcn-ui/shadcn-btn-primary"],
+        "n42"
+    );
+    assert!(serde_json::to_value(EditorMeta::default())
+        .unwrap()
+        .get("kitMasters")
+        .is_none());
+
+    let mut state = de_editor_core::EditorState::new();
+    apply_editor_meta(&mut state, meta.clone());
+    assert_eq!(state.editor_ui.kit_masters, meta.kit_masters);
+    assert_eq!(EditorMeta::from_state(&state).kit_masters, meta.kit_masters);
+    apply_editor_meta_or_legacy_fallback(&mut state, None);
+    assert!(state.editor_ui.kit_masters.is_empty());
 }

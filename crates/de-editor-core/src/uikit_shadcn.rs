@@ -207,8 +207,11 @@ mod tests {
         assert_eq!(inserted.base().id, id.as_str());
         assert_eq!(inserted.base().x, Some(50.0));
         assert_eq!(inserted.base().y, Some(60.0));
-        // The shadcn templates are container frames with children —
-        // the clone must carry the subtree.
-        assert!(inserted.children().map(|c| !c.is_empty()).unwrap_or(false));
+        // A linked instance of the master installed on the Components
+        // page (#365), which carries the subtree.
+        match inserted {
+            PenNode::Ref(reference) => assert_eq!(reference.target, "shadcn-btn-primary"),
+            other => panic!("expected a ref, got {other:?}"),
+        }
     }
 }

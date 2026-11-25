@@ -522,6 +522,8 @@ fn structured_arg_allowed(tool: &str, key: &str) -> bool {
             | ("codegen_plan", "plan")
             | ("codegen_submit_chunk", "result")
             | ("copy_node", "overrides")
+            | ("instantiate_component", "descendants")
+            | ("instantiate_component", "overrides")
             | ("insert_node", "data")
             | ("update_node", "data")
             | ("replace_node", "data")

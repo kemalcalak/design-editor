@@ -204,9 +204,14 @@ fn component_conversion_uikit_and_refine_commands_use_the_supplied_allocator() {
     let mut component_allocator = supplied();
     assert!(component_state
         .apply_with_allocator(
-            EditorCommand::InstantiateComponent {
+            EditorCommand::Instance(crate::InstanceCommand::Insert {
                 component_id: NodeId::new("n10"),
-            },
+                parent: NodeId::NONE,
+                x: None,
+                y: None,
+                descendants_json: None,
+                page_id: None,
+            }),
             &mut component_allocator,
         )
         .unwrap());
@@ -225,6 +230,7 @@ fn component_conversion_uikit_and_refine_commands_use_the_supplied_allocator() {
                 target_parent: NodeId::NONE,
                 page_id: None,
                 overrides_json: None,
+                detach: false,
             },
             &mut kit_allocator,
         )

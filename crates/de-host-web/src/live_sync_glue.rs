@@ -320,6 +320,7 @@ fn apply_document_response<C: RepaintContext + 'static>(
                         let pinned_style_guide =
                             host.editor_state().editor_ui.pinned_style_guide.clone();
                         let libraries = host.editor_state().editor_ui.libraries.links();
+                        let kit_masters = host.editor_state().editor_ui.kit_masters.clone();
                         de_pen_loader::apply_editor_meta(
                             host.editor_state_mut(),
                             de_pen_loader::EditorMeta {
@@ -328,6 +329,7 @@ fn apply_document_response<C: RepaintContext + 'static>(
                                 scenario,
                                 pinned_style_guide,
                                 libraries,
+                                kit_masters,
                             },
                         );
                         inner_ref.repaint().is_ok()

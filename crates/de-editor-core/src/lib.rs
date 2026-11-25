@@ -62,6 +62,7 @@ mod command_root_replace;
 pub mod command_style_replace;
 mod component_backing;
 pub mod component_browser_state;
+pub mod component_instances;
 pub mod components;
 pub mod compositing;
 pub mod conversion;
@@ -124,10 +125,13 @@ pub mod ime_state;
 pub mod instance_anchor;
 mod instance_child_override;
 pub mod instance_descendants;
+pub mod instance_command;
 pub mod instance_edit;
+pub mod instance_error;
 pub mod instance_ids;
 pub mod instance_override;
 pub mod instance_path;
+pub mod instance_view;
 pub mod interaction_edit;
 pub mod mesh_lattice;
 pub mod missing_fonts;
@@ -213,6 +217,7 @@ pub mod theme_presets;
 pub mod tool;
 pub mod toolbar_state;
 pub mod ui_draft;
+pub mod kit_master;
 pub mod uikit;
 mod uikit_allocator;
 pub mod uikit_io;
@@ -227,6 +232,10 @@ pub mod write_scope;
 
 #[cfg(test)]
 mod command_allocator_tests;
+#[cfg(test)]
+mod component_instances_tests;
+#[cfg(test)]
+mod kit_master_tests;
 #[cfg(test)]
 mod command_app_state_tests;
 #[cfg(test)]
@@ -346,6 +355,10 @@ pub use command::{
     StylePropValue, StylePropertyReplacement, VariableScalarPayload, VideoPlaybackField,
 };
 pub use command_node_attrs::{WidgetNumberField, WidgetTextField};
+pub use component_instances::parse_descendants;
+pub use instance_view::{InstanceUse, InstanceView, OverrideTarget};
+pub use instance_command::InstanceCommand;
+pub use instance_error::InstanceError;
 pub use command_promote::PromoteResult;
 pub use command_style_replace::StyleReplaceError;
 pub use component_browser_state::ComponentBrowserButton;

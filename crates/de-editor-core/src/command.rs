@@ -377,8 +377,8 @@ pub enum EditorCommand {
     },
     /// Link, re-sync or unlink a component library file (#15).
     Library(crate::library_link::LibraryCommand),
-    /// Instantiate a registered component onto the active page.
-    InstantiateComponent { component_id: NodeId },
+    /// Insert, copy, detach or swap a component instance (#365).
+    Instance(crate::instance_command::InstanceCommand),
     /// Promote an active-page Frame / Group / Rectangle to a component.
     CreateComponent { node_id: NodeId, name: String },
     /// Remove a component registration.
@@ -390,8 +390,10 @@ pub enum EditorCommand {
     /// `(doc_x, doc_y)` default to `(0, 0)` when the caller does not
     /// specify a drop point. `target_parent = NONE` inserts at the
     /// page root; otherwise the parent must be a container on the
-    /// target page. `overrides_json` is a TS-style object applied to
-    /// the template before fresh ids are minted.
+    /// target page. The component lands as a linked instance of a
+    /// master installed once on the `Components` page (#365);
+    /// `overrides_json` keys name the kit template's nodes. `detach`
+    /// inserts an independent copy with the overrides applied instead.
     InstantiateKitComponent {
         kit_id: String,
         component_id: String,
@@ -400,6 +402,7 @@ pub enum EditorCommand {
         target_parent: NodeId,
         page_id: Option<String>,
         overrides_json: Option<String>,
+        detach: bool,
     },
     /// Switch the active page.
     SetActivePage { index: u32 },

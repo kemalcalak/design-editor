@@ -53,6 +53,7 @@ impl DocumentSyncRequest<'_> {
             scenario: embedded.scenario,
             pinned_style_guide: embedded.pinned_style_guide,
             libraries: embedded.libraries,
+            kit_masters: embedded.kit_masters,
         }
     }
 }

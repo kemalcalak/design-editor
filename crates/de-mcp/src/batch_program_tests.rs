@@ -135,7 +135,7 @@ D("n14")"##;
 }
 
 #[test]
-fn kit_op_instantiates_shadcn_component_under_parent() {
+fn kit_op_inserts_a_linked_instance_of_an_installed_master() {
     let mut state = de_editor_core::EditorState::new();
     let program = r##"root=I(null, {"type":"frame","name":"Root","width":320,"height":240})
 button=K("shadcn/btn-primary", root)"##;
@@ -149,43 +149,90 @@ button=K("shadcn/btn-primary", root)"##;
     assert!(state.apply(cmd.expect("K program emits a command")));
     let root = de_editor_core::walkers::find_node(state.active_children(), &NodeId::new(&root_id))
         .expect("root frame");
-    let root_children = root.children().expect("root children");
-    let button = de_editor_core::walkers::find_node(root_children, &NodeId::new(&button_id))
-        .expect("button under root");
-    assert_eq!(button.base().name.as_deref(), Some("Primary Button"));
-    assert!(
-        button.children().map(|c| !c.is_empty()).unwrap_or(false),
-        "kit instance must carry the shadcn button subtree"
-    );
-    assert!(
-        subtree_contains_text(button, "Button"),
-        "shadcn primary button label should survive"
-    );
-}
-
-#[test]
-fn kit_op_applies_descendant_text_overrides_before_remapping_ids() {
-    let mut state = de_editor_core::EditorState::new();
-    let program = r##"root=I(null, {"type":"frame","name":"Root","width":320,"height":240})
-button=K("shadcn/btn-primary", root, {"descendants":{"shadcn-btn-primary-label":{"content":"Book now"}}})"##;
-    let (envelope, cmd) = call_operations(&state, program);
-
-    assert!(envelope.get("errors").is_none(), "{envelope}");
-    let root_id = binding_id(&envelope, "root");
-    let button_id = binding_id(&envelope, "button");
-
-    assert!(state.apply(cmd.expect("K override program emits a command")));
-    let root = de_editor_core::walkers::find_node(state.active_children(), &NodeId::new(&root_id))
-        .expect("root frame");
     let button = de_editor_core::walkers::find_node(
         root.children().expect("root children"),
         &NodeId::new(&button_id),
     )
     .expect("button under root");
+    let jian_ops_schema::node::PenNode::Ref(reference) = button else {
+        panic!("K() inserts a ref, got {button:?}")
+    };
+    assert_eq!(reference.target, "shadcn-btn-primary");
+    assert_eq!(button.base().name.as_deref(), Some("Primary Button"));
     assert!(
-        subtree_contains_text(button, "Book now"),
-        "descendants override must land on the original shadcn label before ids are remapped"
+        rendered_contains_text(&state, &button_id, "Button"),
+        "the instance renders the master's label"
     );
+}
+
+#[test]
+fn kit_op_overrides_land_on_the_instance_and_master_edits_reach_the_rest() {
+    let mut state = de_editor_core::EditorState::new();
+    let program = r##"root=I(null, {"type":"frame","name":"Root","width":320,"height":240})
+button=K("shadcn/btn-primary", root, {"descendants":{"shadcn-btn-primary-label":{"content":"Book now"}}})
+plain=K("shadcn/btn-primary", root)"##;
+    let (envelope, cmd) = call_operations(&state, program);
+
+    assert!(envelope.get("errors").is_none(), "{envelope}");
+    let button_id = binding_id(&envelope, "button");
+    let plain_id = binding_id(&envelope, "plain");
+    assert!(state.apply(cmd.expect("K override program emits a command")));
+    assert!(rendered_contains_text(&state, &button_id, "Book now"));
+    assert!(rendered_contains_text(&state, &plain_id, "Button"));
+
+    // Edit the master's label: the instance without an override follows.
+    let page = state
+        .doc
+        .pages
+        .as_mut()
+        .unwrap()
+        .iter_mut()
+        .find(|page| page.name == "Components")
+        .expect("components page");
+    let Some(jian_ops_schema::node::PenNode::Text(label)) = de_editor_core::walkers::find_node_mut(
+        &mut page.children,
+        &NodeId::new("shadcn-btn-primary-label"),
+    ) else {
+        panic!("master label")
+    };
+    label.content = serde_json::from_value(serde_json::json!("Reserve")).unwrap();
+    assert!(rendered_contains_text(&state, &plain_id, "Reserve"));
+    assert!(rendered_contains_text(&state, &button_id, "Book now"));
+}
+
+#[test]
+fn kit_op_detach_inserts_a_copy() {
+    let mut state = de_editor_core::EditorState::new();
+    let program = r##"root=I(null, {"type":"frame","name":"Root","width":320,"height":240})
+button=K("shadcn/btn-primary", root, {"detach":true,"label":"Copy"})"##;
+    let (envelope, cmd) = call_operations(&state, program);
+    assert!(envelope.get("errors").is_none(), "{envelope}");
+    let button_id = binding_id(&envelope, "button");
+    assert!(state.apply(cmd.expect("K detach emits a command")));
+    let button =
+        de_editor_core::walkers::find_node(state.active_children(), &NodeId::new(&button_id))
+            .expect("copy");
+    assert!(matches!(button, jian_ops_schema::node::PenNode::Frame(_)));
+    assert!(subtree_contains_text(button, "Copy"));
+    assert!(state
+        .doc
+        .pages
+        .iter()
+        .flatten()
+        .all(|page| page.name != "Components"));
+}
+
+/// Whether instance `id` renders `needle` once refs are expanded.
+fn rendered_contains_text(state: &EditorState, id: &str, needle: &str) -> bool {
+    let resolved = de_editor_core::ref_resolve::resolve_refs_for_canvas(&state.doc);
+    let node = resolved
+        .pages
+        .iter()
+        .flatten()
+        .find_map(|page| de_editor_core::walkers::find_node(&page.children, &NodeId::new(id)))
+        .or_else(|| de_editor_core::walkers::find_node(&resolved.children, &NodeId::new(id)))
+        .expect("rendered instance");
+    subtree_contains_text(node, needle)
 }
 
 #[test]

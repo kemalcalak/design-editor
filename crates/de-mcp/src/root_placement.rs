@@ -14,7 +14,8 @@ use std::collections::{BTreeMap, HashSet};
 
 use de_editor_core::geometry::DocRect;
 use de_editor_core::root_placement::{plan_root_placement, IncomingRoot, ROOT_GAP};
-use de_editor_core::{EditorCommand, EditorState, NodeId, PenNodeExt};
+use de_editor_core::page_mutators::COMPONENTS_PAGE_NAME;
+use de_editor_core::{EditorCommand, EditorState, InstanceCommand, NodeId, PenNodeExt};
 use jian_ops_schema::node::PenNode;
 use jian_scene::layout_scene::SceneNode;
 use serde_json::Value;
@@ -84,6 +85,7 @@ pub fn place_new_roots(
     let pages: Vec<(usize, Vec<usize>)> = page_roots(&trial)
         .into_iter()
         .enumerate()
+        .filter(|(idx, _)| !is_components_page(&trial, *idx))
         .filter_map(|(idx, (_, roots))| {
             let before = roots_before.get(idx).map(Vec::as_slice).unwrap_or_default();
             let new = new_root_indices(roots, before, &ids_before, &replaced);
@@ -130,10 +132,12 @@ pub fn place_new_roots(
 }
 
 /// Tools whose command writes an origin even when the call gave none
-/// (kit components and `import_svg` default to 0,0), so whether the agent
+/// (kit components and `import_svg` default to 0,0, an instance to its
+/// master's origin + 20), so whether the agent
 /// asked for a position has to come from the call's own `x` / `y`.
 fn defaults_origin_when_unset(tool: &str) -> bool {
-    (tool.starts_with("insert_") && tool != "insert_node") || tool == "import_svg"
+    (tool.starts_with("insert_") && tool != "insert_node")
+        || matches!(tool, "import_svg" | "instantiate_component")
 }
 
 /// Cheap pre-check: can `cmd` add a page root at all? Parented inserts and
@@ -149,8 +153,9 @@ fn may_create_page_root(cmd: &EditorCommand) -> bool {
         C::InsertSubtree { parent_id, .. }
         | C::InsertAuthoredSubtree { parent_id, .. }
         | C::InsertAuthoredSubtreePreservingRoots { parent_id, .. } => !parent_id.is_real(),
+        C::Instance(InstanceCommand::Insert { parent, .. }) => !parent.is_real(),
         C::BatchInsert { .. }
-        | C::InstantiateComponent { .. }
+        | C::Instance(InstanceCommand::Copy { .. })
         | C::UpsertScreen { .. }
         | C::UpsertComponent { .. } => true,
         _ => false,
@@ -277,6 +282,18 @@ impl PagePlacement<'_> {
             h: f64::from(b.size.y),
         })
     }
+}
+
+/// Whether page `idx` is the hidden `Components` page: masters a write
+/// installs there (kit components, #365) are side storage, not new
+/// canvas roots to place.
+fn is_components_page(state: &EditorState, idx: usize) -> bool {
+    state
+        .doc
+        .pages
+        .as_ref()
+        .and_then(|pages| pages.get(idx))
+        .is_some_and(|page| page.name == COMPONENTS_PAGE_NAME)
 }
 
 /// `(page id, roots)` for every page, in document order; a document

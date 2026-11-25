@@ -7,8 +7,9 @@
 //! Each tool returns `ToolOutcome::OkWithCommand(map,
 //! EditorCommand::InstantiateKitComponent { … })` so the host's
 //! applier runs the same `EditorState::instantiate_kit_component`
-//! path the Component-Browser panel uses — deep-clone, fresh-id,
-//! subtree-translate, select, history-snapshot.
+//! path the Component-Browser panel uses: a linked instance of a master
+//! installed once on the `Components` page (#365), selected, one undo
+//! step; `detach: true` drops an independent copy instead.
 
 use std::collections::BTreeMap;
 
@@ -76,9 +77,20 @@ impl McpTool for InsertKitComponent {
             Ok(v) => v,
             Err(e) => return e,
         };
+        let detach = match args.get("detach").map(String::as_str) {
+            None | Some("") | Some("false") => false,
+            Some("true") => true,
+            Some(other) => {
+                return ToolOutcome::Err(
+                    ToolErrorCode::InvalidArgument,
+                    format!("detach must be true or false, got {other}"),
+                )
+            }
+        };
         let mut result = BTreeMap::new();
         result.insert("kit_id".into(), self.kit_id.clone());
         result.insert("component_id".into(), self.component_id.clone());
+        result.insert("linked".into(), (!detach).to_string());
         ToolOutcome::OkWithCommand(
             result,
             EditorCommand::InstantiateKitComponent {
@@ -89,6 +101,7 @@ impl McpTool for InsertKitComponent {
                 target_parent: NodeId::NONE,
                 page_id: None,
                 overrides_json: None,
+                detach,
             },
         )
     }
@@ -142,7 +155,7 @@ pub fn element_tool_schema(component_name: &str, component_id: &str) -> String {
 
 fn canonical_element_tool_schema(tool: &str, component_name: &str) -> String {
     format!(
-        r#"{{"name":"{tool}","description":"Insert a {component_name} from the built-in UIKit onto the active page. Optional x/y doc-px floats place the top-left; defaults to (0, 0).","inputSchema":{{"type":"object","properties":{{"x":{{"type":"string","description":"top-left doc-px (float)"}},"y":{{"type":"string","description":"top-left doc-px (float)"}}}}}}}}"#
+        r#"{{"name":"{tool}","description":"Insert a {component_name} from the built-in UIKit onto the active page as a linked instance: the first use installs the component as a master on the hidden Components page, every use is a ref to it, so editing that master changes every instance (the new instance is selected; get_selection gives its id). detach: true inserts an independent copy instead. Optional x/y doc-px floats place the top-left; defaults to (0, 0). See get_guidelines topic components.","inputSchema":{{"type":"object","properties":{{"x":{{"type":"string","description":"top-left doc-px (float)"}},"y":{{"type":"string","description":"top-left doc-px (float)"}},"detach":{{"type":"boolean","description":"insert an independent copy instead of a linked instance (default false)"}}}}}}}}"#
     )
 }
 
