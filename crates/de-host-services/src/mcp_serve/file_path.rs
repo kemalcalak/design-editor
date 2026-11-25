@@ -95,9 +95,10 @@ fn create_empty_document(path: &Path) -> Result<(), McpServeError> {
         std::fs::create_dir_all(parent)
             .map_err(|e| McpServeError::Document(format!("create {}: {e}", parent.display())))?;
     }
+    let version = de_editor_core::document_version::PRODUCT_VERSION;
     std::fs::write(
         path,
-        "{\n  \"version\": \"1.0.0\",\n  \"children\": []\n}\n",
+        format!("{{\n  \"version\": \"{version}\",\n  \"children\": []\n}}\n"),
     )
     .map_err(|e| McpServeError::Document(format!("write {}: {e}", path.display())))
 }

@@ -94,7 +94,7 @@ impl LibraryTool {
         let mut out = json!({
             "path": row.link.path,
             "name": row.link.display_name(),
-            "file": file.to_string_lossy(),
+            "file": de_util::display_path::display_path(&file),
             "status": row.status.as_str(),
             "componentIds": row.link.masters,
         });
@@ -145,7 +145,7 @@ impl LibraryTool {
             .collect();
         let result = json!({
             "path": path,
-            "file": file.to_string_lossy(),
+            "file": de_util::display_path::display_path(&file),
             "libraryComponents": ids.len(),
             "libraryComponentIds": ids,
             "note": "Instances are `ref` nodes pointing at a component id. \

@@ -3,7 +3,7 @@
 
 pub const TOOL_SCHEMAS: &[&str] = &[
     // --- read tools ---
-    r#"{"name":"open_document","description":"Open the current Rust MCP document, or the TS-compatible filePath target for this call, and return metadata, context summary, and design prompt.","inputSchema":{"type":"object","properties":{"filePath":{"type":"string","description":"Optional target .de file path; omit to use the server document"}}}}"#,
+    r#"{"name":"open_document","description":"Read a document and return its metadata, a context summary and a design prompt. Without filePath (or with live://canvas) it reads the server document (with the running app, the document open in the editor). With filePath it reads and summarizes that .de file for this call only (an empty one is created when the path does not exist): it does not change the server document, so use it as a load check. No tool opens a file in a running editor: use File > Open in the app, or `de start --file <file.de>` when no editor is running yet. Tools that take filePath act on that file directly.","inputSchema":{"type":"object","properties":{"filePath":{"type":"string","description":"Optional .de file to read and summarize; the server document is not changed. Omit to use the server document"}}}}"#,
     r#"{"name":"save_document","description":"Save the current Rust MCP document snapshot to a .de file. Images are written as files in a sibling `<name>.assets/` folder and referenced by relative path; pass singleFile=true for one self-contained file to share. Used by the Rust HTTP CLI to match TS `de save`; pass sourceFilePath to copy a specific source .de file to the target filePath.","inputSchema":{"type":"object","properties":{"filePath":{"type":"string","description":"Target .de file path"},"singleFile":{"type":"boolean","description":"Embed every image in the one .de file instead of the sibling .assets folder"},"sourceFilePath":{"type":"string","description":"Optional source .de file path for TS-compatible `de save <target> --file <source>`"}},"required":["filePath"]}}"#,
     r#"{"name":"get_document_info","description":"Summarize the open document (page count, active page, etc).","inputSchema":{"type":"object","properties":{},"additionalProperties":false}}"#,
     r#"{"name":"get_selection","description":"Return the current selection state (ids, count).","inputSchema":{"type":"object","properties":{"filePath":{"type":"string","description":"Optional target .de file path; omit to use the server document"},"readDepth":{"type":"number","description":"How deep to include children in selected nodes; default 2"}}}}"#,
@@ -268,5 +268,19 @@ mod tests {
         assert!(finalize.contains("MUST NOT present the design as finished"));
         assert!(finalize.contains("complete=false"));
         serde_json::from_str::<serde_json::Value>(finalize).expect("valid finalize schema JSON");
+    }
+
+    #[test]
+    fn open_document_says_it_leaves_the_editor_document_alone() {
+        let schema = TOOL_SCHEMAS
+            .iter()
+            .find(|schema| schema.contains(r#""name":"open_document""#))
+            .expect("open_document schema");
+        let value: serde_json::Value = serde_json::from_str(schema).expect("valid JSON");
+        let description = value["description"].as_str().expect("description");
+        assert!(description.contains("does not change the server document"));
+        assert!(description.contains("load check"));
+        assert!(description.contains("File > Open"));
+        assert!(description.contains("de start --file"));
     }
 }

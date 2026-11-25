@@ -92,7 +92,7 @@ impl ExportFrames {
             .map(|(file_name, detail)| serde_json::json!({ "file": file_name, "error": detail }))
             .collect();
         let mut result = serde_json::json!({
-            "directory": directory.display().to_string(),
+            "directory": de_util::display_path::display_path(&directory),
             "format": extension,
             "attempted": report.attempted(),
             "written": report.written,
