@@ -163,21 +163,28 @@ impl DesktopApp {
     }
 
     pub(crate) fn poll_mcp_server(&mut self) -> bool {
-        let (outcome, pending_design_md, client, follow) = {
+        let document_epoch = self.host.document_epoch();
+        let (outcome, pending_design_md, client, follow, saved) = {
             let Some(server) = self.mcp_server.as_mut() else {
                 // No server, no connected agent.
                 return self.sync_home_mcp_client(None);
             };
+            server.set_document_epoch(document_epoch);
             let outcome = server.pump(self.host.editor_state_mut());
             let pending_design_md = server.take_pending_design_md_request();
-            // A file an agent saved joins Home's Recent list (its preview
-            // is already queued), just as a UI save would.
-            for path in server.take_saved_documents() {
-                crate::settings_io::touch_recent(&mut self.host, &path);
-            }
+            let saved = server.take_saved_documents();
             let follow = server.take_follow_target();
-            (outcome, pending_design_md, server.client_name(), follow)
+            (
+                outcome,
+                pending_design_md,
+                server.client_name(),
+                follow,
+                saved,
+            )
         };
+        for document in saved {
+            self.apply_mcp_saved_document(&document);
+        }
         let client_changed = self.sync_home_mcp_client(client);
         // Provider execution is deliberately outside the UI/server borrow and
         // on its own worker. This request contains bounded extension evidence,
@@ -216,6 +223,28 @@ impl DesktopApp {
             self.host.force_rotate_layer_panel_owner();
         }
         outcome.repaint || client_changed
+    }
+
+    /// A file an agent saved joins Home's Recent list (its preview is
+    /// already queued), just as a UI save would. A save of the document
+    /// that is still open binds it like Save As (#403): name, title, Saved
+    /// state and Cmd+S all follow the file, and edits made after the
+    /// client's snapshot keep it dirty. A copy of another file
+    /// (`sourceFilePath`) or a save from a document since replaced only
+    /// touches Recent.
+    pub(crate) fn apply_mcp_saved_document(
+        &mut self,
+        document: &de_host_services::mcp_live::McpSavedDocument,
+    ) {
+        let live = document
+            .saved_from
+            .filter(|from| self.names_live_document(from.document_epoch, from.generation));
+        match live {
+            Some(from) => {
+                self.bind_saved_path(&document.path, true, from.generation, from.revision);
+            }
+            None => crate::settings_io::touch_recent(&mut self.host, &document.path),
+        }
     }
 
     /// Mirror the live server's connected client into Home's MCP card and
@@ -354,6 +383,108 @@ mod dirty_tests {
         assert!(app.poll_mcp_server(), "clearing the client repaints");
         assert_eq!(app.host.editor_state().editor_ui.home.mcp_client, None);
         assert!(!app.poll_mcp_server(), "nothing changed the second time");
+    }
+
+    fn saved_from(app: &DesktopApp) -> de_host_services::mcp_live::McpSavedRevision {
+        let state = app.host.editor_state();
+        de_host_services::mcp_live::McpSavedRevision {
+            document_epoch: app.host.document_epoch(),
+            generation: state.document_generation(),
+            revision: state.document_revision(),
+        }
+    }
+
+    fn agent_save(
+        path: &str,
+        saved_from: Option<de_host_services::mcp_live::McpSavedRevision>,
+    ) -> de_host_services::mcp_live::McpSavedDocument {
+        de_host_services::mcp_live::McpSavedDocument {
+            path: std::env::temp_dir().join(path),
+            saved_from,
+        }
+    }
+
+    fn lists_in_recent(app: &DesktopApp, path: &std::path::Path) -> bool {
+        let path = path.to_string_lossy();
+        app.host
+            .editor_state()
+            .editor_ui
+            .recent_files
+            .iter()
+            .any(|recent| recent.path == path)
+    }
+
+    #[test]
+    fn an_mcp_save_of_the_live_document_binds_it_like_save_as() {
+        let mut app = DesktopApp::new(None);
+        app.host.editor_state_mut().mark_document_changed();
+        assert!(app.host.editor_state().is_dirty());
+        let saved = agent_save("de-403-agent.de", Some(saved_from(&app)));
+
+        app.apply_mcp_saved_document(&saved);
+
+        let state = app.host.editor_state();
+        assert!(!state.is_dirty(), "the file holds the live revision: Saved");
+        assert_eq!(
+            state.editor_ui.file_name_display.as_deref(),
+            Some("de-403-agent.de")
+        );
+        assert_eq!(app.current_path.as_deref(), Some(saved.path.as_path()));
+        assert!(lists_in_recent(&app, &saved.path));
+    }
+
+    #[test]
+    fn edits_after_the_mcp_snapshot_keep_the_document_edited() {
+        let mut app = DesktopApp::new(None);
+        app.host.editor_state_mut().mark_document_changed();
+        let saved = agent_save("de-403-later.de", Some(saved_from(&app)));
+        app.host.editor_state_mut().mark_document_changed();
+
+        app.apply_mcp_saved_document(&saved);
+
+        assert!(
+            app.host.editor_state().is_dirty(),
+            "a newer edit stays Edited"
+        );
+        assert_eq!(app.current_path.as_deref(), Some(saved.path.as_path()));
+    }
+
+    #[test]
+    fn an_mcp_copy_of_another_file_only_joins_recent() {
+        let mut app = DesktopApp::new(None);
+        app.host.editor_state_mut().mark_document_changed();
+        let saved = agent_save("de-403-copy.de", None);
+
+        app.apply_mcp_saved_document(&saved);
+
+        assert!(lists_in_recent(&app, &saved.path));
+        assert!(app.current_path.is_none());
+        assert!(app.host.editor_state().is_dirty());
+        assert!(app
+            .host
+            .editor_state()
+            .editor_ui
+            .file_name_display
+            .is_none());
+    }
+
+    #[test]
+    fn an_mcp_save_from_a_replaced_document_does_not_bind_the_new_one() {
+        let mut app = DesktopApp::new(None);
+        let saved = agent_save("de-403-stale.de", Some(saved_from(&app)));
+        // A fresh document restarts at the same generation; only the host
+        // epoch tells the two apart.
+        app.host
+            .replace_editor_state(de_editor_core::EditorState::new());
+        assert_eq!(
+            saved.saved_from.map(|from| from.generation),
+            Some(app.host.editor_state().document_generation())
+        );
+
+        app.apply_mcp_saved_document(&saved);
+
+        assert!(app.current_path.is_none());
+        assert!(lists_in_recent(&app, &saved.path));
     }
 
     #[test]

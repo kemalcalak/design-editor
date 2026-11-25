@@ -148,6 +148,7 @@ mod read_nodes_resolve_tests;
 mod read_nodes_tests;
 pub mod read_tools;
 pub mod read_tools_extra;
+pub mod repair_duplicate_ids_tool;
 pub mod reparent_tools;
 #[cfg(test)]
 mod replace_node_tests;
@@ -262,7 +263,7 @@ pub use design_md_tools::{
 };
 pub use design_prompt::{get_design_prompt_snapshot, GetDesignPrompt};
 pub use design_refine_result::{design_refine_snapshot, DesignRefine};
-pub use document_save::{save_document_snapshot, SaveDocument};
+pub use document_save::{save_document_snapshot_to, SaveDocument};
 pub use extra_read_tools::{get_node_children_snapshot, ChildRecord, GetNodeChildren};
 pub use guidelines_tools::{get_guidelines_snapshot, GetGuidelines};
 pub use json_serializer::{response_to_json, tool_response_to_json};
@@ -294,6 +295,7 @@ pub use page_tools::{
 };
 pub use parser::parse_tool_call;
 pub use read_nodes::{read_nodes_snapshot, ReadNodes};
+pub use repair_duplicate_ids_tool::{repair_duplicate_ids_snapshot, RepairDuplicateIds};
 pub use reparent_tools::{copy_node_snapshot, move_node_snapshot, CopyNode, MoveNode};
 pub use scalar_vars::{
     create_variable_snapshot, delete_variable_snapshot, rename_variable_snapshot,

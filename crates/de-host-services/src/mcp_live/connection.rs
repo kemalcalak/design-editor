@@ -256,7 +256,8 @@ pub(super) fn serve_connection<S: std::io::Read + std::io::Write>(
     if let Some(response) =
         crate::mcp_serve::file_path::process_message_for_file_path_arg(None, &req.body)?
     {
-        report_saved_document(&req.body, &response, req_tx, wake_ui);
+        // A file-backed save copies another file, not the live document.
+        report_saved_document(&req.body, &response, None, req_tx, wake_ui);
         return write_json_rpc_response(stream, &response);
     }
     // `debug_screenshot` against the LIVE canvas: route through the
@@ -279,7 +280,7 @@ pub(super) fn serve_connection<S: std::io::Read + std::io::Write>(
     if let Some(response) = process_lightweight_live_tool(&req.body, req_tx, wake_ui)? {
         return write_json_rpc_response(stream, &response);
     }
-    let mut state = request_snapshot(req_tx, wake_ui)?;
+    let (mut state, document_epoch) = request_snapshot_with_epoch(req_tx, wake_ui)?;
     let response = crate::mcp_serve::process_message_with_write_applier(
         &mut state,
         &req.body,
@@ -303,20 +304,30 @@ pub(super) fn serve_connection<S: std::io::Read + std::io::Write>(
         },
     )?
     .unwrap_or_default();
-    report_saved_document(&req.body, &response, req_tx, wake_ui);
+    // Only a `save_document` reply is reported, and that tool applies no
+    // write, so this names the snapshot its file was written from.
+    let saved_from = McpSavedRevision {
+        document_epoch,
+        generation: state.document_generation(),
+        revision: state.document_revision(),
+    };
+    report_saved_document(&req.body, &response, Some(saved_from), req_tx, wake_ui);
     write_json_rpc_response(stream, &response)
 }
 
 /// Tell the UI about a file a client just wrote with `save_document`, so
-/// the host can list it on Home (its preview is already queued).
+/// the host can list it on Home (its preview is already queued) and, when
+/// `saved_from` names the live document, bind the file like Save As (#403).
 pub(super) fn report_saved_document(
     line: &str,
     response: &str,
+    saved_from: Option<McpSavedRevision>,
     req_tx: &Sender<UiRequest>,
     wake_ui: &UiWake,
 ) {
     if let Some(path) = crate::mcp_serve::saved_document_path(line, response) {
-        if req_tx.send(UiRequest::DocumentSaved { path }).is_ok() {
+        let saved = McpSavedDocument { path, saved_from };
+        if req_tx.send(UiRequest::DocumentSaved(saved)).is_ok() {
             wake_ui();
         }
     }

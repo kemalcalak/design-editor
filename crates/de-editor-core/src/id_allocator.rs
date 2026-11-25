@@ -121,7 +121,8 @@ fn allocate_with(
 
 /// Collect page and node ids across the complete canonical document.
 ///
-/// Page ids and nodes share one collision domain. The walk is iterative so a
+/// Page ids and nodes share one collision domain; instance-owned content
+/// ([`crate::instance_ids`]) is part of it. The walk is iterative so a
 /// validated but deeply nested imported tree does not consume the call stack.
 pub fn collect_document_ids(doc: &PenDocument) -> HashSet<NodeId> {
     let mut ids = HashSet::new();
@@ -138,6 +139,11 @@ pub fn collect_document_ids(doc: &PenDocument) -> HashSet<NodeId> {
         if let Some(id) = NodeId::new_opt(node.id_str()) {
             ids.insert(id);
         }
+        crate::instance_ids::for_each_owned_id(node, &mut |id| {
+            if let Some(id) = NodeId::new_opt(id) {
+                ids.insert(id);
+            }
+        });
         if let Some(children) = node.children() {
             stack.extend(children.iter());
         }

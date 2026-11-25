@@ -242,6 +242,8 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "dialog.motionRepairTitle" => "一部のアニメーションを読み込みませんでした",
         "dialog.motionRepairBody" => "“{{name}}” にはこのバージョンで再生できないアニメーションデータがあるため、読み込みませんでした:\n\n{{details}}\n\nドキュメントはそれを除いて開きました。保存するとファイルから完全に削除されます。元のファイルを残すには保存せずに閉じてください。",
         "dialog.motionRepairToast" => "開く際に {{count}} 件のアニメーションデータを読み込みませんでした（{{details}}）。保存すると完全に削除されます。",
+        "dialog.duplicateIdsTitle" => "一部の ID が重複しています",
+        "dialog.duplicateIdsBody" => "「{{name}}」には同じ ID を持つノードがあり、そのうち 1 つへの編集が別のノードに適用されることがあります：\n\n{{details}}\n\n今すぐ ID を修復しますか？各 ID は最初のノードが保持し、ほかのノードには新しい ID が付きます。キャンバスは変わりません。元に戻すことができ、保存するまでファイルは変更されません。",
         "import.fromPptx" => "PowerPoint から読み込む",
         "dialog.pptxImportTitle" => "PowerPoint から読み込みました",
         "dialog.pptxImportBody" => "“{{name}}” の一部はそのまま読み込めませんでした:\n\n{{details}}\n\n残りは未保存の新規デッキとして開きました。元のファイルは変更されていません。",

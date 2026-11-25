@@ -9,6 +9,15 @@ pub(super) fn request_snapshot(
     req_tx: &Sender<UiRequest>,
     wake_ui: &UiWake,
 ) -> Result<EditorState, McpLiveError> {
+    request_snapshot_with_epoch(req_tx, wake_ui).map(|(state, _)| state)
+}
+
+/// [`request_snapshot`] plus the host document epoch it was taken in, for
+/// a call that reports back which document it read (`save_document`).
+pub(super) fn request_snapshot_with_epoch(
+    req_tx: &Sender<UiRequest>,
+    wake_ui: &UiWake,
+) -> Result<(EditorState, u64), McpLiveError> {
     request_snapshot_within(req_tx, wake_ui, UI_ACK_TIMEOUT)
 }
 
@@ -19,7 +28,7 @@ pub(super) fn request_snapshot_within(
     req_tx: &Sender<UiRequest>,
     wake_ui: &UiWake,
     timeout: Duration,
-) -> Result<EditorState, McpLiveError> {
+) -> Result<(EditorState, u64), McpLiveError> {
     let (ack_tx, ack_rx) = mpsc::sync_channel(1);
     let abandoned = Arc::new(AtomicBool::new(false));
     req_tx
@@ -37,7 +46,8 @@ pub(super) fn request_snapshot_within(
     }
     // The document-sized copy happens here, on the connection thread,
     // not on the UI thread that shared it (#352).
-    recv_with_timeout(result, "snapshot").map(SharedRequestSnapshot::into_state)
+    recv_with_timeout(result, "snapshot")
+        .map(|live| (live.snapshot.into_state(), live.document_epoch))
 }
 
 pub(super) fn request_list_pages(

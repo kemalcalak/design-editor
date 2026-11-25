@@ -6,7 +6,13 @@
 
 use super::*;
 
-pub(super) fn rebuild_registry(doc: &EditorState, requested_tool: Option<&str>) -> ToolRegistry {
+/// `save_target` is the requested call's `filePath`, which a
+/// `save_document` snapshot needs to write its library links relative to.
+pub(super) fn rebuild_registry(
+    doc: &EditorState,
+    requested_tool: Option<&str>,
+    save_target: Option<&str>,
+) -> ToolRegistry {
     let mut r = ToolRegistry::default();
 
     macro_rules! register_tool {
@@ -30,7 +36,7 @@ pub(super) fn rebuild_registry(doc: &EditorState, requested_tool: Option<&str>) 
         }
     }
     register_tool!("open_document", open_document_snapshot(doc));
-    register_tool!("save_document", save_document_snapshot(doc));
+    register_tool!("save_document", save_document_snapshot_to(doc, save_target));
     register_tool!("get_document_info", document_info_snapshot(doc));
     register_tool!("get_selection", selection_snapshot(doc));
     register_tool!("get_node", get_node_snapshot(doc));
@@ -42,6 +48,10 @@ pub(super) fn rebuild_registry(doc: &EditorState, requested_tool: Option<&str>) 
     register_tool!("upsert_screen", upsert_screen_snapshot());
     register_tool!("conversion_status", conversion_status_snapshot(doc));
     register_tool!("lint_document", lint_document_snapshot(doc));
+    register_tool!(
+        "repair_duplicate_ids",
+        de_mcp::repair_duplicate_ids_snapshot(doc)
+    );
     register_tool!("save_theme_preset", save_theme_preset_snapshot(doc));
     register_tool!("load_theme_preset", load_theme_preset_snapshot());
     register_tool!("list_theme_presets", list_theme_presets_snapshot());

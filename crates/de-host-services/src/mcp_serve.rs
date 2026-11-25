@@ -46,7 +46,7 @@ use de_mcp::{
     redo_snapshot, remove_library_snapshot, remove_node_effect_snapshot, remove_page_snapshot,
     rename_component_snapshot, rename_page_snapshot, rename_variable_snapshot,
     reorder_page_snapshot, reorder_selected_snapshot, replace_all_matching_properties_snapshot,
-    replace_node_snapshot, run_stdio_with_applier, save_document_snapshot,
+    replace_node_snapshot, run_stdio_with_applier, save_document_snapshot_to,
     save_theme_preset_snapshot, search_all_unique_properties_snapshot, selection_snapshot,
     set_active_axis_value_snapshot, set_active_page_snapshot, set_active_tool_snapshot,
     set_design_md_snapshot, set_ellipse_arc_snapshot, set_node_collapsed_snapshot,
@@ -288,7 +288,13 @@ where
     // borrows it once the applier closure mutates it.
     let call = de_mcp::parse_tool_call(trimmed);
     let requested_tool = call.as_ref().map(|call| call.tool.clone());
-    let registry = rebuild_registry(state, requested_tool.as_deref());
+    // `save_document` writes library links relative to the file it saves.
+    let save_target = call
+        .as_ref()
+        .filter(|call| call.tool == "save_document")
+        .and_then(|call| call.arguments.get("filePath"))
+        .map(String::as_str);
+    let registry = rebuild_registry(state, requested_tool.as_deref(), save_target);
     let response = process_tool_message_with_registry(&registry, line, |tool_name, cmd| {
         // New page roots land in free canvas space, in front (#37). Placing
         // here, before the host applier runs, gives every transport the

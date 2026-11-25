@@ -143,3 +143,26 @@ fn dropped_animation_data_is_reported_by_node() {
     assert!(loaded.report.motion_repairs[0].contains("hero"));
     let _ = std::fs::remove_file(path);
 }
+
+#[test]
+fn reports_ids_used_by_more_than_one_node() {
+    let path = temp_path("duplicate-ids");
+    std::fs::write(
+        &path,
+        r#"{"version":"1.0.0","children":[],"pages":[
+            {"id":"p1","name":"Home","children":[{"type":"frame","id":"n7","name":"Hero"}]},
+            {"id":"p2","name":"Shop","children":[
+                {"type":"frame","id":"card","reusable":true,"children":[
+                    {"type":"frame","id":"slot"}]},
+                {"type":"ref","id":"inst","ref":"card","descendants":{
+                    "slot":{"children":[{"type":"text","id":"n7","name":"Price","content":"9"}]}}}]}]}"#,
+    )
+    .expect("write fixture");
+    let loaded = load_editor_state_with_report(&path, de_editor_core::Locale::EnUs).expect("loads");
+    let _ = std::fs::remove_file(&path);
+    let duplicates = &loaded.report.duplicate_ids;
+    assert_eq!(duplicates.len(), 1, "{duplicates:?}");
+    assert_eq!(duplicates[0].id, "n7");
+    assert_eq!(duplicates[0].pages, vec!["Home", "Shop"]);
+    assert_eq!(duplicates[0].names, vec!["Hero", "Price"]);
+}

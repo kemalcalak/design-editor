@@ -101,11 +101,44 @@ pub struct McpLiveServer {
     /// reads nor mutates the live document.
     pending_design_md: VecDeque<PendingDesignMdRequest>,
     /// Files a client wrote with `save_document`, for the host to list on
-    /// Home. Their previews are already queued.
-    saved_documents: Vec<std::path::PathBuf>,
+    /// Home and, for a save of the live document, to bind like Save As
+    /// (#403). Their previews are already queued.
+    saved_documents: Vec<McpSavedDocument>,
+    /// The host's document epoch, stamped on every snapshot handed out so a
+    /// save written from one names the document it came from. Hosts that
+    /// swap whole documents keep it current with
+    /// [`McpLiveServer::set_document_epoch`]; UI-thread-only.
+    host_document_epoch: u64,
     /// The page root the last write added, for the host to bring into view
     /// (#264). Taken by [`McpLiveServer::take_follow_target`].
     follow_target: Option<McpFollowTarget>,
+}
+
+/// A file a client wrote with `save_document`.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct McpSavedDocument {
+    pub path: std::path::PathBuf,
+    /// The live document state the file holds. `None` when the client
+    /// copied another file (`sourceFilePath`), which must not rebind the
+    /// open document.
+    pub saved_from: Option<McpSavedRevision>,
+}
+
+/// The live document state a `save_document` wrote, in the same terms the
+/// host's own Save acknowledges: it binds the file only while
+/// `document_epoch` and `generation` still name the open document, and
+/// marks `revision` saved, so edits made after the snapshot stay dirty.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct McpSavedRevision {
+    pub document_epoch: u64,
+    pub generation: u64,
+    pub revision: u64,
+}
+
+/// A request snapshot and the host document epoch it was taken in.
+struct LiveSnapshot {
+    snapshot: SharedRequestSnapshot,
+    document_epoch: u64,
 }
 
 /// A page root an MCP write just added: where the canvas follows the agent.
@@ -149,7 +182,7 @@ struct UnplacedWrite {
 
 enum UiRequest {
     Snapshot {
-        ack: SyncSender<SharedRequestSnapshot>,
+        ack: SyncSender<LiveSnapshot>,
         /// Set by the connection once it stopped waiting (`UI_ACK_TIMEOUT`):
         /// the pump then skips the capture nobody will read (#350).
         abandoned: Arc<AtomicBool>,
@@ -193,9 +226,7 @@ enum UiRequest {
         request: PendingDesignMdRequest,
     },
     /// A client saved a document with `save_document`.
-    DocumentSaved {
-        path: std::path::PathBuf,
-    },
+    DocumentSaved(McpSavedDocument),
     /// `debug_screenshot` against the LIVE canvas — the connection
     /// thread blocks on `ack` while the UI pump renders the active
     /// page / node through the raster export pipeline
@@ -272,6 +303,7 @@ impl McpLiveServer {
             last_snapshot_doc: None,
             pending_design_md: VecDeque::new(),
             saved_documents: Vec::new(),
+            host_document_epoch: 0,
             follow_target: None,
         })
     }
@@ -320,7 +352,10 @@ impl McpLiveServer {
                     ) {
                         self.last_snapshot_doc =
                             Some((snapshot.shared_doc().clone(), Instant::now()));
-                        let _ = ack.send(snapshot);
+                        let _ = ack.send(LiveSnapshot {
+                            snapshot,
+                            document_epoch: self.host_document_epoch,
+                        });
                     }
                 }
                 Ok(UiRequest::ListPages { ack }) => {
@@ -407,8 +442,8 @@ impl McpLiveServer {
                 Ok(UiRequest::GenerateDesignMd { request }) => {
                     self.pending_design_md.push_back(request);
                 }
-                Ok(UiRequest::DocumentSaved { path }) => {
-                    self.saved_documents.push(path);
+                Ok(UiRequest::DocumentSaved(saved)) => {
+                    self.saved_documents.push(saved);
                     outcome.repaint = true;
                 }
                 #[cfg(feature = "mcp-debug-tools")]
@@ -450,8 +485,14 @@ impl McpLiveServer {
 
     /// Take the files clients saved with `save_document` since the last
     /// call, oldest first.
-    pub fn take_saved_documents(&mut self) -> Vec<std::path::PathBuf> {
+    pub fn take_saved_documents(&mut self) -> Vec<McpSavedDocument> {
         std::mem::take(&mut self.saved_documents)
+    }
+
+    /// Record the host's current document epoch before [`Self::pump`], so
+    /// the snapshots it hands out carry it (see [`McpSavedRevision`]).
+    pub fn set_document_epoch(&mut self, epoch: u64) {
+        self.host_document_epoch = epoch;
     }
 
     /// The page root the latest write added, once (#264).
@@ -642,6 +683,9 @@ use ui_requests::*;
 #[cfg(test)]
 #[path = "mcp_live_placement_tests.rs"]
 mod placement_tests;
+#[cfg(test)]
+#[path = "mcp_live_save_tests.rs"]
+mod save_tests;
 #[cfg(test)]
 #[path = "mcp_live_snapshot_tests.rs"]
 mod snapshot_tests;

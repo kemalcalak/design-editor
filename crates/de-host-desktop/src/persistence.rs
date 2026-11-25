@@ -201,6 +201,7 @@ fn load_into_host(
     let pen_dev_import = loaded.report.pen_dev_import.clone();
     let pptx_import = loaded.report.pptx_import.clone();
     let motion_repairs = loaded.report.motion_repairs.clone();
+    let duplicate_ids = loaded.report.duplicate_ids.clone();
     let bound_path = (!loaded.report.is_import()).then(|| path.to_path_buf());
     set_file_name_display(&mut state, bound_path.as_deref());
     state.clear_selection();
@@ -235,6 +236,9 @@ fn load_into_host(
             &motion_repairs.join("\n"),
         );
     }
+    if !duplicate_ids.is_empty() {
+        offer_duplicate_id_repair(host, path, &duplicate_ids);
+    }
     Ok(Some(OpenedDocument {
         source: path.to_path_buf(),
         bound: bound_path,
@@ -266,18 +270,64 @@ fn alert_import_losses(
     details: &str,
 ) {
     let locale = host.editor_state().editor_ui.locale;
-    let name = path
-        .file_name()
-        .map(|name| name.to_string_lossy().into_owned())
-        .unwrap_or_else(|| path.display().to_string());
-    let body = de_i18n::translate(locale, body_key)
-        .replace("{{name}}", &name)
-        .replace("{{details}}", details);
+    let body = file_dialog_body(locale, path, body_key, details);
     crate::message_dialog::alert(
         de_i18n::translate(locale, title_key),
         &body,
         rfd::MessageLevel::Warning,
     );
+}
+
+/// A dialog body naming the opened file (`{{name}}`) and what was found in
+/// it (`{{details}}`).
+fn file_dialog_body(
+    locale: de_editor_core::Locale,
+    path: &std::path::Path,
+    body_key: &'static str,
+    details: &str,
+) -> String {
+    let name = path
+        .file_name()
+        .map(|name| name.to_string_lossy().into_owned())
+        .unwrap_or_else(|| path.display().to_string());
+    de_i18n::translate(locale, body_key)
+        .replace("{{name}}", &name)
+        .replace("{{details}}", details)
+}
+
+/// How many duplicate ids the open warning lists before "…".
+const DUPLICATE_IDS_LISTED: usize = 12;
+
+/// Warn about ids more than one node uses (#364) and offer to repair them
+/// (`EditorCommand::RepairDuplicateIds`, one undo step). Never repaired
+/// without the user's yes: the file stays as it is until they save.
+fn offer_duplicate_id_repair(
+    host: &mut WidgetHostNative,
+    path: &std::path::Path,
+    duplicates: &[de_editor_core::duplicate_ids::DuplicateIdReport],
+) {
+    let locale = host.editor_state().editor_ui.locale;
+    let mut lines: Vec<String> = duplicates
+        .iter()
+        .take(DUPLICATE_IDS_LISTED)
+        .map(ToString::to_string)
+        .collect();
+    if duplicates.len() > DUPLICATE_IDS_LISTED {
+        lines.push("…".to_string());
+    }
+    let body = file_dialog_body(locale, path, "dialog.duplicateIdsBody", &lines.join("\n"));
+    let answer = crate::message_dialog::ask_yes_no(
+        de_i18n::translate(locale, "dialog.duplicateIdsTitle"),
+        &body,
+        rfd::MessageLevel::Warning,
+    );
+    if answer == Some(crate::message_dialog::Choice::Yes)
+        && host
+            .editor_state_mut()
+            .apply(de_editor_core::EditorCommand::RepairDuplicateIds)
+    {
+        host.mark_editor_state_dirty();
+    }
 }
 
 /// The picker for a File ▸ Import source that opens like a document.

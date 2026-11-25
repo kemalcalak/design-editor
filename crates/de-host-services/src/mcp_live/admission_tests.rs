@@ -6,7 +6,7 @@
 use super::super::*;
 use super::*;
 
-const PORT: u16 = 51234;
+pub(in crate::mcp_live) const PORT: u16 = 51234;
 const TOKEN: &str = "d34db33f-cafe";
 /// A read-only tool call. Reads were entirely unauthenticated before this
 /// gate existed, so the read path is exactly what these tests must pin.
@@ -34,8 +34,8 @@ impl std::io::Write for MockStream {
 }
 
 /// Run one raw HTTP request through the live router and return the raw
-/// response.
-fn drive(request: &str, req_tx: &Sender<UiRequest>) -> String {
+/// response. Shared with the `save_document` routing tests.
+pub(in crate::mcp_live) fn drive(request: &str, req_tx: &Sender<UiRequest>) -> String {
     let admission = LiveAdmission::new(TOKEN.to_string(), PORT);
     let stateful_lock = Mutex::new(());
     let quit_flag = AtomicBool::new(false);
@@ -58,7 +58,7 @@ fn drive(request: &str, req_tx: &Sender<UiRequest>) -> String {
     String::from_utf8_lossy(&stream.output).into_owned()
 }
 
-fn request(path: &str, headers: &str, body: &str) -> String {
+pub(in crate::mcp_live) fn request(path: &str, headers: &str, body: &str) -> String {
     request_with_method("POST", path, headers, body)
 }
 
@@ -337,10 +337,13 @@ fn extension_snapshot_ingress_inserts_without_a_token() {
         while let Ok(request) = req_rx.recv_timeout(Duration::from_secs(5)) {
             match request {
                 UiRequest::Snapshot { ack, .. } => {
-                    let _ = ack.send(de_editor_core::request_snapshot::shared_snapshot(
-                        &mut EditorState::starter(),
-                        None,
-                    ));
+                    let _ = ack.send(LiveSnapshot {
+                        snapshot: de_editor_core::request_snapshot::shared_snapshot(
+                            &mut EditorState::starter(),
+                            None,
+                        ),
+                        document_epoch: 0,
+                    });
                 }
                 UiRequest::Apply { ack, .. } => {
                     applied += 1;
