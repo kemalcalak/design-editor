@@ -10,6 +10,8 @@ use crate::export_pdf::{render_node_on_page_pdf_bytes, render_page_pdf_bytes};
 
 pub struct ExportItem {
     scene: LayoutScene,
+    /// Layer names by node id, for SVG element ids.
+    names: de_pen_loader::SceneLayerNames,
     selected_node_id: Option<String>,
 }
 
@@ -30,7 +32,7 @@ impl ExportItem {
             _ => {
                 return ToolOutcome::Err(
                     ToolErrorCode::MissingArgument,
-                    "format is required (png|jpeg|webp|pdf)".into(),
+                    "format is required (png|jpeg|webp|svg|pdf)".into(),
                 );
             }
         };
@@ -58,6 +60,9 @@ impl ExportItem {
             .and_then(|value| value.trim().parse::<f32>().ok())
             .unwrap_or(1.0);
 
+        if format == "svg" {
+            return self.export_svg(item_id);
+        }
         let (bytes, item_type) = if let Some(page) =
             self.scene.pages.iter().find(|page| page.id == item_id)
         {
@@ -109,6 +114,48 @@ impl ExportItem {
     }
 }
 
+impl ExportItem {
+    /// A page (every top-level frame a group) or a node as one layered SVG
+    /// (#407), with `warnings` for what the file leaves out.
+    fn export_svg(&self, item_id: &str) -> ToolOutcome {
+        let (result, item_type) =
+            if let Some(page) = self.scene.pages.iter().find(|page| page.id == item_id) {
+                (
+                    crate::export_svg::render_layered_page_svg(page, &self.names),
+                    "page",
+                )
+            } else if let Some(page) = self
+                .scene
+                .pages
+                .iter()
+                .find(|page| page.find(item_id).is_some())
+            {
+                (
+                    crate::export_svg::render_layered_node_on_page_svg(page, &self.names, item_id),
+                    "node",
+                )
+            } else {
+                return ToolOutcome::Err(
+                    ToolErrorCode::InvalidArgument,
+                    format!("item {item_id} is not a page or node in the document"),
+                );
+            };
+        match result {
+            Ok(export) => ToolOutcome::OkJson(
+                serde_json::json!({
+                    "itemId": item_id,
+                    "itemType": item_type,
+                    "format": "svg",
+                    "bytes_base64": base64::engine::general_purpose::STANDARD.encode(export.svg),
+                    "warnings": export.warnings,
+                })
+                .to_string(),
+            ),
+            Err(error) => ToolOutcome::Err(ToolErrorCode::ToolFailed, error.to_string()),
+        }
+    }
+}
+
 fn canonical_format(format: &str) -> &str {
     if format == "jpg" {
         "jpeg"
@@ -120,13 +167,15 @@ fn canonical_format(format: &str) -> &str {
 fn unsupported_format(format: &str) -> ToolOutcome {
     ToolOutcome::Err(
         ToolErrorCode::InvalidArgument,
-        format!("unknown format {format:?}: must be one of png, jpeg, webp, pdf"),
+        format!("unknown format {format:?}: must be one of png, jpeg, webp, svg, pdf"),
     )
 }
 
 pub fn export_item_snapshot(state: &EditorState) -> ExportItem {
+    let (scene, names) = de_pen_loader::editor_state_to_layout_scene_with_names(state);
     ExportItem {
-        scene: de_pen_loader::editor_state_to_layout_scene(state),
+        scene,
+        names,
         selected_node_id: state
             .selection
             .anchor
@@ -180,6 +229,7 @@ mod tests {
     fn tool_from_scene(scene: LayoutScene, selected_node_id: Option<String>) -> ExportItem {
         ExportItem {
             scene,
+            names: Default::default(),
             selected_node_id,
         }
     }

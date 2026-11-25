@@ -1,12 +1,16 @@
 //! MCP tool `export_nodes` — renders one or more nodes to base64-encoded
-//! image bytes (PNG / JPEG / WEBP) or PDF bytes, returning one entry per
-//! requested node.
+//! image bytes (PNG / JPEG / WEBP), layered SVG or PDF bytes, returning one
+//! entry per requested node.
 //!
-//! Input: `{ "nodeIds": [String], "format": "png"|"jpeg"|"webp"|"pdf",
+//! Input: `{ "nodeIds": [String], "format": "png"|"jpeg"|"webp"|"svg"|"pdf",
 //!           "scale"?: number }`
 //!
 //! Output: `{ "files": [ { "nodeId": String, "bytes_base64": String,
-//!                          "format": String } ] }`
+//!                          "format": String, "warnings"?: [String] } ] }`
+//!
+//! SVG (#407): one file per node through `crate::export_svg` — the layer
+//! tree as nested `<g>`, layer names as ids, live text, embedded images;
+//! `warnings` lists what the file leaves out. `scale` does not apply.
 //!
 //! Unknown node ids are skipped with a note in the response (consistent
 //! with allowing partial success across a batch). This is documented in
@@ -33,6 +37,8 @@ use crate::export_pdf::render_nodes_pdf_bytes;
 pub struct ExportNodes {
     /// Layout-resolved scene snapshot.
     scene: LayoutScene,
+    /// Layer names by node id, for SVG element ids.
+    names: de_pen_loader::SceneLayerNames,
 }
 
 impl McpTool for ExportNodes {
@@ -74,7 +80,7 @@ impl ExportNodes {
             _ => {
                 return ToolOutcome::Err(
                     ToolErrorCode::MissingArgument,
-                    "format is required (png|jpeg|webp|pdf)".into(),
+                    "format is required (png|jpeg|webp|svg|pdf)".into(),
                 )
             }
         };
@@ -88,6 +94,7 @@ impl ExportNodes {
         // --- render ---
         match format_str {
             "pdf" => render_pdf(&self.scene, &node_ids, scale),
+            "svg" => render_svg(&self.scene, &self.names, &node_ids),
             fmt => {
                 let raster_fmt = match fmt {
                     "png" => RasterFormat::Png,
@@ -97,7 +104,7 @@ impl ExportNodes {
                         return ToolOutcome::Err(
                             ToolErrorCode::InvalidArgument,
                             format!(
-                                "unknown format {other:?}: must be one of png, jpeg, webp, pdf"
+                                "unknown format {other:?}: must be one of png, jpeg, webp, svg, pdf"
                             ),
                         )
                     }
@@ -111,9 +118,36 @@ impl ExportNodes {
 /// Snapshot constructor — derives the layout scene from the live editor
 /// state at registration time (same pattern as `get_screenshot_snapshot`).
 pub fn export_nodes_snapshot(state: &EditorState) -> ExportNodes {
-    ExportNodes {
-        scene: de_pen_loader::editor_state_to_active_page_layout_scene(state),
-    }
+    let (scene, names) = de_pen_loader::editor_state_to_active_page_layout_scene_with_names(state);
+    ExportNodes { scene, names }
+}
+
+/// One layered SVG per node; a node that is missing or paints nothing gets
+/// an `error` entry, like the raster path.
+fn render_svg(
+    scene: &LayoutScene,
+    names: &de_pen_loader::SceneLayerNames,
+    node_ids: &[String],
+) -> ToolOutcome {
+    let files: Vec<serde_json::Value> = node_ids
+        .iter()
+        .map(
+            |id| match crate::export_svg::render_layered_node_svg(scene, names, id) {
+                Ok(export) => serde_json::json!({
+                    "nodeId": id,
+                    "bytes_base64": base64::engine::general_purpose::STANDARD.encode(export.svg),
+                    "format": "svg",
+                    "warnings": export.warnings,
+                }),
+                Err(e) => serde_json::json!({
+                    "nodeId": id,
+                    "error": e.to_string(),
+                    "format": "svg",
+                }),
+            },
+        )
+        .collect();
+    ToolOutcome::OkJson(serde_json::json!({ "files": files }).to_string())
 }
 
 /// Render each node as a raster image and assemble the `files` array.
@@ -280,7 +314,10 @@ mod tests {
     /// Build a minimal `ExportNodes` tool directly from a `LayoutScene` to
     /// avoid the `EditorState` round-trip in unit tests.
     fn tool_from_scene(scene: de_editor_ui::layout_scene::LayoutScene) -> ExportNodes {
-        ExportNodes { scene }
+        ExportNodes {
+            scene,
+            names: Default::default(),
+        }
     }
 
     fn call_tool(tool: &ExportNodes, node_ids_json: &str, format: &str) -> ToolOutcome {

@@ -79,6 +79,44 @@ pub fn export_frames_to_dir(
     report
 }
 
+/// Write each planned frame as one layered SVG (#407): the layer tree as
+/// nested groups, layer names as ids, live text, embedded images. Returns
+/// the report and every file's left-out features, prefixed with its name.
+pub fn export_frames_svg_to_dir(
+    state: &EditorState,
+    directory: &Path,
+    targets: &[FrameExportTarget],
+) -> (BatchExportReport, Vec<String>) {
+    let mut report = BatchExportReport::default();
+    let mut warnings = Vec::new();
+    if targets.is_empty() {
+        return (report, warnings);
+    }
+    let (scene, names) = de_pen_loader::editor_state_to_active_page_layout_scene_with_names(state);
+    for target in targets {
+        let written =
+            crate::export_svg::render_layered_node_svg(&scene, &names, target.node_id.as_str())
+                .map_err(|e| e.to_string())
+                .and_then(|export| {
+                    std::fs::write(directory.join(&target.file_name), export.svg)
+                        .map_err(|e| e.to_string())?;
+                    Ok(export.warnings)
+                });
+        match written {
+            Ok(file_warnings) => {
+                report.written.push(target.file_name.clone());
+                warnings.extend(
+                    file_warnings
+                        .into_iter()
+                        .map(|w| format!("{}: {w}", target.file_name)),
+                );
+            }
+            Err(e) => report.failed.push((target.file_name.clone(), e)),
+        }
+    }
+    (report, warnings)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

@@ -130,7 +130,7 @@ pub(super) fn svg_id(id: &str) -> String {
     out
 }
 
-fn matrix_value(xform: glam::Affine2) -> String {
+pub(super) fn matrix_value(xform: glam::Affine2) -> String {
     let m = xform.matrix2;
     let t = xform.translation;
     format!(

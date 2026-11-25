@@ -1,12 +1,13 @@
-//! Rectangle emission helpers for the SVG serializer.
+//! Rectangle emission helpers for the SVG serializer. `attrs` are the layer
+//! attributes of the node the rect stands for (`svg_export/node.rs`); the
+//! stroke overlay of a container is an unnamed paint detail.
 
-use super::{
-    fill_attrs, fill_stroke_attrs, normalize_rect, stroke_attrs, stroke_style_attrs, xml_escape,
-};
+use super::shapes::stroke_aligned;
+use super::{fill_attrs, fill_stroke_attrs, normalize_rect, stroke_attrs, stroke_style_attrs};
 use crate::layout_scene::{NodeKind, SceneNode};
 use std::fmt::Write as _;
 
-pub(super) fn emit_rect(out: &mut String, node: &SceneNode) {
+pub(super) fn emit_rect(out: &mut String, node: &SceneNode, attrs: &str) {
     if node.fill.is_none()
         && node.gradient.is_none()
         && node.stroke.is_none()
@@ -14,43 +15,45 @@ pub(super) fn emit_rect(out: &mut String, node: &SceneNode) {
     {
         return;
     }
-    emit_rect_shape(out, node, Some(&node.id), &fill_stroke_attrs(node));
+    emit_rect_shape(out, node, attrs, &fill_stroke_attrs(node), true);
 }
 
-pub(super) fn emit_rect_fill(out: &mut String, node: &SceneNode) {
-    emit_rect_shape(out, node, Some(&node.id), &fill_attrs(node));
+pub(super) fn emit_rect_fill(out: &mut String, node: &SceneNode, attrs: &str) {
+    emit_rect_shape(out, node, attrs, &fill_attrs(node), false);
 }
 
 pub(super) fn emit_rect_stroke_overlay(out: &mut String, node: &SceneNode) {
     let Some(stroke) = node.stroke else {
         return;
     };
-    let attrs = format!(
+    let paint = format!(
         r#" fill="none"{}{}"#,
         stroke_attrs(stroke.color, stroke.width),
         stroke_style_attrs(node)
     );
     // The overlay is a paint detail, not a second scene node. Leaving it
     // unlabelled avoids collisions with authored ids such as `foo-stroke`.
-    emit_rect_shape(out, node, None, &attrs);
+    emit_rect_shape(out, node, "", &paint, true);
 }
 
-fn emit_rect_shape(out: &mut String, node: &SceneNode, id: Option<&str>, attrs: &str) {
+fn emit_rect_shape(out: &mut String, node: &SceneNode, attrs: &str, paint: &str, stroked: bool) {
     let rect = normalize_rect(node.bounds);
     if rect.size.x == 0.0 && rect.size.y == 0.0 {
         return;
     }
-    let rx = if node.corner_radius > 0.0 {
-        format!(r#" rx="{}""#, node.corner_radius)
+    let (rect, radius) = if stroked {
+        stroke_aligned(node, rect, node.corner_radius)
+    } else {
+        (rect, node.corner_radius)
+    };
+    let rx = if radius > 0.0 {
+        format!(r#" rx="{radius}""#)
     } else {
         String::new()
     };
-    let id = id
-        .map(|id| format!(r#" id="{}""#, xml_escape(id)))
-        .unwrap_or_default();
     let _ = write!(
         out,
-        r#"<rect{id} x="{}" y="{}" width="{}" height="{}"{rx}{attrs}/>"#,
+        r#"<rect{attrs} x="{}" y="{}" width="{}" height="{}"{rx}{paint}/>"#,
         rect.origin.x, rect.origin.y, rect.size.x, rect.size.y,
     );
 }

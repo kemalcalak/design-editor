@@ -23,7 +23,7 @@ use std::path::PathBuf;
 use de_editor_core::EditorState;
 use de_mcp::{McpTool, ToolErrorCode, ToolOutcome};
 
-use crate::export_batch::export_frames_to_dir;
+use crate::export_batch::{export_frames_svg_to_dir, export_frames_to_dir};
 
 pub struct ExportFrames {
     state: EditorState,
@@ -55,10 +55,10 @@ impl ExportFrames {
             .map(|value| value.trim())
             .filter(|value| !value.is_empty())
             .unwrap_or("png");
-        if !matches!(extension, "png" | "jpeg" | "jpg" | "webp") {
+        if !matches!(extension, "png" | "jpeg" | "jpg" | "webp" | "svg") {
             return ToolOutcome::Err(
                 ToolErrorCode::InvalidArgument,
-                format!("unknown format {extension:?}: must be one of png, jpeg, webp"),
+                format!("unknown format {extension:?}: must be one of png, jpeg, webp, svg"),
             );
         }
 
@@ -76,7 +76,14 @@ impl ExportFrames {
             );
         }
 
-        let report = export_frames_to_dir(&self.state, &directory, &targets);
+        let (report, warnings) = if extension == "svg" {
+            export_frames_svg_to_dir(&self.state, &directory, &targets)
+        } else {
+            (
+                export_frames_to_dir(&self.state, &directory, &targets),
+                Vec::new(),
+            )
+        };
         // Partial success is reported, not raised: one unrenderable frame must
         // not throw away the files that did land.
         let failed: Vec<serde_json::Value> = report
@@ -84,16 +91,17 @@ impl ExportFrames {
             .iter()
             .map(|(file_name, detail)| serde_json::json!({ "file": file_name, "error": detail }))
             .collect();
-        ToolOutcome::OkJson(
-            serde_json::json!({
-                "directory": directory.display().to_string(),
-                "format": extension,
-                "attempted": report.attempted(),
-                "written": report.written,
-                "failed": failed,
-            })
-            .to_string(),
-        )
+        let mut result = serde_json::json!({
+            "directory": directory.display().to_string(),
+            "format": extension,
+            "attempted": report.attempted(),
+            "written": report.written,
+            "failed": failed,
+        });
+        if extension == "svg" {
+            result["warnings"] = serde_json::json!(warnings);
+        }
+        ToolOutcome::OkJson(result.to_string())
     }
 }
 

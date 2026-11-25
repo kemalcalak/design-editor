@@ -4,14 +4,55 @@
 //! Interactive hosts use the active-page builder so inactive pages do not pay
 //! ref/token expansion, layout, payload, or scene-allocation costs.
 
+use std::collections::HashMap;
+
 use de_editor_core::scene_vars::VariableTable;
 use jian_scene::layout_scene::{LayoutScene, ScenePage};
 
 use crate::editor_state_var_table;
-use crate::payload::DocPayload;
+use crate::payload::{DocPayload, NodePayload};
+
+/// Layer names by scene node id, as the scene builder saw them (instance
+/// content under its resolved ids). The SVG export writes them as ids.
+pub type SceneLayerNames = HashMap<String, String>;
 
 /// Build a paint-only [`LayoutScene`] from every page in an editor state.
 pub fn editor_state_to_layout_scene(state: &de_editor_core::EditorState) -> LayoutScene {
+    layout_scene(state, None)
+}
+
+/// [`editor_state_to_layout_scene`] plus every node's layer name.
+pub fn editor_state_to_layout_scene_with_names(
+    state: &de_editor_core::EditorState,
+) -> (LayoutScene, SceneLayerNames) {
+    let mut names = SceneLayerNames::new();
+    let scene = layout_scene(state, Some(&mut names));
+    (scene, names)
+}
+
+/// [`editor_state_to_active_page_layout_scene`] plus the active page's
+/// layer names.
+pub fn editor_state_to_active_page_layout_scene_with_names(
+    state: &de_editor_core::EditorState,
+) -> (LayoutScene, SceneLayerNames) {
+    let mut names = SceneLayerNames::new();
+    let scene = active_page_layout_scene(state, None, Some(&mut names));
+    (scene, names)
+}
+
+fn collect_names(nodes: &[NodePayload], names: &mut SceneLayerNames) {
+    for node in nodes {
+        if !node.name.is_empty() {
+            names.insert(node.id.clone(), node.name.clone());
+        }
+        collect_names(&node.children, names);
+    }
+}
+
+fn layout_scene(
+    state: &de_editor_core::EditorState,
+    names: Option<&mut SceneLayerNames>,
+) -> LayoutScene {
     let mut prepared = std::borrow::Cow::Borrowed(&state.doc);
     if de_editor_core::ref_resolve::document_has_refs(&prepared) {
         prepared = std::borrow::Cow::Owned(de_editor_core::ref_resolve::resolve_refs_for_canvas(
@@ -32,6 +73,11 @@ pub fn editor_state_to_layout_scene(state: &de_editor_core::EditorState) -> Layo
         crate::adapter::pen_document_to_payload(&prepared).payload
     };
     let var_table: VariableTable = editor_state_var_table(state);
+    if let Some(names) = names {
+        for page in &payload.pages {
+            collect_names(&page.children, names);
+        }
+    }
 
     LayoutScene {
         pages: payload
@@ -61,7 +107,7 @@ pub fn editor_state_to_layout_scene(state: &de_editor_core::EditorState) -> Layo
 pub fn editor_state_to_active_page_layout_scene(
     state: &de_editor_core::EditorState,
 ) -> LayoutScene {
-    active_page_layout_scene(state, None)
+    active_page_layout_scene(state, None, None)
 }
 
 /// [`editor_state_to_active_page_layout_scene`] with only the page root
@@ -73,12 +119,13 @@ pub fn editor_state_to_active_page_root_layout_scene(
     state: &de_editor_core::EditorState,
     root_id: &str,
 ) -> LayoutScene {
-    active_page_layout_scene(state, Some(root_id))
+    active_page_layout_scene(state, Some(root_id), None)
 }
 
 fn active_page_layout_scene(
     state: &de_editor_core::EditorState,
     only_root: Option<&str>,
+    names: Option<&mut SceneLayerNames>,
 ) -> LayoutScene {
     let (mut pages, active_page_index, roots): (
         Vec<ScenePage>,
@@ -172,6 +219,9 @@ fn active_page_layout_scene(
         state.editor_ui.preserve_authored_geometry,
     );
     let var_table = editor_state_var_table(state);
+    if let Some(names) = names {
+        collect_names(&payload.children, names);
+    }
     pages[active_page_index].children = payload
         .children
         .iter()

@@ -82,6 +82,7 @@ mod export_html_template;
 pub mod export_hyperframes;
 pub mod export_pdf;
 pub mod export_pptx;
+pub mod export_svg;
 mod figma_convert;
 mod figma_convert_error;
 pub mod font_host;
