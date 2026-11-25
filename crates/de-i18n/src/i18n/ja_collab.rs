@@ -404,6 +404,14 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "componentProps.instance" => "インスタンスプロパティ",
         "componentProps.color" => "カラープロパティ",
         "componentProps.unbound" => "未バインド",
+        "prototype.trigger.tap" => "タップ",
+        "prototype.trigger.hover" => "ホバー",
+        "prototype.trigger.longPress" => "長押し",
+        "prototype.back" => "戻る",
+        "prototype.brokenLink" => "リンク切れ",
+        "prototype.opens" => "{{host}} を開く",
+        "prototype.scrollTo" => "{{name}} へスクロール",
+        "menu.showPrototypeLinks" => "プロトタイプのリンクを表示",
         _ => return None,
     })
 }

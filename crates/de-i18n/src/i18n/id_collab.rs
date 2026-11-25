@@ -404,6 +404,14 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "componentProps.instance" => "Properti instans",
         "componentProps.color" => "Properti warna",
         "componentProps.unbound" => "tidak terikat",
+        "prototype.trigger.tap" => "Ketuk",
+        "prototype.trigger.hover" => "Arahkan",
+        "prototype.trigger.longPress" => "Tekan lama",
+        "prototype.back" => "Kembali",
+        "prototype.brokenLink" => "Tautan rusak",
+        "prototype.opens" => "Membuka {{host}}",
+        "prototype.scrollTo" => "Gulir ke {{name}}",
+        "menu.showPrototypeLinks" => "Tampilkan tautan prototipe",
         _ => return None,
     })
 }

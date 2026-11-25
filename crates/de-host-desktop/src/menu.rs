@@ -46,6 +46,8 @@ pub enum MenuAction {
     ToggleFullscreen,
     /// View ▸ Present (Cmd+Enter, #157).
     Present,
+    /// View ▸ Show prototype links (#371).
+    TogglePrototypeLinks,
     ToggleGitPanel,
     ToggleDesignMdPanel,
     ToggleComponentBrowserPanel,
@@ -97,6 +99,7 @@ mod backend {
     const ID_UNGROUP: &str = "ungroup";
     const ID_FULLSCREEN: &str = "fullscreen";
     const ID_PRESENT: &str = "present";
+    const ID_PROTOTYPE_LINKS: &str = "prototype-links";
     const ID_GIT_PANEL: &str = "git-panel";
     const ID_DESIGN_MD: &str = "design-md";
     const ID_COMPONENT_BROWSER: &str = "component-browser";
@@ -133,6 +136,7 @@ mod backend {
             ID_UNGROUP => MenuAction::Ungroup,
             ID_FULLSCREEN => MenuAction::ToggleFullscreen,
             ID_PRESENT => MenuAction::Present,
+            ID_PROTOTYPE_LINKS => MenuAction::TogglePrototypeLinks,
             ID_GIT_PANEL => MenuAction::ToggleGitPanel,
             ID_DESIGN_MD => MenuAction::ToggleDesignMdPanel,
             ID_COMPONENT_BROWSER => MenuAction::ToggleComponentBrowserPanel,
@@ -287,6 +291,11 @@ mod backend {
                 ID_PRESENT,
                 tr(locale, "workspace.present"),
                 Some(accel(Code::Enter)),
+            ));
+            let _ = view.append(&item(
+                ID_PROTOTYPE_LINKS,
+                tr(locale, "menu.showPrototypeLinks"),
+                None,
             ));
             let _ = view.append(&PredefinedMenuItem::separator());
             let _ = view.append(&item(ID_GIT_PANEL, tr(locale, "menu.gitPanel"), None));

@@ -103,7 +103,12 @@ const GUIDELINE_TOPICS: &[(&str, &[&str], &[&str])] = &[
     ),
     ("form", &["form-ui"], &["form-ui"]),
     ("design-system", &[], &["design-system-composition"]),
-    ("interactivity", &[], &["interactivity"]),
+    // The generation contract, then the MCP interaction tools (#371).
+    (
+        "interactivity",
+        &["interactions", "prototype"],
+        &["interactivity", "interactions-mcp"],
+    ),
     // The page-scroll contract for external agents driving the MCP tools:
     // K3 and Grok over MCP built a 900 px clipped viewport root when the
     // prompt did not spell the contract out (2026-09-03 matrix), because
@@ -162,8 +167,10 @@ fn compose_skills(names: &[&str]) -> Option<String> {
 /// - `"slides"` (`deck`, `presentation`) — slide layout contracts
 /// - `"form"` (`form-ui`) — form-ui domain
 /// - `"design-system"` — design-system composition
-/// - `"interactivity"` — multi-screen navigation contract (`screen` markers
-///   + `events.onTap` actions) for tappable App Mode preview
+/// - `"interactivity"` (`interactions`, `prototype`) — multi-screen
+///   navigation contract (`screen` markers + `events.onTap` actions) for
+///   tappable App Mode preview, then the MCP interaction tools
+///   (`set_interaction`, `list_interactions`)
 /// - `"scroll"` (`scroll-orchestration`, `parallax`, `page-scroll`) — the
 ///   page-scroll contract: the page root is the `$scroll` source, `pin: true`
 ///   pins, paint-only `translateX/Y` moves

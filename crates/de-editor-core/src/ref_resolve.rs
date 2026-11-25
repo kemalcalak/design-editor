@@ -298,7 +298,11 @@ fn expand_ref(
             .iter()
             .map(|child| remap_ids(child, ref_id, overrides))
             .collect();
+        // A master's `scroll_to` aimed inside the master follows the node
+        // into the instance's id space (#371).
+        let ids = crate::ref_scroll_targets::virtual_ids(&remapped, ref_id);
         merged.insert("children".into(), Value::Array(remapped));
+        crate::ref_scroll_targets::remap_scroll_targets(&mut merged, &ids);
     }
 
     // A failed re-parse must not silently erase the instance from the

@@ -404,6 +404,14 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "componentProps.instance" => "इंस्टेंस प्रॉपर्टी",
         "componentProps.color" => "रंग प्रॉपर्टी",
         "componentProps.unbound" => "बंधा नहीं",
+        "prototype.trigger.tap" => "टैप",
+        "prototype.trigger.hover" => "होवर",
+        "prototype.trigger.longPress" => "देर तक दबाएँ",
+        "prototype.back" => "वापस",
+        "prototype.brokenLink" => "टूटा लिंक",
+        "prototype.opens" => "{{host}} खोलता है",
+        "prototype.scrollTo" => "{{name}} तक स्क्रॉल करें",
+        "menu.showPrototypeLinks" => "प्रोटोटाइप लिंक दिखाएँ",
         _ => return None,
     })
 }

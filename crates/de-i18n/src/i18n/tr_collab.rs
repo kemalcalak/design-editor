@@ -404,6 +404,14 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "componentProps.instance" => "Örnek özelliği",
         "componentProps.color" => "Renk özelliği",
         "componentProps.unbound" => "bağlı değil",
+        "prototype.trigger.tap" => "Dokunma",
+        "prototype.trigger.hover" => "Üzerine gelme",
+        "prototype.trigger.longPress" => "Uzun basma",
+        "prototype.back" => "Geri",
+        "prototype.brokenLink" => "Kırık bağlantı",
+        "prototype.opens" => "{{host}} açılır",
+        "prototype.scrollTo" => "{{name}} bölümüne kaydır",
+        "menu.showPrototypeLinks" => "Prototip bağlantılarını göster",
         _ => return None,
     })
 }

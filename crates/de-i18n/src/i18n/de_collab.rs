@@ -404,6 +404,14 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "componentProps.instance" => "Instanzeigenschaft",
         "componentProps.color" => "Farbeigenschaft",
         "componentProps.unbound" => "nicht verknüpft",
+        "prototype.trigger.tap" => "Tippen",
+        "prototype.trigger.hover" => "Hover",
+        "prototype.trigger.longPress" => "Lange drücken",
+        "prototype.back" => "Zurück",
+        "prototype.brokenLink" => "Defekter Link",
+        "prototype.opens" => "Öffnet {{host}}",
+        "prototype.scrollTo" => "Zu {{name}} scrollen",
+        "menu.showPrototypeLinks" => "Prototyp-Links anzeigen",
         _ => return None,
     })
 }

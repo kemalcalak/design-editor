@@ -404,6 +404,14 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "componentProps.instance" => "Свойство экземпляра",
         "componentProps.color" => "Свойство цвета",
         "componentProps.unbound" => "не привязано",
+        "prototype.trigger.tap" => "Нажатие",
+        "prototype.trigger.hover" => "Наведение",
+        "prototype.trigger.longPress" => "Долгое нажатие",
+        "prototype.back" => "Назад",
+        "prototype.brokenLink" => "Битая ссылка",
+        "prototype.opens" => "Открывает {{host}}",
+        "prototype.scrollTo" => "Прокрутить к {{name}}",
+        "menu.showPrototypeLinks" => "Показать связи прототипа",
         _ => return None,
     })
 }

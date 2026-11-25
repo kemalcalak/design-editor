@@ -406,6 +406,14 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "componentProps.instance" => "인스턴스 속성",
         "componentProps.color" => "색상 속성",
         "componentProps.unbound" => "연결 안 됨",
+        "prototype.trigger.tap" => "탭",
+        "prototype.trigger.hover" => "호버",
+        "prototype.trigger.longPress" => "길게 누르기",
+        "prototype.back" => "뒤로",
+        "prototype.brokenLink" => "끊어진 링크",
+        "prototype.opens" => "{{host}} 열기",
+        "prototype.scrollTo" => "{{name}}(으)로 스크롤",
+        "menu.showPrototypeLinks" => "프로토타입 링크 표시",
         _ => return None,
     })
 }

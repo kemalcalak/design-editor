@@ -105,6 +105,18 @@ impl WidgetHostNative {
                 self.editor_state.history_push_past(before);
             }
         }
+        // An interaction row asked to show its target (#371): the panel
+        // selected it, the camera frames it.
+        if let Some(target) = self.editor_state.editor_ui.prototype.pending_frame.take() {
+            self.refresh_layout_scene();
+            de_editor_ui::widgets::host_overlay_geometry::zoom_to_fit_node(
+                &mut self.editor_state,
+                &self.layout_scene,
+                target.as_str(),
+                self.last_viewport_w,
+                self.last_viewport_h,
+            );
+        }
         // Opening an input-owning Property overlay while the software
         // keyboard is already visible must reveal it immediately. This is
         // idempotent for ordinary actions and complements body-row focus,

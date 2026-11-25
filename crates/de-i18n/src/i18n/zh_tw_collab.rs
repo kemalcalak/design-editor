@@ -404,6 +404,14 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "componentProps.instance" => "實例屬性",
         "componentProps.color" => "顏色屬性",
         "componentProps.unbound" => "未綁定",
+        "prototype.trigger.tap" => "點擊",
+        "prototype.trigger.hover" => "懸停",
+        "prototype.trigger.longPress" => "長按",
+        "prototype.back" => "返回",
+        "prototype.brokenLink" => "失效連結",
+        "prototype.opens" => "開啟 {{host}}",
+        "prototype.scrollTo" => "捲動到 {{name}}",
+        "menu.showPrototypeLinks" => "顯示原型連線",
         _ => return None,
     })
 }

@@ -404,6 +404,14 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "componentProps.instance" => "คุณสมบัติอินสแตนซ์",
         "componentProps.color" => "คุณสมบัติสี",
         "componentProps.unbound" => "ไม่ได้ผูก",
+        "prototype.trigger.tap" => "แตะ",
+        "prototype.trigger.hover" => "วางเมาส์",
+        "prototype.trigger.longPress" => "กดค้าง",
+        "prototype.back" => "ย้อนกลับ",
+        "prototype.brokenLink" => "ลิงก์เสีย",
+        "prototype.opens" => "เปิด {{host}}",
+        "prototype.scrollTo" => "เลื่อนไปที่ {{name}}",
+        "menu.showPrototypeLinks" => "แสดงลิงก์ต้นแบบ",
         _ => return None,
     })
 }

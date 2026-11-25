@@ -404,6 +404,14 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "componentProps.instance" => "Thuộc tính phiên bản",
         "componentProps.color" => "Thuộc tính màu",
         "componentProps.unbound" => "chưa liên kết",
+        "prototype.trigger.tap" => "Chạm",
+        "prototype.trigger.hover" => "Di chuột",
+        "prototype.trigger.longPress" => "Nhấn giữ",
+        "prototype.back" => "Quay lại",
+        "prototype.brokenLink" => "Liên kết hỏng",
+        "prototype.opens" => "Mở {{host}}",
+        "prototype.scrollTo" => "Cuộn tới {{name}}",
+        "menu.showPrototypeLinks" => "Hiện liên kết nguyên mẫu",
         _ => return None,
     })
 }

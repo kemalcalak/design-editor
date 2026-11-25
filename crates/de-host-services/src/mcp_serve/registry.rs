@@ -76,6 +76,12 @@ pub(super) fn rebuild_registry(
     register_tool!("get_screenshot", get_screenshot_snapshot(doc));
     register_tool!("capture_preview", capture_preview_snapshot(doc));
     register_tool!("set_screen", de_mcp::set_screen_snapshot(doc));
+    register_tool!("set_interaction", de_mcp::set_interaction_snapshot(doc));
+    register_tool!(
+        "remove_interaction",
+        de_mcp::remove_interaction_snapshot(doc)
+    );
+    register_tool!("list_interactions", de_mcp::list_interactions_snapshot(doc));
     register_tool!("browser", browser_tool_snapshot(doc));
     register_tool!("export_item", export_item_snapshot(doc));
     register_tool!("export_nodes", export_nodes_snapshot(doc));
