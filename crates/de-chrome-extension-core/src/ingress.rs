@@ -7,8 +7,9 @@
 //!    origin, and it needs no token. The request body IS the snapshot JSON,
 //!    so there is nothing to build.
 //! 2. `POST /mcp` — a plain MCP `tools/call` for `import_web_snapshot`. This
-//!    covers exactly one host: the UNMANAGED headless daemon
-//!    (`design-editor --serve-web <port>`), whose `/mcp` needs no token.
+//!    covers exactly one host: the headless file-backed MCP server
+//!    (`de start --headless`, `design-editor --mcp-http <port> <file>`), which
+//!    has no ingest route (404) and whose `/mcp` needs no token.
 //!    It is NOT a compatibility path for older desktop builds — a desktop app
 //!    that predates the ingest route answers 404 there and 403 on `/mcp` (its
 //!    admission gate refuses extension origins outright), and the fallback

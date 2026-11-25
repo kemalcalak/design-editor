@@ -227,6 +227,13 @@ jobs:
       - name: Clippy non-default feature surfaces
         if: runner.os == 'Linux'
         run: cargo clippy -p de-host-native --features gl-host --all-targets -- -D warnings
+      # de-editor-core / de-editor-ui stay wasm32-clean, and the Chrome
+      # extension core ships as wasm: keep them compiling for wasm32.
+      - name: Check wasm32-clean crates
+        if: runner.os == 'Linux'
+        run: |
+          rustup target add wasm32-unknown-unknown
+          cargo check --target wasm32-unknown-unknown -p de-editor-core -p de-editor-ui -p de-chrome-extension-core
       - name: Verify Step 1b widget boundary (spec §1.4)
         if: runner.os == 'Linux'
         run: bash tools/check-widget-boundary.sh

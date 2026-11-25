@@ -103,8 +103,8 @@ reason = "Design Editor must use the separately installed CLI without embedding 
 # tokio's process / rt-multi-thread features are no longer banned:
 # de-host-desktop's native (async) agent runtime legitimately needs them.
 # The wasm side is structurally safe — both features depend on OS
-# threads/processes and cannot compile to wasm32 — and is verified by
-# tools/check-wasm-bundle.sh.
+# threads/processes and cannot compile to wasm32 — and rust-check.yml's
+# wasm32 check of the wasm32-clean crates keeps it that way.
 
 [sources]
 unknown-registry = "deny"

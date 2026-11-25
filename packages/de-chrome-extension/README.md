@@ -114,7 +114,7 @@ wasm heap.
 
 `wasm/` holds the build product (`de_chrome_extension_core.js` +
 `de_chrome_extension_core_bg.wasm`) and is **gitignored**, matching how the
-repo treats every other wasm-bindgen output (`crates/de-host-web/pkg/`).
+repo treats every wasm-bindgen output.
 
 The manifest declares
 `content_security_policy.extension_pages: "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'; img-src 'self' data:"`.

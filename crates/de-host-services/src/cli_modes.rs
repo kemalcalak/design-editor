@@ -15,6 +15,9 @@ use std::path::PathBuf;
 /// committed memory, so a generous size costs nothing until it is used.
 pub const MODE_STACK_BYTES: usize = 64 * 1024 * 1024;
 
+/// The retired `--serve-web` flag, refused with a usage error.
+const REMOVED_SERVE_WEB: &str = "--serve-web";
+
 /// Run `work` on a fresh thread with [`MODE_STACK_BYTES`] of stack and
 /// wait for it. A panic in `work` resumes on the caller.
 pub fn on_mode_stack<T: Send + 'static>(work: impl FnOnce() -> T + Send + 'static) -> T {
@@ -33,6 +36,7 @@ pub fn on_mode_stack<T: Send + 'static>(work: impl FnOnce() -> T + Send + 'stati
 /// Run the headless server mode named by `mode` (the first argv token),
 /// consuming the remaining `args`.
 ///
+/// - `Some(2)` for the removed `--serve-web` flag.
 /// - `None` — `mode` is not one of the server modes; the caller
 ///   decides what an unknown mode means.
 /// - `Some(0)` — the mode ran to completion.
@@ -41,6 +45,13 @@ pub fn on_mode_stack<T: Send + 'static>(work: impl FnOnce() -> T + Send + 'stati
 ///   caller should exit with `code` (2 = malformed invocation, 1 =
 ///   runtime failure).
 pub fn run_cli_mode(prog: &str, mode: &str, args: impl Iterator<Item = String>) -> Option<i32> {
+    if mode == REMOVED_SERVE_WEB {
+        // Answer the retired daemon flag instead of letting the desktop fall
+        // through to the GUI, which would open a window (or hang) under a
+        // script or supervisor that still passes it.
+        eprintln!("{prog} {mode}: the browser editor and its daemon were removed (#401)");
+        return Some(2);
+    }
     if !matches!(mode, "--mcp" | "--mcp-http") {
         return None;
     }
