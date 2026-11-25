@@ -25,8 +25,10 @@ fn state() -> EditorState {
     let label = text("btn-label", "Label", 8.0, 8.0, 80.0, 20.0, "Button");
     let btn = frame("btn", "Button", 0.0, 0.0, 120.0, 40.0, vec![label]);
     let alt = frame("alt", "Alt", 200.0, 0.0, 120.0, 40.0, Vec::new());
-    s.add_page_with_name_and_children(Some("Kit".into()), Some(vec![btn, alt]))
-        .expect("kit page");
+    // Pushed as-is: page and subtree inserts re-mint authored ids.
+    s.add_page_with_name(Some("Kit".into())).expect("kit page");
+    s.active_children_mut().clear();
+    s.active_children_mut().extend([btn, alt]);
     for (id, name) in [("btn", "Button"), ("alt", "Alt")] {
         assert!(s.apply(EditorCommand::CreateComponent {
             node_id: NodeId::new(id),
@@ -97,11 +99,9 @@ fn instantiate_inserts_a_linked_instance_at_the_predicted_id() {
 #[test]
 fn instantiate_into_a_parent_on_another_page_keeps_the_active_page() {
     let mut s = state();
-    assert!(s.apply(EditorCommand::InsertSubtree {
-        nodes: vec![frame("other", "Other", 0.0, 0.0, 10.0, 10.0, Vec::new())],
-        parent_id: NodeId::NONE,
-        page_id: Some(s.doc.pages.as_ref().unwrap()[1].id.clone()),
-    }));
+    s.doc.pages.as_mut().unwrap()[1]
+        .children
+        .push(frame("other", "Other", 0.0, 0.0, 10.0, 10.0, Vec::new()));
     let (result, command) = write(
         instantiate_component_snapshot(&s)
             .call(&args(&[("component_id", "btn"), ("parent", "other")])),

@@ -212,7 +212,7 @@ fn detach_component_clears_reusable_flag_and_registry() {
 }
 
 #[test]
-fn detach_instance_materializes_overridden_subtree_with_fresh_ids() {
+fn detach_instance_keeps_its_id_and_materializes_children_with_fresh_ids() {
     let mut s = sample();
     assert!(s.apply(EditorCommand::CreateComponent {
         node_id: id("n10"),
@@ -230,17 +230,21 @@ fn detach_instance_materializes_overridden_subtree_with_fresh_ids() {
     }
 
     let detached = s.detach_component(&inst_id).expect("instance detaches");
+    // #365: the root keeps the instance's id, so links to it still hold.
+    assert_eq!(detached, inst_id);
     let node = find_node(s.active_children(), &detached).expect("detached tree in place");
     match node {
         PenNode::Frame(f) => {
             assert_eq!(f.reusable, None, "detached tree is independent");
+            let children = f.children.as_ref().expect("materialized children");
+            assert!(
+                children.iter().all(|c| c.id_str() != "n11" && c.id_str() != "n12"),
+                "inner nodes get fresh ids"
+            );
         }
         other => panic!("expected materialized frame, got {other:?}"),
     }
-    assert!(
-        find_node(s.active_children(), &inst_id).is_none(),
-        "the ref node itself is gone"
-    );
+    assert!(s.duplicate_ids().is_empty());
 }
 
 #[test]

@@ -376,6 +376,7 @@ fn command_dispatch_has_no_legacy_allocator_escape_hatch() {
         include_str!("command_apply/helpers.rs"),
         include_str!("command_apply/clipboard.rs"),
         include_str!("command_apply/boolean.rs"),
+        include_str!("command_apply/instance.rs"),
     ]
     .concat();
     for required in [
@@ -395,7 +396,9 @@ fn command_dispatch_has_no_legacy_allocator_escape_hatch() {
         "paste_clipboard_with_allocator",
         "apply_import_svg_on_active_page",
         "instantiate_component_with_allocator",
-        "apply_kit_component_on_page",
+        "insert_component_instance_with_allocator",
+        "detach_component_with_allocator",
+        "instantiate_kit_component_under_parent_with_allocator",
         "cmd_batch_with_allocator",
         "replace_paths_with_polyline_with_allocator",
     ] {

@@ -30,11 +30,12 @@ fn two_page_state() -> EditorState {
     )]);
     let label = text("btn-label", "Label", 8.0, 8.0, 80.0, 20.0, "Button");
     let master = frame("btn", "Button", 0.0, 0.0, 120.0, 40.0, vec![label]);
-    let page = s
-        .add_page_with_name_and_children(Some("Kit".into()), Some(vec![master]))
-        .expect("second page");
+    // Pushed as-is: page and subtree inserts re-mint authored ids.
+    let page = s.add_page_with_name(Some("Kit".into())).expect("second page");
     assert_eq!(page, 1);
     assert!(s.apply(EditorCommand::SetActivePage { index: 1 }));
+    s.active_children_mut().clear();
+    s.active_children_mut().push(master);
     assert!(s.apply(EditorCommand::CreateComponent {
         node_id: id("btn"),
         name: "Button".into(),
@@ -148,11 +149,7 @@ fn an_instance_cannot_go_inside_its_own_master() {
     assert!(!s.apply(insert("btn", "btn-label", None)));
 
     // Indirect: card shows btn; btn may not then hold a card instance.
-    assert!(s.apply(EditorCommand::InsertSubtree {
-        nodes: vec![frame("card", "Card", 200.0, 0.0, 200.0, 100.0, Vec::new())],
-        parent_id: NodeId::NONE,
-        page_id: None,
-    }));
+    s.active_children_mut().push(frame("card", "Card", 200.0, 0.0, 200.0, 100.0, Vec::new()));
     assert!(s.apply(EditorCommand::CreateComponent {
         node_id: id("card"),
         name: "Card".into(),
@@ -221,11 +218,7 @@ fn swap_keeps_overrides_and_list_instances_reports_each_use() {
     assert_eq!(uses[1].override_count, 0);
 
     assert!(s.apply(EditorCommand::SetActivePage { index: 1 }));
-    assert!(s.apply(EditorCommand::InsertSubtree {
-        nodes: vec![frame("alt", "Alt", 200.0, 0.0, 100.0, 40.0, Vec::new())],
-        parent_id: NodeId::NONE,
-        page_id: None,
-    }));
+    s.active_children_mut().push(frame("alt", "Alt", 200.0, 0.0, 100.0, 40.0, Vec::new()));
     assert!(s.apply(EditorCommand::CreateComponent {
         node_id: id("alt"),
         name: "Alt".into(),

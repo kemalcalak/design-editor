@@ -22,7 +22,11 @@ fn kit(kit_id: &str, component: &str, parent: &str, overrides: Option<&str>) -> 
         component_id: component.into(),
         doc_x: None,
         doc_y: None,
-        target_parent: NodeId::new(parent),
+        target_parent: if parent.is_empty() {
+            NodeId::NONE
+        } else {
+            NodeId::new(parent)
+        },
         page_id: None,
         overrides_json: overrides.map(str::to_string),
         detach: false,
