@@ -242,6 +242,8 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "dialog.motionRepairTitle" => "部分動畫未載入",
         "dialog.motionRepairBody" => "「{{name}}」中有目前版本無法播放的動畫資料，已略過：\n\n{{details}}\n\n文件已在不含這些資料的情況下開啟。儲存後它們將從檔案中永久移除；如需保留原始檔案，請不儲存直接關閉。",
         "dialog.motionRepairToast" => "開啟時略過了 {{count}} 項動畫資料（{{details}}）。儲存後將永久移除。",
+        "dialog.duplicateIdsTitle" => "部分 ID 被重複使用",
+        "dialog.duplicateIdsBody" => "「{{name}}」中有節點共用同一個 ID，針對其中一個的修改可能落到另一個上：\n\n{{details}}\n\n現在修復這些 ID 嗎？每個 ID 由第一個節點保留，其餘節點取得新 ID；畫布保持不變。可以復原，儲存後才會寫入檔案。",
         "import.fromPptx" => "從 PowerPoint 匯入",
         "dialog.pptxImportTitle" => "已從 PowerPoint 匯入",
         "dialog.pptxImportBody" => "「{{name}}」中有部分內容無法原樣匯入：\n\n{{details}}\n\n其餘內容已作為新的未儲存簡報開啟。原始檔案未被修改。",

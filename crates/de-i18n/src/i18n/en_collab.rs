@@ -242,6 +242,8 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "dialog.motionRepairTitle" => "Some animations were left out",
         "dialog.motionRepairBody" => "“{{name}}” has animation data this version cannot play, so it was left out:\n\n{{details}}\n\nThe document opened without it. Saving removes it from the file for good; close without saving to keep the original.",
         "dialog.motionRepairToast" => "{{count}} animation items left out on open ({{details}}). Saving removes them for good.",
+        "dialog.duplicateIdsTitle" => "Some ids are used more than once",
+        "dialog.duplicateIdsBody" => "“{{name}}” has nodes that share an id, so an edit aimed at one of them can land on another:\n\n{{details}}\n\nRepair the ids now? The first node keeps each id and the others get new ones; the canvas stays the same. You can undo it, and the file changes only when you save.",
         "import.fromPptx" => "Import from PowerPoint",
         "dialog.pptxImportTitle" => "Imported from PowerPoint",
         "dialog.pptxImportBody" => "Some parts of “{{name}}” could not be brought over as-is:\n\n{{details}}\n\nThe rest opened as a new, unsaved deck. The original file is not changed.",

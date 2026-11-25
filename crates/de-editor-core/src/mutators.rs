@@ -183,7 +183,8 @@ impl EditorState {
         union_aggregate_bounds(self.active_children(), &self.selection.set)
     }
 
-    /// First duplicate id found in the document, or `None`.
+    /// First duplicate id found in the document, or `None`. Page ids and
+    /// node ids share one set; instance-owned content counts too (#364).
     pub fn find_duplicate_id(&self) -> Option<NodeId> {
         let mut seen: HashSet<String> = HashSet::new();
         if let Some(pages) = self.doc.pages.as_ref() {
@@ -196,7 +197,11 @@ impl EditorState {
                 }
             }
         }
-        walkers::find_duplicate(&self.doc.children, &mut seen)
+        walkers::find_duplicate(&self.doc.children, &mut seen).or_else(|| {
+            crate::duplicate_ids::find_duplicate_ids(&self.doc)
+                .into_iter()
+                .find_map(|report| NodeId::new_opt(report.id))
+        })
     }
 
     // --- Selection ---------------------------------------------------

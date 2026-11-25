@@ -247,12 +247,18 @@ pub fn reorder_in_children(
     false
 }
 
-/// Insert every descendant id of the forest into `out`.
+/// Insert every descendant id of the forest into `out`, instance-owned
+/// content included ([`crate::instance_ids`]).
 pub fn collect_ids(children: &[PenNode], out: &mut HashSet<NodeId>) {
     for child in children {
         if let Some(id) = NodeId::new_opt(child.id_str()) {
             out.insert(id);
         }
+        crate::instance_ids::for_each_owned_id(child, &mut |id| {
+            if let Some(id) = NodeId::new_opt(id) {
+                out.insert(id);
+            }
+        });
         if let Some(grand) = child.children() {
             collect_ids(grand, out);
         }
@@ -270,9 +276,13 @@ pub fn parse_n_id(id: &str) -> Option<u64> {
     digits.parse::<u64>().ok()
 }
 
-/// Largest `n{N}` suffix in the subtree (0 when none exists).
+/// Largest `n{N}` suffix in the subtree (0 when none exists), instance-owned
+/// content included ([`crate::instance_ids`]).
 pub fn max_id_walk(node: &PenNode) -> u64 {
     let mut max = parse_n_id(node.id_str()).unwrap_or(0);
+    crate::instance_ids::for_each_owned_id(node, &mut |id| {
+        max = max.max(parse_n_id(id).unwrap_or(0));
+    });
     if let Some(children) = node.children() {
         for child in children {
             max = max.max(max_id_walk(child));
@@ -341,6 +351,12 @@ pub fn deep_clone_with_allocator(
     let mut clone = node.clone();
     let new_id = allocator.allocate(taken)?;
     clone.base_mut().id = new_id.into();
+    // A copied instance's own content gets fresh ids too (#364).
+    if let PenNode::Ref(reference) = &mut clone {
+        if let Some(descendants) = reference.descendants.as_mut() {
+            crate::instance_ids::remint_owned_ids(descendants, allocator, taken)?;
+        }
+    }
     if let Some(children) = clone.children_mut() {
         let fresh: Result<Vec<PenNode>, IdAllocError> = children
             .iter()

@@ -244,6 +244,8 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "dialog.motionRepairTitle" => "일부 애니메이션을 제외했습니다",
         "dialog.motionRepairBody" => "“{{name}}”에 이 버전에서 재생할 수 없는 애니메이션 데이터가 있어 제외했습니다:\n\n{{details}}\n\n문서는 이 데이터 없이 열렸습니다. 저장하면 파일에서 영구히 제거됩니다. 원본을 유지하려면 저장하지 말고 닫으세요.",
         "dialog.motionRepairToast" => "열 때 애니메이션 데이터 {{count}}개를 제외했습니다({{details}}). 저장하면 영구히 제거됩니다.",
+        "dialog.duplicateIdsTitle" => "일부 ID가 중복 사용됨",
+        "dialog.duplicateIdsBody" => "“{{name}}”에 같은 ID를 공유하는 노드가 있어 그중 하나를 겨냥한 편집이 다른 노드에 적용될 수 있습니다:\n\n{{details}}\n\n지금 ID를 복구할까요? 각 ID는 첫 번째 노드가 유지하고 나머지는 새 ID를 받습니다. 캔버스는 그대로입니다. 실행 취소할 수 있으며 저장할 때만 파일이 바뀝니다.",
         "import.fromPptx" => "PowerPoint에서 가져오기",
         "dialog.pptxImportTitle" => "PowerPoint에서 가져옴",
         "dialog.pptxImportBody" => "“{{name}}”의 일부를 그대로 가져오지 못했습니다:\n\n{{details}}\n\n나머지는 저장되지 않은 새 덱으로 열렸습니다. 원본 파일은 변경되지 않았습니다.",
