@@ -68,7 +68,9 @@ fn a_snapshot_carries_the_host_document_epoch() {
     let mut server = fresh_mcp_server(req_rx, stop_tx);
     server.set_document_epoch(5);
     let wake_ui: UiWake = Arc::new(|| {});
-    let requester = thread::spawn(move || request_snapshot_with_epoch(&req_tx, &wake_ui));
+    let requester = thread::spawn(move || {
+        request_snapshot_with_epoch(&req_tx, &wake_ui, &LiveShared::default())
+    });
     let mut state = EditorState::new();
     state.mark_document_changed();
     let deadline = std::time::Instant::now() + Duration::from_secs(5);

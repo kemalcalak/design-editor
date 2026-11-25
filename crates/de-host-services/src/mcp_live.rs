@@ -24,11 +24,13 @@ pub mod error;
 pub mod screenshot;
 
 pub use design_md_route::{DesignMdResponder, DesignMdResponseError, PendingDesignMdRequest};
-pub use error::McpLiveError;
+pub use error::{EditorBusy, McpLiveError};
 
-/// Per-request budget for a UI-thread snapshot/apply ack. Sized to cover a
-/// large single editor operation without the connection giving up; the CLI
-/// allows even longer per tool call (`POST_TIMEOUT`).
+/// Per-request budget for a UI-thread apply / document-sync ack. Sized to
+/// cover a large single editor operation without the connection giving up;
+/// the CLI allows even longer per tool call (`POST_TIMEOUT`). Reads wait
+/// far less (`live_shared::UI_BUSY_WAIT`, #406): a read can be withdrawn,
+/// a queued write cannot.
 const UI_ACK_TIMEOUT: Duration = Duration::from_secs(15);
 const ACCEPT_IDLE_SLEEP: Duration = Duration::from_millis(25);
 /// Cap on concurrently-served connections, so a flood of localhost connects
@@ -88,6 +90,9 @@ pub struct McpLiveServer {
     /// the previous one's tail animation. UI-thread-only (`pump` takes
     /// `&mut self`), so a plain field — no interior mutability needed.
     last_mcp_epoch: u64,
+    /// The UI thread's side of what the connection threads share (#406):
+    /// `pump` tells it the UI is answering and which kits it holds.
+    ui_side: LiveUiSide,
     /// The document of the last snapshot handed to a connection, the
     /// sharing anchor for the next one (#352): unchanged top-level nodes
     /// reuse its `Arc`s, so a read call does not copy the document on
@@ -277,6 +282,8 @@ impl McpLiveServer {
         crate::generate_jobs::GenerateJobs::global().set_listener(Some(Arc::clone(&wake_ui)));
         let client_identity = Arc::new(Mutex::new(None));
         let server_identity = Arc::clone(&client_identity);
+        let shared = Arc::new(LiveShared::default());
+        let server_shared = Arc::clone(&shared);
         thread::Builder::new()
             .name("de-mcp-live-http".into())
             .spawn(move || {
@@ -288,6 +295,7 @@ impl McpLiveServer {
                     server_quit,
                     wake_ui,
                     server_identity,
+                    server_shared,
                 )
             })
             .map_err(|e| McpLiveError::Startup(format!("spawn MCP live server: {e}")))?;
@@ -300,12 +308,21 @@ impl McpLiveServer {
             stop_tx,
             client_identity,
             last_mcp_epoch: 0,
+            ui_side: LiveUiSide::new(shared),
             last_snapshot_doc: None,
             pending_design_md: VecDeque::new(),
             saved_documents: Vec::new(),
             host_document_epoch: 0,
             follow_target: None,
         })
+    }
+
+    /// Describe `kits` in `tools/list` from now on. The host calls it right
+    /// after start, since its imported kits are loaded before the server
+    /// exists and the first pump may be a whole document load away; `pump`
+    /// keeps it current after that.
+    pub fn note_ui_kits(&mut self, kits: &[de_editor_core::UIKit]) {
+        self.ui_side.pumped(kits);
     }
 
     pub fn port(&self) -> u16 {
@@ -335,6 +352,7 @@ impl McpLiveServer {
 
     pub fn pump(&mut self, state: &mut EditorState) -> McpPumpOutcome {
         let mut outcome = McpPumpOutcome::default();
+        self.ui_side.pumped(&state.ui_kits);
         if self
             .last_snapshot_doc
             .as_ref()
@@ -342,6 +360,7 @@ impl McpLiveServer {
         {
             self.last_snapshot_doc = None;
         }
+        let mut abandoned_reads = 0usize;
         for _ in 0..UI_PUMP_REQUEST_BUDGET {
             match self.req_rx.try_recv() {
                 Ok(UiRequest::Snapshot { ack, abandoned }) => {
@@ -356,6 +375,8 @@ impl McpLiveServer {
                             snapshot,
                             document_epoch: self.host_document_epoch,
                         });
+                    } else {
+                        abandoned_reads += 1;
                     }
                 }
                 Ok(UiRequest::ListPages { ack }) => {
@@ -454,6 +475,13 @@ impl McpLiveServer {
                 Err(TryRecvError::Empty) => break,
                 Err(TryRecvError::Disconnected) => break,
             }
+        }
+        if abandoned_reads > 0 {
+            // The UI thread was away long enough for calls to give up on it
+            // (#406): this line dates a stall the clients saw as busy.
+            eprintln!(
+                "design-editor mcp: the editor came back to {abandoned_reads} snapshot request(s) their calls had already given up on"
+            );
         }
         self.land_generations(state, &mut outcome);
         outcome
@@ -669,6 +697,7 @@ mod connection;
 mod design_md_output;
 pub(crate) mod design_md_route;
 mod doc_sync;
+mod live_shared;
 /// `pub(crate)` for two consts only: the shared HTTP parser
 /// (`mcp_serve::read_http_request`) has to recognise this route's path to
 /// apply its smaller body cap before reading a body.
@@ -678,8 +707,15 @@ mod ui_requests;
 use admission::*;
 use connection::*;
 use doc_sync::*;
+use live_shared::*;
 use ui_requests::*;
 
+#[cfg(test)]
+#[path = "mcp_live_busy_tests.rs"]
+mod busy_tests;
+#[cfg(test)]
+#[path = "mcp_live_memory_tests.rs"]
+mod memory_tests;
 #[cfg(test)]
 #[path = "mcp_live_placement_tests.rs"]
 mod placement_tests;

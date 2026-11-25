@@ -103,6 +103,10 @@ pub enum Stateless {
     /// A `ping` carrying this raw JSON-RPC id; the caller builds the body
     /// (the live server adds its identity token).
     Ping(String),
+    /// A `tools/list` carrying this raw JSON-RPC id; the caller answers it
+    /// from its kit catalog ([`super::tools_list_response_for`]), so it
+    /// needs no document either (#406).
+    ToolsList(String),
     /// Needs document state — fall through to the snapshot/dispatch path.
     NeedsState,
 }
@@ -156,7 +160,30 @@ pub fn classify_stateless(line: &str) -> Stateless {
             Some(id) => Stateless::Ping(id),
             None => Stateless::Swallow,
         },
+        Some("tools/list") => match sniff_id_raw(trimmed) {
+            Some(id) => Stateless::ToolsList(id),
+            None => Stateless::Swallow,
+        },
         Some("notifications/initialized") | Some("initialized") => Stateless::Swallow,
         _ => Stateless::NeedsState,
     }
+}
+
+/// JSON-RPC error for a request the server could not take now and the
+/// client should simply send again (#406): the editor is loading or
+/// painting a large document, or another request still holds it. Code
+/// `-32000` like the transport's own "server busy"; `data` names the
+/// `reason` and how long to wait. `None` for a notification (no id).
+pub fn busy_error_response(
+    line: &str,
+    message: &str,
+    reason: &str,
+    retry_after_ms: u64,
+) -> Option<String> {
+    let id = sniff_id_raw(line.trim())?;
+    Some(format!(
+        r#"{{"jsonrpc":"2.0","id":{id},"error":{{"code":-32000,"message":"{}","data":{{"reason":"{}","retryAfterMs":{retry_after_ms}}}}}}}"#,
+        super::json_escape(message),
+        super::json_escape(reason),
+    ))
 }

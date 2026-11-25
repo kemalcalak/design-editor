@@ -329,6 +329,26 @@ pub(super) fn dispatch<S: Read + Write>(
         )?;
         return Ok(true);
     }
+    // `tools/list` describes the catalog, not the document, so it never
+    // waits on the state lock behind a long call (#406). The daemon's
+    // editor only ever holds the built-in kits: nothing here imports one,
+    // and a document sync keeps the previous kits (`doc_routes.rs`).
+    if let crate::mcp_serve::Stateless::ToolsList(id) =
+        crate::mcp_serve::classify_stateless(&req.body)
+    {
+        let response = crate::mcp_serve::tools_list_response_for(
+            &id,
+            de_mcp::element_tools::KitToolCatalog::builtin(),
+            de_mcp::debug_tools_enabled(),
+        );
+        crate::mcp_serve::write_mcp_http_response_with_origin(
+            stream,
+            "200 OK",
+            &response,
+            cors_origin,
+        )?;
+        return Ok(false);
+    }
     // `debug_screenshot` for `--serve-web`: the browser shell mirrors this
     // daemon's document, so the daemon can satisfy the live screenshot tool from
     // the same raster export path desktop live MCP uses. Keep this ahead of the

@@ -195,7 +195,7 @@ pub(super) fn serve_snapshot_ingest<S: std::io::Read + std::io::Write>(
     stream: &mut S,
     req_tx: &Sender<UiRequest>,
     wake_ui: &UiWake,
-    stateful_lock: &Mutex<()>,
+    shared: &LiveShared,
     req: &crate::mcp_serve::HttpRequest,
     cors_origin: Option<&str>,
 ) -> Result<(), McpLiveError> {
@@ -218,15 +218,33 @@ pub(super) fn serve_snapshot_ingest<S: std::io::Read + std::io::Write>(
         );
     }
     let call = snapshot_tool_call(&req.body);
-    // Same serialization as the JSON-RPC write path: one live apply at a
-    // time, and a coherent snapshot to validate against.
-    let _guard = stateful_lock
-        .lock()
-        .unwrap_or_else(|poison| poison.into_inner());
-    let mut state = request_snapshot(req_tx, wake_ui)?;
-    let response = crate::mcp_serve::process_message_with_write_applier(
+    let (status, body) = match import_locked(&call, req_tx, wake_ui, shared) {
+        Ok(response) => rest_reply(&response),
+        // The editor is loading or another request holds it (#406).
+        Err(McpLiveError::Busy(busy)) => (
+            "503 Service Unavailable",
+            crate::mcp_serve::rest_error_body(&busy.to_string()),
+        ),
+        Err(e) => return Err(e),
+    };
+    // Written with the lock released, like the JSON-RPC path.
+    write_http_with_origin(stream, status, &body, cors_origin)
+}
+
+/// The import under the state lock: same serialization as the JSON-RPC
+/// write path, one live apply at a time and a coherent snapshot to
+/// validate against. Returns the MCP reply.
+fn import_locked(
+    call: &str,
+    req_tx: &Sender<UiRequest>,
+    wake_ui: &UiWake,
+    shared: &LiveShared,
+) -> Result<String, McpLiveError> {
+    let _guard = shared.lock_state("web snapshot import")?;
+    let mut state = request_snapshot(req_tx, wake_ui, shared)?;
+    Ok(crate::mcp_serve::process_message_with_write_applier(
         &mut state,
-        &call,
+        call,
         |tool_name, local_state, write| match request_apply(
             req_tx,
             wake_ui,
@@ -246,9 +264,7 @@ pub(super) fn serve_snapshot_ingest<S: std::io::Read + std::io::Write>(
             }
         },
     )?
-    .unwrap_or_default();
-    let (status, body) = rest_reply(&response);
-    write_http_with_origin(stream, status, &body, cors_origin)
+    .unwrap_or_default())
 }
 
 #[cfg(test)]
