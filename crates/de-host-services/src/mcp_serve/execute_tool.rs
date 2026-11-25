@@ -29,7 +29,7 @@ impl ScriptRenderer for HostScriptRenderer {
         node_id: Option<&str>,
     ) -> Result<ImageContent, ScriptRenderError> {
         // Same brand-icon catalog `get_screenshot` installs before painting.
-        let _ = de_editor_ui::set_brand_catalog(crate::web_static::ICONIFY_BRANDS_JSON);
+        let _ = de_editor_ui::set_brand_catalog(crate::brand_catalog::ICONIFY_BRANDS_JSON);
         let scene = de_pen_loader::editor_state_to_active_page_layout_scene(state);
         let spec = CaptureSpec {
             node_id: node_id.map(str::to_string),
@@ -49,7 +49,7 @@ impl ScriptRenderer for HostScriptRenderer {
         state: &EditorState,
         request: &ExportRequest,
     ) -> Result<ExportWritten, ScriptRenderError> {
-        let _ = de_editor_ui::set_brand_catalog(crate::web_static::ICONIFY_BRANDS_JSON);
+        let _ = de_editor_ui::set_brand_catalog(crate::brand_catalog::ICONIFY_BRANDS_JSON);
         let dir = PathBuf::from(request.output_path.trim());
         std::fs::create_dir_all(&dir)
             .map_err(|e| ScriptRenderError(format!("create {}: {e}", dir.display())))?;

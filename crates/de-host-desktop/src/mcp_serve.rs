@@ -1,7 +1,6 @@
 //! Argv dispatcher for the headless CLI server modes.
 //!
-//! The `--mcp` / `--mcp-http` / `--serve-web` dispatch itself is shared
-//! with the `de-host-web-server` binary via
+//! The `--mcp` / `--mcp-http` dispatch itself lives in
 //! [`de_host_services::cli_modes::run_cli_mode`]; this residual only
 //! decides the desktop policy around it: an unknown / missing leading
 //! arg falls through to GUI mode instead of being a usage error.
@@ -13,7 +12,6 @@
 ///
 /// - `--mcp <path>` — JSON-RPC stdio MCP server backed by `<path>`.
 /// - `--mcp-http <port> <path>` — Streamable-HTTP MCP server.
-/// - `--serve-web <port> [doc] [--host <addr>]` — headless web-canvas daemon.
 ///
 /// External CLIs (Claude Code / Codex / OpenCode / Kiro / Copilot /
 /// Antigravity / Grok Build) spawn the binary in these modes to drive

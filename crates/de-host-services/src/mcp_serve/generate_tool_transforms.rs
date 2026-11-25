@@ -75,8 +75,7 @@ fn source_arg(
         }
     };
     let bad_source = |e: GenerateJobError| Box::new(invalid(e.to_string()));
-    let allow_remote = !crate::generate_jobs::backend_screening();
-    let source = SourceRef::from_url(&url, allow_remote).map_err(bad_source)?;
+    let source = SourceRef::from_url(&url).map_err(bad_source)?;
     if let SourceRef::Data(data) = &source {
         SourceImage::from_data_url(data, min_px).map_err(bad_source)?;
     }
@@ -205,8 +204,7 @@ pub(super) fn call_background(
         Ok(profile) => profile,
         Err(error) => return failed(error),
     };
-    if let Err(error) = check_supported(&edit, &profile, crate::generate_jobs::backend_screening())
-    {
+    if let Err(error) = check_supported(&edit, &profile) {
         return failed(error);
     }
     let ticket = match tool.jobs.reserve_edit(kind, target, &source_url) {

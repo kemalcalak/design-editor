@@ -175,7 +175,7 @@ pub(super) fn serve_connection<S: std::io::Read + std::io::Write>(
     // on-screen canvas, mirroring `apps/web/server/api/mcp/document.post.ts`.
     if crate::mcp_serve::is_document_sync_route(&req.method, &req.path) {
         // Whole-document replacement of the live (possibly SHARED) document.
-        // The local desktop and a self-hosted serve-web daemon trust every
+        // The local desktop trusts every
         // caller that clears the `Host`/`Origin` boundary above, so no
         // per-instance token is demanded here. The
         // REST route answers `{ok,error}`, not JSON-RPC.
@@ -288,8 +288,8 @@ fn serve_stateful(
 ) -> Result<String, McpLiveError> {
     // Gate 2 (see `admission.rs`): everything from here down reads or writes
     // the live document — every `tools/call`, not just the write ones. The
-    // `Host`/`Origin` boundary above is the only gate the local desktop and a
-    // self-hosted serve-web daemon apply.
+    // `Host`/`Origin` boundary above is the only gate the local desktop
+    // applies.
     // Everything below observes or mutates shared state — the live
     // `EditorState` OR a `--file` document on disk (a read-modify-write).
     // Serialize it under one lock so snapshots stay coherent, concurrent live

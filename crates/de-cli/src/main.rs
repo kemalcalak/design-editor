@@ -84,8 +84,6 @@ fn run(args: &[String]) -> Result<String, CliError> {
         Command::StartMcp {
             document_path,
             headless,
-            web,
-            host,
             wait_secs,
         } => app_control_cli::run_start(
             app_control_cli::StartPort {
@@ -94,8 +92,6 @@ fn run(args: &[String]) -> Result<String, CliError> {
             },
             document_path.as_deref(),
             headless,
-            web,
-            host.as_deref(),
             wait_secs,
         )?,
         Command::StopMcp => app_control_cli::run_stop()?,
@@ -228,11 +224,6 @@ enum Command {
     StartMcp {
         document_path: Option<String>,
         headless: bool,
-        /// `--web`: serve the browser editor (wasm bundle) instead of the
-        /// desktop GUI / windowless file server.
-        web: bool,
-        /// `--host` bind address for `--web` (e.g. `0.0.0.0` for LAN/Docker).
-        host: Option<String>,
         /// `--wait <seconds>`: how long `--headless` waits for the server to
         /// answer (#281); `None` sizes the wait from the document.
         wait_secs: Option<u64>,
@@ -430,16 +421,12 @@ fn command_from_positionals(positionals: &[String], flags: &Flags) -> Result<Com
         "status" => Ok(Command::Status),
         "start" => {
             let headless = flags.contains_key("headless");
-            let web = flags.contains_key("web");
-            if headless && web {
+            // The browser editor and its daemon are gone (#401): say so
+            // instead of silently opening the desktop app.
+            if flags.contains_key("web") || flags.contains_key("host") {
                 return Err(CliError::usage(
-                    "--headless and --web are mutually exclusive",
-                ));
-            }
-            let host = flag_value(flags, "host");
-            if host.is_some() && !web {
-                return Err(CliError::usage(
-                    "--host requires --web (only the web daemon binds non-loopback)",
+                    "--web and --host were removed with the browser editor; use `de start` \
+                     (desktop app) or `de start --headless`",
                 ));
             }
             let wait_secs = match flags.get("wait") {
@@ -452,8 +439,6 @@ fn command_from_positionals(positionals: &[String], flags: &Flags) -> Result<Com
             Ok(Command::StartMcp {
                 document_path: flag_value(flags, "file"),
                 headless,
-                web,
-                host,
                 wait_secs,
             })
         }

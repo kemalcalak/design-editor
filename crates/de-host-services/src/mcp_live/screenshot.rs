@@ -19,13 +19,11 @@ use crate::export::screenshot::{CaptureSpec, ScreenshotPng};
 /// `None` ⇒ not a screenshot call (or gate closed) — the caller falls
 /// through to the generic dispatch.
 ///
-/// The fulfiller's error type is generic over `Display` rather than fixed,
-/// because the two production fulfillers fail differently: the live desktop
-/// pump can also fail in TRANSPORT (`McpLiveError` — UI ack timeout / closed
-/// channel), while the `--serve-web` daemon renders inline and can only fail
-/// in the raster core (`ExportError`). All this glue needs is the sentence
-/// for the "Renderer reported failure: …" envelope, so `Display` is the
-/// honest bound — and it keeps the envelope text byte-identical either way.
+/// The fulfiller's error type is generic over `Display` rather than fixed:
+/// the live desktop pump fails in TRANSPORT (`McpLiveError` — UI ack timeout
+/// / closed channel) and a render fails in the raster core (`ExportError`).
+/// All this glue needs is the sentence for the "Renderer reported failure: …"
+/// envelope, so `Display` is the honest bound.
 pub fn maybe_serve<F, E>(body: &str, debug_enabled: bool, fulfill: F) -> Option<String>
 where
     F: FnOnce(ScreenshotRequest) -> Result<ScreenshotPng, E>,
@@ -209,8 +207,7 @@ mod tests {
     #[test]
     fn invalid_arguments_report_the_shared_validation_error() {
         // The cast only pins `maybe_serve`'s generic error parameter, which a
-        // diverging closure body leaves unconstrained; `ExportError` is the
-        // type the `--serve-web` fulfiller really uses.
+        // diverging closure body leaves unconstrained.
         let response = maybe_serve(&call_body(r#"{"target":"node"}"#), true, |_| {
             panic!("validation failures must never reach the fulfiller")
                 as Result<ScreenshotPng, crate::export::ExportError>

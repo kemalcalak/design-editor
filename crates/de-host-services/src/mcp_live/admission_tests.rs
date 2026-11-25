@@ -1,6 +1,6 @@
 //! Admission-gate tests for the live-MCP endpoint. Driven through the real
-//! `serve_connection` router (generic over the stream, like the web-canvas
-//! daemon's connection tests) so they cover the wiring, not just the
+//! `serve_connection` router (generic over the stream) so they cover the
+//! wiring, not just the
 //! predicates: a refused request must never reach the UI-request channel.
 
 use super::super::*;

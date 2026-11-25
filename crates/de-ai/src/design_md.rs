@@ -1,15 +1,13 @@
 //! Shared design.md ("Design System brief") generation support.
 //!
-//! Three hosts generate design.md from the open document — the desktop
-//! app (`de-host-desktop::design_md_host`), the serve-web daemon
-//! (`de-host-services::design_md_llm`), and the browser shell
-//! (`de-host-web::web_design_md`). They share the system prompt and the
-//! LLM-output cleanup chain below; transport and user-prompt framing
-//! stay host-side.
+//! The desktop app (`de-host-desktop::design_md_host`) and the headless
+//! services (`de-host-services::design_md_llm`) generate design.md from the
+//! open document. They share the system prompt and the LLM-output cleanup
+//! chain below; transport and user-prompt framing stay host-side.
 
-/// System prompt for design.md generation, used verbatim by the desktop
-/// and web hosts. The serve-web orchestrator flow splices two extra
-/// workflow rules in via [`design_md_system_prompt_with_extra_rules`].
+/// System prompt for design.md generation, used verbatim by the hosts. The
+/// orchestrator flow splices two extra workflow rules in via
+/// [`design_md_system_prompt_with_extra_rules`].
 pub const DESIGN_MD_SYSTEM_PROMPT: &str = r##"You are a Design Systems Lead. Analyze the provided PenNode design tree and generate a comprehensive design.md in the Google Stitch format.
 
 OUTPUT FORMAT — a complete markdown document with these sections:

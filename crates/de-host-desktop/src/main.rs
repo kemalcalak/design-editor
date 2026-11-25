@@ -558,10 +558,9 @@ where
     I: IntoIterator<Item = S>,
     S: AsRef<OsStr>,
 {
-    const MODE_FLAGS: [&str; 6] = [
+    const MODE_FLAGS: [&str; 5] = [
         "--mcp",
         "--mcp-http",
-        "--serve-web",
         "--tcc-selftest",
         "--render-shots",
         "--enrich-images",
@@ -589,12 +588,11 @@ fn main() {
     // carrier. This spawns no agent CLI; those wait for
     // `start_cli_probes_on_demand`.
     de_host_services::chat_spawn::repair_gui_process_env();
-    // Register the brand-logo catalog (omitted from the wasm bundle, embedded in
-    // this binary) BEFORE any path that can render natively — the GUI app, the
+    // Register the brand-logo catalog (embedded in this binary) BEFORE any path that can render natively — the GUI app, the
     // headless `--render-shots` rasterizer below, MCP — so they resolve
     // simple-icons instead of the unknown-glyph fallback dot. Set-once /
     // idempotent.
-    de_editor_ui::set_brand_catalog(de_host_services::web_static::ICONIFY_BRANDS_JSON);
+    de_editor_ui::set_brand_catalog(de_host_services::brand_catalog::ICONIFY_BRANDS_JSON);
     // Same rationale for bundled design fonts (Inter / Space Grotesk /
     // …): register before any native render or measure pass so designs
     // referencing them resolve the right glyphs + metrics without a
@@ -608,15 +606,10 @@ fn main() {
         Err(err) => eprintln!("[fonts] skipping imported-font rescan: {err}"),
     }
     // MCP `load_fonts` / `get_design_quality` ask this host about fonts in
-    // the GUI and `--mcp` / `--mcp-http`, where this process paints. Not
-    // under `--serve-web`: the browser canvas registers fonts in CanvasKit,
-    // so a download here would report success the viewer never sees.
-    if !std::env::args_os().any(|arg| arg == OsStr::new("--serve-web")) {
-        font_host_desktop::install();
-        // Same split for local image paths in MCP writes (#268): read and
-        // embedded here, refused by the web daemon.
-        de_host_services::local_image_reader::install();
-    }
+    // the GUI and `--mcp` / `--mcp-http`, where this process paints; local
+    // image paths in MCP writes (#268) are read and embedded here too.
+    font_host_desktop::install();
+    de_host_services::local_image_reader::install();
     init_tracing();
     if let Some(modes) = conflicting_headless_modes(std::env::args_os().skip(1)) {
         eprintln!(

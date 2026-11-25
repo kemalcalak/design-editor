@@ -27,8 +27,8 @@
 //!    clause is omitted rather than optimistically filled in with "none".
 //!
 //! Text is English and hardcoded, matching every other progress/report line
-//! on these paths (`report_unfilled_if_any`, `report_blockers_if_any`,
-//! `web_chat_standard::progress_label`); `de-i18n` is not involved in this
+//! on these paths (`report_unfilled_if_any`, `report_blockers_if_any`);
+//! `de-i18n` is not involved in this
 //! family of diagnostic lines today.
 
 use de_ai::chat_provider::QualitySummary;

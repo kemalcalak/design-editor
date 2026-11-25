@@ -35,7 +35,7 @@ use crate::{BrowserPool, BrowserRenderError, PoolLease};
 const DEFAULT_MAX_WIDTH: u32 = 1024;
 const DEFAULT_MAX_HEIGHT: u32 = 2048;
 const DEFAULT_QUALITY: u8 = 70;
-/// The desktop cap; the web daemon passes its own.
+/// The default frame-rate cap.
 const DEFAULT_MAX_FPS: f64 = 10.0;
 /// The stream connection wakes this often to notice a taken frame or a
 /// control message.

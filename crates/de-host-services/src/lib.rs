@@ -1,26 +1,19 @@
 //! Design Editor headless host services — the GUI-free host backend.
 //!
-//! Everything the host does that doesn't need a window: the in-memory
-//! `.de` document daemon (whole-document REST sync + SSE for the browser
-//! `de-host-web` shell + external MCP/CLI clients), the stdio + HTTP MCP
-//! servers, the AI chat providers + design orchestration, server-side
-//! PNG/SVG/PDF export (skia raster), document/settings persistence, and
-//! model/provider discovery. It links NO winit / glutin / muda /
-//! accesskit adapters / skia-GL — the desktop GUI stack stays in
-//! `de-host-native` / `de-host-desktop`.
-//!
-//! Both hosts depend on this crate: `de-host-desktop` embeds it for its
-//! own `--serve-web` / MCP / chat / export, and the thin
-//! `de-host-web-server` binary is just an argv dispatcher over it.
+//! Everything the host does that doesn't need a window: the stdio + HTTP
+//! MCP servers and the live MCP endpoint, the AI chat providers + design
+//! orchestration, server-side PNG/SVG/PDF export (skia raster),
+//! document/settings persistence, and model/provider discovery. It links NO
+//! winit / glutin / muda / accesskit adapters / skia-GL — the desktop GUI
+//! stack stays in `de-host-native` / `de-host-desktop`, which embeds this
+//! crate for its MCP / chat / export.
 //!
 //! Modules were migrated here out of `de-host-desktop` over Phases 2–5 of
-//! the extraction (plan:
-//! `design-editor-docs/superpowers/plans/2026-06-19-op-web-daemon-extraction.md`).
+//! the extraction.
 
 // Migrated headless modules (Phases 2-5), kept alphabetical.
 pub mod acp_agent_probe_host;
-pub mod ai_proxy;
-pub mod ai_proxy_error;
+pub mod brand_catalog;
 pub mod builtin_model_discovery;
 pub mod chat_agent_loop;
 pub mod chat_attachment;
@@ -83,8 +76,6 @@ pub mod export_hyperframes;
 pub mod export_pdf;
 pub mod export_pptx;
 pub mod export_svg;
-mod figma_convert;
-mod figma_convert_error;
 pub mod font_host;
 mod font_host_error;
 pub mod generate_jobs;
@@ -116,19 +107,10 @@ pub(crate) mod test_support;
 // re-exports keep every `de_host_services::settings_io*` import stable.
 pub use de_editor_host_core::settings_io;
 pub use de_editor_host_core::settings_io_error;
-mod browser_url_policy;
 mod test_config_root;
 pub mod user_scene_template_store;
 pub mod validation_providers;
-mod web_browser_input;
-mod web_browser_live;
-pub mod web_browser_snapshot;
-pub mod web_canvas_server;
-pub mod web_canvas_server_error;
-pub mod web_chat_standard;
-pub mod web_credential_policy;
 pub mod web_credentials;
 pub mod web_credentials_error;
 pub mod web_image_generate;
 pub mod web_image_search;
-pub mod web_static;

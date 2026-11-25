@@ -22,10 +22,8 @@ pub enum SourceRef {
 }
 
 impl SourceRef {
-    /// Classify a url taken from the document. `allow_remote` is off on the
-    /// web daemon, whose documents come from the browser: fetching their
-    /// urls from the daemon's host would be an SSRF hop.
-    pub fn from_url(url: &str, allow_remote: bool) -> Result<Self, GenerateJobError> {
+    /// Classify a url taken from the document.
+    pub fn from_url(url: &str) -> Result<Self, GenerateJobError> {
         let url = url.trim();
         if url.starts_with(super::PENDING_IMAGE_PREFIX) {
             return Err(GenerateJobError::Source(
@@ -36,12 +34,6 @@ impl SourceRef {
             return Ok(SourceRef::Data(url.to_string()));
         }
         if url.starts_with("https://") || url.starts_with("http://") {
-            if !allow_remote {
-                return Err(GenerateJobError::Source(
-                    "remote image urls are not fetched by the web daemon; embed the image first"
-                        .into(),
-                ));
-            }
             return Ok(SourceRef::Remote(url.to_string()));
         }
         Err(GenerateJobError::Source(format!(
