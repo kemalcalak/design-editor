@@ -17,13 +17,12 @@ impl McpTool for SaveDocument {
     }
 
     fn call(&self, args: &BTreeMap<String, String>) -> ToolOutcome {
-        let Some(path) = args.get("filePath").filter(|path| !path.trim().is_empty()) else {
+        let Some(path) = target_path(args.get("filePath").map(String::as_str)) else {
             return ToolOutcome::Err(
                 ToolErrorCode::MissingArgument,
                 "filePath is required".into(),
             );
         };
-        let path = resolve_path(path);
         if !de_util::document_file::is_document_path(&path) {
             return ToolOutcome::Err(
                 ToolErrorCode::InvalidArgument,
@@ -65,7 +64,13 @@ impl McpTool for SaveDocument {
     }
 }
 
-pub fn save_document_snapshot(state: &EditorState) -> SaveDocument {
+/// The `save_document` snapshot for a call that will write `file_path` (the
+/// request's `filePath` argument): library links are written relative to
+/// that file's folder, as the host's own Save writes them. Without a
+/// target they are written absolute, and the next open makes them
+/// relative again.
+pub fn save_document_snapshot_to(state: &EditorState, file_path: Option<&str>) -> SaveDocument {
+    let target = target_path(file_path);
     // Stream once into the immutable MCP snapshot. The schema writer
     // externalizes shared images while serializing, avoiding both a
     // document-sized `Value` and a second final `String` allocation.
@@ -78,10 +83,8 @@ pub fn save_document_snapshot(state: &EditorState) -> SaveDocument {
         "editorMeta",
         // The same metadata desktop Save writes, so an MCP save keeps the
         // scenario, pinned style guide and library links too.
-        // The target is only known at call time, so library links are
-        // written absolute; the next open makes them relative again.
         &de_pen_loader::EditorMeta {
-            libraries: de_pen_loader::links_for_document(state, None),
+            libraries: de_pen_loader::links_for_document(state, target.as_deref()),
             ..de_pen_loader::EditorMeta::from_state(state)
         },
     )
@@ -91,6 +94,13 @@ pub fn save_document_snapshot(state: &EditorState) -> SaveDocument {
         document_payload.extend_from_slice(b"{}");
     }
     SaveDocument { document_payload }
+}
+
+/// The file a `filePath` argument names. The snapshot (for its library
+/// links) and the call (for the write) both resolve it here, so the links
+/// are relative to the folder the file lands in.
+fn target_path(raw: Option<&str>) -> Option<PathBuf> {
+    raw.filter(|path| !path.trim().is_empty()).map(resolve_path)
 }
 
 fn resolve_path(raw: &str) -> PathBuf {

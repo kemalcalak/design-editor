@@ -262,7 +262,7 @@ pub use design_md_tools::{
 };
 pub use design_prompt::{get_design_prompt_snapshot, GetDesignPrompt};
 pub use design_refine_result::{design_refine_snapshot, DesignRefine};
-pub use document_save::{save_document_snapshot, SaveDocument};
+pub use document_save::{save_document_snapshot_to, SaveDocument};
 pub use extra_read_tools::{get_node_children_snapshot, ChildRecord, GetNodeChildren};
 pub use guidelines_tools::{get_guidelines_snapshot, GetGuidelines};
 pub use json_serializer::{response_to_json, tool_response_to_json};
