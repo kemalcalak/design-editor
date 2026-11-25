@@ -1,6 +1,16 @@
 # In-app release notes, shown once on the first launch after an update.
 #
-# One [[note]]
+# One [[note]] block per (version, locale); keep the newest release at the
+# top for readers (the window sorts by version itself). Every release needs
+# all 15 UI locales (see `de_i18n::Locale::ALL`), each with an `intro`
+# exactly when en-US has one and the same number of `item` lines; a test
+# enforces this. A missing locale falls back to en-US at runtime.
+#
+# Fields: `version`, `locale` (BCP-47 code), `title`, optional `intro`
+# (one short paragraph) and one `item = "..."` line per bullet, in order.
+# Write for users: short, plain, no issue numbers or technical terms.
+
+[[note]]
 version = "0.6.2"
 locale = "en-US"
 title = "Steadier agents and linked components"
