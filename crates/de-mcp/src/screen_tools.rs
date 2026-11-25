@@ -12,25 +12,15 @@ use super::{EditorCommand, McpTool, ToolErrorCode, ToolOutcome};
 
 /// First-party `set_screen` tool.
 pub struct SetScreen {
-    /// The active page's top-level frames, without their subtrees: all a
-    /// marker edit reads (ids, names, markers).
+    /// The active page's roots with their subtrees: a new start screen
+    /// moves the page's `navigate` actions along with the routes (#371).
     frames: Vec<PenNode>,
 }
 
 pub fn set_screen_snapshot(state: &EditorState) -> SetScreen {
-    let frames = state
-        .active_children()
-        .iter()
-        .filter_map(|node| match node {
-            PenNode::Frame(frame) => {
-                let mut shallow = frame.clone();
-                shallow.children = None;
-                Some(PenNode::Frame(shallow))
-            }
-            _ => None,
-        })
-        .collect();
-    SetScreen { frames }
+    SetScreen {
+        frames: state.active_children().to_vec(),
+    }
 }
 
 impl McpTool for SetScreen {

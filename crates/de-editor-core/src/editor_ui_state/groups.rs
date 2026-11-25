@@ -74,6 +74,9 @@ pub struct PreviewState {
     /// pressed — same press/hover/release contract as the switchers.
     pub browser_hover: Option<PreviewBrowserControl>,
     pub browser_pressed: Option<PreviewBrowserControl>,
+    /// The bar's link-hint button turned the "where does this go"
+    /// tooltip off (#371). Off by default: the hints show.
+    pub link_hints_hidden: bool,
 }
 
 /// A button on the preview browser bar (#153).
@@ -81,6 +84,19 @@ pub struct PreviewState {
 pub enum PreviewBrowserControl {
     Back,
     Forward,
+    /// Show / hide the link-hint tooltip (#371).
+    LinkHints,
+}
+
+/// Prototype links on the editor canvas (#371).
+#[derive(Debug, Clone, Default, PartialEq)]
+pub struct PrototypeState {
+    /// View ▸ Show prototype links: draw every link on the page, not only
+    /// the selection's.
+    pub show_links: bool,
+    /// A node the property panel asked the host to frame (an
+    /// interaction's target); desktop takes it after the action.
+    pub pending_frame: Option<crate::NodeId>,
 }
 
 /// PropertyPanel Size-section fill / hug / clip toggles.

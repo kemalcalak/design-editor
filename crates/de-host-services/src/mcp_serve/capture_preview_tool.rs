@@ -164,7 +164,8 @@ impl CapturePreview {
     }
 }
 
-/// Parse the `actions` array: `{"tap":"<nodeId>"}`, `{"hover":"<nodeId>"}`,
+/// Parse the `actions` array: `{"tap":"<nodeId | inst/child | layer name>"}`,
+/// `{"hover":"<same>"}`,
 /// `{"navigate":"/path"}`, `{"back":true}` or `{"wait":<ms>}`, in order.
 fn parse_actions(raw: &str) -> Result<Vec<CaptureStep>, ToolError> {
     let invalid = |message: String| (ToolErrorCode::InvalidArgument, message);

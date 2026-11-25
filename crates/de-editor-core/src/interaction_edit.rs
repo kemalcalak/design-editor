@@ -48,6 +48,22 @@ impl InteractionTrigger {
     }
 
     /// The authored actions for this trigger, if any.
+    /// The MCP spelling (`tap`, `hover`, `long_press`).
+    pub fn wire_name(self) -> &'static str {
+        match self {
+            InteractionTrigger::Tap => "tap",
+            InteractionTrigger::Hover => "hover",
+            InteractionTrigger::LongPress => "long_press",
+        }
+    }
+
+    /// Parse the MCP spelling; the handler key (`onTap`) is accepted too.
+    pub fn from_wire(name: &str) -> Option<Self> {
+        Self::ALL
+            .into_iter()
+            .find(|t| t.wire_name() == name || t.handler_key() == name)
+    }
+
     pub fn actions(self, handlers: &EventHandlers) -> Option<&ActionList> {
         match self {
             InteractionTrigger::Tap => handlers.on_tap.as_ref(),
@@ -56,7 +72,7 @@ impl InteractionTrigger {
         }
     }
 
-    fn slot(self, handlers: &mut EventHandlers) -> &mut Option<ActionList> {
+    pub(crate) fn slot(self, handlers: &mut EventHandlers) -> &mut Option<ActionList> {
         match self {
             InteractionTrigger::Tap => &mut handlers.on_tap,
             InteractionTrigger::Hover => &mut handlers.on_hover_enter,
@@ -145,10 +161,16 @@ pub fn pop_action() -> Action {
 /// The section-link action: scroll the page so the node `target`
 /// meets the top — the shape `wire_web_nav_links` writes (#153).
 pub fn scroll_to_action(target: &str) -> Action {
+    scroll_to_action_aligned(target, "start")
+}
+
+/// A `scroll_to` with an explicit alignment (`start`, `center`, `end`,
+/// `nearest`; MCP `set_interaction`).
+pub fn scroll_to_action_aligned(target: &str, alignment: &str) -> Action {
     let mut map = std::collections::BTreeMap::new();
     map.insert(
         "scroll_to".to_string(),
-        serde_json::json!({ "target": target, "alignment": "start" }),
+        serde_json::json!({ "target": target, "alignment": alignment }),
     );
     Action(map)
 }
@@ -320,7 +342,34 @@ impl EditorState {
         let Some(node) = self.selected_node() else {
             return false;
         };
-        let mut handlers = node.events().cloned().unwrap_or_default();
+        let handlers = node.events().cloned().unwrap_or_default();
+        self.write_events(node_id, handlers, edit)
+    }
+
+    /// Run `edit` on a copy of `node_id`'s `events` block (a node of the
+    /// active page, or the display node an instance-write scope swapped
+    /// in) and write the whole block back when `edit` reports a change.
+    pub(crate) fn edit_node_events(
+        &mut self,
+        node_id: &crate::NodeId,
+        edit: impl FnOnce(&mut EventHandlers) -> bool,
+    ) -> bool {
+        if !node_id.is_real() || !self.is_editable(node_id) {
+            return false;
+        }
+        let Some(node) = crate::walkers::find_node(self.active_children(), node_id) else {
+            return false;
+        };
+        let handlers = node.events().cloned().unwrap_or_default();
+        self.write_events(node_id.clone(), handlers, edit)
+    }
+
+    fn write_events(
+        &mut self,
+        node_id: crate::NodeId,
+        mut handlers: EventHandlers,
+        edit: impl FnOnce(&mut EventHandlers) -> bool,
+    ) -> bool {
         if !edit(&mut handlers) {
             return false;
         }

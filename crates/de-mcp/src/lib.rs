@@ -120,6 +120,7 @@ mod import_snapshot_tool_tests;
 mod insert_node_args;
 mod insert_node_data;
 pub mod instance_tools;
+pub mod interaction_tools;
 pub mod json_serializer;
 mod layout_overlaps;
 #[cfg(test)]
@@ -274,6 +275,10 @@ pub use document_save::{save_document_snapshot_to, SaveDocument};
 pub use export_html_tool::{export_html_snapshot, ExportHtml};
 pub use extra_read_tools::{get_node_children_snapshot, ChildRecord, GetNodeChildren};
 pub use guidelines_tools::{get_guidelines_snapshot, GetGuidelines};
+pub use interaction_tools::{
+    list_interactions_snapshot, remove_interaction_snapshot, set_interaction_snapshot,
+    ListInteractions, RemoveInteraction, SetInteraction,
+};
 pub use json_serializer::{response_to_json, tool_response_to_json};
 pub use library_tools::{
     add_library_snapshot, list_libraries_snapshot, remove_library_snapshot, LibraryTool,

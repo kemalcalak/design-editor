@@ -12,8 +12,8 @@ pub use super::git_panel::{
 };
 pub use super::groups::{
     AssetCenterTab, CustomPrompt, DesignMdPanelState, PreviewState, PromptCenterFocus,
-    PromptCenterState, PromptFilter, SceneFilter, SceneTemplateCenterState, SceneTemplateFocus,
-    SizeToggleState, StyleImportState,
+    PromptCenterState, PromptFilter, PrototypeState, SceneFilter, SceneTemplateCenterState,
+    SceneTemplateFocus, SizeToggleState, StyleImportState,
 };
 pub use super::home::{
     EntrySurface, HomeCopyTarget, HomeFamily, HomeHit, HomeSize, HomeState, HomeTemplate,

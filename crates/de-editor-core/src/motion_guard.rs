@@ -165,6 +165,7 @@ pub(crate) fn prepare_command(cmd: &mut EditorCommand) -> Result<(), MotionWrite
         // (shipped templates, SVG import, booleans, kit masters) or only
         // touch fields animations do not live in.
         C::SetVariableColor { .. }
+        | C::Interaction(_)
         | C::SetActiveAxisValue { .. }
         | C::CycleActiveAxisValue { .. }
         | C::InsertNode { .. }

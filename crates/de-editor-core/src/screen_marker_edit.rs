@@ -5,8 +5,9 @@
 //! A marker is the frame's `screen` route path. Marking takes a path made
 //! from the frame's name (any script, unique on the page); the start
 //! screen is `/`, and the frame that held `/` before moves to a path of
-//! its own name. All writes are `PatchNodeData` on the active page,
-//! applied as one `Batch` (one undo step).
+//! its own name; the page's `navigate` actions follow both screens
+//! (`route_rename`, #371). All writes are `PatchNodeData` on the active
+//! page, applied as one `Batch` (one undo step).
 
 use std::collections::BTreeSet;
 
@@ -81,11 +82,19 @@ pub fn screen_marker_commands(
                 }
                 _ => None,
             });
+            // Links follow their screens (#371): `/` now names this
+            // frame, and the old start screen's links get its new path.
+            let mut renames = std::collections::BTreeMap::new();
             if let Some(holder) = holder {
                 let path = own_path(roots, &holder, &mut used);
                 out.push(patch(&holder, Some(&path)));
+                renames.insert("/".to_owned(), path);
             }
             out.push(patch(node_id, Some("/")));
+            if let Some(old) = current {
+                renames.insert(old, "/".to_owned());
+            }
+            out.extend(crate::route_rename::route_rename_commands(roots, &renames));
         }
         ScreenMarkerEdit::Remove if current.is_some() => out.push(patch(node_id, None)),
         _ => {}

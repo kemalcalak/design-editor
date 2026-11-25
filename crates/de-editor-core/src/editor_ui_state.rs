@@ -232,6 +232,8 @@ pub struct EditorUiState {
     // --- Canvas preview (Play) mode -------------------------------
     /// Preview (Play) mode flag + device / screen switcher state.
     pub preview: PreviewState,
+    /// Canvas prototype links + the panel's frame-target request (#371).
+    pub prototype: PrototypeState,
     /// Left-rail tab selection plus the slides tab's hover / press /
     /// drag bookkeeping. The tab row itself only appears for scenario
     /// documents that have a page navigator to offer.
