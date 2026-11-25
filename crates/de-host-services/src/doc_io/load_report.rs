@@ -17,6 +17,9 @@ pub struct DocumentLoadReport {
     /// Animation data the loader dropped (#351), one line per drop naming
     /// the node. Saving makes the loss permanent, so hosts show it.
     pub motion_repairs: Vec<String>,
+    /// Ids more than one node uses (#364). Writes by id can land on the
+    /// wrong node, so hosts warn and offer `EditorCommand::RepairDuplicateIds`.
+    pub duplicate_ids: Vec<de_editor_core::duplicate_ids::DuplicateIdReport>,
 }
 
 impl DocumentLoadReport {

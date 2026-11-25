@@ -242,6 +242,8 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "dialog.motionRepairTitle" => "Đã bỏ qua một số hoạt ảnh",
         "dialog.motionRepairBody" => "“{{name}}” có dữ liệu hoạt ảnh mà phiên bản này không phát được nên đã bị bỏ qua:\n\n{{details}}\n\nTài liệu đã mở mà không có dữ liệu này. Lưu sẽ xóa vĩnh viễn khỏi tệp; hãy đóng mà không lưu để giữ bản gốc.",
         "dialog.motionRepairToast" => "Đã bỏ qua {{count}} mục hoạt ảnh khi mở ({{details}}). Lưu sẽ xóa vĩnh viễn.",
+        "dialog.duplicateIdsTitle" => "Một số ID được dùng nhiều lần",
+        "dialog.duplicateIdsBody" => "“{{name}}” có các nút dùng chung một ID, nên một chỉnh sửa nhắm vào nút này có thể rơi vào nút khác:\n\n{{details}}\n\nSửa các ID ngay bây giờ? Nút đầu tiên giữ mỗi ID và các nút còn lại nhận ID mới; canvas không thay đổi. Bạn có thể hoàn tác, và tệp chỉ thay đổi khi bạn lưu.",
         "import.fromPptx" => "Nhập từ PowerPoint",
         "dialog.pptxImportTitle" => "Đã nhập từ PowerPoint",
         "dialog.pptxImportBody" => "Một số phần của “{{name}}” không thể giữ nguyên khi nhập:\n\n{{details}}\n\nPhần còn lại đã mở dưới dạng bản trình bày mới chưa lưu. Tệp gốc không bị thay đổi.",

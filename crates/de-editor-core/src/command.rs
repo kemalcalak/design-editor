@@ -646,4 +646,10 @@ pub enum EditorCommand {
     ///
     /// [`EditorState::promote_legacy_widgets`]: crate::EditorState::promote_legacy_widgets
     PromoteLegacyWidgets,
+    /// Give every later use of an id that more than one node uses a fresh
+    /// id, keeping the first use, and move the references that meant the
+    /// renamed node (#364, `crate::duplicate_ids`). One undo step; `false`
+    /// when every id is already unique, or when the document could not be
+    /// rewritten (logged, the document stays as it was).
+    RepairDuplicateIds,
 }

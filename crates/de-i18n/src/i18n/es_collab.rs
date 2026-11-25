@@ -242,6 +242,8 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "dialog.motionRepairTitle" => "Se omitieron algunas animaciones",
         "dialog.motionRepairBody" => "«{{name}}» tiene datos de animación que esta versión no puede reproducir, así que se omitieron:\n\n{{details}}\n\nEl documento se abrió sin ellos. Al guardar se eliminan del archivo para siempre; cierra sin guardar para conservar el original.",
         "dialog.motionRepairToast" => "Se omitieron {{count}} elementos de animación al abrir ({{details}}). Al guardar se eliminan para siempre.",
+        "dialog.duplicateIdsTitle" => "Algunos ID se usan más de una vez",
+        "dialog.duplicateIdsBody" => "“{{name}}” tiene nodos que comparten un ID, así que una edición dirigida a uno puede caer en otro:\n\n{{details}}\n\n¿Reparar los ID ahora? El primer nodo conserva cada ID y los demás reciben uno nuevo; el lienzo no cambia. Puedes deshacerlo, y el archivo solo cambia al guardar.",
         "import.fromPptx" => "Importar desde PowerPoint",
         "dialog.pptxImportTitle" => "Importado de PowerPoint",
         "dialog.pptxImportBody" => "Algunas partes de «{{name}}» no se pudieron importar tal cual:\n\n{{details}}\n\nEl resto se abrió como una presentación nueva sin guardar. El archivo original no cambia.",

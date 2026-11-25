@@ -242,6 +242,8 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "dialog.motionRepairTitle" => "Bazı animasyonlar dışarıda bırakıldı",
         "dialog.motionRepairBody" => "“{{name}}” bu sürümün oynatamadığı animasyon verisi içeriyor, bu yüzden dışarıda bırakıldı:\n\n{{details}}\n\nBelge bu veri olmadan açıldı. Kaydederseniz dosyadan kalıcı olarak silinir; özgün dosyayı korumak için kaydetmeden kapatın.",
         "dialog.motionRepairToast" => "Açılışta {{count}} animasyon öğesi dışarıda bırakıldı ({{details}}). Kaydederseniz kalıcı olarak silinir.",
+        "dialog.duplicateIdsTitle" => "Bazı kimlikler birden çok kez kullanılıyor",
+        "dialog.duplicateIdsBody" => "“{{name}}” içinde aynı kimliği paylaşan düğümler var; birine yönelik bir düzenleme başka birine uygulanabilir:\n\n{{details}}\n\nKimlikler şimdi onarılsın mı? Her kimliği ilk düğüm korur, diğerleri yeni kimlik alır; tuval değişmez. Geri alabilirsiniz; dosya yalnızca kaydettiğinizde değişir.",
         "import.fromPptx" => "PowerPoint'ten içe aktar",
         "dialog.pptxImportTitle" => "PowerPoint'ten içe aktarıldı",
         "dialog.pptxImportBody" => "“{{name}}” dosyasının bazı kısımları olduğu gibi aktarılamadı:\n\n{{details}}\n\nGeri kalanı kaydedilmemiş yeni bir sunum olarak açıldı. Özgün dosya değiştirilmedi.",

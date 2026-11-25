@@ -242,6 +242,8 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "dialog.motionRepairTitle" => "Certaines animations ont été écartées",
         "dialog.motionRepairBody" => "« {{name}} » contient des données d’animation que cette version ne peut pas lire ; elles ont été écartées :\n\n{{details}}\n\nLe document s’est ouvert sans elles. Enregistrer les supprime définitivement du fichier ; fermez sans enregistrer pour garder l’original.",
         "dialog.motionRepairToast" => "{{count}} éléments d’animation écartés à l’ouverture ({{details}}). Enregistrer les supprime définitivement.",
+        "dialog.duplicateIdsTitle" => "Certains identifiants sont utilisés plusieurs fois",
+        "dialog.duplicateIdsBody" => "« {{name}} » contient des nœuds qui partagent un identifiant ; une modification visant l’un d’eux peut toucher un autre :\n\n{{details}}\n\nRéparer les identifiants maintenant ? Le premier nœud garde chaque identifiant et les autres en reçoivent un nouveau ; le canevas ne change pas. Vous pouvez annuler, et le fichier ne change qu’à l’enregistrement.",
         "import.fromPptx" => "Importer depuis PowerPoint",
         "dialog.pptxImportTitle" => "Importé depuis PowerPoint",
         "dialog.pptxImportBody" => "Certaines parties de « {{name}} » n’ont pas pu être reprises telles quelles :\n\n{{details}}\n\nLe reste s’est ouvert comme une nouvelle présentation non enregistrée. Le fichier d’origine n’est pas modifié.",

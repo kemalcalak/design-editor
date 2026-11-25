@@ -42,6 +42,10 @@ pub(super) fn rebuild_registry(doc: &EditorState, requested_tool: Option<&str>) 
     register_tool!("upsert_screen", upsert_screen_snapshot());
     register_tool!("conversion_status", conversion_status_snapshot(doc));
     register_tool!("lint_document", lint_document_snapshot(doc));
+    register_tool!(
+        "repair_duplicate_ids",
+        de_mcp::repair_duplicate_ids_snapshot(doc)
+    );
     register_tool!("save_theme_preset", save_theme_preset_snapshot(doc));
     register_tool!("load_theme_preset", load_theme_preset_snapshot());
     register_tool!("list_theme_presets", list_theme_presets_snapshot());

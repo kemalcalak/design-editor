@@ -158,3 +158,33 @@ fn update_node_patches_an_instance_descendant() {
         Some("#ff0000")
     );
 }
+
+#[test]
+fn ids_stay_unique_after_writes_inside_instances_and_later_inserts() {
+    // Each call reads its id seed off the document again (#364).
+    let mut state = state();
+    run(
+        &mut state,
+        "a=I(\"inst/slot\", {\"type\":\"frame\",\"name\":\"Row\"})",
+    );
+    run(
+        &mut state,
+        "b=R(\"inst/title\", {\"type\":\"text\",\"content\":\"Swapped\"})",
+    );
+    run(
+        &mut state,
+        "c=I(\"inst/slot\", {\"type\":\"ref\",\"ref\":\"button\"})",
+    );
+    run(
+        &mut state,
+        concat!(
+            "x=I(\"page\", {\"type\":\"rectangle\",\"width\":10,\"height\":10})\n",
+            "y=I(\"page\", {\"type\":\"text\",\"content\":\"New\"})"
+        ),
+    );
+    assert!(
+        state.duplicate_ids().is_empty(),
+        "{:?}",
+        state.duplicate_ids()
+    );
+}

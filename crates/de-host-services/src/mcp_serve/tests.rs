@@ -19,7 +19,7 @@ fn tools_list_response_includes_all_registered_tools() {
     // TOOL_SCHEMAS without being added to the list below.
     assert_eq!(
         TOOL_SCHEMAS.len(),
-        153,
+        154,
         "tools/list catalog count must match the registered tools — add the new tool to this test"
     );
     // Production catalog excludes debug tools (we removed the
@@ -77,6 +77,7 @@ fn tools_list_response_includes_all_registered_tools() {
         "upsert_screen",
         "conversion_status",
         "lint_document",
+        "repair_duplicate_ids",
         "save_theme_preset",
         "load_theme_preset",
         "list_theme_presets",

@@ -237,6 +237,7 @@ pub(crate) fn prepare_command(cmd: &mut EditorCommand) -> Result<(), MotionWrite
         | C::ReplaceFontFamily { .. }
         | C::ReplaceAllMatchingProperties { .. }
         | C::PromoteLegacyWidgets
+        | C::RepairDuplicateIds
         | C::CopySelected
         | C::CutSelected
         | C::PasteClipboard { .. }

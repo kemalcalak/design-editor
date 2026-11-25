@@ -242,6 +242,8 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "dialog.motionRepairTitle" => "Beberapa animasi dilewati",
         "dialog.motionRepairBody" => "“{{name}}” berisi data animasi yang tidak dapat diputar versi ini, jadi dilewati:\n\n{{details}}\n\nDokumen dibuka tanpa data itu. Menyimpan akan menghapusnya dari file secara permanen; tutup tanpa menyimpan untuk mempertahankan aslinya.",
         "dialog.motionRepairToast" => "{{count}} item animasi dilewati saat membuka ({{details}}). Menyimpan akan menghapusnya secara permanen.",
+        "dialog.duplicateIdsTitle" => "Beberapa ID dipakai lebih dari sekali",
+        "dialog.duplicateIdsBody" => "“{{name}}” memiliki node yang berbagi ID, sehingga suntingan untuk salah satunya bisa mengenai yang lain:\n\n{{details}}\n\nPerbaiki ID sekarang? Node pertama mempertahankan setiap ID dan yang lain mendapat ID baru; kanvas tidak berubah. Anda bisa membatalkannya, dan berkas hanya berubah saat Anda menyimpan.",
         "import.fromPptx" => "Impor dari PowerPoint",
         "dialog.pptxImportTitle" => "Diimpor dari PowerPoint",
         "dialog.pptxImportBody" => "Beberapa bagian “{{name}}” tidak dapat dibawa apa adanya:\n\n{{details}}\n\nSisanya dibuka sebagai presentasi baru yang belum disimpan. File asli tidak diubah.",
