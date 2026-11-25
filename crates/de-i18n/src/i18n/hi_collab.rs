@@ -400,6 +400,14 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "whatsNew.next" => "अगला",
         "settings.system.livePages" => "लाइव पेज",
         "settings.system.livePagesDesc" => "चुना हुआ ब्राउज़र नोड असली पेज की तरह चलता है। बंद होने पर स्थिर स्नैपशॉट दिखता है।",
+        "prototype.trigger.tap" => "टैप",
+        "prototype.trigger.hover" => "होवर",
+        "prototype.trigger.longPress" => "देर तक दबाएँ",
+        "prototype.back" => "वापस",
+        "prototype.brokenLink" => "टूटा लिंक",
+        "prototype.opens" => "{{host}} खोलता है",
+        "prototype.scrollTo" => "{{name}} तक स्क्रॉल करें",
+        "menu.showPrototypeLinks" => "प्रोटोटाइप लिंक दिखाएँ",
         _ => return None,
     })
 }

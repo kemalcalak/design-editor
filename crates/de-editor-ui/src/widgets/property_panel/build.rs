@@ -201,6 +201,8 @@ impl PropertyPanel {
             // "Scroll to" targets need the page, not just the node (#176).
             snapshot.interactions.sections =
                 crate::widgets::property_panel_interactions::document_section_targets(state);
+            snapshot.interactions.screens =
+                crate::widgets::property_panel_interactions::document_screens(state);
             if !state.editor_ui.agent_settings.experimental_features_enabled {
                 // The Widget section is an experimental surface. Hide it
                 // unless opted in — the section's paint AND height both key

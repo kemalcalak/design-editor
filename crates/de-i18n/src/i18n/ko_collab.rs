@@ -402,6 +402,14 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "whatsNew.next" => "다음",
         "settings.system.livePages" => "라이브 페이지",
         "settings.system.livePagesDesc" => "선택한 브라우저 노드를 실제 페이지처럼 재생합니다. 끄면 정지된 스냅샷을 표시합니다.",
+        "prototype.trigger.tap" => "탭",
+        "prototype.trigger.hover" => "호버",
+        "prototype.trigger.longPress" => "길게 누르기",
+        "prototype.back" => "뒤로",
+        "prototype.brokenLink" => "끊어진 링크",
+        "prototype.opens" => "{{host}} 열기",
+        "prototype.scrollTo" => "{{name}}(으)로 스크롤",
+        "menu.showPrototypeLinks" => "프로토타입 링크 표시",
         _ => return None,
     })
 }

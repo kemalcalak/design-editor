@@ -400,6 +400,14 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "whatsNew.next" => "下一个",
         "settings.system.livePages" => "实时页面",
         "settings.system.livePagesDesc" => "选中的浏览器节点像真实页面一样实时播放。关闭后显示静态快照。",
+        "prototype.trigger.tap" => "点击",
+        "prototype.trigger.hover" => "悬停",
+        "prototype.trigger.longPress" => "长按",
+        "prototype.back" => "返回",
+        "prototype.brokenLink" => "失效链接",
+        "prototype.opens" => "打开 {{host}}",
+        "prototype.scrollTo" => "滚动到 {{name}}",
+        "menu.showPrototypeLinks" => "显示原型连线",
         _ => return None,
     })
 }

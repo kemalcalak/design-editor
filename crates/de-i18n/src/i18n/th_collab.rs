@@ -400,6 +400,14 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "whatsNew.next" => "ถัดไป",
         "settings.system.livePages" => "หน้าเว็บสด",
         "settings.system.livePagesDesc" => "โหนดเบราว์เซอร์ที่เลือกจะเล่นเหมือนหน้าเว็บจริง เมื่อปิดจะแสดงภาพนิ่ง",
+        "prototype.trigger.tap" => "แตะ",
+        "prototype.trigger.hover" => "วางเมาส์",
+        "prototype.trigger.longPress" => "กดค้าง",
+        "prototype.back" => "ย้อนกลับ",
+        "prototype.brokenLink" => "ลิงก์เสีย",
+        "prototype.opens" => "เปิด {{host}}",
+        "prototype.scrollTo" => "เลื่อนไปที่ {{name}}",
+        "menu.showPrototypeLinks" => "แสดงลิงก์ต้นแบบ",
         _ => return None,
     })
 }

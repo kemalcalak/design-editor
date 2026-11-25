@@ -400,6 +400,14 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "whatsNew.next" => "Próximo",
         "settings.system.livePages" => "Páginas ao vivo",
         "settings.system.livePagesDesc" => "Um nó de navegador selecionado roda como a página real. Desligado, mostra uma captura estática.",
+        "prototype.trigger.tap" => "Tocar",
+        "prototype.trigger.hover" => "Passar o cursor",
+        "prototype.trigger.longPress" => "Toque longo",
+        "prototype.back" => "Voltar",
+        "prototype.brokenLink" => "Link quebrado",
+        "prototype.opens" => "Abre {{host}}",
+        "prototype.scrollTo" => "Rolar até {{name}}",
+        "menu.showPrototypeLinks" => "Mostrar links do protótipo",
         _ => return None,
     })
 }

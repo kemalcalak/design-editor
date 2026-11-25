@@ -465,6 +465,11 @@ pub fn apply_file_menu_app_choice(
         FileMenuChoice::Undo => FileMenuStep::Toolbar(ToolbarAction::Undo),
         FileMenuChoice::Redo => FileMenuStep::Toolbar(ToolbarAction::Redo),
         FileMenuChoice::Present => FileMenuStep::Present,
+        FileMenuChoice::PrototypeLinks => {
+            let prototype = &mut state.editor_ui.prototype;
+            prototype.show_links = !prototype.show_links;
+            FileMenuStep::Handled
+        }
         FileMenuChoice::Tool(tool) => apply_file_menu_tool(state, tool, now_ms),
         _ => return None,
     };

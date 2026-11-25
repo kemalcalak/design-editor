@@ -95,6 +95,7 @@ impl WidgetHost {
                     | FileMenuChoice::Undo
                     | FileMenuChoice::Redo
                     | FileMenuChoice::Present
+                    | FileMenuChoice::PrototypeLinks
                     | FileMenuChoice::Tool(_) => return,
                 });
                 self.editor_state.editor_ui.file_menu_open = false;

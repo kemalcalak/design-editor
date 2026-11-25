@@ -400,6 +400,14 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "whatsNew.next" => "Berikutnya",
         "settings.system.livePages" => "Halaman langsung",
         "settings.system.livePagesDesc" => "Node browser yang dipilih berjalan seperti halaman aslinya. Jika mati, tampil cuplikan diam.",
+        "prototype.trigger.tap" => "Ketuk",
+        "prototype.trigger.hover" => "Arahkan",
+        "prototype.trigger.longPress" => "Tekan lama",
+        "prototype.back" => "Kembali",
+        "prototype.brokenLink" => "Tautan rusak",
+        "prototype.opens" => "Membuka {{host}}",
+        "prototype.scrollTo" => "Gulir ke {{name}}",
+        "menu.showPrototypeLinks" => "Tampilkan tautan prototipe",
         _ => return None,
     })
 }

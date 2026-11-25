@@ -72,6 +72,15 @@ pub struct SectionTarget {
     pub name: String,
 }
 
+/// A routed screen of the selection's page, for the rows' target names
+/// (#371).
+#[derive(Debug, Clone, PartialEq)]
+pub struct ScreenRef {
+    pub route: String,
+    pub name: String,
+    pub id: String,
+}
+
 /// One authored trigger and its actions (never empty).
 #[derive(Debug, Clone, PartialEq)]
 pub struct TriggerSummary {
@@ -97,6 +106,9 @@ pub struct InteractionSummary {
     /// "Scroll to" targets for the popover; filled from the document by
     /// the panel builder (the node alone can't know its page).
     pub sections: Vec<SectionTarget>,
+    /// The page's routed screens, so a navigate row names its target and
+    /// can jump to it (#371); filled by the panel builder.
+    pub screens: Vec<ScreenRef>,
 }
 
 impl InteractionSummary {
@@ -124,6 +136,23 @@ impl InteractionSummary {
             .iter()
             .find(|section| section.id == id)
             .map_or(id, |section| section.name.as_str())
+    }
+
+    /// The screen a route leads to, if the page has one.
+    pub fn screen_for(&self, route: &str) -> Option<&ScreenRef> {
+        self.screens.iter().find(|screen| screen.route == route)
+    }
+
+    /// The node `trigger`'s single action leads to, for the row's jump
+    /// button (#371): a navigate's screen, a scroll target.
+    pub fn target_of(&self, trigger: InteractionTrigger) -> Option<String> {
+        match self.actions(trigger) {
+            [TapActionSummary::Navigate { path, .. }] => {
+                self.screen_for(path).map(|screen| screen.id.clone())
+            }
+            [TapActionSummary::ScrollTo { target }] => Some(target.clone()),
+            _ => None,
+        }
     }
 
     /// Triggers with no action yet, in list order — the "+" menu rows.
@@ -166,6 +195,7 @@ pub(crate) fn interactions_of(node: &PenNode, is_top_level: bool) -> Interaction
             .0
             .map(de_editor_core::transition_edit::TransitionSummary::of),
         sections: Vec::new(),
+        screens: Vec::new(),
     }
 }
 
@@ -223,6 +253,28 @@ pub fn document_screen_paths(state: &de_editor_core::EditorState) -> Vec<String>
         // something is selected.
         .filter(|(n, _)| anchor.is_empty() || !subtree_contains(n, anchor))
         .map(|(_, screen)| screen.to_string())
+        .collect()
+}
+
+/// The active page's routed screens (top-level frames with a `screen`
+/// marker), in document order (#371).
+pub fn document_screens(state: &de_editor_core::EditorState) -> Vec<ScreenRef> {
+    state
+        .active_children()
+        .iter()
+        .filter_map(|node| {
+            let route = node.screen()?;
+            let name = node.base().name.as_deref().map(str::trim).unwrap_or("");
+            Some(ScreenRef {
+                route: route.to_string(),
+                name: if name.is_empty() {
+                    route.to_string()
+                } else {
+                    name.to_string()
+                },
+                id: node.id_str().to_string(),
+            })
+        })
         .collect()
 }
 
@@ -326,6 +378,23 @@ fn row_rect(x: f32, y: f32, width: f32) -> Rect {
     Rect::xywh(x + PAD_X, y, width - PAD_X * 2.0, INPUT_HEIGHT)
 }
 
+/// Gap between an action row's dropdown and its jump button.
+const JUMP_GAP: f32 = 4.0;
+
+/// An action row with a jump button (#371): the dropdown keeps the row
+/// minus a square at its right end, which is the button.
+fn split_jump(row: Rect) -> (Rect, Rect) {
+    let side = row.size.y;
+    let dropdown = Rect::xywh(
+        row.origin.x,
+        row.origin.y,
+        row.size.x - side - JUMP_GAP,
+        side,
+    );
+    let jump = Rect::xywh(row.origin.x + row.size.x - side, row.origin.y, side, side);
+    (dropdown, jump)
+}
+
 /// The Slide | Fade cells of a Transition row at `row`. The cells take
 /// the whole row (#190): a "Transition" label column beside them left
 /// too little room for the longer translations of both.
@@ -354,10 +423,18 @@ pub fn push_interaction_action_rects(
     for row in rows(interactions) {
         let rect = row_rect(x, row_y, width);
         match row {
-            Row::Action(trigger, _) => out.push((
-                PropertyPanelAction::ToggleInteractionMenu(InteractionMenuTarget::Trigger(trigger)),
-                rect,
-            )),
+            Row::Action(trigger, _) => {
+                let menu = PropertyPanelAction::ToggleInteractionMenu(
+                    InteractionMenuTarget::Trigger(trigger),
+                );
+                if interactions.target_of(trigger).is_some() {
+                    let (dropdown, jump) = split_jump(rect);
+                    out.push((menu, dropdown));
+                    out.push((PropertyPanelAction::GoToInteractionTarget(trigger), jump));
+                } else {
+                    out.push((menu, rect));
+                }
+            }
             Row::Transition(trigger, _) => {
                 for (verb, cell) in TRANSITION_VERBS.into_iter().zip(transition_cells(rect)) {
                     out.push((
@@ -430,7 +507,13 @@ pub fn paint_interactions_section(
             }
             Row::Action(trigger, action) => {
                 let label = action_label(locale, interactions, trigger, action);
-                paint_fitted_dropdown(cx, theme, rect, &label);
+                if interactions.target_of(trigger).is_some() {
+                    let (dropdown, jump) = split_jump(rect);
+                    paint_fitted_dropdown(cx, theme, dropdown, &label);
+                    paint_jump_button(cx, theme, jump);
+                } else {
+                    paint_fitted_dropdown(cx, theme, rect, &label);
+                }
             }
             Row::Transition(_, verb) => paint_transition_row(cx, theme, locale, rect, verb),
             Row::Url(trigger) => {
@@ -486,6 +569,23 @@ pub fn paint_interactions_section(
     )
 }
 
+/// The square "go to target" button beside an action row.
+fn paint_jump_button(cx: &mut PaintCx<'_>, theme: &Theme, rect: Rect) {
+    const ICON: f32 = 14.0;
+    cx.backend.fill_round_rect(rect, 6.0, theme.muted);
+    crate::widgets::icons::draw_icon(
+        cx.backend,
+        crate::widgets::icons::Icon::ArrowRight,
+        Point2D::new(
+            rect.origin.x + (rect.size.x - ICON) / 2.0,
+            rect.origin.y + (rect.size.y - ICON) / 2.0,
+        ),
+        ICON,
+        theme.foreground,
+        1.75,
+    );
+}
+
 fn paint_transition_row(
     cx: &mut PaintCx<'_>,
     theme: &Theme,
@@ -526,9 +626,13 @@ fn action_label(
 ) -> String {
     let prefix = trigger_prefix(locale, trigger);
     match action {
+        // The screen's name, not only its route (#371).
         TapActionSummary::Navigate { path, .. } => format!(
-            "{prefix} {} {path}",
+            "{prefix} {} {}",
             translate(locale, "interactions.navigate", "Navigate"),
+            interactions
+                .screen_for(path)
+                .map_or(path.as_str(), |screen| screen.name.as_str()),
         ),
         TapActionSummary::Pop => {
             format!(
@@ -605,3 +709,7 @@ pub(crate) fn translate(
 #[cfg(test)]
 #[path = "property_panel_interactions_tests.rs"]
 mod tests;
+
+#[cfg(test)]
+#[path = "property_panel_interactions_target_tests.rs"]
+mod target_tests;
