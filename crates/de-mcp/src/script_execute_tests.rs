@@ -8,7 +8,7 @@ use de_editor_core::{EditorCommand, EditorState, PenNodeExt};
 use serde_json::Value;
 
 use super::{
-    execute_snapshot, execute_snapshot_with_renderer, ExportFormat, ExportRequest,
+    execute_snapshot, execute_snapshot_with_renderer, ExportFormat, ExportRequest, ExportWritten,
     ScriptRenderError, ScriptRenderer,
 };
 use crate::test_fixtures::{frame, rect, sample, state_with};
@@ -510,13 +510,16 @@ impl ScriptRenderer for FakeRenderer {
         &self,
         _state: &EditorState,
         request: &ExportRequest,
-    ) -> Result<Vec<String>, ScriptRenderError> {
+    ) -> Result<ExportWritten, ScriptRenderError> {
         self.exports.lock().expect("lock").push(request.clone());
-        Ok(request
-            .node_ids
-            .iter()
-            .map(|id| format!("{}/{id}.png", request.output_path))
-            .collect())
+        Ok(ExportWritten {
+            paths: request
+                .node_ids
+                .iter()
+                .map(|id| format!("{}/{id}.png", request.output_path))
+                .collect(),
+            warnings: Vec::new(),
+        })
     }
 }
 

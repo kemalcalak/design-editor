@@ -52,9 +52,9 @@ pub(crate) fn ensure_raster_bytes(bytes: Arc<[u8]>) -> Arc<[u8]> {
 
 /// Loose sniff: the payload reads as XML-ish text whose first 4 KiB contain
 /// an `<svg` tag. A false positive only costs a failed parse, which passes
-/// the bytes through unchanged.
-#[cfg(not(target_arch = "wasm32"))]
-fn sniffs_as_svg(bytes: &[u8]) -> bool {
+/// the bytes through unchanged. The SVG export uses it to type an embedded
+/// image too.
+pub(crate) fn sniffs_as_svg(bytes: &[u8]) -> bool {
     let head = &bytes[..bytes.len().min(4096)];
     let Ok(text) = std::str::from_utf8(head) else {
         return false;

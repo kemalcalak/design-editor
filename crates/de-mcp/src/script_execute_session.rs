@@ -562,12 +562,13 @@ impl ExecSession {
             "png" => ExportFormat::Png,
             "jpeg" | "jpg" => ExportFormat::Jpeg,
             "webp" => ExportFormat::Webp,
+            "svg" => ExportFormat::Svg,
             "pdf" => ExportFormat::Pdf,
             other => {
                 return Err(ExecuteError::BadArgument {
                     call: "Export",
                     detail: format!(
-                        "format {other:?} is not supported here: use png, jpeg, webp or pdf \
+                        "format {other:?} is not supported here: use png, jpeg, webp, svg or pdf \
                          (for HTML use the codegen_export tool)"
                     ),
                 })

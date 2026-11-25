@@ -523,9 +523,14 @@ fn clipped_container_stroke_overlays_children_once() {
     ));
 
     let body = serialize_node_svg(&scene_with(vec![frame]), "clipped-frame").expect("svg");
-    let frame_fill = body
-        .find(r#"<rect id="clipped-frame""#)
-        .expect("frame fill");
+    let frame_group = body
+        .find(r#"<g id="clipped-frame">"#)
+        .expect("frame layer group");
+    let frame_fill = body.find(r#"fill="rgb(255,255,255)""#).expect("frame fill");
+    assert!(
+        frame_group < frame_fill,
+        "fill is inside the frame group: {body}"
+    );
     let clip_group = body
         .find(r#"<g clip-path="url(#clip-"#)
         .expect("clip group");
@@ -756,5 +761,9 @@ fn composite_opacity_wraps_gradient_stroke_and_descendants_once() {
     assert!(!body.contains("stroke-opacity="), "{body}");
     assert!(body.contains(r#"id="opacity-child""#), "{body}");
     assert!(!body.contains("fill-opacity="), "{body}");
-    assert_eq!(body.matches(r#"<g opacity="0.5""#).count(), 1, "{body}");
+    assert_eq!(body.matches(r#"opacity="0.5""#).count(), 1, "{body}");
+    assert!(
+        body.contains(r#"<g id="opacity-frame" opacity="0.5">"#),
+        "the frame's layer group carries its opacity: {body}"
+    );
 }

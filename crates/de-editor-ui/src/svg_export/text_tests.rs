@@ -31,7 +31,12 @@ fn headline() -> SceneNode {
 #[test]
 fn plain_text_keeps_its_solid_fill() {
     let svg = serialize_active_page_svg(&page(headline())).expect("svg");
-    assert!(svg.contains(r#"fill="rgb(0,0,0)">PHOTO</text>"#), "{svg}");
+    assert!(svg.contains(r#"fill="rgb(0,0,0)""#), "{svg}");
+    assert!(
+        svg.contains(r#"<text id="h" fill="rgb(0,0,0)" xml:space="preserve""#),
+        "{svg}"
+    );
+    assert!(svg.contains(">PHOTO</tspan></text>"), "{svg}");
     assert!(!svg.contains("text-clip-"), "{svg}");
 }
 
@@ -64,7 +69,10 @@ fn image_and_multiply_layers_paint_inside_a_glyph_clip() {
     let clip = svg
         .find(r#"<clipPath id="text-clip-n-68">"#)
         .expect("glyph clip");
-    assert!(svg[clip..].contains(">PHOTO</text></clipPath>"), "{svg}");
+    assert!(
+        svg[clip..].contains(">PHOTO</tspan></text></clipPath>"),
+        "{svg}"
+    );
     let group = svg
         .find(r#"<g clip-path="url(#text-clip-n-68)" style="isolation:isolate">"#)
         .expect("stack group");

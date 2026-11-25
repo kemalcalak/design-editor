@@ -11,29 +11,14 @@
 use de_editor_ui::layout_scene::SceneNode;
 use de_editor_ui::polygon_geometry::polygon_node_points;
 use de_editor_ui::widgets::icon_catalog::IconRenderStyle;
-use de_editor_ui::widgets::icon_family::{canonical_family, lookup_icon_weighted};
-use de_editor_ui::widgets::icons::Icon;
+use de_editor_ui::widgets::icon_family::{
+    resolve_icon_glyph, IconGlyph, FALLBACK_ICON_D, ICON_DEFAULT_TINT, ICON_GLYPH_UNITS,
+};
 use de_editor_ui::{Color, Point2D, Rect};
 use de_util::xml_escape::escape_xml;
 use std::fmt::Write as _;
 
 use super::css;
-
-/// Painter default icon tint when the node authored no fill.
-const ICON_DEFAULT_FILL: Color = Color {
-    r: 0.39,
-    g: 0.45,
-    b: 0.55,
-    a: 1.0,
-};
-
-/// Lucide's dot placeholder — the same `d` the canvas strokes for an
-/// unresolvable glyph name, so an unknown icon reads identically in the
-/// editor and in the exported deck.
-const FALLBACK_ICON_D: &str = "M12 12m-3 0a3 3 0 1 0 6 0a3 3 0 1 0 -6 0";
-
-/// Lucide's authoring viewBox.
-const LUCIDE_VIEWBOX: f32 = 24.0;
 
 /// Emit an `icon_font` node as an inline SVG.
 ///
@@ -53,10 +38,18 @@ pub fn emit_icon(out: &mut String, n: &SceneNode, rect: Rect) {
         size: Point2D::new(size, size),
     };
     let name = n.text.as_deref().unwrap_or("");
-    let family = canonical_family(&n.font_family);
-    let tint = css::color(n.fill.unwrap_or(ICON_DEFAULT_FILL));
+    let tint = css::color(n.fill.unwrap_or(ICON_DEFAULT_TINT));
 
-    let (viewbox, paints, outline_units) = resolve_glyph(&family, name, n.font_weight);
+    let IconGlyph {
+        viewbox,
+        paths: paints,
+        outline_units,
+    } = resolve_icon_glyph(&n.font_family, name, n.font_weight).unwrap_or_else(|| IconGlyph {
+        // The honest dot the canvas draws for an unknown name.
+        viewbox: ICON_GLYPH_UNITS,
+        paths: vec![(FALLBACK_ICON_D.to_string(), IconRenderStyle::Stroke)],
+        outline_units: 0.0,
+    });
     let mut style = String::new();
     css::place(&mut style, square);
 
@@ -79,7 +72,7 @@ pub fn emit_icon(out: &mut String, n: &SceneNode, rect: Rect) {
                     out,
                     r#"<path d="{}" fill="{tint}" stroke="{tint}" stroke-width="{}" stroke-linejoin="round"/>"#,
                     escape_xml(&d),
-                    css::num(outline_units * viewbox / 24.0)
+                    css::num(outline_units * viewbox / ICON_GLYPH_UNITS)
                 );
             }
             IconRenderStyle::Fill => {
@@ -95,42 +88,6 @@ pub fn emit_icon(out: &mut String, n: &SceneNode, rect: Rect) {
         }
     }
     out.push_str("</svg>");
-}
-
-/// Resolve a glyph at `weight` to its viewBox extent, its `d` strings and
-/// the weight outline (24-unit glyph space, `0.0` = none).
-/// Mirrors the lookup ladder in `icons::paint_icon_font_node_weighted`:
-/// Iconify catalog first, then the chrome's built-in lucide table for
-/// the `lucide` collection, then the honest dot.
-fn resolve_glyph(
-    family: &str,
-    name: &str,
-    weight: u16,
-) -> (f32, Vec<(String, IconRenderStyle)>, f32) {
-    if let Some(icon) = lookup_icon_weighted(family, name, weight) {
-        let entry = icon.entry;
-        let viewbox = entry.width.max(entry.height).max(1.0);
-        return (
-            viewbox,
-            vec![(entry.d.clone(), entry.style)],
-            icon.outline_units,
-        );
-    }
-    if family == "lucide" {
-        if let Some(icon) = Icon::from_name(name) {
-            let paths = icon
-                .paths()
-                .iter()
-                .map(|d| ((*d).to_string(), IconRenderStyle::Stroke))
-                .collect();
-            return (LUCIDE_VIEWBOX, paths, 0.0);
-        }
-    }
-    (
-        LUCIDE_VIEWBOX,
-        vec![(FALLBACK_ICON_D.to_string(), IconRenderStyle::Stroke)],
-        0.0,
-    )
 }
 
 /// Emit a Line node as an inline SVG segment.

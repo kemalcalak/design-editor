@@ -26,7 +26,10 @@ pub(crate) fn map_export(flags: &Flags) -> Result<Command, CliError> {
         }
     }
     let format = format_flag.or(formats_flag).unwrap_or_else(|| "png".into());
-    if !matches!(format.as_str(), "png" | "jpeg" | "jpg" | "webp" | "pdf") {
+    if !matches!(
+        format.as_str(),
+        "png" | "jpeg" | "jpg" | "webp" | "svg" | "pdf"
+    ) {
         return Err(CliError::Usage(format!(
             "unsupported export format {format:?}"
         )));
@@ -180,20 +183,24 @@ pub(crate) fn write_export_response(response: &str, output: &Path) -> Result<Str
         ))
     })?;
 
-    Ok(serde_json::json!({
+    let mut summary = serde_json::json!({
         "output": output.to_string_lossy(),
         "itemId": value.get("itemId").and_then(Value::as_str).unwrap_or(""),
         "itemType": value.get("itemType").and_then(Value::as_str).unwrap_or(""),
         "format": value.get("format").and_then(Value::as_str).unwrap_or(""),
-    })
-    .to_string())
+    });
+    // An SVG export lists what the file leaves out; pass it on.
+    if let Some(warnings) = value.get("warnings") {
+        summary["warnings"] = warnings.clone();
+    }
+    Ok(summary.to_string())
 }
 
 pub(crate) fn map_export_frames(flags: &Flags) -> Result<Command, CliError> {
     let format = flag_value(flags, "format").unwrap_or_else(|| "png".into());
-    if !matches!(format.as_str(), "png" | "jpeg" | "jpg" | "webp") {
+    if !matches!(format.as_str(), "png" | "jpeg" | "jpg" | "webp" | "svg") {
         return Err(CliError::Usage(format!(
-            "unsupported frame format {format:?}: must be one of png, jpeg, webp"
+            "unsupported frame format {format:?}: must be one of png, jpeg, webp, svg"
         )));
     }
     let output_dir = flag_value(flags, "output-dir")

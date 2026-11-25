@@ -56,13 +56,16 @@ pub enum ExportFormat {
     Png,
     Jpeg,
     Webp,
+    /// One layered `<nodeId>.svg` per node (#407): groups, layer names as
+    /// ids, live text, embedded images.
+    Svg,
     /// All nodes in one multi-page `export.pdf`.
     Pdf,
 }
 
 /// One `Export` call: write `node_ids` as `format` under `output_path` (a
-/// directory; images are `<nodeId>.<ext>` with `/` in instance paths turned
-/// into `_`, PDF is `export.pdf`).
+/// directory; images and SVGs are `<nodeId>.<ext>` with `/` in instance
+/// paths turned into `_`, PDF is `export.pdf`).
 #[derive(Debug, Clone, PartialEq)]
 pub struct ExportRequest {
     pub node_ids: Vec<String>,
@@ -79,12 +82,22 @@ pub trait ScriptRenderer: Send + Sync {
         state: &EditorState,
         node_id: Option<&str>,
     ) -> Result<ImageContent, ScriptRenderError>;
-    /// Write `request` from `state`; returns the written file paths.
+    /// Write `request` from `state`; returns the written file paths and
+    /// what the files could not carry.
     fn export(
         &self,
         state: &EditorState,
         request: &ExportRequest,
-    ) -> Result<Vec<String>, ScriptRenderError>;
+    ) -> Result<ExportWritten, ScriptRenderError>;
+}
+
+/// What one `Export` call wrote.
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct ExportWritten {
+    /// Absolute paths of the files written.
+    pub paths: Vec<String>,
+    /// Lines for the result's `warnings` (an SVG's left-out features).
+    pub warnings: Vec<String>,
 }
 
 /// The `execute` MCP tool over a document snapshot.
@@ -305,7 +318,10 @@ fn finish(mut session: ExecSession, renderer: Option<&dyn ScriptRenderer>) -> To
         }
         for export in &session.exports {
             match renderer.export(&export.state, &export.request) {
-                Ok(paths) => written.extend(paths),
+                Ok(done) => {
+                    written.extend(done.paths);
+                    warnings.extend(done.warnings.into_iter().map(|w| format!("Export: {w}")));
+                }
                 Err(e) => warnings.push(format!("Export {:?}: {e}", export.request.node_ids)),
             }
         }

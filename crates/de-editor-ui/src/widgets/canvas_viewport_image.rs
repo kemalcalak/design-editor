@@ -9,6 +9,7 @@ use std::sync::{Arc, Mutex, OnceLock};
 mod decode_registry;
 mod picture_glyph;
 mod svg_raster;
+pub(crate) use svg_raster::sniffs_as_svg;
 #[cfg(test)]
 mod test_support;
 
