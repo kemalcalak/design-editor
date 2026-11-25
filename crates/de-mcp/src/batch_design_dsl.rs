@@ -24,7 +24,15 @@ enum ParentRef {
     Ref(String),
 }
 
-type InsertForest = (NodeId, Vec<PenNode>, usize, Vec<String>);
+#[derive(Debug)]
+pub(crate) struct InsertForest {
+    pub(crate) parent_id: NodeId,
+    pub(crate) nodes: Vec<PenNode>,
+    pub(crate) bindings: Vec<String>,
+    /// Authored id → binding for bound nodes, whose authored id the binding
+    /// stamp replaced, first-wins: an instance may name its master by it.
+    pub(crate) authored_roots: BTreeMap<String, String>,
+}
 
 pub(crate) fn parse_insert_operations(input: &str) -> Result<InsertForest, InsertDslError> {
     let lines = split_operations(input);
@@ -34,6 +42,9 @@ pub(crate) fn parse_insert_operations(input: &str) -> Result<InsertForest, Inser
     let mut inserts = Vec::new();
     let mut binding_to_idx = BTreeMap::new();
     let mut tmp_id = 1usize;
+    // Authored ids of bound nodes, which the binding stamp below replaces:
+    // an instance naming its master by such an id must follow (#366).
+    let mut authored_roots: BTreeMap<String, String> = BTreeMap::new();
     for (line_idx, line) in lines.iter().enumerate() {
         let (binding, parent, data) = parse_insert_operation(line, line_idx)?;
         if binding_to_idx.contains_key(&binding) {
@@ -61,6 +72,12 @@ pub(crate) fn parse_insert_operations(input: &str) -> Result<InsertForest, Inser
         // (which the `batch_design` tool simulates) can be traced back to its
         // binding for the TS `results:[{binding,nodeId}]` map. The host remaps
         // every id at apply, so this authored id is transient + harmless.
+        let authored = node.id_str();
+        if !authored.starts_with("__op_tmp_") && authored != binding {
+            authored_roots
+                .entry(authored.to_string())
+                .or_insert_with(|| binding.clone());
+        }
         node.base_mut().id = binding.clone();
         binding_to_idx.insert(binding.clone(), inserts.len());
         inserts.push(ParsedInsert {
@@ -70,8 +87,13 @@ pub(crate) fn parse_insert_operations(input: &str) -> Result<InsertForest, Inser
         });
     }
     let bindings: Vec<String> = inserts.iter().map(|i| i.binding.clone()).collect();
-    let (parent_id, nodes, count) = assemble_insert_forest(inserts, &binding_to_idx)?;
-    Ok((parent_id, nodes, count, bindings))
+    let (parent_id, nodes, _count) = assemble_insert_forest(inserts, &binding_to_idx)?;
+    Ok(InsertForest {
+        parent_id,
+        nodes,
+        bindings,
+        authored_roots,
+    })
 }
 
 fn assemble_insert_forest(

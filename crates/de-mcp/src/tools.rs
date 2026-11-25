@@ -574,7 +574,20 @@ pub fn list_components_snapshot(state: &EditorState) -> ListComponents {
 
 /// First-party `get_component` tool.
 pub struct GetComponent {
-    pub snapshot: Vec<(String, String, String, usize)>,
+    pub snapshot: Vec<ComponentDetail>,
+}
+
+/// One registered component as `get_component` reports it.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ComponentDetail {
+    pub id: String,
+    pub name: String,
+    pub kind: String,
+    pub leaf_count: usize,
+    /// `;`-separated `id|name|kind` records of every node inside the
+    /// master, depth-first, root excluded: the ids an instance's
+    /// `descendants` overrides are keyed by.
+    pub descendants: String,
 }
 
 impl McpTool for GetComponent {
@@ -589,21 +602,31 @@ impl McpTool for GetComponent {
             );
         };
         let component_id: &str = raw.as_str();
-        let Some((_, name, kind, leaf_count)) = self
-            .snapshot
-            .iter()
-            .find(|(id, _, _, _)| id == component_id)
-        else {
+        let Some(detail) = self.snapshot.iter().find(|c| c.id == component_id) else {
             return ToolOutcome::Err(
                 ToolErrorCode::ToolFailed,
                 format!("component {component_id} not found"),
             );
         };
         let mut out = BTreeMap::new();
-        out.insert("name".into(), name.clone());
-        out.insert("kind".into(), kind.clone());
-        out.insert("leaf_count".into(), leaf_count.to_string());
+        out.insert("name".into(), detail.name.clone());
+        out.insert("kind".into(), detail.kind.clone());
+        out.insert("leaf_count".into(), detail.leaf_count.to_string());
+        out.insert("descendants".into(), detail.descendants.clone());
         ToolOutcome::Ok(out)
+    }
+}
+
+/// Append an `id|name|kind` record for every node below `node`.
+fn push_descendant_records(node: &PenNode, records: &mut Vec<String>) {
+    for child in node.children().into_iter().flatten() {
+        records.push(format!(
+            "{}|{}|{}",
+            escape_record_field(child.id_str()),
+            escape_record_field(child.base().name.as_deref().unwrap_or("")),
+            kind_label(child)
+        ));
+        push_descendant_records(child, records);
     }
 }
 
@@ -615,12 +638,15 @@ pub fn get_component_snapshot(state: &EditorState) -> GetComponent {
             .iter()
             .filter_map(|c| {
                 let root = state.components.resolved_root(&state.doc, &c.id)?;
-                Some((
-                    c.id.as_str().to_string(),
-                    c.name.clone(),
-                    kind_label(root).to_string(),
-                    count_subtree(root),
-                ))
+                let mut records = Vec::new();
+                push_descendant_records(root, &mut records);
+                Some(ComponentDetail {
+                    id: c.id.as_str().to_string(),
+                    name: c.name.clone(),
+                    kind: kind_label(root).to_string(),
+                    leaf_count: count_subtree(root),
+                    descendants: records.join(";"),
+                })
             })
             .collect(),
     }

@@ -63,6 +63,7 @@ pub mod command_style_replace;
 mod component_backing;
 pub mod component_browser_state;
 pub mod component_instances;
+mod component_registration;
 pub mod components;
 pub mod compositing;
 pub mod conversion;

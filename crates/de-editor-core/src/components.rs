@@ -217,27 +217,19 @@ impl ComponentLibrary {
         ) {
             for (index, node) in nodes.iter().enumerate() {
                 path.push(index);
-                if let PenNode::Frame(frame) = node {
-                    if frame.reusable == Some(true) {
-                        let id = NodeId::new(frame.base.id.clone());
-                        let name = frame
-                            .base
-                            .name
-                            .clone()
-                            .unwrap_or_else(|| frame.base.id.clone());
-                        lib.insert_document_backed_indexed(
-                            Component {
-                                id,
-                                name,
-                                root: shallow_root(node),
-                            },
-                            DocumentNodeLocation {
-                                page_index,
-                                child_path: path.clone().into_boxed_slice(),
-                            },
-                            positions,
-                        );
-                    }
+                if let Some(name) = crate::component_registration::reusable_component_name(node) {
+                    lib.insert_document_backed_indexed(
+                        Component {
+                            id: NodeId::new(node.id_str()),
+                            name,
+                            root: shallow_root(node),
+                        },
+                        DocumentNodeLocation {
+                            page_index,
+                            child_path: path.clone().into_boxed_slice(),
+                        },
+                        positions,
+                    );
                 }
                 if let Some(children) = node.children() {
                     walk(children, page_index, path, lib, positions);
@@ -265,7 +257,11 @@ impl ComponentLibrary {
         lib
     }
 
-    fn insert_document_backed(&mut self, component: Component, location: DocumentNodeLocation) {
+    pub(crate) fn insert_document_backed(
+        &mut self,
+        component: Component,
+        location: DocumentNodeLocation,
+    ) {
         self.invalidate_sorted_options();
         Arc::make_mut(&mut self.document_backing).insert(component.id.clone(), location);
         if let Some(pos) = self

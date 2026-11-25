@@ -3,7 +3,7 @@
 //! Ported off the old shell-core `Document` onto `de_editor_core::
 //! EditorState`.
 
-use super::test_fixtures::{add_theme_axis, add_variable, frame, state_with};
+use super::test_fixtures::{add_theme_axis, add_variable, frame, rect, state_with};
 use super::tools::*;
 use super::{McpTool, ToolOutcome};
 use de_editor_core::{EditorCommand, EditorState, NodeId};
@@ -171,6 +171,46 @@ fn get_component_reports_kind_and_subtree_size() {
             assert_eq!(out.get("kind"), Some(&"frame".to_string()));
             assert_eq!(out.get("leaf_count"), Some(&"1".to_string()));
         }
+        other => panic!("expected Ok, got {other:?}"),
+    }
+}
+
+#[test]
+fn get_component_lists_the_master_child_ids_for_descendants() {
+    let mut s = state_with(vec![frame(
+        "card",
+        "Card",
+        0.0,
+        0.0,
+        200.0,
+        120.0,
+        vec![
+            rect("card-image", "Image", 0.0, 0.0, 200.0, 80.0),
+            frame(
+                "card-body",
+                "Body",
+                0.0,
+                80.0,
+                200.0,
+                40.0,
+                vec![rect("card-badge", "Badge|New", 0.0, 0.0, 20.0, 20.0)],
+            ),
+        ],
+    )]);
+    assert!(s.apply(EditorCommand::CreateComponent {
+        node_id: NodeId::new("card"),
+        name: "Card".into(),
+    }));
+    let mut args = BTreeMap::new();
+    args.insert("component_id".into(), "card".into());
+    match get_component_snapshot(&s).call(&args) {
+        ToolOutcome::Ok(out) => assert_eq!(
+            out.get("descendants").map(String::as_str),
+            Some(
+                "card-image|Image|rectangle;card-body|Body|frame;card-badge|Badge\\|New|rectangle"
+            ),
+            "depth-first id|name|kind records, root excluded, fields escaped"
+        ),
         other => panic!("expected Ok, got {other:?}"),
     }
 }

@@ -98,12 +98,22 @@ pub(super) fn apply_authored_subtree_on_page(
         state.ui.active_page_index = target_page_index;
     }
     let snap = state.snapshot_for_history();
+    let mut masters = Vec::new();
+    crate::component_registration::collect_reusable_frames(&nodes, &mut masters);
     let changed = if preserve_roots {
         state.cmd_insert_authored_subtree_preserving_roots(nodes, parent_id)
     } else {
         state.cmd_insert_authored_subtree(nodes, parent_id)
     };
     if changed {
+        // A reusable frame an agent writes is a component at once, as it is
+        // after a reload: `list_components` / `get_component` see it (#366).
+        // Undo restores the registry from `snap` with the tree.
+        if !masters.is_empty() {
+            state
+                .components
+                .register_document_components(&state.doc, masters);
+        }
         state.history_push_past(snap);
     }
     if page_id.is_some() && target_page_index != original_page_index {

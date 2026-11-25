@@ -557,6 +557,7 @@ fn execute_insert(binding: &str, args: &str, ctx: &mut ProgramCtx) -> Result<()>
 
     let mut nodes = vec![node];
     let map = ctx.remap(&mut nodes)?;
+    super::batch_program_instance::retarget_program_instances(&mut nodes, &map, ctx);
     let root_id = map
         .first()
         .map(|(_, new)| new.clone())
