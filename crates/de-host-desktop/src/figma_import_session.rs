@@ -241,7 +241,7 @@ fn convert_prepared(
     if cancellation.is_cancelled() {
         return Err(FigmaImportError::Cancelled);
     }
-    let mut state = EditorState::from_document(import.document);
+    let mut state = EditorState::from_opened_document(import.document);
     if cancellation.is_cancelled() {
         return Err(FigmaImportError::Cancelled);
     }

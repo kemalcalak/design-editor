@@ -86,10 +86,11 @@ fn file_stem(id: &str) -> String {
 fn write(path: &Path, bytes: &[u8]) -> Result<String, ScriptRenderError> {
     std::fs::write(path, bytes)
         .map_err(|e| ScriptRenderError(format!("write {}: {e}", path.display())))?;
-    Ok(std::fs::canonicalize(path)
-        .unwrap_or_else(|_| path.to_path_buf())
-        .display()
-        .to_string())
+    // Canonical, so the caller gets an absolute path; without the Windows
+    // verbatim prefix `canonicalize` adds there (#408).
+    Ok(de_util::display_path::display_path(
+        &std::fs::canonicalize(path).unwrap_or_else(|_| path.to_path_buf()),
+    ))
 }
 
 pub(crate) fn execute_snapshot(state: &EditorState) -> Execute {

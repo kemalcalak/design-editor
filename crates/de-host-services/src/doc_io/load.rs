@@ -199,7 +199,7 @@ fn parse_editor_state_source(
         motion_repairs: motion_repair_lines(&loaded.warnings),
     };
     Ok((
-        EditorState::from_document(loaded.value),
+        EditorState::from_opened_document(loaded.value),
         embedded.map(|extraction| extraction.meta),
         report,
     ))

@@ -8,6 +8,7 @@
 //! browser host via de-editor-core / de-editor-ui.
 
 pub mod cli_output;
+pub mod display_path;
 pub mod document_file;
 pub mod fnv;
 pub mod hex_color;

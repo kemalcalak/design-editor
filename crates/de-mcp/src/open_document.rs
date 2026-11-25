@@ -27,7 +27,7 @@ impl McpTool for OpenDocument {
         let file_path = args
             .get("filePath")
             .filter(|path| !path.trim().is_empty())
-            .cloned()
+            .map(|path| de_util::display_path::strip_verbatim_prefix(path))
             .unwrap_or_else(|| LIVE_CANVAS_PATH.into());
         out.insert("filePath".into(), file_path);
         out.insert("document".into(), self.document_json.clone());

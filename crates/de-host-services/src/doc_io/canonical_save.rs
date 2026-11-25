@@ -300,7 +300,10 @@ mod tests {
         std::fs::write(&path, streamed).expect("write fixture");
         let reloaded = super::super::load_editor_state(&path, de_editor_core::Locale::EnUs)
             .expect("product loader roundtrip");
-        assert_eq!(reloaded.doc, document);
+        // Opening re-stamps the release that will write it next (#408).
+        let mut expected = document;
+        de_editor_core::document_version::stamp_product_version(&mut expected);
+        assert_eq!(reloaded.doc, expected);
         let _ = std::fs::remove_file(path);
     }
 }

@@ -49,3 +49,17 @@ fn open_document_echoes_ts_file_path_without_legacy_warning() {
         other => panic!("expected Ok, got {other:?}"),
     }
 }
+
+#[test]
+fn open_document_returns_file_paths_without_the_windows_verbatim_prefix() {
+    let state = sample();
+    let tool = open_document_snapshot(&state);
+    let args = BTreeMap::from([("filePath".to_string(), r"\\?\C:\x\design.de".to_string())]);
+
+    match tool.call(&args) {
+        ToolOutcome::Ok(out) => {
+            assert_eq!(out.get("filePath"), Some(&r"C:\x\design.de".to_string()));
+        }
+        other => panic!("expected Ok, got {other:?}"),
+    }
+}
