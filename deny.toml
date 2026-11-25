@@ -77,11 +77,7 @@ multiple-versions = "warn"
 wildcards = "allow"
 allow-wildcard-paths = true
 deny = [
-  # WASM bundle blacklist (kickoff spec §1.2 invariant).
-  # `agent` is not listed: it is a native-only dependency of de-host-desktop
-  # (the desktop binary, never compiled to wasm); wasm isolation is
-  # structural (de-host-web does not depend on it) and verified by
-  # tools/check-wasm-bundle.sh.
+  # Retired TypeScript-era crates that must never come back.
   "pen-agent-cli",
   "pen-server",
   # zip <9 carries RUSTSEC-2026-0367..0369; every consumer is on 9.
