@@ -5,8 +5,7 @@
 //! clamped at 1) run as SkSL runtime blenders. Both use the same separable
 //! compositing as skia's built-in modes, written for premultiplied colours:
 //! `src·(1-Da) + dst·(1-Sa) + Sa·Da·B(dst/Da, src/Sa)`, which with the linear
-//! `B` reduces to the bodies below. The web host's `op_ck_bridge.js` carries
-//! the same two programs for CanvasKit.
+//! `B` reduces to the bodies below.
 
 use de_editor_ui::ImageBlendMode;
 use skia_safe::{Blender, Data, RuntimeEffect};
@@ -113,20 +112,6 @@ mod tests {
             .iter()
             .zip(expected)
             .all(|(a, e)| (*a as i32 - e as i32).abs() <= 2)
-    }
-
-    /// The web host's `op_ck_bridge.js` must run the same two programs.
-    #[test]
-    fn web_bridge_carries_the_same_programs() {
-        let squash = |s: &str| -> String {
-            s.chars()
-                .filter(|c| !c.is_whitespace() && !matches!(c, '\'' | '+'))
-                .collect()
-        };
-        let bridge = squash(include_str!("../../../../de-host-web/src/op_ck_bridge.js"));
-        for program in [LINEAR_BURN_SKSL, LINEAR_DODGE_SKSL] {
-            assert!(bridge.contains(&squash(program)), "{program}");
-        }
     }
 
     #[test]

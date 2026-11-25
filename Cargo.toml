@@ -16,12 +16,7 @@ exclude = [
 # A bare `cargo build` / `cargo test` (no `-p`, no `--workspace`) operates on
 # this set only — the native shippable artifacts (the desktop app + the `de`
 # CLI), exactly what `rust-release.yml` builds via `-p de-host-desktop -p de-cli`.
-# This stops a plain `cargo build` from also compiling the wasm host
-# (`de-host-web`) on the native target — a wasted compile, since its real build
-# is always `cargo build -p de-host-web --target wasm32-unknown-unknown`. CI and
-# the `package.json` cargo:* scripts are unaffected: they all pass `--workspace`
-# explicitly, which overrides `default-members`.
-default-members = ["crates/de-host-desktop", "crates/de-cli", "crates/de-host-web-server"]
+default-members = ["crates/de-host-desktop", "crates/de-cli"]
 
 [workspace.package]
 version = "0.6.1"

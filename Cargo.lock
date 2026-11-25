@@ -967,16 +967,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "console_error_panic_hook"
-version = "0.1.7"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a06aeb73f470f66dcdbf7223caeebb85984942f22f1adb2a088cf9668146bbbc"
-dependencies = [
- "cfg-if",
- "wasm-bindgen",
-]
-
-[[package]]
 name = "convert_case"
 version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1572,47 +1562,6 @@ dependencies = [
  "tracing",
  "vtracer",
  "zip",
-]
-
-[[package]]
-name = "de-host-web"
-version = "0.6.1"
-dependencies = [
- "accesskit",
- "base64 0.22.1",
- "console_error_panic_hook",
- "de-ai",
- "de-codegen",
- "de-editor-core",
- "de-editor-host-core",
- "de-editor-ui",
- "de-figma",
- "de-host-native",
- "de-html",
- "de-i18n",
- "de-pen-loader",
- "de-pptx",
- "de-preview-core",
- "de-util",
- "jian-core",
- "jian-ops-schema",
- "js-sys",
- "serde",
- "serde_json",
- "skia-safe",
- "ttf-parser",
- "url",
- "wasm-bindgen",
- "wasm-bindgen-futures",
- "web-sys",
-]
-
-[[package]]
-name = "de-host-web-server"
-version = "0.6.1"
-dependencies = [
- "de-host-services",
- "serde_json",
 ]
 
 [[package]]
