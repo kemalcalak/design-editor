@@ -12,21 +12,10 @@ use super::writer::Writer;
 use super::{color_to_rgb, normalize_rect, xml_escape};
 use crate::layout_scene::SceneNode;
 use crate::widgets::icon_catalog::IconRenderStyle;
-use crate::widgets::icon_family::{canonical_family, lookup_icon_weighted};
-use crate::widgets::icons::Icon;
-use crate::Color;
-use std::fmt::Write as _;
-
-/// Lucide's dot, what the canvas strokes for an unknown glyph name.
-const FALLBACK_ICON_D: &str = "M12 12m-3 0a3 3 0 1 0 6 0a3 3 0 1 0 -6 0";
-const LUCIDE_VIEWBOX: f32 = 24.0;
-/// Painter default icon tint when the node authored no fill.
-const ICON_DEFAULT_FILL: Color = Color {
-    r: 0.39,
-    g: 0.45,
-    b: 0.55,
-    a: 1.0,
+use crate::widgets::icon_family::{
+    resolve_icon_glyph, IconGlyph, FALLBACK_ICON_D, ICON_DEFAULT_TINT, ICON_GLYPH_UNITS,
 };
+use std::fmt::Write as _;
 
 pub(super) fn is_icon(n: &SceneNode) -> bool {
     matches!(&n.kind, crate::layout_scene::NodeKind::Other(tag) if tag == "icon_font")
@@ -39,47 +28,31 @@ pub(super) fn emit_icon(out: &mut String, n: &SceneNode, attrs: &LayerAttrs, w: 
         return;
     }
     let name = n.text.as_deref().unwrap_or("");
-    let family = canonical_family(&n.font_family);
-    let Some((viewbox, paths, outline_units)) = resolve_glyph(&family, name, n.font_weight) else {
+    let glyph = resolve_icon_glyph(&n.font_family, name, n.font_weight).unwrap_or_else(|| {
         w.warn(
             n,
             &format!("icon {name:?} is not in the icon catalog; exported as a dot"),
         );
-        return emit_paths(
-            out,
-            n,
-            attrs,
-            rect,
-            size,
-            LUCIDE_VIEWBOX,
-            &[(FALLBACK_ICON_D.to_string(), IconRenderStyle::Stroke)],
-            0.0,
-        );
-    };
-    emit_paths(out, n, attrs, rect, size, viewbox, &paths, outline_units);
-}
-
-#[allow(clippy::too_many_arguments)]
-fn emit_paths(
-    out: &mut String,
-    n: &SceneNode,
-    attrs: &LayerAttrs,
-    rect: crate::Rect,
-    size: f32,
-    viewbox: f32,
-    paths: &[(String, IconRenderStyle)],
-    outline_units: f32,
-) {
-    let scale = size / viewbox;
+        IconGlyph {
+            viewbox: ICON_GLYPH_UNITS,
+            paths: vec![(FALLBACK_ICON_D.to_string(), IconRenderStyle::Stroke)],
+            outline_units: 0.0,
+        }
+    });
+    let IconGlyph {
+        viewbox,
+        paths,
+        outline_units,
+    } = glyph;
     let fit = glam::Affine2::from_scale_angle_translation(
-        glam::Vec2::splat(scale),
+        glam::Vec2::splat(size / viewbox),
         0.0,
         glam::Vec2::new(
             rect.origin.x + (rect.size.x - size) * 0.5,
             rect.origin.y + (rect.size.y - size) * 0.5,
         ),
     );
-    let tint = n.fill.unwrap_or(ICON_DEFAULT_FILL);
+    let tint = n.fill.unwrap_or(ICON_DEFAULT_TINT);
     // The tint's alpha rides on the layer opacity, so paths stay opaque.
     let alpha = tint.a.clamp(0.0, 1.0);
     let paint_of = |style: IconRenderStyle| -> String {
@@ -90,7 +63,7 @@ fn emit_paths(
                     s,
                     r#" fill="{0}" stroke="{0}" stroke-width="{1}" stroke-linejoin="round""#,
                     color_to_rgb(tint),
-                    outline_units * viewbox / 24.0
+                    outline_units * viewbox / ICON_GLYPH_UNITS
                 );
             }
             IconRenderStyle::Fill => {
@@ -107,49 +80,36 @@ fn emit_paths(
         }
         s
     };
-    if let [(d, style)] = paths {
+    // A filter (layer blur) reads its region in the element's user space,
+    // so with one the fit goes on a child rather than on the layer.
+    if let ([(d, style)], true) = (paths.as_slice(), attrs.filter.is_empty()) {
         // One path: the path itself is the layer.
         let _ = write!(
             out,
             r#"<path{} d="{}"{}/>"#,
-            attrs.render(fit, alpha),
+            attrs.attrs_with(fit, alpha),
             xml_escape(d),
             paint_of(*style)
         );
         return;
     }
-    let _ = write!(out, "<g{}>", attrs.render(fit, alpha));
-    for (d, style) in paths {
+    let (outer, inner) = if attrs.filter.is_empty() {
+        (attrs.attrs_with(fit, alpha), String::new())
+    } else {
+        (
+            attrs.attrs_with(glam::Affine2::IDENTITY, alpha),
+            format!(r#" transform="{}""#, super::transform::matrix_value(fit)),
+        )
+    };
+    let _ = write!(out, "<g{outer}>");
+    if !inner.is_empty() {
+        let _ = write!(out, "<g{inner}>");
+    }
+    for (d, style) in &paths {
         let _ = write!(out, r#"<path d="{}"{}/>"#, xml_escape(d), paint_of(*style));
     }
+    if !inner.is_empty() {
+        out.push_str("</g>");
+    }
     out.push_str("</g>");
-}
-
-/// The glyph's viewBox extent, its `d` strings and the weight outline;
-/// `None` for a name no table knows.
-fn resolve_glyph(
-    family: &str,
-    name: &str,
-    weight: u16,
-) -> Option<(f32, Vec<(String, IconRenderStyle)>, f32)> {
-    if let Some(icon) = lookup_icon_weighted(family, name, weight) {
-        let entry = icon.entry;
-        let viewbox = entry.width.max(entry.height).max(1.0);
-        return Some((
-            viewbox,
-            vec![(entry.d.clone(), entry.style)],
-            icon.outline_units,
-        ));
-    }
-    if family == "lucide" {
-        if let Some(icon) = Icon::from_name(name) {
-            let paths = icon
-                .paths()
-                .iter()
-                .map(|d| ((*d).to_string(), IconRenderStyle::Stroke))
-                .collect();
-            return Some((LUCIDE_VIEWBOX, paths, 0.0));
-        }
-    }
-    None
 }

@@ -70,13 +70,13 @@ fn decoded(value: &Value) -> String {
 fn assert_layered(svg: &str) {
     assert!(svg.starts_with("<svg "), "{svg}");
     let card = svg
-        .find(r#"<g id="Pricing_card" data-name="Pricing card">"#)
+        .find(r#"<g id="Pricing card" data-name="Pricing card">"#)
         .unwrap_or_else(|| panic!("card group: {svg}"));
     let title = svg
         .find(r#"<text id="Title" data-name="Title""#)
         .unwrap_or_else(|| panic!("title text: {svg}"));
     let row = svg
-        .find(r#"<g id="Price_row" data-name="Price row">"#)
+        .find(r#"<g id="Price row" data-name="Price row">"#)
         .unwrap_or_else(|| panic!("row group: {svg}"));
     let chip = svg
         .find(r#"<rect id="Chip" data-name="Chip""#)
@@ -114,7 +114,7 @@ fn export_nodes_writes_one_layered_svg_per_node() {
         "{result}"
     );
     let second = decoded(&files[1]);
-    assert!(second.contains(r#"id="Second_board""#), "{second}");
+    assert!(second.contains(r#"id="Second board""#), "{second}");
     assert!(!second.contains("Pricing"), "one file per node: {second}");
     assert!(files[2]["error"].is_string(), "{result}");
 }
@@ -135,7 +135,7 @@ fn export_item_writes_a_node_or_a_whole_page_as_svg() {
     assert_eq!(page["itemType"], "page");
     let svg = decoded(&page);
     assert_layered(&svg);
-    assert!(svg.contains(r#"id="Second_board""#), "{svg}");
+    assert!(svg.contains(r#"id="Second board""#), "{svg}");
 }
 
 fn temp_dir(tag: &str) -> std::path::PathBuf {

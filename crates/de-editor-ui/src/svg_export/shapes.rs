@@ -120,11 +120,23 @@ pub(super) fn emit_path(out: &mut String, n: &SceneNode, attrs: &LayerAttrs) {
     } else {
         ""
     };
+    let d = xml_escape(&d);
+    if !attrs.filter.is_empty() && fit != glam::Affine2::IDENTITY {
+        // A filter reads its region in the element's own user space; with
+        // the fit on the same element that is the `d` string's space, not
+        // the node box the region is written in. The fit goes inside.
+        let _ = write!(
+            out,
+            r#"<g{}><path d="{d}" transform="{}"{vector_effect}{fill_rule}{paint}/></g>"#,
+            attrs.attrs(),
+            super::transform::matrix_value(fit),
+        );
+        return;
+    }
     let _ = write!(
         out,
-        r#"<path{} d="{}"{vector_effect}{fill_rule}{paint}/>"#,
-        attrs.render(fit, 1.0),
-        xml_escape(&d),
+        r#"<path{} d="{d}"{vector_effect}{fill_rule}{paint}/>"#,
+        attrs.attrs_with(fit, 1.0),
     );
 }
 

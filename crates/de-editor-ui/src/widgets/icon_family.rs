@@ -165,6 +165,64 @@ pub fn lookup_icon_weighted(family: &str, name: &str, weight: u16) -> Option<Wei
     })
 }
 
+/// Lucide's dot: what the canvas strokes for a glyph name no table knows.
+pub const FALLBACK_ICON_D: &str = "M12 12m-3 0a3 3 0 1 0 6 0a3 3 0 1 0 -6 0";
+/// The 24-unit glyph space of lucide (and of `outline_units`).
+pub const ICON_GLYPH_UNITS: f32 = 24.0;
+/// The painter's icon tint when the node authored no fill.
+pub const ICON_DEFAULT_TINT: crate::Color = crate::Color {
+    r: 0.39,
+    g: 0.45,
+    b: 0.55,
+    a: 1.0,
+};
+
+/// An `icon_font` glyph as vector data, for writers that emit it as paths
+/// (SVG and HTML export).
+#[derive(Debug, Clone)]
+pub struct IconGlyph {
+    /// Side of the square viewBox the `d` strings are drawn in.
+    pub viewbox: f32,
+    /// Each `d` string and whether it is filled or stroked.
+    pub paths: Vec<(String, super::icon_catalog::IconRenderStyle)>,
+    /// Same-colour weight outline in 24-unit glyph space (`0.0` = none).
+    pub outline_units: f32,
+}
+
+/// The vector glyph for an `icon_font` node, with the canvas's lookup
+/// ladder: the Iconify catalog at `weight`, then (for the `lucide` family)
+/// the built-in lucide table. `None` for a name neither knows; callers draw
+/// [`FALLBACK_ICON_D`] then, as the canvas does.
+pub fn resolve_icon_glyph(family: &str, name: &str, weight: u16) -> Option<IconGlyph> {
+    if let Some(icon) = lookup_icon_weighted(family, name, weight) {
+        let entry = icon.entry;
+        return Some(IconGlyph {
+            viewbox: entry.width.max(entry.height).max(1.0),
+            paths: vec![(entry.d.clone(), entry.style)],
+            outline_units: icon.outline_units,
+        });
+    }
+    if canonical_family(family) == "lucide" {
+        if let Some(icon) = super::icons::Icon::from_name(name) {
+            return Some(IconGlyph {
+                viewbox: ICON_GLYPH_UNITS,
+                paths: icon
+                    .paths()
+                    .iter()
+                    .map(|d| {
+                        (
+                            (*d).to_string(),
+                            super::icon_catalog::IconRenderStyle::Stroke,
+                        )
+                    })
+                    .collect(),
+                outline_units: 0.0,
+            });
+        }
+    }
+    None
+}
+
 #[cfg(test)]
 #[path = "icon_family_tests.rs"]
 mod tests;

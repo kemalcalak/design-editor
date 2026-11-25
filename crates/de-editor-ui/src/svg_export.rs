@@ -27,7 +27,9 @@ mod text_outline;
 mod transform;
 mod writer;
 
-use node::{box_needs_clip, box_paint, emit_node, is_container, is_exported, BoxPaint};
+use node::{
+    box_clip, box_paint, clips_children, emit_node, is_box, is_container, is_written, BoxPaint,
+};
 use text::emit_text_fill_defs;
 use transform::{
     apply_ancestor_clip_bounds, apply_clip_bounds, close_ancestor_clip_groups,
@@ -59,7 +61,9 @@ pub struct SvgExportOptions<'a> {
 pub struct SvgExport {
     pub svg: String,
     /// One line per node feature the file leaves out or approximates
-    /// (`"<layer name> (<node id>): <what>"`), in document order.
+    /// (`"<layer name> (<node id>): <what>"`): first those found while
+    /// writing the defs (effects, linked images), then the rest, each pass
+    /// in document order.
     pub warnings: Vec<String>,
 }
 
@@ -67,8 +71,7 @@ pub struct SvgExport {
 ///
 /// `Display` reproduces the previous ad-hoc `String` messages byte for byte,
 /// and `From<SvgExportError> for String` keeps the `?` call sites in hosts
-/// that still return `Result<_, String>` (e.g. `de-host-services`'s
-/// `export_svg` wrappers) compiling unchanged.
+/// that still return `Result<_, String>` compiling unchanged.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum SvgExportError {
     /// The scene carries no active page.
@@ -204,23 +207,26 @@ fn emit_defs(
     ancestor_clips: &[AncestorClip],
     w: &mut Writer,
 ) {
-    let mut defs = String::new();
-    emit_ancestor_clip_defs(&mut defs, ancestor_clips);
+    // Written in place; an empty `<defs>` is taken back off.
+    let start = out.len();
+    out.push_str("<defs>");
+    let body = out.len();
+    emit_ancestor_clip_defs(out, ancestor_clips);
     for node in nodes {
-        emit_node_defs(&mut defs, node, w);
+        emit_node_defs(out, node, w);
     }
-    if !defs.is_empty() {
-        out.push_str("<defs>");
-        out.push_str(&defs);
+    if out.len() == body {
+        out.truncate(start);
+    } else {
         out.push_str("</defs>");
     }
 }
 
-/// Defs for `n` and its exported descendants. Warnings about a node are
-/// raised in the body pass (`node.rs`) and here only for its defs' paints,
-/// so each lands once.
+/// Defs for `n` and its written descendants, decided by the same
+/// predicates the body pass (`node.rs`) uses. Effect and linked-image
+/// warnings are raised here; `Writer::warn` keeps each line once.
 fn emit_node_defs(out: &mut String, n: &SceneNode, w: &mut Writer) {
-    if !is_exported(n) {
+    if !is_written(n) {
         return;
     }
     let id = svg_id(&n.id);
@@ -232,8 +238,7 @@ fn emit_node_defs(out: &mut String, n: &SceneNode, w: &mut Writer) {
             normalize_rect(n.bounds),
         );
     }
-    let clips_children = n.clip_content && !n.children.is_empty();
-    if (clips_children || box_needs_clip(n)) && n.bounds.size.x != 0.0 && n.bounds.size.y != 0.0 {
+    if clips_children(n) || box_clip(n) {
         let r = normalize_rect(n.bounds);
         let _ = write!(
             out,
@@ -245,11 +250,7 @@ fn emit_node_defs(out: &mut String, n: &SceneNode, w: &mut Writer) {
             n.corner_radius.max(0.0),
         );
     }
-    if matches!(
-        n.kind,
-        NodeKind::Rect | NodeKind::Frame | NodeKind::Other(_)
-    ) && !icon::is_icon(n)
-    {
+    if is_box(n) {
         match box_paint(n) {
             BoxPaint::Image(image) => image::emit_box_image_pattern(out, n, &image, w),
             BoxPaint::Stack => fill_stack::emit_fill_stack_defs(out, n, &id, w),
@@ -259,7 +260,13 @@ fn emit_node_defs(out: &mut String, n: &SceneNode, w: &mut Writer) {
     if n.kind == NodeKind::Text {
         emit_text_fill_defs(out, n, &id, w);
     }
-    effects::emit_effect_defs(out, n, is_container(n), w);
+    let container = is_container(n);
+    let content = if container {
+        content_bounds(n)
+    } else {
+        n.bounds
+    };
+    effects::emit_effect_defs(out, n, container, content, w);
     for child in &n.children {
         emit_node_defs(out, child, w);
     }
@@ -370,11 +377,45 @@ const SVG_PAINT_RULES: PaintCornerRules = PaintCornerRules {
     image_paints: true,
 };
 
+/// `n`'s box joined with everything its children paint, in `n`'s own user
+/// space (inside its transform): what a layer blur on the group covers.
+fn content_bounds(n: &SceneNode) -> Rect {
+    let mut acc = BoundsAcc::new();
+    let r = normalize_rect(n.bounds);
+    acc.add(
+        r.origin.x,
+        r.origin.y,
+        r.origin.x + r.size.x,
+        r.origin.y + r.size.y,
+    );
+    for child in &n.children {
+        collect_bounds(child, glam::Affine2::IDENTITY, &mut acc);
+    }
+    acc.into_rect().unwrap_or(r)
+}
+
 fn collect_bounds(n: &SceneNode, parent_xform: glam::Affine2, acc: &mut BoundsAcc) {
-    if n.hidden {
+    if !is_written(n) {
         return;
     }
     let local_xform = parent_xform * node_transform(n);
+    // Shadows and blur paint past the box; the view box keeps them.
+    let [left, top, right, bottom] = effects::paint_outsets(n);
+    if left + top + right + bottom > 0.0 {
+        let r = normalize_rect(n.bounds);
+        for p in [
+            glam::Vec2::new(r.origin.x - left, r.origin.y - top),
+            glam::Vec2::new(r.origin.x + r.size.x + right, r.origin.y - top),
+            glam::Vec2::new(r.origin.x - left, r.origin.y + r.size.y + bottom),
+            glam::Vec2::new(
+                r.origin.x + r.size.x + right,
+                r.origin.y + r.size.y + bottom,
+            ),
+        ] {
+            let w = local_xform.transform_point2(p);
+            acc.add(w.x, w.y, w.x, w.y);
+        }
+    }
     if let Some(local_corners) = own_paint_corners(n) {
         for p in local_corners {
             let w = local_xform.transform_point2(p);
@@ -406,6 +447,16 @@ fn collect_bounds(n: &SceneNode, parent_xform: glam::Affine2, acc: &mut BoundsAc
 
 fn own_paint_corners(n: &SceneNode) -> Option<Vec<glam::Vec2>> {
     crate::scene_bounds::own_paint_corners(n, SVG_PAINT_RULES)
+}
+
+/// An attribute value escaped, borrowed when it has nothing to escape
+/// (a long `data:` URL, most names).
+fn escape_attr(text: &str) -> std::borrow::Cow<'_, str> {
+    if text.contains(['&', '<', '>', '"', '\'']) {
+        std::borrow::Cow::Owned(xml_escape(text))
+    } else {
+        std::borrow::Cow::Borrowed(text)
+    }
 }
 
 fn xml_escape(text: &str) -> String {

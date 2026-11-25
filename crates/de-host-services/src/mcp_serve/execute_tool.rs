@@ -56,7 +56,7 @@ impl ScriptRenderer for HostScriptRenderer {
         let scale = request.scale.clamp(0.5, 8.0);
         let (format, ext) = match request.format {
             // The SVG writer builds its own scene, with layer names.
-            ExportFormat::Svg => return export_svg(state, request, &dir),
+            ExportFormat::Svg => return export_layered_svg(state, request, &dir),
             ExportFormat::Pdf => {
                 let scene = de_pen_loader::editor_state_to_active_page_layout_scene(state);
                 let ids: Vec<&str> = request.node_ids.iter().map(String::as_str).collect();
@@ -91,7 +91,7 @@ impl ScriptRenderer for HostScriptRenderer {
 
 /// One layered `<nodeId>.svg` per node (#407); each file's left-out
 /// features come back as warnings prefixed with the node id.
-fn export_svg(
+fn export_layered_svg(
     state: &EditorState,
     request: &ExportRequest,
     dir: &Path,

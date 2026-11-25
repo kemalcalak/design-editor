@@ -61,7 +61,7 @@ impl ExportItem {
             .unwrap_or(1.0);
 
         if format == "svg" {
-            return self.export_svg(item_id);
+            return self.export_layered_svg(item_id);
         }
         let (bytes, item_type) = if let Some(page) =
             self.scene.pages.iter().find(|page| page.id == item_id)
@@ -117,7 +117,7 @@ impl ExportItem {
 impl ExportItem {
     /// A page (every top-level frame a group) or a node as one layered SVG
     /// (#407), with `warnings` for what the file leaves out.
-    fn export_svg(&self, item_id: &str) -> ToolOutcome {
+    fn export_layered_svg(&self, item_id: &str) -> ToolOutcome {
         let (result, item_type) =
             if let Some(page) = self.scene.pages.iter().find(|page| page.id == item_id) {
                 (

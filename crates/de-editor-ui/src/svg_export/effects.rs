@@ -75,25 +75,29 @@ pub(super) fn group_blur_attr(n: &SceneNode) -> String {
 
 /// Defs for `n`'s effects, plus a warning for each one the file cannot
 /// carry. `container` mirrors how the node is written: a container's shape
-/// filter holds only its shadows and its blur filter sits on the group.
-pub(super) fn emit_effect_defs(out: &mut String, n: &SceneNode, container: bool, w: &mut Writer) {
+/// filter holds only its shadows, and its blur filter sits on the group and
+/// covers `content` (the box with everything the children paint).
+pub(super) fn emit_effect_defs(
+    out: &mut String,
+    n: &SceneNode,
+    container: bool,
+    content: Rect,
+    w: &mut Writer,
+) {
     report_unsupported(n, w);
     let id = svg_id(&n.id);
     let blur = layer_blur(n);
     let shape_blur = if container { None } else { blur };
     if has_shape_shadows(n) || shape_blur.is_some() {
-        emit_filter(out, &format!("filter-{id}"), n, true, shape_blur, n.bounds);
+        let stroke = n.stroke.map_or(0.0, |s| s.width.max(0.0));
+        let region = filter_region(n.bounds, outsets(n, shape_blur), stroke);
+        emit_filter(out, &format!("filter-{id}"), n, true, shape_blur, region);
     }
     if container {
         if let Some(radius) = blur {
-            emit_filter(
-                out,
-                &format!("blur-{id}"),
-                n,
-                false,
-                Some(radius),
-                n.aggregate_bounds(),
-            );
+            // The group holds the box's own shadow too.
+            let region = filter_region(content, outsets(n, Some(radius)), 0.0);
+            emit_filter(out, &format!("blur-{id}"), n, false, Some(radius), region);
         }
     }
 }
@@ -119,6 +123,16 @@ fn report_unsupported(n: &SceneNode, w: &mut Writer) {
         .any(|e| matches!(e, Effect::DropShadow(s) if !s.inner && visible(s)))
         && outer_shadows(n).next().is_none()
         && n.kind != NodeKind::Text;
+    let unfilled_box = outer_shadows(n).next().is_some()
+        && n.fill.is_none()
+        && n.gradient.is_none()
+        && n.fill_layers.is_empty()
+        && n.image_src.is_none();
+    if unfilled_box {
+        // The canvas casts it from the box; an SVG shadow comes from what
+        // the shape paints, which is nothing here.
+        w.warn(n, "drop shadow on a box with no fill is left out");
+    }
     if skipped_outer {
         // The canvas does not cast these either; say so instead of
         // silently differing from the file's effect list.
@@ -135,9 +149,8 @@ fn emit_filter(
     n: &SceneNode,
     shadows: bool,
     blur: Option<f32>,
-    area: Rect,
+    region: Rect,
 ) {
-    let region = filter_region(n, shadows, blur, area);
     let _ = write!(
         out,
         r#"<filter id="{id}" x="{}" y="{}" width="{}" height="{}" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">"#,
@@ -216,27 +229,37 @@ fn emit_shadow_color(out: &mut String, shadow: &DropShadow) {
     );
 }
 
-/// The filter's paint area: the node's box grown by every shadow's reach
-/// (offset plus three sigma) and the blur's spread.
-fn filter_region(n: &SceneNode, shadows: bool, blur: Option<f32>, area: Rect) -> Rect {
-    let r = normalize_rect(area);
-    let (mut left, mut top, mut right, mut bottom) = (0.0f32, 0.0f32, 0.0f32, 0.0f32);
-    if shadows {
-        for s in outer_shadows(n) {
-            let spread = s.blur * 1.5;
-            left = left.max(spread - s.offset_x);
-            right = right.max(spread + s.offset_x);
-            top = top.max(spread - s.offset_y);
-            bottom = bottom.max(spread + s.offset_y);
-        }
+/// How far `n`'s outer shadows (offset plus three sigma) and a layer blur
+/// of `blur` reach past its box: `[left, top, right, bottom]`.
+fn outsets(n: &SceneNode, blur: Option<f32>) -> [f32; 4] {
+    let mut out = [0.0f32; 4];
+    for s in outer_shadows(n) {
+        let spread = s.blur * 1.5;
+        out[0] = out[0].max(spread - s.offset_x);
+        out[1] = out[1].max(spread - s.offset_y);
+        out[2] = out[2].max(spread + s.offset_x);
+        out[3] = out[3].max(spread + s.offset_y);
     }
     if let Some(radius) = blur {
         let spread = radius * 1.5;
-        left = left.max(spread);
-        right = right.max(spread);
-        top = top.max(spread);
-        bottom = bottom.max(spread);
+        for side in &mut out {
+            *side = side.max(spread);
+        }
     }
+    out
+}
+
+/// What `n`'s own effects paint past its box, for the export's view box:
+/// `[left, top, right, bottom]` (zero when it has none).
+pub(super) fn paint_outsets(n: &SceneNode) -> [f32; 4] {
+    outsets(n, layer_blur(n))
+}
+
+/// A filter's paint area: `area` grown by `outsets` and, on every side, by
+/// `pad` (the stroke, which may sit outside the box).
+fn filter_region(area: Rect, outsets: [f32; 4], pad: f32) -> Rect {
+    let r = normalize_rect(area);
+    let [left, top, right, bottom] = outsets.map(|side| side + pad);
     Rect::xywh(
         r.origin.x - left,
         r.origin.y - top,

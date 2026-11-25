@@ -8,8 +8,9 @@
 //! transform (Crop paints like Fill). Each is reported in `warnings`.
 
 use super::image::{emit_image_pattern, preserve_aspect_ratio};
-use super::writer::Writer;
-use super::{color_to_rgb, emit_gradient, normalize_rect, svg_id, xml_escape};
+use super::node::css_blend;
+use super::writer::{Href, Writer};
+use super::{color_to_rgb, emit_gradient, normalize_rect, svg_id};
 use crate::layout_scene::{NodeKind, SceneFillLayer, SceneImageFit, SceneNode};
 use crate::{Color, ImageAdjustments, ImageBlendMode, Rect};
 use std::fmt::Write as _;
@@ -39,13 +40,12 @@ pub(super) fn emit_fill_stack_defs(out: &mut String, n: &SceneNode, id: &str, w:
     }
 }
 
-/// The stack itself, clipped by `clip_id` when given, with `attrs` (layer id and the
-/// like) on its group.
+/// The stack itself, as an unnamed group clipped by `clip_id` when given
+/// (the caller's element carries the layer).
 pub(super) fn emit_fill_stack(
     out: &mut String,
     n: &SceneNode,
     clip_id: Option<&str>,
-    attrs: &str,
     w: &mut Writer,
 ) {
     let id = svg_id(&n.id);
@@ -54,7 +54,7 @@ pub(super) fn emit_fill_stack(
     } else {
         1.0
     };
-    let _ = write!(out, r#"<g{attrs}"#);
+    out.push_str("<g");
     if let Some(clip_id) = clip_id {
         let _ = write!(out, r#" clip-path="url(#{clip_id})""#);
     }
@@ -96,8 +96,9 @@ pub(super) fn emit_fill_stack(
                 if *adjustments != ImageAdjustments::default() {
                     w.warn(n, "image colour adjustments are left out");
                 }
-                let href = w.image_href(n, src, *src_id);
-                emit_image_layer(out, r, &href, *fit, *opacity, &layer_id, &blend);
+                // A tiled layer paints its pattern def, which holds the href.
+                let href = (*fit != SceneImageFit::Tile).then(|| w.image_href(n, src, *src_id));
+                emit_image_layer(out, r, href.as_ref(), *fit, *opacity, &layer_id, &blend);
             }
         }
     }
@@ -123,7 +124,7 @@ fn emit_solid_layer(out: &mut String, r: Rect, color: Color, blend: &str) {
 fn emit_image_layer(
     out: &mut String,
     r: Rect,
-    href: &str,
+    href: Option<&Href>,
     fit: SceneImageFit,
     opacity: f32,
     layer_id: &str,
@@ -141,6 +142,9 @@ fn emit_image_layer(
         }
         fit => preserve_aspect_ratio(fit),
     };
+    let Some(href) = href else {
+        return;
+    };
     let _ = write!(
         out,
         r#"<image x="{}" y="{}" width="{}" height="{}" xlink:href="{}" preserveAspectRatio="{preserve}" opacity="{opacity}"{blend}/>"#,
@@ -148,7 +152,7 @@ fn emit_image_layer(
         r.origin.y,
         r.size.x,
         r.size.y,
-        xml_escape(href),
+        href.attr_value(),
     );
 }
 
@@ -171,13 +175,8 @@ fn image_node(n: &SceneNode, layer: &SceneFillLayer) -> SceneNode {
 }
 
 /// `style="mix-blend-mode:…"`, empty for Normal.
-pub(super) fn blend_style(mode: ImageBlendMode) -> String {
-    let css = match mode {
-        ImageBlendMode::Normal => return String::new(),
-        // Same CSS as the HTML export (#14); `plus-darker` is WebKit-only.
-        ImageBlendMode::LinearBurn => "plus-darker",
-        ImageBlendMode::LinearDodge => "plus-lighter",
-        other => super::effects::blend_name(other).unwrap_or("normal"),
-    };
-    format!(r#" style="mix-blend-mode:{css}""#)
+fn blend_style(mode: ImageBlendMode) -> String {
+    css_blend(mode)
+        .map(|css| format!(r#" style="mix-blend-mode:{css}""#))
+        .unwrap_or_default()
 }

@@ -4,15 +4,17 @@
 //! a repeating `<pattern>`.
 
 use super::image_metadata;
-use super::writer::Writer;
-use super::{normalize_rect, svg_id, xml_escape};
+use super::node::box_clip;
+use super::writer::{Href, Writer};
+use super::{normalize_rect, svg_id};
 use crate::layout_scene::{SceneFillLayer, SceneImageFit, SceneNode};
 use crate::ImageAdjustments;
 use std::fmt::Write as _;
+use std::sync::Arc;
 
 /// One image painting a node's box.
 pub(super) struct BoxImage<'a> {
-    pub src: &'a str,
+    pub src: &'a Arc<str>,
     pub src_id: u64,
     pub fit: SceneImageFit,
     pub opacity: f32,
@@ -24,7 +26,7 @@ impl<'a> BoxImage<'a> {
     /// The image of an image node (`image_src`).
     pub(super) fn of_node(n: &'a SceneNode) -> Option<Self> {
         Some(Self {
-            src: n.image_src.as_deref()?,
+            src: n.image_src.as_ref()?,
             src_id: n.image_src_id,
             fit: n.image_fit,
             opacity: n.opacity,
@@ -58,9 +60,9 @@ impl<'a> BoxImage<'a> {
     }
 }
 
-/// Write `image` over `n`'s box with `attrs` (`opacity` is the image's own
-/// and is folded into `attrs` by the caller). Rounded boxes reference the
-/// node's `clip-…` def.
+/// Write `image` over `n`'s box with `attrs` (the image's own `opacity` is
+/// folded into `attrs` by the caller). Rounded boxes reference the node's
+/// `clip-…` def ([`box_clip`]).
 pub(super) fn emit_box_image(
     out: &mut String,
     n: &SceneNode,
@@ -79,7 +81,7 @@ pub(super) fn emit_box_image(
     }
     let r = normalize_rect(n.bounds);
     let id = svg_id(&n.id);
-    let clip = if n.corner_radius > 0.0 {
+    let clip = if box_clip(n) {
         format!(r#" clip-path="url(#clip-{id})""#)
     } else {
         String::new()
@@ -100,7 +102,7 @@ pub(super) fn emit_box_image(
         r.origin.y,
         r.size.x,
         r.size.y,
-        xml_escape(&href),
+        href.attr_value(),
         preserve_aspect_ratio(image.fit),
     );
 }
@@ -118,7 +120,7 @@ pub(super) fn emit_box_image_pattern(
     let href = w.image_href(n, image.src, image.src_id);
     let mut cell = SceneNode::leaf(n.id.as_str(), n.kind.clone());
     cell.bounds = n.bounds;
-    cell.image_src = Some(image.src.into());
+    cell.image_src = Some(Arc::clone(image.src));
     cell.image_src_id = image.src_id;
     emit_image_pattern(out, &cell, &href, &svg_id(&n.id));
 }
@@ -135,7 +137,7 @@ pub(super) fn preserve_aspect_ratio(fit: SceneImageFit) -> &'static str {
 
 /// A repeating pattern of `n.image_src` (its intrinsic size sets the cell)
 /// written with `href`, under `image-pattern-{id}`.
-pub(super) fn emit_image_pattern(out: &mut String, n: &SceneNode, href: &str, id: &str) {
+pub(super) fn emit_image_pattern(out: &mut String, n: &SceneNode, href: &Href, id: &str) {
     let r = normalize_rect(n.bounds);
     // If source bytes are unavailable (for example an uncached remote URL),
     // fall back to one bounds-sized cell instead of inventing a repeat scale.
@@ -149,6 +151,6 @@ pub(super) fn emit_image_pattern(out: &mut String, n: &SceneNode, href: &str, id
     let _ = write!(
         out,
         r#"<pattern id="image-pattern-{id}" patternUnits="userSpaceOnUse" x="{start_x}" y="{start_y}" width="{tile_w}" height="{tile_h}" viewBox="0 0 {tile_w} {tile_h}"><image width="{tile_w}" height="{tile_h}" xlink:href="{}" preserveAspectRatio="none"/></pattern>"#,
-        xml_escape(href),
+        href.attr_value(),
     );
 }

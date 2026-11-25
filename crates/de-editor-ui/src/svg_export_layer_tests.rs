@@ -127,11 +127,11 @@ fn layer_names_become_unique_ids_with_data_names() {
     };
     let body = serialize_page_svg_with(&p, &options).expect("svg").svg;
     assert!(
-        body.contains(r#"id="Hero_card" data-name="Hero card""#),
+        body.contains(r#"id="Hero card" data-name="Hero card""#),
         "{body}"
     );
     assert!(
-        body.contains(r#"id="Hero_card_2" data-name="Hero card""#),
+        body.contains(r#"id="Hero card_2" data-name="Hero card""#),
         "{body}"
     );
     // A node without a name keeps its node id and gets no data-name.
@@ -142,7 +142,7 @@ fn layer_names_become_unique_ids_with_data_names() {
 fn nested_auto_layout_frames_and_groups_are_nested_g_layers() {
     let p = page(vec![card()]);
     let body = layered(&p, "1", &card_names()).svg;
-    let card = position(&body, r#"<g id="Pricing_card" data-name="Pricing card">"#);
+    let card = position(&body, r#"<g id="Pricing card" data-name="Pricing card">"#);
     let header = position(&body, r#"<g id="Header" data-name="Header">"#);
     let title = position(&body, r#"<text id="Title""#);
     let subtitle = position(&body, r#"<text id="Subtitle""#);
@@ -356,10 +356,76 @@ fn an_icon_is_a_named_vector_path_not_a_filled_box() {
     let export = layered(&page(vec![icon]), "i", &names(&[("i", "Done icon")]));
     let body = &export.svg;
     assert!(
-        body.contains(r#"<path id="Done_icon" data-name="Done icon""#),
+        body.contains(r#"<path id="Done icon" data-name="Done icon""#),
         "{body}"
     );
     assert!(body.contains(r#"stroke="rgb(0,0,0)""#), "{body}");
     assert!(!body.contains("<rect"), "no box for an icon: {body}");
     assert!(export.warnings.is_empty(), "{:?}", export.warnings);
+}
+
+#[test]
+fn a_linked_image_the_editor_has_loaded_is_embedded_once() {
+    let url = "https://images.invalid/cached-photo.png";
+    let png = base64::Engine::decode(
+        &base64::engine::general_purpose::STANDARD,
+        PIXEL_PNG.trim_start_matches("data:image/png;base64,"),
+    )
+    .expect("fixture png");
+    crate::widgets::canvas_viewport_image::store_remote_image_bytes(
+        crate::layout_scene::stable_image_source_id(url),
+        png,
+    );
+    let mut root = frame("root", 0.0, 0.0, 300.0, 200.0);
+    root.children = vec![photo("a", url), photo("b", url)];
+    let export = layered(&page(vec![root]), "root", &LayerNames::new());
+    assert_eq!(
+        export
+            .svg
+            .matches("xlink:href=\"data:image/png;base64,")
+            .count(),
+        2,
+        "{}",
+        export.svg
+    );
+    assert!(!export.svg.contains(url), "{}", export.svg);
+    assert!(export.warnings.is_empty(), "{:?}", export.warnings);
+}
+
+#[test]
+fn a_blended_text_keeps_one_style_attribute() {
+    let mut t = text("t", "Overlay", 0.0, 0.0);
+    t.blend_mode = ImageBlendMode::Multiply;
+    let body = layered(&page(vec![t]), "t", &LayerNames::new()).svg;
+    assert!(
+        body.contains(r#"style="white-space: pre; mix-blend-mode:multiply""#),
+        "{body}"
+    );
+    let text_tag = &body[position(&body, "<text ")..];
+    let text_tag = &text_tag[..text_tag.find('>').expect("tag end")];
+    assert_eq!(text_tag.matches("style=").count(), 1, "{body}");
+}
+
+#[test]
+fn a_filter_on_a_fitted_path_reads_the_node_box_space() {
+    let mut path = SceneNode::leaf("p", NodeKind::Path);
+    path.bounds = Rect::xywh(500.0, 300.0, 40.0, 20.0);
+    path.svg_path = Some("M0 0 L4 0 L4 2 Z".into());
+    path.fill = Some(Color::BLACK);
+    path.effects = vec![Effect::Blur(BlurEffect { radius: 4.0 })];
+    let body = layered(&page(vec![path]), "p", &names(&[("p", "Arrow")])).svg;
+    // The layer (with the filter) wraps a path that carries the fit.
+    assert!(
+        body.contains(r#"<g id="Arrow" data-name="Arrow" filter="url(#filter-n-70)"><path d="M0 0 L4 0 L4 2 Z" transform="matrix("#),
+        "{body}"
+    );
+}
+
+#[test]
+fn the_view_box_keeps_a_drop_shadow() {
+    let mut card = card();
+    card.children.clear();
+    let body = layered(&page(vec![card]), "1", &card_names()).svg;
+    // 12 px blur (σ 6, reach 18) and a 4 px drop below.
+    assert!(body.contains(r#"viewBox="-18 -14 356 236""#), "{body}");
 }

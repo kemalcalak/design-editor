@@ -33,12 +33,7 @@ pub fn paint_icon_font_node_weighted(
     if size <= 0.0 {
         return;
     }
-    let color = fill.unwrap_or(Color {
-        r: 0.39,
-        g: 0.45,
-        b: 0.55,
-        a: 1.0,
-    });
+    let color = fill.unwrap_or(super::icon_family::ICON_DEFAULT_TINT);
     let top_left = Point2D::new(
         rect.origin.x + (rect.size.x - size) / 2.0,
         rect.origin.y + (rect.size.y - size) / 2.0,
