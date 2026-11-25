@@ -399,6 +399,14 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "whatsNew.next" => "Next",
         "settings.system.livePages" => "Live pages",
         "settings.system.livePagesDesc" => "A selected browser node plays like the live page. Off shows a still snapshot.",
+        "prototype.trigger.tap" => "Tap",
+        "prototype.trigger.hover" => "Hover",
+        "prototype.trigger.longPress" => "Long press",
+        "prototype.back" => "Back",
+        "prototype.brokenLink" => "Broken link",
+        "prototype.opens" => "Opens {{host}}",
+        "prototype.scrollTo" => "Scroll to {{name}}",
+        "menu.showPrototypeLinks" => "Show prototype links",
         _ => return None,
     })
 }

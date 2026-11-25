@@ -399,6 +399,14 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "whatsNew.next" => "Tiếp",
         "settings.system.livePages" => "Trang trực tiếp",
         "settings.system.livePagesDesc" => "Nút trình duyệt được chọn chạy như trang thật. Khi tắt sẽ hiện ảnh chụp tĩnh.",
+        "prototype.trigger.tap" => "Chạm",
+        "prototype.trigger.hover" => "Di chuột",
+        "prototype.trigger.longPress" => "Nhấn giữ",
+        "prototype.back" => "Quay lại",
+        "prototype.brokenLink" => "Liên kết hỏng",
+        "prototype.opens" => "Mở {{host}}",
+        "prototype.scrollTo" => "Cuộn tới {{name}}",
+        "menu.showPrototypeLinks" => "Hiện liên kết nguyên mẫu",
         _ => return None,
     })
 }

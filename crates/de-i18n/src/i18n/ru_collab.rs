@@ -399,6 +399,14 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "whatsNew.next" => "Далее",
         "settings.system.livePages" => "Живые страницы",
         "settings.system.livePagesDesc" => "Выбранный узел браузера воспроизводится как настоящая страница. Если выключено, показывается статичный снимок.",
+        "prototype.trigger.tap" => "Нажатие",
+        "prototype.trigger.hover" => "Наведение",
+        "prototype.trigger.longPress" => "Долгое нажатие",
+        "prototype.back" => "Назад",
+        "prototype.brokenLink" => "Битая ссылка",
+        "prototype.opens" => "Открывает {{host}}",
+        "prototype.scrollTo" => "Прокрутить к {{name}}",
+        "menu.showPrototypeLinks" => "Показать связи прототипа",
         _ => return None,
     })
 }

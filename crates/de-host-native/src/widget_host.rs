@@ -359,6 +359,8 @@ pub struct WidgetHostNative {
     /// Pointer over the canvas (logical px) for `uniform float2 mouse;`
     /// shader fills; `None` while it is over chrome or outside the window.
     pub(in crate::widget_host) shader_pointer: Option<de_editor_ui::Point2D>,
+    /// Pointer while Preview is open, for the link-hint tooltip (#371).
+    pub(in crate::widget_host) preview_pointer: Option<de_editor_ui::Point2D>,
     /// Active chat-panel drag state — present while the user
     /// drags the floating AI chat panel by its header. Holds the
     /// transient panel top-left position so paint can place the

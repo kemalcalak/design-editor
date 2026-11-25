@@ -96,6 +96,8 @@ impl<'a> CanvasViewport<'a> {
             cull_override: None,
             pointer: None,
             text_layout_generation: None,
+            prototype_links: crate::widgets::canvas_prototype_links::visible_links(state),
+            locale: state.editor_ui.locale,
         }
     }
 
@@ -155,6 +157,8 @@ impl<'a> CanvasViewport<'a> {
             cull_override: None,
             pointer: None,
             text_layout_generation: None,
+            prototype_links: Vec::new(),
+            locale: de_editor_core::Locale::EnUs,
         }
     }
 

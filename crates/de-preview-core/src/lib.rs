@@ -79,6 +79,7 @@ mod input;
 mod input_event;
 mod interaction_state;
 mod invalidation;
+mod link_hints;
 mod mode_transition;
 mod motion;
 mod motion_pointer;
@@ -118,6 +119,7 @@ pub use input_event::{
 pub use interaction_state::InteractionState;
 pub use invalidation::InvalidationKind;
 pub use jian_ops_schema::motion::MotionPreference;
+pub use link_hints::PreviewLinkHint;
 
 /// Website-style browsing (#153): the address bar's content, a section
 /// link's page-scroll request, and the hover cursor shape.

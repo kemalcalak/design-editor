@@ -67,6 +67,7 @@ impl Default for EditorUiState {
             preserve_authored_geometry: false,
             scenario: None,
             preview: PreviewState::default(),
+            prototype: Default::default(),
             slides_panel: super::SlidesPanelState::default(),
             agent_settings_open: false,
             agent_settings: crate::agent_settings::AgentSettings::default(),

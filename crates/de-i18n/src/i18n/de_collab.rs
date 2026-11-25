@@ -399,6 +399,14 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "whatsNew.next" => "Weiter",
         "settings.system.livePages" => "Live-Seiten",
         "settings.system.livePagesDesc" => "Ein ausgewählter Browser-Knoten läuft wie die echte Seite. Aus zeigt einen Standbild-Schnappschuss.",
+        "prototype.trigger.tap" => "Tippen",
+        "prototype.trigger.hover" => "Hover",
+        "prototype.trigger.longPress" => "Lange drücken",
+        "prototype.back" => "Zurück",
+        "prototype.brokenLink" => "Defekter Link",
+        "prototype.opens" => "Öffnet {{host}}",
+        "prototype.scrollTo" => "Zu {{name}} scrollen",
+        "menu.showPrototypeLinks" => "Prototyp-Links anzeigen",
         _ => return None,
     })
 }

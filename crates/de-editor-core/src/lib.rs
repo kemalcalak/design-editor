@@ -135,6 +135,10 @@ pub mod instance_override;
 pub mod instance_path;
 pub mod instance_view;
 pub mod interaction_edit;
+#[cfg(test)]
+mod interaction_fixture;
+pub mod interaction_graph;
+pub mod interaction_write;
 pub mod mesh_lattice;
 pub mod missing_fonts;
 pub mod motion_edit;
@@ -157,11 +161,13 @@ pub mod prompt_center_keyboard;
 pub mod property_edit_mutators;
 pub mod property_panel_state;
 pub mod ref_resolve;
+mod ref_scroll_targets;
 pub mod release_notes;
 pub mod rename;
 pub mod render_backend;
 pub mod request_snapshot;
 pub mod root_placement;
+pub mod route_rename;
 pub mod scene_template_append;
 pub mod scene_template_catalog;
 pub mod scene_template_keyboard;
@@ -418,6 +424,7 @@ pub use instance_override::{
     INSTANCE_DIRECT_PROPS,
 };
 pub use instance_view::{InstanceUse, InstanceView, OverrideTarget};
+pub use interaction_write::InteractionCommand;
 pub use jian_ops_schema::node::MaskType;
 pub use jian_ops_schema::style::BlendMode;
 pub use jian_ops_schema::{DesignMdColor, DesignMdSpec, DesignMdTypography, PenDocument};

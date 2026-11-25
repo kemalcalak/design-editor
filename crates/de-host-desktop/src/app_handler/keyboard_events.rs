@@ -43,7 +43,10 @@ impl DesktopApp {
         // mouse press can branch on shift+click for
         // multi-select.
         self.host.set_modifier_shift(self.shift_modifier);
-        self.host.set_modifier_alt(self.alt_modifier);
+        // Alt also shows Preview's hotspots (#371).
+        if self.host.set_modifier_alt(self.alt_modifier) {
+            self.request_redraw(true);
+        }
     }
 
     pub(super) fn on_space_released(&mut self) {

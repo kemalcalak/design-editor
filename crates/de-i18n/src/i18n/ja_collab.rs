@@ -399,6 +399,14 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "whatsNew.next" => "次へ",
         "settings.system.livePages" => "ライブページ",
         "settings.system.livePagesDesc" => "選択中のブラウザノードを実際のページのように再生します。オフにすると静止スナップショットを表示します。",
+        "prototype.trigger.tap" => "タップ",
+        "prototype.trigger.hover" => "ホバー",
+        "prototype.trigger.longPress" => "長押し",
+        "prototype.back" => "戻る",
+        "prototype.brokenLink" => "リンク切れ",
+        "prototype.opens" => "{{host}} を開く",
+        "prototype.scrollTo" => "{{name}} へスクロール",
+        "menu.showPrototypeLinks" => "プロトタイプのリンクを表示",
         _ => return None,
     })
 }

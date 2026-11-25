@@ -25,8 +25,9 @@ pub(super) const FOOTER_HEIGHT: f32 = 40.0;
 const FOOTER_BUTTON: f32 = 26.0;
 const FOOTER_ICON: f32 = 15.0;
 
-/// Rows in the tail section: Import, Undo, Redo, Present.
-pub(super) const TAIL_ROWS: usize = 4;
+/// Rows in the tail section: Import, Undo, Redo, Present, Show prototype
+/// links.
+pub(super) const TAIL_ROWS: usize = 5;
 
 /// An app-level action in the File menu's icon footer.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

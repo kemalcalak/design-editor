@@ -37,6 +37,7 @@ impl WidgetHostNative {
             last_hover_probe: None,
             browser_interaction: Default::default(),
             shader_pointer: None,
+            preview_pointer: None,
             chat_drag: None,
             chat_resize: None,
             design_md_drag: None,
@@ -176,8 +177,18 @@ impl WidgetHostNative {
         self.shift_held = held;
     }
 
-    pub fn set_modifier_alt(&mut self, held: bool) {
+    /// Alt / Option also shows every hotspot in Preview (#371); returns
+    /// whether that needs a repaint.
+    pub fn set_modifier_alt(&mut self, held: bool) -> bool {
         self.alt_held = held;
+        let changed = self
+            .preview
+            .as_mut()
+            .is_some_and(|preview| preview.set_show_hotspots(held));
+        if changed {
+            self.mark_dirty();
+        }
+        changed
     }
 
     /// Publish the geometry used by this frame.

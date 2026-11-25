@@ -399,6 +399,14 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "whatsNew.next" => "Sonraki",
         "settings.system.livePages" => "Canlı sayfalar",
         "settings.system.livePagesDesc" => "Seçili tarayıcı düğümü gerçek sayfa gibi oynar. Kapalıyken durağan bir anlık görüntü gösterilir.",
+        "prototype.trigger.tap" => "Dokunma",
+        "prototype.trigger.hover" => "Üzerine gelme",
+        "prototype.trigger.longPress" => "Uzun basma",
+        "prototype.back" => "Geri",
+        "prototype.brokenLink" => "Kırık bağlantı",
+        "prototype.opens" => "{{host}} açılır",
+        "prototype.scrollTo" => "{{name}} bölümüne kaydır",
+        "menu.showPrototypeLinks" => "Prototip bağlantılarını göster",
         _ => return None,
     })
 }

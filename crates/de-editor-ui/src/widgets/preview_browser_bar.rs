@@ -1,6 +1,7 @@
 //! APP MODE browser bar (#153): back, forward and an address field that
 //! shows the mounted page's title and route, so a routed preview reads
-//! like a website in a browser.
+//! like a website in a browser. A trailing button turns the "where does
+//! this go" link hints on and off (#371).
 //!
 //! Shared by paint and hit-testing like its siblings
 //! (`preview_device_switcher.rs`, `screen_switcher_pills.rs`). It sits
@@ -37,6 +38,8 @@ pub struct PreviewBrowserBar<'a> {
     pub can_go_forward: bool,
     pub hover: Option<PreviewBrowserControl>,
     pub pressed: Option<PreviewBrowserControl>,
+    /// The link-hint tooltip is on (the button shows pressed).
+    pub link_hints: bool,
 }
 
 impl PreviewBrowserBar<'_> {
@@ -57,12 +60,13 @@ impl PreviewBrowserBar<'_> {
 
     pub fn button_rect(canvas: Rect, control: PreviewBrowserControl) -> Rect {
         let bar = Self::bar_rect(canvas);
-        let index = match control {
-            PreviewBrowserControl::Back => 0.0,
-            PreviewBrowserControl::Forward => 1.0,
+        let x = match control {
+            PreviewBrowserControl::Back => bar.origin.x,
+            PreviewBrowserControl::Forward => bar.origin.x + BUTTON_W + GAP,
+            PreviewBrowserControl::LinkHints => bar.origin.x + bar.size.x - BUTTON_W,
         };
         Rect {
-            origin: Point2D::new(bar.origin.x + index * (BUTTON_W + GAP), bar.origin.y),
+            origin: Point2D::new(x, bar.origin.y),
             size: Point2D::new(BUTTON_W, BAR_H),
         }
     }
@@ -70,17 +74,22 @@ impl PreviewBrowserBar<'_> {
     pub fn address_rect(canvas: Rect) -> Rect {
         let bar = Self::bar_rect(canvas);
         let left = 2.0 * (BUTTON_W + GAP);
+        let right = BUTTON_W + GAP;
         Rect {
             origin: Point2D::new(bar.origin.x + left, bar.origin.y),
-            size: Point2D::new((bar.size.x - left).max(0.0), BAR_H),
+            size: Point2D::new((bar.size.x - left - right).max(0.0), BAR_H),
         }
     }
 
     /// The button under `point`, if any.
     pub fn hit_test(canvas: Rect, point: Point2D) -> Option<PreviewBrowserControl> {
-        [PreviewBrowserControl::Back, PreviewBrowserControl::Forward]
-            .into_iter()
-            .find(|control| Self::button_rect(canvas, *control).contains(point))
+        [
+            PreviewBrowserControl::Back,
+            PreviewBrowserControl::Forward,
+            PreviewBrowserControl::LinkHints,
+        ]
+        .into_iter()
+        .find(|control| Self::button_rect(canvas, *control).contains(point))
     }
 
     /// Whether `point` is anywhere on the bar (presses there never reach
@@ -93,6 +102,7 @@ impl PreviewBrowserBar<'_> {
         match control {
             PreviewBrowserControl::Back => self.can_go_back,
             PreviewBrowserControl::Forward => self.can_go_forward,
+            PreviewBrowserControl::LinkHints => true,
         }
     }
 
@@ -100,10 +110,12 @@ impl PreviewBrowserBar<'_> {
         for (control, icon) in [
             (PreviewBrowserControl::Back, Icon::ChevronLeft),
             (PreviewBrowserControl::Forward, Icon::ChevronRight),
+            (PreviewBrowserControl::LinkHints, Icon::Link),
         ] {
             let rect = Self::button_rect(canvas, control);
             let enabled = self.enabled(control);
-            let fill = if enabled && self.pressed == Some(control) {
+            let toggled_on = control == PreviewBrowserControl::LinkHints && self.link_hints;
+            let fill = if enabled && (self.pressed == Some(control) || toggled_on) {
                 theme.accent
             } else if enabled && self.hover == Some(control) {
                 theme.muted

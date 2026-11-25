@@ -211,6 +211,7 @@ pub mod canvas_animation_regions;
 pub mod canvas_layout_transition;
 pub mod canvas_overlay_transform;
 mod canvas_path_overlay;
+pub mod canvas_prototype_links;
 mod canvas_selection_overlay;
 // `pub` so both hosts can read the animated-shader flag after paint.
 pub mod canvas_shader_clock;

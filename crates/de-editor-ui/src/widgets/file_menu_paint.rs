@@ -240,6 +240,16 @@ impl<'a> Widget for FileMenu<'a> {
             // Cmd/Ctrl+Enter, bound by both hosts (#157); listed here so
             // Windows, Linux and the browser show it too (#190).
             (Icon::Play, "workspace.present", "⌘↩"),
+            // A toggle: the check sits where a chord would.
+            (
+                Icon::Link,
+                "menu.showPrototypeLinks",
+                if self.ui.prototype.show_links {
+                    "✓"
+                } else {
+                    ""
+                },
+            ),
         ]
         .into_iter()
         .enumerate()

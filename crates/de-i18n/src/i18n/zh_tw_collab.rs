@@ -399,6 +399,14 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "whatsNew.next" => "下一個",
         "settings.system.livePages" => "即時頁面",
         "settings.system.livePagesDesc" => "選取的瀏覽器節點會像真實頁面一樣即時播放。關閉後顯示靜態快照。",
+        "prototype.trigger.tap" => "點擊",
+        "prototype.trigger.hover" => "懸停",
+        "prototype.trigger.longPress" => "長按",
+        "prototype.back" => "返回",
+        "prototype.brokenLink" => "失效連結",
+        "prototype.opens" => "開啟 {{host}}",
+        "prototype.scrollTo" => "捲動到 {{name}}",
+        "menu.showPrototypeLinks" => "顯示原型連線",
         _ => return None,
     })
 }
