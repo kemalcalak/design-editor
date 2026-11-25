@@ -375,4 +375,4 @@ fn is_numeric_loopback(host: &str) -> bool {
 
 #[cfg(test)]
 #[path = "admission_tests.rs"]
-mod tests;
+pub(super) mod tests;

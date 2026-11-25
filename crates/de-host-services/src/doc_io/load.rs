@@ -197,6 +197,7 @@ fn parse_editor_state_source(
         pen_dev_import: canonical.compatibility.pen_dev,
         pptx_import: None,
         motion_repairs: motion_repair_lines(&loaded.warnings),
+        duplicate_ids: de_editor_core::duplicate_ids::find_duplicate_ids(&loaded.value),
     };
     Ok((
         EditorState::from_document(loaded.value),

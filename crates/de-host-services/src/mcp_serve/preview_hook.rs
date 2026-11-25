@@ -64,6 +64,13 @@ mod tests {
             Some(PathBuf::from("/tmp/a.de"))
         );
         assert_eq!(saved_document_path(&call("get_node"), &ok), None);
+        // A copy of another file (`sourceFilePath`) still names its target,
+        // so Home lists it; the live transport decides it binds nothing.
+        let copy = r#"{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"save_document","arguments":{"filePath":"/tmp/a.de","sourceFilePath":"/tmp/src.de"}}}"#;
+        assert_eq!(
+            saved_document_path(copy, &ok),
+            Some(PathBuf::from("/tmp/a.de"))
+        );
         let failed = reply("save document failed: denied");
         assert_eq!(saved_document_path(&call("save_document"), &failed), None);
     }

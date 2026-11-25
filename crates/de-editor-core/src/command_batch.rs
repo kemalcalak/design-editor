@@ -146,7 +146,8 @@ fn batchable(cmd: &EditorCommand) -> bool {
         | C::ReplaceFontFamily { .. }
         | C::ReplaceAllMatchingProperties { .. }
         | C::MergeAppState { .. }
-        | C::PromoteLegacyWidgets => true,
+        | C::PromoteLegacyWidgets
+        | C::RepairDuplicateIds => true,
     }
 }
 

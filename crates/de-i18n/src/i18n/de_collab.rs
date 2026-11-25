@@ -242,6 +242,8 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "dialog.motionRepairTitle" => "Einige Animationen wurden ausgelassen",
         "dialog.motionRepairBody" => "„{{name}}“ enthält Animationsdaten, die diese Version nicht abspielen kann; sie wurden ausgelassen:\n\n{{details}}\n\nDas Dokument wurde ohne sie geöffnet. Beim Speichern werden sie endgültig aus der Datei entfernt; schließen Sie ohne zu speichern, um das Original zu behalten.",
         "dialog.motionRepairToast" => "Beim Öffnen wurden {{count}} Animationsdaten ausgelassen ({{details}}). Speichern entfernt sie endgültig.",
+        "dialog.duplicateIdsTitle" => "Einige IDs werden mehrfach verwendet",
+        "dialog.duplicateIdsBody" => "„{{name}}“ enthält Knoten mit derselben ID; eine Änderung an einem davon kann einen anderen treffen:\n\n{{details}}\n\nIDs jetzt reparieren? Der erste Knoten behält jede ID, die anderen erhalten neue; die Leinwand bleibt gleich. Sie können es rückgängig machen, und die Datei ändert sich erst beim Speichern.",
         "import.fromPptx" => "Aus PowerPoint importieren",
         "dialog.pptxImportTitle" => "Aus PowerPoint importiert",
         "dialog.pptxImportBody" => "Einige Teile von „{{name}}“ konnten nicht unverändert übernommen werden:\n\n{{details}}\n\nDer Rest wurde als neue, ungespeicherte Präsentation geöffnet. Die Originaldatei bleibt unverändert.",

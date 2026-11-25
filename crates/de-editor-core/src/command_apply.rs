@@ -779,6 +779,7 @@ impl EditorState {
                 self.merge_app_state(plan_idx, state)
             }
             EditorCommand::PromoteLegacyWidgets => self.promote_legacy_widgets().changed(),
+            EditorCommand::RepairDuplicateIds => self.cmd_repair_duplicate_ids(allocator)?,
             EditorCommand::Library(command) => self.apply_library_command(command),
             EditorCommand::SetImageVideoSrc { node_id, src } => {
                 self.apply_video_src(&node_id, &src)

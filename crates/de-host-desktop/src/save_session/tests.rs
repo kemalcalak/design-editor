@@ -275,3 +275,50 @@ fn stale_epoch_ack_cannot_rebind_save_as_to_a_replaced_document() {
         .file_name_display
         .is_none());
 }
+
+#[test]
+fn a_cmd_s_ack_after_an_mcp_save_bound_another_file_does_not_mark_it_saved() {
+    let mut app = crate::DesktopApp::new(None);
+    let bound = std::env::temp_dir().join("de-403-cmd-s-start.de");
+    app.current_path = Some(bound.clone());
+    app.host.editor_state_mut().mark_document_changed();
+    let epoch = app.host.document_epoch();
+    let generation = app.host.editor_state().document_generation();
+    let started_at = app.host.editor_state().document_revision();
+    // An agent saves the document to another file while Cmd+S is writing.
+    let agent_file = std::env::temp_dir().join("de-403-agent-copy.de");
+    app.apply_mcp_saved_document(&de_host_services::mcp_live::McpSavedDocument {
+        path: agent_file.clone(),
+        saved_from: Some(de_host_services::mcp_live::McpSavedRevision {
+            document_epoch: epoch,
+            generation,
+            revision: started_at,
+        }),
+    });
+    app.host.editor_state_mut().mark_document_changed();
+    let later = app.host.editor_state().document_revision();
+
+    let applied = app.apply_save_completion(SaveCompletion {
+        path: bound,
+        set_current_path: false,
+        document_epoch: epoch,
+        generation,
+        revision: later,
+        result: Ok(()),
+    });
+
+    assert!(applied);
+    assert_eq!(app.current_path.as_deref(), Some(agent_file.as_path()));
+    assert!(
+        app.host.editor_state().is_dirty(),
+        "the bound file holds the older revision"
+    );
+    assert_eq!(
+        app.host
+            .editor_state()
+            .editor_ui
+            .file_name_display
+            .as_deref(),
+        Some("de-403-agent-copy.de")
+    );
+}

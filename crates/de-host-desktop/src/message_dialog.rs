@@ -31,6 +31,12 @@ pub(crate) fn ask_yes_no_cancel(title: &str, body: &str, level: MessageLevel) ->
     ask(title, body, level, true)
 }
 
+/// Two-way prompt. `None` means the question could not be shown at all
+/// (Linux with no working `zenity` / `kdialog`).
+pub(crate) fn ask_yes_no(title: &str, body: &str, level: MessageLevel) -> Option<Choice> {
+    ask(title, body, level, false)
+}
+
 /// One-button informational dialog. Degrades to stderr when the
 /// dialog could not be displayed so the message is never lost.
 pub(crate) fn alert(title: &str, body: &str, level: MessageLevel) {

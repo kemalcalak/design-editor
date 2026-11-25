@@ -11,7 +11,7 @@ use jian_ops_schema::node::PenNode;
 /// instances keep their components. Returns how many ids were renamed.
 pub(crate) fn rename_colliding_ids(nodes: &mut [PenNode], existing: &HashSet<NodeId>) -> usize {
     let mut incoming = HashSet::new();
-    collect_ids(nodes, &mut incoming);
+    collect_all_ids(nodes, &mut incoming);
     if !incoming
         .iter()
         .any(|id| existing.contains(&NodeId::new(id)))
@@ -38,11 +38,26 @@ pub(crate) fn rename_colliding_ids(nodes: &mut [PenNode], existing: &HashSet<Nod
     renames.len()
 }
 
+/// Every id in the node trees of `nodes` (what a `ref` can target).
 pub(crate) fn collect_ids(nodes: &[PenNode], out: &mut HashSet<String>) {
     for node in nodes {
         out.insert(node.id_str().to_owned());
         if let Some(children) = node.children() {
             collect_ids(children, out);
+        }
+    }
+}
+
+/// Every id in `nodes`, the content instances own included: all of them
+/// share the document's id space (#364).
+fn collect_all_ids(nodes: &[PenNode], out: &mut HashSet<String>) {
+    for node in nodes {
+        out.insert(node.id_str().to_owned());
+        de_editor_core::instance_ids::for_each_owned_id(node, &mut |id| {
+            out.insert(id.to_owned());
+        });
+        if let Some(children) = node.children() {
+            collect_all_ids(children, out);
         }
     }
 }
@@ -121,14 +136,21 @@ fn rewrite_ids(nodes: &mut [PenNode], ids: &Lookups, mode: Rewrite) {
     }
 }
 
-/// Instances inside a replacement subtree or slot content (#166) keep
-/// their components too: their `ref` targets and own override paths follow
-/// the renames. The subtree's own ids render in the instance's id space and
-/// stay as written.
+/// Instance-owned content (#166): a replacement subtree or slot content.
+/// Its nodes share the document's id space (#364), so an import's renames
+/// rename their ids too; in every mode the `ref` targets and override paths
+/// of instances inside it follow the lookups.
 fn rename_refs_in_value(value: &mut serde_json::Value, ids: &Lookups, mode: Rewrite) {
     let serde_json::Value::Object(map) = value else {
         return;
     };
+    if mode == Rewrite::Everything {
+        if let Some(serde_json::Value::String(id)) = map.get_mut("id") {
+            if let Some(fresh) = (ids.target)(id.as_str()) {
+                *id = fresh;
+            }
+        }
+    }
     if map.get("type").and_then(serde_json::Value::as_str) == Some("ref") {
         let mut retargeted = false;
         if let Some(serde_json::Value::String(target)) = map.get_mut("ref") {
@@ -168,3 +190,7 @@ fn rename_id_path(path: &str, lookup: &dyn Fn(&str) -> Option<String>) -> String
         .collect::<Vec<_>>()
         .join("/")
 }
+
+#[cfg(test)]
+#[path = "import_ids_tests.rs"]
+mod tests;

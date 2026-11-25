@@ -75,10 +75,10 @@ fn snapshot_request_wakes_ui_event_loop_after_queueing() {
     let UiRequest::Snapshot { ack, .. } = request else {
         panic!("expected snapshot request");
     };
-    ack.send(de_editor_core::request_snapshot::shared_snapshot(
-        &mut EditorState::new(),
-        None,
-    ))
+    ack.send(LiveSnapshot {
+        snapshot: de_editor_core::request_snapshot::shared_snapshot(&mut EditorState::new(), None),
+        document_epoch: 0,
+    })
     .expect("ack snapshot");
     requester
         .join()
@@ -167,6 +167,7 @@ fn pump_yields_after_ui_request_budget() {
         last_snapshot_doc: None,
         pending_design_md: VecDeque::new(),
         saved_documents: Vec::new(),
+        host_document_epoch: 0,
         follow_target: None,
     };
     let mut state = EditorState::new();
@@ -215,6 +216,7 @@ fn pump_fulfills_screenshot_requests_off_the_live_state() {
         last_snapshot_doc: None,
         pending_design_md: VecDeque::new(),
         saved_documents: Vec::new(),
+        host_document_epoch: 0,
         follow_target: None,
     };
     let mut state = EditorState::new();
@@ -266,6 +268,7 @@ fn pump_marks_layout_dirty_only_for_layout_affecting_commands() {
         last_snapshot_doc: None,
         pending_design_md: VecDeque::new(),
         saved_documents: Vec::new(),
+        host_document_epoch: 0,
         follow_target: None,
     };
     let mut state = EditorState::new();
@@ -340,6 +343,7 @@ fn pump_flags_document_replaced_only_for_replace_document_requests() {
         last_snapshot_doc: None,
         pending_design_md: VecDeque::new(),
         saved_documents: Vec::new(),
+        host_document_epoch: 0,
         follow_target: None,
     };
     let mut state = EditorState::new();
@@ -545,6 +549,7 @@ pub(super) fn fresh_mcp_server(req_rx: Receiver<UiRequest>, stop_tx: Sender<()>)
         last_snapshot_doc: None,
         pending_design_md: VecDeque::new(),
         saved_documents: Vec::new(),
+        host_document_epoch: 0,
         follow_target: None,
     }
 }
@@ -736,49 +741,10 @@ fn client_name_reports_the_initialize_identity() {
         last_snapshot_doc: None,
         pending_design_md: VecDeque::new(),
         saved_documents: Vec::new(),
+        host_document_epoch: 0,
         follow_target: None,
     };
     assert_eq!(server.client_name(), None);
     *identity.lock().unwrap() = Some(("Claude Code".to_string(), "#8A8F98".to_string()));
     assert_eq!(server.client_name().as_deref(), Some("Claude Code"));
-}
-
-#[test]
-fn a_save_document_reply_reaches_the_host_through_the_pump() {
-    let (req_tx, req_rx) = mpsc::channel();
-    let (stop_tx, _stop_rx) = mpsc::channel();
-    let woke = Arc::new(AtomicUsize::new(0));
-    let wake_ui: UiWake = {
-        let woke = Arc::clone(&woke);
-        Arc::new(move || {
-            woke.fetch_add(1, Ordering::AcqRel);
-        })
-    };
-    let line = r#"{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"save_document","arguments":{"filePath":"/tmp/agent.de"}}}"#;
-    let reply = serde_json::json!({"jsonrpc":"2.0","id":3,"result":{"content":[
-        {"type":"text","text":r#"{"ok":"true","filePath":"/tmp/agent.de"}"#}
-    ]}})
-    .to_string();
-    report_saved_document(line, &reply, &req_tx, &wake_ui);
-    let other = r#"{"jsonrpc":"2.0","id":4,"method":"tools/call","params":{"name":"get_node","arguments":{}}}"#;
-    report_saved_document(other, &reply, &req_tx, &wake_ui);
-    assert_eq!(
-        woke.load(Ordering::Acquire),
-        1,
-        "only the save wakes the UI"
-    );
-
-    let mut server = fresh_mcp_server(req_rx, stop_tx);
-    let mut state = EditorState::new();
-    let outcome = server.pump(&mut state);
-    assert!(outcome.repaint);
-    assert!(
-        !outcome.document_edited,
-        "a save does not edit the live document"
-    );
-    assert_eq!(
-        server.take_saved_documents(),
-        vec![std::path::PathBuf::from("/tmp/agent.de")]
-    );
-    assert!(server.take_saved_documents().is_empty());
 }

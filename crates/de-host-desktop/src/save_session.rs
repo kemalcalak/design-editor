@@ -512,11 +512,11 @@ impl crate::DesktopApp {
         // The file is on disk whichever document is open now, so its Home
         // preview is due even for a stale acknowledgement.
         crate::home_previews::queue_after_save(&path);
-        let live_epoch = self.host.document_epoch();
-        let live_generation = self.host.editor_state().document_generation();
-        if live_epoch != document_epoch || live_generation != generation {
+        if !self.names_live_document(document_epoch, generation) {
             eprintln!(
-                "[save] ignored stale ack epoch {document_epoch} revision {generation}:{revision}; live identity is epoch {live_epoch} revision {live_generation}:{}",
+                "[save] ignored stale ack epoch {document_epoch} revision {generation}:{revision}; live identity is epoch {} revision {}:{}",
+                self.host.document_epoch(),
+                self.host.editor_state().document_generation(),
                 self.host.editor_state().document_revision()
             );
             // The old snapshot did reach its requested path. It simply has no
@@ -524,21 +524,57 @@ impl crate::DesktopApp {
             // as completed without rebinding or changing the live baseline.
             return true;
         }
+        // A Cmd+S writes the path the document was bound to when it started.
+        // An MCP client's save may have bound the document to another file
+        // meanwhile (#403); that file holds the client's revision, so this
+        // ack must not mark the document saved or show its own name.
+        if !set_current_path && self.current_path.as_deref() != Some(path.as_path()) {
+            eprintln!(
+                "[save] {} was written, but the document is now bound elsewhere",
+                path.display()
+            );
+            crate::settings_io::touch_recent(&mut self.host, &path);
+            return true;
+        }
+        self.bind_saved_path(&path, set_current_path, generation, revision)
+    }
 
+    /// Whether `(document_epoch, generation)` still names the document that
+    /// is open now: the host's document epoch changes when New / Open
+    /// installs another document, the generation when a document is
+    /// replaced in place.
+    pub(crate) fn names_live_document(&self, document_epoch: u64, generation: u64) -> bool {
+        self.host.document_epoch() == document_epoch
+            && self.host.editor_state().document_generation() == generation
+    }
+
+    /// Bind the live document to the file a save just wrote from its
+    /// `(generation, revision)`: the host's own Save and an MCP client's
+    /// `save_document` of the live document (#403). The caller has checked
+    /// that the write came from the document that is open now.
+    /// `set_current_path` is Save As: Cmd+S writes `path` from now on.
+    pub(crate) fn bind_saved_path(
+        &mut self,
+        path: &Path,
+        set_current_path: bool,
+        generation: u64,
+        revision: u64,
+    ) -> bool {
         // Preserve the synchronous Save contract: once the live document was
         // persisted successfully, an import started from that document must
-        // not land afterward and replace what the user just saved. Stale save
-        // acknowledgements return above and cannot cancel the replacement
+        // not land afterward and replace what was just saved. Stale save
+        // acknowledgements never get here and cannot cancel the replacement
         // document's own import.
         crate::figma_import_session::cancel(&mut self.host, &mut self.current_figma_import);
         crate::html_import_session::cancel(&mut self.host, &mut self.current_html_import);
         if set_current_path {
-            self.current_path = Some(path.clone());
+            self.current_path = Some(path.to_path_buf());
         }
-        crate::settings_io::touch_recent(&mut self.host, &path);
-        de_host_services::doc_io::set_file_name_display(self.host.editor_state_mut(), Some(&path));
-        // A user may keep editing while the worker writes. Acknowledging the
-        // captured revision leaves a newer live revision dirty by design.
+        crate::settings_io::touch_recent(&mut self.host, path);
+        de_host_services::doc_io::set_file_name_display(self.host.editor_state_mut(), Some(path));
+        crate::persistence::refresh_title(&self.current_path, self.window.as_ref());
+        // A user may keep editing while the file is written. Acknowledging
+        // the captured revision leaves a newer live revision dirty by design.
         if !self
             .host
             .editor_state_mut()

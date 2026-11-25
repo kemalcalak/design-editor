@@ -79,6 +79,7 @@ mod library_sync;
 #[cfg(test)]
 mod library_sync_tests;
 // Runtime-fetched product assets for the browser bundle (native embeds them).
+pub mod duplicate_ids;
 pub mod editor_ui_state;
 pub mod export_batch;
 pub mod export_dialog_state;
@@ -125,6 +126,7 @@ pub mod instance_anchor;
 mod instance_child_override;
 pub mod instance_descendants;
 pub mod instance_edit;
+pub mod instance_ids;
 pub mod instance_override;
 pub mod instance_path;
 pub mod interaction_edit;
