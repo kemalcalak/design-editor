@@ -70,7 +70,6 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "home.mcp.port" => "Port {{port}}",
         "home.mcp.settings" => "MCP-Einstellungen",
         "home.mcp.start" => "Server starten",
-        "icon.catalogLoading" => "Symbolkatalog wird geladen…",
         "sceneTemplate.documentUnavailable" => "Das Dokument dieser Vorlage konnte nicht geladen werden. Bitte erneut versuchen.",
         "sceneTemplate.deleteFailed" => "Diese Vorlage konnte nicht gelöscht werden. Bitte erneut versuchen.",
         "sceneTemplate.item.soundingNavyDeck.title" => "Seekarte · Strategie-Deck",

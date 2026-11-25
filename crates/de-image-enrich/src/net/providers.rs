@@ -1,19 +1,12 @@
-//! Browser image-search route for the web daemon.
+//! Image search: Openverse → two-keyword retry → Wikimedia, thumbnails
+//! embedded as `data:` URLs. Used by the desktop image panel's Search
+//! popover (`de-host-desktop/src/image_panel_host.rs`) and the MCP
+//! `enrich_images` / `generate type:"stock"` paths. Openverse / Wikimedia
+//! are product-constant public hosts, so they dial with a plain client.
 //!
-//! `POST /api/ai/image/search` mirrors the desktop image panel's Search
-//! popover backend (`de-host-desktop/src/image_panel_host.rs`: Openverse →
-//! two-keyword retry → Wikimedia, thumbnails embedded as `data:` URLs) so
-//! the wasm shell can drain its `search_epoch` through the daemon instead
-//! of leaving the popover loading forever. Openverse credentials come from
-//! the request body (browser-held) or fall back to the daemon's persisted
-//! agent settings. Openverse / Wikimedia are product-constant public hosts
-//! — the same operator-trust tier as the desktop path — so they dial with
-//! a plain client; nothing in this route dials a browser-supplied URL.
-//!
-//! Unlike the desktop, fetched thumbnails are NOT re-encoded/down-scaled
-//! here: `image_downscale` needs skia and this crate must stay GL-free for
-//! `de-host-web-server`. The 4 MiB per-image cap still bounds what can be
-//! embedded.
+//! Fetched thumbnails are not re-encoded / down-scaled here (`image_downscale`
+//! needs skia, which this crate does not link); the 4 MiB per-image cap still
+//! bounds what can be embedded.
 
 mod catalog;
 mod download;
@@ -106,7 +99,7 @@ impl WebOpenverseCredentials {
     }
 }
 
-/// One search hit ready for the JSON reply / the desktop popover.
+/// One search hit ready for the desktop popover / MCP.
 pub struct WebImageSearchHit {
     pub id: String,
     pub thumb_data_url: String,
@@ -119,92 +112,8 @@ pub struct WebImageSearchOutcome {
     pub source: Option<&'static str>,
 }
 
-/// Why a `POST /api/ai/image/search` body was refused. Both variants answer
-/// HTTP 400; the enum exists so the route reports WHICH client mistake was
-/// made instead of matching on prose, and `Display` reproduces the exact
-/// sentence the JSON reply already carried.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum SearchRequestError {
-    /// The body is not JSON, or is JSON but not an object.
-    InvalidBody,
-    /// The body is a valid object but carries no non-blank `query`.
-    MissingQuery,
-}
-
-impl std::fmt::Display for SearchRequestError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            SearchRequestError::InvalidBody => f.write_str("invalid request body"),
-            SearchRequestError::MissingQuery => f.write_str("missing query"),
-        }
-    }
-}
-
-impl std::error::Error for SearchRequestError {}
-
-/// Parse the request body and snapshot the daemon-side credential fallback.
-/// Returns `(query, credentials)` or the reason for the 400 reply.
-pub fn parse_search_request(
-    body: &str,
-    state: &de_editor_core::EditorState,
-) -> Result<(String, Option<WebOpenverseCredentials>), SearchRequestError> {
-    let value: serde_json::Value =
-        serde_json::from_str(body).map_err(|_| SearchRequestError::InvalidBody)?;
-    let obj = value.as_object().ok_or(SearchRequestError::InvalidBody)?;
-    let query = obj
-        .get("query")
-        .and_then(serde_json::Value::as_str)
-        .map(str::trim)
-        .filter(|q| !q.is_empty())
-        .ok_or(SearchRequestError::MissingQuery)?;
-    // Browser-held credential wins; the daemon's persisted settings are the
-    // fallback (both are optional — anonymous Openverse works, rate-limited).
-    let request_credentials = obj
-        .get("openverse")
-        .and_then(serde_json::Value::as_object)
-        .and_then(|cred| {
-            WebOpenverseCredentials::from_parts(
-                cred.get("client_id")
-                    .and_then(serde_json::Value::as_str)
-                    .unwrap_or(""),
-                cred.get("client_secret")
-                    .and_then(serde_json::Value::as_str)
-                    .unwrap_or(""),
-            )
-        });
-    let credentials = request_credentials.or_else(|| {
-        let settings = &state.editor_ui.agent_settings;
-        WebOpenverseCredentials::from_parts(
-            &settings.openverse_client_id,
-            &settings.openverse_client_secret,
-        )
-    });
-    Ok((query.to_string(), credentials))
-}
-
-/// JSON reply body for a finished search.
-pub fn search_outcome_to_json(outcome: &WebImageSearchOutcome) -> String {
-    let results: Vec<serde_json::Value> = outcome
-        .results
-        .iter()
-        .map(|hit| {
-            serde_json::json!({
-                "id": hit.id,
-                "thumb_data_url": hit.thumb_data_url,
-                "attribution": hit.attribution,
-            })
-        })
-        .collect();
-    serde_json::json!({
-        "ok": true,
-        "results": results,
-        "source": outcome.source,
-    })
-    .to_string()
-}
-
-/// Run the full search ladder on the calling thread (the connection's own
-/// thread — the caller must NOT hold the state lock).
+/// Run the full search ladder on the calling thread (the caller must NOT
+/// hold the state lock).
 pub fn run_search_blocking(
     query: &str,
     credentials: Option<&WebOpenverseCredentials>,

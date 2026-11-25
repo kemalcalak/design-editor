@@ -517,8 +517,7 @@ fn contains_adjacent_words(words: &[String], first: &str, second: &str) -> bool 
         .any(|pair| pair[0] == first && pair[1] == second)
 }
 
-/// Simplify a verbose prompt into provider keywords. Shared by the desktop
-/// image pipeline and the web daemon route.
+/// Simplify a verbose prompt into provider keywords.
 pub fn simplify_search_query(prompt: &str) -> String {
     let mut normalized = String::with_capacity(prompt.len());
     for ch in prompt.to_lowercase().chars() {

@@ -1,7 +1,6 @@
 //! Whole-document REST sync wire helpers (TS `/api/mcp/document` parity).
-//! Shared by the desktop live server (`mcp_live`) and the headless web-canvas
-//! daemon (`web_canvas_server`) so both speak the exact same shape as the TS
-//! web app's `apps/web/server/api/mcp/document.post.ts`. Re-exported from
+//! Used by the desktop live server (`mcp_live`), speaking the same shape as
+//! the retired TS web app's `apps/web/server/api/mcp/document.post.ts`. Re-exported from
 //! `mcp_serve` so callers keep using `crate::mcp_serve::*`.
 
 use serde::de::{MapAccess, SeqAccess, Visitor};

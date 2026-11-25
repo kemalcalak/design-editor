@@ -70,7 +70,6 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "home.mcp.port" => "連接埠 {{port}}",
         "home.mcp.settings" => "MCP 設定",
         "home.mcp.start" => "啟動伺服器",
-        "icon.catalogLoading" => "圖示庫正在載入…",
         "sceneTemplate.documentUnavailable" => "該範本的文件載入失敗，請重試。",
         "sceneTemplate.deleteFailed" => "該範本刪除失敗，請重試。",
         "sceneTemplate.item.soundingNavyDeck.title" => "測深海圖 · 顧問策略檔",

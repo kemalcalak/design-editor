@@ -70,7 +70,6 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "home.mcp.port" => "Port {{port}}",
         "home.mcp.settings" => "Réglages MCP",
         "home.mcp.start" => "Démarrer le serveur",
-        "icon.catalogLoading" => "Chargement du catalogue d'icônes…",
         "sceneTemplate.documentUnavailable" => "Le document de ce modèle n'a pas pu être chargé. Réessayez.",
         "sceneTemplate.deleteFailed" => "Ce modèle n'a pas pu être supprimé. Réessayez.",
         "sceneTemplate.item.soundingNavyDeck.title" => "Carte de sondage · deck stratégie",

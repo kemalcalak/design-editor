@@ -70,7 +70,6 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "home.mcp.port" => "पोर्ट {{port}}",
         "home.mcp.settings" => "MCP सेटिंग्स",
         "home.mcp.start" => "सर्वर शुरू करें",
-        "icon.catalogLoading" => "आइकन कैटलॉग लोड हो रहा है…",
         "sceneTemplate.documentUnavailable" => "इस टेम्पलेट का दस्तावेज़ लोड नहीं हो सका। फिर से कोशिश करें।",
         "sceneTemplate.deleteFailed" => "उस टेम्पलेट को हटाया नहीं जा सका। फिर से कोशिश करें।",
         "sceneTemplate.item.soundingNavyDeck.title" => "गहराई मानचित्र · रणनीति प्रस्तुति",

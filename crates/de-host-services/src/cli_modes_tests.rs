@@ -41,3 +41,12 @@ fn an_unknown_mode_is_left_to_the_caller() {
 fn a_mode_failure_comes_back_from_the_mode_thread() {
     assert_eq!(run_cli_mode("prog", "--mcp", std::iter::empty()), Some(2));
 }
+
+#[test]
+fn the_removed_serve_web_flag_is_a_usage_error() {
+    // Must not fall through to the desktop GUI (#401).
+    assert_eq!(
+        run_cli_mode("prog", "--serve-web", ["3100".to_string()].into_iter()),
+        Some(2)
+    );
+}

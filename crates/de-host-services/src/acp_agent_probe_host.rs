@@ -122,8 +122,8 @@ impl AcpAgentConnectJob {
 }
 
 pub fn probe_acp_agent_config(config: de_acp::AcpAgentConfig) -> AcpAgentProbeOutcome {
-    // Reached from the probe worker thread today and from tokio workers via
-    // the web-canvas server, so bridge through the runtime-aware helper.
+    // May be reached from a tokio worker, so bridge through the
+    // runtime-aware helper.
     crate::chat_runtime::block_on_anywhere(async move {
         match de_acp::connect_acp_agent(&config).await {
             Ok(mut conn) => {

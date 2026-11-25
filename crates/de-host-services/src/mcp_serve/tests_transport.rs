@@ -482,46 +482,6 @@ fn http_request_still_rejects_an_over_cap_content_length() {
 }
 
 #[test]
-fn credential_settings_request_rejects_over_256_kib_before_reading_body() {
-    let request = concat!(
-        "POST /api/settings/credentials HTTP/1.1\r\n",
-        "Host: x\r\n",
-        "Content-Length: 262145\r\n",
-        "\r\n"
-    );
-    let mut cur = std::io::Cursor::new(request.as_bytes().to_vec());
-
-    let err = read_http_request(&mut cur).expect_err("oversized credential body must be rejected");
-
-    assert!(matches!(err, McpServeError::Protocol(_)), "{err:?}");
-    assert!(
-        err.to_string()
-            .contains("credential settings body exceeds 256 KiB"),
-        "{err}"
-    );
-}
-
-#[test]
-fn model_discovery_request_rejects_over_256_kib_before_reading_body() {
-    let request = concat!(
-        "POST /api/ai/models/discover HTTP/1.1\r\n",
-        "Host: x\r\n",
-        "Content-Length: 262145\r\n",
-        "\r\n"
-    );
-    let mut cur = std::io::Cursor::new(request.as_bytes().to_vec());
-
-    let err = read_http_request(&mut cur).expect_err("oversized discovery body must be rejected");
-
-    assert!(matches!(err, McpServeError::Protocol(_)), "{err:?}");
-    assert!(
-        err.to_string()
-            .contains("model discovery body exceeds 256 KiB"),
-        "{err}"
-    );
-}
-
-#[test]
 fn design_md_evidence_requires_one_decimal_content_length() {
     for (headers, expected_status) in [
         ("Host: x\r\n", "411 Length Required"),

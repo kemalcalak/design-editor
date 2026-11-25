@@ -4,10 +4,7 @@
 //! `templates/step0/_generators/scene_preview_cards.py`; see that script for
 //! why a deck is tiled into a grid rather than fitted as a strip.
 //!
-//! ~2.7 MiB of JPEG. Embedded on desktop, fetched from the daemon on `wasm32`
-//! for the same reason the Prompt Center's are — see
-//! `prompt_center_previews` for the full rationale and
-//! `de_editor_core::web_assets` for the loader.
+//! ~2.7 MiB of JPEG, embedded like the Prompt Center's.
 
 /// Cache ids are hand-assigned and must stay stable: the renderer keys its
 /// decoded-raster cache on them, so reusing an id for different bytes would
@@ -23,49 +20,23 @@ const CACHE_ID_BASE: u64 = 10_000;
 /// from the other fixed UI image namespaces.
 pub(crate) const USER_PREVIEW_CACHE_ID_BASE: u64 = 0x5554_504c_0000_0000;
 
-// Test-only: `concat!` cannot interpolate a const, so the route literals in
-// the macro below spell the directory out. This is the value the route
-// tests rebuild the expected path from, which is what keeps the spelled-out
-// literal and the staged bundle layout (`tools/stage-web-assets.sh`) from
-// drifting into a silent per-asset 404.
-#[cfg(test)]
-const PREVIEW_DIR: &str = "scene_template_previews";
-
-/// One card's preview, resolved for the current platform.
+/// One card's preview.
 pub(crate) struct TemplatePreview {
-    /// Stable renderer cache id, known before any bytes are.
+    /// Stable renderer cache id.
     pub image_id: u64,
-    /// `None` on wasm until the fetch lands; always `Some` on native.
-    pub bytes: Option<&'static [u8]>,
-    /// Daemon route to fetch. Unused on native.
-    pub route: &'static str,
+    pub bytes: &'static [u8],
 }
 
 macro_rules! preview {
     ($offset:expr, $name:literal) => {{
-        const ROUTE: &str = concat!(
-            "/pkg/assets/",
-            "scene_template_previews",
-            "/",
-            $name,
-            ".jpg"
-        );
-        #[cfg(not(target_arch = "wasm32"))]
-        let bytes = Some(
-            include_bytes!(concat!(
+        Some(TemplatePreview {
+            image_id: CACHE_ID_BASE + $offset,
+            bytes: include_bytes!(concat!(
                 env!("CARGO_MANIFEST_DIR"),
                 "/assets/scene_template_previews/",
                 $name,
                 ".jpg"
-            ))
-            .as_slice(),
-        );
-        #[cfg(target_arch = "wasm32")]
-        let bytes = de_editor_core::web_assets::installed_bytes(ROUTE);
-        Some(TemplatePreview {
-            image_id: CACHE_ID_BASE + $offset,
-            bytes,
-            route: ROUTE,
+            )),
         })
     }};
 }
@@ -74,9 +45,7 @@ macro_rules! preview {
 ///
 /// Every shipped template has one — `scene_template_catalog` rejects a
 /// catalogue entry without a document, and the preview baker is driven by the
-/// same id list — so `None` means an unknown id, not a missing asset. On web a
-/// `Some` with `bytes: None` means "not fetched yet", which is not the same
-/// answer.
+/// same id list — so `None` means an unknown id, not a missing asset.
 pub(crate) fn scene_template_preview(template_id: &str) -> Option<TemplatePreview> {
     match template_id {
         "screenshot-tutorial" => preview!(1, "screenshot-tutorial"),
@@ -175,7 +144,7 @@ mod tests {
         for template in scene_template_catalogue() {
             let preview = scene_template_preview(&template.id)
                 .unwrap_or_else(|| panic!("{} has no card preview", template.id));
-            let bytes = preview.bytes.expect("native embeds every preview");
+            let bytes = preview.bytes;
             assert!(!bytes.is_empty(), "{} preview is empty", template.id);
             assert!(
                 ids.insert(preview.image_id),
@@ -205,32 +174,8 @@ mod tests {
     #[test]
     fn previews_are_jpeg_so_the_raster_decoder_accepts_them() {
         for template in scene_template_catalogue() {
-            let bytes = scene_template_preview(&template.id)
-                .expect("preview")
-                .bytes
-                .expect("native embeds every preview");
+            let bytes = scene_template_preview(&template.id).expect("preview").bytes;
             assert_eq!(&bytes[..2], &[0xFF, 0xD8], "{} is not a JPEG", template.id);
-        }
-    }
-
-    #[test]
-    fn every_route_is_distinct_and_uses_the_shared_prefix() {
-        // The route is the web host's identity for the asset, exactly as the
-        // cache id is the renderer's. `concat!` cannot interpolate the prefix
-        // constant, so this is what keeps the spelled-out literal honest.
-        let mut routes = HashSet::new();
-        for template in scene_template_catalogue() {
-            let preview = scene_template_preview(&template.id).expect("preview");
-            assert_eq!(
-                preview.route,
-                format!(
-                    "{}{}/{}.jpg",
-                    de_editor_core::web_assets::WEB_ASSET_ROUTE_PREFIX,
-                    PREVIEW_DIR,
-                    template.id
-                )
-            );
-            assert!(routes.insert(preview.route), "duplicate {}", preview.route);
         }
     }
 }

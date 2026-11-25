@@ -493,7 +493,7 @@ fn an_import_loads_the_fonts_its_text_uses_and_reports_them() {
     assert_eq!(result["fontsLoaded"], "Inter");
     assert!(!result.contains_key("fontsMissing"), "{result:?}");
 
-    // Without a font host (the web daemon) nothing loads, and it says so.
+    // Without a font host nothing loads, and it says so.
     let (without, _) = tool();
     let ToolOutcome::OkWithCommand(result, _) = call(&without, &[("action", "import-to-canvas")])
     else {

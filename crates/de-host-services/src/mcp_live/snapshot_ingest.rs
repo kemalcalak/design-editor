@@ -100,8 +100,6 @@ pub(super) fn is_snapshot_ingest_route(method: &str, path: &str) -> bool {
 }
 
 /// `application/json` (optionally with parameters, e.g. `; charset=utf-8`).
-/// Mirrors the web daemon's `origin_guard::content_type_is_json`, which is
-/// private to that module.
 fn content_type_is_json(value: Option<&str>) -> bool {
     value.is_some_and(|value| {
         value

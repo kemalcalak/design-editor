@@ -80,9 +80,8 @@ role = "Editor"
 # render-backend / layout scene paths resolve through de-editor-ui.
 de-editor-ui = { path = "../de-editor-ui" }
 de-host-native = { path = "../de-host-native", features = ["gl-host"] }
-# Phase 2: the headless daemon crate. The `--serve-web` closure migrates here
-# over Phases 2-5; de-host-desktop's serve-web dispatch + GUI residuals call into
-# it via `de_host_services::*`.
+# The headless services (MCP servers, AI chat, export, persistence); the GUI
+# residuals call into it via `de_host_services::*`.
 de-host-services = { path = "../de-host-services" }
 # Headless-Chrome snapshots for live browser nodes (#20).
 de-browser-render = { path = "../de-browser-render" }

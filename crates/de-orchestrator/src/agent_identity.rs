@@ -59,9 +59,9 @@ pub fn assign_agent_identities_seeded(count: usize, seed: u64) -> Vec<AgentIdent
 /// identities are drawn from the pool, skipping any colour already used so
 /// every group's badge stays visually distinct.
 ///
-/// This is the web-streaming half of the dual-cursor-identity fix
-/// (2026-07-17): `web_chat_standard.rs` confirms + announces an identity to
-/// the client BEFORE `Orchestrator::run()` even starts (the SSE transcript
+/// This is the pre-confirmed half of the dual-cursor-identity fix
+/// (2026-07-17): a caller may confirm + announce an identity to the client
+/// BEFORE `Orchestrator::run()` even starts (the SSE transcript
 /// needs a persona immediately, well before groups/concurrency is known).
 /// If the run turns out to be genuinely concurrent, minting a FRESH set of
 /// identities (as `assign_agent_identities` does) would silently overwrite

@@ -211,36 +211,3 @@ fn a_multi_frame_template_positions_every_frame() {
         }
     }
 }
-
-#[test]
-fn every_shipped_template_has_a_document_route_under_the_shared_prefix() {
-    // The route is how the browser identifies a template document, and it is
-    // what the catalogue's load-time check now asks about — on wasm the bytes
-    // are not in the binary, so checking for them there would reject the whole
-    // catalogue at start-up.
-    use std::collections::HashSet;
-
-    use crate::scene_template_catalog::scene_template_document_route;
-
-    let mut routes = HashSet::new();
-    for template in scene_template_catalogue() {
-        let route = scene_template_document_route(&template.id)
-            .unwrap_or_else(|| panic!("{} has no document route", template.id));
-        assert_eq!(
-            route,
-            format!(
-                "{}scene_templates/{}.de",
-                crate::web_assets::WEB_ASSET_ROUTE_PREFIX,
-                template.id
-            ),
-            "{} route must match the staged bundle layout",
-            template.id
-        );
-        assert!(routes.insert(route), "{} duplicates a route", template.id);
-    }
-    assert!(
-        scene_template_document_route("no-such-template").is_none(),
-        "an unknown id has no route, which is how a caller tells it apart from \
-         a shipped template whose document has not been fetched yet"
-    );
-}

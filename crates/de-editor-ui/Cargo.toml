@@ -43,22 +43,16 @@ base64 = "0.22"
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
 # Inflate the gzipped extended icon catalogs (Material Symbols + phosphor, #4).
-# Pure Rust. Optional on wasm (only the fetching `runtime-icon-catalog` build
-# needs it); native always embeds and inflates them, see the target table.
-flate2 = { version = "1", default-features = false, features = ["rust_backend"], optional = true }
+# Pure Rust, so it stays wasm32-clean.
+flate2 = { version = "1", default-features = false, features = ["rust_backend"] }
 
 # Rasterize SVG image sources into PNG at the byte-cache seam — skia
 # decodes PNG/JPEG/GIF/WebP, not SVG, so every captured-page `<svg>`
-# fallback and remote `.svg` painted as a placeholder. NATIVE ONLY:
-# measured +0.9 MiB gzip on the wasm bundle (over the 6 MiB ceiling),
-# and the browser host doesn't need it — its CanvasKit bridge falls
-# back to the browser's own SVG decoder at decode time. Minimal feature
-# set on purpose: no `text` (needs fontdb + system fonts) and no
+# fallback and remote `.svg` painted as a placeholder. Native only, so the
+# crate stays wasm32-clean. Minimal feature set on purpose: no `text` (needs fontdb + system fonts) and no
 # `raster-images` (not worth carrying the `image` crate).
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 resvg = { version = "0.48", default-features = false }
-# Native always embeds + inflates the extended icon catalogs (see `flate2` above).
-flate2 = { version = "1", default-features = false, features = ["rust_backend"] }
 
 [dev-dependencies]
 # Enable jian-scene's find-visit instrumentation so the canvas-viewport
@@ -67,21 +61,3 @@ jian-scene = { path = "../../vendor/jian/crates/jian-scene", features = ["test-s
 
 [features]
 default = []
-# Leave the core (lucide + feather) icon catalog OUT of the binary and resolve
-# it at run time through `set_core_catalog` instead.
-#
-# Opt-in, and only `de-host-web` opts in: it has a daemon to fetch the catalog
-# from (`/pkg/assets/iconify-catalog-core.json`) and a frame pump to install it
-# on. Every other consumer (the desktop hosts) keeps the embed, because for
-# them "not fetched yet" would simply mean "never".
-# Also turns on the gzip inflate for the extended (Material Symbols / phosphor)
-# catalogs, which this build fetches instead of embedding.
-runtime-icon-catalog = ["dep:flate2"]
-# Forward the browser host's opt-in locale split to de-i18n. The source gate is
-# feature AND wasm32, so Cargo feature unification cannot strip native tables.
-runtime-locale-catalog = ["de-i18n/runtime-locale-catalog"]
-# Forward to de-ai-skills: embed only the style-guides subtree. Opted
-# into by de-host-web alongside runtime-icon-catalog and for the same
-# reason — the daemon owns prompt composition, so the phase corpus is
-# dead weight in the browser bundle.
-slim-corpus = ["de-ai-skills/slim-corpus"]

@@ -39,8 +39,8 @@ from `chrome://extensions`.
 - The live MCP endpoint exposes two extension-scoped REST capabilities. Snapshot
   import uses `POST /api/import/web-snapshot` (insert-only and open to a
   well-formed `chrome-extension://` origin unless explicitly pinned), with a
-  plain `/mcp` `tools/call import_web_snapshot` fallback for unmanaged
-  `--serve-web`. Intelligent `design.md` extraction uses a stricter asynchronous
+  plain `/mcp` `tools/call import_web_snapshot` fallback for the unmanaged
+  headless `--mcp-http` server. Intelligent `design.md` extraction uses a stricter asynchronous
   `POST /api/generate/design-md` + GET/DELETE job flow: it accepts only bounded
   style evidence and queues model work only for an extension id explicitly
   paired through `DESIGN_EDITOR_EXTENSION_ALLOWED_IDS` and a cancellable,

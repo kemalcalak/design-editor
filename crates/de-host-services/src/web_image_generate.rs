@@ -1,26 +1,16 @@
-//! Browser image-generation route for the web daemon.
-//!
-//! `POST /api/ai/image/generate` mirrors the desktop Generate popover
-//! backend (`de-host-desktop/src/image_generate_host.rs`: OpenAI /
+//! Image generation against the user's provider (OpenAI /
 //! OpenAI-compatible, Gemini inline-image, Replicate / Atlas prediction
-//! polling).
-//! The generation profile comes from the request body (browser-held keys)
-//! or falls back to the daemon's persisted agent settings.
+//! polling), used by the MCP `generate` jobs (`generate_jobs`) and the
+//! desktop Generate popover (`de-host-desktop/src/image_generate_host.rs`).
 //!
-//! Endpoint trust follows the chat route's rules: provider DEFAULT hosts
-//! are product constants and dial with a plain client, but any custom
-//! `base_url` reaching this browser-facing route is screened through
-//! `web_credentials` + `provider_dial` (reserved-address rejection +
-//! connect-time pinning) unless explicitly allowlisted. The provider's
-//! RESULT url is screened the same way before download — a custom
-//! provider's response is browser-controlled data and must not become an
-//! SSRF hop through the daemon.
+//! The profile is the user's own saved setting, so its endpoint (default or
+//! custom `base_url`) dials with a plain client, the desktop popover's
+//! trust tier.
 
 use std::time::Duration;
 
-use de_editor_core::agent_settings::{ImageGenProfile, ImageGenProvider, ImageTestStatus};
+use de_editor_core::agent_settings::{ImageGenProfile, ImageGenProvider};
 
-use crate::provider_dial::EndpointDialPolicy;
 use crate::web_image_search::fetch_image_data_url;
 
 #[path = "web_image_generate_error.rs"]
@@ -58,137 +48,13 @@ pub(crate) struct WebImageGenerateRequest {
     pub(crate) width: Option<f64>,
     pub(crate) height: Option<f64>,
     pub(crate) profile: ImageGenProfile,
-    /// Whether `profile` carries a custom endpoint that must be screened.
-    pub(crate) custom_endpoint: bool,
-}
-
-/// Parse the request body, taking the browser-supplied profile when present
-/// and falling back to the daemon's persisted active profile.
-pub(crate) fn parse_generate_request(
-    body: &str,
-    state: &de_editor_core::EditorState,
-) -> Result<WebImageGenerateRequest, ImageGenerateError> {
-    let value: serde_json::Value =
-        serde_json::from_str(body).map_err(|_| ImageGenerateError::InvalidRequestBody)?;
-    let obj = value
-        .as_object()
-        .ok_or(ImageGenerateError::InvalidRequestBody)?;
-    let prompt = obj
-        .get("prompt")
-        .and_then(serde_json::Value::as_str)
-        .map(str::trim)
-        .filter(|p| !p.is_empty())
-        .ok_or(ImageGenerateError::MissingPrompt)?;
-    let width = obj.get("width").and_then(serde_json::Value::as_f64);
-    let height = obj.get("height").and_then(serde_json::Value::as_f64);
-    let profile = match obj.get("profile").and_then(serde_json::Value::as_object) {
-        Some(profile) => parse_profile(profile)?,
-        None => daemon_active_profile(state).ok_or(ImageGenerateError::NotConfigured)?,
-    };
-    let custom_endpoint = profile
-        .base_url
-        .as_deref()
-        .is_some_and(|base| !base.trim().is_empty());
-    Ok(WebImageGenerateRequest {
-        prompt: prompt.to_string(),
-        width,
-        height,
-        profile,
-        custom_endpoint,
-    })
-}
-
-fn parse_profile(
-    profile: &serde_json::Map<String, serde_json::Value>,
-) -> Result<ImageGenProfile, ImageGenerateError> {
-    let provider = match profile
-        .get("provider")
-        .and_then(serde_json::Value::as_str)
-        .unwrap_or("")
-    {
-        "openai" => ImageGenProvider::OpenAi,
-        "gemini" => ImageGenProvider::Gemini,
-        "replicate" => ImageGenProvider::Replicate,
-        "atlas" => ImageGenProvider::Atlas,
-        "custom" => ImageGenProvider::Custom,
-        _ => return Err(ImageGenerateError::UnknownProvider),
-    };
-    let api_key = profile
-        .get("api_key")
-        .and_then(serde_json::Value::as_str)
-        .map(str::trim)
-        .filter(|k| !k.is_empty())
-        .ok_or(ImageGenerateError::MissingApiKey)?;
-    let model = profile
-        .get("model")
-        .and_then(serde_json::Value::as_str)
-        .map(str::trim)
-        .filter(|m| !m.is_empty())
-        .ok_or(ImageGenerateError::MissingModel)?;
-    let base_url = profile
-        .get("base_url")
-        .and_then(serde_json::Value::as_str)
-        .map(str::trim)
-        .filter(|b| !b.is_empty())
-        .map(str::to_string);
-    Ok(ImageGenProfile {
-        id: String::new(),
-        name: String::new(),
-        provider,
-        api_key: api_key.to_string(),
-        model: model.to_string(),
-        base_url,
-        test_status: ImageTestStatus::Idle,
-    })
-}
-
-/// The daemon's persisted active profile (desktop `active_image_gen_profile`).
-fn daemon_active_profile(state: &de_editor_core::EditorState) -> Option<ImageGenProfile> {
-    let settings = &state.editor_ui.agent_settings;
-    settings
-        .image_gen_profiles
-        .iter()
-        .find(|p| Some(&p.id) == settings.active_image_gen_profile_id.as_ref())
-        .or_else(|| settings.image_gen_profiles.first())
-        .filter(|p| !p.api_key.trim().is_empty())
-        .cloned()
-}
-
-/// Run one generation on the calling thread (the connection's own thread —
-/// the caller must NOT hold the state lock). Returns the final `data:` URL.
-pub(crate) fn run_generate_blocking(
-    request: &WebImageGenerateRequest,
-) -> Result<String, ImageGenerateError> {
-    // Same reasoning as `web_image_search::run_search_blocking`: a private
-    // current-thread runtime panics when this sync helper is called from a
-    // tokio worker, so the generation future rides the shared runtime.
-    crate::chat_runtime::block_on_anywhere(run_generate(request))
 }
 
 pub(crate) async fn run_generate(
     request: &WebImageGenerateRequest,
 ) -> Result<String, ImageGenerateError> {
     let profile = &request.profile;
-    // Screen browser-supplied custom endpoints before any dial; default
-    // provider hosts are product constants and stay trusted.
-    let endpoint_policy = if request.custom_endpoint {
-        let base = profile.base_url.as_deref().unwrap_or_default();
-        // The screening REASON is intentionally discarded (`|_|`) — a
-        // browser-facing route must not become a probe oracle.
-        crate::web_credentials::validate_web_provider_base_url(base)
-            .map_err(|_| ImageGenerateError::EndpointNotAllowed)?;
-        let allowlist = std::env::var(crate::web_credentials::WEB_AI_ENDPOINT_ALLOWLIST_ENV).ok();
-        crate::provider_dial::web_dial_policy_for(base, allowlist.as_deref())
-    } else {
-        EndpointDialPolicy::Trusted
-    };
-    let client = match endpoint_policy {
-        EndpointDialPolicy::Trusted => generate_client()?,
-        EndpointDialPolicy::PublicOnly => {
-            let base = profile.base_url.as_deref().unwrap_or_default();
-            crate::provider_dial::client_for(endpoint_policy, base).await?
-        }
-    };
+    let client = generate_client()?;
     let url = match profile.provider {
         ImageGenProvider::OpenAi | ImageGenProvider::Custom => {
             generate_openai(
@@ -238,21 +104,8 @@ pub(crate) async fn run_generate(
         return Ok(url);
     }
     // Remote URL → embed as a data URL so the preview paints and the applied
-    // src stays renderable offline. Any CUSTOM provider's result URL is
-    // browser/endpoint-controlled data and is screened independently — an
-    // allowlist entry trusts the configured endpoint, not every URL its
-    // responses point at (the download host can be allowlisted separately).
-    // Default provider hosts keep the trusted client for their own CDNs.
-    let download_client = if request.custom_endpoint {
-        let allowlist = std::env::var(crate::web_credentials::WEB_AI_ENDPOINT_ALLOWLIST_ENV).ok();
-        let policy = crate::provider_dial::web_dial_policy_for(&url, allowlist.as_deref());
-        crate::provider_dial::client_for(policy, &url)
-            .await
-            .map_err(|_| ImageGenerateError::ResultUrlNotAllowed)?
-    } else {
-        client.clone()
-    };
-    fetch_image_data_url(&download_client, &url)
+    // src stays renderable offline.
+    fetch_image_data_url(&client, &url)
         .await
         .ok_or(ImageGenerateError::DownloadFailed)
 }
@@ -269,24 +122,6 @@ fn generate_client() -> Result<reqwest::Client, ImageGenerateError> {
         .map_err(|e| ImageGenerateError::ClientBuild {
             message: e.to_string(),
         })
-}
-
-/// Cap + JSON-wrap an error for the reply body.
-///
-/// Takes anything `Display` rather than `&str` so the route can hand it an
-/// [`ImageGenerateError`] directly — the rendered sentence is identical
-/// either way, and the truncation still applies to the finished text.
-pub(crate) fn generate_error_json(message: impl std::fmt::Display) -> String {
-    let message: String = message
-        .to_string()
-        .chars()
-        .take(ERROR_MESSAGE_CAP)
-        .collect();
-    serde_json::json!({ "ok": false, "error": message }).to_string()
-}
-
-pub(crate) fn generate_ok_json(url: &str) -> String {
-    serde_json::json!({ "ok": true, "url": url }).to_string()
 }
 
 /// TS `mapToOpenAISize`.
@@ -386,8 +221,7 @@ pub(crate) fn provider_error(provider: &str, status: reqwest::StatusCode, body: 
 }
 
 /// OpenAI / OpenAI-compatible `images/generations` request. Shared verbatim
-/// by the desktop Generate popover (its own client/UA) and the web daemon
-/// route.
+/// by the desktop Generate popover (its own client/UA) and the MCP jobs.
 pub async fn generate_openai(
     client: &reqwest::Client,
     prompt: &str,
@@ -649,85 +483,6 @@ pub async fn generate_replicate(
 mod tests {
     use super::*;
 
-    fn state_with_profile(id: &str, api_key: &str) -> de_editor_core::EditorState {
-        let mut state = de_editor_core::EditorState::default();
-        state.editor_ui.agent_settings.image_gen_profiles = vec![ImageGenProfile {
-            id: id.to_string(),
-            name: "p".into(),
-            provider: ImageGenProvider::OpenAi,
-            api_key: api_key.to_string(),
-            model: "gpt-image-1".into(),
-            base_url: None,
-            test_status: ImageTestStatus::Idle,
-        }];
-        state
-    }
-
-    #[test]
-    fn parse_generate_request_prefers_the_request_profile() {
-        let state = state_with_profile("persisted", "sk-persisted");
-        let req = parse_generate_request(
-            r#"{"prompt":"a cat","width":1600,"height":900,
-                "profile":{"provider":"gemini","model":"gemini-img","api_key":"sk-req"}}"#,
-            &state,
-        )
-        .expect("parses");
-        assert_eq!(req.prompt, "a cat");
-        assert_eq!(req.width, Some(1600.0));
-        assert_eq!(req.profile.provider, ImageGenProvider::Gemini);
-        assert_eq!(req.profile.api_key, "sk-req");
-        assert!(!req.custom_endpoint);
-    }
-
-    #[test]
-    fn parse_generate_request_accepts_atlas_profiles() {
-        let state = de_editor_core::EditorState::default();
-        let req = parse_generate_request(
-            r#"{"prompt":"a cat","profile":{"provider":"atlas","model":"google/nano-banana-2-lite/text-to-image","api_key":"test-key"}}"#,
-            &state,
-        )
-        .expect("parses");
-        assert_eq!(req.profile.provider, ImageGenProvider::Atlas);
-        assert!(!req.custom_endpoint);
-    }
-
-    #[test]
-    fn parse_generate_request_falls_back_to_the_daemon_profile() {
-        let state = state_with_profile("persisted", "sk-persisted");
-        let req = parse_generate_request(r#"{"prompt":"a cat"}"#, &state).expect("parses");
-        assert_eq!(req.profile.api_key, "sk-persisted");
-        // No configured profile anywhere → explicit error.
-        let empty = de_editor_core::EditorState::default();
-        let err = parse_generate_request(r#"{"prompt":"a cat"}"#, &empty)
-            .err()
-            .expect("unconfigured daemon must error")
-            .to_string();
-        assert_eq!(err, "image generation not configured");
-    }
-
-    #[test]
-    fn parse_generate_request_flags_custom_endpoints_and_rejects_bad_input() {
-        let state = de_editor_core::EditorState::default();
-        let req = parse_generate_request(
-            r#"{"prompt":"x","profile":{"provider":"custom","model":"m","api_key":"k",
-                "base_url":"https://images.example.com"}}"#,
-            &state,
-        )
-        .expect("parses");
-        assert!(req.custom_endpoint);
-        assert!(parse_generate_request(r#"{"prompt":""}"#, &state).is_err());
-        assert!(parse_generate_request(
-            r#"{"prompt":"x","profile":{"provider":"nope","model":"m","api_key":"k"}}"#,
-            &state
-        )
-        .is_err());
-        assert!(parse_generate_request(
-            r#"{"prompt":"x","profile":{"provider":"openai","model":"m","api_key":""}}"#,
-            &state
-        )
-        .is_err());
-    }
-
     #[test]
     fn size_mappers_mirror_ts() {
         assert_eq!(openai_size(None, None), "1024x1024");
@@ -758,16 +513,5 @@ mod tests {
         );
         assert!(provider_error("Gemini", status, "<html>boom</html>")
             .starts_with("Gemini returned 502"));
-    }
-
-    #[test]
-    fn error_json_truncates_to_the_ts_cap() {
-        let long = "x".repeat(300);
-        let json: serde_json::Value =
-            serde_json::from_str(&generate_error_json(&long)).expect("valid json");
-        assert_eq!(json["error"].as_str().unwrap().len(), ERROR_MESSAGE_CAP);
-        let ok: serde_json::Value =
-            serde_json::from_str(&generate_ok_json("data:image/png;base64,AA==")).unwrap();
-        assert_eq!(ok["ok"], true);
     }
 }

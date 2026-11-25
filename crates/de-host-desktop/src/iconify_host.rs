@@ -10,7 +10,6 @@ use serde::Deserialize;
 use crate::asset_fetch_error::AssetFetchError;
 use crate::DesktopApp;
 
-/// Shared with the web fetch path (`de-host-web/src/iconify_web.rs`).
 const ICONIFY_API: &str = de_editor_core::icon_picker_state::ICONIFY_API_BASE;
 
 pub struct IconifyJob {

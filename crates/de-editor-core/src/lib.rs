@@ -172,7 +172,6 @@ pub mod screen_marker_edit;
 mod script_edit;
 pub mod script_inputs;
 pub mod script_regen;
-pub mod script_wire;
 pub mod selection;
 pub mod selection_flip;
 pub mod selection_resolve;
@@ -196,7 +195,6 @@ pub mod transition_edit;
 pub mod user_scene_templates;
 pub mod version_order;
 pub mod video_node_props;
-pub mod web_assets;
 
 /// Tight source-coordinate bounds for an SVG path-data string.
 pub fn svg_path_data_bounds(d: &str) -> Option<(f32, f32, f32, f32)> {
@@ -229,7 +227,6 @@ pub mod variables_panel_state;
 pub mod variables_resolve;
 pub mod viewport;
 pub mod walkers;
-pub mod web_sync;
 pub mod write_scope;
 
 #[cfg(test)]
@@ -457,4 +454,3 @@ pub use uikit_io::KitIoRequest;
 pub use variables_panel_state::VariablesPanelButton;
 pub use viewport::Viewport;
 pub use walkers::ReorderDirection;
-pub use web_sync::WebSyncError;

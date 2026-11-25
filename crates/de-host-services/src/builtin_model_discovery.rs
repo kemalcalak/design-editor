@@ -2,8 +2,9 @@
 //!
 //! Authentication, provider URL construction, response bounds, and catalog
 //! parsing live in `de-builtin-model-discovery` so every host uses the same
-//! implementation. This wrapper adds the web daemon's connect-time DNS
-//! screening for browser-originated credentials.
+//! implementation. This wrapper adds the host's dial policy: `Trusted` for
+//! the user's own saved credentials, `PublicOnly` for connect-time DNS
+//! screening of an endpoint the host does not trust.
 
 use de_editor_core::BuiltinAgentConfig;
 
