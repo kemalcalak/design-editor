@@ -14,9 +14,9 @@ pub(super) fn after_save(path: &Path) {
 /// its `response`. `None` for any other tool or a failed save.
 pub(crate) fn saved_document_path(line: &str, response: &str) -> Option<PathBuf> {
     // Every live request passes through here; skip the parse for the rest.
-    if !line.contains("save_document")
-        || de_mcp::parse_tool_call(line.trim())?.tool != "save_document"
-    {
+    // "save" also catches pen.dev's `save` (#392), which parses as
+    // `save_document`.
+    if !line.contains("save") || de_mcp::parse_tool_call(line.trim())?.tool != "save_document" {
         return None;
     }
     saved_path_from_reply(response)
@@ -61,6 +61,11 @@ mod tests {
         let ok = reply(r#"{"ok":"true","filePath":"/tmp/a.de"}"#);
         assert_eq!(
             saved_document_path(&call("save_document"), &ok),
+            Some(PathBuf::from("/tmp/a.de"))
+        );
+        // pen.dev's `save` is the same tool (#392).
+        assert_eq!(
+            saved_document_path(&call("save"), &ok),
             Some(PathBuf::from("/tmp/a.de"))
         );
         assert_eq!(saved_document_path(&call("get_node"), &ok), None);

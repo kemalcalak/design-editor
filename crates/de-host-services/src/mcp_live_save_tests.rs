@@ -192,3 +192,54 @@ fn a_copy_of_another_file_reports_no_live_revision() {
     );
     let _ = std::fs::remove_dir_all(dir);
 }
+
+/// pen.dev's `save` with no arguments (#392).
+const PEN_DEV_SAVE: &str =
+    r#"{"jsonrpc":"2.0","id":9,"method":"tools/call","params":{"name":"save","arguments":{}}}"#;
+
+#[test]
+fn pen_devs_pathless_save_writes_the_bound_file_and_binds_it() {
+    use super::admission::tests::{drive_with, request, PORT};
+    let dir = scratch_dir("pen-dev");
+    let target = dir.join("bound.de");
+    let mut ui_side = LiveUiSide::default();
+    ui_side.document_path(Some(&target));
+    let mut state = EditorState::new();
+    state.mark_document_changed();
+    let (generation, revision) = (state.document_generation(), state.document_revision());
+    let (req_tx, req_rx) = mpsc::channel();
+    let saves = reported_saves(req_rx, 4, state);
+
+    let headers = format!("Host: 127.0.0.1:{PORT}\r\n");
+    let response = drive_with(
+        &request("/mcp", &headers, PEN_DEV_SAVE),
+        &req_tx,
+        ui_side.shared(),
+    );
+    drop(req_tx);
+
+    assert!(response.contains(r#"\"ok\":\"true\""#), "{response}");
+    assert_eq!(
+        saves.join().expect("responder"),
+        vec![McpSavedDocument {
+            path: target.clone(),
+            saved_from: Some(McpSavedRevision {
+                document_epoch: 4,
+                generation,
+                revision,
+            }),
+        }]
+    );
+    assert!(target.exists());
+    let _ = std::fs::remove_dir_all(dir);
+}
+
+#[test]
+fn pen_devs_pathless_save_of_an_untitled_document_is_refused() {
+    use super::admission::tests::{drive, request, PORT};
+    let (req_tx, _req_rx) = mpsc::channel();
+    let headers = format!("Host: 127.0.0.1:{PORT}\r\n");
+    let response = drive(&request("/mcp", &headers, PEN_DEV_SAVE), &req_tx);
+    assert!(response.contains("no file yet"), "{response}");
+    assert!(response.contains(r#""isError":true"#), "{response}");
+}

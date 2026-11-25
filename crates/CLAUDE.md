@@ -657,6 +657,21 @@ tools are what remains of the old TS element ecosystem — the ~188
 the layered element manifest (`emit_elements`) are retired; callers
 that need an arbitrary tree reach for `batch_design` instead.
 
+**pen.dev tool names (#392).** `tools/list` closes with
+`de_mcp::pen_dev_aliases::PEN_DEV_ALIAS_SCHEMAS` (six entries described
+"pen.dev-compatible name for …"; kept out of `TOOL_SCHEMAS` so the in-app
+agent never sees them). `parse_tool_call` resolves `read_skill` /
+`get_app_state` / `get_style` / `save` / `import_library` to our tools and
+renames pen.dev's arguments (`execute { input }`, `remove_library { id }`),
+dropping a `.pen` `filePath`; `export_html` is a tool of its own
+(`export_html_tool.rs`). A pathless `save` gets the bound file from the
+transport (`mcp_serve/pen_dev_save.rs`; the live server learns it through
+`McpLiveServer::set_document_path`). The table for users is in
+`docs/guide/connect-agents.md`. **On each release, re-check pen.dev's tool
+list** (docs.pencil.dev: AI Integration and the pen.dev CLI page) and add any
+new name to the alias table, its schema, the docs table and
+`mcp_serve/pen_dev_alias_tests.rs`. Known and not served yet: `comments`.
+
 By category:
 
 - **Read (18)** — `get_document_info` / `get_selection` / `get_node`

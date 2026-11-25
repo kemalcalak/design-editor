@@ -22,6 +22,12 @@ fn tools_list_response_includes_all_registered_tools() {
         159,
         "tools/list catalog count must match the registered tools — add the new tool to this test"
     );
+    // Plus 37 kit tools and pen.dev's 6 names (#392).
+    let listed: serde_json::Value = serde_json::from_str(&r).expect("json");
+    assert_eq!(
+        listed["result"]["tools"].as_array().map(Vec::len),
+        Some(TOOL_SCHEMAS.len() + 37 + 6)
+    );
     // Production catalog excludes debug tools (we removed the
     // env var above to ensure deterministic gate-off behaviour).
     assert!(
