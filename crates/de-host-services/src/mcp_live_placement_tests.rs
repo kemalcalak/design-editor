@@ -21,6 +21,7 @@ fn pump_applies_the_unplaced_write_when_the_document_moved_on() {
             last_snapshot_doc: None,
             pending_design_md: VecDeque::new(),
             saved_documents: Vec::new(),
+            host_document_epoch: 0,
             follow_target: None,
         };
         let src = r#"{"version":"1.0.0","children":[{"type":"frame","id":"seed","x":0,"y":0,
