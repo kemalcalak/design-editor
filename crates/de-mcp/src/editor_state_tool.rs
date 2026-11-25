@@ -35,7 +35,14 @@ pub struct GetEditorState {
     pub top_level_nodes: String,
     /// `;`-separated `name|id` records for registered components.
     pub components: String,
+    /// Number of registered (reusable) components in the document.
+    pub component_count: usize,
 }
+
+/// Sent with `get_editor_state` when the document has components, so an
+/// agent connected from outside learns about linked instances before it
+/// rebuilds repeated UI by hand (#366).
+pub(crate) const COMPONENTS_HINT: &str = "This document has reusable components: insert them as linked instances (I(parent,{type:\"ref\",ref:id,descendants:{...}})) instead of copying them. Read get_guidelines topic=components first.";
 
 impl McpTool for GetEditorState {
     fn name(&self) -> &str {
@@ -53,6 +60,10 @@ impl McpTool for GetEditorState {
         out.insert("selection_count".into(), self.selection_count.to_string());
         out.insert("top_level_nodes".into(), self.top_level_nodes.clone());
         out.insert("components".into(), self.components.clone());
+        out.insert("component_count".into(), self.component_count.to_string());
+        if self.component_count > 0 {
+            out.insert("components_hint".into(), COMPONENTS_HINT.into());
+        }
         ToolOutcome::Ok(out)
     }
 }
@@ -120,6 +131,7 @@ pub fn get_editor_state_snapshot(state: &EditorState) -> GetEditorState {
         selection_count,
         top_level_nodes,
         components,
+        component_count: comp_snap.items.len(),
     }
 }
 
@@ -214,6 +226,11 @@ mod tests {
                     components.contains("MyCard") && components.contains("n1"),
                     "components should contain 'MyCard|n1', got {components:?}"
                 );
+                assert_eq!(out["component_count"], "1");
+                assert!(
+                    out["components_hint"].contains("topic=components"),
+                    "a document with components must point at the components topic"
+                );
             }
             other => panic!("expected Ok, got {other:?}"),
         }
@@ -230,6 +247,11 @@ mod tests {
                 assert_eq!(out["selection_count"], "0");
                 assert_eq!(out["top_level_nodes"], "");
                 assert_eq!(out["components"], "");
+                assert_eq!(out["component_count"], "0");
+                assert!(
+                    !out.contains_key("components_hint"),
+                    "no components, no hint"
+                );
             }
             other => panic!("expected Ok, got {other:?}"),
         }

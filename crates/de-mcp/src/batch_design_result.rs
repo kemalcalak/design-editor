@@ -110,8 +110,18 @@ impl BatchDesign {
                 nodes,
                 count: _,
                 bindings,
+                authored_roots,
                 promoted,
-            }) => self.insert_with_result(args, parent_id, nodes, bindings, promoted),
+            }) => self.insert_with_result(
+                args,
+                parent_id,
+                InsertedForest {
+                    nodes,
+                    bindings,
+                    authored_roots,
+                },
+                promoted,
+            ),
             // G() needs the document snapshot to size the generated image to
             // its target slot. The flat direct parser has no parent geometry,
             // so route even a single G through the program simulator.
@@ -151,14 +161,53 @@ impl BatchDesign {
 }
 
 impl BatchDesign {
+    /// An instance written against a master from this same program names
+    /// it (and its children in `descendants`) by binding or authored id;
+    /// point it at the ids that land (#366). A document id always means that
+    /// node, so an existing master is never hijacked.
+    fn retarget_instances(
+        &self,
+        nodes: &mut [PenNode],
+        map: &[(String, String)],
+        authored_roots: &BTreeMap<String, String>,
+    ) {
+        // `.rev()` so the first remap entry of a repeated old id wins, as
+        // the program executor's alias table does.
+        let fresh_ids: BTreeMap<&str, &str> = map
+            .iter()
+            .rev()
+            .map(|(old, new)| (old.as_str(), new.as_str()))
+            .collect();
+        let fresh = |id: &str| {
+            let id = authored_roots.get(id).map_or(id, String::as_str);
+            fresh_ids.get(id).map(|fresh| (*fresh).to_string())
+        };
+        let target = |id: &str| {
+            if self.existing_ids.contains(&NodeId::new(id)) {
+                None
+            } else {
+                fresh(id)
+            }
+        };
+        let ids = super::import_ids::Lookups {
+            target: &target,
+            path: &fresh,
+        };
+        super::import_ids::retarget_instances(nodes, &ids);
+    }
+
     fn insert_with_result(
         &self,
         args: &BTreeMap<String, String>,
         parent_id: NodeId,
-        mut nodes: Vec<PenNode>,
-        bindings: Vec<String>,
+        forest: InsertedForest,
         promoted: Vec<PromoteNote>,
     ) -> ToolOutcome {
+        let InsertedForest {
+            mut nodes,
+            bindings,
+            authored_roots,
+        } = forest;
         let post_processed = args
             .get("postProcess")
             .or_else(|| args.get("post_process"))
@@ -194,6 +243,12 @@ impl BatchDesign {
         let Some(map) = remap_subtree_ids_mapping(&mut nodes, &mut seed, &mut taken) else {
             return dispatch_batch_design(args, None);
         };
+        if nodes
+            .iter()
+            .any(super::batch_program_instance::subtree_has_instance)
+        {
+            self.retarget_instances(&mut nodes, &map, &authored_roots);
+        }
 
         // Each binding-node carries its binding as its pre-assignment authored
         // id, so map entries whose old id is a binding give binding -> new id.
@@ -287,4 +342,11 @@ fn count_subtree(node: &PenNode) -> usize {
         .children()
         .map(|children| children.iter().map(count_subtree).sum::<usize>())
         .unwrap_or(0)
+}
+
+/// The parsed forest `insert_with_result` lands.
+struct InsertedForest {
+    nodes: Vec<PenNode>,
+    bindings: Vec<String>,
+    authored_roots: BTreeMap<String, String>,
 }

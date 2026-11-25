@@ -19,7 +19,7 @@ use super::batch_layered::{dispatch_design_content, dispatch_design_skeleton};
 use super::batch_page::{command_with_outer_page_id, optional_page_id};
 use super::{EditorCommand, McpTool, ToolErrorCode, ToolOutcome};
 
-use super::batch_design_dsl::parse_insert_operations;
+use super::batch_design_dsl::{parse_insert_operations, InsertForest};
 use super::batch_design_dsl_error::OperationsError;
 use super::batch_design_wire::parse_batch_items;
 
@@ -335,6 +335,9 @@ pub(crate) enum ParsedOperations {
         /// One binding name per top-level `I()` op, used to trace post-remap
         /// ids back to bindings for TS's `results:[{binding,nodeId}]`.
         bindings: Vec<String>,
+        /// Authored id → binding of bound nodes (an instance may name its
+        /// master by the id it authored; the binding stamp replaced it).
+        authored_roots: BTreeMap<String, String>,
         /// Per-node legacy-frame promotions applied to `nodes` (Phase E3).
         /// Empty when the AI emitted no explicitly-marked role frames.
         promoted: Vec<PromoteNote>,
@@ -349,7 +352,13 @@ pub(crate) fn parse_operations(input: &str) -> Result<ParsedOperations, Operatio
             return Ok(ParsedOperations::Direct(command));
         }
     }
-    let (parent_id, mut nodes, _count, bindings) = parse_insert_operations(input)?;
+    let InsertForest {
+        parent_id,
+        mut nodes,
+        bindings,
+        authored_roots,
+        ..
+    } = parse_insert_operations(input)?;
     // Phase E3 — normalize explicitly-marked legacy frames (`role:"input"`
     // etc., or `semantics.role == input`) into first-class widget nodes
     // BEFORE they become the inserted command, so an old-style
@@ -365,6 +374,7 @@ pub(crate) fn parse_operations(input: &str) -> Result<ParsedOperations, Operatio
         nodes,
         count,
         bindings,
+        authored_roots,
         promoted,
     })
 }
