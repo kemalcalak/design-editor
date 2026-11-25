@@ -202,6 +202,7 @@ mod tests {
             scenario: None,
             pinned_style_guide: None,
             libraries: Vec::new(),
+            kit_masters: Default::default(),
         };
         let disk = externalize_for_disk(&serialized, meta.clone());
         assert_eq!(

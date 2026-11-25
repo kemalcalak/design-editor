@@ -218,7 +218,10 @@ pub(super) fn rebuild_registry(
     register_tool!("create_variable", create_variable_snapshot(doc));
     register_tool!("delete_variable", delete_variable_snapshot(doc));
     register_tool!("rename_variable", rename_variable_snapshot(doc));
-    register_tool!("instantiate_component", instantiate_component_snapshot());
+    register_tool!("instantiate_component", instantiate_component_snapshot(doc));
+    register_tool!("detach_instance", de_mcp::detach_instance_snapshot(doc));
+    register_tool!("swap_instance", de_mcp::swap_instance_snapshot(doc));
+    register_tool!("list_instances", de_mcp::list_instances_snapshot(doc));
     register_tool!("create_component", create_component_snapshot());
     register_tool!("delete_component", delete_component_snapshot());
     register_tool!("rename_component", rename_component_snapshot());

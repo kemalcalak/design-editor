@@ -738,6 +738,9 @@ pub struct EditorUiState {
     pub pinned_style_guide: Option<String>,
     /// Linked component libraries (#15): persisted links + runtime status.
     pub libraries: crate::library_link::LibraryLinks,
+    /// Kit masters installed under fresh ids (#365): `"<kit>/<component>"`
+    /// → master id. Persisted in `editorMeta.kitMasters`.
+    pub kit_masters: std::collections::BTreeMap<String, String>,
 
     // --- Component browser ------------------------------------------
     /// Whether the Components tab's search box owns the keyboard. The

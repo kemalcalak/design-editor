@@ -63,6 +63,7 @@ pub(crate) fn convert_fig_json(body: &str) -> Result<String> {
             scenario: None,
             pinned_style_guide: None,
             libraries: Vec::new(),
+            kit_masters: Default::default(),
         },
     )
     .map_err(|error| FigmaConvertError::Encode {

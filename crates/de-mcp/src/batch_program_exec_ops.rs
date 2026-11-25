@@ -97,8 +97,10 @@ pub(crate) fn execute_copy(binding: &str, args: &str, ctx: &mut ProgramCtx) -> R
     Ok(())
 }
 
-/// `binding=K("kit/component", parent[, overrides])` — instantiate a
-/// built-in UI-kit component. Model-facing ids are compact aliases:
+/// `binding=K("kit/component", parent[, overrides])` — insert a linked
+/// instance of a built-in UI-kit component (its master is installed once on
+/// the `Components` page, #365; `{"detach": true}` copies it instead). The
+/// binding names the instance. Model-facing ids are compact aliases:
 /// `starter/<component-id>` maps to kit `design-editor-starter`, and
 /// `shadcn/<short-id>` maps to kit `shadcn-ui` with component
 /// `shadcn-<short-id>` (for example `shadcn/btn-primary` →
@@ -123,14 +125,26 @@ pub(crate) fn execute_kit_instantiate(
         .as_deref()
         .map(|resolved| NodeId::new(lookup_id(resolved, &ctx.alias)))
         .unwrap_or(NodeId::NONE);
+    let mut detach = false;
     let overrides_json = match parts.get(2) {
         None => None,
         Some(raw) => {
             let mut value = parse_json_arg(raw)?;
-            if !value.is_object() {
+            let Some(object) = value.as_object_mut() else {
                 return Err(ProgramError::Syntax(
                     "K() overrides JSON must be an object".into(),
                 ));
+            };
+            // `detach: true` asks for an independent copy instead of a
+            // linked instance (#365); it is no override.
+            match object.remove("detach") {
+                None | Some(serde_json::Value::Bool(false)) => {}
+                Some(serde_json::Value::Bool(true)) => detach = true,
+                Some(_) => {
+                    return Err(ProgramError::Syntax(
+                        "K() detach must be true or false".into(),
+                    ))
+                }
             }
             de_editor_core::motion_guard::prepare_motion_json(&mut value)
                 .map_err(|e| ProgramError::Json(e.to_string()))?;
@@ -139,13 +153,14 @@ pub(crate) fn execute_kit_instantiate(
     };
     ctx.emit(
         EditorCommand::InstantiateKitComponent {
-            kit_id,
-            component_id,
+            kit_id: kit_id.into(),
+            component_id: component_id.into(),
             doc_x: None,
             doc_y: None,
             target_parent: parent,
             page_id: ctx.page_id.clone(),
             overrides_json,
+            detach,
         },
         "K() kit/component not found, parent is not a container, or overrides are invalid",
     )?;

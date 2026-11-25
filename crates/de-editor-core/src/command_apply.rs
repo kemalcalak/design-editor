@@ -38,11 +38,11 @@ mod app_state;
 mod boolean;
 mod clipboard;
 mod helpers;
+mod instance;
 
 use helpers::{
     apply_authored_subtree_on_page, apply_import_svg_on_active_page,
-    apply_insert_node_on_active_page, apply_kit_component_on_page, parse_align_action, parse_tool,
-    parse_variable_kind,
+    apply_insert_node_on_active_page, parse_align_action, parse_tool, parse_variable_kind,
 };
 pub(crate) use helpers::{command_marks_document_dirty, command_page_index};
 
@@ -726,9 +726,7 @@ impl EditorState {
             EditorCommand::Redo => self.redo(),
 
             // --- Component commands -------------------------------
-            EditorCommand::InstantiateComponent { component_id } => self
-                .instantiate_component_with_allocator(&component_id, allocator)?
-                .is_some(),
+            EditorCommand::Instance(command) => self.apply_instance_command(*command, allocator)?,
             EditorCommand::CreateComponent { node_id, name } => {
                 self.create_component_from_node(&node_id, &name)
             }
@@ -738,25 +736,9 @@ impl EditorState {
             }
 
             // --- UIKit element insert -------------------------------
-            EditorCommand::InstantiateKitComponent {
-                kit_id,
-                component_id,
-                doc_x,
-                doc_y,
-                target_parent,
-                page_id,
-                overrides_json,
-            } => apply_kit_component_on_page(
-                self,
-                &kit_id,
-                &component_id,
-                &target_parent,
-                doc_x.unwrap_or(0.0),
-                doc_y.unwrap_or(0.0),
-                overrides_json.as_deref(),
-                page_id.as_deref(),
-                allocator,
-            )?,
+            cmd @ EditorCommand::InstantiateKitComponent { .. } => {
+                self.apply_kit_command(cmd, allocator)?
+            }
 
             // --- Layout / text property writer ----------------------
             EditorCommand::SetNodeLayoutProp {

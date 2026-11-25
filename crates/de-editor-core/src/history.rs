@@ -66,6 +66,10 @@ pub struct EditorSnapshot {
     /// of running flex layout. Layout mutations can clear this document-level
     /// latch, so undo / redo must restore it alongside the document snapshot.
     pub preserve_authored_geometry: bool,
+    /// Kit masters installed under fresh ids (#365). An undo or a rolled-back
+    /// batch that removes a master must forget it too, or a later id reuse
+    /// would make the record name another component.
+    pub kit_masters: std::collections::BTreeMap<String, String>,
     /// Document revision at snapshot time. Restoring it lets undo back
     /// to a saved snapshot clear the dirty marker naturally.
     pub revision: u64,
@@ -132,6 +136,7 @@ impl EditorState {
             fill_refs: self.ui.variables.fill_refs.clone(),
             stroke_refs: self.ui.variables.stroke_refs.clone(),
             preserve_authored_geometry: self.editor_ui.preserve_authored_geometry,
+            kit_masters: self.editor_ui.kit_masters.clone(),
             revision: self.revision,
         }
     }
@@ -163,6 +168,7 @@ impl EditorState {
         self.ui.variables.fill_refs = snapshot.fill_refs;
         self.ui.variables.stroke_refs = snapshot.stroke_refs;
         self.editor_ui.preserve_authored_geometry = snapshot.preserve_authored_geometry;
+        self.editor_ui.kit_masters = snapshot.kit_masters;
         self.revision = snapshot.revision;
         self.sync_dirty_flag();
     }

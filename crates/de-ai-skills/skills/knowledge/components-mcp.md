@@ -29,8 +29,12 @@ changes every instance.
   `create_component {node_id, name}`.
 - Masters on any page work. Keep them together (a Components page, or a board
   beside the screens) and place instances on every page.
-- `K(kitRef, parent, overrides)` and `instantiate_component` insert copies
-  today, which do not follow the master; write `ref` instances for linked UI.
+- `K(kitRef, parent, overrides)` inserts a linked instance of a built-in kit
+  component (its master is installed once on the hidden Components page;
+  `{"detach": true}` copies instead). `instantiate_component {component_id,
+  parent, x, y, descendants}` inserts a linked instance of a document master
+  and returns `instanceId` plus the `overridable` child ids.
+  `list_instances` shows where a master is used.
 
 ## Instances in a script
 
@@ -56,8 +60,10 @@ instance does not override follows the master.
   `R("<instanceId>/<childId>", {...})` replaces the child in that instance
   only; `I("<instanceId>/<slotId>", {...})` fills a container slot (the first
   insert replaces the master's default children).
-- Detach an instance in the editor only when one copy must change structure
-  for good; it stops following the master.
+- Detach an instance (`detach_instance {nodeId}`, or in the editor) only
+  when one copy must change structure for good; it stops following the
+  master. `swap_instance {nodeId, component_id}` points it at another
+  master and keeps its overrides.
 
 ## Themes and variables
 

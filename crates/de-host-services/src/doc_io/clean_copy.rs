@@ -110,6 +110,7 @@ mod tests {
                 scenario: None,
                 pinned_style_guide: None,
                 libraries: Vec::new(),
+                kit_masters: Default::default(),
             },
         )
         .expect("clean copy save");
@@ -137,6 +138,7 @@ mod tests {
                 scenario: None,
                 pinned_style_guide: None,
                 libraries: Vec::new(),
+                kit_masters: Default::default(),
             },
         )
         .expect("clean copy appends metadata");

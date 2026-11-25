@@ -223,6 +223,7 @@ impl Default for EditorUiState {
             scene_template_center: SceneTemplateCenterState::default(),
             pinned_style_guide: None,
             libraries: crate::library_link::LibraryLinks::default(),
+            kit_masters: Default::default(),
             component_browser_search_focused: false,
             canvas_hover_node: None,
             entered_container: None,
