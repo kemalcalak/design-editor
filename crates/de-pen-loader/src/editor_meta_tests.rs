@@ -433,14 +433,13 @@ fn kit_masters_round_trip_and_drop_non_string_ids() {
     let meta = extract_editor_meta(source).expect("meta");
     assert_eq!(meta.kit_masters.len(), 1);
     assert_eq!(
-        meta.kit_masters.get("shadcn-ui/shadcn-btn-primary").map(String::as_str),
+        meta.kit_masters
+            .get("shadcn-ui/shadcn-btn-primary")
+            .map(String::as_str),
         Some("n42")
     );
     let written = serde_json::to_value(&meta).expect("serialize");
-    assert_eq!(
-        written["kitMasters"]["shadcn-ui/shadcn-btn-primary"],
-        "n42"
-    );
+    assert_eq!(written["kitMasters"]["shadcn-ui/shadcn-btn-primary"], "n42");
     assert!(serde_json::to_value(EditorMeta::default())
         .unwrap()
         .get("kitMasters")

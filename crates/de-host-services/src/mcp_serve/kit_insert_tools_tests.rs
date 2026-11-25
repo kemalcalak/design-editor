@@ -2,7 +2,7 @@
 //! a name advertised by `tools/list` must also dispatch on `tools/call`.
 
 use super::*;
-use de_editor_core::PenNodeExt;
+use de_editor_core::{NodeId, PenNodeExt};
 
 /// Names that `tools/list` advertises and that are backed by a kit
 /// component, in listing order.
@@ -135,7 +135,38 @@ fn kit_tools_insert_linked_instances_of_one_unplaced_master() {
         (roots[1].base().x, roots[1].base().y),
         "placement keeps the two instances apart"
     );
-    let text = call_tool(&mut state, 3, "insert_shadcn_btn_primary", r#"{"detach":true}"#);
+    // Editing the master reaches both instances.
+    let master_id = masters[0].id_str().to_string();
+    let label = masters[0].children().unwrap()[0].id_str().to_string();
+    let instances: Vec<String> = roots.iter().map(|n| n.id_str().to_string()).collect();
+    let page = state.doc.pages.as_ref().unwrap()[1].id.clone();
+    call_tool(
+        &mut state,
+        4,
+        "update_node",
+        &format!(r#"{{"node_id":"{label}","pageId":"{page}","data":{{"content":"Edited"}}}}"#),
+    );
+    let resolved = de_editor_core::ref_resolve::resolve_refs_for_canvas(&state.doc);
+    for instance in &instances {
+        let virtual_id = NodeId::new(de_editor_core::ref_resolve::instance_child_virtual_id(
+            instance, &label,
+        ));
+        let node = de_editor_core::walkers::find_node(
+            &resolved.pages.as_ref().unwrap()[0].children,
+            &virtual_id,
+        )
+        .expect("rendered label");
+        assert!(
+            serde_json::to_string(node).unwrap().contains("Edited"),
+            "{master_id}"
+        );
+    }
+    let text = call_tool(
+        &mut state,
+        3,
+        "insert_shadcn_btn_primary",
+        r#"{"detach":true}"#,
+    );
     assert!(text.contains(r#""linked":"false""#), "{text}");
     assert!(matches!(
         state.active_children()[0],
@@ -171,6 +202,15 @@ fn twenty_linked_kit_buttons_are_smaller_than_twenty_copies() {
     );
     assert!(linked_saved < copied_saved);
     assert!(linked_read < copied_read);
+}
+
+/// A kit component that is not a frame is copied and says so.
+#[test]
+fn a_non_frame_kit_tool_reports_a_copy() {
+    let mut state = EditorState::new();
+    let text = call_tool(&mut state, 1, "insert_divider", "{}");
+    assert!(text.contains(r#""linked":"false""#), "{text}");
+    assert!(components_page(&state).is_empty());
 }
 
 /// A master added to an existing Components page is not a new root to

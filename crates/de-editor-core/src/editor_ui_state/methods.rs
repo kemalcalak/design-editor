@@ -707,6 +707,8 @@ impl EditorUiState {
         self.layer_layers_h_scroll.offset = 0.0;
         self.collapsed_layers.clear();
         self.custom_shader_bodies.clear();
+        // Ids only mean something in the document they were recorded for.
+        self.kit_masters.clear();
         self.browser_live.clear_nodes();
         self.shader_editing.editor = None;
         self.shader_editing.uniform_drag = None;

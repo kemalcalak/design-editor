@@ -153,8 +153,8 @@ pub(crate) fn execute_kit_instantiate(
     };
     ctx.emit(
         EditorCommand::InstantiateKitComponent {
-            kit_id,
-            component_id,
+            kit_id: kit_id.into(),
+            component_id: component_id.into(),
             doc_x: None,
             doc_y: None,
             target_parent: parent,

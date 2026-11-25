@@ -203,21 +203,18 @@ fn detach_instance_panel_action_materializes_the_ref() {
     let mut host = seeded_host();
     host.apply_property_action(de_editor_ui::widgets::PropertyPanelAction::DetachInstance);
     let anchor = host.editor_state().selection.anchor.clone();
-    assert_ne!(anchor.as_str(), "inst1", "detach selects the new subtree");
+    // #365: the detached root keeps the instance's id.
+    assert_eq!(
+        anchor.as_str(),
+        "inst1",
+        "detach selects the detached subtree"
+    );
     let detached =
         de_editor_core::walkers::find_node(host.editor_state().active_children(), &anchor)
             .expect("detached node on the page");
     assert!(
         matches!(detached, PenNode::Frame(_)),
         "the Ref materialized into the component's Frame"
-    );
-    assert!(
-        de_editor_core::walkers::find_node(
-            host.editor_state().active_children(),
-            &NodeId::new("inst1")
-        )
-        .is_none(),
-        "the Ref slot was replaced"
     );
 }
 
@@ -285,12 +282,15 @@ fn context_menu_detach_instance_dispatch_materializes() {
         LayerContextAction::DetachInstance,
         LayerContextTarget::Layer(NodeId::new("inst1")),
     );
+    // #365: the detached root keeps the instance's id.
     assert!(
-        de_editor_core::walkers::find_node(
-            host.editor_state().active_children(),
-            &NodeId::new("inst1")
-        )
-        .is_none(),
+        matches!(
+            de_editor_core::walkers::find_node(
+                host.editor_state().active_children(),
+                &NodeId::new("inst1")
+            ),
+            Some(PenNode::Frame(_))
+        ),
         "context-menu detach replaced the Ref"
     );
 }

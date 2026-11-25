@@ -7,13 +7,18 @@
 //! page: enough to check the call and predict the ids the host's apply
 //! gives (`EditorState::apply` allocates from the document's high-water
 //! mark, like `repair_duplicate_ids`).
+//!
+//! The argument helpers return a finished `ToolOutcome::Err` that the tool
+//! hands back as is, so the large `Err` is deliberate (as in
+//! `element_tools.rs`).
+#![allow(clippy::result_large_err)]
 
 use std::collections::{BTreeMap, HashSet};
 
 use de_editor_core::id_allocator::{collect_document_ids, SequentialIdAllocator};
 use de_editor_core::{
     parse_descendants, ComponentLibrary, EditorCommand, EditorState, InstanceCommand,
-    InstanceView, NodeId, PenNodeExt,
+    InstanceError, InstanceView, NodeId, PenNodeExt,
 };
 use jian_ops_schema::node::PenNode;
 use jian_ops_schema::PenDocument;
@@ -59,12 +64,9 @@ impl InstanceSnapshot {
 
     /// The page a node lives on, as an error the agent can act on.
     fn node_page(&self, node_id: &NodeId) -> Result<usize, ToolOutcome> {
-        self.view().find_node_page(node_id).ok_or_else(|| {
-            ToolOutcome::Err(
-                ToolErrorCode::InvalidArgument,
-                format!("node not found: {}", node_id.as_str()),
-            )
-        })
+        self.view()
+            .find_node_page(node_id)
+            .ok_or_else(|| invalid(InstanceError::NodeNotFound(node_id.as_str().to_string())))
     }
 
     /// A fresh allocator and taken set, as the host's apply starts with.
@@ -74,11 +76,12 @@ impl InstanceSnapshot {
     }
 }
 
+/// The first alias with a non-blank value.
 fn arg<'a>(args: &'a BTreeMap<String, String>, keys: &[&str]) -> Option<&'a str> {
     keys.iter()
-        .find_map(|key| args.get(*key))
+        .filter_map(|key| args.get(*key))
         .map(|value| value.trim())
-        .filter(|value| !value.is_empty())
+        .find(|value| !value.is_empty())
 }
 
 fn required<'a>(args: &'a BTreeMap<String, String>, keys: &[&str]) -> Result<&'a str, ToolOutcome> {
@@ -128,13 +131,16 @@ impl InstantiateComponent {
     fn run(&self, args: &BTreeMap<String, String>) -> Result<ToolOutcome, ToolOutcome> {
         let snapshot = &self.0;
         let component_id = NodeId::new(required(args, &["component_id", "componentId"])?);
-        let predicted = snapshot
-            .allocator()
-            .and_then(|(mut allocator, mut taken)| {
-                use de_editor_core::IdAllocator;
-                allocator.allocate(&mut taken).ok()
-            })
-            .map(|id| id.as_str().to_string());
+        // The first id the host's apply allocates is the new node's.
+        let predicted = || {
+            snapshot
+                .allocator()
+                .and_then(|(mut allocator, mut taken)| {
+                    use de_editor_core::IdAllocator;
+                    allocator.allocate(&mut taken).ok()
+                })
+                .map(|id| id.as_str().to_string())
+        };
         if flag(args, "detach")? {
             if snapshot.components.find_by_id(&component_id).is_none() {
                 return Err(invalid(format!(
@@ -142,10 +148,10 @@ impl InstantiateComponent {
                     component_id.as_str()
                 )));
             }
-            let result = json!({ "nodeId": predicted, "componentId": component_id.as_str(), "linked": false });
+            let result = json!({ "nodeId": predicted(), "componentId": component_id.as_str(), "linked": false });
             return Ok(ToolOutcome::OkJsonWithCommand(
                 result.to_string(),
-                EditorCommand::Instance(InstanceCommand::Copy { component_id }),
+                EditorCommand::Instance(Box::new(InstanceCommand::Copy { component_id })),
             ));
         }
         let parent = arg(args, &["parent", "parentId"])
@@ -168,7 +174,7 @@ impl InstantiateComponent {
             .collect();
         let page_id = snapshot.page_id(page);
         let result = json!({
-            "instanceId": predicted,
+            "instanceId": predicted(),
             "componentId": component_id.as_str(),
             "linked": true,
             "pageId": page_id,
@@ -179,14 +185,14 @@ impl InstantiateComponent {
         });
         Ok(ToolOutcome::OkJsonWithCommand(
             result.to_string(),
-            EditorCommand::Instance(InstanceCommand::Insert {
+            EditorCommand::Instance(Box::new(InstanceCommand::Insert {
                 component_id,
                 parent,
                 x: number(args, "x")?,
                 y: number(args, "y")?,
                 descendants_json: descendants.map(str::to_string),
                 page_id: (page != snapshot.page_index).then_some(page_id).flatten(),
-            }),
+            })),
         ))
     }
 }
@@ -216,7 +222,7 @@ impl DetachInstance {
         let view = snapshot.view().on_page(page);
         let instance = view.instance_node(&node_id).map_err(invalid)?;
         let PenNode::Ref(reference) = instance else {
-            return Err(invalid(format!("{} is not an instance", node_id.as_str())));
+            unreachable!("instance_node returns refs only");
         };
         let (mut allocator, mut taken) = snapshot
             .allocator()
@@ -241,10 +247,10 @@ impl DetachInstance {
         });
         Ok(ToolOutcome::OkJsonWithCommand(
             result.to_string(),
-            EditorCommand::Instance(InstanceCommand::Detach {
+            EditorCommand::Instance(Box::new(InstanceCommand::Detach {
                 node_id,
                 page_id: snapshot.page_id(page),
-            }),
+            })),
         ))
     }
 }
@@ -294,11 +300,11 @@ impl SwapInstance {
         });
         Ok(ToolOutcome::OkJsonWithCommand(
             result.to_string(),
-            EditorCommand::Instance(InstanceCommand::Swap {
+            EditorCommand::Instance(Box::new(InstanceCommand::Swap {
                 node_id,
                 component_id,
                 page_id: snapshot.page_id(page),
-            }),
+            })),
         ))
     }
 }

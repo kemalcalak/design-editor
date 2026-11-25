@@ -13,6 +13,7 @@
 
 use std::collections::BTreeMap;
 
+use de_editor_core::uikit::KitComponent;
 use de_editor_core::{EditorCommand, EditorState, NodeId, UIKit};
 
 use super::{McpTool, ToolErrorCode, ToolOutcome};
@@ -49,6 +50,9 @@ pub struct InsertKitComponent {
     name: String,
     kit_id: String,
     component_id: String,
+    /// Only a frame template can become a master; any other kit
+    /// component (the starter divider is a rectangle) is always copied.
+    linkable: bool,
 }
 
 impl InsertKitComponent {
@@ -58,6 +62,14 @@ impl InsertKitComponent {
             name: element_tool_name(&component_id),
             kit_id: kit_id.into(),
             component_id,
+            linkable: true,
+        }
+    }
+
+    fn for_component(kit: &UIKit, component: &KitComponent) -> Self {
+        Self {
+            linkable: kit_component_linkable(component),
+            ..Self::new(kit.id.clone(), component.id.clone())
         }
     }
 }
@@ -90,12 +102,12 @@ impl McpTool for InsertKitComponent {
         let mut result = BTreeMap::new();
         result.insert("kit_id".into(), self.kit_id.clone());
         result.insert("component_id".into(), self.component_id.clone());
-        result.insert("linked".into(), (!detach).to_string());
+        result.insert("linked".into(), (!detach && self.linkable).to_string());
         ToolOutcome::OkWithCommand(
             result,
             EditorCommand::InstantiateKitComponent {
-                kit_id: self.kit_id.clone(),
-                component_id: self.component_id.clone(),
+                kit_id: self.kit_id.as_str().into(),
+                component_id: self.component_id.as_str().into(),
                 doc_x,
                 doc_y,
                 target_parent: NodeId::NONE,
@@ -140,7 +152,7 @@ pub fn insert_kit_component_tools(state: &EditorState) -> Vec<InsertKitComponent
         .flat_map(|kit: &UIKit| {
             kit.components
                 .iter()
-                .map(|c| InsertKitComponent::new(kit.id.clone(), c.id.clone()))
+                .map(|c| InsertKitComponent::for_component(kit, c))
         })
         .collect()
 }
@@ -150,12 +162,23 @@ pub fn insert_kit_component_tools(state: &EditorState) -> Vec<InsertKitComponent
 /// `TOOL_SCHEMAS`.
 pub fn element_tool_schema(component_name: &str, component_id: &str) -> String {
     let tool = element_tool_name(component_id);
-    canonical_element_tool_schema(&tool, component_name)
+    canonical_element_tool_schema(&tool, component_name, true)
 }
 
-fn canonical_element_tool_schema(tool: &str, component_name: &str) -> String {
+/// Whether a kit component inserts as a linked instance (its template can
+/// be a master).
+fn kit_component_linkable(component: &KitComponent) -> bool {
+    matches!(component.template, jian_ops_schema::node::PenNode::Frame(_))
+}
+
+fn canonical_element_tool_schema(tool: &str, component_name: &str, linkable: bool) -> String {
+    let how = if linkable {
+        "as a linked instance: the first use installs the component as a master on the hidden Components page, every use is a ref to it, so editing that master changes every instance (the new instance is selected; get_selection gives its id). detach: true inserts an independent copy instead."
+    } else {
+        "as an independent copy (this component is not a frame, so it cannot be a master)."
+    };
     format!(
-        r#"{{"name":"{tool}","description":"Insert a {component_name} from the built-in UIKit onto the active page as a linked instance: the first use installs the component as a master on the hidden Components page, every use is a ref to it, so editing that master changes every instance (the new instance is selected; get_selection gives its id). detach: true inserts an independent copy instead. Optional x/y doc-px floats place the top-left; defaults to (0, 0). See get_guidelines topic components.","inputSchema":{{"type":"object","properties":{{"x":{{"type":"string","description":"top-left doc-px (float)"}},"y":{{"type":"string","description":"top-left doc-px (float)"}},"detach":{{"type":"boolean","description":"insert an independent copy instead of a linked instance (default false)"}}}}}}}}"#
+        r#"{{"name":"{tool}","description":"Insert a {component_name} from the built-in UIKit onto the active page {how} Optional x/y doc-px floats place the top-left; defaults to (0, 0). See get_guidelines topic components.","inputSchema":{{"type":"object","properties":{{"x":{{"type":"string","description":"top-left doc-px (float)"}},"y":{{"type":"string","description":"top-left doc-px (float)"}},"detach":{{"type":"boolean","description":"insert an independent copy instead of a linked instance (default false)"}}}}}}}}"#
     )
 }
 
@@ -167,9 +190,13 @@ pub fn element_tool_schemas(state: &EditorState) -> Vec<String> {
         .ui_kits
         .iter()
         .flat_map(|kit| {
-            kit.components
-                .iter()
-                .map(|c| element_tool_schema(&c.name, &c.id))
+            kit.components.iter().map(|c| {
+                canonical_element_tool_schema(
+                    &element_tool_name(&c.id),
+                    &c.name,
+                    kit_component_linkable(c),
+                )
+            })
         })
         .collect()
 }

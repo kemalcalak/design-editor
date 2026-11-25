@@ -726,7 +726,7 @@ impl EditorState {
             EditorCommand::Redo => self.redo(),
 
             // --- Component commands -------------------------------
-            EditorCommand::Instance(command) => self.apply_instance_command(command, allocator)?,
+            EditorCommand::Instance(command) => self.apply_instance_command(*command, allocator)?,
             EditorCommand::CreateComponent { node_id, name } => {
                 self.create_component_from_node(&node_id, &name)
             }

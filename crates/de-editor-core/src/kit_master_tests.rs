@@ -80,12 +80,18 @@ fn rendered_text(s: &EditorState, instance: &str, child: &str) -> String {
     let PenNode::Text(text) = node else {
         panic!("expected text, got {node:?}")
     };
-    serde_json::to_value(&text.content).unwrap().as_str().unwrap().to_string()
+    serde_json::to_value(&text.content)
+        .unwrap()
+        .as_str()
+        .unwrap()
+        .to_string()
 }
 
 fn set_text(s: &mut EditorState, id: &str, content: &str) {
     for page in s.doc.pages.as_mut().unwrap() {
-        if let Some(PenNode::Text(text)) = crate::walkers::find_node_mut(&mut page.children, &NodeId::new(id)) {
+        if let Some(PenNode::Text(text)) =
+            crate::walkers::find_node_mut(&mut page.children, &NodeId::new(id))
+        {
             text.content = serde_json::from_value(serde_json::json!(content)).unwrap();
             return;
         }
@@ -175,7 +181,12 @@ fn colliding_kit_ids_install_under_fresh_ids_and_later_inserts_reuse_them() {
 fn starter_kit_ids_with_path_separators_are_reminted_so_overrides_work() {
     let mut s = screen_state();
     let overrides = r#"{"descendants":{"kit/btn-primary/label":{"content":"Buy"}}}"#;
-    assert!(s.apply(kit("design-editor-starter", "btn-primary", "screen", Some(overrides))));
+    assert!(s.apply(kit(
+        "design-editor-starter",
+        "btn-primary",
+        "screen",
+        Some(overrides)
+    )));
     let master = &components_page(&s)[0];
     assert!(!master.id_str().contains('/'));
     let label = master.children().unwrap()[0].id_str().to_string();
@@ -212,8 +223,54 @@ fn masters_sit_side_by_side_on_the_components_page() {
 #[test]
 fn the_panel_insert_is_linked() {
     let mut s = screen_state();
-    let id = s.instantiate_kit_component(SHADCN, BUTTON, 30.0, 40.0).unwrap();
+    let id = s
+        .instantiate_kit_component(SHADCN, BUTTON, 30.0, 40.0)
+        .unwrap();
     let instance = find_node(s.active_children(), &id).unwrap();
     assert!(matches!(instance, PenNode::Ref(_)));
-    assert_eq!((instance.base().x, instance.base().y), (Some(30.0), Some(40.0)));
+    assert_eq!(
+        (instance.base().x, instance.base().y),
+        (Some(30.0), Some(40.0))
+    );
+    set_text(&mut s, LABEL, "Edited");
+    assert_eq!(rendered_text(&s, id.as_str(), LABEL), "Edited");
+}
+
+#[test]
+fn a_non_frame_kit_component_is_copied() {
+    // The starter divider is a rectangle, which cannot be a master.
+    let mut s = screen_state();
+    assert!(s.apply(kit("design-editor-starter", "divider", "", None)));
+    assert!(components_page(&s).is_empty());
+    assert!(matches!(
+        s.active_children().last(),
+        Some(PenNode::Rectangle(_))
+    ));
+}
+
+#[test]
+fn undo_forgets_the_record_so_a_reused_id_never_names_another_component() {
+    let mut s = screen_state();
+    let starter = "design-editor-starter";
+    assert!(s.apply(kit(starter, "btn-primary", "", None)));
+    let first_master = components_page(&s)[0].id_str().to_string();
+    assert!(s.undo());
+    assert!(
+        s.editor_ui.kit_masters.is_empty(),
+        "undo restores the record"
+    );
+    // The card's master may now take the button master's old id.
+    assert!(s.apply(kit(starter, "card-basic", "", None)));
+    assert!(s.apply(kit(starter, "btn-primary", "", None)));
+    let anchor = s.selection.anchor.clone();
+    let PenNode::Ref(reference) = find_node(s.active_children(), &anchor).unwrap() else {
+        panic!("ref")
+    };
+    let master = components_page(&s)
+        .iter()
+        .find(|node| node.id_str() == reference.target)
+        .expect("master");
+    assert_eq!(master.base().name.as_deref(), Some("Primary Button"));
+    assert_eq!(components_page(&s).len(), 2);
+    let _ = first_master;
 }

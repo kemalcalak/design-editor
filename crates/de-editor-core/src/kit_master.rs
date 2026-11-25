@@ -6,9 +6,10 @@
 //! Ids stay verbatim, like library masters, unless one is already taken
 //! or holds the `descendants` path separator: then the master gets fresh
 //! ids and `editor_ui.kit_masters` (persisted in `editorMeta.kitMasters`)
-//! records which master stands for the kit component. Undo does not roll
-//! that record back, so it is checked on every use: a recorded id that is
-//! no longer a master on the `Components` page installs the master again.
+//! records which master stands for the kit component. The record travels
+//! with undo and batch rollback (it is part of the history snapshot) and is
+//! dropped with the document; a recorded id that is no longer a master on
+//! the `Components` page still installs the master again.
 
 use std::collections::{BTreeMap, HashMap, HashSet};
 
@@ -19,7 +20,7 @@ use serde_json::{Map, Value};
 use crate::component_instances::{build_instance_node, InstanceSpec};
 use crate::id_allocator::{IdAllocError, IdAllocator};
 use crate::instance_ids::split_first_segment;
-use crate::page_mutators::COMPONENTS_PAGE_NAME;
+use crate::page_mutators::is_components_page;
 use crate::pen_node_ext::PenNodeExt;
 use crate::{walkers, ComponentLibrary, EditorState, NodeId};
 
@@ -42,7 +43,8 @@ pub fn kit_master_key(kit_id: &str, component_id: &str) -> String {
 
 struct KitTemplate {
     template: PenNode,
-    label: String,
+    /// The component's display name (the master's layer name).
+    name: String,
     variables: Option<BTreeMap<String, VariableDefinition>>,
 }
 
@@ -57,8 +59,11 @@ impl EditorState {
     /// Whether the kit component exists and its template can be a master
     /// (a frame); anything else is inserted as a copy.
     pub(crate) fn kit_template_is_frame(&self, kit_id: &str, component_id: &str) -> bool {
-        self.kit_template(kit_id, component_id)
-            .is_some_and(|kit| matches!(kit.template, PenNode::Frame(_)))
+        self.ui_kits
+            .iter()
+            .find(|kit| kit.id == kit_id)
+            .and_then(|kit| kit.components.iter().find(|c| c.id == component_id))
+            .is_some_and(|component| matches!(component.template, PenNode::Frame(_)))
     }
 
     /// Id of the master this document holds for the kit component, if it
@@ -170,7 +175,7 @@ impl EditorState {
             .find(|component| component.id == component_id)?;
         Some(KitTemplate {
             template: component.template.clone(),
-            label: component.name.clone(),
+            name: component.name.clone(),
             variables: kit.variables.clone(),
         })
     }
@@ -184,12 +189,18 @@ impl EditorState {
             .chain(std::iter::once(template.id_str()))
             .find_map(|id| {
                 let node = self.components_page_master(id)?;
+                let fresh_ids = id != template.id_str();
+                // A master kept the kit's own ids, so keys map to themselves
+                // however the master was edited since; fresh ids map by
+                // place.
                 let mut ids = HashMap::new();
-                zip_ids(template, node, &mut ids);
+                if fresh_ids {
+                    zip_ids(template, node, &mut ids);
+                }
                 Some(KitMaster {
                     node: node.clone(),
                     ids,
-                    fresh_ids: id != template.id_str(),
+                    fresh_ids,
                 })
             })
     }
@@ -199,7 +210,7 @@ impl EditorState {
             .pages
             .iter()
             .flatten()
-            .filter(|page| page.name == COMPONENTS_PAGE_NAME)
+            .filter(|page| is_components_page(page))
             .flat_map(|page| page.children.iter())
             .find(|node| {
                 node.id_str() == id
@@ -221,7 +232,7 @@ impl EditorState {
         frame.reusable = Some(true);
         let (x, y) = self.next_master_slot();
         let base = master.base_mut();
-        base.name = Some(kit.label.clone());
+        base.name = Some(kit.name.clone());
         base.x = Some(x);
         base.y = Some(y);
         let mut taken = self.collect_node_ids();
@@ -236,7 +247,11 @@ impl EditorState {
         if fresh_ids {
             master = walkers::deep_clone_with_allocator(&master, allocator, &mut taken)?;
         }
-        let had_pages = self.doc.pages.as_ref().is_some_and(|pages| !pages.is_empty());
+        let had_pages = self
+            .doc
+            .pages
+            .as_ref()
+            .is_some_and(|pages| !pages.is_empty());
         if self.append_components_page_masters_with_allocator(vec![master.clone()], allocator)? == 0
         {
             return Ok(None);
@@ -244,14 +259,16 @@ impl EditorState {
         let id = NodeId::new(master.id_str());
         if had_pages {
             self.components
-                .register_document_component(&self.doc, id, kit.label.clone());
+                .register_document_component(&self.doc, id, kit.name.clone());
         } else {
             // The design moved into page 0, so every stored location moved.
             self.components = ComponentLibrary::from_document(&self.doc);
         }
         self.install_kit_variables(&kit.template, kit.variables.as_ref());
         let mut ids = HashMap::new();
-        zip_ids(&kit.template, &master, &mut ids);
+        if fresh_ids {
+            zip_ids(&kit.template, &master, &mut ids);
+        }
         Ok(Some(KitMaster {
             node: master,
             ids,
@@ -266,7 +283,7 @@ impl EditorState {
             .pages
             .iter()
             .flatten()
-            .filter(|page| page.name == COMPONENTS_PAGE_NAME)
+            .filter(|page| is_components_page(page))
             .flat_map(|page| page.children.iter())
             .map(|node| node.base().x.unwrap_or(0.0) + node.width_px().unwrap_or(0.0))
             .fold(None, |max: Option<f64>, right| {
@@ -303,6 +320,9 @@ fn kit_overrides_to_instance<'a>(
             if key == root {
                 if let Value::Object(patch) = value {
                     for (field, field_value) in patch {
+                        // `descendants[<root>]` is a patch: identity and
+                        // structure never move (the top-level list below also
+                        // drops the K()-only keys).
                         if !matches!(field.as_str(), "id" | "type" | "children" | "descendants") {
                             root_patch.insert(field.clone(), field_value.clone());
                         }
@@ -337,7 +357,11 @@ fn kit_overrides_to_instance<'a>(
         merge_entry(&mut descendants, text_id.to_string(), Value::Object(patch));
     }
     if !root_patch.is_empty() {
-        merge_entry(&mut descendants, root.to_string(), Value::Object(root_patch));
+        merge_entry(
+            &mut descendants,
+            root.to_string(),
+            Value::Object(root_patch),
+        );
     }
     InstanceSpec {
         target: root,
@@ -372,8 +396,12 @@ fn first_text_id(node: &PenNode) -> Option<&str> {
         .find_map(first_text_id)
 }
 
-/// Map each template id onto the master node in the same place.
+/// Map each template id onto the master node in the same place, while the
+/// kinds still match (an edited master may have moved things).
 fn zip_ids(template: &PenNode, master: &PenNode, out: &mut HashMap<String, String>) {
+    if template.type_tag() != master.type_tag() {
+        return;
+    }
     out.insert(template.id_str().to_string(), master.id_str().to_string());
     if let (Some(left), Some(right)) = (template.children(), master.children()) {
         for (left, right) in left.iter().zip(right) {

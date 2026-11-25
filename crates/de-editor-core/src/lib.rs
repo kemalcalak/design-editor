@@ -125,8 +125,8 @@ pub mod image_panel_state;
 pub mod ime_state;
 pub mod instance_anchor;
 mod instance_child_override;
-pub mod instance_descendants;
 pub mod instance_command;
+pub mod instance_descendants;
 pub mod instance_edit;
 pub mod instance_error;
 pub mod instance_ids;
@@ -208,6 +208,7 @@ pub fn svg_path_data_bounds(d: &str) -> Option<(f32, f32, f32, f32)> {
     ))
 }
 pub mod chrome_button_state;
+pub mod kit_master;
 pub mod text_defaults;
 pub mod text_edit;
 pub mod text_input_focus;
@@ -218,7 +219,6 @@ pub mod theme_presets;
 pub mod tool;
 pub mod toolbar_state;
 pub mod ui_draft;
-pub mod kit_master;
 pub mod uikit;
 mod uikit_allocator;
 pub mod uikit_io;
@@ -233,10 +233,6 @@ pub mod write_scope;
 
 #[cfg(test)]
 mod command_allocator_tests;
-#[cfg(test)]
-mod component_instances_tests;
-#[cfg(test)]
-mod kit_master_tests;
 #[cfg(test)]
 mod command_app_state_tests;
 #[cfg(test)]
@@ -276,6 +272,8 @@ mod command_update_tests;
 #[cfg(test)]
 mod command_widget_tests;
 #[cfg(test)]
+mod component_instances_tests;
+#[cfg(test)]
 mod conversion_tests;
 #[cfg(test)]
 mod dirty_tests;
@@ -291,6 +289,8 @@ mod history_snapshot_tests;
 #[cfg(test)]
 #[path = "icon_path_normalize_tests.rs"]
 mod icon_path_normalize_tests;
+#[cfg(test)]
+mod kit_master_tests;
 #[cfg(test)]
 mod prompt_center_catalog_tests;
 #[cfg(test)]
@@ -356,13 +356,10 @@ pub use command::{
     StylePropValue, StylePropertyReplacement, VariableScalarPayload, VideoPlaybackField,
 };
 pub use command_node_attrs::{WidgetNumberField, WidgetTextField};
-pub use component_instances::parse_descendants;
-pub use instance_view::{InstanceUse, InstanceView, OverrideTarget};
-pub use instance_command::InstanceCommand;
-pub use instance_error::InstanceError;
 pub use command_promote::PromoteResult;
 pub use command_style_replace::StyleReplaceError;
 pub use component_browser_state::ComponentBrowserButton;
+pub use component_instances::parse_descendants;
 pub use components::{Component, ComponentLibrary, ComponentOption};
 pub use compositing::{fill_blend_mode_at, node_blend_mode, node_mask_type};
 pub use design_md::{extract_design_md_from_document, generate_design_md, parse_design_md};
@@ -414,12 +411,15 @@ pub use image_crop::{
 };
 pub use image_node_props::image_node_summary;
 pub use instance_anchor::{DescendantTarget, InstanceDescendant};
+pub use instance_command::InstanceCommand;
 pub use instance_edit::InstanceEdit;
+pub use instance_error::InstanceError;
 pub use instance_override::{
     apply_instance_override, resolve_instance_display_node,
     resolve_instance_display_node_for_anchor, split_instance_child_anchor, InstanceWriteScope,
     INSTANCE_DIRECT_PROPS,
 };
+pub use instance_view::{InstanceUse, InstanceView, OverrideTarget};
 pub use jian_ops_schema::node::MaskType;
 pub use jian_ops_schema::style::BlendMode;
 pub use jian_ops_schema::{DesignMdColor, DesignMdSpec, DesignMdTypography, PenDocument};

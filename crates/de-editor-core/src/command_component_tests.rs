@@ -73,9 +73,11 @@ fn instantiate_component_clones_registered_root_with_fresh_ids() {
         node_id: id("n10"),
         name: "Hero".into(),
     }));
-    assert!(s.apply(EditorCommand::Instance(crate::InstanceCommand::Copy {
-        component_id: id("n10"),
-    })));
+    assert!(s.apply(EditorCommand::Instance(Box::new(
+        crate::InstanceCommand::Copy {
+            component_id: id("n10"),
+        }
+    ))));
     assert_eq!(s.active_children().len(), 2);
     assert!(s.find_duplicate_id().is_none());
     let clone = s.active_children().last().expect("inserted clone");
@@ -238,7 +240,9 @@ fn detach_instance_keeps_its_id_and_materializes_children_with_fresh_ids() {
             assert_eq!(f.reusable, None, "detached tree is independent");
             let children = f.children.as_ref().expect("materialized children");
             assert!(
-                children.iter().all(|c| c.id_str() != "n11" && c.id_str() != "n12"),
+                children
+                    .iter()
+                    .all(|c| c.id_str() != "n11" && c.id_str() != "n12"),
                 "inner nodes get fresh ids"
             );
         }

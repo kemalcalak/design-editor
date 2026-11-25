@@ -403,7 +403,8 @@ fn web_property_panel_instance_buttons_go_to_master_and_detach_instance() {
         matches!(action, PropertyPanelAction::DetachInstance)
     });
     assert!(host.apply_press(detach.x, detach.y, VIEWPORT_W, VIEWPORT_H));
-    assert_ne!(host.editor_state.selection.anchor, NodeId::new("inst1"));
+    // #365: the detached root keeps the instance's id.
+    assert_eq!(host.editor_state.selection.anchor, NodeId::new("inst1"));
     assert!(matches!(
         host.editor_state.selected_node(),
         Some(PenNode::Frame(_))

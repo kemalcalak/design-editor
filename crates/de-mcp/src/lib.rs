@@ -100,7 +100,6 @@ mod document_save_tests;
 pub mod editor_state_tool;
 pub mod effect_normalize;
 pub mod element_tools;
-pub mod instance_tools;
 pub mod extra_read_tools;
 #[cfg(test)]
 mod extra_read_tools_tests;
@@ -119,6 +118,7 @@ pub mod import_snapshot_tool;
 mod import_snapshot_tool_tests;
 mod insert_node_args;
 mod insert_node_data;
+pub mod instance_tools;
 pub mod json_serializer;
 mod layout_overlaps;
 #[cfg(test)]
@@ -242,10 +242,6 @@ pub use component_tools::{
     set_node_collapsed_snapshot, CreateComponent, DeleteComponent, RenameComponent,
     SetNodeCollapsed,
 };
-pub use instance_tools::{
-    detach_instance_snapshot, instantiate_component_snapshot, list_instances_snapshot,
-    swap_instance_snapshot, DetachInstance, InstantiateComponent, ListInstances, SwapInstance,
-};
 pub use conversion_status::{conversion_status_snapshot, ConversionStatus};
 pub use conversion_tools::{
     upsert_component_snapshot, upsert_screen_snapshot, upsert_variables_snapshot,
@@ -256,6 +252,10 @@ pub use debug_tools::{
     debug_logs_tail_snapshot, debug_screenshot_snapshot, debug_tools_enabled,
     debug_validation_report_snapshot, parse_screenshot_args, DebugLogsTail, DebugScreenshot,
     DebugValidationReport, ScreenshotRequest, ScreenshotTarget,
+};
+pub use instance_tools::{
+    detach_instance_snapshot, instantiate_component_snapshot, list_instances_snapshot,
+    swap_instance_snapshot, DetachInstance, InstantiateComponent, ListInstances, SwapInstance,
 };
 #[cfg(not(feature = "debug-tools"))]
 pub fn debug_tools_enabled() -> bool {

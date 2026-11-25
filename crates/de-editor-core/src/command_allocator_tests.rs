@@ -204,14 +204,14 @@ fn component_conversion_uikit_and_refine_commands_use_the_supplied_allocator() {
     let mut component_allocator = supplied();
     assert!(component_state
         .apply_with_allocator(
-            EditorCommand::Instance(crate::InstanceCommand::Insert {
+            EditorCommand::Instance(Box::new(crate::InstanceCommand::Insert {
                 component_id: NodeId::new("n10"),
                 parent: NodeId::NONE,
                 x: None,
                 y: None,
                 descendants_json: None,
                 page_id: None,
-            }),
+            })),
             &mut component_allocator,
         )
         .unwrap());
@@ -223,8 +223,8 @@ fn component_conversion_uikit_and_refine_commands_use_the_supplied_allocator() {
     assert!(kit_state
         .apply_with_allocator(
             EditorCommand::InstantiateKitComponent {
-                kit_id: "design-editor-starter".to_string(),
-                component_id: "btn-primary".to_string(),
+                kit_id: "design-editor-starter".into(),
+                component_id: "btn-primary".into(),
                 doc_x: Some(10.0),
                 doc_y: Some(20.0),
                 target_parent: NodeId::NONE,

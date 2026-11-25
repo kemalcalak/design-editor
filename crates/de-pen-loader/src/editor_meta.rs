@@ -361,8 +361,11 @@ pub fn apply_editor_meta(state: &mut de_editor_core::EditorState, meta: EditorMe
     if !meta.libraries.is_empty() {
         state.editor_ui.libraries.set_links(meta.libraries);
     }
-    // Ids only mean something in the document they came with.
-    state.editor_ui.kit_masters = meta.kit_masters;
+    // Like the links: a browser push carries no kit masters, and must not
+    // erase them (the next `K()` would install a second master).
+    if !meta.kit_masters.is_empty() {
+        state.editor_ui.kit_masters = meta.kit_masters;
+    }
 }
 
 /// Apply saved metadata, or use the legacy reopen policy when it is absent.

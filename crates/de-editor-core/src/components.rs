@@ -554,20 +554,19 @@ impl EditorState {
         match &node {
             PenNode::Ref(_) => {
                 let mut taken = self.collect_node_ids();
-                let Some(detached) =
-                    self.instance_view()
-                        .detached_instance(&node, allocator, &mut taken)?
+                let Some(detached) = self
+                    .instance_view()
+                    .detached_instance(&node, allocator, &mut taken)?
                 else {
                     return Ok(None);
                 };
-                let new_id = node_id.clone();
                 let snap = self.snapshot_for_history();
                 if !replace_node_in_children(self.active_children_mut(), node_id, detached) {
                     return Ok(None);
                 }
-                self.set_single_selection(new_id.clone());
+                self.set_single_selection(node_id.clone());
                 self.history_push_past(snap);
-                Ok(Some(new_id))
+                Ok(Some(node_id.clone()))
             }
             _ => Ok(None),
         }

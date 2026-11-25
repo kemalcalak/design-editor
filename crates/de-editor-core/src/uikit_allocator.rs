@@ -27,7 +27,7 @@ impl EditorState {
             doc_x,
             doc_y,
             None,
-            false,
+            false, // detach
         )
     }
 
@@ -46,7 +46,7 @@ impl EditorState {
             doc_x,
             doc_y,
             None,
-            true,
+            true, // detach
         )
     }
 

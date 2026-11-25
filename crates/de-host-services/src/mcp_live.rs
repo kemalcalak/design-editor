@@ -717,9 +717,12 @@ fn new_page_root(before: &[(String, Vec<String>)], state: &EditorState) -> Optio
         .into_iter()
         .enumerate()
         .find_map(|(page_index, (page_id, roots))| {
-            let components_page = state.doc.pages.as_ref().is_some_and(|pages| {
-                pages[page_index].name == de_editor_core::page_mutators::COMPONENTS_PAGE_NAME
-            });
+            let components_page = state
+                .doc
+                .pages
+                .as_ref()
+                .and_then(|pages| pages.get(page_index))
+                .is_some_and(de_editor_core::page_mutators::is_components_page);
             if components_page {
                 return None;
             }

@@ -82,8 +82,8 @@ fn instantiate_inserts_a_linked_instance_at_the_predicted_id() {
     assert!(result["hint"].as_str().unwrap().contains("get_guidelines"));
     assert!(s.apply(command));
     let predicted = result["instanceId"].as_str().unwrap();
-    let screen = de_editor_core::walkers::find_node(s.active_children(), &NodeId::new("screen"))
-        .unwrap();
+    let screen =
+        de_editor_core::walkers::find_node(s.active_children(), &NodeId::new("screen")).unwrap();
     let instance = &screen.children().unwrap()[0];
     assert_eq!(instance.id_str(), predicted);
     let PenNode::Ref(reference) = instance else {
@@ -99,18 +99,27 @@ fn instantiate_inserts_a_linked_instance_at_the_predicted_id() {
 #[test]
 fn instantiate_into_a_parent_on_another_page_keeps_the_active_page() {
     let mut s = state();
-    s.doc.pages.as_mut().unwrap()[1]
-        .children
-        .push(frame("other", "Other", 0.0, 0.0, 10.0, 10.0, Vec::new()));
+    s.doc.pages.as_mut().unwrap()[1].children.push(frame(
+        "other",
+        "Other",
+        0.0,
+        0.0,
+        10.0,
+        10.0,
+        Vec::new(),
+    ));
     let (result, command) = write(
         instantiate_component_snapshot(&s)
             .call(&args(&[("component_id", "btn"), ("parent", "other")])),
     );
-    assert_eq!(result["pageId"], s.doc.pages.as_ref().unwrap()[1].id.as_str());
+    assert_eq!(
+        result["pageId"],
+        s.doc.pages.as_ref().unwrap()[1].id.as_str()
+    );
     assert!(s.apply(command));
     assert_eq!(s.ui.active_page_index, 0);
-    let other = de_editor_core::walkers::find_node(page_children(&s, 1), &NodeId::new("other"))
-        .unwrap();
+    let other =
+        de_editor_core::walkers::find_node(page_children(&s, 1), &NodeId::new("other")).unwrap();
     assert_eq!(other.children().unwrap().len(), 1);
 }
 
@@ -118,14 +127,20 @@ fn instantiate_into_a_parent_on_another_page_keeps_the_active_page() {
 fn instantiate_refuses_cycles_unknown_masters_and_bad_descendants() {
     let s = state();
     let tool = instantiate_component_snapshot(&s);
-    assert!(error(tool.call(&args(&[("component_id", "btn"), ("parent", "btn")])))
-        .contains("contain itself"));
-    assert!(error(tool.call(&args(&[("component_id", "btn"), ("parent", "btn-label")])))
-        .contains("cannot hold children"));
+    assert!(
+        error(tool.call(&args(&[("component_id", "btn"), ("parent", "btn")])))
+            .contains("contain itself")
+    );
+    assert!(
+        error(tool.call(&args(&[("component_id", "btn"), ("parent", "btn-label")])))
+            .contains("cannot hold children")
+    );
     assert!(error(tool.call(&args(&[("component_id", "nope")]))).contains("not found"));
     assert!(error(tool.call(&args(&[("component_id", "screen")]))).contains("not a component"));
-    assert!(error(tool.call(&args(&[("component_id", "btn"), ("descendants", "[1]")])))
-        .contains("descendants"));
+    assert!(
+        error(tool.call(&args(&[("component_id", "btn"), ("descendants", "[1]")])))
+            .contains("descendants")
+    );
     assert!(error(tool.call(&args(&[]))).contains("component_id"));
 }
 
@@ -138,8 +153,8 @@ fn instantiate_detach_copies_like_before() {
     );
     assert_eq!(result["linked"], false);
     assert!(matches!(
-        command,
-        EditorCommand::Instance(InstanceCommand::Copy { .. })
+        &command,
+        EditorCommand::Instance(instance) if matches!(**instance, InstanceCommand::Copy { .. })
     ));
     assert!(s.apply(command));
     let copy = s.active_children().last().unwrap();
@@ -206,12 +221,17 @@ fn swap_and_list_instances() {
         let ToolOutcome::OkJson(json) = tool.call(&args(&[("component_id", component)])) else {
             panic!("json")
         };
-        assert_eq!(serde_json::from_str::<Value>(&json).unwrap()["count"], count);
+        assert_eq!(
+            serde_json::from_str::<Value>(&json).unwrap()["count"],
+            count
+        );
     }
     assert!(error(
         swap_instance_snapshot(&s).call(&args(&[("nodeId", &first), ("component_id", "alt")]))
     )
     .contains("already"));
-    assert!(error(list_instances_snapshot(&s).call(&args(&[("component_id", "nope")])))
-        .contains("not found"));
+    assert!(
+        error(list_instances_snapshot(&s).call(&args(&[("component_id", "nope")])))
+            .contains("not found")
+    );
 }

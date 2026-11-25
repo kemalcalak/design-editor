@@ -59,7 +59,9 @@ impl<'a> InstanceView<'a> {
         Self { page_index, ..self }
     }
 
-    /// The page's root nodes, like `EditorState::active_children`.
+    /// The page's root nodes. Same clamp and page-less fallback as
+    /// `EditorState::active_children`, which reads `ui.active_page_index`;
+    /// change both together.
     pub fn page_children(&self) -> &'a [PenNode] {
         match self.doc.pages.as_ref() {
             Some(pages) if !pages.is_empty() => {
@@ -164,6 +166,8 @@ impl<'a> InstanceView<'a> {
             }
         }
         if self.components.find_by_id(component_id).is_none() {
+            // An unknown id reports "not found", an unregistered node
+            // "not a component".
             self.component_master(component_id.as_str())?;
             return Err(InstanceError::NotAComponent(
                 component_id.as_str().to_string(),
@@ -172,7 +176,8 @@ impl<'a> InstanceView<'a> {
         let parent = walkers::find_parent_and_index(self.page_children(), node_id)
             .and_then(|(parent, _)| parent)
             .unwrap_or(NodeId::NONE);
-        self.check_instance_insert(component_id, &parent).map(|_| ())
+        self.check_instance_insert(component_id, &parent)
+            .map(|_| ())
     }
 
     /// The independent subtree an instance detaches into: its master with

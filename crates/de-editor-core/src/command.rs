@@ -378,7 +378,8 @@ pub enum EditorCommand {
     /// Link, re-sync or unlink a component library file (#15).
     Library(crate::library_link::LibraryCommand),
     /// Insert, copy, detach or swap a component instance (#365).
-    Instance(crate::instance_command::InstanceCommand),
+    /// Boxed: the insert payload would otherwise grow every command.
+    Instance(Box<crate::instance_command::InstanceCommand>),
     /// Promote an active-page Frame / Group / Rectangle to a component.
     CreateComponent { node_id: NodeId, name: String },
     /// Remove a component registration.
@@ -395,8 +396,10 @@ pub enum EditorCommand {
     /// `overrides_json` keys name the kit template's nodes. `detach`
     /// inserts an independent copy with the overrides applied instead.
     InstantiateKitComponent {
-        kit_id: String,
-        component_id: String,
+        // `Box<str>` keeps this, the largest command, at its old size now
+        // that it carries `detach`.
+        kit_id: Box<str>,
+        component_id: Box<str>,
         doc_x: Option<f64>,
         doc_y: Option<f64>,
         target_parent: NodeId,

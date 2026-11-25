@@ -31,7 +31,9 @@ fn two_page_state() -> EditorState {
     let label = text("btn-label", "Label", 8.0, 8.0, 80.0, 20.0, "Button");
     let master = frame("btn", "Button", 0.0, 0.0, 120.0, 40.0, vec![label]);
     // Pushed as-is: page and subtree inserts re-mint authored ids.
-    let page = s.add_page_with_name(Some("Kit".into())).expect("second page");
+    let page = s
+        .add_page_with_name(Some("Kit".into()))
+        .expect("second page");
     assert_eq!(page, 1);
     assert!(s.apply(EditorCommand::SetActivePage { index: 1 }));
     s.active_children_mut().clear();
@@ -45,7 +47,7 @@ fn two_page_state() -> EditorState {
 }
 
 fn insert(component: &str, parent: &str, descendants: Option<&str>) -> EditorCommand {
-    EditorCommand::Instance(InstanceCommand::Insert {
+    EditorCommand::Instance(Box::new(InstanceCommand::Insert {
         component_id: id(component),
         parent: if parent.is_empty() {
             NodeId::NONE
@@ -56,7 +58,7 @@ fn insert(component: &str, parent: &str, descendants: Option<&str>) -> EditorCom
         y: None,
         descendants_json: descendants.map(str::to_string),
         page_id: None,
-    })
+    }))
 }
 
 /// The content an instance's copy of `child` renders.
@@ -97,7 +99,11 @@ fn set_master_label(s: &mut EditorState, content: &str) {
 #[test]
 fn instance_of_a_master_on_another_page_is_a_ref_that_follows_the_master() {
     let mut s = two_page_state();
-    assert!(s.apply(insert("btn", "screen", Some(r#"{"btn-label":{"content":"Save"}}"#))));
+    assert!(s.apply(insert(
+        "btn",
+        "screen",
+        Some(r#"{"btn-label":{"content":"Save"}}"#)
+    )));
     assert!(s.apply(insert("btn", "screen", None)));
     let screen = find_node(s.active_children(), &id("screen")).unwrap();
     let instances: Vec<String> = screen
@@ -130,7 +136,10 @@ fn page_root_instance_defaults_next_to_the_master_origin_and_undoes_in_one_step(
     assert!(s.apply(insert("btn", "", None)));
     let instance = s.active_children().last().unwrap();
     assert!(matches!(instance, PenNode::Ref(_)));
-    assert_eq!((instance.base().x, instance.base().y), (Some(20.0), Some(20.0)));
+    assert_eq!(
+        (instance.base().x, instance.base().y),
+        (Some(20.0), Some(20.0))
+    );
     assert_eq!(s.history.past.len(), depth + 1);
     assert!(s.undo());
     assert_eq!(s.active_children().len(), 1);
@@ -149,14 +158,16 @@ fn an_instance_cannot_go_inside_its_own_master() {
     assert!(!s.apply(insert("btn", "btn-label", None)));
 
     // Indirect: card shows btn; btn may not then hold a card instance.
-    s.active_children_mut().push(frame("card", "Card", 200.0, 0.0, 200.0, 100.0, Vec::new()));
+    s.active_children_mut()
+        .push(frame("card", "Card", 200.0, 0.0, 200.0, 100.0, Vec::new()));
     assert!(s.apply(EditorCommand::CreateComponent {
         node_id: id("card"),
         name: "Card".into(),
     }));
     assert!(s.apply(insert("btn", "card", None)));
     assert!(matches!(
-        s.instance_view().check_instance_insert(&id("card"), &id("btn")),
+        s.instance_view()
+            .check_instance_insert(&id("card"), &id("btn")),
         Err(InstanceError::Cycle { .. })
     ));
 }
@@ -166,11 +177,13 @@ fn unknown_or_plain_nodes_are_not_instantiable() {
     let s = two_page_state();
     let view = s.instance_view();
     assert_eq!(
-        view.check_instance_insert(&id("nope"), &NodeId::NONE).unwrap_err(),
+        view.check_instance_insert(&id("nope"), &NodeId::NONE)
+            .unwrap_err(),
         InstanceError::ComponentNotFound("nope".into())
     );
     assert_eq!(
-        view.check_instance_insert(&id("screen"), &NodeId::NONE).unwrap_err(),
+        view.check_instance_insert(&id("screen"), &NodeId::NONE)
+            .unwrap_err(),
         InstanceError::NotAComponent("screen".into())
     );
 }
@@ -178,14 +191,20 @@ fn unknown_or_plain_nodes_are_not_instantiable() {
 #[test]
 fn detach_keeps_the_instance_id_and_gives_inner_nodes_fresh_ids() {
     let mut s = two_page_state();
-    assert!(s.apply(insert("btn", "screen", Some(r#"{"btn-label":{"content":"Save"}}"#))));
+    assert!(s.apply(insert(
+        "btn",
+        "screen",
+        Some(r#"{"btn-label":{"content":"Save"}}"#)
+    )));
     let instance = s.selection.anchor.clone();
     assert!(s.apply(EditorCommand::SetActivePage { index: 1 }));
     // Detach finds the instance on page 1 while page 2 is active.
-    assert!(s.apply(EditorCommand::Instance(InstanceCommand::Detach {
-        node_id: instance.clone(),
-        page_id: None,
-    })));
+    assert!(
+        s.apply(EditorCommand::Instance(Box::new(InstanceCommand::Detach {
+            node_id: instance.clone(),
+            page_id: None,
+        })))
+    );
     assert_eq!(s.ui.active_page_index, 1);
     let page = &s.doc.pages.as_ref().unwrap()[0].children;
     let detached = find_node(page, &instance).expect("same id");
@@ -208,7 +227,11 @@ fn detach_keeps_the_instance_id_and_gives_inner_nodes_fresh_ids() {
 #[test]
 fn swap_keeps_overrides_and_list_instances_reports_each_use() {
     let mut s = two_page_state();
-    assert!(s.apply(insert("btn", "screen", Some(r#"{"btn-label":{"content":"Save"}}"#))));
+    assert!(s.apply(insert(
+        "btn",
+        "screen",
+        Some(r#"{"btn-label":{"content":"Save"}}"#)
+    )));
     let first = s.selection.anchor.clone();
     assert!(s.apply(insert("btn", "", None)));
     let uses = s.instance_view().list_instances("btn");
@@ -218,22 +241,29 @@ fn swap_keeps_overrides_and_list_instances_reports_each_use() {
     assert_eq!(uses[1].override_count, 0);
 
     assert!(s.apply(EditorCommand::SetActivePage { index: 1 }));
-    s.active_children_mut().push(frame("alt", "Alt", 200.0, 0.0, 100.0, 40.0, Vec::new()));
+    s.active_children_mut()
+        .push(frame("alt", "Alt", 200.0, 0.0, 100.0, 40.0, Vec::new()));
     assert!(s.apply(EditorCommand::CreateComponent {
         node_id: id("alt"),
         name: "Alt".into(),
     }));
-    assert!(s.apply(EditorCommand::Instance(InstanceCommand::Swap {
-        node_id: first.clone(),
-        component_id: id("alt"),
-        page_id: None,
-    })));
+    assert!(
+        s.apply(EditorCommand::Instance(Box::new(InstanceCommand::Swap {
+            node_id: first.clone(),
+            component_id: id("alt"),
+            page_id: None,
+        })))
+    );
     let page = &s.doc.pages.as_ref().unwrap()[0].children;
     let PenNode::Ref(reference) = find_node(page, &first).unwrap() else {
         panic!("still a ref")
     };
     assert_eq!(reference.target, "alt");
-    assert!(reference.descendants.as_ref().unwrap().contains_key("btn-label"));
+    assert!(reference
+        .descendants
+        .as_ref()
+        .unwrap()
+        .contains_key("btn-label"));
     assert_eq!(s.instance_view().list_instances("btn").len(), 1);
     assert_eq!(s.instance_view().list_instances("alt").len(), 1);
 }
@@ -251,9 +281,11 @@ fn override_targets_name_the_masters_nodes() {
 #[test]
 fn copy_keeps_the_old_detached_clone() {
     let mut s = two_page_state();
-    assert!(s.apply(EditorCommand::Instance(InstanceCommand::Copy {
-        component_id: id("btn"),
-    })));
+    assert!(
+        s.apply(EditorCommand::Instance(Box::new(InstanceCommand::Copy {
+            component_id: id("btn"),
+        })))
+    );
     let clone = s.active_children().last().unwrap();
     assert!(matches!(clone, PenNode::Frame(_)));
     assert_ne!(clone.id_str(), "btn");
