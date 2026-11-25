@@ -140,3 +140,41 @@ fn a_named_empty_board_is_not_replaced_by_the_next_root_frame() {
     assert_eq!(ids.len(), 2, "{ids:?}");
     assert!(ids.contains(&"board"), "{ids:?}");
 }
+
+#[test]
+fn inserted_reusable_frames_join_the_component_registry_until_undo() {
+    let mut s = state_with(vec![]);
+    let mut master = frame(
+        "card",
+        "Card/Product",
+        0.0,
+        0.0,
+        240.0,
+        120.0,
+        vec![rect("card-image", "Image", 0.0, 0.0, 240.0, 80.0)],
+    );
+    let jian_ops_schema::node::PenNode::Frame(body) = &mut master else {
+        panic!("frame fixture");
+    };
+    body.reusable = Some(true);
+    let board = frame("board", "Board", 400.0, 0.0, 400.0, 300.0, vec![master]);
+
+    assert!(
+        s.apply(EditorCommand::InsertAuthoredSubtreePreservingRoots {
+            nodes: vec![board],
+            parent_id: NodeId::NONE,
+            page_id: None,
+        })
+    );
+    let card = NodeId::new("card");
+    let component = s.components.find_by_id(&card).expect("registered at once");
+    assert_eq!(component.name, "Card/Product");
+    assert!(s.components.resolved_root(&s.doc, &card).is_some());
+    assert_eq!(s.components.len(), 1, "only the reusable frame registers");
+
+    assert!(s.apply(EditorCommand::Undo));
+    assert!(
+        s.components.find_by_id(&card).is_none(),
+        "undo drops it again"
+    );
+}

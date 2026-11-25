@@ -9,25 +9,28 @@ budget: 1200
 category: domain
 ---
 
-COMPONENT COMPOSITION (this document ships reusable components — prefer instances):
+COMPONENT COMPOSITION (when the document has reusable components — prefer instances):
 
 ## Priority Rule
 
 When a needed UI element (button, card, input, nav item, badge, avatar, etc.)
-matches one of the AVAILABLE COMPONENTS listed in your prompt, INSTANTIATE it
+matches an available component — one in the AVAILABLE COMPONENTS list of your
+prompt (in-app agent) or one `list_components` returns (MCP) — INSTANTIATE it
 with a `ref` node instead of hand-building the same structure out of
-frame/text/icon_font. Instances inherit the component's exact spacing, radius,
-fill, and typography, so the design stays visually consistent and on-brand.
-Only build from scratch when no available component fits.
+frame/text/icon_font.
+Instances inherit the component's exact spacing, radius, fill, and typography,
+so the design stays visually consistent and on-brand. Only build from scratch
+when no available component fits.
 
-## The `ref` Node — script-gen (your default output protocol)
+## The `ref` Node — in a script
 
-script-gen is THE output protocol on the full generation attempt: you write a
-JavaScript program that builds the document by calling the global
-`I(parent, node)`. A component instance under script-gen is ONE `I(...)` call
-— `type:"ref"` plus the component id from the AVAILABLE COMPONENTS list. It
-needs no children of its own; the system expands the master subtree at render
-time, and the call returns the new instance's id like any other `I(...)` call:
+Design content is written as a JavaScript program that builds the document by
+calling the global `I(parent, node)` (the `script` of `batch_design`). A
+component instance is ONE `I(...)` call — `type:"ref"` plus the component id.
+It needs no children of its own; the system expands the master subtree at
+render time, and the call returns the new instance's id like any other
+`I(...)` call. The examples below use a kit button whose master id is
+`shadcn-btn-primary`; use the ids your list gives:
 
 ```js
 const cta = I(sec, {"type":"ref","ref":"shadcn-btn-primary"});
@@ -58,11 +61,11 @@ const btnB = I(row, {"type":"ref","ref":"shadcn-btn-secondary","descendants":{"s
 
 ## Rules
 
-- The `ref` value MUST be a component id from the AVAILABLE COMPONENTS list.
-  Never invent an id; if nothing matches, build the element normally.
-- Use script-gen's `I(parent, {"type":"ref",...})` form on every subagent
-  generation attempt. Reduced-complexity and minimal-skills retries narrow the
-  skill set only; they do not switch output protocol.
+- The `ref` value MUST be the id of an available component. Never invent an
+  id; if nothing matches, build the element normally.
+- Always write instances in the script form `I(parent, {"type":"ref",...})`.
+  (In-app generation: a retry with fewer skills narrows the guidance only; it
+  does not change the output protocol.)
 - A `ref` node does NOT take its own visual props (fill / cornerRadius /
   padding) — those live on the master. Customize only via `descendants`.
 - Keys in `descendants` MUST be ids that exist inside the chosen master.

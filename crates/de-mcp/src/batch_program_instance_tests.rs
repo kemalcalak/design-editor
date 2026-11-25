@@ -158,3 +158,92 @@ fn update_node_patches_an_instance_descendant() {
         Some("#ff0000")
     );
 }
+
+fn instance_json(state: &EditorState, id: &str) -> Value {
+    let node = de_editor_core::walkers::find_node(state.active_children(), &NodeId::new(id))
+        .unwrap_or_else(|| panic!("{id} exists"));
+    serde_json::to_value(node).expect("json")
+}
+
+#[test]
+fn instance_names_a_master_by_its_binding_in_the_same_program() {
+    let mut s = state();
+    let envelope = run(
+        &mut s,
+        "master=I(null,{\"type\":\"frame\",\"name\":\"Tag\",\"reusable\":true,\"width\":80,\"height\":24})\n\
+         label=I(master,{\"type\":\"text\",\"content\":\"Tag\"})\n\
+         one=I(null,{\"type\":\"ref\",\"ref\":\"master\",\"descendants\":{\"label\":{\"content\":\"New\"}}})",
+    );
+    let (master, label) = (
+        binding_id(&envelope, "master"),
+        binding_id(&envelope, "label"),
+    );
+    let one = instance_json(&s, &binding_id(&envelope, "one"));
+    assert_eq!(one["ref"], master.as_str());
+    assert_eq!(one["descendants"][label.as_str()]["content"], "New");
+}
+
+#[test]
+fn instance_names_a_master_by_an_id_authored_in_the_same_program() {
+    let mut s = state();
+    let envelope = run(
+        &mut s,
+        "m=I(null,{\"type\":\"frame\",\"id\":\"hero\",\"reusable\":true,\"width\":80,\"height\":24,\
+         \"children\":[{\"type\":\"text\",\"id\":\"hero-title\",\"content\":\"x\"}]})\n\
+         one=I(null,{\"type\":\"ref\",\"ref\":\"hero\",\"descendants\":{\"hero-title\":{\"content\":\"y\"}}})",
+    );
+    let master = binding_id(&envelope, "m");
+    assert_ne!(master, "hero", "the authored id was remapped");
+    let one = instance_json(&s, &binding_id(&envelope, "one"));
+    assert_eq!(one["ref"], master.as_str());
+    let key = one["descendants"]
+        .as_object()
+        .and_then(|map| map.keys().next().cloned())
+        .expect("one override");
+    assert_ne!(key, "hero-title", "the override key follows the remap");
+    let resolved = resolve_refs_for_canvas(&s.doc);
+    let page = resolved.children;
+    assert_eq!(
+        content(
+            &rendered(&page, one["id"].as_str().expect("id"))
+                .children()
+                .expect("kids")[0]
+        ),
+        "y"
+    );
+}
+
+#[test]
+fn instance_of_an_existing_master_keeps_its_target() {
+    let mut s = state();
+    let envelope = run(
+        &mut s,
+        "one=I(\"page\",{\"type\":\"ref\",\"ref\":\"card\",\"descendants\":{\"title\":{\"content\":\"Hi\"}}})",
+    );
+    let one = instance_json(&s, &binding_id(&envelope, "one"));
+    assert_eq!(one["ref"], "card");
+    assert_eq!(one["descendants"]["title"]["content"], "Hi");
+}
+
+#[test]
+fn a_binding_named_like_a_master_child_does_not_hijack_an_existing_instance() {
+    // `title` is both a fresh binding here and the id of the existing
+    // `card` master's label: the override must stay on the master's label.
+    // The trailing `U` sends the same lines through the program executor.
+    for tail in ["", "\nU(\"page\",{\"name\":\"Page\"})"] {
+        let mut s = state();
+        let envelope = run(
+            &mut s,
+            &format!(
+                "title=I(\"page\",{{\"type\":\"text\",\"content\":\"Fresh\"}})\n\
+                 card=I(\"page\",{{\"type\":\"ref\",\"ref\":\"card\",\"descendants\":{{\"title\":{{\"content\":\"Hi\"}}}}}}){tail}"
+            ),
+        );
+        let one = instance_json(&s, &binding_id(&envelope, "card"));
+        assert_eq!(one["ref"], "card", "tail {tail:?}");
+        assert_eq!(
+            one["descendants"]["title"]["content"], "Hi",
+            "tail {tail:?}"
+        );
+    }
+}

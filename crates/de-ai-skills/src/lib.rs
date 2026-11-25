@@ -121,6 +121,14 @@ const GUIDELINE_TOPICS: &[(&str, &[&str], &[&str])] = &[
     ("execute", &["execute-script"], &["execute-script"]),
     // Live script nodes: the program contract, inputs and limits (#19).
     ("script", &["script-node"], &["script-node"]),
+    // Linked components for MCP clients (#366): the in-app agent's
+    // `component-composition` skill first (one source for the `ref` +
+    // `descendants` syntax), then the MCP workflow and worked examples.
+    (
+        "components",
+        &["component", "instances"],
+        &["component-composition", "components-mcp"],
+    ),
 ];
 
 /// Compose the named skills (in order) into one coherent guideline doc,
@@ -165,6 +173,8 @@ fn compose_skills(names: &[&str]) -> Option<String> {
 ///   reads and writes, one undo step, all-or-nothing
 /// - `"script"` (`script-node`) — live script nodes: the program contract,
 ///   typed inputs and run limits
+/// - `"components"` (`component`, `instances`) — linked components: masters,
+///   `ref` instances, per-instance `descendants`, themed and nested instances
 ///
 /// Returns `None` for any unrecognised topic so callers can produce a typed
 /// "unknown topic" error without special-casing the string themselves.
@@ -174,8 +184,9 @@ pub fn guideline_for(topic: &str) -> Option<String> {
         .find(|(name, aliases, _)| *name == topic || aliases.contains(&topic))?;
     compose_skills(skill_names).map(|mut guideline| {
         // `execute` writes land as written; the repair passes are not part
-        // of that tool's contract.
-        if *name != "execute" {
+        // of that tool's contract. `components` is a reference read before
+        // or between writes, not a build recipe that ends a design.
+        if !matches!(*name, "execute" | "components") {
             guideline.push_str("\n\nWhen you are done, call finalize_design once — it runs the same repair passes the built-in pipeline applies.");
         }
         guideline

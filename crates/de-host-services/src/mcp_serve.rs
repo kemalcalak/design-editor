@@ -726,6 +726,8 @@ mod auto_finalize_stdio_tests;
 #[cfg(test)]
 mod codegen_wire_tests;
 #[cfg(test)]
+mod components_topic_tests;
+#[cfg(test)]
 mod conversion_flow_tests;
 #[cfg(test)]
 mod design_agent_run_tool_tests;
