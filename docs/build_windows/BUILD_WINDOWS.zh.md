@@ -73,12 +73,6 @@
         rustup default 1.94-x86_64-pc-windows-msvc
         ```
 
-    - 2.4 安装 wasm‑bindgen‑cli，用于处理 WASM 与 JS 的绑定生成，PowerShell 执行以下命令：
-
-        ```powershell
-        cargo install -f wasm-bindgen-cli --version 0.2.117
-        ```
-
 ## 三、编译
 
 1. 在仓库根目录打开 PowerShell，执行：
@@ -99,44 +93,6 @@
     
     -  1\.3 执行步骤 `三.1` 重新编译
 
-2. 构建 Web Bundle
-
-    - 2\.1 编译 WASM 库，在仓库根目录打开 PowerShell，执行：
-
-        ```powershell
-        cargo build -p de-host-web --target wasm32-unknown-unknown --release --no-default-features --features "web canvaskit"
-        ```
-
-    - 2\.2 生成 JS 绑定文件
-
-        ```powershell
-        wasm-bindgen target\wasm32-unknown-unknown\release\de_host_web.wasm --out-dir target\release\web-bundle --target web
-        ```
-
-    - 2\.3 补全 CanvasKit 渲染资源，从 `crates\de-host-web\assets\` 目录把 `canvaskit` 复制到 `web-bundle` 中
-
-        ```powershell
-        Copy-Item -Recurse "crates\de-host-web\assets\canvaskit" -Destination "target\release\web-bundle\canvaskit" -Force
-        ```
-
-    - 2\.4 最终目录结构（`target\release\` 下）
-
-        ```plaintext
-        release\
-        ├── design-editor.exe
-        ├── de-host-web-server.exe
-        ├── de.exe
-        └── web-bundle\
-            ├── canvaskit\
-            │   ├── canvaskit.js
-            │   └── canvaskit.wasm
-            ├── snippets\
-            ├── op_host-web.d.ts
-            ├── de_host_web.js
-            ├── de_host_web_bg.wasm
-            └── de_host_web_bg.wasm.d.ts
-        ```
-
 ## 四、配置 dsh‑design-editor 插件需要的环境变量
 
 1. 以管理员身份运行 PowerShell，执行以下命令，**把 <i><u>design-editor‑main 根目录</u></i> 替换为实际仓库目录**：
@@ -152,39 +108,13 @@
 
     ```powershell
     cd target\release
-    ./design-editor.exe --serve-web 3100
+    ./design-editor.exe --mcp-http 3100 demo.de
     #屏幕会一闪而过，后台运行design-editor服务监听3100端口
-    ```
-
-2. de-host-web-server.exe  <i>` (dsh插件可以不用这个文件) `</i>
-
-    ```powershell
-    cd target\release
-    ./de-host-web-server.exe --serve-web 3100
-    #会看到两段“design-editor --serve-web: ”，在PowerShell中监听3100端口
     ```
 
 ---
 
 # 注意
 
-1.  --feature 参数
-
-    ```powershell
-    cargo build -p de-host-web --target wasm32-unknown-unknown --release --no-default-features --features "web canvaskit"
-    ```
-
-    > 是`--features "web canvaskit"` 而不是`--features "web"`，
-    > 
-    >`--features "web"`能编译成功，但生成的js文件没有导出 `mount_ck` 函数
-    > 
-    >
-
-2. web-bundle 目录映射到 HTTP 的 /pkg/ 路由
-
-    > 磁盘路径 `web-bundle/de_host_web.js` → 浏览器对应 `/pkg/de_host_web.js`
-    > 
-    > 页面报找不到 `/pkg/de_host_web.js` 时，是文件夹没有 `web-bundle/de_host_web.js` 文件
-
-3. rustup 工具链 `1.94`、wasm-bindgen-cli `0.2.117`、skia-bindings `0.97.2` 对应 `rust-toolchain.toml` 与 `Cargo.lock` 中固定的版本；若这些文件中的版本不同，请以它们为准
+1. rustup 工具链 `1.94`、skia-bindings `0.97.2` 对应 `rust-toolchain.toml` 与 `Cargo.lock` 中固定的版本；若这些文件中的版本不同，请以它们为准
 

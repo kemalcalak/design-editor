@@ -10,10 +10,9 @@ For full guidance see **`CLAUDE.md`** (this directory). Authoritative Rust archi
 
 Tooling is **Cargo** (Rust — the product). The root has **no `package.json`**; the JS/**Bun** tooling (Chrome extension scripts, Iconify catalog) lives under `packages/` — run JS scripts from there.
 
-- **Web dev server (Rust):** `bash scripts/start-web-rust.sh`
 - **Build (Rust):** `cargo build --workspace --release`
 - **Tests (Rust):** `cargo test --workspace`; single crate: `cargo test -p <crate>`
-- **Type check:** `cargo check --workspace`; wasm: `cargo check --target wasm32-unknown-unknown -p de-host-web --no-default-features --features web`
+- **Type check:** `cargo check --workspace`; wasm32-clean crates: `cargo check --target wasm32-unknown-unknown -p de-editor-core -p de-editor-ui`
 - **Lint / format (Rust):** `cargo clippy --workspace --all-targets -- -D warnings` / `cargo fmt --all`
 - **Lint / format (JS):** from `packages/`: `bun run lint` (oxlint) / `bun run format` (oxfmt)
 - **Desktop app:** `cargo build -p de-host-desktop` → binary `design-editor`
