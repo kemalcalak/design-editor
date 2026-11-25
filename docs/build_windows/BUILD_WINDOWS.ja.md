@@ -64,12 +64,6 @@
         rustup default 1.94-x86_64-pc-windows-msvc
         ```
 
-    - 2.4 wasm-bindgen-cli をインストール（WASM と JS のバインド生成用）。PowerShell で以下を実行：
-
-        ```powershell
-        cargo install -f wasm-bindgen-cli --version 0.2.117
-        ```
-
 ## 3. ビルド
 
 1. リポジトリルートで PowerShell を開き、以下を実行：
@@ -90,44 +84,6 @@
     
     - 1.3 ステップ 3.1 を再実行してリビルド
 
-2. Web バンドルのビルド
-
-    - 2.1 WASM ライブラリのコンパイル。リポジトリルートで PowerShell を開き、以下を実行：
-
-        ```powershell
-        cargo build -p de-host-web --target wasm32-unknown-unknown --release --no-default-features --features "web canvaskit"
-        ```
-
-    - 2.2 JS バインドファイルの生成
-
-        ```powershell
-        wasm-bindgen target\wasm32-unknown-unknown\release\de_host_web.wasm --out-dir target\release\web-bundle --target web
-        ```
-
-    - 2.3 CanvasKit レンダリングアセットを `crates\de-host-web\assets\canvaskit` から `web-bundle` にコピー：
-
-        ```powershell
-        Copy-Item -Recurse "crates\de-host-web\assets\canvaskit" -Destination "target\release\web-bundle\canvaskit" -Force
-        ```
-
-    - 2.4 最終ディレクトリ構造
-
-        ```plaintext
-        target\release\
-        ├── design-editor.exe
-        ├── de-host-web-server.exe
-        ├── de.exe
-        └── web-bundle\
-            ├── canvaskit\
-            │   ├── canvaskit.js
-            │   └── canvaskit.wasm
-            ├── snippets\
-            ├── op_host-web.d.ts
-            ├── de_host_web.js
-            ├── de_host_web_bg.wasm
-            └── de_host_web_bg.wasm.d.ts
-        ```
-
 ## 4. dsh-design-editor プラグインの環境変数設定
 
 1. 管理者として PowerShell を実行し、以下を実行（パスを実際のリポジトリルートに置き換え）：
@@ -143,38 +99,12 @@
 
     ```powershell
     cd target\release
-    ./design-editor.exe --serve-web 3100
+    ./design-editor.exe --mcp-http 3100 demo.de
     # ウィンドウが一瞬表示されて閉じます — バックグラウンドで3100ポートをリッスンします
-    ```
-
-2. de-host-web-server.exe  <i>`（dsh プラグインでは不要）`</i>
-
-    ```powershell
-    cd target\release
-    ./de-host-web-server.exe --serve-web 3100
-    # PowerShell で「design-editor --serve-web:」が2行表示され、3100ポートをリッスンします
     ```
 
 ---
 
 # トラブルシューティング
 
-1. WASM ビルド時の `--features` パラメータに注意
-
-    ```powershell
-    cargo build -p de-host-web --target wasm32-unknown-unknown --release --no-default-features --features "web canvaskit"
-    ```
-
-    > `--features "web"` ではなく `--features "web canvaskit"` を使用してください。
-    > 
-    > `--features "web"` でもコンパイルは成功しますが、生成された JS ファイルに `mount_ck` 関数がエクスポートされません。
-    > 
-    >
-
-2. サーバーは `web-bundle` ディレクトリ全体を HTTP の `/pkg/` ルートにマッピングします
-
-    > ディスクパス `web-bundle/de_host_web.js` → ブラウザ URL `/pkg/de_host_web.js`
-    > 
-    > ページに `/pkg/de_host_web.js` が見つからないと表示される場合は、`web-bundle/` にファイルがありません。
-
-3. rustup ツールチェーン `1.94`、wasm-bindgen-cli `0.2.117`、skia-bindings `0.97.2` は `rust-toolchain.toml` と `Cargo.lock` で固定されたバージョンに対応しています。これらのファイルが別のバージョンを指定している場合は、そちらを使用してください。
+1. rustup ツールチェーン `1.94`、skia-bindings `0.97.2` は `rust-toolchain.toml` と `Cargo.lock` で固定されたバージョンに対応しています。これらのファイルが別のバージョンを指定している場合は、そちらを使用してください。

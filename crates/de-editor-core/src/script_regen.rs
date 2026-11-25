@@ -28,7 +28,7 @@ use crate::script_inputs::{resolved_script_inputs, script_input_specs};
 use crate::state::EditorState;
 use crate::variables_resolve::effective_theme;
 use crate::walkers::find_node_mut;
-use crate::web_sync::{fnv1a64, fnv1a64_extend};
+use de_util::fnv::{fnv1a64, fnv1a64_extend};
 
 type Theme = BTreeMap<String, String>;
 

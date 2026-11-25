@@ -376,9 +376,9 @@ pub struct HttpRequest {
     pub body: String,
     pub host: Option<String>,
     pub origin: Option<String>,
-    /// Legacy `X-Design-Editor-Token` header value, when present. The local and
-    /// managed web-canvas daemons deliberately ignore it; managed lifecycle
-    /// authentication, when used, stays in the `design-editor/shutdown` body.
+    /// Legacy `X-Design-Editor-Token` header value, when present. The live
+    /// server deliberately ignores it; lifecycle authentication, when used,
+    /// stays in the `design-editor/shutdown` body.
     pub token: Option<String>,
     /// `Content-Type` header value, when present. Browser-facing JSON routes
     /// require `application/json` so cross-origin "simple requests" (which
@@ -530,18 +530,6 @@ pub fn read_http_request<S: std::io::Read>(stream: &mut S) -> Result<HttpRequest
             });
         }
     }
-    let credential_body_label = match path.as_str() {
-        "/api/settings/credentials" => Some("credential settings"),
-        "/api/ai/models/discover" => Some("model discovery"),
-        _ => None,
-    };
-    if let Some(label) = credential_body_label
-        .filter(|_| content_length > crate::web_credentials::MAX_CREDENTIAL_BODY_BYTES)
-    {
-        return Err(McpServeError::Protocol(format!(
-            "{label} body exceeds 256 KiB"
-        )));
-    }
     let header_value = |wanted: &str| {
         headers.lines().skip(1).find_map(|line| {
             let (name, value) = line.trim().split_once(':')?;
@@ -636,12 +624,9 @@ pub fn write_mcp_http_response<S: std::io::Write>(
 
 /// Like [`write_mcp_http_response`], but lets the caller supply the exact
 /// `Access-Control-Allow-Origin` value to emit: `Some(origin)` echoes that
-/// literal value, `None` omits the header entirely. Used by the managed
-/// web-canvas daemon (`web_canvas_server::serve_one`), which computes the
-/// right value per-request via `cors_origin_for` against its
-/// `--allow-origin` allowlist; every other caller (the `--mcp-http`
-/// server, the legacy `--serve-web` accept-loop overflow reply) keeps the
-/// permissive `*` via `write_mcp_http_response` above, unchanged.
+/// literal value, `None` omits the header entirely. Used by the live MCP
+/// document sync, which computes the value per request; every other caller
+/// keeps the permissive `*` via `write_mcp_http_response` above.
 pub(crate) fn write_mcp_http_response_with_origin<S: std::io::Write>(
     stream: &mut S,
     status: &str,

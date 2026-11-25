@@ -102,8 +102,8 @@ pub(crate) fn import_page_from_url(
         return Err(ImportHtmlUrlError::TooManyConcurrentJobs);
     };
     // `call` is a synchronous MCP tool that can be reached either from a
-    // plain worker thread (CLI / stdio server) or from a tokio worker (the
-    // web daemon's connection pool). A private runtime built here would
+    // plain worker thread (CLI / stdio server) or from a tokio worker. A
+    // private runtime built here would
     // panic on `block_on` in the latter case, so both fetch paths below go
     // through the one sanctioned bridge, which sheds the worker instead.
     let page = block_on_anywhere(fetch_capped(

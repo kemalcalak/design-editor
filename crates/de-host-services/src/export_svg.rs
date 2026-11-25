@@ -23,7 +23,7 @@ fn layered_options(names: &SceneLayerNames) -> SvgExportOptions<'_> {
 /// Icons that name a brand glyph resolve through the same catalog the
 /// raster exports install before painting (a no-op once installed).
 fn install_brand_catalog() {
-    let _ = de_editor_ui::set_brand_catalog(crate::web_static::ICONIFY_BRANDS_JSON);
+    let _ = de_editor_ui::set_brand_catalog(crate::brand_catalog::ICONIFY_BRANDS_JSON);
 }
 
 /// Node `node_id` of the scene's active page as a layered SVG.

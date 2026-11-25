@@ -70,7 +70,6 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "home.mcp.port" => "Port {{port}}",
         "home.mcp.settings" => "Pengaturan MCP",
         "home.mcp.start" => "Mulai server",
-        "icon.catalogLoading" => "Katalog ikon sedang dimuat…",
         "sceneTemplate.documentUnavailable" => "Dokumen templat itu tidak dapat dimuat. Coba lagi.",
         "sceneTemplate.deleteFailed" => "Templat itu tidak dapat dihapus. Coba lagi.",
         "sceneTemplate.item.soundingNavyDeck.title" => "Peta pengukuran kedalaman · deck strategi",

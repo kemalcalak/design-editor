@@ -64,12 +64,6 @@
         rustup default 1.94-x86_64-pc-windows-msvc
         ```
 
-    - 2.4 Instale o wasm-bindgen-cli para geração de bindings WASM-JS. Execute o seguinte comando no PowerShell:
-
-        ```powershell
-        cargo install -f wasm-bindgen-cli --version 0.2.117
-        ```
-
 ## 3. Compilação
 
 1. Na raiz do repositório, abra o PowerShell e execute:
@@ -90,44 +84,6 @@
     
     - 1.3 Execute novamente o passo 3.1 para recompilar
 
-2. Construção do bundle Web
-
-    - 2.1 Compilar a biblioteca WASM. Na raiz do repositório, abra o PowerShell e execute:
-
-        ```powershell
-        cargo build -p de-host-web --target wasm32-unknown-unknown --release --no-default-features --features "web canvaskit"
-        ```
-
-    - 2.2 Gerar arquivos de bindings JS
-
-        ```powershell
-        wasm-bindgen target\wasm32-unknown-unknown\release\de_host_web.wasm --out-dir target\release\web-bundle --target web
-        ```
-
-    - 2.3 Copie os recursos de renderização CanvasKit de `crates\de-host-web\assets\canvaskit` para `web-bundle`:
-
-        ```powershell
-        Copy-Item -Recurse "crates\de-host-web\assets\canvaskit" -Destination "target\release\web-bundle\canvaskit" -Force
-        ```
-
-    - 2.4 Estrutura final de diretórios
-
-        ```plaintext
-        target\release\
-        ├── design-editor.exe
-        ├── de-host-web-server.exe
-        ├── de.exe
-        └── web-bundle\
-            ├── canvaskit\
-            │   ├── canvaskit.js
-            │   └── canvaskit.wasm
-            ├── snippets\
-            ├── op_host-web.d.ts
-            ├── de_host_web.js
-            ├── de_host_web_bg.wasm
-            └── de_host_web_bg.wasm.d.ts
-        ```
-
 ## 4. Configurar variáveis de ambiente para o plugin dsh-design-editor
 
 1. Execute o PowerShell como administrador e execute os seguintes comandos (substitua o caminho pela raiz real do repositório):
@@ -143,38 +99,12 @@
 
     ```powershell
     cd target\release
-    ./design-editor.exe --serve-web 3100
+    ./design-editor.exe --mcp-http 3100 demo.de
     # A janela aparece brevemente e fecha — o serviço escuta na porta 3100 em segundo plano
-    ```
-
-2. de-host-web-server.exe  <i>` (não necessário para o plugin dsh) `</i>
-
-    ```powershell
-    cd target\release
-    ./de-host-web-server.exe --serve-web 3100
-    # Você verá duas linhas de "design-editor --serve-web:" e a porta 3100 no PowerShell
     ```
 
 ---
 
 # Solução de problemas
 
-1. Preste atenção ao parâmetro `--features` ao compilar WASM
-
-    ```powershell
-    cargo build -p de-host-web --target wasm32-unknown-unknown --release --no-default-features --features "web canvaskit"
-    ```
-
-    > Use `--features "web canvaskit"` em vez de `--features "web"`.
-    > 
-    > `--features "web"` compila com sucesso, mas o arquivo JS gerado não exporta a função `mount_ck`.
-    > 
-    >
-
-2. O servidor mapeia todo o diretório `web-bundle` para a rota HTTP `/pkg/`
-
-    > Caminho no disco `web-bundle/de_host_web.js` → URL do navegador `/pkg/de_host_web.js`
-    > 
-    > Se a página informar que `/pkg/de_host_web.js` não foi encontrado, o arquivo está faltando em `web-bundle/`.
-
-3. A toolchain rustup `1.94`, wasm-bindgen-cli `0.2.117` e skia-bindings `0.97.2` correspondem às versões fixadas em `rust-toolchain.toml` e `Cargo.lock`. Se esses arquivos indicarem outra versão, use a deles.
+1. A toolchain rustup `1.94` e skia-bindings `0.97.2` correspondem às versões fixadas em `rust-toolchain.toml` e `Cargo.lock`. Se esses arquivos indicarem outra versão, use a deles.

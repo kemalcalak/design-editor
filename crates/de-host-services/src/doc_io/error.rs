@@ -19,8 +19,7 @@
 //! client-fault / server-fault split a request boundary needs — a daemon route
 //! handed a bad document answers `400`, while a disk that would not open
 //! answers `500` — and it is now a `match` on the variant rather than a
-//! substring test on the prose. `From<DocIoError> for WebCanvasError` in
-//! `web_canvas_server_error.rs` is where that split is consumed.
+//! substring test on the prose.
 //!
 //! ## No `String` bridge
 //!

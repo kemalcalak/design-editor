@@ -70,7 +70,6 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "home.mcp.port" => "端口 {{port}}",
         "home.mcp.settings" => "MCP 设置",
         "home.mcp.start" => "启动服务器",
-        "icon.catalogLoading" => "图标库正在加载…",
         "sceneTemplate.documentUnavailable" => "该模板的文档加载失败，请重试。",
         "sceneTemplate.deleteFailed" => "该模板删除失败，请重试。",
         "sceneTemplate.item.soundingNavyDeck.title" => "测深海图 · 咨询策略档",

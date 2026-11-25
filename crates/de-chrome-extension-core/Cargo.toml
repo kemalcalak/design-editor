@@ -27,9 +27,9 @@ crate-type = ["cdylib", "rlib"]
 # serializer. Dependency-free leaf crate, wasm32-clean by contract.
 de-util = { path = "../de-util" }
 # The snapshot → `.de` (PenDocument) conversion, shared with the `de` CLI's
-# `import:snapshot` command. wasm32-clean by contract (de-host-web depends on
-# it and builds to wasm32), so the offline download can produce a ready-to-open
-# `.de` document in the browser instead of the raw snapshot JSON.
+# `import:snapshot` command. wasm32-clean by contract, so the offline download
+# can produce a ready-to-open `.de` document in the browser instead of the raw
+# snapshot JSON.
 de-html = { path = "../de-html" }
 # The canonical `.de` document schema `import_snapshot_document` returns; needed
 # to walk the imported node tree for the reported node count.
@@ -41,6 +41,6 @@ jian-ops-schema = { path = "../../vendor/jian/crates/jian-ops-schema" }
 # through an intermediate `serde_json::Value`.
 serde = { workspace = true }
 serde_json = { workspace = true }
-# Pin matches de-host-web — the wasm-bindgen crate and the
-# installed `wasm-bindgen-cli` must agree exactly.
+# The wasm-bindgen crate and the installed `wasm-bindgen-cli` must agree
+# exactly.
 wasm-bindgen = "=0.2.117"

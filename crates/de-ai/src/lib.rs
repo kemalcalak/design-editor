@@ -15,8 +15,7 @@
 //! - [`agent_settings_state`] — state types for the Cmd+, settings
 //!   modal (`AgentSettingsTab`, `AgentProvider`, …).
 //! - [`design_md`] — the shared design.md generation system prompt +
-//!   LLM-output cleanup helpers used by the desktop / web / serve-web
-//!   design.md generators.
+//!   LLM-output cleanup helpers used by the design.md generators.
 //!
 //! The crate is transport-free (serde_json only) and wasm32-clean so
 //! both the native and web shells can build against it.

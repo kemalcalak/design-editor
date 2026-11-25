@@ -114,7 +114,7 @@ wasm heap.
 
 `wasm/` holds the build product (`de_chrome_extension_core.js` +
 `de_chrome_extension_core_bg.wasm`) and is **gitignored**, matching how the
-repo treats every other wasm-bindgen output (`crates/de-host-web/pkg/`).
+repo treats every wasm-bindgen output.
 
 The manifest declares
 `content_security_policy.extension_pages: "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'; img-src 'self' data:"`.
@@ -282,14 +282,14 @@ The extension POSTs the snapshot to the local editor. It tries, in order:
 | ---------------------------------------------- | ------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
 | `POST /api/import/web-snapshot`                | desktop app's live MCP endpoint (`crates/de-host-services/src/mcp_live/snapshot_ingest.rs`) | Insert-only. Open to a well-formed extension id by default; optionally pinned as described below.                |
 | `POST /api/generate/design-md`                 | desktop app's live MCP endpoint (`crates/de-host-services/src/mcp_live/design_md_route.rs`) | Bounded style evidence only. Model work requires explicit extension pairing; every refusal falls back locally.   |
-| `POST /mcp` → `tools/call import_web_snapshot` | headless daemon `design-editor --serve-web <port>`                                          | Fallback, tried only on a `404`. That daemon is unmanaged (permissive CORS, no token) so a plain MCP call works. |
+| `POST /mcp` → `tools/call import_web_snapshot` | headless file-backed server `de start --headless` (`design-editor --mcp-http <port> <file>`) | Fallback, tried only on a `404`. That server is unmanaged (permissive CORS, no token) so a plain MCP call works. |
 
 The desktop route is the recommended path, and the only one this extension is
-designed around. The fallback exists for the **unmanaged** `--serve-web` daemon,
-whose `/mcp` is an open local surface: it takes no token and answers permissive
-CORS, so anything running on your machine that can reach that port can drive it.
-That is pre-existing behaviour of that daemon, not something the extension adds
-— if it matters to you, run the desktop app instead of the bare daemon. The
+designed around. The fallback exists for the **unmanaged** headless
+`--mcp-http` server, whose `/mcp` is an open local surface: it takes no token and
+answers permissive CORS, so anything running on your machine that can reach that
+port can drive it. That is pre-existing behaviour of that server, not something
+the extension adds — if it matters to you, run the desktop app instead. The
 fallback is **not** a compatibility path for older desktop builds: a desktop app
 that predates the ingest route answers `403` (not `404`), so the extension
 reports "no extension ingress" rather than retrying.
@@ -534,7 +534,7 @@ store assigns one:
 
 **"Design Editor is not reachable at 127.0.0.1:3100"** — nothing is listening.
 Start the desktop app and switch on `Settings → MCP → server`, run `de start`,
-or run `design-editor --serve-web 3100`. Check the port with
+or run `de start`. Check the port with
 `cat ~/.design-editor/.de-mcp-port`.
 
 **"This Design Editor build has no extension ingress"** — the app is listening but

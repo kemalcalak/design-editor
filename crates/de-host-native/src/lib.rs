@@ -1,9 +1,8 @@
 //! Design Editor shell — native (desktop) backend.
 //!
-//! Per spec v19 §1.2 (FROZEN 2026-05-04): this crate must NOT be linked into
-//! the wasm32-unknown-unknown web bundle. Even though some deps (winit) compile
-//! silently on wasm32 via web-sys, we use an explicit compile_error! guard to
-//! make accidental inclusion a hard error.
+//! Per spec v19 §1.2 (FROZEN 2026-05-04): this crate is native only. Even
+//! though some deps (winit) compile silently on wasm32 via web-sys, we use an
+//! explicit compile_error! guard to make accidental inclusion a hard error.
 //!
 //! Step 1a Task 2: this crate now ships [`SharedSkiaContext`] (own GL stack +
 //! Skia DirectContext + Surface, idempotent teardown, lifecycle hooks),
@@ -21,10 +20,7 @@
 //!   spec §5.2.1).
 
 #[cfg(target_arch = "wasm32")]
-compile_error!(
-    "de-host-native must NOT be compiled for wasm32 targets. \
-     Use de-host-web for browser builds (spec v19 §1.2)."
-);
+compile_error!("de-host-native must NOT be compiled for wasm32 targets (spec v19 §1.2).");
 
 // Context module: re-exports the `GlContextProvider` trait +
 // `ProviderError` / `ProviderResult` on every (non-wasm) target;

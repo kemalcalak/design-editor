@@ -64,12 +64,6 @@
         rustup default 1.94-x86_64-pc-windows-msvc
         ```
 
-    - 2.4 ติดตั้ง wasm-bindgen-cli สำหรับการสร้าง WASM-JS binding รันคำสั่งต่อไปนี้ใน PowerShell:
-
-        ```powershell
-        cargo install -f wasm-bindgen-cli --version 0.2.117
-        ```
-
 ## 3. การคอมไพล์
 
 1. ในรูทของคลังเก็บ เปิด PowerShell แล้วรัน:
@@ -90,44 +84,6 @@
     
     - 1.3 รันขั้นตอน 3.1 อีกครั้งเพื่อคอมไพล์ใหม่
 
-2. การสร้าง Web Bundle
-
-    - 2.1 คอมไพล์ไลบรารี WASM ในรูทของคลังเก็บ เปิด PowerShell แล้วรัน:
-
-        ```powershell
-        cargo build -p de-host-web --target wasm32-unknown-unknown --release --no-default-features --features "web canvaskit"
-        ```
-
-    - 2.2 สร้างไฟล์ JS binding
-
-        ```powershell
-        wasm-bindgen target\wasm32-unknown-unknown\release\de_host_web.wasm --out-dir target\release\web-bundle --target web
-        ```
-
-    - 2.3 คัดลอกทรัพยากร CanvasKit rendering จาก `crates\de-host-web\assets\canvaskit` ไปยัง `web-bundle`:
-
-        ```powershell
-        Copy-Item -Recurse "crates\de-host-web\assets\canvaskit" -Destination "target\release\web-bundle\canvaskit" -Force
-        ```
-
-    - 2.4 โครงสร้างไดเรกทอรีสุดท้าย
-
-        ```plaintext
-        target\release\
-        ├── design-editor.exe
-        ├── de-host-web-server.exe
-        ├── de.exe
-        └── web-bundle\
-            ├── canvaskit\
-            │   ├── canvaskit.js
-            │   └── canvaskit.wasm
-            ├── snippets\
-            ├── op_host-web.d.ts
-            ├── de_host_web.js
-            ├── de_host_web_bg.wasm
-            └── de_host_web_bg.wasm.d.ts
-        ```
-
 ## 4. กำหนดค่า environment variable สำหรับปลั๊กอิน dsh-design-editor
 
 1. เปิด PowerShell ในฐานะผู้ดูแลระบบแล้วรันคำสั่งต่อไปนี้ (แทนที่เส้นทางด้วยรูทคลังเก็บจริง):
@@ -143,38 +99,12 @@
 
     ```powershell
     cd target\release
-    ./design-editor.exe --serve-web 3100
+    ./design-editor.exe --mcp-http 3100 demo.de
     # หน้าต่างจะกะพริบแล้วปิด — บริการทำงานในพื้นหลังและฟังพอร์ต 3100
-    ```
-
-2. de-host-web-server.exe  <i>` (ไม่จำเป็นสำหรับปลั๊กอิน dsh) `</i>
-
-    ```powershell
-    cd target\release
-    ./de-host-web-server.exe --serve-web 3100
-    # คุณจะเห็นสองบรรทัด "design-editor --serve-web:" และพอร์ต 3100 ใน PowerShell
     ```
 
 ---
 
 # การแก้ไขปัญหา
 
-1. ให้ความสำคัญกับพารามิเตอร์ `--features` เมื่อคอมไพล์ WASM
-
-    ```powershell
-    cargo build -p de-host-web --target wasm32-unknown-unknown --release --no-default-features --features "web canvaskit"
-    ```
-
-    > ใช้ `--features "web canvaskit"` แทน `--features "web"`
-    > 
-    > `--features "web"` คอมไพล์สำเร็จ แต่ไฟล์ JS ที่สร้างขึ้นจะไม่ส่งออกฟังก์ชัน `mount_ck`
-    > 
-    >
-
-2. เซิร์ฟเวอร์จะแมปไดเรกทอรี `web-bundle` ทั้งหมดไปยังเส้นทาง HTTP `/pkg/`
-
-    > เส้นทางดิ스크 `web-bundle/de_host_web.js` → URL ในเบราว์เซอร์ `/pkg/de_host_web.js`
-    > 
-    > ถ้าหน้าเว็บแจ้งว่าไม่พบ `/pkg/de_host_web.js` แสดงว่าไฟล์หายไปจาก `web-bundle/`
-
-3. rustup toolchain `1.94`, wasm-bindgen-cli `0.2.117` และ skia-bindings `0.97.2` ตรงกับเวอร์ชันที่กำหนดไว้ใน `rust-toolchain.toml` และ `Cargo.lock` หากไฟล์เหล่านั้นระบุเวอร์ชันอื่น ให้ใช้เวอร์ชันนั้น
+1. rustup toolchain `1.94` และ skia-bindings `0.97.2` ตรงกับเวอร์ชันที่กำหนดไว้ใน `rust-toolchain.toml` และ `Cargo.lock` หากไฟล์เหล่านั้นระบุเวอร์ชันอื่น ให้ใช้เวอร์ชันนั้น

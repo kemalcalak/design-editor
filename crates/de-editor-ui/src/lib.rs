@@ -63,16 +63,11 @@ pub use de_editor_core::render_backend::{
 };
 pub use layout_scene::{SceneTextAlign, SceneTextVerticalAlign};
 pub use theme::Theme;
-// Brand-logo catalog registration, surfaced at the crate root so non-widget
-// host code (the web brand-catalog fetcher) can install the runtime-loaded
-// catalog without importing the boundary-restricted `widgets` facade.
-pub use widgets::icon_catalog::{
-    brand_catalog_loaded, core_catalog_loaded, set_brand_catalog, set_core_catalog,
-    ICONIFY_BRANDS_ROUTE, ICONIFY_CORE_ROUTE,
-};
-pub use widgets::icon_catalog_extended::{
-    extended_icon_catalog_loaded, install_extended_icon_catalog, ExtendedIconSet,
-};
+// Re-exported at the crate root so host code (the desktop / MCP startup that
+// installs the brand catalog) need not import the boundary-restricted
+// `widgets` facade.
+pub use widgets::icon_catalog::{brand_catalog_loaded, set_brand_catalog};
+pub use widgets::icon_catalog_extended::{extended_icon_catalog_loaded, ExtendedIconSet};
 
 /// Re-exports of Jian gesture / event types so widget code can use the
 /// canonical Jian types directly via the short `crate::` form.

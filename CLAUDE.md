@@ -2,26 +2,27 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+> **The browser editor has been removed (#401).** There is no web host, `--serve-web` daemon or wasm bundle any more; the product is the desktop app plus its live MCP, the `--mcp` / `--mcp-http` modes, the `de` CLI and the Chrome extension. Older comments that mention `de-host-web`, CanvasKit or the web daemon describe removed code.
+
 > **The TypeScript Design Editor has been retired.** `apps/web`, `apps/desktop`, `apps/cli`, and the `pen-*` packages (pen-types/core/engine/renderer/figma/mcp/ai-skills/sdk/react/acp) are gone. The product is now implemented in **Rust** (`crates/`); `packages/` keeps only the Chrome extension and JS build tooling. Historical `// ported from pen-*` comments in the Rust sources name the retired TS as their origin — that code no longer exists in-tree; consult git history (last TS tag `v0.7.5`) if you need it.
 
 Detailed module docs load automatically in subdirectories:
 
-- **`crates/CLAUDE.md`** — Rust shell: crate layout, editor core, widgets, hosts (native/web/desktop), MCP, AI, orchestrator, codegen. **The canonical architecture doc.**
+- **`crates/CLAUDE.md`** — Rust shell: crate layout, editor core, widgets, hosts (native/desktop), MCP, AI, orchestrator, codegen. **The canonical architecture doc.**
 - **`packages/CLAUDE.md`** — Remaining packages (Chrome extension + JS tooling).
 
 ## Commands
 
 Tooling is **Cargo** (Rust — the product). The root has **no `package.json`**; the JS/**Bun** tooling (Chrome extension scripts, Iconify catalog) lives under `packages/` — run JS scripts from there.
 
-- **Web dev server (Rust):** `bash scripts/start-web-rust.sh`
 - **Build (Rust):** `cargo build --workspace --release`
 - **Run all tests (Rust):** `cargo test --workspace`; single crate: `cargo test -p <crate>`
-- **Type check:** `cargo check --workspace`; wasm: `cargo check --target wasm32-unknown-unknown -p de-host-web --no-default-features --features web`
+- **Type check:** `cargo check --workspace`; wasm32-clean crates: `cargo check --target wasm32-unknown-unknown -p de-editor-core -p de-editor-ui`
 - **Lint / format (Rust):** `cargo clippy --workspace --all-targets -- -D warnings` / `cargo fmt --all`
 - **Lint / format (JS):** from `packages/`: `bun run lint` (oxlint) / `bun run format` (oxfmt)
 - **Desktop app:** `cargo build -p de-host-desktop` → binary `design-editor` (live MCP on `127.0.0.1:<port>/mcp`)
 - **CLI:** `cargo build -p de-cli` → binary `de`
-- **MCP server:** built into the desktop/web host (`--mcp <path>`); crate `de-mcp`
+- **MCP server:** built into the desktop binary (`--mcp <path>` / `--mcp-http <port> <path>`); crate `de-mcp`
 - **Iconify catalog (Rust assets):** from `packages/`: `bun run generate-iconify-catalog`
 - **Bump the product version:** `scripts/bump-version.sh X.Y.Z` edits root `Cargo.toml` (the only hand-edited copy) and refreshes `Cargo.lock`; commit both. Verify with `tools/check-version-sync.sh`.
 
@@ -35,10 +36,8 @@ crates/
 ├── de-editor-ui/         Platform-free widgets + RenderBackend facade (wasm32-clean)
 ├── de-editor-host-core/  Transport-free host state machines shared by all hosts
 ├── de-host-native/       Native host lib (winit + skia-safe GL) — desktop
-├── de-host-web/          Browser bundle: wasm32 cdylib, CanvasKit renderer
-├── de-host-desktop/      Desktop binary `design-editor`; also the `--serve-web` daemon
-├── de-host-services/     Headless serve-web / MCP daemon lib (shared by desktop + web-server)
-├── de-host-web-server/   Thin GL-free web-server binary
+├── de-host-desktop/      Desktop binary `design-editor` (GUI, live MCP, `--mcp` / `--mcp-http`)
+├── de-host-services/     Headless MCP / AI / export / persistence lib embedded by the desktop
 ├── de-cli/               `de` command-line tool
 ├── de-util/              Dependency-free leaf: hex-colour parsing + JSON / XML escaping
 └── de-mcp / de-ai / de-ai-skills / de-codegen / de-orchestrator / de-figma /

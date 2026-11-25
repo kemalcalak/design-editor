@@ -30,7 +30,6 @@ Closes #
 - [ ] `cargo fmt --all -- --check`
 - [ ] `cargo clippy --workspace --all-targets -- -D warnings`
 - [ ] `cargo test` for the touched crates (native host crates with `--features gl-host`)
-- [ ] wasm check if `de-editor-ui` or `de-host-web` changed: `cargo check --target wasm32-unknown-unknown -p de-host-web --no-default-features --features web`
 - [ ] `bash tools/check-widget-boundary.sh` and no `.rs` file over 800 lines
 - [ ] Visible change: screenshots in both themes, or n/a
 

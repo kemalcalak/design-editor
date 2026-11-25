@@ -39,9 +39,6 @@ pub enum GenerateJobError {
     Trace(String),
     /// The provider's edited image could not be read or post-processed.
     EditResult(String),
-    /// The web daemon refuses custom image endpoints for transforms (their
-    /// calls cannot be SSRF-screened like the generation route).
-    CustomEndpointRefused,
 }
 
 impl fmt::Display for GenerateJobError {
@@ -79,10 +76,6 @@ impl fmt::Display for GenerateJobError {
             GenerateJobError::Chat(message) => write!(f, "chat provider: {message}"),
             GenerateJobError::Trace(message) => write!(f, "vectorize: {message}"),
             GenerateJobError::EditResult(message) => write!(f, "edited image: {message}"),
-            GenerateJobError::CustomEndpointRefused => f.write_str(
-                "background transforms cannot use a custom image endpoint on the web daemon; \
-                 use a profile on the provider's own host",
-            ),
         }
     }
 }

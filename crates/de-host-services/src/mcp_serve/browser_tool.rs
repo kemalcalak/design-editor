@@ -20,7 +20,7 @@
 //!   (`browser_tool_canvas_shots`, #323).
 //!
 //! A document whose pages the user has not let load (`browser_live`) keeps
-//! its nodes out of reach; addresses follow `browser_url_policy`. Calls
+//! its nodes out of reach. Calls
 //! block their MCP connection thread while the page loads (capped, see
 //! `de_browser_render`), never the UI thread.
 
@@ -73,7 +73,7 @@ pub struct BrowserTool {
     document_folder: Option<String>,
     driver: Arc<dyn PageDriver>,
     /// Makes an import's fonts available; `None` where the host installs
-    /// no font host (the `--serve-web` daemon).
+    /// no font host.
     font_host: Option<&'static dyn FontHost>,
 }
 
@@ -124,9 +124,6 @@ impl BrowserTool {
         let node_url = target
             .and_then(|t| browser_url(&t.node))
             .map(|url| resolve_page_url(url, folder).into_owned());
-        if let Some(url) = &node_url {
-            ensure_permitted(url)?;
-        }
         let call = PageCall {
             key: target.map_or(OWN_PAGE_KEY.to_string(), |t| {
                 de_editor_core::browser_stream::node_page_session_key(&t.id)
@@ -147,7 +144,6 @@ impl BrowserTool {
                         invalid(format!("`{raw}` is not an http, https or file address"))
                     })?;
                 let url = resolve_page_url(&typed, folder).into_owned();
-                ensure_permitted(&url)?;
                 let done = run(PageOp::Load(url.clone()))?;
                 let PageReply::Loaded { url, title } = done.reply else {
                     return Err(internal());
@@ -310,14 +306,6 @@ fn shot_target(args: &BTreeMap<String, String>) -> Result<ShotTarget, ToolError>
         other => Err(invalid(format!(
             "unknown target `{other}` (full-page, selection, query)"
         ))),
-    }
-}
-
-fn ensure_permitted(url: &str) -> Result<(), ToolError> {
-    if crate::browser_url_policy::url_permitted(url) {
-        Ok(())
-    } else {
-        Err(invalid(format!("`{url}` is not allowed on this server")))
     }
 }
 

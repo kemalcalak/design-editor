@@ -5,7 +5,7 @@
 //! `load_fonts`' Google Fonts path; one Google does not have is taken from
 //! the page's own `@font-face` files, fetched by the page itself and
 //! registered for this session. Only a host with a [`FontHost`] (the
-//! desktop app) does any of this; the `--serve-web` daemon installs none.
+//! desktop app) does any of this.
 
 use std::collections::BTreeMap;
 

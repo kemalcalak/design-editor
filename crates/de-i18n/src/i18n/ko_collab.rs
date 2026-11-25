@@ -70,7 +70,6 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "home.mcp.port" => "포트 {{port}}",
         "home.mcp.settings" => "MCP 설정",
         "home.mcp.start" => "서버 시작",
-        "icon.catalogLoading" => "아이콘 카탈로그를 불러오는 중…",
         "sceneTemplate.documentUnavailable" => {
             "이 템플릿의 문서를 불러오지 못했습니다. 다시 시도하세요."
         }

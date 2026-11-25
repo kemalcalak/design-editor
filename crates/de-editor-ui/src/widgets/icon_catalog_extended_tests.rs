@@ -1,7 +1,7 @@
 use super::*;
 
 #[test]
-fn every_extended_collection_maps_to_its_set_and_back_to_its_route() {
+fn every_extended_collection_maps_to_its_set() {
     assert_eq!(
         ExtendedIconSet::for_collection("material-symbols-sharp"),
         Some(ExtendedIconSet::MaterialSymbols)
@@ -11,43 +11,14 @@ fn every_extended_collection_maps_to_its_set_and_back_to_its_route() {
         Some(ExtendedIconSet::Phosphor)
     );
     assert_eq!(ExtendedIconSet::for_collection("lucide"), None);
-    for set in ExtendedIconSet::ALL {
-        assert_eq!(ExtendedIconSet::for_route(set.route()), Some(set));
-    }
-    assert_eq!(ExtendedIconSet::for_route("/pkg/assets/other.json"), None);
 }
 
 #[test]
-fn routes_match_the_staged_bundle_layout() {
-    // `tools/stage-web-assets.sh` copies each catalog to `<bundle>/assets/`
-    // under the asset's own file name; a mismatch is a silent 404.
-    for (set, file) in [
-        (
-            ExtendedIconSet::MaterialSymbols,
-            "iconify-catalog-material-symbols.json.gz",
-        ),
-        (
-            ExtendedIconSet::Phosphor,
-            "iconify-catalog-phosphor.json.gz",
-        ),
-    ] {
-        assert_eq!(
-            set.route(),
-            format!(
-                "{}{file}",
-                de_editor_core::web_assets::WEB_ASSET_ROUTE_PREFIX
-            )
-        );
-    }
-}
-
-#[test]
-fn native_embeds_both_sets_and_refuses_a_runtime_install() {
+fn both_sets_are_embedded() {
     for set in ExtendedIconSet::ALL {
-        let catalog = ensure_loaded(set).expect("native embeds every extended set");
+        let catalog = ensure_loaded(set).expect("every extended set is embedded");
         assert!(catalog.icons.len() > 1000, "{set:?} looks truncated");
         assert!(extended_icon_catalog_loaded(set));
-        assert!(!install_extended_icon_catalog(set, &[]));
     }
     assert_eq!(loaded_mask(), 0b11);
 }
