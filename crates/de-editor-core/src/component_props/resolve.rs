@@ -2,7 +2,12 @@
 //! instance expands (render, inspector display, detach).
 
 use jian_ops_schema::component_props::{BindingField, ComponentProperties, ComponentPropertyType};
+use jian_ops_schema::node::text::TextContent;
+use jian_ops_schema::node::PenNode;
+use jian_ops_schema::style::PenFill;
 use serde_json::{Map, Value};
+
+use crate::pen_node_ext::PenNodeExt;
 
 /// The node key holding a master's properties.
 pub(crate) const PROPERTIES_KEY: &str = "componentProperties";
@@ -123,31 +128,30 @@ pub(crate) fn value_fits(kind: &ComponentPropertyType, value: &Value) -> bool {
     }
 }
 
-/// The value a binding's node shows now, read from the master's JSON.
-pub(crate) fn bound_value(node: &Value, field: &BindingField) -> Option<Value> {
+/// The value a binding's node shows now. Reads the typed node, so a
+/// binding on a large master root never serializes its subtree.
+pub(crate) fn bound_value(node: &PenNode, field: &BindingField) -> Option<Value> {
     match field {
-        BindingField::Content => match node.get("content")? {
-            Value::String(text) => Some(Value::String(text.clone())),
-            Value::Array(runs) => Some(Value::String(
-                runs.iter()
-                    .filter_map(|run| run.get("text").and_then(Value::as_str))
-                    .collect(),
-            )),
+        BindingField::Content => match node {
+            PenNode::Text(text) => Some(Value::String(match &text.content {
+                TextContent::Plain(plain) => plain.clone(),
+                TextContent::Styled(runs) => runs.iter().map(|run| run.text.as_str()).collect(),
+            })),
             _ => None,
         },
-        BindingField::Visible => Some(node.get("visible").cloned().unwrap_or(Value::Bool(true))),
-        BindingField::Ref => node.get("ref").cloned(),
-        BindingField::Fill => node
-            .get("fill")
-            .and_then(Value::as_array)
-            .and_then(|fills| fills.first())
-            .filter(|fill| fill.get("type").and_then(Value::as_str) == Some("solid"))
-            .and_then(|fill| fill.get("color"))
-            .cloned(),
-        BindingField::Prop(name) => node
-            .get(PROPS_KEY)
-            .and_then(|props| props.get(name))
-            .cloned(),
+        BindingField::Visible => Some(Value::Bool(node.base().visible.unwrap_or(true))),
+        BindingField::Ref => match node {
+            PenNode::Ref(reference) => Some(Value::String(reference.target.clone())),
+            _ => None,
+        },
+        BindingField::Fill => match crate::fills::node_fills(node)?.first()? {
+            PenFill::Solid(solid) => Some(Value::String(solid.color.clone())),
+            _ => None,
+        },
+        BindingField::Prop(name) => match node {
+            PenNode::Ref(reference) => reference.props.as_ref()?.get(name).cloned(),
+            _ => None,
+        },
         BindingField::Other(_) => None,
     }
 }

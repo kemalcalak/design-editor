@@ -119,6 +119,15 @@ pub fn editable_input_rects(
         (PropertyFocus::Rotation, rotation_rect),
     ];
     rects.extend(size_rects.into_iter().flatten());
+    if visible.create_component {
+        use crate::widgets::property_panel_component_props as props;
+        rects.extend(props::input_rects(
+            visible.component_props,
+            x0,
+            props::rows_top(visible.component_button, tops.component),
+            w,
+        ));
+    }
     if let Some(radius_rect) = radius_rect {
         rects.push((PropertyFocus::PositionR, radius_rect));
     }

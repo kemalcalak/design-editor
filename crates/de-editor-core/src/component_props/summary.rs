@@ -79,9 +79,7 @@ pub fn property_summaries(context: PropsContext<'_>, master: &PenNode) -> Vec<Pr
                     continue;
                 }
                 if live.is_none() {
-                    live = node
-                        .and_then(|node| serde_json::to_value(node).ok())
-                        .and_then(|value| bound_value(&value, &binding.field));
+                    live = node.and_then(|node| bound_value(node, &binding.field));
                 }
             }
             PropertySummary {
@@ -101,11 +99,7 @@ pub fn property_summaries(context: PropsContext<'_>, master: &PenNode) -> Vec<Pr
 }
 
 /// How many instances of `master_id` (any page) set a value for `name`.
-pub(crate) fn instances_setting(
-    doc: &jian_ops_schema::PenDocument,
-    master_id: &str,
-    name: &str,
-) -> usize {
+pub fn instances_setting(doc: &jian_ops_schema::PenDocument, master_id: &str, name: &str) -> usize {
     let mut count = 0;
     super::edit::for_each_instance(doc, master_id, |reference| {
         if reference

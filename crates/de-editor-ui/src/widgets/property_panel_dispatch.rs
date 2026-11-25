@@ -179,6 +179,13 @@ pub fn apply_instance_lifecycle_action(
                 select: None,
             }
         }
+        a if crate::widgets::property_panel_component_props::is_action(a) => {
+            crate::widgets::property_panel_component_props::apply_action(state, a);
+            InstanceLifecycleOutcome::Handled {
+                page_switched: false,
+                select: None,
+            }
+        }
         A::SetInstanceComponent(component_id) => {
             let instance_id = state.selection.anchor.clone();
             let component_id = NodeId::new(component_id.clone());
@@ -210,7 +217,11 @@ pub fn apply_property_action(
         | A::DetachComponent
         | A::ResetInstanceOverride
         | A::ToggleInstanceComponentPicker
-        | A::SetInstanceComponent(_) => Handled,
+        | A::SetInstanceComponent(_)
+        | A::ToggleInstanceProp(_)
+        | A::CycleInstanceProp(_)
+        | A::RemoveComponentProperty(_)
+        | A::BindComponentProperty(_) => Handled,
         A::SetPropertyTab(tab) => {
             state.editor_ui.set_property_tab(*tab);
             Handled

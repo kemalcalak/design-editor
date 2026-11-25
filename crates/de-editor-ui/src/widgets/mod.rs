@@ -82,6 +82,9 @@ pub mod property_panel_browser;
 pub mod property_panel_code;
 pub mod property_panel_code_chips;
 pub mod property_panel_commit;
+pub mod property_panel_component_props;
+#[cfg(test)]
+mod property_panel_component_props_tests;
 pub mod property_panel_compositing;
 pub mod property_panel_corner;
 pub mod property_panel_dispatch;

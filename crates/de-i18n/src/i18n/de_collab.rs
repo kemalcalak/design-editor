@@ -400,6 +400,11 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "whatsNew.next" => "Weiter",
         "settings.system.livePages" => "Live-Seiten",
         "settings.system.livePagesDesc" => "Ein ausgewählter Browser-Knoten läuft wie die echte Seite. Aus zeigt einen Standbild-Schnappschuss.",
+        "componentProps.text" => "Texteigenschaft",
+        "componentProps.visibility" => "Sichtbarkeitseigenschaft",
+        "componentProps.instance" => "Instanzeigenschaft",
+        "componentProps.color" => "Farbeigenschaft",
+        "componentProps.unbound" => "nicht verknüpft",
         _ => return None,
     })
 }

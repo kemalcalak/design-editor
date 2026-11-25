@@ -95,8 +95,7 @@ impl PropertyUpsert {
             (None, Some(existing)) => existing.kind.clone(),
             (None, None) => return Err(PropsError::MissingType(name.to_string())),
         };
-        if let Some(existing) = existing.filter(|existing| existing.kind != kind) {
-            let _ = existing;
+        if existing.is_some_and(|existing| existing.kind != kind) {
             let instances = super::summary::instances_setting(context.doc, master.id_str(), source);
             if instances > 0 {
                 return Err(PropsError::TypeChangeInUse {
@@ -110,8 +109,12 @@ impl PropertyUpsert {
             (None, Some(existing)) => existing.bind.clone(),
             (None, None) => Vec::new(),
         };
-        for binding in &bind {
-            context.check_binding(master, name, &kind, &binding.node, &binding.field)?;
+        // New bindings, or old ones under a new type, must fit; kept ones
+        // may have lost their node and stay reported as unbound.
+        if self.bind.is_some() || existing.is_some_and(|existing| existing.kind != kind) {
+            for binding in &bind {
+                context.check_binding(master, name, &kind, &binding.node, &binding.field)?;
+            }
         }
         let preferred = match (&self.preferred, existing) {
             (Some(preferred), _) => Some(preferred.clone()).filter(|list| !list.is_empty()),
@@ -132,7 +135,7 @@ impl PropertyUpsert {
         let derived = || {
             bind.iter().find_map(|binding| {
                 let node = super::check::find_in_subtree(master, &binding.node)?;
-                bound_value(&serde_json::to_value(node).ok()?, &binding.field)
+                bound_value(node, &binding.field)
             })
         };
         let default = self

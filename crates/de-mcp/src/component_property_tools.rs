@@ -177,7 +177,11 @@ impl McpTool for RemoveComponentProperty {
                 name: name.clone(),
             };
             command.check(self.0.context()).map_err(invalid)?;
-            let kept = instances_setting(&self.0.doc, &component_id, &name);
+            let kept = de_editor_core::component_props::instances_setting(
+                &self.0.doc,
+                &component_id,
+                &name,
+            );
             let result = json!({
                 "componentId": component_id,
                 "removed": name,
@@ -190,28 +194,6 @@ impl McpTool for RemoveComponentProperty {
         };
         run().unwrap_or_else(|error| error)
     }
-}
-
-fn instances_setting(doc: &PenDocument, master_id: &str, name: &str) -> usize {
-    fn walk(nodes: &[PenNode], master_id: &str, name: &str) -> usize {
-        nodes
-            .iter()
-            .map(|node| {
-                let own = matches!(node, PenNode::Ref(reference)
-                    if reference.target == master_id
-                        && reference.props.as_ref().is_some_and(|props| props.contains_key(name)));
-                usize::from(own)
-                    + de_editor_core::PenNodeExt::children(node)
-                        .map_or(0, |children| walk(children, master_id, name))
-            })
-            .sum()
-    }
-    doc.pages
-        .iter()
-        .flatten()
-        .map(|page| walk(&page.children, master_id, name))
-        .sum::<usize>()
-        + walk(&doc.children, master_id, name)
 }
 
 /// Check every instance in `nodes` (a subtree about to be inserted) whose

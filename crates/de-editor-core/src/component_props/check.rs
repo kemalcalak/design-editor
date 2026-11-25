@@ -124,8 +124,8 @@ impl<'a> PropsContext<'a> {
         }
     }
 
-    /// Check that `field` of `node` (inside `master`) can carry a property
-    /// of `kind`; returns the bound node.
+    /// Check that `field` of `node` (inside `master`, the root included)
+    /// can carry a property of `kind`.
     pub fn check_binding(
         &self,
         master: &'a PenNode,

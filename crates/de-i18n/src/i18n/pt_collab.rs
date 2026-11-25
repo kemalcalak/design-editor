@@ -400,6 +400,11 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "whatsNew.next" => "Próximo",
         "settings.system.livePages" => "Páginas ao vivo",
         "settings.system.livePagesDesc" => "Um nó de navegador selecionado roda como a página real. Desligado, mostra uma captura estática.",
+        "componentProps.text" => "Propriedade de texto",
+        "componentProps.visibility" => "Propriedade de visibilidade",
+        "componentProps.instance" => "Propriedade de instância",
+        "componentProps.color" => "Propriedade de cor",
+        "componentProps.unbound" => "não vinculada",
         _ => return None,
     })
 }

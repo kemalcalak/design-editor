@@ -400,6 +400,11 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "whatsNew.next" => "ถัดไป",
         "settings.system.livePages" => "หน้าเว็บสด",
         "settings.system.livePagesDesc" => "โหนดเบราว์เซอร์ที่เลือกจะเล่นเหมือนหน้าเว็บจริง เมื่อปิดจะแสดงภาพนิ่ง",
+        "componentProps.text" => "คุณสมบัติข้อความ",
+        "componentProps.visibility" => "คุณสมบัติการมองเห็น",
+        "componentProps.instance" => "คุณสมบัติอินสแตนซ์",
+        "componentProps.color" => "คุณสมบัติสี",
+        "componentProps.unbound" => "ไม่ได้ผูก",
         _ => return None,
     })
 }

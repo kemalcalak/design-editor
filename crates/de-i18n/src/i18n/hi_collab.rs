@@ -400,6 +400,11 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "whatsNew.next" => "अगला",
         "settings.system.livePages" => "लाइव पेज",
         "settings.system.livePagesDesc" => "चुना हुआ ब्राउज़र नोड असली पेज की तरह चलता है। बंद होने पर स्थिर स्नैपशॉट दिखता है।",
+        "componentProps.text" => "टेक्स्ट प्रॉपर्टी",
+        "componentProps.visibility" => "दृश्यता प्रॉपर्टी",
+        "componentProps.instance" => "इंस्टेंस प्रॉपर्टी",
+        "componentProps.color" => "रंग प्रॉपर्टी",
+        "componentProps.unbound" => "बंधा नहीं",
         _ => return None,
     })
 }

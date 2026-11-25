@@ -400,6 +400,11 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "whatsNew.next" => "Далее",
         "settings.system.livePages" => "Живые страницы",
         "settings.system.livePagesDesc" => "Выбранный узел браузера воспроизводится как настоящая страница. Если выключено, показывается статичный снимок.",
+        "componentProps.text" => "Текстовое свойство",
+        "componentProps.visibility" => "Свойство видимости",
+        "componentProps.instance" => "Свойство экземпляра",
+        "componentProps.color" => "Свойство цвета",
+        "componentProps.unbound" => "не привязано",
         _ => return None,
     })
 }

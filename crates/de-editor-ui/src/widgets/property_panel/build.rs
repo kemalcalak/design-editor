@@ -254,6 +254,7 @@ impl PropertyPanel {
                                 == state.selection.anchor.as_str();
                 }
             }
+            panel.component_props = state.panel_properties();
             panel.image_panel_view =
                 crate::widgets::property_panel_image_assets::image_panel_view(state, node);
             return Some(panel);
@@ -365,6 +366,7 @@ impl PropertyPanel {
             compositing_picker_target: ui.compositing_picker_target,
             instance_component_options: std::sync::Arc::from([]),
             instance_component_target: None,
+            component_props: Default::default(),
             instance_component_picker_open: false,
             corner_expand_open,
             effect_add_picker_open: ui.effect_add_picker_open,

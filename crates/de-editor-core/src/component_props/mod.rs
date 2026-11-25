@@ -15,13 +15,15 @@
 mod check;
 mod edit;
 mod error;
+mod panel;
 mod resolve;
 mod summary;
 
 pub use check::{describe, find_in_subtree, properties_of, PropsContext};
 pub use edit::{ComponentPropertyCommand, PlannedUpsert, PropertyUpsert};
 pub use error::PropsError;
-pub use summary::{property_names, property_summaries, PropertySummary};
+pub use panel::{PanelPropRow, PanelProperties};
+pub use summary::{instances_setting, property_names, property_summaries, PropertySummary};
 
 pub(crate) use resolve::fold_props_into_descendants;
 
@@ -29,3 +31,5 @@ pub(crate) use resolve::fold_props_into_descendants;
 mod tests;
 #[cfg(test)]
 mod tests_edit;
+#[cfg(test)]
+mod tests_panel;

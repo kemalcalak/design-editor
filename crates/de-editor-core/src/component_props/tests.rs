@@ -223,16 +223,16 @@ fn a_variable_valued_property_follows_the_theme_at_the_instance() {
     raw["pages"][0]["children"][0]["children"][2]["theme"] = json!({"Mode": "Dark"});
     let doc = jian_ops_schema::load_str(&raw.to_string()).unwrap().value;
     let light = std::collections::BTreeMap::from([("Mode".to_string(), "Light".to_string())]);
-    let resolved = crate::variables_resolve::resolve_document_for_canvas(
+    let themed = crate::variables_resolve::resolve_document_for_canvas(
         &resolve_refs_for_canvas(&doc),
         &light,
     );
     assert_eq!(
-        fill_color(resolved(&resolved, "b4__btn-bg")),
+        fill_color(resolved(&themed, "b4__btn-bg")),
         json!("#3355ff")
     );
     assert_eq!(
-        fill_color(resolved(&resolved, "b3__btn-bg")),
+        fill_color(resolved(&themed, "b3__btn-bg")),
         json!("#99aaff"),
         "the instance's own theme scope picks the Dark value"
     );

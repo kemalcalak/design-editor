@@ -332,8 +332,19 @@ fn a_property_whose_node_left_the_master_is_reported_unbound() {
     let icon = summaries.iter().find(|p| p.name == "icon").unwrap();
     assert!(!icon.is_unbound());
     assert_eq!(icon.default, Some(json!("icon-arrow")));
-    // Instances keep their values.
+    // Instances keep their values, and the property can still be renamed.
     assert_eq!(instance_props(&s, "b1").unwrap()["label"], "Save");
+    apply(
+        &mut s,
+        ComponentPropertyCommand::Upsert(PropertyUpsert {
+            component_id: "btn".into(),
+            name: "caption".into(),
+            rename_from: Some("label".into()),
+            ..Default::default()
+        }),
+    )
+    .unwrap();
+    assert_eq!(instance_props(&s, "b1").unwrap()["caption"], "Save");
 }
 
 #[test]

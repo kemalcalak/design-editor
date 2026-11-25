@@ -153,6 +153,9 @@ pub enum PropertyFocus {
     /// The address of `trigger`'s Open URL action in the Interactions
     /// section (#176). Free text.
     InteractionUrl(crate::interaction_edit::InteractionTrigger),
+    /// Row `index` of the component-property rows (#367): an instance's
+    /// text or colour value, or a master property's name. Free text.
+    ComponentProp(usize),
     /// One number field of a shader uniform row (#164): the float, or
     /// `component` of a vector, at row `index` of paint `target`.
     ShaderUniform {
@@ -203,6 +206,7 @@ impl PropertyFocus {
                 | PropertyFocus::ScriptInput(_)
                 | PropertyFocus::BrowserUrl
                 | PropertyFocus::InteractionUrl(_)
+                | PropertyFocus::ComponentProp(_)
         )
     }
 
