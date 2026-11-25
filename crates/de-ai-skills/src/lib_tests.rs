@@ -624,3 +624,48 @@ fn guideline_for_script_teaches_the_program_contract() {
     assert!(guideline_for("script-node").is_some(), "alias resolves");
     assert!(guideline_topics().contains(&"script"));
 }
+
+#[test]
+fn guideline_for_components_teaches_linked_instances() {
+    let guide = guideline_for("components").expect("components guideline must be present");
+    for alias in ["component", "instances"] {
+        assert_eq!(
+            guideline_for(alias).as_deref(),
+            Some(guide.as_str()),
+            "alias {alias} resolves to the same topic"
+        );
+    }
+    assert!(guideline_topics().contains(&"components"));
+    // One source with the in-app agent: the topic carries the
+    // `component-composition` skill body verbatim, then the MCP workflow.
+    let composition = get_skill_by_name("component-composition")
+        .expect("component-composition skill")
+        .content
+        .trim()
+        .to_string();
+    assert!(
+        guide.starts_with(&composition),
+        "the topic opens with the in-app component-composition skill"
+    );
+    for needle in [
+        "\"type\":\"ref\"",
+        "descendants",
+        "list_components",
+        "get_component",
+        "create_component",
+        "\"reusable\":true",
+        "\"theme\":{\"Mode\":mode}",
+        "// Example 1:",
+        "// Example 2:",
+        "// Example 3:",
+    ] {
+        assert!(
+            guide.contains(needle),
+            "components guide must mention {needle}"
+        );
+    }
+    assert!(
+        !guide.contains("finalize_design"),
+        "a reference topic, not a build recipe: no finalize tail"
+    );
+}

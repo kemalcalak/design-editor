@@ -14,7 +14,7 @@
 //! Nodes created inside an instance get fresh ids, and their binding is
 //! their path (`card/<id>`), so later lines can update or fill them.
 
-use de_editor_core::{EditorState, InstanceDescendant, InstanceEdit};
+use de_editor_core::{EditorState, InstanceDescendant, InstanceEdit, PenNodeExt};
 use jian_ops_schema::node::PenNode;
 
 use super::batch_design::find_top_level_char;
@@ -103,6 +103,53 @@ pub(crate) fn single_line_targets_instance(state: &EditorState, operations: &str
             .and_then(|id| de_editor_core::walkers::find_node(state.active_children(), &id))
             .is_some_and(|node| matches!(node, PenNode::Ref(_)))
     })
+}
+
+/// Instances in a fresh insert may name their master, and the master's
+/// children in `descendants`, by a binding (`ref: master` in a script) or by
+/// an id authored earlier in this program; both are final ids only after
+/// `remap`. Without this the instance keeps a target nothing carries and
+/// renders nothing (#366).
+pub(crate) fn retarget_program_instances(
+    nodes: &mut [PenNode],
+    map: &[(String, String)],
+    ctx: &ProgramCtx,
+) {
+    if !nodes.iter().any(subtree_has_instance) {
+        return;
+    }
+    let fresh = |id: &str| {
+        ctx.bindings
+            .get(id)
+            .or_else(|| map.iter().find(|(old, _)| old == id).map(|(_, new)| new))
+            .or_else(|| ctx.alias.get(id))
+            // A binding made by `R()` / an instance-slot insert is an
+            // `instanceId/childId` path, never a master or a master child.
+            .filter(|fresh| !fresh.contains('/'))
+            .cloned()
+    };
+    // A target that is a node id in the document always means that node:
+    // binding names and authored ids never hijack an existing master.
+    let existing = ctx.sim.collect_node_ids();
+    let target = |id: &str| {
+        if existing.contains(&de_editor_core::NodeId::new(id)) {
+            None
+        } else {
+            fresh(id)
+        }
+    };
+    let ids = super::import_ids::Lookups {
+        target: &target,
+        path: &fresh,
+    };
+    super::import_ids::retarget_instances(nodes, &ids);
+}
+
+pub(crate) fn subtree_has_instance(node: &PenNode) -> bool {
+    matches!(node, PenNode::Ref(_))
+        || node
+            .children()
+            .is_some_and(|children| children.iter().any(subtree_has_instance))
 }
 
 #[cfg(test)]
