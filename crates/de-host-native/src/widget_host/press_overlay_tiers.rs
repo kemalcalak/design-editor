@@ -141,6 +141,9 @@ impl WidgetHostNative {
             return Some(true);
         }
 
+        // Measure the open menu's width first (cached per locale / rows),
+        // so the shared press routing hit-tests the width paint draws.
+        let _ = self.measured_layer_context_menu();
         if let Some(press) =
             press_flow::press_open_layer_context_menu(&self.editor_state, Point2D::new(x, y))
         {
