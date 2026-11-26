@@ -145,6 +145,11 @@ impl WidgetHostNative {
     }
 
     fn apply_input_select_all(&mut self) -> bool {
+        // The command palette (#395): macOS / Windows send Cmd+A through
+        // the Edit menu, past the desktop's palette key handler.
+        if self.palette_select_all() {
+            return true;
+        }
         if self.home_select_all() {
             return true;
         }

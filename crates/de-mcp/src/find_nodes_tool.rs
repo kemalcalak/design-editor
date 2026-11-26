@@ -9,7 +9,10 @@
 
 use std::collections::BTreeMap;
 
-use de_editor_core::find_layers::{document_pages, find_layers_on, node_text_content, FindQuery};
+use de_editor_core::find_layers::{
+    document_pages, find_layers_on, is_known_kind, node_text_content, normalize_hex, FindQuery,
+    MAX_FIND_RESULTS,
+};
 use de_editor_core::walkers::find_node;
 use de_editor_core::EditorState;
 use serde_json::json;
@@ -108,12 +111,36 @@ impl FindNodes {
                     .to_string(),
             ));
         }
+        if let Some(fill) = query.fill.as_deref() {
+            if normalize_hex(fill).is_none() {
+                return Err((
+                    ToolErrorCode::InvalidArgument,
+                    format!("fill must be a #RRGGBB colour, got {fill}"),
+                ));
+            }
+        }
+        if let Some(kind) = query.kind.as_deref() {
+            if !is_known_kind(kind) {
+                return Err((
+                    ToolErrorCode::InvalidArgument,
+                    format!(
+                        "unknown type {kind} (a node type tag such as frame, text, rectangle, \
+                         ellipse, path, image, ref)"
+                    ),
+                ));
+            }
+        }
         let limit = match args.get("limit") {
             None => DEFAULT_LIMIT,
-            Some(raw) => raw.trim().parse::<usize>().ok().filter(|n| *n > 0).ok_or((
-                ToolErrorCode::InvalidArgument,
-                format!("limit must be a positive integer, got {raw}"),
-            ))?,
+            Some(raw) => raw
+                .trim()
+                .parse::<usize>()
+                .ok()
+                .filter(|n| (1..=MAX_FIND_RESULTS).contains(n))
+                .ok_or((
+                    ToolErrorCode::InvalidArgument,
+                    format!("limit must be an integer from 1 to {MAX_FIND_RESULTS}, got {raw}"),
+                ))?,
         };
         let page = self.page_filter(args.get("page").map(String::as_str))?;
         let results = find_layers_on(&self.state, &query, page);

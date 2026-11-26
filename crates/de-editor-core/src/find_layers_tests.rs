@@ -161,3 +161,65 @@ fn case_insensitive_replace_handles_unicode() {
         Some("bbb")
     );
 }
+
+fn state_of(children: serde_json::Value) -> EditorState {
+    let doc = serde_json::json!({"version": "1.0.0", "children": children});
+    EditorState::from_document(
+        jian_ops_schema::load_str(&doc.to_string())
+            .expect("fixture")
+            .value,
+    )
+}
+
+#[test]
+fn text_matches_use_the_raw_text_a_replace_rewrites() {
+    let mut state = state_of(serde_json::json!([
+        {"type": "text", "id": "split", "name": "A", "content": "Sign\nin"},
+        {"type": "text", "id": "one", "name": "B", "content": "Sign  in now"}
+    ]));
+    // Neither layer holds "sign in" as written, so neither is listed …
+    assert!(find_layers(&state, &FindQuery::parse("sign in"))
+        .matches
+        .is_empty());
+    // … and every listed text match is one a replace changes.
+    let query = FindQuery::parse("now");
+    let all = find_all_layer_matches(&state, &query, None);
+    assert_eq!(all.len(), 1);
+    assert_eq!(
+        state.replace_text_in_layer_matches(&query, &all, "later"),
+        all.len()
+    );
+    // The row shows the text whitespace-collapsed.
+    let shown = find_layers(&state, &FindQuery::parse("sign"));
+    assert_eq!(shown.matches[0].snippet.as_deref(), Some("Sign in"));
+}
+
+#[test]
+fn every_match_is_found_past_the_row_cap() {
+    let children: Vec<serde_json::Value> = (0..MAX_FIND_RESULTS + 20)
+        .map(|i| serde_json::json!({"type": "text", "id": format!("t{i}"), "content": "Buy"}))
+        .collect();
+    let mut state = state_of(serde_json::Value::Array(children));
+    let query = FindQuery::parse("buy");
+    let shown = find_layers(&state, &query);
+    assert_eq!(shown.matches.len(), MAX_FIND_RESULTS);
+    assert_eq!(shown.total, MAX_FIND_RESULTS + 20);
+    let all = find_all_layer_matches(&state, &query, None);
+    assert_eq!(all.len(), MAX_FIND_RESULTS + 20);
+    assert_eq!(
+        state.replace_text_in_layer_matches(&query, &all, "Get"),
+        MAX_FIND_RESULTS + 20
+    );
+    assert!(find_all_layer_matches(&state, &query, None).is_empty());
+}
+
+#[test]
+fn a_match_not_on_its_page_never_switches_pages() {
+    let mut state = multi_page_state();
+    assert!(!state.select_layer_match(1, &NodeId::new("title")));
+    assert_eq!(state.ui.active_page_index, 0, "stayed on the first page");
+    assert!(state
+        .select_layer_matches(1, &[NodeId::new("title")])
+        .is_empty());
+    assert_eq!(state.ui.active_page_index, 0);
+}

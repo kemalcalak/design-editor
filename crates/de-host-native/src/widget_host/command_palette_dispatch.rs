@@ -120,10 +120,6 @@ impl WidgetHostNative {
     pub(in crate::widget_host) fn run_palette_outcome(&mut self, outcome: PaletteOutcome) {
         let (w, h) = (self.last_viewport_w, self.last_viewport_h);
         match outcome {
-            PaletteOutcome::Command(command) if command.needs_runner() => {
-                self.editor_state.editor_ui.palette_runner_request =
-                    Some(PaletteRunnerRequest::Command(command));
-            }
             PaletteOutcome::Command(command) => {
                 self.run_palette_command(command);
             }
@@ -147,8 +143,9 @@ impl WidgetHostNative {
     }
 
     /// Run a command the way its shortcut does. `false` when it did
-    /// nothing (nothing selected, a refused path op, …) or needs the
-    /// runner.
+    /// nothing (nothing selected, a refused path op, …). The one place a
+    /// palette command runs: those only the desktop runner can carry out
+    /// ([`PaletteCommand::needs_runner`]) are queued here for it.
     pub fn run_palette_command(&mut self, command: PaletteCommand) -> bool {
         use PaletteCommand as C;
         match command {
@@ -213,9 +210,10 @@ impl WidgetHostNative {
             | C::Save
             | C::SaveAs
             | C::ExportImage => {
+                debug_assert!(command.needs_runner());
                 self.editor_state.editor_ui.palette_runner_request =
                     Some(PaletteRunnerRequest::Command(command));
-                false
+                true
             }
         }
     }

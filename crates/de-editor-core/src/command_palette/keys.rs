@@ -8,6 +8,7 @@
 
 use super::rows::replaced_summary;
 use super::{PaletteCommand, PaletteField, PaletteItem, PaletteMode, PaletteOutcome};
+use crate::find_layers::find_all_layer_matches;
 use crate::id_allocator::SequentialIdAllocator;
 use crate::{EditorState, NodeId};
 
@@ -150,7 +151,7 @@ impl EditorState {
             return PaletteOutcome::Nothing;
         };
         let item = row.item.clone();
-        let matches = palette.layer_matches();
+        let query = palette.query.clone();
         if let PaletteItem::Command(PaletteCommand::FindLayers) = item {
             if let Some(palette) = self.editor_ui.command_palette.as_mut() {
                 *palette = super::CommandPaletteState::new(PaletteMode::FindLayers);
@@ -172,9 +173,9 @@ impl EditorState {
             }
             PaletteItem::Component(id) => self.insert_palette_instance(&id),
             PaletteItem::Layer(found) if all => {
-                let ids: Vec<NodeId> = matches
+                // Every match on the page, not only the rows on show.
+                let ids: Vec<NodeId> = find_all_layer_matches(self, &query, Some(found.page_index))
                     .into_iter()
-                    .filter(|(page, _)| *page == found.page_index)
                     .map(|(_, id)| id)
                     .collect();
                 let selected = self.select_layer_matches(found.page_index, &ids);
@@ -222,7 +223,8 @@ impl EditorState {
             return PaletteOutcome::Nothing;
         }
         let query = palette.query.clone();
-        let matches = palette.layer_matches();
+        // Every match, not only the rows on show (one undo step).
+        let matches = find_all_layer_matches(self, &query, None);
         let replacement = palette.replace.text().to_string();
         let count = self.replace_text_in_layer_matches(&query, &matches, &replacement);
         self.refresh_command_palette();

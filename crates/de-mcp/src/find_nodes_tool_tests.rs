@@ -90,4 +90,17 @@ fn bad_arguments_are_typed_errors() {
         call(&[("query", "x"), ("limit", "0")]).unwrap_err().0,
         ToolErrorCode::InvalidArgument
     );
+    for args in [
+        [("query", "x"), ("limit", "501")],
+        [("query", "x"), ("fill", "blue")],
+        [("query", "x"), ("type", "widget")],
+        [("query", "type:widget"), ("limit", "5")],
+    ] {
+        assert_eq!(
+            call(&args).unwrap_err().0,
+            ToolErrorCode::InvalidArgument,
+            "{args:?}"
+        );
+    }
+    assert!(call(&[("type", "rect")]).is_ok(), "aliases are known types");
 }

@@ -113,3 +113,52 @@ fn backspace_and_paste_refresh_the_results() {
     }
     assert_eq!(rows(&host), 0, "an empty query lists nothing");
 }
+
+#[test]
+fn a_replace_survives_an_inline_edit_that_was_open() {
+    let mut host = host();
+    assert!(host
+        .editor_state_mut()
+        .start_text_edit(NodeId::new("title")));
+    host.mark_editor_state_dirty();
+    assert!(host.apply_toggle_command_palette(PaletteMode::FindLayers));
+    type_text(&mut host, "welcome");
+    assert!(host.palette_tab());
+    type_text(&mut host, "Hello");
+    assert!(host.apply_send(), "Enter in the replace field");
+    assert!(host.apply_escape());
+    // The next keys must not write the old edit's draft back.
+    host.apply_text('x');
+    let content = |host: &WidgetHostNative| {
+        let node = de_editor_core::walkers::find_node(
+            host.editor_state().active_children(),
+            &NodeId::new("title"),
+        )
+        .unwrap();
+        de_editor_core::find_layers::node_text_content(node).unwrap()
+    };
+    assert_eq!(content(&host), "Hello");
+    assert!(host.editor_state().ui.text_editing.is_none());
+}
+
+#[test]
+fn cmd_a_from_the_menu_selects_the_palette_field() {
+    let mut host = host();
+    assert!(host.apply_toggle_command_palette(PaletteMode::Commands));
+    type_text(&mut host, "undo");
+    host.editor_state_mut()
+        .set_single_selection(NodeId::new("board"));
+    assert!(host.apply_select_all());
+    let palette = host
+        .editor_state()
+        .editor_ui
+        .command_palette
+        .as_ref()
+        .unwrap();
+    assert!(palette.input.is_select_all());
+    assert_eq!(
+        host.editor_state().selection.set.len(),
+        1,
+        "canvas untouched"
+    );
+}

@@ -115,7 +115,9 @@ impl DesktopApp {
                 PaletteCommand::Save => MenuAction::Save,
                 PaletteCommand::SaveAs => MenuAction::SaveAs,
                 PaletteCommand::ExportImage => MenuAction::Export,
-                other => return self.host.run_palette_command(other),
+                // Never queued: the host runs every other command itself
+                // (`run_palette_command` queues only `needs_runner` ones).
+                _ => return false,
             },
         };
         self.apply_menu_action(action)

@@ -143,17 +143,6 @@ impl CommandPaletteState {
             self.scroll.offset = top + ROW_HEIGHT - window;
         }
     }
-
-    /// The find matches as `(page, id)` pairs, in rank order.
-    pub fn layer_matches(&self) -> Vec<(usize, NodeId)> {
-        self.rows
-            .iter()
-            .filter_map(|row| match &row.item {
-                PaletteItem::Layer(found) => Some((found.page_index, found.node_id.clone())),
-                _ => None,
-            })
-            .collect()
-    }
 }
 
 /// Work a widget host hands to the desktop runner.
@@ -201,6 +190,10 @@ impl EditorState {
                 palette.input.touch(now_ms);
             }
             None => {
+                // End an inline canvas text edit first: the palette takes the
+                // keyboard, and a replace must not be overwritten by the
+                // edit's stale draft on the next key.
+                self.text_edit_commit();
                 self.editor_ui.layer_context_menu = None;
                 let mut palette = CommandPaletteState::new(mode);
                 palette.input.touch(now_ms);

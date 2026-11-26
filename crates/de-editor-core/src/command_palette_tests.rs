@@ -217,3 +217,44 @@ fn the_palette_input_owns_the_caret() {
     assert_eq!(command_palette_escape(&mut state), Some(true));
     assert!(state.active_text_input().is_none() || !state.command_palette_open());
 }
+
+#[test]
+fn opening_ends_an_inline_text_edit() {
+    let mut state = multi_page_state();
+    assert!(state.start_text_edit(NodeId::new("title")));
+    state.toggle_command_palette(PaletteMode::FindLayers, 0);
+    assert!(state.ui.text_editing.is_none());
+    assert_eq!(
+        state.active_text_input().map(|input| input.text()),
+        Some("")
+    );
+}
+
+#[test]
+fn shift_enter_and_replace_cover_matches_past_the_rows() {
+    let many = crate::find_layers::MAX_FIND_RESULTS + 5;
+    let children: Vec<serde_json::Value> = (0..many)
+        .map(|i| serde_json::json!({"type": "text", "id": format!("t{i}"), "content": "Buy"}))
+        .collect();
+    let doc = serde_json::json!({"version": "1.0.0", "children": children});
+    let mut state = EditorState::from_document(
+        jian_ops_schema::load_str(&doc.to_string())
+            .expect("fixture")
+            .value,
+    );
+    state.toggle_command_palette(PaletteMode::FindLayers, 0);
+    type_text(&mut state, "buy");
+    let outcome = command_palette_activate(&mut state, true).unwrap();
+    let PaletteOutcome::Frame(ids) = outcome else {
+        panic!("{outcome:?}");
+    };
+    assert_eq!(ids.len(), many);
+    state.toggle_command_palette(PaletteMode::FindLayers, 0);
+    type_text(&mut state, "buy");
+    command_palette_tab(&mut state, 0);
+    type_text(&mut state, "Get");
+    assert_eq!(
+        command_palette_activate(&mut state, false),
+        Some(PaletteOutcome::Replaced(many))
+    );
+}
