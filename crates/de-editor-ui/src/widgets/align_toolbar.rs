@@ -353,7 +353,33 @@ fn boolean_supported_node(node: &PenNode) -> bool {
             | PenNode::Polygon(_)
             | PenNode::Path(_)
             | PenNode::Line(_)
+            | PenNode::Group(_)
+            | PenNode::Boolean(_)
     )
+}
+
+/// Flatten (#388) applies: a non-empty selection of shapes, groups and
+/// boolean groups (a frame only while it holds no layers).
+pub(super) fn can_flatten(state: &EditorState) -> bool {
+    let children = state.active_children();
+    !state.selection.set.is_empty()
+        && state.selection.set.iter().all(|id| {
+            find_node(children, id).is_some_and(|node| {
+                boolean_supported_node(node)
+                    && !matches!(node, PenNode::Frame(f) if f.children.as_ref().is_some_and(|c| !c.is_empty()))
+            })
+        })
+}
+
+/// Outline stroke (#388) applies: every selected node has a stroke.
+pub(super) fn can_outline_stroke(state: &EditorState) -> bool {
+    let children = state.active_children();
+    !state.selection.set.is_empty()
+        && state.selection.set.iter().all(|id| {
+            find_node(children, id).is_some_and(|node| {
+                crate::widgets::property_panel_path_ops::PathOpsButtons::for_node(node).outline
+            })
+        })
 }
 
 #[cfg(test)]

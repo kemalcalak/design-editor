@@ -315,14 +315,8 @@ fn host_creation_seams_share_the_supplied_allocator() {
         .create_node_for_tool_with_allocator(Tool::Pen, &mut allocator, 20.0, 0.0, 10.0, 10.0)
         .unwrap()
         .unwrap();
-    state
-        .replace_paths_with_polyline_with_allocator(
-            &[first, second],
-            &[vec![(0.0, 0.0), (10.0, 10.0)]],
-            &mut allocator,
-        )
-        .unwrap()
-        .unwrap();
+    assert!(state.group_selected_with_allocator(&mut allocator).is_ok());
+    let _ = (first, second);
     state
         .insert_image_node_at_viewport_with_allocator("Image", "data:", &mut allocator)
         .unwrap()
@@ -375,7 +369,6 @@ fn command_dispatch_has_no_legacy_allocator_escape_hatch() {
         include_str!("command_apply.rs"),
         include_str!("command_apply/helpers.rs"),
         include_str!("command_apply/clipboard.rs"),
-        include_str!("command_apply/boolean.rs"),
         include_str!("command_apply/instance.rs"),
     ]
     .concat();
@@ -400,7 +393,7 @@ fn command_dispatch_has_no_legacy_allocator_escape_hatch() {
         "detach_component_with_allocator",
         "instantiate_kit_component_under_parent_with_allocator",
         "cmd_batch_with_allocator",
-        "replace_paths_with_polyline_with_allocator",
+        "apply_path_command",
     ] {
         assert!(
             source.contains(required),

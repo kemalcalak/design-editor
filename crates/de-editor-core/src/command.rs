@@ -554,20 +554,10 @@ pub enum EditorCommand {
     },
     /// Apply alignment / distribution to the selection.
     AlignSelected { action: String },
-    /// Replace the active-page shapes `source_ids` with one compound
-    /// path `new_id` built from host-computed boolean `contours`
-    /// (doc-space polylines). The skia math runs in the host layer; this
-    /// commits its result as one undo step and selects the new path.
-    /// Rejected when the document moved past `revision` (the one the
-    /// contours were computed against), `new_id` is taken or a source is
-    /// missing or has children. Both the MCP `boolean_op` tool and the
-    /// canvas (`EditorState::commit_canvas_boolean`) commit through it.
-    CommitBooleanResult {
-        source_ids: Vec<NodeId>,
-        contours: Vec<Vec<(f64, f64)>>,
-        new_id: NodeId,
-        revision: u64,
-    },
+    /// A path operation (#388): commit a host-computed path (boolean
+    /// flatten, Flatten, Outline stroke, Offset), create a boolean group,
+    /// switch its op, Simplify, Reverse. One undo step each.
+    Path(crate::path_ops::PathCommand),
     /// Set the fill color on a node by id.
     SetNodeFillHex { node_id: NodeId, hex: String },
     /// Rename a node by id.

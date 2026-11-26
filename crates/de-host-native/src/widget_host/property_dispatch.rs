@@ -134,6 +134,9 @@ impl WidgetHostNative {
         use PropertyPanelAction as A;
         match action {
             A::MatchImageAspectRatio => self.match_selected_image_aspect_ratio(),
+            A::PathOperation(op) => {
+                let _ = self.apply_path_operation(op);
+            }
             A::ToggleImageSearchPopover => self.toggle_image_search_popover(),
             A::ToggleImageGeneratePopover => self.toggle_image_generate_popover(),
             A::RunImageSearch => self.run_image_search(),

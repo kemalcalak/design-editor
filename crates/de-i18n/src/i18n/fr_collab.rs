@@ -439,6 +439,13 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "menu.snapPixelGrid" => "Aligner sur la grille de pixels",
         "vectorEdit.pixelSnapOn" => "Alignement sur la grille de pixels activé",
         "vectorEdit.pixelSnapOff" => "Alignement sur la grille de pixels désactivé",
+        "menu.path" => "Tracé",
+        "path.flatten" => "Aplatir",
+        "path.outlineStroke" => "Vectoriser le contour",
+        "path.offsetOutward" => "Décaler le tracé vers l'extérieur",
+        "path.offsetInward" => "Décaler le tracé vers l'intérieur",
+        "path.simplify" => "Simplifier le tracé",
+        "path.reverse" => "Inverser le sens du tracé",
         _ => return None,
     })
 }

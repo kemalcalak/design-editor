@@ -439,6 +439,13 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "menu.snapPixelGrid" => "पिक्सेल ग्रिड पर स्नैप करें",
         "vectorEdit.pixelSnapOn" => "पिक्सेल ग्रिड स्नैपिंग चालू",
         "vectorEdit.pixelSnapOff" => "पिक्सेल ग्रिड स्नैपिंग बंद",
+        "menu.path" => "पाथ",
+        "path.flatten" => "फ़्लैटन करें",
+        "path.outlineStroke" => "स्ट्रोक की आउटलाइन बनाएँ",
+        "path.offsetOutward" => "पाथ को बाहर ऑफ़सेट करें",
+        "path.offsetInward" => "पाथ को अंदर ऑफ़सेट करें",
+        "path.simplify" => "पाथ सरल करें",
+        "path.reverse" => "पाथ की दिशा उलटें",
         _ => return None,
     })
 }

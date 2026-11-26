@@ -3,6 +3,7 @@
 //! hosts keep their existing `press_flow::…` import paths.
 
 use de_editor_core::host_press_transitions as core_press;
+use de_editor_core::path_ops::PathOperation;
 use de_editor_core::ui_draft::LayerContextTarget;
 use de_editor_core::{BooleanOp, EditorState};
 
@@ -16,8 +17,9 @@ pub enum LayerContextStep {
     Done,
     /// Host runs its `apply_group()`.
     Group,
-    /// Host runs its `apply_boolean_op(op)`.
-    Boolean(BooleanOp),
+    /// Host runs its `apply_path_operation(op)` (booleans, Flatten,
+    /// Outline stroke; #388).
+    Path(PathOperation),
     /// Host re-fits the viewport on the active page.
     Refit,
 }
@@ -67,8 +69,10 @@ pub fn apply_layer_context_action(
                 A::BooleanExclude => BooleanOp::Exclude,
                 _ => BooleanOp::Union,
             };
-            LayerContextStep::Boolean(op)
+            LayerContextStep::Path(PathOperation::Boolean(op))
         }
+        (A::Flatten, T::Layer(_)) => LayerContextStep::Path(PathOperation::Flatten),
+        (A::OutlineStroke, T::Layer(_)) => LayerContextStep::Path(PathOperation::OutlineStroke),
         (A::ToggleLock, T::Layer(id)) => {
             // TS toggleLock runs through mutateWithHistory
             // (document-store-node-actions.ts:176-188).

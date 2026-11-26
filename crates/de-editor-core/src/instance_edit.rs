@@ -252,7 +252,7 @@ fn insert_children(
 fn is_container(node: &PenNode) -> bool {
     matches!(
         node,
-        PenNode::Frame(_) | PenNode::Group(_) | PenNode::Rectangle(_)
+        PenNode::Frame(_) | PenNode::Group(_) | PenNode::Boolean(_) | PenNode::Rectangle(_)
     )
 }
 

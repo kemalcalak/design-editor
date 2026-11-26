@@ -439,6 +439,13 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "menu.snapPixelGrid" => "Ajustar à grade de pixels",
         "vectorEdit.pixelSnapOn" => "Ajuste à grade de pixels ativado",
         "vectorEdit.pixelSnapOff" => "Ajuste à grade de pixels desativado",
+        "menu.path" => "Caminho",
+        "path.flatten" => "Achatar",
+        "path.outlineStroke" => "Contornar traço",
+        "path.offsetOutward" => "Deslocar caminho para fora",
+        "path.offsetInward" => "Deslocar caminho para dentro",
+        "path.simplify" => "Simplificar caminho",
+        "path.reverse" => "Inverter direção do caminho",
         _ => return None,
     })
 }

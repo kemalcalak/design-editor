@@ -1491,6 +1491,7 @@ dependencies = [
  "de-editor-ui",
  "de-i18n",
  "de-orchestrator",
+ "de-path-ops",
  "de-pen-loader",
  "de-preview-core",
  "glow",
@@ -1537,6 +1538,7 @@ dependencies = [
  "de-image-enrich",
  "de-mcp",
  "de-orchestrator",
+ "de-path-ops",
  "de-pen-loader",
  "de-pptx",
  "de-preview-core",
@@ -1658,12 +1660,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "de-path-ops"
+version = "0.6.2"
+dependencies = [
+ "de-editor-core",
+ "jian-ops-schema",
+ "jian-scene",
+ "skia-safe",
+]
+
+[[package]]
 name = "de-pen-loader"
 version = "0.6.2"
 dependencies = [
  "base64 0.22.1",
  "de-editor-core",
  "de-html",
+ "de-path-ops",
  "de-util",
  "jian-core",
  "jian-ops-schema",

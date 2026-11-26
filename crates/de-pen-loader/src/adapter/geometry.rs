@@ -22,7 +22,8 @@ pub fn root_authored_origin(n: &PenNode) -> (f32, f32) {
 fn pen_base(n: &PenNode) -> &jian_ops_schema::node::base::PenNodeBase {
     match n {
         PenNode::Frame(f) | PenNode::Script(ScriptNode { frame: f, .. }) => &f.base,
-        PenNode::Group(g) => &g.base,
+        PenNode::Group(g)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: g, .. }) => &g.base,
         PenNode::Rectangle(r) => &r.base,
         PenNode::Ellipse(e) => &e.base,
         PenNode::Line(l) => &l.base,
@@ -75,7 +76,10 @@ pub fn root_available_size(root: &PenNode) -> (f32, f32) {
 fn root_sizing(root: &PenNode) -> (Option<SizingBehavior>, Option<SizingBehavior>) {
     match root {
         PenNode::Frame(f) => (f.container.width.clone(), f.container.height.clone()),
-        PenNode::Group(g) => (g.container.width.clone(), g.container.height.clone()),
+        PenNode::Group(g)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: g, .. }) => {
+            (g.container.width.clone(), g.container.height.clone())
+        }
         PenNode::Rectangle(r) => (r.container.width.clone(), r.container.height.clone()),
         PenNode::Ellipse(e) => (e.width.clone(), e.height.clone()),
         PenNode::Text(t) => (t.width.clone(), t.height.clone()),

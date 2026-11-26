@@ -768,7 +768,10 @@ fn node_corner_radii(node: &PenNode) -> Option<[f64; 4]> {
         PenNode::Frame(node) | PenNode::Script(ScriptNode { frame: node, .. }) => {
             node.container.corner_radius.as_ref()
         }
-        PenNode::Group(node) => node.container.corner_radius.as_ref(),
+        PenNode::Group(node)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: node, .. }) => {
+            node.container.corner_radius.as_ref()
+        }
         PenNode::Rectangle(node) => node.container.corner_radius.as_ref(),
         PenNode::Image(node) => node.corner_radius.as_ref(),
         PenNode::Browser(node) => node.corner_radius.as_ref(),

@@ -291,6 +291,12 @@ impl DesktopApp {
                         "z" => consumed = self.host.apply_undo(),
                         "y" => consumed = self.host.apply_redo(),
                         "g" => consumed = self.host.apply_group(),
+                        // Cmd+E — Flatten the selection into one path (#388).
+                        "e" => {
+                            consumed = self.host.apply_path_operation(
+                                de_editor_core::path_ops::PathOperation::Flatten,
+                            )
+                        }
                         // Cmd+J joins end points in vector edit mode (#387).
                         "j" => {
                             consumed =
@@ -339,6 +345,12 @@ impl DesktopApp {
                         _ if settings_focused => {}
                         "z" => consumed = self.host.apply_redo(),
                         "g" => consumed = self.host.apply_ungroup(),
+                        // Cmd+Shift+O — Outline stroke (#388).
+                        "o" => {
+                            consumed = self.host.apply_path_operation(
+                                de_editor_core::path_ops::PathOperation::OutlineStroke,
+                            )
+                        }
                         "c" => consumed = self.host.apply_toggle_code_panel(),
                         "v" => consumed = self.host.apply_toggle_variables_panel(),
                         "d" => consumed = self.host.apply_toggle_design_md_panel(),

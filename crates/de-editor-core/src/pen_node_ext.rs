@@ -108,7 +108,8 @@ macro_rules! base_arms {
     ($self:ident) => {
         match $self {
             PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => &n.base,
-            PenNode::Group(n) => &n.base,
+            PenNode::Group(n)
+            | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => &n.base,
             PenNode::Rectangle(n) => &n.base,
             PenNode::Ellipse(n) => &n.base,
             PenNode::Line(n) => &n.base,
@@ -138,7 +139,10 @@ macro_rules! events_arms {
     ($self:ident) => {
         match $self {
             PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => n.events.as_ref(),
-            PenNode::Group(n) => n.events.as_ref(),
+            PenNode::Group(n)
+            | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => {
+                n.events.as_ref()
+            }
             PenNode::Rectangle(n) => n.events.as_ref(),
             PenNode::Ellipse(n) => n.events.as_ref(),
             PenNode::Line(n) => n.events.as_ref(),
@@ -168,7 +172,8 @@ macro_rules! base_mut_arms {
     ($self:ident) => {
         match $self {
             PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => &mut n.base,
-            PenNode::Group(n) => &mut n.base,
+            PenNode::Group(n)
+            | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => &mut n.base,
             PenNode::Rectangle(n) => &mut n.base,
             PenNode::Ellipse(n) => &mut n.base,
             PenNode::Line(n) => &mut n.base,
@@ -217,7 +222,10 @@ impl PenNodeExt for PenNode {
     fn children(&self) -> Option<&Vec<PenNode>> {
         match self {
             PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => n.children.as_ref(),
-            PenNode::Group(n) => n.children.as_ref(),
+            PenNode::Group(n)
+            | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => {
+                n.children.as_ref()
+            }
             PenNode::Rectangle(n) => n.children.as_ref(),
             PenNode::Tabs(n) => n.children.as_ref(),
             PenNode::Ref(n) => n.children.as_ref(),
@@ -228,7 +236,10 @@ impl PenNodeExt for PenNode {
     fn children_mut(&mut self) -> Option<&mut Vec<PenNode>> {
         match self {
             PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => n.children.as_mut(),
-            PenNode::Group(n) => n.children.as_mut(),
+            PenNode::Group(n)
+            | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => {
+                n.children.as_mut()
+            }
             PenNode::Rectangle(n) => n.children.as_mut(),
             PenNode::Tabs(n) => n.children.as_mut(),
             PenNode::Ref(n) => n.children.as_mut(),
@@ -241,7 +252,10 @@ impl PenNodeExt for PenNode {
             PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => {
                 Some(n.children.get_or_insert_with(Vec::new))
             }
-            PenNode::Group(n) => Some(n.children.get_or_insert_with(Vec::new)),
+            PenNode::Group(n)
+            | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => {
+                Some(n.children.get_or_insert_with(Vec::new))
+            }
             PenNode::Rectangle(n) => Some(n.children.get_or_insert_with(Vec::new)),
             PenNode::Tabs(n) => Some(n.children.get_or_insert_with(Vec::new)),
             PenNode::Ref(n) => Some(n.children.get_or_insert_with(Vec::new)),
@@ -254,6 +268,7 @@ impl PenNodeExt for PenNode {
             self,
             PenNode::Frame(_)
                 | PenNode::Group(_)
+                | PenNode::Boolean(_)
                 | PenNode::Rectangle(_)
                 | PenNode::Tabs(_)
                 | PenNode::Ref(_)
@@ -261,7 +276,7 @@ impl PenNodeExt for PenNode {
     }
 
     fn is_group(&self) -> bool {
-        matches!(self, PenNode::Group(_))
+        matches!(self, PenNode::Group(_) | PenNode::Boolean(_))
     }
 
     fn is_auto_layout_container(&self) -> bool {
@@ -270,7 +285,10 @@ impl PenNodeExt for PenNode {
             PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => {
                 n.container.layout.as_ref()
             }
-            PenNode::Group(n) => n.container.layout.as_ref(),
+            PenNode::Group(n)
+            | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => {
+                n.container.layout.as_ref()
+            }
             PenNode::Rectangle(n) => n.container.layout.as_ref(),
             _ => None,
         };
@@ -282,7 +300,10 @@ impl PenNodeExt for PenNode {
             PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => {
                 sizing_px(&n.container.width)
             }
-            PenNode::Group(n) => sizing_px(&n.container.width),
+            PenNode::Group(n)
+            | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => {
+                sizing_px(&n.container.width)
+            }
             PenNode::Rectangle(n) => sizing_px(&n.container.width),
             PenNode::Ellipse(n) => sizing_px(&n.width),
             PenNode::Polygon(n) => sizing_px(&n.width),
@@ -311,7 +332,10 @@ impl PenNodeExt for PenNode {
             PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => {
                 sizing_px(&n.container.height)
             }
-            PenNode::Group(n) => sizing_px(&n.container.height),
+            PenNode::Group(n)
+            | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => {
+                sizing_px(&n.container.height)
+            }
             PenNode::Rectangle(n) => sizing_px(&n.container.height),
             PenNode::Ellipse(n) => sizing_px(&n.height),
             PenNode::Polygon(n) => sizing_px(&n.height),
@@ -341,7 +365,10 @@ impl PenNodeExt for PenNode {
             PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => {
                 n.container.width = Some(v)
             }
-            PenNode::Group(n) => n.container.width = Some(v),
+            PenNode::Group(n)
+            | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => {
+                n.container.width = Some(v)
+            }
             PenNode::Rectangle(n) => n.container.width = Some(v),
             PenNode::Ellipse(n) => n.width = Some(v),
             PenNode::Polygon(n) => n.width = Some(v),
@@ -381,7 +408,10 @@ impl PenNodeExt for PenNode {
             PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => {
                 n.container.height = Some(v)
             }
-            PenNode::Group(n) => n.container.height = Some(v),
+            PenNode::Group(n)
+            | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => {
+                n.container.height = Some(v)
+            }
             PenNode::Rectangle(n) => n.container.height = Some(v),
             PenNode::Ellipse(n) => n.height = Some(v),
             PenNode::Polygon(n) => n.height = Some(v),

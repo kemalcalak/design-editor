@@ -33,7 +33,10 @@ fn size_of(node: &PenNode) -> (f32, f32) {
         PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => {
             numeric_size(&n.container.width, &n.container.height)
         }
-        PenNode::Group(n) => numeric_size(&n.container.width, &n.container.height),
+        PenNode::Group(n)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => {
+            numeric_size(&n.container.width, &n.container.height)
+        }
         PenNode::Rectangle(n) => numeric_size(&n.container.width, &n.container.height),
         PenNode::Ellipse(n) => numeric_size(&n.width, &n.height),
         PenNode::Polygon(n) => numeric_size(&n.width, &n.height),
@@ -76,7 +79,10 @@ fn children_of(node: &PenNode) -> &[PenNode] {
         PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => {
             n.children.as_deref().unwrap_or(&[])
         }
-        PenNode::Group(n) => n.children.as_deref().unwrap_or(&[]),
+        PenNode::Group(n)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => {
+            n.children.as_deref().unwrap_or(&[])
+        }
         PenNode::Rectangle(n) => n.children.as_deref().unwrap_or(&[]),
         PenNode::Tabs(n) => n.children.as_deref().unwrap_or(&[]),
         PenNode::Ref(n) => n.children.as_deref().unwrap_or(&[]),
@@ -87,7 +93,8 @@ fn children_of(node: &PenNode) -> &[PenNode] {
 fn base_of(node: &PenNode) -> &PenNodeBase {
     match node {
         PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => &n.base,
-        PenNode::Group(n) => &n.base,
+        PenNode::Group(n)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => &n.base,
         PenNode::Rectangle(n) => &n.base,
         PenNode::Ellipse(n) => &n.base,
         PenNode::Line(n) => &n.base,

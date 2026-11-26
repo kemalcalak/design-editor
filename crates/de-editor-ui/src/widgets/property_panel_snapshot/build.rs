@@ -136,6 +136,7 @@ impl NodeSnapshot {
             flip_x: false,
             flip_y: false,
             vector_points: None,
+            path_ops: Default::default(),
             shader_preset: None,
             shader_custom_available: false,
             mesh_lattice: None,
@@ -229,6 +230,7 @@ impl NodeSnapshot {
             flip_x: false,
             flip_y: false,
             vector_points: None,
+            path_ops: Default::default(),
             shader_preset: None,
             shader_custom_available: false,
             mesh_lattice: None,
@@ -283,6 +285,7 @@ impl NodeSnapshot {
             // A script lays out as a frame but names its own kind (#19).
             kind: match node {
                 PenNode::Script(_) => "Script".to_string(),
+                PenNode::Boolean(_) => "Boolean".to_string(),
                 _ => kind.label().to_string(),
             },
             name: base.name.clone().unwrap_or_default(),
@@ -355,6 +358,7 @@ impl NodeSnapshot {
             flip_x: base.flip_x == Some(true),
             flip_y: base.flip_y == Some(true),
             vector_points: None,
+            path_ops: Default::default(),
             shader_preset: de_editor_core::shader_presets::primary_shader_preset(node),
             shader_custom_available: de_editor_core::shader_presets::primary_custom_shader(node)
                 .is_some(),

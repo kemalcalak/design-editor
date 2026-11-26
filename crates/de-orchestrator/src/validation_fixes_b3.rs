@@ -462,7 +462,10 @@ pub(crate) fn snapshot_justify(node: &PenNode) -> Option<String> {
     use jian_ops_schema::node::container::JustifyContent;
     let jc = match node {
         PenNode::Frame(n) => n.container.justify_content.as_ref(),
-        PenNode::Group(n) => n.container.justify_content.as_ref(),
+        PenNode::Group(n)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => {
+            n.container.justify_content.as_ref()
+        }
         PenNode::Rectangle(n) => n.container.justify_content.as_ref(),
         _ => return None,
     };
@@ -480,7 +483,10 @@ pub(crate) fn snapshot_layout(node: &PenNode) -> Option<String> {
     use jian_ops_schema::node::container::LayoutMode;
     let lm = match node {
         PenNode::Frame(n) => n.container.layout.as_ref(),
-        PenNode::Group(n) => n.container.layout.as_ref(),
+        PenNode::Group(n)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => {
+            n.container.layout.as_ref()
+        }
         PenNode::Rectangle(n) => n.container.layout.as_ref(),
         _ => return None,
     };

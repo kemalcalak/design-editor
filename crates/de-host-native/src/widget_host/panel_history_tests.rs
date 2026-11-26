@@ -372,8 +372,8 @@ fn context_menu_group_selection_is_undoable() {
 #[cfg(feature = "gl-host")]
 #[test]
 fn context_menu_boolean_union_is_undoable() {
-    // TS boolean rows push history explicitly before swapping the
-    // operands for the result node (`layer-panel.tsx:389-407`).
+    // The boolean rows wrap the operands in a boolean group as one
+    // undo step (#388).
     let mut host = WidgetHostNative::new();
     seed(
         &mut host,
@@ -391,10 +391,10 @@ fn context_menu_boolean_union_is_undoable() {
         LayerContextTarget::Layer(NodeId::new("a")),
     );
     let children = host.editor_state().active_children();
-    assert_eq!(children.len(), 1, "operands replaced by the result");
+    assert_eq!(children.len(), 1, "operands wrapped by the result");
     assert!(
-        matches!(children[0], jian_ops_schema::node::PenNode::Path(_)),
-        "union result is a Path node"
+        matches!(children[0], jian_ops_schema::node::PenNode::Boolean(_)),
+        "union makes a boolean group (#388)"
     );
     assert_eq!(history_len(&host), before + 1, "one history entry");
     assert!(host.editor_state_mut().undo());

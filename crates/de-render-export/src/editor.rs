@@ -98,7 +98,10 @@ pub fn write_html_export(
         asset_dir: Some(asset_dir),
         ..de_codegen::HtmlExportOptions::default()
     };
-    let export = de_codegen::export_editor_html(state, target, &options);
+    // Codegen reads the authored tree: boolean groups go out as the path
+    // the canvas paints, not as their separate sources (#388).
+    let baked = de_pen_loader::bake_boolean_groups(state);
+    let export = de_codegen::export_editor_html(baked.as_ref().unwrap_or(state), target, &options);
     let write = |p: &Path, bytes: &[u8]| {
         std::fs::write(p, bytes).map_err(|e| ExportError::Write(format!("{}: {e}", p.display())))
     };

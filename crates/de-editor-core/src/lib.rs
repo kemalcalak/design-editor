@@ -154,6 +154,7 @@ pub mod padding_shorthand;
 pub mod page_mutators;
 pub mod path_bounds;
 pub mod path_edit;
+pub mod path_ops;
 pub mod pen;
 pub mod pen_node_ext;
 pub mod pencil;

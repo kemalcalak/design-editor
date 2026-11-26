@@ -439,6 +439,13 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "menu.snapPixelGrid" => "Piksel Izgarasına Yasla",
         "vectorEdit.pixelSnapOn" => "Piksel ızgarasına yaslama açık",
         "vectorEdit.pixelSnapOff" => "Piksel ızgarasına yaslama kapalı",
+        "menu.path" => "Yol",
+        "path.flatten" => "Düzleştir",
+        "path.outlineStroke" => "Konturu Dış Hatta Çevir",
+        "path.offsetOutward" => "Yolu Dışa Kaydır",
+        "path.offsetInward" => "Yolu İçe Kaydır",
+        "path.simplify" => "Yolu Sadeleştir",
+        "path.reverse" => "Yol Yönünü Ters Çevir",
         _ => return None,
     })
 }

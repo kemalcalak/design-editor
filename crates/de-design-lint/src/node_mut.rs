@@ -21,7 +21,10 @@ pub fn set_corner_radius(node: &mut PenNode, radius: f32) -> bool {
     let value = CornerRadius::Uniform(radius as f64);
     match node {
         PenNode::Frame(n) => n.container.corner_radius = Some(value),
-        PenNode::Group(n) => n.container.corner_radius = Some(value),
+        PenNode::Group(n)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => {
+            n.container.corner_radius = Some(value)
+        }
         PenNode::Rectangle(n) => n.container.corner_radius = Some(value),
         _ => return false,
     }
@@ -46,7 +49,10 @@ pub fn set_y(node: &mut PenNode, y: f64) -> bool {
 pub fn clear_effects(node: &mut PenNode) -> bool {
     match node {
         PenNode::Frame(n) => n.container.effects = None,
-        PenNode::Group(n) => n.container.effects = None,
+        PenNode::Group(n)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => {
+            n.container.effects = None
+        }
         PenNode::Rectangle(n) => n.container.effects = None,
         PenNode::Path(n) => n.effects = None,
         PenNode::Text(n) => n.effects = None,
@@ -76,7 +82,10 @@ pub fn set_padding_ltrb(node: &mut PenNode, ltrb: [f32; 4]) -> bool {
 fn set_padding(node: &mut PenNode, value: Padding) -> bool {
     match node {
         PenNode::Frame(n) => n.container.padding = Some(value),
-        PenNode::Group(n) => n.container.padding = Some(value),
+        PenNode::Group(n)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => {
+            n.container.padding = Some(value)
+        }
         PenNode::Rectangle(n) => n.container.padding = Some(value),
         _ => return false,
     }
@@ -93,7 +102,10 @@ pub fn set_stroke_from_json(node: &mut PenNode, suggested: &Value) -> bool {
     };
     match node {
         PenNode::Frame(n) => n.container.stroke = Some(stroke),
-        PenNode::Group(n) => n.container.stroke = Some(stroke),
+        PenNode::Group(n)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => {
+            n.container.stroke = Some(stroke)
+        }
         PenNode::Rectangle(n) => n.container.stroke = Some(stroke),
         PenNode::Path(n) => n.stroke = Some(stroke),
         _ => return false,
@@ -151,7 +163,10 @@ pub fn detach_child(parent: &mut PenNode, node_id: &str) -> bool {
 fn children_mut(node: &mut PenNode) -> Option<&mut Vec<PenNode>> {
     match node {
         PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => n.children.as_mut(),
-        PenNode::Group(n) => n.children.as_mut(),
+        PenNode::Group(n)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => {
+            n.children.as_mut()
+        }
         PenNode::Rectangle(n) => n.children.as_mut(),
         _ => None,
     }
@@ -161,7 +176,8 @@ fn children_mut(node: &mut PenNode) -> Option<&mut Vec<PenNode>> {
 fn base_mut(node: &mut PenNode) -> &mut jian_ops_schema::node::PenNodeBase {
     match node {
         PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => &mut n.base,
-        PenNode::Group(n) => &mut n.base,
+        PenNode::Group(n)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => &mut n.base,
         PenNode::Rectangle(n) => &mut n.base,
         PenNode::Ellipse(n) => &mut n.base,
         PenNode::Line(n) => &mut n.base,

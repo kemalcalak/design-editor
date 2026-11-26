@@ -170,7 +170,10 @@ fn node_has_own_visual(node: &PenNode) -> bool {
         PenNode::Frame(n) => {
             container_has_own_visual(&n.container) || n.image_search_query.is_some()
         }
-        PenNode::Group(n) => container_has_own_visual(&n.container),
+        PenNode::Group(n)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => {
+            container_has_own_visual(&n.container)
+        }
         PenNode::Rectangle(n) => container_has_own_visual(&n.container),
         PenNode::Ref(_) => false,
         PenNode::Text(n) => match &n.content {

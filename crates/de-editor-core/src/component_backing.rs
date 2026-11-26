@@ -48,18 +48,21 @@ pub(crate) fn shallow_root(node: &PenNode) -> PenNode {
             component_set: frame.component_set.clone(),
             variant_values: frame.variant_values.clone(),
         }),
-        PenNode::Group(group) => PenNode::Group(GroupNode {
-            base: group.base.clone(),
-            container: group.container.clone(),
-            children: None,
-            state: group.state.clone(),
-            bindings: group.bindings.clone(),
-            events: group.events.clone(),
-            lifecycle: group.lifecycle.clone(),
-            semantics: group.semantics.clone(),
-            gestures: group.gestures.clone(),
-            route: group.route.clone(),
-        }),
+        PenNode::Group(group)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group, .. }) => {
+            PenNode::Group(GroupNode {
+                base: group.base.clone(),
+                container: group.container.clone(),
+                children: None,
+                state: group.state.clone(),
+                bindings: group.bindings.clone(),
+                events: group.events.clone(),
+                lifecycle: group.lifecycle.clone(),
+                semantics: group.semantics.clone(),
+                gestures: group.gestures.clone(),
+                route: group.route.clone(),
+            })
+        }
         PenNode::Rectangle(rectangle) => PenNode::Rectangle(RectangleNode {
             base: rectangle.base.clone(),
             container: rectangle.container.clone(),

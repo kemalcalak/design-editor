@@ -646,7 +646,10 @@ mod tests {
             fn walk(n: &PenNode, seen: &mut std::collections::HashSet<String>) -> bool {
                 let id = match n {
                     PenNode::Frame(f) => &f.base.id,
-                    PenNode::Group(g) => &g.base.id,
+                    PenNode::Group(g)
+                    | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: g, .. }) => {
+                        &g.base.id
+                    }
                     PenNode::Rectangle(r) => &r.base.id,
                     PenNode::Text(t) => &t.base.id,
                     _ => return true,
@@ -656,7 +659,10 @@ mod tests {
                 }
                 let children = match n {
                     PenNode::Frame(f) => f.children.as_deref(),
-                    PenNode::Group(g) => g.children.as_deref(),
+                    PenNode::Group(g)
+                    | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: g, .. }) => {
+                        g.children.as_deref()
+                    }
                     PenNode::Rectangle(r) => r.children.as_deref(),
                     _ => None,
                 };

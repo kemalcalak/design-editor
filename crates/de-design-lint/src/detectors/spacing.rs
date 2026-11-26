@@ -139,7 +139,10 @@ const BLEED_NAME_SUFFIX: &str = "(bleed)";
 fn node_name(node: &PenNode) -> Option<&str> {
     match node {
         PenNode::Frame(n) => n.base.name.as_deref(),
-        PenNode::Group(n) => n.base.name.as_deref(),
+        PenNode::Group(n)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => {
+            n.base.name.as_deref()
+        }
         PenNode::Rectangle(n) => n.base.name.as_deref(),
         _ => None,
     }
@@ -234,7 +237,10 @@ fn node_spans_width(node: &PenNode, root_width: f64) -> bool {
 fn node_width(node: &PenNode) -> Option<&SizingBehavior> {
     match node {
         PenNode::Frame(node) => node.container.width.as_ref(),
-        PenNode::Group(node) => node.container.width.as_ref(),
+        PenNode::Group(node)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: node, .. }) => {
+            node.container.width.as_ref()
+        }
         PenNode::Rectangle(node) => node.container.width.as_ref(),
         PenNode::Image(node) => node.width.as_ref(),
         _ => None,
@@ -260,7 +266,8 @@ fn is_intentional_horizontal_scroller(node: &PenNode) -> bool {
             node.container.layout == Some(LayoutMode::Horizontal)
                 && node.container.clip_content == Some(true)
         }
-        PenNode::Group(node) => {
+        PenNode::Group(node)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: node, .. }) => {
             node.container.layout == Some(LayoutMode::Horizontal)
                 && node.container.clip_content == Some(true)
         }
@@ -529,7 +536,10 @@ fn walk_edge_section_padding(node: &PenNode, depth: usize, issues: &mut Vec<Issu
 fn has_layout(node: &PenNode) -> bool {
     match node {
         PenNode::Frame(n) => n.container.layout.is_some(),
-        PenNode::Group(n) => n.container.layout.is_some(),
+        PenNode::Group(n)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => {
+            n.container.layout.is_some()
+        }
         PenNode::Rectangle(n) => n.container.layout.is_some(),
         _ => false,
     }

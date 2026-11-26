@@ -441,6 +441,13 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "menu.snapPixelGrid" => "픽셀 그리드에 스냅",
         "vectorEdit.pixelSnapOn" => "픽셀 그리드 스냅 켜짐",
         "vectorEdit.pixelSnapOff" => "픽셀 그리드 스냅 꺼짐",
+        "menu.path" => "패스",
+        "path.flatten" => "병합",
+        "path.outlineStroke" => "윤곽선 획",
+        "path.offsetOutward" => "패스 바깥쪽 오프셋",
+        "path.offsetInward" => "패스 안쪽 오프셋",
+        "path.simplify" => "패스 단순화",
+        "path.reverse" => "패스 방향 반전",
         _ => return None,
     })
 }

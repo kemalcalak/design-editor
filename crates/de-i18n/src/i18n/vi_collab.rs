@@ -439,6 +439,13 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "menu.snapPixelGrid" => "Bắt dính lưới điểm ảnh",
         "vectorEdit.pixelSnapOn" => "Đã bật bắt dính lưới điểm ảnh",
         "vectorEdit.pixelSnapOff" => "Đã tắt bắt dính lưới điểm ảnh",
+        "menu.path" => "Đường dẫn",
+        "path.flatten" => "Làm phẳng",
+        "path.outlineStroke" => "Chuyển nét thành đường viền",
+        "path.offsetOutward" => "Dịch đường dẫn ra ngoài",
+        "path.offsetInward" => "Dịch đường dẫn vào trong",
+        "path.simplify" => "Đơn giản hóa đường dẫn",
+        "path.reverse" => "Đảo hướng đường dẫn",
         _ => return None,
     })
 }

@@ -74,7 +74,8 @@ fn single_node_image_size(node: &PenNode) -> Option<IntrinsicAxes> {
             &frame.container,
             frame.children.as_deref().unwrap_or_default(),
         ),
-        PenNode::Group(group) => sized_container(
+        PenNode::Group(group)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group, .. }) => sized_container(
             &group.container,
             group.children.as_deref().unwrap_or_default(),
         ),

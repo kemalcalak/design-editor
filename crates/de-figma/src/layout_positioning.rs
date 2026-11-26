@@ -105,7 +105,10 @@ fn map_figma_constraints(figma: &FigValue) -> Constraints {
 fn base_mut(node: &mut PenNode) -> &mut PenNodeBase {
     match node {
         PenNode::Frame(node) | PenNode::Script(ScriptNode { frame: node, .. }) => &mut node.base,
-        PenNode::Group(node) => &mut node.base,
+        PenNode::Group(node)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: node, .. }) => {
+            &mut node.base
+        }
         PenNode::Rectangle(node) => &mut node.base,
         PenNode::Ellipse(node) => &mut node.base,
         PenNode::Line(node) => &mut node.base,

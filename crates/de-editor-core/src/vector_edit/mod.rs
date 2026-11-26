@@ -20,13 +20,14 @@
 //! heal, join, reverse), `snap` (45° constraint, pixel grid, point and
 //! axis snapping), `source` / `write` (document ↔ subpaths), `session`
 //! (the `EditorState` operations) and `pen` (pen-tool continue / close
-//! inside the mode).
+//! inside the mode), plus `simplify` for the Simplify path operation (#388).
 
 mod arc;
 mod geometry;
 mod parse;
 mod pen;
 mod session;
+mod simplify;
 mod snap;
 mod source;
 mod write;
@@ -48,9 +49,11 @@ pub use geometry::{
     segment_controls, segment_count, split_cubic, split_segment,
 };
 pub use parse::parse_path_data;
+pub use simplify::{anchor_count, simplify_subpaths};
 pub use snap::{constrain_45, snap_point, snap_to_pixel_grid, SnapGuide, SnapResult};
 pub use source::{node_subpaths, subpaths_bounds};
 pub use write::subpaths_to_path_data;
+pub(crate) use write::write_subpaths;
 
 /// One 2-D point / vector in the path's parent-local frame.
 pub type Pt = (f64, f64);
