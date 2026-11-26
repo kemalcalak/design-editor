@@ -65,10 +65,10 @@ fn an_instance_is_named_after_the_texts_it_shows() {
         .map(|p| (p.node_id, p.proposed))
         .collect();
     assert_eq!(names["row"], "Pricing cards");
-    // Two instances of one master: the first plain, the second has no
-    // text of its own to tell it apart.
-    assert_eq!(names["i1"], "Starter card");
-    assert!(!names.contains_key("i2"));
+    // Two instances of one master show the same texts: their place in the
+    // row tells them apart.
+    assert_eq!(names["i1"], "Starter card (Left)");
+    assert_eq!(names["i2"], "Starter card (Right)");
     // The master's content is never proposed through an instance.
     assert!(!names.contains_key("m-name") && !names.contains_key("m-price"));
     // Without a source an instance stays unread and unnamed.
@@ -259,7 +259,9 @@ fn a_finding_without_a_suggestion_points_away_from_the_rules() {
     };
     let screen = node(json!({
         "type": "frame", "id": "s", "name": "Frame", "width": 400, "height": 400,
-        "layout": "horizontal", "children": [shape("r1"), shape("r2")]
+        "layout": "horizontal",
+        // Four alike in a row: no colour or place word tells them apart.
+        "children": [shape("r1"), shape("r2"), shape("r3"), shape("r4")]
     }));
     let roots = std::slice::from_ref(&screen);
     let issues = detect_default_layer_names(&NamingPage::new(roots, &NoInstances), Locale::EnUs);

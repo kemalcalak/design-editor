@@ -55,6 +55,9 @@ mod copilot_sdk_probe;
 mod deck_motion;
 #[cfg(test)]
 mod design_agent_reflow_tests;
+pub mod design_agent_run;
+mod design_agent_run_error;
+mod design_agent_run_executor;
 #[cfg(test)]
 mod design_agent_tool_result_tests;
 pub mod design_agent_tools;
@@ -85,6 +88,8 @@ mod font_host_error;
 pub mod generate_jobs;
 pub mod google_fonts;
 pub mod google_fonts_error;
+pub mod headless_export;
+mod headless_export_error;
 pub mod home_preview;
 pub mod image_relevance_judge;
 mod import_html_url;

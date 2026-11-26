@@ -430,3 +430,40 @@ fn presses_outside_the_panel_are_not_claimed() {
     assert_eq!(panel.hit_test(PANEL, outside), None);
     assert_eq!(panel.hover_at(PANEL, outside), None);
 }
+
+/// The tab track is as wide as its labels measured in the face they are
+/// painted in, so in every locale each tab label is painted whole inside
+/// the segment the backend-less hit-test resolves for it (#440).
+#[test]
+fn tab_segments_agree_with_their_painted_labels_in_every_locale() {
+    use crate::widgets::label_fit_test_support::{
+        assert_centred, assert_inside, fresh_backend, run_in,
+    };
+    use crate::widgets::label_widths::LabelWidths;
+    for locale in de_i18n::Locale::ALL {
+        let mut state = open_state();
+        state.editor_ui.locale = locale;
+        let panel = SceneTemplatePanel::for_editor(&state).expect("open");
+        let mut backend = fresh_backend();
+        panel.paint(
+            &mut crate::widgets::PaintCx {
+                backend: &mut backend,
+            },
+            PANEL,
+        );
+        let measured = panel.tab_track_rect_with(PANEL, &mut LabelWidths::measuring(&mut backend));
+        assert_eq!(panel.tab_track_rect(PANEL), measured, "{locale:?}");
+        let what = format!("{locale:?}");
+        for (rect, tab) in panel.tab_chip_rects(PANEL) {
+            let label = run_in(&backend, panel.tab_label(tab), rect, &what);
+            assert_inside(label, rect, 4.0, &what);
+            assert_centred(label, rect, &what);
+            let edge = Point2D::new(rect.origin.x + rect.size.x - 0.5, rect.origin.y + 1.0);
+            assert_eq!(
+                panel.tab_at(PANEL, edge).map(|(_, t)| t),
+                Some(tab),
+                "{what}"
+            );
+        }
+    }
+}

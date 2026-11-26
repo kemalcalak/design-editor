@@ -11,7 +11,9 @@ use crate::{Color, Point2D, Rect, TextLayout};
 pub(super) fn paint_home(surface: &HomeSurface<'_>, cx: &mut PaintCx<'_>, rect: Rect) {
     let p = surface.palette;
     let (w, h) = (rect.size.x, rect.size.y);
-    let layout = surface.layout(w, h);
+    // Measures the labels (only what nothing measured yet), so the
+    // backend-less hit-tests read the rects painted here (#440).
+    let layout = surface.measured_layout(w, h, &mut *cx.backend);
     cx.backend.fill_rect(rect, p.bg);
 
     cx.backend.save();
@@ -28,7 +30,7 @@ pub(super) fn paint_home(surface: &HomeSurface<'_>, cx: &mut PaintCx<'_>, rect: 
         composer::paint_size_menu(surface, cx, &layout);
     }
     if surface.state.mcp_popover_open {
-        let popover = surface.mcp_popover(&layout, w);
+        let popover = surface.measured_mcp_popover(&layout, w, &mut *cx.backend);
         mcp_popover::paint_mcp_popover(surface, cx, &popover);
     }
     // The borderless window's own close / minimise / maximise dots

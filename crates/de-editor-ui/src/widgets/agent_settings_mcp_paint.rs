@@ -93,7 +93,7 @@ fn copy_chip(
         SETTINGS_FONT_FAMILY,
         COPY_CHIP_FONT,
         theme.muted_foreground,
-        500,
+        COPY_CHIP_WEIGHT,
         Point2D::new(
             rect.origin.x + COPY_CHIP_PAD + icon_size + COPY_CHIP_GAP,
             centered_text_baseline_y(rect, COPY_CHIP_FONT),
@@ -109,6 +109,8 @@ pub(in crate::widgets) fn paint_mcp_tab(
     content: Rect,
     now_ms: u64,
 ) {
+    // The chip rects below read these widths.
+    measure_copy_chips(&mut *cx.backend);
     paint_tab_intro(
         cx,
         theme,

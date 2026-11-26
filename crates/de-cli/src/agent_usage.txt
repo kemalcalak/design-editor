@@ -1,0 +1,84 @@
+de agent - run the Design Editor design agent headless (no app, no window)
+
+USAGE:
+  de agent -p "<prompt>" --out <file.de> [--in <file.de|.pen|.pptx>]
+           [--export png|pdf|html|svg[,...]] [--export-dir DIR]
+           [--provider NAME] [--model ID] [--timeout SECONDS] [--max-turns N]
+  de agent --tasks <tasks.yaml> [--parallel N] [run options]
+  de agent --list-providers [--json]
+
+The design agent is the one the app's chat and MCP `run_design_agent` run:
+same prompt, tools, checks and finalize pass. It designs on a copy of --in
+(or an empty document); --out gets that document as the agent left it,
+boards it did not touch included. --in is never written. --out is written
+only when the run succeeds, atomically, so a failed, timed-out or cancelled
+run (Ctrl+C) leaves it untouched.
+
+TASK OPTIONS:
+  -p, --prompt TEXT        the design request
+  --prompt-file PATH       read the prompt from a file (- for stdin);
+                           a prompt may be at most 32 KiB
+  --in PATH                document to start from (.de, pen.dev .pen, .pptx)
+  --out PATH               where to save the result (.de)
+  --export FORMATS         after saving, export png, pdf, html and/or svg
+                           (repeat the flag or separate with commas):
+                           png/svg write one file per top-level frame, pdf
+                           one page per board, html one page with assets/
+  --export-dir DIR         export root; each task writes into its own
+                           <root>/<task name>/ (default root: <out folder>/exports;
+                           a single prompt's task name is the --out name)
+  --timeout SECONDS        budget per task, 1-86400 (default 600)
+  --max-turns N            agent turn cap, 1-64 (default: the app's)
+
+PROVIDER (first match wins; keys are never read from the command line):
+  1. --provider NAME       a provider saved in the app (Settings > Agents),
+                           by id, display name or preset; a tasks file's
+                           `provider` and DE_AGENT_PROVIDER work the same
+  2. an API key in the environment, for CI: DE_AGENT_API_KEY, or the
+     variable --api-key-env NAME names. Then:
+       --api-format anthropic|openai   (DE_AGENT_API_FORMAT, default anthropic)
+       --base-url URL                  (DE_AGENT_BASE_URL, default: the
+                                       format's public endpoint)
+       --model ID                      (DE_AGENT_MODEL, required)
+  3. the first ready provider saved in the app
+  --model ID               model (else DE_AGENT_MODEL); a saved provider only
+                           runs models saved on it, by default its first
+  --settings PATH          read saved providers from this settings.json
+                           (else DE_AGENT_SETTINGS, else the app's own file)
+
+BATCH:
+  --tasks FILE             run every task in a YAML or JSON file:
+                             defaults: {export: [png], model: ..., timeout: 900}
+                             tasks:
+                               - name: landing          # optional
+                                 prompt: A landing page for a coffee roaster
+                                 in: base.de            # optional
+                                 out: out/landing.de
+                                 export: [png, pdf]     # any defaults key
+                           Relative paths resolve against the file's folder.
+                           A task's own value beats the flags, which beat the
+                           file's `defaults`. Names are folder names, unique
+                           ignoring case; two tasks may not write one `out`
+                           (`..` and, on macOS / Windows, case are resolved)
+                           or export into overlapping folders.
+  --parallel N             run up to N tasks at once (1-16, default 1). All
+                           tasks share one request pacer: requests start at
+                           least 350 ms apart (DESIGN_EDITOR_BUILTIN_HTTP_MIN_GAP_MS)
+                           and every 429 widens the gap for all of them
+
+OUTPUT:
+  progress goes to stderr (--quiet / -q silences it); stdout gets a summary,
+  or with --json a report: per task its status (ok, failed, cancelled, or
+  interrupted: saved, then stopped by Ctrl+C before its exports), out,
+  exports, duration, tool calls, token usage and error (stage + message),
+  plus totals. `ok` is true exactly when the exit status is 0.
+
+EXIT STATUS:
+  0 every task succeeded, 1 a task failed, 2 bad arguments, tasks file or
+  provider setup (nothing ran), 130 Ctrl+C cut a task short (a second
+  Ctrl+C exits at once)
+
+EXAMPLES:
+  de agent -p "A pricing page with three plans" --out pricing.de --export png
+  DE_AGENT_API_KEY=... de agent -p "..." --model claude-sonnet-4-5 --out a.de
+  de agent --tasks screens.yaml --parallel 3 --json > report.json

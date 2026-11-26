@@ -6,14 +6,14 @@
 use crate::theme::Theme;
 use crate::widgets::agent_settings_caret;
 use crate::widgets::agent_settings_detail_chrome::{
-    self as chrome, button_width_estimate, checklist_height, checklist_row_at, next_field,
-    paint_button, paint_checklist, paint_header, paint_icon_button, paint_input_box,
-    paint_input_value, paint_label, paint_segmented, paint_status, segment_at, segmented_width,
-    ButtonKind, CheckRow, BODY_TOP_GAP, BUTTON_H, FIELD_GAP, FOOTER_GAP, HEADER_H, INPUT_H,
-    INPUT_PAD_X, VALUE_FONT,
+    self as chrome, button_width, checklist_height, checklist_row_at, next_field, paint_button,
+    paint_checklist, paint_header, paint_icon_button, paint_input_box, paint_input_value,
+    paint_label, paint_segmented, paint_status, segment_at, segmented_width, ButtonKind, CheckRow,
+    BODY_TOP_GAP, BUTTON_H, FIELD_GAP, FOOTER_GAP, HEADER_H, INPUT_H, INPUT_PAD_X, VALUE_FONT,
 };
 use crate::widgets::agent_settings_i18n::t as t_settings;
 use crate::widgets::icons::{draw_icon, Icon};
+use crate::widgets::label_widths::LabelWidths;
 use crate::widgets::PaintCx;
 use crate::{Point2D, Rect};
 use de_editor_core::agent_settings::{
@@ -176,11 +176,24 @@ fn kind_labels(agent: &BuiltinAgentConfig) -> Vec<(&'static str, BuiltinAgentKin
         .collect()
 }
 
+/// The pane's rects, its buttons and format control sized from the widths
+/// paint measured (`label_widths`, #440).
 pub(crate) fn api_layout(
     detail: Rect,
     settings: &AgentSettings,
     ui: &EditorUiState,
     target: ApiTarget<'_>,
+) -> ApiLayout {
+    api_layout_with(detail, settings, ui, target, &mut LabelWidths::cached())
+}
+
+/// [`api_layout`] reading (paint: measuring) label widths through `widths`.
+pub(crate) fn api_layout_with(
+    detail: Rect,
+    settings: &AgentSettings,
+    ui: &EditorUiState,
+    target: ApiTarget<'_>,
+    widths: &mut LabelWidths<'_>,
 ) -> ApiLayout {
     let x = detail.origin.x;
     let w = detail.size.x;
@@ -189,7 +202,7 @@ pub(crate) fn api_layout(
     let kinds = kind_labels(agent);
     let format = (kinds.len() > 1).then(|| {
         let labels: Vec<&str> = kinds.iter().map(|(label, _)| *label).collect();
-        next_field(x, &mut y, segmented_width(&labels).min(w), INPUT_H)
+        next_field(x, &mut y, segmented_width(widths, &labels).min(w), INPUT_H)
     });
     let provider = target
         .index
@@ -215,9 +228,9 @@ pub(crate) fn api_layout(
     let models = next_field(x, &mut y, w, models_h);
     let footer = Rect::xywh(x, y - FIELD_GAP + FOOTER_GAP, w, BUTTON_H);
     let right = x + w;
-    let save_w = button_width_estimate(save_label(ui, target), false);
+    let save_w = button_width(widths, save_label(ui, target), false);
     let save = Rect::xywh(right - save_w, footer.origin.y, save_w, BUTTON_H);
-    let fetch_w = button_width_estimate(t_settings(ui, "settings.agents.fetchModels"), false);
+    let fetch_w = button_width(widths, t_settings(ui, "settings.agents.fetchModels"), false);
     let fetch = Rect::xywh(
         save.origin.x - 10.0 - fetch_w,
         footer.origin.y,
@@ -226,7 +239,7 @@ pub(crate) fn api_layout(
     );
     let secondary_w = match target.index {
         Some(_) => BUTTON_H,
-        None => button_width_estimate(t_settings(ui, "common.cancel"), false),
+        None => button_width(widths, t_settings(ui, "common.cancel"), false),
     };
     let secondary = Rect::xywh(
         fetch.origin.x - 10.0 - secondary_w,
@@ -381,7 +394,13 @@ pub(crate) fn paint_api_detail(
     target: ApiTarget<'_>,
     now_ms: u64,
 ) {
-    let layout = api_layout(detail, settings, ui, target);
+    let layout = api_layout_with(
+        detail,
+        settings,
+        ui,
+        target,
+        &mut LabelWidths::measuring(&mut *cx.backend),
+    );
     let agent = target.agent;
     let title = if target.index.is_none() && agent.preset == BuiltinAgentPresetKey::Custom {
         t_settings(ui, "settings.agents.addCustomEndpoint").to_string()

@@ -6,15 +6,16 @@
 use crate::theme::Theme;
 use crate::widgets::agent_settings_caret;
 use crate::widgets::agent_settings_detail_chrome::{
-    self as chrome, button_width_estimate, next_field, paint_button, paint_header,
-    paint_icon_button, paint_input_box, paint_input_value, paint_label, paint_segmented,
-    paint_status, segment_at, segmented_width, text, ButtonKind, BODY_TOP_GAP, BUTTON_H, FIELD_GAP,
-    FOOTER_GAP, HEADER_H, INPUT_H, INPUT_PAD_X, LABEL_FONT, VALUE_FONT,
+    self as chrome, button_width, next_field, paint_button, paint_header, paint_icon_button,
+    paint_input_box, paint_input_value, paint_label, paint_segmented, paint_status, segment_at,
+    segmented_width, text, ButtonKind, BODY_TOP_GAP, BUTTON_H, FIELD_GAP, FOOTER_GAP, HEADER_H,
+    INPUT_H, INPUT_PAD_X, LABEL_FONT, VALUE_FONT,
 };
 use crate::widgets::agent_settings_i18n::t as t_settings;
 use crate::widgets::agent_settings_install_command::{self as install, CommandLayout};
 use crate::widgets::agent_settings_rows::{fit_text, SETTINGS_FONT_FAMILY};
 use crate::widgets::icons::{draw_icon, Icon};
+use crate::widgets::label_widths::LabelWidths;
 use crate::widgets::PaintCx;
 use crate::{Point2D, Rect};
 use de_editor_core::acp_agent_presets::{
@@ -143,11 +144,24 @@ fn primary_label<'a>(
     }
 }
 
+/// The pane's rects, its buttons and segmented controls sized from the
+/// widths paint measured (`label_widths`, #440).
 pub(crate) fn acp_layout(
     detail: Rect,
     settings: &AgentSettings,
     ui: &EditorUiState,
     target: AcpTarget<'_>,
+) -> AcpLayout {
+    acp_layout_with(detail, settings, ui, target, &mut LabelWidths::cached())
+}
+
+/// [`acp_layout`] reading (paint: measuring) label widths through `widths`.
+pub(crate) fn acp_layout_with(
+    detail: Rect,
+    settings: &AgentSettings,
+    ui: &EditorUiState,
+    target: AcpTarget<'_>,
+    widths: &mut LabelWidths<'_>,
 ) -> AcpLayout {
     let x = detail.origin.x;
     let w = detail.size.x;
@@ -156,14 +170,14 @@ pub(crate) fn acp_layout(
         next_field(
             x,
             &mut y,
-            segmented_width(&preset_labels(ui)).min(w),
+            segmented_width(widths, &preset_labels(ui)).min(w),
             INPUT_H,
         )
     });
     let connection = next_field(
         x,
         &mut y,
-        segmented_width(&connection_labels(ui)).min(w),
+        segmented_width(widths, &connection_labels(ui)).min(w),
         INPUT_H,
     );
     let name = next_field(x, &mut y, w, INPUT_H);
@@ -195,11 +209,11 @@ pub(crate) fn acp_layout(
     };
     let (hint, install) = hint.unzip();
     let footer = Rect::xywh(x, y - FIELD_GAP + FOOTER_GAP, w, BUTTON_H);
-    let primary_w = button_width_estimate(primary_label(ui, settings, target), false);
+    let primary_w = button_width(widths, primary_label(ui, settings, target), false);
     let primary = Rect::xywh(x + w - primary_w, footer.origin.y, primary_w, BUTTON_H);
     let secondary_w = match target.index {
         Some(_) => BUTTON_H,
-        None => button_width_estimate(t_settings(ui, "common.cancel"), false),
+        None => button_width(widths, t_settings(ui, "common.cancel"), false),
     };
     let secondary = Rect::xywh(
         primary.origin.x - 10.0 - secondary_w,
@@ -305,7 +319,13 @@ pub(crate) fn paint_acp_detail(
     target: AcpTarget<'_>,
     now_ms: u64,
 ) {
-    let layout = acp_layout(detail, settings, ui, target);
+    let layout = acp_layout_with(
+        detail,
+        settings,
+        ui,
+        target,
+        &mut LabelWidths::measuring(&mut *cx.backend),
+    );
     let agent = target.agent;
     let title = match target.index {
         Some(_) => agent.display_name.as_str(),

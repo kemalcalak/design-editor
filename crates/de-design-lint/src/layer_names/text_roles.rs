@@ -206,23 +206,39 @@ fn lies_in_a_row(node: &PenNode) -> bool {
     boxes.len() >= 2 && single_row(&boxes)
 }
 
+/// `node`, or the container it wraps alone (through every such wrapper).
+fn lone_content(mut node: &PenNode) -> &PenNode {
+    while let [only] = children(node) {
+        if !is_container(only) {
+            break;
+        }
+        node = only;
+    }
+    node
+}
+
 /// The first child of a screen that reads as its header band (the
 /// preview's rule, `wire_web_nav_links`, plus a navigation shape): at most
 /// `HEADER_MAX_HEIGHT` tall (or, without an authored height, a row), laid
 /// out in a row, holding two or more texts none longer than a link label,
-/// at most one of them prominent (a logo among links). A heading block
-/// (`Pricing` over `Choose a plan`) is no band.
-fn header_band(screen: &PenNode, facts: &Facts) -> bool {
+/// at most one of them prominent (a logo among links). A wrapper around
+/// the row alone (a full-width bar holding a padded row) counts as the row.
+/// A heading block (`Pricing` over `Choose a plan`) is no band.
+/// Remembered per screen: ask [`Facts::header_band`].
+pub(crate) fn header_band_of(screen: &PenNode, facts: &Facts) -> bool {
     let Some(first) = children(screen).first() else {
         return false;
     };
-    if !is_container(first) || !lies_in_a_row(first) {
+    let row = lone_content(first);
+    if !is_container(first) || !lies_in_a_row(row) {
         return false;
     }
     if numeric_height(first).is_some_and(|height| height > HEADER_MAX_HEIGHT) {
         return false;
     }
-    let labels = texts(first, 1, Scope::Heading, facts);
+    // Read from the row itself: a floating bar is shaped like a card, and
+    // a card's texts are its own.
+    let labels = texts(row, 1, Scope::Heading, facts);
     labels.len() >= 2
         && labels
             .iter()
@@ -239,7 +255,7 @@ pub(crate) fn screen_heading(screen: &PenNode, facts: &Facts) -> Option<String> 
         0,
         Scope::Heading,
         facts,
-        header_band(screen, facts),
+        facts.header_band(screen),
         &mut placed,
     );
     let texts: Vec<TextInfo> = placed.into_iter().map(|p| p.info).collect();

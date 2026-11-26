@@ -25,8 +25,14 @@ impl WidgetHostNative {
         viewport_height: f32,
     ) {
         let ui = &self.editor_state.editor_ui;
-        let chrome =
-            canvas_geometry::chrome_layout(&self.editor_state, viewport_width, viewport_height);
+        // Measures the pill and action-group labels (only ones not measured
+        // yet), so the backend-less hit-tests read the widths painted here.
+        let chrome = canvas_geometry::measured_chrome_layout(
+            &self.editor_state,
+            viewport_width,
+            viewport_height,
+            &mut *frame,
+        );
         let mut cx = PaintCx {
             backend: &mut *frame,
         };

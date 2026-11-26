@@ -104,7 +104,9 @@ pub(crate) fn is_free_form(node: &PenNode) -> bool {
         && kids.iter().all(|kid| node_y(kid).is_some())
 }
 
-fn text_size(node: &PenNode) -> Option<(f64, f64)> {
+/// A text's box size: its authored width / height, else an estimate from
+/// its characters and font size.
+pub(crate) fn text_size(node: &PenNode) -> Option<(f64, f64)> {
     let PenNode::Text(text) = node else {
         return None;
     };
