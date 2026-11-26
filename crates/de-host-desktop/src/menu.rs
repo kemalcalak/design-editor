@@ -52,8 +52,13 @@ pub enum MenuAction {
     Present,
     /// View ▸ Show prototype links (#371).
     TogglePrototypeLinks,
-    /// View ▸ Snap to Pixel Grid (vector editing, #387).
+    /// View ▸ Snap to Pixel Grid (vector editing #387; moves, resizes and
+    /// drawing #399).
     TogglePixelGridSnap,
+    /// View ▸ Pixel Grid (#399).
+    TogglePixelGrid,
+    /// Edit ▸ Copy as PNG / Copy as SVG (#399).
+    CopyAs(de_editor_core::copy_as::CopyAsFormat),
     ToggleGitPanel,
     ToggleDesignMdPanel,
     ToggleComponentBrowserPanel,
@@ -140,6 +145,7 @@ impl PathMenuOp {
 #[cfg(target_os = "macos")]
 mod backend {
     use super::{MenuAction, PathMenuOp};
+    use de_editor_core::copy_as::CopyAsFormat;
     use de_editor_core::Locale;
     use muda::accelerator::{Accelerator, Code, Modifiers};
     use muda::{Menu, MenuEvent, MenuItem, PredefinedMenuItem, Submenu};
@@ -180,6 +186,9 @@ mod backend {
     const ID_PRESENT: &str = "present";
     const ID_PROTOTYPE_LINKS: &str = "prototype-links";
     const ID_PIXEL_GRID_SNAP: &str = "pixel-grid-snap";
+    const ID_PIXEL_GRID: &str = "pixel-grid";
+    const ID_COPY_AS_PNG: &str = "copy-as-png";
+    const ID_COPY_AS_SVG: &str = "copy-as-svg";
     const ID_GIT_PANEL: &str = "git-panel";
     const ID_DESIGN_MD: &str = "design-md";
     const ID_COMPONENT_BROWSER: &str = "component-browser";
@@ -225,6 +234,9 @@ mod backend {
             ID_PRESENT => MenuAction::Present,
             ID_PROTOTYPE_LINKS => MenuAction::TogglePrototypeLinks,
             ID_PIXEL_GRID_SNAP => MenuAction::TogglePixelGridSnap,
+            ID_PIXEL_GRID => MenuAction::TogglePixelGrid,
+            ID_COPY_AS_PNG => MenuAction::CopyAs(CopyAsFormat::Png),
+            ID_COPY_AS_SVG => MenuAction::CopyAs(CopyAsFormat::Svg),
             ID_GIT_PANEL => MenuAction::ToggleGitPanel,
             ID_DESIGN_MD => MenuAction::ToggleDesignMdPanel,
             ID_COMPONENT_BROWSER => MenuAction::ToggleComponentBrowserPanel,
@@ -363,6 +375,16 @@ mod backend {
                 &PredefinedMenuItem::separator(),
                 &item(ID_CUT, tr(locale, "menu.cut"), Some(accel(Code::KeyX))),
                 &item(ID_COPY, tr(locale, "menu.copy"), Some(accel(Code::KeyC))),
+                // Figma's Shift+Cmd+C is the Code panel here (#399).
+                &item(
+                    ID_COPY_AS_PNG,
+                    tr(locale, "layerMenu.copyAsPng"),
+                    Some(Accelerator::new(
+                        Some(primary() | Modifiers::ALT),
+                        Code::KeyC,
+                    )),
+                ),
+                &item(ID_COPY_AS_SVG, tr(locale, "layerMenu.copyAsSvg"), None),
                 &item(ID_PASTE, tr(locale, "menu.paste"), Some(accel(Code::KeyV))),
                 &item(
                     ID_SELECT_ALL,
@@ -412,10 +434,14 @@ mod backend {
                 tr(locale, "menu.showPrototypeLinks"),
                 None,
             ));
+            // Shift+' toggles the grid from the keyboard table only: a
+            // bare-Shift key equivalent here would also swallow a `"`
+            // typed into a text field.
+            let _ = view.append(&item(ID_PIXEL_GRID, tr(locale, "menu.pixelGrid"), None));
             let _ = view.append(&item(
                 ID_PIXEL_GRID_SNAP,
                 tr(locale, "menu.snapPixelGrid"),
-                None,
+                Some(accel_shift(Code::Quote)),
             ));
             let _ = view.append(&PredefinedMenuItem::separator());
             let _ = view.append(&item(ID_GIT_PANEL, tr(locale, "menu.gitPanel"), None));
@@ -523,6 +549,10 @@ mod backend {
                 ID_UNGROUP,
                 ID_RENAME_LAYERS,
                 ID_FULLSCREEN,
+                ID_PIXEL_GRID,
+                ID_PIXEL_GRID_SNAP,
+                ID_COPY_AS_PNG,
+                ID_COPY_AS_SVG,
                 ID_GIT_PANEL,
                 ID_DESIGN_MD,
                 ID_COMPONENT_BROWSER,

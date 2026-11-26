@@ -67,7 +67,12 @@ impl WidgetHostNative {
             let zoom = self.editor_state.viewport.zoom.max(0.0001);
             let dx = (x - drag.start_screen_x) / zoom;
             let dy = (y - drag.start_screen_y) / zoom;
-            let new_bounds = resize_bounds(drag.start_bounds, drag.handle, dx, dy);
+            let mut new_bounds = resize_bounds(drag.start_bounds, drag.handle, dx, dy);
+            // Snap to pixel grid (#399): the dragged edges land on whole
+            // pixels; `new_x` / `new_y` below follow the snapped box.
+            if self.editor_state.pixel_snap_active() {
+                new_bounds = drag.handle.snap_moving_edges_to_pixels(new_bounds);
+            }
             let new_x = drag.handle.moves_left_edge().then(|| {
                 drag.start_authored_x.unwrap_or(0.0)
                     + f64::from(new_bounds.origin.x - drag.start_bounds.origin.x)
@@ -104,7 +109,16 @@ impl WidgetHostNative {
             };
             let w = (drag.start_doc_x - cur.x).abs().max(min_w);
             let h = (drag.start_doc_y - cur.y).abs().max(min_h);
-            let new_bounds = Rect::xywh(min_x, min_y, w, h);
+            let mut new_bounds = Rect::xywh(min_x, min_y, w, h);
+            if self.editor_state.pixel_snap_active() {
+                let (x, y, w, h) = de_editor_core::pixel_grid::snap_rect_edges(
+                    f64::from(min_x),
+                    f64::from(min_y),
+                    f64::from(w),
+                    f64::from(h),
+                );
+                new_bounds = Rect::xywh(x as f32, y as f32, w as f32, h as f32);
+            }
             self.editor_state
                 .set_selected_bounds(rect_to_doc_rect(new_bounds));
             self.finish_live_bounds_update(new_bounds, patch_scene);

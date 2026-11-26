@@ -121,6 +121,8 @@ pub enum FileMenuChoice {
     /// Show prototype links (#371): every link on the page, not only the
     /// selection's. The View menu's toggle, on every host.
     PrototypeLinks,
+    /// View ▸ Pixel grid (#399): the grid over the canvas at zoom >= 400 %.
+    PixelGrid,
     /// An icon in the app-level footer.
     Tool(FileMenuTool),
 }
@@ -250,7 +252,7 @@ impl<'a> FileMenu<'a> {
         h += DIVIDER_GAP * 2.0 + 1.0;
         h += ROW_HEIGHT; // Clear history
         h += DIVIDER_GAP * 2.0 + 1.0;
-        h += ROW_HEIGHT * tools::TAIL_ROWS as f32; // Import … Present, prototype links
+        h += ROW_HEIGHT * tools::TAIL_ROWS as f32; // Import … Present, prototype links, pixel grid
         h += DIVIDER_GAP * 2.0 + 1.0;
         h += tools::FOOTER_HEIGHT;
         h += PAD_Y;
@@ -310,6 +312,7 @@ impl<'a> FileMenu<'a> {
             row if row == self.tail_row_start() + 2 => Some(FileMenuChoice::Redo),
             row if row == self.tail_row_start() + 3 => Some(FileMenuChoice::Present),
             row if row == self.tail_row_start() + 4 => Some(FileMenuChoice::PrototypeLinks),
+            row if row == self.tail_row_start() + 5 => Some(FileMenuChoice::PixelGrid),
             row if row >= self.footer_row_start() => tools::footer_tools(self.ui)
                 .get(row - self.footer_row_start())
                 .copied()

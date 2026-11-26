@@ -495,6 +495,14 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "convertInstances.done" => "{{converted}} 個のコピーが同じコンポーネントのインスタンスになりました",
         "convertInstances.partial" => "{{converted}} 個がインスタンスになりました。{{skipped}} 個は異なるためそのままです",
         "convertInstances.failed" => "これらのコピーは同じコンポーネントにできません",
+        "menu.pixelGrid" => "ピクセルグリッド",
+        "canvas.pixelGridOn" => "ピクセルグリッドをオン",
+        "canvas.pixelGridOff" => "ピクセルグリッドをオフ",
+        "layerMenu.copyAsPng" => "PNG としてコピー",
+        "layerMenu.copyAsSvg" => "SVG としてコピー",
+        "clipboard.copiedPng" => "PNG としてコピーしました",
+        "clipboard.copiedSvg" => "SVG としてコピーしました",
+        "clipboard.copyFailed" => "選択範囲をコピーできませんでした",
         _ => return None,
     })
 }

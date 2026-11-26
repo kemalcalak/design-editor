@@ -172,6 +172,8 @@ impl DesktopApp {
             }
             // Same call as the Cmd/Ctrl+Enter key arm; Home has no page.
             A::TogglePixelGridSnap => self.host.apply_toggle_pixel_grid_snap(),
+            A::TogglePixelGrid => self.host.apply_toggle_pixel_grid(),
+            A::CopyAs(format) => self.copy_selection_as(format),
             A::Present => {
                 !self.host.home_visible() && self.host.toggle_present_with_cached_viewport()
             }

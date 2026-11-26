@@ -42,6 +42,9 @@ pub enum LayerContextAction {
     /// and everything under it.
     RenameLayersAuto,
     Duplicate,
+    /// Copy the selection to the OS clipboard as a PNG / as SVG (#399).
+    CopyAsPng,
+    CopyAsSvg,
     Delete,
     GroupSelection,
     /// Boolean path ops — TS `boolean-union` etc. rows
@@ -159,6 +162,18 @@ const LAYER_ROWS: &[Row] = &[
         icon: Icon::Component,
         action: LayerContextAction::CreateComponentFromSimilar,
         label_key: "layerMenu.createComponentFromSimilar",
+        destructive: false,
+    },
+    Row {
+        icon: Icon::Image,
+        action: LayerContextAction::CopyAsPng,
+        label_key: "layerMenu.copyAsPng",
+        destructive: false,
+    },
+    Row {
+        icon: Icon::Code,
+        action: LayerContextAction::CopyAsSvg,
+        label_key: "layerMenu.copyAsSvg",
         destructive: false,
     },
     Row {

@@ -26,8 +26,8 @@ const FOOTER_BUTTON: f32 = 26.0;
 const FOOTER_ICON: f32 = 15.0;
 
 /// Rows in the tail section: Import, Undo, Redo, Present, Show prototype
-/// links.
-pub(super) const TAIL_ROWS: usize = 5;
+/// links, Pixel grid (#399).
+pub(super) const TAIL_ROWS: usize = 6;
 
 /// An app-level action in the File menu's icon footer.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

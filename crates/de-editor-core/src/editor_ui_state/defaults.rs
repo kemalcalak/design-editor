@@ -68,6 +68,7 @@ impl Default for EditorUiState {
             scenario: None,
             preview: PreviewState::default(),
             prototype: Default::default(),
+            canvas_view: Default::default(),
             slides_panel: super::SlidesPanelState::default(),
             agent_settings_open: false,
             agent_settings: crate::agent_settings::AgentSettings::default(),

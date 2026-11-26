@@ -58,6 +58,29 @@ impl SelectionHandle {
     pub fn moves_top_edge(self) -> bool {
         matches!(self, Self::Top | Self::TopLeft | Self::TopRight)
     }
+
+    /// `bounds` with the edges this handle drags rounded to whole pixels
+    /// (Snap to pixel grid, #399); the opposite edges stay put.
+    pub fn snap_moving_edges_to_pixels(self, bounds: Rect) -> Rect {
+        let left = self.moves_left_edge();
+        let top = self.moves_top_edge();
+        let edges = [
+            left,
+            top,
+            self.resizes_width() && !left,
+            self.resizes_height() && !top,
+        ];
+        let (x, y, w, h) = de_editor_core::pixel_grid::snap_moving_edges(
+            (
+                f64::from(bounds.origin.x),
+                f64::from(bounds.origin.y),
+                f64::from(bounds.size.x),
+                f64::from(bounds.size.y),
+            ),
+            edges,
+        );
+        Rect::xywh(x as f32, y as f32, w as f32, h as f32)
+    }
 }
 
 /// Radius (screen px) of the rotation ring that sits OUTSIDE the

@@ -495,6 +495,14 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "convertInstances.done" => "{{converted}} Kopien sind jetzt Instanzen einer Komponente",
         "convertInstances.partial" => "{{converted}} Kopien sind Instanzen; {{skipped}} weichen ab und bleiben unverändert",
         "convertInstances.failed" => "Diese Kopien können keine Komponente teilen",
+        "menu.pixelGrid" => "Pixelraster",
+        "canvas.pixelGridOn" => "Pixelraster an",
+        "canvas.pixelGridOff" => "Pixelraster aus",
+        "layerMenu.copyAsPng" => "Als PNG kopieren",
+        "layerMenu.copyAsSvg" => "Als SVG kopieren",
+        "clipboard.copiedPng" => "Als PNG kopiert",
+        "clipboard.copiedSvg" => "Als SVG kopiert",
+        "clipboard.copyFailed" => "Auswahl konnte nicht kopiert werden",
         _ => return None,
     })
 }

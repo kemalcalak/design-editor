@@ -250,6 +250,15 @@ impl<'a> Widget for FileMenu<'a> {
                     ""
                 },
             ),
+            (
+                Icon::LayoutGrid,
+                "menu.pixelGrid",
+                if self.ui.canvas_view.pixel_grid_hidden {
+                    ""
+                } else {
+                    "✓"
+                },
+            ),
         ]
         .into_iter()
         .enumerate()

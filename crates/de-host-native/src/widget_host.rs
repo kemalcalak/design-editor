@@ -179,6 +179,9 @@ mod pen_press_tests;
 mod pencil_press;
 #[cfg(test)]
 mod pencil_press_tests;
+mod pixel_snap;
+#[cfg(test)]
+mod pixel_snap_tests;
 mod pointer_cancel;
 mod press;
 mod press_canvas_tiers;
@@ -509,6 +512,8 @@ pub struct WidgetHostNative {
     /// Whether Alt/Option is currently held. Node dragging uses this
     /// to duplicate the current selection before moving it.
     pub(in crate::widget_host) alt_held: bool,
+    /// Rounding Snap to pixel grid added to the current node drag (#399).
+    pub(in crate::widget_host) node_drag_pixel_residual: (f64, f64),
     /// Whether Cmd (macOS) / Ctrl is held — suspends vector snapping.
     pub(in crate::widget_host) cmd_held: bool,
     /// Vector edit mode pointer state (#387, `vector_edit_press.rs`).

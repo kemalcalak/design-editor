@@ -231,6 +231,26 @@ pub fn render_node_on_page_raster_bytes(
     })
 }
 
+/// Render several nodes together (a multi-selection copy, #399), cropped
+/// to their combined painted bounds. Hidden nodes are left out; the nodes
+/// paint as given, without their ancestors' transforms or clips.
+pub fn render_nodes_raster_bytes(
+    nodes: &[&SceneNode],
+    format: RasterFormat,
+    scale: f32,
+) -> Result<Vec<u8>, ExportError> {
+    let mut acc = BoundsAcc::new();
+    for node in nodes.iter().filter(|n| !n.hidden) {
+        collect_bounds(node, glam::Affine2::IDENTITY, &mut acc);
+    }
+    let bounds = acc.into_rect().ok_or(ExportError::NothingToExport)?;
+    render_raster_bytes(bounds, format, clamp_scale(scale), MARGIN, |canvas| {
+        for node in nodes.iter().filter(|n| !n.hidden) {
+            paint_node(canvas, node);
+        }
+    })
+}
+
 /// Clamp a caller-supplied export scale to the @0.5x..@8x range,
 /// defaulting a non-finite value to @2x (TS export-dialog parity).
 fn clamp_scale(scale: f32) -> f32 {

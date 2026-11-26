@@ -495,6 +495,14 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "convertInstances.done" => "สำเนา {{converted}} รายการเป็นอินสแตนซ์ของคอมโพเนนต์เดียวแล้ว",
         "convertInstances.partial" => "{{converted}} รายการเป็นอินสแตนซ์แล้ว {{skipped}} รายการต่างกันจึงคงไว้",
         "convertInstances.failed" => "สำเนาเหล่านี้ใช้คอมโพเนนต์ร่วมกันไม่ได้",
+        "menu.pixelGrid" => "ตารางพิกเซล",
+        "canvas.pixelGridOn" => "เปิดตารางพิกเซล",
+        "canvas.pixelGridOff" => "ปิดตารางพิกเซล",
+        "layerMenu.copyAsPng" => "คัดลอกเป็น PNG",
+        "layerMenu.copyAsSvg" => "คัดลอกเป็น SVG",
+        "clipboard.copiedPng" => "คัดลอกเป็น PNG แล้ว",
+        "clipboard.copiedSvg" => "คัดลอกเป็น SVG แล้ว",
+        "clipboard.copyFailed" => "คัดลอกรายการที่เลือกไม่ได้",
         _ => return None,
     })
 }

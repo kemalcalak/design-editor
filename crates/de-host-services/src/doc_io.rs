@@ -248,6 +248,9 @@ pub fn preserve_app_preferences(previous: &EditorState, next: &mut EditorState) 
     next.editor_ui.locale = previous.editor_ui.locale;
     next.editor_ui.entry_surface = previous.editor_ui.entry_surface;
     next.editor_ui.recent_files = previous.editor_ui.recent_files.clone();
+    // View toggles (#399) are app preferences, not document state.
+    next.editor_ui.canvas_view.pixel_grid_hidden = previous.editor_ui.canvas_view.pixel_grid_hidden;
+    next.ui.pixel_grid_snap_off = previous.ui.pixel_grid_snap_off;
     // Home's saved Recent view and the live MCP client outlive the
     // document they were seen on.
     next.editor_ui.home.recent_view = previous.editor_ui.home.recent_view;

@@ -495,6 +495,14 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "convertInstances.done" => "Копий стало экземплярами одного компонента: {{converted}}",
         "convertInstances.partial" => "Экземплярами стали {{converted}}; {{skipped}} отличаются и оставлены как есть",
         "convertInstances.failed" => "Эти копии не могут стать одним компонентом",
+        "menu.pixelGrid" => "Пиксельная сетка",
+        "canvas.pixelGridOn" => "Пиксельная сетка включена",
+        "canvas.pixelGridOff" => "Пиксельная сетка выключена",
+        "layerMenu.copyAsPng" => "Копировать как PNG",
+        "layerMenu.copyAsSvg" => "Копировать как SVG",
+        "clipboard.copiedPng" => "Скопировано как PNG",
+        "clipboard.copiedSvg" => "Скопировано как SVG",
+        "clipboard.copyFailed" => "Не удалось скопировать выделение",
         _ => return None,
     })
 }

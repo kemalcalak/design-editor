@@ -226,6 +226,8 @@ pub struct EditorUiState {
     pub preview: PreviewState,
     /// Canvas prototype links + the panel's frame-target request (#371).
     pub prototype: PrototypeState,
+    /// Pixel grid toggle + Alt hover measurements (#399).
+    pub canvas_view: CanvasViewState,
     /// Left-rail tab selection plus the slides tab's hover / press /
     /// drag bookkeeping. The tab row itself only appears for scenario
     /// documents that have a page navigator to offer.

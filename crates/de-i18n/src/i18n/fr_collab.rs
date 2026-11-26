@@ -495,6 +495,14 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "convertInstances.done" => "{{converted}} copies sont désormais des instances d’un composant",
         "convertInstances.partial" => "{{converted}} copies sont des instances ; {{skipped}} diffèrent et restent telles quelles",
         "convertInstances.failed" => "Ces copies ne peuvent pas partager un composant",
+        "menu.pixelGrid" => "Grille de pixels",
+        "canvas.pixelGridOn" => "Grille de pixels activée",
+        "canvas.pixelGridOff" => "Grille de pixels désactivée",
+        "layerMenu.copyAsPng" => "Copier en PNG",
+        "layerMenu.copyAsSvg" => "Copier en SVG",
+        "clipboard.copiedPng" => "Copié en PNG",
+        "clipboard.copiedSvg" => "Copié en SVG",
+        "clipboard.copyFailed" => "Impossible de copier la sélection",
         _ => return None,
     })
 }

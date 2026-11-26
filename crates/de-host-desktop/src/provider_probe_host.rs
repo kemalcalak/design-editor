@@ -205,6 +205,8 @@ impl DesktopApp {
             pencil_cursor: ui.pencil_cursor_style,
             pencil_smoothing: ui.pencil_smoothing,
             live_pages: ui.browser_live.live_pages(),
+            pixel_grid: !ui.canvas_view.pixel_grid_hidden,
+            snap_pixel_grid: !self.host.editor_state().ui.pixel_grid_snap_off,
         };
         if self.last_saved_ui_prefs == Some(values) {
             return;

@@ -495,6 +495,14 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "convertInstances.done" => "{{converted}} kopya artık tek bir bileşenin örneği",
         "convertInstances.partial" => "{{converted}} kopya örnek oldu; {{skipped}} farklı olduğu için olduğu gibi bırakıldı",
         "convertInstances.failed" => "Bu kopyalar tek bir bileşeni paylaşamıyor",
+        "menu.pixelGrid" => "Piksel ızgarası",
+        "canvas.pixelGridOn" => "Piksel ızgarası açık",
+        "canvas.pixelGridOff" => "Piksel ızgarası kapalı",
+        "layerMenu.copyAsPng" => "PNG olarak kopyala",
+        "layerMenu.copyAsSvg" => "SVG olarak kopyala",
+        "clipboard.copiedPng" => "PNG olarak kopyalandı",
+        "clipboard.copiedSvg" => "SVG olarak kopyalandı",
+        "clipboard.copyFailed" => "Seçim kopyalanamadı",
         _ => return None,
     })
 }

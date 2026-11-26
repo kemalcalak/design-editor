@@ -24,8 +24,6 @@ const DOUBLE_CLICK_MS: u64 = 400;
 const DOUBLE_CLICK_PX: f32 = 4.0;
 /// Screen px a press must travel before it counts as a drag.
 const DRAG_SLOP_PX: f32 = 2.0;
-/// Zoom from which points snap to whole pixels (Figma's pixel grid).
-const PIXEL_GRID_ZOOM: f32 = 4.0;
 
 /// What a vector-edit drag moves.
 pub(in crate::widget_host) enum VectorDragKind {
@@ -115,7 +113,7 @@ impl WidgetHostNative {
                 return (r.point, r.on_point, r.guides);
             }
         }
-        if zoom >= PIXEL_GRID_ZOOM && !self.editor_state.ui.pixel_grid_snap_off {
+        if self.editor_state.pixel_snap_active() {
             p = snap_to_pixel_grid(p);
         }
         (p, false, Vec::new())

@@ -4,10 +4,10 @@
 //! ids and linked images embedded, so a team can hand the file to someone
 //! who drops it into Figma and gets the same layer tree back.
 
-use de_editor_ui::layout_scene::{LayoutScene, ScenePage};
+use de_editor_ui::layout_scene::{LayoutScene, SceneNode, ScenePage};
 use de_editor_ui::svg_export::{
-    serialize_node_on_page_svg_with, serialize_page_svg_with, SvgExport, SvgExportError,
-    SvgExportOptions,
+    serialize_node_on_page_svg_with, serialize_nodes_svg_with, serialize_page_svg_with, SvgExport,
+    SvgExportError, SvgExportOptions,
 };
 use de_pen_loader::SceneLayerNames;
 
@@ -44,6 +44,16 @@ pub fn render_layered_node_on_page_svg(
 ) -> Result<SvgExport, SvgExportError> {
     install_brand_catalog();
     serialize_node_on_page_svg_with(page, node_id, &layered_options(names))
+}
+
+/// Several nodes together as one tight layered SVG (a multi-selection
+/// copy, #399).
+pub fn render_layered_nodes_svg(
+    nodes: &[SceneNode],
+    names: &SceneLayerNames,
+) -> Result<SvgExport, SvgExportError> {
+    install_brand_catalog();
+    serialize_nodes_svg_with(nodes, &layered_options(names))
 }
 
 /// All of `page` as one layered SVG (each top-level frame a group).

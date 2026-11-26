@@ -495,6 +495,14 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "convertInstances.done" => "{{converted}} bản sao giờ là phiên bản của một thành phần",
         "convertInstances.partial" => "{{converted}} bản sao đã thành phiên bản; {{skipped}} khác nên được giữ nguyên",
         "convertInstances.failed" => "Các bản sao này không thể dùng chung một thành phần",
+        "menu.pixelGrid" => "Lưới điểm ảnh",
+        "canvas.pixelGridOn" => "Đã bật lưới điểm ảnh",
+        "canvas.pixelGridOff" => "Đã tắt lưới điểm ảnh",
+        "layerMenu.copyAsPng" => "Sao chép dạng PNG",
+        "layerMenu.copyAsSvg" => "Sao chép dạng SVG",
+        "clipboard.copiedPng" => "Đã sao chép dạng PNG",
+        "clipboard.copiedSvg" => "Đã sao chép dạng SVG",
+        "clipboard.copyFailed" => "Không thể sao chép vùng chọn",
         _ => return None,
     })
 }

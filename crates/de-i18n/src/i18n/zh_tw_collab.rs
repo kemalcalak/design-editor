@@ -495,6 +495,14 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "convertInstances.done" => "{{converted}} 個副本已成為同一元件的實例",
         "convertInstances.partial" => "{{converted}} 個副本已成為實例；{{skipped}} 個不同，保持原樣",
         "convertInstances.failed" => "這些副本無法共用一個元件",
+        "menu.pixelGrid" => "像素格線",
+        "canvas.pixelGridOn" => "像素格線已開啟",
+        "canvas.pixelGridOff" => "像素格線已關閉",
+        "layerMenu.copyAsPng" => "複製為 PNG",
+        "layerMenu.copyAsSvg" => "複製為 SVG",
+        "clipboard.copiedPng" => "已複製為 PNG",
+        "clipboard.copiedSvg" => "已複製為 SVG",
+        "clipboard.copyFailed" => "無法複製所選內容",
         _ => return None,
     })
 }

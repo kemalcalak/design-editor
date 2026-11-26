@@ -269,8 +269,15 @@ impl WidgetHostNative {
                 self.editor_state.editor_ui.active_guides.clear();
                 (0.0, 0.0)
             };
-            let scene_dx = dx as f64 + snap_dx;
-            let scene_dy = dy as f64 + snap_dy;
+            // Snap to pixel grid (#399) on the axes the guides left alone;
+            // kept out of `snap_*` so it never rewinds the cursor anchor.
+            let (pixel_dx, pixel_dy) = if translated {
+                self.pixel_snap_node_drag(snap_dx != 0.0, snap_dy != 0.0)
+            } else {
+                (0.0, 0.0)
+            };
+            let scene_dx = dx as f64 + snap_dx + pixel_dx;
+            let scene_dy = dy as f64 + snap_dy + pixel_dy;
             if translated && !self.editor_state_dirty {
                 let ids =
                     de_editor_ui::widgets::drag_flow::drag_scene_translate_ids(&self.editor_state);

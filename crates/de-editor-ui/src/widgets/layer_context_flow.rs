@@ -2,6 +2,7 @@
 //! to honor the 800-line cap. Re-exported from `press_flow` so both
 //! hosts keep their existing `press_flow::…` import paths.
 
+use de_editor_core::copy_as::CopyAsFormat;
 use de_editor_core::host_press_transitions as core_press;
 use de_editor_core::path_ops::PathOperation;
 use de_editor_core::ui_draft::LayerContextTarget;
@@ -43,6 +44,18 @@ pub fn apply_layer_context_action(
             }
             state.commit_history();
             let _ = state.duplicate_selected(next_node_id, 10.0);
+            LayerContextStep::Done
+        }
+        (A::CopyAsPng | A::CopyAsSvg, T::Layer(id)) => {
+            // Copy the multi-selection when the row is part of it, like
+            // Duplicate; the desktop renders and writes the clipboard.
+            if !state.is_selected(&id) {
+                state.set_single_selection(id);
+            }
+            state.editor_ui.canvas_view.pending_copy_as = Some(match action {
+                A::CopyAsSvg => CopyAsFormat::Svg,
+                _ => CopyAsFormat::Png,
+            });
             LayerContextStep::Done
         }
         (A::Delete, T::Layer(id)) => {
@@ -192,3 +205,7 @@ fn convert_similar_layers(state: &mut EditorState, id: de_editor_core::NodeId, n
     };
     state.editor_ui.show_toast(key, args, level, now_ms);
 }
+
+#[cfg(test)]
+#[path = "layer_context_copy_tests.rs"]
+mod copy_tests;

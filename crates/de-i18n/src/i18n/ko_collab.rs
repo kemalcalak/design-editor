@@ -497,6 +497,14 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "convertInstances.done" => "사본 {{converted}}개가 한 컴포넌트의 인스턴스가 되었습니다",
         "convertInstances.partial" => "{{converted}}개가 인스턴스가 되었고 {{skipped}}개는 달라서 그대로 두었습니다",
         "convertInstances.failed" => "이 사본들은 한 컴포넌트를 공유할 수 없습니다",
+        "menu.pixelGrid" => "픽셀 그리드",
+        "canvas.pixelGridOn" => "픽셀 그리드 켜짐",
+        "canvas.pixelGridOff" => "픽셀 그리드 꺼짐",
+        "layerMenu.copyAsPng" => "PNG로 복사",
+        "layerMenu.copyAsSvg" => "SVG로 복사",
+        "clipboard.copiedPng" => "PNG로 복사됨",
+        "clipboard.copiedSvg" => "SVG로 복사됨",
+        "clipboard.copyFailed" => "선택 항목을 복사할 수 없습니다",
         _ => return None,
     })
 }

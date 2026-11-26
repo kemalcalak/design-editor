@@ -32,6 +32,7 @@ mod codegen_input;
 mod codegen_session;
 mod commit_diff_host;
 mod commit_diff_semantic;
+mod copy_as_host;
 mod cursor_icon;
 mod design_loop_indicator;
 mod design_md_error;

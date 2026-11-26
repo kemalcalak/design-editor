@@ -495,6 +495,14 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "convertInstances.done" => "{{converted}} copies are now instances of one component",
         "convertInstances.partial" => "{{converted}} copies are now instances; {{skipped}} differ and were left as they are",
         "convertInstances.failed" => "These copies could not share one component",
+        "menu.pixelGrid" => "Pixel Grid",
+        "canvas.pixelGridOn" => "Pixel grid on",
+        "canvas.pixelGridOff" => "Pixel grid off",
+        "layerMenu.copyAsPng" => "Copy as PNG",
+        "layerMenu.copyAsSvg" => "Copy as SVG",
+        "clipboard.copiedPng" => "Copied as PNG",
+        "clipboard.copiedSvg" => "Copied as SVG",
+        "clipboard.copyFailed" => "Couldn't copy the selection",
         _ => return None,
     })
 }

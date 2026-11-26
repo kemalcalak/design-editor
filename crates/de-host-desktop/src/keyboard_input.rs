@@ -226,6 +226,12 @@ impl DesktopApp {
                     "i" => consumed = self.host.apply_boolean_op(BooleanOp::Intersect),
                     "x" => consumed = self.host.apply_boolean_op(BooleanOp::Exclude),
                     "k" => consumed = self.host.apply_create_component(),
+                    // Cmd+Alt+C — Copy as PNG (#399); Figma's Shift+Cmd+C
+                    // is the Code panel here.
+                    "c" => {
+                        consumed =
+                            self.copy_selection_as(de_editor_core::copy_as::CopyAsFormat::Png)
+                    }
                     _ => {}
                 }
             }
@@ -365,9 +371,25 @@ impl DesktopApp {
                         "k" => consumed = self.host.apply_toggle_component_browser(),
                         "f" => consumed = self.host.apply_open_figma_import(),
                         "h" => consumed = self.host.apply_open_html_import(),
+                        // Cmd+Shift+' — Snap to pixel grid (#399, Figma's
+                        // chord; `"` is Shift+' on US layouts).
+                        "'" | "\"" => consumed = self.host.apply_toggle_pixel_grid_snap(),
                         _ => {}
                     }
                 }
+            }
+            // Shift+' — View ▸ Pixel grid (#399). Ahead of the bare-letter
+            // arm, which would otherwise type nothing and drop it.
+            Key::Character(ref ch)
+                if !self.zoom_modifier
+                    && self.shift_modifier
+                    && !self.alt_modifier
+                    && !settings_focused
+                    && !home_visible
+                    && !self.host.input_active_pub()
+                    && matches!(ch.as_str(), "'" | "\"") =>
+            {
+                consumed = self.host.apply_toggle_pixel_grid();
             }
             // Shift+H / Shift+V — flip the selection (#90). Ahead of the
             // bare-letter arm below, which ignores Shift and would read
@@ -555,7 +577,35 @@ impl DesktopApp {
         if let Some(image) = payload.image {
             return self.paste_image_to_canvas(image);
         }
+        if let Some(svg) = payload
+            .text
+            .as_deref()
+            .filter(|t| crate::clipboard::looks_like_svg(t))
+        {
+            return self.paste_svg_text_to_canvas(svg);
+        }
         self.host.apply_paste()
+    }
+
+    /// SVG markup on the clipboard becomes vectors at the canvas centre
+    /// (#399); markup with no shapes falls back to the node clipboard.
+    fn paste_svg_text_to_canvas(&mut self, svg: &str) -> bool {
+        let centre = de_editor_ui::widgets::host_canvas_geometry::canvas_centre_doc_point(
+            self.host.editor_state(),
+            self.viewport_width,
+            self.viewport_height,
+        );
+        let mut next_id = 0;
+        let pasted = self.host.editor_state_mut().paste_svg_centered(
+            &mut next_id,
+            svg,
+            (f64::from(centre.x), f64::from(centre.y)),
+        );
+        if pasted == 0 {
+            return self.host.apply_paste();
+        }
+        self.host.mark_editor_state_dirty();
+        true
     }
 
     /// Stage a clipboard image as a chat attachment. Image data wins over
