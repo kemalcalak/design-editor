@@ -34,6 +34,7 @@ use super::prompt_center_panel::estimated_text_width;
 use super::scene_template_card_actions::basis_chip_reserved_width;
 use crate::theme::Theme;
 use crate::widgets::editor_state_ext::theme_for;
+use crate::widgets::label_widths::LabelWidths;
 use crate::{Color, Point2D, Rect};
 
 /// Margin between the canvas region and the gallery on every side.
@@ -426,7 +427,12 @@ impl<'a> SceneTemplatePanel<'a> {
     /// *filter* row, not of a mode switch: nothing said the two belonged to
     /// each other or that exactly one of them was ever on. A segmented
     /// control says both by construction.
+    /// Its width comes from the tab labels as paint measured them (#440).
     pub(super) fn tab_track_rect(&self, panel: Rect) -> Rect {
+        self.tab_track_rect_with(panel, &mut LabelWidths::cached())
+    }
+
+    pub(super) fn tab_track_rect_with(&self, panel: Rect, widths: &mut LabelWidths<'_>) -> Rect {
         let labels: Vec<&str> = AssetCenterTab::ALL
             .into_iter()
             .map(|tab| self.tab_label(tab))
@@ -435,7 +441,7 @@ impl<'a> SceneTemplatePanel<'a> {
         Rect::xywh(
             Self::content_rect(panel).origin.x,
             panel.origin.y + HEADER_H + (TAB_ROW_H - track_h) / 2.0,
-            segment_track_width(labels.len(), segment_width_for(&labels)),
+            segment_track_width(labels.len(), segment_width_for(widths, &labels)),
             track_h,
         )
     }

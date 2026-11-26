@@ -4,6 +4,7 @@
 use super::copy::tr;
 use super::layout::{
     IMPORT_H_TALL, IMPORT_TEXT_PAD_R, IMPORT_TEXT_X, IMPORT_TITLE_FONT, IMPORT_TITLE_KEYS,
+    IMPORT_TITLE_WEIGHT as TITLE_WEIGHT,
 };
 use super::paint::{draw_text, draw_text_weighted, outline};
 use super::{HomeLayout, HomeSurface, SANS};
@@ -22,7 +23,6 @@ const CARDS: [(HomeHit, &str); 4] = [
     (HomeHit::ImportPenDev, "home.import.penDevSub"),
 ];
 
-const TITLE_WEIGHT: u16 = 600;
 const SUB_FONT: f32 = 12.0;
 /// Baseline-to-baseline step between title lines.
 const TITLE_LINE_H: f32 = 17.0;

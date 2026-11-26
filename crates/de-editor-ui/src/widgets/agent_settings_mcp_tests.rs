@@ -110,16 +110,26 @@ fn content_height_grows_with_the_full_list() {
     assert!(content_height(&settings) > collapsed);
 }
 
-/// The wider Copy-chip label in `locale`, by the same estimate the chip is
-/// sized from (hit-test has no backend).
+/// The wider Copy-chip label in `locale`, measured in the face and weight
+/// the chip paints it in, under the family-aware test backend.
 fn label_w(locale: Locale) -> f32 {
-    let w = |key| {
-        crate::widgets::home_surface::estimate_width(
+    let mut backend = crate::widgets::test_family_gap_backend::FamilyGapBackend::default();
+    let mut w = |key| {
+        crate::widgets::text_metrics::measure_in_family_weighted(
+            &mut backend,
             de_i18n::translate(locale, key),
             COPY_CHIP_FONT,
+            SETTINGS_FONT_FAMILY,
+            COPY_CHIP_WEIGHT,
         )
     };
     w("home.mcp.copy").max(w("home.mcp.copied"))
+}
+
+/// Measure the chips the way the tab's paint does.
+fn painted() {
+    crate::widgets::label_widths::reset();
+    measure_copy_chips(&mut crate::widgets::test_family_gap_backend::FamilyGapBackend::default());
 }
 
 fn label_run(locale: Locale) -> f32 {
@@ -128,6 +138,7 @@ fn label_run(locale: Locale) -> f32 {
 
 #[test]
 fn the_copy_chip_fits_its_label_in_every_locale() {
+    painted();
     let settings = AgentSettings::default();
     for locale in Locale::ALL {
         let chip = client_config_copy_button_rect(content(), &settings, locale);
@@ -148,6 +159,7 @@ fn the_copy_chip_fits_its_label_in_every_locale() {
 
 #[test]
 fn the_longest_locale_label_fits_and_turkish_no_longer_overflows() {
+    painted();
     let longest = Locale::ALL
         .into_iter()
         .max_by(|a, b| label_w(*a).total_cmp(&label_w(*b)))
