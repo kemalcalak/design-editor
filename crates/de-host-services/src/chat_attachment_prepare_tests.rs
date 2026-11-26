@@ -106,10 +106,19 @@ fn cli_agents_see_images_and_builtin_models_follow_the_model_table() {
     use de_editor_core::chat::{AgentProvider, ModelEntry};
     let cli = ModelEntry::new(AgentProvider::ClaudeCode, "sonnet", "Sonnet");
     assert!(model_sees_images(&cli));
-    let mut text_only = ModelEntry::new(AgentProvider::ClaudeCode, "glm-5.2", "GLM 5.2");
-    text_only.builtin_provider_id = Some("zhipu".into());
+    // Built-in rows carry `builtin:<provider>:<model>`; the model decides.
+    let text_only = ModelEntry::builtin(
+        AgentProvider::ClaudeCode,
+        "zhipu",
+        "builtin:zhipu:glm-5.2",
+        "GLM 5.2",
+    );
     assert!(!model_sees_images(&text_only));
-    let mut vision = ModelEntry::new(AgentProvider::ClaudeCode, "glm-5v-turbo", "GLM 5V");
-    vision.builtin_provider_id = Some("zhipu".into());
+    let vision = ModelEntry::builtin(
+        AgentProvider::ClaudeCode,
+        "zhipu",
+        "builtin:zhipu:glm-5v-turbo",
+        "GLM 5V",
+    );
     assert!(model_sees_images(&vision));
 }

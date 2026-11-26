@@ -97,12 +97,14 @@ pub fn prepare_turn_attachments(
 /// Agent CLIs and ACP agents read an attached image through their own tools
 /// (a temp file path), so they count as seeing it. A built-in (API key)
 /// model sends it as an inline image block, which only vision models accept;
-/// that decision is `de_chat_agent`'s single model table.
+/// that decision is `de_chat_agent`'s single model table, asked with the
+/// wire model id (`entry.value` is the composite `builtin:<id>:<model>`).
 pub fn model_sees_images(entry: &de_editor_core::chat::ModelEntry) -> bool {
     if entry.builtin_provider_id.is_none() {
         return true;
     }
-    de_chat_agent::chat_agent_context::model_supports_inline_images(&entry.value)
+    let model = entry.builtin_model_id().unwrap_or(&entry.value);
+    de_chat_agent::chat_agent_context::model_supports_inline_images(model)
 }
 
 #[cfg(test)]
