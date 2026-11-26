@@ -69,8 +69,23 @@ impl PropertyPanel {
             return Some(PropertyPanelAction::CreateComponent);
         }
         if self.is_multi {
-            // Multi-select inputs / toggles are inert in v1.
-            return None;
+            // Multi-select inputs / toggles are inert in v1; Combine as
+            // variants (#368) is the one action on several masters.
+            let visible = self.visible_sections();
+            let scrolled = self.scrolled_rect(panel_rect);
+            let top = crate::widgets::property_panel_variants::rows_top(
+                &visible,
+                scrolled.origin.y + crate::widgets::property_panel_inputs::PANEL_HEADER_HEIGHT,
+            );
+            return crate::widgets::property_panel_variants::action_rects(
+                visible.variant_rows,
+                scrolled.origin.x,
+                top,
+                scrolled.size.x,
+            )
+            .into_iter()
+            .find(|(_, rect)| rect.contains(point))
+            .map(|(action, _)| action);
         }
         if matches!(self.tab, de_editor_core::PropertyTab::Code) {
             return crate::widgets::property_panel_code::code_action_hit_with_locale_for_touch(
@@ -201,11 +216,7 @@ impl PropertyPanel {
         let visible = self.visible_sections();
         if let Some(index) = crate::widgets::property_panel_instance::option_index_at(
             scrolled.origin.x,
-            crate::widgets::property_panel_component_props::buttons_y(
-                visible.component_button,
-                visible.component_props,
-                component_block_y,
-            ),
+            crate::widgets::property_panel_variants::buttons_y(&visible, component_block_y),
             scrolled.size.x,
             self.visible_sections().component_button,
             point,

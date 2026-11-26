@@ -1,11 +1,11 @@
 ---
 name: components-mcp
-description: Linked components over MCP - masters, ref instances, per-instance overrides, themed and nested instances, with worked examples
+description: Linked components over MCP - masters, ref instances, per-instance overrides, properties, variant sets, themed and nested instances, with worked examples
 phase: [maintenance]
 trigger:
   keywords: [linked component, component instance, reusable master]
 priority: 20
-budget: 3600
+budget: 5200
 category: knowledge
 ---
 
@@ -70,6 +70,39 @@ explicit `descendants` entry for the same field still wins. A binding field
   `update_node {nodeId, data:{props:{…}}}` (merged; `null` clears a value).
 - `batch_get` on an instance returns `ref` + `props`, not the expanded tree. Every field an
 instance does not override follows the master.
+
+## Variants: one set, named axes
+
+States and sizes of one component (primary / ghost, sm / md / lg, default /
+hover / loading) are ONE component set, not unrelated masters. A set is a
+frame with `componentSet` (`axes` in order, each with its values; the first
+value, or `default`, is the default) whose children are the variant masters:
+`reusable: true` frames with `variantValues` (`{"variant":"primary",
+"size":"md"}`). Alternatives the user asked for ("give me 4 options") are a
+set too, with one `option` axis (`A|B|C|D`): linked variants to compare and
+switch, not four loose copies.
+
+- Author a set in one script (examples 5 and 6), or combine existing
+  masters: `create_component_set {name, master_ids, axes?}` reads the axes
+  from `key=value` master names (`variant=primary, size=md`) when `axes` is
+  left out, and lays the set out as a grid.
+- An instance names the set and the variant it shows:
+  `{"type":"ref","ref":<setId>,"variant":{"size":"sm"}}`; axes left out take
+  the default. Its `ref` is stored as the variant master it shows. A
+  combination with no master shows the nearest one (most matching axes,
+  earlier axes first) and comes back in `warnings`.
+- Switch one instance: `U("<instanceId>", {"variant":{"state":"loading"}})`,
+  `update_node {data:{variant:{…}}}` or `set_instance_variant {nodeId,
+  variant}`. `props` stay; `descendants` overrides stay when the new variant
+  has the same node (same id or same layer-name path), the rest are dropped
+  and listed in `warnings`. Give variants the same layer names.
+- Grow the set: `add_variant {set_id, values, from?}` (a copy of `from`),
+  `add_variant_axis`, `rename_variant_axis`, `rename_variant_value`,
+  `remove_variant_value` (its instances move to the default).
+- `list_components` lists sets under `sets` with axes, default and
+  variants; `get_component {component_id: <setId>}` returns the same. The
+  built-in kit buttons are one set (`variant` × `size`): `K("shadcn/btn-
+  primary", parent, {"variant":{"size":"lg"}})`.
 
 ## Change all, or one
 
@@ -196,6 +229,52 @@ get. `list_components` returns `Badge/Status|<badgeId>|dotColor:color,
 label:text,showDot:boolean`. Cost: each badge is about 20 tokens with
 `props` against about 30 with `descendants` keyed by child ids, and reading
 the screen back is as small.
+
+### 5. Alternatives ("4 options for the hero")
+
+```js
+// Example 5: four alternatives as one set with an option axis
+const hero = I(null, {"type":"frame","name":"Hero","componentSet":{"axes":{"option":["A","B","C","D"]}},"layout":"horizontal","gap":24,"padding":24,"width":"fit_content","height":"fit_content"});
+const options = [["A", "Ship faster", "#2563EB"], ["B", "Build together", "#7C3AED"], ["C", "Design as code", "#059669"], ["D", "One source of truth", "#DC2626"]];
+for (const [option, headline, color] of options) {
+  const master = I(hero, {"type":"frame","name":"option=" + option,"reusable":true,"variantValues":{"option":option},"width":320,"height":"fit_content","layout":"vertical","padding":24,"gap":8,"cornerRadius":16,"fill":[{"type":"solid","color":color}]});
+  I(master, {"type":"text","name":"Headline","content":headline,"fontSize":28,"fontWeight":"700","fill":[{"type":"solid","color":"#FFFFFF"}]});
+}
+const page = I(null, {"type":"frame","name":"Landing","layout":"vertical","gap":16,"width":"fit_content","height":"fit_content"});
+I(page, {"type":"ref","ref":hero,"variant":{"option":"B"}});
+```
+
+`list_components` returns the set under `sets` with `option[A,B,C,D]`. Trying
+another option is one write, `U("<instanceId>", {"variant":{"option":"D"}})`,
+and the losing options stay linked in the set instead of as stray copies.
+Cost: about 330 tokens; each further option is one array entry.
+
+### 6. Real states ("button: variant × size")
+
+```js
+// Example 6: a Button set, variant x size, with a label property
+const button = I(null, {"type":"frame","name":"Button","componentSet":{"axes":{"variant":["primary","ghost"],"size":["md","sm"]}},"layout":"horizontal","gap":16,"padding":16,"width":"fit_content","height":"fit_content"});
+const sizes = {"md": [12, 15], "sm": [8, 13]};
+for (const variant of ["primary", "ghost"]) {
+  for (const size of ["md", "sm"]) {
+    const [pad, font] = sizes[size];
+    const label = "label-" + variant + "-" + size;
+    I(button, {"type":"frame","name":"variant=" + variant + ", size=" + size,"reusable":true,"variantValues":{"variant":variant,"size":size},"layout":"horizontal","padding":pad,"cornerRadius":8,"width":"fit_content","height":"fit_content","fill":[{"type":"solid","color":variant == "primary" ? "#2563EB" : "#FFFFFF"}],
+      "componentProperties":{"label":{"type":"text","bind":[{"node":label,"field":"content"}]}},
+      "children":[{"type":"text","id":label,"name":"Label","content":"Button","fontSize":font,"fontWeight":"600","fill":[{"type":"solid","color":variant == "primary" ? "#FFFFFF" : "#2563EB"}]}]});
+  }
+}
+const bar = I(null, {"type":"frame","name":"Actions","layout":"horizontal","gap":8,"width":"fit_content","height":"fit_content"});
+I(bar, {"type":"ref","ref":button,"props":{"label":"Save"}});
+I(bar, {"type":"ref","ref":button,"variant":{"variant":"ghost"},"props":{"label":"Cancel"}});
+I(bar, {"type":"ref","ref":button,"variant":{"size":"sm"},"props":{"label":"More"}});
+```
+
+The three instances share the `label` property across variants, so a switch
+(`U("<cancelId>", {"variant":{"size":"sm"}})`) keeps "Cancel". Adding a
+`state` axis later is `add_variant_axis {set_id, axis: "state", value:
+"default"}` plus one `add_variant` per new state. Cost: about 520 tokens for
+the four variants and three instances.
 
 ## Existing copies → instances
 

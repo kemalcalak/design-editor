@@ -204,6 +204,23 @@ fn resolve_nodes(
                 let Some(component) = lookup.find(&reference.target) else {
                     continue; // Unknown target — drop like TS.
                 };
+                // A `ref` naming a component set (#368) shows the variant
+                // its `variant` picks; writes and loads normally store the
+                // master itself.
+                let component = match crate::component_set::component_set_of(component) {
+                    Some(set) => {
+                        let values = crate::component_set::full_values(
+                            set,
+                            reference.variant.as_ref(),
+                            None,
+                        );
+                        match crate::component_set::pick_variant(component, &values) {
+                            Some(pick) => pick.master,
+                            None => continue,
+                        }
+                    }
+                    None => component,
+                };
                 visited.insert(reference.target.clone());
                 if let Some(resolved) = expand_ref(node, component, lookup, visited) {
                     out.push(resolved);
@@ -252,7 +269,10 @@ fn expand_ref(
         // `type`/`ref` identify the instance, `descendants` routes
         // child overrides, `children` (slot content) never replaces
         // the component subtree (TS skips it too).
-        if matches!(key.as_str(), "type" | "ref" | "descendants" | "children") {
+        if matches!(
+            key.as_str(),
+            "type" | "ref" | "descendants" | "children" | "variant"
+        ) {
             continue;
         }
         if !value.is_null() {
@@ -272,6 +292,7 @@ fn expand_ref(
     // An expanded instance is not itself a component definition.
     merged.remove("reusable");
     merged.remove("componentProperties");
+    merged.remove("variantValues");
 
     // Children: clone the component's subtree into the instance's
     // virtual id space with `descendants` overrides applied.
@@ -380,7 +401,7 @@ pub(crate) fn materialize_instance(ref_node: &PenNode, component: &PenNode) -> O
     for (key, value) in &ref_map {
         if matches!(
             key.as_str(),
-            "type" | "ref" | "descendants" | "children" | "id"
+            "type" | "ref" | "descendants" | "children" | "id" | "variant"
         ) {
             continue;
         }
@@ -398,6 +419,7 @@ pub(crate) fn materialize_instance(ref_node: &PenNode, component: &PenNode) -> O
     }
     merged.remove("reusable");
     merged.remove("componentProperties");
+    merged.remove("variantValues");
     let overrides = ref_map.get("descendants").and_then(Value::as_object);
     if let Some(Value::Array(children)) = component_map.get("children") {
         let with_overrides: Vec<Value> = children

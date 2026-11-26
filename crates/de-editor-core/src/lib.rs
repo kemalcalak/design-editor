@@ -66,6 +66,7 @@ pub mod component_browser_state;
 pub mod component_instances;
 pub mod component_props;
 mod component_registration;
+pub mod component_set;
 pub mod components;
 pub mod compositing;
 pub mod conversion;
@@ -222,6 +223,8 @@ pub fn svg_path_data_bounds(d: &str) -> Option<(f32, f32, f32, f32)> {
 }
 pub mod chrome_button_state;
 pub mod kit_master;
+mod kit_master_set;
+pub mod kit_sets;
 pub mod text_defaults;
 pub mod text_edit;
 pub mod text_input_focus;
@@ -302,6 +305,8 @@ mod history_snapshot_tests;
 #[cfg(test)]
 #[path = "icon_path_normalize_tests.rs"]
 mod icon_path_normalize_tests;
+#[cfg(test)]
+mod kit_master_set_tests;
 #[cfg(test)]
 mod kit_master_tests;
 #[cfg(test)]

@@ -715,6 +715,8 @@ fn frame_with(base: PenNodeBase, container: ContainerProps, children: Vec<PenNod
         route: None,
         screen: None,
         component_properties: None,
+        component_set: None,
+        variant_values: None,
     })
 }
 

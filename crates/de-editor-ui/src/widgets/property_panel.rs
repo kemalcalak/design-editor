@@ -133,6 +133,8 @@ pub struct PropertyPanel {
     pub instance_component_target: Option<String>,
     /// Component-property rows for the selection (#367).
     pub component_props: de_editor_core::component_props::PanelProperties,
+    /// Variant rows of the selection (#368).
+    pub variants: de_editor_core::component_set::PanelVariants,
     /// Whether the inline component list is expanded for this anchor.
     pub instance_component_picker_open: bool,
     pub corner_expand_open: bool,
@@ -347,7 +349,13 @@ impl PropertyPanel {
 
     pub(crate) fn visible_sections(&self) -> sections::VisibleSections {
         let caps = self.capabilities();
-        let component_button = if self.snapshot.instance_override {
+        let component_button = if matches!(
+            self.variants,
+            de_editor_core::component_set::PanelVariants::Combine { .. }
+        ) {
+            // Several masters: only Combine as variants (#368).
+            crate::widgets::property_panel_visibility::ComponentButtonState::BindProperty
+        } else if self.snapshot.instance_override {
             crate::widgets::property_panel_visibility::ComponentButtonState::InstanceOverride
         } else if self.snapshot.is_instance {
             crate::widgets::property_panel_visibility::ComponentButtonState::Instance {
@@ -359,6 +367,9 @@ impl PropertyPanel {
         } else if matches!(
             self.component_props,
             de_editor_core::component_props::PanelProperties::Bindable(_)
+        ) || matches!(
+            self.variants,
+            de_editor_core::component_set::PanelVariants::Set { .. }
         ) {
             crate::widgets::property_panel_visibility::ComponentButtonState::BindProperty
         } else {
@@ -367,13 +378,17 @@ impl PropertyPanel {
         let component_props = crate::widgets::property_panel_component_props::PropRowsLayout::of(
             &self.component_props,
         );
+        let variant_rows =
+            crate::widgets::property_panel_variants::VariantRowsLayout::of(&self.variants);
         sections::VisibleSections {
             create_component: self.snapshot.is_instance
                 || self.snapshot.instance_override
                 || component_props.rows() > 0
+                || variant_rows.rows() > 0
                 || (caps.create_component && self.snapshot.can_create_component),
             component_button,
             component_props,
+            variant_rows,
             flex_layout: caps.flex_layout,
             flex_layout_mode: self.snapshot.flex_layout,
             layout_justify: self.snapshot.layout_justify,

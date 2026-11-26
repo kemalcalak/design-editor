@@ -727,6 +727,9 @@ impl EditorState {
             EditorCommand::ComponentProperty(command) => {
                 self.apply_component_property(&command).is_ok()
             }
+            EditorCommand::ComponentSet(command) => self
+                .apply_component_set_with_allocator(&command, allocator)?
+                .is_ok(),
             EditorCommand::CreateComponent { node_id, name } => {
                 self.create_component_from_node(&node_id, &name)
             }

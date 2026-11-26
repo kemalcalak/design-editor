@@ -41,6 +41,8 @@ fn make_frame(id: &str, children: Option<Vec<PenNode>>) -> PenNode {
         breakpoint: None,
         placeholder: None,
         component_properties: None,
+        component_set: None,
+        variant_values: None,
     })
 }
 
@@ -175,6 +177,8 @@ fn dump_width_height_number() {
         breakpoint: None,
         placeholder: None,
         component_properties: None,
+        component_set: None,
+        variant_values: None,
     })];
     let dump = build_node_tree_dump(&state);
     assert!(dump.contains("w=390"), "expected w=390 in {dump}");
@@ -210,6 +214,8 @@ fn dump_width_keyword_quoted() {
         breakpoint: None,
         placeholder: None,
         component_properties: None,
+        component_set: None,
+        variant_values: None,
     })];
     let dump = build_node_tree_dump(&state);
     assert!(
@@ -257,6 +263,8 @@ fn dump_layout_props() {
         breakpoint: None,
         placeholder: None,
         component_properties: None,
+        component_set: None,
+        variant_values: None,
     })];
     let dump = build_node_tree_dump(&state);
     assert!(
@@ -304,6 +312,8 @@ fn dump_corner_radius() {
         breakpoint: None,
         placeholder: None,
         component_properties: None,
+        component_set: None,
+        variant_values: None,
     })];
     let dump = build_node_tree_dump(&state);
     assert!(dump.contains("cr=8"), "expected cr=8 in {dump}");
@@ -342,6 +352,8 @@ fn dump_fill_color() {
         breakpoint: None,
         placeholder: None,
         component_properties: None,
+        component_set: None,
+        variant_values: None,
     })];
     let dump = build_node_tree_dump(&state);
     assert!(dump.contains("fill=\"#FF0000\""), "expected fill in {dump}");
@@ -388,6 +400,8 @@ fn dump_stroke() {
         breakpoint: None,
         placeholder: None,
         component_properties: None,
+        component_set: None,
+        variant_values: None,
     })];
     let dump = build_node_tree_dump(&state);
     assert!(
@@ -503,6 +517,8 @@ fn dump_exact_format_simple_tree() {
         breakpoint: None,
         placeholder: None,
         component_properties: None,
+        component_set: None,
+        variant_values: None,
     })];
     let dump = build_node_tree_dump(&state);
     let expected = "id=\"root\" type=frame w=390\n  id=\"lbl\" type=text text=\"Hello\"";
@@ -541,6 +557,8 @@ fn dump_opacity_omitted_at_1() {
         breakpoint: None,
         placeholder: None,
         component_properties: None,
+        component_set: None,
+        variant_values: None,
     })];
     let dump = build_node_tree_dump(&state);
     assert!(
@@ -572,6 +590,8 @@ fn dump_opacity_omitted_at_1() {
         breakpoint: None,
         placeholder: None,
         component_properties: None,
+        component_set: None,
+        variant_values: None,
     })];
     let dump2 = build_node_tree_dump(&state);
     assert!(

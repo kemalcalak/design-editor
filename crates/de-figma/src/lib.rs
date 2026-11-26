@@ -396,6 +396,8 @@ fn build_node(variant: FigmaNodeVariant, base: PenNodeBase) -> PenNode {
             breakpoint: None,
             placeholder: None,
             component_properties: None,
+            component_set: None,
+            variant_values: None,
         }),
         FigmaNodeVariant::Group => PenNode::Group(GroupNode {
             base,

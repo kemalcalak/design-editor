@@ -274,13 +274,14 @@ impl PropertyPanel {
                 }
             }
             panel.component_props = state.panel_properties();
+            panel.variants = state.panel_variants();
             panel.image_panel_view =
                 crate::widgets::property_panel_image_assets::image_panel_view(state, node);
             return Some(panel);
         }
         if state.selection_count() >= 2 {
             let snapshot = NodeSnapshot::from_multi_selection(state)?;
-            return Some(Self::build_from_snapshot(
+            let mut panel = Self::build_from_snapshot(
                 state,
                 snapshot,
                 de_editor_core::FillType::Solid,
@@ -288,7 +289,10 @@ impl PropertyPanel {
                 true,
                 None,
                 None,
-            ));
+            );
+            // Selected masters can be combined into a set (#368).
+            panel.variants = state.panel_variants();
+            return Some(panel);
         }
         None
     }
@@ -386,6 +390,7 @@ impl PropertyPanel {
             instance_component_options: std::sync::Arc::from([]),
             instance_component_target: None,
             component_props: Default::default(),
+            variants: Default::default(),
             instance_component_picker_open: false,
             corner_expand_open,
             effect_add_picker_open: ui.effect_add_picker_open,

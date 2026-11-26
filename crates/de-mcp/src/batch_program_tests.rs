@@ -158,7 +158,8 @@ button=K("shadcn/btn-primary", root)"##;
         panic!("K() inserts a ref, got {button:?}")
     };
     assert_eq!(reference.target, "shadcn-btn-primary");
-    assert_eq!(button.base().name.as_deref(), Some("Primary Button"));
+    // The kit buttons are one set (#368): the instance is named after it.
+    assert_eq!(button.base().name.as_deref(), Some("Button"));
     assert!(
         rendered_contains_text(&state, &button_id, "Button"),
         "the instance renders the master's label"

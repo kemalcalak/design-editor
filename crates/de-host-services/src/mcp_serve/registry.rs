@@ -207,7 +207,7 @@ pub(super) fn rebuild_registry(
     register_tool!("paste_clipboard", paste_clipboard_snapshot());
     register_tool!("set_variable_color", set_variable_color_snapshot(doc));
     register_tool!("set_active_axis_value", set_active_axis_value_snapshot(doc));
-    register_tool!("insert_node", insert_node_snapshot());
+    register_tool!("insert_node", de_mcp::insert_node_snapshot_for(doc));
     register_tool!("import_svg", import_svg_snapshot());
     register_tool!("import_html", import_html_snapshot());
     register_tool!("import_pen_dev", import_pen_dev_snapshot(doc));
@@ -261,6 +261,11 @@ pub(super) fn rebuild_registry(
         "remove_component_property",
         de_mcp::remove_component_property_snapshot(doc)
     );
+    for name in de_mcp::SET_TOOL_NAMES {
+        if should_register(requested_tool, name) {
+            r.register(Box::new(de_mcp::component_set_tool_snapshot(doc, name)));
+        }
+    }
     register_tool!("create_component", create_component_snapshot());
     register_tool!("delete_component", delete_component_snapshot());
     register_tool!("rename_component", rename_component_snapshot());

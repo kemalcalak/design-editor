@@ -48,6 +48,8 @@ fn frame(id: &str, children: Vec<PenNode>) -> PenNode {
         breakpoint: None,
         placeholder: None,
         component_properties: None,
+        component_set: None,
+        variant_values: None,
     })
 }
 

@@ -45,6 +45,8 @@ pub(crate) fn shallow_root(node: &PenNode) -> PenNode {
             breakpoint: frame.breakpoint,
             placeholder: frame.placeholder,
             component_properties: frame.component_properties.clone(),
+            component_set: frame.component_set.clone(),
+            variant_values: frame.variant_values.clone(),
         }),
         PenNode::Group(group)
         | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group, .. }) => {

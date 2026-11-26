@@ -41,18 +41,18 @@ pub fn kit_master_key(kit_id: &str, component_id: &str) -> String {
     format!("{kit_id}/{component_id}")
 }
 
-struct KitTemplate {
-    template: PenNode,
+pub(crate) struct KitTemplate {
+    pub(crate) template: PenNode,
     /// The component's display name (the master's layer name).
-    name: String,
-    variables: Option<BTreeMap<String, VariableDefinition>>,
+    pub(crate) name: String,
+    pub(crate) variables: Option<BTreeMap<String, VariableDefinition>>,
 }
 
 /// An installed master and the kit template's ids mapped onto its ids.
-struct KitMaster {
-    node: PenNode,
-    ids: HashMap<String, String>,
-    fresh_ids: bool,
+pub(crate) struct KitMaster {
+    pub(crate) node: PenNode,
+    pub(crate) ids: HashMap<String, String>,
+    pub(crate) fresh_ids: bool,
 }
 
 impl EditorState {
@@ -104,7 +104,11 @@ impl EditorState {
         let snap = self.snapshot_for_history();
         let (master, installed) = match self.find_kit_master(&key, &kit.template) {
             Some(master) => (master, false),
-            None => match self.install_kit_master(&kit, allocator) {
+            None => match match crate::kit_sets::kit_set_of(kit_id, component_id) {
+                // A set member installs its whole set (#368).
+                Some((spec, _)) => self.install_kit_set(spec, component_id, &kit, allocator),
+                None => self.install_kit_master(&kit, allocator),
+            } {
                 Ok(Some(master)) => (master, true),
                 Ok(None) => {
                     // Installing may already have moved the design into pages.
@@ -117,7 +121,10 @@ impl EditorState {
                 }
             },
         };
-        let inserted = self.insert_kit_instance(&master, &overrides, placement, allocator);
+        // `variant` in the overrides picks another variant of the set.
+        let (overrides, shown) = self.kit_variant(&master, &kit.template, overrides);
+        let shown = shown.as_ref().unwrap_or(&master);
+        let inserted = self.insert_kit_instance(shown, &overrides, placement, allocator);
         match inserted {
             Ok(Some(id)) => {
                 if master.fresh_ids {
@@ -156,13 +163,24 @@ impl EditorState {
             return Ok(None);
         }
         let mut spec = kit_overrides_to_instance(overrides, master);
-        spec.name = spec.name.or_else(|| master.node.base().name.clone());
+        // A variant's instance is named after its set, as in Figma: the
+        // variant can change, the component stays.
+        let set_name = crate::component_set::set_containing(&self.doc, master.node.id_str())
+            .and_then(|set| set.base().name.clone());
+        spec.name = spec
+            .name
+            .or(set_name)
+            .or_else(|| master.node.base().name.clone());
         spec.x = spec.x.or(Some(placement.doc_x));
         spec.y = spec.y.or(Some(placement.doc_y));
         let mut taken = self.collect_node_ids();
         let Some(node) = build_instance_node(spec, allocator, &mut taken)? else {
             return Ok(None);
         };
+        let mut node = node;
+        if let PenNode::Ref(reference) = &mut node {
+            reference.variant = self.kit_variant_values(&master_id);
+        }
         let id = NodeId::new(node.id_str());
         Ok(self.place_instance(placement.parent, node).then_some(id))
     }
@@ -182,7 +200,7 @@ impl EditorState {
 
     /// The recorded master, else a master on the `Components` page under
     /// the template's own root id.
-    fn find_kit_master(&self, key: &str, template: &PenNode) -> Option<KitMaster> {
+    pub(crate) fn find_kit_master(&self, key: &str, template: &PenNode) -> Option<KitMaster> {
         let recorded = self.editor_ui.kit_masters.get(key).map(String::as_str);
         recorded
             .into_iter()
@@ -205,13 +223,19 @@ impl EditorState {
             })
     }
 
-    fn components_page_master(&self, id: &str) -> Option<&PenNode> {
+    /// A master on the `Components` page, at its top level or inside a
+    /// component set there.
+    pub(crate) fn components_page_master(&self, id: &str) -> Option<&PenNode> {
         self.doc
             .pages
             .iter()
             .flatten()
             .filter(|page| is_components_page(page))
             .flat_map(|page| page.children.iter())
+            .flat_map(|node| match crate::component_set::component_set_of(node) {
+                Some(_) => crate::component_set::variant_masters(node),
+                None => vec![node],
+            })
             .find(|node| {
                 node.id_str() == id
                     && matches!(node, PenNode::Frame(frame) if frame.reusable == Some(true))
@@ -277,7 +301,7 @@ impl EditorState {
     }
 
     /// Right of the masters already on the `Components` page, top-aligned.
-    fn next_master_slot(&self) -> (f64, f64) {
+    pub(crate) fn next_master_slot(&self) -> (f64, f64) {
         let right = self
             .doc
             .pages
@@ -398,7 +422,7 @@ fn first_text_id(node: &PenNode) -> Option<&str> {
 
 /// Map each template id onto the master node in the same place, while the
 /// kinds still match (an edited master may have moved things).
-fn zip_ids(template: &PenNode, master: &PenNode, out: &mut HashMap<String, String>) {
+pub(crate) fn zip_ids(template: &PenNode, master: &PenNode, out: &mut HashMap<String, String>) {
     if template.type_tag() != master.type_tag() {
         return;
     }

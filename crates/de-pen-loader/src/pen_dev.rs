@@ -42,6 +42,7 @@ mod text_stroke_gradient_tests;
 mod variables;
 #[cfg(test)]
 mod variables_tests;
+mod variants;
 
 /// Reads a sibling asset (an image fill's relative `url`) for the document
 /// being converted. Returns `None` when the file is missing or unreadable;

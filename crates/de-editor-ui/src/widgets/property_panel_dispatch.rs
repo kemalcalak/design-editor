@@ -40,8 +40,7 @@ pub enum PropertyActionFollowUp {
     /// Enumerate installed font families before the picker paints.
     /// Native resolves this synchronously (the TS app requests Local
     /// Font Access inside the click gesture for the same reason); the
-    /// web host drains its own permission flow after the press and
-    /// ignores it.
+    /// web host drains its own permission flow after the press and ignores it.
     EnsureSystemFontsLoaded,
 }
 
@@ -219,7 +218,8 @@ pub fn apply_property_action(
         | A::ToggleInstanceProp(_)
         | A::CycleInstanceProp(_)
         | A::RemoveComponentProperty(_)
-        | A::BindComponentProperty(_) => Handled,
+        | A::BindComponentProperty(_)
+        | A::Variant(_) => Handled,
         A::SetPropertyTab(tab) => {
             state.editor_ui.set_property_tab(*tab);
             Handled

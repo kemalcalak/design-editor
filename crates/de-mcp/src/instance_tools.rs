@@ -131,6 +131,8 @@ impl InstantiateComponent {
     fn run(&self, args: &BTreeMap<String, String>) -> Result<ToolOutcome, ToolOutcome> {
         let snapshot = &self.0;
         let component_id = NodeId::new(required(args, &["component_id", "componentId"])?);
+        // A set id, or `variant`, picks the variant master (#368).
+        let (component_id, variant_warnings) = variant_target(&snapshot.doc, component_id, args)?;
         // The first id the host's apply allocates is the new node's.
         let predicted = || {
             snapshot
@@ -173,7 +175,7 @@ impl InstantiateComponent {
             .map(|target| json!({ "id": target.id, "name": target.name, "type": target.kind }))
             .collect();
         let page_id = snapshot.page_id(page);
-        let result = json!({
+        let mut result = json!({
             "instanceId": predicted(),
             "componentId": component_id.as_str(),
             "linked": true,
@@ -183,6 +185,9 @@ impl InstantiateComponent {
                 "Linked instance: editing the master changes every instance. Override per instance with descendants keyed by the ids in overridable, e.g. {{\"<id>\":{{\"content\":\"Save\"}}}}. See {COMPONENTS_GUIDE}."
             ),
         });
+        if !variant_warnings.is_empty() {
+            result["warnings"] = json!(variant_warnings);
+        }
         Ok(ToolOutcome::OkJsonWithCommand(
             result.to_string(),
             EditorCommand::Instance(Box::new(InstanceCommand::Insert {
@@ -367,3 +372,37 @@ impl McpTool for ListInstances {
 #[cfg(test)]
 #[path = "instance_tools_tests.rs"]
 mod tests;
+
+/// `instantiate_component` on a set id or with `variant`: the master the
+/// combination resolves to, and a warning when it is the nearest one.
+fn variant_target(
+    doc: &PenDocument,
+    component_id: NodeId,
+    args: &BTreeMap<String, String>,
+) -> Result<(NodeId, Vec<String>), ToolOutcome> {
+    let variant = match arg(args, &["variant"]) {
+        None => None,
+        Some(raw) => Some(
+            serde_json::from_str::<jian_ops_schema::component_set::VariantValues>(raw)
+                .map_err(|_| invalid("variant must be an object of axis to value"))?,
+        ),
+    };
+    let target = de_editor_core::component_set::resolve_target(
+        doc,
+        component_id.as_str(),
+        Some(&variant.unwrap_or_default()),
+    )
+    .map_err(invalid)?;
+    let Some(target) = target else {
+        return Ok((component_id, Vec::new()));
+    };
+    let mut warnings = Vec::new();
+    if !target.exact {
+        warnings.push(format!(
+            "{} has no variant; the instance shows the nearest, {}",
+            de_editor_core::component_set::values_label(&target.values),
+            target.master_id
+        ));
+    }
+    Ok((NodeId::new(target.master_id), warnings))
+}

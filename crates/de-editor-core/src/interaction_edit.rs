@@ -126,6 +126,8 @@ pub enum InteractionMenuTarget {
     MotionTrigger(usize),
     /// The easing list of the node-level `transition` row.
     TransitionEasing,
+    /// The values of axis `index` of the selected variant instance (#368).
+    VariantAxis(usize),
     /// The frames `trigger`'s overlay can show (#372); `swap` writes a
     /// `swap_overlay`, else an `open_overlay`.
     OverlayTarget {

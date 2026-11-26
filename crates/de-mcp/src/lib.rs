@@ -76,6 +76,9 @@ mod codegen_tools_tests;
 pub mod component_property_tools;
 #[cfg(test)]
 mod component_property_tools_tests;
+pub mod component_set_tools;
+#[cfg(test)]
+mod component_set_tools_tests;
 pub mod component_tools;
 #[cfg(test)]
 mod component_tools_tests;
@@ -253,6 +256,7 @@ pub use component_property_tools::{
     remove_component_property_snapshot, upsert_component_property_snapshot,
     RemoveComponentProperty, UpsertComponentProperty,
 };
+pub use component_set_tools::{component_set_tool_snapshot, SetSnapshot, SET_TOOL_NAMES};
 pub use component_tools::{
     create_component_snapshot, delete_component_snapshot, rename_component_snapshot,
     set_node_collapsed_snapshot, CreateComponent, DeleteComponent, RenameComponent,
@@ -377,10 +381,10 @@ pub use tools::{
     ListVariables, NodeRecord, SnapshotLayout, VariableRecord,
 };
 pub use write_tools::{
-    delete_node_snapshot, import_svg_snapshot, insert_node_snapshot, replace_node_snapshot,
-    set_active_axis_value_snapshot, set_variable_color_snapshot, update_node_snapshot,
-    update_node_snapshot_for, DeleteNode, ImportSvg, InsertNode, ReplaceNode, SetActiveAxisValue,
-    SetVariableColor, UpdateNode,
+    delete_node_snapshot, import_svg_snapshot, insert_node_snapshot, insert_node_snapshot_for,
+    replace_node_snapshot, set_active_axis_value_snapshot, set_variable_color_snapshot,
+    update_node_snapshot, update_node_snapshot_for, DeleteNode, ImportSvg, InsertNode, ReplaceNode,
+    SetActiveAxisValue, SetVariableColor, UpdateNode,
 };
 
 /// JSON-RPC-style request id. Strings + integers both supported by

@@ -48,6 +48,8 @@ impl WidgetHostNative {
             if let Some(master) = select {
                 self.editor_state.set_single_selection(master);
             }
+            // A variant switch that dropped overrides or fell back says so.
+            self.editor_state.raise_pending_variant_toast(self.now_ms);
             self.mark_dirty();
             return;
         }
