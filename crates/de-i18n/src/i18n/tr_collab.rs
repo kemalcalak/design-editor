@@ -568,6 +568,16 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "clipboard.copiedPng" => "PNG olarak kopyalandı",
         "clipboard.copiedSvg" => "SVG olarak kopyalandı",
         "clipboard.copyFailed" => "Seçim kopyalanamadı",
+        "chat.mention.page" => "Sayfa",
+        "chat.mention.layer" => "Katman",
+        "chat.mention.component" => "Bileşen",
+        "chat.mention.variable" => "Değişken",
+        "chat.mention.file" => "Dosya",
+        "chat.mention.noMatches" => "Eşleşme yok",
+        "chat.context.title" => "Bağlamda",
+        "chat.context.document" => "Belge",
+        "chat.context.selection" => "Seçim",
+        "chat.context.attachment" => "Ek",
         _ => return None,
     })
 }

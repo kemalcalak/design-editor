@@ -568,6 +568,16 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "clipboard.copiedPng" => "PNG के रूप में कॉपी किया गया",
         "clipboard.copiedSvg" => "SVG के रूप में कॉपी किया गया",
         "clipboard.copyFailed" => "चयन कॉपी नहीं हो सका",
+        "chat.mention.page" => "पेज",
+        "chat.mention.layer" => "लेयर",
+        "chat.mention.component" => "कंपोनेंट",
+        "chat.mention.variable" => "वेरिएबल",
+        "chat.mention.file" => "फ़ाइल",
+        "chat.mention.noMatches" => "कोई मिलान नहीं",
+        "chat.context.title" => "संदर्भ में",
+        "chat.context.document" => "दस्तावेज़",
+        "chat.context.selection" => "चयन",
+        "chat.context.attachment" => "अटैचमेंट",
         _ => return None,
     })
 }

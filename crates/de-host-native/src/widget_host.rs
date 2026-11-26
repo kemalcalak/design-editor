@@ -61,6 +61,7 @@ mod chat_design_hover;
 mod chat_design_hover_tests;
 #[cfg(test)]
 mod chat_input_caret_tests;
+mod chat_mentions_keys;
 mod chat_model_picker_caret;
 #[cfg(test)]
 mod chat_model_picker_caret_tests;

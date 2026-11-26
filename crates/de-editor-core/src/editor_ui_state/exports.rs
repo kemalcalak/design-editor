@@ -1,5 +1,8 @@
 //! Public re-exports for the `editor_ui_state` spine.
 
+pub use super::host_capabilities::HostCapabilities;
+pub use super::panel_motion::{PanelMotion, PANEL_MOTION_MS};
+
 pub use super::chrome::{
     DesignMdRequest, EmbedHost, FileAction, PencilCursorStyle, PencilSmoothing, RecentFile,
     ThemeMode, ThemePresetIo, UpdateStatus, RECENT_FILE_CAP,

@@ -568,6 +568,16 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "clipboard.copiedPng" => "Disalin sebagai PNG",
         "clipboard.copiedSvg" => "Disalin sebagai SVG",
         "clipboard.copyFailed" => "Tidak dapat menyalin pilihan",
+        "chat.mention.page" => "Halaman",
+        "chat.mention.layer" => "Layer",
+        "chat.mention.component" => "Komponen",
+        "chat.mention.variable" => "Variabel",
+        "chat.mention.file" => "File",
+        "chat.mention.noMatches" => "Tidak ada hasil",
+        "chat.context.title" => "Dalam konteks",
+        "chat.context.document" => "Dokumen",
+        "chat.context.selection" => "Pilihan",
+        "chat.context.attachment" => "Lampiran",
         _ => return None,
     })
 }

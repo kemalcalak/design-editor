@@ -570,6 +570,16 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "clipboard.copiedPng" => "PNG로 복사됨",
         "clipboard.copiedSvg" => "SVG로 복사됨",
         "clipboard.copyFailed" => "선택 항목을 복사할 수 없습니다",
+        "chat.mention.page" => "페이지",
+        "chat.mention.layer" => "레이어",
+        "chat.mention.component" => "컴포넌트",
+        "chat.mention.variable" => "변수",
+        "chat.mention.file" => "파일",
+        "chat.mention.noMatches" => "일치 항목 없음",
+        "chat.context.title" => "컨텍스트",
+        "chat.context.document" => "문서",
+        "chat.context.selection" => "선택",
+        "chat.context.attachment" => "첨부",
         _ => return None,
     })
 }

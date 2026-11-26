@@ -47,6 +47,12 @@ impl<'a> AIChatPlaceholder<'a> {
         let left = card.origin.x + COMPOSER_TEXT_INSET + ROW_INSET;
         let right = card.origin.x + card.size.x - COMPOSER_TEXT_INSET - ROW_INSET;
         let plus = Rect::xywh(left, cy - FOOTER_PLUS_D / 2.0, FOOTER_PLUS_D, FOOTER_PLUS_D);
+        let context = Rect::xywh(
+            plus.origin.x + plus.size.x + FOOTER_GAP,
+            plus.origin.y,
+            FOOTER_PLUS_D,
+            FOOTER_PLUS_D,
+        );
         let send = Rect::xywh(
             right - FOOTER_CIRCLE_D,
             cy - FOOTER_CIRCLE_D / 2.0,
@@ -58,8 +64,8 @@ impl<'a> AIChatPlaceholder<'a> {
         } else {
             self.label_no_models.as_str()
         };
-        let room =
-            (send.origin.x - FOOTER_GAP - (plus.origin.x + plus.size.x + FOOTER_GAP)).max(0.0);
+        let room = (send.origin.x - FOOTER_GAP - (context.origin.x + context.size.x + FOOTER_GAP))
+            .max(0.0);
         let want = super::ai_chat_panel::footer_label_width(label, MODEL_FONT) + 8.0 + 8.0 + 18.0;
         let model_w = want.min(MODEL_CHIP_MAX_W).min(room);
         let model = Rect::xywh(
@@ -70,6 +76,7 @@ impl<'a> AIChatPlaceholder<'a> {
         );
         FooterLayout {
             plus,
+            context,
             model,
             stop: send,
             send,
@@ -220,6 +227,36 @@ pub(crate) fn paint_bottom_toolbar(
         p.text_2,
         1.6,
     );
+
+    // The context button (#398): what the turn carries. A dot marks staged
+    // mentions or attachments.
+    if widget.context_rows.is_some() || active(ChatFooterButton::Context) {
+        cx.backend.fill_round_rect(footer.context, 6.0, p.subtle);
+    }
+    draw_icon(
+        cx.backend,
+        Icon::LayersStack,
+        Point2D::new(
+            footer.context.origin.x + (FOOTER_PLUS_D - 15.0) / 2.0,
+            footer.context.origin.y + (FOOTER_PLUS_D - 15.0) / 2.0,
+        ),
+        15.0,
+        p.text_2,
+        1.5,
+    );
+    if widget.staged_context > 0 {
+        let d = 6.0;
+        cx.backend.fill_round_rect(
+            Rect::xywh(
+                footer.context.origin.x + footer.context.size.x - d - 2.0,
+                footer.context.origin.y + 2.0,
+                d,
+                d,
+            ),
+            d / 2.0,
+            p.accent,
+        );
+    }
 
     // "model · provider", or the link to add a provider when none can answer.
     let chip = footer.model;

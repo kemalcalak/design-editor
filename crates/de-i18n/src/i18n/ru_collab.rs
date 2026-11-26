@@ -568,6 +568,16 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "clipboard.copiedPng" => "Скопировано как PNG",
         "clipboard.copiedSvg" => "Скопировано как SVG",
         "clipboard.copyFailed" => "Не удалось скопировать выделение",
+        "chat.mention.page" => "Страница",
+        "chat.mention.layer" => "Слой",
+        "chat.mention.component" => "Компонент",
+        "chat.mention.variable" => "Переменная",
+        "chat.mention.file" => "Файл",
+        "chat.mention.noMatches" => "Нет совпадений",
+        "chat.context.title" => "В контексте",
+        "chat.context.document" => "Документ",
+        "chat.context.selection" => "Выделение",
+        "chat.context.attachment" => "Вложение",
         _ => return None,
     })
 }

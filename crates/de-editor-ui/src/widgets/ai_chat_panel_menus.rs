@@ -52,6 +52,33 @@ impl<'a> AIChatPlaceholder<'a> {
     /// footer hit-tests resolve to the same toggle. `None` when no
     /// dropdown is open.
     pub(crate) fn open_menu_hit(&self, rect: Rect, point: Point2D) -> Option<AIChatHit> {
+        // The `@` popup is not modal: it follows the caret, so a press
+        // outside it falls through to whatever is underneath.
+        if let Some(menu) = self.mention_popup_bounds(rect) {
+            if menu.contains(point) {
+                let rows = self
+                    .state
+                    .mention_popup
+                    .as_ref()
+                    .map_or(0, |p| p.rows.len());
+                return Some(
+                    match crate::widgets::ai_chat_mention_popup::mention_row_at(menu, rows, point) {
+                        Some(row) => AIChatHit::PickMention(row),
+                        None => AIChatHit::FocusInput,
+                    },
+                );
+            }
+        }
+        if let (Some(menu), Some(rows)) =
+            (self.context_panel_bounds(rect), self.context_rows.as_ref())
+        {
+            if menu.contains(point) {
+                return Some(crate::widgets::ai_chat_context_panel::context_panel_hit(
+                    menu, rows, point,
+                ));
+            }
+            return Some(AIChatHit::ToggleContextPanel);
+        }
         if let Some(menu) = self.session_menu_bounds(rect) {
             if menu.contains(point) {
                 return Some(

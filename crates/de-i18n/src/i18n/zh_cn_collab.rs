@@ -568,6 +568,16 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "clipboard.copiedPng" => "已复制为 PNG",
         "clipboard.copiedSvg" => "已复制为 SVG",
         "clipboard.copyFailed" => "无法复制所选内容",
+        "chat.mention.page" => "页面",
+        "chat.mention.layer" => "图层",
+        "chat.mention.component" => "组件",
+        "chat.mention.variable" => "变量",
+        "chat.mention.file" => "文件",
+        "chat.mention.noMatches" => "无匹配项",
+        "chat.context.title" => "上下文",
+        "chat.context.document" => "文档",
+        "chat.context.selection" => "选区",
+        "chat.context.attachment" => "附件",
         _ => return None,
     })
 }

@@ -568,6 +568,16 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "clipboard.copiedPng" => "PNG としてコピーしました",
         "clipboard.copiedSvg" => "SVG としてコピーしました",
         "clipboard.copyFailed" => "選択範囲をコピーできませんでした",
+        "chat.mention.page" => "ページ",
+        "chat.mention.layer" => "レイヤー",
+        "chat.mention.component" => "コンポーネント",
+        "chat.mention.variable" => "変数",
+        "chat.mention.file" => "ファイル",
+        "chat.mention.noMatches" => "一致なし",
+        "chat.context.title" => "コンテキスト",
+        "chat.context.document" => "ドキュメント",
+        "chat.context.selection" => "選択",
+        "chat.context.attachment" => "添付",
         _ => return None,
     })
 }

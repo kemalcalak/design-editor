@@ -79,6 +79,18 @@ impl DesktopApp {
             {
                 consumed = self.host.toggle_present_with_cached_viewport();
             }
+            // The chat's `@` popup (#398) owns Up / Down / Tab while open.
+            Key::Named(NamedKey::ArrowUp | NamedKey::ArrowDown)
+                if !self.zoom_modifier && self.host.chat_mention_popup_active() =>
+            {
+                consumed = self.host.apply_chat_mention_move(matches!(
+                    logical_key,
+                    Key::Named(NamedKey::ArrowDown)
+                ));
+            }
+            Key::Named(NamedKey::Tab) if self.host.chat_mention_popup_active() => {
+                consumed = self.host.apply_chat_mention_pick();
+            }
             Key::Named(NamedKey::Enter) if !self.zoom_modifier => {
                 consumed = self.host.apply_send();
                 // apply_send may raise pending_send (chat send).

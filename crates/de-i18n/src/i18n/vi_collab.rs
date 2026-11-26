@@ -568,6 +568,16 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "clipboard.copiedPng" => "Đã sao chép dạng PNG",
         "clipboard.copiedSvg" => "Đã sao chép dạng SVG",
         "clipboard.copyFailed" => "Không thể sao chép vùng chọn",
+        "chat.mention.page" => "Trang",
+        "chat.mention.layer" => "Lớp",
+        "chat.mention.component" => "Thành phần",
+        "chat.mention.variable" => "Biến",
+        "chat.mention.file" => "Tệp",
+        "chat.mention.noMatches" => "Không có kết quả",
+        "chat.context.title" => "Trong ngữ cảnh",
+        "chat.context.document" => "Tài liệu",
+        "chat.context.selection" => "Vùng chọn",
+        "chat.context.attachment" => "Tệp đính kèm",
         _ => return None,
     })
 }

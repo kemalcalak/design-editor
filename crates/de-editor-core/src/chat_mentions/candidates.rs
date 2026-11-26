@@ -139,7 +139,10 @@ pub fn mention_candidates(
     };
     let pages = document_pages(state);
     let multi_page = pages.len() > 1;
-    let active_page = state.ui.active_page_index.min(pages.len().saturating_sub(1));
+    let active_page = state
+        .ui
+        .active_page_index
+        .min(pages.len().saturating_sub(1));
 
     // Selection first: boosted, and offered even when unnamed.
     let mut selected_ids: Vec<&str> = Vec::new();
@@ -150,10 +153,7 @@ pub fn mention_candidates(
         let label = node_label(node).unwrap_or_else(|| node.type_tag());
         if let Some(score) = fuzzy_score(&query, label) {
             selected_ids.push(node.id_str());
-            push(
-                score + SELECTION_BOOST,
-                node_candidate(node, label, None),
-            );
+            push(score + SELECTION_BOOST, node_candidate(node, label, None));
         }
     }
 

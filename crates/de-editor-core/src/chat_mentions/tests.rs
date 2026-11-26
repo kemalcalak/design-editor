@@ -27,13 +27,19 @@ fn query_opens_at_text_start_or_after_whitespace_only() {
         })
     );
     assert_eq!(active_mention_query("fix @", 5).map(|q| q.start), Some(4));
-    assert_eq!(active_mention_query("fix @hero", 9).map(|q| q.query), Some("hero"));
+    assert_eq!(
+        active_mention_query("fix @hero", 9).map(|q| q.query),
+        Some("hero")
+    );
     // An email address is not a mention.
     assert_eq!(active_mention_query("ana@example", 11), None);
     // Whitespace after the token closes it.
     assert_eq!(active_mention_query("@hero now", 9), None);
     // Caret inside the token: the query runs up to the caret.
-    assert_eq!(active_mention_query("@hero", 3).map(|q| q.query), Some("he"));
+    assert_eq!(
+        active_mention_query("@hero", 3).map(|q| q.query),
+        Some("he")
+    );
     // Out-of-range / non-boundary caret.
     assert_eq!(active_mention_query("@é", 2), None);
     assert_eq!(active_mention_query("@", 9), None);
@@ -84,7 +90,10 @@ fn sync_opens_reranks_and_closes_the_popup() {
     let mut state = multi_page_state();
     typed(&mut state, "make @he");
     assert!(state.sync_chat_mentions());
-    assert!(state.chat.project_files.rescan_requested, "opening asks for a file scan");
+    assert!(
+        state.chat.project_files.rescan_requested,
+        "opening asks for a file scan"
+    );
     assert_eq!(labels(&state)[0], "Hero");
     // Same text and caret: nothing to do.
     assert!(!state.sync_chat_mentions());
@@ -160,7 +169,10 @@ fn highlight_wraps_and_hover_sets_it() {
     let len = state.chat.mention_popup.as_ref().unwrap().rows.len();
     assert!(len > 1);
     assert!(state.move_chat_mention_highlight(-1));
-    assert_eq!(state.chat.mention_popup.as_ref().unwrap().highlight, len - 1);
+    assert_eq!(
+        state.chat.mention_popup.as_ref().unwrap().highlight,
+        len - 1
+    );
     assert!(state.move_chat_mention_highlight(1));
     assert_eq!(state.chat.mention_popup.as_ref().unwrap().highlight, 0);
     assert!(state.set_chat_mention_highlight(1));

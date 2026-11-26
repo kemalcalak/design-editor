@@ -568,6 +568,16 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "clipboard.copiedPng" => "คัดลอกเป็น PNG แล้ว",
         "clipboard.copiedSvg" => "คัดลอกเป็น SVG แล้ว",
         "clipboard.copyFailed" => "คัดลอกรายการที่เลือกไม่ได้",
+        "chat.mention.page" => "หน้า",
+        "chat.mention.layer" => "เลเยอร์",
+        "chat.mention.component" => "คอมโพเนนต์",
+        "chat.mention.variable" => "ตัวแปร",
+        "chat.mention.file" => "ไฟล์",
+        "chat.mention.noMatches" => "ไม่พบรายการที่ตรงกัน",
+        "chat.context.title" => "ในบริบท",
+        "chat.context.document" => "เอกสาร",
+        "chat.context.selection" => "ส่วนที่เลือก",
+        "chat.context.attachment" => "ไฟล์แนบ",
         _ => return None,
     })
 }
