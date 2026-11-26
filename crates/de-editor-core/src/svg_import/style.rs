@@ -34,6 +34,7 @@ pub(super) fn merge_stroke_style(
         linejoin: pick("stroke-linejoin", &parent.linejoin),
         dasharray: pick("stroke-dasharray", &parent.dasharray),
         dashoffset: pick("stroke-dashoffset", &parent.dashoffset),
+        miterlimit: pick("stroke-miterlimit", &parent.miterlimit),
     }
 }
 
@@ -78,11 +79,24 @@ fn svg_stroke_style_fields(style: &SvgStrokeStyle, scale: f64) -> crate::fills::
                 .filter(|v| v.is_finite() && *v != 0.0)
                 .map(|v| (v * scale) as f32)
         });
+    // A unitless multiple of the width; SVG's own default (4) and values
+    // a renderer cannot use stay absent.
+    let miter_limit = style
+        .miterlimit
+        .as_deref()
+        .and_then(|raw| raw.trim().parse::<f32>().ok())
+        .filter(|v| {
+            v.is_finite()
+                && (1.0..=crate::fills::MAX_MITER_LIMIT).contains(v)
+                && (*v - crate::fills::DEFAULT_MITER_LIMIT).abs() > f32::EPSILON
+        });
     crate::fills::StrokeStyleFields {
         cap,
         join,
         dash_pattern: dash,
         dash_offset: offset,
+        miter_limit,
+        ..crate::fills::StrokeStyleFields::default()
     }
 }
 
@@ -145,7 +159,7 @@ pub(super) fn resolve_svg_stroke(
     Some(PenStroke {
         stroke_start: None,
         stroke_end: None,
-        miter_limit: None,
+        miter_limit: style.miter_limit,
         width_profile: None,
         thickness: StrokeThickness::Uniform(width),
         align: None,

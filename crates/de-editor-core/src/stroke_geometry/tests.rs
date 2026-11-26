@@ -54,7 +54,8 @@ fn unset_ends_fall_back_to_cap_and_no_ends_means_no_geometry() {
     .expect("ends");
     assert_eq!(e, ends(StrokeEndCap::Round, StrokeEndCap::TriangleArrow));
     let e = StrokeEnds::of(&stroke(Some(StrokeEndCap::Circle), None, None)).expect("ends");
-    assert_eq!(e.end, StrokeEndCap::None);
+    // No cap at all: open strokes paint round ends.
+    assert_eq!(e.end, StrokeEndCap::Round);
 }
 
 #[test]

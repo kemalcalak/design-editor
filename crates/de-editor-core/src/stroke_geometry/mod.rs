@@ -26,7 +26,8 @@ pub struct StrokeEnds {
 impl StrokeEnds {
     /// The ends a stroke asks for, or `None` when it sets neither
     /// `strokeStart` nor `strokeEnd` (backends draw its `cap` as before).
-    /// An unset end falls back to `cap` (absent = butt).
+    /// An unset end falls back to `cap`; an absent `cap` is round, which
+    /// is what every renderer draws on an open stroke.
     pub fn of(stroke: &PenStroke) -> Option<Self> {
         Self::from_parts(stroke.stroke_start, stroke.stroke_end, stroke.cap.as_ref())
     }
@@ -41,9 +42,9 @@ impl StrokeEnds {
             return None;
         }
         let cap = match cap {
-            Some(StrokeCap::Round) => StrokeEndCap::Round,
+            Some(StrokeCap::Round) | None => StrokeEndCap::Round,
             Some(StrokeCap::Square) => StrokeEndCap::Square,
-            Some(StrokeCap::None) | None => StrokeEndCap::None,
+            Some(StrokeCap::None) => StrokeEndCap::None,
         };
         Some(Self {
             start: start.unwrap_or(cap),

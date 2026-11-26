@@ -77,14 +77,19 @@ fn plain_cap(style: &StrokeStyle) -> StrokeCap {
         .flatten()
         .find_map(cap_of)
         .or(style.cap)
-        .unwrap_or(StrokeCap::Butt)
+        .unwrap_or(if style.start.is_some() || style.end.is_some() {
+            // Open strokes paint round ends when no cap is set.
+            StrokeCap::Round
+        } else {
+            StrokeCap::Butt
+        })
 }
 
 fn end_or_cap(style: &StrokeStyle, end: Option<StrokeEnd>) -> StrokeEnd {
     end.unwrap_or(match style.cap {
-        Some(StrokeCap::Round) => StrokeEnd::Round,
+        Some(StrokeCap::Round) | None => StrokeEnd::Round,
         Some(StrokeCap::Square) => StrokeEnd::Square,
-        _ => StrokeEnd::None,
+        Some(StrokeCap::Butt) => StrokeEnd::None,
     })
 }
 
@@ -134,7 +139,8 @@ mod tests {
         assert!(xml.contains("<a:tailEnd type=\"triangle\""), "{xml}");
         assert!(xml.find("headEnd") < xml.find("tailEnd"));
         assert_eq!(unsupported_line_ends(&s), None);
-        assert_eq!(cap_attr(&s), "flat");
+        // No cap set: both ends carry heads, so the line's cap is round.
+        assert_eq!(cap_attr(&s), "rnd");
     }
 
     #[test]

@@ -90,6 +90,10 @@ pub struct StrokeStyleFields {
     pub join: Option<StrokeJoin>,
     pub dash_pattern: Option<Vec<f32>>,
     pub dash_offset: Option<f32>,
+    /// Per-end caps / arrowheads and miter limit (#389).
+    pub stroke_start: Option<StrokeEndCap>,
+    pub stroke_end: Option<StrokeEndCap>,
+    pub miter_limit: Option<f32>,
 }
 
 pub fn node_stroke_style(node: &PenNode) -> Option<StrokeStyleFields> {
@@ -98,6 +102,9 @@ pub fn node_stroke_style(node: &PenNode) -> Option<StrokeStyleFields> {
         join: stroke.join.clone(),
         dash_pattern: stroke.dash_pattern.clone(),
         dash_offset: stroke.dash_offset,
+        stroke_start: stroke.stroke_start,
+        stroke_end: stroke.stroke_end,
+        miter_limit: stroke.miter_limit,
     })
 }
 
@@ -192,7 +199,18 @@ pub struct StrokeStyleWrite {
     pub join: Option<StrokeJoin>,
     pub dash_pattern: Option<Vec<f32>>,
     pub dash_offset: Option<f32>,
+    /// What the start / end of an open stroke draws (#389).
+    pub stroke_start: Option<StrokeEndCap>,
+    pub stroke_end: Option<StrokeEndCap>,
+    /// Miter limit, a multiple of the stroke width (`>= 1`; 4 is the SVG
+    /// default and is written as absent).
+    pub miter_limit: Option<f32>,
 }
+
+/// The miter limit SVG and Skia use when none is set.
+pub const DEFAULT_MITER_LIMIT: f32 = 4.0;
+/// Largest miter limit the editor writes.
+pub const MAX_MITER_LIMIT: f32 = 100.0;
 
 impl StrokeStyleWrite {
     pub fn is_empty(&self) -> bool {
@@ -200,6 +218,9 @@ impl StrokeStyleWrite {
             && self.join.is_none()
             && self.dash_pattern.is_none()
             && self.dash_offset.is_none()
+            && self.stroke_start.is_none()
+            && self.stroke_end.is_none()
+            && self.miter_limit.is_none()
     }
 
     /// Reject what no renderer can draw: a negative or non-finite dash
@@ -210,7 +231,10 @@ impl StrokeStyleWrite {
                 || (pattern.iter().all(|v| v.is_finite() && *v >= 0.0)
                     && pattern.iter().sum::<f32>() > 0.0)
         });
-        pattern_ok && self.dash_offset.is_none_or(f32::is_finite)
+        let miter_ok = self
+            .miter_limit
+            .is_none_or(|limit| limit.is_finite() && (1.0..=MAX_MITER_LIMIT).contains(&limit));
+        pattern_ok && miter_ok && self.dash_offset.is_none_or(f32::is_finite)
     }
 }
 
@@ -228,6 +252,7 @@ pub fn set_stroke_style(node: &mut PenNode, write: &StrokeStyleWrite) -> bool {
         stroke.join.clone(),
         stroke.dash_pattern.clone(),
         stroke.dash_offset,
+        (stroke.stroke_start, stroke.stroke_end, stroke.miter_limit),
     );
     if let Some(cap) = &write.cap {
         stroke.cap = Some(cap.clone());
@@ -245,12 +270,22 @@ pub fn set_stroke_style(node: &mut PenNode, write: &StrokeStyleWrite) -> bool {
         // A solid stroke has no phase to keep.
         stroke.dash_offset = None;
     }
+    if let Some(start) = write.stroke_start {
+        stroke.stroke_start = Some(start);
+    }
+    if let Some(end) = write.stroke_end {
+        stroke.stroke_end = Some(end);
+    }
+    if let Some(limit) = write.miter_limit {
+        stroke.miter_limit = ((limit - DEFAULT_MITER_LIMIT).abs() > f32::EPSILON).then_some(limit);
+    }
     before
         != (
             stroke.cap.clone(),
             stroke.join.clone(),
             stroke.dash_pattern.clone(),
             stroke.dash_offset,
+            (stroke.stroke_start, stroke.stroke_end, stroke.miter_limit),
         )
 }
 
@@ -276,6 +311,14 @@ pub enum StrokeStyleEdit {
     Cap(StrokeCap),
     Join(StrokeJoin),
     Dash(StrokeDashPreset),
+    /// What the start of an open stroke draws (#389).
+    Start(StrokeEndCap),
+    /// What the end of an open stroke draws (#389).
+    End(StrokeEndCap),
+    /// Swap the start and end (the panel's swap button).
+    SwapEnds,
+    /// Miter limit (`1..=100`).
+    MiterLimit(f32),
 }
 
 /// Apply one Stroke-section click. Dots are zero-length dashes that only
@@ -303,7 +346,43 @@ pub fn apply_stroke_style_edit(node: &mut PenNode, edit: &StrokeStyleEdit) -> bo
             },
         ),
         StrokeStyleEdit::Dash(preset) => set_stroke_dash_preset(node, *preset),
+        StrokeStyleEdit::Start(cap) => set_stroke_style(
+            node,
+            &StrokeStyleWrite {
+                stroke_start: Some(*cap),
+                ..StrokeStyleWrite::default()
+            },
+        ),
+        StrokeStyleEdit::End(cap) => set_stroke_style(
+            node,
+            &StrokeStyleWrite {
+                stroke_end: Some(*cap),
+                ..StrokeStyleWrite::default()
+            },
+        ),
+        StrokeStyleEdit::SwapEnds => swap_stroke_ends(node),
+        StrokeStyleEdit::MiterLimit(limit) => set_stroke_style(
+            node,
+            &StrokeStyleWrite {
+                miter_limit: Some(*limit),
+                ..StrokeStyleWrite::default()
+            },
+        ),
     }
+}
+
+/// Swap what the two ends of the node's stroke draw. An unset end reads
+/// as the stroke's `cap`, so the swap is exact for every combination;
+/// returns `false` when there is no stroke or both ends already match.
+pub fn swap_stroke_ends(node: &mut PenNode) -> bool {
+    let Some(Some(stroke)) = node_stroke_mut(node) else {
+        return false;
+    };
+    if stroke.stroke_start == stroke.stroke_end {
+        return false;
+    }
+    std::mem::swap(&mut stroke.stroke_start, &mut stroke.stroke_end);
+    true
 }
 
 /// Whether the node's stroke draws dots: a zero-length dash, which only a
