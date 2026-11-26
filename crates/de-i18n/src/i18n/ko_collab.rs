@@ -401,6 +401,11 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "whatsNew.next" => "다음",
         "settings.system.livePages" => "라이브 페이지",
         "settings.system.livePagesDesc" => "선택한 브라우저 노드를 실제 페이지처럼 재생합니다. 끄면 정지된 스냅샷을 표시합니다.",
+        "componentProps.text" => "텍스트 속성",
+        "componentProps.visibility" => "표시 여부 속성",
+        "componentProps.instance" => "인스턴스 속성",
+        "componentProps.color" => "색상 속성",
+        "componentProps.unbound" => "연결 안 됨",
         "prototype.trigger.tap" => "탭",
         "prototype.trigger.hover" => "호버",
         "prototype.trigger.longPress" => "길게 누르기",
@@ -427,6 +432,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "interactions.overlayFromRight" => "오른쪽",
         "prototype.overlay" => "오버레이",
         "prototype.closeOverlay" => "오버레이 닫기",
+        "menu.snapPixelGrid" => "픽셀 그리드에 스냅",
+        "vectorEdit.pixelSnapOn" => "픽셀 그리드 스냅 켜짐",
+        "vectorEdit.pixelSnapOff" => "픽셀 그리드 스냅 꺼짐",
         _ => return None,
     })
 }

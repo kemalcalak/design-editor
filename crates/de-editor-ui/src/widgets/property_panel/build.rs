@@ -191,6 +191,15 @@ impl PropertyPanel {
                 .any(|n| n.id_str() == state.selection.anchor.as_str());
             let mut snapshot = NodeSnapshot::from_node(node, is_top_level);
             snapshot.script = crate::widgets::property_panel_script::script_summary(node, state);
+            if let Some((px, py)) = state.vector_selection_origin() {
+                snapshot.x = px.round() as i32;
+                snapshot.y = py.round() as i32;
+                snapshot.vector_points = Some(
+                    state
+                        .vector_selection_point_type()
+                        .map(|t| t != jian_ops_schema::node::PenPathPointType::Corner),
+                );
+            }
             if let Some(browser) = snapshot.browser.as_mut() {
                 crate::widgets::property_panel_browser::apply_live_state(
                     browser,
@@ -263,6 +272,7 @@ impl PropertyPanel {
                                 == state.selection.anchor.as_str();
                 }
             }
+            panel.component_props = state.panel_properties();
             panel.image_panel_view =
                 crate::widgets::property_panel_image_assets::image_panel_view(state, node);
             return Some(panel);
@@ -374,6 +384,7 @@ impl PropertyPanel {
             compositing_picker_target: ui.compositing_picker_target,
             instance_component_options: std::sync::Arc::from([]),
             instance_component_target: None,
+            component_props: Default::default(),
             instance_component_picker_open: false,
             corner_expand_open,
             effect_add_picker_open: ui.effect_add_picker_open,

@@ -69,6 +69,16 @@ pub fn property_focus_initial(focus: PropertyFocus, panel: &PropertyPanel) -> St
             .interactions
             .overlay_background(trigger)
             .unwrap_or_default(),
+        F::ComponentProp(index) => match &panel.component_props {
+            de_editor_core::component_props::PanelProperties::Master(rows) => rows
+                .get(index)
+                .map(|row| row.name.clone())
+                .unwrap_or_default(),
+            props => props
+                .row(index)
+                .map(|row| row.display())
+                .unwrap_or_default(),
+        },
         F::MotionValue { index, field } | F::MotionColor { index, field } => {
             match panel.snapshot.interactions.motion.get(index) {
                 Some(crate::widgets::property_panel_motion::MotionSummary::Simple(simple)) => {
@@ -329,6 +339,13 @@ pub fn commit_property_focus(state: &mut EditorState) -> bool {
     state.ui.property_input.set_text("");
     state.ui.property_input_draft.clear();
     state.ui.property_caret_pos = 0;
+    if let PropertyFocus::ComponentProp(index) = focus {
+        // Component properties (#367) write the real instance or master
+        // as their own undo step, like the instance lifecycle actions:
+        // never through the instance-write redirect below.
+        let _ = state.commit_selected_prop_text(index, &draft);
+        return true;
+    }
     // Instance-write redirect (GAP #10) — see `apply_property_action`
     // for the choke-point note.
     let before = state.snapshot_for_history();

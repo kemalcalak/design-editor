@@ -365,6 +365,9 @@ impl WidgetHostNative {
             self.mark_dirty();
             return true;
         }
+        if self.apply_vector_edit_escape() {
+            return true;
+        }
         if self.exit_image_crop_edit() {
             return true;
         }

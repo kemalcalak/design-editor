@@ -101,7 +101,11 @@ impl BatchDesign {
         };
         // A one-line write into an instance (`U("inst/child", …)`) needs the
         // snapshot to resolve its path (#166): run it as a program.
-        if super::batch_program_instance::single_line_targets_instance(&self.state, operations) {
+        // Component-property values (#367) are checked against their masters
+        // and merged by name, which also needs the snapshot.
+        if super::batch_program_instance::single_line_targets_instance(&self.state, operations)
+            || operations.contains("\"props\"")
+        {
             return super::batch_program::run_batch_design_program(&self.state, operations, args);
         }
         match parse_operations(operations) {

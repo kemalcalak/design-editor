@@ -399,6 +399,11 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "whatsNew.next" => "Tiếp",
         "settings.system.livePages" => "Trang trực tiếp",
         "settings.system.livePagesDesc" => "Nút trình duyệt được chọn chạy như trang thật. Khi tắt sẽ hiện ảnh chụp tĩnh.",
+        "componentProps.text" => "Thuộc tính văn bản",
+        "componentProps.visibility" => "Thuộc tính hiển thị",
+        "componentProps.instance" => "Thuộc tính phiên bản",
+        "componentProps.color" => "Thuộc tính màu",
+        "componentProps.unbound" => "chưa liên kết",
         "prototype.trigger.tap" => "Chạm",
         "prototype.trigger.hover" => "Di chuột",
         "prototype.trigger.longPress" => "Nhấn giữ",
@@ -425,6 +430,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "interactions.overlayFromRight" => "Phải",
         "prototype.overlay" => "Lớp phủ",
         "prototype.closeOverlay" => "Đóng lớp phủ",
+        "menu.snapPixelGrid" => "Bắt dính lưới điểm ảnh",
+        "vectorEdit.pixelSnapOn" => "Đã bật bắt dính lưới điểm ảnh",
+        "vectorEdit.pixelSnapOff" => "Đã tắt bắt dính lưới điểm ảnh",
         _ => return None,
     })
 }

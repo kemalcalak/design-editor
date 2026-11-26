@@ -132,6 +132,9 @@ impl WidgetHostNative {
         if self.input_active() {
             return true;
         }
+        if let Some(consumed) = self.apply_vector_edit_select_all() {
+            return consumed;
+        }
         let ok = self.editor_state.select_all_top_level();
         if ok {
             self.mark_dirty();
@@ -523,6 +526,7 @@ impl WidgetHostNative {
         if !self.cancel_pen_on_tool_switch(tool) {
             return;
         }
+        self.vector_edit_on_tool_switch(tool);
         shared::set_active_tool(&mut self.editor_state, tool);
         self.mark_dirty();
     }

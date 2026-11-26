@@ -399,6 +399,11 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "whatsNew.next" => "次へ",
         "settings.system.livePages" => "ライブページ",
         "settings.system.livePagesDesc" => "選択中のブラウザノードを実際のページのように再生します。オフにすると静止スナップショットを表示します。",
+        "componentProps.text" => "テキストプロパティ",
+        "componentProps.visibility" => "表示プロパティ",
+        "componentProps.instance" => "インスタンスプロパティ",
+        "componentProps.color" => "カラープロパティ",
+        "componentProps.unbound" => "未バインド",
         "prototype.trigger.tap" => "タップ",
         "prototype.trigger.hover" => "ホバー",
         "prototype.trigger.longPress" => "長押し",
@@ -425,6 +430,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "interactions.overlayFromRight" => "右",
         "prototype.overlay" => "オーバーレイ",
         "prototype.closeOverlay" => "オーバーレイを閉じる",
+        "menu.snapPixelGrid" => "ピクセルグリッドにスナップ",
+        "vectorEdit.pixelSnapOn" => "ピクセルグリッドへのスナップ: オン",
+        "vectorEdit.pixelSnapOff" => "ピクセルグリッドへのスナップ: オフ",
         _ => return None,
     })
 }

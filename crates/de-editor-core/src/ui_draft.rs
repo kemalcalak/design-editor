@@ -156,6 +156,9 @@ pub enum PropertyFocus {
     /// The dim colour (`#RRGGBBAA`) of `trigger`'s overlay (#372). Free
     /// text.
     OverlayBackground(crate::interaction_edit::InteractionTrigger),
+    /// Row `index` of the component-property rows (#367): an instance's
+    /// text or colour value, or a master property's name. Free text.
+    ComponentProp(usize),
     /// One number field of a shader uniform row (#164): the float, or
     /// `component` of a vector, at row `index` of paint `target`.
     ShaderUniform {
@@ -207,6 +210,7 @@ impl PropertyFocus {
                 | PropertyFocus::BrowserUrl
                 | PropertyFocus::InteractionUrl(_)
                 | PropertyFocus::OverlayBackground(_)
+                | PropertyFocus::ComponentProp(_)
         )
     }
 
@@ -448,6 +452,12 @@ pub struct UiDraftState {
     pub pencil_stroke: Option<Vec<Point2D>>,
     /// Open right-click menu on a path anchor; `None` when closed.
     pub path_anchor_menu: Option<PathAnchorMenuState>,
+    /// Vector edit mode on a path (#387); `None` outside the mode.
+    /// Read it through `EditorState::vector_edit`, which validates it.
+    pub vector_edit: Option<crate::vector_edit::VectorEditSession>,
+    /// View ▸ Snap to Pixel Grid turned OFF. Snapping to whole pixels
+    /// applies while drawing / editing points at zoom ≥ 400 % (#387).
+    pub pixel_grid_snap_off: bool,
     /// Active HSV colour picker overlay; `None` when closed.
     pub color_picker: Option<ColorPickerState>,
     /// Pre-edit snapshot captured when the colour picker opens;

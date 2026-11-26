@@ -399,6 +399,11 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "whatsNew.next" => "Próximo",
         "settings.system.livePages" => "Páginas ao vivo",
         "settings.system.livePagesDesc" => "Um nó de navegador selecionado roda como a página real. Desligado, mostra uma captura estática.",
+        "componentProps.text" => "Propriedade de texto",
+        "componentProps.visibility" => "Propriedade de visibilidade",
+        "componentProps.instance" => "Propriedade de instância",
+        "componentProps.color" => "Propriedade de cor",
+        "componentProps.unbound" => "não vinculada",
         "prototype.trigger.tap" => "Tocar",
         "prototype.trigger.hover" => "Passar o cursor",
         "prototype.trigger.longPress" => "Toque longo",
@@ -425,6 +430,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "interactions.overlayFromRight" => "Direita",
         "prototype.overlay" => "Sobreposição",
         "prototype.closeOverlay" => "Fechar sobreposição",
+        "menu.snapPixelGrid" => "Ajustar à grade de pixels",
+        "vectorEdit.pixelSnapOn" => "Ajuste à grade de pixels ativado",
+        "vectorEdit.pixelSnapOff" => "Ajuste à grade de pixels desativado",
         _ => return None,
     })
 }

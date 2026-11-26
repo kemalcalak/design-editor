@@ -52,6 +52,12 @@ impl WidgetHostNative {
         viewport_w: f32,
         viewport_h: f32,
     ) -> bool {
+        // An open end of the selected path continues it (#387).
+        if self.editor_state.ui.pen_in_progress.is_none()
+            && self.try_pen_continue_selected_path(x, y)
+        {
+            return true;
+        }
         if self.editor_state.ui.pen_in_progress.is_none()
             && self.try_path_anchor_press(x, y, viewport_w, viewport_h)
         {

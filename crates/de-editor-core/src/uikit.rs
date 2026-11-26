@@ -214,6 +214,7 @@ fn frame(
         route: None,
         breakpoint: None,
         placeholder: None,
+        component_properties: None,
     });
     if let Some(hex) = fill_hex {
         set_primary_fill_hex(&mut node, hex);

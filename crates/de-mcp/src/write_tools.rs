@@ -214,7 +214,11 @@ fn ts_data_tree_node(args: &BTreeMap<String, String>) -> Result<Option<PenNode>,
 }
 
 /// First-party `update_node` tool — patch fields on an existing node.
-pub struct UpdateNode;
+/// With a document snapshot it checks an instance's `data.props` (#367)
+/// before the host applies them.
+pub struct UpdateNode {
+    props: Option<crate::component_property_tools::PropsSnapshot>,
+}
 
 impl McpTool for UpdateNode {
     fn name(&self) -> &str {
@@ -227,6 +231,11 @@ impl McpTool for UpdateNode {
         };
         if let Some((instance, path)) = node_id.as_str().split_once('/') {
             return update_instance_descendant(args, instance, path);
+        }
+        if let Some(outcome) =
+            crate::component_property_tools::update_node_props(self.props.as_ref(), &node_id, args)
+        {
+            return outcome;
         }
         match ts_update_patch_json(args) {
             Ok(Some(patch_json)) => {
@@ -316,7 +325,14 @@ impl McpTool for UpdateNode {
 }
 
 pub fn update_node_snapshot() -> UpdateNode {
-    UpdateNode
+    UpdateNode { props: None }
+}
+
+/// `update_node` that checks component-property values against `state`.
+pub fn update_node_snapshot_for(state: &de_editor_core::EditorState) -> UpdateNode {
+    UpdateNode {
+        props: Some(crate::component_property_tools::PropsSnapshot::new(state)),
+    }
 }
 
 /// `update_node` on `instanceId/childPath` (#166): the node exists only in

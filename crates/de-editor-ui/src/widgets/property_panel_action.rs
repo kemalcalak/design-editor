@@ -215,6 +215,15 @@ pub enum PropertyPanelAction {
     /// component id. The host writes this into the existing `ref`
     /// field; no extra persisted instance schema is involved.
     SetInstanceComponent(String),
+    /// Flip boolean property `index` of the selected instance (#367).
+    ToggleInstanceProp(usize),
+    /// Show the next preferred component in instance property `index`.
+    CycleInstanceProp(usize),
+    /// Remove property `index` of the selected master.
+    RemoveComponentProperty(usize),
+    /// Make this field of the selected node (inside a master) a new
+    /// property of the master.
+    BindComponentProperty(crate::widgets::property_panel_component_props::BindOffer),
     /// User clicked fill `index`'s `⋯` button — toggles its menu
     /// (`editor_ui.fill_menu_open`).
     ToggleFillMenu(usize),

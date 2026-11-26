@@ -38,6 +38,9 @@ pub(super) fn visible_for(panel: &PropertyPanel) -> sections::VisibleSections {
         } else {
             crate::widgets::property_panel_visibility::ComponentButtonState::Create
         },
+        component_props: crate::widgets::property_panel_component_props::PropRowsLayout::of(
+            &panel.component_props,
+        ),
         flex_layout: caps.flex_layout,
         flex_layout_mode: panel.snapshot.flex_layout,
         layout_justify: panel.snapshot.layout_justify,

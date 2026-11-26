@@ -399,6 +399,11 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "whatsNew.next" => "Sonraki",
         "settings.system.livePages" => "Canlı sayfalar",
         "settings.system.livePagesDesc" => "Seçili tarayıcı düğümü gerçek sayfa gibi oynar. Kapalıyken durağan bir anlık görüntü gösterilir.",
+        "componentProps.text" => "Metin özelliği",
+        "componentProps.visibility" => "Görünürlük özelliği",
+        "componentProps.instance" => "Örnek özelliği",
+        "componentProps.color" => "Renk özelliği",
+        "componentProps.unbound" => "bağlı değil",
         "prototype.trigger.tap" => "Dokunma",
         "prototype.trigger.hover" => "Üzerine gelme",
         "prototype.trigger.longPress" => "Uzun basma",
@@ -425,6 +430,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "interactions.overlayFromRight" => "Sağ",
         "prototype.overlay" => "Katman",
         "prototype.closeOverlay" => "Katmanı kapat",
+        "menu.snapPixelGrid" => "Piksel Izgarasına Yasla",
+        "vectorEdit.pixelSnapOn" => "Piksel ızgarasına yaslama açık",
+        "vectorEdit.pixelSnapOff" => "Piksel ızgarasına yaslama kapalı",
         _ => return None,
     })
 }

@@ -142,6 +142,7 @@ impl WidgetHostNative {
         cancelled |= self.marquee_drag.take().is_some();
         cancelled |= self.layer_drag.take().is_some();
         cancelled |= self.path_anchor_drag.take().is_some();
+        cancelled |= self.cancel_vector_drag();
         cancelled |= self.arc_handle_drag.take().is_some();
 
         if !self.option_drag_source_ids.is_empty() {

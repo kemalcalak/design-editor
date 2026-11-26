@@ -52,9 +52,14 @@ pub(crate) fn paint_flip_buttons(
     width: f32,
 ) {
     for (axis, rect) in flip_button_rects(x, section_y, width) {
-        let (active, icon) = match axis {
-            FlipAxis::Horizontal => (snapshot.flip_x, Icon::FlipHorizontal),
-            FlipAxis::Vertical => (snapshot.flip_y, Icon::FlipVertical),
+        // Vector edit mode with points selected: the same two buttons
+        // set the point type, Corner and Smooth (#387; the dispatch
+        // routes `FlipSelection` there while points are selected).
+        let (active, icon) = match (snapshot.vector_points, axis) {
+            (Some(smooth), FlipAxis::Horizontal) => (smooth == Some(false), Icon::Square),
+            (Some(smooth), FlipAxis::Vertical) => (smooth == Some(true), Icon::Circle),
+            (None, FlipAxis::Horizontal) => (snapshot.flip_x, Icon::FlipHorizontal),
+            (None, FlipAxis::Vertical) => (snapshot.flip_y, Icon::FlipVertical),
         };
         if active {
             cx.backend.fill_round_rect(rect, 5.0, theme.muted);

@@ -135,17 +135,36 @@ impl Widget for PropertyPanel {
             &self.snapshot.interactions,
         );
         if self.visible_sections().create_component {
+            use crate::widgets::property_panel_component_props as props;
+            let visible = self.visible_sections();
+            let block_top = y;
             y = crate::widgets::property_panel_instance::paint_component_block(
                 cx,
                 &self.theme,
                 &self.labels,
-                self.visible_sections().component_button,
+                visible.component_button,
                 &self.instance_component_options,
                 self.instance_component_target.as_deref(),
                 tab_bottom,
                 rect.origin.y + rect.size.y,
                 x,
-                y,
+                props::buttons_y(visible.component_button, visible.component_props, y),
+                w,
+            );
+            if !matches!(
+                visible.component_button,
+                crate::widgets::property_panel_visibility::ComponentButtonState::Instance { .. }
+            ) {
+                y += visible.component_props.height();
+            }
+            props::paint(
+                cx,
+                &self.theme,
+                &self.labels,
+                &self.component_props,
+                &edit_ctx,
+                x,
+                props::rows_top(visible.component_button, block_top),
                 w,
             );
         }

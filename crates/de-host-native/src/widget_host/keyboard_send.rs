@@ -235,6 +235,10 @@ impl WidgetHostNative {
             self.commit_property_focus_if_any();
             return true;
         }
+        // Enter / leave vector edit mode on the selected path (#387).
+        if self.apply_vector_edit_enter() {
+            return true;
+        }
         if self.editor_state.chat.available_models.is_empty() {
             return false;
         }

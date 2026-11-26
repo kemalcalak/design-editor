@@ -399,6 +399,11 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "whatsNew.next" => "下一个",
         "settings.system.livePages" => "实时页面",
         "settings.system.livePagesDesc" => "选中的浏览器节点像真实页面一样实时播放。关闭后显示静态快照。",
+        "componentProps.text" => "文本属性",
+        "componentProps.visibility" => "可见性属性",
+        "componentProps.instance" => "实例属性",
+        "componentProps.color" => "颜色属性",
+        "componentProps.unbound" => "未绑定",
         "prototype.trigger.tap" => "点击",
         "prototype.trigger.hover" => "悬停",
         "prototype.trigger.longPress" => "长按",
@@ -425,6 +430,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "interactions.overlayFromRight" => "右",
         "prototype.overlay" => "浮层",
         "prototype.closeOverlay" => "关闭浮层",
+        "menu.snapPixelGrid" => "对齐像素网格",
+        "vectorEdit.pixelSnapOn" => "已开启像素网格吸附",
+        "vectorEdit.pixelSnapOff" => "已关闭像素网格吸附",
         _ => return None,
     })
 }

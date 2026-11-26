@@ -98,10 +98,11 @@ pub fn resolve_instance_display_node(doc: &PenDocument, ref_node: &PenNode) -> O
     let component = crate::ref_resolve::find_component_node(doc, &reference.target)?;
     let component_value = serde_json::to_value(&component).ok()?;
     let ref_value = serde_json::to_value(ref_node).ok()?;
-    let (Value::Object(component_map), Value::Object(ref_map)) = (component_value, ref_value)
+    let (Value::Object(component_map), Value::Object(mut ref_map)) = (component_value, ref_value)
     else {
         return None;
     };
+    crate::component_props::fold_props_into_descendants(&component_map, &mut ref_map);
     let mut merged = component_map.clone();
     // Top-level overrides live under the component's own id (TS
     // `descendants?.[node.ref]`).
@@ -137,6 +138,7 @@ pub fn resolve_instance_display_node(doc: &PenDocument, ref_node: &PenNode) -> O
     }
     // The display node is an instance view, not a component definition.
     merged.remove("reusable");
+    merged.remove("componentProperties");
     // Children: the component subtree with `descendants` child
     // overrides applied at their ORIGINAL ids (display only). Mirror
     // `expand_ref`'s slot fallback when an empty master gets inline

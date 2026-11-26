@@ -83,6 +83,7 @@ pub fn build_leaf_node(
             route: None,
             breakpoint: None,
             placeholder: None,
+            component_properties: None,
         }),
         "group" => PenNode::Group(GroupNode {
             base,

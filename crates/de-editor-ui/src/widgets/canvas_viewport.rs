@@ -116,6 +116,8 @@ pub struct CanvasViewport<'a> {
     /// still be reflowed to preview sibling avoidance while this copy
     /// follows the cursor.
     pub(super) node_drag_overlay: Option<CanvasNodeDragOverlay>,
+    /// Vector edit mode (#387): the edited path and its overlay data.
+    pub(super) vector_edit: Option<super::canvas_vector_edit_overlay::VectorEditPaint>,
     /// Text node being edited (scene-space string id) and its shared
     /// draft/caret/selection state.
     pub(super) text_editing: Option<String>,
@@ -208,6 +210,7 @@ impl<'a> Widget for CanvasViewport<'a> {
         let indicators = de_editor_core::agent_indicators::snapshot_at_if_active(self.now_ms);
         let selection_chrome_visible = !self.node_drag_active;
         let show_handles = selection_chrome_visible
+            && self.vector_edit.is_none()
             && !self.image_crop_edit_active
             && !self.browser_interacting
             && self.selected_set.len() == 1;
@@ -367,6 +370,17 @@ impl<'a> Widget for CanvasViewport<'a> {
                         );
                     });
                 }
+            }
+            if let Some(ve) = self.vector_edit.as_ref() {
+                super::canvas_vector_edit_overlay::paint_dim_and_node(
+                    cx,
+                    page.find(ve.view.node_id.as_str()),
+                    rect,
+                    self.canvas_background,
+                    viewport_origin,
+                    viewport.zoom,
+                    cull,
+                );
             }
             if let Some(indicators) = indicators.as_ref() {
                 super::canvas_agent_cursor::paint_agent_cursors(
@@ -528,20 +542,31 @@ impl<'a> Widget for CanvasViewport<'a> {
         //       single Path selected (pre-existing Rust superset);
         //     - TS `drawPathEditor` for a single selected Path under
         //       any other tool (Select-tool bezier editing, #5).
-        super::canvas_path_overlay::paint_path_overlays(
-            cx,
-            &self.theme,
-            self.tool,
-            self.pen_in_progress.is_some(),
-            paint_hits.pen_node,
-            self.pen_cursor_doc,
-            self.pen_dragging_handle,
-            self.selected_set.len(),
-            anchor_selected_node,
-            &paint_hits.selected_transforms,
-            rect,
-            viewport,
-        );
+        if let Some(ve) = self.vector_edit.as_ref() {
+            super::canvas_vector_edit_overlay::paint_vector_edit_overlay(
+                cx,
+                ve,
+                anchor_selected_node,
+                &paint_hits.selected_transforms,
+                rect,
+                viewport,
+            );
+        } else {
+            super::canvas_path_overlay::paint_path_overlays(
+                cx,
+                &self.theme,
+                self.tool,
+                self.pen_in_progress.is_some(),
+                paint_hits.pen_node,
+                self.pen_cursor_doc,
+                self.pen_dragging_handle,
+                self.selected_set.len(),
+                anchor_selected_node,
+                &paint_hits.selected_transforms,
+                rect,
+                viewport,
+            );
+        }
         super::canvas_path_overlay::paint_pencil_preview(cx, &self.pencil_stroke, rect, viewport);
 
         // 4c. Arc-edit handles for a single-selected Ellipse with the

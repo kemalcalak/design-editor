@@ -98,6 +98,10 @@ pub fn create_component_block_height(
         // Create component lives in the panel header since #83.
         S::Create => 0.0,
         S::DetachComponent | S::InstanceOverride => CREATE_COMPONENT_BLOCK_H,
+        // Only property offers, which add their own rows.
+        S::BindProperty => {
+            CREATE_COMPONENT_PAD_TOP + CREATE_COMPONENT_PAD_BOTTOM - CREATE_COMPONENT_ROW_GAP
+        }
         S::Instance {
             component_count,
             picker_open,

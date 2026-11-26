@@ -36,6 +36,15 @@ pub(crate) fn apply_paint_option_action(state: &mut EditorState, action: &Proper
         A::SetStrokeStyle(edit) => {
             let _ = state.set_selected_stroke_style(edit);
         }
+        // Vector edit mode with points selected: the header buttons are
+        // the point type, Corner / Smooth (#387).
+        A::FlipSelection(axis) if state.vector_selection_origin().is_some() => {
+            use jian_ops_schema::node::PenPathPointType as P;
+            let _ = state.vector_set_point_type(match axis {
+                de_editor_core::FlipAxis::Horizontal => P::Corner,
+                de_editor_core::FlipAxis::Vertical => P::Mirrored,
+            });
+        }
         A::FlipSelection(axis) => {
             let _ = state.flip_selected(*axis);
         }

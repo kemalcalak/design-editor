@@ -76,6 +76,7 @@ pub(crate) fn block_rects(
     let step = CREATE_COMPONENT_BTN_H + CREATE_COMPONENT_ROW_GAP;
     match state {
         ComponentButtonState::Create
+        | ComponentButtonState::BindProperty
         | ComponentButtonState::DetachComponent
         | ComponentButtonState::InstanceOverride => InstanceBlockRects {
             swap_trigger: None,
@@ -120,7 +121,7 @@ pub(crate) fn action_rects(
     let primary = row_rect(x, y + CREATE_COMPONENT_PAD_TOP, width);
     match state {
         // Hit-tested on the pinned header (`create_component_rect`).
-        ComponentButtonState::Create => Vec::new(),
+        ComponentButtonState::Create | ComponentButtonState::BindProperty => Vec::new(),
         ComponentButtonState::DetachComponent => {
             vec![(PropertyPanelAction::DetachComponent, primary)]
         }
@@ -180,7 +181,7 @@ pub fn paint_component_block(
     let rows = block_rects(x, y, width, state);
     match state {
         // Create component is a header icon since #83 — no block.
-        ComponentButtonState::Create => {}
+        ComponentButtonState::Create | ComponentButtonState::BindProperty => {}
         ComponentButtonState::DetachComponent => paint_button(
             cx,
             theme,

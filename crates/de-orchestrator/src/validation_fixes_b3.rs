@@ -303,6 +303,7 @@ fn build_container_node(
             route: None,
             breakpoint: None,
             placeholder: None,
+            component_properties: None,
         }),
     };
     Some(node)

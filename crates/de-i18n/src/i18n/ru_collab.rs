@@ -399,6 +399,11 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "whatsNew.next" => "Далее",
         "settings.system.livePages" => "Живые страницы",
         "settings.system.livePagesDesc" => "Выбранный узел браузера воспроизводится как настоящая страница. Если выключено, показывается статичный снимок.",
+        "componentProps.text" => "Текстовое свойство",
+        "componentProps.visibility" => "Свойство видимости",
+        "componentProps.instance" => "Свойство экземпляра",
+        "componentProps.color" => "Свойство цвета",
+        "componentProps.unbound" => "не привязано",
         "prototype.trigger.tap" => "Нажатие",
         "prototype.trigger.hover" => "Наведение",
         "prototype.trigger.longPress" => "Долгое нажатие",
@@ -425,6 +430,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "interactions.overlayFromRight" => "Справа",
         "prototype.overlay" => "Оверлей",
         "prototype.closeOverlay" => "Закрыть оверлей",
+        "menu.snapPixelGrid" => "Привязка к пиксельной сетке",
+        "vectorEdit.pixelSnapOn" => "Привязка к пиксельной сетке включена",
+        "vectorEdit.pixelSnapOff" => "Привязка к пиксельной сетке выключена",
         _ => return None,
     })
 }

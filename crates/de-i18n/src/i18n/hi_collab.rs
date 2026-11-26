@@ -399,6 +399,11 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "whatsNew.next" => "अगला",
         "settings.system.livePages" => "लाइव पेज",
         "settings.system.livePagesDesc" => "चुना हुआ ब्राउज़र नोड असली पेज की तरह चलता है। बंद होने पर स्थिर स्नैपशॉट दिखता है।",
+        "componentProps.text" => "टेक्स्ट प्रॉपर्टी",
+        "componentProps.visibility" => "दृश्यता प्रॉपर्टी",
+        "componentProps.instance" => "इंस्टेंस प्रॉपर्टी",
+        "componentProps.color" => "रंग प्रॉपर्टी",
+        "componentProps.unbound" => "बंधा नहीं",
         "prototype.trigger.tap" => "टैप",
         "prototype.trigger.hover" => "होवर",
         "prototype.trigger.longPress" => "देर तक दबाएँ",
@@ -425,6 +430,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "interactions.overlayFromRight" => "दाएँ",
         "prototype.overlay" => "ओवरले",
         "prototype.closeOverlay" => "ओवरले बंद करें",
+        "menu.snapPixelGrid" => "पिक्सेल ग्रिड पर स्नैप करें",
+        "vectorEdit.pixelSnapOn" => "पिक्सेल ग्रिड स्नैपिंग चालू",
+        "vectorEdit.pixelSnapOff" => "पिक्सेल ग्रिड स्नैपिंग बंद",
         _ => return None,
     })
 }

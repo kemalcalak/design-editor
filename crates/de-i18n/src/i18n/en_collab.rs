@@ -399,6 +399,11 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "whatsNew.next" => "Next",
         "settings.system.livePages" => "Live pages",
         "settings.system.livePagesDesc" => "A selected browser node plays like the live page. Off shows a still snapshot.",
+        "componentProps.text" => "Text property",
+        "componentProps.visibility" => "Visibility property",
+        "componentProps.instance" => "Instance property",
+        "componentProps.color" => "Color property",
+        "componentProps.unbound" => "unbound",
         "prototype.trigger.tap" => "Tap",
         "prototype.trigger.hover" => "Hover",
         "prototype.trigger.longPress" => "Long press",
@@ -425,6 +430,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "interactions.overlayFromRight" => "Right",
         "prototype.overlay" => "Overlay",
         "prototype.closeOverlay" => "Close overlay",
+        "menu.snapPixelGrid" => "Snap to Pixel Grid",
+        "vectorEdit.pixelSnapOn" => "Pixel grid snapping on",
+        "vectorEdit.pixelSnapOff" => "Pixel grid snapping off",
         _ => return None,
     })
 }

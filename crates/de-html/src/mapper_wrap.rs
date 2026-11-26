@@ -320,6 +320,7 @@ fn build_rows(
             screen: None,
             breakpoint: None,
             placeholder: None,
+            component_properties: None,
         }));
         context.node_count += 1;
     }

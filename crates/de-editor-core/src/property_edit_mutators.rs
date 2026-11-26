@@ -70,6 +70,15 @@ impl EditorState {
         if !sel.is_real() || !self.is_editable(&sel) {
             return false;
         }
+        // Vector edit mode: X / Y move the selected points (#387).
+        if self.vector_selection_origin().is_some() && value.is_finite() {
+            let v = Some(f64::from(value));
+            match focus {
+                PropertyFocus::PositionX => return self.vector_set_selection_origin(v, None),
+                PropertyFocus::PositionY => return self.vector_set_selection_origin(None, v),
+                _ => {}
+            }
+        }
         match focus {
             PropertyFocus::PageBackgroundHex => return false,
             PropertyFocus::MotionValue { index, field } => {
@@ -81,9 +90,9 @@ impl EditorState {
             // A hex colour: committed from the draft, never as a number.
             PropertyFocus::MotionColor { .. } => return false,
             // Free text: committed from the draft, never as a number.
-            PropertyFocus::InteractionUrl(_) | PropertyFocus::OverlayBackground(_) => {
-                return false
-            }
+            PropertyFocus::InteractionUrl(_)
+            | PropertyFocus::OverlayBackground(_)
+            | PropertyFocus::ComponentProp(_) => return false,
             PropertyFocus::ShaderUniform {
                 target,
                 index,
@@ -330,6 +339,7 @@ impl EditorState {
             | PropertyFocus::TransitionDuration
             | PropertyFocus::InteractionUrl(_)
             | PropertyFocus::OverlayBackground(_)
+            | PropertyFocus::ComponentProp(_)
             | PropertyFocus::ShaderUniform { .. }
             | PropertyFocus::StrokeWidth => {
                 unreachable!("corner radius / stroke width handled before node borrow")
