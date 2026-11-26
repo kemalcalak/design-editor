@@ -105,6 +105,7 @@ pub(crate) fn map_pseudo(
         screen: None,
         breakpoint: None,
         placeholder: None,
+        component_properties: None,
     });
     let node = super::margin::wrap_margins(
         context,

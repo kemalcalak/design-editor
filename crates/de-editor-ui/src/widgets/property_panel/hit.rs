@@ -198,9 +198,14 @@ impl PropertyPanel {
         let scrolled = self.scrolled_rect(panel_rect);
         let component_block_y =
             scrolled.origin.y + crate::widgets::property_panel_inputs::PANEL_HEADER_HEIGHT;
+        let visible = self.visible_sections();
         if let Some(index) = crate::widgets::property_panel_instance::option_index_at(
             scrolled.origin.x,
-            component_block_y,
+            crate::widgets::property_panel_component_props::buttons_y(
+                visible.component_button,
+                visible.component_props,
+                component_block_y,
+            ),
             scrolled.size.x,
             self.visible_sections().component_button,
             point,

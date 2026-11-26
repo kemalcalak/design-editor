@@ -19,7 +19,7 @@ fn tools_list_response_includes_all_registered_tools() {
     // TOOL_SCHEMAS without being added to the list below.
     assert_eq!(
         TOOL_SCHEMAS.len(),
-        160,
+        162,
         "tools/list catalog count must match the registered tools — add the new tool to this test"
     );
     // Plus 37 kit tools and pen.dev's 6 names (#392).
@@ -180,6 +180,8 @@ fn tools_list_response_includes_all_registered_tools() {
         "detach_instance",
         "swap_instance",
         "list_instances",
+        "upsert_component_property",
+        "remove_component_property",
         "create_component",
         "delete_component",
         "rename_component",

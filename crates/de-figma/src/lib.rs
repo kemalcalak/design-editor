@@ -394,6 +394,7 @@ fn build_node(variant: FigmaNodeVariant, base: PenNodeBase) -> PenNode {
             // Figma import never authors a responsive breakpoint variant.
             breakpoint: None,
             placeholder: None,
+            component_properties: None,
         }),
         FigmaNodeVariant::Group => PenNode::Group(GroupNode {
             base,

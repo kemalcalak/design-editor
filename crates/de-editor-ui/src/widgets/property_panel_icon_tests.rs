@@ -18,6 +18,9 @@ fn visible_for(panel: &PropertyPanel) -> sections::VisibleSections {
     sections::VisibleSections {
         create_component: caps.create_component && panel.snapshot.can_create_component,
         component_button: crate::widgets::property_panel_visibility::ComponentButtonState::Create,
+        component_props: crate::widgets::property_panel_component_props::PropRowsLayout::of(
+            &panel.component_props,
+        ),
         flex_layout: caps.flex_layout,
         flex_layout_mode: panel.snapshot.flex_layout,
         layout_justify: panel.snapshot.layout_justify,

@@ -127,6 +127,7 @@ fn frame_node(
         route: None,
         breakpoint: None,
         placeholder: None,
+        component_properties: None,
     })
 }
 

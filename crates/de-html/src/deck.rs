@@ -277,6 +277,7 @@ fn into_board(
             screen: None,
             breakpoint: None,
             placeholder: None,
+            component_properties: None,
         },
     };
     strip_private_hints(&mut frame.base);

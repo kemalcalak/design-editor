@@ -44,6 +44,7 @@ pub(crate) fn shallow_root(node: &PenNode) -> PenNode {
             screen: frame.screen.clone(),
             breakpoint: frame.breakpoint,
             placeholder: frame.placeholder,
+            component_properties: frame.component_properties.clone(),
         }),
         PenNode::Group(group) => PenNode::Group(GroupNode {
             base: group.base.clone(),

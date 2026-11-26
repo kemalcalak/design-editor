@@ -137,6 +137,7 @@ pub(super) fn wrap_grid_rows(
             screen: None,
             breakpoint: None,
             placeholder: None,
+            component_properties: None,
         });
         context.node_count += 1;
         rows.push(row);
