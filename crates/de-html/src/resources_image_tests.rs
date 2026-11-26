@@ -669,18 +669,16 @@ fn unavailable_and_malformed_remote_images_do_not_gain_placeholder_dimensions() 
 
 #[test]
 fn remote_and_data_images_are_sized_flex_items_of_a_wrapping_row() {
-    // The engine breaks the 250px row after two 120px images (#379); the
-    // import only has to hand it measured items.
+    // The engine wraps the 250px row (#379); the import hands it sized items.
     fn assert_two_plus_one(imported: &crate::HtmlImportResult) {
         let frame = frame_named(&imported.nodes, "div").expect("wrapping div");
         assert_eq!(frame.container.wrap, Some(true));
         let items = frame.children.as_deref().expect("items");
         assert_eq!(items.len(), 3);
         for item in items {
-            let PenNode::Image(image) = item else {
-                panic!("expected an image item, got {item:?}")
-            };
-            assert_eq!(image.width, Some(SizingBehavior::Number(120.0)));
+            assert!(
+                matches!(item, PenNode::Image(i) if i.width == Some(SizingBehavior::Number(120.0)))
+            );
         }
     }
 

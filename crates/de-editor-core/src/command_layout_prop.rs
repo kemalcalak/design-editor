@@ -400,9 +400,7 @@ fn set_container_layout(node: &mut PenNode, mode: LayoutMode) -> bool {
     let container = match node {
         PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => &mut n.container,
         PenNode::Group(n)
-        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => {
-            &mut n.container
-        }
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => &mut n.container,
         PenNode::Rectangle(n) => &mut n.container,
         _ => return false,
     };
