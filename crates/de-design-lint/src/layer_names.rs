@@ -10,6 +10,9 @@
 mod default_names;
 mod lang;
 mod rules;
+mod text_roles;
+mod unique;
+mod walk;
 
 use std::collections::HashSet;
 
@@ -19,14 +22,14 @@ use serde::Serialize;
 use serde_json::Value;
 
 use crate::issue::{FixProperty, Issue, IssueCategory, IssueSeverity};
-use crate::node_util::{base, children, node_id};
+use crate::node_util::{base, children};
 
 pub use default_names::is_default_layer_name;
 pub use lang::detect_document_locale;
 
 pub use rules::{collapse_whitespace, text_content};
 
-use rules::{infer_role, Place};
+use walk::candidates;
 
 /// One proposed rename: the layer, its name today (`None` when it has
 /// none) and the name the rules propose.
@@ -78,101 +81,6 @@ pub fn texts_under(roots: &[PenNode]) -> Vec<String> {
 pub fn document_locale(roots: &[PenNode]) -> Locale {
     let texts = texts_under(roots);
     detect_document_locale(texts.iter().map(String::as_str))
-}
-
-/// A layer that has no meaningful name, with the rules' proposal for it
-/// (`None` when the rules have nothing better to offer).
-struct Candidate {
-    node_id: String,
-    current: Option<String>,
-    proposed: Option<String>,
-}
-
-struct Walk<'a> {
-    targets: Option<&'a HashSet<String>>,
-    locale: Locale,
-    out: Vec<Candidate>,
-}
-
-impl Walk<'_> {
-    fn node(&mut self, node: &PenNode, place: Place<'_>, section: Option<&str>, in_target: bool) {
-        let id = node_id(node);
-        let in_target = in_target || self.targets.is_none_or(|targets| targets.contains(id));
-        let role = infer_role(node, place);
-        let current = base(node).name.clone();
-        let final_name = if has_meaningful_name(node) {
-            current.clone()
-        } else {
-            let proposed = role
-                .as_ref()
-                .map(|role| role.render(self.locale, section))
-                .filter(|proposed| acceptable(node, proposed, current.as_deref()));
-            if in_target {
-                self.out.push(Candidate {
-                    node_id: id.to_string(),
-                    current: current.clone(),
-                    proposed: proposed.clone(),
-                });
-            }
-            proposed
-        };
-        // A section-like layer (or any wide child of a screen) names the
-        // section its descendants sit in: `Hero / Title`.
-        let names_section = role.as_ref().is_some_and(|role| role.is_section_like())
-            || (place.depth == 1 && final_name.is_some() && !children(node).is_empty());
-        let child_section = if names_section {
-            final_name.as_deref()
-        } else {
-            section
-        };
-        for (index, child) in children(node).iter().enumerate() {
-            self.node(
-                child,
-                Place {
-                    parent: Some(node),
-                    index,
-                    depth: place.depth + 1,
-                },
-                child_section,
-                in_target,
-            );
-        }
-    }
-}
-
-/// A proposal is worth making when it is not itself a default name (a
-/// text layer named after its content is fine) and it changes something.
-fn acceptable(node: &PenNode, proposed: &str, current: Option<&str>) -> bool {
-    if proposed.trim().is_empty() || current.map(str::trim) == Some(proposed.trim()) {
-        return false;
-    }
-    !is_default_layer_name(proposed)
-        || text_content(node).is_some_and(|content| content == collapse_whitespace(proposed))
-}
-
-fn candidates(
-    roots: &[PenNode],
-    targets: Option<&HashSet<String>>,
-    locale: Locale,
-) -> Vec<Candidate> {
-    let mut walk = Walk {
-        targets,
-        locale,
-        out: Vec::new(),
-    };
-    for (index, root) in roots.iter().enumerate() {
-        walk.node(
-            root,
-            Place {
-                parent: None,
-                index,
-                depth: 0,
-            },
-            None,
-            false,
-        );
-    }
-    walk.out
 }
 
 /// Rule-based names for the layers under `roots` (a page's top-level
@@ -227,3 +135,7 @@ pub fn detect_default_layer_names(root: &PenNode) -> Vec<Issue> {
 #[cfg(test)]
 #[path = "layer_names_tests.rs"]
 mod tests;
+
+#[cfg(test)]
+#[path = "layer_names_roles_tests.rs"]
+mod roles_tests;

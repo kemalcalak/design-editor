@@ -164,6 +164,7 @@ fn the_agent_brief_and_reply_round_trip() {
     assert_eq!(cta["children"][0], "text \"Start\"");
     let prompt = rename_layers_prompt(&briefs, Locale::Tr);
     assert!(prompt.contains("Türkçe (tr)"));
+    assert!(prompt.contains("must not share a name"));
     assert!(prompt.contains("\"cta\""));
 
     let reply = "Sure!\n```json\n{\"cta\": \"Start button\", \"hero\": \" \"}\n```";

@@ -112,7 +112,7 @@ fn rules_name_a_generated_screen() {
     assert_eq!(names["cta-2"], "Secondary button");
     assert_eq!(names["pricing"], "Pricing section");
     assert_eq!(names["pricing-title"], "Pricing section / Title");
-    assert_eq!(names["cards"], "Card list");
+    assert_eq!(names["cards"], "Pricing cards");
     assert_eq!(names["card-2"], "Pro plan card");
     assert_eq!(names["footer"], "Footer");
     assert_eq!(names["nav-2"], "Pricing");
@@ -191,7 +191,11 @@ fn no_role_word_is_a_default_name_in_any_locale() {
         rules::Role::Footer,
         rules::Role::Section(None),
         rules::Role::Card(None),
-        rules::Role::CardList,
+        rules::Role::Cards(rules::CardsName::Plain),
+        rules::Role::Cards(rules::CardsName::Pricing),
+        rules::Role::Subtitle,
+        rules::Role::Price,
+        rules::Role::Caption,
         rules::Role::Row,
         rules::Role::Column,
         rules::Role::Container,
