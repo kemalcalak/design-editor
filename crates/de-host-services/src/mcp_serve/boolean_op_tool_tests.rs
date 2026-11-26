@@ -18,10 +18,19 @@ fn state() -> EditorState {
     EditorState::from_document(doc)
 }
 
+/// `boolean_op` with `mode: "flatten"`, the destructive form these
+/// tests cover (the default group mode is in `path_ops_tool_tests`).
 fn call(state: &EditorState, ids: &str, operation: &str) -> ToolOutcome {
+    call_mode(state, ids, operation, Some("flatten"))
+}
+
+fn call_mode(state: &EditorState, ids: &str, operation: &str, mode: Option<&str>) -> ToolOutcome {
     let mut args = BTreeMap::new();
     args.insert("nodeIds".to_string(), ids.to_string());
     args.insert("operation".to_string(), operation.to_string());
+    if let Some(mode) = mode {
+        args.insert("mode".to_string(), mode.to_string());
+    }
     boolean_op_snapshot(state).call(&args)
 }
 
@@ -44,8 +53,12 @@ fn union_returns_the_id_the_commit_lands_as_one_undo_step() {
     assert!(state.apply(command));
 
     let ids: Vec<&str> = state.active_children().iter().map(|n| n.id_str()).collect();
-    assert_eq!(ids, ["t", new_id.as_str()]);
-    let PenNode::Path(path) = &state.active_children()[1] else {
+    assert_eq!(
+        ids,
+        [new_id.as_str(), "t"],
+        "the result takes the base's slot"
+    );
+    let PenNode::Path(path) = &state.active_children()[0] else {
         panic!("boolean result should be a path");
     };
     assert_eq!(path.base.x, Some(0.0));
@@ -95,6 +108,10 @@ fn rejects_bad_arguments() {
     assert_eq!(
         error_code(boolean_op_snapshot(&state).call(&args)),
         ToolErrorCode::MissingArgument
+    );
+    assert_eq!(
+        error_code(call_mode(&state, r#"["a","b"]"#, "union", Some("bake"))),
+        ToolErrorCode::InvalidArgument
     );
 }
 

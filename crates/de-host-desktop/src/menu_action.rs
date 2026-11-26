@@ -158,6 +158,7 @@ impl DesktopApp {
             A::Duplicate => self.host.apply_duplicate(),
             A::Group => self.host.apply_group(),
             A::Ungroup => self.host.apply_ungroup(),
+            A::PathOp(op) => self.host.apply_path_operation(op.operation()),
             A::ToggleFullscreen => {
                 if let Some(window) = self.window.as_ref() {
                     let next = match window.fullscreen() {

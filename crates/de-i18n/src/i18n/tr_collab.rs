@@ -437,6 +437,13 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "layout.rowGap" => "Satır aralığı",
         "layout.columns" => "Sütunlar",
         "layout.rows" => "Satırlar",
+        "menu.path" => "Yol",
+        "path.flatten" => "Düzleştir",
+        "path.outlineStroke" => "Konturu Dış Hatta Çevir",
+        "path.offsetOutward" => "Yolu Dışa Kaydır",
+        "path.offsetInward" => "Yolu İçe Kaydır",
+        "path.simplify" => "Yolu Sadeleştir",
+        "path.reverse" => "Yol Yönünü Ters Çevir",
         _ => return None,
     })
 }

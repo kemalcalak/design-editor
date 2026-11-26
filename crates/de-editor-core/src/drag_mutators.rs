@@ -71,7 +71,10 @@ pub fn auto_layout_direction(node: &PenNode) -> Option<FlexDirection> {
         PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => {
             n.container.layout.as_ref()
         }
-        PenNode::Group(n) => n.container.layout.as_ref(),
+        PenNode::Group(n)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => {
+            n.container.layout.as_ref()
+        }
         PenNode::Rectangle(n) => n.container.layout.as_ref(),
         _ => None,
     }?;

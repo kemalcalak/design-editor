@@ -437,6 +437,13 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "layout.rowGap" => "Khoảng cách hàng",
         "layout.columns" => "Cột",
         "layout.rows" => "Hàng",
+        "menu.path" => "Đường dẫn",
+        "path.flatten" => "Làm phẳng",
+        "path.outlineStroke" => "Chuyển nét thành đường viền",
+        "path.offsetOutward" => "Dịch đường dẫn ra ngoài",
+        "path.offsetInward" => "Dịch đường dẫn vào trong",
+        "path.simplify" => "Đơn giản hóa đường dẫn",
+        "path.reverse" => "Đảo hướng đường dẫn",
         _ => return None,
     })
 }

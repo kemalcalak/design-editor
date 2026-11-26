@@ -292,7 +292,8 @@ fn group_wraps_multi_node_svg() {
     assert_eq!(s.import_svg(&mut next, svg, (0.0, 0.0)), 2);
     assert_eq!(s.active_children().len(), 1);
     match &s.active_children()[0] {
-        PenNode::Group(g) => {
+        PenNode::Group(g)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: g, .. }) => {
             assert_eq!(g.children.as_ref().unwrap().len(), 2);
         }
         other => panic!("expected Group wrap, got {other:?}"),

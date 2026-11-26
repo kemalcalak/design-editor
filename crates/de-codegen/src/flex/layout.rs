@@ -209,7 +209,8 @@ pub(crate) fn node_sizing(
             n.container.height.as_ref(),
             Some(&n.container.limits),
         ),
-        PenNode::Group(n) => (
+        PenNode::Group(n)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => (
             n.container.width.as_ref(),
             n.container.height.as_ref(),
             Some(&n.container.limits),

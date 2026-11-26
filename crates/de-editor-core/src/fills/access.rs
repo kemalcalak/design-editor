@@ -15,7 +15,10 @@ pub fn node_fills(node: &PenNode) -> Option<&Vec<PenFill>> {
         PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => {
             n.container.fill.as_ref()
         }
-        PenNode::Group(n) => n.container.fill.as_ref(),
+        PenNode::Group(n)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => {
+            n.container.fill.as_ref()
+        }
         PenNode::Rectangle(n) => n.container.fill.as_ref(),
         PenNode::Ellipse(n) => n.fill.as_ref(),
         PenNode::Polygon(n) => n.fill.as_ref(),
@@ -50,7 +53,10 @@ pub fn node_fills_mut(node: &mut PenNode) -> Option<&mut Vec<PenFill>> {
         PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => {
             Some(n.container.fill.get_or_insert_with(Vec::new))
         }
-        PenNode::Group(n) => Some(n.container.fill.get_or_insert_with(Vec::new)),
+        PenNode::Group(n)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => {
+            Some(n.container.fill.get_or_insert_with(Vec::new))
+        }
         PenNode::Rectangle(n) => Some(n.container.fill.get_or_insert_with(Vec::new)),
         PenNode::Ellipse(n) => Some(n.fill.get_or_insert_with(Vec::new)),
         PenNode::Polygon(n) => Some(n.fill.get_or_insert_with(Vec::new)),
@@ -83,7 +89,10 @@ pub(crate) fn node_stroke_mut(node: &mut PenNode) -> Option<&mut Option<PenStrok
         PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => {
             Some(&mut n.container.stroke)
         }
-        PenNode::Group(n) => Some(&mut n.container.stroke),
+        PenNode::Group(n)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => {
+            Some(&mut n.container.stroke)
+        }
         PenNode::Rectangle(n) => Some(&mut n.container.stroke),
         PenNode::Ellipse(n) => Some(&mut n.stroke),
         PenNode::Polygon(n) => Some(&mut n.stroke),
@@ -116,7 +125,10 @@ pub(crate) fn node_stroke(node: &PenNode) -> Option<&PenStroke> {
         PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => {
             n.container.stroke.as_ref()
         }
-        PenNode::Group(n) => n.container.stroke.as_ref(),
+        PenNode::Group(n)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => {
+            n.container.stroke.as_ref()
+        }
         PenNode::Rectangle(n) => n.container.stroke.as_ref(),
         PenNode::Ellipse(n) => n.stroke.as_ref(),
         PenNode::Polygon(n) => n.stroke.as_ref(),
@@ -165,7 +177,10 @@ pub(super) fn node_effects_mut(node: &mut PenNode) -> Option<&mut Vec<PenEffect>
         PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => {
             Some(n.container.effects.get_or_insert_with(Vec::new))
         }
-        PenNode::Group(n) => Some(n.container.effects.get_or_insert_with(Vec::new)),
+        PenNode::Group(n)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => {
+            Some(n.container.effects.get_or_insert_with(Vec::new))
+        }
         PenNode::Rectangle(n) => Some(n.container.effects.get_or_insert_with(Vec::new)),
         PenNode::Ellipse(n) => Some(n.effects.get_or_insert_with(Vec::new)),
         PenNode::Polygon(n) => Some(n.effects.get_or_insert_with(Vec::new)),
@@ -206,7 +221,10 @@ pub(crate) fn node_fills_opt_mut(node: &mut PenNode) -> Option<&mut Vec<PenFill>
         PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => {
             n.container.fill.as_mut()
         }
-        PenNode::Group(n) => n.container.fill.as_mut(),
+        PenNode::Group(n)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => {
+            n.container.fill.as_mut()
+        }
         PenNode::Rectangle(n) => n.container.fill.as_mut(),
         PenNode::Ellipse(n) => n.fill.as_mut(),
         PenNode::Polygon(n) => n.fill.as_mut(),
@@ -240,7 +258,10 @@ pub(crate) fn node_effects_opt_mut(node: &mut PenNode) -> Option<&mut Vec<PenEff
         PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => {
             n.container.effects.as_mut()
         }
-        PenNode::Group(n) => n.container.effects.as_mut(),
+        PenNode::Group(n)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => {
+            n.container.effects.as_mut()
+        }
         PenNode::Rectangle(n) => n.container.effects.as_mut(),
         PenNode::Ellipse(n) => n.effects.as_mut(),
         PenNode::Polygon(n) => n.effects.as_mut(),
@@ -285,7 +306,10 @@ pub fn node_effects(node: &PenNode) -> &[jian_ops_schema::style::PenEffect] {
         PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => {
             n.container.effects.as_deref()
         }
-        PenNode::Group(n) => n.container.effects.as_deref(),
+        PenNode::Group(n)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => {
+            n.container.effects.as_deref()
+        }
         PenNode::Rectangle(n) => n.container.effects.as_deref(),
         PenNode::Ellipse(n) => n.effects.as_deref(),
         PenNode::Polygon(n) => n.effects.as_deref(),

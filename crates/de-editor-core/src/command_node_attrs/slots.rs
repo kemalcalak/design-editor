@@ -18,7 +18,8 @@ pub(super) fn write_corner_radius(node: &mut PenNode, radius: f64) -> bool {
             n.container.corner_radius = Some(CornerRadius::Uniform(radius));
             true
         }
-        PenNode::Group(n) => {
+        PenNode::Group(n)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => {
             n.container.corner_radius = Some(CornerRadius::Uniform(radius));
             true
         }
@@ -53,7 +54,10 @@ fn corner_radius_slot(node: &mut PenNode) -> Option<&mut Option<CornerRadius>> {
         PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => {
             Some(&mut n.container.corner_radius)
         }
-        PenNode::Group(n) => Some(&mut n.container.corner_radius),
+        PenNode::Group(n)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => {
+            Some(&mut n.container.corner_radius)
+        }
         PenNode::Rectangle(n) => Some(&mut n.container.corner_radius),
         PenNode::Image(n) => Some(&mut n.corner_radius),
         PenNode::Browser(n) => Some(&mut n.corner_radius),
@@ -93,7 +97,10 @@ pub(crate) fn node_effects_slot(node: &mut PenNode) -> Option<&mut Option<Vec<Pe
         PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => {
             Some(&mut n.container.effects)
         }
-        PenNode::Group(n) => Some(&mut n.container.effects),
+        PenNode::Group(n)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => {
+            Some(&mut n.container.effects)
+        }
         PenNode::Rectangle(n) => Some(&mut n.container.effects),
         PenNode::Ellipse(n) => Some(&mut n.effects),
         PenNode::Polygon(n) => Some(&mut n.effects),
@@ -127,7 +134,10 @@ pub(super) fn node_stroke_slot(node: &mut PenNode) -> Option<&mut Option<PenStro
         PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => {
             Some(&mut n.container.stroke)
         }
-        PenNode::Group(n) => Some(&mut n.container.stroke),
+        PenNode::Group(n)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => {
+            Some(&mut n.container.stroke)
+        }
         PenNode::Rectangle(n) => Some(&mut n.container.stroke),
         PenNode::Ellipse(n) => Some(&mut n.stroke),
         PenNode::Polygon(n) => Some(&mut n.stroke),

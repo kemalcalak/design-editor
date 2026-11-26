@@ -271,7 +271,10 @@ fn replace_corner_radius(node: &mut PenNode, replacement: &StylePropertyReplacem
         PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => {
             replace_container_corner_radius(&mut n.container, replacement)
         }
-        PenNode::Group(n) => replace_container_corner_radius(&mut n.container, replacement),
+        PenNode::Group(n)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => {
+            replace_container_corner_radius(&mut n.container, replacement)
+        }
         PenNode::Rectangle(n) => replace_container_corner_radius(&mut n.container, replacement),
         PenNode::Image(ImageNode { corner_radius, .. })
         | PenNode::Browser(BrowserNode { corner_radius, .. }) => {
@@ -421,7 +424,10 @@ fn node_fill_mut(node: &mut PenNode) -> Option<&mut Vec<PenFill>> {
         PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => {
             n.container.fill.as_mut()
         }
-        PenNode::Group(n) => n.container.fill.as_mut(),
+        PenNode::Group(n)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => {
+            n.container.fill.as_mut()
+        }
         PenNode::Rectangle(n) => n.container.fill.as_mut(),
         PenNode::Ellipse(n) => n.fill.as_mut(),
         PenNode::Polygon(n) => n.fill.as_mut(),
@@ -453,7 +459,10 @@ fn node_stroke_mut(node: &mut PenNode) -> Option<&mut PenStroke> {
         PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => {
             n.container.stroke.as_mut()
         }
-        PenNode::Group(n) => n.container.stroke.as_mut(),
+        PenNode::Group(n)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => {
+            n.container.stroke.as_mut()
+        }
         PenNode::Rectangle(n) => n.container.stroke.as_mut(),
         PenNode::Ellipse(n) => n.stroke.as_mut(),
         PenNode::Line(n) => n.stroke.as_mut(),
@@ -483,7 +492,10 @@ fn node_stroke_mut(node: &mut PenNode) -> Option<&mut PenStroke> {
 fn container_mut(node: &mut PenNode) -> Option<&mut ContainerProps> {
     match node {
         PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => Some(&mut n.container),
-        PenNode::Group(n) => Some(&mut n.container),
+        PenNode::Group(n)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => {
+            Some(&mut n.container)
+        }
         PenNode::Rectangle(n) => Some(&mut n.container),
         _ => None,
     }
@@ -492,7 +504,10 @@ fn container_mut(node: &mut PenNode) -> Option<&mut ContainerProps> {
 fn existing_children_mut(node: &mut PenNode) -> Option<&mut Vec<PenNode>> {
     match node {
         PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => n.children.as_mut(),
-        PenNode::Group(n) => n.children.as_mut(),
+        PenNode::Group(n)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => {
+            n.children.as_mut()
+        }
         PenNode::Rectangle(n) => n.children.as_mut(),
         PenNode::Ref(n) => n.children.as_mut(),
         _ => None,

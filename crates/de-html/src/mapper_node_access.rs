@@ -15,6 +15,7 @@ macro_rules! base_ref {
         match $node {
             $(PenNode::$variant(node) => &node.base,)+
             PenNode::Script(node) => &node.frame.base,
+            PenNode::Boolean(node) => &node.group.base,
         }
     };
 }
@@ -24,6 +25,7 @@ macro_rules! base_mut {
         match $node {
             $(PenNode::$variant(node) => &mut node.base,)+
             PenNode::Script(node) => &mut node.frame.base,
+            PenNode::Boolean(node) => &mut node.group.base,
         }
     };
 }
@@ -57,7 +59,10 @@ macro_rules! leaf_axis_mut {
 pub(crate) fn node_width_mut(node: &mut PenNode) -> Option<&mut Option<SizingBehavior>> {
     match node {
         PenNode::Frame(node) => Some(&mut node.container.width),
-        PenNode::Group(node) => Some(&mut node.container.width),
+        PenNode::Group(node)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: node, .. }) => {
+            Some(&mut node.container.width)
+        }
         PenNode::Rectangle(node) => Some(&mut node.container.width),
         node => leaf_axis_mut!(node, width; Ellipse, Polygon, Path, Text, TextInput,
             Image, IconFont, TextArea, Select, Switch, Checkbox, Slider,
@@ -69,7 +74,10 @@ pub(crate) fn node_width_mut(node: &mut PenNode) -> Option<&mut Option<SizingBeh
 pub(crate) fn node_height_mut(node: &mut PenNode) -> Option<&mut Option<SizingBehavior>> {
     match node {
         PenNode::Frame(node) => Some(&mut node.container.height),
-        PenNode::Group(node) => Some(&mut node.container.height),
+        PenNode::Group(node)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: node, .. }) => {
+            Some(&mut node.container.height)
+        }
         PenNode::Rectangle(node) => Some(&mut node.container.height),
         node => leaf_axis_mut!(node, height; Ellipse, Polygon, Path, Text, TextInput,
             Image, IconFont, TextArea, Select, Switch, Checkbox, Slider,
@@ -82,7 +90,10 @@ pub(crate) fn node_width(node: &PenNode) -> Option<&SizingBehavior> {
         PenNode::Frame(node) | PenNode::Script(ScriptNode { frame: node, .. }) => {
             node.container.width.as_ref()
         }
-        PenNode::Group(node) => node.container.width.as_ref(),
+        PenNode::Group(node)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: node, .. }) => {
+            node.container.width.as_ref()
+        }
         PenNode::Rectangle(node) => node.container.width.as_ref(),
         PenNode::Ellipse(node) => node.width.as_ref(),
         PenNode::Polygon(node) => node.width.as_ref(),
@@ -111,7 +122,10 @@ pub(crate) fn node_height(node: &PenNode) -> Option<&SizingBehavior> {
         PenNode::Frame(node) | PenNode::Script(ScriptNode { frame: node, .. }) => {
             node.container.height.as_ref()
         }
-        PenNode::Group(node) => node.container.height.as_ref(),
+        PenNode::Group(node)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: node, .. }) => {
+            node.container.height.as_ref()
+        }
         PenNode::Rectangle(node) => node.container.height.as_ref(),
         PenNode::Ellipse(node) => node.height.as_ref(),
         PenNode::Polygon(node) => node.height.as_ref(),

@@ -437,6 +437,13 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "layout.rowGap" => "पंक्ति अंतराल",
         "layout.columns" => "कॉलम",
         "layout.rows" => "पंक्तियाँ",
+        "menu.path" => "पाथ",
+        "path.flatten" => "फ़्लैटन करें",
+        "path.outlineStroke" => "स्ट्रोक की आउटलाइन बनाएँ",
+        "path.offsetOutward" => "पाथ को बाहर ऑफ़सेट करें",
+        "path.offsetInward" => "पाथ को अंदर ऑफ़सेट करें",
+        "path.simplify" => "पाथ सरल करें",
+        "path.reverse" => "पाथ की दिशा उलटें",
         _ => return None,
     })
 }

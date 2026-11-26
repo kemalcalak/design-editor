@@ -145,6 +145,7 @@ mod property_panel_overlay_hit;
 mod property_panel_page;
 #[cfg(test)]
 mod property_panel_paint_options_tests;
+mod property_panel_path_ops;
 #[cfg(test)]
 mod property_panel_press_tests;
 pub mod property_panel_script;

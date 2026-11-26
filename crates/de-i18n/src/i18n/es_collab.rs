@@ -437,6 +437,13 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "layout.rowGap" => "Espacio entre filas",
         "layout.columns" => "Columnas",
         "layout.rows" => "Filas",
+        "menu.path" => "Trazado",
+        "path.flatten" => "Acoplar",
+        "path.outlineStroke" => "Contornear trazo",
+        "path.offsetOutward" => "Desplazar trazado hacia fuera",
+        "path.offsetInward" => "Desplazar trazado hacia dentro",
+        "path.simplify" => "Simplificar trazado",
+        "path.reverse" => "Invertir dirección del trazado",
         _ => return None,
     })
 }

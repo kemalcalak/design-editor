@@ -24,6 +24,8 @@ pub mod asset_folder;
 mod asset_folder_error;
 mod asset_folder_shader;
 mod authored_geometry;
+mod boolean_bake;
+pub use boolean_bake::bake_boolean_groups;
 mod editor_meta;
 mod editor_meta_error;
 mod editor_scene;
@@ -40,6 +42,8 @@ mod library_files_error;
 // under the CanvasKit (no-skia-measure) web build.
 #[cfg(test)]
 mod active_page_scene_tests;
+#[cfg(all(test, feature = "skia-measure"))]
+mod boolean_scene_tests;
 #[cfg(test)]
 mod geometry_mode_scene_tests;
 #[cfg(test)]

@@ -551,7 +551,8 @@ fn is_chip_shape(
     }
     let props = match node {
         PenNode::Frame(frame) => &frame.container,
-        PenNode::Group(group) => &group.container,
+        PenNode::Group(group)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group, .. }) => &group.container,
         PenNode::Rectangle(rect) => &rect.container,
         _ => return false,
     };

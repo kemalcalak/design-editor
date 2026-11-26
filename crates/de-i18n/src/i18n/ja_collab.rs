@@ -437,6 +437,13 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "layout.rowGap" => "行の間隔",
         "layout.columns" => "列",
         "layout.rows" => "行",
+        "menu.path" => "パス",
+        "path.flatten" => "平坦化",
+        "path.outlineStroke" => "線のアウトライン",
+        "path.offsetOutward" => "パスを外側にオフセット",
+        "path.offsetInward" => "パスを内側にオフセット",
+        "path.simplify" => "パスを単純化",
+        "path.reverse" => "パスの方向を反転",
         _ => return None,
     })
 }

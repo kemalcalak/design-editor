@@ -128,7 +128,10 @@ fn node_text(node: &PenNode) -> String {
 fn recursive_node_count(node: &PenNode) -> usize {
     let children = match node {
         PenNode::Frame(node) => node.children.as_deref(),
-        PenNode::Group(node) => node.children.as_deref(),
+        PenNode::Group(node)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: node, .. }) => {
+            node.children.as_deref()
+        }
         PenNode::Rectangle(node) => node.children.as_deref(),
         _ => None,
     };

@@ -439,6 +439,13 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "layout.rowGap" => "행 간격",
         "layout.columns" => "열",
         "layout.rows" => "행",
+        "menu.path" => "패스",
+        "path.flatten" => "병합",
+        "path.outlineStroke" => "윤곽선 획",
+        "path.offsetOutward" => "패스 바깥쪽 오프셋",
+        "path.offsetInward" => "패스 안쪽 오프셋",
+        "path.simplify" => "패스 단순화",
+        "path.reverse" => "패스 방향 반전",
         _ => return None,
     })
 }

@@ -35,7 +35,6 @@ pub mod context;
 #[cfg(any(target_os = "macos", target_os = "linux", target_os = "windows"))]
 pub mod backend;
 #[cfg(any(target_os = "macos", target_os = "linux", target_os = "windows"))]
-pub mod boolean_ops;
 #[cfg(feature = "gl-host")]
 #[cfg(any(target_os = "macos", target_os = "linux", target_os = "windows"))]
 pub mod canvas_view_stub;

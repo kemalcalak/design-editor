@@ -437,6 +437,13 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "layout.rowGap" => "Zeilenabstand",
         "layout.columns" => "Spalten",
         "layout.rows" => "Zeilen",
+        "menu.path" => "Pfad",
+        "path.flatten" => "Reduzieren",
+        "path.outlineStroke" => "Kontur in Fläche umwandeln",
+        "path.offsetOutward" => "Pfad nach außen versetzen",
+        "path.offsetInward" => "Pfad nach innen versetzen",
+        "path.simplify" => "Pfad vereinfachen",
+        "path.reverse" => "Pfadrichtung umkehren",
         _ => return None,
     })
 }

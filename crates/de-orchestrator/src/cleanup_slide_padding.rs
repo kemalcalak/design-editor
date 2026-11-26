@@ -412,7 +412,10 @@ fn find_pen_descendant<'a>(node: &'a PenNode, node_id: &str) -> Option<&'a PenNo
 fn container_props(node: &PenNode) -> Option<&jian_ops_schema::node::container::ContainerProps> {
     match node {
         PenNode::Frame(frame) => Some(&frame.container),
-        PenNode::Group(group) => Some(&group.container),
+        PenNode::Group(group)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group, .. }) => {
+            Some(&group.container)
+        }
         PenNode::Rectangle(rect) => Some(&rect.container),
         _ => None,
     }

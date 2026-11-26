@@ -383,7 +383,8 @@ fn set_container_gap(node: &mut PenNode, gap: f64) -> bool {
             n.container.gap = Some(noe);
             true
         }
-        PenNode::Group(n) => {
+        PenNode::Group(n)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => {
             n.container.gap = Some(noe);
             true
         }
@@ -398,7 +399,10 @@ fn set_container_gap(node: &mut PenNode, gap: f64) -> bool {
 fn set_container_layout(node: &mut PenNode, mode: LayoutMode) -> bool {
     let container = match node {
         PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => &mut n.container,
-        PenNode::Group(n) => &mut n.container,
+        PenNode::Group(n)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => {
+            &mut n.container
+        }
         PenNode::Rectangle(n) => &mut n.container,
         _ => return false,
     };
@@ -415,7 +419,8 @@ fn set_container_padding(node: &mut PenNode, pad: Padding) -> bool {
             n.container.padding = Some(pad);
             true
         }
-        PenNode::Group(n) => {
+        PenNode::Group(n)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => {
             n.container.padding = Some(pad);
             true
         }
@@ -433,7 +438,8 @@ fn set_container_clip_content(node: &mut PenNode, value: bool) -> bool {
             n.container.clip_content = Some(value);
             true
         }
-        PenNode::Group(n) => {
+        PenNode::Group(n)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => {
             n.container.clip_content = Some(value);
             true
         }
@@ -451,7 +457,8 @@ fn set_container_justify(node: &mut PenNode, jc: JustifyContent) -> bool {
             n.container.justify_content = Some(jc);
             true
         }
-        PenNode::Group(n) => {
+        PenNode::Group(n)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => {
             n.container.justify_content = Some(jc);
             true
         }
@@ -469,7 +476,8 @@ fn set_container_align(node: &mut PenNode, ai: AlignItems) -> bool {
             n.container.align_items = Some(ai);
             true
         }
-        PenNode::Group(n) => {
+        PenNode::Group(n)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => {
             n.container.align_items = Some(ai);
             true
         }
@@ -547,7 +555,8 @@ fn set_node_width(node: &mut PenNode, sb: SizingBehavior) -> bool {
             n.container.width = Some(sb);
             true
         }
-        PenNode::Group(n) => {
+        PenNode::Group(n)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => {
             n.container.width = Some(sb);
             true
         }
@@ -593,7 +602,8 @@ fn set_node_height(node: &mut PenNode, sb: SizingBehavior) -> bool {
             n.container.height = Some(sb);
             true
         }
-        PenNode::Group(n) => {
+        PenNode::Group(n)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => {
             n.container.height = Some(sb);
             true
         }

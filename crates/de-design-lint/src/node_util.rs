@@ -74,7 +74,7 @@ pub fn node_id(node: &PenNode) -> &str {
 pub fn node_kind(node: &PenNode) -> NodeKind {
     match node {
         PenNode::Frame(_) | PenNode::Script(_) => NodeKind::Frame,
-        PenNode::Group(_) => NodeKind::Group,
+        PenNode::Group(_) | PenNode::Boolean(_) => NodeKind::Group,
         PenNode::Rectangle(_) => NodeKind::Rectangle,
         PenNode::Ellipse(_) => NodeKind::Ellipse,
         PenNode::Line(_) => NodeKind::Line,
@@ -169,7 +169,10 @@ pub fn numeric_height(node: &PenNode) -> Option<f64> {
 fn width_sizing(node: &PenNode) -> Option<&SizingBehavior> {
     match node {
         PenNode::Frame(n) => n.container.width.as_ref(),
-        PenNode::Group(n) => n.container.width.as_ref(),
+        PenNode::Group(n)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => {
+            n.container.width.as_ref()
+        }
         PenNode::Rectangle(n) => n.container.width.as_ref(),
         PenNode::Ellipse(n) => n.width.as_ref(),
         PenNode::Polygon(n) => n.width.as_ref(),
@@ -193,7 +196,10 @@ fn numeric_sizing(sizing: Option<&SizingBehavior>) -> Option<f64> {
 pub fn children(node: &PenNode) -> &[PenNode] {
     let kids = match node {
         PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => n.children.as_ref(),
-        PenNode::Group(n) => n.children.as_ref(),
+        PenNode::Group(n)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => {
+            n.children.as_ref()
+        }
         PenNode::Rectangle(n) => n.children.as_ref(),
         PenNode::Tabs(n) => n.children.as_ref(),
         _ => None,
@@ -394,7 +400,8 @@ fn resolve_themed_value(
 fn base(node: &PenNode) -> &jian_ops_schema::node::PenNodeBase {
     match node {
         PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => &n.base,
-        PenNode::Group(n) => &n.base,
+        PenNode::Group(n)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => &n.base,
         PenNode::Rectangle(n) => &n.base,
         PenNode::Ellipse(n) => &n.base,
         PenNode::Line(n) => &n.base,
@@ -429,7 +436,10 @@ pub fn node_fills(node: &PenNode) -> Option<&Vec<PenFill>> {
         PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => {
             n.container.fill.as_ref()
         }
-        PenNode::Group(n) => n.container.fill.as_ref(),
+        PenNode::Group(n)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => {
+            n.container.fill.as_ref()
+        }
         PenNode::Rectangle(n) => n.container.fill.as_ref(),
         PenNode::Ellipse(n) => n.fill.as_ref(),
         PenNode::Polygon(n) => n.fill.as_ref(),
@@ -464,7 +474,10 @@ fn stroke(node: &PenNode) -> Option<&jian_ops_schema::style::PenStroke> {
             n.container.stroke.as_ref()
         }
         PenNode::Rectangle(n) => n.container.stroke.as_ref(),
-        PenNode::Group(n) => n.container.stroke.as_ref(),
+        PenNode::Group(n)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => {
+            n.container.stroke.as_ref()
+        }
         PenNode::Ellipse(n) => n.stroke.as_ref(),
         PenNode::Line(n) => n.stroke.as_ref(),
         PenNode::Polygon(n) => n.stroke.as_ref(),
@@ -535,7 +548,10 @@ pub fn node_property_value(node: &PenNode, property: &str) -> Option<Value> {
 fn height_sizing(node: &PenNode) -> Option<&SizingBehavior> {
     match node {
         PenNode::Frame(n) => n.container.height.as_ref(),
-        PenNode::Group(n) => n.container.height.as_ref(),
+        PenNode::Group(n)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => {
+            n.container.height.as_ref()
+        }
         PenNode::Rectangle(n) => n.container.height.as_ref(),
         PenNode::Text(n) => n.height.as_ref(),
         _ => None,
@@ -557,7 +573,10 @@ fn sizing_value(sizing: &SizingBehavior) -> Option<Value> {
 fn corner_radius_value(node: &PenNode) -> Option<Value> {
     match node {
         PenNode::Frame(n) => n.container.corner_radius.as_ref().map(corner_radius_json),
-        PenNode::Group(n) => n.container.corner_radius.as_ref().map(corner_radius_json),
+        PenNode::Group(n)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => {
+            n.container.corner_radius.as_ref().map(corner_radius_json)
+        }
         PenNode::Rectangle(n) => n.container.corner_radius.as_ref().map(corner_radius_json),
         PenNode::Image(n) => n.corner_radius.as_ref().map(corner_radius_json),
         PenNode::Browser(n) => n.corner_radius.as_ref().map(corner_radius_json),
@@ -586,7 +605,10 @@ fn corner_radius_json(radius: &CornerRadius) -> Value {
 pub fn corner_radius_numeric(node: &PenNode) -> f64 {
     let radius = match node {
         PenNode::Frame(n) => n.container.corner_radius.as_ref(),
-        PenNode::Group(n) => n.container.corner_radius.as_ref(),
+        PenNode::Group(n)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => {
+            n.container.corner_radius.as_ref()
+        }
         PenNode::Rectangle(n) => n.container.corner_radius.as_ref(),
         PenNode::Image(n) => n.corner_radius.as_ref(),
         PenNode::Browser(n) => n.corner_radius.as_ref(),
@@ -607,7 +629,10 @@ pub fn corner_radius_numeric(node: &PenNode) -> f64 {
 pub fn padding(node: &PenNode) -> Option<&Padding> {
     match node {
         PenNode::Frame(n) => n.container.padding.as_ref(),
-        PenNode::Group(n) => n.container.padding.as_ref(),
+        PenNode::Group(n)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => {
+            n.container.padding.as_ref()
+        }
         PenNode::Rectangle(n) => n.container.padding.as_ref(),
         _ => None,
     }

@@ -197,7 +197,10 @@ pub fn scan_empty_shells(nodes: &[PenNode]) -> Vec<String> {
 pub(super) fn node_layout_is_none(node: &PenNode) -> bool {
     match node {
         PenNode::Frame(n) => matches!(n.container.layout, None | Some(LayoutMode::None)),
-        PenNode::Group(n) => matches!(n.container.layout, None | Some(LayoutMode::None)),
+        PenNode::Group(n)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => {
+            matches!(n.container.layout, None | Some(LayoutMode::None))
+        }
         PenNode::Rectangle(n) => matches!(n.container.layout, None | Some(LayoutMode::None)),
         _ => false,
     }
@@ -469,7 +472,10 @@ pub(super) fn container_background_hex(
 ) -> Option<String> {
     let fill = match node {
         PenNode::Frame(n) => &n.container.fill,
-        PenNode::Group(n) => &n.container.fill,
+        PenNode::Group(n)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => {
+            &n.container.fill
+        }
         PenNode::Rectangle(n) => &n.container.fill,
         PenNode::Tabs(n) => &n.fill,
         _ => return None,

@@ -434,7 +434,10 @@ fn node_fill(node: &PenNode) -> Option<&Vec<PenFill>> {
         PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => {
             n.container.fill.as_ref()
         }
-        PenNode::Group(n) => n.container.fill.as_ref(),
+        PenNode::Group(n)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => {
+            n.container.fill.as_ref()
+        }
         PenNode::Rectangle(n) => n.container.fill.as_ref(),
         PenNode::Ellipse(n) => n.fill.as_ref(),
         PenNode::Polygon(n) => n.fill.as_ref(),
@@ -466,7 +469,10 @@ fn node_stroke(node: &PenNode) -> Option<&PenStroke> {
         PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => {
             n.container.stroke.as_ref()
         }
-        PenNode::Group(n) => n.container.stroke.as_ref(),
+        PenNode::Group(n)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => {
+            n.container.stroke.as_ref()
+        }
         PenNode::Rectangle(n) => n.container.stroke.as_ref(),
         PenNode::Ellipse(n) => n.stroke.as_ref(),
         PenNode::Line(n) => n.stroke.as_ref(),
@@ -496,7 +502,10 @@ fn node_stroke(node: &PenNode) -> Option<&PenStroke> {
 fn container(node: &PenNode) -> Option<&ContainerProps> {
     match node {
         PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => Some(&n.container),
-        PenNode::Group(n) => Some(&n.container),
+        PenNode::Group(n)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => {
+            Some(&n.container)
+        }
         PenNode::Rectangle(n) => Some(&n.container),
         _ => None,
     }
@@ -539,7 +548,10 @@ fn corner_radius(node: &PenNode) -> Option<Value> {
         PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => {
             n.container.corner_radius.as_ref().map(corner_radius_value)
         }
-        PenNode::Group(n) => n.container.corner_radius.as_ref().map(corner_radius_value),
+        PenNode::Group(n)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => {
+            n.container.corner_radius.as_ref().map(corner_radius_value)
+        }
         PenNode::Rectangle(n) => n.container.corner_radius.as_ref().map(corner_radius_value),
         PenNode::Ellipse(n) => n.corner_radius.and_then(number_value),
         PenNode::Polygon(n) => n.corner_radius.and_then(number_value),

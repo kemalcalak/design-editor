@@ -437,6 +437,13 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "layout.rowGap" => "Row gap",
         "layout.columns" => "Columns",
         "layout.rows" => "Rows",
+        "menu.path" => "Path",
+        "path.flatten" => "Flatten",
+        "path.outlineStroke" => "Outline Stroke",
+        "path.offsetOutward" => "Offset Path Outward",
+        "path.offsetInward" => "Offset Path Inward",
+        "path.simplify" => "Simplify Path",
+        "path.reverse" => "Reverse Path Direction",
         _ => return None,
     })
 }

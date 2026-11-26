@@ -437,6 +437,13 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "layout.rowGap" => "ระยะห่างแถว",
         "layout.columns" => "คอลัมน์",
         "layout.rows" => "แถว",
+        "menu.path" => "เส้นทาง",
+        "path.flatten" => "รวมเป็นเส้นทางเดียว",
+        "path.outlineStroke" => "แปลงเส้นขอบเป็นรูปร่าง",
+        "path.offsetOutward" => "เลื่อนเส้นทางออกด้านนอก",
+        "path.offsetInward" => "เลื่อนเส้นทางเข้าด้านใน",
+        "path.simplify" => "ลดความซับซ้อนของเส้นทาง",
+        "path.reverse" => "กลับทิศทางเส้นทาง",
         _ => return None,
     })
 }

@@ -28,7 +28,10 @@ pub(crate) fn node_effects(node: &PenNode) -> &[PenEffect] {
         PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => {
             n.container.effects.as_ref()
         }
-        PenNode::Group(n) => n.container.effects.as_ref(),
+        PenNode::Group(n)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => {
+            n.container.effects.as_ref()
+        }
         PenNode::Rectangle(n) => n.container.effects.as_ref(),
         PenNode::Ellipse(n) => n.effects.as_ref(),
         PenNode::Polygon(n) => n.effects.as_ref(),

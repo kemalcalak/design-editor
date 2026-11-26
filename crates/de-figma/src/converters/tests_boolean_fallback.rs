@@ -44,7 +44,10 @@ fn empty_boolean(operation: &str) -> TreeNode {
 fn assert_parent_paint(node: &PenNode) {
     let (fill, stroke) = match node {
         PenNode::Rectangle(node) => (&node.container.fill, &node.container.stroke),
-        PenNode::Group(node) => (&node.container.fill, &node.container.stroke),
+        PenNode::Group(node)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: node, .. }) => {
+            (&node.container.fill, &node.container.stroke)
+        }
         _ => panic!("expected paintable fallback operand, got {node:?}"),
     };
     let Some(PenFill::Solid(fill)) = fill.as_ref().and_then(|fills| fills.first()) else {

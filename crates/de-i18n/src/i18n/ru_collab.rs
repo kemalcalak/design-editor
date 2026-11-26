@@ -437,6 +437,13 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "layout.rowGap" => "Отступ строк",
         "layout.columns" => "Столбцы",
         "layout.rows" => "Строки",
+        "menu.path" => "Контур",
+        "path.flatten" => "Объединить в контур",
+        "path.outlineStroke" => "Преобразовать обводку в контур",
+        "path.offsetOutward" => "Сместить контур наружу",
+        "path.offsetInward" => "Сместить контур внутрь",
+        "path.simplify" => "Упростить контур",
+        "path.reverse" => "Изменить направление контура",
         _ => return None,
     })
 }

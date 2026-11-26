@@ -437,6 +437,13 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "layout.rowGap" => "Jarak baris",
         "layout.columns" => "Kolom",
         "layout.rows" => "Baris",
+        "menu.path" => "Jalur",
+        "path.flatten" => "Ratakan",
+        "path.outlineStroke" => "Garis Luar Goresan",
+        "path.offsetOutward" => "Geser Jalur ke Luar",
+        "path.offsetInward" => "Geser Jalur ke Dalam",
+        "path.simplify" => "Sederhanakan Jalur",
+        "path.reverse" => "Balik Arah Jalur",
         _ => return None,
     })
 }

@@ -193,6 +193,14 @@ impl Widget for PropertyPanel {
                 tops.position,
                 w,
             );
+            crate::widgets::property_panel_path_ops::paint(
+                cx,
+                &self.theme,
+                &self.snapshot.path_ops,
+                x,
+                tops.position,
+                w,
+            );
         }
         y = section_start(y, tops.flex, "position");
         let flex_section_y = y;

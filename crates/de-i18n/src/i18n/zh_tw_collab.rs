@@ -437,6 +437,13 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "layout.rowGap" => "列間距",
         "layout.columns" => "欄",
         "layout.rows" => "列",
+        "menu.path" => "路徑",
+        "path.flatten" => "合併",
+        "path.outlineStroke" => "外框化筆畫",
+        "path.offsetOutward" => "向外偏移路徑",
+        "path.offsetInward" => "向內偏移路徑",
+        "path.simplify" => "簡化路徑",
+        "path.reverse" => "反轉路徑方向",
         _ => return None,
     })
 }

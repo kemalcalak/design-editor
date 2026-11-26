@@ -221,7 +221,7 @@ fn layout_props(node: &PenNode) -> String {
             node.container.justify_content,
             node.container.align_items
         ),
-        PenNode::Group(node) => format!(
+        PenNode::Group(node) | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: node, .. }) => format!(
             "layout={:?} gap={:?} padding={:?} justify={:?} align={:?}",
             node.container.layout,
             node.container.gap,
@@ -263,7 +263,10 @@ fn image_fill(node: &PenNode) -> Option<&jian_ops_schema::style::ImageFillBody> 
     use jian_ops_schema::style::PenFill;
     let fills = match node {
         PenNode::Frame(node) => node.container.fill.as_deref(),
-        PenNode::Group(node) => node.container.fill.as_deref(),
+        PenNode::Group(node)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: node, .. }) => {
+            node.container.fill.as_deref()
+        }
         PenNode::Rectangle(node) => node.container.fill.as_deref(),
         PenNode::Ellipse(node) => node.fill.as_deref(),
         PenNode::Polygon(node) => node.fill.as_deref(),
@@ -295,7 +298,8 @@ fn sizing(node: &PenNode) -> (Option<&SizingBehavior>, Option<&SizingBehavior>) 
             node.container.width.as_ref(),
             node.container.height.as_ref(),
         ),
-        PenNode::Group(node) => (
+        PenNode::Group(node)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: node, .. }) => (
             node.container.width.as_ref(),
             node.container.height.as_ref(),
         ),
@@ -330,7 +334,10 @@ fn sizing(node: &PenNode) -> (Option<&SizingBehavior>, Option<&SizingBehavior>) 
 fn children_of(node: &PenNode) -> &[PenNode] {
     match node {
         PenNode::Frame(node) => node.children.as_deref().unwrap_or(&[]),
-        PenNode::Group(node) => node.children.as_deref().unwrap_or(&[]),
+        PenNode::Group(node)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: node, .. }) => {
+            node.children.as_deref().unwrap_or(&[])
+        }
         PenNode::Rectangle(node) => node.children.as_deref().unwrap_or(&[]),
         PenNode::Tabs(node) => node.children.as_deref().unwrap_or(&[]),
         PenNode::Ref(node) => node.children.as_deref().unwrap_or(&[]),
@@ -341,7 +348,8 @@ fn children_of(node: &PenNode) -> &[PenNode] {
 fn base_of(node: &PenNode) -> &PenNodeBase {
     match node {
         PenNode::Frame(node) | PenNode::Script(ScriptNode { frame: node, .. }) => &node.base,
-        PenNode::Group(node) => &node.base,
+        PenNode::Group(node)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: node, .. }) => &node.base,
         PenNode::Rectangle(node) => &node.base,
         PenNode::Ellipse(node) => &node.base,
         PenNode::Line(node) => &node.base,

@@ -451,7 +451,10 @@ fn node_container(node: &PenNode) -> Option<&ContainerProps> {
         PenNode::Frame(node) | PenNode::Script(ScriptNode { frame: node, .. }) => {
             Some(&node.container)
         }
-        PenNode::Group(node) => Some(&node.container),
+        PenNode::Group(node)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: node, .. }) => {
+            Some(&node.container)
+        }
         PenNode::Rectangle(node) => Some(&node.container),
         _ => None,
     }
