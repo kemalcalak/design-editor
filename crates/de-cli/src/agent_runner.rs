@@ -5,7 +5,7 @@
 //! app's atomic save (sibling temp file + rename), so a failed, timed-out
 //! or cancelled task never leaves a partial or changed `--out`.
 
-use std::path::PathBuf;
+use std::path::Path;
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
@@ -245,7 +245,7 @@ fn load(spec: &TaskSpec) -> Result<EditorState, String> {
     }
 }
 
-fn save(state: &mut EditorState, output: &PathBuf) -> Result<(), String> {
+fn save(state: &mut EditorState, output: &Path) -> Result<(), String> {
     if let Some(parent) = output.parent().filter(|p| !p.as_os_str().is_empty()) {
         std::fs::create_dir_all(parent)
             .map_err(|error| format!("cannot create {}: {error}", parent.display()))?;

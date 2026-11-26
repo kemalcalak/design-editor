@@ -53,7 +53,9 @@ fn png_and_svg_write_one_file_per_frame_into_a_new_directory() {
     let dir = temp_dir("frames").join("nested");
     let png = export_document(&state, HeadlessExportFormat::Png, &dir, "doc").expect("png");
     assert_eq!(names(&png), vec!["01-Home.png", "02-Pricing.png"]);
-    assert!(std::fs::read(&png.files[0]).unwrap().starts_with(b"\x89PNG"));
+    assert!(std::fs::read(&png.files[0])
+        .unwrap()
+        .starts_with(b"\x89PNG"));
     let svg = export_document(&state, HeadlessExportFormat::Svg, &dir, "doc").expect("svg");
     assert_eq!(names(&svg), vec!["01-Home.svg", "02-Pricing.svg"]);
     assert!(std::fs::read_to_string(&svg.files[0])

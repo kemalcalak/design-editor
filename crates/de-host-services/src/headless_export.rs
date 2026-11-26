@@ -18,8 +18,8 @@ use de_editor_core::export_batch::plan_frame_exports;
 use de_editor_core::EditorState;
 use de_mcp::{McpTool, ToolOutcome};
 
-pub use crate::headless_export_error::HeadlessExportError;
 use crate::export_batch::{export_frames_svg_to_dir, export_frames_to_dir};
+pub use crate::headless_export_error::HeadlessExportError;
 
 /// The formats a headless run can export.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]

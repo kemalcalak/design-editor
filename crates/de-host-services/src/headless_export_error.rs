@@ -9,7 +9,10 @@ pub enum HeadlessExportError {
     /// A per-frame format found no top-level frame on the active page.
     NoFrames,
     /// The exporter itself failed.
-    Render { format: &'static str, detail: String },
+    Render {
+        format: &'static str,
+        detail: String,
+    },
 }
 
 impl fmt::Display for HeadlessExportError {
