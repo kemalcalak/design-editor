@@ -171,6 +171,10 @@ pub(super) fn map_stroke(style: &ComputedStyle, context: &mut MapCtx<'_>) -> Opt
         }
     };
     Some(PenStroke {
+        stroke_start: None,
+        stroke_end: None,
+        miter_limit: None,
+        width_profile: None,
         thickness,
         // CSS borders occupy the inside edge of the border box. Jian strokes
         // are centered by default, so make the inward alignment explicit.

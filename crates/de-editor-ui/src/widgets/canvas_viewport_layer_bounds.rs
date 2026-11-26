@@ -227,6 +227,11 @@ fn stroke_visual_bounds(node: &SceneNode, bounds: Rect) -> Result<Rect, ()> {
         SceneStrokeAlign::Center => width * 0.5,
         SceneStrokeAlign::Outside => width,
     };
+    let outset = if node.stroke_geometry.is_some() {
+        outset.max(crate::scene_bounds::stroke_end_reach(width))
+    } else {
+        outset
+    };
     outset_rect(bounds, outset)
 }
 

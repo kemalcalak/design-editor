@@ -45,6 +45,7 @@ mod boolean;
 mod gradient;
 pub(crate) use boolean::KIND_PREFIX as BOOLEAN_KIND_PREFIX;
 mod stroke;
+mod stroke_geometry;
 use gradient::{payload_gradient_to_scene, scale_gradient_opacity};
 use stroke::{resolve_scene_stroke, resolve_stroke_fill_layers};
 
@@ -220,6 +221,7 @@ pub(crate) fn node_payload_to_scene(
     let stroke = resolve_scene_stroke(node, &node_id, var_table, paint_opacity);
     let stroke_fill_layers = resolve_stroke_fill_layers(node, &node_id, var_table, stroke.as_ref());
     let mut scene = SceneNode {
+        corner_smoothing: 0.0,
         id: node.id.clone(),
         kind: str_to_kind(&node.kind),
         bounds,
@@ -233,6 +235,10 @@ pub(crate) fn node_payload_to_scene(
         rotation: node.rotation,
         flip_x: node.flip_x,
         flip_y: node.flip_y,
+        line_direction: jian_scene::layout_scene::SceneLineDirection {
+            right_to_left: node.line_right_to_left,
+            bottom_to_top: node.line_bottom_to_top,
+        },
         corner_radius: node.corner_radius,
         corner_radii: node.corner_radii,
         clip_content: node.clip_content,
@@ -279,6 +285,8 @@ pub(crate) fn node_payload_to_scene(
         mask_type,
         even_odd_fill: node.even_odd_fill,
         svg_path: node.svg_path.clone(),
+        stroke_geometry: stroke_geometry::scene_stroke_geometry(node),
+        corner_path: None,
         arc_start_angle: node.arc_start_angle,
         arc_sweep_angle: node.arc_sweep_angle,
         arc_inner_radius: node.arc_inner_radius,

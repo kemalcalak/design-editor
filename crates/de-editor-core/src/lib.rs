@@ -236,6 +236,7 @@ pub mod chrome_button_state;
 pub mod kit_master;
 mod kit_master_set;
 pub mod kit_sets;
+pub mod stroke_geometry;
 pub mod text_defaults;
 pub mod text_edit;
 pub mod text_input_focus;

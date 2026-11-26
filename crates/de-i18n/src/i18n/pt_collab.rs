@@ -568,6 +568,18 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "clipboard.copiedPng" => "Copiado como PNG",
         "clipboard.copiedSvg" => "Copiado como SVG",
         "clipboard.copyFailed" => "Não foi possível copiar a seleção",
+        "stroke.start" => "Início",
+        "stroke.end" => "Fim",
+        "stroke.miter" => "Chanfro",
+        "stroke.swapEnds" => "Trocar extremidades",
+        "stroke.endNone" => "Nenhum",
+        "stroke.endRound" => "Redondo",
+        "stroke.endSquare" => "Quadrado",
+        "stroke.endLineArrow" => "Seta de linha",
+        "stroke.endTriangleArrow" => "Seta triangular",
+        "stroke.endReversedTriangle" => "Triângulo inverso",
+        "stroke.endCircle" => "Círculo",
+        "stroke.endDiamond" => "Losango",
         _ => return None,
     })
 }

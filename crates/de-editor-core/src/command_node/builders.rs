@@ -140,6 +140,7 @@ pub fn build_leaf_node(
             limits: Default::default(),
         }),
         "polygon" | "star" => PenNode::Polygon(PolygonNode {
+            corner_smoothing: None,
             base,
             polygon_count: if is_star {
                 crate::star_shape::STAR_DEFAULT_POINTS
@@ -207,6 +208,8 @@ pub fn build_leaf_node(
             limits: Default::default(),
         }),
         "path" => PenNode::Path(PathNode {
+            vertex_radius: None,
+            corner_smoothing: None,
             base,
             icon_id: None,
             d: None,
