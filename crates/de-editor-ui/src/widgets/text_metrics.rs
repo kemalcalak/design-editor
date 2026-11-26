@@ -102,6 +102,20 @@ pub fn fit_chrome(
     crate::util::ellipsize_to_width(text, max_w, |s| measure_chrome(backend, s, font_size))
 }
 
+/// [`fit_chrome`] for a run painted at `weight` — a bold title is wider
+/// than the regular face would fit it to.
+pub fn fit_chrome_weighted(
+    backend: &mut dyn RenderBackend,
+    text: &str,
+    max_w: f32,
+    font_size: f32,
+    weight: u16,
+) -> String {
+    crate::util::ellipsize_to_width(text, max_w, |s| {
+        measure_chrome_weighted(backend, s, font_size, weight)
+    })
+}
+
 /// Ellipsize `text` to `max_w` measured in an explicitly named `family` —
 /// the [`fit_chrome`] twin for runs a jian component paints in its own face.
 pub fn fit_in_family(

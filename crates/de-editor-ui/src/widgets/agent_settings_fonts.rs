@@ -142,7 +142,7 @@ const REMOVE_FONT: f32 = 11.0;
 fn remove_rect_in(row: Rect, ui: &EditorUiState) -> Rect {
     let height = REMOVE_HEIGHT;
     let width =
-        super::missing_fonts_panel::fit_button_width(translate(ui, "common.delete"), REMOVE_FONT)
+        super::chrome_buttons::fit_button_width(translate(ui, "common.delete"), REMOVE_FONT)
             .max(height);
     Rect::xywh(
         row.origin.x + row.size.x - width,
@@ -332,7 +332,7 @@ pub(super) fn paint_fonts_tab(
     ui: &EditorUiState,
     content: Rect,
 ) {
-    super::missing_fonts_row::measure_button_labels(
+    super::chrome_buttons::measure_button_labels(
         cx.backend,
         REMOVE_FONT,
         &[translate(ui, "common.delete")],

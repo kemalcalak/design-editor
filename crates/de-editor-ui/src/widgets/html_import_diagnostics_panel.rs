@@ -154,7 +154,7 @@ impl<'a> HtmlImportDiagnosticsPanel<'a> {
 
     pub fn toggle_rect(&self, panel: Rect) -> Rect {
         let label = translate(self.ui, self.toggle_key());
-        let width = crate::widgets::missing_fonts_panel::fit_button_width(label, 12.0);
+        let width = crate::widgets::chrome_buttons::fit_button_width(label, 12.0);
         Rect {
             origin: Point2D::new(
                 panel.origin.x + HORIZONTAL_PAD,
@@ -166,7 +166,7 @@ impl<'a> HtmlImportDiagnosticsPanel<'a> {
 
     pub fn dismiss_rect(&self, panel: Rect) -> Rect {
         let label = translate(self.ui, "htmlImport.diagnostics.dismiss");
-        let width = crate::widgets::missing_fonts_panel::fit_button_width(label, 12.0);
+        let width = crate::widgets::chrome_buttons::fit_button_width(label, 12.0);
         Rect {
             origin: Point2D::new(
                 panel.origin.x + panel.size.x - HORIZONTAL_PAD - width,
@@ -369,7 +369,7 @@ impl Widget for HtmlImportDiagnosticsPanel<'_> {
     }
 
     fn paint(&self, cx: &mut PaintCx<'_>, panel: Rect) {
-        crate::widgets::missing_fonts_row::measure_button_labels(
+        crate::widgets::chrome_buttons::measure_button_labels(
             cx.backend,
             12.0,
             &[

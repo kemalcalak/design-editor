@@ -31,15 +31,18 @@
 #
 # Rules (widget code = crates/de-editor-ui/src/widgets):
 #   R1  no family-blind measurement: `.measure_text(`, `.measure_text_weighted(`,
-#       `.measure_text_styled(`.
-#   R2  no `"system-ui"` literal: chrome paints in CHROME_FONT_FAMILY.
+#       `.measure_text_styled(` (also called as `RenderBackend::measure_text(..)`),
+#       and no family-aware measurement handed the empty family `""`, which
+#       resolves the same default face.
+#   R2  no `"system-ui"` literal in code (comments may name it):
+#       chrome paints in CHROME_FONT_FAMILY.
 #   R3  no string-literal font family in a paint run (`TextLayout::single_run`)
 #       or a family-aware measurement (`measure_text_family[_styled]`,
 #       `measure_in_family[_weighted]`, `fit_in_family`, `LabelWidths::styled`
 #       / `wrap`): a family is a named constant, so the run and its
-#       measurement can be seen to name the same one. `""` (the backend's
-#       default face, used by canvas mock-widget labels that are not
-#       measured in a family) is allowed.
+#       measurement can be seen to name the same one. A paint run may name
+#       `""` (the backend's default face: canvas mock-widget labels, measured
+#       blind under R1's allowlist).
 #
 # Exit semantics:
 #   0   PASS — no violation in widget code.
@@ -57,77 +60,7 @@ report() {
 }
 
 # ---------------------------------------------------------------------
-# R1 — family-blind measurement.
-#
-# Files that legitimately name the blind calls:
-#   text_metrics.rs          — defines the sanctioned wrappers; its tests
-#                              compare blind against family-aware.
-#   text_input_backend.rs    — a decorating `RenderBackend` that must forward
-#                              every trait method, blind ones included.
-#   test_family_gap_backend.rs / test_capture_backend.rs
-#                            — test backends implementing the trait.
-#   text_metrics_paint_tests.rs
-#                            — the cross-panel guard's negative control
-#                              paints a deliberately blind fitter.
-#   canvas_viewport_widget.rs
-#                            — canvas mock-widget tab labels: document
-#                              content painted in the default face (`""`),
-#                              so the default-face measurement IS the
-#                              painted family.
-R1_ALLOWED='^crates/de-editor-ui/src/widgets/(text_metrics|text_metrics_paint_tests|text_input_backend|test_family_gap_backend|test_capture_backend|canvas_viewport_widget)\.rs:'
-
-r1_hits="$(grep -RInE '\.[[:space:]]*measure_text(_weighted|_styled)?[[:space:]]*\(' "${WIDGETS}" 2>/dev/null \
-  | grep -vE "${R1_ALLOWED}" \
-  || true)"
-
-if [ -n "${r1_hits}" ]; then
-  report "family-blind text measurement in widget code" "${r1_hits}" \
-'RenderBackend::measure_text[_weighted|_styled] resolves the backend default
-font, not the family these runs are painted with. Measure through
-crate::widgets::text_metrics instead:
-
-  cx.backend.measure_text(s, size)
-    -> text_metrics::measure_chrome(cx.backend, s, size)
-  cx.backend.measure_text_weighted(s, size, weight)
-    -> text_metrics::measure_chrome_weighted(cx.backend, s, size, weight)
-  ellipsize_to_width(s, w, |t| cx.backend.measure_text(t, size))
-    -> text_metrics::fit_chrome(cx.backend, s, w, size)
-  rect.origin.x + (rect.size.x - measured) / 2.0
-    -> text_metrics::centered_text_x(cx.backend, s, size, rect)
-
-For a run drawn in some other family (a jian component painting in
-"Inter", a monospace readout), name that family:
-  text_metrics::measure_in_family / fit_in_family.'
-fi
-
-# ---------------------------------------------------------------------
-# R2 — the "system-ui" literal.
-#
-#   chrome_family_paint_tests/mod.rs
-#     — the negative controls paint a deliberately mismatched
-#       "system-ui" run to prove the paint/measure check can fail.
-R2_ALLOWED='^crates/de-editor-ui/src/widgets/chrome_family_paint_tests/mod\.rs:'
-
-r2_hits="$(grep -RIn '"system-ui"' "${WIDGETS}" 2>/dev/null \
-  | grep -vE "${R2_ALLOWED}" \
-  || true)"
-
-if [ -n "${r2_hits}" ]; then
-  report 'chrome painted or measured in a literal "system-ui"' "${r2_hits}" \
-'The chrome font is Manrope (text_metrics::CHROME_FONT_FAMILY), and every
-chrome measurer (measure_chrome, fit_chrome, centered_text_x, LabelWidths)
-measures in it. A run drawn as "system-ui" paints SF Pro on macOS, so it is
-fitted, centred and hit-tested against a face it is not drawn in (#441).
-
-  TextLayout::single_run(text, "system-ui", ...)
-    -> TextLayout::single_run(text, text_metrics::CHROME_FONT_FAMILY, ...)
-
-A run that is deliberately not chrome (document text) names its own
-constant, e.g. de_editor_core::text_defaults::FONT_FAMILY.'
-fi
-
-# ---------------------------------------------------------------------
-# R3 — string-literal families in paint runs and family-aware measurement.
+# Call scan shared by R1 (empty family) and R3 (literal family).
 #
 # Test modules build fixtures with ad-hoc family names ("Wide Sans",
 # "Arial", …) to model a font gap; they are not chrome. Test files are
@@ -144,9 +77,10 @@ while IFS= read -r file; do
 done < <(find "${WIDGETS}" -name '*.rs' | sort)
 
 # For each call, split its top-level arguments (strings and nested brackets
-# respected) and report the family argument when it is a non-empty string
-# literal. `name => [arg index, required arg count or 0 for any]`.
-r3_hits="$(perl -0777 -ne '
+# respected) and look at the family argument: a non-empty string literal is
+# an R3 hit (`LITERAL<TAB>…`), the empty literal in a measurement is an R1
+# hit (`BLIND<TAB>…`). `name => [arg index, required arg count or 0 for any]`.
+scan_hits="$(perl -0777 -ne '
   my %family_arg = (
     "single_run"                 => [1, 0],
     "measure_text_family"        => [2, 0],
@@ -188,11 +122,93 @@ r3_hits="$(perl -0777 -ne '
     next if $index >= scalar(@args);
     my $arg = $args[$index];
     $arg =~ s/^\s+|\s+$//g;
-    next unless $arg =~ /^"(.+)"$/s;
+    next unless $arg =~ /^"(.*)"$/s;
+    my $family = $1;
     my $line = 1 + (substr($src, 0, $start) =~ tr/\n//);
-    print "$ARGV:$line: $name(.., \"$1\", ..)\n";
+    if ($family ne "") {
+      print "LITERAL\t$ARGV:$line: $name(.., \"$family\", ..)\n";
+    } elsif ($name ne "single_run") {
+      print "BLIND\t$ARGV:$line: $name(.., \"\", ..)\n";
+    }
   }
 ' "${r3_files[@]}" || true)"
+
+r3_hits="$(printf '%s\n' "${scan_hits}" | sed -n 's/^LITERAL\t//p')"
+
+# ---------------------------------------------------------------------
+# R1 — family-blind measurement.
+#
+# Files that legitimately name the blind calls:
+#   text_metrics.rs          — defines the sanctioned wrappers; its tests
+#                              compare blind against family-aware.
+#   text_input_backend.rs    — a decorating `RenderBackend` that must forward
+#                              every trait method, blind ones included.
+#   test_family_gap_backend.rs / test_capture_backend.rs
+#                            — test backends implementing the trait.
+#   text_metrics_paint_tests.rs
+#                            — the cross-panel guard's negative control
+#                              paints a deliberately blind fitter.
+#   canvas_viewport_widget.rs
+#                            — canvas mock-widget tab labels: document
+#                              content painted in the default face (`""`),
+#                              so the default-face measurement IS the
+#                              painted family.
+R1_ALLOWED='^crates/de-editor-ui/src/widgets/(text_metrics|text_metrics_paint_tests|text_input_backend|test_family_gap_backend|test_capture_backend|canvas_viewport_widget)\.rs:'
+
+r1_hits="$( { grep -RInE '(\.|::)[[:space:]]*measure_text(_weighted|_styled)?[[:space:]]*\(' "${WIDGETS}" 2>/dev/null \
+    || true; printf '%s\n' "${scan_hits}" | sed -n 's/^BLIND\t//p'; } \
+  | grep -vE "${R1_ALLOWED}" \
+  | grep -v '^$' \
+  || true)"
+
+if [ -n "${r1_hits}" ]; then
+  report "family-blind text measurement in widget code" "${r1_hits}" \
+'RenderBackend::measure_text[_weighted|_styled] resolves the backend default
+font, not the family these runs are painted with, and so does a family-aware
+call handed the empty family "". Measure through
+crate::widgets::text_metrics instead:
+
+  cx.backend.measure_text(s, size)
+    -> text_metrics::measure_chrome(cx.backend, s, size)
+  cx.backend.measure_text_weighted(s, size, weight)
+    -> text_metrics::measure_chrome_weighted(cx.backend, s, size, weight)
+  ellipsize_to_width(s, w, |t| cx.backend.measure_text(t, size))
+    -> text_metrics::fit_chrome(cx.backend, s, w, size)
+  rect.origin.x + (rect.size.x - measured) / 2.0
+    -> text_metrics::centered_text_x(cx.backend, s, size, rect)
+
+For a run drawn in some other family (a jian component painting in
+"Inter", a monospace readout), name that family:
+  text_metrics::measure_in_family / fit_in_family.'
+fi
+
+# ---------------------------------------------------------------------
+# R2 — the "system-ui" literal. Comment lines (`//`, `///`, `//!`) may name
+# it when they explain the rule.
+#
+#   chrome_family_paint_tests/mod.rs
+#     — the negative controls paint a deliberately mismatched
+#       "system-ui" run to prove the paint/measure check can fail.
+R2_ALLOWED='^crates/de-editor-ui/src/widgets/chrome_family_paint_tests/mod\.rs:'
+
+r2_hits="$(grep -RIn '"system-ui"' "${WIDGETS}" 2>/dev/null \
+  | grep -vE "${R2_ALLOWED}" \
+  | grep -vE '^[^:]+:[0-9]+:[[:space:]]*//' \
+  || true)"
+
+if [ -n "${r2_hits}" ]; then
+  report 'chrome painted or measured in a literal "system-ui"' "${r2_hits}" \
+'The chrome font is Manrope (text_metrics::CHROME_FONT_FAMILY), and every
+chrome measurer (measure_chrome, fit_chrome, centered_text_x, LabelWidths)
+measures in it. A run drawn as "system-ui" paints SF Pro on macOS, so it is
+fitted, centred and hit-tested against a face it is not drawn in (#441).
+
+  TextLayout::single_run(text, "system-ui", ...)
+    -> TextLayout::single_run(text, text_metrics::CHROME_FONT_FAMILY, ...)
+
+A run that is deliberately not chrome (document text) names its own
+constant, e.g. de_editor_core::text_defaults::FONT_FAMILY.'
+fi
 
 if [ -n "${r3_hits}" ]; then
   report "string-literal font family in a widget paint run or measurement" "${r3_hits}" \

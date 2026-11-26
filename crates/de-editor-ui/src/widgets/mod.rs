@@ -28,6 +28,7 @@ pub const MIN_RAIL_WIDTH: f32 = 80.0;
 
 // Phase B primitives.
 pub(crate) mod button;
+pub(crate) mod chrome_buttons;
 pub mod prop_row;
 pub mod tree;
 

@@ -8,9 +8,9 @@
 //! allocates for labels.
 
 use crate::theme::Theme;
+use crate::widgets::chrome_buttons::{fit_button_width, measure_button_labels};
 use crate::widgets::editor_state_ext::{theme_for, translate};
 use crate::widgets::icons::{draw_icon, Icon};
-use crate::widgets::missing_fonts_row::{fit_button_width, measure_button_labels};
 use crate::widgets::text_metrics;
 use crate::widgets::{LayoutBox, LayoutCx, PaintCx, Widget, WidgetId};
 use crate::{Color, Point2D, Rect, TextLayout};
@@ -314,7 +314,7 @@ impl CommandPalettePanel<'_> {
         let trailing_width = if row.trailing.is_empty() {
             0.0
         } else {
-            text_metrics::measure_chrome(cx.backend, &row.trailing, SMALL_FONT)
+            text_metrics::measure_chrome_weighted(cx.backend, &row.trailing, SMALL_FONT, 500)
         };
         let right = rect.origin.x + rect.size.x - PAD;
         if trailing_width > 0.0 {

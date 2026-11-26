@@ -8,8 +8,9 @@
 //!    deliberately uses (a jian component's own "Inter", a monospace
 //!    readout) and names here;
 //! 2. every run whose exact text the surface measured was measured in the
-//!    family it is painted in — the issue itself: a label fitted or centred
-//!    in Manrope and drawn in `system-ui`;
+//!    family and weight it is painted in — the issue itself: a label fitted
+//!    or centred in Manrope and drawn in `system-ui`, or sized at 400 and
+//!    drawn at 600;
 //! 3. widening the chrome face pushes no chrome run out of the surface's box
 //!    further than the control (where all faces agree) does, so whatever the
 //!    surface fits, centres or sizes from a label holds at the painted width.
@@ -75,17 +76,18 @@ pub(super) fn assert_drawn_as_measured(
         // Family-blind measurements (`""`) come from jian components and are
         // kept out of widget code by `tools/check-text-measure.sh`; what is
         // checked here is that no NAMED family other than the painted one
-        // sized this run.
-        let measured: Vec<&str> = strict
-            .families_measured_for(&run.text)
+        // sized this run, and none at another weight.
+        let measured: Vec<(&str, u16)> = strict
+            .styles_measured_for(&run.text)
             .into_iter()
-            .filter(|family| !family.is_empty())
+            .filter(|(family, _)| !family.is_empty())
             .collect();
         assert!(
-            measured.is_empty() || measured.contains(&run.family.as_str()),
-            "{what}: {:?} is painted in {:?} but measured in {measured:?}",
+            measured.is_empty() || measured.contains(&(run.family.as_str(), run.font_weight)),
+            "{what}: {:?} is painted in {:?} at {} but measured in {measured:?}",
             run.text,
             run.family,
+            run.font_weight,
         );
     }
 
@@ -161,5 +163,33 @@ fn the_check_catches_an_unnamed_family() {
         );
         cx.backend.draw_text(&layout, Point2D::ZERO);
         Rect::xywh(0.0, 0.0, 100.0, 30.0)
+    });
+}
+
+/// …and a label fitted at the regular weight but painted semibold, which
+/// the strict machine paints wider than it was measured.
+#[test]
+#[should_panic(expected = "at 600 but measured in")]
+fn the_check_catches_a_label_painted_at_another_weight() {
+    use crate::{Color, Point2D, TextLayout};
+
+    assert_drawn_as_measured("mismatched weight", &[], |cx| {
+        let container = Rect::xywh(0.0, 0.0, 100.0, 30.0);
+        let fitted = crate::widgets::text_metrics::fit_chrome(
+            cx.backend,
+            "Публикация проекта",
+            container.size.x,
+            12.0,
+        );
+        let layout = TextLayout::single_run(
+            &fitted,
+            CHROME_FONT_FAMILY,
+            12.0,
+            Color::WHITE.to_jian(),
+            Point2D::ZERO,
+        )
+        .with_font_weight(600);
+        cx.backend.draw_text(&layout, Point2D::ZERO);
+        container
     });
 }
