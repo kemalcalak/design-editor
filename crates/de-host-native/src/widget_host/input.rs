@@ -29,6 +29,9 @@ impl WidgetHostNative {
         if self.preview.is_some() {
             return true;
         }
+        if self.editor_state.rename_layers_owns_keyboard() {
+            return true;
+        }
         let ui = &self.editor_state.ui;
         ui.layer_rename.is_some()
             || ui.text_editing.is_some()

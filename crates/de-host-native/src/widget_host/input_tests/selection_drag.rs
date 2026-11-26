@@ -243,7 +243,8 @@ fn layer_context_create_component_click_promotes_frame() {
         menu: Default::default(),
     });
 
-    let create_row_y = 100.0 + 6.0 + 32.0 * 2.0 + 16.0;
+    // Rows: Rename, Rename layers…, Duplicate, Create component.
+    let create_row_y = 100.0 + 6.0 + 32.0 * 3.0 + 16.0;
     assert!(host.apply_press(120.0, create_row_y, 1440.0, 900.0));
     assert!(host
         .editor_state()
@@ -314,7 +315,8 @@ fn layer_context_group_preserves_multi_selection_and_groups() {
         "right-clicking an already-selected layer must keep the multi-selection"
     );
 
-    let group_row_y = first_row_y + 6.0 + 32.0 * 2.0 + 16.0;
+    // Rows: Rename, Rename layers…, Duplicate, Group selection.
+    let group_row_y = first_row_y + 6.0 + 32.0 * 3.0 + 16.0;
     assert!(host.apply_press(row_x + 20.0, group_row_y, viewport_w, viewport_h));
     assert!(matches!(
         host.editor_state().doc.children.first(),

@@ -13,6 +13,13 @@ impl EditorState {
         if self.editor_ui.home.visible {
             return Some(&self.editor_ui.home.input);
         }
+        // The Rename-layers preview (#383) is modal; its inline name field
+        // owns the caret while a row is being edited.
+        if let Some(dialog) = &self.editor_ui.rename_layers {
+            if dialog.editing.is_some() {
+                return Some(&dialog.input);
+            }
+        }
         // Image popovers paint above every editor surface. Resolve their
         // visible field first so stale focus underneath cannot split keyboard,
         // clipboard, and IME ownership across different inputs.
@@ -104,6 +111,18 @@ impl EditorState {
     pub fn active_text_input_mut(&mut self) -> Option<&mut TextInputState> {
         if self.editor_ui.home.visible {
             return Some(&mut self.editor_ui.home.input);
+        }
+        if self
+            .editor_ui
+            .rename_layers
+            .as_ref()
+            .is_some_and(|dialog| dialog.editing.is_some())
+        {
+            return self
+                .editor_ui
+                .rename_layers
+                .as_mut()
+                .map(|dialog| &mut dialog.input);
         }
         let generate_configured = self.editor_ui.agent_settings.image_generation_configured();
         if self.editor_ui.image_panel.search_open || self.editor_ui.image_panel.generate_open {

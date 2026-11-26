@@ -35,6 +35,10 @@ impl WidgetHostNative {
             }
             return Some(changed);
         }
+        // Rename-layers preview (#383) — modal, owns the cursor while open.
+        if let Some(changed) = self.update_rename_layers_hover(x, y) {
+            return Some(changed);
+        }
         // Post-import HTML diagnostics notice — tints its own buttons and
         // owns the cursor only while it is under the card, so hovers below
         // keep working around it.

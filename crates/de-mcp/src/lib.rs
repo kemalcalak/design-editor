@@ -159,6 +159,7 @@ mod read_nodes_resolve_tests;
 mod read_nodes_tests;
 pub mod read_tools;
 pub mod read_tools_extra;
+pub mod rename_layers_tool;
 pub mod repair_duplicate_ids_tool;
 pub mod reparent_tools;
 #[cfg(test)]
@@ -319,6 +320,7 @@ pub use page_tools::{
 };
 pub use parser::parse_tool_call;
 pub use read_nodes::{read_nodes_snapshot, ReadNodes};
+pub use rename_layers_tool::{rename_layers_snapshot, RenameLayers};
 pub use repair_duplicate_ids_tool::{repair_duplicate_ids_snapshot, RepairDuplicateIds};
 pub use reparent_tools::{copy_node_snapshot, move_node_snapshot, CopyNode, MoveNode};
 pub use scalar_vars::{

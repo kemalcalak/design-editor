@@ -25,6 +25,16 @@ impl WidgetHostNative {
             // Settings modal over Home: fall through so its own input
             // arm in the ladder below takes the key.
         }
+        // The Rename-layers preview (#383) is modal: it owns every key.
+        if let Some(changed) = de_editor_core::rename_layers::rename_layers_backspace(
+            &mut self.editor_state,
+            self.now_ms,
+        ) {
+            if changed {
+                self.mark_dirty();
+            }
+            return true;
+        }
         if let Some(changed) = shared::prompt_center_backspace(&mut self.editor_state, self.now_ms)
         {
             if changed {

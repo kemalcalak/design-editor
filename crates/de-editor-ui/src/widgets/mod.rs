@@ -456,6 +456,10 @@ pub mod panel_toggle;
 pub mod property_panel_color_variables;
 #[cfg(test)]
 mod property_panel_color_variables_tests;
+pub mod rename_layers_flow;
+pub mod rename_layers_panel;
+#[cfg(test)]
+mod rename_layers_panel_tests;
 pub mod shader_source_editor;
 pub mod shape_picker;
 pub mod slides_panel;
@@ -534,6 +538,7 @@ pub use prompt_center_panel::{
     PromptCenterCard, PromptCenterHit, PromptCenterPanel, PROMPT_CENTER_MIN_H, PROMPT_CENTER_MIN_W,
     PROMPT_CENTER_VIEWPORT_H_RATIO, PROMPT_CENTER_VIEWPORT_W_RATIO,
 };
+pub use rename_layers_panel::{RenameLayersHit, RenameLayersPanel};
 pub use shape_picker::{ShapeChoice, ShapePicker, SHAPE_PICKER_WIDTH};
 pub use slides_panel::{
     SlidesPanel, SlidesPanelLayout, SlidesPanelTabs, SLIDES_TAB_ROW_HEIGHT, SLIDE_THUMB_RADIUS,

@@ -175,6 +175,8 @@ pub fn detect_and_plan(doc: &PenDocument) -> Vec<PlannedFix> {
             FixProperty::Label => continue,
             // slop three-card-feature-row is detect-only (no auto-fix) — skip.
             FixProperty::Layout => continue,
+            // default-layer-name: renamed through `rename_layers`, not a plan.
+            FixProperty::Name => continue,
             // Remove is handled above; this arm is unreachable.
             FixProperty::Remove => continue,
         };
