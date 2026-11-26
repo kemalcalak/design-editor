@@ -35,11 +35,15 @@ fn report_totals_and_orders_its_largest_lines() {
 fn node_estimate_grows_with_the_subtree() {
     let small = rows_doc(1);
     let large = rows_doc(50);
-    let page_root = |d: &jian_ops_schema::PenDocument| d.pages.as_ref().unwrap()[0].children[0].clone();
+    let page_root =
+        |d: &jian_ops_schema::PenDocument| d.pages.as_ref().unwrap()[0].children[0].clone();
     let small_bytes = approx_node_bytes(&page_root(&small));
     let large_bytes = approx_node_bytes(&page_root(&large));
     assert!(small_bytes >= 2 * std::mem::size_of::<PenNode>() as u64);
-    assert!(large_bytes > 40 * small_bytes / 2, "{small_bytes} vs {large_bytes}");
+    assert!(
+        large_bytes > 40 * small_bytes / 2,
+        "{small_bytes} vs {large_bytes}"
+    );
 }
 
 #[test]
@@ -54,7 +58,10 @@ fn history_counts_each_shared_node_once() {
     let two = history_usage(&state);
     assert_eq!(one.entries, 1);
     assert_eq!(two.entries, 2);
-    assert_eq!(one.bytes, two.bytes, "the second snapshot shares the first's nodes");
+    assert_eq!(
+        one.bytes, two.bytes,
+        "the second snapshot shares the first's nodes"
+    );
     assert!(one.bytes > 0);
     assert!(!one.exact);
 }
@@ -63,7 +70,11 @@ fn history_counts_each_shared_node_once() {
 fn chat_usage_counts_message_text() {
     let mut state = EditorState::new();
     let empty = chat_usage(&state);
-    state.chat.active_mut().messages.push(crate::chat::ChatMessage::user("x".repeat(10_000)));
+    state
+        .chat
+        .active_mut()
+        .messages
+        .push(crate::chat::ChatMessage::user("x".repeat(10_000)));
     let after = chat_usage(&state);
     assert!(after.entries > empty.entries);
     assert!(after.bytes >= empty.bytes + 10_000);

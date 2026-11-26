@@ -171,10 +171,15 @@ fn live_mcp_call_memory_and_latency() {
 
     let mut anchor: Option<SharedDoc> = None;
     // The first capture has no anchor and no history to share with.
-    let first = live_call(&mut live, &mut anchor, 0, &Call {
-        tool: "get_history_depth",
-        args: "{}".into(),
-    });
+    let first = live_call(
+        &mut live,
+        &mut anchor,
+        0,
+        &Call {
+            tool: "get_history_depth",
+            args: "{}".into(),
+        },
+    );
     println!(
         "first call (no anchor): {:.1} ms, peak +{:.0} MB, kept {:+.0} MB",
         first.took.as_secs_f64() * 1e3,
@@ -289,7 +294,11 @@ fn undo_history_memory() {
 fn footprint_mb() -> String {
     let memory = de_host_services::process_memory::current();
     match (memory.resident, memory.footprint) {
-        (Some(r), Some(f)) => format!("RSS {:.0} MB, footprint {:.0} MB", mb(r as f64), mb(f as f64)),
+        (Some(r), Some(f)) => format!(
+            "RSS {:.0} MB, footprint {:.0} MB",
+            mb(r as f64),
+            mb(f as f64)
+        ),
         _ => "n/a".into(),
     }
 }

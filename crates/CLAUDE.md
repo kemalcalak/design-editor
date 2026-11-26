@@ -506,6 +506,17 @@ Layer-panel drag now supports **cross-parent reparenting**: a drag whose drop-ta
 - **Cursor-move coalescing** — `apply_cursor_move` cached as `pending_cursor_move`, drained on `RedrawRequested` AND right before `apply_press` / `apply_release` / `apply_right_press` (so the final drag-end frame isn't dropped). Without the press-time drain a fast drag-release could fire press before the queued cursor-move and the release saw stale hover state.
 - **Font cache prewarm** (`de-host-native/src/backend/skia.rs`) — `NativeBackend::new` walks `PREWARM_CJK_CODEPOINTS` (~50 chars covering every CJK glyph used in the chrome + settings modal) through `FontMgr::match_family_style_character` at startup. Without this the first cross-tab paint stutters because each unseen CJK char triggers a synchronous system font scan.
 
+### Memory on large documents (#456)
+
+Measure before and after any change that touches document copies or caches; the owner rule is less memory with **no** slower frame, MCP call, page switch or generation. Two hand-run benchmarks on #412's document (14 pages × 100 boards × 46 rows ≈ 197k nodes, plus a component page and image fills; `DE_MEM_PAGES` / `DE_MEM_BOARDS` / `DE_MEM_ROWS` resize it):
+
+- **Live MCP calls** — `cargo test --release -p de-host-services --test large_document_memory -- --ignored --nocapture --test-threads=1`. A counting global allocator (`tests/support/counting_alloc.rs`) gives exact heap bytes on every OS: per read tool the median latency and the heap a call adds at its peak (as % of the editor's own document heap), then a write; `undo_history_memory` follows history bytes and edit / undo time over 120 edits.
+- **Editor session** — `cargo test --release -p de-host-native --features gl-host --lib large_doc_session -- --ignored --nocapture --test-threads=1`. Pan, pinch-zoom, nudge, undo frame times (median / p95), every page switch and the return, RSS, and the biggest caches; `DE_MEM_BENCH_SECS=3600` repeats the pass for an hour to show bounded memory.
+
+Run both on macOS locally and on Windows by hand (same commands; `process_memory` reads the working set and private bytes there). `de_editor_core::memory_report` is the one report type: `CacheUsage { id, bytes, entries, budget, exact }` lines, filled by `WidgetHostNative::memory_report(&backend)` (undo history and chat estimates from core, layout scene, pan cache, slide thumbnails, text layouts, data-URL bytes, browser pages, and `NativeBackend::report_memory`: decoded rasters, thumbnails, SVG paths and rasters, shader textures, compiled shaders). It walks the history once per unique shared node, so build it on demand, never per frame. `de_host_services::process_memory::current()` reads RSS / footprint (macOS `proc_pid_rusage`, Windows `K32GetProcessMemoryInfo`, Linux `/proc`).
+
+Baseline (v0.6.3, Apple-silicon Mac): a `PenNode` is 2,792 bytes inline, so the document heap is ~550 MB; every live read call materializes the whole document (~100%), and tools that clone the state again reach 200–400% (`snapshot_layout` lays out every page: 6.8 s); the first history step and the first live call's anchor each hold a full copy.
+
 ## Shared host logic (the native↔web `widget_host` fork is single-sourced)
 
 The web twin is gone (#401); the shared flows below stay where they are and the native `widget_host` remains a thin arm over them.

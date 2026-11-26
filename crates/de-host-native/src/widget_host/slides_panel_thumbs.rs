@@ -90,7 +90,9 @@ impl SlideThumbCache {
         let bytes = self
             .entries
             .values()
-            .map(|thumb| (thumb.image.width().max(0) as usize) * (thumb.image.height().max(0) as usize) * 4)
+            .map(|thumb| {
+                (thumb.image.width().max(0) as usize) * (thumb.image.height().max(0) as usize) * 4
+            })
             .sum();
         (self.entries.len(), bytes)
     }

@@ -126,7 +126,13 @@ mod platform {
                 status
                     .lines()
                     .find_map(|line| line.strip_prefix("VmRSS:"))
-                    .and_then(|rest| rest.trim().trim_end_matches("kB").trim().parse::<u64>().ok())
+                    .and_then(|rest| {
+                        rest.trim()
+                            .trim_end_matches("kB")
+                            .trim()
+                            .parse::<u64>()
+                            .ok()
+                    })
             })
             .map(|kib| kib * 1024);
         ProcessMemory {

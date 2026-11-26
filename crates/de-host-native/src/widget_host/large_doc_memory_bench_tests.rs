@@ -37,7 +37,11 @@ fn document_json(pages: usize, boards: usize, rows: usize) -> String {
         if page > 0 {
             out.push(',');
         }
-        write!(out, r#"{{"id":"page-{page}","name":"Page {page}","children":["#).unwrap();
+        write!(
+            out,
+            r#"{{"id":"page-{page}","name":"Page {page}","children":["#
+        )
+        .unwrap();
         for board in 0..boards {
             if board > 0 {
                 out.push(',');
@@ -146,7 +150,7 @@ fn script_pass(host: &mut WidgetHostNative, painter: &mut Painter, pages: usize)
         .collect();
     host.editor_state_mut()
         .apply(de_editor_core::EditorCommand::SetSelection {
-            node_id: de_editor_core::NodeId::new("p0b0r1"),
+            node_id: de_editor_core::NodeId::new("p0b0"),
         });
     host.mark_editor_state_dirty();
     painter.paint(host);

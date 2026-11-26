@@ -7,6 +7,7 @@
 //! frame.
 
 use super::*;
+use crate::NativeBackend;
 use de_editor_core::memory_report::{self, CacheUsage, MemoryReport};
 
 impl WidgetHostNative {
@@ -35,10 +36,7 @@ impl WidgetHostNative {
     /// estimated from its node count.
     fn layout_scene_usage(&self) -> CacheUsage {
         fn count(nodes: &[de_editor_ui::layout_scene::SceneNode]) -> u64 {
-            nodes
-                .iter()
-                .map(|node| 1 + count(&node.children))
-                .sum()
+            nodes.iter().map(|node| 1 + count(&node.children)).sum()
         }
         let nodes: u64 = self
             .layout_scene
