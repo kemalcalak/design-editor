@@ -1,32 +1,38 @@
 //! The layer / page context menu's measured width (#435).
 //!
 //! The menu keeps [`LAYER_CONTEXT_MENU_WIDTH`] unless a row's label, at the
-//! chrome font's real metrics, needs more. Only paint holds a backend to
-//! measure with, while the press and cursor-move hit-tests build the menu
-//! without one, so the width paint measured is kept here and every
-//! hit-test reads the same number.
+//! chrome font's real metrics, needs more
+//! ([`LayerContextMenu::required_width`]). Measuring needs a backend, which
+//! the shared press flow and the widget's own `hit` / `rect` do not get, so
+//! the width is measured once and kept here, and every hit-test reads the
+//! same number paint uses.
 //!
 //! One thread-local slot, keyed on what decides the labels: the locale and
 //! the set of rows (each action has exactly one label key, so a bitmask of
-//! the shown actions names the label set). A frame whose key matches the
+//! the shown actions names the label set). A build whose key matches the
 //! slot measures nothing and allocates nothing; the slot is measured again
 //! only when the locale or the row set changes. Only one menu is ever
 //! open, so a single slot suffices.
 //!
-//! Before the first paint of a key the slot has no width and hit-test uses
-//! [`LAYER_CONTEXT_MENU_WIDTH`]. Nothing can be aimed at a menu the user
-//! has not seen yet, and the host paints it (filling the slot) before the
-//! next pointer event can see it.
+//! Who fills it: paint ([`LayerContextMenu::measured_rect`]), and the
+//! native host, which holds a measure-only backend outside the paint pass
+//! and measures whenever it builds the menu for the right press that opens
+//! it, for a hover or for a press. So a cursor move winit delivers after
+//! the opening right press but before the first redraw already sees the
+//! measured width. Only a caller with no backend at all (a unit test, a
+//! host without a measuring backend) reads [`LAYER_CONTEXT_MENU_WIDTH`]
+//! for a key that was never measured.
+//!
+//! [`LayerContextMenu::required_width`]: super::layer_context_menu::LayerContextMenu::required_width
+//! [`LayerContextMenu::measured_rect`]: super::layer_context_menu::LayerContextMenu::measured_rect
 
 use std::cell::Cell;
 
 use de_editor_core::Locale;
 
-use super::layer_context_menu::{
-    Row, LABEL_RIGHT_PAD, LABEL_X, LAYER_CONTEXT_MENU_WIDTH, ROW_FONT,
-};
-use super::text_metrics;
-use crate::RenderBackend;
+use super::layer_context_menu::LayerContextAction;
+#[cfg(doc)]
+use super::layer_context_menu::LAYER_CONTEXT_MENU_WIDTH;
 
 /// What decides the menu's labels: the locale and the shown actions.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -36,10 +42,8 @@ pub(super) struct WidthKey {
 }
 
 impl WidthKey {
-    pub(super) fn new(locale: Locale, rows: &[Row]) -> Self {
-        let actions = rows
-            .iter()
-            .fold(0u64, |mask, row| mask | 1u64 << row.action as u32);
+    pub(super) fn new(locale: Locale, actions: impl Iterator<Item = LayerContextAction>) -> Self {
+        let actions = actions.fold(0u64, |mask, action| mask | 1u64 << action as u32);
         Self { locale, actions }
     }
 }
@@ -48,7 +52,7 @@ thread_local! {
     static SLOT: Cell<Option<(WidthKey, f32)>> = const { Cell::new(None) };
 }
 
-/// The width paint measured for `key`, if it has been painted.
+/// The width measured for `key`, if it has been measured.
 pub(super) fn cached(key: WidthKey) -> Option<f32> {
     SLOT.with(|slot| match slot.get() {
         Some((k, width)) if k == key => Some(width),
@@ -56,35 +60,12 @@ pub(super) fn cached(key: WidthKey) -> Option<f32> {
     })
 }
 
-/// The menu width for `rows` in `locale`: the cached width when `key`
-/// matches, else measured through the chrome family and cached.
-pub(super) fn measure(
-    backend: &mut dyn RenderBackend,
-    key: WidthKey,
-    locale: Locale,
-    rows: &[Row],
-) -> f32 {
-    if let Some(width) = cached(key) {
-        return width;
-    }
-    let width = rows
-        .iter()
-        .map(|row| {
-            LABEL_X
-                + text_metrics::measure_chrome(
-                    backend,
-                    de_i18n::translate(locale, row.label_key),
-                    ROW_FONT,
-                )
-                + LABEL_RIGHT_PAD
-        })
-        .fold(LAYER_CONTEXT_MENU_WIDTH, f32::max)
-        .ceil();
+/// Keep `width` as the measured width for `key`.
+pub(super) fn store(key: WidthKey, width: f32) {
     SLOT.with(|slot| slot.set(Some((key, width))));
-    width
 }
 
-/// Empty the slot, so a test starts from an unpainted menu.
+/// Empty the slot, so a test starts from an unmeasured menu.
 #[cfg(test)]
 pub(super) fn reset() {
     SLOT.with(|slot| slot.set(None));

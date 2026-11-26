@@ -93,6 +93,20 @@ pub(crate) mod font_registry_test_support {
     pub(crate) fn lock() -> MutexGuard<'static, ()> {
         LOCK.lock().unwrap_or_else(|e| e.into_inner())
     }
+
+    /// `jian_skia::register_bundled_fonts` is process-global and
+    /// first-call-wins, so every test that needs a bundled family must
+    /// register the SAME set: the first test to run decides what the whole
+    /// binary sees. Manrope is the chrome font (`CHROME_FONT_FAMILY`), so
+    /// chrome measured in tests uses its real metrics.
+    pub(crate) fn register_bundled_fonts() {
+        jian_skia::register_bundled_fonts(vec![
+            include_bytes!("../../de-host-desktop/assets/fonts/CormorantGaramond-VF.ttf").to_vec(),
+            include_bytes!("../../de-host-desktop/assets/fonts/Inter-VF.ttf").to_vec(),
+            include_bytes!("../../de-host-desktop/assets/fonts/Outfit-VF.ttf").to_vec(),
+            include_bytes!("../../de-host-desktop/assets/fonts/Manrope-VF.ttf").to_vec(),
+        ]);
+    }
 }
 
 // All remaining users live in gl-host-gated `widget_host` test files,
