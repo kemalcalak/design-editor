@@ -16,6 +16,8 @@ use de_editor_core::chat_mentions::{
 };
 use de_editor_core::EditorState;
 
+use crate::chat_text_excerpt::text_excerpt;
+
 pub use crate::chat_mention_context_error::MentionFileError;
 
 /// Files the popup is offered at most.
@@ -24,10 +26,6 @@ pub const MAX_PROJECT_FILES: usize = 2_000;
 pub const MAX_SCAN_DEPTH: usize = 4;
 /// Bytes read from a mentioned file.
 const MAX_READ_BYTES: u64 = 64 * 1024;
-/// Characters of a text file quoted into the context block.
-const MAX_EXCERPT_CHARS: usize = 4_000;
-/// Lines of a text file quoted into the context block.
-const MAX_EXCERPT_LINES: usize = 80;
 
 /// Folders never worth offering: VCS internals, dependency and build
 /// output trees.
@@ -66,7 +64,7 @@ pub fn scan_project_files(root: &Path) -> Vec<String> {
             }
             let path = entry.path();
             if kind.is_dir() {
-                if depth + 1 <= MAX_SCAN_DEPTH {
+                if depth < MAX_SCAN_DEPTH {
                     queue.push((path, depth + 1));
                 }
             } else if kind.is_file() {
@@ -127,27 +125,8 @@ fn resolve_in_root(root: &Path, rel: &str) -> Result<PathBuf, MentionFileError> 
     Ok(full)
 }
 
-fn excerpt(text: &str) -> (String, bool) {
-    let mut out = String::new();
-    let mut truncated = false;
-    for (index, line) in text.lines().enumerate() {
-        if index >= MAX_EXCERPT_LINES
-            || out.chars().count() + line.chars().count() > MAX_EXCERPT_CHARS
-        {
-            truncated = true;
-            break;
-        }
-        if index > 0 {
-            out.push('\n');
-        }
-        out.push_str(line);
-    }
-    (out, truncated)
-}
-
 /// Summarize project file `rel`: its size, and for UTF-8 text the first
-/// lines in a fenced block (cut at [`MAX_EXCERPT_LINES`] lines /
-/// [`MAX_EXCERPT_CHARS`] characters). Binary files are described, not
+/// lines in a fenced block (cut by `chat_text_excerpt::text_excerpt`). Binary files are described, not
 /// quoted — images should be attached instead.
 pub fn summarize_project_file(root: &Path, rel: &str) -> Result<String, MentionFileError> {
     let full = resolve_in_root(root, rel)?;
@@ -183,7 +162,7 @@ pub fn summarize_project_file(root: &Path, rel: &str) -> Result<String, MentionF
         };
         return Ok(format!("binary file ({media}), {size} bytes{hint}"));
     };
-    let (body, truncated) = excerpt(text);
+    let (body, truncated) = text_excerpt(text);
     let more = if truncated || size > MAX_READ_BYTES {
         ", excerpt"
     } else {

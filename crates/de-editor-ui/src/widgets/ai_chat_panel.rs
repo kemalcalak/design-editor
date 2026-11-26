@@ -730,3 +730,7 @@ mod tests_transcript;
 #[cfg(test)]
 #[path = "ai_chat_panel/tests_selected_chip.rs"]
 mod tests_selected_chip;
+
+#[cfg(test)]
+#[path = "ai_chat_panel/tests_context.rs"]
+mod tests_context;

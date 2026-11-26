@@ -124,10 +124,22 @@ mod tests {
             vec!["brief.md".to_string(), "notes.txt".to_string()].into();
         state.sync_chat_mentions();
         assert!(host.chat_mention_popup_active());
+        // The fresh document's starter layers may rank ahead of the files;
+        // whatever the second row is, Down + Enter must pick exactly it.
+        let second = host
+            .editor_state()
+            .chat
+            .mention_popup
+            .as_ref()
+            .unwrap()
+            .rows[1]
+            .mention
+            .label
+            .clone();
         assert!(host.apply_chat_mention_move(true));
         assert!(host.apply_send());
         let state = host.editor_state();
-        assert_eq!(state.chat.input.text(), "@notes.txt ");
+        assert_eq!(state.chat.input.text(), format!("@{second} "));
         assert_eq!(state.chat.pending_mentions.len(), 1);
         assert!(
             state.chat.pending_send.is_none(),
