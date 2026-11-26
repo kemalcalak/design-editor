@@ -17,6 +17,7 @@ use serde_json::json;
 use crate::agent_args::{parse_agent_args, AgentArgs, AgentMode};
 use crate::agent_progress::Progress;
 use crate::agent_provider::{process_env, ProviderResolver, ENV_API_KEY};
+use crate::agent_provider_error::redact_url;
 use crate::agent_report::{json_report, run_was_stopped, text_report};
 use crate::agent_runner::{run_tasks, PlannedTask, TaskStatus};
 use crate::agent_task::TaskSpec;
@@ -133,7 +134,7 @@ fn list_providers(args: &AgentArgs, resolver: &ProviderResolver) -> i32 {
                     "name": agent.display_name,
                     "preset": agent.preset.as_str(),
                     "apiFormat": api_format(agent.kind),
-                    "baseUrl": agent.base_url,
+                    "baseUrl": redact_url(&agent.base_url),
                     "models": agent.models,
                     "enabled": agent.enabled,
                     "hasKey": !agent.api_key.trim().is_empty(),

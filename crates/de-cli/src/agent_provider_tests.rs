@@ -211,7 +211,7 @@ fn environment_input_is_checked() {
     );
     assert_eq!(
         unset.resolve(None, Some("m")).unwrap_err(),
-        AgentProviderError::ApiKeyEnvUnset { var: "NOPE".into() }
+        AgentProviderError::ApiKeyEnvUnset { chars: 4 }
     );
     let bad_format = resolver(
         "format",
@@ -299,14 +299,22 @@ fn errors_never_echo_values_that_may_be_secrets() {
     .to_string();
     assert!(!key_as_name.contains("SECRET"), "{key_as_name}");
     assert!(
-        key_as_name.contains("25 characters, not shown"),
+        key_as_name.contains("(25 characters, not shown)"),
         "{key_as_name}"
     );
-    // A real variable name is fine to show.
-    let named = AgentProviderError::ApiKeyEnvUnset {
-        var: "CI_ANTHROPIC_KEY".into(),
-    };
-    assert!(named.to_string().contains("CI_ANTHROPIC_KEY"));
+    // Not even a plausible variable name is echoed.
+    let named = resolver(
+        "named-unset",
+        ProviderFlags {
+            api_key_env: Some("CI_ANTHROPIC_KEY".into()),
+            ..ProviderFlags::default()
+        },
+        &[],
+    )
+    .resolve(None, Some("m"))
+    .unwrap_err()
+    .to_string();
+    assert!(!named.contains("CI_ANTHROPIC_KEY"), "{named}");
 
     // A base URL can carry credentials.
     let url = resolver(
@@ -346,12 +354,17 @@ fn errors_never_echo_values_that_may_be_secrets() {
 }
 
 #[test]
-fn variable_names_are_recognised() {
-    use crate::agent_provider_error::looks_like_variable_name;
-    for good in ["DE_AGENT_API_KEY", "_x", "a1"] {
-        assert!(looks_like_variable_name(good), "{good}");
-    }
-    for bad in ["", "1A", "sk-abc", "has space", "ключ"] {
-        assert!(!looks_like_variable_name(bad), "{bad}");
-    }
+fn listed_base_urls_lose_credentials() {
+    use crate::agent_provider_error::redact_url;
+    assert_eq!(
+        redact_url("https://user:sk-secret@proxy.example:8443/v1?key=sk-2#frag"),
+        "https://proxy.example:8443/v1"
+    );
+    assert_eq!(
+        redact_url("https://api.openai.com/v1"),
+        "https://api.openai.com/v1"
+    );
+    assert_eq!(redact_url("http://host?token=x"), "http://host");
+    assert_eq!(redact_url("sk-not-a-url"), "(hidden)");
+    assert_eq!(redact_url(""), "");
 }

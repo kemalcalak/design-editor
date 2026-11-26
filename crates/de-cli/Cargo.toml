@@ -41,6 +41,8 @@ serde_json = { workspace = true }
 serde-saphyr = { version = "=2.1.1", default-features = false, features = ["deserialize"], optional = true }
 # `de agent`: Ctrl+C cancels the run instead of killing it mid-save.
 signal-hook = { version = "0.3", optional = true }
+# `de agent`: NFC path keys on macOS (already in the graph via de-orchestrator).
+unicode-normalization = { version = "0.1", optional = true }
 
 [features]
 default = ["agent"]
@@ -53,6 +55,7 @@ agent = [
   "dep:serde",
   "dep:serde-saphyr",
   "dep:signal-hook",
+  "dep:unicode-normalization",
 ]
 
 [target.'cfg(unix)'.dev-dependencies]

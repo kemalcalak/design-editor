@@ -1,5 +1,18 @@
 //! Path rules for `de agent` tasks: which names may become a folder, and
 //! when two paths name the same place on disk.
+//!
+//! [`path_key`] is lexical: it compares what the paths say, not what the
+//! disk resolves them to. Known limits, where two different keys can still
+//! name one file (the checks then miss a clash; they never refuse a valid
+//! plan):
+//!
+//! - symlinks and hard links are not followed;
+//! - one share reached as a UNC path and as a mapped drive letter, or one
+//!   volume mounted twice, gives two keys;
+//! - a case-insensitive disk on Linux (or a case-sensitive APFS volume on
+//!   macOS) is not detected: case is folded on macOS and Windows only;
+//! - Unicode normalization is folded to NFC on macOS only (APFS / HFS+ treat
+//!   NFC and NFD names as one; Windows and Linux do not).
 
 use std::path::{Component, Path, PathBuf};
 
@@ -38,14 +51,21 @@ pub(crate) fn is_portable_name(name: &str) -> bool {
 /// HFS+ on macOS and NTFS on Windows as installed; Linux file systems do not).
 pub(crate) const CASE_INSENSITIVE_FS: bool = cfg!(any(target_os = "macos", windows));
 
-/// A key that is equal for two paths naming the same place: absolute, `.`
-/// and `..` resolved lexically (symlinks are not followed), and case-folded
-/// where the file system ignores case.
+/// Whether this platform's file systems treat NFC and NFD names as one.
+pub(crate) const NORMALIZATION_INSENSITIVE_FS: bool = cfg!(target_os = "macos");
+
+/// A key that is equal for two paths naming the same place, as far as the
+/// path text tells (see the module docs for the limits): absolute, `.` and
+/// `..` resolved, a removable Windows `\\?\` prefix dropped, NFC on macOS,
+/// and case-folded where the file system ignores case.
 pub(crate) fn path_key(path: &Path) -> PathBuf {
-    path_key_with(path, CASE_INSENSITIVE_FS)
+    path_key_with(path, CASE_INSENSITIVE_FS, NORMALIZATION_INSENSITIVE_FS)
 }
 
-pub(crate) fn path_key_with(path: &Path, fold_case: bool) -> PathBuf {
+pub(crate) fn path_key_with(path: &Path, fold_case: bool, fold_unicode: bool) -> PathBuf {
+    // `C:\a` and `\\?\C:\a` are one file; keep the plain form.
+    let plain = de_util::display_path::strip_verbatim_prefix(&path.to_string_lossy());
+    let path = Path::new(&plain);
     let absolute = std::path::absolute(path).unwrap_or_else(|_| path.to_path_buf());
     let mut normal = PathBuf::new();
     for component in absolute.components() {
@@ -63,11 +83,15 @@ pub(crate) fn path_key_with(path: &Path, fold_case: bool) -> PathBuf {
             other => normal.push(other.as_os_str()),
         }
     }
-    if fold_case {
-        PathBuf::from(normal.to_string_lossy().to_lowercase())
-    } else {
-        normal
+    let mut text = normal.to_string_lossy().into_owned();
+    if fold_unicode {
+        use unicode_normalization::UnicodeNormalization as _;
+        text = text.nfc().collect();
     }
+    if fold_case {
+        text = text.to_lowercase();
+    }
+    PathBuf::from(text)
 }
 
 /// Whether `inner` is `outer` or lies inside it (both already [`path_key`]s).
@@ -108,16 +132,16 @@ mod tests {
     fn keys_resolve_dots_and_parents() {
         let base = std::env::temp_dir().join("de-agent-paths");
         assert_eq!(
-            path_key_with(&base.join("a/./b/../c.de"), false),
-            path_key_with(&base.join("a/c.de"), false)
+            path_key_with(&base.join("a/./b/../c.de"), false, false),
+            path_key_with(&base.join("a/c.de"), false, false)
         );
         assert_ne!(
-            path_key_with(&base.join("a/c.de"), false),
-            path_key_with(&base.join("a/C.de"), false)
+            path_key_with(&base.join("a/c.de"), false, false),
+            path_key_with(&base.join("a/C.de"), false, false)
         );
         assert_eq!(
-            path_key_with(&base.join("a/c.de"), true),
-            path_key_with(&base.join("A/C.DE"), true)
+            path_key_with(&base.join("a/c.de"), true, false),
+            path_key_with(&base.join("A/C.DE"), true, false)
         );
     }
 
@@ -125,21 +149,45 @@ mod tests {
     fn relative_paths_key_against_the_working_directory() {
         let here = std::env::current_dir().unwrap();
         assert_eq!(
-            path_key_with(Path::new("x/../y.de"), false),
-            path_key_with(&here.join("y.de"), false)
+            path_key_with(Path::new("x/../y.de"), false, false),
+            path_key_with(&here.join("y.de"), false, false)
+        );
+    }
+
+    #[test]
+    fn unicode_forms_fold_where_the_file_system_does() {
+        let base = std::env::temp_dir().join("de-agent-paths");
+        let nfc = base.join("caf\u{e9}.de");
+        let nfd = base.join("cafe\u{301}.de");
+        assert_eq!(
+            path_key_with(&nfc, false, true),
+            path_key_with(&nfd, false, true)
+        );
+        assert_ne!(
+            path_key_with(&nfc, false, false),
+            path_key_with(&nfd, false, false)
+        );
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn verbatim_windows_paths_match_their_plain_form() {
+        assert_eq!(
+            path_key_with(Path::new(r"\\?\C:\work\out.de"), true, false),
+            path_key_with(Path::new(r"C:\work\out.de"), true, false)
         );
     }
 
     #[test]
     fn within_compares_whole_components() {
-        let root = path_key_with(Path::new("/tmp/out"), false);
+        let root = path_key_with(Path::new("/tmp/out"), false, false);
         assert!(is_within(
-            &path_key_with(Path::new("/tmp/out/a"), false),
+            &path_key_with(Path::new("/tmp/out/a"), false, false),
             &root
         ));
         assert!(is_within(&root, &root));
         assert!(!is_within(
-            &path_key_with(Path::new("/tmp/outer"), false),
+            &path_key_with(Path::new("/tmp/outer"), false, false),
             &root
         ));
     }

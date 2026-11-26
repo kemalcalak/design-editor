@@ -158,7 +158,9 @@ impl ProviderResolver {
         match &self.flags.api_key_env {
             Some(var) => match (self.env)(var) {
                 Some(key) => Ok(Some((var.clone(), key))),
-                None => Err(AgentProviderError::ApiKeyEnvUnset { var: var.clone() }),
+                None => Err(AgentProviderError::ApiKeyEnvUnset {
+                    chars: var.chars().count(),
+                }),
             },
             None => Ok((self.env)(ENV_API_KEY).map(|key| (ENV_API_KEY.to_string(), key))),
         }

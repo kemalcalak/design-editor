@@ -1322,6 +1322,7 @@ dependencies = [
  "serde-saphyr",
  "serde_json",
  "signal-hook",
+ "unicode-normalization",
 ]
 
 [[package]]

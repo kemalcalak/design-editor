@@ -540,8 +540,11 @@ fn ctrl_c_cancels_the_run_and_leaves_out_untouched() {
 fn document_with_thumb(src: &str, thumb: &[u8]) -> String {
     use base64::Engine as _;
     let id = jian_ops_schema::node::image_src::paint_image_id(src);
+    // A current document (release `version` + schema `formatVersion`), as
+    // the app writes it.
     serde_json::json!({
-        "version": "1.0.0",
+        "version": env!("CARGO_PKG_VERSION"),
+        "formatVersion": "1.0",
         "children": [{
             "type": "frame", "id": "keep", "name": "Keep", "x": 0, "y": 0,
             "width": 200, "height": 200,
@@ -577,41 +580,53 @@ fn parallel_tasks_keep_their_own_image_thumbnails() {
             [0xff, 0xd8, 0x02, 0xd9],
         ),
     ];
-    let mut tasks = String::from("tasks:\n");
+    // Round 1 starts from single-file documents (inline base64 thumbnails)
+    // and saves folder-layout ones; round 2 starts from those (thumbnails
+    // as `<name>.assets/<hash>.jpg` paths) and saves again.
     for (name, src, thumb) in &sources {
         std::fs::write(
             dir.join(format!("{name}-in.de")),
             document_with_thumb(src, thumb),
         )
         .unwrap();
-        tasks.push_str(&format!(
-            "  - {{name: {name}, prompt: 'Add <<frame:{name}>>', in: {name}-in.de, out: {name}.de}}\n"
-        ));
     }
-    let tasks = write_tasks(&dir, &tasks);
-    let output = run(agent(&provider, &dir).args([
-        "--tasks",
-        tasks.to_str().unwrap(),
-        "--parallel",
-        "2",
-        "--quiet",
-    ]));
-    assert_eq!(code(&output), 0, "{:?}", texts(&output));
-    for (name, src, thumb) in &sources {
-        let saved = thumbs_of(&dir.join(format!("{name}.de")));
-        let id = jian_ops_schema::node::image_src::paint_image_id(src).to_string();
-        assert_eq!(
-            saved.len(),
-            1,
-            "{name} keeps only its own thumbnail: {saved:?}"
-        );
-        // The save moves the thumbnail into the document's asset folder.
-        let file = saved[&id].as_str().expect("thumbnail path");
-        assert_eq!(
-            std::fs::read(dir.join(file)).expect("thumbnail file"),
-            thumb.to_vec(),
-            "{name}"
-        );
+    for (round, input) in [(1, "{name}-in.de"), (2, "{name}-r1.de")] {
+        let mut tasks = String::from("tasks:\n");
+        for (name, _, _) in &sources {
+            let input = input.replace("{name}", name);
+            tasks.push_str(&format!(
+                "  - {{name: {name}, prompt: 'Add <<frame:{name}{round}>>', in: {input}, out: {name}-r{round}.de}}\n"
+            ));
+        }
+        let tasks = write_tasks(&dir, &tasks);
+        let output = run(agent(&provider, &dir).args([
+            "--tasks",
+            tasks.to_str().unwrap(),
+            "--parallel",
+            "2",
+            "--quiet",
+        ]));
+        assert_eq!(code(&output), 0, "round {round}: {:?}", texts(&output));
+        for (name, src, thumb) in &sources {
+            let saved = thumbs_of(&dir.join(format!("{name}-r{round}.de")));
+            let id = jian_ops_schema::node::image_src::paint_image_id(src).to_string();
+            assert_eq!(
+                saved.len(),
+                1,
+                "round {round}: {name} keeps only its own thumbnail: {saved:?}"
+            );
+            // The save moves the thumbnail into the document's asset folder.
+            let file = saved[&id].as_str().expect("thumbnail path");
+            assert!(
+                file.starts_with(&format!("{name}-r{round}.assets/")),
+                "{file}"
+            );
+            assert_eq!(
+                std::fs::read(dir.join(file)).expect("thumbnail file"),
+                thumb.to_vec(),
+                "round {round}: {name}"
+            );
+        }
     }
 }
 
@@ -621,7 +636,10 @@ fn parallel_tasks_share_one_request_pacer() {
     let dir = temp_dir("pacer");
     let tasks = write_tasks(&dir, THREE_TASKS);
     let output = run(agent(&provider, &dir)
-        .env("DESIGN_EDITOR_BUILTIN_HTTP_MIN_GAP_MS", "300")
+        .env(
+            "DESIGN_EDITOR_BUILTIN_HTTP_MIN_GAP_MS",
+            PACER_GAP_MS.to_string(),
+        )
         .args([
             "--tasks",
             tasks.to_str().unwrap(),
@@ -631,11 +649,20 @@ fn parallel_tasks_share_one_request_pacer() {
         ]));
     assert_eq!(code(&output), 0, "{:?}", texts(&output));
     let arrivals = provider.arrivals();
-    assert!(arrivals.len() >= 6, "{} requests", arrivals.len());
-    // Three workers, one pacer: no two requests start closer than the gap
-    // (with a little slack for the accept loop).
-    for pair in arrivals.windows(2) {
-        let gap = pair[1].duration_since(pair[0]);
-        assert!(gap >= std::time::Duration::from_millis(250), "gap {gap:?}");
-    }
+    let n = arrivals.len() as u32;
+    assert!(n >= 6, "{n} requests");
+    // Three workers with their own pacers would send their first requests
+    // together. One shared pacer spaces all n requests at least one gap
+    // apart, so they span (n - 1) gaps; 0.8 leaves room for scheduling and
+    // accept-loop jitter (it only errs towards a longer span) without
+    // letting three concurrent first requests pass.
+    let span = arrivals[arrivals.len() - 1].duration_since(arrivals[0]);
+    let floor = std::time::Duration::from_millis(PACER_GAP_MS) * (n - 1) * 8 / 10;
+    assert!(
+        span >= floor,
+        "{n} requests in {span:?}, expected at least {floor:?}"
+    );
 }
+
+/// The pacer gap the shared-pacer test sets.
+const PACER_GAP_MS: u64 = 400;

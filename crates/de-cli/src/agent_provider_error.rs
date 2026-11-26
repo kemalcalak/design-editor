@@ -28,8 +28,9 @@ pub(crate) enum AgentProviderError {
         model: String,
         saved: Vec<String>,
     },
-    /// `--api-key-env NAME` names a variable that is unset or empty.
-    ApiKeyEnvUnset { var: String },
+    /// `--api-key-env` names a variable that is unset or empty. Only the
+    /// given value's length is kept: it may be the key itself.
+    ApiKeyEnvUnset { chars: usize },
     /// A key came from the environment but no model was named.
     MissingModel { key_var: String },
     /// `--api-format` / `DE_AGENT_API_FORMAT` is neither anthropic nor openai.
@@ -82,15 +83,11 @@ impl fmt::Display for AgentProviderError {
                 "model {model:?} is not saved on provider {provider} (saved: {})",
                 saved.join(", ")
             ),
-            Self::ApiKeyEnvUnset { var } if looks_like_variable_name(var) => {
-                write!(f, "environment variable {var} (--api-key-env) is not set")
-            }
-            Self::ApiKeyEnvUnset { var } => write!(
+            Self::ApiKeyEnvUnset { chars } => write!(
                 f,
-                "--api-key-env takes the NAME of an environment variable, and the value \
-                 given ({} characters, not shown) is not one; pass e.g. \
-                 --api-key-env ANTHROPIC_API_KEY",
-                var.chars().count()
+                "--api-key-env must be the name of a set environment variable that holds \
+                 the key; no variable by the given value ({chars} characters, not shown) \
+                 is set"
             ),
             Self::MissingModel { key_var } => write!(
                 f,
@@ -110,16 +107,27 @@ impl fmt::Display for AgentProviderError {
 
 impl std::error::Error for AgentProviderError {}
 
-/// An environment variable name as shells write them: a letter or `_`,
-/// then letters, digits or `_`, at most 128 characters. Anything else is
-/// treated as a possible secret and not echoed.
-pub(crate) fn looks_like_variable_name(value: &str) -> bool {
-    let mut chars = value.chars();
-    value.len() <= 128
-        && chars
-            .next()
-            .is_some_and(|c| c.is_ascii_alphabetic() || c == '_')
-        && chars.all(|c| c.is_ascii_alphanumeric() || c == '_')
+/// `url` without what may carry a credential: `scheme://host[:port]/path`
+/// stays, user info (`user:key@`), the query and the fragment go. A value
+/// that is not `scheme://…` is replaced whole.
+pub(crate) fn redact_url(url: &str) -> String {
+    let url = url.trim();
+    if url.is_empty() {
+        return String::new();
+    }
+    let Some((scheme, rest)) = url.split_once("://") else {
+        return "(hidden)".to_string();
+    };
+    let end = rest.find(['?', '#']).unwrap_or(rest.len());
+    let rest = &rest[..end];
+    let (authority, path) = match rest.find('/') {
+        Some(slash) => (&rest[..slash], &rest[slash..]),
+        None => (rest, ""),
+    };
+    let host = authority
+        .rsplit_once('@')
+        .map_or(authority, |(_, host)| host);
+    format!("{scheme}://{host}{path}")
 }
 
 /// A settings read / parse message without file content: `serde_json`
