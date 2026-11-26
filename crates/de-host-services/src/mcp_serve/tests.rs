@@ -225,10 +225,7 @@ fn tools_list_response_includes_all_registered_tools() {
         "enrich_images",
         "generate",
         "get_generation_status",
-    ]
-    .into_iter()
-    .chain(de_mcp::SET_TOOL_NAMES)
-    {
+    ] {
         assert!(r.contains(name), "tools/list must include {name}: {r}");
     }
 

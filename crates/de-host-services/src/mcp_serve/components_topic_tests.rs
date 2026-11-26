@@ -454,3 +454,12 @@ fn get_editor_state_points_at_the_components_topic() {
         "get_component lists the descendants keys: {keys}"
     );
 }
+
+#[test]
+fn tools_list_carries_the_component_set_tools() {
+    let state = EditorState::new();
+    let listed = tools_list_response("1", &state, false);
+    for name in de_mcp::SET_TOOL_NAMES {
+        assert!(listed.contains(name), "tools/list must include {name}");
+    }
+}
