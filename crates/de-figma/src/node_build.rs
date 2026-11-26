@@ -37,6 +37,8 @@ pub fn frame_node(
         breakpoint: None,
         placeholder: None,
         component_properties: None,
+        component_set: None,
+        variant_values: None,
     })
 }
 
@@ -232,5 +234,6 @@ pub fn ref_node(base: PenNodeBase, target: String) -> PenNode {
         gestures: None,
         route: None,
         props: None,
+        variant: None,
     })
 }

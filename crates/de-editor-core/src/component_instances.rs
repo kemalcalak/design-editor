@@ -32,6 +32,25 @@ impl EditorState {
         descendants_json: Option<&str>,
         allocator: &mut dyn IdAllocator,
     ) -> Result<Option<NodeId>, IdAllocError> {
+        // A component set (#368) inserts its default variant; a variant
+        // records its values.
+        let variant = crate::component_set::resolve_target(
+            &self.doc,
+            component_id.as_str(),
+            Some(&Default::default()),
+        )
+        .ok()
+        .flatten();
+        let component_id = &variant.as_ref().map_or_else(
+            || component_id.clone(),
+            |t| NodeId::new(t.master_id.as_str()),
+        );
+        let set_name = variant.as_ref().and_then(|target| {
+            crate::component_set::find_node(&self.doc, &target.set_id)?
+                .base()
+                .name
+                .clone()
+        });
         let Ok(master) = self
             .instance_view()
             .check_instance_insert(component_id, parent)
@@ -52,13 +71,17 @@ impl EditorState {
             target: component_id.as_str(),
             x,
             y,
-            // Like a Figma instance, it starts with its master's name.
-            name: master.base().name.clone(),
+            // Like a Figma instance, it starts with its master's name (its
+            // set's, for a variant).
+            name: set_name.or_else(|| master.base().name.clone()),
             descendants,
         };
-        let Some(node) = build_instance_node(spec, allocator, &mut taken)? else {
+        let Some(mut node) = build_instance_node(spec, allocator, &mut taken)? else {
             return Ok(None);
         };
+        if let (PenNode::Ref(reference), Some(target)) = (&mut node, variant) {
+            reference.variant = Some(target.values);
+        }
         let id = NodeId::new(node.id_str());
         let snap = self.snapshot_for_history();
         if !self.place_instance(parent, node) {

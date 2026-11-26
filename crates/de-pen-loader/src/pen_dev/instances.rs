@@ -66,6 +66,7 @@ const INSTANCE_KEYS: &[&str] = &[
     // pen.dev spellings the walk converts or drops on the instance.
     "layoutPosition",
     "reusable",
+    "variant",
     "placeholder",
     "context",
     "metadata",

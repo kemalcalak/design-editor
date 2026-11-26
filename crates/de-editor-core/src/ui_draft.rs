@@ -165,6 +165,9 @@ pub enum PropertyFocus {
     /// Row `index` of the component-property rows (#367): an instance's
     /// text or colour value, or a master property's name. Free text.
     ComponentProp(usize),
+    /// Row `index` of the variant rows (#368): a set's axis name, or a
+    /// variant master's value on that axis. Free text.
+    VariantText(usize),
     /// One number field of a shader uniform row (#164): the float, or
     /// `component` of a vector, at row `index` of paint `target`.
     ShaderUniform {
@@ -217,6 +220,7 @@ impl PropertyFocus {
                 | PropertyFocus::InteractionUrl(_)
                 | PropertyFocus::OverlayBackground(_)
                 | PropertyFocus::ComponentProp(_)
+                | PropertyFocus::VariantText(_)
                 | PropertyFocus::GridColumns
                 | PropertyFocus::GridRows
         )

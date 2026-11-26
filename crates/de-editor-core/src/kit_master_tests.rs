@@ -1,5 +1,6 @@
 //! UIKit components insert as linked instances of one installed master
-//! (#365).
+//! (#365). The kit buttons install as one component set instead
+//! (`kit_master_set_tests.rs`, #368), so these use the single badge.
 
 use crate::command::EditorCommand;
 use crate::kit_master::kit_master_key;
@@ -13,8 +14,8 @@ use crate::EditorState;
 use jian_ops_schema::node::PenNode;
 
 const SHADCN: &str = "shadcn-ui";
-const BUTTON: &str = "shadcn-btn-primary";
-const LABEL: &str = "shadcn-btn-primary-label";
+const BUTTON: &str = "shadcn-badge";
+const LABEL: &str = "shadcn-badge-label";
 
 fn kit(kit_id: &str, component: &str, parent: &str, overrides: Option<&str>) -> EditorCommand {
     EditorCommand::InstantiateKitComponent {
@@ -121,7 +122,7 @@ fn first_kit_insert_installs_one_master_and_every_use_links_to_it() {
     assert!(instances.iter().all(|(_, target)| target == BUTTON));
     assert_eq!(s.selection.anchor.as_str(), instances[1].0);
     assert_eq!(rendered_text(&s, &instances[0].0, LABEL), "Save");
-    assert_eq!(rendered_text(&s, &instances[1].0, LABEL), "Button");
+    assert_eq!(rendered_text(&s, &instances[1].0, LABEL), "Badge");
 
     set_text(&mut s, LABEL, "Go");
     assert_eq!(rendered_text(&s, &instances[0].0, LABEL), "Save");
@@ -213,7 +214,7 @@ fn detach_inserts_an_independent_copy() {
 fn masters_sit_side_by_side_on_the_components_page() {
     let mut s = screen_state();
     assert!(s.apply(kit(SHADCN, BUTTON, "", None)));
-    assert!(s.apply(kit(SHADCN, "shadcn-btn-secondary", "", None)));
+    assert!(s.apply(kit(SHADCN, "shadcn-avatar", "", None)));
     let masters = components_page(&s);
     assert_eq!(masters.len(), 2);
     let right = masters[0].base().x.unwrap() + masters[0].width_px().unwrap();

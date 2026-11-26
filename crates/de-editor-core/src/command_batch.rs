@@ -97,6 +97,7 @@ fn batchable(cmd: &EditorCommand) -> bool {
         | C::Interaction(_)
         | C::Instance(_)
         | C::ComponentProperty(_)
+        | C::ComponentSet(_)
         | C::CreateComponent { .. }
         | C::DeleteComponent { .. }
         | C::RenameComponent { .. }

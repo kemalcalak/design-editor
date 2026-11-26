@@ -159,20 +159,25 @@ pub fn buttons_y(button: ComponentButtonState, layout: PropRowsLayout, y: f32) -
     }
 }
 
-/// Whether `action` is one of the component-property actions.
+/// Whether `action` is one of the component-property actions, or a
+/// variant action (#368), which dispatches the same way.
 pub fn is_action(action: &PropertyPanelAction) -> bool {
-    matches!(
-        action,
-        PropertyPanelAction::ToggleInstanceProp(_)
-            | PropertyPanelAction::CycleInstanceProp(_)
-            | PropertyPanelAction::RemoveComponentProperty(_)
-            | PropertyPanelAction::BindComponentProperty(_)
-    )
+    crate::widgets::property_panel_variants::is_action(action)
+        || matches!(
+            action,
+            PropertyPanelAction::ToggleInstanceProp(_)
+                | PropertyPanelAction::CycleInstanceProp(_)
+                | PropertyPanelAction::RemoveComponentProperty(_)
+                | PropertyPanelAction::BindComponentProperty(_)
+        )
 }
 
 /// Apply a component-property action to the real instance or master
 /// (each write is its own undo step). False for any other action.
 pub fn apply_action(state: &mut de_editor_core::EditorState, action: &PropertyPanelAction) -> bool {
+    if crate::widgets::property_panel_variants::is_action(action) {
+        return crate::widgets::property_panel_variants::apply_action(state, action);
+    }
     match action {
         PropertyPanelAction::ToggleInstanceProp(index) => {
             state.toggle_selected_instance_prop(*index)

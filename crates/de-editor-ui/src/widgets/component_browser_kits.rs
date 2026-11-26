@@ -17,6 +17,7 @@ use crate::widgets::component_browser_panel::{
 use crate::widgets::{draw_icon, Icon, PaintCx};
 use crate::{Point2D, Rect};
 use de_editor_core::ComponentBrowserButton as Btn;
+use de_editor_core::KitComponent;
 
 /// Dropdown control width on the "Kit:" row.
 const KIT_DROPDOWN_W: f32 = 200.0;
@@ -31,6 +32,24 @@ const CONFIRM_PAD_X: f32 = 6.0;
 const CONFIRM_GAP: f32 = 4.0;
 
 impl ComponentBrowserPanel<'_> {
+    /// A card's label: the component's name, or a kit set's name with its
+    /// variant count.
+    pub(in crate::widgets) fn card_label(&self, kit_id: &str, comp: &KitComponent) -> String {
+        match de_editor_core::kit_sets::kit_set_of(kit_id, &comp.id) {
+            Some((spec, _)) => crate::i18n::interpolate(
+                self.t("componentBrowser.setLabel"),
+                &[
+                    ("name", spec.name),
+                    (
+                        "count",
+                        &de_editor_core::kit_sets::variant_count(spec).to_string(),
+                    ),
+                ],
+            ),
+            None => comp.name.clone(),
+        }
+    }
+
     // -- geometry -----------------------------------------------------------
 
     fn kit_row_top(panel: Rect) -> f32 {
@@ -552,7 +571,17 @@ mod tests {
     #[test]
     fn kit_filter_narrows_cards_and_strip_height_tracks_imports() {
         let mut state = open_state_with_import();
-        let total: usize = state.ui_kits.iter().map(|k| k.components.len()).sum();
+        // Each kit set is one card (#368): its other members are hidden.
+        let hidden: usize = de_editor_core::kit_sets::KIT_SETS
+            .iter()
+            .map(|spec| spec.members.len() - 1)
+            .sum();
+        let total: usize = state
+            .ui_kits
+            .iter()
+            .map(|k| k.components.len())
+            .sum::<usize>()
+            - hidden;
         {
             let panel = ComponentBrowserPanel::for_editor(&state).expect("open");
             assert_eq!(panel.filtered().len(), total);

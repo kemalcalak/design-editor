@@ -105,6 +105,11 @@ impl BatchDesign {
         // and merged by name, which also needs the snapshot.
         if super::batch_program_instance::single_line_targets_instance(&self.state, operations)
             || operations.contains("\"props\"")
+            || operations.contains("\"variant\"")
+            // An instance may name a component set (#368): the simulator
+            // points it at its variant master and checks the variant.
+            || (operations.contains("\"ref\"")
+                && !de_editor_core::component_set::SetIndex::build(&self.state.doc).is_empty())
         {
             return super::batch_program::run_batch_design_program(&self.state, operations, args);
         }

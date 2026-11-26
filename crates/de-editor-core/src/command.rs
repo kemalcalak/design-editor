@@ -383,6 +383,9 @@ pub enum EditorCommand {
     /// Declare, change, rename or remove a master's component property, or
     /// set an instance's property values (#367). Boxed like `Instance`.
     ComponentProperty(Box<crate::component_props::ComponentPropertyCommand>),
+    /// Create a component set, add / rename its variants, axes and values,
+    /// or switch an instance's variant (#368). Boxed like `Instance`.
+    ComponentSet(Box<crate::component_set::ComponentSetCommand>),
     /// Set or remove one trigger's actions on a node, instance
     /// descendants included (#371).
     Interaction(crate::interaction_write::InteractionCommand),

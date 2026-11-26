@@ -181,6 +181,8 @@ pub fn interaction_menu_rows(
                 })
                 .collect()
         }
+        // Served by the panel itself from its variant rows (#368).
+        InteractionMenuTarget::VariantAxis(_) => Vec::new(),
         InteractionMenuTarget::OverlayTarget { trigger, swap } => {
             crate::widgets::property_panel_interactions_overlay::overlay_target_menu_rows(
                 summary, trigger, swap,

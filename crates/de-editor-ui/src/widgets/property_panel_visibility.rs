@@ -259,6 +259,8 @@ pub struct VisibleSections {
     pub component_button: ComponentButtonState,
     /// Component-property rows in the component block (#367).
     pub component_props: crate::widgets::property_panel_component_props::PropRowsLayout,
+    /// Variant rows above them (#368).
+    pub variant_rows: crate::widgets::property_panel_variants::VariantRowsLayout,
     pub flex_layout: bool,
     pub flex_layout_mode: de_editor_core::FlexLayout,
     pub layout_justify: LayoutJustifyValue,
@@ -370,6 +372,7 @@ impl VisibleSections {
             crate::widgets::property_panel_inputs::create_component_block_height(
                 self.component_button,
             ) + self.component_props.height()
+                + self.variant_rows.height()
         } else {
             0.0
         }
@@ -429,6 +432,7 @@ impl VisibleSections {
         create_component: true,
         component_button: ComponentButtonState::Create,
         component_props: crate::widgets::property_panel_component_props::PropRowsLayout::None,
+        variant_rows: crate::widgets::property_panel_variants::VariantRowsLayout::None,
         flex_layout: true,
         flex_layout_mode: de_editor_core::FlexLayout::Free,
         layout_justify: LayoutJustifyValue::Start,

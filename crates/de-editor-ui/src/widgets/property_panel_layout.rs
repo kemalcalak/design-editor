@@ -274,20 +274,23 @@ pub fn action_button_rects_with_fill_picker(
     );
     if visible.create_component {
         use crate::widgets::property_panel_component_props as props;
+        use crate::widgets::property_panel_variants as variants;
         out.extend(crate::widgets::property_panel_instance::action_rects(
             x0,
-            props::buttons_y(
-                visible.component_button,
-                visible.component_props,
-                tops.component,
-            ),
+            variants::buttons_y(&visible, tops.component),
             w,
             visible.component_button,
+        ));
+        out.extend(variants::action_rects(
+            visible.variant_rows,
+            x0,
+            variants::rows_top(&visible, tops.component),
+            w,
         ));
         out.extend(props::action_rects(
             visible.component_props,
             x0,
-            props::rows_top(visible.component_button, tops.component),
+            variants::props_top(&visible, tops.component),
             w,
         ));
     }

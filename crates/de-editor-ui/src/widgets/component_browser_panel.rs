@@ -313,7 +313,7 @@ impl<'a> ComponentBrowserPanel<'a> {
             .trim()
             .to_lowercase();
         let kit_filter = self.state.editor_ui.component_browser_kit_id.as_deref();
-        let mut out = Vec::new();
+        let mut out: Vec<(&str, &KitComponent)> = Vec::new();
         for kit in self.kits() {
             if let Some(want) = kit_filter {
                 if kit.id != want {
@@ -332,7 +332,24 @@ impl<'a> ComponentBrowserPanel<'a> {
                 {
                     continue;
                 }
-                out.push((kit.id.as_str(), comp));
+                // A kit set (#368) is one card: its first member stands for
+                // it, found through any member.
+                let shown = match de_editor_core::kit_sets::kit_set_of(&kit.id, &comp.id) {
+                    Some((spec, _)) => {
+                        let first = spec.members[0].1;
+                        match kit.components.iter().find(|c| c.id == first) {
+                            Some(first) => first,
+                            None => comp,
+                        }
+                    }
+                    None => comp,
+                };
+                if !out
+                    .iter()
+                    .any(|(id, c)| *id == kit.id.as_str() && std::ptr::eq(*c, shown))
+                {
+                    out.push((kit.id.as_str(), shown));
+                }
             }
         }
         out
@@ -677,14 +694,16 @@ impl<'a> ComponentBrowserPanel<'a> {
                 self.theme.muted_foreground,
             );
         } else {
-            for (i, ((_, comp), card_rect)) in filtered
+            for (i, ((kit_id, comp), card_rect)) in filtered
                 .iter()
                 .zip(self.card_rects(rect, filtered.len()))
                 .enumerate()
             {
                 let target = ComponentBrowserButton::Card(i);
                 let hovered = self.hover == Some(target);
-                self.paint_card(cx, card_rect, comp, hovered, self.is_pressed(target));
+                let label = self.card_label(kit_id, comp);
+                let pressed = self.is_pressed(target);
+                self.paint_card(cx, card_rect, comp, &label, hovered, pressed);
             }
         }
         cx.backend.restore();
@@ -712,6 +731,7 @@ impl<'a> ComponentBrowserPanel<'a> {
         cx: &mut PaintCx<'_>,
         rect: Rect,
         comp: &KitComponent,
+        name: &str,
         hovered: bool,
         pressed: bool,
     ) {
@@ -738,7 +758,7 @@ impl<'a> ComponentBrowserPanel<'a> {
         // footprint takes the border tone to stay visible.
         cx.backend.fill_round_rect(preview, 4.0, self.theme.border);
         // Component name.
-        let label = truncate(&comp.name, 22);
+        let label = truncate(name, 22);
         let label_w = label.chars().count() as f32 * CHAR_W;
         self.text(
             cx,

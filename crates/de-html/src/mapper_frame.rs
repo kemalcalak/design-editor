@@ -25,5 +25,7 @@ pub(super) fn frame(
         breakpoint: None,
         placeholder: None,
         component_properties: None,
+        component_set: None,
+        variant_values: None,
     })
 }

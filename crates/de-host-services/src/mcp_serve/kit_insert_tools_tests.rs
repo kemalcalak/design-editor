@@ -111,12 +111,14 @@ fn components_page(state: &EditorState) -> &[jian_ops_schema::node::PenNode] {
 }
 
 /// #365: kit tools insert refs to one master on the Components page, and
+/// (the kit buttons install as one variant set since #368, so these use the
+/// single badge)
 /// root placement moves the instances, never the master.
 #[test]
 fn kit_tools_insert_linked_instances_of_one_unplaced_master() {
     let mut state = EditorState::new();
     for id in 1..=2 {
-        let text = call_tool(&mut state, id, "insert_shadcn_btn_primary", "{}");
+        let text = call_tool(&mut state, id, "insert_shadcn_badge", "{}");
         assert!(text.contains(r#""linked":"true""#), "{text}");
     }
     let masters = components_page(&state);
@@ -161,12 +163,7 @@ fn kit_tools_insert_linked_instances_of_one_unplaced_master() {
             "{master_id}"
         );
     }
-    let text = call_tool(
-        &mut state,
-        3,
-        "insert_shadcn_btn_primary",
-        r#"{"detach":true}"#,
-    );
+    let text = call_tool(&mut state, 3, "insert_shadcn_badge", r#"{"detach":true}"#);
     assert!(text.contains(r#""linked":"false""#), "{text}");
     assert!(matches!(
         state.active_children()[0],
@@ -177,10 +174,10 @@ fn kit_tools_insert_linked_instances_of_one_unplaced_master() {
 /// #365 "done when": a kit-heavy screen is smaller linked than copied, in
 /// the saved document and in `batch_get`. `--nocapture` prints the numbers.
 #[test]
-fn twenty_linked_kit_buttons_are_smaller_than_twenty_copies() {
+fn twenty_linked_kit_badges_are_smaller_than_twenty_copies() {
     let measure = |detach: bool| {
         let mut state = EditorState::new();
-        let screen = r#"{"script":"const s = I(null, {type:'frame',name:'Screen',width:800,height:1200,layout:'vertical'}); for (let i = 0; i < 20; i++) K('shadcn/btn-primary', s, {label:'Item ' + i, detach: DETACH});"}"#
+        let screen = r#"{"script":"const s = I(null, {type:'frame',name:'Screen',width:800,height:1200,layout:'vertical'}); for (let i = 0; i < 20; i++) K('shadcn/badge', s, {label:'Item ' + i, detach: DETACH});"}"#
             .replace("DETACH", if detach { "true" } else { "false" });
         let text = call_tool(&mut state, 1, "batch_design", &screen);
         assert!(!text.contains("\"errors\""), "{text}");
@@ -198,7 +195,7 @@ fn twenty_linked_kit_buttons_are_smaller_than_twenty_copies() {
     let (linked_saved, linked_read) = measure(false);
     let (copied_saved, copied_read) = measure(true);
     eprintln!(
-        "20 shadcn buttons: saved {linked_saved} B linked vs {copied_saved} B copied; batch_get {linked_read} B vs {copied_read} B"
+        "20 shadcn badges: saved {linked_saved} B linked vs {copied_saved} B copied; batch_get {linked_read} B vs {copied_read} B"
     );
     assert!(linked_saved < copied_saved);
     assert!(linked_read < copied_read);
@@ -218,8 +215,8 @@ fn a_non_frame_kit_tool_reports_a_copy() {
 #[test]
 fn a_second_kit_master_keeps_its_slot_on_the_components_page() {
     let mut state = EditorState::new();
-    call_tool(&mut state, 1, "insert_shadcn_btn_primary", "{}");
-    call_tool(&mut state, 2, "insert_shadcn_btn_secondary", "{}");
+    call_tool(&mut state, 1, "insert_shadcn_badge", "{}");
+    call_tool(&mut state, 2, "insert_shadcn_avatar", "{}");
     let masters = components_page(&state);
     assert_eq!(masters.len(), 2);
     let right = masters[0].base().x.unwrap() + masters[0].width_px().unwrap();

@@ -35,6 +35,11 @@ impl PropsSnapshot {
         }
     }
 
+    /// The snapshot's document.
+    pub fn doc(&self) -> &PenDocument {
+        &self.doc
+    }
+
     pub fn context(&self) -> PropsContext<'_> {
         PropsContext {
             doc: &self.doc,

@@ -494,6 +494,9 @@ pub struct EditorUiState {
     /// being announced; a newer notice replaces an older one rather than
     /// queueing behind it. See [`crate::editor_toast`].
     pub editor_toast: Option<crate::editor_toast::EditorToastState>,
+    /// What the last panel variant write could not keep (#368); the host
+    /// raises it as a toast with its clock and clears it.
+    pub pending_variant_report: Option<crate::component_set::VariantReport>,
     /// Whether this host can render real board thumbnails for the left
     /// rail's slides tab — it needs a local offscreen scene renderer.
     /// Native sets it; hosts that leave it `false` still get the tab,

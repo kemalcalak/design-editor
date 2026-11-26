@@ -21,6 +21,9 @@ fn visible_for(panel: &PropertyPanel) -> sections::VisibleSections {
         component_props: crate::widgets::property_panel_component_props::PropRowsLayout::of(
             &panel.component_props,
         ),
+        variant_rows: crate::widgets::property_panel_variants::VariantRowsLayout::of(
+            &panel.variants,
+        ),
         flex_layout: caps.flex_layout,
         flex_layout_mode: panel.snapshot.flex_layout,
         layout_justify: panel.snapshot.layout_justify,
