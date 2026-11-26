@@ -86,7 +86,9 @@ fn context_button_opens_a_panel_listing_staged_items() {
     let backend = painted(&s);
     let texts: Vec<&str> = backend.texts.iter().map(|(t, ..)| t.as_str()).collect();
     assert!(texts.contains(&"In context"));
-    assert!(texts.contains(&"Document"));
+    // The tag column is capped at a share of the panel; this test backend
+    // measures wide, so the tag may arrive ellipsized.
+    assert!(texts.iter().any(|t| t.starts_with("Doc")), "{texts:?}");
     assert!(texts.contains(&"Brief"));
     // A press outside the open panel closes it.
     let panel = AIChatPlaceholder::from_editor(&s);

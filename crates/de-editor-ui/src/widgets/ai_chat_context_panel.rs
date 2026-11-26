@@ -21,8 +21,11 @@ const ROW_H: f32 = 30.0;
 const PAD: f32 = 4.0;
 const GAP: f32 = 6.0;
 const PANEL_W: f32 = 300.0;
-/// Width of the tag column ("Layer", "File", …).
-const TAG_W: f32 = 84.0;
+/// Narrowest the tag column ("Layer", "File", …) gets; it grows to the
+/// widest measured tag, up to [`TAG_MAX_SHARE`] of the panel.
+const TAG_MIN_W: f32 = 48.0;
+const TAG_MAX_SHARE: f32 = 0.4;
+const TAG_GAP: f32 = 12.0;
 const CLEAR_W: f32 = 24.0;
 const TITLE_FONT: f32 = 11.5;
 const LABEL_FONT: f32 = 12.5;
@@ -112,13 +115,26 @@ pub(crate) fn paint_context_panel(
         500,
         Point2D::new(title.origin.x + 10.0, label_baseline(title, TITLE_FONT)),
     );
+    // The tag column is paint-only (no hit target depends on it), so it is
+    // sized from the tags as painted, in the active locale.
+    let widest_tag = rows
+        .iter()
+        .map(|row| {
+            crate::widgets::text_metrics::measure_chrome(
+                cx.backend,
+                de_i18n::translate(locale, row.item.tag_key()),
+                TAG_FONT,
+            )
+        })
+        .fold(0.0_f32, f32::max);
+    let tag_w = (widest_tag + 10.0 + TAG_GAP).clamp(TAG_MIN_W, menu.size.x * TAG_MAX_SHARE);
     for (index, row) in rows.iter().enumerate() {
         let rect = row_rect(menu, index);
         let tag = fit_label(
             cx,
             de_i18n::translate(locale, row.item.tag_key()),
             TAG_FONT,
-            TAG_W - 14.0,
+            (tag_w - 10.0 - TAG_GAP).max(0.0),
         );
         chat_label(
             cx,
@@ -128,7 +144,7 @@ pub(crate) fn paint_context_panel(
             400,
             Point2D::new(rect.origin.x + 10.0, label_baseline(rect, TAG_FONT)),
         );
-        let text_x = rect.origin.x + TAG_W;
+        let text_x = rect.origin.x + tag_w;
         let right = if row.item.removable() {
             rect.origin.x + rect.size.x - CLEAR_W - 4.0
         } else {
