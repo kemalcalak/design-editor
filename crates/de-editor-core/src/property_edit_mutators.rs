@@ -303,25 +303,16 @@ impl EditorState {
                     &crate::LayoutPropValue::Number(value as f64),
                 );
             }
-            PropertyFocus::LayoutGap => {
+            PropertyFocus::LayoutGap | PropertyFocus::LayoutRowGap => {
                 if !value.is_finite() {
                     return false;
                 }
-                return self.cmd_set_node_layout_prop(
-                    &sel,
-                    "gap",
-                    &crate::LayoutPropValue::Number(value.max(0.0) as f64),
-                );
-            }
-            PropertyFocus::LayoutRowGap => {
-                if !value.is_finite() {
-                    return false;
-                }
-                return self.cmd_set_node_layout_prop(
-                    &sel,
-                    "rowGap",
-                    &crate::LayoutPropValue::Number(value.max(0.0) as f64),
-                );
+                let property = match focus {
+                    PropertyFocus::LayoutGap => "gap",
+                    _ => "rowGap",
+                };
+                let gap = crate::LayoutPropValue::Number(value.max(0.0) as f64);
+                return self.cmd_set_node_layout_prop(&sel, property, &gap);
             }
             // The shorthand `Pad` field and the track lists are string
             // drafts; they commit through `commit_padding_shorthand` /

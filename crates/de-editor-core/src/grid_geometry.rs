@@ -166,10 +166,9 @@ fn place(items: &[GridItem], columns: usize) -> Vec<GridCell> {
             if taken.len() <= r {
                 taken.resize(r + 1, vec![false; columns]);
             }
-            for c in cell.column..cell.column + cell.column_span {
-                if c < columns {
-                    taken[r][c] = true;
-                }
+            let end = (cell.column + cell.column_span).min(columns);
+            for slot in taken[r].iter_mut().take(end).skip(cell.column) {
+                *slot = true;
             }
         }
     };

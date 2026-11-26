@@ -7,16 +7,17 @@ use jian_core::layout::LayoutEngine;
 use jian_ops_schema::node::PenNode;
 use serde_json::{json, Value};
 
-/// Lay `root` out; return the grid's container props, content box, items
-/// and each child's laid-out `(x, y)`.
-fn layout(
-    root: Value,
-) -> (
+/// The grid's container props, content box, items and each child's
+/// laid-out `(x, y)`.
+type LaidOut = (
     ContainerProps,
     (f64, f64, f64, f64),
     Vec<GridItem>,
     Vec<(f64, f64)>,
-) {
+);
+
+/// Lay `root` out with jian's engine.
+fn layout(root: Value) -> LaidOut {
     let node: PenNode = serde_json::from_value(root).unwrap();
     let PenNode::Frame(frame) = &node else {
         panic!()
