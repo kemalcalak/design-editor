@@ -8,6 +8,7 @@ use crate::widgets::agent_settings_api_detail::{api_layout, api_target, paint_ap
 use crate::widgets::agent_settings_cli_detail::{cli_layout, paint_cli_detail};
 use crate::widgets::agent_settings_i18n::t as t_settings;
 use crate::widgets::agent_settings_panel::{AgentSettingsHit, AgentSettingsPanel};
+use crate::widgets::agent_settings_system::IN_APP_UPDATE_AVAILABLE;
 use crate::widgets::label_fit_test_support::{assert_inside, fresh_backend, run_in};
 use crate::widgets::test_family_gap_backend::FamilyGapBackend;
 use crate::widgets::PaintCx;
@@ -278,6 +279,15 @@ fn the_system_row_button_agrees_in_every_locale() {
             let (rect, backend) = painted_panel(&state);
             let label = t_settings(&state.editor_ui, key);
             let what = format!("{locale:?} {key}");
+            // Update / Restart exist only where the app can update in place
+            // (macOS arm64, Windows x64); elsewhere the row has no button.
+            if expected == AgentSettingsHit::UpdateButton && !IN_APP_UPDATE_AVAILABLE {
+                assert!(
+                    backend.runs.iter().all(|run| run.text != label),
+                    "{what}: no Update / Restart button on this platform"
+                );
+                continue;
+            }
             let run = backend
                 .runs
                 .iter()

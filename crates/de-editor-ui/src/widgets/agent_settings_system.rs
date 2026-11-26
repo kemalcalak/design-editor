@@ -75,7 +75,7 @@ pub(super) const AUTO_UPDATE_AVAILABLE: bool = !cfg!(target_arch = "wasm32");
 /// Platforms with a published installer (`rust-release.yml`: macOS arm64,
 /// Windows x64) — the only ones that can update in place, so the only ones
 /// that get the Update button (#111).
-const IN_APP_UPDATE_AVAILABLE: bool = cfg!(any(
+pub(crate) const IN_APP_UPDATE_AVAILABLE: bool = cfg!(any(
     all(target_os = "macos", target_arch = "aarch64"),
     all(target_os = "windows", target_arch = "x86_64")
 ));
