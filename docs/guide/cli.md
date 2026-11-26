@@ -19,6 +19,8 @@ de start --headless --file a.de     # windowless MCP server for CI or scripts
 `de agent` runs the in-app design agent without the app or a window: the
 same prompt, tools, checks and finalize pass as the chat and the MCP
 `run_design_agent` tool.
+Release builds include it; a `de` built from source with
+`--no-default-features` leaves it out (and is about 50 MiB smaller).
 
 ```bash
 de agent -p "A pricing page with three plans" --out pricing.de

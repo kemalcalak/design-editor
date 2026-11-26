@@ -1,5 +1,6 @@
 //! `de agent` end to end: the real binary, the real engine and provider
 //! client, against a loopback fake provider (`agent_cli/fake_provider.rs`).
+#![cfg(feature = "agent")]
 
 #[path = "agent_cli/fake_provider.rs"]
 mod fake_provider;

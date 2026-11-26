@@ -14,7 +14,7 @@ path = "src/main.rs"
 [dependencies]
 base64 = "0.22"
 # `de agent`: progress deltas and token counts of the shared design-agent engine.
-de-ai = { path = "../de-ai" }
+de-ai = { path = "../de-ai", optional = true }
 de-ai-skills = { path = "../de-ai-skills" }
 de-config-store = { path = "../de-config-store" }
 # Shared MCP defaults (port + local endpoint URL helpers). Already in the
@@ -24,8 +24,9 @@ jian-ops-schema = { path = "../../vendor/jian/crates/jian-ops-schema" }
 de-figma = { path = "../de-figma" }
 # `de agent` runs the in-app design agent in process: the shared
 # `design_agent_run` engine, document load / atomic save, the exporters and
-# the app's saved provider settings.
-de-host-services = { path = "../de-host-services" }
+# the app's saved provider settings. Optional: it brings skia, tokio and
+# reqwest, ~50 MiB of the release binary.
+de-host-services = { path = "../de-host-services", optional = true }
 de-pptx = { path = "../de-pptx" }
 de-html = { path = "../de-html" }
 de-pen-loader = { path = "../de-pen-loader", default-features = false }
@@ -33,13 +34,26 @@ de-process-io = { path = "../de-process-io" }
 de-rpc-transport = { path = "../de-rpc-transport" }
 # Canonical JSON string escaping (dependency-free).
 de-util = { path = "../de-util" }
-serde = { workspace = true }
+serde = { workspace = true, optional = true }
 serde_json = { workspace = true }
 # `de agent --tasks`: YAML (and JSON) task files. Panic-free parser with
 # line / column error reports; pinned exactly like the other parsers.
-serde-saphyr = { version = "=2.1.1", default-features = false, features = ["deserialize"] }
+serde-saphyr = { version = "=2.1.1", default-features = false, features = ["deserialize"], optional = true }
 # `de agent`: Ctrl+C cancels the run instead of killing it mid-save.
-signal-hook = "0.3"
+signal-hook = { version = "0.3", optional = true }
+
+[features]
+default = ["agent"]
+# `de agent`: the headless design agent (#397). Releases build it; turn it
+# off (`--no-default-features`) for a slim `de` that only drives a running
+# editor over MCP. CI checks both.
+agent = [
+  "dep:de-ai",
+  "dep:de-host-services",
+  "dep:serde",
+  "dep:serde-saphyr",
+  "dep:signal-hook",
+]
 
 [target.'cfg(unix)'.dev-dependencies]
 # The Ctrl+C integration test signals the child `de` process.
