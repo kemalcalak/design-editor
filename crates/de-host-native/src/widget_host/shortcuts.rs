@@ -96,8 +96,9 @@ impl WidgetHostNative {
     /// an image) outranks the copied nodes on the next paste (#436).
     fn queue_node_clipboard_marker(&mut self) {
         self.editor_state
-            .chat
-            .queue_copy_text(de_editor_core::node_clipboard_marker::NODE_CLIPBOARD_MARKER);
+            .editor_ui
+            .canvas_view
+            .pending_node_clipboard_marker = true;
     }
 
     /// Cmd/Ctrl+X — copy then delete the selection.

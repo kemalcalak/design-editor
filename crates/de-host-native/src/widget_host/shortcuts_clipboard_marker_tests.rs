@@ -1,8 +1,7 @@
-//! A user node copy / cut queues the node-copy marker for the system
-//! clipboard (#436); nothing else does.
+//! A user node copy / cut asks for the node-copy marker on the system
+//! clipboard (#436); nothing else does, and no plain text is queued.
 
 use super::WidgetHostNative;
-use de_editor_core::node_clipboard_marker::NODE_CLIPBOARD_MARKER;
 use de_editor_core::NodeId;
 
 const TWO_RECTS: &str = r#"{"version":"1.0.0","children":[
@@ -18,31 +17,40 @@ fn host() -> WidgetHostNative {
     host
 }
 
-fn queued(host: &WidgetHostNative) -> Option<&str> {
+fn marker_requested(host: &WidgetHostNative) -> bool {
+    host.editor_state()
+        .editor_ui
+        .canvas_view
+        .pending_node_clipboard_marker
+}
+
+fn text_queued(host: &WidgetHostNative) -> Option<&str> {
     host.editor_state().chat.pending_copy_text.as_deref()
 }
 
 #[test]
-fn node_copy_queues_the_marker_and_fills_the_node_clipboard() {
+fn node_copy_requests_the_marker_and_fills_the_node_clipboard() {
     let mut host = host();
     host.editor_state_mut()
         .set_single_selection(NodeId::new("n1"));
 
     assert!(host.apply_copy());
 
-    assert_eq!(queued(&host), Some(NODE_CLIPBOARD_MARKER));
+    assert!(marker_requested(&host));
+    assert_eq!(text_queued(&host), None);
     assert_eq!(host.editor_state().clipboard.len(), 1);
 }
 
 #[test]
-fn node_cut_queues_the_marker() {
+fn node_cut_requests_the_marker() {
     let mut host = host();
     host.editor_state_mut()
         .set_single_selection(NodeId::new("n2"));
 
     assert!(host.apply_cut());
 
-    assert_eq!(queued(&host), Some(NODE_CLIPBOARD_MARKER));
+    assert!(marker_requested(&host));
+    assert_eq!(text_queued(&host), None);
     assert_eq!(host.editor_state().clipboard.len(), 1);
     assert_eq!(host.editor_state().active_children().len(), 1);
 }
@@ -54,7 +62,8 @@ fn copy_or_cut_with_nothing_selected_leaves_the_system_clipboard_alone() {
     assert!(!host.apply_copy());
     assert!(!host.apply_cut());
 
-    assert_eq!(queued(&host), None);
+    assert!(!marker_requested(&host));
+    assert_eq!(text_queued(&host), None);
 }
 
 #[test]
@@ -63,11 +72,15 @@ fn duplicate_and_paste_do_not_touch_the_system_clipboard() {
     host.editor_state_mut()
         .set_single_selection(NodeId::new("n1"));
     assert!(host.apply_copy());
-    host.editor_state_mut().chat.pending_copy_text = None;
+    host.editor_state_mut()
+        .editor_ui
+        .canvas_view
+        .pending_node_clipboard_marker = false;
 
     assert!(host.apply_duplicate());
     assert!(host.apply_paste());
 
-    assert_eq!(queued(&host), None);
+    assert!(!marker_requested(&host));
+    assert_eq!(text_queued(&host), None);
     assert_eq!(host.editor_state().active_children().len(), 4);
 }

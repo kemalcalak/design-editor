@@ -196,7 +196,7 @@ impl DesktopApp {
         if self.drain_save_current_template_request() {
             self.request_redraw(true);
         }
-        self.flush_pending_copy_text();
+        self.flush_clipboard_requests();
         // A layer-menu Copy as PNG / SVG row (#399).
         if self.drain_copy_as_request() {
             self.request_redraw(true);

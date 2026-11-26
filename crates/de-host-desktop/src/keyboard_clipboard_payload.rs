@@ -1,5 +1,6 @@
 //! Injectable system-clipboard snapshot used by desktop paste routing.
 
+use crate::system_clipboard::SystemClipboard;
 use de_editor_core::node_clipboard_marker::is_node_clipboard_marker;
 
 /// Every clipboard flavor relevant to Cmd/Ctrl+V.
@@ -11,15 +12,15 @@ pub(crate) struct ClipboardPayload {
 }
 
 impl ClipboardPayload {
-    pub(super) fn read_text_system() -> Self {
+    pub(super) fn read_text_system(clipboard: &mut dyn SystemClipboard) -> Self {
         Self {
-            text: crate::clipboard::read_text_paste(),
+            text: clipboard.read_text(),
             ..Self::default()
         }
     }
 
-    pub(super) fn read_chat_system() -> Self {
-        let (text, image) = crate::clipboard::read_chat_paste();
+    pub(super) fn read_chat_system(clipboard: &mut dyn SystemClipboard) -> Self {
+        let (text, image) = clipboard.read_chat();
         Self {
             text,
             image,
@@ -27,34 +28,25 @@ impl ClipboardPayload {
         }
     }
 
-    pub(super) fn read_canvas_system() -> Self {
-        let (html, image) = crate::clipboard::read_canvas_paste();
-        // SVG markup copied as text pastes as vectors (#399), and the
-        // node-copy marker (#436) says the node clipboard is current. Only
-        // read when no richer flavour won (writing the marker replaces
-        // them all), and only kept when it is one of the two.
+    pub(super) fn read_canvas_system(clipboard: &mut dyn SystemClipboard) -> Self {
+        let (html, image) = clipboard.read_canvas();
+        // SVG markup copied as text pastes as vectors (#399). Only read
+        // when no richer flavour won, and only kept when it is SVG.
         let text = if html.as_deref().is_none_or(|h| h.trim().is_empty()) && image.is_none() {
-            crate::clipboard::read_text_paste()
-                .filter(|t| crate::clipboard::looks_like_svg(t) || is_node_clipboard_marker(t))
+            clipboard
+                .read_text()
+                .filter(|t| crate::clipboard::looks_like_svg(t))
         } else {
             None
         };
         Self { text, html, image }
     }
 
-    /// The system clipboard still holds the editor's node-copy marker: the
+    /// The system clipboard's HTML is the editor's node-copy marker: the
     /// last copy was nodes in the editor, so a canvas paste uses the node
     /// clipboard (#436).
     pub(crate) fn holds_node_marker(&self) -> bool {
-        self.text.as_deref().is_some_and(is_node_clipboard_marker)
-    }
-
-    /// Text for a focused text input. The node-copy marker is not text a
-    /// user copied, so it pastes nothing.
-    pub(crate) fn input_text(&self) -> Option<&str> {
-        self.text
-            .as_deref()
-            .filter(|text| !is_node_clipboard_marker(text))
+        self.html.as_deref().is_some_and(is_node_clipboard_marker)
     }
 }
 

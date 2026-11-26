@@ -66,6 +66,7 @@ mod image_panel_host;
 mod image_search_session;
 mod ime_window;
 mod keyboard_chat_tabs;
+mod keyboard_clipboard;
 mod keyboard_clipboard_payload;
 mod keyboard_input;
 mod keyboard_input_arrows;
@@ -111,6 +112,7 @@ mod single_instance;
 mod style_import_host;
 mod sub_agent_session;
 mod sub_agent_spawn_error;
+mod system_clipboard;
 mod tcc_selftest;
 mod test_config_root;
 mod theme_preset_host;
@@ -332,6 +334,8 @@ struct DesktopApp {
     /// In-flight clipboard HTML decode (non-Figma `text/html` paste):
     /// worker thread sends `(nodes, warnings)`.
     pending_html_paste: Option<PendingHtmlPaste>,
+    /// The system clipboard (one long-lived handle; a recorder in tests).
+    clipboard: Box<dyn system_clipboard::SystemClipboard>,
     /// Background AI-model discovery — probes the installed CLIs
     /// on a worker thread; its result is drained into
     /// `chat.available_models` on a later frame. Idle until

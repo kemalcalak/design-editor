@@ -5,35 +5,35 @@
 //! text > editor nodes). Without touching the system clipboard, whatever
 //! was copied before — a Copy as SVG, an image, a browser selection — kept
 //! winning over the nodes just copied. So a user copy / cut also puts this
-//! marker on the system clipboard as plain text:
+//! marker on the system clipboard, as HTML only:
 //!
 //! - writing it replaces every older flavour, so nothing stale outranks it;
-//! - paste recognises it and goes straight to the node clipboard (Figma
-//!   behaviour: the last copy is what pastes);
-//! - text inputs treat it as empty, so a copied layer never pastes this
-//!   string into a field;
-//! - anything copied in another app afterwards replaces the marker and
-//!   pastes as before.
+//! - paste finds it in the HTML flavour and goes straight to the node
+//!   clipboard (Figma behaviour: the last copy is what pastes);
+//! - it carries no plain-text flavour, so a text field, a text editor or a
+//!   terminal pastes nothing rather than a marker string;
+//! - anything copied in another app afterwards replaces it and pastes as
+//!   before.
 //!
-//! The marker is a plain, versioned token rather than serialized nodes: the
-//! node clipboard is per editor process, so the text only has to say "the
-//! editor's node clipboard is current", and it is cheap to write on every
-//! Cmd+C. MCP `copy_selected` does not write it — an agent must not
-//! overwrite the user's system clipboard.
+//! The payload is an empty element whose `data-design-editor` attribute
+//! names the content and its version. The node clipboard is per editor
+//! process, so today the marker only says "the editor's node clipboard is
+//! current"; the attribute is where serialized nodes would go for pasting
+//! across processes. MCP `copy_selected` does not write it — an agent must
+//! not overwrite the user's system clipboard.
 
-/// Prefix every version of the marker starts with.
-const MARKER_PREFIX: &str = "design-editor:nodes";
+/// The HTML the current editor writes.
+pub const NODE_CLIPBOARD_MARKER_HTML: &str = r#"<span data-design-editor="nodes/v1"></span>"#;
 
-/// The marker text the current editor writes.
-pub const NODE_CLIPBOARD_MARKER: &str = "design-editor:nodes/v1";
+/// The part every version of the marker carries. Matched as a substring:
+/// platforms wrap clipboard HTML (macOS and Windows add a document or
+/// fragment header around it).
+const MARKER_ATTRIBUTE: &str = r#"data-design-editor="nodes/"#;
 
-/// Whether system-clipboard `text` is the editor's node-copy marker (any
-/// version, surrounding whitespace ignored — some platforms append a
-/// newline on round-trip).
-pub fn is_node_clipboard_marker(text: &str) -> bool {
-    let text = text.trim();
-    text.strip_prefix(MARKER_PREFIX)
-        .is_some_and(|rest| rest.is_empty() || rest.starts_with('/'))
+/// Whether system-clipboard `html` holds the editor's node-copy marker
+/// (any version).
+pub fn is_node_clipboard_marker(html: &str) -> bool {
+    html.contains(MARKER_ATTRIBUTE)
 }
 
 #[cfg(test)]
@@ -42,26 +42,37 @@ mod tests {
 
     #[test]
     fn the_written_marker_is_recognised() {
-        assert!(is_node_clipboard_marker(NODE_CLIPBOARD_MARKER));
-        assert!(is_node_clipboard_marker(&format!(
-            "\n{NODE_CLIPBOARD_MARKER}\r\n"
-        )));
+        assert!(is_node_clipboard_marker(NODE_CLIPBOARD_MARKER_HTML));
+    }
+
+    #[test]
+    fn the_marker_is_recognised_inside_platform_wrappers() {
+        // arboard on macOS.
+        let mac = format!(
+            r#"<html><head><meta http-equiv="content-type" content="text/html; charset=utf-8"></head><body>{NODE_CLIPBOARD_MARKER_HTML}</body></html>"#
+        );
+        assert!(is_node_clipboard_marker(&mac));
+        // Windows CF_HTML.
+        let windows = format!(
+            "Version:0.9\r\nStartHTML:0000000105\r\nEndHTML:0000000199\r\n<html><body>\r\n<!--StartFragment-->{NODE_CLIPBOARD_MARKER_HTML}<!--EndFragment-->\r\n</body></html>"
+        );
+        assert!(is_node_clipboard_marker(&windows));
     }
 
     #[test]
     fn other_marker_versions_are_recognised() {
-        assert!(is_node_clipboard_marker("design-editor:nodes"));
-        assert!(is_node_clipboard_marker("design-editor:nodes/v2"));
+        assert!(is_node_clipboard_marker(
+            r#"<span data-design-editor="nodes/v2" data-nodes="e30="></span>"#
+        ));
     }
 
     #[test]
-    fn ordinary_text_is_not_the_marker() {
+    fn ordinary_html_is_not_the_marker() {
         assert!(!is_node_clipboard_marker(""));
-        assert!(!is_node_clipboard_marker("just words"));
-        assert!(!is_node_clipboard_marker("design-editor:nodesX"));
+        assert!(!is_node_clipboard_marker("<p>just words</p>"));
         assert!(!is_node_clipboard_marker(
-            "see design-editor:nodes/v1 for details"
+            r#"<span data-design-editor="theme/v1"></span>"#
         ));
-        assert!(!is_node_clipboard_marker("<svg/>"));
+        assert!(!is_node_clipboard_marker("design-editor:nodes/v1"));
     }
 }

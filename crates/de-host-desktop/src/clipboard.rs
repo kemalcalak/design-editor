@@ -1,10 +1,12 @@
 //! Thin wrapper over the OS clipboard.
 //!
-//! Backs the AI chat input's Cmd+C / Cmd+V / Cmd+X. `arboard` wraps
-//! the platform clipboard (NSPasteboard on macOS, the Win32
-//! clipboard, X11 / Wayland on Linux); all calls are best-effort —
-//! a clipboard that fails to initialise simply yields `None` / a
-//! no-op rather than surfacing an error to the user.
+//! `arboard` wraps the platform clipboard (NSPasteboard on macOS, the
+//! Win32 clipboard, X11 / Wayland on Linux); all calls are best-effort —
+//! a failed read yields `None` and a failed write is a no-op rather than
+//! an error for the user. The paste readers and writers take the
+//! desktop's one long-lived handle (`system_clipboard::OsClipboard`):
+//! opening a handle per call costs a fresh X11 connection, and dropping
+//! it blocks while ownership is handed to a clipboard manager.
 
 /// PNG-encoded clipboard bitmap plus its original pixel dimensions.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -37,17 +39,16 @@ pub fn get_image() -> Option<ClipboardImage> {
 ///
 /// Canvas and chat paste use their own target-aware readers below so a
 /// text paste never pays to transfer and PNG-encode a clipboard bitmap.
-pub(crate) fn read_text_paste() -> Option<String> {
-    arboard::Clipboard::new().ok()?.get_text().ok()
+pub(crate) fn read_text_paste(clipboard: &mut arboard::Clipboard) -> Option<String> {
+    clipboard.get_text().ok()
 }
 
 /// Read the flavours relevant to a focused chat input. Images win over
 /// text, matching the paste router, so the losing flavour is never
 /// transferred from the OS clipboard.
-pub(crate) fn read_chat_paste() -> (Option<String>, Option<ClipboardImage>) {
-    let Ok(mut clipboard) = arboard::Clipboard::new() else {
-        return (None, None);
-    };
+pub(crate) fn read_chat_paste(
+    clipboard: &mut arboard::Clipboard,
+) -> (Option<String>, Option<ClipboardImage>) {
     if let Some(image) = clipboard.get_image().ok().and_then(encode_image) {
         return (None, Some(image));
     }
@@ -57,15 +58,14 @@ pub(crate) fn read_chat_paste() -> (Option<String>, Option<ClipboardImage>) {
 /// Read the external flavours relevant to a canvas paste. HTML wins over
 /// images (Figma and editable HTML ingestion), while plain text is not a
 /// canvas payload and deliberately is not requested.
-pub(crate) fn read_canvas_paste() -> (Option<String>, Option<ClipboardImage>) {
+pub(crate) fn read_canvas_paste(
+    clipboard: &mut arboard::Clipboard,
+) -> (Option<String>, Option<ClipboardImage>) {
     #[cfg(target_os = "linux")]
     if let Some(payload) = read_wayland_canvas_paste() {
         return payload;
     }
 
-    let Ok(mut clipboard) = arboard::Clipboard::new() else {
-        return (None, None);
-    };
     let html = clipboard.get().html().ok();
     if html
         .as_deref()
@@ -175,24 +175,62 @@ pub fn get_html() -> Option<String> {
     arboard::Clipboard::new().ok()?.get().html().ok()
 }
 
-/// Write `text` to the system clipboard. Best-effort — an init or
-/// set failure is swallowed.
-pub fn set_text(text: &str) {
-    if let Ok(mut clipboard) = arboard::Clipboard::new() {
-        let _ = clipboard.set_text(text.to_owned());
-    }
+/// Write `text` to the system clipboard. Best-effort — a set failure is
+/// swallowed.
+pub(crate) fn set_text(clipboard: &mut arboard::Clipboard, text: &str) {
+    let _ = clipboard.set_text(text.to_owned());
 }
 
 /// Put a PNG on the system clipboard as an image (Copy as PNG, #399).
 /// arboard takes raw RGBA, so the PNG is decoded first. Best-effort, like
 /// [`set_text`].
-pub fn set_png_image(png: &[u8]) {
-    let Some(image) = png_to_rgba(png) else {
-        return;
-    };
-    if let Ok(mut clipboard) = arboard::Clipboard::new() {
+pub(crate) fn set_png_image(clipboard: &mut arboard::Clipboard, png: &[u8]) {
+    if let Some(image) = png_to_rgba(png) {
         let _ = clipboard.set_image(image);
     }
+}
+
+/// Put the node-copy marker on the system clipboard (#436): HTML only, so
+/// no plain-text flavour exists for a text field, editor or terminal to
+/// paste (Windows stores an empty text alongside), and kept out of
+/// clipboard-history tools, since it means nothing outside this editor.
+/// Best-effort, like [`set_text`].
+pub(crate) fn set_node_marker(clipboard: &mut arboard::Clipboard) {
+    let html = de_editor_core::node_clipboard_marker::NODE_CLIPBOARD_MARKER_HTML;
+    let _ = exclude_from_history(clipboard.set()).html(html, None);
+}
+
+#[cfg(target_os = "macos")]
+fn exclude_from_history(set: arboard::Set<'_>) -> arboard::Set<'_> {
+    use arboard::SetExtApple;
+    set.exclude_from_history()
+}
+
+#[cfg(windows)]
+fn exclude_from_history(set: arboard::Set<'_>) -> arboard::Set<'_> {
+    use arboard::SetExtWindows;
+    set.exclude_from_history()
+}
+
+#[cfg(all(
+    unix,
+    not(any(target_os = "macos", target_os = "android", target_os = "emscripten"))
+))]
+fn exclude_from_history(set: arboard::Set<'_>) -> arboard::Set<'_> {
+    use arboard::SetExtLinux;
+    set.exclude_from_history()
+}
+
+#[cfg(not(any(
+    target_os = "macos",
+    windows,
+    all(
+        unix,
+        not(any(target_os = "macos", target_os = "android", target_os = "emscripten"))
+    )
+)))]
+fn exclude_from_history(set: arboard::Set<'_>) -> arboard::Set<'_> {
+    set
 }
 
 /// Decode `png` to tightly packed, unpremultiplied RGBA8.
