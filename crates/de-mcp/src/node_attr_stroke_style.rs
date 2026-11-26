@@ -20,15 +20,22 @@ pub(crate) const END_NAMES: [(&str, StrokeEndCap); 8] = [
     ("diamond", StrokeEndCap::Diamond),
 ];
 
+/// What `stroke_start` / `stroke_end` writes: `None` leaves the end
+/// alone, `Some(None)` unsets it (`null`, `"auto"`, `"unset"`, `"cap"` or
+/// `""`: the end falls back to the stroke's `cap` again), `Some(Some(_))`
+/// sets it.
 #[allow(clippy::result_large_err)]
 fn parse_end(
     args: &BTreeMap<String, String>,
     key: &str,
-) -> Result<Option<StrokeEndCap>, ToolOutcome> {
+) -> Result<Option<Option<StrokeEndCap>>, ToolOutcome> {
     let Some(raw) = args.get(key) else {
         return Ok(None);
     };
     let wanted = raw.trim().to_ascii_lowercase().replace('-', "_");
+    if matches!(wanted.as_str(), "" | "null" | "auto" | "unset" | "cap") {
+        return Ok(Some(None));
+    }
     let wanted = if wanted == "butt" {
         "none".to_owned()
     } else {
@@ -37,11 +44,11 @@ fn parse_end(
     END_NAMES
         .iter()
         .find(|(name, _)| *name == wanted)
-        .map(|(_, cap)| Some(*cap))
+        .map(|(_, cap)| Some(Some(*cap)))
         .ok_or_else(|| {
             let names: Vec<&str> = END_NAMES.iter().map(|(name, _)| *name).collect();
             invalid(format!(
-                "{key} must be one of {}, got {raw:?}",
+                "{key} must be one of {}, or null / auto to fall back to cap, got {raw:?}",
                 names.join(" / ")
             ))
         })
@@ -167,8 +174,11 @@ mod tests {
             ("miter_limit", "10"),
         ]))
         .expect("style");
-        assert_eq!(style.stroke_start, Some(StrokeEndCap::ReversedTriangle));
-        assert_eq!(style.stroke_end, Some(StrokeEndCap::None));
+        assert_eq!(
+            style.stroke_start,
+            Some(Some(StrokeEndCap::ReversedTriangle))
+        );
+        assert_eq!(style.stroke_end, Some(Some(StrokeEndCap::None)));
         assert_eq!(style.miter_limit, Some(10.0));
     }
 
@@ -187,5 +197,34 @@ mod tests {
                 "{limit}"
             );
         }
+    }
+
+    #[test]
+    fn an_end_resets_to_unset_so_it_falls_back_to_cap() {
+        for spelling in ["null", "auto", "Unset", "cap", ""] {
+            let style = parse_stroke_style_args(&args(&[("stroke_end", spelling)]))
+                .unwrap_or_else(|_| panic!("{spelling:?} refused"));
+            assert_eq!(style.stroke_end, Some(None), "{spelling:?}");
+            assert_eq!(style.stroke_start, None, "{spelling:?} touched the start");
+            assert!(!style.is_empty());
+        }
+        // Applied to a node, the end goes back to absent.
+        let mut node: jian_ops_schema::node::PenNode = serde_json::from_str(
+            r#"{"type":"line","id":"l","x2":10,"y2":0,"stroke":{"thickness":1,"cap":"square","strokeEnd":"diamond"}}"#,
+        )
+        .expect("node");
+        let write = parse_stroke_style_args(&args(&[("stroke_end", "null")])).expect("style");
+        assert!(de_editor_core::fills::set_stroke_style(&mut node, &write));
+        let fields = de_editor_core::fills::node_stroke_style(&node).expect("stroke");
+        assert_eq!(fields.stroke_end, None);
+        assert_eq!(
+            de_editor_core::stroke_geometry::StrokeEnds::from_parts(
+                fields.stroke_start,
+                fields.stroke_end,
+                fields.cap.as_ref()
+            ),
+            None,
+            "the end falls back to the square cap, which the backends draw"
+        );
     }
 }

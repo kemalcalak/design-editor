@@ -9,7 +9,7 @@
 //! so the order is stated once.
 
 use de_editor_ui::layout_scene::{
-    SceneFillType, SceneGradient, SceneGradientStop, SceneNode, SceneStroke,
+    SceneFillType, SceneGradient, SceneGradientStop, SceneNode, SceneStroke, StrokeStyle,
 };
 use de_editor_ui::{Color, Rect};
 use de_util::xml_escape::escape_xml;
@@ -224,7 +224,22 @@ fn stop_list(stops: &[SceneGradientStop], alpha: f32) -> String {
 /// from where the canvas puts it. At the 1–2 px strokes decks use, that
 /// is a sub-pixel difference on a projected slide, and the alternative —
 /// insetting the shape to compensate — would move the FILL edge too.
+///
+/// A closed shape has no ends: its stroke's start / end shapes (#389) are
+/// dropped here, so no `<a:headEnd>` / `<a:tailEnd>` lands on a box and
+/// the cap is the authored one. Lines go through [`line_element_open`].
 pub fn line_element(stroke: SceneStroke, alpha: f32) -> Option<String> {
+    let style = StrokeStyle {
+        start: None,
+        end: None,
+        ..stroke.style
+    };
+    line_element_open(SceneStroke { style, ..stroke }, alpha)
+}
+
+/// [`line_element`] for an open stroke (a line): its start / end shapes
+/// become `<a:headEnd>` / `<a:tailEnd>`.
+pub fn line_element_open(stroke: SceneStroke, alpha: f32) -> Option<String> {
     if stroke.width <= 0.0 || !stroke.width.is_finite() {
         return None;
     }

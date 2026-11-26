@@ -66,6 +66,10 @@ use package::{MediaFile, SlidePart};
 #[path = "export_pptx/tests.rs"]
 mod tests;
 
+#[cfg(test)]
+#[path = "export_pptx/stroke_ends_export_tests.rs"]
+mod stroke_ends_export_tests;
+
 /// What one export produced.
 ///
 /// The fallback count is not decoration: a deck that came out mostly

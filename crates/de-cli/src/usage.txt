@@ -7,6 +7,12 @@ USAGE:
   de help                                 show this message
 
 COMMON COMMANDS:
+  de agent -p "<prompt>" --out <file.de> [--in <file>] [--export png|pdf|html|svg]
+  de agent --tasks <tasks.yaml> [--parallel N] [--json]
+                                           run the design agent headless, no
+                                           app needed (see `de agent --help`;
+                                           release builds; not in a de built
+                                           with --no-default-features)
   de start [--file path.de] [--port N]     launch the live editor (live canvas);
                                            op <tool> then drives the on-screen canvas
   de start --headless [--file path.de] [--wait SECONDS]

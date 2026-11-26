@@ -6,10 +6,8 @@
 use crate::widgets::property_panel::{PropertyPanel, PropertyPanelAction};
 use crate::widgets::property_panel_sections as sections;
 use crate::widgets::property_panel_stroke::StrokeStyleRows;
-use crate::widgets::property_panel_stroke_ends::{end_menu_rows, field_rect, END_CAPS, LABEL_W};
-use crate::widgets::property_panel_test_support::{
-    chrome_width, state_from, visible_for, CountingBackend,
-};
+use crate::widgets::property_panel_stroke_ends::{end_menu_rows, END_CAPS};
+use crate::widgets::property_panel_test_support::{state_from, visible_for, CountingBackend};
 use crate::widgets::{PaintCx, Widget};
 use crate::{Point2D, Rect};
 use de_editor_core::fills::{node_stroke_style, StrokeStyleEdit};
@@ -102,8 +100,8 @@ fn dispatch(state: &mut EditorState, action: &PropertyPanelAction) {
             now_ms: 0,
             resolved_sizing_fallback: None,
             image_adjustment_drag: &mut image_adjustment_drag,
-            effect_radius_drag: &mut effect_radius_drag,
             corner_smoothing_drag: &mut false,
+            effect_radius_drag: &mut effect_radius_drag,
         },
     );
     if d::updates_document(action) && state.snapshot_for_history() != before {
@@ -363,45 +361,24 @@ fn paint_agrees_with_the_walkers() {
     assert!(backend.texts.iter().any(|t| t == "Diamond"));
 }
 
-/// Every Start / End / Miter label and end name fits its control in
-/// every locale at the panel's width.
+/// The fit check paint and the host's locale sweep share: a label too
+/// wide for its column is reported, a short one is not. The 15-locale
+/// sweep on real font metrics is the native host's
+/// `stroke_ends_width_tests`.
 #[test]
-fn every_end_label_fits_in_every_locale() {
-    let width = crate::widgets::property_panel::PROPERTY_PANEL_WIDTH;
-    let row = Rect::xywh(
-        crate::widgets::property_panel_inputs::PAD_X,
-        0.0,
-        width - crate::widgets::property_panel_inputs::PAD_X * 2.0,
-        28.0,
+fn the_fit_check_reports_labels_its_rows_would_cut() {
+    let mut backend = crate::widgets::label_fit_test_support::fresh_backend();
+    let ui = de_editor_core::editor_ui_state::EditorUiState::default();
+    let mut labels = sections::PropertyLabels::for_editor_ui(&ui);
+    assert!(
+        !crate::widgets::property_panel_stroke_ends::cut_end_labels(&mut backend, &labels)
+            .contains(&labels.stroke_end)
     );
-    // `fit_select_trigger_label`'s inset (padding + chevron).
-    let name_room = field_rect(row).size.x - 34.0;
-    let label_room = LABEL_W - 6.0;
-    for locale in de_editor_core::Locale::ALL {
-        let ui = de_editor_core::editor_ui_state::EditorUiState {
-            locale,
-            ..Default::default()
-        };
-        let labels = sections::PropertyLabels::for_editor_ui(&ui);
-        let mut checks = vec![
-            (labels.stroke_start, label_room),
-            (labels.stroke_end, label_room),
-            (labels.stroke_miter, label_room),
-        ];
-        checks.extend(
-            labels
-                .stroke_end_names
-                .iter()
-                .map(|name| (*name, name_room)),
-        );
-        for (label, room) in checks {
-            assert!(
-                chrome_width(label) <= room,
-                "{locale:?}: {label:?} is {:.0} px, room {room:.0} px",
-                chrome_width(label)
-            );
-        }
-    }
+    labels.stroke_end = "An end label far too long for its column";
+    labels.stroke_end_names[1] = "A dropdown value far too long for the field";
+    let cut = crate::widgets::property_panel_stroke_ends::cut_end_labels(&mut backend, &labels);
+    assert!(cut.contains(&labels.stroke_end), "{cut:?}");
+    assert!(cut.contains(&labels.stroke_end_names[1]), "{cut:?}");
 }
 
 #[test]

@@ -4,11 +4,14 @@
 //! these so the three read as one form.
 
 use crate::theme::Theme;
-use crate::widgets::agent_settings_rows::{fit_text, measure_settings_text, SETTINGS_FONT_FAMILY};
+use crate::widgets::agent_settings_rows::{fit_text, SETTINGS_FONT_FAMILY};
 use crate::widgets::agent_settings_switch::{SETTINGS_SWITCH_H, SETTINGS_SWITCH_W};
 use crate::widgets::button::tokens_from_theme;
-use crate::widgets::home_surface::{estimate_width, MONO};
+use crate::widgets::home_surface::MONO;
 use crate::widgets::icons::{draw_icon, Icon};
+use crate::widgets::label_widths::LabelWidths;
+use crate::widgets::text_input_backend::BaselineAdjustingBackend;
+use crate::widgets::text_metrics::measure_in_family_weighted;
 use crate::widgets::PaintCx;
 use crate::{Color, Point2D, Rect, TextLayout};
 
@@ -208,7 +211,19 @@ pub(crate) fn paint_segmented(
         hover: None,
         font_size: SEGMENT_FONT,
     }
-    .paint(cx.backend, rect, &segment_tokens(theme));
+    // `ToggleGroup` draws its labels in `SEGMENT_FAMILY` but centres them
+    // on the family-blind `measure_text`; measuring through the override
+    // face keeps each label centred in the cell `segmented_width` sized
+    // from that face (#440).
+    .paint(
+        &mut BaselineAdjustingBackend {
+            inner: &mut *cx.backend,
+            baseline_delta_y: 0.0,
+            font_family: Some(SEGMENT_FAMILY),
+        },
+        rect,
+        &segment_tokens(theme),
+    );
 }
 
 /// The active segment reads as a raised chip on the track, not as a
@@ -225,13 +240,20 @@ pub(crate) fn segment_at(rect: Rect, count: usize, point: Point2D) -> Option<usi
     jian_widgets::components::toggle_group::ToggleGroup::segment_at(rect, count, point)
 }
 
-/// Width a segmented control needs for `labels`.
-pub(crate) fn segmented_width(labels: &[&str]) -> f32 {
-    labels
+/// The face jian's `ToggleGroup` paints segment labels in
+/// (`jian_widgets::components::toggle_group`).
+const SEGMENT_FAMILY: &str = "Inter";
+
+/// Width a segmented control needs for `labels`, measured in the face the
+/// segments are painted in (#440). `ToggleGroup` splits the control into
+/// equal cells, so every cell is as wide as the widest label needs.
+pub(crate) fn segmented_width(widths: &mut LabelWidths<'_>, labels: &[&str]) -> f32 {
+    let cell = labels
         .iter()
-        .map(|label| estimate_width(label, SEGMENT_FONT) + SEGMENT_PAD_X * 2.0)
-        .sum::<f32>()
-        + SEGMENT_TRACK_PAD * 2.0
+        .map(|label| widths.styled(label, SEGMENT_FONT, SEGMENT_FAMILY, 400))
+        .fold(0.0, f32::max)
+        + SEGMENT_PAD_X * 2.0;
+    cell * labels.len() as f32 + SEGMENT_TRACK_PAD * 2.0
 }
 
 /// Height of a checklist box with `rows` rows (capped, then it scrolls).
@@ -361,9 +383,15 @@ pub(crate) enum ButtonKind {
     Outline,
 }
 
-/// Estimated button width for hit geometry, which has no painter.
-pub(crate) fn button_width_estimate(label: &str, icon: bool) -> f32 {
-    estimate_width(label, VALUE_FONT) + BUTTON_PAD_X * 2.0 + if icon { ICON_SLOT } else { 0.0 }
+/// Weight a footer button's label is painted (and measured) at.
+const BUTTON_LABEL_WEIGHT: u16 = 500;
+
+/// A footer button's width: its label as [`paint_button`] draws it, the
+/// padding and the icon slot (#440).
+pub(crate) fn button_width(widths: &mut LabelWidths<'_>, label: &str, icon: bool) -> f32 {
+    widths.styled(label, VALUE_FONT, SETTINGS_FONT_FAMILY, BUTTON_LABEL_WEIGHT)
+        + BUTTON_PAD_X * 2.0
+        + if icon { ICON_SLOT } else { 0.0 }
 }
 
 /// A rounded footer button.
@@ -388,16 +416,22 @@ pub(crate) fn paint_button(
         }
     };
     let icon_w = if icon.is_some() { ICON_SLOT } else { 0.0 };
-    // Widths come from an estimate (hit-test has no painter), so a long
-    // translation is fitted rather than left to spill past the border.
-    let label = fit_text(
-        cx,
-        label,
-        (rect.size.x - BUTTON_FIT_PAD_X * 2.0 - icon_w).max(0.0),
-        VALUE_FONT,
-    );
+    // The label is fitted and centred at the face and weight it is drawn
+    // in; a button narrower than its label (capped by its column) fits it
+    // rather than letting it spill past the border.
+    let mut measure = |s: &str| {
+        measure_in_family_weighted(
+            cx.backend,
+            s,
+            VALUE_FONT,
+            SETTINGS_FONT_FAMILY,
+            BUTTON_LABEL_WEIGHT,
+        )
+    };
+    let budget = (rect.size.x - BUTTON_FIT_PAD_X * 2.0 - icon_w).max(0.0);
+    let label = crate::util::ellipsize_to_width(label, budget, &mut measure);
     let label = label.as_str();
-    let label_w = measure_settings_text(cx, label, VALUE_FONT);
+    let label_w = measure(label);
     let mut x = rect.origin.x + (rect.size.x - label_w - icon_w) / 2.0;
     if let Some(icon) = icon {
         draw_icon(
@@ -415,7 +449,7 @@ pub(crate) fn paint_button(
         label,
         VALUE_FONT,
         ink,
-        500,
+        BUTTON_LABEL_WEIGHT,
         SETTINGS_FONT_FAMILY,
         x,
         centred_baseline(rect, VALUE_FONT),

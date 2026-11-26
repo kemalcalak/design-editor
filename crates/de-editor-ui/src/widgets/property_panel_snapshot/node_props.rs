@@ -381,7 +381,7 @@ pub(super) fn container_corner_radius(node: &PenNode) -> f32 {
         None => match node {
             PenNode::Ellipse(n) => n.corner_radius.unwrap_or(0.0) as f32,
             PenNode::Polygon(n) => n.corner_radius.unwrap_or(0.0) as f32,
-            PenNode::Path(n) => n.corner_radius.unwrap_or(0.0) as f32,
+            PenNode::Path(n) => n.vertex_radius.unwrap_or(0.0) as f32,
             _ => 0.0,
         },
     }

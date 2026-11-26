@@ -98,6 +98,13 @@ pub struct NodePayload {
     pub flip_x: bool,
     #[serde(default)]
     pub flip_y: bool,
+    /// A line drawn from right to left / bottom to top (#389): `x` / `y`
+    /// / `w` / `h` are its normalised box, these keep which corner it
+    /// starts at (`SceneLineDirection`).
+    #[serde(default)]
+    pub line_right_to_left: bool,
+    #[serde(default)]
+    pub line_bottom_to_top: bool,
     /// Node-level opacity (0.0..=1.0). Folded into resolved fill /
     /// stroke / text / gradient-stop alpha at scene-build time (see
     /// `layout_scene`), cumulative down the subtree. Defaults to 1.0.

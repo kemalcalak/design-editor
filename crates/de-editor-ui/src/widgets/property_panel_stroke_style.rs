@@ -29,7 +29,7 @@ const STYLE_ROWS_TOP_GAP: f32 = 6.0;
 const STYLE_ROW_GAP: f32 = 6.0;
 /// Width of the Cap / Join / Dash row label column.
 const ROW_LABEL_W: f32 = 44.0;
-const LABEL_FONT_SIZE: f32 = 11.0;
+pub(crate) const LABEL_FONT_SIZE: f32 = 11.0;
 
 /// Alignment cells, left to right.
 pub(crate) const STROKE_ALIGNS: [StrokeAlign; 3] = [
@@ -154,19 +154,26 @@ pub(crate) fn stroke_style_input_rects(
     )]
 }
 
+/// Where the style rows sit: the section's left edge, the first row's
+/// top and the row width.
+#[derive(Debug, Clone, Copy)]
+pub(crate) struct StyleRowsAt {
+    pub x: f32,
+    pub top: f32,
+    pub width: f32,
+}
+
 /// Paint the style rows. A node without a stroke shows no active cell:
 /// the style only applies once a stroke exists.
-#[allow(clippy::too_many_arguments)]
 pub(crate) fn paint_stroke_style_rows(
     cx: &mut PaintCx<'_>,
     theme: &Theme,
     labels: &PropertyLabels,
     snapshot: &NodeSnapshot,
     edit: &EditContext<'_>,
-    x: f32,
-    top: f32,
-    width: f32,
+    at: StyleRowsAt,
 ) {
+    let StyleRowsAt { x, top, width } = at;
     let active = snapshot.stroke.as_ref().and_then(|stroke| {
         let align = match stroke.align {
             SceneStrokeAlign::Inside => StrokeAlign::Inside,

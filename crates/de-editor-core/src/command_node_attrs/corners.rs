@@ -121,7 +121,7 @@ fn write_radius(node: &mut PenNode, radius: CornerRadius) {
         PenNode::Image(n) => n.corner_radius = Some(radius),
         PenNode::Browser(n) => n.corner_radius = Some(radius),
         PenNode::Polygon(n) => n.corner_radius = Some(uniform),
-        PenNode::Path(n) => n.corner_radius = Some(uniform),
+        PenNode::Path(n) => n.vertex_radius = Some(uniform),
         PenNode::Ellipse(n) => n.corner_radius = Some(uniform),
         _ => {}
     }

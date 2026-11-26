@@ -452,6 +452,7 @@ fn a_line_with_an_arrowhead_inlines_the_stroke_geometry_with_its_flip() {
             stroke_d: "M 0 0 L 70 35".into(),
             fill_d: "M 80 40 L 70 30 L 66 38 Z".into(),
             arms_d: String::new(),
+            head_hits: Vec::new(),
         },
     ));
 

@@ -128,15 +128,15 @@ pub(super) fn ellipse_to_payload(n: &EllipseNode) -> NodePayload {
 
 pub(super) fn line_to_payload(n: &LineNode) -> NodePayload {
     let mut p = base_payload(&n.base, "line");
-    // The shell's line painter draws from `bounds.origin` to
-    // `bounds.origin + bounds.size`, so encoding `(x2, y2)` as
-    // a signed size puts both endpoints exactly where the
-    // canonical schema says they are. Negative components shift
-    // `origin` so `aggregate_bounds` (which gates on `size > 0`)
-    // still picks the rect up — a horizontal/vertical/diagonal
-    // line is direction-invariant for paint purposes anyway.
+    // The box is normalised (negative components shift `origin`, so
+    // `aggregate_bounds`, which gates on `size > 0`, still picks the rect
+    // up) and the direction is kept apart: a line from bottom-left to
+    // top-right is not its box's top-left → bottom-right diagonal, and
+    // which end is the start decides where `strokeStart` draws (#389).
     let x2 = n.x2.unwrap_or(0.0) as f32;
     let y2 = n.y2.unwrap_or(0.0) as f32;
+    p.line_right_to_left = x2 < 0.0;
+    p.line_bottom_to_top = y2 < 0.0;
     if x2 < 0.0 {
         p.x += x2;
         p.w = -x2;
@@ -213,7 +213,7 @@ pub(super) fn path_to_payload(n: &PathNode) -> NodePayload {
     p.svg_path = n.d.clone();
     // Rounded vertices (#389): the scene builder rounds the outline.
     p.corner_radius = n
-        .corner_radius
+        .vertex_radius
         .filter(|r| r.is_finite())
         .unwrap_or(0.0)
         .max(0.0) as f32;

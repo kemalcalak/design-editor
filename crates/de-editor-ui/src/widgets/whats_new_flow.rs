@@ -22,7 +22,9 @@ pub fn paint(cx: &mut PaintCx<'_>, state: &EditorState, viewport_w: f32, viewpor
             a: 0.5,
         },
     );
-    let rect = modal.rect(viewport_w, viewport_h);
+    // Measures the copy (only what nothing measured yet), so the
+    // backend-less press / hover below see the card painted here.
+    let rect = modal.measured_rect(viewport_w, viewport_h, &mut *cx.backend);
     modal.paint(cx, rect);
 }
 

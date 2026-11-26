@@ -1,5 +1,4 @@
-//! Home copy: i18n lookups for kinds, sizes and the Recent ages, plus
-//! the width estimate layout uses before a renderer is available.
+//! Home copy: i18n lookups for kinds, sizes and the Recent ages.
 
 use super::icons::HomeGlyph;
 use crate::widgets::icons::Icon;
@@ -7,30 +6,6 @@ use de_editor_core::{HomeFamily, HomeSize, Locale};
 
 pub(crate) fn tr(locale: Locale, key: &'static str) -> &'static str {
     de_i18n::translate(locale, key)
-}
-
-/// A layout-time width estimate for `text` at `size` px. Hit-test runs
-/// without a backend, so layout and hit-test share this estimate and
-/// paint centres the real glyphs inside the rects it produces.
-pub(crate) fn estimate_width(text: &str, size: f32) -> f32 {
-    text.chars().fold(0.0, |w, c| {
-        w + if c.is_ascii_uppercase() || c.is_ascii_digit() {
-            size * 0.64
-        } else if c == ' ' {
-            size * 0.28
-        } else if c.is_ascii() {
-            size * 0.54
-        } else if is_wide(c) {
-            size
-        } else {
-            size * 0.6
-        }
-    })
-}
-
-fn is_wide(c: char) -> bool {
-    matches!(c as u32,
-        0x1100..=0x115F | 0x2E80..=0xA4CF | 0xAC00..=0xD7A3 | 0xF900..=0xFAFF | 0xFF00..=0xFF60)
 }
 
 pub(crate) fn kind_label(locale: Locale, family: HomeFamily) -> &'static str {

@@ -251,6 +251,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "annotate-snippets"
+version = "0.12.18"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0258346f92c78dbc5b336b9a5b27c64447aa10643bc64e651db2edb145361564"
+dependencies = [
+ "anstyle",
+ "memchr",
+ "unicode-width",
+]
+
+[[package]]
+name = "anstyle"
+version = "1.0.14"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "940b3a0ca603d1eade50a4846a2afffd5ef57a9feac2c0e2ec2e14f9ead76000"
+
+[[package]]
 name = "anthropic-agent-sdk"
 version = "0.2.75"
 dependencies = [
@@ -307,6 +324,12 @@ dependencies = [
  "wl-clipboard-rs",
  "x11rb",
 ]
+
+[[package]]
+name = "arraydeque"
+version = "0.5.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7d902e3d592a523def97af8f317b08ce16b7ab854c1985a0c671e6f15cebc236"
 
 [[package]]
 name = "arrayref"
@@ -1182,7 +1205,7 @@ checksum = "be1e0bca6c3637f992fc1cc7cbc52a78c1ef6db076dbf1059c4323d6a2048376"
 
 [[package]]
 name = "de-acp"
-version = "0.6.2"
+version = "0.6.3"
 dependencies = [
  "agent-client-protocol",
  "de-ai",
@@ -1202,14 +1225,14 @@ dependencies = [
 
 [[package]]
 name = "de-ai"
-version = "0.6.2"
+version = "0.6.3"
 dependencies = [
  "serde_json",
 ]
 
 [[package]]
 name = "de-ai-skills"
-version = "0.6.2"
+version = "0.6.3"
 dependencies = [
  "de-util",
  "include_dir",
@@ -1220,7 +1243,7 @@ dependencies = [
 
 [[package]]
 name = "de-browser-render"
-version = "0.6.2"
+version = "0.6.3"
 dependencies = [
  "base64 0.22.1",
  "de-editor-core",
@@ -1232,7 +1255,7 @@ dependencies = [
 
 [[package]]
 name = "de-builtin-model-discovery"
-version = "0.6.2"
+version = "0.6.3"
 dependencies = [
  "de-editor-core",
  "futures",
@@ -1243,7 +1266,7 @@ dependencies = [
 
 [[package]]
 name = "de-chat-agent"
-version = "0.6.2"
+version = "0.6.3"
 dependencies = [
  "base64 0.22.1",
  "de-ai",
@@ -1266,7 +1289,7 @@ dependencies = [
 
 [[package]]
 name = "de-chrome-extension-core"
-version = "0.6.2"
+version = "0.6.3"
 dependencies = [
  "de-html",
  "de-util",
@@ -1278,13 +1301,15 @@ dependencies = [
 
 [[package]]
 name = "de-cli"
-version = "0.6.2"
+version = "0.6.3"
 dependencies = [
  "base64 0.22.1",
+ "de-ai",
  "de-ai-skills",
  "de-config-store",
  "de-editor-core",
  "de-figma",
+ "de-host-services",
  "de-html",
  "de-pen-loader",
  "de-pptx",
@@ -1292,12 +1317,17 @@ dependencies = [
  "de-rpc-transport",
  "de-util",
  "jian-ops-schema",
+ "libc",
+ "serde",
+ "serde-saphyr",
  "serde_json",
+ "signal-hook",
+ "unicode-normalization",
 ]
 
 [[package]]
 name = "de-codegen"
-version = "0.6.2"
+version = "0.6.3"
 dependencies = [
  "base64 0.22.1",
  "de-ai",
@@ -1311,7 +1341,7 @@ dependencies = [
 
 [[package]]
 name = "de-config-store"
-version = "0.6.2"
+version = "0.6.3"
 dependencies = [
  "serde",
  "serde_json",
@@ -1319,7 +1349,7 @@ dependencies = [
 
 [[package]]
 name = "de-design-lint"
-version = "0.6.2"
+version = "0.6.3"
 dependencies = [
  "de-i18n",
  "de-util",
@@ -1330,7 +1360,7 @@ dependencies = [
 
 [[package]]
 name = "de-editor-core"
-version = "0.6.2"
+version = "0.6.3"
 dependencies = [
  "base64 0.22.1",
  "de-ai",
@@ -1349,7 +1379,7 @@ dependencies = [
 
 [[package]]
 name = "de-editor-host-core"
-version = "0.6.2"
+version = "0.6.3"
 dependencies = [
  "de-ai",
  "de-ai-skills",
@@ -1370,7 +1400,7 @@ dependencies = [
 
 [[package]]
 name = "de-editor-ui"
-version = "0.6.2"
+version = "0.6.3"
 dependencies = [
  "accesskit",
  "base64 0.22.1",
@@ -1392,7 +1422,7 @@ dependencies = [
 
 [[package]]
 name = "de-figma"
-version = "0.6.2"
+version = "0.6.3"
 dependencies = [
  "base64 0.22.1",
  "de-editor-core",
@@ -1407,7 +1437,7 @@ dependencies = [
 
 [[package]]
 name = "de-git"
-version = "0.6.2"
+version = "0.6.3"
 dependencies = [
  "de-config-store",
  "de-util",
@@ -1419,7 +1449,7 @@ dependencies = [
 
 [[package]]
 name = "de-host-desktop"
-version = "0.6.2"
+version = "0.6.3"
 dependencies = [
  "accesskit",
  "accesskit_macos",
@@ -1483,7 +1513,7 @@ dependencies = [
 
 [[package]]
 name = "de-host-native"
-version = "0.6.2"
+version = "0.6.3"
 dependencies = [
  "accesskit",
  "casement",
@@ -1516,7 +1546,7 @@ dependencies = [
 
 [[package]]
 name = "de-host-services"
-version = "0.6.2"
+version = "0.6.3"
 dependencies = [
  "agent",
  "anthropic-agent-sdk",
@@ -1569,7 +1599,7 @@ dependencies = [
 
 [[package]]
 name = "de-html"
-version = "0.6.2"
+version = "0.6.3"
 dependencies = [
  "base64 0.22.1",
  "de-util",
@@ -1585,14 +1615,14 @@ dependencies = [
 
 [[package]]
 name = "de-i18n"
-version = "0.6.2"
+version = "0.6.3"
 dependencies = [
  "de-html",
 ]
 
 [[package]]
 name = "de-image-enrich"
-version = "0.6.2"
+version = "0.6.3"
 dependencies = [
  "base64 0.22.1",
  "de-editor-core",
@@ -1608,7 +1638,7 @@ dependencies = [
 
 [[package]]
 name = "de-mcp"
-version = "0.6.2"
+version = "0.6.3"
 dependencies = [
  "base64 0.22.1",
  "de-ai-skills",
@@ -1631,7 +1661,7 @@ dependencies = [
 
 [[package]]
 name = "de-opmerge"
-version = "0.6.2"
+version = "0.6.3"
 dependencies = [
  "jian-ops-schema",
  "serde_json",
@@ -1640,7 +1670,7 @@ dependencies = [
 
 [[package]]
 name = "de-orchestrator"
-version = "0.6.2"
+version = "0.6.3"
 dependencies = [
  "de-ai-skills",
  "de-design-lint",
@@ -1663,7 +1693,7 @@ dependencies = [
 
 [[package]]
 name = "de-path-ops"
-version = "0.6.2"
+version = "0.6.3"
 dependencies = [
  "de-editor-core",
  "jian-ops-schema",
@@ -1673,7 +1703,7 @@ dependencies = [
 
 [[package]]
 name = "de-pen-loader"
-version = "0.6.2"
+version = "0.6.3"
 dependencies = [
  "base64 0.22.1",
  "de-editor-core",
@@ -1693,7 +1723,7 @@ dependencies = [
 
 [[package]]
 name = "de-pptx"
-version = "0.6.2"
+version = "0.6.3"
 dependencies = [
  "base64 0.22.1",
  "de-editor-core",
@@ -1710,7 +1740,7 @@ dependencies = [
 
 [[package]]
 name = "de-preview-contracts"
-version = "0.6.2"
+version = "0.6.3"
 dependencies = [
  "serde",
  "serde_json",
@@ -1719,7 +1749,7 @@ dependencies = [
 
 [[package]]
 name = "de-preview-core"
-version = "0.6.2"
+version = "0.6.3"
 dependencies = [
  "async-trait",
  "de-editor-core",
@@ -1737,7 +1767,7 @@ dependencies = [
 
 [[package]]
 name = "de-process-io"
-version = "0.6.2"
+version = "0.6.3"
 dependencies = [
  "libc",
  "tokio",
@@ -1745,7 +1775,7 @@ dependencies = [
 
 [[package]]
 name = "de-render-export"
-version = "0.6.2"
+version = "0.6.3"
 dependencies = [
  "base64 0.22.1",
  "de-codegen",
@@ -1761,7 +1791,7 @@ dependencies = [
 
 [[package]]
 name = "de-rpc-transport"
-version = "0.6.2"
+version = "0.6.3"
 dependencies = [
  "serde",
  "serde_json",
@@ -1769,7 +1799,7 @@ dependencies = [
 
 [[package]]
 name = "de-smoke"
-version = "0.6.2"
+version = "0.6.3"
 dependencies = [
  "agent",
  "de-ai",
@@ -1791,7 +1821,7 @@ dependencies = [
 
 [[package]]
 name = "de-util"
-version = "0.6.2"
+version = "0.6.3"
 
 [[package]]
 name = "defmt"
@@ -2042,6 +2072,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "75030f3c4f45dafd7586dd6780965a8c7e8e285a5ecb86713e63a79c5b2766f3"
 dependencies = [
  "cfg-if",
+]
+
+[[package]]
+name = "encoding_rs_io"
+version = "0.1.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fba3fe847045ecff794b9c138293a80db914678c453ad63fbf0c6a9eb6e00b22"
+dependencies = [
+ "encoding_rs",
 ]
 
 [[package]]
@@ -2609,6 +2648,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2c4ee00b289aba7a9e5306d57c2d05499b2e5dc427f84ac708bd2c090212cf3e"
 dependencies = [
  "gl_generator",
+]
+
+[[package]]
+name = "granit-parser"
+version = "2.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9bd04d0d9c7079b416b458d2317aea4aa964c81938cb7c20f559758c4f422dc8"
+dependencies = [
+ "arraydeque",
+ "smallvec",
 ]
 
 [[package]]
@@ -5364,6 +5413,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "serde-saphyr"
+version = "2.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d43fb82d550b07e6f929a58d7d0935182602f48ddead875f5ee313c41c8f07fe"
+dependencies = [
+ "annotate-snippets",
+ "encoding_rs_io",
+ "granit-parser",
+ "num-traits",
+ "serde_core",
+ "smallvec",
+]
+
+[[package]]
 name = "serde_core"
 version = "1.0.228"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6440,6 +6503,12 @@ name = "unicode-segmentation"
 version = "1.13.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9629274872b2bfaf8d66f5f15725007f635594914870f65218920345aa11aa8c"
+
+[[package]]
+name = "unicode-width"
+version = "0.2.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ca718471876992059f251e33aafc334346ada08042b7661dd1fe313a9bced557"
 
 [[package]]
 name = "unicode-xid"

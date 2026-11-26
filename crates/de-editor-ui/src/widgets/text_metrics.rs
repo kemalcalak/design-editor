@@ -74,6 +74,18 @@ pub fn measure_in_family(
     backend.measure_text_family(text, font_size, family)
 }
 
+/// Painted width of `text` in an explicitly named `family` at `weight` —
+/// the weighted twin of [`measure_in_family`].
+pub fn measure_in_family_weighted(
+    backend: &mut dyn RenderBackend,
+    text: &str,
+    font_size: f32,
+    family: &str,
+    weight: u16,
+) -> f32 {
+    backend.measure_text_family_styled(text, font_size, family, weight, false)
+}
+
 /// Ellipsize `text` with a trailing `…` until it fits `max_w`, measured in
 /// the family it will be drawn in.
 pub fn fit_chrome(

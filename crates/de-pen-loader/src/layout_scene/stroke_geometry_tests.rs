@@ -29,7 +29,7 @@ fn a_line_arrow_is_local_to_the_box_and_falls_back_to_cap_at_the_start() {
     let g = scene_stroke_geometry(&n).expect("geometry");
     assert!(g.fill_d.contains("M 100 0"), "{}", g.fill_d);
     // The start falls back to the round cap: a half circle behind 0,0.
-    assert!(g.fill_d.contains("M 0 -1"), "{}", g.fill_d);
+    assert!(g.fill_d.contains("M 0 1"), "{}", g.fill_d);
     assert!(g.stroke_d.starts_with("M 0 0 L 90.5 0"), "{}", g.stroke_d);
 }
 

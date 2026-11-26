@@ -45,7 +45,7 @@ pub(super) fn write_corner_radius(node: &mut PenNode, radius: f64) -> bool {
         }
         // Rounded path vertices (#389).
         PenNode::Path(n) => {
-            n.corner_radius = Some(radius);
+            n.vertex_radius = Some(radius);
             true
         }
         // Other kinds have no corner-radius field; the write is a

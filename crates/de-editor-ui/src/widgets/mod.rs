@@ -157,7 +157,7 @@ pub(crate) mod property_panel_segments;
 pub mod property_panel_shader_body;
 pub mod property_panel_snapshot;
 pub mod property_panel_stroke;
-pub(crate) mod property_panel_stroke_ends;
+pub mod property_panel_stroke_ends;
 #[cfg(test)]
 mod property_panel_stroke_ends_tests;
 pub(crate) mod property_panel_stroke_style;
@@ -267,7 +267,7 @@ pub mod canvas_viewport_overlay;
 pub mod canvas_viewport_paint;
 #[cfg(test)]
 mod canvas_viewport_paint_pop_tests;
-mod canvas_viewport_stroke_paint;
+pub(crate) mod canvas_viewport_stroke_paint;
 mod canvas_viewport_text;
 mod canvas_viewport_text_fill;
 mod canvas_viewport_text_stroke;
@@ -296,8 +296,8 @@ pub mod host_overlay_geometry;
 pub mod image_crop_flow;
 pub mod image_popover_input_flow;
 pub mod images_tab;
+pub mod label_widths;
 mod layer_context_flow;
-mod layer_context_menu_width;
 pub mod press_flow;
 mod prompt_center_press_flow;
 mod scene_template_press_flow;
@@ -493,6 +493,12 @@ pub mod whats_new_modal;
 pub mod window_strip;
 
 // Test-support: shared RenderBackend stubs (never ships in non-test builds).
+#[cfg(test)]
+mod agent_settings_width_tests;
+#[cfg(test)]
+mod floating_chrome_width_tests;
+#[cfg(test)]
+pub(crate) mod label_fit_test_support;
 #[cfg(test)]
 pub(crate) mod test_capture_backend;
 #[cfg(test)]

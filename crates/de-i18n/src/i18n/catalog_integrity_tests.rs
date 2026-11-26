@@ -215,7 +215,7 @@ fn table_keys(name: &str, main: &str, git: &str) -> BTreeSet<String> {
     keys
 }
 
-fn placeholders(value: &str) -> BTreeSet<String> {
+pub(super) fn placeholders(value: &str) -> BTreeSet<String> {
     let bytes = value.as_bytes();
     let mut result = BTreeSet::new();
     let mut index = 0;
@@ -251,7 +251,7 @@ fn placeholders(value: &str) -> BTreeSet<String> {
 fn every_locale_has_exactly_the_english_key_set() {
     let all_tables = tables();
     let expected = table_keys(all_tables[0].0, all_tables[0].1, all_tables[0].2);
-    assert_eq!(expected.len(), 2036, "update the intentional catalog size");
+    assert_eq!(expected.len(), 2059, "update the intentional catalog size");
 
     for (name, main, git, lookup) in all_tables {
         let actual = table_keys(name, main, git);

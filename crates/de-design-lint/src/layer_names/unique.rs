@@ -1,8 +1,11 @@
 //! Siblings never get the same proposed name. Siblings that would share
 //! one are each told apart by one of their own texts (`Row (HD export)`,
-//! the first of them too, so the set reads evenly); one that nothing tells
-//! apart keeps the plain name when it is still free and gets no proposal
-//! otherwise. Nothing is ever numbered.
+//! the first of them too, so the set reads evenly). Those without a text
+//! to tell them apart are told apart together, by their fill colours when
+//! every one differs (`Shape (Blue)`), else by where they sit among each
+//! other (`Shape (Left)`, see `tell_apart`). A lone one keeps the plain
+//! name when it is still free; past that, one keeps the plain name and the
+//! rest get no proposal. Nothing is ever numbered.
 
 use std::collections::HashSet;
 
@@ -11,6 +14,7 @@ use jian_ops_schema::node::PenNode;
 
 use super::facts::Facts;
 use super::rules::collapse_whitespace;
+use super::tell_apart::{fill_word, position_words};
 use super::text_roles::labels;
 
 /// One sibling's naming.
@@ -49,6 +53,15 @@ fn key(name: &str) -> String {
     collapse_whitespace(name).to_lowercase()
 }
 
+/// `name` told apart by `detail`: `Card (Starter)`.
+fn qualify(name: &str, detail: &str, locale: Locale) -> String {
+    de_i18n::translate_with(
+        locale,
+        "renameLayers.role.qualified",
+        &[("name", name), ("detail", detail)],
+    )
+}
+
 /// `name` told apart by `node`'s own texts that it does not already say,
 /// in reading order, e.g. `Card (Starter)`.
 fn qualified(node: &PenNode, name: &str, locale: Locale, facts: &Facts) -> Vec<String> {
@@ -56,22 +69,61 @@ fn qualified(node: &PenNode, name: &str, locale: Locale, facts: &Facts) -> Vec<S
     labels(node, facts)
         .into_iter()
         .filter(|label| !lower.contains(&label.to_lowercase()))
-        .map(|label| {
-            de_i18n::translate_with(
-                locale,
-                "renameLayers.role.qualified",
-                &[("name", name), ("detail", label.as_str())],
-            )
-        })
+        .map(|label| qualify(name, &label, locale))
         .collect()
+}
+
+/// Siblings that share one proposal and hold no text that tells them
+/// apart, and what they are named in.
+struct Untold<'s, 'n> {
+    nodes: Vec<&'n PenNode>,
+    /// Every sibling, in tree order: the grid a place is read in.
+    siblings: Vec<&'n PenNode>,
+    plain: &'s str,
+    parent: Option<&'n PenNode>,
+    locale: Locale,
+}
+
+impl Untold<'_, '_> {
+    /// One qualified name per member: by fill when every fill has a word
+    /// and no two match, else by position. `None` when neither tells every
+    /// one apart with names still free.
+    fn told_together(
+        &self,
+        taken: &HashSet<String>,
+        acceptable: &impl Fn(&PenNode, &str) -> bool,
+    ) -> Option<Vec<String>> {
+        let usable = |details: Vec<String>| -> Option<Vec<String>> {
+            let names: Vec<String> = details
+                .iter()
+                .map(|detail| qualify(self.plain, detail, self.locale))
+                .collect();
+            let mut seen = HashSet::new();
+            let fine = names.iter().zip(&self.nodes).all(|(name, node)| {
+                let name_key = key(name);
+                !taken.contains(&name_key) && seen.insert(name_key) && acceptable(node, name)
+            });
+            fine.then_some(names)
+        };
+        let fills: Option<Vec<String>> = self
+            .nodes
+            .iter()
+            .map(|node| fill_word(node, self.locale))
+            .collect();
+        fills.and_then(usable).or_else(|| {
+            position_words(&self.nodes, &self.siblings, self.parent, self.locale).and_then(usable)
+        })
+    }
 }
 
 /// Make the applied proposals of `siblings` distinct from each other and
 /// from the names siblings hold. `order` is the reading order (indexes
-/// into `siblings`); `acceptable` vets a qualified name for its layer.
+/// into `siblings`), `parent` the layer holding them (`None` for a page's
+/// top-level layers); `acceptable` vets a qualified name for its layer.
 pub(crate) fn make_distinct(
     siblings: &mut [SiblingName<'_>],
     order: &[usize],
+    parent: Option<&PenNode>,
     locale: Locale,
     facts: &Facts,
     acceptable: impl Fn(&PenNode, &str) -> bool,
@@ -117,6 +169,26 @@ pub(crate) fn make_distinct(
             }
         }
         let mut plain_free = !taken.contains(&name_key);
+        if untold.len() > 1 || (!untold.is_empty() && !plain_free) {
+            let plain = siblings[untold[0]]
+                .proposed
+                .clone()
+                .expect("grouped proposal");
+            let group = Untold {
+                nodes: untold.iter().map(|&index| siblings[index].node).collect(),
+                siblings: siblings.iter().map(|sibling| sibling.node).collect(),
+                plain: &plain,
+                parent,
+                locale,
+            };
+            if let Some(names) = group.told_together(&taken, &acceptable) {
+                for (index, name) in untold.into_iter().zip(names) {
+                    taken.insert(key(&name));
+                    siblings[index].proposed = Some(name);
+                }
+                continue;
+            }
+        }
         for index in untold {
             if plain_free {
                 taken.insert(name_key.clone());

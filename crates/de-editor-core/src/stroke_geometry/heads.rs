@@ -2,8 +2,12 @@
 //! `tip` with `dir` the unit direction pointing *out of* the path, and
 //! reports how much of the centre line it covers (the trim), so the line
 //! never pokes out of a pointed head.
+//!
+//! Every filled shape winds the same way (clockwise on screen, y down),
+//! so the nonzero fill of `fill_d` never cancels where two shapes overlap
+//! (both heads of a short line, a cap under a neighbouring head).
 
-use super::{push_cmd, StrokeGeometry};
+use super::{push_cmd, HeadCover, StrokeGeometry};
 use crate::vector_edit::Pt;
 use jian_ops_schema::style::StrokeEndCap;
 
@@ -30,6 +34,17 @@ pub(super) fn push_head(
     let s = head_length(width);
     let half_w = width / 2.0;
     let n = (-dir.1, dir.0);
+    if !matches!(
+        cap,
+        StrokeEndCap::None | StrokeEndCap::Round | StrokeEndCap::Square
+    ) {
+        // Every marker lies within `s` of the point half a head back
+        // from the tip; the arms and outlines add half a width.
+        out.heads.push(HeadCover {
+            center: (tip.0 - dir.0 * s / 2.0, tip.1 - dir.1 * s / 2.0),
+            radius: s + half_w,
+        });
+    }
     let at = |along: f64, across: f64| {
         (
             tip.0 + dir.0 * along + n.0 * across,
@@ -42,10 +57,10 @@ pub(super) fn push_head(
             polygon(
                 &mut out.fill_d,
                 &[
-                    at(0.0, half_w),
-                    at(half_w, half_w),
-                    at(half_w, -half_w),
                     at(0.0, -half_w),
+                    at(half_w, -half_w),
+                    at(half_w, half_w),
+                    at(0.0, half_w),
                 ],
             );
             0.0
@@ -53,10 +68,10 @@ pub(super) fn push_head(
         StrokeEndCap::Round => {
             // Half a circle centred on the end point, bulging outward: two
             // quarter arcs turning from the normal through `dir` (each a
-            // -90° turn, so sweep 0 in y-down coordinates).
-            push_cmd(&mut out.fill_d, 'M', &[at(0.0, half_w)]);
-            push_arc(&mut out.fill_d, half_w, at(half_w, 0.0), false);
-            push_arc(&mut out.fill_d, half_w, at(0.0, -half_w), false);
+            // +90° turn, so sweep 1 in y-down coordinates).
+            push_cmd(&mut out.fill_d, 'M', &[at(0.0, -half_w)]);
+            push_arc(&mut out.fill_d, half_w, at(half_w, 0.0), true);
+            push_arc(&mut out.fill_d, half_w, at(0.0, half_w), true);
             out.fill_d.push_str(" Z");
             0.0
         }
@@ -83,8 +98,8 @@ pub(super) fn push_head(
         StrokeEndCap::Circle => {
             let r = s * CIRCLE_FACTOR;
             push_cmd(&mut out.fill_d, 'M', &[at(r, 0.0)]);
-            push_arc(&mut out.fill_d, r, at(-r, 0.0), false);
-            push_arc(&mut out.fill_d, r, at(r, 0.0), false);
+            push_arc(&mut out.fill_d, r, at(-r, 0.0), true);
+            push_arc(&mut out.fill_d, r, at(r, 0.0), true);
             out.fill_d.push_str(" Z");
             if r > half_w {
                 (r * r - half_w * half_w).sqrt()

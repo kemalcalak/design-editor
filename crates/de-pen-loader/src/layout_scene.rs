@@ -235,6 +235,10 @@ pub(crate) fn node_payload_to_scene(
         rotation: node.rotation,
         flip_x: node.flip_x,
         flip_y: node.flip_y,
+        line_direction: jian_scene::layout_scene::SceneLineDirection {
+            right_to_left: node.line_right_to_left,
+            bottom_to_top: node.line_bottom_to_top,
+        },
         corner_radius: node.corner_radius,
         corner_radii: node.corner_radii,
         corner_smoothing: node.corner_smoothing,

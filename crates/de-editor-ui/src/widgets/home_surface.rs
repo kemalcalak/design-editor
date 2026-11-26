@@ -7,8 +7,9 @@
 //! and owns hit-testing. The surface is document-agnostic: it reads the
 //! same `EditorState` as the canvas and never creates a second model.
 
+use crate::widgets::label_widths::LabelWidths;
 use crate::widgets::{LayoutBox, LayoutCx, PaintCx, Widget, WidgetId};
-use crate::{Point2D, Rect};
+use crate::{Point2D, Rect, RenderBackend};
 use de_editor_core::agent_settings::McpCli;
 use de_editor_core::{
     EditorState, EditorUiState, HomeFamily, HomeHit, HomeState, Locale, RecentView,
@@ -24,8 +25,6 @@ mod icons;
 
 #[path = "home_surface_copy.rs"]
 mod copy;
-/// Backend-free text width, shared with the settings modal's hit geometry.
-pub(crate) use copy::estimate_width;
 pub use copy::size_chip_label;
 
 #[path = "home_surface_model.rs"]
@@ -178,20 +177,72 @@ impl<'a> HomeSurface<'a> {
     }
 
     pub fn max_scroll(&self, viewport_width: f32, viewport_height: f32) -> f32 {
-        home_max_scroll(self.layout_input(viewport_width, viewport_height))
+        home_max_scroll(
+            self.layout_input(viewport_width, viewport_height),
+            &mut LabelWidths::cached(),
+        )
     }
 
+    /// The surface's rects, its labelled controls sized from the widths
+    /// paint measured (`label_widths`, #440).
     pub fn layout(&self, viewport_width: f32, viewport_height: f32) -> HomeLayout {
-        let max = self.max_scroll(viewport_width, viewport_height);
-        home_layout(HomeLayoutInput {
-            scroll_y: self.state.scroll_y.clamp(0.0, max),
-            ..self.layout_input(viewport_width, viewport_height)
-        })
+        self.layout_with(viewport_width, viewport_height, &mut LabelWidths::cached())
     }
 
-    /// The connect popover's rects (only meaningful while it is open).
+    /// [`Self::layout`], measuring the labels through `backend` where
+    /// nothing measured them yet. Paint calls it, so every backend-less
+    /// [`Self::layout`] after it (press, hover, scroll) reads the widths
+    /// it painted.
+    pub fn measured_layout(
+        &self,
+        viewport_width: f32,
+        viewport_height: f32,
+        backend: &mut dyn RenderBackend,
+    ) -> HomeLayout {
+        self.layout_with(
+            viewport_width,
+            viewport_height,
+            &mut LabelWidths::measuring(backend),
+        )
+    }
+
+    fn layout_with(
+        &self,
+        viewport_width: f32,
+        viewport_height: f32,
+        labels: &mut LabelWidths<'_>,
+    ) -> HomeLayout {
+        let input = self.layout_input(viewport_width, viewport_height);
+        let max = home_max_scroll(input, labels);
+        home_layout(
+            HomeLayoutInput {
+                scroll_y: self.state.scroll_y.clamp(0.0, max),
+                ..input
+            },
+            labels,
+        )
+    }
+
+    /// The connect popover's rects (only meaningful while it is open),
+    /// from the widths paint measured.
     pub fn mcp_popover(&self, layout: &HomeLayout, viewport_width: f32) -> McpPopoverLayout {
-        mcp_popover_layout(self, layout, viewport_width)
+        mcp_popover_layout(self, layout, viewport_width, &mut LabelWidths::cached())
+    }
+
+    /// [`Self::mcp_popover`], measuring its labels and copy through
+    /// `backend` where nothing measured them yet (paint).
+    pub fn measured_mcp_popover(
+        &self,
+        layout: &HomeLayout,
+        viewport_width: f32,
+        backend: &mut dyn RenderBackend,
+    ) -> McpPopoverLayout {
+        mcp_popover_layout(
+            self,
+            layout,
+            viewport_width,
+            &mut LabelWidths::measuring(backend),
+        )
     }
 
     /// Whether a press at `point` lands on an open popover. A press
@@ -325,10 +376,16 @@ impl<'a> HomeSurface<'a> {
                 .is_none()
     }
 
-    /// The IME caret rect inside the composer's input box.
-    pub fn focused_input_caret_rect(&self, viewport_width: f32, viewport_height: f32) -> Rect {
+    /// The IME caret rect inside the composer's input box, measured
+    /// through `backend` in the face the input paints its text in.
+    pub fn focused_input_caret_rect(
+        &self,
+        viewport_width: f32,
+        viewport_height: f32,
+        backend: &mut dyn RenderBackend,
+    ) -> Rect {
         let layout = self.layout(viewport_width, viewport_height);
-        composer::caret_rect(self, &layout)
+        composer::caret_rect(self, &layout, backend)
     }
 }
 
@@ -397,3 +454,7 @@ mod tests;
 #[cfg(test)]
 #[path = "home_surface_layout_tests.rs"]
 mod layout_tests;
+
+#[cfg(test)]
+#[path = "home_surface_width_tests.rs"]
+mod width_tests;

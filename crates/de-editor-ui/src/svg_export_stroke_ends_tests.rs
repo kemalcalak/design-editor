@@ -38,6 +38,7 @@ fn arrow_line(id: &str) -> SceneNode {
         stroke_d: "M 0 0 L 100 0".into(),
         fill_d: "M 0 -1 A 1 1 0 0 0 -1 0 A 1 1 0 0 0 0 1 Z".into(),
         arms_d: "M 92 7 L 100 0 L 92 -7".into(),
+        head_hits: Vec::new(),
     }));
     line
 }
@@ -86,4 +87,26 @@ fn miter_limit_exports_as_stroke_miterlimit() {
     }));
     let body = serialize_node_svg(&scene_with(vec![path]), id).expect("svg");
     assert!(body.contains(r#"stroke-miterlimit="10""#), "{body}");
+}
+
+#[test]
+fn a_dotted_line_with_ends_keeps_round_dots_and_fills_heads_nonzero() {
+    use crate::layout_scene::{StrokeCap, StrokeDash};
+    let id = "dots";
+    let mut line = arrow_line(id);
+    line.stroke = Some(stroke(StrokeStyle {
+        cap: Some(StrokeCap::Round),
+        dash: StrokeDash::new(&[0.0, 4.0], 0.0),
+        end: Some(StrokeEnd::LineArrow),
+        ..StrokeStyle::default()
+    }));
+    let body = serialize_node_svg(&scene_with(vec![line]), id).expect("svg");
+    let centre = body
+        .split("<path")
+        .find(|part| part.contains(r#"d="M 0 0 L 100 0""#))
+        .expect("centre line");
+    // Zero-length dashes only draw with the round cap.
+    assert!(centre.contains(r#"stroke-linecap="round""#), "{centre}");
+    assert!(centre.contains(r#"stroke-dasharray="0 4""#), "{centre}");
+    assert!(body.contains(r#"fill-rule="nonzero""#), "{body}");
 }

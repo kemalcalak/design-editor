@@ -6,9 +6,7 @@
 //! and each returns whether the document changed.
 
 use super::*;
-use jian_ops_schema::style::{
-    StrokeAlign, StrokeCap, StrokeEndCap, StrokeJoin, StrokeWidthProfile,
-};
+use jian_ops_schema::style::{StrokeAlign, StrokeCap, StrokeEndCap, StrokeJoin};
 
 /// The node's stroke alignment, `None` when it has no stroke. An absent
 /// `align` field reads as `Center`, which is how every renderer treats it.
@@ -123,7 +121,6 @@ pub fn render_stroke_style(
         miter_limit: None,
         start: None,
         end: None,
-        width_profile: None,
         cap: cap.map(|cap| match cap {
             StrokeCap::None => Cap::Butt,
             StrokeCap::Round => Cap::Round,
@@ -140,39 +137,42 @@ pub fn render_stroke_style(
 
 /// [`render_stroke_style`] of a whole schema stroke, shape fields included.
 pub fn pen_stroke_render_style(stroke: &PenStroke) -> jian_widgets::StrokeStyle {
-    with_stroke_shape(
-        render_stroke_style(
-            stroke.cap.as_ref(),
-            stroke.join.as_ref(),
-            stroke.dash_pattern.as_deref(),
-            stroke.dash_offset,
-        ),
-        stroke.stroke_start,
-        stroke.stroke_end,
-        stroke.miter_limit,
-        stroke.width_profile.as_ref(),
-    )
+    StrokeShape {
+        start: stroke.stroke_start,
+        end: stroke.stroke_end,
+        miter_limit: stroke.miter_limit,
+    }
+    .apply(render_stroke_style(
+        stroke.cap.as_ref(),
+        stroke.join.as_ref(),
+        stroke.dash_pattern.as_deref(),
+        stroke.dash_offset,
+    ))
 }
 
-/// `style` with a schema stroke's per-end caps, miter limit and width
-/// profile (#389). A miter limit below 1 or not finite, and a profile that
-/// does not vary, stay unset.
-pub fn with_stroke_shape(
-    style: jian_widgets::StrokeStyle,
-    start: Option<StrokeEndCap>,
-    end: Option<StrokeEndCap>,
-    miter_limit: Option<f32>,
-    width_profile: Option<&StrokeWidthProfile>,
-) -> jian_widgets::StrokeStyle {
-    jian_widgets::StrokeStyle {
-        start: start.map(render_stroke_end),
-        end: end.map(render_stroke_end),
-        miter_limit: miter_limit.filter(|limit| limit.is_finite() && *limit >= 1.0),
-        width_profile: width_profile.and_then(|profile| {
-            let stops: Vec<[f32; 2]> = profile.stops().iter().map(|p| [p.t, p.width]).collect();
-            jian_widgets::StrokeWidthProfile::new(&stops)
-        }),
-        ..style
+/// A schema stroke's per-end caps and miter limit (#389), the shape
+/// fields the render-side style carries beside cap / join / dash. A width
+/// profile is not render style: it stays on the schema stroke and is
+/// baked into geometry.
+#[derive(Debug, Clone, Copy, PartialEq, Default)]
+pub struct StrokeShape {
+    pub start: Option<StrokeEndCap>,
+    pub end: Option<StrokeEndCap>,
+    pub miter_limit: Option<f32>,
+}
+
+impl StrokeShape {
+    /// `style` with these ends and miter limit. A miter limit below 1 or
+    /// not finite stays unset.
+    pub fn apply(self, style: jian_widgets::StrokeStyle) -> jian_widgets::StrokeStyle {
+        jian_widgets::StrokeStyle {
+            start: self.start.map(render_stroke_end),
+            end: self.end.map(render_stroke_end),
+            miter_limit: self
+                .miter_limit
+                .filter(|limit| limit.is_finite() && *limit >= 1.0),
+            ..style
+        }
     }
 }
 
@@ -199,9 +199,10 @@ pub struct StrokeStyleWrite {
     pub join: Option<StrokeJoin>,
     pub dash_pattern: Option<Vec<f32>>,
     pub dash_offset: Option<f32>,
-    /// What the start / end of an open stroke draws (#389).
-    pub stroke_start: Option<StrokeEndCap>,
-    pub stroke_end: Option<StrokeEndCap>,
+    /// What the start / end of an open stroke draws (#389): `Some(None)`
+    /// unsets the end, so it falls back to `cap` again.
+    pub stroke_start: Option<Option<StrokeEndCap>>,
+    pub stroke_end: Option<Option<StrokeEndCap>>,
     /// Miter limit, a multiple of the stroke width (`>= 1`; 4 is the SVG
     /// default and is written as absent).
     pub miter_limit: Option<f32>,
@@ -271,10 +272,10 @@ pub fn set_stroke_style(node: &mut PenNode, write: &StrokeStyleWrite) -> bool {
         stroke.dash_offset = None;
     }
     if let Some(start) = write.stroke_start {
-        stroke.stroke_start = Some(start);
+        stroke.stroke_start = start;
     }
     if let Some(end) = write.stroke_end {
-        stroke.stroke_end = Some(end);
+        stroke.stroke_end = end;
     }
     if let Some(limit) = write.miter_limit {
         stroke.miter_limit = ((limit - DEFAULT_MITER_LIMIT).abs() > f32::EPSILON).then_some(limit);
@@ -349,14 +350,14 @@ pub fn apply_stroke_style_edit(node: &mut PenNode, edit: &StrokeStyleEdit) -> bo
         StrokeStyleEdit::Start(cap) => set_stroke_style(
             node,
             &StrokeStyleWrite {
-                stroke_start: Some(*cap),
+                stroke_start: Some(Some(*cap)),
                 ..StrokeStyleWrite::default()
             },
         ),
         StrokeStyleEdit::End(cap) => set_stroke_style(
             node,
             &StrokeStyleWrite {
-                stroke_end: Some(*cap),
+                stroke_end: Some(Some(*cap)),
                 ..StrokeStyleWrite::default()
             },
         ),

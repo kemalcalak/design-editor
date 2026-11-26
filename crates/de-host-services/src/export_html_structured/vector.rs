@@ -92,11 +92,12 @@ pub fn emit_icon(out: &mut String, n: &SceneNode, rect: Rect) {
 
 /// Emit a Line node as an inline SVG segment.
 ///
-/// A line's `bounds` is a vector, not a box: the segment runs from the
-/// origin to `origin + size`, and either component may be zero or
-/// negative. The SVG box is therefore the normalised rect padded out by
-/// the stroke, which also keeps a perfectly horizontal line (zero
-/// height) from collapsing to an unrenderable zero-extent viewport.
+/// The segment runs from the line's start to its end
+/// (`SceneNode::line_endpoints`: the scene keeps a normalised box plus the
+/// direction it was drawn in, #389), so the start stays the start. The SVG
+/// box is the segment's normalised rect padded out by the stroke, which
+/// also keeps a perfectly horizontal line (zero height) from collapsing to
+/// an unrenderable zero-extent viewport.
 pub fn emit_line(out: &mut String, n: &SceneNode, origin: Point2D) {
     if emit_stroke_geometry(out, n, origin) {
         return;
@@ -105,11 +106,7 @@ pub fn emit_line(out: &mut String, n: &SceneNode, origin: Point2D) {
         Some(s) => (s.color, s.width),
         None => (n.fill.unwrap_or(Color::BLACK), 1.5),
     };
-    let a = n.bounds.origin;
-    let b = Point2D::new(
-        n.bounds.origin.x + n.bounds.size.x,
-        n.bounds.origin.y + n.bounds.size.y,
-    );
+    let (a, b) = n.line_endpoints();
     let doc_box = padded_box(
         Rect {
             origin: Point2D::new(a.x.min(b.x), a.y.min(b.y)),
@@ -319,6 +316,20 @@ fn paint_attrs_with_fill(n: &SceneNode, filled: bool) -> String {
             css::color(stroke.color),
             css::num(stroke.width)
         );
+        // The authored join and miter limit (#389): a polygon or path
+        // corner bevels / rounds / mitres as on the canvas.
+        use de_editor_ui::layout_scene::StrokeJoin;
+        if let Some(join) = stroke.style.join {
+            let join = match join {
+                StrokeJoin::Miter => "miter",
+                StrokeJoin::Round => "round",
+                StrokeJoin::Bevel => "bevel",
+            };
+            let _ = write!(attrs, r#" stroke-linejoin="{join}""#);
+        }
+        if let Some(limit) = stroke.style.miter_limit {
+            let _ = write!(attrs, r#" stroke-miterlimit="{}""#, css::num(limit));
+        }
     }
     attrs
 }

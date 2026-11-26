@@ -56,14 +56,15 @@ fn radii_and_smoothing_land_in_one_step() {
 #[test]
 fn polygons_and_paths_take_one_radius_and_smoothing() {
     let mut s = state_with(polygon_and_path());
-    for node in ["p", "q"] {
+    // A polygon stores `cornerRadius`; a path its vertex radius.
+    for (node, field) in [("p", "cornerRadius"), ("q", "vertexRadius")] {
         assert!(s.apply(EditorCommand::SetNodeCorners {
             node_id: id(node),
             radii: Some([6.0; 4]),
             smoothing: Some(0.25),
         }));
         let json = node_json(&s, node);
-        assert_eq!(json["cornerRadius"], serde_json::json!(6.0), "{json}");
+        assert_eq!(json[field], serde_json::json!(6.0), "{json}");
         assert_eq!(json["cornerSmoothing"], serde_json::json!(0.25), "{json}");
     }
     // The legacy uniform command now reaches paths too.
@@ -71,7 +72,7 @@ fn polygons_and_paths_take_one_radius_and_smoothing() {
         node_id: id("q"),
         radius: 3.0,
     }));
-    assert_eq!(node_json(&s, "q")["cornerRadius"], serde_json::json!(3.0));
+    assert_eq!(node_json(&s, "q")["vertexRadius"], serde_json::json!(3.0));
 }
 
 #[test]
