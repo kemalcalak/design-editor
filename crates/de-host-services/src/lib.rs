@@ -55,11 +55,11 @@ mod copilot_sdk_probe;
 mod deck_motion;
 #[cfg(test)]
 mod design_agent_reflow_tests;
-#[cfg(test)]
-mod design_agent_tool_result_tests;
 pub mod design_agent_run;
 mod design_agent_run_error;
 mod design_agent_run_executor;
+#[cfg(test)]
+mod design_agent_tool_result_tests;
 pub mod design_agent_tools;
 pub mod design_context;
 pub(crate) mod design_md_evidence;
