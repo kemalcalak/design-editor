@@ -27,7 +27,7 @@ fn row(index: usize) -> Value {
     let overdue = index % 10 == 7;
     let status = if overdue {
         "Overdue"
-    } else if index % 3 == 0 {
+    } else if index.is_multiple_of(3) {
         "Pending"
     } else {
         "Paid"
@@ -36,7 +36,7 @@ fn row(index: usize) -> Value {
         "type": "frame", "id": id, "name": format!("Row {}", index + 1),
         "layout": "horizontal", "gap": 16, "padding": [10, 16], "alignItems": "center",
         "width": "fill_container", "height": 40, "cornerRadius": 6,
-        "fill": solid(if index % 2 == 0 { "#ffffff" } else { "#f9fafb" }),
+        "fill": solid(if index.is_multiple_of(2) { "#ffffff" } else { "#f9fafb" }),
         "children": [
             cell(format!("{id}-name"), &format!("Invoice #{:04}", 1000 + index * 7), 160.0, "600"),
             cell(format!("{id}-client"), ["Acme Corp", "Globex", "Initech", "Umbrella"][index % 4], 140.0, "400"),

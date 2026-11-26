@@ -12,11 +12,9 @@ fn tools_list_response_includes_all_registered_tools() {
     // so this test can't race other tests' env access).
     let state = de_editor_core::EditorState::new();
     let r = tools_list_response("3", &state, false);
-    // The production catalog excludes debug tools. Exact-count
-    // assertion: any tool added without updating this test trips
-    // the count first. Codex stop-gate: previous `contains`-only
-    // checks would have silently passed if a new tool slipped into
-    // TOOL_SCHEMAS without being added to the list below.
+    // The production catalog excludes debug tools. Exact count: a tool added
+    // without updating this test trips it first (`contains`-only checks would
+    // let a new TOOL_SCHEMAS entry slip past the list below).
     assert_eq!(
         TOOL_SCHEMAS.len(),
         170,
