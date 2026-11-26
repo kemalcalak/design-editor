@@ -224,7 +224,8 @@ fn lone_content(mut node: &PenNode) -> &PenNode {
 /// at most one of them prominent (a logo among links). A wrapper around
 /// the row alone (a full-width bar holding a padded row) counts as the row.
 /// A heading block (`Pricing` over `Choose a plan`) is no band.
-pub(crate) fn header_band(screen: &PenNode, facts: &Facts) -> bool {
+/// Remembered per screen: ask [`Facts::header_band`].
+pub(crate) fn header_band_of(screen: &PenNode, facts: &Facts) -> bool {
     let Some(first) = children(screen).first() else {
         return false;
     };
@@ -254,7 +255,7 @@ pub(crate) fn screen_heading(screen: &PenNode, facts: &Facts) -> Option<String> 
         0,
         Scope::Heading,
         facts,
-        header_band(screen, facts),
+        facts.header_band(screen),
         &mut placed,
     );
     let texts: Vec<TextInfo> = placed.into_iter().map(|p| p.info).collect();

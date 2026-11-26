@@ -1,7 +1,8 @@
 //! What the rules ask about a layer again and again (is it a card, a
-//! button, does it hold text, what is its heading), answered once per
-//! layer and remembered for one naming pass. Without it the heading search
-//! re-tests every descendant of every container, quadratic in depth.
+//! button, does it hold text, what is its heading, does it open with a
+//! header band), answered once per layer and remembered for one naming
+//! pass. Without it the heading search re-tests every descendant of every
+//! container, quadratic in depth.
 
 use std::cell::RefCell;
 use std::collections::HashMap;
@@ -11,7 +12,7 @@ use jian_ops_schema::node::PenNode;
 use crate::node_util::{children, is_node_visible, node_kind};
 
 use super::rules::{button_role, is_card_shaped, text_content};
-use super::text_roles::heading_of;
+use super::text_roles::{header_band_of, heading_of};
 
 type Key = *const PenNode;
 
@@ -27,6 +28,7 @@ pub(crate) struct Facts {
     card: RefCell<HashMap<Key, bool>>,
     has_text: RefCell<HashMap<Key, bool>>,
     heading: RefCell<HashMap<Key, Option<String>>>,
+    header_band: RefCell<HashMap<Key, bool>>,
 }
 
 fn remember<V: Clone>(
@@ -80,6 +82,12 @@ impl Facts {
                     text_content(kid).is_some_and(|text| !text.is_empty()) || self.has_text(kid)
                 })
         })
+    }
+
+    /// Whether the first child of `screen` is its header band (see
+    /// [`header_band_of`]).
+    pub(crate) fn header_band(&self, screen: &PenNode) -> bool {
+        remember(&self.header_band, screen, || header_band_of(screen, self))
     }
 
     /// The heading `node` is named after (see [`heading_of`]).

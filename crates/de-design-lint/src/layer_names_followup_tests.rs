@@ -2,7 +2,7 @@
 //! badges apart from buttons, and textless siblings told apart by colour
 //! or place.
 
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 use super::roles_tests::{page_roots, scene_templates, strip_names};
 use super::*;
@@ -290,7 +290,7 @@ fn alike_siblings_are_told_apart_by_place() {
 }
 
 #[test]
-fn siblings_past_three_across_are_left_to_a_hand_written_name() {
+fn siblings_sharing_a_place_are_left_to_a_hand_written_name() {
     let gray = "#E5E7EB";
     let wrapped = node(json!({
         "type": "frame", "id": "s", "name": "Frame", "width": 400, "height": 400,
@@ -308,8 +308,170 @@ fn siblings_past_three_across_are_left_to_a_hand_written_name() {
             .map(|id| rect(id, gray, json!({})))
             .collect(),
     ));
+    // Three of five sit in the middle of the run: no word for each.
     assert_eq!(five["a"], "Shape");
     assert_eq!(five.len(), 2, "{five:?}");
+}
+
+/// A card: a filled, rounded box holding two layers, the first a text
+/// when `label` is given.
+fn card(id: &str, label: Option<&str>) -> Value {
+    let first = match label {
+        Some(label) => text(&format!("{id}-t"), label, 20.0),
+        None => rect(
+            &format!("{id}-icon"),
+            "#93C5FD",
+            json!({"width": 24, "height": 24}),
+        ),
+    };
+    json!({"type": "frame", "id": id, "name": "Frame", "width": 200, "height": 160,
+           "cornerRadius": 12, "layout": "vertical",
+           "fill": [{"type": "solid", "color": "#FFFFFF"}],
+           "children": [first, text(&format!("{id}-b"), "The same body text shown under every one of these cards", 14.0)]})
+}
+
+#[test]
+fn a_place_is_read_among_all_siblings_and_a_selection_agrees_with_lint() {
+    // The first card has a title of its own; the other two share the
+    // body text only and sit in the middle and on the right of the row.
+    let page = holder(
+        "horizontal",
+        vec![card("a", Some("Starter")), card("b", None), card("c", None)],
+    );
+    let names = names_of(&page);
+    assert_eq!(names["a"], "Starter card");
+    assert_eq!(names["b"], "Card (Middle)");
+    assert_eq!(names["c"], "Card (Right)");
+
+    let roots = std::slice::from_ref(&page);
+    let issues = detect_default_layer_names(&NamingPage::new(roots, &NoInstances), Locale::EnUs);
+    let targets: HashSet<String> = ["b", "c"].iter().map(|id| id.to_string()).collect();
+    // The selection covers the two cards and what they hold.
+    let selected: Vec<_> = propose_layer_names(roots, Some(&targets), Locale::EnUs)
+        .into_iter()
+        .filter(|p| targets.contains(&p.node_id))
+        .collect();
+    assert_eq!(selected.len(), 2, "{selected:?}");
+    for p in selected {
+        let issue = issues
+            .iter()
+            .find(|i| i.node_id == p.node_id)
+            .expect("finding");
+        assert_eq!(issue.suggested_value, json!(p.proposed), "{}", p.node_id);
+    }
+}
+
+#[test]
+fn free_form_rows_are_ordered_by_centre() {
+    // The tall box starts higher but its centre sits under the short one.
+    let gray = "#E5E7EB";
+    let names = names_of(&holder(
+        "none",
+        vec![
+            rect("tall", gray, json!({"x": 0, "y": 0, "height": 300})),
+            rect("short", gray, json!({"x": 0, "y": 10, "height": 20})),
+        ],
+    ));
+    assert_eq!(names["short"], "Shape (Top)");
+    assert_eq!(names["tall"], "Shape (Bottom)");
+}
+
+#[test]
+fn only_a_visible_fill_names_a_colour() {
+    let faint = |id: &str, under: &str| {
+        json!({"type": "rectangle", "id": id, "name": "Rectangle", "width": 40, "height": 40,
+               "fill": [{"type": "solid", "color": "#00000000"},
+                        {"type": "solid", "color": "#FF000010"},
+                        {"type": "solid", "color": "#2563EB", "opacity": 0.05},
+                        {"type": "solid", "color": under}]})
+    };
+    let names = names_of(&holder(
+        "horizontal",
+        vec![faint("a", "#16A34A"), faint("b", "#7C3AED")],
+    ));
+    assert_eq!(names["a"], "Shape (Green)");
+    assert_eq!(names["b"], "Shape (Purple)");
+}
+
+#[test]
+fn the_tailwind_sm_button_and_an_authored_role_stay_buttons() {
+    let mut role = label_box(
+        "role",
+        json!({"padding": [4, 8], "cornerRadius": 999}),
+        "Draft",
+        11.0,
+    );
+    role["role"] = json!("button");
+    let mut tag = label_box(
+        "tag",
+        json!({"height": 40, "padding": [0, 20, 0, 20]}),
+        "Docs",
+        14.0,
+    );
+    tag["role"] = json!("tag");
+    let names = names_of(&screen(vec![json!({
+        "type": "frame", "id": "row", "name": "Frame", "layout": "horizontal",
+        "children": [
+            // `h-8 px-3 text-sm`, wired to nothing.
+            label_box("sm", json!({"height": 32, "padding": [0, 12, 0, 12], "cornerRadius": 6}), "Sign up", 14.0),
+            role,
+            tag
+        ]
+    })]));
+    assert!(names["sm"].starts_with("Primary button"), "{names:?}");
+    assert!(names["role"].starts_with("Primary button"), "{names:?}");
+    assert!(names["tag"].starts_with("Badge"), "{names:?}");
+}
+
+#[test]
+fn trend_and_remove_icons_keep_a_chip_a_badge() {
+    let compact = json!({"padding": [4, 8], "cornerRadius": 999});
+    let with_icon = |id: &str, icon: &str| {
+        let mut chip = label_box(id, compact.clone(), &format!("Chip {id}"), 12.0);
+        chip["children"]
+            .as_array_mut()
+            .expect("children")
+            .push(json!({"type": "icon_font", "id": format!("{id}-icon"), "iconFontName": icon}));
+        chip
+    };
+    let names = names_of(&screen(vec![json!({
+        "type": "frame", "id": "row", "name": "Frame", "layout": "horizontal",
+        "children": [
+            with_icon("up", "lucide:arrow-up"),
+            with_icon("down", "arrow_downward"),
+            with_icon("trend", "trending-up"),
+            with_icon("remove", "x"),
+            with_icon("next", "arrow-right"),
+            with_icon("open", "chevron-down"),
+            with_icon("add", "plus")
+        ]
+    })]));
+    for id in ["up", "down", "trend", "remove"] {
+        assert!(names[id].starts_with("Badge"), "{id}: {names:?}");
+    }
+    for id in ["next", "open", "add"] {
+        assert!(names[id].starts_with("Primary button"), "{id}: {names:?}");
+    }
+}
+
+#[test]
+fn initials_without_letter_case_make_an_avatar_too() {
+    let circle = |id: &str, label: &str| {
+        label_box(
+            id,
+            json!({"width": 40, "height": 40, "cornerRadius": 20}),
+            label,
+            14.0,
+        )
+    };
+    let names = names_of(&screen(vec![json!({
+        "type": "frame", "id": "row", "name": "Frame", "layout": "horizontal",
+        "children": [circle("zh", "王"), circle("th", "สม"), circle("hi", "रा"), circle("lower", "jd")]
+    })]));
+    for id in ["zh", "th", "hi"] {
+        assert!(names[id].starts_with("Avatar"), "{id}: {names:?}");
+    }
+    assert!(!names["lower"].starts_with("Avatar"), "{names:?}");
 }
 
 #[test]
@@ -378,12 +540,17 @@ fn says_any(words: &[String], any: &[&str]) -> bool {
 #[test]
 fn template_names_follow_what_their_authors_called_them() {
     let en = |key| de_i18n::translate(Locale::EnUs, key);
-    // Pills as roomy around their labels as a small button (`VOL.12 Tech
-    // Meetup`, `$50 off at launch`, `Lunch break & networking`): their
-    // geometry cannot tell them from one (#453).
+    // Labels as roomy as a small button: pills (`VOL.12 Tech Meetup`, `$50
+    // off at launch`, `Lunch break & networking`, `PRIMARY LOCKUP` at 2.3
+    // font sizes tall) and fixed 132 px stage chips around short names
+    // (`Main`, `Second`). Their geometry cannot tell them from one (#453).
     let roomy_badges = [
+        "brand-concept-sheet.de f25",
         "conference-agenda-card.de n105",
         "event-invitation-card.de n7",
+        "music-fest-poster-card.de n20",
+        "music-fest-poster-card.de n24",
+        "music-fest-poster-card.de n28",
         "product-launch-card.de n94",
     ];
     // A date filter as compact as a chip (`Last 7 Days` beside a calendar

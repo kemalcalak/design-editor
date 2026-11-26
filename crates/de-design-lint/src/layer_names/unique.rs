@@ -77,6 +77,8 @@ fn qualified(node: &PenNode, name: &str, locale: Locale, facts: &Facts) -> Vec<S
 /// apart, and what they are named in.
 struct Untold<'s, 'n> {
     nodes: Vec<&'n PenNode>,
+    /// Every sibling, in tree order: the grid a place is read in.
+    siblings: Vec<&'n PenNode>,
     plain: &'s str,
     parent: Option<&'n PenNode>,
     locale: Locale,
@@ -108,9 +110,9 @@ impl Untold<'_, '_> {
             .iter()
             .map(|node| fill_word(node, self.locale))
             .collect();
-        fills
-            .and_then(usable)
-            .or_else(|| position_words(&self.nodes, self.parent, self.locale).and_then(usable))
+        fills.and_then(usable).or_else(|| {
+            position_words(&self.nodes, &self.siblings, self.parent, self.locale).and_then(usable)
+        })
     }
 }
 
@@ -174,6 +176,7 @@ pub(crate) fn make_distinct(
                 .expect("grouped proposal");
             let group = Untold {
                 nodes: untold.iter().map(|&index| siblings[index].node).collect(),
+                siblings: siblings.iter().map(|sibling| sibling.node).collect(),
                 plain: &plain,
                 parent,
                 locale,

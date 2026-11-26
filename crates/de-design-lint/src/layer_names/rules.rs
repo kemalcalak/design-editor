@@ -14,8 +14,8 @@ use crate::node_util::{
 };
 
 use super::facts::Facts;
-use super::label_box::{is_badge, is_initials_avatar};
-use super::text_roles::{self, header_band, holds_price, screen_heading};
+use super::label_box::{label_box_kind, LabelBox};
+use super::text_roles::{self, holds_price, screen_heading};
 
 /// How a container of repeated cards is named: as pricing cards when at
 /// least half of them hold a price, else after the heading right before it
@@ -292,14 +292,11 @@ pub(crate) fn button_role(node: &PenNode) -> Option<Role> {
     {
         return None;
     }
-    Some(if kids.len() == 1 && is_initials_avatar(node, label_node) {
-        Role::Avatar
-    } else if is_badge(node, label_node) {
-        Role::Badge
-    } else if is_primary_fill(node) {
-        Role::PrimaryButton
-    } else {
-        Role::SecondaryButton
+    Some(match label_box_kind(node, label_node, kids.len()) {
+        LabelBox::Avatar => Role::Avatar,
+        LabelBox::Badge => Role::Badge,
+        LabelBox::Button if is_primary_fill(node) => Role::PrimaryButton,
+        LabelBox::Button => Role::SecondaryButton,
     })
 }
 
@@ -343,7 +340,7 @@ fn section_role(node: &PenNode, place: Place<'_>, facts: &Facts) -> Option<Role>
     let largest = largest_text(node);
     // Only a bar that looks like one: the screen's header band (links in a
     // row at the top), the band a screen's heading search skips too.
-    let band = header_band(parent, facts);
+    let band = facts.header_band(parent);
     if place.index == 0 && band {
         return Some(Role::Navigation);
     }
