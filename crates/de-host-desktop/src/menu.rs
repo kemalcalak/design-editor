@@ -43,6 +43,8 @@ pub enum MenuAction {
     Duplicate,
     Group,
     Ungroup,
+    /// Edit ▸ Rename layers… (Cmd+Shift+R, #383).
+    RenameLayers,
     ToggleFullscreen,
     /// View ▸ Present (Cmd+Enter, #157).
     Present,
@@ -99,6 +101,7 @@ mod backend {
     const ID_DUPLICATE: &str = "duplicate";
     const ID_GROUP: &str = "group";
     const ID_UNGROUP: &str = "ungroup";
+    const ID_RENAME_LAYERS: &str = "rename-layers";
     const ID_FULLSCREEN: &str = "fullscreen";
     const ID_PRESENT: &str = "present";
     const ID_PROTOTYPE_LINKS: &str = "prototype-links";
@@ -137,6 +140,7 @@ mod backend {
             ID_DUPLICATE => MenuAction::Duplicate,
             ID_GROUP => MenuAction::Group,
             ID_UNGROUP => MenuAction::Ungroup,
+            ID_RENAME_LAYERS => MenuAction::RenameLayers,
             ID_FULLSCREEN => MenuAction::ToggleFullscreen,
             ID_PRESENT => MenuAction::Present,
             ID_PROTOTYPE_LINKS => MenuAction::TogglePrototypeLinks,
@@ -277,6 +281,12 @@ mod backend {
                     tr(locale, "menu.ungroup"),
                     Some(accel_shift(Code::KeyG)),
                 ),
+                &PredefinedMenuItem::separator(),
+                &item(
+                    ID_RENAME_LAYERS,
+                    tr(locale, "layerMenu.renameLayers"),
+                    Some(accel_shift(Code::KeyR)),
+                ),
             ]);
             let _ = menu.append(&edit);
 
@@ -410,6 +420,7 @@ mod backend {
                 ID_DUPLICATE,
                 ID_GROUP,
                 ID_UNGROUP,
+                ID_RENAME_LAYERS,
                 ID_FULLSCREEN,
                 ID_GIT_PANEL,
                 ID_DESIGN_MD,

@@ -16,6 +16,11 @@ impl WidgetHostNative {
             self.mark_dirty();
             return true;
         }
+        // Rename-layers preview (#383): drop the inline edit, then close.
+        if de_editor_core::rename_layers::rename_layers_escape(&mut self.editor_state).is_some() {
+            self.mark_dirty();
+            return true;
+        }
         // "What's new" (#251) closes like its "Got it" button.
         if self.editor_state.editor_ui.escape_whats_new() {
             self.mark_dirty();

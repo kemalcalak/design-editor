@@ -51,6 +51,9 @@ fn set_property(node: &mut PenNode, property: FixProperty, suggested: &Value) ->
         // slop three-card-feature-row is detect-only — restructuring a layout
         // is a design decision, no auto-fix.
         FixProperty::Layout => false,
+        // default-layer-name is Info; its fix is the `rename_layers` editor
+        // command (one undo step), never a silent pre-validation write.
+        FixProperty::Name => false,
         // Remove is handled in apply_fixes, never dispatched here.
         FixProperty::Remove => false,
     }

@@ -33,6 +33,12 @@ impl WidgetHostNative {
                 return sent;
             }
         }
+        // Rename-layers preview (#383): Enter commits the edited name, or
+        // applies the renames as one undo step.
+        if de_editor_core::rename_layers::rename_layers_enter(&mut self.editor_state).is_some() {
+            self.mark_dirty();
+            return true;
+        }
         if self.editor_state.editor_ui.prompt_center.open {
             return true;
         }

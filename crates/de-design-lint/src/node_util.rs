@@ -391,7 +391,7 @@ fn resolve_themed_value(
 }
 
 /// Borrow the flattened `PenNodeBase` of any node kind.
-fn base(node: &PenNode) -> &jian_ops_schema::node::PenNodeBase {
+pub(crate) fn base(node: &PenNode) -> &jian_ops_schema::node::PenNodeBase {
     match node {
         PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => &n.base,
         PenNode::Group(n) => &n.base,

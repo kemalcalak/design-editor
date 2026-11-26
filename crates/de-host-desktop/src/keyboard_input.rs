@@ -339,6 +339,8 @@ impl DesktopApp {
                         _ if settings_focused => {}
                         "z" => consumed = self.host.apply_redo(),
                         "g" => consumed = self.host.apply_ungroup(),
+                        // Cmd+Shift+R — Rename layers (#383).
+                        "r" => consumed = self.host.apply_open_rename_layers(),
                         "c" => consumed = self.host.apply_toggle_code_panel(),
                         "v" => consumed = self.host.apply_toggle_variables_panel(),
                         "d" => consumed = self.host.apply_toggle_design_md_panel(),

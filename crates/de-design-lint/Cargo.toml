@@ -14,5 +14,8 @@ path = "src/lib.rs"
 jian-ops-schema = { path = "../../vendor/jian/crates/jian-ops-schema" }
 # Canonical hex-color parsing (dependency-free, wasm-clean).
 de-util = { path = "../de-util" }
+# Role words for proposed layer names, in the document's language
+# (`layer_names`). Dependency-free + wasm32-clean.
+de-i18n = { path = "../de-i18n" }
 serde = { workspace = true }
 serde_json = { workspace = true }

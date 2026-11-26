@@ -96,6 +96,8 @@ mod persistence_image;
 mod prompt_center_store;
 mod provider_probe_host;
 mod remote_image_host;
+mod rename_layers_error;
+mod rename_layers_host;
 mod render_cli;
 mod render_cli_error;
 mod save_session;
@@ -303,6 +305,8 @@ struct DesktopApp {
     /// resolves the selected model and lands the generated markdown
     /// back into `doc.design_md` when the worker completes.
     current_design_md: Option<design_md_host::DesignMdSession>,
+    /// In-flight Rename-layers agent turn (#383), if any.
+    current_rename_layers: Option<rename_layers_host::RenameLayersSession>,
     /// Completed generation results keyed by framework and kept host-side
     /// (including raw asset bytes) for Download — not carried in the
     /// wasm-clean `editor_state`.

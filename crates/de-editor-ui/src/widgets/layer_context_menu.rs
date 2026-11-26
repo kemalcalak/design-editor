@@ -32,6 +32,9 @@ const ICON_SIZE: f32 = 14.0;
 pub enum LayerContextAction {
     // Layer-row actions
     RenameLayer,
+    /// Rename layers (#383): preview semantic names for the selection
+    /// and everything under it.
+    RenameLayersAuto,
     Duplicate,
     Delete,
     GroupSelection,
@@ -76,6 +79,12 @@ const LAYER_ROWS: &[Row] = &[
         icon: Icon::Pencil,
         action: LayerContextAction::RenameLayer,
         label_key: "common.rename",
+        destructive: false,
+    },
+    Row {
+        icon: Icon::Sparkles,
+        action: LayerContextAction::RenameLayersAuto,
+        label_key: "layerMenu.renameLayers",
         destructive: false,
     },
     Row {
