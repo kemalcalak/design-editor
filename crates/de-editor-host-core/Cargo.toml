@@ -58,3 +58,6 @@ settings-io = [
 [dev-dependencies]
 serde_json = { workspace = true }
 zip = { version = "9", default-features = false, features = ["deflate-flate2"] }
+
+[lints]
+workspace = true

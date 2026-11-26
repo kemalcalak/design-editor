@@ -44,3 +44,6 @@ serde_json = { workspace = true }
 # The wasm-bindgen crate and the installed `wasm-bindgen-cli` must agree
 # exactly.
 wasm-bindgen = "=0.2.117"
+
+[lints]
+workspace = true

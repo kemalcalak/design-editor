@@ -205,3 +205,6 @@ tracing-test = { version = "0.2", features = ["no-env-filter"] }
 [target.'cfg(target_os = "linux")'.dev-dependencies]
 khronos-egl = { version = "6", features = ["dynamic"] }
 libloading = "0.8"
+
+[lints]
+workspace = true
