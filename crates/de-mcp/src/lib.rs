@@ -166,6 +166,7 @@ pub mod read_tools_extra;
 pub mod rename_layers_tool;
 pub mod repair_duplicate_ids_tool;
 pub mod reparent_tools;
+pub mod repeated_structures_tools;
 #[cfg(test)]
 mod replace_node_tests;
 pub mod root_placement;
@@ -329,6 +330,10 @@ pub use read_nodes::{read_nodes_snapshot, ReadNodes};
 pub use rename_layers_tool::{rename_layers_snapshot, RenameLayers};
 pub use repair_duplicate_ids_tool::{repair_duplicate_ids_snapshot, RepairDuplicateIds};
 pub use reparent_tools::{copy_node_snapshot, move_node_snapshot, CopyNode, MoveNode};
+pub use repeated_structures_tools::{
+    convert_to_instances_snapshot, find_repeated_structures_snapshot, ConvertToInstances,
+    FindRepeatedStructures,
+};
 pub use scalar_vars::{
     create_variable_snapshot, delete_variable_snapshot, rename_variable_snapshot,
     set_variable_boolean_snapshot, set_variable_number_snapshot, set_variable_string_snapshot,

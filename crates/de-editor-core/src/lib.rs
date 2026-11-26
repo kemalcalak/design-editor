@@ -175,6 +175,7 @@ pub mod release_notes;
 pub mod rename;
 pub mod rename_layers;
 pub mod render_backend;
+pub mod repeated_structures;
 pub mod request_snapshot;
 pub mod root_placement;
 pub mod route_rename;

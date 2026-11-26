@@ -525,6 +525,10 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "palette.kind.component" => "Thành phần",
         "palette.kind.variable" => "Biến",
         "palette.kind.recent" => "Tệp gần đây",
+        "layerMenu.createComponentFromSimilar" => "Thành phần từ bản sao",
+        "convertInstances.done" => "{{converted}} bản sao giờ là phiên bản của một thành phần",
+        "convertInstances.partial" => "{{converted}} bản sao đã thành phiên bản; {{skipped}} khác nên được giữ nguyên",
+        "convertInstances.failed" => "Các bản sao này không thể dùng chung một thành phần",
         _ => return None,
     })
 }

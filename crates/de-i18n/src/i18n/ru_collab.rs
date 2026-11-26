@@ -525,6 +525,10 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "palette.kind.component" => "Компонент",
         "palette.kind.variable" => "Переменная",
         "palette.kind.recent" => "Недавний файл",
+        "layerMenu.createComponentFromSimilar" => "Компонент из копий",
+        "convertInstances.done" => "Копий стало экземплярами одного компонента: {{converted}}",
+        "convertInstances.partial" => "Экземплярами стали {{converted}}; {{skipped}} отличаются и оставлены как есть",
+        "convertInstances.failed" => "Эти копии не могут стать одним компонентом",
         _ => return None,
     })
 }

@@ -66,6 +66,9 @@ pub enum IssueCategory {
     /// A layer still carries an editor default name (`Frame 1`,
     /// `Rectangle 3`). Info; the fix is `rename_layers` (#383).
     DefaultLayerName,
+    /// Hand-built copies that could share one component (#369). Reported by
+    /// MCP `lint_document` only; its fix is a `convert_to_instances` call.
+    RepeatedStructure,
 }
 
 /// The node property a fix targets. `Remove` is the `"__remove"` sentinel;

@@ -525,6 +525,10 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "palette.kind.component" => "元件",
         "palette.kind.variable" => "變數",
         "palette.kind.recent" => "最近的檔案",
+        "layerMenu.createComponentFromSimilar" => "從副本建立元件",
+        "convertInstances.done" => "{{converted}} 個副本已成為同一元件的實例",
+        "convertInstances.partial" => "{{converted}} 個副本已成為實例；{{skipped}} 個不同，保持原樣",
+        "convertInstances.failed" => "這些副本無法共用一個元件",
         _ => return None,
     })
 }

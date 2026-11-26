@@ -525,6 +525,10 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "palette.kind.component" => "Komponen",
         "palette.kind.variable" => "Variabel",
         "palette.kind.recent" => "File terbaru",
+        "layerMenu.createComponentFromSimilar" => "Komponen dari salinan",
+        "convertInstances.done" => "{{converted}} salinan kini menjadi instans satu komponen",
+        "convertInstances.partial" => "{{converted}} salinan menjadi instans; {{skipped}} berbeda dan dibiarkan",
+        "convertInstances.failed" => "Salinan ini tidak bisa berbagi satu komponen",
         _ => return None,
     })
 }

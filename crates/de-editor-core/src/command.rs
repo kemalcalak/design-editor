@@ -386,6 +386,10 @@ pub enum EditorCommand {
     /// Create a component set, add / rename its variants, axes and values,
     /// or switch an instance's variant (#368). Boxed like `Instance`.
     ComponentSet(Box<crate::component_set::ComponentSetCommand>),
+    /// Turn repeated hand-built frames into one master plus linked
+    /// instances (#369). Planned against the live document first; one undo
+    /// step, nothing changes when the plan is refused.
+    ConvertToInstances(Box<crate::repeated_structures::ConvertRequest>),
     /// Set or remove one trigger's actions on a node, instance
     /// descendants included (#371).
     Interaction(crate::interaction_write::InteractionCommand),

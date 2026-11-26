@@ -275,3 +275,16 @@ The three instances share the `label` property across variants, so a switch
 `state` axis later is `add_variant_axis {set_id, axis: "state", value:
 "default"}` plus one `add_variant` per new state. Cost: about 520 tokens for
 the four variants and three instances.
+
+## Existing copies → instances
+
+A document built before linked instances may hold many hand-built copies
+(buttons, cards, table rows). `find_repeated_structures {pageId?, minNodes?}`
+lists groups of frames with one structure (text, images, names, positions and
+visibility may differ) with `estimatedTokenSaving`; `lint_document` reports
+each group as an `info` `repeated-structure` finding. `convert_to_instances
+{groupId | nodeIds, masterFrom?, placement?, dryRun?}` makes one master (on
+the Components page, or `placement: "inPlace"`) and replaces every copy with
+a `ref` that keeps its id, name, position and links; differences become
+`descendants`. Copies whose structure differs are listed in `skipped` with the
+first difference and left as they are. Run with `dryRun: true` first.

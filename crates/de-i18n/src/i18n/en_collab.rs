@@ -525,6 +525,10 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "palette.kind.component" => "Component",
         "palette.kind.variable" => "Variable",
         "palette.kind.recent" => "Recent file",
+        "layerMenu.createComponentFromSimilar" => "Component from copies",
+        "convertInstances.done" => "{{converted}} copies are now instances of one component",
+        "convertInstances.partial" => "{{converted}} copies are now instances; {{skipped}} differ and were left as they are",
+        "convertInstances.failed" => "These copies could not share one component",
         _ => return None,
     })
 }

@@ -525,6 +525,10 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "palette.kind.component" => "Bileşen",
         "palette.kind.variable" => "Değişken",
         "palette.kind.recent" => "Son dosya",
+        "layerMenu.createComponentFromSimilar" => "Kopyalardan bileşen",
+        "convertInstances.done" => "{{converted}} kopya artık tek bir bileşenin örneği",
+        "convertInstances.partial" => "{{converted}} kopya örnek oldu; {{skipped}} farklı olduğu için olduğu gibi bırakıldı",
+        "convertInstances.failed" => "Bu kopyalar tek bir bileşeni paylaşamıyor",
         _ => return None,
     })
 }

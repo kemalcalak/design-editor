@@ -89,6 +89,10 @@ pub fn apply_layer_context_action(
             let _ = state.create_component_from_node_name(&id);
             LayerContextStep::Done
         }
+        (A::CreateComponentFromSimilar, T::Layer(id)) => {
+            convert_similar_layers(state, id, now_ms);
+            LayerContextStep::Done
+        }
         (A::DetachComponent | A::DetachInstance, T::Layer(id)) => {
             // Reusable component sheds its flag; a Ref instance
             // materializes into an independent subtree (#22).
@@ -148,4 +152,43 @@ pub fn apply_layer_context_action(
         // Mismatched action/target — no-op.
         _ => LayerContextStep::Done,
     }
+}
+
+/// "Component from copies" (#369): the right-clicked frame is the master
+/// source; copies whose structure differs stay as they are. The outcome is
+/// said in a toast, since nothing else on screen tells the user which
+/// copies were left out or that none could be converted.
+fn convert_similar_layers(state: &mut EditorState, id: de_editor_core::NodeId, now_ms: u64) {
+    use de_editor_core::editor_toast::EditorToastLevel;
+    use de_editor_core::repeated_structures::ConvertRequest;
+    let node_ids = state.similar_layer_ids(&id);
+    if node_ids.len() < 2 {
+        return;
+    }
+    let request = ConvertRequest {
+        master_from: Some(id),
+        node_ids,
+        ..Default::default()
+    };
+    let (key, args, level) = match state.convert_to_instances(&request) {
+        Some(plan) if plan.skipped.is_empty() => (
+            "convertInstances.done",
+            vec![("converted".to_string(), plan.converted.len().to_string())],
+            EditorToastLevel::Info,
+        ),
+        Some(plan) => (
+            "convertInstances.partial",
+            vec![
+                ("converted".to_string(), plan.converted.len().to_string()),
+                ("skipped".to_string(), plan.skipped.len().to_string()),
+            ],
+            EditorToastLevel::Warn,
+        ),
+        None => (
+            "convertInstances.failed",
+            Vec::new(),
+            EditorToastLevel::Warn,
+        ),
+    };
+    state.editor_ui.show_toast(key, args, level, now_ms);
 }
