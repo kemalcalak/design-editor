@@ -412,6 +412,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "prototype.opens" => "Открывает {{host}}",
         "prototype.scrollTo" => "Прокрутить к {{name}}",
         "menu.showPrototypeLinks" => "Показать связи прототипа",
+        "menu.snapPixelGrid" => "Привязка к пиксельной сетке",
+        "vectorEdit.pixelSnapOn" => "Привязка к пиксельной сетке включена",
+        "vectorEdit.pixelSnapOff" => "Привязка к пиксельной сетке выключена",
         _ => return None,
     })
 }

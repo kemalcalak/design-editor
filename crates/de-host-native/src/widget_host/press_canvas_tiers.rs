@@ -60,6 +60,10 @@ impl WidgetHostNative {
             size: Point2D::new(cw, ch),
         };
         let doc_point = canvas_geometry::canvas_doc_point_unclamped(&self.editor_state, x, y);
+        // Vector edit mode owns Select / Pen presses (`vector_edit_press.rs`).
+        if let Some(handled) = self.apply_vector_edit_press(x, y) {
+            return Some(handled);
+        }
         if matches!(self.editor_state.tool, Tool::Select) {
             return Some(self.press_canvas_select_tier(&CanvasPressCtx {
                 x,

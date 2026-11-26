@@ -191,6 +191,15 @@ impl PropertyPanel {
                 .any(|n| n.id_str() == state.selection.anchor.as_str());
             let mut snapshot = NodeSnapshot::from_node(node, is_top_level);
             snapshot.script = crate::widgets::property_panel_script::script_summary(node, state);
+            if let Some((px, py)) = state.vector_selection_origin() {
+                snapshot.x = px.round() as i32;
+                snapshot.y = py.round() as i32;
+                snapshot.vector_points = Some(
+                    state
+                        .vector_selection_point_type()
+                        .map(|t| t != jian_ops_schema::node::PenPathPointType::Corner),
+                );
+            }
             if let Some(browser) = snapshot.browser.as_mut() {
                 crate::widgets::property_panel_browser::apply_live_state(
                     browser,

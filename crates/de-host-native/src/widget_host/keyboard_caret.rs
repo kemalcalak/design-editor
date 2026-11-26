@@ -201,6 +201,9 @@ impl WidgetHostNative {
         if self.input_active() {
             return false;
         }
+        if let Some(consumed) = self.apply_vector_edit_nudge(dx, dy) {
+            return consumed;
+        }
         if shared::nudge_selection(&mut self.editor_state, dx, dy) {
             self.mark_dirty();
             return true;

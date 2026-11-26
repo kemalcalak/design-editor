@@ -412,6 +412,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "prototype.opens" => "打开 {{host}}",
         "prototype.scrollTo" => "滚动到 {{name}}",
         "menu.showPrototypeLinks" => "显示原型连线",
+        "menu.snapPixelGrid" => "对齐像素网格",
+        "vectorEdit.pixelSnapOn" => "已开启像素网格吸附",
+        "vectorEdit.pixelSnapOff" => "已关闭像素网格吸附",
         _ => return None,
     })
 }

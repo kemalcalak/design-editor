@@ -412,6 +412,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "prototype.opens" => "Abre {{host}}",
         "prototype.scrollTo" => "Desplazar a {{name}}",
         "menu.showPrototypeLinks" => "Mostrar enlaces del prototipo",
+        "menu.snapPixelGrid" => "Ajustar a la cuadrícula de píxeles",
+        "vectorEdit.pixelSnapOn" => "Ajuste a la cuadrícula de píxeles activado",
+        "vectorEdit.pixelSnapOff" => "Ajuste a la cuadrícula de píxeles desactivado",
         _ => return None,
     })
 }

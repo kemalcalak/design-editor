@@ -448,6 +448,12 @@ pub struct UiDraftState {
     pub pencil_stroke: Option<Vec<Point2D>>,
     /// Open right-click menu on a path anchor; `None` when closed.
     pub path_anchor_menu: Option<PathAnchorMenuState>,
+    /// Vector edit mode on a path (#387); `None` outside the mode.
+    /// Read it through `EditorState::vector_edit`, which validates it.
+    pub vector_edit: Option<crate::vector_edit::VectorEditSession>,
+    /// View ▸ Snap to Pixel Grid turned OFF. Snapping to whole pixels
+    /// applies while drawing / editing points at zoom ≥ 400 % (#387).
+    pub pixel_grid_snap_off: bool,
     /// Active HSV colour picker overlay; `None` when closed.
     pub color_picker: Option<ColorPickerState>,
     /// Pre-edit snapshot captured when the colour picker opens;

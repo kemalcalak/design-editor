@@ -412,6 +412,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "prototype.opens" => "Opens {{host}}",
         "prototype.scrollTo" => "Scroll to {{name}}",
         "menu.showPrototypeLinks" => "Show prototype links",
+        "menu.snapPixelGrid" => "Snap to Pixel Grid",
+        "vectorEdit.pixelSnapOn" => "Pixel grid snapping on",
+        "vectorEdit.pixelSnapOff" => "Pixel grid snapping off",
         _ => return None,
     })
 }

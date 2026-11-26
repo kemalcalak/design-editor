@@ -242,6 +242,9 @@ impl WidgetHostNative {
         if self.apply_pen_backspace() {
             return true;
         }
+        if let Some(consumed) = self.apply_vector_edit_delete() {
+            return consumed;
+        }
         if shared::delete_selection_with_history(&mut self.editor_state) {
             self.mark_dirty();
             return true;
@@ -363,6 +366,9 @@ impl WidgetHostNative {
         // silently drop the node behind the focused field.
         if shared::delete_owned_by_chrome_input(&self.editor_state) {
             return false;
+        }
+        if let Some(consumed) = self.apply_vector_edit_delete() {
+            return consumed;
         }
         if shared::delete_selection_with_history(&mut self.editor_state) {
             self.mark_dirty();

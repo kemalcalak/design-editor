@@ -412,6 +412,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "prototype.opens" => "Ouvre {{host}}",
         "prototype.scrollTo" => "Défiler jusqu'à {{name}}",
         "menu.showPrototypeLinks" => "Afficher les liens du prototype",
+        "menu.snapPixelGrid" => "Aligner sur la grille de pixels",
+        "vectorEdit.pixelSnapOn" => "Alignement sur la grille de pixels activé",
+        "vectorEdit.pixelSnapOff" => "Alignement sur la grille de pixels désactivé",
         _ => return None,
     })
 }

@@ -414,6 +414,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "prototype.opens" => "{{host}} 열기",
         "prototype.scrollTo" => "{{name}}(으)로 스크롤",
         "menu.showPrototypeLinks" => "프로토타입 링크 표시",
+        "menu.snapPixelGrid" => "픽셀 그리드에 스냅",
+        "vectorEdit.pixelSnapOn" => "픽셀 그리드 스냅 켜짐",
+        "vectorEdit.pixelSnapOff" => "픽셀 그리드 스냅 꺼짐",
         _ => return None,
     })
 }

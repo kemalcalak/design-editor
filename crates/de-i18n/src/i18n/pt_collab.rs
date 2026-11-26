@@ -412,6 +412,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "prototype.opens" => "Abre {{host}}",
         "prototype.scrollTo" => "Rolar até {{name}}",
         "menu.showPrototypeLinks" => "Mostrar links do protótipo",
+        "menu.snapPixelGrid" => "Ajustar à grade de pixels",
+        "vectorEdit.pixelSnapOn" => "Ajuste à grade de pixels ativado",
+        "vectorEdit.pixelSnapOff" => "Ajuste à grade de pixels desativado",
         _ => return None,
     })
 }

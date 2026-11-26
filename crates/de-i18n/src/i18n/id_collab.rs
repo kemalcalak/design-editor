@@ -412,6 +412,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "prototype.opens" => "Membuka {{host}}",
         "prototype.scrollTo" => "Gulir ke {{name}}",
         "menu.showPrototypeLinks" => "Tampilkan tautan prototipe",
+        "menu.snapPixelGrid" => "Jepret ke Kisi Piksel",
+        "vectorEdit.pixelSnapOn" => "Jepret ke kisi piksel aktif",
+        "vectorEdit.pixelSnapOff" => "Jepret ke kisi piksel nonaktif",
         _ => return None,
     })
 }

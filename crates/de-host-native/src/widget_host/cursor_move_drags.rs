@@ -115,6 +115,10 @@ impl WidgetHostNative {
         if self.apply_path_anchor_drag_move(x, y) {
             return Some(true);
         }
+        // Vector edit mode drags (`vector_edit_press.rs`).
+        if self.apply_vector_edit_drag_move(x, y) {
+            return Some(true);
+        }
         // Ellipse arc-handle drag: recompute arc geometry from the cursor.
         if self.arc_handle_drag.is_some() {
             let doc = canvas_geometry::canvas_doc_point_unclamped(&self.editor_state, x, y);

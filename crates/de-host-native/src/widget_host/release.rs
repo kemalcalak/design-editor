@@ -65,6 +65,9 @@ impl WidgetHostNative {
         if self.slides_panel_release(viewport_w, viewport_h) {
             return true;
         }
+        if self.apply_vector_edit_release() {
+            return true;
+        }
         // Pen owns the release while authoring (TS onMouseUp).
         if self.apply_pen_release() {
             return true;
@@ -243,6 +246,9 @@ impl WidgetHostNative {
         // cached one is what every other viewport-less path here uses, and
         // a row drag left open would strand the deck mid-reorder.
         if self.slides_panel_release(self.last_viewport_w, self.last_viewport_h) {
+            return true;
+        }
+        if self.apply_vector_edit_release() {
             return true;
         }
         // Pen owns the release while authoring (TS onMouseUp).

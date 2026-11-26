@@ -47,6 +47,7 @@ impl DesktopApp {
         if self.host.set_modifier_alt(self.alt_modifier) {
             self.request_redraw(true);
         }
+        self.host.set_modifier_cmd(self.zoom_modifier);
     }
 
     pub(super) fn on_space_released(&mut self) {

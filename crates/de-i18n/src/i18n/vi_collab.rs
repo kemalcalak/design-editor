@@ -412,6 +412,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "prototype.opens" => "Mở {{host}}",
         "prototype.scrollTo" => "Cuộn tới {{name}}",
         "menu.showPrototypeLinks" => "Hiện liên kết nguyên mẫu",
+        "menu.snapPixelGrid" => "Bắt dính lưới điểm ảnh",
+        "vectorEdit.pixelSnapOn" => "Đã bật bắt dính lưới điểm ảnh",
+        "vectorEdit.pixelSnapOff" => "Đã tắt bắt dính lưới điểm ảnh",
         _ => return None,
     })
 }

@@ -412,6 +412,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "prototype.opens" => "{{host}} खोलता है",
         "prototype.scrollTo" => "{{name}} तक स्क्रॉल करें",
         "menu.showPrototypeLinks" => "प्रोटोटाइप लिंक दिखाएँ",
+        "menu.snapPixelGrid" => "पिक्सेल ग्रिड पर स्नैप करें",
+        "vectorEdit.pixelSnapOn" => "पिक्सेल ग्रिड स्नैपिंग चालू",
+        "vectorEdit.pixelSnapOff" => "पिक्सेल ग्रिड स्नैपिंग बंद",
         _ => return None,
     })
 }

@@ -412,6 +412,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "prototype.opens" => "{{host}} açılır",
         "prototype.scrollTo" => "{{name}} bölümüne kaydır",
         "menu.showPrototypeLinks" => "Prototip bağlantılarını göster",
+        "menu.snapPixelGrid" => "Piksel Izgarasına Yasla",
+        "vectorEdit.pixelSnapOn" => "Piksel ızgarasına yaslama açık",
+        "vectorEdit.pixelSnapOff" => "Piksel ızgarasına yaslama kapalı",
         _ => return None,
     })
 }

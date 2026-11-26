@@ -412,6 +412,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "prototype.opens" => "เปิด {{host}}",
         "prototype.scrollTo" => "เลื่อนไปที่ {{name}}",
         "menu.showPrototypeLinks" => "แสดงลิงก์ต้นแบบ",
+        "menu.snapPixelGrid" => "จัดชิดกริดพิกเซล",
+        "vectorEdit.pixelSnapOn" => "เปิดการจัดชิดกริดพิกเซลแล้ว",
+        "vectorEdit.pixelSnapOff" => "ปิดการจัดชิดกริดพิกเซลแล้ว",
         _ => return None,
     })
 }

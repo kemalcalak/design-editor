@@ -530,6 +530,10 @@ impl WidgetHostNative {
     }
 
     fn apply_cursor_move_inner(&mut self, x: f32, y: f32) -> bool {
+        // See `apply_press_inner`: a stale vector edit session ends.
+        if self.editor_state.prune_vector_edit() {
+            self.mark_dirty();
+        }
         let changed = self.apply_cursor_move_ladder(x, y);
         // After the ladder: tracking never consumes a move, it only adds a
         // repaint while a pointer-reactive shader is on screen.
