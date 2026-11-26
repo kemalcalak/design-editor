@@ -94,7 +94,9 @@ fn batchable(cmd: &EditorCommand) -> bool {
         | C::UpsertComponent { .. }
         | C::UpsertScreen { .. }
         | C::Library(_)
+        | C::Interaction(_)
         | C::Instance(_)
+        | C::ComponentProperty(_)
         | C::CreateComponent { .. }
         | C::DeleteComponent { .. }
         | C::RenameComponent { .. }

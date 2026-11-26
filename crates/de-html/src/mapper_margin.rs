@@ -406,6 +406,7 @@ fn wrap(context: &mut MapCtx<'_>, mut node: PenNode, edges: Edges) -> PenNode {
         screen: None,
         breakpoint: None,
         placeholder: None,
+        component_properties: None,
     };
     configure_frame(&mut frame, edges);
     PenNode::Frame(frame)

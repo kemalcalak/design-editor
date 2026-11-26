@@ -4,7 +4,7 @@
 
 /// Names must be stable across runs and platforms (unlike `std`'s
 /// randomly seeded hasher), so they hash with the crate's FNV-1a.
-use crate::web_sync::fnv1a64 as fnv1a;
+use de_util::fnv::fnv1a64 as fnv1a;
 
 /// The thumbnail file for the document at `path`, relative to the
 /// thumbnails folder. One file per document; a new save overwrites it.

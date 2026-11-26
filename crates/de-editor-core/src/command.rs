@@ -380,6 +380,12 @@ pub enum EditorCommand {
     /// Insert, copy, detach or swap a component instance (#365).
     /// Boxed: the insert payload would otherwise grow every command.
     Instance(Box<crate::instance_command::InstanceCommand>),
+    /// Declare, change, rename or remove a master's component property, or
+    /// set an instance's property values (#367). Boxed like `Instance`.
+    ComponentProperty(Box<crate::component_props::ComponentPropertyCommand>),
+    /// Set or remove one trigger's actions on a node, instance
+    /// descendants included (#371).
+    Interaction(crate::interaction_write::InteractionCommand),
     /// Promote an active-page Frame / Group / Rectangle to a component.
     CreateComponent { node_id: NodeId, name: String },
     /// Remove a component registration.

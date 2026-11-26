@@ -43,6 +43,7 @@ pub fn paint(
         can_go_forward: session.can_go_forward(),
         hover: state.browser_hover,
         pressed: state.browser_pressed,
+        link_hints: !state.link_hints_hidden,
     };
     let mut cx = PaintCx { backend };
     bar.paint(&mut cx, canvas, theme);
@@ -79,11 +80,76 @@ pub fn release(session: Option<&mut PreviewSession>, state: &mut PreviewState) -
         return false;
     };
     if state.browser_hover == Some(pressed) {
-        if let Some(session) = session {
+        if pressed == PreviewBrowserControl::LinkHints {
+            state.link_hints_hidden = !state.link_hints_hidden;
+        } else if let Some(session) = session {
             step(session, pressed == PreviewBrowserControl::Forward);
         }
     }
     true
+}
+
+/// Paint the hovered clickable's link hint (#371) just below and right of
+/// `pointer`, kept inside `canvas`. A no-op while the bar's button has the
+/// hints off or nothing linkable is hovered.
+pub fn paint_link_hint(
+    session: Option<&PreviewSession>,
+    state: &PreviewState,
+    backend: &mut dyn RenderBackend,
+    canvas: Rect,
+    pointer: Option<Point2D>,
+    theme: &Theme,
+    locale: de_editor_core::Locale,
+) {
+    if state.link_hints_hidden {
+        return;
+    }
+    let (Some(session), Some(pointer)) = (session, pointer) else {
+        return;
+    };
+    let Some(hint) = session.hovered_link_hint() else {
+        return;
+    };
+    let text = link_hint_text(&hint, locale);
+    use de_editor_ui::widgets::tooltip;
+    let mut cx = PaintCx { backend };
+    // Anchored under the pointer's tip, clear of the cursor glyph.
+    let anchor = Rect {
+        origin: Point2D::new(pointer.x, pointer.y + 14.0),
+        size: Point2D::new(1.0, 1.0),
+    };
+    let clamp = (canvas.origin.x + 8.0, canvas.origin.x + canvas.size.x - 8.0);
+    tooltip::paint_tooltip(
+        &mut cx,
+        theme,
+        anchor,
+        &text,
+        None,
+        tooltip::TooltipPlacement::Below,
+        Some(clamp),
+    );
+}
+
+/// The tooltip text: `→ Pricing`, `Back`, `Opens example.com`,
+/// `Scroll to Features`.
+pub fn link_hint_text(hint: &crate::PreviewLinkHint, locale: de_editor_core::Locale) -> String {
+    use crate::PreviewLinkHint as H;
+    let t = |key: &'static str, fallback: &'static str| {
+        let text = de_editor_ui::i18n::translate(locale, key);
+        if text == key {
+            fallback
+        } else {
+            text
+        }
+    };
+    match hint {
+        H::Navigate { name } => format!("→ {name}"),
+        H::Back => t("prototype.back", "Back").to_owned(),
+        H::OpenUrl { host } => t("prototype.opens", "Opens {{host}}").replace("{{host}}", host),
+        H::ScrollTo { name } => {
+            t("prototype.scrollTo", "Scroll to {{name}}").replace("{{name}}", name)
+        }
+    }
 }
 
 /// Track hover. Returns whether the hovered control changed.

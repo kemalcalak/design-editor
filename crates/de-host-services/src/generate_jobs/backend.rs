@@ -8,7 +8,6 @@
 //! for SVG artwork, and provider image edits for background transforms.
 //! Vectorize is local and needs no backend (`vectorize.rs`).
 
-use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Duration;
 
 use de_editor_core::agent_settings::{BuiltinAgentConfig, ImageGenProfile};
@@ -21,29 +20,6 @@ use crate::web_image_search::{run_first_search_blocking_with_timeout, WebOpenver
 
 /// Wall-clock budget of one stock search.
 const STOCK_SEARCH_TIMEOUT: Duration = Duration::from_secs(60);
-
-/// Whether a profile's custom `base_url` must pass the browser route's SSRF
-/// screening. Off on the desktop (the user's own saved settings, the
-/// popover's trust tier); the `--serve-web` daemon turns it on, because its
-/// settings can carry browser-supplied profiles.
-static SCREEN_CUSTOM_ENDPOINTS: AtomicBool = AtomicBool::new(false);
-
-/// Screen custom image endpoints in this process from now on.
-pub fn screen_custom_endpoints() {
-    SCREEN_CUSTOM_ENDPOINTS.store(true, Ordering::Release);
-}
-
-/// Whether this process screens custom endpoints (the web daemon).
-pub(crate) fn screening() -> bool {
-    SCREEN_CUSTOM_ENDPOINTS.load(Ordering::Acquire)
-}
-
-fn has_custom_endpoint(profile: &ImageGenProfile) -> bool {
-    profile
-        .base_url
-        .as_deref()
-        .is_some_and(|base| !base.trim().is_empty())
-}
 
 /// One AI image request.
 #[derive(Clone)]
@@ -103,7 +79,6 @@ impl GenerateBackend for ProviderBackend {
             width: request.width,
             height: request.height,
             profile: request.profile.clone(),
-            custom_endpoint: screening() && has_custom_endpoint(&request.profile),
         };
         let url = crate::chat_runtime::block_on_anywhere(async {
             match request.timeout {
@@ -137,7 +112,6 @@ impl GenerateBackend for ProviderBackend {
     fn generate_svg(&self, request: &SvgJobRequest) -> Result<String, GenerateJobError> {
         super::svg_llm::generate_svg_blocking(
             &request.agent,
-            screening(),
             &request.prompt,
             request.width,
             request.height,
@@ -145,9 +119,8 @@ impl GenerateBackend for ProviderBackend {
     }
 
     fn edit_image(&self, request: &EditJobRequest) -> Result<String, GenerateJobError> {
-        // Also checked by the tool before anything is written; repeated here
-        // so no path reaches an unscreened custom endpoint.
-        super::image_edit::check_supported(&request.kind, &request.profile, screening())?;
+        // Also checked by the tool before anything is written.
+        super::image_edit::check_supported(&request.kind, &request.profile)?;
         let source = request.source.load(super::source::MIN_SOURCE_PX)?;
         let client = provider_client()?;
         crate::chat_runtime::block_on_anywhere(edit_image(
@@ -175,9 +148,6 @@ pub(crate) fn provider_client() -> Result<reqwest::Client, GenerateJobError> {
 
 impl From<ImageGenerateError> for GenerateJobError {
     fn from(error: ImageGenerateError) -> Self {
-        match error {
-            ImageGenerateError::NotConfigured => GenerateJobError::NotConfigured,
-            other => GenerateJobError::Image(other),
-        }
+        GenerateJobError::Image(error)
     }
 }

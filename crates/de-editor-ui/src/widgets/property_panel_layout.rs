@@ -273,11 +273,22 @@ pub fn action_button_rects_with_fill_picker(
         interactions,
     );
     if visible.create_component {
+        use crate::widgets::property_panel_component_props as props;
         out.extend(crate::widgets::property_panel_instance::action_rects(
             x0,
-            tops.component,
+            props::buttons_y(
+                visible.component_button,
+                visible.component_props,
+                tops.component,
+            ),
             w,
             visible.component_button,
+        ));
+        out.extend(props::action_rects(
+            visible.component_props,
+            x0,
+            props::rows_top(visible.component_button, tops.component),
+            w,
         ));
     }
     // Position section: the header's flip buttons, X Y, then W H (#30),

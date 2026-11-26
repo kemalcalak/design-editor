@@ -3,22 +3,17 @@
 //!
 //! Each family ships as one gzipped catalog (`assets/iconify-catalog-*.json.gz`,
 //! written by `packages/scripts/generate-iconify-catalog.mjs`). As plain JSON
-//! the two are ~10 MB, which every native binary would carry; gzipped they are
-//! ~2.5 MB. Neither is ever embedded in the browser bundle.
-//!
-//! - **Native** embeds the gzipped bytes and inflates + parses a family the
-//!   first time something looks it up, so a session that never uses phosphor
-//!   never pays for it.
-//! - **Web** (`runtime-icon-catalog`, i.e. `de-host-web`) asks for the family's
-//!   `/pkg/assets/` route on the first miss; the host installs the fetched bytes
-//!   through [`install_extended_icon_catalog`] and the next paint resolves.
+//! the two are ~10 MB, which every binary would carry; gzipped they are
+//! ~2.5 MB. The gzipped bytes are embedded and a family is inflated + parsed
+//! the first time something looks it up, so a session that never uses
+//! phosphor never pays for it.
 
 use std::collections::HashMap;
 use std::sync::OnceLock;
 
 use super::icon_catalog::IconCatalogEntry;
 
-/// One runtime-loaded icon catalog file.
+/// One lazily inflated icon catalog file.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ExtendedIconSet {
     /// `material-symbols-outlined` / `-rounded` / `-sharp`.
@@ -41,21 +36,6 @@ impl ExtendedIconSet {
         }
     }
 
-    /// The `/pkg/assets/` route the web host fetches this set from.
-    ///
-    /// `tools/stage-web-assets.sh` copies each file under exactly this name.
-    pub fn route(self) -> &'static str {
-        match self {
-            Self::MaterialSymbols => "/pkg/assets/iconify-catalog-material-symbols.json.gz",
-            Self::Phosphor => "/pkg/assets/iconify-catalog-phosphor.json.gz",
-        }
-    }
-
-    /// The set a fetched `route` belongs to.
-    pub fn for_route(route: &str) -> Option<Self> {
-        Self::ALL.into_iter().find(|set| set.route() == route)
-    }
-
     fn slot(self) -> &'static OnceLock<IndexedCatalog> {
         static MATERIAL: OnceLock<IndexedCatalog> = OnceLock::new();
         static PHOSPHOR: OnceLock<IndexedCatalog> = OnceLock::new();
@@ -65,7 +45,6 @@ impl ExtendedIconSet {
         }
     }
 
-    #[cfg(not(target_arch = "wasm32"))]
     fn embedded_gz(self) -> &'static [u8] {
         match self {
             Self::MaterialSymbols => {
@@ -81,14 +60,12 @@ pub(crate) struct IndexedCatalog {
     index: HashMap<String, usize>,
 }
 
-#[cfg(any(not(target_arch = "wasm32"), feature = "runtime-icon-catalog"))]
 #[derive(serde::Deserialize)]
 struct CatalogFile {
     icons: Vec<IconCatalogEntry>,
 }
 
 /// Inflate and parse one gzipped catalog. `None` on corrupt bytes or JSON.
-#[cfg(any(not(target_arch = "wasm32"), feature = "runtime-icon-catalog"))]
 fn parse_gz(gz: &[u8]) -> Option<IndexedCatalog> {
     use std::io::Read;
     let mut json = Vec::new();
@@ -108,60 +85,16 @@ fn parse_gz(gz: &[u8]) -> Option<IndexedCatalog> {
     })
 }
 
-/// Install a fetched (gzipped) catalog for `set`. Returns `true` when this call
-/// installed it; corrupt bytes or an already-installed set return `false`.
-///
-/// Native builds load their embedded copy on demand, so a runtime install there
-/// is refused rather than allowed to replace what lookups already resolved.
-pub fn install_extended_icon_catalog(set: ExtendedIconSet, gz: &[u8]) -> bool {
-    #[cfg(not(target_arch = "wasm32"))]
-    {
-        let _ = (set, gz);
-        false
-    }
-    #[cfg(all(target_arch = "wasm32", feature = "runtime-icon-catalog"))]
-    {
-        if set.slot().get().is_some() {
-            return false;
-        }
-        let Some(catalog) = parse_gz(gz) else {
-            return false;
-        };
-        set.slot().set(catalog).is_ok()
-    }
-    #[cfg(all(target_arch = "wasm32", not(feature = "runtime-icon-catalog")))]
-    {
-        let _ = (set, gz);
-        false
-    }
-}
-
 /// Whether `set` is available to look up and search without further loading.
 pub fn extended_icon_catalog_loaded(set: ExtendedIconSet) -> bool {
     set.slot().get().is_some()
 }
 
-/// The loaded catalog for `set`, loading it if this build can.
-///
-/// Native inflates its embedded copy on first call. Web returns `None` until
-/// the fetch lands and asks for it meanwhile (single-flight through
-/// `web_assets`), so callers just paint nothing and wait for the repaint.
+/// The catalog for `set`, inflating its embedded copy on first call.
 pub(crate) fn ensure_loaded(set: ExtendedIconSet) -> Option<&'static IndexedCatalog> {
-    #[cfg(not(target_arch = "wasm32"))]
-    {
-        Some(set.slot().get_or_init(|| {
-            parse_gz(set.embedded_gz()).expect("bundled extended icon catalog is valid")
-        }))
-    }
-    #[cfg(target_arch = "wasm32")]
-    {
-        let loaded = set.slot().get();
-        #[cfg(feature = "runtime-icon-catalog")]
-        if loaded.is_none() {
-            de_editor_core::web_assets::request(set.route());
-        }
-        loaded
-    }
+    Some(set.slot().get_or_init(|| {
+        parse_gz(set.embedded_gz()).expect("bundled extended icon catalog is valid")
+    }))
 }
 
 /// Exact `collection:name` lookup in an extended set, loading it if needed.
@@ -175,7 +108,7 @@ pub(crate) fn lookup_extended(collection: &str, name: &str) -> Option<&'static I
 }
 
 /// Bitmask of the loaded sets, part of the icon-search cache key: a search run
-/// before a web fetch lands must not be served after it.
+/// before a set loads must not be served after it.
 pub(crate) fn loaded_mask() -> u8 {
     ExtendedIconSet::ALL
         .into_iter()
@@ -193,8 +126,8 @@ pub(crate) fn loaded_icons() -> impl Iterator<Item = &'static IconCatalogEntry> 
         .flat_map(|catalog| catalog.icons.iter())
 }
 
-/// Load (native) or request (web) every extended set. The icon picker searches
-/// all families, so its first search pays the one-time inflate on native.
+/// Load every extended set. The icon picker searches all families, so its
+/// first search pays the one-time inflate.
 pub fn request_all_extended_icon_catalogs() {
     for set in ExtendedIconSet::ALL {
         let _ = ensure_loaded(set);

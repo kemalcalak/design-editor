@@ -82,6 +82,9 @@ pub mod property_panel_browser;
 pub mod property_panel_code;
 pub mod property_panel_code_chips;
 pub mod property_panel_commit;
+pub mod property_panel_component_props;
+#[cfg(test)]
+mod property_panel_component_props_tests;
 pub mod property_panel_compositing;
 pub mod property_panel_corner;
 pub mod property_panel_dispatch;
@@ -211,6 +214,7 @@ pub mod canvas_animation_regions;
 pub mod canvas_layout_transition;
 pub mod canvas_overlay_transform;
 mod canvas_path_overlay;
+pub mod canvas_prototype_links;
 mod canvas_selection_overlay;
 mod canvas_vector_edit_overlay;
 // `pub` so both hosts can read the animated-shader flag after paint.

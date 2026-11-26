@@ -23,137 +23,15 @@ const SCENE_TEMPLATES_TOML: &str = concat!(
     include_str!("../assets/scene_templates.toml")
 );
 
-/// The shipped documents.
-///
-/// Embedded on desktop so opening a template needs no filesystem. NOT embedded
-/// on `wasm32`: the documents are ~6.2 MiB of JSON that every visitor would
-/// download before the editor painted, to open a panel most sessions never
-/// touch. There the document is fetched from the daemon when a template is
-/// actually instantiated — see [`scene_template_document_route`] and
-/// `de_editor_core::web_assets`.
+/// The shipped documents, embedded so opening a template needs no filesystem.
 macro_rules! template_document {
     ($file:literal) => {{
-        #[cfg(not(target_arch = "wasm32"))]
-        {
-            Some(include_str!(concat!(
-                "../assets/scene_templates/",
-                $file,
-                ".de"
-            )))
-        }
-        #[cfg(target_arch = "wasm32")]
-        {
-            crate::web_assets::installed_str(concat!(
-                "/pkg/assets/",
-                "scene_templates",
-                "/",
-                $file,
-                ".de"
-            ))
-        }
+        Some(include_str!(concat!(
+            "../assets/scene_templates/",
+            $file,
+            ".de"
+        )))
     }};
-}
-
-/// Daemon route carrying a template's document.
-///
-/// `None` for an unknown id. Always present for a shipped template on both
-/// platforms — native simply has no use for it, because its bytes are already
-/// in the binary.
-pub fn scene_template_document_route(template_id: &str) -> Option<&'static str> {
-    macro_rules! route {
-        ($file:literal) => {
-            Some(concat!(
-                "/pkg/assets/",
-                "scene_templates",
-                "/",
-                $file,
-                ".de"
-            ))
-        };
-    }
-    match template_id {
-        "screenshot-tutorial" => route!("screenshot-tutorial"),
-        "knowledge-carousel" => route!("knowledge-carousel"),
-        "before-after" => route!("before-after"),
-        "slide-deck" => route!("slide-deck"),
-        "knowledge-card-vertical" => route!("knowledge-card-vertical"),
-        "knowledge-card-square" => route!("knowledge-card-square"),
-        "pitch-deck-dark" => route!("pitch-deck-dark"),
-        "lecture-deck-light" => route!("lecture-deck-light"),
-        "minimal-keynote" => route!("minimal-keynote"),
-        "gradient-tech" => route!("gradient-tech"),
-        "saas-landing-orange" => route!("saas-landing-orange"),
-        "product-landing-light" => route!("product-landing-light"),
-        "punch-quote-card" => route!("punch-quote-card"),
-        "journal-checklist-card" => route!("journal-checklist-card"),
-        "data-report-infographic" => route!("data-report-infographic"),
-        "steps-flow-infographic" => route!("steps-flow-infographic"),
-        "event-poster-deck" => route!("event-poster-deck"),
-        "pitfall-list-infographic" => route!("pitfall-list-infographic"),
-        "spine-culture-card" => route!("spine-culture-card"),
-        "metric-single-card" => route!("metric-single-card"),
-        "quote-frame-card" => route!("quote-frame-card"),
-        "daily-sign-card" => route!("daily-sign-card"),
-        "price-tier-card" => route!("price-tier-card"),
-        "notice-board-card" => route!("notice-board-card"),
-        "milestone-timeline-infographic" => route!("milestone-timeline-infographic"),
-        "concept-contrast-infographic" => route!("concept-contrast-infographic"),
-        "ranking-board-infographic" => route!("ranking-board-infographic"),
-        "faq-thread-infographic" => route!("faq-thread-infographic"),
-        "data-story-infographic" => route!("data-story-infographic"),
-        "challenge-tracker-infographic" => route!("challenge-tracker-infographic"),
-        "ecosystem-map-infographic" => route!("ecosystem-map-infographic"),
-        "do-dont-comparison" => route!("do-dont-comparison"),
-        "myth-truth-comparison" => route!("myth-truth-comparison"),
-        "pricing-tiers-comparison" => route!("pricing-tiers-comparison"),
-        "scenario-guide-comparison" => route!("scenario-guide-comparison"),
-        "spec-table-comparison" => route!("spec-table-comparison"),
-        "three-way-comparison" => route!("three-way-comparison"),
-        "time-shift-comparison" => route!("time-shift-comparison"),
-        "tradeoff-scale-comparison" => route!("tradeoff-scale-comparison"),
-        "version-diff-comparison" => route!("version-diff-comparison"),
-        "app-onboarding-triptych" => route!("app-onboarding-triptych"),
-        "diy-blueprint-guide" => route!("diy-blueprint-guide"),
-        "photo-composition-tutorial" => route!("photo-composition-tutorial"),
-        "recipe-four-step" => route!("recipe-four-step"),
-        "skincare-routine-cards" => route!("skincare-routine-cards"),
-        "software-step-tutorial" => route!("software-step-tutorial"),
-        "storage-makeover-steps" => route!("storage-makeover-steps"),
-        "weekly-report-lesson" => route!("weekly-report-lesson"),
-        "workout-breakdown-guide" => route!("workout-breakdown-guide"),
-        "bookreview-silk-carousel" => route!("bookreview-silk-carousel"),
-        "cityguide-film-carousel" => route!("cityguide-film-carousel"),
-        "datareport-grid-carousel" => route!("datareport-grid-carousel"),
-        "opinion-longform-carousel" => route!("opinion-longform-carousel"),
-        "qa-chalkboard-carousel" => route!("qa-chalkboard-carousel"),
-        "story-night-carousel" => route!("story-night-carousel"),
-        "toolkit-notebook-carousel" => route!("toolkit-notebook-carousel"),
-        "tutorial-journal-carousel" => route!("tutorial-journal-carousel"),
-        "yearreview-mineral-carousel" => route!("yearreview-mineral-carousel"),
-        "sounding-navy-deck" => route!("sounding-navy-deck"),
-        "tidemark-slate-deck" => route!("tidemark-slate-deck"),
-        "banxin-rule-deck" => route!("banxin-rule-deck"),
-        "gridpaper-graphite-deck" => route!("gridpaper-graphite-deck"),
-        "dossier-linen-deck" => route!("dossier-linen-deck"),
-        "ledger-tick-deck" => route!("ledger-tick-deck"),
-        "ai-support-pitch-deck" => route!("ai-support-pitch-deck"),
-        "quarterly-review-deck" => route!("quarterly-review-deck"),
-        "quicksort-lecture-deck" => route!("quicksort-lecture-deck"),
-        "brand-concept-sheet" => route!("brand-concept-sheet"),
-        "logo-qa-board" => route!("logo-qa-board"),
-        "event-invitation-card" => route!("event-invitation-card"),
-        "livestream-teaser-card" => route!("livestream-teaser-card"),
-        "hiring-poster-card" => route!("hiring-poster-card"),
-        "course-enroll-card" => route!("course-enroll-card"),
-        "conference-agenda-card" => route!("conference-agenda-card"),
-        "product-launch-card" => route!("product-launch-card"),
-        "annual-report-card" => route!("annual-report-card"),
-        "music-fest-poster-card" => route!("music-fest-poster-card"),
-        "book-club-invite-card" => route!("book-club-invite-card"),
-        "compound-effect-card" => route!("compound-effect-card"),
-        "analytics-metric-card" => route!("analytics-metric-card"),
-        _ => None,
-    }
 }
 
 /// Return the document JSON for a template id.
@@ -162,10 +40,6 @@ pub fn scene_template_document_route(template_id: &str) -> Option<&'static str> 
 /// verifies every catalogue entry resolves here on native, so a template added
 /// to the TOML without its document fails at first use rather than presenting a
 /// card that does nothing when clicked.
-///
-/// On `wasm32` a `None` for a SHIPPED id means "not fetched yet" rather than
-/// "no such template" — callers there must distinguish the two through
-/// [`scene_template_document_route`], which answers for the id alone.
 pub fn scene_template_document(template_id: &str) -> Option<&'static str> {
     match template_id {
         "screenshot-tutorial" => template_document!("screenshot-tutorial"),
@@ -410,14 +284,8 @@ pub struct SceneTemplateDefinition {
 }
 
 impl SceneTemplateDefinition {
-    /// The embedded document for this template.
-    ///
-    /// Native only, and deliberately so: it is infallible exactly because the
-    /// bytes are in the binary. On `wasm32` the document may not have been
-    /// fetched yet, which is not a failure this accessor could express without
-    /// becoming an `Option` at every call site for the benefit of a platform
-    /// that must go through the async path anyway.
-    #[cfg(not(target_arch = "wasm32"))]
+    /// The embedded document for this template. Infallible because the
+    /// catalogue load verified every template has one.
     pub fn document(&self) -> &'static str {
         scene_template_document(&self.id)
             .expect("catalogue load verified every template has a document")
@@ -583,12 +451,7 @@ impl TemplateBuilder {
         // The load-time guarantee `document()` relies on: a catalogue entry
         // without a document would compile fine and fail only when a user
         // clicked the card.
-        //
-        // Checked through the ROUTE, not the bytes: on wasm the bytes are not
-        // in the binary at all, so asking for them here would reject the whole
-        // catalogue at start-up. The route answers the question actually being
-        // asked — "does this id ship a document?" — on both platforms.
-        if scene_template_document_route(&id).is_none() {
+        if scene_template_document(&id).is_none() {
             return Err(SceneTemplateCatalogError::new(
                 line,
                 format!("template `{id}` has no embedded document"),

@@ -7,8 +7,8 @@ use std::sync::{Arc, Mutex};
 
 use de_editor_core::agent_settings::ImageGenProfile;
 use de_editor_core::{walkers, EditorState, NodeId};
-// Provider plumbing shared with the web daemon (single-sourced in
-// de-host-services): keyword simplification, Openverse token exchange, and
+// Provider plumbing shared with the MCP image paths (single-sourced in
+// de-image-enrich): keyword simplification, Openverse token exchange, and
 // image mime handling. The desktop keeps its own `fetch_image_data_url`
 // on top of `fetch_image_bytes` so the skia down-scale pass still runs.
 pub(crate) use de_host_services::web_image_search::WebOpenverseCredentials;

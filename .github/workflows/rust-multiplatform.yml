@@ -1,7 +1,7 @@
 name: Rust multi-platform build
 
 # Builds the Design Editor Rust workspace on the two shipped platforms
-# (macOS arm64, Windows x64) plus the wasm web host. Linux stays covered by
+# (macOS arm64, Windows x64). Linux stays covered by
 # the Ubuntu leg of `rust-check.yml`. Release artifacts are produced by
 # `rust-release.yml`.
 
@@ -98,28 +98,3 @@ jobs:
       # Desktop binary artifact upload is intentionally not wired here yet.
       # The real desktop binary lives in the `de-host-desktop` crate; a
       # build + upload step can be added once release packaging is finalized.
-
-  wasm-web:
-    name: wasm32-unknown-unknown / de-host-web (compile guard)
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: recursive
-      - uses: dtolnay/rust-toolchain@stable
-        with:
-          toolchain: '1.94'
-          targets: wasm32-unknown-unknown
-      - uses: Swatinem/rust-cache@v2
-        with:
-          key: wasm32
-      # Step 1b wasm32-clean compile guard. The default `web` feature is a
-      # stub mount that validates the canvas and does not paint; it stays here
-      # to prove the public surface remains wasm32-clean without the production
-      # bundle deps. The real deployable renderer is built in
-      # wasm-bundle-build.yml with the `canvaskit` feature and the
-      # tools/check-wasm-bundle.sh gate.
-      - run: cargo build -p de-host-web --target wasm32-unknown-unknown --release --no-default-features --features web
-      # Artifact upload deliberately removed: the stub `.wasm` from this
-      # path would mislead downstream consumers into thinking the shell can
-      # render. The deployable artifact is uploaded by wasm-bundle-build.yml.

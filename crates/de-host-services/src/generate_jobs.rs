@@ -14,9 +14,7 @@
 //!   wakes the UI thread),
 //! - the file-backed `--mcp` / `--mcp-http` servers before each request (and
 //!   each idle poll for http), and once more after a bounded wait for running
-//!   jobs when the session ends,
-//! - the `--serve-web` daemon before each MCP request and from the job's
-//!   listener.
+//!   jobs when the session ends.
 //!
 //! Landings are computed against the document as it is at drain time (see
 //! `landing.rs`), so a write the client made meanwhile is respected.
@@ -36,10 +34,9 @@ pub mod source;
 pub mod svg_llm;
 pub mod vectorize;
 
-pub(crate) use backend::screening as backend_screening;
 pub use backend::{
-    screen_custom_endpoints, EditJobRequest, GenerateBackend, ImageJobRequest, ProviderBackend,
-    StockJobRequest, SvgJobRequest,
+    EditJobRequest, GenerateBackend, ImageJobRequest, ProviderBackend, StockJobRequest,
+    SvgJobRequest,
 };
 pub use error::GenerateJobError;
 pub use image_edit::EditKind;
@@ -214,7 +211,7 @@ impl GenerateJobs {
     }
 
     /// Called (from a worker thread) after a job finishes; the live editor
-    /// wakes its UI thread with it, the web daemon lands the result.
+    /// wakes its UI thread with it.
     pub fn set_listener(&self, listener: Option<Listener>) {
         *self.listener.lock().unwrap_or_else(|p| p.into_inner()) = listener;
     }

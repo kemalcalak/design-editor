@@ -1,60 +1,26 @@
 //! Prompt Center card previews.
 //!
-//! ~2.0 MB of JPEG across 57 cards. The desktop binary embeds them: it is
-//! already a local file, and card painting should never touch the network.
-//! The browser bundle does not — 2 MB of already-compressed JPEG is 2 MB the
-//! user downloads before the editor paints anything, and the Prompt Center is
-//! a panel most sessions never open. On `wasm32` each preview is fetched from
-//! the daemon the first time its card paints (see
-//! `de_editor_core::web_assets`), and the card shows its text fallback until
-//! the bytes land.
-//!
-//! Both platforms resolve through the same [`prompt_center_preview`] so the
-//! paint site has one shape, and the cache id is known on both before any
-//! bytes exist — the id is what the renderer's raster cache is keyed on, so it
-//! must not depend on whether a fetch has completed.
+//! ~2.0 MB of JPEG across 57 cards, embedded: card painting never touches
+//! the network. The cache id is what the renderer's raster cache is keyed on.
 
 const PREVIEW_IMAGE_ID_BASE: u64 = 0x5052_4d50_0000_0000;
 
-// Test-only: `concat!` cannot interpolate a const, so the route literals in
-// the macro below spell the directory out. This is the value the route
-// tests rebuild the expected path from, which is what keeps the spelled-out
-// literal and the staged bundle layout (`tools/stage-web-assets.sh`) from
-// drifting into a silent per-asset 404.
-#[cfg(test)]
-const PREVIEW_DIR: &str = "prompt_center_previews";
-
-/// One card's preview, resolved for the current platform.
+/// One card's preview.
 pub(crate) struct PromptPreview {
-    /// Stable renderer cache id. Known before any bytes are, on both hosts.
+    /// Stable renderer cache id.
     pub image_id: u64,
-    /// `None` on wasm until the fetch lands; always `Some` on native.
-    pub bytes: Option<&'static [u8]>,
-    /// Daemon route to fetch. Unused on native, where `bytes` is already set.
-    pub route: &'static str,
+    pub bytes: &'static [u8],
 }
 
 macro_rules! preview {
     ($index:literal, $file:literal) => {{
-        // The route literal must agree with `WEB_ASSET_ROUTE_PREFIX`; `concat!`
-        // needs literals, so the prefix is spelled out here and checked against
-        // the constant by `route_prefix_matches_the_shared_constant` below.
-        const ROUTE: &str = concat!("/pkg/assets/", "prompt_center_previews", "/", $file, ".jpg");
-        #[cfg(not(target_arch = "wasm32"))]
-        let bytes = Some(
-            include_bytes!(concat!(
+        Some(PromptPreview {
+            image_id: PREVIEW_IMAGE_ID_BASE | $index,
+            bytes: include_bytes!(concat!(
                 "../../assets/prompt_center_previews/",
                 $file,
                 ".jpg"
-            ))
-            .as_slice(),
-        );
-        #[cfg(target_arch = "wasm32")]
-        let bytes = de_editor_core::web_assets::installed_bytes(ROUTE);
-        Some(PromptPreview {
-            image_id: PREVIEW_IMAGE_ID_BASE | $index,
-            bytes,
-            route: ROUTE,
+            )),
         })
     }};
 }
@@ -62,9 +28,7 @@ macro_rules! preview {
 /// Return the preview for a built-in prompt.
 ///
 /// User-defined prompts and unknown ids intentionally have no generated preview
-/// and therefore return `None`. A `Some` whose `bytes` are `None` is the web
-/// host's "not fetched yet" — a different answer, and the caller must not
-/// confuse the two: one means there is no picture, the other means not yet.
+/// and therefore return `None`.
 pub(crate) fn prompt_center_preview(prompt_id: &str) -> Option<PromptPreview> {
     match prompt_id {
         "gallery-wander" => preview!(1, "gallery-wander"),
@@ -153,7 +117,7 @@ mod tests {
                 "duplicate image id {:#x}",
                 preview.image_id
             );
-            let bytes = preview.bytes.expect("native embeds every preview");
+            let bytes = preview.bytes;
             assert_eq!(
                 crate::image_runtime::encoded_image_dimensions(bytes),
                 Some((640, 400)),
@@ -162,42 +126,6 @@ mod tests {
             );
         }
         assert_eq!(image_ids.len(), 59);
-    }
-
-    #[test]
-    fn route_prefix_matches_the_shared_constant() {
-        // `concat!` cannot interpolate a const, so the macro spells the prefix
-        // out. This is what stops the literal and the daemon's route from
-        // drifting apart into a silent 404 on every card.
-        let preview = prompt_center_preview("gallery-wander").expect("ships");
-        assert!(preview
-            .route
-            .starts_with(de_editor_core::web_assets::WEB_ASSET_ROUTE_PREFIX));
-        assert_eq!(
-            preview.route,
-            format!(
-                "{}{}/gallery-wander.jpg",
-                de_editor_core::web_assets::WEB_ASSET_ROUTE_PREFIX,
-                super::PREVIEW_DIR
-            )
-        );
-    }
-
-    #[test]
-    fn every_shipped_preview_has_a_distinct_route() {
-        // A duplicated route would make two cards share one fetch and one
-        // picture — the routes are the web host's identity for these assets
-        // exactly as the image ids are the renderer's.
-        let mut routes = HashSet::new();
-        for prompt in prompt_catalogue() {
-            let preview = prompt_center_preview(&prompt.id).expect("ships");
-            assert!(
-                routes.insert(preview.route),
-                "duplicate route {}",
-                preview.route
-            );
-        }
-        assert_eq!(routes.len(), 59);
     }
 
     #[test]

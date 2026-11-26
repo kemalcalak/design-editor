@@ -9,10 +9,6 @@ USAGE:
 COMMON COMMANDS:
   de start [--file path.de] [--port N]     launch the live editor (live canvas);
                                            op <tool> then drives the on-screen canvas
-  de start --web [--host H] [--file path.de]
-                                           serve the browser editor (wasm bundle +
-                                           MCP) and open http://127.0.0.1:PORT;
-                                           --host 0.0.0.0 binds for LAN/Docker
   de start --headless [--file path.de] [--wait SECONDS]
                                            run the windowless file-backed MCP server
                                            (CI / display-less agents); waits for it

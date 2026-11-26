@@ -54,17 +54,12 @@ pub fn svg_user_prompt(prompt: &str, width: f64, height: f64) -> String {
 /// Ask the chat model for the drawing and return the SVG text.
 pub fn generate_svg_blocking(
     agent: &BuiltinAgentConfig,
-    screen_endpoint: bool,
     prompt: &str,
     width: f64,
     height: f64,
 ) -> Result<String, GenerateJobError> {
-    let provider = if screen_endpoint {
-        ConfiguredBuiltinProvider::from_builtin_agent_for_web(agent)
-    } else {
-        ConfiguredBuiltinProvider::from_builtin_agent(agent)
-    }
-    .ok_or(GenerateJobError::NoChatProvider)?;
+    let provider = ConfiguredBuiltinProvider::from_builtin_agent(agent)
+        .ok_or(GenerateJobError::NoChatProvider)?;
     let request = ChatRequest {
         system_prompt: SVG_SYSTEM_PROMPT.to_string(),
         user_message: svg_user_prompt(prompt, width, height),

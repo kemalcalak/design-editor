@@ -359,8 +359,7 @@ fn should_launch_direct_modify(state: &EditorState, user_text: &str) -> bool {
     // design, never a modify — even when the prompt is a bare noun phrase the
     // new-screen gates don't recognize (measured: "Luxury webapp for managing
     // barbershop clients" on a fresh canvas fell into run_modify_turn → glm
-    // flat-nodes → empty `"`). This is the desktop parity of
-    // web_chat_standard's `page_children_empty => New`.
+    // flat-nodes → empty `"`).
     if active_page_is_blank_starter_frame(state) {
         return false;
     }

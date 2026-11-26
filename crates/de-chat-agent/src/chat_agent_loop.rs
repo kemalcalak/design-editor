@@ -237,8 +237,7 @@ fn contract_nudge_text(committed: &[String], still_empty: &[String]) -> String {
 /// (every dedicated fill round the screen was eligible for ran out, or the
 /// executor never had a live document to check). Wording mirrors the classic
 /// path's `Progress::UnfilledScreens` line (`de-host-desktop::design_session`'s
-/// `apply_progress` / `de-host-services::web_chat_standard`'s
-/// `progress_label`) so a user sees the same sentence shape on either path.
+/// `apply_progress`) so a user sees the same sentence shape on either path.
 async fn report_unfilled_if_any(tx: &mpsc::Sender<ChatDelta>, names: &[String]) {
     if names.is_empty() {
         return;

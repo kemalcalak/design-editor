@@ -269,12 +269,6 @@ pub(super) fn parse_modify_response(full_response: &str) -> ModifyNodeParse {
     }
 }
 
-pub(crate) fn parse_modify_nodes(
-    full_response: &str,
-) -> Vec<crate::chat_canvas_tools::DesignModificationOp> {
-    parse_modify_response(full_response).nodes
-}
-
 /// Build a modification plan for explicitly selected Frames. Direct mutation
 /// is never inferred from the last canvas node: when selection is empty,
 /// stale, or includes a non-Frame, the caller must degrade to a non-modifying

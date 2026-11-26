@@ -42,7 +42,7 @@ impl McpTool for GetScreenshot {
         // but this exact PNG is rendered server-side. Install the same catalog
         // before painting so brand icon_font nodes do not degrade to the
         // honest fallback dot during agent visual QA.
-        let _ = de_editor_ui::set_brand_catalog(crate::web_static::ICONIFY_BRANDS_JSON);
+        let _ = de_editor_ui::set_brand_catalog(crate::brand_catalog::ICONIFY_BRANDS_JSON);
 
         // Parse nodeId argument.
         let raw_id = match args.get("nodeId").map(String::as_str) {

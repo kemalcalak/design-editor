@@ -8,12 +8,7 @@
 //! stringly-typed code produced, so stderr lines, HTTP error bodies and the
 //! messages tests assert on are unchanged byte for byte.
 //!
-//! What the enum adds is a transport-independent classification. Its main
-//! consumer is the `--serve-web` daemon, which used to re-label every
-//! `mcp_serve` string by hand at the call site
-//! (`.map_err(WebCanvasError::Transport)` / `::Document` / `::BadRequest`).
-//! With [`From<McpServeError> for WebCanvasError`] that mapping lives in one
-//! table and the call sites are plain `?`.
+//! What the enum adds is a transport-independent classification.
 //!
 //! The whole module surface is typed now. The three seams that used to keep
 //! a `String` for `mcp_live.rs`'s sake — [`super::write_mcp_http_response`]

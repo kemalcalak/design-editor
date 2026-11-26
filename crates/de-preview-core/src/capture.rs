@@ -24,9 +24,11 @@ pub const MAX_CAPTURE_MS: u64 = 60_000;
 /// One scripted step.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum CaptureStep {
-    /// Press and release at the centre of the node with this id.
+    /// Press and release at the centre of the node with this id, instance
+    /// path (`inst/child`) or layer name (#371).
     Tap(String),
-    /// Move the (mouse) pointer over the node with this id.
+    /// Move the (mouse) pointer over the node with this id, instance path
+    /// or layer name.
     Hover(String),
     /// Switch to the screen at this route path (APP MODE only).
     Navigate(String),
@@ -185,19 +187,53 @@ impl PreviewSession {
         Ok(self.painted_scene())
     }
 
-    /// Scene-space centre of node `id` as currently painted.
-    fn shown_node_centre(&self, id: &str) -> Result<(f32, f32), CaptureStepError> {
+    /// Scene-space centre of the node `target` names as currently painted:
+    /// an id, an instance path (`inst/child` is shown as `inst__child`),
+    /// else the first shown node whose layer name matches (#371).
+    fn shown_node_centre(&self, target: &str) -> Result<(f32, f32), CaptureStepError> {
         let scene = self.painted_scene();
-        let node = scene
-            .active_page()
-            .and_then(|page| page.find(id))
-            .filter(|node| !node.hidden)
-            .ok_or_else(|| CaptureStepError::NodeNotShown(id.to_string()))?;
+        let page = scene.active_page();
+        let shown = |id: &str| {
+            page.and_then(|page| page.find(id))
+                .filter(|node| !node.hidden)
+        };
+        let anchor = target.replace('/', "__");
+        let node = shown(target)
+            .or_else(|| shown(&anchor))
+            .or_else(|| self.ids_named(target).into_iter().find_map(|id| shown(&id)))
+            .ok_or_else(|| CaptureStepError::NodeNotShown(target.to_string()))?;
         let bounds = node.bounds;
         Ok((
             bounds.origin.x + bounds.size.x / 2.0,
             bounds.origin.y + bounds.size.y / 2.0,
         ))
+    }
+}
+
+impl PreviewSession {
+    /// Ids of the runtime nodes whose layer name is `name` (trimmed,
+    /// case-insensitive), in document order.
+    fn ids_named(&self, name: &str) -> Vec<String> {
+        use de_editor_core::PenNodeExt;
+        let wanted = name.trim().to_lowercase();
+        let Some(document) = self.runtime.document.as_ref() else {
+            return Vec::new();
+        };
+        document
+            .tree
+            .by_id
+            .iter()
+            .filter(|(_, key)| {
+                document.tree.nodes.get(**key).is_some_and(|data| {
+                    data.schema
+                        .base()
+                        .name
+                        .as_deref()
+                        .is_some_and(|n| n.trim().to_lowercase() == wanted)
+                })
+            })
+            .map(|(id, _)| id.clone())
+            .collect()
     }
 }
 

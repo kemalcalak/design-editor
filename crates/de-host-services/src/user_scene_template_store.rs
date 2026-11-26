@@ -4,8 +4,8 @@
 //! canonical `document.de`, a `meta.json`, and an optional `preview.jpg`.
 //! The registry itself belongs to `de-editor-core` so every host can resolve
 //! a `user:` id, but reading the native user's directory belongs here: this
-//! crate is shared by the desktop GUI, stdio/HTTP MCP, and serve-web without
-//! pulling a windowing dependency into either headless binary.
+//! crate is shared by the desktop GUI and the stdio/HTTP MCP servers without
+//! pulling a windowing dependency into the headless modes.
 
 use std::path::{Path, PathBuf};
 

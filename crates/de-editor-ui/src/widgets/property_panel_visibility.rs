@@ -245,6 +245,9 @@ pub enum ComponentButtonState {
     /// A node inside an instance whose override the user can reset to the
     /// master (#166): one "Reset override" row.
     InstanceOverride,
+    /// A node inside a master (#367): no button, only the "… property"
+    /// offers of [`VisibleSections::component_props`].
+    BindProperty,
 }
 
 /// Whether each section currently paints.
@@ -254,6 +257,8 @@ pub struct VisibleSections {
     /// Which Create-component variant paints (see
     /// [`ComponentButtonState`]). Only read when `create_component`.
     pub component_button: ComponentButtonState,
+    /// Component-property rows in the component block (#367).
+    pub component_props: crate::widgets::property_panel_component_props::PropRowsLayout,
     pub flex_layout: bool,
     pub flex_layout_mode: de_editor_core::FlexLayout,
     pub layout_justify: LayoutJustifyValue,
@@ -364,7 +369,7 @@ impl VisibleSections {
         if self.create_component {
             crate::widgets::property_panel_inputs::create_component_block_height(
                 self.component_button,
-            )
+            ) + self.component_props.height()
         } else {
             0.0
         }
@@ -423,6 +428,7 @@ impl VisibleSections {
     pub const ALL: Self = Self {
         create_component: true,
         component_button: ComponentButtonState::Create,
+        component_props: crate::widgets::property_panel_component_props::PropRowsLayout::None,
         flex_layout: true,
         flex_layout_mode: de_editor_core::FlexLayout::Free,
         layout_justify: LayoutJustifyValue::Start,

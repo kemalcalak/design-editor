@@ -168,8 +168,7 @@ pub fn run_design_worker<L: LlmClient + Send>(
                     true
                 }
                 Ok(None) => {
-                    // C1 M2 desktop parity with the web route
-                    // (`web_chat_standard::stream_new_design_route`): a
+                    // C1 M2: a
                     // reference trigger plus an image attachment drives
                     // vision-based design.md + skeleton extraction.
                     image_reference_fallback(
@@ -241,10 +240,8 @@ fn image_reference_fallback(
     }
 }
 
-/// C1 M2 image-attachment reference branch — the desktop parity of the web
-/// route's `web_chat_standard_reference::resolve_image_reference` /
-/// `apply_image_reference` pair. Runs after URL reference resolution
-/// returned `Ok(None)`.
+/// C1 M2 image-attachment reference branch. Runs after URL reference
+/// resolution returned `Ok(None)`.
 ///
 /// Three states:
 /// - reference trigger in the prompt + an image attachment → vision

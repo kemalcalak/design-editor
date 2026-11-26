@@ -24,5 +24,6 @@ pub(super) fn frame(
         screen: None,
         breakpoint: None,
         placeholder: None,
+        component_properties: None,
     })
 }

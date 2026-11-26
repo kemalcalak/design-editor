@@ -31,11 +31,12 @@ pub const PATH_SEPARATOR: char = '/';
 /// (`PenNodeBase::variable_bindings`).
 const VARIABLE_BINDINGS: &str = "variableBindings";
 
-/// Spread one override key onto `node`. Variable bindings merge per field
-/// instead of replacing the node's whole map, so an override that binds
-/// one field keeps the node's other bindings.
+/// Spread one override key onto `node`. Variable bindings and nested
+/// instance `props` merge per entry instead of replacing the node's whole
+/// map, so an override that binds one field keeps the node's other ones.
 pub fn merge_override_key(node: &mut Map<String, Value>, key: &str, value: &Value) {
-    if key == VARIABLE_BINDINGS {
+    // A nested instance's property values (#367) merge by name too.
+    if key == VARIABLE_BINDINGS || key == "props" {
         if let (Some(Value::Object(own)), Value::Object(added)) = (node.get_mut(key), value) {
             own.extend(added.iter().map(|(k, v)| (k.clone(), v.clone())));
             return;
@@ -155,8 +156,16 @@ fn is_ref(map: &Map<String, Value>) -> bool {
 /// (position, name, visibility, …, `INSTANCE_DIRECT_PROPS`) land on the
 /// `ref` itself, where they win over the component; everything else goes to
 /// `descendants[<its ref>]`, the instance's top-level override slot, because
-/// the canonical `RefNode` holds no paint or size fields.
+/// the canonical `RefNode` holds no paint or size fields. A component
+/// property (#367) may swap the nested instance's `ref` or set its `props`;
+/// both land on the ref.
 fn patch_nested_instance_root(ref_map: &mut Map<String, Value>, patch: &Map<String, Value>) {
+    if let Some(Value::String(swapped)) = patch.get("ref") {
+        ref_map.insert("ref".into(), Value::String(swapped.clone()));
+    }
+    if let Some(props @ Value::Object(_)) = patch.get("props") {
+        merge_override_key(ref_map, "props", props);
+    }
     let Some(target) = ref_map
         .get("ref")
         .and_then(Value::as_str)
@@ -166,7 +175,7 @@ fn patch_nested_instance_root(ref_map: &mut Map<String, Value>, patch: &Map<Stri
     };
     let mut rest = Map::new();
     for (key, value) in patch {
-        if matches!(key.as_str(), "id" | "type" | "children") {
+        if matches!(key.as_str(), "id" | "type" | "children" | "ref" | "props") {
             continue;
         }
         if crate::instance_override::INSTANCE_DIRECT_PROPS.contains(&key.as_str()) {

@@ -410,6 +410,7 @@ fn map_placeholder(
         screen: None,
         breakpoint: None,
         placeholder: None,
+        component_properties: None,
     });
     finish(context, node)
 }

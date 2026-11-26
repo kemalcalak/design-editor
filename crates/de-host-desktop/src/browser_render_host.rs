@@ -14,7 +14,7 @@ use std::sync::{Arc, Mutex};
 use std::time::Instant;
 
 use de_browser_render::{BrowserPool, BrowserRenderError, RenderSpec};
-use de_editor_core::browser_live::BrowserRenderRequest;
+use de_editor_core::browser_live::{BrowserRenderRequest, BrowserSnapshotSpec};
 use de_editor_core::EditorState;
 use de_editor_ui::widgets::browser_render_queue::{BrowserRenderOutcome, BrowserRenderQueue};
 use winit::event_loop::EventLoopProxy;
@@ -171,9 +171,22 @@ impl Drop for BrowserRenderHost {
 
 fn job_for(request: BrowserRenderRequest) -> Job {
     Job {
-        spec: de_host_services::web_browser_snapshot::render_spec(&request.snapshot_spec()),
+        spec: render_spec(&request.snapshot_spec()),
         node_id: request.node_id,
         key: request.key,
+    }
+}
+
+/// The renderer's spec for a snapshot request.
+fn render_spec(spec: &BrowserSnapshotSpec) -> RenderSpec {
+    RenderSpec {
+        url: spec.url.clone(),
+        layout_width: spec.layout_width,
+        layout_height: spec.layout_height,
+        scale: spec.scale,
+        mobile: spec.mobile,
+        scroll_x: spec.scroll_x.max(0.0),
+        scroll_y: spec.scroll_y.max(0.0),
     }
 }
 

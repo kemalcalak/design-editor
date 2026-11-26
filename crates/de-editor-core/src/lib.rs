@@ -63,6 +63,7 @@ pub mod command_style_replace;
 mod component_backing;
 pub mod component_browser_state;
 pub mod component_instances;
+pub mod component_props;
 mod component_registration;
 pub mod components;
 pub mod compositing;
@@ -135,6 +136,10 @@ pub mod instance_override;
 pub mod instance_path;
 pub mod instance_view;
 pub mod interaction_edit;
+#[cfg(test)]
+mod interaction_fixture;
+pub mod interaction_graph;
+pub mod interaction_write;
 pub mod mesh_lattice;
 pub mod missing_fonts;
 pub mod motion_edit;
@@ -157,11 +162,13 @@ pub mod prompt_center_keyboard;
 pub mod property_edit_mutators;
 pub mod property_panel_state;
 pub mod ref_resolve;
+mod ref_scroll_targets;
 pub mod release_notes;
 pub mod rename;
 pub mod render_backend;
 pub mod request_snapshot;
 pub mod root_placement;
+pub mod route_rename;
 pub mod scene_template_append;
 pub mod scene_template_catalog;
 pub mod scene_template_keyboard;
@@ -172,7 +179,6 @@ pub mod screen_marker_edit;
 mod script_edit;
 pub mod script_inputs;
 pub mod script_regen;
-pub mod script_wire;
 pub mod selection;
 pub mod selection_flip;
 pub mod selection_resolve;
@@ -196,7 +202,6 @@ pub mod transition_edit;
 pub mod user_scene_templates;
 pub mod version_order;
 pub mod video_node_props;
-pub mod web_assets;
 
 /// Tight source-coordinate bounds for an SVG path-data string.
 pub fn svg_path_data_bounds(d: &str) -> Option<(f32, f32, f32, f32)> {
@@ -230,7 +235,6 @@ pub mod variables_resolve;
 pub mod vector_edit;
 pub mod viewport;
 pub mod walkers;
-pub mod web_sync;
 pub mod write_scope;
 
 #[cfg(test)]
@@ -362,6 +366,7 @@ pub use command_promote::PromoteResult;
 pub use command_style_replace::StyleReplaceError;
 pub use component_browser_state::ComponentBrowserButton;
 pub use component_instances::parse_descendants;
+pub use component_props::{ComponentPropertyCommand, PropertyUpsert, PropsContext, PropsError};
 pub use components::{Component, ComponentLibrary, ComponentOption};
 pub use compositing::{fill_blend_mode_at, node_blend_mode, node_mask_type};
 pub use design_md::{extract_design_md_from_document, generate_design_md, parse_design_md};
@@ -422,6 +427,7 @@ pub use instance_override::{
     INSTANCE_DIRECT_PROPS,
 };
 pub use instance_view::{InstanceUse, InstanceView, OverrideTarget};
+pub use interaction_write::InteractionCommand;
 pub use jian_ops_schema::node::MaskType;
 pub use jian_ops_schema::style::BlendMode;
 pub use jian_ops_schema::{DesignMdColor, DesignMdSpec, DesignMdTypography, PenDocument};
@@ -458,4 +464,3 @@ pub use uikit_io::KitIoRequest;
 pub use variables_panel_state::VariablesPanelButton;
 pub use viewport::Viewport;
 pub use walkers::ReorderDirection;
-pub use web_sync::WebSyncError;

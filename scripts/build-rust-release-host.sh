@@ -34,7 +34,7 @@ cargo clean -p skia-bindings --target "$release_target" --release
 "$repo_root/tools/pinned-release-tools.sh" verify-skia \
     desktop "$release_target" "$SKIA_BINARIES_URL"
 cargo build \
-    -p de-host-desktop -p de-cli -p de-host-web-server \
+    -p de-host-desktop -p de-cli \
     --target "$release_target" --release --locked \
     --features \
-      de-host-desktop/pinned-skia-binaries,de-host-web-server/pinned-skia-binaries
+      de-host-desktop/pinned-skia-binaries

@@ -640,7 +640,7 @@ fn chat_tool_registry(state: &EditorState, requested: &str) -> ToolRegistry {
         "snapshot_layout" => r.register(Box::new(de_mcp::snapshot_layout_snapshot(state))),
         "get_selection" => r.register(Box::new(de_mcp::selection_snapshot(state))),
         "insert_node" => r.register(Box::new(de_mcp::insert_node_snapshot())),
-        "update_node" => r.register(Box::new(de_mcp::update_node_snapshot())),
+        "update_node" => r.register(Box::new(de_mcp::update_node_snapshot_for(state))),
         "move_node" => r.register(Box::new(de_mcp::move_node_snapshot())),
         "delete_node" => r.register(Box::new(de_mcp::delete_node_snapshot())),
         _ => {}

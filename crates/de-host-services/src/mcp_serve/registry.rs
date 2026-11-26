@@ -76,6 +76,12 @@ pub(super) fn rebuild_registry(
     register_tool!("get_screenshot", get_screenshot_snapshot(doc));
     register_tool!("capture_preview", capture_preview_snapshot(doc));
     register_tool!("set_screen", de_mcp::set_screen_snapshot(doc));
+    register_tool!("set_interaction", de_mcp::set_interaction_snapshot(doc));
+    register_tool!(
+        "remove_interaction",
+        de_mcp::remove_interaction_snapshot(doc)
+    );
+    register_tool!("list_interactions", de_mcp::list_interactions_snapshot(doc));
     register_tool!("browser", browser_tool_snapshot(doc));
     register_tool!("export_item", export_item_snapshot(doc));
     register_tool!("export_nodes", export_nodes_snapshot(doc));
@@ -191,7 +197,7 @@ pub(super) fn rebuild_registry(
     register_tool!("import_pptx", import_pptx_snapshot(doc));
     register_tool!("import_html_url", import_html_url_snapshot());
     register_tool!("import_web_snapshot", import_web_snapshot_tool());
-    register_tool!("update_node", update_node_snapshot());
+    register_tool!("update_node", de_mcp::update_node_snapshot_for(doc));
     register_tool!("delete_node", delete_node_snapshot());
     register_tool!("move_node", move_node_snapshot());
     register_tool!("copy_node", copy_node_snapshot());
@@ -222,6 +228,14 @@ pub(super) fn rebuild_registry(
     register_tool!("detach_instance", de_mcp::detach_instance_snapshot(doc));
     register_tool!("swap_instance", de_mcp::swap_instance_snapshot(doc));
     register_tool!("list_instances", de_mcp::list_instances_snapshot(doc));
+    register_tool!(
+        "upsert_component_property",
+        de_mcp::upsert_component_property_snapshot(doc)
+    );
+    register_tool!(
+        "remove_component_property",
+        de_mcp::remove_component_property_snapshot(doc)
+    );
     register_tool!("create_component", create_component_snapshot());
     register_tool!("delete_component", delete_component_snapshot());
     register_tool!("rename_component", rename_component_snapshot());

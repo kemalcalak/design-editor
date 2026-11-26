@@ -173,7 +173,7 @@ impl PreviewSession {
     pub(crate) fn has_preview_widget_visuals(&self) -> bool {
         // Not only widgets: a link / button under the pointer paints its
         // hover and pressed state (#153) through the same cloned overlay.
-        if self.hovered_clickable().is_some() {
+        if self.show_hotspots || self.hovered_clickable().is_some() {
             return true;
         }
         self.runtime.document.as_ref().is_some_and(|document| {
@@ -223,6 +223,7 @@ impl PreviewSession {
             &pointer,
             &self.ui_actions,
         );
+        self.apply_hotspots(&mut scene);
         scene
     }
 

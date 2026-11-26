@@ -167,6 +167,8 @@ pub struct PreviewSession {
     pub(crate) ui_actions: crate::ui_actions::PreviewUiActions,
     /// Cached at enter/reset: skip switch-tween overlay clones when none exist.
     pub(crate) has_switch_widgets: bool,
+    /// Every clickable shows its hotspot (the host holds Alt, #371).
+    pub(crate) show_hotspots: bool,
     #[cfg(test)]
     pub(crate) overlay_builds_for_test: std::cell::Cell<u64>,
 }
@@ -539,6 +541,7 @@ impl PreviewSession {
             effects,
             ui_actions,
             has_switch_widgets,
+            show_hotspots: false,
             #[cfg(test)]
             overlay_builds_for_test: std::cell::Cell::new(0),
         };

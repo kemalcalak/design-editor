@@ -26,6 +26,7 @@ pub(crate) fn is_interaction_action(action: &PropertyPanelAction) -> bool {
             | A::MoveInteraction { .. }
             | A::SetInteractionTransition { .. }
             | A::RemoveInteraction(_)
+            | A::GoToInteractionTarget(_)
             | A::EditScreenMarker(_)
             | A::AddAnimation
             | A::RemoveAnimation(_)
@@ -44,7 +45,33 @@ pub(crate) fn interaction_updates_document(action: &PropertyPanelAction) -> bool
             action,
             PropertyPanelAction::ToggleInteractionMenu(_)
                 | PropertyPanelAction::PickInteractionTrigger(_)
+                | PropertyPanelAction::GoToInteractionTarget(_)
         )
+}
+
+/// The node the selection's `trigger` leads to: a navigate's screen on
+/// this page, or a `scroll_to` target (#371).
+fn interaction_target(
+    state: &EditorState,
+    trigger: de_editor_core::interaction_edit::InteractionTrigger,
+) -> Option<de_editor_core::NodeId> {
+    use de_editor_core::PenNodeExt;
+    let node = state.selected_node()?;
+    let [action] = trigger.actions(node.events()?)?.as_slice() else {
+        return None;
+    };
+    let (key, body) = action.single()?;
+    let id = if de_editor_core::interaction_edit::NavigateVerb::from_key(key).is_some() {
+        let route = de_editor_core::interaction_edit::unquote_literal(body.as_str()?);
+        de_editor_core::interaction_graph::resolve_screen_target(state.active_children(), &route)
+            .filter(|target| !target.needs_marker)?
+            .node_id
+    } else if key == "scroll_to" {
+        body.get("target")?.as_str()?.to_owned()
+    } else {
+        return None;
+    };
+    de_editor_core::NodeId::new_opt(id)
 }
 
 /// Apply one of the actions above; any other action is ignored.
@@ -96,6 +123,13 @@ pub(crate) fn apply_interaction_action(state: &mut EditorState, action: &Propert
         }
         A::RemoveInteraction(trigger) => {
             let _ = state.remove_selected_interaction(*trigger);
+        }
+        A::GoToInteractionTarget(trigger) => {
+            if let Some(target) = interaction_target(state, *trigger) {
+                state.set_single_selection(target.clone());
+                // The host frames it once the action's scope has closed.
+                state.editor_ui.prototype.pending_frame = Some(target);
+            }
         }
         A::EditScreenMarker(edit) => {
             let _ = state.edit_selected_screen_marker(*edit);

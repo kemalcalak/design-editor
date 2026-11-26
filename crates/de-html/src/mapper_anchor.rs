@@ -188,5 +188,6 @@ pub(super) fn wrap(context: &mut MapCtx<'_>, mut node: PenNode, anchor: Option<A
         screen: None,
         breakpoint: None,
         placeholder: None,
+        component_properties: None,
     })
 }

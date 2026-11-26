@@ -166,39 +166,6 @@ fn unwrap_mcp_reply(reply: &str) -> Result<String, CliError> {
     Ok(reply.to_string())
 }
 
-/// Plain HTTP `GET` against `127.0.0.1:port{path}` with the same deadline
-/// discipline as [`post_raw`]; returns `(http_status, body)`.
-fn http_get_raw(
-    port: u16,
-    path: &str,
-    timeout: std::time::Duration,
-) -> Result<(u16, String), CliError> {
-    TcpJsonRpc::local_mcp(port)
-        .get_raw(path, timeout)
-        .map(|reply| (reply.status, reply.body))
-        .map_err(|e| CliError::Transport(e.to_string()))
-}
-
-/// True when `127.0.0.1:port` is the `--serve-web` web-canvas daemon —
-/// `GET /api/mcp/server` reports our identity AND `mode:"web-canvas"`. Used
-/// by `de start --web` so it never "reuses" a plain `--mcp-http` server
-/// (which answers the token ping but serves no browser editor).
-pub(crate) fn web_daemon_running(port: u16) -> bool {
-    match http_get_raw(port, "/api/mcp/server", PING_TIMEOUT) {
-        Ok((status, body)) => (200..300).contains(&status) && is_web_canvas_health(&body),
-        Err(_) => false,
-    }
-}
-
-/// Pure predicate over the `/api/mcp/server` health body (testable without
-/// a socket): the Design Editor identity marker plus the web-canvas mode.
-fn is_web_canvas_health(body: &str) -> bool {
-    serde_json::from_str::<Value>(body).is_ok_and(|v| {
-        v.get("server").and_then(Value::as_str) == Some(MCP_SERVER_NAME)
-            && v.get("mode").and_then(Value::as_str) == Some("web-canvas")
-    })
-}
-
 /// Send a JSON-RPC `ping` and return the parsed `result` object when the
 /// reply is a Design Editor MCP server (`result.server == "design-editor-mcp"`).
 /// This distinguishes our `/mcp` JSON-RPC server from a stale TCP listener,
@@ -319,23 +286,6 @@ mod tests {
         // A tools/list reply (result.tools, no content) is returned as-is.
         let reply = r#"{"jsonrpc":"2.0","id":1,"result":{"tools":[]}}"#;
         assert_eq!(unwrap_mcp_reply(reply).unwrap(), reply);
-    }
-
-    #[test]
-    fn web_canvas_health_requires_identity_and_web_mode() {
-        // The `--serve-web` daemon's health shape (extra fields tolerated).
-        assert!(is_web_canvas_health(
-            r#"{"running":true,"port":3100,"localIp":"127.0.0.1","server":"design-editor-mcp","mode":"web-canvas"}"#
-        ));
-        // A plain `--mcp-http` server (no health route → would 404 anyway),
-        // a foreign service, or a missing mode must all be rejected.
-        assert!(!is_web_canvas_health(
-            r#"{"running":true,"port":3100,"server":"design-editor-mcp"}"#
-        ));
-        assert!(!is_web_canvas_health(
-            r#"{"server":"someone-else","mode":"web-canvas"}"#
-        ));
-        assert!(!is_web_canvas_health("not json"));
     }
 
     #[test]

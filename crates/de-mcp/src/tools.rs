@@ -542,6 +542,8 @@ pub fn get_active_theme_snapshot(state: &EditorState) -> GetActiveTheme {
 /// First-party `list_components` tool.
 pub struct ListComponents {
     pub items: Vec<(String, String)>,
+    /// Component id -> `name:type,…` of the properties it declares (#367).
+    pub property_names: BTreeMap<String, String>,
 }
 
 impl McpTool for ListComponents {
@@ -552,7 +554,10 @@ impl McpTool for ListComponents {
         let encoded: Vec<String> = self
             .items
             .iter()
-            .map(|(name, id)| format!("{}|{}", escape_record_field(name), id))
+            .map(|(name, id)| match self.property_names.get(id) {
+                Some(props) => format!("{}|{}|{}", escape_record_field(name), id, props),
+                None => format!("{}|{}", escape_record_field(name), id),
+            })
             .collect();
         let mut out = BTreeMap::new();
         out.insert("count".into(), self.items.len().to_string());
@@ -568,6 +573,16 @@ pub fn list_components_snapshot(state: &EditorState) -> ListComponents {
             .components
             .iter()
             .map(|c| (c.name.clone(), c.id.as_str().to_string()))
+            .collect(),
+        property_names: state
+            .components
+            .components
+            .iter()
+            .filter_map(|c| {
+                let root = state.components.resolved_root(&state.doc, &c.id)?;
+                let names = de_editor_core::component_props::property_names(root);
+                (!names.is_empty()).then(|| (c.id.as_str().to_string(), names))
+            })
             .collect(),
     }
 }
@@ -588,6 +603,9 @@ pub struct ComponentDetail {
     /// master, depth-first, root excluded: the ids an instance's
     /// `descendants` overrides are keyed by.
     pub descendants: String,
+    /// JSON array of the master's component properties (#367), when it
+    /// declares any.
+    pub properties: Option<String>,
 }
 
 impl McpTool for GetComponent {
@@ -613,6 +631,9 @@ impl McpTool for GetComponent {
         out.insert("kind".into(), detail.kind.clone());
         out.insert("leaf_count".into(), detail.leaf_count.to_string());
         out.insert("descendants".into(), detail.descendants.clone());
+        if let Some(properties) = &detail.properties {
+            out.insert("properties".into(), properties.clone());
+        }
         ToolOutcome::Ok(out)
     }
 }
@@ -646,6 +667,13 @@ pub fn get_component_snapshot(state: &EditorState) -> GetComponent {
                     kind: kind_label(root).to_string(),
                     leaf_count: count_subtree(root),
                     descendants: records.join(";"),
+                    properties: crate::component_property_tools::properties_json(
+                        de_editor_core::component_props::PropsContext {
+                            doc: &state.doc,
+                            components: &state.components,
+                        },
+                        root,
+                    ),
                 })
             })
             .collect(),

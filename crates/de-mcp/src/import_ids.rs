@@ -107,6 +107,9 @@ fn rewrite_ids(nodes: &mut [PenNode], ids: &Lookups, mode: Rewrite) {
                 node.base_mut().id = fresh;
             }
         }
+        if let PenNode::Frame(master) = node {
+            rename_property_ids(master, ids);
+        }
         if let PenNode::Ref(instance) = node {
             let retargeted = (ids.target)(&instance.target);
             let rewrite_paths = mode == Rewrite::Everything || retargeted.is_some();
@@ -179,6 +182,37 @@ fn rename_refs_in_value(value: &mut serde_json::Value, ids: &Lookups, mode: Rewr
     if let Some(serde_json::Value::Array(children)) = map.get_mut("children") {
         for child in children {
             rename_refs_in_value(child, ids, mode);
+        }
+    }
+}
+
+/// A master's component properties (#367) bind its own children and may
+/// name other masters (`preferred`, an instance default): those ids follow
+/// the lookups like an instance's `descendants` keys.
+fn rename_property_ids(master: &mut jian_ops_schema::node::FrameNode, ids: &Lookups) {
+    use jian_ops_schema::component_props::ComponentPropertyType;
+    for property in master
+        .component_properties
+        .iter_mut()
+        .flat_map(|properties| properties.values_mut())
+    {
+        for binding in &mut property.bind {
+            if let Some(fresh) = (ids.path)(&binding.node) {
+                binding.node = fresh;
+            }
+        }
+        if property.kind != ComponentPropertyType::Instance {
+            continue;
+        }
+        for id in property.preferred.iter_mut().flatten() {
+            if let Some(fresh) = (ids.target)(id) {
+                *id = fresh;
+            }
+        }
+        if let Some(serde_json::Value::String(id)) = property.default.as_mut() {
+            if let Some(fresh) = (ids.target)(id) {
+                *id = fresh;
+            }
         }
     }
 }

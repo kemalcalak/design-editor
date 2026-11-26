@@ -36,6 +36,7 @@ pub fn frame_node(
         // Figma import never authors a responsive breakpoint variant.
         breakpoint: None,
         placeholder: None,
+        component_properties: None,
     })
 }
 
@@ -230,5 +231,6 @@ pub fn ref_node(base: PenNodeBase, target: String) -> PenNode {
         semantics: None,
         gestures: None,
         route: None,
+        props: None,
     })
 }

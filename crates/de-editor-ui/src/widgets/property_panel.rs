@@ -131,6 +131,8 @@ pub struct PropertyPanel {
         std::sync::Arc<[crate::widgets::property_panel_instance::InstanceComponentOption]>,
     /// Current canonical `ref` target of the selected Ref.
     pub instance_component_target: Option<String>,
+    /// Component-property rows for the selection (#367).
+    pub component_props: de_editor_core::component_props::PanelProperties,
     /// Whether the inline component list is expanded for this anchor.
     pub instance_component_picker_open: bool,
     pub corner_expand_open: bool,
@@ -332,10 +334,15 @@ impl PropertyPanel {
             && !self.is_multi
             && matches!(self.tab, de_editor_core::PropertyTab::Design)
             && visible.create_component
-            && matches!(
-                visible.component_button,
-                crate::widgets::property_panel_visibility::ComponentButtonState::Create
-            )
+            && match visible.component_button {
+                crate::widgets::property_panel_visibility::ComponentButtonState::Create => true,
+                // A node inside a master keeps its Create icon next to
+                // the property offers.
+                crate::widgets::property_panel_visibility::ComponentButtonState::BindProperty => {
+                    self.snapshot.can_create_component
+                }
+                _ => false,
+            }
     }
 
     pub(crate) fn visible_sections(&self) -> sections::VisibleSections {
@@ -349,14 +356,24 @@ impl PropertyPanel {
             }
         } else if self.snapshot.is_reusable {
             crate::widgets::property_panel_visibility::ComponentButtonState::DetachComponent
+        } else if matches!(
+            self.component_props,
+            de_editor_core::component_props::PanelProperties::Bindable(_)
+        ) {
+            crate::widgets::property_panel_visibility::ComponentButtonState::BindProperty
         } else {
             crate::widgets::property_panel_visibility::ComponentButtonState::Create
         };
+        let component_props = crate::widgets::property_panel_component_props::PropRowsLayout::of(
+            &self.component_props,
+        );
         sections::VisibleSections {
             create_component: self.snapshot.is_instance
                 || self.snapshot.instance_override
+                || component_props.rows() > 0
                 || (caps.create_component && self.snapshot.can_create_component),
             component_button,
+            component_props,
             flex_layout: caps.flex_layout,
             flex_layout_mode: self.snapshot.flex_layout,
             layout_justify: self.snapshot.layout_justify,

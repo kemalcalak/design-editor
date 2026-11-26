@@ -153,6 +153,10 @@ pub struct CanvasViewport<'a> {
     /// their line layout across frames (see
     /// [`super::canvas_text_layout_memo`], #208).
     pub text_layout_generation: Option<u64>,
+    /// Prototype links to draw (#371): the selection's, or the page's
+    /// with View ▸ Show prototype links.
+    pub(super) prototype_links: Vec<super::canvas_prototype_links::CanvasLink>,
+    pub(super) locale: de_editor_core::Locale,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -474,6 +478,12 @@ impl<'a> Widget for CanvasViewport<'a> {
                 indicator,
                 !self.node_drag_active,
             );
+        }
+
+        // 3c. Prototype links (#371), over the nodes, under the handles.
+        if let (false, Some(page)) = (self.prototype_links.is_empty(), self.scene.active_page()) {
+            let links = &self.prototype_links;
+            super::canvas_prototype_links::paint(cx, page, links, rect, viewport, self.locale);
         }
 
         // 4. Selection overlay — outlines + handles (single-select only).

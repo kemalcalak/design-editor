@@ -173,6 +173,12 @@ impl DesktopApp {
             A::Present => {
                 !self.host.home_visible() && self.host.toggle_present_with_cached_viewport()
             }
+            A::TogglePrototypeLinks => {
+                let prototype = &mut self.host.editor_state_mut().editor_ui.prototype;
+                prototype.show_links = !prototype.show_links;
+                self.host.mark_editor_state_dirty();
+                true
+            }
             A::ToggleGitPanel => {
                 let opening = !self.host.editor_state().editor_ui.git_panel.open;
                 if opening {

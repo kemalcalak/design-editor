@@ -70,7 +70,6 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "home.mcp.port" => "포트 {{port}}",
         "home.mcp.settings" => "MCP 설정",
         "home.mcp.start" => "서버 시작",
-        "icon.catalogLoading" => "아이콘 카탈로그를 불러오는 중…",
         "sceneTemplate.documentUnavailable" => {
             "이 템플릿의 문서를 불러오지 못했습니다. 다시 시도하세요."
         }
@@ -402,6 +401,19 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "whatsNew.next" => "다음",
         "settings.system.livePages" => "라이브 페이지",
         "settings.system.livePagesDesc" => "선택한 브라우저 노드를 실제 페이지처럼 재생합니다. 끄면 정지된 스냅샷을 표시합니다.",
+        "componentProps.text" => "텍스트 속성",
+        "componentProps.visibility" => "표시 여부 속성",
+        "componentProps.instance" => "인스턴스 속성",
+        "componentProps.color" => "색상 속성",
+        "componentProps.unbound" => "연결 안 됨",
+        "prototype.trigger.tap" => "탭",
+        "prototype.trigger.hover" => "호버",
+        "prototype.trigger.longPress" => "길게 누르기",
+        "prototype.back" => "뒤로",
+        "prototype.brokenLink" => "끊어진 링크",
+        "prototype.opens" => "{{host}} 열기",
+        "prototype.scrollTo" => "{{name}}(으)로 스크롤",
+        "menu.showPrototypeLinks" => "프로토타입 링크 표시",
         "menu.snapPixelGrid" => "픽셀 그리드에 스냅",
         "vectorEdit.pixelSnapOn" => "픽셀 그리드 스냅 켜짐",
         "vectorEdit.pixelSnapOff" => "픽셀 그리드 스냅 꺼짐",

@@ -103,7 +103,12 @@ const GUIDELINE_TOPICS: &[(&str, &[&str], &[&str])] = &[
     ),
     ("form", &["form-ui"], &["form-ui"]),
     ("design-system", &[], &["design-system-composition"]),
-    ("interactivity", &[], &["interactivity"]),
+    // The generation contract, then the MCP interaction tools (#371).
+    (
+        "interactivity",
+        &["interactions", "prototype"],
+        &["interactivity", "interactions-mcp"],
+    ),
     // The page-scroll contract for external agents driving the MCP tools:
     // K3 and Grok over MCP built a 900 px clipped viewport root when the
     // prompt did not spell the contract out (2026-09-03 matrix), because
@@ -162,8 +167,10 @@ fn compose_skills(names: &[&str]) -> Option<String> {
 /// - `"slides"` (`deck`, `presentation`) — slide layout contracts
 /// - `"form"` (`form-ui`) — form-ui domain
 /// - `"design-system"` — design-system composition
-/// - `"interactivity"` — multi-screen navigation contract (`screen` markers
-///   + `events.onTap` actions) for tappable App Mode preview
+/// - `"interactivity"` (`interactions`, `prototype`) — multi-screen
+///   navigation contract (`screen` markers + `events.onTap` actions) for
+///   tappable App Mode preview, then the MCP interaction tools
+///   (`set_interaction`, `list_interactions`)
 /// - `"scroll"` (`scroll-orchestration`, `parallax`, `page-scroll`) — the
 ///   page-scroll contract: the page root is the `$scroll` source, `pin: true`
 ///   pins, paint-only `translateX/Y` moves
@@ -253,8 +260,7 @@ fn design_agent_template() -> &'static str {
             .and_then(|dir| dir.get_file("phases/agent/design-agent.md"))
             .and_then(|f| f.contents_utf8())
             .expect(
-                "skills/phases/agent/design-agent.md must be embedded in the de-ai-skills corpus \
-                 (a slim-corpus build must never reach the design-agent template)",
+                "skills/phases/agent/design-agent.md must be embedded in the de-ai-skills corpus",
             );
         for placeholder in [
             JIAN_COMPONENTS_PLACEHOLDER,
@@ -380,45 +386,16 @@ pub fn design_agent_system_prompt_with_skills_for(
 /// The embedded `skills/` corpus — domain / knowledge / phase skill
 /// markdown plus the `style-guides/` subtree. Parsed into the skill
 /// registry on first access (see [`loader`]).
-// The slim gate is feature AND target: cargo feature unification opens
-// the feature for every crate in a workspace build that includes
-// de-host-web, and without the target gate that build would strip the
-// corpus out from under the desktop and daemon. Only an actual wasm32
-// compilation slims.
-#[cfg(not(all(feature = "slim-corpus", target_arch = "wasm32")))]
 pub static SKILLS: Dir<'static> = include_dir!("$CARGO_MANIFEST_DIR/skills");
 
-/// slim-corpus: only the style-guides subtree is embedded. Everything
-/// that walks [`SKILLS`] must go through [`style_guides_dir`] /
-/// [`phase_corpus_dir`] so both embeds answer the same questions.
-#[cfg(all(feature = "slim-corpus", target_arch = "wasm32"))]
-pub static STYLE_GUIDES_ONLY: Dir<'static> =
-    include_dir!("$CARGO_MANIFEST_DIR/skills/style-guides");
-
-/// The style-guides subtree, wherever this build embedded it.
+/// The style-guides subtree.
 pub fn style_guides_dir() -> Option<&'static Dir<'static>> {
-    #[cfg(not(all(feature = "slim-corpus", target_arch = "wasm32")))]
-    {
-        SKILLS.get_dir("style-guides")
-    }
-    #[cfg(all(feature = "slim-corpus", target_arch = "wasm32"))]
-    {
-        Some(&STYLE_GUIDES_ONLY)
-    }
+    SKILLS.get_dir("style-guides")
 }
 
-/// The phase/domain/knowledge corpus root, absent on a slim build — the
-/// browser never composes prompts, so callers must treat `None` as "not
-/// this build's job", never as an error.
+/// The phase/domain/knowledge corpus root.
 pub fn phase_corpus_dir() -> Option<&'static Dir<'static>> {
-    #[cfg(not(all(feature = "slim-corpus", target_arch = "wasm32")))]
-    {
-        Some(&SKILLS)
-    }
-    #[cfg(all(feature = "slim-corpus", target_arch = "wasm32"))]
-    {
-        None
-    }
+    Some(&SKILLS)
 }
 
 /// The embedded P2 style catalog. This is deliberately separate from

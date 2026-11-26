@@ -538,7 +538,26 @@ impl WidgetHostNative {
         // After the ladder: tracking never consumes a move, it only adds a
         // repaint while a pointer-reactive shader is on screen.
         let pointer_changed = self.track_shader_pointer(x, y);
-        changed || pointer_changed
+        changed || pointer_changed || self.track_preview_pointer(x, y)
+    }
+
+    /// Record the pointer for the Preview link-hint tooltip (#371); a
+    /// repaint is owed while a hint shows (it follows the pointer) or when
+    /// one just went away.
+    fn track_preview_pointer(&mut self, x: f32, y: f32) -> bool {
+        let in_preview = self.editor_state.editor_ui.preview.mode;
+        let had_hint = self.preview_pointer.is_some();
+        self.preview_pointer = in_preview.then(|| de_editor_ui::Point2D::new(x, y));
+        let hint = in_preview
+            && !self.editor_state.editor_ui.preview.link_hints_hidden
+            && self
+                .preview
+                .as_ref()
+                .is_some_and(|preview| preview.hovered_link_hint().is_some());
+        if !hint {
+            self.preview_pointer = None;
+        }
+        hint || had_hint
     }
 
     /// Record the canvas pointer for `uniform float2 mouse;` shader fills.

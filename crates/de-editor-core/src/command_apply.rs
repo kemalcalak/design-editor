@@ -727,6 +727,9 @@ impl EditorState {
 
             // --- Component commands -------------------------------
             EditorCommand::Instance(command) => self.apply_instance_command(*command, allocator)?,
+            EditorCommand::ComponentProperty(command) => {
+                self.apply_component_property(&command).is_ok()
+            }
             EditorCommand::CreateComponent { node_id, name } => {
                 self.create_component_from_node(&node_id, &name)
             }
@@ -763,6 +766,7 @@ impl EditorState {
             EditorCommand::PromoteLegacyWidgets => self.promote_legacy_widgets().changed(),
             EditorCommand::RepairDuplicateIds => self.cmd_repair_duplicate_ids(allocator)?,
             EditorCommand::Library(command) => self.apply_library_command(command),
+            EditorCommand::Interaction(command) => self.apply_interaction_command(command),
             EditorCommand::SetImageVideoSrc { node_id, src } => {
                 self.apply_video_src(&node_id, &src)
             }

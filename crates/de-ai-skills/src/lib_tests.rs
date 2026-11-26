@@ -263,6 +263,10 @@ fn guideline_for_extended_topics_resolve() {
 #[test]
 fn guideline_for_interactivity_teaches_screen_and_on_tap_contract() {
     let content = guideline_for("interactivity").expect("interactivity guideline must be present");
+    for tool in ["set_interaction", "remove_interaction", "list_interactions"] {
+        assert!(content.contains(tool), "the topic documents {tool}");
+    }
+    assert!(content.contains("instanceId/childId"));
     assert!(
         content.contains("\"screen\""),
         "must teach the screen marker"

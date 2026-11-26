@@ -4,7 +4,7 @@ version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
-description = "Design Editor headless host services — the GUI-free backend (serve-web daemon, MCP, AI chat/orchestration, export, persistence) shared by de-host-desktop + de-host-web-server; no winit/skia-GL"
+description = "Design Editor headless host services — the GUI-free backend (MCP servers, AI chat/orchestration, export, persistence) embedded by de-host-desktop; no winit/skia-GL"
 
 [lib]
 name = "de_host_services"
@@ -14,21 +14,16 @@ path = "src/lib.rs"
 default = []
 # Mirrors de-host-desktop's debug-tools toggle for the MCP server.
 mcp-debug-tools = ["de-mcp/debug-tools", "de-chat-agent/mcp-debug-tools"]
-# Production release lane; forwarded by de-host-web-server.
+# Production release lane.
 pinned-skia-binaries = ["skia-safe/no-compile"]
 
 [dependencies]
-# --- workspace path deps (the headless daemon's closure; modules land in
-#     Phases 2-5). Conditional deps (de-codegen / de-config-store) are added
-#     when a moved module proves it needs them, per the plan. de-figma landed
-#     for the VS Code plugin's offline `.fig` -> `.op` convert endpoint
-#     (figma_convert.rs). ---
-de-figma = { path = "../de-figma" }
+# --- workspace path deps ---
 de-html = { path = "../de-html" }
 de-pptx = { path = "../de-pptx" }
 # Node motion as CSS for the deck slideshow export (#245).
 de-codegen = { path = "../de-codegen" }
-# Headless-browser pages for the MCP `browser` tool and the web daemon (#20).
+# Headless-browser pages for the MCP `browser` tool (#20).
 de-browser-render = { path = "../de-browser-render" }
 de-editor-core = { path = "../de-editor-core" }
 de-builtin-model-discovery = { path = "../de-builtin-model-discovery" }

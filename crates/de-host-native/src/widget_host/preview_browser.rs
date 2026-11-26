@@ -22,6 +22,16 @@ impl super::WidgetHostNative {
             canvas,
             &self.theme,
         );
+        // The "where does this go" tooltip at the pointer (#371).
+        browse_chrome::paint_link_hint(
+            self.preview.as_ref(),
+            &self.editor_state.editor_ui.preview,
+            backend,
+            canvas,
+            self.preview_pointer,
+            &self.theme,
+            self.editor_state.editor_ui.locale,
+        );
     }
 
     pub(crate) fn over_preview_browser_bar(
