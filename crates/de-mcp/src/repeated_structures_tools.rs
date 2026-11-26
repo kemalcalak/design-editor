@@ -18,7 +18,7 @@ use std::collections::BTreeMap;
 
 use de_editor_core::id_allocator::SequentialIdAllocator;
 use de_editor_core::repeated_structures::{
-    find_repeated_structures, group_members, plan_conversion, ConversionPlan, ConvertRequest,
+    find_repeated_structures, group_members, plan_conversion_in, ConversionPlan, ConvertRequest,
     MasterPlacement, RepeatedGroup, DEFAULT_MIN_NODES,
 };
 use de_editor_core::{ComponentLibrary, EditorCommand, EditorState, NodeId};
@@ -68,11 +68,22 @@ impl RepeatedStructuresSnapshot {
             .map_or(Value::Null, |page| Value::from(page.id.as_str()))
     }
 
-    fn plan(&self, request: &ConvertRequest) -> Result<ConversionPlan, String> {
+    /// The document as JSON, which every plan reads; made once per call.
+    fn doc_value(&self) -> Result<Value, String> {
+        serde_json::to_value(&self.doc).map_err(|error| error.to_string())
+    }
+
+    fn plan(&self, doc_value: &Value, request: &ConvertRequest) -> Result<ConversionPlan, String> {
         let mut allocator =
             SequentialIdAllocator::for_document(&self.doc, 1).map_err(|e| e.to_string())?;
-        plan_conversion(&self.doc, &self.components, request, &mut allocator)
-            .map_err(|error| error.to_string())
+        plan_conversion_in(
+            &self.doc,
+            doc_value,
+            &self.components,
+            request,
+            &mut allocator,
+        )
+        .map_err(|error| error.to_string())
     }
 }
 
@@ -98,7 +109,7 @@ pub fn find_repeated_structures_snapshot(state: &EditorState) -> FindRepeatedStr
 }
 
 impl FindRepeatedStructures {
-    fn group_json(&self, group: &RepeatedGroup) -> Value {
+    fn group_json(&self, doc_value: &Value, group: &RepeatedGroup) -> Value {
         let snapshot = &self.0;
         let request = ConvertRequest {
             node_ids: group.node_ids.clone(),
@@ -112,7 +123,7 @@ impl FindRepeatedStructures {
             "nodeIds": group.node_ids.iter().map(NodeId::as_str).collect::<Vec<_>>(),
             "pageIds": group.pages.iter().map(|page| snapshot.page_id(*page)).collect::<Vec<_>>(),
         });
-        match snapshot.plan(&request) {
+        match snapshot.plan(doc_value, &request) {
             Ok(plan) => {
                 entry["convertible"] = json!(plan.converted.len());
                 entry["skipped"] = json!(plan.skipped.len());
@@ -148,7 +159,14 @@ impl McpTool for FindRepeatedStructures {
             },
         };
         let groups = find_repeated_structures(&self.0.doc, &self.0.components, page, min_nodes);
-        let groups: Vec<Value> = groups.iter().map(|group| self.group_json(group)).collect();
+        let doc_value = match self.0.doc_value() {
+            Ok(value) => value,
+            Err(error) => return ToolOutcome::Err(ToolErrorCode::ToolFailed, error),
+        };
+        let groups: Vec<Value> = groups
+            .iter()
+            .map(|group| self.group_json(&doc_value, group))
+            .collect();
         ToolOutcome::OkJson(
             json!({
                 "count": groups.len(),
@@ -235,7 +253,10 @@ impl ConvertToInstances {
             master_from: arg(args, "masterFrom").map(NodeId::new),
             placement,
         };
-        let plan = snapshot.plan(&request).map_err(invalid)?;
+        let doc_value = snapshot
+            .doc_value()
+            .map_err(|error| ToolOutcome::Err(ToolErrorCode::ToolFailed, error))?;
+        let plan = snapshot.plan(&doc_value, &request).map_err(invalid)?;
         let result = json!({
             "dryRun": dry_run,
             "groupId": group_id,

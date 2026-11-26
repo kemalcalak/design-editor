@@ -167,6 +167,9 @@ fn page_scope_masters_and_instances_are_left_out() {
     assert_eq!(all[0].pages, vec![Some(0), Some(1)]);
     // One page alone has no copy.
     assert!(find_repeated_structures(&s.doc, &s.components, Some(0), DEFAULT_MIN_NODES).is_empty());
+    // The Components page holds masters: never scanned, even when named.
+    assert!(find_repeated_structures(&s.doc, &s.components, Some(2), 1).is_empty());
+    assert!(similar_layers(&s.doc, &s.components, Some(2), &NodeId::new("c1")).is_empty());
     // The group id finds the same members.
     assert_eq!(
         group_members(&s.doc, &s.components, None, &all[0].group_id),

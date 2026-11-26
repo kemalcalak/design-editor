@@ -485,7 +485,10 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "path.offsetInward" => "Сместить контур внутрь",
         "path.simplify" => "Упростить контур",
         "path.reverse" => "Изменить направление контура",
-        "layerMenu.createComponentFromSimilar" => "Компонент из похожих слоёв",
+        "layerMenu.createComponentFromSimilar" => "Компонент из копий",
+        "convertInstances.done" => "Копий стало экземплярами одного компонента: {{converted}}",
+        "convertInstances.partial" => "Экземплярами стали {{converted}}; {{skipped}} отличаются и оставлены как есть",
+        "convertInstances.failed" => "Эти копии не могут стать одним компонентом",
         _ => return None,
     })
 }

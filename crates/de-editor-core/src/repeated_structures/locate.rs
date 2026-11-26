@@ -6,7 +6,7 @@ use std::collections::{HashMap, HashSet};
 
 use serde_json::Value;
 
-use super::diff::{children, node_id, node_type};
+use super::diff::{children, node_id, node_type, NOT_REFERENCES};
 use super::scan::is_master;
 use crate::page_mutators::COMPONENTS_PAGE_NAME;
 
@@ -115,20 +115,32 @@ pub(super) fn locate<'a>(
     walk.found
 }
 
-/// Every node id inside a member (its root excluded) that a string outside
-/// that member names (a link target, a `ref`, …), with the id of the node
-/// holding the reference. Such a node would disappear into the instance.
-pub(super) fn referenced_inner_ids(
-    doc: &Value,
-    members: &HashMap<&str, &Value>,
-) -> HashMap<String, String> {
+/// Where the nodes inside the members are named from: by inner node id, the
+/// id of the node holding the string.
+#[derive(Default)]
+pub(super) struct InnerLinks {
+    /// Named from outside the copy (another node, another copy, a `ref`):
+    /// the node would disappear into the instance.
+    pub outside: HashMap<String, String>,
+    /// Named from inside the same copy (a `scroll_to` to its own section):
+    /// the instance's content renders under `instance__child` ids, so the
+    /// link would land on the master's node instead.
+    pub inside: HashMap<String, String>,
+}
+
+/// Every node id inside a member (its root excluded) that a string names.
+pub(super) fn inner_links(doc: &Value, members: &HashMap<&str, &Value>) -> InnerLinks {
     let mut owner_of: HashMap<&str, &str> = HashMap::new();
     for (root, member) in members {
         collect_inner(member, root, &mut owner_of);
     }
-    let mut referenced = HashMap::new();
-    scan_strings(doc, None, "", members, &owner_of, &mut referenced, None);
-    referenced
+    let mut links = InnerLinks::default();
+    let scan = Scan {
+        members,
+        owner_of: &owner_of,
+    };
+    scan.strings(doc, None, "", &mut links, None);
+    links
 }
 
 fn collect_inner<'a>(node: &'a Value, owner: &'a str, out: &mut HashMap<&'a str, &'a str>) {
@@ -140,48 +152,57 @@ fn collect_inner<'a>(node: &'a Value, owner: &'a str, out: &mut HashMap<&'a str,
     }
 }
 
-/// Walk every string in `value`. `owner`: the member being walked;
-/// `holder`: the nearest node id, for the message.
-fn scan_strings<'a>(
-    value: &'a Value,
-    owner: Option<&'a str>,
-    holder: &'a str,
-    members: &HashMap<&str, &Value>,
-    owner_of: &HashMap<&str, &str>,
-    out: &mut HashMap<String, String>,
-    key: Option<&str>,
-) {
-    match value {
-        Value::String(text) => {
-            if matches!(key, Some("id" | "name" | "content" | "type")) {
-                return;
-            }
-            if let Some(target_owner) = owner_of.get(text.as_str()) {
-                if owner != Some(*target_owner) {
-                    out.entry(text.clone())
+struct Scan<'s> {
+    members: &'s HashMap<&'s str, &'s Value>,
+    owner_of: &'s HashMap<&'s str, &'s str>,
+}
+
+impl Scan<'_> {
+    /// Walk every string in `value`. `owner`: the member being walked;
+    /// `holder`: the nearest node id, for the message.
+    fn strings<'a>(
+        &self,
+        value: &'a Value,
+        owner: Option<&'a str>,
+        holder: &'a str,
+        links: &mut InnerLinks,
+        key: Option<&str>,
+    ) {
+        match value {
+            Value::String(text) => {
+                if key.is_some_and(|key| NOT_REFERENCES.contains(&key)) {
+                    return;
+                }
+                if let Some(target_owner) = self.owner_of.get(text.as_str()) {
+                    let map = if owner == Some(*target_owner) {
+                        &mut links.inside
+                    } else {
+                        &mut links.outside
+                    };
+                    map.entry(text.clone())
                         .or_insert_with(|| holder.to_string());
                 }
             }
-        }
-        Value::Array(items) => {
-            for item in items {
-                scan_strings(item, owner, holder, members, owner_of, out, key);
-            }
-        }
-        Value::Object(map) => {
-            let (mut owner, mut holder) = (owner, holder);
-            if let Some(id) = map.get("id").and_then(Value::as_str) {
-                if map.contains_key("type") {
-                    holder = id;
-                    if members.contains_key(id) {
-                        owner = Some(id);
-                    }
+            Value::Array(items) => {
+                for item in items {
+                    self.strings(item, owner, holder, links, key);
                 }
             }
-            for (key, item) in map {
-                scan_strings(item, owner, holder, members, owner_of, out, Some(key));
+            Value::Object(map) => {
+                let (mut owner, mut holder) = (owner, holder);
+                if let Some(id) = map.get("id").and_then(Value::as_str) {
+                    if map.contains_key("type") {
+                        holder = id;
+                        if self.members.contains_key(id) {
+                            owner = Some(id);
+                        }
+                    }
+                }
+                for (key, item) in map {
+                    self.strings(item, owner, holder, links, Some(key));
+                }
             }
+            _ => {}
         }
-        _ => {}
     }
 }

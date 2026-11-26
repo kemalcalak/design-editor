@@ -28,8 +28,9 @@ struct Context<'a> {
     ref_targets: HashSet<String>,
 }
 
-/// The page trees in scope: one page (by index), else every page but the
-/// `Components` page; a document without pages is its root list.
+/// The page trees in scope: one page (by index), else every page; never
+/// the `Components` page, which holds masters, not hand-built copies. A
+/// document without pages is its root list.
 fn scope_roots(
     doc: &PenDocument,
     page: Option<usize>,
@@ -39,7 +40,7 @@ fn scope_roots(
             .iter()
             .enumerate()
             .filter(|(index, candidate)| {
-                page.map_or(!is_components_page(candidate), |page| page == *index)
+                !is_components_page(candidate) && page.is_none_or(|page| page == *index)
             })
             .map(|(index, candidate)| (Some(index), candidate.children.as_slice()))
             .collect(),

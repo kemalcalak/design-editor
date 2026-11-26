@@ -485,7 +485,10 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "path.offsetInward" => "Pfad nach innen versetzen",
         "path.simplify" => "Pfad vereinfachen",
         "path.reverse" => "Pfadrichtung umkehren",
-        "layerMenu.createComponentFromSimilar" => "Komponente aus ähnlichen Ebenen",
+        "layerMenu.createComponentFromSimilar" => "Komponente aus Kopien",
+        "convertInstances.done" => "{{converted}} Kopien sind jetzt Instanzen einer Komponente",
+        "convertInstances.partial" => "{{converted}} Kopien sind Instanzen; {{skipped}} weichen ab und bleiben unverändert",
+        "convertInstances.failed" => "Diese Kopien können keine Komponente teilen",
         _ => return None,
     })
 }

@@ -21,9 +21,13 @@ use de_editor_core::editor_ui_state::{LayerContextMenuState, LayerContextTarget}
 use de_editor_core::EditorState;
 pub use jian_widgets::components::menu::MenuHit;
 
-/// Wide enough for the longest row label in every locale ("Create component
-/// from similar layers", #369); labels are not truncated.
-pub const LAYER_CONTEXT_MENU_WIDTH: f32 = 280.0;
+/// The menu's usual width; [`LayerContextMenu::rect`] grows it only when a
+/// row's label (in the active locale) would run past it.
+pub const LAYER_CONTEXT_MENU_WIDTH: f32 = 168.0;
+/// Where a row's label starts (after the icon), and the room kept on its
+/// right.
+const LABEL_X: f32 = 40.0;
+const LABEL_RIGHT_PAD: f32 = 12.0;
 const ROW_HEIGHT: f32 = 32.0;
 const PAD_Y: f32 = 6.0;
 const ROW_FONT: f32 = 13.0;
@@ -305,11 +309,29 @@ impl LayerContextMenu {
         }
     }
 
+    /// [`LAYER_CONTEXT_MENU_WIDTH`], or wider when a row's label needs it
+    /// (by the chrome's text estimate, which errs wide; hit-test has no
+    /// backend to measure with).
+    pub fn width(&self) -> f32 {
+        self.rows
+            .iter()
+            .map(|row| {
+                LABEL_X
+                    + super::home_surface::estimate_width(
+                        de_i18n::translate(self.locale, row.label_key),
+                        ROW_FONT,
+                    )
+                    + LABEL_RIGHT_PAD
+            })
+            .fold(LAYER_CONTEXT_MENU_WIDTH, f32::max)
+            .ceil()
+    }
+
     pub fn rect(&self) -> Rect {
         Rect {
             origin: Point2D::new(self.state.anchor_x, self.state.anchor_y),
             size: Point2D::new(
-                LAYER_CONTEXT_MENU_WIDTH,
+                self.width(),
                 PAD_Y * 2.0 + self.rows.len() as f32 * ROW_HEIGHT,
             ),
         }
@@ -399,7 +421,7 @@ impl Widget for LayerContextMenu {
             );
             cx.backend.draw_text(
                 &label,
-                Point2D::new(row_rect.origin.x + 40.0, row_rect.origin.y + 21.0),
+                Point2D::new(row_rect.origin.x + LABEL_X, row_rect.origin.y + 21.0),
             );
             y += ROW_HEIGHT;
         }

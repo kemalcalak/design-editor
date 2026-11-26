@@ -230,6 +230,50 @@ fn free_positions_and_links_stay_on_each_instance() {
 }
 
 #[test]
+fn a_copy_linking_to_its_own_inner_node_is_skipped() {
+    // The link would land on the master's node: an instance's content
+    // renders under `instance__child` ids.
+    let mut linked = row("r2", "B", "2");
+    linked["events"] = json!({"onTap": [{"scroll_to": {"target": "r2-amount"}}]});
+    let s = state(json!([page(
+        "p1",
+        "Page",
+        vec![table(
+            "t",
+            vec![row("r1", "A", "1"), linked, row("r3", "C", "3")]
+        )]
+    )]));
+    for placement in [MasterPlacement::ComponentsPage, MasterPlacement::InPlace] {
+        let mut req = request(&["r1", "r2", "r3"]);
+        req.placement = placement;
+        let plan = s.plan_instance_conversion(&req).expect("plan");
+        assert_eq!(plan.skipped.len(), 1, "{placement:?}");
+        assert_eq!(plan.skipped[0].id.as_str(), "r2");
+        assert!(
+            plan.skipped[0]
+                .reason
+                .contains("inner node r2-amount is linked from inside the copy"),
+            "{}",
+            plan.skipped[0].reason
+        );
+        assert_eq!(
+            plan.converted
+                .iter()
+                .filter(|m| m.id.as_str() != "r1")
+                .count(),
+            1
+        );
+    }
+    // As the master source on the Components page it is refused.
+    let mut req = request(&["r1", "r2"]);
+    req.master_from = Some(NodeId::new("r2"));
+    assert!(matches!(
+        s.plan_instance_conversion(&req),
+        Err(ConvertError::MasterUnusable { .. })
+    ));
+}
+
+#[test]
 fn an_inner_node_linked_from_elsewhere_is_skipped() {
     let button = json!({"type": "frame", "id": "go", "name": "Go", "width": 40, "height": 20,
         "events": {"onTap": [{"scroll_to": {"target": "r2-amount"}}]}, "children": []});

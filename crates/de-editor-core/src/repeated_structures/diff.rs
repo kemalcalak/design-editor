@@ -14,9 +14,10 @@ const NON_STRUCTURAL: &[&str] = &[
     "id", "name", "x", "y", "content", "src", "visible", "locked", "events", "explain", "children",
 ];
 
-/// Keys whose values are never treated as node-id references when a
-/// member's ids are mapped onto the master's.
-const NOT_REFERENCES: &[&str] = &["id", "name", "content", "type"];
+/// Keys whose string values never name a node: a node's own identity and
+/// its prose. Every other string equal to a node id counts as a reference
+/// to that node (link targets, `ref`s, ...).
+pub(super) const NOT_REFERENCES: &[&str] = &["id", "name", "content", "type"];
 
 /// FNV-1a, 64 bit: stable across runs and builds (group ids are handed to
 /// agents and read back).

@@ -8,7 +8,7 @@ use jian_ops_schema::PenDocument;
 use serde_json::Value;
 
 use super::diff::{build_instance, node_id, node_type, structure_difference};
-use super::locate::{locate, referenced_inner_ids, Blocked};
+use super::locate::{inner_links, locate, Blocked};
 use super::scan::ref_targets;
 use super::{
     ConversionPlan, ConvertError, ConvertRequest, ConvertedMember, MasterPlacement, SkippedMember,
@@ -28,6 +28,20 @@ pub fn plan_conversion(
     request: &ConvertRequest,
     allocator: &mut dyn IdAllocator,
 ) -> Result<ConversionPlan, ConvertError> {
+    let doc_value = serde_json::to_value(doc).map_err(|_| ConvertError::Serialize)?;
+    plan_conversion_in(doc, &doc_value, components, request, allocator)
+}
+
+/// [`plan_conversion`] over `doc_value`, the document already as JSON
+/// (`serde_json::to_value(doc)`), for callers that plan several requests
+/// against one document.
+pub fn plan_conversion_in(
+    doc: &PenDocument,
+    doc_value: &Value,
+    components: &ComponentLibrary,
+    request: &ConvertRequest,
+    allocator: &mut dyn IdAllocator,
+) -> Result<ConversionPlan, ConvertError> {
     let ids: Vec<&str> = request.node_ids.iter().map(NodeId::as_str).collect();
     if ids.len() < 2 {
         return Err(ConvertError::TooFewNodes(ids.len()));
@@ -43,15 +57,14 @@ pub fn plan_conversion(
         return Err(ConvertError::MasterNotListed(source_id.to_string()));
     }
 
-    let doc_value = serde_json::to_value(doc).map_err(|_| ConvertError::Serialize)?;
     let masters: HashSet<&str> = components
         .components
         .iter()
         .map(|c| c.id.as_str())
         .collect();
-    let found = locate(&doc_value, &wanted, &masters);
+    let found = locate(doc_value, &wanted, &masters);
     let mut targets = HashSet::new();
-    ref_targets(&doc_value, &mut targets);
+    ref_targets(doc_value, &mut targets);
     for id in &ids {
         let Some(node) = found.get(*id) else {
             return Err(ConvertError::NodeNotFound(id.to_string()));
@@ -95,12 +108,19 @@ pub fn plan_conversion(
 
     let source = found[source_id].value;
     let members: HashMap<&str, &Value> = ids.iter().map(|id| (*id, found[*id].value)).collect();
-    let referenced = referenced_inner_ids(&doc_value, &members);
+    let links = inner_links(doc_value, &members);
+    // A node inside a copy that something names cannot move into an
+    // instance: links from elsewhere would lose it, links from inside the
+    // copy would land on the master's node (instance content renders under
+    // `instance__child` ids).
     let referenced_in = |member: &Value| -> Option<String> {
         inner_ids(member).into_iter().find_map(|inner| {
-            referenced
-                .get(inner)
-                .map(|holder| format!("inner node {inner} is referenced by node {holder}"))
+            if let Some(holder) = links.outside.get(inner) {
+                return Some(format!("inner node {inner} is referenced by node {holder}"));
+            }
+            links.inside.get(inner).map(|holder| {
+                format!("inner node {inner} is linked from inside the copy (node {holder})")
+            })
         })
     };
 
@@ -123,7 +143,7 @@ pub fn plan_conversion(
             }
             let mut taken = collect_document_ids(doc);
             let id = allocator.allocate(&mut taken)?;
-            let (x, y) = next_master_slot(&doc_value);
+            let (x, y) = next_master_slot(doc_value);
             if let Value::Object(map) = &mut master {
                 map.insert("id".into(), Value::from(id.as_str()));
                 map.insert("x".into(), Value::from(x));

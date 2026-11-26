@@ -157,10 +157,16 @@ impl EditorState {
     /// layer `id` is right-clicked: the selection when `id` is part of a
     /// multi-selection that shares one structure, else every frame on the
     /// active page with the structure of `id`; `id` first (it becomes the
-    /// master). Empty when there is nothing to convert. Cached per
-    /// document revision, page and selection: the menu asks every frame.
+    /// master). Empty when there is nothing to convert.
+    ///
+    /// The context menu is rebuilt on every paint and hover while it is
+    /// open, and the answer needs a scan of the page, so the last answer is
+    /// kept per thread and reused while the key matches: the document (its
+    /// generation, which a load or replace moves, and its revision, which
+    /// every edit moves), the active page, the clicked layer and the
+    /// selection.
     pub fn similar_layer_ids(&self, id: &NodeId) -> Vec<NodeId> {
-        type Key = (u64, usize, String, Vec<NodeId>, usize);
+        type Key = (u64, u64, usize, String, Vec<NodeId>, usize);
         thread_local! {
             static CACHE: RefCell<Option<(Key, Vec<NodeId>)>> = const { RefCell::new(None) };
         }
@@ -171,6 +177,7 @@ impl EditorState {
             .filter(|pages| !pages.is_empty())
             .map(|pages| self.ui.active_page_index.min(pages.len() - 1));
         let key: Key = (
+            self.document_generation,
             self.revision,
             page.unwrap_or(usize::MAX),
             id.as_str().to_string(),

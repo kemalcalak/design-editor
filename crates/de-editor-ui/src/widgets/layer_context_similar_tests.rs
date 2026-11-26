@@ -102,4 +102,72 @@ fn the_row_converts_the_copies_with_the_clicked_frame_as_master_source() {
     let master_json = serde_json::to_value(root).unwrap();
     assert_eq!(master_json["children"][0]["content"], "B");
     assert!(!offers(&menu_for(&s, "lone")));
+    let toast = s.editor_ui.editor_toast.as_ref().expect("a toast says it");
+    assert_eq!(toast.i18n_key, "convertInstances.done");
+    assert_eq!(toast.args, vec![("converted".to_string(), "3".to_string())]);
+}
+
+#[test]
+fn copies_that_differ_are_named_in_the_toast() {
+    let mut s = state();
+    // "c" holds a link to its own inner node, so it stays a frame.
+    let Some(PenNode::Frame(list)) = s.doc.children.first_mut() else {
+        panic!("list")
+    };
+    let rows = list.children.as_mut().unwrap();
+    rows[2] = serde_json::from_value(json!({"type": "frame", "id": "c", "layout": "horizontal",
+        "width": 200, "height": 32,
+        "events": {"onTap": [{"scroll_to": {"target": "c-dot"}}]},
+        "children": [
+            {"type": "text", "id": "c-t", "content": "C", "fontSize": 14},
+            {"type": "frame", "id": "c-dot", "width": 8, "height": 8}]}))
+    .unwrap();
+    apply_layer_context_action(
+        &mut s,
+        &mut 1000,
+        LayerContextAction::CreateComponentFromSimilar,
+        LayerContextTarget::Layer(NodeId::new("a")),
+        0,
+    );
+    let toast = s.editor_ui.editor_toast.as_ref().expect("toast");
+    assert_eq!(toast.i18n_key, "convertInstances.partial");
+    assert!(toast
+        .args
+        .contains(&("skipped".to_string(), "1".to_string())));
+}
+
+#[test]
+fn every_row_label_fits_the_menu_in_every_locale() {
+    use de_editor_core::Locale;
+    for locale in Locale::ALL {
+        let mut s = state();
+        s.editor_ui.locale = locale;
+        let menu = menu_for(&s, "b");
+        assert!(offers(&menu));
+        for row in &menu.rows {
+            let label = de_i18n::translate(locale, row.label_key);
+            let run = super::LABEL_X
+                + crate::widgets::home_surface::estimate_width(label, super::ROW_FONT);
+            assert!(
+                run <= menu.width(),
+                "{locale:?}: {label:?} needs {run} px, the menu is {}",
+                menu.width()
+            );
+        }
+        // The menu only grows past its usual width when a label needs it.
+        let widest = menu
+            .rows
+            .iter()
+            .map(|row| {
+                super::LABEL_X
+                    + crate::widgets::home_surface::estimate_width(
+                        de_i18n::translate(locale, row.label_key),
+                        super::ROW_FONT,
+                    )
+                    + super::LABEL_RIGHT_PAD
+            })
+            .fold(super::LAYER_CONTEXT_MENU_WIDTH, f32::max);
+        assert_eq!(menu.width(), widest.ceil());
+        assert_eq!(menu.rect().size.x, menu.width());
+    }
 }
