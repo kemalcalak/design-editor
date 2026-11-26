@@ -415,6 +415,10 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "menu.snapPixelGrid" => "Привязка к пиксельной сетке",
         "vectorEdit.pixelSnapOn" => "Привязка к пиксельной сетке включена",
         "vectorEdit.pixelSnapOff" => "Привязка к пиксельной сетке выключена",
+        "layout.wrap" => "Перенос",
+        "layout.rowGap" => "Отступ строк",
+        "layout.columns" => "Столбцы",
+        "layout.rows" => "Строки",
         _ => return None,
     })
 }

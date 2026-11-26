@@ -415,6 +415,10 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "menu.snapPixelGrid" => "Aligner sur la grille de pixels",
         "vectorEdit.pixelSnapOn" => "Alignement sur la grille de pixels activé",
         "vectorEdit.pixelSnapOff" => "Alignement sur la grille de pixels désactivé",
+        "layout.wrap" => "Retour à la ligne",
+        "layout.rowGap" => "Écart des lignes",
+        "layout.columns" => "Colonnes",
+        "layout.rows" => "Lignes",
         _ => return None,
     })
 }

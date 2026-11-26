@@ -13,11 +13,18 @@
 //! - `fill_container` on the main axis shares the free space
 //!   (`flex: 1 1 0`), on the cross axis it stretches; `fit_content` hugs;
 //! - `alignItems: stretch` reads as start (the canvas has no stretch pass),
-//!   and a main-axis number never shrinks.
+//!   and a main-axis number never shrinks;
+//! - `wrap: true` is `flex-wrap: wrap`; `rowGap` / `columnGap` split `gap`;
+//! - `layout: grid` is a CSS grid over `columns` / `rows`, children placed by
+//!   `gridColumn` / `gridRow` and aligned like the stack (`justifyContent`
+//!   horizontally, `alignItems` vertically); `fill_container` stretches a
+//!   child across its cell.
 
 use super::ir::Decls;
 use super::value::{fixed_size, number_or_expr_px, px};
-use jian_ops_schema::node::{AlignItems, ContainerProps, JustifyContent, LayoutMode, Padding};
+use jian_ops_schema::node::{
+    AlignItems, ContainerProps, JustifyContent, LayoutMode, Padding, SelfAlign,
+};
 use jian_ops_schema::node::{PenNode, PenNodeBase, ScriptNode};
 use jian_ops_schema::sizing::{SizeLimits, SizingBehavior, SizingKeyword};
 
@@ -31,12 +38,15 @@ pub(crate) enum Parent {
     Flow { horizontal: bool, auto_layout: bool },
     /// A `layout: none` stack.
     Stack,
+    /// A `layout: grid` container.
+    Grid,
 }
 
 /// The parent context a container gives its children.
 pub(crate) fn child_parent(container: &ContainerProps) -> Parent {
     match container.layout {
         Some(LayoutMode::None) => Parent::Stack,
+        Some(LayoutMode::Grid) => Parent::Grid,
         Some(LayoutMode::Vertical) => Parent::Flow {
             horizontal: false,
             auto_layout: true,
@@ -55,7 +65,9 @@ pub(crate) fn child_parent(container: &ContainerProps) -> Parent {
 /// Display, direction, alignment, gap, padding and clipping of a container
 /// that has children.
 pub(crate) fn apply_container(decls: &mut Decls, c: &ContainerProps) {
-    if matches!(c.layout, Some(LayoutMode::None)) {
+    if matches!(c.layout, Some(LayoutMode::Grid)) {
+        apply_grid_container(decls, c);
+    } else if matches!(c.layout, Some(LayoutMode::None)) {
         decls.set("display", "grid");
         let justify = match c.justify_content {
             Some(JustifyContent::Center) => "center",
@@ -91,14 +103,83 @@ pub(crate) fn apply_container(decls: &mut Decls, c: &ContainerProps) {
             _ => "flex-start",
         };
         decls.set("align-items", align);
-        if let Some(gap) = c.gap.as_ref().and_then(number_or_expr_px) {
-            if gap != "0" {
-                decls.set("gap", gap);
-            }
+        if c.wraps() {
+            decls.set("flex-wrap", "wrap");
+            // The canvas packs wrapped lines at the start.
+            decls.set("align-content", "flex-start");
         }
+        apply_gaps(decls, c);
     }
     if let Some(padding) = c.padding.as_ref().and_then(padding_css) {
         decls.set("padding", padding);
+    }
+}
+
+/// `gap`, or `row-gap` / `column-gap` when they differ.
+fn apply_gaps(decls: &mut Decls, c: &ContainerProps) {
+    let px = |v: Option<&jian_ops_schema::node::NumberOrExpression>| {
+        v.and_then(number_or_expr_px).filter(|g| g != "0")
+    };
+    let row = px(c.row_gap_value());
+    let column = px(c.column_gap_value());
+    if row == column {
+        if let Some(gap) = row {
+            decls.set("gap", gap);
+        }
+        return;
+    }
+    if let Some(row) = row {
+        decls.set("row-gap", row);
+    }
+    if let Some(column) = column {
+        decls.set("column-gap", column);
+    }
+}
+
+/// `display: grid` with the container's tracks, gaps and cell alignment.
+fn apply_grid_container(decls: &mut Decls, c: &ContainerProps) {
+    decls.set("display", "grid");
+    if let Some(columns) = c.columns.as_ref().filter(|t| !t.is_empty()) {
+        decls.set("grid-template-columns", columns.css());
+    }
+    if let Some(rows) = c.rows.as_ref().filter(|t| !t.is_empty()) {
+        decls.set("grid-template-rows", rows.css());
+    }
+    let justify = match c.justify_content {
+        Some(JustifyContent::Center) => "center",
+        Some(JustifyContent::End) => "end",
+        _ => "start",
+    };
+    let align = match c.align_items {
+        Some(AlignItems::Center) => "center",
+        Some(AlignItems::End) => "end",
+        Some(AlignItems::Stretch) => "stretch",
+        _ => "start",
+    };
+    decls.set("justify-items", justify);
+    decls.set("align-items", align);
+    apply_gaps(decls, c);
+}
+
+/// A grid child's cell (`grid-column` / `grid-row`) and own alignment.
+pub(crate) fn apply_grid_cell(decls: &mut Decls, base: &PenNodeBase) {
+    if let Some(p) = base.grid_column.filter(|p| *p != Default::default()) {
+        decls.set("grid-column", p.css());
+    }
+    if let Some(p) = base.grid_row.filter(|p| *p != Default::default()) {
+        decls.set("grid-row", p.css());
+    }
+    let css = |a: SelfAlign| match a {
+        SelfAlign::Start => "start",
+        SelfAlign::Center => "center",
+        SelfAlign::End => "end",
+        SelfAlign::Stretch => "stretch",
+    };
+    if let Some(a) = base.justify_self {
+        decls.set("justify-self", css(a));
+    }
+    if let Some(a) = base.align_self {
+        decls.set("align-self", css(a));
     }
 }
 
@@ -185,6 +266,15 @@ pub(crate) fn apply_size(
         decls.set("height", h);
     }
     match (parent, absolute) {
+        (Parent::Grid, false) => {
+            // The cell sizes a fill child, like the canvas's stretch.
+            if fill(width) {
+                decls.set("justify-self", "stretch");
+            }
+            if fill(height) {
+                decls.set("align-self", "stretch");
+            }
+        }
         (Parent::Flow { horizontal, .. }, false) => {
             let (main_fill, cross_fill) = if horizontal {
                 (fill(width), fill(height))
@@ -241,6 +331,9 @@ pub(crate) fn is_absolute(base: &PenNodeBase, parent: Parent) -> bool {
     match parent {
         Parent::Root => false,
         Parent::Stack => positioned,
+        Parent::Grid => {
+            positioned && (base.role.as_deref() == Some("overlay") || base.constraints.is_some())
+        }
         Parent::Flow { auto_layout, .. } => {
             positioned
                 && (!auto_layout

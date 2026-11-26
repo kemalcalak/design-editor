@@ -415,6 +415,10 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "menu.snapPixelGrid" => "पिक्सेल ग्रिड पर स्नैप करें",
         "vectorEdit.pixelSnapOn" => "पिक्सेल ग्रिड स्नैपिंग चालू",
         "vectorEdit.pixelSnapOff" => "पिक्सेल ग्रिड स्नैपिंग बंद",
+        "layout.wrap" => "रैप",
+        "layout.rowGap" => "पंक्ति अंतराल",
+        "layout.columns" => "कॉलम",
+        "layout.rows" => "पंक्तियाँ",
         _ => return None,
     })
 }

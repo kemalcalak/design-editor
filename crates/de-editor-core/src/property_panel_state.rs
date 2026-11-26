@@ -152,12 +152,14 @@ impl ImageAdjustmentField {
     }
 }
 
-/// Three flex-layout modes the property panel exposes.
+/// The auto-layout modes the property panel exposes.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum FlexLayout {
     Free,
     Vertical,
     Horizontal,
+    /// `layout: grid` (#379).
+    Grid,
 }
 
 /// How the padding section shows its inputs — TS `PaddingMode`.

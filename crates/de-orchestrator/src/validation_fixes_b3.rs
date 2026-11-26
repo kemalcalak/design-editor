@@ -244,6 +244,11 @@ fn build_container_node(
         padding,
         justify_content,
         align_items,
+        wrap: None,
+        row_gap: None,
+        column_gap: None,
+        columns: None,
+        rows: None,
         clip_content: None,
         sticky_children: None,
         corner_radius,
@@ -486,6 +491,7 @@ pub(crate) fn snapshot_layout(node: &PenNode) -> Option<String> {
         LayoutMode::None => "none".to_string(),
         LayoutMode::Vertical => "vertical".to_string(),
         LayoutMode::Horizontal => "horizontal".to_string(),
+        LayoutMode::Grid => "grid".to_string(),
     })
 }
 

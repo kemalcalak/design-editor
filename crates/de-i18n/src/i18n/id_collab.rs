@@ -415,6 +415,10 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "menu.snapPixelGrid" => "Jepret ke Kisi Piksel",
         "vectorEdit.pixelSnapOn" => "Jepret ke kisi piksel aktif",
         "vectorEdit.pixelSnapOff" => "Jepret ke kisi piksel nonaktif",
+        "layout.wrap" => "Bungkus",
+        "layout.rowGap" => "Jarak baris",
+        "layout.columns" => "Kolom",
+        "layout.rows" => "Baris",
         _ => return None,
     })
 }

@@ -25,6 +25,8 @@ mod value;
 #[cfg(test)]
 mod tests;
 #[cfg(test)]
+mod tests_grid;
+#[cfg(test)]
 mod tests_safety;
 #[cfg(test)]
 mod tests_tailwind;

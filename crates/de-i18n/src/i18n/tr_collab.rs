@@ -415,6 +415,10 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "menu.snapPixelGrid" => "Piksel Izgarasına Yasla",
         "vectorEdit.pixelSnapOn" => "Piksel ızgarasına yaslama açık",
         "vectorEdit.pixelSnapOff" => "Piksel ızgarasına yaslama kapalı",
+        "layout.wrap" => "Kaydır",
+        "layout.rowGap" => "Satır aralığı",
+        "layout.columns" => "Sütunlar",
+        "layout.rows" => "Satırlar",
         _ => return None,
     })
 }

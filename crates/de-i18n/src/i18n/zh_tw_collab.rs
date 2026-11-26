@@ -415,6 +415,10 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "menu.snapPixelGrid" => "對齊像素格線",
         "vectorEdit.pixelSnapOn" => "已開啟像素格線吸附",
         "vectorEdit.pixelSnapOff" => "已關閉像素格線吸附",
+        "layout.wrap" => "換行",
+        "layout.rowGap" => "列間距",
+        "layout.columns" => "欄",
+        "layout.rows" => "列",
         _ => return None,
     })
 }

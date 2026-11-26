@@ -470,6 +470,8 @@ pub struct LayoutProps {
     pub justify_content: Option<JustifyContent>,
     pub align_items: Option<AlignItems>,
     pub clip_content: Option<bool>,
+    /// Wrap and grid fields (#379).
+    pub wrap_grid: crate::grid_layout::WrapGrid,
 }
 
 /// Spread mapped [`LayoutProps`] onto a `ContainerProps`.
@@ -492,6 +494,23 @@ pub fn apply_layout(l: LayoutProps, c: &mut jian_ops_schema::node::container::Co
     if l.clip_content.is_some() {
         c.clip_content = l.clip_content;
     }
+    let number = jian_ops_schema::node::base::NumberOrExpression::Number;
+    let wg = l.wrap_grid;
+    if wg.wrap {
+        c.wrap = Some(true);
+    }
+    if let Some(g) = wg.row_gap {
+        c.row_gap = Some(number(g));
+    }
+    if let Some(g) = wg.column_gap {
+        c.column_gap = Some(number(g));
+    }
+    if wg.columns.is_some() {
+        c.columns = wg.columns;
+    }
+    if wg.rows.is_some() {
+        c.rows = wg.rows;
+    }
 }
 
 /// Map Figma stack fields → `LayoutProps`.
@@ -500,13 +519,14 @@ pub fn map_figma_layout(node: &FigValue) -> LayoutProps {
 
     if let Some(mode) = node.get_str("stackMode") {
         if mode != "NONE" {
-            result.layout = Some(if mode == "HORIZONTAL" {
-                LayoutMode::Horizontal
-            } else {
-                LayoutMode::Vertical
+            result.layout = Some(match mode {
+                "HORIZONTAL" => LayoutMode::Horizontal,
+                "GRID" => LayoutMode::Grid,
+                _ => LayoutMode::Vertical,
             });
         }
     }
+    result.wrap_grid = crate::grid_layout::map_wrap_grid(node);
 
     if let Some(align) = node.get_str("stackPrimaryAlignItems") {
         result.justify_content = map_justify_content(align);

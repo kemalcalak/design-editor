@@ -1,5 +1,6 @@
 //! Auto layout section paint and geometry helpers (#83): the direction
-//! segments, then one `Gap | Pad` row. Alignment and the space modes
+//! segments, then one `Gap | Pad` row, then the wrap / grid rows of
+//! `property_panel_flex_grid` (#379). Alignment and the space modes
 //! live in a popover behind the header's sliders button.
 //!
 //! Every helper takes `y` = the section body top (just below the
@@ -24,10 +25,10 @@ use de_editor_core::{FlexLayout, PropertyFocus};
 
 const DIR_BUTTON_H: f32 = 28.0;
 /// Gap between the direction segments and the `Gap | Pad` row.
-const ROW_GAP: f32 = 8.0;
+pub(crate) const ROW_GAP: f32 = 8.0;
 /// Space below the last row before the divider.
 const TRAILING_GAP: f32 = 12.0;
-const COLUMN_GAP: f32 = 8.0;
+pub(crate) const COLUMN_GAP: f32 = 8.0;
 
 const BUTTON_SIZE: f32 = 22.0;
 const POPOVER_W: f32 = 232.0;
@@ -43,13 +44,19 @@ const RADIO_SIZE: f32 = 13.0;
 const RADIO_GUTTER: f32 = 6.0 + RADIO_SIZE;
 
 /// The direction control's segments (#30): full width, in the design's
-/// order — vertical, horizontal, then free. Paint and the action walker
-/// both read this, so a click lands on the segment drawn.
-const DIRECTIONS: [(FlexLayout, Icon); 3] = [
+/// order — vertical, horizontal, grid (#379), then free. Paint and the
+/// action walker both read this, so a click lands on the segment drawn.
+const DIRECTIONS: [(FlexLayout, Icon); 4] = [
     (FlexLayout::Vertical, Icon::ArrowDown),
     (FlexLayout::Horizontal, Icon::ArrowRight),
+    (FlexLayout::Grid, Icon::Hash),
     (FlexLayout::Free, Icon::LayoutGrid),
 ];
+
+/// Top of the wrap / grid rows: just under the `Gap | Pad` row.
+fn extra_rows_y(y: f32) -> f32 {
+    y + DIR_BUTTON_H + ROW_GAP + INPUT_HEIGHT
+}
 
 /// Popover rows for the main-axis distribution, in paint order. The
 /// host hover tier indexes `layout_align_popover_hover` into this.
@@ -172,7 +179,11 @@ pub fn flex_section_height(active: FlexLayout) -> f32 {
     let body = if active == FlexLayout::Free {
         DIR_BUTTON_H + TRAILING_GAP
     } else {
-        DIR_BUTTON_H + ROW_GAP + INPUT_HEIGHT + TRAILING_GAP
+        DIR_BUTTON_H
+            + ROW_GAP
+            + INPUT_HEIGHT
+            + crate::widgets::property_panel_flex_grid::extra_height(active)
+            + TRAILING_GAP
     };
     SECTION_HEADER_HEIGHT + body + SECTION_GAP
 }
@@ -204,6 +215,16 @@ pub fn paint_flex_section(
             1.4,
         );
         paint_gap_pad_row(cx, theme, snapshot, edit, locale, x, body_y, width);
+        crate::widgets::property_panel_flex_grid::paint_extra_rows(
+            cx,
+            theme,
+            snapshot,
+            edit,
+            locale,
+            x,
+            extra_rows_y(body_y),
+            width,
+        );
     }
     let bottom = section_y + flex_section_height(snapshot.flex_layout) - SECTION_GAP;
     if divider {
@@ -302,6 +323,13 @@ pub fn push_flex_input_rects(
         rects.push((PropertyFocus::LayoutGap, gap_rect));
     }
     rects.push((PropertyFocus::Padding, pad_rect));
+    crate::widgets::property_panel_flex_grid::push_input_rects(
+        rects,
+        x0,
+        extra_rows_y(y),
+        width,
+        active,
+    );
 }
 
 pub fn push_flex_action_rects(
@@ -332,6 +360,13 @@ pub fn push_flex_action_rects(
     }
     let button = align_button_rect(x0, y, width);
     out.push((PropertyPanelAction::ToggleLayoutAlignPopover, button));
+    crate::widgets::property_panel_flex_grid::push_action_rects(
+        out,
+        x0,
+        extra_rows_y(y),
+        width,
+        active,
+    );
     if !align_popover_open {
         return;
     }

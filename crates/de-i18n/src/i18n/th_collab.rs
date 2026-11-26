@@ -415,6 +415,10 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "menu.snapPixelGrid" => "จัดชิดกริดพิกเซล",
         "vectorEdit.pixelSnapOn" => "เปิดการจัดชิดกริดพิกเซลแล้ว",
         "vectorEdit.pixelSnapOff" => "ปิดการจัดชิดกริดพิกเซลแล้ว",
+        "layout.wrap" => "ตัดบรรทัด",
+        "layout.rowGap" => "ระยะห่างแถว",
+        "layout.columns" => "คอลัมน์",
+        "layout.rows" => "แถว",
         _ => return None,
     })
 }

@@ -21,6 +21,9 @@ use jian_ops_schema::node::{PenNode, ScriptNode};
 pub enum FlexDirection {
     Vertical,
     Horizontal,
+    /// Reading order over rows: a wrapping flex container or a grid.
+    /// Children are ordered left to right, then top to bottom.
+    Flow,
 }
 
 /// Authored dimensions affected by a selection-handle drag.
@@ -72,7 +75,15 @@ pub fn auto_layout_direction(node: &PenNode) -> Option<FlexDirection> {
         PenNode::Rectangle(n) => n.container.layout.as_ref(),
         _ => None,
     }?;
+    let wraps = match node {
+        PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => n.container.wraps(),
+        PenNode::Group(n) => n.container.wraps(),
+        PenNode::Rectangle(n) => n.container.wraps(),
+        _ => false,
+    };
     match layout {
+        LayoutMode::Grid => Some(FlexDirection::Flow),
+        LayoutMode::Vertical | LayoutMode::Horizontal if wraps => Some(FlexDirection::Flow),
         LayoutMode::Vertical => Some(FlexDirection::Vertical),
         LayoutMode::Horizontal => Some(FlexDirection::Horizontal),
         LayoutMode::None => None,
@@ -253,6 +264,8 @@ impl EditorState {
             FlexDirection::Vertical if dy > 0.0 => Some(current_index + 1),
             FlexDirection::Horizontal if dx < 0.0 => current_index.checked_sub(1),
             FlexDirection::Horizontal if dx > 0.0 => Some(current_index + 1),
+            FlexDirection::Flow if dx < 0.0 || dy < 0.0 => current_index.checked_sub(1),
+            FlexDirection::Flow if dx > 0.0 || dy > 0.0 => Some(current_index + 1),
             _ => None,
         };
         let Some(target_index) = target_index else {

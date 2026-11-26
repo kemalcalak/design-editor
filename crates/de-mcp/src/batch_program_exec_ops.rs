@@ -348,7 +348,7 @@ pub(crate) fn execute_image(binding: &str, args: &str, ctx: &mut ProgramCtx) -> 
         "append" => {
             if explicit_flow_layout(container).is_none() {
                 return Err(ProgramError::Rejected(format!(
-                    "G() append target {} must declare layout \"horizontal\" or \"vertical\"; got {}. Append means a new flow sibling and is never an absolute overlay",
+                    "G() append target {} must declare layout \"horizontal\", \"vertical\" or \"grid\"; got {}. Append means a new flow sibling and is never an absolute overlay",
                     target.id_str(),
                     layout_label(container)
                 )));
@@ -431,6 +431,7 @@ fn explicit_flow_layout(container: &ContainerProps) -> Option<&'static str> {
     match container.layout {
         Some(LayoutMode::Horizontal) => Some("horizontal"),
         Some(LayoutMode::Vertical) => Some("vertical"),
+        Some(LayoutMode::Grid) => Some("grid"),
         _ => None,
     }
 }
@@ -440,6 +441,7 @@ fn layout_label(container: &ContainerProps) -> &'static str {
         Some(LayoutMode::Horizontal) => "horizontal",
         Some(LayoutMode::Vertical) => "vertical",
         Some(LayoutMode::None) => "none",
+        Some(LayoutMode::Grid) => "grid",
         None => "omitted",
     }
 }

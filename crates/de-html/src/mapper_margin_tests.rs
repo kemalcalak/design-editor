@@ -485,7 +485,8 @@ fn grid_span_and_relative_offset_carriers_reach_the_outer_margin_wrapper() {
          </div>",
     );
     let margin = named_frame(&result.nodes[0], "Margin").expect("margin wrapper");
-    assert_eq!(number(margin.container.width.as_ref()), 400.0);
+    // The span lands on the outermost wrapper, the one the grid places.
+    assert_eq!(margin.base.grid_column.map(|p| p.span), Some(2));
     let offset = frame(&children(margin)[0]);
     assert_eq!(offset.base.name.as_deref(), Some("Offset"));
     assert_eq!(number(offset.container.width.as_ref()), 100.0);

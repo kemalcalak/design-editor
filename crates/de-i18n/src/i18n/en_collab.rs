@@ -415,6 +415,10 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "menu.snapPixelGrid" => "Snap to Pixel Grid",
         "vectorEdit.pixelSnapOn" => "Pixel grid snapping on",
         "vectorEdit.pixelSnapOff" => "Pixel grid snapping off",
+        "layout.wrap" => "Wrap",
+        "layout.rowGap" => "Row gap",
+        "layout.columns" => "Columns",
+        "layout.rows" => "Rows",
         _ => return None,
     })
 }

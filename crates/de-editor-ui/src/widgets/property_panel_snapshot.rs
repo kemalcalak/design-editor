@@ -122,6 +122,19 @@ pub(crate) fn stroke_style_summary(node: &PenNode) -> Option<StrokeStyleSummary>
     })
 }
 
+/// Wrap / grid values the Auto layout section shows (#379).
+#[derive(Debug, Clone, Default, PartialEq)]
+pub struct LayoutGridSummary {
+    /// `wrap: true` on a flex container.
+    pub wrap: bool,
+    /// Effective row gap (`rowGap`, else `gap`).
+    pub row_gap: f32,
+    /// Column tracks as the panel edits them (`1fr 1fr 120`).
+    pub columns: String,
+    /// Row tracks; empty when rows are auto.
+    pub rows: String,
+}
+
 /// Snapshot of the selected node's editable fields, formatted for
 /// display. Built once per `for_selection` call so all paint
 /// helpers can read pre-computed strings instead of re-formatting.
@@ -163,6 +176,8 @@ pub struct NodeSnapshot {
     pub layout_align: LayoutAlignValue,
     pub layout_gap: f32,
     pub layout_padding: LayoutPaddingSummary,
+    /// Wrap and grid fields of the Auto layout section (#379).
+    pub layout_grid: LayoutGridSummary,
     pub size_fill_width: bool,
     pub size_fill_height: bool,
     pub size_hug_width: bool,

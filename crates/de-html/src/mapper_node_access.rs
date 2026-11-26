@@ -143,11 +143,3 @@ pub(crate) fn set_node_width(node: &mut PenNode, width: f64) {
         *slot = Some(SizingBehavior::Number(width));
     }
 }
-
-/// The node's main-axis size in CSS px when it is a plain number.
-pub(crate) fn numeric_width(node: &PenNode) -> Option<f64> {
-    match node_width(node) {
-        Some(SizingBehavior::Number(value)) if value.is_finite() && *value >= 0.0 => Some(*value),
-        _ => None,
-    }
-}

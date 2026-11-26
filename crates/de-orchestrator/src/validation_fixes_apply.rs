@@ -648,6 +648,7 @@ fn collect_node(node: &jian_ops_schema::node::PenNode, out: &mut Vec<NodeSnapsho
                 LayoutMode::None => "none".to_string(),
                 LayoutMode::Vertical => "vertical".to_string(),
                 LayoutMode::Horizontal => "horizontal".to_string(),
+                LayoutMode::Grid => "grid".to_string(),
             });
             let jc = n.container.justify_content.as_ref().map(|j| match j {
                 JustifyContent::Start => "start".to_string(),
@@ -668,6 +669,7 @@ fn collect_node(node: &jian_ops_schema::node::PenNode, out: &mut Vec<NodeSnapsho
                 LayoutMode::None => "none".to_string(),
                 LayoutMode::Vertical => "vertical".to_string(),
                 LayoutMode::Horizontal => "horizontal".to_string(),
+                LayoutMode::Grid => "grid".to_string(),
             });
             let jc = n.container.justify_content.as_ref().map(|j| match j {
                 JustifyContent::Start => "start".to_string(),
@@ -688,6 +690,7 @@ fn collect_node(node: &jian_ops_schema::node::PenNode, out: &mut Vec<NodeSnapsho
                 LayoutMode::None => "none".to_string(),
                 LayoutMode::Vertical => "vertical".to_string(),
                 LayoutMode::Horizontal => "horizontal".to_string(),
+                LayoutMode::Grid => "grid".to_string(),
             });
             let jc = n.container.justify_content.as_ref().map(|j| match j {
                 JustifyContent::Start => "start".to_string(),

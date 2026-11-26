@@ -169,6 +169,8 @@ pub enum PropertyPanelAction {
     /// button returns to Design.
     SetPropertyTab(de_editor_core::PropertyTab),
     SetFlexLayout(de_editor_core::FlexLayout),
+    /// Auto layout Wrap checkbox (horizontal layout, #379).
+    ToggleLayoutWrap,
     ToggleCornerExpand,
     SetFillRule(jian_ops_schema::node::path::PathFillRule),
     /// Open or close one of the Layer / Fill compositing dropdowns.

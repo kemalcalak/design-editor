@@ -6,7 +6,7 @@ use jian_ops_schema::node::PenNode;
 
 use crate::css::cascade::ComputedStyle;
 
-use super::{grid_place, layout_heuristics, margin, node_access, offset, wrap};
+use super::{grid_place, layout_heuristics, margin, node_access, offset};
 use super::{BaseStyleOutcome, MapCtx};
 
 fn parent_is_grid(parent_style: Option<&ComputedStyle>) -> bool {
@@ -24,9 +24,6 @@ pub(super) fn record_parent_hints(
 ) {
     if parent_is_grid(parent_style) {
         grid_place::record_placement(base, style, context);
-    }
-    if parent_style.is_some_and(wrap::is_wrapping_flex_row) {
-        wrap::record_inline_margins(base, style, context);
     }
 }
 

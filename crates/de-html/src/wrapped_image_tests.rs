@@ -93,10 +93,15 @@ fn linked_images_are_measurable_flex_items_before_wrapping() {
         &HtmlImportOptions::default(),
     );
     let flex = frame_named(&imported.nodes, "div").expect("flex frame");
-    let rows = flex.children.as_deref().expect("wrap rows");
-    assert_eq!(rows.len(), 2);
-    assert_eq!(children(&rows[0]).map(<[PenNode]>::len), Some(2));
-    assert_eq!(children(&rows[1]).map(<[PenNode]>::len), Some(1));
+    assert_eq!(flex.container.wrap, Some(true));
+    let items = flex.children.as_deref().expect("items");
+    assert_eq!(items.len(), 3);
+    for item in items {
+        let PenNode::Frame(link) = item else {
+            panic!("expected a boxed link, got {item:?}")
+        };
+        assert_eq!(number(link.container.width.as_ref()), Some(220.0));
+    }
 }
 
 #[test]

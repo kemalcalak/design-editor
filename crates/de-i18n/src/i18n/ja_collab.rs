@@ -415,6 +415,10 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "menu.snapPixelGrid" => "ピクセルグリッドにスナップ",
         "vectorEdit.pixelSnapOn" => "ピクセルグリッドへのスナップ: オン",
         "vectorEdit.pixelSnapOff" => "ピクセルグリッドへのスナップ: オフ",
+        "layout.wrap" => "折り返し",
+        "layout.rowGap" => "行の間隔",
+        "layout.columns" => "列",
+        "layout.rows" => "行",
         _ => return None,
     })
 }

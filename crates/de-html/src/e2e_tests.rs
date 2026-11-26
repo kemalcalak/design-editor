@@ -233,29 +233,38 @@ fn solid_fill_color(frame: &FrameNode) -> Option<&str> {
         })
 }
 
-fn assert_grid_rows(frame: &FrameNode, expected_columns: &[usize]) {
-    assert_eq!(frame.container.layout, Some(LayoutMode::Vertical));
-    let rows: Vec<_> = frame_children(frame)
-        .iter()
-        .filter_map(|node| match node {
-            PenNode::Frame(row) if row.container.layout == Some(LayoutMode::Horizontal) => {
-                Some(row)
-            }
-            _ => None,
-        })
-        .collect();
+/// A native grid (#379) whose rows hold `expected_rows` items each: the
+/// first entry is the column count, the sum the in-flow item count.
+fn assert_grid_rows(frame: &FrameNode, expected_rows: &[usize]) {
+    assert_eq!(frame.container.layout, Some(LayoutMode::Grid));
     assert_eq!(
-        rows.len(),
-        expected_columns.len(),
-        "unexpected grid row count"
+        frame.container.columns.as_ref().map(|t| t.len()),
+        Some(expected_rows[0]),
+        "unexpected grid column count"
     );
-    for (row, expected) in rows.iter().zip(expected_columns) {
-        assert_eq!(
-            frame_children(row).len(),
-            *expected,
-            "unexpected grid column count"
-        );
+    let items = frame_children(frame)
+        .iter()
+        .filter(|node| {
+            let base = crate::mapper::node_access::node_base(node);
+            base.x.is_none() && base.y.is_none()
+        })
+        .count();
+    assert_eq!(
+        items,
+        expected_rows.iter().sum::<usize>(),
+        "unexpected grid item count"
+    );
+}
+
+/// The first frame at or below `frame` laid out as a grid.
+fn descendant_grid(frame: &FrameNode) -> Option<&FrameNode> {
+    if frame.container.layout == Some(LayoutMode::Grid) {
+        return Some(frame);
     }
+    frame_children(frame).iter().find_map(|child| match child {
+        PenNode::Frame(child) => descendant_grid(child),
+        _ => None,
+    })
 }
 
 fn feature_matrix(viewport_width: f64) -> crate::HtmlImportResult {
@@ -516,7 +525,7 @@ fn css_feature_matrix_maps_grid_pseudo_element_and_positional_selectors() {
 
     let cards = direct_frame_containing(main, "One");
     assert!(matches!(
-        cards.container.gap,
+        cards.container.row_gap,
         Some(NumberOrExpression::Number(value)) if value == 20.0
     ));
     assert_grid_rows(cards, &[4]);
@@ -642,12 +651,10 @@ fn nova_store_desktop_preserves_cascade_geometry_layers_and_grid() {
     assert_eq!(search_label.line_height, None);
 
     let categories_section = direct_frame_containing(main, "逛逛分类");
-    let categories = descendant_frame_with_direct_child_named(categories_section, "Grid row")
-        .expect("categories grid");
+    let categories = descendant_grid(categories_section).expect("categories grid");
     assert_grid_rows(categories, &[4]);
     let products_section = direct_frame_containing(main, "人气上新");
-    let products = descendant_frame_with_direct_child_named(products_section, "Grid row")
-        .expect("products grid");
+    let products = descendant_grid(products_section).expect("products grid");
     assert_grid_rows(products, &[3]);
     assert_eq!(
         solid_fill_color(descendant_frame_with_exact_text(products, "📱").unwrap()),
@@ -702,8 +709,7 @@ fn nova_store_mobile_applies_media_query_and_single_column_products() {
     ));
 
     let categories_section = direct_frame_containing(main, "逛逛分类");
-    let categories = descendant_frame_with_direct_child_named(categories_section, "Grid row")
-        .expect("mobile categories grid");
+    let categories = descendant_grid(categories_section).expect("mobile categories grid");
     assert_grid_rows(categories, &[2, 2]);
 
     let products_section = direct_frame_containing(main, "人气上新");

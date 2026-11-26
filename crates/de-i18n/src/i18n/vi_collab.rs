@@ -415,6 +415,10 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "menu.snapPixelGrid" => "Bắt dính lưới điểm ảnh",
         "vectorEdit.pixelSnapOn" => "Đã bật bắt dính lưới điểm ảnh",
         "vectorEdit.pixelSnapOff" => "Đã tắt bắt dính lưới điểm ảnh",
+        "layout.wrap" => "Xuống dòng",
+        "layout.rowGap" => "Khoảng cách hàng",
+        "layout.columns" => "Cột",
+        "layout.rows" => "Hàng",
         _ => return None,
     })
 }

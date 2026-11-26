@@ -415,6 +415,10 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "menu.snapPixelGrid" => "Am Pixelraster ausrichten",
         "vectorEdit.pixelSnapOn" => "Am Pixelraster ausrichten: an",
         "vectorEdit.pixelSnapOff" => "Am Pixelraster ausrichten: aus",
+        "layout.wrap" => "Umbruch",
+        "layout.rowGap" => "Zeilenabstand",
+        "layout.columns" => "Spalten",
+        "layout.rows" => "Zeilen",
         _ => return None,
     })
 }
