@@ -264,9 +264,11 @@ pub fn paint_stroke_section(
         labels,
         snapshot,
         edit,
-        x,
-        stroke_style_top(y, mode),
-        width,
+        crate::widgets::property_panel_stroke_style::StyleRowsAt {
+            x,
+            top: stroke_style_top(y, mode),
+            width,
+        },
     );
     y += stroke_section_body_height(mode, StrokeStyleRows::of(snapshot));
     paint_section_divider(cx, theme, x, y, width);

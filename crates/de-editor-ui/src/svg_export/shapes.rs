@@ -81,14 +81,16 @@ pub(super) fn emit_line(out: &mut String, n: &SceneNode, attrs: &str) {
         Some(s) => (s.color, s.width),
         None => (n.fill.unwrap_or(Color::BLACK), 1.5),
     };
-    let r = n.bounds;
-    let x2 = r.origin.x + r.size.x;
-    let y2 = r.origin.y + r.size.y;
+    // Start to end the way the line was drawn (#389), not always the
+    // box's top-left → bottom-right diagonal.
+    let (from, to) = n.line_endpoints();
     let _ = write!(
         out,
-        r#"<line{attrs} x1="{}" y1="{}" x2="{x2}" y2="{y2}"{}/>"#,
-        r.origin.x,
-        r.origin.y,
+        r#"<line{attrs} x1="{}" y1="{}" x2="{}" y2="{}"{}/>"#,
+        from.x,
+        from.y,
+        to.x,
+        to.y,
         stroke_attrs(color, width) + &stroke_style_attrs(n),
     );
 }
@@ -200,8 +202,9 @@ fn fill_attrs_only(n: &SceneNode) -> String {
 }
 
 /// A line's or open path's precomputed stroke geometry (#389): the centre
-/// line (butt caps, the stroke's join / dash / miter limit), the filled end
-/// shapes and the line-arrow arms, as plain paths placed in the node box.
+/// line (styled like the canvas, `centre_line_style`), the filled end
+/// shapes (nonzero) and the line-arrow arms, as plain paths placed in the
+/// node box.
 /// Written as paths rather than markers so Figma's SVG import, which
 /// drops markers, keeps the arrowheads. `place` is the attribute text
 /// (e.g. a `transform`) that puts node-local coordinates where they go.
@@ -218,10 +221,7 @@ pub fn write_stroke_geometry(
     };
     let line = stroke_attrs(stroke.color, stroke.width);
     if !geometry.stroke_d.is_empty() {
-        let style = StrokeStyle {
-            cap: Some(StrokeCap::Butt),
-            ..stroke.style
-        };
+        let style = crate::widgets::canvas_viewport_stroke_paint::centre_line_style(stroke.style);
         let _ = write!(
             out,
             r#"<path d="{}"{place} fill="none"{line}{}/>"#,
@@ -230,7 +230,10 @@ pub fn write_stroke_geometry(
         );
     }
     if !geometry.fill_d.is_empty() {
-        let mut fill = format!(r#" fill="{}""#, super::color_to_rgb(stroke.color));
+        let mut fill = format!(
+            r#" fill="{}" fill-rule="nonzero""#,
+            super::color_to_rgb(stroke.color)
+        );
         if stroke.color.a < 0.999 {
             let _ = write!(fill, r#" fill-opacity="{}""#, stroke.color.a);
         }

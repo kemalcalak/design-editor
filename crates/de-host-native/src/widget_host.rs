@@ -265,6 +265,8 @@ mod shortcuts;
 mod shortcuts_clipboard_marker_tests;
 mod slides_panel;
 mod slides_panel_thumbs;
+#[cfg(test)]
+mod stroke_ends_width_tests;
 mod text_edit_press;
 mod update_modal_host;
 mod vector_edit_keys;

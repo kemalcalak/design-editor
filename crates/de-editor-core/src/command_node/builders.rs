@@ -208,7 +208,7 @@ pub fn build_leaf_node(
             limits: Default::default(),
         }),
         "path" => PenNode::Path(PathNode {
-            corner_radius: None,
+            vertex_radius: None,
             corner_smoothing: None,
             base,
             icon_id: None,

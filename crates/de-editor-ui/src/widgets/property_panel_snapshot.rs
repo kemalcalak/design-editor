@@ -149,19 +149,36 @@ pub(crate) fn stroke_style_summary(node: &PenNode) -> Option<StrokeStyleSummary>
 /// A line, or a path with at least one open subpath (#389): the strokes
 /// whose ends the canvas draws start / end shapes on.
 fn has_open_stroke(node: &PenNode) -> bool {
-    use de_editor_core::vector_edit::parse_path_data;
     match node {
         PenNode::Line(_) => true,
         PenNode::Path(path) => match path.anchors.as_ref().filter(|a| !a.is_empty()) {
             Some(anchors) => !path.closed.unwrap_or(false) && anchors.len() >= 2,
-            None => path
-                .d
-                .as_deref()
-                .and_then(parse_path_data)
-                .is_some_and(|subs| subs.iter().any(|s| !s.closed && s.anchors.len() >= 2)),
+            None => path.d.as_deref().is_some_and(d_has_open_subpath),
         },
         _ => false,
     }
+}
+
+/// Whether path data `d` holds an open subpath. The panel snapshot is
+/// built every frame, so the answer for the last `d` seen is kept and a
+/// `d` is parsed only when it changes (a compare, not a parse, per frame).
+fn d_has_open_subpath(d: &str) -> bool {
+    use std::cell::RefCell;
+    thread_local! {
+        static LAST: RefCell<Option<(String, bool)>> = const { RefCell::new(None) };
+    }
+    LAST.with(|last| {
+        let mut last = last.borrow_mut();
+        if let Some((seen, open)) = last.as_ref() {
+            if seen == d {
+                return *open;
+            }
+        }
+        let open = de_editor_core::vector_edit::parse_path_data(d)
+            .is_some_and(|subs| subs.iter().any(|s| !s.closed && s.anchors.len() >= 2));
+        *last = Some((d.to_owned(), open));
+        open
+    })
 }
 
 /// Wrap / grid values the Auto layout section shows (#379).

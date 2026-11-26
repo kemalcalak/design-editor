@@ -235,6 +235,10 @@ pub(crate) fn node_payload_to_scene(
         rotation: node.rotation,
         flip_x: node.flip_x,
         flip_y: node.flip_y,
+        line_direction: jian_scene::layout_scene::SceneLineDirection {
+            right_to_left: node.line_right_to_left,
+            bottom_to_top: node.line_bottom_to_top,
+        },
         corner_radius: node.corner_radius,
         corner_radii: node.corner_radii,
         clip_content: node.clip_content,
@@ -282,6 +286,7 @@ pub(crate) fn node_payload_to_scene(
         even_odd_fill: node.even_odd_fill,
         svg_path: node.svg_path.clone(),
         stroke_geometry: stroke_geometry::scene_stroke_geometry(node),
+        corner_path: None,
         arc_start_angle: node.arc_start_angle,
         arc_sweep_angle: node.arc_sweep_angle,
         arc_inner_radius: node.arc_inner_radius,

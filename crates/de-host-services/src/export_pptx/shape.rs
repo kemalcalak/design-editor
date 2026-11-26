@@ -20,8 +20,8 @@ use std::fmt::Write as _;
 
 use super::units::solid_fill;
 use super::xml::{
-    effect_list, fill_element, filled_rect, line_element, nv_sp_pr, prst_geom, sp_pr, xfrm, Geom,
-    EMPTY_TX_BODY,
+    effect_list, fill_element, filled_rect, line_element, line_element_open, nv_sp_pr, prst_geom,
+    sp_pr, xfrm, Geom, EMPTY_TX_BODY,
 };
 
 /// Default stroke for a Line node that authored none (canvas parity).
@@ -151,10 +151,10 @@ fn emit_side_strokes(
 
 /// Emit a Line node as a straight connector.
 ///
-/// `origin` is the board origin: the endpoints come from the node's
-/// SIGNED bounds (a line running up-and-left has a negative extent), and
-/// direction is carried by `flipH` / `flipV` rather than by normalising
-/// the rect, which would silently reverse the line.
+/// `origin` is the board origin. The box is the line's normalised rect;
+/// its direction (a negative extent in hand-built scenes, the scene's
+/// `line_direction` for loaded ones, #389) is carried by `flipH` / `flipV`,
+/// so the head end stays the head end.
 pub fn emit_line(
     out: &mut String,
     node: &SceneNode,
@@ -178,10 +178,11 @@ pub fn emit_line(
         dy.abs(),
     );
     let mut attrs = String::new();
-    if (dx < 0.0) != node.flip_x {
+    let direction = node.line_direction;
+    if ((dx < 0.0) != direction.right_to_left) != node.flip_x {
         attrs.push_str(" flipH=\"1\"");
     }
-    if (dy < 0.0) != node.flip_y {
+    if ((dy < 0.0) != direction.bottom_to_top) != node.flip_y {
         attrs.push_str(" flipV=\"1\"");
     }
     let rot = super::units::rot_60k(node.rotation);
@@ -204,7 +205,7 @@ pub fn emit_line(
         take(next_id),
         de_util::xml_escape::escape_xml(&node.id),
         line_xfrm(box_rect, &attrs),
-        line_element(stroke, alpha).unwrap_or_else(|| solid_fill(color, alpha))
+        line_element_open(stroke, alpha).unwrap_or_else(|| solid_fill(color, alpha))
     );
 }
 

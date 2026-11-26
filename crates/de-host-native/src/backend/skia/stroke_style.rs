@@ -70,7 +70,6 @@ mod tests {
             miter_limit: None,
             start: None,
             end: None,
-            width_profile: None,
             cap: Some(StrokeCap::Square),
             join: Some(StrokeJoin::Bevel),
             dash: StrokeDash::new(&[4.0, 2.0], 0.0),

@@ -179,6 +179,41 @@ pub(crate) fn paint_end_rows(
     }
 }
 
+/// The Start / End / Miter labels and end names of `labels` that the rows
+/// would paint cut (ellipsized) in the property panel, measured through
+/// `backend` in the face and size each one is painted with and fitted by
+/// the same fitters paint uses. Empty when every one fits. A host test
+/// runs it on the native backend's real font metrics for all 15 locales.
+pub fn cut_end_labels(
+    backend: &mut dyn crate::RenderBackend,
+    labels: &PropertyLabels,
+) -> Vec<&'static str> {
+    use crate::widgets::text_metrics::{fit_chrome, fit_select_trigger_label};
+    let pad = crate::widgets::property_panel_inputs::PAD_X;
+    let row = Rect::xywh(
+        pad,
+        0.0,
+        crate::widgets::property_panel::PROPERTY_PANEL_WIDTH - pad * 2.0,
+        INPUT_HEIGHT,
+    );
+    let label_size = crate::widgets::property_panel_stroke_style::LABEL_FONT_SIZE;
+    let name_size = crate::widgets::property_panel_compositing::TRIGGER_FONT_SIZE;
+    let mut cut = Vec::new();
+    // `paint_row_label` fits a label into `LABEL_W - 6`.
+    for label in [labels.stroke_start, labels.stroke_end, labels.stroke_miter] {
+        if fit_chrome(backend, label, LABEL_W - 6.0, label_size) != label {
+            cut.push(label);
+        }
+    }
+    // `paint_trigger` fits an end name into the dropdown.
+    for name in labels.stroke_end_names {
+        if fit_select_trigger_label(backend, name, field_rect(row), name_size) != name {
+            cut.push(name);
+        }
+    }
+    cut
+}
+
 /// The Miter field's rect in its row.
 pub(crate) fn miter_input_rect(row: Rect) -> Rect {
     field_rect(row)

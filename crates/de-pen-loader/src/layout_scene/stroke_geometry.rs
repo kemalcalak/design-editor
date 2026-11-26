@@ -5,10 +5,11 @@
 
 use std::sync::Arc;
 
-use de_editor_core::stroke_geometry::{stroke_end_geometry, StrokeEnds};
+use de_editor_core::render_backend::{Point2D, Rect};
+use de_editor_core::stroke_geometry::{stroke_end_geometry, CentreLine, StrokeEnds};
 use de_editor_core::vector_edit::{parse_path_data, subpaths_bounds, Subpath};
 use jian_ops_schema::node::{PenPathAnchor, PenPathHandle};
-use jian_scene::layout_scene::SceneStrokeGeometry;
+use jian_scene::layout_scene::{SceneLineDirection, SceneStrokeGeometry, SceneStrokeHead};
 
 use crate::payload::NodePayload;
 
@@ -18,22 +19,56 @@ pub(super) fn scene_stroke_geometry(node: &NodePayload) -> Option<Arc<SceneStrok
     let stroke = node.stroke.as_ref()?;
     let ends = StrokeEnds::from_parts(stroke.stroke_start, stroke.stroke_end, stroke.cap.as_ref())?;
     let subs = local_subpaths(node)?;
-    let geometry = stroke_end_geometry(&subs, f64::from(stroke.width), ends)?;
+    // The painters stroke a dashed centre line with the dash's own cap;
+    // the same dash rule (`StrokeDash::new`) decides whether it is dashed.
+    let dashed = de_editor_core::fills::render_stroke_style(
+        None,
+        None,
+        stroke.dash_pattern.as_deref(),
+        stroke.dash_offset,
+    )
+    .dash
+    .is_some();
+    let centre = if dashed {
+        CentreLine::Dashed
+    } else {
+        CentreLine::Solid
+    };
+    let geometry = stroke_end_geometry(&subs, f64::from(stroke.width), ends, centre)?;
     Some(Arc::new(SceneStrokeGeometry {
         stroke_d: geometry.stroke_d,
         fill_d: geometry.fill_d,
         arms_d: geometry.arms_d,
+        head_hits: geometry
+            .heads
+            .iter()
+            .map(|head| SceneStrokeHead {
+                center: Point2D::new(head.center.0 as f32, head.center.1 as f32),
+                radius: head.radius as f32,
+            })
+            .collect(),
     }))
 }
 
 /// The node's outline in node-local doc px, drawn the way the painter
-/// draws it: a line is its box diagonal (flips ride on the node
-/// transform), a path its `d` fitted to the box like the backends'
-/// `fit_path_to_rect`, else its anchors or points.
+/// draws it: a line runs across its box the way it was drawn (its start
+/// stays its start; flips ride on the node transform), a path is its `d`
+/// fitted to the box like the backends' `fit_path_to_rect`, else its
+/// anchors or points.
 fn local_subpaths(node: &NodePayload) -> Option<Vec<Subpath>> {
     let (w, h) = (f64::from(node.w), f64::from(node.h));
     match node.kind.as_str() {
-        "line" => Some(vec![Subpath::polyline(&[(0.0, 0.0), (w, h)])]),
+        "line" => {
+            let direction = SceneLineDirection {
+                right_to_left: node.line_right_to_left,
+                bottom_to_top: node.line_bottom_to_top,
+            };
+            let (from, to) = direction.endpoints(Rect::xywh(0.0, 0.0, node.w, node.h));
+            Some(vec![Subpath::polyline(&[
+                (f64::from(from.x), f64::from(from.y)),
+                (f64::from(to.x), f64::from(to.y)),
+            ])])
+        }
         "path" => {
             if let Some(d) = node.svg_path.as_deref() {
                 let mut subs = parse_path_data(d)?;

@@ -442,7 +442,7 @@ fn build_path_node(
     let (state, bindings, events) = parse_interactivity(obj);
 
     Some(PenNode::Path(PathNode {
-        corner_radius: None,
+        vertex_radius: None,
         corner_smoothing: None,
         base,
         icon_id: None, // TODO: icon resolver

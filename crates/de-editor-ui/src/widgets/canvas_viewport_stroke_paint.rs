@@ -146,19 +146,16 @@ pub(crate) fn paint_polygon_stroke(
     });
 }
 
-/// A line node: the bounds' top-left → bottom-right diagonal, at the stroke
-/// width, or a 1.5 px implicit outline in the fill colour without a stroke.
+/// A line node: across its bounds from its start to its end
+/// (`SceneNode::line_direction`), at the stroke width, or a 1.5 px implicit
+/// outline in the fill colour without a stroke.
 pub(crate) fn paint_line_node_stroke(
     cx: &mut PaintCx<'_>,
     node: &SceneNode,
     world_rect: Rect,
     zoom: f32,
 ) {
-    let from = world_rect.origin;
-    let to = Point2D::new(
-        world_rect.origin.x + world_rect.size.x,
-        world_rect.origin.y + world_rect.size.y,
-    );
+    let (from, to) = node.line_direction.endpoints(world_rect);
     let (color, width) = match node.stroke {
         Some(s) => (s.color, s.width * zoom),
         None => (node.fill.unwrap_or(Color::BLACK), (1.5_f32).max(zoom)),
@@ -172,9 +169,30 @@ pub(crate) fn paint_line_node_stroke(
     });
 }
 
+/// The style a precomputed centre line is stroked with (#389): the
+/// stroke's own join / dash / miter limit, with butt caps on a solid line
+/// (its ends are fill shapes) and the authored cap on a dashed one, whose
+/// dashes need it (dots are zero-length dashes only a round cap draws, so
+/// a dotted line never goes invisible). An unset cap on a dashed open
+/// stroke is round, as everywhere else for open strokes. The geometry is
+/// already shortened so no dash cap reaches past an end.
+pub(crate) fn centre_line_style(style: StrokeStyle) -> StrokeStyle {
+    let cap = if style.dash.is_some() {
+        style.cap.unwrap_or(StrokeCap::Round)
+    } else {
+        StrokeCap::Butt
+    };
+    StrokeStyle {
+        cap: Some(cap),
+        start: None,
+        end: None,
+        ..style
+    }
+}
+
 /// Paint a line's or open path's precomputed stroke geometry (#389): the
-/// centre line with butt caps (the stroke's own join / dash / miter limit
-/// kept), the filled end shapes, then the line-arrow arms, all in the
+/// centre line ([`centre_line_style`]), the filled end shapes (nonzero, so
+/// overlapping shapes never cancel), then the line-arrow arms, all in the
 /// stroke paint. The geometry is node-local doc px, so the backends' path
 /// caches key on the same strings every frame. Restores the node's style.
 pub(crate) fn paint_stroke_geometry(
@@ -194,16 +212,19 @@ pub(crate) fn paint_stroke_geometry(
     let path_size = 24.0 * zoom;
     with_stroke_paint(cx, node, world_rect, zoom, |cx, color| {
         if !geometry.stroke_d.is_empty() {
-            cx.backend.set_stroke_style(StrokeStyle {
-                cap: Some(StrokeCap::Butt),
-                ..own
-            });
+            cx.backend.set_stroke_style(centre_line_style(own));
             cx.backend
                 .stroke_svg_path(&geometry.stroke_d, origin, path_size, color, width);
         }
         if !geometry.fill_d.is_empty() {
-            cx.backend
-                .fill_svg_path(&geometry.fill_d, origin, zoom, 1.0, color);
+            cx.backend.fill_svg_path_with_fill_rule(
+                &geometry.fill_d,
+                origin,
+                zoom,
+                1.0,
+                color,
+                false,
+            );
         }
         if !geometry.arms_d.is_empty() {
             cx.backend.set_stroke_style(StrokeStyle {
