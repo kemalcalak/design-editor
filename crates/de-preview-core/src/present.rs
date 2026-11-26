@@ -357,6 +357,38 @@ impl PreviewSession {
             backend.restore();
         }
 
+        // Open overlays (#372) cover the whole screen, strips included.
+        let screen = [pinned, pinned_top]
+            .into_iter()
+            .flatten()
+            .fold(content_clip, |acc, paint| union(acc, paint.strip_clip));
+        if let Some((_, overlays)) = self.framed_overlay_page(screen, content_origin, fit, now_ms) {
+            backend.save();
+            backend.clip_rect(screen);
+            {
+                let mut cx = PaintCx {
+                    backend: &mut *backend,
+                };
+                browser_preview::with_clip(screen, || {
+                    paint_scene_page_with(
+                        &mut cx,
+                        &overlays,
+                        content_origin,
+                        fit,
+                        screen,
+                        PaintSceneOptions {
+                            only_root: None,
+                            skip_node: None,
+                        },
+                    );
+                });
+            }
+            backend.restore();
+        }
+
+        if self.has_open_overlays() {
+            return;
+        }
         let focused = self.focused_schema_id();
         let in_framed_root = focused.as_ref().is_some_and(|focused_id| {
             page.find(only_root)
@@ -389,6 +421,14 @@ impl PreviewSession {
         }
         backend.restore();
     }
+}
+
+fn union(a: Rect, b: Rect) -> Rect {
+    let x0 = a.origin.x.min(b.origin.x);
+    let y0 = a.origin.y.min(b.origin.y);
+    let x1 = (a.origin.x + a.size.x).max(b.origin.x + b.size.x);
+    let y1 = (a.origin.y + a.size.y).max(b.origin.y + b.size.y);
+    Rect::xywh(x0, y0, x1 - x0, y1 - y0)
 }
 
 fn subtree_contains(node: &SceneNode, id: &str) -> bool {

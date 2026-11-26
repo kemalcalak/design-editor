@@ -34,6 +34,9 @@ de-editor-core = { path = "../de-editor-core" }
 de-pen-loader = { path = "../de-pen-loader", default-features = false }
 # Payload serialization round-trips through serde JSON.
 serde_json = { workspace = true }
+# The prototype-overlay actions (#372) implement jian's `async_trait`
+# `ActionImpl`.
+async-trait = "0.1"
 # Tracing for span instrumentation.
 tracing = { workspace = true }
 # Error types.

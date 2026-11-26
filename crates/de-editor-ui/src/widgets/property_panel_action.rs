@@ -515,6 +515,27 @@ pub enum PropertyPanelAction {
     /// The jump button beside a trigger's row (#371): select and frame
     /// the screen or section its action leads to.
     GoToInteractionTarget(de_editor_core::interaction_edit::InteractionTrigger),
+    /// "Open overlay…" / "Swap overlay…" in a trigger's popover (#372):
+    /// the popover switches to the frames the overlay can show.
+    PickOverlayTarget {
+        trigger: de_editor_core::interaction_edit::InteractionTrigger,
+        swap: bool,
+    },
+    /// A frame picked for `trigger`'s overlay: `open_overlay`, or
+    /// `swap_overlay` when `swap`.
+    SetInteractionOverlay {
+        trigger: de_editor_core::interaction_edit::InteractionTrigger,
+        target: String,
+        swap: bool,
+    },
+    /// "Close overlay" for the trigger.
+    SetInteractionCloseOverlay(de_editor_core::interaction_edit::InteractionTrigger),
+    /// One option of `trigger`'s overlay: position grid, close-outside
+    /// checkbox, background, animation, direction.
+    SetOverlayOption {
+        trigger: de_editor_core::interaction_edit::InteractionTrigger,
+        edit: de_editor_core::overlay_edit::OverlayOptionEdit,
+    },
     /// A top-level frame's Mark as screen / Set as start screen / Remove
     /// screen row (#223).
     EditScreenMarker(de_editor_core::screen_marker_edit::ScreenMarkerEdit),

@@ -128,6 +128,7 @@ pub mod property_panel_instance;
 mod property_panel_instance_tests;
 pub mod property_panel_interactions;
 pub mod property_panel_interactions_menu;
+pub(crate) mod property_panel_interactions_overlay;
 pub mod property_panel_layer;
 pub mod property_panel_layout;
 pub mod property_panel_layout_ops;

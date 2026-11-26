@@ -183,15 +183,20 @@ impl PreviewSession {
     /// into), and `Router::pop` on a depth-1 stack is a documented no-op
     /// (`ScreenRouter::pop`). `false` outside APP MODE.
     pub fn can_pop(&self) -> bool {
-        self.app
-            .as_ref()
-            .is_some_and(|app| app.router.current().stack.len() > 1)
+        self.has_open_overlays()
+            || self
+                .app
+                .as_ref()
+                .is_some_and(|app| app.router.current().stack.len() > 1)
     }
 
     /// Navigate back via the installed router — the edge-swipe gesture's
     /// action, mirroring the on-screen back button's `{"pop": null}`
     /// path. A no-op outside APP MODE or at the entry screen.
-    pub fn pop_screen(&self) {
+    pub fn pop_screen(&mut self) {
+        if self.overlay_back() {
+            return;
+        }
         if let Some(app) = &self.app {
             app.router.pop();
         }
@@ -221,7 +226,7 @@ impl PreviewSession {
     /// from actual screen switches so warning-only passes never recenter.
     /// `now_ms` seeds a new Track C-3 transition's clock on a switch —
     /// see `crate::preview::transition`.
-    pub fn reconcile(&mut self, now_ms: u64) -> ReconcileOutcome {
+    pub(crate) fn reconcile_routes(&mut self, now_ms: u64) -> ReconcileOutcome {
         let (pending_path, old_path, old_page_idx) = {
             let Some(app) = self.app.as_ref() else {
                 return ReconcileOutcome::default();

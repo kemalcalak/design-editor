@@ -335,6 +335,9 @@ impl PreviewSession {
             self.track_transition_press(pointer_id, kind, scene_x, scene_y, phase, t_ms);
             return false;
         }
+        if let Some(repaint) = self.overlay_pointer(pointer_id, scene_x, scene_y, phase) {
+            return repaint | self.proto_overlays.take_changed();
+        }
         let binding_before = self.binding_values();
         let hit = self
             .deepest_mapped_hit(scene_x, scene_y)
@@ -355,7 +358,8 @@ impl PreviewSession {
         self.sync_pointer_motion();
         let binding_changed =
             self.finish_binding_update(&binding_before) != crate::InvalidationKind::None;
-        emitted || binding_changed
+        let overlays_changed = self.sync_prototype_overlays();
+        emitted || binding_changed || overlays_changed
     }
 
     /// The R4 Canonical PreviewInput POINTER path: take a FULL host
@@ -379,6 +383,14 @@ impl PreviewSession {
             self.set_now_ms(event.t_ms);
         }
         if self.transition_active() {
+            return Vec::new();
+        }
+        // Open overlays take the pointer (#372); `dispatch_input` reports
+        // their repaint.
+        if self
+            .overlay_pointer(event.id.0, event.position.x, event.position.y, event.phase)
+            .is_some()
+        {
             return Vec::new();
         }
         // Interaction-state tracking reads the SCENE-space hit; compute
@@ -469,6 +481,9 @@ impl PreviewSession {
         use jian_core::gesture::pointer::WheelEvent;
         if self.transition_active() {
             return false;
+        }
+        if let Some(consumed) = self.overlay_wheel(scene_x, scene_y, dy) {
+            return consumed;
         }
         let (rt_x, rt_y) = self.scene_to_runtime(scene_x, scene_y);
         let ev = WheelEvent::simple(point(rt_x, rt_y), point(dx, dy));
