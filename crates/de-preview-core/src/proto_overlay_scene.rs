@@ -61,7 +61,12 @@ impl PreviewSession {
     pub(crate) fn overlay_box(&self, entry: &OverlayEntry, viewport: Rect) -> Rect {
         let (x, y) = self.overlay_origin(entry, viewport);
         let size = entry.node.bounds.size;
-        Rect::xywh(x, y, size.x, size.y.min(self.overlay_visible_h(entry, viewport)))
+        Rect::xywh(
+            x,
+            y,
+            size.x,
+            size.y.min(self.overlay_visible_h(entry, viewport)),
+        )
     }
 
     fn overlay_visible_h(&self, entry: &OverlayEntry, viewport: Rect) -> f32 {
@@ -85,7 +90,10 @@ impl PreviewSession {
         for (index, entry) in self.proto_overlays.stack.iter().enumerate() {
             let p = progress(entry, now_ms);
             if let Some([r, g, b, a]) = entry.spec.background_rgba() {
-                let mut dim = SceneNode::leaf(format!("{}#overlay-dim-{index}", entry.spec.target), NodeKind::Frame);
+                let mut dim = SceneNode::leaf(
+                    format!("{}#overlay-dim-{index}", entry.spec.target),
+                    NodeKind::Frame,
+                );
                 dim.bounds = viewport;
                 dim.fill = Some(Color { r, g, b, a: a * p });
                 out.push(dim);
@@ -106,11 +114,15 @@ impl PreviewSession {
                 OverlayEdge::Bottom => {
                     dy += rest * (viewport.origin.y + viewport.size.y - boxed.origin.y)
                 }
-                OverlayEdge::Top => dy -= rest * (boxed.origin.y + boxed.size.y - viewport.origin.y),
+                OverlayEdge::Top => {
+                    dy -= rest * (boxed.origin.y + boxed.size.y - viewport.origin.y)
+                }
                 OverlayEdge::Right => {
                     dx += rest * (viewport.origin.x + viewport.size.x - boxed.origin.x)
                 }
-                OverlayEdge::Left => dx -= rest * (boxed.origin.x + boxed.size.x - viewport.origin.x),
+                OverlayEdge::Left => {
+                    dx -= rest * (boxed.origin.x + boxed.size.x - viewport.origin.x)
+                }
             }
         }
         let mut node = translated(&entry.node, dx, dy - entry.scroll_y);
@@ -121,7 +133,10 @@ impl PreviewSession {
             return node;
         }
         // Taller than the viewport: a clipping box the content scrolls in.
-        let mut clip = SceneNode::leaf(format!("{}#overlay-clip", entry.spec.target), NodeKind::Frame);
+        let mut clip = SceneNode::leaf(
+            format!("{}#overlay-clip", entry.spec.target),
+            NodeKind::Frame,
+        );
         clip.bounds = Rect::xywh(dx, dy, boxed.size.x, boxed.size.y);
         clip.clip_content = true;
         clip.children = vec![node];

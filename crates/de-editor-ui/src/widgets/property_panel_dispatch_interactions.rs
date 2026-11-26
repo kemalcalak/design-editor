@@ -73,9 +73,8 @@ fn interaction_target(
             .node_id
     } else if key == "scroll_to" {
         body.get("target")?.as_str()?.to_owned()
-    } else if let Some(target) =
-        de_editor_core::overlay_action::OverlayAction::parse(action)
-            .and_then(|overlay| overlay.target().map(str::to_owned))
+    } else if let Some(target) = de_editor_core::overlay_action::OverlayAction::parse(action)
+        .and_then(|overlay| overlay.target().map(str::to_owned))
     {
         // An overlay frame on this page (#372).
         let id = de_editor_core::NodeId::new_opt(&target)?;

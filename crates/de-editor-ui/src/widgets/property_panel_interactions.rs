@@ -40,8 +40,8 @@ pub use crate::widgets::property_panel_interactions_menu::{
     INTERACTION_MENU_W,
 };
 use crate::widgets::property_panel_interactions_overlay::{
-    overlay_action_label, overlay_input_focus, overlay_rows, paint_overlay_row,
-    push_overlay_rects, OverlayRow,
+    overlay_action_label, overlay_input_focus, overlay_rows, paint_overlay_row, push_overlay_rects,
+    OverlayRow,
 };
 pub use de_editor_core::interaction_edit::{
     InteractionMenuTarget, InteractionTrigger, NavigateVerb,

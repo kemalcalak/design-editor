@@ -88,7 +88,8 @@ impl PreviewSession {
     /// Where a scene point lands: inside the top overlay (on the nearest
     /// clickable ancestor-or-self of the node under it), or outside.
     pub(crate) fn overlay_hit(&self, x: f32, y: f32) -> OverlayHit {
-        let (Some(top), Some(viewport)) = (self.proto_overlays.stack.last(), self.overlay_viewport())
+        let (Some(top), Some(viewport)) =
+            (self.proto_overlays.stack.last(), self.overlay_viewport())
         else {
             return OverlayHit::Outside;
         };

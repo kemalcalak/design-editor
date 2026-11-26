@@ -27,7 +27,7 @@ pub(super) fn overlay_attrs(node: &PenNode) -> Vec<(String, String)> {
         return Vec::new();
     };
     let mut attrs = Vec::new();
-    let mut animation = |attrs: &mut Vec<(String, String)>, anim: OverlayAnimation, ms: u32| {
+    let animation = |attrs: &mut Vec<(String, String)>, anim: OverlayAnimation, ms: u32| {
         attrs.push(("data-de-overlay-anim".into(), anim.wire_name().into()));
         if let OverlayAnimation::MoveIn(edge) = anim {
             attrs.push(("data-de-overlay-dir".into(), edge.wire_name().into()));
@@ -109,7 +109,9 @@ pub(super) fn overlay_targets(doc: &PenDocument, roots: &[PenNode]) -> Vec<(Stri
 fn collect(nodes: &[PenNode], out: &mut Vec<String>) {
     for node in nodes {
         for action in node.on_tap().into_iter().flatten() {
-            if let Some(target) = OverlayAction::parse(action).and_then(|a| a.target().map(str::to_owned)) {
+            if let Some(target) =
+                OverlayAction::parse(action).and_then(|a| a.target().map(str::to_owned))
+            {
                 out.push(target);
             }
         }
@@ -128,12 +130,17 @@ impl Walker<'_> {
             .filter_map(|(id, node)| {
                 let content = self.roots(std::slice::from_ref(node)).into_iter().next()?;
                 let mut dim = Element::new("div", "de-overlay-dim".into());
-                dim.attrs.push(("data-de-overlay-dim".into(), String::new()));
+                dim.attrs
+                    .push(("data-de-overlay-dim".into(), String::new()));
                 let mut boxed = Element::new("div", "de-overlay-box".into());
-                boxed.attrs.push(("data-de-overlay-box".into(), String::new()));
+                boxed
+                    .attrs
+                    .push(("data-de-overlay-box".into(), String::new()));
                 boxed.content = super::ir::Content::Children(vec![content]);
                 let mut layer = Element::new("div", "de-overlay".into());
-                layer.attrs.push(("data-de-overlay-layer".into(), id.clone()));
+                layer
+                    .attrs
+                    .push(("data-de-overlay-layer".into(), id.clone()));
                 layer.attrs.push(("hidden".into(), String::new()));
                 layer.content = super::ir::Content::Children(vec![dim, boxed]);
                 Some(layer)

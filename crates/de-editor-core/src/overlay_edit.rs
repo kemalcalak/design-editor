@@ -11,8 +11,7 @@ use jian_ops_schema::PenDocument;
 
 use crate::interaction_edit::InteractionTrigger;
 use crate::overlay_action::{
-    OverlayAction, OverlayAnimation, OverlayEdge, OverlayPosition, OverlaySpec,
-    DEFAULT_OVERLAY_DIM,
+    OverlayAction, OverlayAnimation, OverlayEdge, OverlayPosition, OverlaySpec, DEFAULT_OVERLAY_DIM,
 };
 use crate::pen_node_ext::PenNodeExt;
 use crate::state::EditorState;

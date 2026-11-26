@@ -356,7 +356,10 @@ impl EditorState {
 
     /// Run `edit` on a copy of the anchor's `events` block and write the
     /// result when `edit` reports a change.
-    pub(crate) fn edit_selected_events(&mut self, edit: impl FnOnce(&mut EventHandlers) -> bool) -> bool {
+    pub(crate) fn edit_selected_events(
+        &mut self,
+        edit: impl FnOnce(&mut EventHandlers) -> bool,
+    ) -> bool {
         let node_id = self.selection.anchor.clone();
         if !node_id.is_real() || !self.is_editable(&node_id) {
             return false;

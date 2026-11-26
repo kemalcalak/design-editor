@@ -187,7 +187,11 @@ impl OverlayAnimation {
     /// Parse `animation` + `direction`. `fade` and `slide` (the navigate
     /// transition names) are accepted as `dissolve` and `move_in`.
     pub fn from_wire(name: &str, direction: Option<&str>) -> Option<Self> {
-        let edge = || direction.and_then(OverlayEdge::from_wire).unwrap_or_default();
+        let edge = || {
+            direction
+                .and_then(OverlayEdge::from_wire)
+                .unwrap_or_default()
+        };
         match name.trim().to_ascii_lowercase().replace('-', "_").as_str() {
             "instant" | "none" => Some(OverlayAnimation::Instant),
             "dissolve" | "fade" => Some(OverlayAnimation::Dissolve),

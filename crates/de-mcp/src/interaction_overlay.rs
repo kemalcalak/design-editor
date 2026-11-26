@@ -105,9 +105,8 @@ fn animation(object: &Map<String, Value>) -> Result<(OverlayAnimation, u32), Str
         }
     }
     let animation = match object.get("animation").and_then(Value::as_str) {
-        Some(raw) => OverlayAnimation::from_wire(raw, direction).ok_or_else(|| {
-            format!("animation must be instant, dissolve or move_in, got {raw}")
-        })?,
+        Some(raw) => OverlayAnimation::from_wire(raw, direction)
+            .ok_or_else(|| format!("animation must be instant, dissolve or move_in, got {raw}"))?,
         None => OverlayAnimation::Instant,
     };
     let duration_ms = match object.get("duration") {
@@ -115,7 +114,8 @@ fn animation(object: &Map<String, Value>) -> Result<(OverlayAnimation, u32), Str
         Some(value) => value
             .as_f64()
             .filter(|ms| ms.is_finite() && (0.0..=10_000.0).contains(ms))
-            .ok_or("duration must be milliseconds between 0 and 10000")? as u32,
+            .ok_or("duration must be milliseconds between 0 and 10000")?
+            as u32,
     };
     Ok((animation, duration_ms))
 }

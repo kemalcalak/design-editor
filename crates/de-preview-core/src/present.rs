@@ -362,9 +362,7 @@ impl PreviewSession {
             .into_iter()
             .flatten()
             .fold(content_clip, |acc, paint| union(acc, paint.strip_clip));
-        if let Some((_, overlays)) =
-            self.framed_overlay_page(screen, content_origin, fit, now_ms)
-        {
+        if let Some((_, overlays)) = self.framed_overlay_page(screen, content_origin, fit, now_ms) {
             backend.save();
             backend.clip_rect(screen);
             {

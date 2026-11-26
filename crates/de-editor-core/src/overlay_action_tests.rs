@@ -18,7 +18,10 @@ fn open_overlay_parses_every_option() {
     assert_eq!(spec.position, OverlayPosition::BottomCenter);
     assert!(!spec.close_on_outside_click);
     assert_eq!(spec.background.as_deref(), Some("#00000066"));
-    assert_eq!(spec.animation, OverlayAnimation::MoveIn(OverlayEdge::Bottom));
+    assert_eq!(
+        spec.animation,
+        OverlayAnimation::MoveIn(OverlayEdge::Bottom)
+    );
     assert_eq!(spec.duration_ms, 250);
     let rgba = spec.background_rgba().expect("a dim");
     assert!((rgba[3] - 0.4).abs() < 0.01);
@@ -42,10 +45,7 @@ fn an_open_without_a_target_is_not_an_overlay() {
         OverlayAction::parse(&action(r#"{"open_overlay":{"position":"center"}}"#)),
         None
     );
-    assert_eq!(
-        OverlayAction::parse(&action(r#"{"push":"\"/a\""}"#)),
-        None
-    );
+    assert_eq!(OverlayAction::parse(&action(r#"{"push":"\"/a\""}"#)), None);
 }
 
 #[test]

@@ -14,8 +14,8 @@
 use crate::theme::Theme;
 use crate::widgets::property_panel::PropertyPanelAction;
 use crate::widgets::property_panel_interactions::{
-    paint_fitted_dropdown, translate, InteractionMenuTarget, InteractionSummary, InteractionTrigger,
-    TapActionSummary,
+    paint_fitted_dropdown, translate, InteractionMenuTarget, InteractionSummary,
+    InteractionTrigger, TapActionSummary,
 };
 use crate::widgets::PaintCx;
 use crate::Rect;
@@ -312,8 +312,16 @@ pub(crate) fn paint_overlay_row(
                 edit.now_ms,
             );
             if let Some([r, g, b, a]) = spec.and_then(OverlaySpec::background_rgba) {
-                cx.backend
-                    .fill_round_rect(swatch, 6.0, crate::Color { r, g, b, a: a.max(0.15) });
+                cx.backend.fill_round_rect(
+                    swatch,
+                    6.0,
+                    crate::Color {
+                        r,
+                        g,
+                        b,
+                        a: a.max(0.15),
+                    },
+                );
             }
             cx.backend.stroke_round_rect(swatch, 6.0, theme.border, 1.0);
         }

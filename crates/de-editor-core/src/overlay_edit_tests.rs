@@ -95,10 +95,8 @@ fn options_edit_the_single_overlay_and_refuse_no_ops() {
         &OverlayOptionEdit::Animation(OverlayAnimationKind::MoveIn)
     ));
     assert!(state.set_selected_overlay_option(tap, &OverlayOptionEdit::Direction(OverlayEdge::Top)));
-    assert!(state.set_selected_overlay_option(
-        tap,
-        &OverlayOptionEdit::BackgroundHex("#ff000080".into())
-    ));
+    assert!(state
+        .set_selected_overlay_option(tap, &OverlayOptionEdit::BackgroundHex("#ff000080".into())));
     assert!(!state.set_selected_overlay_option(
         tap,
         &OverlayOptionEdit::BackgroundHex("not a colour".into())

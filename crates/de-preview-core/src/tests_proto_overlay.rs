@@ -165,12 +165,12 @@ fn an_instance_overlay_shows_and_its_master_link_closes_it() {
     tap(&mut s, "open-card");
     assert_eq!(s.open_overlay_targets(), ["card-1"]);
     let scene = s.painted_scene();
-    let card = scene.active_page().and_then(|p| p.find("card-1")).expect("card");
+    let card = scene
+        .active_page()
+        .and_then(|p| p.find("card-1"))
+        .expect("card");
     // Bottom centre of the 400 × 800 screen.
-    assert_eq!(
-        (card.bounds.origin.x, card.bounds.origin.y),
-        (120.0, 700.0)
-    );
+    assert_eq!((card.bounds.origin.x, card.bounds.origin.y), (120.0, 700.0));
     tap(&mut s, "card-1/card-close");
     assert!(!s.has_open_overlays());
 }
@@ -180,8 +180,14 @@ fn a_manual_overlay_sits_under_its_trigger() {
     let mut s = enter();
     tap(&mut s, "open-drop");
     let scene = s.painted_scene();
-    let modal = scene.active_page().and_then(|p| p.find("modal")).expect("modal");
-    assert_eq!((modal.bounds.origin.x, modal.bounds.origin.y), (200.0, 54.0));
+    let modal = scene
+        .active_page()
+        .and_then(|p| p.find("modal"))
+        .expect("modal");
+    assert_eq!(
+        (modal.bounds.origin.x, modal.bounds.origin.y),
+        (200.0, 54.0)
+    );
 }
 
 #[test]
@@ -197,7 +203,10 @@ fn a_tall_overlay_scrolls_inside_itself() {
     assert_eq!(clip.bounds.size.y, 800.0);
     assert!(s.dispatch_wheel(200.0, 400.0, 0.0, -300.0));
     let scene = s.painted_scene();
-    let sheet = scene.active_page().and_then(|p| p.find("sheet")).expect("sheet");
+    let sheet = scene
+        .active_page()
+        .and_then(|p| p.find("sheet"))
+        .expect("sheet");
     assert_eq!(sheet.bounds.origin.y, -300.0);
 }
 

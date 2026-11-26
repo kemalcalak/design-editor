@@ -30,8 +30,7 @@ fn state() -> EditorState {
 
 fn summary(state: &EditorState) -> InteractionSummary {
     let mut summary = interactions_of(state.selected_node().expect("selection"), false);
-    summary.overlay_targets =
-        de_editor_core::overlay_edit::overlay_targets(&state.doc, 0, "go");
+    summary.overlay_targets = de_editor_core::overlay_edit::overlay_targets(&state.doc, 0, "go");
     summary
 }
 
@@ -96,14 +95,21 @@ fn picking_a_frame_writes_the_overlay_and_shows_its_option_rows() {
     push_interaction_action_rects(&mut out, &before, 0.0, 0.0, 280.0);
     let has = |edit: OverlayOptionEdit| {
         out.iter().any(|(a, _)| {
-            *a == PropertyPanelAction::SetOverlayOption { trigger: TAP, edit: edit.clone() }
+            *a == PropertyPanelAction::SetOverlayOption {
+                trigger: TAP,
+                edit: edit.clone(),
+            }
         })
     };
-    assert!(has(OverlayOptionEdit::Position(OverlayPosition::BottomCenter)));
+    assert!(has(OverlayOptionEdit::Position(
+        OverlayPosition::BottomCenter
+    )));
     assert!(has(OverlayOptionEdit::Position(OverlayPosition::Manual)));
     assert!(has(OverlayOptionEdit::CloseOnOutsideClick(false)));
     assert!(has(OverlayOptionEdit::Background(true)));
-    assert!(has(OverlayOptionEdit::Animation(OverlayAnimationKind::MoveIn)));
+    assert!(has(OverlayOptionEdit::Animation(
+        OverlayAnimationKind::MoveIn
+    )));
 
     apply_interaction_action(
         &mut state,

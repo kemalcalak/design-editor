@@ -207,7 +207,11 @@ fn overlay_links_draw_dashed_or_badge_a_frame_elsewhere() {
         pan_y: 0.0,
         zoom: 1.0,
     };
-    let only_open: Vec<CanvasLink> = links.iter().filter(|l| l.anchor == "open").cloned().collect();
+    let only_open: Vec<CanvasLink> = links
+        .iter()
+        .filter(|l| l.anchor == "open")
+        .cloned()
+        .collect();
     let mut backend = CaptureBackend::default();
     let mut cx = PaintCx {
         backend: &mut backend,
@@ -220,7 +224,11 @@ fn overlay_links_draw_dashed_or_badge_a_frame_elsewhere() {
         &viewport,
         de_editor_core::Locale::EnUs,
     );
-    assert_eq!(backend.lines, CURVE_STEPS / 2, "every other segment: dashed");
+    assert_eq!(
+        backend.lines,
+        CURVE_STEPS / 2,
+        "every other segment: dashed"
+    );
     let texts: Vec<&str> = backend.texts.iter().map(|(t, _)| t.as_str()).collect();
     assert!(texts.contains(&"Tap · Overlay"), "{texts:?}");
 }

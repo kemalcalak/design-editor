@@ -190,16 +190,18 @@ pub(crate) fn install(runtime: &mut jian_core::Runtime, overlays: &PrototypeOver
         let requests = overlays.requests.clone();
         runtime.actions.borrow_mut().register(
             name,
-            Box::new(move |body: &serde_json::Value| -> Result<BoxedAction, ActionError> {
-                let action = OverlayAction::parse_body(name, body).ok_or_else(|| {
-                    ActionError::Custom(format!("{name} needs a target frame"))
-                })?;
-                Ok(Box::new(QueueOverlay {
-                    name,
-                    action,
-                    requests: requests.clone(),
-                }))
-            }),
+            Box::new(
+                move |body: &serde_json::Value| -> Result<BoxedAction, ActionError> {
+                    let action = OverlayAction::parse_body(name, body).ok_or_else(|| {
+                        ActionError::Custom(format!("{name} needs a target frame"))
+                    })?;
+                    Ok(Box::new(QueueOverlay {
+                        name,
+                        action,
+                        requests: requests.clone(),
+                    }))
+                },
+            ),
         );
     }
     let allowed = jian_core::action::policy::PreviewActionPolicy::ALLOWED
