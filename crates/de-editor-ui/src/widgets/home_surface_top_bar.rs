@@ -3,6 +3,7 @@
 
 use super::copy::tr;
 use super::paint::{baseline, draw_text_weighted, outline};
+use super::layout::{NEW_FILE_WEIGHT, OPEN_FILE_WEIGHT};
 use super::{HomeLayout, HomeSurface, SANS};
 use crate::widgets::icons::{draw_icon, Icon};
 use crate::widgets::PaintCx;
@@ -79,7 +80,7 @@ pub(super) fn paint_top_bar(surface: &HomeSurface<'_>, cx: &mut PaintCx<'_>, lay
         SANS,
         13.0,
         if hovered { p.text } else { p.text_2 },
-        500,
+        OPEN_FILE_WEIGHT,
         Point2D::new(open.origin.x + 36.0, baseline(open, 13.0)),
     );
 
@@ -107,7 +108,7 @@ pub(super) fn paint_top_bar(surface: &HomeSurface<'_>, cx: &mut PaintCx<'_>, lay
         SANS,
         13.0,
         p.on_accent,
-        600,
+        NEW_FILE_WEIGHT,
         Point2D::new(new.origin.x + 38.0, baseline(new, 13.0)),
     );
 }

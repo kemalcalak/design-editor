@@ -317,21 +317,58 @@ pub(super) fn paint_popover_card(cx: &mut PaintCx<'_>, surface: &HomeSurface<'_>
     cx.backend.stroke_round_rect(rect, 10.0, p.border, 1.0);
 }
 
-/// The caret rect for the platform IME panel: the start of the input's
-/// first line, nudged right by an estimate of the text before the caret.
-pub(super) fn caret_rect(surface: &HomeSurface<'_>, layout: &HomeLayout) -> Rect {
+/// The face jian's `TextArea` paints (and measures) its text in
+/// (`jian_widgets::components::text_area`), so the IME caret is measured
+/// in it too.
+const INPUT_FAMILY: &str = "Inter";
+/// `TextArea`'s line height (1.35 em) and the inset above its first line.
+const INPUT_LINE_H: f32 = INPUT_FONT * 1.35;
+const TEXT_AREA_PAD_Y: f32 = 4.0;
+/// Lines the composer shows before it scrolls (`max_visible_lines`).
+const INPUT_VISIBLE_LINES: usize = 3;
+
+/// The caret rect for the platform IME panel, where the input paints the
+/// caret: the input's lines are wrapped and the text before the caret is
+/// measured through `backend` in the face the input draws (#440), and the
+/// row is the caret's line among the visible ones.
+pub(super) fn caret_rect(
+    surface: &HomeSurface<'_>,
+    layout: &HomeLayout,
+    backend: &mut dyn RenderBackend,
+) -> Rect {
     let input = layout.input_box;
     let text = surface.state.input.text();
     let caret = jian_core::text_input::prev_char_boundary(
         text,
         surface.state.input.caret().min(text.len()),
     );
-    let before = super::copy::estimate_width(&text[..caret], INPUT_FONT);
-    let x = input.origin.x + INPUT_PAD_X + before.min(input.size.x - 2.0 * INPUT_PAD_X);
+    let content_w = (input.size.x - 2.0 * INPUT_PAD_X).max(0.0);
+    let lines = TextArea::layout_lines(backend, text, INPUT_FONT, content_w);
+    let last = lines.len() - 1;
+    // A soft-wrapped line ends where the next starts; the caret there
+    // belongs to the next line (as `TextArea` places it).
+    let line_i = (0..lines.len())
+        .find(|&i| {
+            let line = &lines[i];
+            let soft_wrapped = lines.get(i + 1).is_some_and(|next| next.start == line.end);
+            caret >= line.start
+                && (caret < line.end || (caret == line.end && !soft_wrapped))
+        })
+        .unwrap_or(last);
+    let line = &lines[line_i];
+    let rel = jian_core::text_input::prev_char_boundary(
+        &line.text,
+        caret.saturating_sub(line.start).min(line.text.len()),
+    );
+    let before =
+        crate::widgets::text_metrics::measure_in_family(backend, &line.text[..rel], INPUT_FONT, INPUT_FAMILY);
+    let first_visible = (line_i + 1).saturating_sub(INPUT_VISIBLE_LINES);
+    let row = (line_i - first_visible) as f32;
+    let x = input.origin.x + INPUT_PAD_X + before.min(content_w);
     Rect::xywh(
         x,
-        input.origin.y + INPUT_PAD_Y + 4.0,
+        text_rect(input).origin.y + TEXT_AREA_PAD_Y + row * INPUT_LINE_H,
         1.5,
-        INPUT_FONT * 1.35,
+        INPUT_LINE_H,
     )
 }

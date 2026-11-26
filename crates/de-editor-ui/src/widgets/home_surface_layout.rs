@@ -1,8 +1,14 @@
 //! Geometry for the Home surface: one rect set that paint and hit-test
 //! both read, already scroll-translated. Split from the `home_surface`
 //! spine so each stays under the repo's 800-line ceiling.
+//!
+//! Labelled controls are as wide as their labels measured in the face and
+//! weight paint draws them in (#440): layout takes [`LabelWidths`], which
+//! paint runs measuring and hit-test runs cached.
 
-use super::copy::{estimate_width, kind_label, size_chip_label, tr};
+use super::copy::{kind_label, size_chip_label, tr};
+use super::SANS;
+use crate::widgets::label_widths::LabelWidths;
 use crate::Rect;
 use de_editor_core::{HomeFamily, HomeSize, Locale, RecentView};
 
@@ -43,6 +49,18 @@ pub(crate) const IMPORT_H_TALL: f32 = 80.0;
 pub(crate) const IMPORT_TEXT_X: f32 = 62.0;
 pub(crate) const IMPORT_TEXT_PAD_R: f32 = 16.0;
 pub(crate) const IMPORT_TITLE_FONT: f32 = 13.0;
+/// Weight the import card titles are painted (and measured) at.
+pub(crate) const IMPORT_TITLE_WEIGHT: u16 = 600;
+/// A kind chip's label is semibold when selected, medium otherwise; the
+/// chip is sized for the semibold run so selecting it never resizes it.
+const CHIP_LABEL_WEIGHT: u16 = 600;
+const MODEL_ADD_WEIGHT: u16 = 500;
+const LOCALE_CODE_WEIGHT: u16 = 600;
+/// Top-bar button label weights: Open file (quiet) and New file (accent).
+pub(crate) const OPEN_FILE_WEIGHT: u16 = 500;
+pub(crate) const NEW_FILE_WEIGHT: u16 = 600;
+const LOCALE_CODE_FONT: f32 = 12.0;
+const TOP_BUTTON_FONT: f32 = 13.0;
 /// The import card titles, in card order (paint and layout share them).
 pub(crate) const IMPORT_TITLE_KEYS: [&str; 4] = [
     "home.import.figma",
@@ -128,20 +146,28 @@ pub struct HomeLayout {
 }
 
 /// The width of a kind chip (icon + label + padding).
-pub(crate) fn chip_width(locale: Locale, family: HomeFamily) -> f32 {
-    12.0 + 16.0 + 8.0 + estimate_width(kind_label(locale, family), CHIP_FONT) + 12.0
+pub(crate) fn chip_width(labels: &mut LabelWidths<'_>, locale: Locale, family: HomeFamily) -> f32 {
+    let label = labels.styled(kind_label(locale, family), CHIP_FONT, SANS, CHIP_LABEL_WEIGHT);
+    12.0 + 16.0 + 8.0 + label + 12.0
 }
 
-pub(crate) fn size_chip_width(locale: Locale, size: HomeSize) -> f32 {
-    8.0 + 13.0 + 6.0 + estimate_width(&size_chip_label(locale, size), SIZE_CHIP_FONT) + 8.0
+pub(crate) fn size_chip_width(labels: &mut LabelWidths<'_>, locale: Locale, size: HomeSize) -> f32 {
+    let label = labels.styled(&size_chip_label(locale, size), SIZE_CHIP_FONT, SANS, 400);
+    8.0 + 13.0 + 6.0 + label + 8.0
 }
 
 /// The model slot's width: label + chevron, or the provider link + arrow.
-pub(crate) fn model_slot_width(locale: Locale, label: &str, usable: bool) -> f32 {
+pub(crate) fn model_slot_width(
+    labels: &mut LabelWidths<'_>,
+    locale: Locale,
+    label: &str,
+    usable: bool,
+) -> f32 {
     if usable {
-        (estimate_width(label, MODEL_FONT) + 8.0 + 12.0 + 8.0).min(260.0)
+        (labels.styled(label, MODEL_FONT, SANS, 400) + 8.0 + 12.0 + 8.0).min(260.0)
     } else {
-        estimate_width(tr(locale, "home.model.addProvider"), MODEL_FONT) + 6.0 + 12.0 + 8.0
+        let add = tr(locale, "home.model.addProvider");
+        labels.styled(add, MODEL_FONT, SANS, MODEL_ADD_WEIGHT) + 6.0 + 12.0 + 8.0
     }
 }
 
@@ -150,23 +176,31 @@ pub(crate) fn locale_code(locale: Locale) -> String {
     locale.code().split('-').next().unwrap_or("").to_uppercase()
 }
 
-fn locale_button_width(locale: Locale) -> f32 {
-    10.0 + 16.0 + 6.0 + estimate_width(&locale_code(locale), 12.0) + 4.0 + 12.0 + 8.0
+fn locale_button_width(labels: &mut LabelWidths<'_>, locale: Locale) -> f32 {
+    let code = labels.styled(&locale_code(locale), LOCALE_CODE_FONT, SANS, LOCALE_CODE_WEIGHT);
+    10.0 + 16.0 + 6.0 + code + 4.0 + 12.0 + 8.0
 }
 
-fn button_width(locale: Locale, key: &'static str) -> f32 {
-    12.0 + 16.0 + 8.0 + estimate_width(tr(locale, key), 13.0) + 14.0
+/// A top-bar button: icon slot, the label at `weight`, `pad_r` after it.
+fn button_width(
+    labels: &mut LabelWidths<'_>,
+    locale: Locale,
+    key: &'static str,
+    weight: u16,
+    pad_r: f32,
+) -> f32 {
+    12.0 + 16.0 + 8.0 + labels.styled(tr(locale, key), TOP_BUTTON_FONT, SANS, weight) + pad_r
 }
 
 /// The import cards' shared height: tall enough for a two-line title as
-/// soon as any card's title (estimated, since layout has no renderer)
-/// overflows its text box. Paint measures for real and wraps or
-/// ellipsizes inside whatever height this picks, so a title never clips.
-fn import_card_height(locale: Locale, card_w: f32) -> f32 {
+/// soon as any card's title, measured as paint draws it, overflows its
+/// text box. Paint wraps or ellipsizes inside whatever height this picks,
+/// so a title never clips.
+fn import_card_height(labels: &mut LabelWidths<'_>, locale: Locale, card_w: f32) -> f32 {
     let text_w = card_w - IMPORT_TEXT_X - IMPORT_TEXT_PAD_R;
-    let wraps = IMPORT_TITLE_KEYS
-        .iter()
-        .any(|&key| estimate_width(tr(locale, key), IMPORT_TITLE_FONT) > text_w);
+    let wraps = IMPORT_TITLE_KEYS.iter().any(|&key| {
+        labels.styled(tr(locale, key), IMPORT_TITLE_FONT, SANS, IMPORT_TITLE_WEIGHT) > text_w
+    });
     if wraps {
         IMPORT_H_TALL
     } else {
@@ -175,7 +209,7 @@ fn import_card_height(locale: Locale, card_w: f32) -> f32 {
 }
 
 /// Resolve the full rect set (see `HomeLayout`).
-pub fn home_layout(input: HomeLayoutInput<'_>) -> HomeLayout {
+pub fn home_layout(input: HomeLayoutInput<'_>, labels: &mut LabelWidths<'_>) -> HomeLayout {
     let w = input.viewport_w.max(1.0);
     let h = input.viewport_h.max(1.0);
     let rail = w < RAIL_BREAK_W;
@@ -224,11 +258,11 @@ pub fn home_layout(input: HomeLayoutInput<'_>) -> HomeLayout {
     let main_x = side_w;
     let main_w = (w - side_w).max(1.0);
     let top_bar = Rect::xywh(main_x, 0.0, main_w, HOME_TOPBAR_H);
-    let new_w = button_width(input.locale, "home.top.newFile");
-    let open_w = button_width(input.locale, "home.top.openFile");
+    let new_w = button_width(labels, input.locale, "home.top.newFile", NEW_FILE_WEIGHT, 12.0);
+    let open_w = button_width(labels, input.locale, "home.top.openFile", OPEN_FILE_WEIGHT, 14.0);
     let new_file = Rect::xywh(w - 28.0 - new_w, 13.0, new_w, 34.0);
     let open_file = Rect::xywh(new_file.origin.x - 8.0 - open_w, 13.0, open_w, 34.0);
-    let locale_w = locale_button_width(input.locale);
+    let locale_w = locale_button_width(labels, input.locale);
     let locale_button = Rect::xywh(open_file.origin.x - 8.0 - locale_w, 13.0, locale_w, 34.0);
 
     // Column.
@@ -244,7 +278,7 @@ pub fn home_layout(input: HomeLayoutInput<'_>) -> HomeLayout {
     let mut chips = [Rect::ZERO; 6];
     let widths: Vec<f32> = HomeFamily::ALL
         .iter()
-        .map(|family| chip_width(input.locale, *family))
+        .map(|family| chip_width(labels, input.locale, *family))
         .collect();
     let mut index = 0;
     while index < widths.len() {
@@ -273,11 +307,11 @@ pub fn home_layout(input: HomeLayoutInput<'_>) -> HomeLayout {
     let size_chip = Rect::xywh(
         col_x + 48.0,
         ty + 13.0,
-        size_chip_width(input.locale, input.size),
+        size_chip_width(labels, input.locale, input.size),
         24.0,
     );
     let send = Rect::xywh(col_x + col_w - 14.0 - 30.0, ty + 10.0, 30.0, 30.0);
-    let model_w = model_slot_width(input.locale, input.model_label, input.usable_agent);
+    let model_w = model_slot_width(labels, input.locale, input.model_label, input.usable_agent);
     let model_chip = Rect::xywh(send.origin.x - 10.0 - model_w, ty + 12.0, model_w, 26.0);
 
     let option_count = input.task.sizes().len();
@@ -305,7 +339,7 @@ pub fn home_layout(input: HomeLayoutInput<'_>) -> HomeLayout {
         // otherwise two rows of two.
         let per_row = if col_w >= IMPORT_ONE_ROW_W { 4 } else { 2 };
         let card_w = (col_w - (per_row - 1) as f32 * IMPORT_GAP) / per_row as f32;
-        let import_h = import_card_height(input.locale, card_w);
+        let import_h = import_card_height(labels, input.locale, card_w);
         for (i, slot) in imports.iter_mut().enumerate() {
             let (row, column) = (i / per_row, i % per_row);
             *slot = Rect::xywh(
@@ -318,7 +352,7 @@ pub fn home_layout(input: HomeLayoutInput<'_>) -> HomeLayout {
         let rows = imports.len().div_ceil(per_row);
         y += rows as f32 * import_h + (rows - 1) as f32 * IMPORT_GAP;
     } else {
-        let import_h = import_card_height(input.locale, col_w);
+        let import_h = import_card_height(labels, input.locale, col_w);
         for slot in &mut imports {
             *slot = Rect::xywh(col_x, y, col_w, import_h);
             y += import_h + 10.0;
@@ -418,10 +452,13 @@ pub fn home_layout(input: HomeLayoutInput<'_>) -> HomeLayout {
 
 /// The largest scroll offset for this input: the page's height past the
 /// visible body, never negative.
-pub fn home_max_scroll(input: HomeLayoutInput<'_>) -> f32 {
-    let layout = home_layout(HomeLayoutInput {
-        scroll_y: 0.0,
-        ..input
-    });
+pub fn home_max_scroll(input: HomeLayoutInput<'_>, labels: &mut LabelWidths<'_>) -> f32 {
+    let layout = home_layout(
+        HomeLayoutInput {
+            scroll_y: 0.0,
+            ..input
+        },
+        labels,
+    );
     (layout.content_h - input.viewport_h.max(1.0)).max(0.0)
 }

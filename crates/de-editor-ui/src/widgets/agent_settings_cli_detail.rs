@@ -3,9 +3,10 @@
 //! leave the chat picker, D6), and Connect / Disconnect. A missing agent's
 //! card carries its whole install command with a copy button (#304).
 
+use crate::widgets::label_widths::LabelWidths;
 use crate::theme::Theme;
 use crate::widgets::agent_settings_detail_chrome::{
-    self as chrome, button_width_estimate, checklist_height, checklist_row_at, paint_button,
+    self as chrome, button_width, checklist_height, checklist_row_at, paint_button,
     paint_checklist, paint_header, paint_label, paint_status, text, ButtonKind, CheckRow,
     BODY_TOP_GAP, BUTTON_H, FIELD_GAP, FOOTER_GAP, HEADER_H, LABEL_FONT, LABEL_H, VALUE_FONT,
 };
@@ -88,6 +89,8 @@ fn connect_label(settings: &AgentSettings, provider: AgentProvider) -> &'static 
     }
 }
 
+/// The pane's rects, its buttons sized from the widths paint measured
+/// (`label_widths`, #440).
 pub(crate) fn cli_layout(
     detail: Rect,
     settings: &AgentSettings,
@@ -95,10 +98,23 @@ pub(crate) fn cli_layout(
     discovered: &[ModelEntry],
     provider: AgentProvider,
 ) -> CliLayout {
+    let mut widths = LabelWidths::cached();
+    cli_layout_with(detail, settings, ui, discovered, provider, &mut widths)
+}
+
+/// [`cli_layout`] reading (paint: measuring) label widths through `widths`.
+pub(crate) fn cli_layout_with(
+    detail: Rect,
+    settings: &AgentSettings,
+    ui: &EditorUiState,
+    discovered: &[ModelEntry],
+    provider: AgentProvider,
+    widths: &mut LabelWidths<'_>,
+) -> CliLayout {
     let x = detail.origin.x;
     let w = detail.size.x;
     let mut y = detail.origin.y + HEADER_H + BODY_TOP_GAP + LABEL_H;
-    let recheck_w = button_width_estimate(t_settings(ui, "settings.agents.checkAgain"), true)
+    let recheck_w = button_width(widths, t_settings(ui, "settings.agents.checkAgain"), true)
         .min((w - CARD_PAD * 2.0).max(0.0));
     let (status, recheck, recheck_beside, install) = match install_command(settings, provider) {
         Some(text) => status_with_command(x, y, w, recheck_w, text),
@@ -124,7 +140,7 @@ pub(crate) fn cli_layout(
     y += models_h + FOOTER_GAP;
     let footer = Rect::xywh(x, y, w, BUTTON_H);
     let label = t_settings(ui, connect_label(settings, provider));
-    let connect_w = button_width_estimate(label, false);
+    let connect_w = button_width(widths, label, false);
     let connect = Rect::xywh(x + w - connect_w, y, connect_w, BUTTON_H);
     CliLayout {
         status,
@@ -274,7 +290,14 @@ pub(crate) fn paint_cli_detail(
     provider: AgentProvider,
     now_ms: u64,
 ) {
-    let layout = cli_layout(detail, settings, ui, discovered, provider);
+    let layout = cli_layout_with(
+        detail,
+        settings,
+        ui,
+        discovered,
+        provider,
+        &mut LabelWidths::measuring(&mut *cx.backend),
+    );
     paint_header(
         cx,
         theme,

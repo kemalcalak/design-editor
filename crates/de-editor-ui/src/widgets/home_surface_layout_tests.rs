@@ -3,7 +3,17 @@
 
 use super::layout::*;
 use crate::Rect;
+use crate::widgets::label_widths::LabelWidths;
 use de_editor_core::{HomeFamily, HomeSize, Locale, RecentView};
+
+/// Layout from the kept label widths, as hit-test runs it.
+fn home_layout(input: HomeLayoutInput<'_>) -> HomeLayout {
+    super::layout::home_layout(input, &mut LabelWidths::cached())
+}
+
+fn home_max_scroll(input: HomeLayoutInput<'_>) -> f32 {
+    super::layout::home_max_scroll(input, &mut LabelWidths::cached())
+}
 
 fn input(w: f32, recent: usize, view: RecentView) -> HomeLayoutInput<'static> {
     HomeLayoutInput {

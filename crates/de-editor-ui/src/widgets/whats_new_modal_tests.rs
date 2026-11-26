@@ -1,4 +1,5 @@
 use super::*;
+use crate::widgets::label_fit_test_support::fresh_backend;
 use crate::widgets::whats_new_flow;
 use de_editor_core::release_notes::release_notes;
 use de_i18n::Locale;
@@ -93,17 +94,22 @@ fn every_locale_wraps_inside_the_card_and_fits_the_viewport() {
         let mut state = state_with(1);
         state.editor_ui.locale = locale;
         let modal = WhatsNewModal::for_editor(&state).unwrap();
+        // Height at realistic advances: the unmeasured estimate (the test
+        // backend charges every non-Latin glyph a full em, far wider than
+        // Cyrillic or Devanagari really are).
+        let mut backend = fresh_backend();
         let card = modal.rect(1200.0, 800.0);
         assert!(
             card.size.y < 800.0 - 32.0,
             "{} card too tall",
             locale.code()
         );
+        let card = modal.measured_rect(1200.0, 800.0, &mut backend);
         let inner = card.size.x - PAD * 2.0;
-        let lines = modal.lines(inner);
+        let lines = modal.lines(inner, &mut LabelWidths::cached());
         for line in lines.items.iter().flatten().chain(&lines.intro) {
             assert!(
-                estimate_width(line, BODY_SIZE) <= inner,
+                measure_chrome(&mut backend, line, BODY_SIZE) <= inner,
                 "{}: {line}",
                 locale.code()
             );
@@ -114,7 +120,7 @@ fn every_locale_wraps_inside_the_card_and_fits_the_viewport() {
 #[test]
 fn an_unspaced_run_breaks_between_characters_but_not_before_marks() {
     let thai = "หลังการอัปเดตแต่ละครั้งหน้าต่างนี้จะแสดงสิ่งที่เปลี่ยนไปเป็นภาษาของคุณ";
-    let lines = wrap(thai, 120.0, BODY_SIZE);
+    let lines = wrap(thai, 120.0, BODY_SIZE, &mut LabelWidths::cached());
     assert!(lines.len() > 1);
     assert_eq!(lines.concat(), thai);
     for pair in lines.windows(2) {
@@ -133,10 +139,11 @@ fn an_unspaced_run_breaks_between_characters_but_not_before_marks() {
 #[test]
 fn cjk_breaks_between_characters_instead_of_at_the_last_space() {
     let text = "Claude で作ったものを含む HTML のスライドを開くと、各スライドが編集できるボードになります。";
-    let lines = wrap(text, 300.0, BODY_SIZE);
+    let mut backend = fresh_backend();
+    let lines = wrap(text, 300.0, BODY_SIZE, &mut LabelWidths::measuring(&mut backend));
     // A space-first break would end the first line at "HTML" with room left.
     assert!(
-        estimate_width(&lines[0], BODY_SIZE) > 300.0 - BODY_SIZE * 1.5,
+        measure_chrome(&mut backend, &lines[0], BODY_SIZE) > 300.0 - BODY_SIZE * 1.5,
         "{lines:?}"
     );
 }
@@ -218,4 +225,56 @@ fn hover_tracks_the_button_under_the_pointer() {
         whats_new_flow::hover(&mut state, Point2D::new(1.0, 1.0), 1200.0, 800.0),
         Some(true)
     );
+}
+
+/// Paint the way the flow does (measure, then paint into that card) and
+/// check, in every locale, that each enabled button's label is painted
+/// whole and centred inside the box the backend-less hit-test resolves,
+/// and that the card the hit-test sees is the card paint drew (#440).
+#[test]
+fn paint_and_hit_test_agree_in_every_locale() {
+    use crate::widgets::label_fit_test_support::{assert_centred, assert_inside, run};
+    for locale in Locale::ALL {
+        let mut state = state_with(3);
+        state.editor_ui.locale = locale;
+        // Page 2 of 3: both paging buttons enabled.
+        state.editor_ui.whats_new.as_mut().unwrap().page = 1;
+        let modal = WhatsNewModal::for_editor(&state).unwrap();
+        let mut backend = fresh_backend();
+        let card = modal.measured_rect(1200.0, 800.0, &mut backend);
+        modal.paint(
+            &mut PaintCx {
+                backend: &mut backend,
+            },
+            card,
+        );
+        assert_eq!(modal.rect(1200.0, 800.0), card, "{locale:?}");
+        let what = format!("{locale:?}");
+        for (button, rect) in modal.button_rects(card) {
+            let label = run(&backend, modal.button_label(button), &what);
+            assert_inside(label, rect, 4.0, &what);
+            assert_centred(label, rect, &what);
+            let edge = Point2D::new(rect.origin.x + rect.size.x - 0.5, rect.origin.y + 1.0);
+            assert_eq!(modal.hit_test(card, edge), WhatsNewHit::Button(button), "{what}");
+        }
+    }
+}
+
+/// A button is exactly as wide as its painted label plus padding once the
+/// label outgrows the floor.
+#[test]
+fn a_long_label_grows_its_button() {
+    let mut state = state_with(3);
+    state.editor_ui.locale = Locale::De;
+    let modal = WhatsNewModal::for_editor(&state).unwrap();
+    let mut backend = fresh_backend();
+    let card = modal.measured_rect(1200.0, 800.0, &mut backend);
+    let mut grown = 0;
+    for (button, rect) in modal.button_rects(card) {
+        let label = measure_chrome(&mut backend, modal.button_label(button), BODY_SIZE);
+        let expected = (label + BUTTON_PAD_X * 2.0).max(BUTTON_MIN_W);
+        assert_eq!(rect.size.x, expected, "{button:?}");
+        grown += usize::from(expected > BUTTON_MIN_W);
+    }
+    assert!(grown > 0, "a label past the floor is under test");
 }

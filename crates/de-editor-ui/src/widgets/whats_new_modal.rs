@@ -6,12 +6,12 @@
 
 use crate::theme::Theme;
 use crate::widgets::editor_state_ext::{theme_for, translate};
-use crate::widgets::home_surface::estimate_width;
+use crate::widgets::label_widths::LabelWidths;
 use crate::widgets::line_break::wrap_lines;
 use crate::widgets::panel_controls::{paint_accent_button, paint_neutral_button, ButtonSpec};
-use crate::widgets::text_metrics::CHROME_FONT_FAMILY;
+use crate::widgets::text_metrics::{centered_text_x, measure_chrome, CHROME_FONT_FAMILY};
 use crate::widgets::{LayoutBox, LayoutCx, PaintCx, Widget, WidgetId};
-use crate::{Color, Point2D, Rect, TextLayout};
+use crate::{Color, Point2D, Rect, RenderBackend, TextLayout};
 use de_editor_core::editor_ui_state::{WhatsNewButton, WhatsNewState};
 use de_editor_core::release_notes::{note_for, ReleaseNote};
 use de_editor_core::text_wrap::wrap_text_measured;
@@ -82,17 +82,39 @@ impl<'a> WhatsNewModal<'a> {
     /// Centred card, as tall as the longest page so the buttons stay put
     /// while paging, and never taller than the viewport (the text is
     /// clipped above the buttons instead, which always stay reachable).
+    /// Wraps against the widths paint measured (`label_widths`, #440).
     pub fn rect(&self, viewport_w: f32, viewport_h: f32) -> Rect {
+        self.rect_with(viewport_w, viewport_h, &mut LabelWidths::cached())
+    }
+
+    /// [`Self::rect`], measuring the copy and the button labels through
+    /// `backend` where nothing measured them yet. Paint calls it, so the
+    /// backend-less [`Self::rect`] and [`Self::hit_test`] after it see the
+    /// card and the buttons paint drew.
+    pub fn measured_rect(
+        &self,
+        viewport_w: f32,
+        viewport_h: f32,
+        backend: &mut dyn RenderBackend,
+    ) -> Rect {
+        let mut widths = LabelWidths::measuring(backend);
+        let rect = self.rect_with(viewport_w, viewport_h, &mut widths);
+        self.button_rects_with(rect, &mut widths);
+        rect
+    }
+
+    fn rect_with(&self, viewport_w: f32, viewport_h: f32, widths: &mut LabelWidths<'_>) -> Rect {
         let w = CARD_W.min((viewport_w - VIEWPORT_MARGIN * 2.0).max(0.0));
         let inner_w = w - PAD * 2.0;
         let locale = self.ui.effective_locale();
+        let own = card_height(&self.lines(inner_w, widths));
         let tallest = self
             .state
             .versions
             .iter()
             .filter_map(|version| note_for(version, locale))
-            .map(|note| card_height(&lines_for(note, inner_w)))
-            .fold(card_height(&self.lines(inner_w)), f32::max);
+            .map(|note| card_height(&lines_for(note, inner_w, widths)))
+            .fold(own, f32::max);
         let h = tallest.min((viewport_h - VIEWPORT_MARGIN * 2.0).max(0.0));
         Rect {
             origin: Point2D::new(
@@ -103,16 +125,25 @@ impl<'a> WhatsNewModal<'a> {
         }
     }
 
-    fn lines(&self, inner_w: f32) -> PageLines {
-        lines_for(self.note, inner_w)
+    fn lines(&self, inner_w: f32, widths: &mut LabelWidths<'_>) -> PageLines {
+        lines_for(self.note, inner_w, widths)
     }
 
     /// Button rects along the card's bottom edge: the paging pair on the
-    /// left, "Got it" on the right.
+    /// left, "Got it" on the right. Each is as wide as its label as paint
+    /// measured it (with a floor).
     pub fn button_rects(&self, card: Rect) -> Vec<(WhatsNewButton, Rect)> {
+        self.button_rects_with(card, &mut LabelWidths::cached())
+    }
+
+    fn button_rects_with(
+        &self,
+        card: Rect,
+        widths: &mut LabelWidths<'_>,
+    ) -> Vec<(WhatsNewButton, Rect)> {
         let y = card.origin.y + card.size.y - PAD - BUTTON_H;
-        let width = |button| {
-            (estimate_width(self.button_label(button), BODY_SIZE) + BUTTON_PAD_X * 2.0)
+        let mut width = |button| {
+            (widths.chrome(self.button_label(button), BODY_SIZE) + BUTTON_PAD_X * 2.0)
                 .max(BUTTON_MIN_W)
         };
         let mut x = card.origin.x + PAD;
@@ -183,7 +214,7 @@ impl<'a> WhatsNewModal<'a> {
             cx.backend
                 .stroke_round_rect(rect, BUTTON_RADIUS, theme.border, 1.0);
             let label = spec.label;
-            let label_x = rect.origin.x + (rect.size.x - estimate_width(label, BODY_SIZE)) / 2.0;
+            let label_x = centered_text_x(cx.backend, label, BODY_SIZE, rect);
             let baseline = jian_widgets::centered_text_baseline_y(rect, BODY_SIZE);
             draw(
                 cx,
@@ -197,19 +228,19 @@ impl<'a> WhatsNewModal<'a> {
     }
 }
 
-fn lines_for(note: &ReleaseNote, inner_w: f32) -> PageLines {
+fn lines_for(note: &ReleaseNote, inner_w: f32, widths: &mut LabelWidths<'_>) -> PageLines {
     let item_w = inner_w - BULLET_INDENT;
     PageLines {
-        title: wrap(&note.title, inner_w, TITLE_SIZE),
+        title: wrap(&note.title, inner_w, TITLE_SIZE, widths),
         intro: note
             .intro
             .as_deref()
-            .map(|intro| wrap(intro, inner_w, BODY_SIZE))
+            .map(|intro| wrap(intro, inner_w, BODY_SIZE, widths))
             .unwrap_or_default(),
         items: note
             .items
             .iter()
-            .map(|item| wrap(item, item_w, BODY_SIZE))
+            .map(|item| wrap(item, item_w, BODY_SIZE, widths))
             .collect(),
     }
 }
@@ -228,15 +259,15 @@ fn card_height(lines: &PageLines) -> f32 {
     h + SECTION_GAP * 2.0 + BUTTON_H + PAD
 }
 
-/// Wrap against the layout-time width estimate, so hit-test (no backend)
-/// and paint agree on the card height. The canvas wrap breaks Latin at
-/// spaces and CJK between characters; a line it leaves too wide (Thai
-/// writes phrases without spaces) is broken again between clusters.
-fn wrap(text: &str, max_w: f32, size: f32) -> Vec<String> {
-    let mut measure = |s: &str| estimate_width(s, size);
-    wrap_text_measured(text, max_w, &mut measure)
+/// Wrap against the painted widths (`label_widths`), so hit-test (no
+/// backend) and paint agree on the card height. The canvas wrap breaks
+/// Latin at spaces and CJK between characters; a line it leaves too wide
+/// (Thai writes phrases without spaces) is broken again between clusters.
+fn wrap(text: &str, max_w: f32, size: f32, widths: &mut LabelWidths<'_>) -> Vec<String> {
+    let lines = wrap_text_measured(text, max_w, &mut |s: &str| widths.chrome(s, size));
+    lines
         .into_iter()
-        .flat_map(|line| wrap_lines(&line, max_w, |s| estimate_width(s, size)))
+        .flat_map(|line| wrap_lines(&line, max_w, |s| widths.chrome(s, size)))
         .collect()
 }
 
@@ -262,7 +293,7 @@ impl Widget for WhatsNewModal<'_> {
                 0.0,
                 0.0,
                 CARD_W,
-                card_height(&self.lines(CARD_W - PAD * 2.0)),
+                card_height(&self.lines(CARD_W - PAD * 2.0, &mut LabelWidths::cached())),
             ),
         }
     }
@@ -275,8 +306,13 @@ impl Widget for WhatsNewModal<'_> {
 
         let x = rect.origin.x + PAD;
         let inner_w = rect.size.x - PAD * 2.0;
-        let lines = self.lines(inner_w);
-        let buttons = self.button_rects(rect);
+        let (lines, buttons) = {
+            let mut widths = LabelWidths::measuring(&mut *cx.backend);
+            (
+                self.lines(inner_w, &mut widths),
+                self.button_rects_with(rect, &mut widths),
+            )
+        };
         // A card capped by a short viewport clips its text above the buttons.
         let text_bottom = rect.origin.y + rect.size.y - PAD - BUTTON_H - SECTION_GAP;
         cx.backend.save();
@@ -298,7 +334,7 @@ impl Widget for WhatsNewModal<'_> {
             y,
         );
         let version = self.version_label();
-        let version_x = x + inner_w - estimate_width(&version, EYEBROW_SIZE);
+        let version_x = x + inner_w - measure_chrome(cx.backend, &version, EYEBROW_SIZE);
         draw(
             cx,
             &version,

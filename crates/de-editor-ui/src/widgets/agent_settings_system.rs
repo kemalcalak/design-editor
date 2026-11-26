@@ -8,8 +8,9 @@
 //! language (`agent_settings_rows`), separated by hairlines.
 
 use crate::theme::Theme;
+use crate::widgets::label_widths::LabelWidths;
 use crate::widgets::agent_settings_detail_chrome::{
-    button_width_estimate, paint_button, ButtonKind,
+    button_width, paint_button, ButtonKind,
 };
 use crate::widgets::agent_settings_i18n::t as t_settings;
 use crate::widgets::agent_settings_metrics::CONTENT_TAIL_PAD;
@@ -259,10 +260,20 @@ fn update_button_face(ui: &EditorUiState) -> (&'static str, Icon) {
 }
 
 /// The row's Update / Restart / Check now button, between the row label
-/// and the switch.
+/// and the switch, as wide as paint measured its label (#440).
 fn row_button_rect(content: Rect, ui: &EditorUiState, button: RowButton) -> Rect {
+    row_button_rect_with(content, ui, button, &mut LabelWidths::cached())
+}
+
+fn row_button_rect_with(
+    content: Rect,
+    ui: &EditorUiState,
+    button: RowButton,
+    widths: &mut LabelWidths<'_>,
+) -> Rect {
     let switch = switch_rect_for(content, SystemRow::AutoUpdate);
-    let width = button_width_estimate(row_button_face(ui, button).0, true).max(ROW_BUTTON_MIN_W);
+    let label = row_button_face(ui, button).0;
+    let width = button_width(widths, label, true).max(ROW_BUTTON_MIN_W);
     Rect {
         origin: Point2D::new(
             switch.origin.x - ROW_BUTTON_GAP - width,
@@ -519,9 +530,14 @@ fn paint_auto_update_row(
 ) {
     let button = row_button(ui);
     let switch = switch_rect_for(content, SystemRow::AutoUpdate);
+    // Measured here, so the hit-test's backend-less rect is this one.
+    let button_rect = button.map(|button| {
+        let mut widths = LabelWidths::measuring(&mut *cx.backend);
+        (button, row_button_rect_with(content, ui, button, &mut widths))
+    });
     // Reserve from the leftmost control to the switch's right edge.
-    let controls_left = match button {
-        Some(button) => row_button_rect(content, ui, button).origin.x,
+    let controls_left = match button_rect {
+        Some((_, rect)) => rect.origin.x,
         None => switch.origin.x,
     };
     let control_w = switch.origin.x + switch.size.x - controls_left + 16.0;
@@ -540,12 +556,12 @@ fn paint_auto_update_row(
         _ => t_settings(ui, status_key).to_string(),
     };
     paint_row_status_line(cx, row, &status_text, color);
-    if let Some(button) = button {
+    if let Some((button, rect)) = button_rect {
         let (label, icon, kind) = row_button_face(ui, button);
         paint_button(
             cx,
             theme,
-            row_button_rect(content, ui, button),
+            rect,
             label,
             Some(icon),
             kind,

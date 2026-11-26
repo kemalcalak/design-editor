@@ -5,11 +5,11 @@
 
 use crate::theme::Theme;
 use crate::widgets::editor_state_ext::{theme_for, translate};
-use crate::widgets::home_surface::estimate_width;
+use crate::widgets::label_widths::LabelWidths;
 use crate::widgets::panel_controls::{paint_accent_button, paint_neutral_button, ButtonSpec};
 use crate::widgets::text_metrics::{fit_chrome, CHROME_FONT_FAMILY};
 use crate::widgets::{LayoutBox, LayoutCx, PaintCx, Widget, WidgetId};
-use crate::{Color, Point2D, Rect, TextLayout};
+use crate::{Color, Point2D, Rect, RenderBackend, TextLayout};
 use de_editor_core::editor_ui_state::{
     UpdateFailure, UpdateModalButton, UpdateModalState, UpdatePhase,
 };
@@ -65,9 +65,30 @@ impl<'a> UpdateModal<'a> {
 
     /// Centred card, as tall as this phase's content (#111 review: a fixed
     /// height left a hole under button-less phases and clipped long copy).
+    /// Wraps against the widths paint measured (`label_widths`, #440).
     pub fn rect(&self, viewport_w: f32, viewport_h: f32) -> Rect {
+        self.rect_with(viewport_w, viewport_h, &mut LabelWidths::cached())
+    }
+
+    /// [`Self::rect`], measuring the body copy and the button labels
+    /// through `backend` where nothing measured them yet. Paint calls it,
+    /// so the backend-less [`Self::rect`] and [`Self::hit_test`] see the
+    /// card and the buttons paint drew.
+    pub fn measured_rect(
+        &self,
+        viewport_w: f32,
+        viewport_h: f32,
+        backend: &mut dyn RenderBackend,
+    ) -> Rect {
+        let mut widths = LabelWidths::measuring(backend);
+        let rect = self.rect_with(viewport_w, viewport_h, &mut widths);
+        self.button_rects_with(rect, &mut widths);
+        rect
+    }
+
+    fn rect_with(&self, viewport_w: f32, viewport_h: f32, widths: &mut LabelWidths<'_>) -> Rect {
         let w = CARD_W.min((viewport_w - VIEWPORT_MARGIN * 2.0).max(0.0));
-        let h = self.card_height(w - PAD * 2.0);
+        let h = self.card_height(w - PAD * 2.0, widths);
         Rect {
             origin: Point2D::new(
                 ((viewport_w - w) / 2.0).max(VIEWPORT_MARGIN),
@@ -78,9 +99,9 @@ impl<'a> UpdateModal<'a> {
     }
 
     /// Paint and hit-test both walk this one stack, top to bottom.
-    fn card_height(&self, inner_w: f32) -> f32 {
+    fn card_height(&self, inner_w: f32, widths: &mut LabelWidths<'_>) -> f32 {
         let mut h = PAD + TITLE_SIZE + SECTION_GAP;
-        h += self.body_lines(inner_w).len() as f32 * LINE_H;
+        h += self.body_lines(inner_w, widths).len() as f32 * LINE_H;
         if self.modal.progress().is_some() {
             h += SECTION_GAP + BAR_H;
         }
@@ -94,16 +115,25 @@ impl<'a> UpdateModal<'a> {
     }
 
     /// Button rects, right-aligned along the card's bottom edge, in the
-    /// phase's paint order. Each is as wide as its label (with a floor);
-    /// a row that would overflow the card shares the space equally.
+    /// phase's paint order. Each is as wide as its label as paint measured
+    /// it (with a floor); a row that would overflow the card shares the
+    /// space equally.
     pub fn button_rects(&self, card: Rect) -> Vec<(UpdateModalButton, Rect)> {
+        self.button_rects_with(card, &mut LabelWidths::cached())
+    }
+
+    fn button_rects_with(
+        &self,
+        card: Rect,
+        widths: &mut LabelWidths<'_>,
+    ) -> Vec<(UpdateModalButton, Rect)> {
         let buttons = self.modal.buttons();
         let inner_w = card.size.x - PAD * 2.0;
         let gaps = BUTTON_GAP * buttons.len().saturating_sub(1) as f32;
         let mut widths: Vec<f32> = buttons
             .iter()
             .map(|b| {
-                (estimate_width(self.button_label(*b), BODY_SIZE) + BUTTON_PAD_X * 2.0)
+                (widths.chrome(self.button_label(*b), BODY_SIZE) + BUTTON_PAD_X * 2.0)
                     .max(BUTTON_MIN_W)
             })
             .collect();
@@ -128,11 +158,12 @@ impl<'a> UpdateModal<'a> {
         out
     }
 
-    /// Body copy wrapped to `inner_w`. Uses the layout-time width estimate
-    /// so hit-test (no backend) and paint agree on the card height, and no
-    /// text is shaped on the 10 Hz download repaint.
-    fn body_lines(&self, inner_w: f32) -> Vec<String> {
-        wrap_estimated(&self.body_text(), inner_w, BODY_SIZE)
+    /// Body copy wrapped to `inner_w` against the widths paint measured,
+    /// so hit-test (no backend) and paint agree on the card height; the
+    /// widths are kept, so no text is shaped again on the 10 Hz download
+    /// repaint.
+    fn body_lines(&self, inner_w: f32, widths: &mut LabelWidths<'_>) -> Vec<String> {
+        wrap_words(&self.body_text(), inner_w, BODY_SIZE, widths)
     }
 
     fn title(&self) -> String {
@@ -216,8 +247,8 @@ pub fn download_stats(received: u64, total: Option<u64>, bytes_per_sec: f64) -> 
     }
 }
 
-/// Greedy word wrap against the layout-time width estimate.
-fn wrap_estimated(text: &str, max_w: f32, size: f32) -> Vec<String> {
+/// Greedy word wrap against the painted widths.
+fn wrap_words(text: &str, max_w: f32, size: f32, widths: &mut LabelWidths<'_>) -> Vec<String> {
     let mut lines = Vec::new();
     let mut line = String::new();
     for word in text.split_whitespace() {
@@ -226,7 +257,7 @@ fn wrap_estimated(text: &str, max_w: f32, size: f32) -> Vec<String> {
         } else {
             format!("{line} {word}")
         };
-        if !line.is_empty() && estimate_width(&candidate, size) > max_w {
+        if !line.is_empty() && widths.chrome(&candidate, size) > max_w {
             lines.push(std::mem::replace(&mut line, word.to_string()));
         } else {
             line = candidate;
@@ -256,7 +287,12 @@ impl Widget for UpdateModal<'_> {
 
     fn layout(&self, _cx: &LayoutCx) -> LayoutBox {
         LayoutBox {
-            rect: Rect::xywh(0.0, 0.0, CARD_W, self.card_height(CARD_W - PAD * 2.0)),
+            rect: Rect::xywh(
+                0.0,
+                0.0,
+                CARD_W,
+                self.card_height(CARD_W - PAD * 2.0, &mut LabelWidths::cached()),
+            ),
         }
     }
 
@@ -277,7 +313,14 @@ impl Widget for UpdateModal<'_> {
             UpdatePhase::Failed(_) => theme.destructive,
             _ => theme.muted_foreground,
         };
-        for line in self.body_lines(inner_w) {
+        let (body, buttons) = {
+            let mut widths = LabelWidths::measuring(&mut *cx.backend);
+            (
+                self.body_lines(inner_w, &mut widths),
+                self.button_rects_with(rect, &mut widths),
+            )
+        };
+        for line in body {
             // Baseline sits a little above the line box's bottom.
             draw(cx, &line, BODY_SIZE, body_color, x, y + LINE_H - 5.0);
             y += LINE_H;
@@ -311,7 +354,7 @@ impl Widget for UpdateModal<'_> {
         }
 
         let primary = self.modal.primary();
-        for (button, button_rect) in self.button_rects(rect) {
+        for (button, button_rect) in buttons {
             let spec = ButtonSpec {
                 rect: button_rect,
                 radius: 8.0,
@@ -429,7 +472,7 @@ mod tests {
         assert_eq!(rects.len(), 3);
         assert!(rects[0].1.origin.x >= card.origin.x + PAD - 0.01);
         for (button, rect) in &rects {
-            let label_w = estimate_width(modal.button_label(*button), BODY_SIZE);
+            let label_w = LabelWidths::cached().chrome(modal.button_label(*button), BODY_SIZE);
             assert!(rect.size.x >= BUTTON_MIN_W.min(label_w), "{button:?}");
         }
     }
@@ -447,5 +490,68 @@ mod tests {
         let state = state_with(UpdatePhase::Installing);
         let modal = UpdateModal::for_editor(&state).unwrap();
         assert!(modal.button_rects(modal.rect(1200.0, 800.0)).is_empty());
+    }
+
+    /// Paint the way the host does (measure, then paint into that card)
+    /// and check, in every locale and every buttoned phase, that each
+    /// label is painted whole inside the box the backend-less hit-test
+    /// resolves, and that hit-test sees the card paint drew (#440).
+    #[test]
+    fn paint_and_hit_test_agree_in_every_locale() {
+        use crate::widgets::label_fit_test_support::{assert_inside, fresh_backend, run};
+        let phases = [
+            UpdatePhase::Offer,
+            UpdatePhase::ReadyToRestart,
+            UpdatePhase::Failed(UpdateFailure::Checksum),
+        ];
+        for locale in de_editor_core::Locale::ALL {
+            for phase in phases {
+                let mut state = state_with(phase);
+                state.editor_ui.locale = locale;
+                let modal = UpdateModal::for_editor(&state).unwrap();
+                let mut backend = fresh_backend();
+                let card = modal.measured_rect(1200.0, 800.0, &mut backend);
+                modal.paint(
+                    &mut PaintCx {
+                        backend: &mut backend,
+                    },
+                    card,
+                );
+                assert_eq!(modal.rect(1200.0, 800.0), card, "{locale:?}");
+                let what = format!("{locale:?} {phase:?}");
+                let rects = modal.button_rects(card);
+                // A row too wide for the card shares it equally and fits
+                // each label into its share; otherwise every label is whole.
+                let natural = rects
+                    .iter()
+                    .map(|(button, _)| {
+                        let label = LabelWidths::cached().chrome(modal.button_label(*button), BODY_SIZE);
+                        (label + BUTTON_PAD_X * 2.0).max(BUTTON_MIN_W) + BUTTON_GAP
+                    })
+                    .sum::<f32>()
+                    - BUTTON_GAP;
+                let shared = natural > card.size.x - PAD * 2.0 + 0.01;
+                for (button, rect) in rects {
+                    let inside = |r: &&crate::widgets::test_family_gap_backend::PaintedRun| {
+                        r.origin.x >= rect.origin.x
+                            && r.origin.x < rect.origin.x + rect.size.x
+                            && r.origin.y > rect.origin.y
+                            && r.origin.y < rect.origin.y + rect.size.y
+                    };
+                    let label = if shared {
+                        backend.runs.iter().find(inside).expect("a fitted label")
+                    } else {
+                        run(&backend, modal.button_label(button), &what)
+                    };
+                    assert_inside(label, rect, 4.0, &what);
+                    let edge = Point2D::new(rect.origin.x + rect.size.x - 0.5, rect.origin.y + 1.0);
+                    assert_eq!(
+                        modal.hit_test(card, edge),
+                        UpdateModalHit::Button(button),
+                        "{what}"
+                    );
+                }
+            }
+        }
     }
 }

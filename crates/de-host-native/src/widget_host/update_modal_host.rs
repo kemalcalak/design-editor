@@ -31,7 +31,9 @@ impl WidgetHostNative {
                 a: 0.5,
             },
         );
-        let rect = modal.rect(viewport_width, viewport_height);
+        // Measures the copy and button labels (only what nothing measured
+        // yet), so the backend-less press / hover see the card painted here.
+        let rect = modal.measured_rect(viewport_width, viewport_height, &mut *frame);
         let mut cx = PaintCx {
             backend: &mut *frame,
         };

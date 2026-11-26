@@ -205,7 +205,10 @@ impl WidgetHostNative {
         if self.editor_state.editor_ui.home.visible {
             let home =
                 de_editor_ui::widgets::HomeSurface::for_editor_at(&self.editor_state, self.now_ms)?;
-            return Some(home.focused_input_caret_rect(viewport_w, viewport_h));
+            // Measured in the face the composer paints its text in.
+            return Some(self.with_measure_only(|backend| {
+                home.focused_input_caret_rect(viewport_w, viewport_h, backend)
+            }));
         }
         let generate_configured = self
             .editor_state
