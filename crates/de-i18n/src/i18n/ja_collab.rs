@@ -582,6 +582,8 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.attach.tooLarge" => "{{name}} は添付の上限 5 MB を超えています",
         "chat.attach.readFailed" => "{{name}} を読み込めませんでした",
         "chat.attach.full" => "1 件のメッセージに添付できるのは 4 ファイルまでです",
+        "chat.mention.skill" => "スキル",
+        "chat.mention.noSkills" => "スキルがありません：.design-editor/skills に SKILL.md を追加してください",
         _ => return None,
     })
 }

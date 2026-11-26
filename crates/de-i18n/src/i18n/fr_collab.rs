@@ -582,6 +582,8 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.attach.tooLarge" => "{{name}} dépasse la limite de 5 Mo par pièce jointe",
         "chat.attach.readFailed" => "Impossible de lire {{name}}",
         "chat.attach.full" => "Un message peut contenir jusqu'à 4 fichiers",
+        "chat.mention.skill" => "Compétence",
+        "chat.mention.noSkills" => "Aucune compétence : ajoutez des fichiers SKILL.md dans .design-editor/skills",
         _ => return None,
     })
 }

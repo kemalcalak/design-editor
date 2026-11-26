@@ -6,20 +6,24 @@
 use std::path::Path;
 use std::sync::Arc;
 
+use de_editor_core::chat_mentions::SkillOption;
+
 use super::WidgetHostNative;
 
 impl WidgetHostNative {
     /// Bring the `@` popup in line with the chat draft, before painting.
     ///
     /// `project_root` is the open document's folder (`None` while unsaved);
-    /// a change of folder drops the old file list. When the popup has just
+    /// a change of folder drops the old file list. When an `@` popup has just
     /// opened, `scan` lists the folder again (files come and go while the
-    /// editor is open) and the rows are re-ranked against it. Returns true
-    /// when anything visible changed.
+    /// editor is open); when a `/` popup has, `scan_skills` reloads the skill
+    /// folders. The rows are then re-ranked. Returns true when anything
+    /// visible changed.
     pub fn sync_chat_mentions(
         &mut self,
         project_root: Option<&Path>,
         scan: &dyn Fn(&Path) -> Vec<String>,
+        scan_skills: &dyn Fn(Option<&Path>) -> Vec<SkillOption>,
     ) -> bool {
         let root = project_root.map(|p| p.to_string_lossy().into_owned());
         let files = &mut self.editor_state.chat.project_files;
@@ -33,6 +37,10 @@ impl WidgetHostNative {
                 self.editor_state.chat.project_files.files = Arc::from(scan(root));
                 changed |= self.editor_state.refresh_chat_mention_rows();
             }
+        }
+        if std::mem::take(&mut self.editor_state.chat.skills.rescan_requested) {
+            self.editor_state.chat.skills.skills = Arc::from(scan_skills(project_root));
+            changed |= self.editor_state.refresh_chat_mention_rows();
         }
         if changed {
             self.mark_dirty();
@@ -96,16 +104,33 @@ mod tests {
             assert_eq!(dir, Path::new("/project"));
             vec!["brief.md".to_string(), "logo.svg".to_string()]
         };
-        assert!(host.sync_chat_mentions(Some(root), &scan));
+        let no_skills = |_: Option<&Path>| Vec::new();
+        assert!(host.sync_chat_mentions(Some(root), &scan, &no_skills));
         assert_eq!(scans.get(), 1);
         let popup = host.editor_state().chat.mention_popup.as_ref().unwrap();
         assert_eq!(popup.rows[0].mention.label, "brief.md");
         // Nothing moved: no rescan, no repaint.
-        assert!(!host.sync_chat_mentions(Some(root), &scan));
+        assert!(!host.sync_chat_mentions(Some(root), &scan, &no_skills));
         assert_eq!(scans.get(), 1);
         // Another folder drops the old list.
-        host.sync_chat_mentions(None, &scan);
+        host.sync_chat_mentions(None, &scan, &no_skills);
         assert!(host.editor_state().chat.project_files.files.is_empty());
+    }
+
+    #[test]
+    fn sync_loads_skills_when_a_slash_popup_opens() {
+        let mut host = host_typing("/to");
+        let no_files = |_: &Path| Vec::new();
+        let skills = |root: Option<&Path>| {
+            assert_eq!(root, Some(Path::new("/project")));
+            vec![SkillOption {
+                name: "tone".into(),
+                description: "House tone".into(),
+            }]
+        };
+        assert!(host.sync_chat_mentions(Some(Path::new("/project")), &no_files, &skills));
+        let popup = host.editor_state().chat.mention_popup.as_ref().unwrap();
+        assert_eq!(popup.rows[0].mention.label, "tone");
     }
 
     #[test]

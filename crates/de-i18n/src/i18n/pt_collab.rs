@@ -582,6 +582,8 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.attach.tooLarge" => "{{name}} excede o limite de 5 MB por anexo",
         "chat.attach.readFailed" => "Não foi possível ler {{name}}",
         "chat.attach.full" => "Uma mensagem aceita até 4 arquivos",
+        "chat.mention.skill" => "Habilidade",
+        "chat.mention.noSkills" => "Nenhuma habilidade ainda: adicione arquivos SKILL.md em .design-editor/skills",
         _ => return None,
     })
 }

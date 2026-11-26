@@ -135,3 +135,34 @@ fn turn_context_resolves_documents_and_files_in_order() {
     assert!(unsaved.contains("unreadable — the document is not saved"));
     fs::remove_dir_all(&root).ok();
 }
+
+#[test]
+fn a_picked_skill_brings_its_instructions() {
+    use de_ai_skills::user_skills::SkillSource;
+    let dir = temp_project("skill");
+    fs::write(
+        dir.join("tone.md"),
+        "---\nname: tone\ndescription: House tone\n---\nWrite calmly.\n",
+    )
+    .unwrap();
+    let set = crate::chat_skill_context::load_chat_skills(&[(SkillSource::Project, dir.clone())]);
+    let skill = |name: &str| ChatMention {
+        kind: MentionKind::Skill,
+        key: name.into(),
+        label: name.into(),
+    };
+    let summaries = resolve_mentions_with(
+        &EditorState::default(),
+        &[skill("tone"), skill("gone")],
+        None,
+        Some(&set),
+    );
+    assert_eq!(
+        summaries[0].text.as_deref(),
+        Some("House tone\nWrite calmly.")
+    );
+    assert_eq!(summaries[1].text, None);
+    let block = de_editor_core::chat_mentions::context_block(&summaries);
+    assert!(block.contains("- /tone (skill): House tone\nWrite calmly."));
+    fs::remove_dir_all(&dir).ok();
+}

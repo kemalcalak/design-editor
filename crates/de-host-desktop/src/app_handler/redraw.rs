@@ -45,8 +45,9 @@ impl DesktopApp {
     /// epilogue, exactly as the inlined `return` did.
     pub(super) fn on_redraw_requested(&mut self, event_loop: &ActiveEventLoop) -> bool {
         crate::prompt_center_store::flush_user_prompts_if_dirty(&mut self.host);
-        // The chat's `@` popup (#398) follows the draft before this frame
-        // paints; opening it rescans the document's folder for files.
+        // The chat's `@` / `/` popup (#398) follows the draft before this
+        // frame paints; opening it rescans the document's folder for files
+        // (`@`) or the skill folders (`/`).
         let project_root = self
             .current_path
             .as_deref()
@@ -54,6 +55,7 @@ impl DesktopApp {
         if self.host.sync_chat_mentions(
             project_root,
             &de_host_services::chat_mention_context::scan_project_files,
+            &de_host_services::chat_skill_context::scan_chat_skills,
         ) {
             self.redraw_dirty = true;
         }

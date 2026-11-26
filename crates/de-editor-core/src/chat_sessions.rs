@@ -27,6 +27,8 @@ pub struct ChatSessions {
     /// Project-folder files the `@` popup offers (#398) — shared by every
     /// tab; see [`crate::chat_mentions::ProjectFiles`].
     pub project_files: crate::chat_mentions::ProjectFiles,
+    /// User skills the `/` popup offers (#398).
+    pub skills: crate::chat_mentions::ChatSkills,
 }
 
 impl Default for ChatSessions {
@@ -35,6 +37,7 @@ impl Default for ChatSessions {
             tabs: vec![ChatState::default()],
             active: 0,
             project_files: Default::default(),
+            skills: Default::default(),
         }
     }
 }

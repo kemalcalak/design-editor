@@ -11,6 +11,7 @@ use std::fs;
 use std::io::Read;
 use std::path::{Component, Path, PathBuf};
 
+use de_ai_skills::user_skills::UserSkillSet;
 use de_editor_core::chat_mentions::{
     context_block, summarize_document_mention, ChatMention, MentionKind, MentionSummary,
 };
@@ -171,11 +172,30 @@ pub fn summarize_project_file(root: &Path, rel: &str) -> Result<String, MentionF
     Ok(format!("text file, {size} bytes{more}:\n```\n{body}\n```"))
 }
 
-/// Resolve every mention of a turn, in order.
+/// Resolve every mention of a turn, in order. Skills are read from the
+/// project's and the user's skills folders (only when one was picked).
 pub fn resolve_mentions(
     state: &EditorState,
     mentions: &[ChatMention],
     project_root: Option<&Path>,
+) -> Vec<MentionSummary> {
+    let skills = mentions
+        .iter()
+        .any(|m| m.kind == MentionKind::Skill)
+        .then(|| {
+            crate::chat_skill_context::load_chat_skills(&crate::chat_skill_context::skill_folders(
+                project_root,
+            ))
+        });
+    resolve_mentions_with(state, mentions, project_root, skills.as_ref())
+}
+
+/// [`resolve_mentions`] against an already loaded skill set.
+pub fn resolve_mentions_with(
+    state: &EditorState,
+    mentions: &[ChatMention],
+    project_root: Option<&Path>,
+    skills: Option<&UserSkillSet>,
 ) -> Vec<MentionSummary> {
     mentions
         .iter()
@@ -185,6 +205,9 @@ pub fn resolve_mentions(
                     Some(root) => summarize_project_file(root, &mention.key)
                         .unwrap_or_else(|err| format!("unreadable — {err}")),
                     None => format!("unreadable — {}", MentionFileError::NoProjectFolder),
+                }),
+                MentionKind::Skill => skills.and_then(|set| {
+                    crate::chat_skill_context::skill_instructions(set, &mention.key)
                 }),
                 _ => summarize_document_mention(state, mention),
             };

@@ -1,6 +1,7 @@
-//! The chat composer's `@` popup (#398): ranked pages, layers,
-//! components, variables and project files, opening upward from the
-//! composer card while the caret ends an `@query`.
+//! The chat composer's `@` / `/` popup (#398): ranked pages, layers,
+//! components, variables and project files after `@`, user skills after
+//! `/`, opening upward from the composer card while the caret ends the
+//! token.
 //!
 //! The rows come from `de_editor_core::chat_mentions` (resolved once per
 //! query change, not per frame); this module owns only the geometry that
@@ -34,6 +35,7 @@ pub(crate) fn kind_icon(kind: MentionKind) -> Icon {
         MentionKind::Component => Icon::Component,
         MentionKind::Variable => Icon::Braces,
         MentionKind::File => Icon::FileText,
+        MentionKind::Skill => Icon::BookOpen,
     }
 }
 
@@ -94,7 +96,15 @@ pub(crate) fn paint_mention_popup(
         let row = row_rect(menu, 0);
         chat_label(
             cx,
-            de_i18n::translate(locale, "chat.mention.noMatches"),
+            // An empty `/` list says where skills come from.
+            de_i18n::translate(
+                locale,
+                if popup.trigger == de_editor_core::chat_mentions::SKILL_TRIGGER {
+                    "chat.mention.noSkills"
+                } else {
+                    "chat.mention.noMatches"
+                },
+            ),
             LABEL_FONT,
             palette.text_3,
             400,

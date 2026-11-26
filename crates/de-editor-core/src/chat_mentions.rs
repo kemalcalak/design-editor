@@ -30,8 +30,8 @@ mod tests;
 
 use std::sync::Arc;
 
-pub use candidates::{mention_candidates, MAX_MENTION_ROWS};
-pub use query::{active_mention_query, MentionQuery};
+pub use candidates::{mention_candidates, skill_candidates, MAX_MENTION_ROWS};
+pub use query::{active_mention_query, MentionQuery, MENTION_TRIGGER, SKILL_TRIGGER};
 pub use summary::{context_block, summarize_document_mention, MentionSummary};
 
 /// What a mention points at.
@@ -44,6 +44,9 @@ pub enum MentionKind {
     Variable,
     /// A file in the project folder (the open document's directory).
     File,
+    /// A user skill (`SKILL.md` in the project's `.design-editor/skills/`
+    /// or the user's skills folder), picked with `/`.
+    Skill,
 }
 
 impl MentionKind {
@@ -56,6 +59,7 @@ impl MentionKind {
             MentionKind::Component => "chat.mention.component",
             MentionKind::Variable => "chat.mention.variable",
             MentionKind::File => "chat.mention.file",
+            MentionKind::Skill => "chat.mention.skill",
         }
     }
 
@@ -68,6 +72,15 @@ impl MentionKind {
             MentionKind::Component => "component",
             MentionKind::Variable => "variable",
             MentionKind::File => "file",
+            MentionKind::Skill => "skill",
+        }
+    }
+
+    /// The character the draft writes before the label.
+    pub fn trigger(self) -> char {
+        match self {
+            MentionKind::Skill => SKILL_TRIGGER,
+            _ => MENTION_TRIGGER,
         }
     }
 }
@@ -85,17 +98,18 @@ pub struct ChatMention {
 }
 
 impl ChatMention {
-    /// The text this mention occupies in the draft, `@` included.
+    /// The text this mention occupies in the draft, trigger included
+    /// (`@Hero`, `/brand-voice`).
     pub fn token(&self) -> String {
-        format!("@{}", self.label)
+        let mut token = String::with_capacity(self.label.len() + 1);
+        token.push(self.kind.trigger());
+        token.push_str(&self.label);
+        token
     }
 
     /// Whether `text` still carries this mention's token.
     pub fn is_in(&self, text: &str) -> bool {
-        let mut token = String::with_capacity(self.label.len() + 1);
-        token.push('@');
-        token.push_str(&self.label);
-        text.contains(&token)
+        text.contains(&self.token())
     }
 }
 
@@ -108,16 +122,35 @@ pub struct MentionCandidate {
 }
 
 /// The open `@` popup for the active chat tab.
-#[derive(Debug, Clone, Default, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct MentionPopup {
-    /// Byte offset of the `@` in the draft.
+    /// Byte offset of the trigger in the draft.
     pub start: usize,
+    /// `@` (document items and files) or `/` (skills).
+    pub trigger: char,
     /// The text typed after the `@` (up to the caret).
     pub query: String,
     /// Ranked rows, at most [`MAX_MENTION_ROWS`].
     pub rows: Vec<MentionCandidate>,
     /// Keyboard / hover highlight into `rows`.
     pub highlight: usize,
+}
+
+/// One user skill the `/` popup offers: its name and one-line description.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct SkillOption {
+    pub name: String,
+    pub description: String,
+}
+
+/// The user skills the `/` popup offers, loaded by the host (project
+/// folder first, then the user's skills folder). Shared by every tab, on
+/// `ChatSessions`, like [`ProjectFiles`].
+#[derive(Debug, Clone, Default)]
+pub struct ChatSkills {
+    pub skills: Arc<[SkillOption]>,
+    /// Raised when a `/` popup opens, so the host reloads the folders.
+    pub rescan_requested: bool,
 }
 
 /// Files the `@` popup offers, scanned by the host from the project folder.

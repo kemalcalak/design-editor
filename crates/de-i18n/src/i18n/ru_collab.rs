@@ -582,6 +582,8 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.attach.tooLarge" => "{{name}} больше лимита вложения в 5 МБ",
         "chat.attach.readFailed" => "Не удалось прочитать {{name}}",
         "chat.attach.full" => "К сообщению можно прикрепить до 4 файлов",
+        "chat.mention.skill" => "Навык",
+        "chat.mention.noSkills" => "Навыков пока нет: добавьте файлы SKILL.md в .design-editor/skills",
         _ => return None,
     })
 }

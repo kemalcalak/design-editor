@@ -582,6 +582,8 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.attach.tooLarge" => "{{name}} vượt giới hạn đính kèm 5 MB",
         "chat.attach.readFailed" => "Không đọc được {{name}}",
         "chat.attach.full" => "Mỗi tin nhắn đính kèm tối đa 4 tệp",
+        "chat.mention.skill" => "Kỹ năng",
+        "chat.mention.noSkills" => "Chưa có kỹ năng: thêm tệp SKILL.md vào .design-editor/skills",
         _ => return None,
     })
 }

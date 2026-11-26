@@ -582,6 +582,8 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.attach.tooLarge" => "{{name}} 5 MB की अटैचमेंट सीमा से बड़ी है",
         "chat.attach.readFailed" => "{{name}} पढ़ी नहीं जा सकी",
         "chat.attach.full" => "एक संदेश में अधिकतम 4 फ़ाइलें हो सकती हैं",
+        "chat.mention.skill" => "स्किल",
+        "chat.mention.noSkills" => "अभी कोई स्किल नहीं: .design-editor/skills में SKILL.md फ़ाइलें जोड़ें",
         _ => return None,
     })
 }

@@ -582,6 +582,8 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.attach.tooLarge" => "{{name}} 5 MB ek sınırını aşıyor",
         "chat.attach.readFailed" => "{{name}} okunamadı",
         "chat.attach.full" => "Bir mesaja en fazla 4 dosya eklenebilir",
+        "chat.mention.skill" => "Beceri",
+        "chat.mention.noSkills" => "Henüz beceri yok: .design-editor/skills klasörüne SKILL.md dosyaları ekleyin",
         _ => return None,
     })
 }

@@ -582,6 +582,8 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.attach.tooLarge" => "{{name}} ใหญ่เกินขีดจำกัดไฟล์แนบ 5 MB",
         "chat.attach.readFailed" => "อ่าน {{name}} ไม่ได้",
         "chat.attach.full" => "แนบไฟล์ได้สูงสุด 4 ไฟล์ต่อข้อความ",
+        "chat.mention.skill" => "สกิล",
+        "chat.mention.noSkills" => "ยังไม่มีสกิล: เพิ่มไฟล์ SKILL.md ไว้ใน .design-editor/skills",
         _ => return None,
     })
 }

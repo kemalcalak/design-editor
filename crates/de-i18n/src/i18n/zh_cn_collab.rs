@@ -582,6 +582,8 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.attach.tooLarge" => "{{name}} 超过 5 MB 附件上限",
         "chat.attach.readFailed" => "无法读取 {{name}}",
         "chat.attach.full" => "每条消息最多附加 4 个文件",
+        "chat.mention.skill" => "技能",
+        "chat.mention.noSkills" => "还没有技能：将 SKILL.md 文件放入 .design-editor/skills",
         _ => return None,
     })
 }
