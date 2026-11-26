@@ -491,6 +491,10 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "path.offsetInward" => "पाथ को अंदर ऑफ़सेट करें",
         "path.simplify" => "पाथ सरल करें",
         "path.reverse" => "पाथ की दिशा उलटें",
+        "layerMenu.createComponentFromSimilar" => "कॉपी से कंपोनेंट",
+        "convertInstances.done" => "{{converted}} कॉपी अब एक कंपोनेंट के इंस्टेंस हैं",
+        "convertInstances.partial" => "{{converted}} कॉपी इंस्टेंस बनीं; {{skipped}} अलग हैं और वैसी ही छोड़ी गईं",
+        "convertInstances.failed" => "ये कॉपी एक कंपोनेंट साझा नहीं कर सकतीं",
         _ => return None,
     })
 }

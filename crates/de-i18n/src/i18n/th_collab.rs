@@ -491,6 +491,10 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "path.offsetInward" => "เลื่อนเส้นทางเข้าด้านใน",
         "path.simplify" => "ลดความซับซ้อนของเส้นทาง",
         "path.reverse" => "กลับทิศทางเส้นทาง",
+        "layerMenu.createComponentFromSimilar" => "คอมโพเนนต์จากสำเนา",
+        "convertInstances.done" => "สำเนา {{converted}} รายการเป็นอินสแตนซ์ของคอมโพเนนต์เดียวแล้ว",
+        "convertInstances.partial" => "{{converted}} รายการเป็นอินสแตนซ์แล้ว {{skipped}} รายการต่างกันจึงคงไว้",
+        "convertInstances.failed" => "สำเนาเหล่านี้ใช้คอมโพเนนต์ร่วมกันไม่ได้",
         _ => return None,
     })
 }

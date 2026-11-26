@@ -246,6 +246,14 @@ pub(super) fn rebuild_registry(
     register_tool!("swap_instance", de_mcp::swap_instance_snapshot(doc));
     register_tool!("list_instances", de_mcp::list_instances_snapshot(doc));
     register_tool!(
+        "find_repeated_structures",
+        de_mcp::find_repeated_structures_snapshot(doc)
+    );
+    register_tool!(
+        "convert_to_instances",
+        de_mcp::convert_to_instances_snapshot(doc)
+    );
+    register_tool!(
         "upsert_component_property",
         de_mcp::upsert_component_property_snapshot(doc)
     );

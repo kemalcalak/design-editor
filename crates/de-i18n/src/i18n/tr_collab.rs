@@ -491,6 +491,10 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "path.offsetInward" => "Yolu İçe Kaydır",
         "path.simplify" => "Yolu Sadeleştir",
         "path.reverse" => "Yol Yönünü Ters Çevir",
+        "layerMenu.createComponentFromSimilar" => "Kopyalardan bileşen",
+        "convertInstances.done" => "{{converted}} kopya artık tek bir bileşenin örneği",
+        "convertInstances.partial" => "{{converted}} kopya örnek oldu; {{skipped}} farklı olduğu için olduğu gibi bırakıldı",
+        "convertInstances.failed" => "Bu kopyalar tek bir bileşeni paylaşamıyor",
         _ => return None,
     })
 }

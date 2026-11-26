@@ -1,6 +1,9 @@
 use std::collections::{BTreeMap, BTreeSet};
 
-use de_design_lint::{detect_all, detect_default_layer_names, Issue};
+use de_design_lint::{
+    detect_all, detect_default_layer_names, FixProperty, Issue, IssueCategory, IssueSeverity,
+};
+use de_editor_core::repeated_structures::{find_repeated_structures, DEFAULT_MIN_NODES};
 use de_editor_core::{EditorState, PenNodeExt};
 use jian_ops_schema::node::PenNode;
 
@@ -59,6 +62,7 @@ pub fn lint_document_snapshot(state: &EditorState) -> LintDocument {
         collect_subtree_ids(root, &mut subtree_ids);
         issues.extend(lint_root(root, state));
     }
+    issues.extend(repeated_structure_issues(state));
     LintDocument {
         issues,
         subtree_ids,
@@ -88,4 +92,35 @@ fn collect_subtree_ids(
     }
     subtree_ids.insert(node.id_str().to_string(), ids.clone());
     ids
+}
+
+/// One `Info` finding per group of hand-built copies that could share a
+/// component (#369), on the group's first member; the fix is the
+/// `convert_to_instances` call. Never auto-applied (`Info`).
+fn repeated_structure_issues(state: &EditorState) -> Vec<Issue> {
+    find_repeated_structures(&state.doc, &state.components, None, DEFAULT_MIN_NODES)
+        .into_iter()
+        .map(|group| {
+            let ids: Vec<&str> = group.node_ids.iter().map(|id| id.as_str()).collect();
+            Issue {
+                node_id: ids[0].to_string(),
+                category: IssueCategory::RepeatedStructure,
+                severity: IssueSeverity::Info,
+                property: FixProperty::None,
+                current_value: serde_json::json!({
+                    "groupId": group.group_id,
+                    "nodeIds": ids,
+                    "nodesPerMember": group.nodes_per_member,
+                }),
+                suggested_value: serde_json::json!({
+                    "tool": "convert_to_instances",
+                    "arguments": {"groupId": group.group_id},
+                }),
+                reason: format!(
+                    "{} similar layers could share a component",
+                    group.node_ids.len()
+                ),
+            }
+        })
+        .collect()
 }

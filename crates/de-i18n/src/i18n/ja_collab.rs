@@ -491,6 +491,10 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "path.offsetInward" => "パスを内側にオフセット",
         "path.simplify" => "パスを単純化",
         "path.reverse" => "パスの方向を反転",
+        "layerMenu.createComponentFromSimilar" => "コピーから部品化",
+        "convertInstances.done" => "{{converted}} 個のコピーが同じコンポーネントのインスタンスになりました",
+        "convertInstances.partial" => "{{converted}} 個がインスタンスになりました。{{skipped}} 個は異なるためそのままです",
+        "convertInstances.failed" => "これらのコピーは同じコンポーネントにできません",
         _ => return None,
     })
 }

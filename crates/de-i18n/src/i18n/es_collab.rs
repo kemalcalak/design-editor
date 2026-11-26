@@ -491,6 +491,10 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "path.offsetInward" => "Desplazar trazado hacia dentro",
         "path.simplify" => "Simplificar trazado",
         "path.reverse" => "Invertir dirección del trazado",
+        "layerMenu.createComponentFromSimilar" => "Componente de copias",
+        "convertInstances.done" => "{{converted}} copias son ahora instancias de un componente",
+        "convertInstances.partial" => "{{converted}} copias son instancias; {{skipped}} son distintas y se dejaron igual",
+        "convertInstances.failed" => "Estas copias no pueden compartir un componente",
         _ => return None,
     })
 }

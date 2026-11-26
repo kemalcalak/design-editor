@@ -491,6 +491,10 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "path.offsetInward" => "Offset Path Inward",
         "path.simplify" => "Simplify Path",
         "path.reverse" => "Reverse Path Direction",
+        "layerMenu.createComponentFromSimilar" => "Component from copies",
+        "convertInstances.done" => "{{converted}} copies are now instances of one component",
+        "convertInstances.partial" => "{{converted}} copies are now instances; {{skipped}} differ and were left as they are",
+        "convertInstances.failed" => "These copies could not share one component",
         _ => return None,
     })
 }

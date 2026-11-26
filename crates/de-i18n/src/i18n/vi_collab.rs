@@ -491,6 +491,10 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "path.offsetInward" => "Dịch đường dẫn vào trong",
         "path.simplify" => "Đơn giản hóa đường dẫn",
         "path.reverse" => "Đảo hướng đường dẫn",
+        "layerMenu.createComponentFromSimilar" => "Thành phần từ bản sao",
+        "convertInstances.done" => "{{converted}} bản sao giờ là phiên bản của một thành phần",
+        "convertInstances.partial" => "{{converted}} bản sao đã thành phiên bản; {{skipped}} khác nên được giữ nguyên",
+        "convertInstances.failed" => "Các bản sao này không thể dùng chung một thành phần",
         _ => return None,
     })
 }

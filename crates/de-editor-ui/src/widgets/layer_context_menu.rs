@@ -21,7 +21,13 @@ use de_editor_core::editor_ui_state::{LayerContextMenuState, LayerContextTarget}
 use de_editor_core::EditorState;
 pub use jian_widgets::components::menu::MenuHit;
 
+/// The menu's usual width; [`LayerContextMenu::rect`] grows it only when a
+/// row's label (in the active locale) would run past it.
 pub const LAYER_CONTEXT_MENU_WIDTH: f32 = 168.0;
+/// Where a row's label starts (after the icon), and the room kept on its
+/// right.
+const LABEL_X: f32 = 40.0;
+const LABEL_RIGHT_PAD: f32 = 12.0;
 const ROW_HEIGHT: f32 = 32.0;
 const PAD_Y: f32 = 6.0;
 const ROW_FONT: f32 = 13.0;
@@ -50,6 +56,10 @@ pub enum LayerContextAction {
     /// Turn the selection's strokes into filled paths (Cmd+Shift+O).
     OutlineStroke,
     CreateComponent,
+    /// Turn the right-clicked frame and its structural copies (or the
+    /// multi-selection of copies) into one master plus instances (#369).
+    /// Shown only when there is something to convert.
+    CreateComponentFromSimilar,
     /// Shown instead of CreateComponent when the target is a reusable
     /// component — sheds the `reusable` flag (TS detach case 1).
     DetachComponent,
@@ -146,6 +156,12 @@ const LAYER_ROWS: &[Row] = &[
         destructive: false,
     },
     Row {
+        icon: Icon::Component,
+        action: LayerContextAction::CreateComponentFromSimilar,
+        label_key: "layerMenu.createComponentFromSimilar",
+        destructive: false,
+    },
+    Row {
         icon: Icon::Lock,
         action: LayerContextAction::ToggleLock,
         label_key: "layerMenu.toggleLock",
@@ -213,7 +229,7 @@ impl LayerContextMenu {
         let flatten_ok = super::align_toolbar::can_flatten(state);
         let outline_ok = super::align_toolbar::can_outline_stroke(state);
         let mut rows = match &menu.target {
-            LayerContextTarget::Layer(_) => LAYER_ROWS
+            LayerContextTarget::Layer(target) => LAYER_ROWS
                 .iter()
                 .copied()
                 .filter(|row| match row.action {
@@ -225,6 +241,9 @@ impl LayerContextMenu {
                     | LayerContextAction::BooleanExclude => boolean_ok,
                     LayerContextAction::Flatten => flatten_ok,
                     LayerContextAction::OutlineStroke => outline_ok,
+                    LayerContextAction::CreateComponentFromSimilar => {
+                        !state.similar_layer_ids(target).is_empty()
+                    }
                     _ => true,
                 })
                 .collect(),
@@ -290,11 +309,29 @@ impl LayerContextMenu {
         }
     }
 
+    /// [`LAYER_CONTEXT_MENU_WIDTH`], or wider when a row's label needs it
+    /// (by the chrome's text estimate, which errs wide; hit-test has no
+    /// backend to measure with).
+    pub fn width(&self) -> f32 {
+        self.rows
+            .iter()
+            .map(|row| {
+                LABEL_X
+                    + super::home_surface::estimate_width(
+                        de_i18n::translate(self.locale, row.label_key),
+                        ROW_FONT,
+                    )
+                    + LABEL_RIGHT_PAD
+            })
+            .fold(LAYER_CONTEXT_MENU_WIDTH, f32::max)
+            .ceil()
+    }
+
     pub fn rect(&self) -> Rect {
         Rect {
             origin: Point2D::new(self.state.anchor_x, self.state.anchor_y),
             size: Point2D::new(
-                LAYER_CONTEXT_MENU_WIDTH,
+                self.width(),
                 PAD_Y * 2.0 + self.rows.len() as f32 * ROW_HEIGHT,
             ),
         }
@@ -384,7 +421,7 @@ impl Widget for LayerContextMenu {
             );
             cx.backend.draw_text(
                 &label,
-                Point2D::new(row_rect.origin.x + 40.0, row_rect.origin.y + 21.0),
+                Point2D::new(row_rect.origin.x + LABEL_X, row_rect.origin.y + 21.0),
             );
             y += ROW_HEIGHT;
         }
@@ -395,3 +432,7 @@ impl Widget for LayerContextMenu {
         n
     }
 }
+
+#[cfg(test)]
+#[path = "layer_context_similar_tests.rs"]
+mod similar_tests;
