@@ -99,10 +99,19 @@ pub struct StrokeStyleSummary {
     pub cap: jian_ops_schema::style::StrokeCap,
     pub join: jian_ops_schema::style::StrokeJoin,
     pub dash: Option<de_editor_core::fills::StrokeDashPreset>,
+    /// What each end draws (#389): an unset end reads as the effective
+    /// `cap`, as `StrokeEnds::from_parts` resolves it.
+    pub start: jian_ops_schema::style::StrokeEndCap,
+    pub end: jian_ops_schema::style::StrokeEndCap,
+    /// Effective miter limit (absent = `DEFAULT_MITER_LIMIT`).
+    pub miter_limit: f32,
+    /// The stroke has ends to style: a line, or a path with an open
+    /// subpath. Only then does the panel show the Start / End rows.
+    pub open: bool,
 }
 
 pub(crate) fn stroke_style_summary(node: &PenNode) -> Option<StrokeStyleSummary> {
-    use jian_ops_schema::style::{StrokeCap, StrokeJoin};
+    use jian_ops_schema::style::{StrokeCap, StrokeEndCap, StrokeJoin};
     let fields = de_editor_core::fills::node_stroke_style(node)?;
     let width = de_editor_core::fills::node_stroke_width(node).unwrap_or(1.0) as f32;
     // What both backends draw for an unset cap / join while a style is
@@ -115,14 +124,44 @@ pub(crate) fn stroke_style_summary(node: &PenNode) -> Option<StrokeStyleSummary>
         }
         _ => (StrokeCap::None, StrokeJoin::Miter),
     };
+    let cap = fields.cap.unwrap_or(default_cap);
+    let cap_end = match cap {
+        StrokeCap::None => StrokeEndCap::None,
+        StrokeCap::Round => StrokeEndCap::Round,
+        StrokeCap::Square => StrokeEndCap::Square,
+    };
     Some(StrokeStyleSummary {
-        cap: fields.cap.unwrap_or(default_cap),
+        cap,
         join: fields.join.unwrap_or(default_join),
         dash: de_editor_core::fills::StrokeDashPreset::matching(
             fields.dash_pattern.as_deref(),
             width,
         ),
+        start: fields.stroke_start.unwrap_or(cap_end),
+        end: fields.stroke_end.unwrap_or(cap_end),
+        miter_limit: fields
+            .miter_limit
+            .unwrap_or(de_editor_core::fills::DEFAULT_MITER_LIMIT),
+        open: has_open_stroke(node),
     })
+}
+
+/// A line, or a path with at least one open subpath (#389): the strokes
+/// whose ends the canvas draws start / end shapes on.
+fn has_open_stroke(node: &PenNode) -> bool {
+    use de_editor_core::vector_edit::parse_path_data;
+    match node {
+        PenNode::Line(_) => true,
+        PenNode::Path(path) => match path.anchors.as_ref().filter(|a| !a.is_empty()) {
+            Some(anchors) => !path.closed.unwrap_or(false) && anchors.len() >= 2,
+            None => path
+                .d
+                .as_deref()
+                .and_then(parse_path_data)
+                .is_some_and(|subs| subs.iter().any(|s| !s.closed && s.anchors.len() >= 2)),
+        },
+        _ => false,
+    }
 }
 
 /// Wrap / grid values the Auto layout section shows (#379).

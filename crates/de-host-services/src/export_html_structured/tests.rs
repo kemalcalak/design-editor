@@ -442,6 +442,30 @@ fn a_line_node_becomes_an_svg_segment_in_absolute_doc_coordinates() {
 }
 
 #[test]
+fn a_line_with_an_arrowhead_inlines_the_stroke_geometry_with_its_flip() {
+    let mut node = SceneNode::leaf("l", NodeKind::Line);
+    node.bounds = Rect::xywh(10.0, 10.0, 80.0, 40.0);
+    node.flip_x = true;
+    node.stroke = Some(black_stroke(2.0, None, SceneStrokeAlign::Center));
+    node.stroke_geometry = Some(std::sync::Arc::new(
+        de_editor_ui::layout_scene::SceneStrokeGeometry {
+            stroke_d: "M 0 0 L 70 35".into(),
+            fill_d: "M 80 40 L 70 30 L 66 38 Z".into(),
+            arms_d: String::new(),
+        },
+    ));
+
+    let body = body_of(board(vec![node]));
+
+    assert!(!body.contains("<line"), "{body}");
+    assert!(body.contains(r#"d="M 80 40 L 70 30 L 66 38 Z""#), "{body}");
+    assert!(
+        body.contains(r#"transform="matrix(-1 0 0 1 90 10)""#),
+        "{body}"
+    );
+}
+
+#[test]
 fn a_horizontal_line_still_gets_a_renderable_svg_viewport() {
     let mut node = SceneNode::leaf("l", NodeKind::Line);
     node.bounds = Rect::xywh(0.0, 20.0, 100.0, 0.0);

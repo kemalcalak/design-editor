@@ -539,6 +539,18 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "clipboard.copiedPng" => "Disalin sebagai PNG",
         "clipboard.copiedSvg" => "Disalin sebagai SVG",
         "clipboard.copyFailed" => "Tidak dapat menyalin pilihan",
+        "stroke.start" => "Awal",
+        "stroke.end" => "Akhir",
+        "stroke.miter" => "Miter",
+        "stroke.swapEnds" => "Tukar ujung",
+        "stroke.endNone" => "Tidak ada",
+        "stroke.endRound" => "Bulat",
+        "stroke.endSquare" => "Persegi",
+        "stroke.endLineArrow" => "Panah garis",
+        "stroke.endTriangleArrow" => "Panah segitiga",
+        "stroke.endReversedTriangle" => "Segitiga terbalik",
+        "stroke.endCircle" => "Lingkaran",
+        "stroke.endDiamond" => "Belah ketupat",
         _ => return None,
     })
 }

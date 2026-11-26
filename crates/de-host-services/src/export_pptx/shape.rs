@@ -333,4 +333,27 @@ mod tests {
             "{out}"
         );
     }
+
+    #[test]
+    fn a_line_with_arrowheads_writes_head_and_tail_ends() {
+        use de_editor_ui::layout_scene::{StrokeEnd, StrokeStyle};
+        let mut n = SceneNode::leaf("l1", NodeKind::Line);
+        n.bounds = Rect::xywh(0.0, 0.0, 80.0, 0.0);
+        n.stroke = Some(SceneStroke {
+            color: Color::BLACK,
+            width: 2.0,
+            sides: None,
+            align: SceneStrokeAlign::Center,
+            style: StrokeStyle {
+                start: Some(StrokeEnd::Diamond),
+                end: Some(StrokeEnd::LineArrow),
+                ..StrokeStyle::default()
+            },
+        });
+        let mut out = String::new();
+        let mut id = 2;
+        emit_line(&mut out, &n, Point2D::new(0.0, 0.0), 1.0, &mut id);
+        assert!(out.contains("<a:headEnd type=\"diamond\""), "{out}");
+        assert!(out.contains("<a:tailEnd type=\"arrow\""), "{out}");
+    }
 }

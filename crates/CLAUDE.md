@@ -617,6 +617,42 @@ One modal, two modes. State and every transition live in `de-editor-core/src/com
   (`property_panel_path_ops.rs`); the layer menu adds Flatten and Outline
   stroke; the layer row shows a boolean group's op icon.
 
+## Stroke ends and miter limit (#389)
+
+- **Schema** (kemalcalak/jian#30): `PenStroke.strokeStart` / `strokeEnd`
+  (`StrokeEndCap`: none · round · square · line_arrow · triangle_arrow ·
+  reversed_triangle · circle · diamond; an unset end uses `cap`, an absent
+  cap on an open stroke is round) and `miterLimit` (absent = 4). They ride
+  through `StrokePayload` onto jian's render `StrokeStyle` (`start` / `end`
+  / `miter_limit`, `fills::with_stroke_shape`); backends apply only the
+  miter limit (`backend/skia/stroke_style.rs`).
+- **Geometry** is built once per scene, never per frame:
+  `de_editor_core::stroke_geometry::stroke_end_geometry` turns a line's
+  diagonal or an open path's subpaths into three SVG strings in node-local
+  doc px — the centre line trimmed under filled heads, the filled end
+  shapes, the line-arrow arms (`head_length(w) = 4 + 3w`, tip on the end
+  point) — and the scene builder stores them on
+  `SceneNode::stroke_geometry` (`de-pen-loader/src/layout_scene/stroke_geometry.rs`;
+  a `d` path is fitted to its box like `fit_path_to_rect`). Closed shapes
+  have no ends.
+- **Paint / exports**: the canvas draws the geometry instead of the plain
+  stroke (`canvas_viewport_stroke_paint::paint_stroke_geometry`: centre line
+  with butt caps and the authored join / dash, `fill_svg_path` heads, mitred
+  undashed arms; rich stroke paints mask it like any stroke), so PNG / PDF
+  match. SVG and the structured HTML export write the same three paths
+  (`svg_export::write_stroke_geometry`), as paths rather than `<marker>`s
+  because Figma's SVG import drops markers; SVG writes
+  `stroke-miterlimit` and SVG import reads it. PPTX writes the line's
+  `cap`, join / `<a:miter lim>` and `<a:headEnd>` / `<a:tailEnd>`
+  (`export_pptx/line_style.rs`); a reversed triangle or different caps on
+  the two ends rasters the line (`unexpressible`).
+- **Panel**: Start / End rows (dropdowns on the shared Interactions popover,
+  `InteractionMenuTarget::StrokeEnd`, plus a swap button) on lines and open
+  paths, and a Miter field while the join is miter
+  (`property_panel_stroke_ends.rs`, `PropertyFocus::StrokeMiterLimit`).
+  MCP: `set_node_stroke_style` takes `stroke_start`, `stroke_end`,
+  `miter_limit`.
+
 ## Canonical `.de` loader (v0.8.0+)
 
 The document extension is `.de`; `.op` and the old `.pen` alias no longer open. pen.dev `.pen` files are an import only: they open as an untitled document and are never written back.

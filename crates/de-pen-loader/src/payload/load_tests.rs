@@ -101,7 +101,11 @@ fn ids(nodes: &[PenNode]) -> Vec<&str> {
 fn load_canonical_accepts_5000_deep_visible_frame_tree() {
     std::thread::Builder::new()
         .name("deep-loader-test".into())
-        .stack_size(512 * 1024 * 1024)
+        // Debug builds spend ~100 KiB of stack per level in serde's buffered
+        // `Content` path for the tagged node enum, and since the stroke and
+        // corner fields of #389 5,000 levels need more than 512 MiB. The
+        // stack is reserved, not committed, so the headroom costs nothing.
+        .stack_size(1024 * 1024 * 1024)
         .spawn(|| {
             let loaded = load_canonical(&nested_frame_doc(5_000)).expect("deep document loads");
             assert_eq!(max_depth(&loaded.value.children), 5_000);

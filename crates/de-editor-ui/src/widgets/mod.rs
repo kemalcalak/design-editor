@@ -156,6 +156,9 @@ pub(crate) mod property_panel_segments;
 pub mod property_panel_shader_body;
 pub mod property_panel_snapshot;
 pub mod property_panel_stroke;
+pub(crate) mod property_panel_stroke_ends;
+#[cfg(test)]
+mod property_panel_stroke_ends_tests;
 pub(crate) mod property_panel_stroke_style;
 #[cfg(test)]
 mod property_panel_stroke_style_tests;

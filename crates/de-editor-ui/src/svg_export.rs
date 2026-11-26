@@ -583,3 +583,7 @@ mod tests;
 #[cfg(test)]
 #[path = "svg_export_layer_tests.rs"]
 mod layer_tests;
+
+#[cfg(test)]
+#[path = "svg_export_stroke_ends_tests.rs"]
+mod stroke_ends_tests;

@@ -539,6 +539,18 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "clipboard.copiedPng" => "คัดลอกเป็น PNG แล้ว",
         "clipboard.copiedSvg" => "คัดลอกเป็น SVG แล้ว",
         "clipboard.copyFailed" => "คัดลอกรายการที่เลือกไม่ได้",
+        "stroke.start" => "ต้น",
+        "stroke.end" => "ปลาย",
+        "stroke.miter" => "มุมตัด",
+        "stroke.swapEnds" => "สลับปลาย",
+        "stroke.endNone" => "ไม่มี",
+        "stroke.endRound" => "มน",
+        "stroke.endSquare" => "เหลี่ยม",
+        "stroke.endLineArrow" => "ลูกศรเส้น",
+        "stroke.endTriangleArrow" => "ลูกศรสามเหลี่ยม",
+        "stroke.endReversedTriangle" => "สามเหลี่ยมกลับ",
+        "stroke.endCircle" => "วงกลม",
+        "stroke.endDiamond" => "ข้าวหลามตัด",
         _ => return None,
     })
 }

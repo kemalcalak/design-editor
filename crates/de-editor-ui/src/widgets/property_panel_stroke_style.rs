@@ -1,20 +1,26 @@
 //! The Stroke section's style rows, under the colour / width rows: the
-//! Inside / Center / Outside alignment row (#90), then the Cap, Join and
-//! Dash rows (#89). Add a row here, grow [`stroke_style_rows_height`],
-//! and emit its rects from [`push_stroke_style_action_rects`]; every
-//! y-walk already reads the section height from `property_panel_stroke`.
+//! Inside / Center / Outside alignment row (#90), the Cap, Join and Dash
+//! rows (#89), then the Start / End rows of an open stroke and the Miter
+//! field (#389, `property_panel_stroke_ends`). Add a row here, grow
+//! [`stroke_style_rows_height`], and emit its rects from
+//! [`push_stroke_style_action_rects`] / [`stroke_style_input_rects`];
+//! every y-walk already reads the section height from
+//! `property_panel_stroke`.
 
 use crate::layout_scene::SceneStrokeAlign;
 use crate::theme::Theme;
 use crate::widgets::property_panel::NodeSnapshot;
 use crate::widgets::property_panel_action::PropertyPanelAction;
 use crate::widgets::property_panel_inputs::{INPUT_HEIGHT, INPUT_TEXT_BASELINE, PAD_X};
-use crate::widgets::property_panel_sections::PropertyLabels;
+use crate::widgets::property_panel_sections::{EditContext, PropertyLabels};
 use crate::widgets::property_panel_segments::{paint_segment_row, segment_rects};
+use crate::widgets::property_panel_stroke::StrokeStyleRows;
+use crate::widgets::property_panel_stroke_ends as ends;
 use crate::widgets::text_metrics;
 use crate::widgets::PaintCx;
 use crate::{Point2D, Rect, TextLayout};
 use de_editor_core::fills::{StrokeDashPreset, StrokeStyleEdit};
+use de_editor_core::PropertyFocus;
 use jian_ops_schema::style::{StrokeAlign, StrokeCap, StrokeJoin};
 
 /// Gap between the rows above and the first style row.
@@ -50,10 +56,27 @@ const STYLE_ROWS: [StyleRow; 3] = [StyleRow::Cap, StyleRow::Join, StyleRow::Dash
 
 /// Height the style rows add to the Stroke body. The Cap / Join / Dash
 /// rows (`styled`) only show once the node has a stroke: they style an
-/// existing stroke and nothing else.
-pub(crate) fn stroke_style_rows_height(styled: bool) -> f32 {
-    let labelled = if styled { STYLE_ROWS.len() as f32 } else { 0.0 };
+/// existing stroke and nothing else; Start / End and Miter follow
+/// [`StrokeStyleRows`].
+pub(crate) fn stroke_style_rows_height(rows: StrokeStyleRows) -> f32 {
+    let labelled = labelled_rows(rows) as f32;
     STYLE_ROWS_TOP_GAP + INPUT_HEIGHT + labelled * (STYLE_ROW_GAP + INPUT_HEIGHT)
+}
+
+/// How many rows follow the alignment row.
+fn labelled_rows(rows: StrokeStyleRows) -> usize {
+    if !rows.styled {
+        return 0;
+    }
+    STYLE_ROWS.len() + if rows.ends { 2 } else { 0 } + usize::from(rows.miter)
+}
+
+/// Row index of the Start row (End follows it), after Cap / Join / Dash.
+const START_ROW: usize = 1 + STYLE_ROWS.len();
+
+/// Row index of the Miter row, under the end rows when they show.
+fn miter_row(rows: StrokeStyleRows) -> usize {
+    START_ROW + if rows.ends { 2 } else { 0 }
 }
 
 /// Row `index` (0 = alignment), given the y where the style rows start.
@@ -89,13 +112,13 @@ pub(crate) fn push_stroke_style_action_rects(
     x: f32,
     top: f32,
     width: f32,
-    styled: bool,
+    rows: StrokeStyleRows,
 ) {
     let cells = segment_rects(row_rect(x, top, width, 0), STROKE_ALIGNS.len());
     for (align, cell) in STROKE_ALIGNS.iter().zip(cells) {
         out.push((PropertyPanelAction::SetStrokeAlign(align.clone()), cell));
     }
-    if !styled {
+    if !rows.styled {
         return;
     }
     for (i, row) in STYLE_ROWS.into_iter().enumerate() {
@@ -106,15 +129,40 @@ pub(crate) fn push_stroke_style_action_rects(
             out.push((PropertyPanelAction::SetStrokeStyle(edit), cell));
         }
     }
+    if rows.ends {
+        ends::push_end_action_rects(
+            out,
+            row_rect(x, top, width, START_ROW),
+            row_rect(x, top, width, START_ROW + 1),
+        );
+    }
+}
+
+/// The Miter field's rect while it shows (#389).
+pub(crate) fn stroke_style_input_rects(
+    x: f32,
+    top: f32,
+    width: f32,
+    rows: StrokeStyleRows,
+) -> Vec<(PropertyFocus, Rect)> {
+    if !(rows.styled && rows.miter) {
+        return Vec::new();
+    }
+    vec![(
+        PropertyFocus::StrokeMiterLimit,
+        ends::miter_input_rect(row_rect(x, top, width, miter_row(rows))),
+    )]
 }
 
 /// Paint the style rows. A node without a stroke shows no active cell:
 /// the style only applies once a stroke exists.
+#[allow(clippy::too_many_arguments)]
 pub(crate) fn paint_stroke_style_rows(
     cx: &mut PaintCx<'_>,
     theme: &Theme,
     labels: &PropertyLabels,
     snapshot: &NodeSnapshot,
+    edit: &EditContext<'_>,
     x: f32,
     top: f32,
     width: f32,
@@ -177,7 +225,7 @@ pub(crate) fn paint_stroke_style_rows(
             ),
         };
         let row_rect = row_rect(x, top, width, i + 1);
-        paint_row_label(cx, theme, label, row_rect);
+        paint_row_label(cx, theme, label, row_rect, ROW_LABEL_W);
         paint_segment_row(
             cx,
             theme,
@@ -187,10 +235,32 @@ pub(crate) fn paint_stroke_style_rows(
             LABEL_FONT_SIZE,
         );
     }
+    let rows = StrokeStyleRows::of(snapshot);
+    if rows.ends {
+        ends::paint_end_rows(
+            cx,
+            theme,
+            labels,
+            snapshot,
+            row_rect(x, top, width, START_ROW),
+            row_rect(x, top, width, START_ROW + 1),
+        );
+    }
+    if rows.miter {
+        let row = row_rect(x, top, width, miter_row(rows));
+        ends::paint_miter_row(cx, theme, labels, snapshot, edit, row);
+    }
 }
 
-fn paint_row_label(cx: &mut PaintCx<'_>, theme: &Theme, label: &str, row: Rect) {
-    let fitted = text_metrics::fit_chrome(cx.backend, label, ROW_LABEL_W - 6.0, LABEL_FONT_SIZE);
+/// A row's muted label, fitted into its `label_w` column.
+pub(crate) fn paint_row_label(
+    cx: &mut PaintCx<'_>,
+    theme: &Theme,
+    label: &str,
+    row: Rect,
+    label_w: f32,
+) {
+    let fitted = text_metrics::fit_chrome(cx.backend, label, label_w - 6.0, LABEL_FONT_SIZE);
     let layout = TextLayout::single_run(
         &fitted,
         text_metrics::CHROME_FONT_FAMILY,

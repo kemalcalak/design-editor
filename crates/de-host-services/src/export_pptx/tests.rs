@@ -483,3 +483,28 @@ fn outlined_text_writes_a_run_outline_before_its_fill() {
     assert!(ln < fill, "a:ln precedes the fill: {r_pr}");
     assert!(r_pr.contains("FF00FF"), "{r_pr}");
 }
+
+#[test]
+fn a_line_end_drawingml_cannot_spell_takes_the_raster_path() {
+    use de_editor_ui::layout_scene::{SceneStroke, SceneStrokeAlign, StrokeEnd, StrokeStyle};
+    use de_editor_ui::Color;
+    let mut line = SceneNode::leaf("l", NodeKind::Line);
+    line.bounds = Rect::xywh(0.0, 0.0, 80.0, 0.0);
+    let stroke = |end| SceneStroke {
+        color: Color::BLACK,
+        width: 2.0,
+        sides: None,
+        align: SceneStrokeAlign::Center,
+        style: StrokeStyle {
+            end: Some(end),
+            ..StrokeStyle::default()
+        },
+    };
+    line.stroke = Some(stroke(StrokeEnd::TriangleArrow));
+    assert_eq!(unexpressible(&line, false), None);
+    line.stroke = Some(stroke(StrokeEnd::ReversedTriangle));
+    assert_eq!(
+        unexpressible(&line, false),
+        Some("reversed triangle line end")
+    );
+}

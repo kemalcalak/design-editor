@@ -147,3 +147,45 @@ fn parse_dash_pattern(raw: &str) -> Result<Vec<f32>, ToolOutcome> {
         })
         .collect()
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn args(pairs: &[(&str, &str)]) -> BTreeMap<String, String> {
+        pairs
+            .iter()
+            .map(|(k, v)| (k.to_string(), v.to_string()))
+            .collect()
+    }
+
+    #[test]
+    fn ends_and_miter_limit_parse_and_spellings_are_forgiving() {
+        let style = parse_stroke_style_args(&args(&[
+            ("stroke_start", "Reversed-Triangle"),
+            ("stroke_end", "butt"),
+            ("miter_limit", "10"),
+        ]))
+        .expect("style");
+        assert_eq!(style.stroke_start, Some(StrokeEndCap::ReversedTriangle));
+        assert_eq!(style.stroke_end, Some(StrokeEndCap::None));
+        assert_eq!(style.miter_limit, Some(10.0));
+    }
+
+    #[test]
+    fn bad_ends_and_limits_are_refused_with_the_allowed_names() {
+        let Err(ToolOutcome::Err(code, message)) =
+            parse_stroke_style_args(&args(&[("stroke_end", "arrow")]))
+        else {
+            panic!("unknown end accepted");
+        };
+        assert_eq!(code, ToolErrorCode::InvalidArgument);
+        assert!(message.contains("triangle_arrow"), "{message}");
+        for limit in ["0.5", "101", "nan"] {
+            assert!(
+                parse_stroke_style_args(&args(&[("miter_limit", limit)])).is_err(),
+                "{limit}"
+            );
+        }
+    }
+}

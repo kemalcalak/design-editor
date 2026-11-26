@@ -539,6 +539,18 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "clipboard.copiedPng" => "已复制为 PNG",
         "clipboard.copiedSvg" => "已复制为 SVG",
         "clipboard.copyFailed" => "无法复制所选内容",
+        "stroke.start" => "起点",
+        "stroke.end" => "终点",
+        "stroke.miter" => "斜接",
+        "stroke.swapEnds" => "交换两端",
+        "stroke.endNone" => "无",
+        "stroke.endRound" => "圆形",
+        "stroke.endSquare" => "方形",
+        "stroke.endLineArrow" => "线条箭头",
+        "stroke.endTriangleArrow" => "三角箭头",
+        "stroke.endReversedTriangle" => "倒三角",
+        "stroke.endCircle" => "圆点",
+        "stroke.endDiamond" => "菱形",
         _ => return None,
     })
 }

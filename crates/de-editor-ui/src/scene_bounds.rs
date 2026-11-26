@@ -91,7 +91,16 @@ fn has_own_paint(n: &SceneNode, rules: PaintCornerRules) -> bool {
 /// Frame/Other contribute only when a counted paint source is set (see
 /// [`PaintCornerRules`]); Path with empty `points` is invisible.
 pub fn own_paint_corners(n: &SceneNode, rules: PaintCornerRules) -> Option<Vec<glam::Vec2>> {
-    let stroke_pad = n.stroke.map(|s| s.width * 0.5).unwrap_or(0.0);
+    let stroke_pad = n
+        .stroke
+        .map(|s| {
+            if n.stroke_geometry.is_some() {
+                stroke_end_reach(s.width)
+            } else {
+                s.width * 0.5
+            }
+        })
+        .unwrap_or(0.0);
     let (x0, y0, x1, y1) = match &n.kind {
         NodeKind::Rect | NodeKind::Ellipse | NodeKind::Polygon | NodeKind::Line => {
             let nr = normalize_rect(n.bounds);
@@ -201,4 +210,11 @@ pub fn own_paint_corners(n: &SceneNode, rules: PaintCornerRules) -> Option<Vec<g
         glam::Vec2::new(x1 + stroke_pad, y1 + stroke_pad),
         glam::Vec2::new(x0 - stroke_pad, y1 + stroke_pad),
     ])
+}
+
+/// How far past a line's end points its end shapes reach (#389): half a
+/// head across the line, plus the stroke width for caps and mitres.
+pub fn stroke_end_reach(width: f32) -> f32 {
+    let head = de_editor_core::stroke_geometry::head_length(f64::from(width.max(0.0))) as f32;
+    head * 0.5 + width
 }

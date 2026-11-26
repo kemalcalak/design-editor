@@ -539,6 +539,18 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "clipboard.copiedPng" => "Đã sao chép dạng PNG",
         "clipboard.copiedSvg" => "Đã sao chép dạng SVG",
         "clipboard.copyFailed" => "Không thể sao chép vùng chọn",
+        "stroke.start" => "Đầu",
+        "stroke.end" => "Cuối",
+        "stroke.miter" => "Góc vát",
+        "stroke.swapEnds" => "Đổi hai đầu",
+        "stroke.endNone" => "Không",
+        "stroke.endRound" => "Tròn",
+        "stroke.endSquare" => "Vuông",
+        "stroke.endLineArrow" => "Mũi tên đường",
+        "stroke.endTriangleArrow" => "Mũi tên tam giác",
+        "stroke.endReversedTriangle" => "Tam giác ngược",
+        "stroke.endCircle" => "Hình tròn",
+        "stroke.endDiamond" => "Hình thoi",
         _ => return None,
     })
 }

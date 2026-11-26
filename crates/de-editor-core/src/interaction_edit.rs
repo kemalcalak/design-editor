@@ -134,6 +134,9 @@ pub enum InteractionMenuTarget {
         trigger: InteractionTrigger,
         swap: bool,
     },
+    /// The end shapes of the Stroke section's Start (`end: false`) or End
+    /// (`end: true`) dropdown on an open stroke (#389).
+    StrokeEnd { end: bool },
 }
 
 /// The action an Interactions edit writes.

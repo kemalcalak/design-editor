@@ -365,3 +365,7 @@ fn paint_sided_rect_stroke(
 #[cfg(test)]
 #[path = "canvas_viewport_stroke_paint_tests.rs"]
 mod tests;
+
+#[cfg(test)]
+#[path = "canvas_viewport_stroke_geometry_tests.rs"]
+mod geometry_tests;
