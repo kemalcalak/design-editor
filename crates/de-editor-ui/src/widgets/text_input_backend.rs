@@ -21,10 +21,12 @@ use crate::{
 pub(crate) struct BaselineAdjustingBackend<'a> {
     pub(crate) inner: &'a mut dyn RenderBackend,
     pub(crate) baseline_delta_y: f32,
-    /// When set, every text draw and family measurement uses this face
-    /// instead of the one the wrapped widget asked for — so a focused
-    /// jian `TextInputView` (fixed chrome face) can render a monospace
-    /// hex value without changing font as it gains focus.
+    /// When set, every text draw and every measurement — family-blind
+    /// ones included — uses this face instead of the one the wrapped
+    /// widget asked for, so a focused jian `TextInputView` (fixed chrome
+    /// face) can render a monospace hex value without changing font as it
+    /// gains focus, and a jian component that centres its label on the
+    /// blind `measure_text` measures the face it draws (#440).
     pub(crate) font_family: Option<&'a str>,
 }
 
@@ -579,11 +581,19 @@ impl RenderBackend for BaselineAdjustingBackend<'_> {
     }
 
     fn measure_text(&mut self, text: &str, font_size: f32) -> f32 {
-        self.inner.measure_text(text, font_size)
+        match self.font_family {
+            Some(family) => self.inner.measure_text_family(text, font_size, family),
+            None => self.inner.measure_text(text, font_size),
+        }
     }
 
     fn measure_text_weighted(&mut self, text: &str, font_size: f32, weight: u16) -> f32 {
-        self.inner.measure_text_weighted(text, font_size, weight)
+        match self.font_family {
+            Some(family) => self
+                .inner
+                .measure_text_family_styled(text, font_size, family, weight, false),
+            None => self.inner.measure_text_weighted(text, font_size, weight),
+        }
     }
 
     fn text_ascent(&mut self, font_size: f32, weight: u16) -> f32 {
@@ -601,8 +611,14 @@ impl RenderBackend for BaselineAdjustingBackend<'_> {
         weight: u16,
         italic: bool,
     ) -> f32 {
-        self.inner
-            .measure_text_styled(text, font_size, weight, italic)
+        match self.font_family {
+            Some(family) => self
+                .inner
+                .measure_text_family_styled(text, font_size, family, weight, italic),
+            None => self
+                .inner
+                .measure_text_styled(text, font_size, weight, italic),
+        }
     }
 
     fn measure_text_family(&mut self, text: &str, font_size: f32, family: &str) -> f32 {
