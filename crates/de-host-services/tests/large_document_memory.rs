@@ -84,6 +84,18 @@ fn write_call(fixture: &Fixture, i: usize) -> Call {
     }
 }
 
+/// What an agent's generation step sends: a `batch_design` program that
+/// adds a small card to a board.
+fn generate_call(fixture: &Fixture, i: usize) -> Call {
+    let board = fixture.board_id(0, i % fixture.boards);
+    Call {
+        tool: "batch_design",
+        args: format!(
+            r#"{{"operations":"card{i}=I(\"{board}\", {{\"type\":\"frame\",\"name\":\"Generated {i}\",\"width\":320,\"height\":64,\"layout\":\"horizontal\",\"gap\":8,\"children\":[{{\"type\":\"text\",\"content\":\"Generated card {i}\",\"fontSize\":14}}]}})"}}"#
+        ),
+    }
+}
+
 fn request_line(id: usize, call: &Call) -> String {
     format!(
         r#"{{"jsonrpc":"2.0","id":{id},"method":"tools/call","params":{{"name":"{}","arguments":{}}}}}"#,
@@ -170,13 +182,14 @@ fn live_mcp_call_memory_and_latency() {
     );
 
     let mut anchor: Option<SharedDoc> = None;
-    // The first capture has no anchor and no history to share with.
+    // The first capture has no anchor and no history to share with: a
+    // whole-document read, so every run starts from the same warm process.
     let first = live_call(
         &mut live,
         &mut anchor,
         0,
         &Call {
-            tool: "get_history_depth",
+            tool: "get_document_info",
             args: "{}".into(),
         },
     );
@@ -217,22 +230,28 @@ fn live_mcp_call_memory_and_latency() {
             if ok { "" } else { "  (tool error)" }
         );
     }
-    let mut times = Vec::new();
-    let mut peaks = Vec::new();
-    for i in 0..calls_per_tool {
-        let sample = live_call(&mut live, &mut anchor, id, &write_call(&fixture, i));
-        id += 1;
-        assert!(sample.ok, "update_node applies");
-        times.push(sample.took.as_secs_f64() * 1e3);
-        peaks.push(sample.peak_extra as f64);
+    let writes: [(&str, fn(&Fixture, usize) -> Call); 2] = [
+        ("update_node (write)", write_call),
+        ("batch_design (write)", generate_call),
+    ];
+    for (label, make) in writes {
+        let mut times = Vec::new();
+        let mut peaks = Vec::new();
+        for i in 0..calls_per_tool {
+            let sample = live_call(&mut live, &mut anchor, id, &make(&fixture, i));
+            id += 1;
+            assert!(sample.ok, "{label} applies");
+            times.push(sample.took.as_secs_f64() * 1e3);
+            peaks.push(sample.peak_extra as f64);
+        }
+        println!(
+            "{:<34} {:>9.1} {:>11.0} {:>8.1}%",
+            label,
+            median(times),
+            mb(median(peaks.clone())),
+            100.0 * median(peaks) / doc_heap.max(1) as f64
+        );
     }
-    println!(
-        "{:<34} {:>9.1} {:>11.0} {:>8.1}%",
-        "update_node (write)",
-        median(times),
-        mb(median(peaks.clone())),
-        100.0 * median(peaks) / doc_heap.max(1) as f64
-    );
     println!(
         "editor heap at the end {:.0} MB (history {} steps); process {}",
         mb(counting_alloc::live().saturating_sub(heap_start) as f64),
