@@ -96,8 +96,8 @@ impl EditorState {
                 let Some((_, target)) = self.selected_variant_instance() else {
                     return PanelVariants::None;
                 };
-                let Some(set) = super::tree::find(&self.doc, &target.set_id)
-                    .and_then(component_set_of)
+                let Some(set) =
+                    super::tree::find(&self.doc, &target.set_id).and_then(component_set_of)
                 else {
                     return PanelVariants::None;
                 };

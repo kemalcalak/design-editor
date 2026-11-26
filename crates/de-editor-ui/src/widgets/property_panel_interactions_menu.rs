@@ -154,6 +154,8 @@ pub fn interaction_menu_rows(
                 })
                 .collect()
         }
+        // Served by the panel itself from its variant rows (#368).
+        InteractionMenuTarget::VariantAxis(_) => Vec::new(),
         InteractionMenuTarget::TransitionEasing => MotionEasing::ALL
             .into_iter()
             .map(|easing| {

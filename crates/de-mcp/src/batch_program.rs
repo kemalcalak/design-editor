@@ -634,7 +634,8 @@ fn execute_update(args: &str, ctx: &mut ProgramCtx) -> Result<()> {
         return ctx.emit(cmd, &format!("Update failed for: {path}"));
     };
     let node_id = NodeId::new(target.id_str());
-    let variant_only = super::batch_program_instance::emit_variant_update(node_id.as_str(), &mut value, ctx)?;
+    let variant_only =
+        super::batch_program_instance::emit_variant_update(node_id.as_str(), &mut value, ctx)?;
     if super::batch_program_instance::emit_props_update(node_id.as_str(), &mut value, ctx)?
         || variant_only
     {

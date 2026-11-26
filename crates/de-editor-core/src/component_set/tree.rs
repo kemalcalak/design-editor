@@ -76,8 +76,9 @@ pub(crate) fn siblings_mut<'a>(
     };
     match &place.parent {
         None => Some(roots),
-        Some(parent) => crate::walkers::find_node_mut(roots, &NodeId::new(parent.as_str()))?
-            .children_mut(),
+        Some(parent) => {
+            crate::walkers::find_node_mut(roots, &NodeId::new(parent.as_str()))?.children_mut()
+        }
     }
 }
 

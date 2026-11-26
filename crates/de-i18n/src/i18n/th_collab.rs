@@ -412,6 +412,12 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "prototype.opens" => "เปิด {{host}}",
         "prototype.scrollTo" => "เลื่อนไปที่ {{name}}",
         "menu.showPrototypeLinks" => "แสดงลิงก์ต้นแบบ",
+        "componentBrowser.setLabel" => "{{name}} · {{count}} รูปแบบ",
+        "variants.combine" => "รวมเป็นรูปแบบ",
+        "variants.addVariant" => "เพิ่มรูปแบบ",
+        "variants.addAxis" => "เพิ่มแกน",
+        "variants.nearest" => "ไม่มีรูปแบบที่ตรงกัน: แสดงแบบที่ใกล้ที่สุด",
+        "variants.reportToast" => "รูปแบบ: ทิ้งการแทนที่ {{dropped}} รายการ, {{nearest}} รายการแสดงรูปแบบที่ใกล้ที่สุด, {{moved}} รายการย้ายไปค่าเริ่มต้น",
         _ => return None,
     })
 }

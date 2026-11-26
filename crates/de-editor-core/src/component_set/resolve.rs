@@ -104,7 +104,8 @@ pub fn normalize_inserted(
     let mut fallbacks = Vec::new();
     for node in nodes {
         if let PenNode::Ref(reference) = node {
-            if let Some(target) = resolve_target(doc, &reference.target, reference.variant.as_ref())?
+            if let Some(target) =
+                resolve_target(doc, &reference.target, reference.variant.as_ref())?
             {
                 if !target.exact {
                     fallbacks.push(VariantFallback {
@@ -114,6 +115,7 @@ pub fn normalize_inserted(
                     });
                 }
                 if reference.target == target.set_id || reference.variant.is_some() {
+                    move_root_override(reference, &target.master_id);
                     reference.target = target.master_id;
                     reference.variant = Some(target.values);
                 }
@@ -180,11 +182,26 @@ pub fn normalize_set_refs(doc: &mut PenDocument) -> Vec<VariantFallback> {
                     shown: target.master_id.clone(),
                 });
             }
+            move_root_override(reference, &target.master_id);
             reference.target = target.master_id.clone();
             reference.variant = Some(target.values.clone());
         }
     });
     fallbacks
+}
+
+/// The instance's top-level override is keyed by its `ref`
+/// (`descendants[<ref>]`): it follows the instance from the set (or an
+/// earlier variant) to `master_id`.
+fn move_root_override(reference: &mut RefNode, master_id: &str) {
+    if reference.target == master_id {
+        return;
+    }
+    if let Some(descendants) = reference.descendants.as_mut() {
+        if let Some(root) = descendants.remove(&reference.target) {
+            descendants.insert(master_id.to_string(), root);
+        }
+    }
 }
 
 /// After set `set_id` changed: move every instance of its variants onto

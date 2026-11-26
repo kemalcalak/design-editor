@@ -64,8 +64,8 @@ mod component_backing;
 pub mod component_browser_state;
 pub mod component_instances;
 pub mod component_props;
-pub mod component_set;
 mod component_registration;
+pub mod component_set;
 pub mod components;
 pub mod compositing;
 pub mod conversion;
@@ -298,9 +298,9 @@ mod history_snapshot_tests;
 #[path = "icon_path_normalize_tests.rs"]
 mod icon_path_normalize_tests;
 #[cfg(test)]
-mod kit_master_tests;
-#[cfg(test)]
 mod kit_master_set_tests;
+#[cfg(test)]
+mod kit_master_tests;
 #[cfg(test)]
 mod prompt_center_catalog_tests;
 #[cfg(test)]

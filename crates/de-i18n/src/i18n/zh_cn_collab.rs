@@ -412,6 +412,12 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "prototype.opens" => "打开 {{host}}",
         "prototype.scrollTo" => "滚动到 {{name}}",
         "menu.showPrototypeLinks" => "显示原型连线",
+        "componentBrowser.setLabel" => "{{name}} · {{count}} 个变体",
+        "variants.combine" => "合并为变体",
+        "variants.addVariant" => "添加变体",
+        "variants.addAxis" => "添加轴",
+        "variants.nearest" => "没有完全匹配的变体：显示最接近的",
+        "variants.reportToast" => "变体：丢弃了 {{dropped}} 个覆盖，{{nearest}} 个显示最接近的变体，{{moved}} 个改为默认值",
         _ => return None,
     })
 }

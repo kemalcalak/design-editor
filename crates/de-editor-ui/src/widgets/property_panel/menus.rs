@@ -94,6 +94,11 @@ impl PropertyPanel {
 
     /// The open popover's rows for the current target.
     pub(super) fn interaction_menu_rows(&self) -> Vec<(PropertyPanelAction, String)> {
+        if let de_editor_core::interaction_edit::InteractionMenuTarget::VariantAxis(index) =
+            self.interaction_menu_target
+        {
+            return crate::widgets::property_panel_variants::axis_menu_rows(&self.variants, index);
+        }
         crate::widgets::property_panel_interactions::interaction_menu_rows(
             self.locale,
             self.interaction_menu_target,

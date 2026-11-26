@@ -64,6 +64,9 @@ pub fn property_focus_initial(focus: PropertyFocus, panel: &PropertyPanel) -> St
             .interactions
             .open_url(trigger)
             .unwrap_or_default(),
+        F::VariantText(index) => {
+            crate::widgets::property_panel_variants::initial_text(&panel.variants, index)
+        }
         F::ComponentProp(index) => match &panel.component_props {
             de_editor_core::component_props::PanelProperties::Master(rows) => rows
                 .get(index)
@@ -334,6 +337,11 @@ pub fn commit_property_focus(state: &mut EditorState) -> bool {
     state.ui.property_input.set_text("");
     state.ui.property_input_draft.clear();
     state.ui.property_caret_pos = 0;
+    if let PropertyFocus::VariantText(index) = focus {
+        // Set renames (#368) write the set as their own undo step.
+        let _ = state.commit_selected_variant_text(index, &draft);
+        return true;
+    }
     if let PropertyFocus::ComponentProp(index) = focus {
         // Component properties (#367) write the real instance or master
         // as their own undo step, like the instance lifecycle actions:

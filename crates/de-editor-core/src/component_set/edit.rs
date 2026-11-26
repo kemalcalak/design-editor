@@ -66,9 +66,13 @@ pub enum ComponentSetCommand {
     },
 }
 
-fn set_of<'a>(doc: &'a PenDocument, set_id: &str) -> Result<(&'a PenNode, &'a ComponentSet), VariantError> {
+fn set_of<'a>(
+    doc: &'a PenDocument,
+    set_id: &str,
+) -> Result<(&'a PenNode, &'a ComponentSet), VariantError> {
     let node = find(doc, set_id).ok_or_else(|| VariantError::SetNotFound(set_id.to_string()))?;
-    let set = component_set_of(node).ok_or_else(|| VariantError::SetNotFound(set_id.to_string()))?;
+    let set =
+        component_set_of(node).ok_or_else(|| VariantError::SetNotFound(set_id.to_string()))?;
     Ok((node, set))
 }
 
@@ -255,7 +259,10 @@ fn new_variant_values(
         .collect()
 }
 
-fn set_mut<'a>(doc: &'a mut PenDocument, set_id: &str) -> Option<&'a mut jian_ops_schema::node::FrameNode> {
+fn set_mut<'a>(
+    doc: &'a mut PenDocument,
+    set_id: &str,
+) -> Option<&'a mut jian_ops_schema::node::FrameNode> {
     match find_mut(doc, set_id) {
         Some(PenNode::Frame(frame)) if frame.component_set.is_some() => Some(frame),
         _ => None,
@@ -276,7 +283,11 @@ fn masters_by_id(doc: &PenDocument, set_id: &str) -> HashMap<String, PenNode> {
 
 /// Rewrite every variant's values with `edit`, renaming a master whose
 /// name spelled its values.
-fn edit_master_values(doc: &mut PenDocument, set_id: &str, edit: &mut dyn FnMut(&mut VariantValues)) {
+fn edit_master_values(
+    doc: &mut PenDocument,
+    set_id: &str,
+    edit: &mut dyn FnMut(&mut VariantValues),
+) {
     fn walk(nodes: &mut [PenNode], set: &ComponentSet, edit: &mut dyn FnMut(&mut VariantValues)) {
         for node in nodes {
             match node {
@@ -350,7 +361,8 @@ pub(crate) fn apply_to_document(
                 (source.clone(), full, ordered)
             };
             let mut taken = crate::id_allocator::collect_document_ids(doc);
-            let mut master = crate::walkers::deep_clone_with_allocator(&copy, allocator, &mut taken)?;
+            let mut master =
+                crate::walkers::deep_clone_with_allocator(&copy, allocator, &mut taken)?;
             remap_property_binds(&copy, &mut master);
             let id = new_id.clone().unwrap_or_else(|| {
                 let base = format!("{set_id}-{}", ordered.join("-"));
@@ -526,11 +538,15 @@ pub(crate) fn apply_to_document(
             }
             if let Some(PenNode::Ref(reference)) = find_mut(doc, node_id) {
                 let old = old_master.filter(|old| component_set_of(old).is_none());
-                for key in super::switch::retarget(reference, old.as_ref(), &new_master, target.values) {
-                    report.dropped_overrides.push(super::report::DroppedOverride {
-                        instance: node_id.clone(),
-                        key,
-                    });
+                for key in
+                    super::switch::retarget(reference, old.as_ref(), &new_master, target.values)
+                {
+                    report
+                        .dropped_overrides
+                        .push(super::report::DroppedOverride {
+                            instance: node_id.clone(),
+                            key,
+                        });
                 }
             }
         }
@@ -567,7 +583,11 @@ fn remap_property_binds(source: &PenNode, copy: &mut PenNode) {
     let mut ids = HashMap::new();
     zip(source, copy, &mut ids);
     if let PenNode::Frame(frame) = copy {
-        for property in frame.component_properties.iter_mut().flat_map(|p| p.values_mut()) {
+        for property in frame
+            .component_properties
+            .iter_mut()
+            .flat_map(|p| p.values_mut())
+        {
             for binding in &mut property.bind {
                 if let Some(new_id) = ids.get(&binding.node) {
                     binding.node = new_id.clone();

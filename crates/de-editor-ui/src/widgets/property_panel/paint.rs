@@ -148,15 +148,25 @@ impl Widget for PropertyPanel {
                 tab_bottom,
                 rect.origin.y + rect.size.y,
                 x,
-                props::buttons_y(visible.component_button, visible.component_props, y),
+                crate::widgets::property_panel_variants::buttons_y(&visible, y),
                 w,
             );
             if !matches!(
                 visible.component_button,
                 crate::widgets::property_panel_visibility::ComponentButtonState::Instance { .. }
             ) {
-                y += visible.component_props.height();
+                y += visible.component_props.height() + visible.variant_rows.height();
             }
+            crate::widgets::property_panel_variants::paint(
+                cx,
+                &self.theme,
+                &self.labels,
+                &self.variants,
+                &edit_ctx,
+                x,
+                crate::widgets::property_panel_variants::rows_top(&visible, block_top),
+                w,
+            );
             props::paint(
                 cx,
                 &self.theme,
@@ -164,7 +174,7 @@ impl Widget for PropertyPanel {
                 &self.component_props,
                 &edit_ctx,
                 x,
-                props::rows_top(visible.component_button, block_top),
+                crate::widgets::property_panel_variants::props_top(&visible, block_top),
                 w,
             );
         }

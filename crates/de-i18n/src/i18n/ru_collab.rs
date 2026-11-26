@@ -412,6 +412,12 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "prototype.opens" => "Открывает {{host}}",
         "prototype.scrollTo" => "Прокрутить к {{name}}",
         "menu.showPrototypeLinks" => "Показать связи прототипа",
+        "componentBrowser.setLabel" => "{{name}} · вариантов: {{count}}",
+        "variants.combine" => "Объединить в варианты",
+        "variants.addVariant" => "Добавить вариант",
+        "variants.addAxis" => "Добавить ось",
+        "variants.nearest" => "Точного варианта нет: показан ближайший",
+        "variants.reportToast" => "Варианты: отброшено переопределений: {{dropped}}, показан ближайший вариант: {{nearest}}, переведено на значение по умолчанию: {{moved}}",
         _ => return None,
     })
 }

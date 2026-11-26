@@ -53,7 +53,10 @@ pub const KIT_SETS: &[KitSetSpec] = &[KitSetSpec {
 }];
 
 /// The set a kit component belongs to, and its values there.
-pub fn kit_set_of(kit_id: &str, component_id: &str) -> Option<(&'static KitSetSpec, VariantValues)> {
+pub fn kit_set_of(
+    kit_id: &str,
+    component_id: &str,
+) -> Option<(&'static KitSetSpec, VariantValues)> {
     KIT_SETS.iter().find_map(|spec| {
         if spec.kit_id != kit_id {
             return None;
@@ -67,6 +70,11 @@ pub fn kit_set_of(kit_id: &str, component_id: &str) -> Option<(&'static KitSetSp
             ]),
         ))
     })
+}
+
+/// How many variants the set installs.
+pub fn variant_count(spec: &KitSetSpec) -> usize {
+    spec.members.len() * SIZES.len()
 }
 
 /// The kit component id and suffix-free template id of a member's `md`

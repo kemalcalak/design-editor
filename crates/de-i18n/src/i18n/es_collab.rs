@@ -412,6 +412,12 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "prototype.opens" => "Abre {{host}}",
         "prototype.scrollTo" => "Desplazar a {{name}}",
         "menu.showPrototypeLinks" => "Mostrar enlaces del prototipo",
+        "componentBrowser.setLabel" => "{{name}} · {{count}} variantes",
+        "variants.combine" => "Combinar como variantes",
+        "variants.addVariant" => "Añadir variante",
+        "variants.addAxis" => "Añadir eje",
+        "variants.nearest" => "No hay variante exacta: se muestra la más cercana",
+        "variants.reportToast" => "Variantes: {{dropped}} anulaciones descartadas, {{nearest}} muestran la variante más cercana, {{moved}} pasaron al valor predeterminado",
         _ => return None,
     })
 }

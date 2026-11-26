@@ -224,6 +224,8 @@ pub enum PropertyPanelAction {
     /// Make this field of the selected node (inside a master) a new
     /// property of the master.
     BindComponentProperty(crate::widgets::property_panel_component_props::BindOffer),
+    /// A variant row's action (#368).
+    Variant(crate::widgets::property_panel_variants::VariantAction),
     /// User clicked fill `index`'s `⋯` button — toggles its menu
     /// (`editor_ui.fill_menu_open`).
     ToggleFillMenu(usize),

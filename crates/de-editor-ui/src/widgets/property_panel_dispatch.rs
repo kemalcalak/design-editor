@@ -221,7 +221,8 @@ pub fn apply_property_action(
         | A::ToggleInstanceProp(_)
         | A::CycleInstanceProp(_)
         | A::RemoveComponentProperty(_)
-        | A::BindComponentProperty(_) => Handled,
+        | A::BindComponentProperty(_)
+        | A::Variant(_) => Handled,
         A::SetPropertyTab(tab) => {
             state.editor_ui.set_property_tab(*tab);
             Handled

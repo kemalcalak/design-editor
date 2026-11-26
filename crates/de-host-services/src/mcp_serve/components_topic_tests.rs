@@ -319,6 +319,119 @@ fn example_4_instances_set_properties_by_name() {
     );
 }
 
+/// The refs of the document in order, and the name of the master each
+/// shows.
+fn refs_with_master_names(state: &EditorState) -> Vec<(String, String)> {
+    let doc = doc_json(state);
+    let all = nodes(&doc);
+    all.iter()
+        .filter(|node| node["type"] == "ref")
+        .map(|node| {
+            let target = node["ref"].as_str().unwrap_or_default();
+            let master = all
+                .iter()
+                .find(|candidate| candidate["id"] == target)
+                .unwrap_or_else(|| panic!("ref {target} names no node"));
+            assert_eq!(master["reusable"], true, "a ref shows a variant master");
+            (
+                node["id"].as_str().unwrap().to_string(),
+                master["name"].as_str().unwrap().to_string(),
+            )
+        })
+        .collect()
+}
+
+/// `field` of the node named `name` inside the rendered instance `id`.
+fn rendered_child(state: &EditorState, id: &str, name: &str, field: &str) -> Value {
+    let expanded = resolve_refs_for_canvas(&state.doc);
+    let resolved = serde_json::to_value(&expanded).expect("resolved JSON");
+    let instance = nodes(&resolved)
+        .into_iter()
+        .find(|node| node["id"] == id)
+        .unwrap_or_else(|| panic!("instance {id} did not render"))
+        .clone();
+    named(&instance, name)[field].clone()
+}
+
+#[test]
+fn example_5_alternatives_are_one_set_with_an_option_axis() {
+    let mut state = EditorState::new();
+    run_example(&mut state, 5);
+    let listed = call(&mut state, "list_components", json!({}));
+    assert_eq!(
+        listed["count"], "0",
+        "the options are listed under their set"
+    );
+    let sets: Value = serde_json::from_str(listed["sets"].as_str().expect("sets")).unwrap();
+    assert_eq!(sets[0]["name"], "Hero");
+    assert_eq!(sets[0]["axes"]["option"], json!(["A", "B", "C", "D"]));
+    assert_eq!(sets[0]["variants"].as_array().unwrap().len(), 4);
+
+    let refs = refs_with_master_names(&state);
+    assert_eq!(refs.len(), 1);
+    let (instance, master) = &refs[0];
+    assert_eq!(master, "option=B");
+    assert_eq!(
+        rendered_child(&state, instance, "Headline", "content"),
+        "Build together"
+    );
+    edit(
+        &mut state,
+        format!(r#"U("{instance}",{{"variant":{{"option":"D"}}}})"#),
+    );
+    assert_eq!(refs_with_master_names(&state)[0].1, "option=D");
+    assert_eq!(
+        rendered_child(&state, instance, "Headline", "content"),
+        "One source of truth"
+    );
+}
+
+#[test]
+fn example_6_button_states_switch_keeping_props() {
+    let mut state = EditorState::new();
+    run_example(&mut state, 6);
+    let listed = call(&mut state, "list_components", json!({}));
+    let sets: Value = serde_json::from_str(listed["sets"].as_str().expect("sets")).unwrap();
+    assert_eq!(
+        sets[0]["axes"],
+        json!({"variant": ["primary", "ghost"], "size": ["md", "sm"]})
+    );
+    let refs = refs_with_master_names(&state);
+    let shown: Vec<&str> = refs.iter().map(|(_, master)| master.as_str()).collect();
+    assert_eq!(
+        shown,
+        [
+            "variant=primary, size=md",
+            "variant=ghost, size=md",
+            "variant=primary, size=sm"
+        ]
+    );
+    let labels: Vec<Value> = refs
+        .iter()
+        .map(|(id, _)| rendered_child(&state, id, "Label", "content"))
+        .collect();
+    assert_eq!(labels, ["Save", "Cancel", "More"].map(Value::from));
+
+    let cancel = refs[1].0.clone();
+    edit(
+        &mut state,
+        format!(r#"U("{cancel}",{{"variant":{{"size":"sm"}}}})"#),
+    );
+    assert_eq!(
+        refs_with_master_names(&state)[1].1,
+        "variant=ghost, size=sm"
+    );
+    assert_eq!(
+        rendered_child(&state, &cancel, "Label", "content"),
+        "Cancel",
+        "props stay across the switch"
+    );
+    assert_eq!(
+        rendered_child(&state, &cancel, "Label", "fontSize"),
+        json!(13.0)
+    );
+}
+
 #[test]
 fn get_editor_state_points_at_the_components_topic() {
     let mut state = EditorState::new();

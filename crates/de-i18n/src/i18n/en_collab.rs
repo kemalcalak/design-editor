@@ -412,6 +412,12 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "prototype.opens" => "Opens {{host}}",
         "prototype.scrollTo" => "Scroll to {{name}}",
         "menu.showPrototypeLinks" => "Show prototype links",
+        "componentBrowser.setLabel" => "{{name}} · {{count}} variants",
+        "variants.combine" => "Combine as variants",
+        "variants.addVariant" => "Add variant",
+        "variants.addAxis" => "Add axis",
+        "variants.nearest" => "No exact variant: nearest shown",
+        "variants.reportToast" => "Variants: {{dropped}} overrides dropped, {{nearest}} showing the nearest variant, {{moved}} moved to the default",
         _ => return None,
     })
 }

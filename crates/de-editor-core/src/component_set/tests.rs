@@ -129,7 +129,11 @@ fn a_ref_naming_the_set_renders_the_picked_variant() {
         panic!("instance expands to a frame, not the whole set");
     };
     let label = &frame.children.as_ref().unwrap()[0];
-    assert_eq!(label.id_str(), "i2__btn-gm-label", "ghost/md (size default)");
+    assert_eq!(
+        label.id_str(),
+        "i2__btn-gm-label",
+        "ghost/md (size default)"
+    );
     assert!(frame.component_set.is_none() && frame.variant_values.is_none());
 }
 

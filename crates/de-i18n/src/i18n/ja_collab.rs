@@ -412,6 +412,12 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "prototype.opens" => "{{host}} を開く",
         "prototype.scrollTo" => "{{name}} へスクロール",
         "menu.showPrototypeLinks" => "プロトタイプのリンクを表示",
+        "componentBrowser.setLabel" => "{{name}} · {{count}} 個のバリアント",
+        "variants.combine" => "バリアントとして結合",
+        "variants.addVariant" => "バリアントを追加",
+        "variants.addAxis" => "軸を追加",
+        "variants.nearest" => "一致するバリアントがないため最も近いものを表示",
+        "variants.reportToast" => "バリアント: {{dropped}} 件のオーバーライドを破棄、{{nearest}} 件は最も近いバリアントを表示、{{moved}} 件はデフォルトに変更",
         _ => return None,
     })
 }

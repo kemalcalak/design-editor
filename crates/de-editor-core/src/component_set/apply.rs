@@ -10,6 +10,9 @@ use crate::id_allocator::{IdAllocError, IdAllocator, SequentialIdAllocator};
 use crate::pen_node_ext::PenNodeExt;
 use crate::{EditorState, NodeId};
 
+/// The toast a variant write raises when it could not keep everything.
+pub const VARIANT_TOAST_KEY: &str = "variants.reportToast";
+
 impl EditorState {
     /// Apply a component-set write as one undo step. The outer `Err` is
     /// id exhaustion; the inner one a refused write (nothing changed).
@@ -67,10 +70,16 @@ impl EditorState {
         let Ok(mut allocator) = SequentialIdAllocator::for_document(&self.doc, 1) else {
             return Err(VariantError::NoMasters);
         };
-        match self.apply_component_set_with_allocator(command, &mut allocator) {
+        let result = match self.apply_component_set_with_allocator(command, &mut allocator) {
             Ok(result) => result,
             Err(_) => Err(VariantError::NoMasters),
+        };
+        if let Ok(report) = &result {
+            if !report.is_quiet() {
+                self.editor_ui.pending_variant_report = Some(report.clone());
+            }
         }
+        result
     }
 
     /// Register the set's masters where they now are, under their current
@@ -99,6 +108,32 @@ impl EditorState {
             .register_document_components(&self.doc, masters);
     }
 
+    /// Raise the last panel variant write's report as a Warn toast (the
+    /// host's clock), then forget it.
+    pub fn raise_pending_variant_toast(&mut self, now_ms: u64) -> bool {
+        let Some(report) = self.editor_ui.pending_variant_report.take() else {
+            return false;
+        };
+        let args = vec![
+            (
+                "dropped".to_string(),
+                report.dropped_overrides.len().to_string(),
+            ),
+            ("nearest".to_string(), report.fallbacks.len().to_string()),
+            (
+                "moved".to_string(),
+                report.moved_to_default.len().to_string(),
+            ),
+        ];
+        self.editor_ui.show_toast(
+            VARIANT_TOAST_KEY,
+            args,
+            crate::editor_toast::EditorToastLevel::Warn,
+            now_ms,
+        );
+        true
+    }
+
     /// The set and variant values of the selected instance's component,
     /// when it is a variant.
     pub fn selected_variant_instance(&self) -> Option<(String, super::InstanceTarget)> {
@@ -108,9 +143,10 @@ impl EditorState {
         let PenNode::Ref(reference) = self.selected_node()? else {
             return None;
         };
-        let target = super::resolve_target(&self.doc, &reference.target, reference.variant.as_ref())
-            .ok()
-            .flatten()?;
+        let target =
+            super::resolve_target(&self.doc, &reference.target, reference.variant.as_ref())
+                .ok()
+                .flatten()?;
         Some((reference.base.id.clone(), target))
     }
 }

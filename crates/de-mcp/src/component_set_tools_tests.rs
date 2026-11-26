@@ -70,8 +70,7 @@ fn error(outcome: ToolOutcome) -> String {
 }
 
 fn node(state: &EditorState, id: &str) -> Value {
-    serde_json::to_value(de_editor_core::component_set::find_node(&state.doc, id).unwrap())
-        .unwrap()
+    serde_json::to_value(de_editor_core::component_set::find_node(&state.doc, id).unwrap()).unwrap()
 }
 
 /// The fixture with its masters combined into `button`.
@@ -114,8 +113,14 @@ fn explicit_axes_order_the_set_and_unknown_values_are_refused() {
         "create_component_set",
         &[
             ("name", "Button"),
-            ("master_ids", "btn-primary-md-default, btn-primary-sm-default"),
-            ("axes", r#"{"size":["sm","md","lg"],"variant":["primary"],"state":["default"]}"#),
+            (
+                "master_ids",
+                "btn-primary-md-default, btn-primary-sm-default",
+            ),
+            (
+                "axes",
+                r#"{"size":["sm","md","lg"],"variant":["primary"],"state":["default"]}"#,
+            ),
         ],
     ));
     let names: Vec<&str> = result["set"]["axes"]
@@ -131,10 +136,16 @@ fn explicit_axes_order_the_set_and_unknown_values_are_refused() {
         &[
             ("name", "Button"),
             ("master_ids", "btn-primary-md-default, btn-ghost-md-default"),
-            ("axes", r#"{"variant":["primary"],"size":["md"],"state":["default"]}"#),
+            (
+                "axes",
+                r#"{"variant":["primary"],"size":["md"],"state":["default"]}"#,
+            ),
         ],
     ));
-    assert_eq!(refused, "unknown value ghost for axis variant; values: primary");
+    assert_eq!(
+        refused,
+        "unknown value ghost for axis variant; values: primary"
+    );
 }
 
 #[test]
@@ -176,7 +187,10 @@ fn instances_switch_variants_keeping_props_and_matching_overrides() {
         "set_instance_variant",
         &[("nodeId", "b1"), ("variant", r#"{"size":"xl"}"#)],
     ));
-    assert_eq!(refused, "unknown value xl for axis size; values: md, sm, lg");
+    assert_eq!(
+        refused,
+        "unknown value xl for axis size; values: md, sm, lg"
+    );
 }
 
 #[test]
@@ -241,7 +255,10 @@ fn reads_list_sets_with_axes_and_variants() {
     let ToolOutcome::Ok(list) = list else {
         panic!("list");
     };
-    assert_eq!(list["count"], "0", "variant masters are listed under their set");
+    assert_eq!(
+        list["count"], "0",
+        "variant masters are listed under their set"
+    );
     let sets: Value = serde_json::from_str(&list["sets"]).unwrap();
     assert_eq!(sets[0]["name"], "Button");
     assert_eq!(sets[0]["default"]["size"], "md");
@@ -256,8 +273,8 @@ fn reads_list_sets_with_axes_and_variants() {
         serde_json::from_str::<Value>(&set["variants"]).unwrap()[1]["values"]["size"],
         "sm"
     );
-    let ToolOutcome::Ok(master) = get_component_snapshot(&state)
-        .call(&args(&[("component_id", "btn-primary-sm-default")]))
+    let ToolOutcome::Ok(master) =
+        get_component_snapshot(&state).call(&args(&[("component_id", "btn-primary-sm-default")]))
     else {
         panic!("variant detail");
     };
@@ -285,4 +302,28 @@ fn reads_list_sets_with_axes_and_variants() {
         ],
     ));
     assert_eq!(result["created"], json!(["button-ghost-md-loading"]));
+}
+
+#[test]
+fn instantiate_component_takes_a_set_id_and_a_variant() {
+    let mut state = with_set();
+    let outcome = crate::instantiate_component_snapshot(&state).call(&args(&[
+        ("component_id", "button"),
+        ("parent", "screen"),
+        ("variant", r#"{"state":"loading","size":"sm"}"#),
+    ]));
+    let (result, command) = ok(outcome);
+    assert!(result["warnings"][0]
+        .as_str()
+        .unwrap()
+        .contains("the instance shows the nearest"));
+    assert!(state.apply(command));
+    let id = result["instanceId"].as_str().unwrap();
+    let placed = node(&state, id);
+    assert_eq!(placed["ref"], "btn-primary-sm-default");
+    assert_eq!(placed["name"], "Button");
+    assert_eq!(
+        placed["variant"],
+        json!({"size":"sm","state":"default","variant":"primary"})
+    );
 }

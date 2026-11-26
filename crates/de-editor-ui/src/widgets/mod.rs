@@ -166,6 +166,9 @@ mod property_panel_text_stroke_tests;
 #[cfg(test)]
 mod property_panel_text_tests;
 pub mod property_panel_typography;
+pub mod property_panel_variants;
+#[cfg(test)]
+mod property_panel_variants_tests;
 #[cfg(test)]
 mod property_panel_vector_fidelity_tests;
 pub mod property_panel_video;

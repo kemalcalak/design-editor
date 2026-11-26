@@ -30,7 +30,15 @@ fn kit(component: &str, overrides: Option<Value>) -> EditorCommand {
 }
 
 fn screen_state(extra: Vec<PenNode>) -> EditorState {
-    let mut roots = vec![frame("screen", "Screen", 0.0, 0.0, 400.0, 300.0, Vec::new())];
+    let mut roots = vec![frame(
+        "screen",
+        "Screen",
+        0.0,
+        0.0,
+        400.0,
+        300.0,
+        Vec::new(),
+    )];
     roots.extend(extra);
     state_with(roots)
 }
@@ -59,7 +67,11 @@ fn a_kit_button_installs_the_whole_set_once() {
     let mut s = screen_state(Vec::new());
     let depth = s.history.past.len();
     assert!(s.apply(kit("shadcn-btn-primary", Some(json!({"label": "Save"})))));
-    assert_eq!(s.history.past.len(), depth + 1, "install and insert are one step");
+    assert_eq!(
+        s.history.past.len(),
+        depth + 1,
+        "install and insert are one step"
+    );
     assert!(s.apply(kit("shadcn-btn-ghost", None)));
     let page = components_page(&s);
     assert_eq!(page.len(), 1, "one set, installed once");
@@ -68,12 +80,22 @@ fn a_kit_button_installs_the_whole_set_once() {
     assert_eq!(summary.axes[0].1.len(), 6);
     assert_eq!(summary.axes[1].1, ["sm", "md", "lg"]);
     assert_eq!(variant_masters(&page[0]).len(), 18);
-    for id in ["shadcn-btn-primary", "shadcn-btn-ghost-sm", "shadcn-btn-link-lg"] {
+    for id in [
+        "shadcn-btn-primary",
+        "shadcn-btn-ghost-sm",
+        "shadcn-btn-link-lg",
+    ] {
         assert!(s.components.find_by_id(&NodeId::new(id)).is_some(), "{id}");
     }
     let placed = instances(&s);
-    assert_eq!(placed[0]["ref"], "shadcn-btn-primary", "the old kit id is the md variant");
-    assert_eq!(placed[0]["variant"], json!({"size": "md", "variant": "primary"}));
+    assert_eq!(
+        placed[0]["ref"], "shadcn-btn-primary",
+        "the old kit id is the md variant"
+    );
+    assert_eq!(
+        placed[0]["variant"],
+        json!({"size": "md", "variant": "primary"})
+    );
     assert_eq!(placed[1]["ref"], "shadcn-btn-ghost");
     assert!(s.duplicate_ids().is_empty());
 }
@@ -107,7 +129,11 @@ fn taken_ids_install_the_set_fresh_and_record_every_member() {
     )]);
     assert!(s.apply(kit("shadcn-btn-primary", None)));
     assert!(s.apply(kit("shadcn-btn-secondary", None)));
-    assert_eq!(components_page(&s).len(), 1, "the record finds the set again");
+    assert_eq!(
+        components_page(&s).len(),
+        1,
+        "the record finds the set again"
+    );
     let primary = s
         .editor_ui
         .kit_masters

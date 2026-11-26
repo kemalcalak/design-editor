@@ -46,7 +46,9 @@ impl EditorState {
         let mut taken = self.collect_node_ids();
         let mut ids = Vec::new();
         subtree_ids(&set, &mut ids);
-        let fresh_ids = ids.iter().any(|id| taken.contains(&NodeId::new(id.as_str())));
+        let fresh_ids = ids
+            .iter()
+            .any(|id| taken.contains(&NodeId::new(id.as_str())));
         if fresh_ids {
             set = walkers::deep_clone_with_allocator(&set, allocator, &mut taken)?;
         }
@@ -119,13 +121,10 @@ impl EditorState {
         else {
             return (overrides, None);
         };
-        let target = crate::component_set::resolve_target(
-            &self.doc,
-            master.node.id_str(),
-            Some(&requested),
-        )
-        .ok()
-        .flatten();
+        let target =
+            crate::component_set::resolve_target(&self.doc, master.node.id_str(), Some(&requested))
+                .ok()
+                .flatten();
         let Some(target) = target.filter(|t| t.master_id != master.node.id_str()) else {
             return (overrides, None);
         };
@@ -148,9 +147,13 @@ impl EditorState {
     /// The full `variant` an instance of `master_id` records, when the
     /// master is a variant.
     pub(crate) fn kit_variant_values(&self, master_id: &NodeId) -> Option<VariantValues> {
-        crate::component_set::resolve_target(&self.doc, master_id.as_str(), Some(&VariantValues::new()))
-            .ok()
-            .flatten()
-            .map(|target| target.values)
+        crate::component_set::resolve_target(
+            &self.doc,
+            master_id.as_str(),
+            Some(&VariantValues::new()),
+        )
+        .ok()
+        .flatten()
+        .map(|target| target.values)
     }
 }

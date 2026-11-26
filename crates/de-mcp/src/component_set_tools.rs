@@ -95,11 +95,7 @@ fn answer(doc: &PenDocument, report: &VariantReport, mut extra: Value) -> String
 }
 
 impl SetSnapshot {
-    fn run(
-        &self,
-        command: ComponentSetCommand,
-        extra: Value,
-    ) -> Result<ToolOutcome, ToolOutcome> {
+    fn run(&self, command: ComponentSetCommand, extra: Value) -> Result<ToolOutcome, ToolOutcome> {
         let (after, report) = preview_command(&self.doc, &command).map_err(invalid)?;
         let mut extra = extra;
         // An instance switch answers with the master it now shows.
@@ -117,7 +113,10 @@ impl SetSnapshot {
         ))
     }
 
-    fn command(&self, args: &BTreeMap<String, String>) -> Result<(ComponentSetCommand, Value), ToolOutcome> {
+    fn command(
+        &self,
+        args: &BTreeMap<String, String>,
+    ) -> Result<(ComponentSetCommand, Value), ToolOutcome> {
         let set_id = || required(args, &["set_id", "setId", "componentSetId"]).map(str::to_string);
         Ok(match self.tool {
             "create_component_set" => {
@@ -148,8 +147,9 @@ impl SetSnapshot {
                 )
             }
             "add_variant" => {
-                let values: VariantValues = json_arg(args, &["values"], "an object of axis to value")?
-                    .ok_or_else(|| invalid("values is required"))?;
+                let values: VariantValues =
+                    json_arg(args, &["values"], "an object of axis to value")?
+                        .ok_or_else(|| invalid("values is required"))?;
                 (
                     ComponentSetCommand::AddVariant {
                         set_id: set_id()?,
@@ -271,7 +271,10 @@ pub fn variant_detail(doc: &PenDocument, master_id: &str, out: &mut BTreeMap<Str
     let Some(set) = de_editor_core::component_set::set_containing(doc, master_id) else {
         return;
     };
-    out.insert("set".into(), de_editor_core::PenNodeExt::id_str(set).to_string());
+    out.insert(
+        "set".into(),
+        de_editor_core::PenNodeExt::id_str(set).to_string(),
+    );
     let values = set_summary(doc, de_editor_core::PenNodeExt::id_str(set))
         .and_then(|summary| summary.variants.into_iter().find(|v| v.id == master_id))
         .map(|variant| variant.values)
@@ -327,7 +330,9 @@ pub(crate) fn update_node_variant(
     let mut data: Value = serde_json::from_str(args.get("data")?).ok()?;
     data.get("variant")?;
     let Some(doc) = doc else {
-        return Some(invalid("variant needs the document; use set_instance_variant"));
+        return Some(invalid(
+            "variant needs the document; use set_instance_variant",
+        ));
     };
     let (command, warnings) = match take_variant_update(doc, node_id.as_str(), &mut data) {
         Ok(Some(update)) => update,

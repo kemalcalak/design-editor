@@ -414,6 +414,12 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "prototype.opens" => "{{host}} 열기",
         "prototype.scrollTo" => "{{name}}(으)로 스크롤",
         "menu.showPrototypeLinks" => "프로토타입 링크 표시",
+        "componentBrowser.setLabel" => "{{name}} · 변형 {{count}}개",
+        "variants.combine" => "변형으로 결합",
+        "variants.addVariant" => "변형 추가",
+        "variants.addAxis" => "축 추가",
+        "variants.nearest" => "정확한 변형 없음: 가장 가까운 변형 표시",
+        "variants.reportToast" => "변형: 재정의 {{dropped}}개 삭제, {{nearest}}개는 가장 가까운 변형 표시, {{moved}}개는 기본값으로 이동",
         _ => return None,
     })
 }

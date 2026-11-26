@@ -60,7 +60,10 @@ fn combining_masters_infers_axes_from_their_names() {
         assert!(state.components.find_by_id(&NodeId::new(id)).is_some());
     }
     // Laid out as a grid: variant across, size down.
-    assert_eq!(node_json(&state, "btn-gm")["x"], node_json(&state, "btn-pm")["x"].as_f64().unwrap() + 120.0 + 24.0);
+    assert_eq!(
+        node_json(&state, "btn-gm")["x"],
+        node_json(&state, "btn-pm")["x"].as_f64().unwrap() + 120.0 + 24.0
+    );
     assert!(node_json(&state, "btn-ps")["y"].as_f64() > node_json(&state, "btn-pm")["y"].as_f64());
 
     assert!(state.undo());
@@ -85,7 +88,10 @@ fn masters_without_key_value_names_get_one_variant_axis() {
     let summary = set_summary(&state.doc, "button").unwrap();
     assert_eq!(
         summary.axes,
-        [("variant".to_string(), vec!["Primary".to_string(), "Ghost".to_string()])]
+        [(
+            "variant".to_string(),
+            vec!["Primary".to_string(), "Ghost".to_string()]
+        )]
     );
     assert_eq!(summary.variants[1].name, "variant=Ghost");
 }
@@ -98,7 +104,10 @@ fn switching_keeps_props_and_matching_overrides_and_reports_the_rest() {
     assert_eq!(state.history.past.len(), depth + 1);
     let instance = node_json(&state, "i1");
     assert_eq!(instance["ref"], "btn-ps");
-    assert_eq!(instance["variant"], json!({"size": "sm", "variant": "primary"}));
+    assert_eq!(
+        instance["variant"],
+        json!({"size": "sm", "variant": "primary"})
+    );
     assert_eq!(instance["props"], json!({"label": "Save"}));
     assert_eq!(
         instance["descendants"],
@@ -154,7 +163,10 @@ fn a_missing_combination_shows_the_nearest_and_is_reported() {
     let copy = node_json(&state, "button-ghost-sm");
     assert_eq!(copy["name"], "variant=ghost, size=sm");
     let bound = copy["componentProperties"]["label"]["bind"][0]["node"].clone();
-    assert_eq!(bound, copy["children"][0]["id"], "binds follow the copy's ids");
+    assert_eq!(
+        bound, copy["children"][0]["id"],
+        "binds follow the copy's ids"
+    );
     assert!(state
         .components
         .find_by_id(&NodeId::new("button-ghost-sm"))
@@ -184,7 +196,10 @@ fn renames_reach_masters_and_instances_on_every_page() {
         node_json(&state, "i2")["variant"],
         json!({"scale": "small", "variant": "primary"})
     );
-    assert_eq!(node_json(&state, "btn-ps")["name"], "variant=primary, scale=small");
+    assert_eq!(
+        node_json(&state, "btn-ps")["name"],
+        "variant=primary, scale=small"
+    );
     assert_eq!(
         state
             .components
@@ -212,7 +227,10 @@ fn removing_a_value_moves_its_instances_to_the_default() {
     assert_eq!(report.removed, ["btn-gm"]);
     assert_eq!(report.moved_to_default, ["i1"]);
     assert_eq!(node_json(&state, "i1")["ref"], "btn-pm");
-    assert!(state.components.find_by_id(&NodeId::new("btn-gm")).is_none());
+    assert!(state
+        .components
+        .find_by_id(&NodeId::new("btn-gm"))
+        .is_none());
 }
 
 #[test]
@@ -284,7 +302,11 @@ fn the_command_runs_through_editor_command_as_one_step() {
             value: "x".into(),
         }
     ))));
-    assert_eq!(state.history.past.len(), depth + 1, "a refusal adds no step");
+    assert_eq!(
+        state.history.past.len(),
+        depth + 1,
+        "a refusal adds no step"
+    );
 }
 
 #[test]

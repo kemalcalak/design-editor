@@ -182,13 +182,6 @@ fn tools_list_response_includes_all_registered_tools() {
         "list_instances",
         "upsert_component_property",
         "remove_component_property",
-        "create_component_set",
-        "add_variant",
-        "add_variant_axis",
-        "rename_variant_axis",
-        "rename_variant_value",
-        "remove_variant_value",
-        "set_instance_variant",
         "create_component",
         "delete_component",
         "rename_component",
@@ -231,7 +224,10 @@ fn tools_list_response_includes_all_registered_tools() {
         "enrich_images",
         "generate",
         "get_generation_status",
-    ] {
+    ]
+    .into_iter()
+    .chain(de_mcp::SET_TOOL_NAMES)
+    {
         assert!(r.contains(name), "tools/list must include {name}: {r}");
     }
 

@@ -179,6 +179,8 @@ fn convert_node(
     let absolute = map.get("layoutPosition").and_then(Value::as_str) == Some("absolute");
     // Before the per-kind defaults, so a promoted rectangle takes the
     // frame path.
+    // pen.dev's `variants` nodes and `reusable: {axis: value}` (#368).
+    super::variants::convert(map);
     promote_reusable_shape(map, ctx.report);
     match map.get("type").and_then(Value::as_str) {
         Some("frame") => apply_frame_defaults(map),

@@ -126,6 +126,8 @@ pub enum InteractionMenuTarget {
     MotionTrigger(usize),
     /// The easing list of the node-level `transition` row.
     TransitionEasing,
+    /// The values of axis `index` of the selected variant instance (#368).
+    VariantAxis(usize),
 }
 
 /// The action an Interactions edit writes.

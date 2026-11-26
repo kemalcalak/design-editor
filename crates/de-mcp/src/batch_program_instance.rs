@@ -160,10 +160,12 @@ pub(crate) fn check_program_props(nodes: &[PenNode], ctx: &ProgramCtx) -> Result
 /// Instances an `I()` line inserts that name a set or ask for a variant
 /// point at the master they show (#368); unknown axes or values fail the
 /// line, a combination without a variant is a warning.
-pub(crate) fn normalize_program_variants(nodes: &mut [PenNode], ctx: &mut ProgramCtx) -> Result<()> {
-    let warnings =
-        super::component_set_tools::normalize_inserted_variants(&ctx.sim.doc, nodes)
-            .map_err(|error| ProgramError::InvalidValue(error.to_string()))?;
+pub(crate) fn normalize_program_variants(
+    nodes: &mut [PenNode],
+    ctx: &mut ProgramCtx,
+) -> Result<()> {
+    let warnings = super::component_set_tools::normalize_inserted_variants(&ctx.sim.doc, nodes)
+        .map_err(|error| ProgramError::InvalidValue(error.to_string()))?;
     ctx.warnings.extend(warnings);
     Ok(())
 }

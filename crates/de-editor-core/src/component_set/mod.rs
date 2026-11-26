@@ -35,9 +35,11 @@ pub use pick::{
     variant_masters, variant_name, variant_values_of, SetIndex, VariantPick,
 };
 pub use report::{values_label, DroppedOverride, VariantFallback, VariantReport};
-pub use resolve::{check_values, normalize_inserted, normalize_set_refs, resolve_target, InstanceTarget};
-pub use tree::find as find_node;
+pub use resolve::{
+    check_values, normalize_inserted, normalize_set_refs, resolve_target, InstanceTarget,
+};
 pub use summary::{set_summaries, set_summary, SetSummary, VariantSummary};
+pub use tree::find as find_node;
 
 #[cfg(test)]
 mod tests;
