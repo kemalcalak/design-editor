@@ -62,13 +62,25 @@ pub fn resolve_target(
     target: &str,
     requested: Option<&VariantValues>,
 ) -> Result<Option<InstanceTarget>, VariantError> {
+    resolve_target_in(doc, target, requested, &|id| set_containing(doc, id))
+}
+
+/// [`resolve_target`] with the caller's way to find the set holding a
+/// master (the editor reads it from the registry's stored location
+/// instead of walking the document).
+pub(crate) fn resolve_target_in<'a>(
+    doc: &'a PenDocument,
+    target: &str,
+    requested: Option<&VariantValues>,
+    set_of: &dyn Fn(&str) -> Option<&'a PenNode>,
+) -> Result<Option<InstanceTarget>, VariantError> {
     let Some(node) = find(doc, target) else {
         return Ok(None);
     };
     let (set_node, current) = if component_set_of(node).is_some() {
         (node, None)
     } else {
-        match set_containing(doc, target) {
+        match set_of(target) {
             Some(set_node) => (set_node, variant_values_of(node)),
             None if requested.is_some_and(|r| !r.is_empty()) => {
                 return Err(VariantError::NotAVariant(target.to_string()))
@@ -94,6 +106,19 @@ pub fn resolve_target(
     }))
 }
 
+/// The master an instance shows now: its `ref`, or the variant its
+/// `variant` picks when `ref` names the set.
+pub(crate) fn shown_master<'a>(doc: &'a PenDocument, reference: &RefNode) -> Option<&'a PenNode> {
+    let node = find(doc, &reference.target)?;
+    match component_set_of(node) {
+        Some(set) => {
+            let values = full_values(set, reference.variant.as_ref(), None);
+            pick_variant(node, &values).map(|pick| pick.master)
+        }
+        None => Some(node),
+    }
+}
+
 /// Rewrite instances in `nodes` (about to be inserted) that name a set or
 /// ask for a variant onto the master they show. Refuses unknown axes and
 /// values; returns the instances that fell back to the nearest variant.
@@ -114,10 +139,15 @@ pub fn normalize_inserted(
                         shown: target.master_id.clone(),
                     });
                 }
-                if reference.target == target.set_id || reference.variant.is_some() {
+                if reference.target == target.set_id {
                     move_root_override(reference, &target.master_id);
                     reference.target = target.master_id;
                     reference.variant = Some(target.values);
+                } else if let Some(new_master) = find(doc, &target.master_id) {
+                    // `ref` names a variant master: its overrides follow
+                    // to the variant `variant` asks for.
+                    let old = find(doc, &reference.target);
+                    super::switch::retarget(reference, old, new_master, target.values);
                 }
             }
         }
@@ -233,9 +263,17 @@ pub(crate) fn reresolve_instances(
         if !in_set {
             return;
         }
+        // A `ref` still naming the set shows the variant it picks.
+        let picked = (reference.target == set_id)
+            .then(|| {
+                let values = full_values(&set, reference.variant.as_ref(), None);
+                pick_variant(&set_node, &values).map(|pick| pick.master.clone())
+            })
+            .flatten();
         let old_master = masters
             .get(&reference.target)
-            .or_else(|| old_masters.get(&reference.target));
+            .or_else(|| old_masters.get(&reference.target))
+            .or(picked.as_ref());
         let mut requested = reference
             .variant
             .clone()

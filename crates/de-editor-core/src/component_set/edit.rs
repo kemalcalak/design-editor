@@ -520,7 +520,10 @@ pub(crate) fn apply_to_document(
                 let target = resolve_target(doc, &reference.target, Some(&requested))
                     .ok()
                     .flatten();
-                (target, find(doc, &reference.target).cloned())
+                (
+                    target,
+                    super::resolve::shown_master(doc, reference).cloned(),
+                )
             };
             let Some(target) = target else {
                 return Ok(Ok(report));

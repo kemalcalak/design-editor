@@ -13,7 +13,7 @@
 use jian_ops_schema::component_set::VariantValues;
 use jian_ops_schema::node::PenNode;
 
-use super::pick::{component_set_of, set_containing, variant_masters, variant_values_of};
+use super::pick::{component_set_of, variant_masters, variant_values_of};
 use super::{ComponentSetCommand, CreateSet, VariantError, VariantReport};
 use crate::pen_node_ext::PenNodeExt;
 use crate::EditorState;
@@ -111,7 +111,7 @@ impl EditorState {
                 axes: axis_rows(component_set_of(node).expect("set"), None),
             },
             PenNode::Frame(frame) if frame.reusable == Some(true) => {
-                match set_containing(&self.doc, node.id_str()) {
+                match self.set_holding(node.id_str()) {
                     Some(set_node) => PanelVariants::Master {
                         set_id: set_node.id_str().to_string(),
                         axes: axis_rows(
@@ -131,8 +131,7 @@ impl EditorState {
         for id in &self.selection.set {
             match super::tree::find(&self.doc, id.as_str()) {
                 Some(PenNode::Frame(frame))
-                    if frame.reusable == Some(true)
-                        && set_containing(&self.doc, id.as_str()).is_none() =>
+                    if frame.reusable == Some(true) && self.set_holding(id.as_str()).is_none() =>
                 {
                     ids.push(id.as_str().to_string())
                 }

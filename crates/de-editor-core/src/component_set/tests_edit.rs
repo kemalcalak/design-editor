@@ -327,3 +327,43 @@ fn three_pages_survive_save_and_load() {
     let reopened_set = super::tree::find(&reopened.doc, "button").unwrap();
     assert_eq!(variant_masters(reopened_set).len(), 3);
 }
+
+#[test]
+fn an_instance_still_naming_the_set_switches_keeping_its_overrides() {
+    let mut state = with_set();
+    if let Some(PenNode::Ref(reference)) = super::tree::find_mut(&mut state.doc, "i1") {
+        reference.target = "button".into();
+        reference.variant = None;
+        reference.descendants = Some(
+            [
+                ("button".to_string(), json!({"opacity": 0.4})),
+                ("btn-pm-label".to_string(), json!({"fontSize": 22})),
+            ]
+            .into(),
+        );
+    }
+    let report = switch(&mut state, "i1", &[("size", "sm")]);
+    assert!(report.dropped_overrides.is_empty(), "{report:?}");
+    let instance = node_json(&state, "i1");
+    assert_eq!(instance["ref"], "btn-ps");
+    assert_eq!(
+        instance["descendants"],
+        json!({"btn-ps": {"opacity": 0.4}, "btn-ps-label": {"fontSize": 22}})
+    );
+}
+
+#[test]
+fn the_panel_finds_the_set_through_the_registry() {
+    let mut state = with_set();
+    state.set_single_selection(NodeId::new("i1"));
+    let (instance, target) = state.selected_variant_instance().expect("a variant");
+    assert_eq!(instance, "i1");
+    assert_eq!(target.set_id, "button");
+    assert_eq!(
+        state
+            .set_holding("btn-gm")
+            .map(|set| set.id_str().to_string()),
+        Some("button".to_string())
+    );
+    assert!(state.set_holding("missing").is_none());
+}

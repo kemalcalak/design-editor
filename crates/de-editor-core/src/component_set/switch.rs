@@ -86,7 +86,15 @@ pub(crate) fn retarget(
         if let Some(descendants) = reference.descendants.take() {
             let mut kept = std::collections::BTreeMap::new();
             for (key, value) in descendants {
-                match old_master.and_then(|old| remap_key(&key, old, new_master)) {
+                // The root override is keyed by the current `ref`, which may
+                // name the set rather than the master shown.
+                let (first, rest) = split_first_segment(&key);
+                let mapped = if first == reference.target {
+                    Some(format!("{}{rest}", new_master.id_str()))
+                } else {
+                    old_master.and_then(|old| remap_key(&key, old, new_master))
+                };
+                match mapped {
                     Some(new_key) => merge(&mut kept, new_key, value),
                     None => dropped.push(key),
                 }

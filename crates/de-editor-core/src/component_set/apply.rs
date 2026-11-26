@@ -134,6 +134,43 @@ impl EditorState {
         true
     }
 
+    /// The set holding master `master_id`: the nearest set among its
+    /// ancestors on the registry's stored path, so the panel never walks
+    /// the document; a walk only for a master the registry does not know
+    /// or whose path went stale.
+    pub(crate) fn set_holding(&self, master_id: &str) -> Option<&PenNode> {
+        let id = NodeId::new(master_id);
+        let backing = self.components.document_backing();
+        if let Some(location) = backing.get(&id) {
+            let roots = match location.page_index {
+                Some(page) => self
+                    .doc
+                    .pages
+                    .as_ref()
+                    .and_then(|p| p.get(page))
+                    .map(|p| &p.children),
+                None => Some(&self.doc.children),
+            };
+            let mut nodes = roots.map(Vec::as_slice).unwrap_or_default();
+            let mut nearest = None;
+            let mut reached = None;
+            for index in location.child_path.iter() {
+                let Some(node) = nodes.get(*index) else {
+                    break;
+                };
+                reached = Some(node);
+                if node.id_str() != master_id && super::component_set_of(node).is_some() {
+                    nearest = Some(node);
+                }
+                nodes = node.children().map(Vec::as_slice).unwrap_or_default();
+            }
+            if reached.is_some_and(|node| node.id_str() == master_id) {
+                return nearest;
+            }
+        }
+        super::set_containing(&self.doc, master_id)
+    }
+
     /// The set and variant values of the selected instance's component,
     /// when it is a variant.
     pub fn selected_variant_instance(&self) -> Option<(String, super::InstanceTarget)> {
@@ -143,10 +180,14 @@ impl EditorState {
         let PenNode::Ref(reference) = self.selected_node()? else {
             return None;
         };
-        let target =
-            super::resolve_target(&self.doc, &reference.target, reference.variant.as_ref())
-                .ok()
-                .flatten()?;
+        let target = super::resolve::resolve_target_in(
+            &self.doc,
+            &reference.target,
+            reference.variant.as_ref(),
+            &|id| self.set_holding(id),
+        )
+        .ok()
+        .flatten()?;
         Some((reference.base.id.clone(), target))
     }
 }
