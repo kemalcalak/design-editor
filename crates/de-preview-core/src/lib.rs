@@ -84,6 +84,9 @@ mod mode_transition;
 mod motion;
 mod motion_pointer;
 mod present;
+mod proto_overlay;
+mod proto_overlay_input;
+mod proto_overlay_scene;
 mod scene_helpers;
 mod session;
 mod session_entry;
@@ -205,6 +208,8 @@ mod tests_multi_pointer;
 mod tests_page_scroll;
 #[cfg(all(test, not(target_os = "windows")))]
 mod tests_pointer_bindings;
+#[cfg(all(test, not(target_os = "windows")))]
+mod tests_proto_overlay;
 #[cfg(all(test, not(target_os = "windows")))]
 mod tests_slide_motion;
 #[cfg(all(test, not(target_os = "windows")))]

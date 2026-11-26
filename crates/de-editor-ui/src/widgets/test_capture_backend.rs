@@ -20,6 +20,8 @@ pub(crate) struct CaptureBackend {
     pub(crate) svg_strokes: Vec<(String, Point2D, f32, Color, f32)>,
     /// `(rect, radius, color, width)` of every `stroke_round_rect`.
     pub(crate) round_strokes: Vec<(Rect, f32, Color, f32)>,
+    /// How many `stroke_line` segments were drawn.
+    pub(crate) lines: usize,
 }
 
 impl RenderBackend for CaptureBackend {
@@ -41,7 +43,9 @@ impl RenderBackend for CaptureBackend {
 
     fn clip_rect(&mut self, _rect: Rect) {}
 
-    fn stroke_line(&mut self, _from: Point2D, _to: Point2D, _color: Color, _width: f32) {}
+    fn stroke_line(&mut self, _from: Point2D, _to: Point2D, _color: Color, _width: f32) {
+        self.lines += 1;
+    }
 
     fn fill_round_rect(&mut self, rect: Rect, radius: f32, color: Color) {
         self.round_fills.push((rect, radius, color));

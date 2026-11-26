@@ -32,7 +32,8 @@ pub enum CaptureStep {
     Hover(String),
     /// Switch to the screen at this route path (APP MODE only).
     Navigate(String),
-    /// Go back one screen, like the back gesture.
+    /// Go back one screen, like the back gesture; with an overlay open,
+    /// close the top overlay (#372).
     Back,
     /// Let this many milliseconds pass.
     Wait(u64),
@@ -111,8 +112,11 @@ impl PreviewSession {
 
     /// The scene the next frame paints: live widget state, bindings and
     /// running animations applied.
+    /// Open overlays (#372) are composed on top of the screen board.
     pub fn painted_scene(&self) -> LayoutScene {
-        self.overlay_runtime_state(&self.scene)
+        let mut scene = self.overlay_runtime_state(&self.scene);
+        self.compose_prototype_overlays(&mut scene, self.last_now_ms);
+        scene
     }
 
     /// Run `step` and let it settle ([`STEP_SETTLE_MS`]; a wait lasts
@@ -142,6 +146,7 @@ impl PreviewSession {
                 }
                 let _ = self.navigate_to_screen(path);
             }
+            CaptureStep::Back if self.has_open_overlays() => self.pop_screen(),
             CaptureStep::Back => {
                 if !self.is_app_mode() {
                     return Err(CaptureStepError::NotAppMode);

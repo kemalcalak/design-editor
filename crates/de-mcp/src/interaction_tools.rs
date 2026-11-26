@@ -8,7 +8,8 @@
 //! given as objects (`{"type":"navigate","to":"/pricing"}`), never as the
 //! expression strings the `events` schema stores, and a navigate target is
 //! resolved to a route here: a route, a screen frame id or a frame name;
-//! an unmarked frame is marked as a screen in the same undo step.
+//! an unmarked frame is marked as a screen in the same undo step. Overlay
+//! actions (#372) are built in `interaction_overlay.rs`.
 //!
 //! The argument helpers return a finished `ToolOutcome::Err`, so the large
 //! `Err` is deliberate (as in `instance_tools.rs`).
@@ -206,7 +207,7 @@ impl SetInteraction {
         let raw = arg(args, &["actions", "action"]).ok_or_else(|| {
             ToolOutcome::Err(
                 ToolErrorCode::MissingArgument,
-                format!("actions is required: a list of navigate / back / scroll_to / open_url; see {GUIDE}"),
+                format!("actions is required: a list of navigate / back / scroll_to / open_url / open_overlay / swap_overlay / close_overlay; see {GUIDE}"),
             )
         })?;
         let items = match serde_json::from_str::<Value>(raw) {
@@ -269,7 +270,13 @@ impl SetInteraction {
                 .map(str::trim)
                 .filter(|s| !s.is_empty())
         };
-        let kind = text("type").ok_or("type is required: navigate, back, scroll_to or open_url")?;
+        let kind = text("type").ok_or(
+            "type is required: navigate, back, scroll_to, open_url, open_overlay, swap_overlay or close_overlay",
+        )?;
+        if let Some(built) = crate::interaction_overlay::overlay_action(&self.0.doc, kind, object)?
+        {
+            return Ok(built);
+        }
         match kind {
             "navigate" => {
                 let to =
@@ -325,7 +332,7 @@ impl SetInteraction {
                 ))
             }
             other => Err(format!(
-                "unknown type {other}: navigate, back, scroll_to or open_url"
+                "unknown type {other}: navigate, back, scroll_to, open_url, open_overlay, swap_overlay or close_overlay"
             )),
         }
     }
@@ -514,6 +521,7 @@ fn link_json(link: &FlowLink) -> Value {
             .map(Value::from),
     );
     put("via", link.via.clone().map(Value::from));
+    put("overlay", link.overlay.clone());
     put("hidden", link.hidden.then_some(Value::Bool(true)));
     put("master", link.in_master.then_some(Value::Bool(true)));
     value

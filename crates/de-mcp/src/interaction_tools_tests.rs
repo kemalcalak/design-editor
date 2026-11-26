@@ -307,3 +307,90 @@ fn bad_arguments_are_refused() {
     )
     .contains("unknown type fly"));
 }
+
+#[test]
+fn overlay_actions_are_written_in_the_stored_shape_and_listed() {
+    let mut s = state();
+    // A target by layer name on the same page, with every option.
+    let echo = set(
+        &mut s,
+        &[
+            ("nodeId", "link"),
+            ("trigger", "tap"),
+            (
+                "actions",
+                r##"[{"type":"open_overlay","target":"About","position":"bottom_center",
+                    "closeOnOutsideClick":false,"background":"#0008",
+                    "animation":"move_in","direction":"bottom"}]"##,
+            ),
+        ],
+    );
+    assert_eq!(echo["actions"][0]["target"], "about");
+    assert_eq!(echo["actions"][0]["targetName"], "About");
+    let stored = &node_json(&s, "link")["events"]["onTap"][0]["open_overlay"];
+    assert_eq!(stored["target"], "about");
+    assert_eq!(stored["position"], "bottom_center");
+    assert_eq!(stored["closeOnOutsideClick"], false);
+    assert_eq!(stored["background"], "#00000088");
+    assert_eq!(stored["animation"], "move_in");
+    assert_eq!(stored["direction"], "bottom");
+
+    // An overlay on another page, set inside an instance: an override.
+    set(
+        &mut s,
+        &[
+            ("nodeId", "cta/btn-label"),
+            ("trigger", "tap"),
+            ("actions", r#"[{"type":"swap_overlay","target":"dash"}]"#),
+        ],
+    );
+    set(
+        &mut s,
+        &[
+            ("nodeId", "tile"),
+            ("trigger", "tap"),
+            ("actions", r#"[{"type":"close_overlay"}]"#),
+        ],
+    );
+
+    let graph = list(&s, &[]);
+    let links = graph["links"].as_array().expect("links");
+    let open = links
+        .iter()
+        .find(|l| l["action"] == "open_overlay")
+        .expect("the open link");
+    assert_eq!(open["target"], "about");
+    assert_eq!(open["overlay"]["position"], "bottom_center");
+    let swap = links
+        .iter()
+        .find(|l| l["action"] == "swap_overlay")
+        .expect("the swap link");
+    assert_eq!(swap["from"], "cta/btn-label");
+    assert_eq!(swap["targetPageId"], "app");
+    assert!(links.iter().any(|l| l["action"] == "close_overlay"));
+}
+
+#[test]
+fn overlay_actions_refuse_bad_options() {
+    let s = state();
+    let refusal = |actions: &str| {
+        refused(
+            &s,
+            &[("nodeId", "link"), ("trigger", "tap"), ("actions", actions)],
+        )
+    };
+    assert!(refusal(r#"[{"type":"open_overlay"}]"#).contains("needs target"));
+    assert!(refusal(r#"[{"type":"open_overlay","target":"nowhere"}]"#).contains("no frame"));
+    assert!(
+        refusal(r#"[{"type":"open_overlay","target":"about","position":"middle"}]"#)
+            .contains("position must be")
+    );
+    assert!(
+        refusal(r#"[{"type":"open_overlay","target":"about","background":"dim"}]"#)
+            .contains("background must be")
+    );
+    assert!(
+        refusal(r#"[{"type":"swap_overlay","target":"about","animation":"spin"}]"#)
+            .contains("animation must be")
+    );
+}

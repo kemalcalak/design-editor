@@ -27,6 +27,10 @@ pub(crate) fn is_interaction_action(action: &PropertyPanelAction) -> bool {
             | A::SetInteractionTransition { .. }
             | A::RemoveInteraction(_)
             | A::GoToInteractionTarget(_)
+            | A::PickOverlayTarget { .. }
+            | A::SetInteractionOverlay { .. }
+            | A::SetInteractionCloseOverlay(_)
+            | A::SetOverlayOption { .. }
             | A::EditScreenMarker(_)
             | A::AddAnimation
             | A::RemoveAnimation(_)
@@ -46,6 +50,7 @@ pub(crate) fn interaction_updates_document(action: &PropertyPanelAction) -> bool
             PropertyPanelAction::ToggleInteractionMenu(_)
                 | PropertyPanelAction::PickInteractionTrigger(_)
                 | PropertyPanelAction::GoToInteractionTarget(_)
+                | PropertyPanelAction::PickOverlayTarget { .. }
         )
 }
 
@@ -68,6 +73,13 @@ fn interaction_target(
             .node_id
     } else if key == "scroll_to" {
         body.get("target")?.as_str()?.to_owned()
+    } else if let Some(target) = de_editor_core::overlay_action::OverlayAction::parse(action)
+        .and_then(|overlay| overlay.target().map(str::to_owned))
+    {
+        // An overlay frame on this page (#372).
+        let id = de_editor_core::NodeId::new_opt(&target)?;
+        de_editor_core::walkers::find_node(state.active_children(), &id)?;
+        target
     } else {
         return None;
     };
@@ -123,6 +135,38 @@ pub(crate) fn apply_interaction_action(state: &mut EditorState, action: &Propert
         }
         A::RemoveInteraction(trigger) => {
             let _ = state.remove_selected_interaction(*trigger);
+        }
+        A::PickOverlayTarget { trigger, swap } => {
+            state.editor_ui.interaction_menu_target = InteractionMenuTarget::OverlayTarget {
+                trigger: *trigger,
+                swap: *swap,
+            };
+            state.editor_ui.interaction_menu_hover = None;
+            return;
+        }
+        A::SetInteractionOverlay {
+            trigger,
+            target,
+            swap,
+        } => {
+            let edit = if *swap {
+                InteractionActionEdit::SwapOverlay {
+                    target: target.clone(),
+                }
+            } else {
+                InteractionActionEdit::OpenOverlay {
+                    target: target.clone(),
+                }
+            };
+            let _ = state.set_selected_interaction_action(*trigger, &edit);
+        }
+        A::SetInteractionCloseOverlay(trigger) => {
+            let _ = state
+                .set_selected_interaction_action(*trigger, &InteractionActionEdit::CloseOverlay);
+        }
+        A::SetOverlayOption { trigger, edit } => {
+            let _ = state.set_selected_overlay_option(*trigger, edit);
+            return;
         }
         A::GoToInteractionTarget(trigger) => {
             if let Some(target) = interaction_target(state, *trigger) {

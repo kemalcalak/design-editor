@@ -90,7 +90,9 @@ impl EditorState {
             // A hex colour: committed from the draft, never as a number.
             PropertyFocus::MotionColor { .. } => return false,
             // Free text: committed from the draft, never as a number.
-            PropertyFocus::InteractionUrl(_) | PropertyFocus::ComponentProp(_) => return false,
+            PropertyFocus::InteractionUrl(_)
+            | PropertyFocus::OverlayBackground(_)
+            | PropertyFocus::ComponentProp(_) => return false,
             PropertyFocus::ShaderUniform {
                 target,
                 index,
@@ -349,6 +351,7 @@ impl EditorState {
             | PropertyFocus::MotionColor { .. }
             | PropertyFocus::TransitionDuration
             | PropertyFocus::InteractionUrl(_)
+            | PropertyFocus::OverlayBackground(_)
             | PropertyFocus::ComponentProp(_)
             | PropertyFocus::ShaderUniform { .. }
             | PropertyFocus::StrokeWidth => {
