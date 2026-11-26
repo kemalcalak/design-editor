@@ -6,12 +6,16 @@ use std::io::Read;
 use std::path::PathBuf;
 
 use crate::agent_args_error::AgentArgsError;
+use crate::agent_paths::is_portable_name;
 use crate::agent_provider::ProviderFlags;
 use crate::agent_task::{build_task, file_stem, RawTaskFields, TaskOptions, TaskSpec};
-use crate::agent_tasks::load_tasks_file;
+use crate::agent_tasks::{check_plan, load_tasks_file};
 
-/// Most tasks `--parallel` runs at once.
-pub(crate) const MAX_PARALLEL: u64 = 64;
+/// Most tasks `--parallel` runs at once. Parallel tasks share one request
+/// pacer (the builtin providers' process-wide minimum gap, widened for every
+/// task by each 429), so more workers mostly queue; 16 keeps a batch from
+/// opening more provider streams than an account usually allows.
+pub(crate) const MAX_PARALLEL: u64 = 16;
 
 /// What `de agent` was asked to do.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -245,6 +249,7 @@ fn tasks_from(c: &Collected) -> Result<Vec<TaskSpec>, AgentArgsError> {
     let name = output
         .as_deref()
         .map(file_stem)
+        .filter(|stem| is_portable_name(stem))
         .unwrap_or_else(|| "design".into());
     let task = build_task(
         name,
@@ -256,7 +261,9 @@ fn tasks_from(c: &Collected) -> Result<Vec<TaskSpec>, AgentArgsError> {
         },
     )
     .map_err(AgentArgsError::Task)?;
-    Ok(vec![task])
+    let tasks = vec![task];
+    check_plan(&tasks)?;
+    Ok(tasks)
 }
 
 fn read_prompt_file(path: &str) -> Result<String, AgentArgsError> {

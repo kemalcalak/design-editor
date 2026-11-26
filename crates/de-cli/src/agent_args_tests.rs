@@ -56,7 +56,7 @@ fn a_full_single_prompt_command_line() {
             HeadlessExportFormat::Svg
         ]
     );
-    assert_eq!(task.export_dir, PathBuf::from("shots"));
+    assert_eq!(task.export_dir, PathBuf::from("shots/pricing"));
     assert_eq!(task.model.as_deref(), Some("claude-x"));
     assert_eq!(task.provider.as_deref(), Some("Claude"));
     assert_eq!(task.timeout, Duration::from_secs(120));
@@ -95,7 +95,7 @@ fn switches_and_provider_flags() {
     );
     assert_eq!(
         single(&["-p", "x", "--out", "a.de"]).export_dir,
-        Path::new("a-export")
+        Path::new("exports/a")
     );
 }
 
@@ -213,7 +213,7 @@ fn command_line_errors_name_the_flag() {
                 min: 1,
                 max: MAX_PARALLEL,
             },
-            "--parallel must be a whole number from 1 to 64",
+            "--parallel must be a whole number from 1 to 16",
         ),
     ];
     for (args, expected, message) in cases {

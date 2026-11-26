@@ -11,7 +11,7 @@ use std::io::{Read, Write};
 use std::net::{TcpListener, TcpStream};
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 use serde_json::Value;
 
@@ -23,6 +23,7 @@ pub struct FakeProvider {
     pub base_url: String,
     requests: Arc<AtomicUsize>,
     api_keys: Arc<Mutex<Vec<String>>>,
+    arrivals: Arc<Mutex<Vec<Instant>>>,
 }
 
 impl FakeProvider {
@@ -31,10 +32,12 @@ impl FakeProvider {
         let addr = listener.local_addr().expect("fake provider address");
         let requests = Arc::new(AtomicUsize::new(0));
         let api_keys = Arc::new(Mutex::new(Vec::new()));
-        let (count, keys) = (requests.clone(), api_keys.clone());
+        let arrivals = Arc::new(Mutex::new(Vec::new()));
+        let (count, keys, times) = (requests.clone(), api_keys.clone(), arrivals.clone());
         std::thread::spawn(move || {
             for stream in listener.incoming() {
                 let Ok(stream) = stream else { return };
+                times.lock().expect("arrivals mutex").push(Instant::now());
                 let (count, keys) = (count.clone(), keys.clone());
                 std::thread::spawn(move || serve(stream, &count, &keys));
             }
@@ -43,11 +46,17 @@ impl FakeProvider {
             base_url: format!("http://{addr}"),
             requests,
             api_keys,
+            arrivals,
         }
     }
 
     pub fn requests(&self) -> usize {
         self.requests.load(Ordering::SeqCst)
+    }
+
+    /// When each connection arrived, in order.
+    pub fn arrivals(&self) -> Vec<Instant> {
+        self.arrivals.lock().expect("arrivals mutex").clone()
     }
 
     /// Every `x-api-key` header received.

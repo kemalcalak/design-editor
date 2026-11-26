@@ -63,7 +63,7 @@ fn export_json(export: &ExportOutcome) -> Value {
             "format": export.format.as_str(),
             "ok": false,
             "files": [],
-            "error": error,
+            "error": error.to_string(),
         }),
     }
 }
@@ -88,9 +88,9 @@ fn task_json(result: &TaskResult) -> Value {
         "agent": report.map(|r| r.to_json()),
         "exportDir": (!spec.exports.is_empty()).then(|| path(&spec.export_dir)),
         "exports": result.exports.iter().map(export_json).collect::<Vec<_>>(),
-        "error": result.error.as_ref().map(|(stage, message)| json!({
-            "stage": stage.as_str(),
-            "message": message,
+        "error": result.error.as_ref().map(|error| json!({
+            "stage": error.stage().as_str(),
+            "message": error.to_string(),
         })),
     })
 }
@@ -100,6 +100,8 @@ pub(crate) struct Totals {
     pub succeeded: usize,
     pub failed: usize,
     pub cancelled: usize,
+    /// Saved, then stopped by Ctrl+C before every export was written.
+    pub interrupted: usize,
     pub usage: TokenUsage,
     pub requests: u64,
 }
@@ -116,23 +118,30 @@ pub(crate) fn totals(results: &[TaskResult]) -> Totals {
         succeeded: count(TaskStatus::Ok),
         failed: count(TaskStatus::Failed),
         cancelled: count(TaskStatus::Cancelled),
+        interrupted: count(TaskStatus::Interrupted),
         usage: meter.total(),
         requests,
     }
 }
 
-/// The `--json` report.
-pub(crate) fn json_report(results: &[TaskResult], elapsed: Duration, cancelled: bool) -> Value {
+/// Whether Ctrl+C stopped any task (the run then exits 130).
+pub(crate) fn run_was_stopped(results: &[TaskResult]) -> bool {
+    results.iter().any(|result| result.status.stopped())
+}
+
+/// The `--json` report. `ok` is true exactly when the process exits 0.
+pub(crate) fn json_report(results: &[TaskResult], elapsed: Duration) -> Value {
     let totals = totals(results);
     json!({
         "version": REPORT_VERSION,
-        "ok": totals.failed == 0 && totals.cancelled == 0 && !cancelled,
-        "cancelled": cancelled,
+        "ok": totals.succeeded == results.len(),
+        "cancelled": run_was_stopped(results),
         "summary": {
             "total": results.len(),
             "succeeded": totals.succeeded,
             "failed": totals.failed,
             "cancelled": totals.cancelled,
+            "interrupted": totals.interrupted,
             "durationMs": millis(elapsed),
             "usage": usage_json(&totals.usage, totals.requests),
         },
@@ -172,10 +181,15 @@ pub(crate) fn text_report(results: &[TaskResult], elapsed: Duration) -> String {
                 result
                     .error
                     .as_ref()
-                    .map(|(stage, message)| format!("{}: {message}", stage.as_str()))
+                    .map(|error| format!("{}: {error}", error.stage().as_str()))
                     .unwrap_or_default()
             ),
             TaskStatus::Cancelled => format!("cancelled  {}", result.spec.name),
+            TaskStatus::Interrupted => format!(
+                "interrupted  {}  {} (exports skipped)",
+                result.spec.name,
+                path(&result.spec.output)
+            ),
         };
         lines.push(line);
     }
@@ -188,6 +202,9 @@ pub(crate) fn text_report(results: &[TaskResult], elapsed: Duration) -> String {
     );
     if totals.cancelled > 0 {
         summary.push_str(&format!("; {} cancelled", totals.cancelled));
+    }
+    if totals.interrupted > 0 {
+        summary.push_str(&format!("; {} interrupted", totals.interrupted));
     }
     lines.push(summary);
     lines.join("\n")

@@ -3,7 +3,9 @@
 //!
 //! The output file is written only after the agent finished, through the
 //! app's atomic save (sibling temp file + rename), so a failed, timed-out
-//! or cancelled task never leaves a partial or changed `--out`.
+//! or cancelled task never leaves a partial or changed `--out`. Ctrl+C
+//! after the save skips the task's remaining exports and marks it
+//! `interrupted`; the run then exits 130 like any cancelled run.
 
 use std::path::Path;
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
@@ -12,18 +14,20 @@ use std::time::{Duration, Instant};
 
 use de_ai::chat_provider::ChatDelta;
 use de_ai::chat_usage::{TokenUsage, UsageMeter};
-use de_editor_core::{EditorState, Locale};
+use de_editor_core::EditorState;
 use de_host_services::design_agent_run::{
     run_design_agent, DesignAgentRun, DesignAgentRunError, DesignAgentRunReport, RunControl,
 };
 use de_host_services::doc_io;
 use de_host_services::headless_export::{
-    export_document, HeadlessExportFormat, HeadlessExportReport,
+    export_document, HeadlessExportError, HeadlessExportFormat, HeadlessExportReport,
 };
 
 use crate::agent_progress::Progress;
 use crate::agent_provider::ResolvedProvider;
+pub(crate) use crate::agent_runner_error::TaskError;
 use crate::agent_task::{file_stem, TaskSpec};
+use crate::agent_thumbs::{load_with_thumbs, save_with_thumbs, TaskThumbs};
 
 /// A task with the provider it runs on (resolved before anything starts).
 pub(crate) struct PlannedTask {
@@ -35,7 +39,10 @@ pub(crate) struct PlannedTask {
 pub(crate) enum TaskStatus {
     Ok,
     Failed,
+    /// Stopped by Ctrl+C before `out` was written.
     Cancelled,
+    /// Stopped by Ctrl+C after `out` was written: exports were skipped.
+    Interrupted,
 }
 
 impl TaskStatus {
@@ -44,27 +51,13 @@ impl TaskStatus {
             TaskStatus::Ok => "ok",
             TaskStatus::Failed => "failed",
             TaskStatus::Cancelled => "cancelled",
+            TaskStatus::Interrupted => "interrupted",
         }
     }
-}
 
-/// The step a task failed in.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub(crate) enum Stage {
-    Load,
-    Agent,
-    Save,
-    Export,
-}
-
-impl Stage {
-    pub(crate) fn as_str(self) -> &'static str {
-        match self {
-            Stage::Load => "load",
-            Stage::Agent => "agent",
-            Stage::Save => "save",
-            Stage::Export => "export",
-        }
+    /// Cancelled or interrupted: the run was stopped by Ctrl+C.
+    pub(crate) fn stopped(self) -> bool {
+        matches!(self, TaskStatus::Cancelled | TaskStatus::Interrupted)
     }
 }
 
@@ -72,12 +65,22 @@ impl Stage {
 #[derive(Debug, Clone)]
 pub(crate) struct ExportOutcome {
     pub format: HeadlessExportFormat,
-    pub result: Result<HeadlessExportReport, String>,
+    pub result: Result<HeadlessExportReport, HeadlessExportError>,
 }
 
 impl ExportOutcome {
-    fn succeeded(&self) -> bool {
-        matches!(&self.result, Ok(report) if report.failed.is_empty())
+    fn error(&self) -> Option<TaskError> {
+        match &self.result {
+            Err(source) => Some(TaskError::Export {
+                format: self.format,
+                source: source.clone(),
+            }),
+            Ok(report) if !report.failed.is_empty() => Some(TaskError::ExportPartial {
+                format: self.format,
+                failed: report.failed.clone(),
+            }),
+            Ok(_) => None,
+        }
     }
 }
 
@@ -87,8 +90,8 @@ pub(crate) struct TaskResult {
     pub provider_label: String,
     pub model: String,
     pub status: TaskStatus,
-    /// Where and why a failed (or cancelled) task stopped.
-    pub error: Option<(Stage, String)>,
+    /// Why a task that is not `Ok` stopped.
+    pub error: Option<TaskError>,
     pub duration: Duration,
     pub report: Option<DesignAgentRunReport>,
     pub exports: Vec<ExportOutcome>,
@@ -133,6 +136,7 @@ pub(crate) fn run_tasks(
 fn run_one(task: &PlannedTask, cancel: &Arc<AtomicBool>, progress: &Progress) -> TaskResult {
     let spec = &task.spec;
     let started = Instant::now();
+    let meter = Arc::new(UsageMeter::new());
     let mut result = TaskResult {
         spec: spec.clone(),
         provider_label: task.provider.label(),
@@ -146,25 +150,43 @@ fn run_one(task: &PlannedTask, cancel: &Arc<AtomicBool>, progress: &Progress) ->
         usage: TokenUsage::default(),
         requests: 0,
     };
-    let meter = Arc::new(UsageMeter::new());
-    let finish = |mut result: TaskResult| {
-        result.duration = started.elapsed();
-        result.usage = meter.total();
-        result.requests = meter.requests();
-        progress.finished(&result);
-        result
+    let outcome = if cancel.load(Ordering::Acquire) {
+        Err(TaskError::Agent(DesignAgentRunError::Cancelled))
+    } else {
+        progress.started(spec, &result.provider_label, &result.model);
+        run_steps(task, cancel, progress, &meter, &mut result)
     };
-    if cancel.load(Ordering::Acquire) {
-        result.status = TaskStatus::Cancelled;
-        result.error = Some((Stage::Agent, DesignAgentRunError::Cancelled.to_string()));
-        return finish(result);
+    if let Err(error) = outcome {
+        result.status = status_for(&error, result.saved);
+        result.error = Some(error);
     }
-    progress.started(spec, &result.provider_label, &result.model);
+    result.duration = started.elapsed();
+    result.usage = meter.total();
+    result.requests = meter.requests();
+    progress.finished(&result);
+    result
+}
 
-    let mut state = match load(spec) {
-        Ok(state) => state,
-        Err(message) => return finish(failed(result, Stage::Load, message)),
-    };
+/// The status of a task that stopped with `error`: a cancellation is
+/// `Interrupted` once `out` was saved (exports were skipped) and `Cancelled`
+/// before; anything else is `Failed`.
+pub(crate) fn status_for(error: &TaskError, saved: bool) -> TaskStatus {
+    match (error.is_cancellation(), saved) {
+        (false, _) => TaskStatus::Failed,
+        (true, true) => TaskStatus::Interrupted,
+        (true, false) => TaskStatus::Cancelled,
+    }
+}
+
+fn run_steps(
+    task: &PlannedTask,
+    cancel: &Arc<AtomicBool>,
+    progress: &Progress,
+    meter: &Arc<UsageMeter>,
+    result: &mut TaskResult,
+) -> Result<(), TaskError> {
+    let spec = &task.spec;
+    let (mut state, thumbs) = load(spec)?;
     let run = DesignAgentRun {
         brief: spec.prompt.clone(),
         timeout: spec.timeout,
@@ -178,79 +200,55 @@ fn run_one(task: &PlannedTask, cancel: &Arc<AtomicBool>, progress: &Progress) ->
         on_delta: Some(&mut on_delta),
         usage: Some(meter.clone()),
     };
-    let outcome = match run_design_agent(&state, &run, control) {
-        Ok(outcome) => outcome,
-        Err(DesignAgentRunError::Cancelled) => {
-            result.status = TaskStatus::Cancelled;
-            result.error = Some((Stage::Agent, DesignAgentRunError::Cancelled.to_string()));
-            return finish(result);
-        }
-        Err(error) => return finish(failed(result, Stage::Agent, error.to_string())),
-    };
+    let outcome = run_design_agent(&state, &run, control)?;
     result.report = Some(outcome.report);
     if !state.apply(outcome.command) {
-        let message = "the agent's design could not be applied to the document".to_string();
-        return finish(failed(result, Stage::Agent, message));
+        return Err(TaskError::Apply);
     }
     // Ctrl+C after the agent finished still leaves `out` untouched.
     if cancel.load(Ordering::Acquire) {
-        result.status = TaskStatus::Cancelled;
-        result.error = Some((Stage::Save, DesignAgentRunError::Cancelled.to_string()));
-        return finish(result);
+        return Err(TaskError::CancelledBeforeSave);
     }
-    if let Err(message) = save(&mut state, &spec.output) {
-        return finish(failed(result, Stage::Save, message));
-    }
+    save(&mut state, &spec.output, &thumbs)?;
     result.saved = true;
-    for format in &spec.exports {
-        let outcome = ExportOutcome {
+    let stem = file_stem(&spec.output);
+    for (position, format) in spec.exports.iter().enumerate() {
+        if cancel.load(Ordering::Acquire) {
+            return Err(TaskError::Interrupted {
+                skipped: spec.exports[position..].to_vec(),
+            });
+        }
+        result.exports.push(ExportOutcome {
             format: *format,
-            result: export_document(&state, *format, &spec.export_dir, &file_stem(&spec.output))
-                .map_err(|error| error.to_string()),
-        };
-        result.exports.push(outcome);
+            result: export_document(&state, *format, &spec.export_dir, &stem),
+        });
     }
-    if let Some(bad) = result.exports.iter().find(|export| !export.succeeded()) {
-        let message = match &bad.result {
-            Err(message) => format!("{}: {message}", bad.format.as_str()),
-            Ok(report) => format!(
-                "{}: {} file(s) failed: {}",
-                bad.format.as_str(),
-                report.failed.len(),
-                report
-                    .failed
-                    .iter()
-                    .map(|(file, error)| format!("{file} ({error})"))
-                    .collect::<Vec<_>>()
-                    .join(", ")
-            ),
-        };
-        return finish(failed(result, Stage::Export, message));
+    match result.exports.iter().find_map(ExportOutcome::error) {
+        Some(error) => Err(error),
+        None => Ok(()),
     }
-    finish(result)
 }
 
-fn failed(mut result: TaskResult, stage: Stage, message: String) -> TaskResult {
-    result.status = TaskStatus::Failed;
-    result.error = Some((stage, message));
-    result
-}
-
-fn load(spec: &TaskSpec) -> Result<EditorState, String> {
+fn load(spec: &TaskSpec) -> Result<(EditorState, TaskThumbs), TaskError> {
     match &spec.input {
-        None => Ok(EditorState::new()),
-        Some(path) => doc_io::load_editor_state_with_report(path, Locale::EnUs)
-            .map(|loaded| loaded.state)
-            .map_err(|error| format!("cannot open {}: {error}", path.display())),
+        None => Ok((EditorState::new(), TaskThumbs::default())),
+        Some(path) => load_with_thumbs(path).map_err(|source| TaskError::Load {
+            path: path.display().to_string(),
+            source,
+        }),
     }
 }
 
-fn save(state: &mut EditorState, output: &Path) -> Result<(), String> {
+fn save(state: &mut EditorState, output: &Path, thumbs: &TaskThumbs) -> Result<(), TaskError> {
     if let Some(parent) = output.parent().filter(|p| !p.as_os_str().is_empty()) {
-        std::fs::create_dir_all(parent)
-            .map_err(|error| format!("cannot create {}: {error}", parent.display()))?;
+        std::fs::create_dir_all(parent).map_err(|error| TaskError::CreateDir {
+            path: parent.display().to_string(),
+            detail: error.to_string(),
+        })?;
     }
     doc_io::set_file_name_display(state, Some(output));
-    doc_io::save_to_path(state, output)
-        .map_err(|error| format!("cannot save {}: {error}", output.display()))
+    save_with_thumbs(state, output, thumbs).map_err(|source| TaskError::Save {
+        path: output.display().to_string(),
+        source,
+    })
 }

@@ -3,7 +3,8 @@
 //! ```yaml
 //! defaults:            # optional; every task inherits these
 //!   export: [png, pdf] # or a single name: png
-//!   exportDir: exports # default: <out folder>/<out stem>-export
+//!   exportDir: shots   # export root (default: <out folder>/exports); each
+//!                      # task writes into <exportDir>/<task name>/
 //!   provider: Claude   # a saved provider (id, name or preset)
 //!   model: claude-sonnet-4-5
 //!   timeout: 900       # seconds, 1-86400 (default 600)
@@ -18,14 +19,19 @@
 //!
 //! JSON is accepted too (YAML is a superset). Relative paths resolve
 //! against the tasks file's folder. Unknown keys are errors, so a typo
-//! never silently drops a setting. A task's own value wins over the file's
-//! `defaults`, which win over the command-line flags.
+//! never silently drops a setting. A task's own value wins over the
+//! command-line flags, which win over the file's `defaults` (so a CI job can
+//! override a checked-in file without editing it). Task names must be
+//! portable folder names and are compared ignoring case; two tasks may not
+//! write the same `out` (compared after `.` / `..` and, on macOS and
+//! Windows, case) or export into overlapping folders.
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 
 use serde::Deserialize;
 
+use crate::agent_paths::{is_portable_name, is_within, path_key};
 use crate::agent_task::{build_task, file_stem, RawTaskFields, TaskOptions, TaskSpec};
 use crate::agent_tasks_error::TasksFileError;
 
@@ -132,14 +138,15 @@ pub(crate) fn parse_tasks(
             path: label.to_string(),
         });
     }
-    let defaults = file.defaults.into_options(base).or(cli);
+    // Command-line flags beat the file's defaults; a task's own keys beat both.
+    let defaults = cli.clone().or(&file.defaults.into_options(base));
     let explicit: BTreeSet<String> = file
         .tasks
         .iter()
         .filter_map(|task| non_blank(task.name.clone()))
+        .map(|name| name.to_lowercase())
         .collect();
     let mut names = BTreeSet::new();
-    let mut outs: BTreeMap<PathBuf, usize> = BTreeMap::new();
     let mut specs = Vec::with_capacity(file.tasks.len());
     for (offset, task) in file.tasks.into_iter().enumerate() {
         let index = offset + 1;
@@ -147,7 +154,7 @@ pub(crate) fn parse_tasks(
         let output = task.out.as_deref().map(|out| resolve(base, out));
         let name = match &explicit_name {
             Some(name) => {
-                if !names.insert(name.clone()) {
+                if !names.insert(name.to_lowercase()) {
                     return Err(TasksFileError::DuplicateName { name: name.clone() });
                 }
                 name.clone()
@@ -174,33 +181,76 @@ pub(crate) fn parse_tasks(
             name: explicit_name,
             problem,
         })?;
-        if let Some(first) = outs.insert(normalized(&spec.output), index) {
-            return Err(TasksFileError::DuplicateOut {
-                out: spec.output.display().to_string(),
-                first,
-                second: index,
-            });
-        }
         specs.push(spec);
     }
+    check_plan(&specs)?;
     Ok(specs)
 }
 
 /// An unnamed task is called after its `out` file, or `task-<n>` when that
-/// name is taken.
+/// name is taken or cannot be a folder name.
 fn default_name(
     output: Option<&Path>,
     index: usize,
     explicit: &BTreeSet<String>,
     taken: &mut BTreeSet<String>,
 ) -> String {
-    let candidate = output.map(file_stem);
-    let name = match candidate {
-        Some(stem) if !explicit.contains(&stem) && !taken.contains(&stem) => stem,
-        _ => format!("task-{index}"),
-    };
-    taken.insert(name.clone());
+    let candidate = output.map(file_stem).filter(|stem| {
+        let key = stem.to_lowercase();
+        is_portable_name(stem) && !explicit.contains(&key) && !taken.contains(&key)
+    });
+    let name = candidate.unwrap_or_else(|| format!("task-{index}"));
+    taken.insert(name.to_lowercase());
     name
+}
+
+/// Checks across tasks, before anything runs: every `out` is its own file,
+/// and no task exports into another task's export folder, a document, or a
+/// document's asset folder. Paths are compared as [`path_key`]s.
+pub(crate) fn check_plan(specs: &[TaskSpec]) -> Result<(), TasksFileError> {
+    let mut outs: BTreeMap<PathBuf, usize> = BTreeMap::new();
+    for (offset, spec) in specs.iter().enumerate() {
+        if let Some(first) = outs.insert(path_key(&spec.output), offset + 1) {
+            return Err(TasksFileError::DuplicateOut {
+                out: spec.output.display().to_string(),
+                first,
+                second: offset + 1,
+            });
+        }
+    }
+    let exporting: Vec<(usize, &TaskSpec, PathBuf)> = specs
+        .iter()
+        .enumerate()
+        .filter(|(_, spec)| !spec.exports.is_empty())
+        .map(|(offset, spec)| (offset + 1, spec, path_key(&spec.export_dir)))
+        .collect();
+    for (i, (first, _, dir)) in exporting.iter().enumerate() {
+        for (second, spec, other) in &exporting[i + 1..] {
+            if is_within(dir, other) || is_within(other, dir) {
+                return Err(TasksFileError::ExportDirClash {
+                    first: *first,
+                    second: *second,
+                    dir: spec.export_dir.display().to_string(),
+                });
+            }
+        }
+    }
+    for (index, spec, dir) in &exporting {
+        for owner in specs {
+            let document = path_key(&owner.output);
+            let assets = de_pen_loader::asset_folder::folder_path(&owner.output)
+                .map(|folder| path_key(&folder));
+            let overlaps_assets = assets.as_ref().is_some_and(|assets| is_within(dir, assets));
+            if dir == &document || overlaps_assets {
+                return Err(TasksFileError::ExportDirOverDocument {
+                    index: *index,
+                    dir: spec.export_dir.display().to_string(),
+                    out: owner.output.display().to_string(),
+                });
+            }
+        }
+    }
+    Ok(())
 }
 
 fn resolve(base: &Path, path: &str) -> PathBuf {
@@ -210,13 +260,6 @@ fn resolve(base: &Path, path: &str) -> PathBuf {
     } else {
         base.join(path)
     }
-}
-
-/// `out` paths compared without `.` segments, so `./a.de` and `a.de` collide.
-fn normalized(path: &Path) -> PathBuf {
-    path.components()
-        .filter(|component| !matches!(component, std::path::Component::CurDir))
-        .collect()
 }
 
 fn non_blank(value: Option<String>) -> Option<String> {

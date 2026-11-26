@@ -28,24 +28,24 @@ fn a_minimal_task_gets_its_defaults() {
     assert_eq!(task.prompt, "A landing page");
     assert_eq!(task.input, None);
     assert_eq!(task.output, base("out/landing.de"));
-    assert_eq!(task.export_dir, base("out/landing-export"));
+    assert_eq!(task.export_dir, base("out/exports/landing"));
     assert!(task.exports.is_empty());
     assert_eq!(task.timeout, Duration::from_secs(600));
     assert_eq!(task.max_turns, None);
 }
 
 #[test]
-fn task_values_beat_defaults_which_beat_the_command_line() {
+fn task_values_beat_the_command_line_which_beats_file_defaults() {
     let cli = TaskOptions {
         model: Some("cli-model".into()),
-        provider: Some("cli-provider".into()),
         timeout_secs: Some(30),
-        exports: Some(vec!["svg".into()]),
         ..TaskOptions::default()
     };
     let text = r#"
 defaults:
   model: file-model
+  provider: file-provider
+  timeout: 900
   export: [png, pdf]
   exportDir: exports
   maxTurns: 12
@@ -61,17 +61,131 @@ tasks:
 "#;
     let tasks = parse_tasks(text, "t.yaml", Path::new("base"), &cli).unwrap();
     let (one, two) = (&tasks[0], &tasks[1]);
+    // The task's own key wins over everything.
     assert_eq!(one.model.as_deref(), Some("task-model"));
     assert_eq!(one.exports, vec![HeadlessExportFormat::Html]);
     assert_eq!(one.input, Some(base("base.pen")));
-    assert_eq!(one.export_dir, base("exports"));
+    // Each task exports into its own folder under the root.
+    assert_eq!(one.export_dir, base("exports/one"));
+    assert_eq!(two.export_dir, base("exports/two"));
     assert_eq!(one.max_turns, Some(12));
-    assert_eq!(two.model.as_deref(), Some("file-model"));
-    assert_eq!(two.provider.as_deref(), Some("cli-provider"));
+    // A flag beats the file's defaults...
+    assert_eq!(two.model.as_deref(), Some("cli-model"));
     assert_eq!(two.timeout, Duration::from_secs(30));
+    // ...which still fill what no flag sets.
+    assert_eq!(two.provider.as_deref(), Some("file-provider"));
     assert_eq!(
         two.exports,
         vec![HeadlessExportFormat::Png, HeadlessExportFormat::Pdf]
+    );
+}
+
+#[test]
+fn outs_are_compared_after_dots_and_case_folding() {
+    let error = parse(
+        "tasks:\n  - prompt: x\n    out: out/a.de\n  - prompt: y\n    out: out/sub/../a.de\n",
+    )
+    .unwrap_err();
+    assert!(
+        matches!(
+            error,
+            TasksFileError::DuplicateOut {
+                first: 1,
+                second: 2,
+                ..
+            }
+        ),
+        "{error}"
+    );
+    let cased = parse("tasks:\n  - prompt: x\n    out: A.de\n  - prompt: y\n    out: a.de\n");
+    if crate::agent_paths::CASE_INSENSITIVE_FS {
+        assert!(
+            matches!(cased, Err(TasksFileError::DuplicateOut { .. })),
+            "{cased:?}"
+        );
+    } else {
+        assert!(cased.is_ok(), "{cased:?}");
+    }
+}
+
+#[test]
+fn names_must_be_folder_names_and_unique_ignoring_case() {
+    let error = parse("tasks:\n  - {name: a/b, prompt: x, out: a.de}\n").unwrap_err();
+    assert!(
+        matches!(
+            &error,
+            TasksFileError::Task {
+                problem: TaskProblem::InvalidName { .. },
+                ..
+            }
+        ),
+        "{error}"
+    );
+    assert_eq!(
+        parse("tasks:\n  - {name: Home, prompt: x, out: a.de}\n  - {name: home, prompt: y, out: b.de}\n")
+            .unwrap_err(),
+        TasksFileError::DuplicateName { name: "home".into() }
+    );
+    // An out stem that cannot be a folder name falls back to task-<n>.
+    let tasks = parse("tasks:\n  - {prompt: x, out: 'CON.de'}\n").unwrap();
+    assert_eq!(tasks[0].name, "task-1");
+}
+
+#[test]
+fn export_folders_may_not_overlap_or_land_on_documents() {
+    // Task 2's export root is task 1's export folder: one holds the other.
+    let error = parse(
+        "tasks:\n  - {name: a, prompt: x, out: a.de, export: png, exportDir: shots}\n  - {name: b, prompt: y, out: b.de, export: png, exportDir: shots/a}\n",
+    )
+    .unwrap_err();
+    assert!(
+        matches!(
+            error,
+            TasksFileError::ExportDirClash {
+                first: 1,
+                second: 2,
+                ..
+            }
+        ),
+        "{error}"
+    );
+    // Overlap only matters when both export.
+    assert!(parse(
+        "tasks:\n  - {name: a, prompt: x, out: a.de, export: png, exportDir: shots}\n  - {name: b, prompt: y, out: b.de, exportDir: shots/a}\n",
+    )
+    .is_ok());
+    // A task named after another document's asset folder.
+    let error = parse(
+        "tasks:\n  - {name: page.assets, prompt: x, out: other.de, export: png, exportDir: .}\n  - {prompt: y, out: page.de}\n",
+    )
+    .unwrap_err();
+    assert!(
+        matches!(
+            error,
+            TasksFileError::ExportDirOverDocument { index: 1, .. }
+        ),
+        "{error}"
+    );
+    assert!(error.to_string().contains("asset folder"), "{error}");
+}
+
+#[test]
+fn an_oversized_prompt_is_refused_before_anything_runs() {
+    let prompt = "x".repeat(de_host_services::design_agent_run::MAX_BRIEF_BYTES + 1);
+    let error = parse(&format!("tasks:\n  - prompt: {prompt}\n    out: a.de\n")).unwrap_err();
+    assert!(
+        matches!(
+            &error,
+            TasksFileError::Task {
+                problem: TaskProblem::PromptTooLarge { .. },
+                ..
+            }
+        ),
+        "{error}"
+    );
+    assert!(
+        error.to_string().contains("the prompt is too large"),
+        "{error}"
     );
 }
 

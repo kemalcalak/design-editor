@@ -45,7 +45,7 @@ impl fmt::Display for DesignAgentRunError {
             }
             Self::NoConfiguredProvider => f.write_str(
                 "no builtin agent provider is configured: save an enabled provider with an \
-                 API key and at least one model in the daemon's agent settings",
+                 API key and at least one model in Design Editor (Settings > Agents)",
             ),
             Self::UnknownProvider(id) => {
                 write!(f, "provider_id names no saved builtin provider: {id}")

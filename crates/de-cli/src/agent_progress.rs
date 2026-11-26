@@ -63,15 +63,15 @@ impl Progress {
                     de_util::display_path::display_path(&result.spec.output),
                 )
             }
-            TaskStatus::Failed => {
-                let (stage, message) = result
-                    .error
-                    .as_ref()
-                    .map(|(stage, message)| (stage.as_str(), message.as_str()))
-                    .unwrap_or(("agent", "unknown error"));
-                format!("failed in {took} ({stage}): {message}")
-            }
+            TaskStatus::Failed => match &result.error {
+                Some(error) => format!("failed in {took} ({}): {error}", error.stage().as_str()),
+                None => format!("failed in {took}"),
+            },
             TaskStatus::Cancelled => format!("cancelled after {took}"),
+            TaskStatus::Interrupted => format!(
+                "interrupted after {took}: {} saved, exports skipped",
+                de_util::display_path::display_path(&result.spec.output)
+            ),
         };
         self.line(&result.spec.name, &text);
     }

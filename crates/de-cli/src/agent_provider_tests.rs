@@ -235,7 +235,7 @@ fn environment_input_is_checked() {
     );
     assert!(matches!(
         bad_url.resolve(None, Some("m")).unwrap_err(),
-        AgentProviderError::InvalidBaseUrl { .. }
+        AgentProviderError::InvalidBaseUrl
     ));
 }
 
@@ -281,4 +281,77 @@ fn the_settings_path_can_come_from_the_environment() {
         Box::new(move |name| env.get(name).cloned()),
     );
     assert_eq!(r.saved().unwrap().1.len(), 3);
+}
+
+#[test]
+fn errors_never_echo_values_that_may_be_secrets() {
+    // A key passed where the variable name belongs is not repeated.
+    let key_as_name = resolver(
+        "key-as-name",
+        ProviderFlags {
+            api_key_env: Some("sk-ant-api03-SECRETSECRET".into()),
+            ..ProviderFlags::default()
+        },
+        &[],
+    )
+    .resolve(None, Some("m"))
+    .unwrap_err()
+    .to_string();
+    assert!(!key_as_name.contains("SECRET"), "{key_as_name}");
+    assert!(
+        key_as_name.contains("25 characters, not shown"),
+        "{key_as_name}"
+    );
+    // A real variable name is fine to show.
+    let named = AgentProviderError::ApiKeyEnvUnset {
+        var: "CI_ANTHROPIC_KEY".into(),
+    };
+    assert!(named.to_string().contains("CI_ANTHROPIC_KEY"));
+
+    // A base URL can carry credentials.
+    let url = resolver(
+        "url-secret",
+        ProviderFlags {
+            base_url: Some("ftp://user:hunter2@proxy?key=SECRET".into()),
+            ..ProviderFlags::default()
+        },
+        &[(ENV_API_KEY, "k")],
+    )
+    .resolve(None, Some("m"))
+    .unwrap_err()
+    .to_string();
+    assert!(!url.contains("hunter2") && !url.contains("SECRET"), "{url}");
+
+    // serde_json quotes the offending value; only the position is kept.
+    let broken = settings_file(
+        "secret-parse",
+        r#"{"version":1,"builtin_agents":[{"id":"b","display_name":"x","kind":"anthropic","api_key":"k","base_url":"","enabled":"sk-LEAK"}]}"#,
+    );
+    let settings = resolver(
+        "secret-parse",
+        ProviderFlags {
+            settings: Some(broken),
+            ..ProviderFlags::default()
+        },
+        &[],
+    )
+    .resolve(None, None)
+    .unwrap_err()
+    .to_string();
+    assert!(!settings.contains("sk-LEAK"), "{settings}");
+    assert!(
+        settings.contains("not valid settings JSON (line 1 column "),
+        "{settings}"
+    );
+}
+
+#[test]
+fn variable_names_are_recognised() {
+    use crate::agent_provider_error::looks_like_variable_name;
+    for good in ["DE_AGENT_API_KEY", "_x", "a1"] {
+        assert!(looks_like_variable_name(good), "{good}");
+    }
+    for bad in ["", "1A", "sk-abc", "has space", "ключ"] {
+        assert!(!looks_like_variable_name(bad), "{bad}");
+    }
 }

@@ -25,6 +25,7 @@ use std::sync::OnceLock;
 use de_editor_core::{BuiltinAgentConfig, BuiltinAgentKind, BuiltinAgentPresetKey};
 use de_host_services::settings_io;
 
+use crate::agent_provider_error::settings_detail;
 pub(crate) use crate::agent_provider_error::AgentProviderError;
 
 pub(crate) const ENV_API_KEY: &str = "DE_AGENT_API_KEY";
@@ -144,7 +145,7 @@ impl ProviderResolver {
                 let agents = settings_io::read_builtin_agents(&path).map_err(|error| {
                     AgentProviderError::Settings {
                         path: label.clone(),
-                        detail: error.to_string(),
+                        detail: settings_detail(&error.to_string()),
                     }
                 })?;
                 Ok((label, agents))
@@ -194,7 +195,7 @@ impl ProviderResolver {
             .map(|url| url.trim().to_string())
             .unwrap_or_default();
         if !base_url.is_empty() && !is_http_url(&base_url) {
-            return Err(AgentProviderError::InvalidBaseUrl { value: base_url });
+            return Err(AgentProviderError::InvalidBaseUrl);
         }
         let model =
             model

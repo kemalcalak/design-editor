@@ -223,8 +223,10 @@ fn every_export_format_lands_in_the_export_folder() {
         "--json",
     ]));
     assert_eq!(code(&output), 0, "{:?}", texts(&output));
+    // The task's own folder under the export root.
+    let folder = exports.join("shop");
     for file in ["01-Shop.png", "shop.pdf", "shop.html", "01-Shop.svg"] {
-        assert!(exports.join(file).is_file(), "missing {file}");
+        assert!(folder.join(file).is_file(), "missing {file}");
     }
     let report = json(&output);
     let formats: Vec<&str> = report["tasks"][0]["exports"]
@@ -234,7 +236,7 @@ fn every_export_format_lands_in_the_export_folder() {
         .map(|export| export["format"].as_str().unwrap())
         .collect();
     assert_eq!(formats, vec!["png", "pdf", "html", "svg"]);
-    assert!(std::fs::read(exports.join("01-Shop.png"))
+    assert!(std::fs::read(folder.join("01-Shop.png"))
         .unwrap()
         .starts_with(b"\x89PNG"));
 }
@@ -277,7 +279,7 @@ fn a_tasks_file_runs_in_order_one_at_a_time() {
     assert_eq!(report["summary"]["total"], 3);
     assert_eq!(report["summary"]["succeeded"], 3);
     assert_eq!(frame_names(&dir.join("out/pricing.de")), vec!["Pricing"]);
-    assert!(dir.join("out/pricing-export/01-Pricing.png").is_file());
+    assert!(dir.join("out/exports/pricing/01-Pricing.png").is_file());
     // Sequential: each task starts after the previous one finished.
     let (_, stderr) = texts(&output);
     let position = |needle: &str| stderr.find(needle).unwrap_or_else(|| panic!("{needle}"));
@@ -525,8 +527,114 @@ fn ctrl_c_cancels_the_run_and_leaves_out_untouched() {
     assert_eq!(leftover_temp_files(&dir), Vec::<String>::new());
     let report: Value = serde_json::from_slice(&output.stdout).expect("JSON report");
     assert_eq!(report["cancelled"], true);
+    assert_eq!(report["ok"], false);
     assert_eq!(report["tasks"][0]["status"], "cancelled");
+    assert_eq!(report["tasks"][0]["saved"], false);
     assert!(rest
         .iter()
         .any(|line| line.contains("[cancel] cancelled after")));
+}
+
+/// A `.de` with one image whose blur-up thumbnail is `thumb`.
+fn document_with_thumb(src: &str, thumb: &[u8]) -> String {
+    use base64::Engine as _;
+    let id = jian_ops_schema::node::image_src::paint_image_id(src);
+    serde_json::json!({
+        "version": "1.0.0",
+        "children": [{
+            "type": "frame", "id": "keep", "name": "Keep", "x": 0, "y": 0,
+            "width": 200, "height": 200,
+            "children": [{"type": "image", "id": "img", "src": src, "width": 100, "height": 100}]
+        }],
+        "imageThumbs": { id.to_string(): base64::engine::general_purpose::STANDARD.encode(thumb) }
+    })
+    .to_string()
+}
+
+fn thumbs_of(path: &Path) -> serde_json::Map<String, Value> {
+    let document: Value =
+        serde_json::from_str(&std::fs::read_to_string(path).expect("read out")).expect("JSON");
+    document["imageThumbs"]
+        .as_object()
+        .cloned()
+        .unwrap_or_default()
+}
+
+#[test]
+fn parallel_tasks_keep_their_own_image_thumbnails() {
+    let provider = FakeProvider::start();
+    let dir = temp_dir("thumbs");
+    let sources = [
+        (
+            "one",
+            "https://example.com/one.png",
+            [0xff, 0xd8, 0x01, 0xd9],
+        ),
+        (
+            "two",
+            "https://example.com/two.png",
+            [0xff, 0xd8, 0x02, 0xd9],
+        ),
+    ];
+    let mut tasks = String::from("tasks:\n");
+    for (name, src, thumb) in &sources {
+        std::fs::write(
+            dir.join(format!("{name}-in.de")),
+            document_with_thumb(src, thumb),
+        )
+        .unwrap();
+        tasks.push_str(&format!(
+            "  - {{name: {name}, prompt: 'Add <<frame:{name}>>', in: {name}-in.de, out: {name}.de}}\n"
+        ));
+    }
+    let tasks = write_tasks(&dir, &tasks);
+    let output = run(agent(&provider, &dir).args([
+        "--tasks",
+        tasks.to_str().unwrap(),
+        "--parallel",
+        "2",
+        "--quiet",
+    ]));
+    assert_eq!(code(&output), 0, "{:?}", texts(&output));
+    for (name, src, thumb) in &sources {
+        let saved = thumbs_of(&dir.join(format!("{name}.de")));
+        let id = jian_ops_schema::node::image_src::paint_image_id(src).to_string();
+        assert_eq!(
+            saved.len(),
+            1,
+            "{name} keeps only its own thumbnail: {saved:?}"
+        );
+        // The save moves the thumbnail into the document's asset folder.
+        let file = saved[&id].as_str().expect("thumbnail path");
+        assert_eq!(
+            std::fs::read(dir.join(file)).expect("thumbnail file"),
+            thumb.to_vec(),
+            "{name}"
+        );
+    }
+}
+
+#[test]
+fn parallel_tasks_share_one_request_pacer() {
+    let provider = FakeProvider::start();
+    let dir = temp_dir("pacer");
+    let tasks = write_tasks(&dir, THREE_TASKS);
+    let output = run(agent(&provider, &dir)
+        .env("DESIGN_EDITOR_BUILTIN_HTTP_MIN_GAP_MS", "300")
+        .args([
+            "--tasks",
+            tasks.to_str().unwrap(),
+            "--parallel",
+            "3",
+            "--quiet",
+        ]));
+    assert_eq!(code(&output), 0, "{:?}", texts(&output));
+    let arrivals = provider.arrivals();
+    assert!(arrivals.len() >= 6, "{} requests", arrivals.len());
+    // Three workers, one pacer: no two requests start closer than the gap
+    // (with a little slack for the accept loop).
+    for pair in arrivals.windows(2) {
+        let gap = pair[1].duration_since(pair[0]);
+        assert!(gap >= std::time::Duration::from_millis(250), "gap {gap:?}");
+    }
 }

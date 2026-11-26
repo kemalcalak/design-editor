@@ -88,5 +88,13 @@ fn flag_message(problem: &TaskProblem) -> String {
         TaskProblem::InvalidMaxTurns { value } => {
             format!("--max-turns must be 1 to 64, got {value}")
         }
+        // Single-prompt names come from --out and fall back to a safe one,
+        // so this only words the rule.
+        TaskProblem::InvalidName { name } => {
+            format!("task name {name:?} cannot be a folder name")
+        }
+        TaskProblem::PromptTooLarge { bytes, max } => {
+            format!("the prompt is too large ({bytes} bytes; maximum {max})")
+        }
     }
 }

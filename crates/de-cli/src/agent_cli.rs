@@ -8,7 +8,7 @@
 //! ([`crate::agent_report`]). See `agent_usage.txt` for the user-facing
 //! contract.
 
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::atomic::AtomicBool;
 use std::sync::Arc;
 use std::time::Instant;
 
@@ -17,7 +17,7 @@ use serde_json::json;
 use crate::agent_args::{parse_agent_args, AgentArgs, AgentMode};
 use crate::agent_progress::Progress;
 use crate::agent_provider::{process_env, ProviderResolver, ENV_API_KEY};
-use crate::agent_report::{json_report, text_report};
+use crate::agent_report::{json_report, run_was_stopped, text_report};
 use crate::agent_runner::{run_tasks, PlannedTask, TaskStatus};
 use crate::agent_task::TaskSpec;
 
@@ -80,9 +80,8 @@ fn run_mode(args: &AgentArgs, resolver: &ProviderResolver, tasks: Vec<TaskSpec>)
     let started = Instant::now();
     let results = run_tasks(planned, args.parallel, &cancel, &progress);
     let elapsed = started.elapsed();
-    let cancelled = cancel.load(Ordering::Acquire);
     if args.json {
-        let report = json_report(&results, elapsed, cancelled);
+        let report = json_report(&results, elapsed);
         println!(
             "{}",
             serde_json::to_string_pretty(&report).unwrap_or_else(|_| report.to_string())
@@ -90,7 +89,9 @@ fn run_mode(args: &AgentArgs, resolver: &ProviderResolver, tasks: Vec<TaskSpec>)
     } else {
         println!("{}", text_report(&results, elapsed));
     }
-    if cancelled {
+    // The status follows what happened to the tasks, not when the signal
+    // came: a Ctrl+C after the last task finished cut nothing short.
+    if run_was_stopped(&results) {
         EXIT_CANCELLED
     } else if results.iter().any(|result| result.status != TaskStatus::Ok) {
         EXIT_FAILED

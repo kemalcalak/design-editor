@@ -4,7 +4,7 @@ USAGE:
   de agent -p "<prompt>" --out <file.de> [--in <file.de|.pen|.pptx>]
            [--export png|pdf|html|svg[,...]] [--export-dir DIR]
            [--provider NAME] [--model ID] [--timeout SECONDS] [--max-turns N]
-  de agent --tasks <tasks.yaml> [--parallel N] [run options as defaults]
+  de agent --tasks <tasks.yaml> [--parallel N] [run options]
   de agent --list-providers [--json]
 
 The design agent is the one the app's chat and MCP `run_design_agent` run:
@@ -16,14 +16,17 @@ run (Ctrl+C) leaves it untouched.
 
 TASK OPTIONS:
   -p, --prompt TEXT        the design request
-  --prompt-file PATH       read the prompt from a file (- for stdin)
+  --prompt-file PATH       read the prompt from a file (- for stdin);
+                           a prompt may be at most 32 KiB
   --in PATH                document to start from (.de, pen.dev .pen, .pptx)
   --out PATH               where to save the result (.de)
   --export FORMATS         after saving, export png, pdf, html and/or svg
                            (repeat the flag or separate with commas):
                            png/svg write one file per top-level frame, pdf
                            one page per board, html one page with assets/
-  --export-dir DIR         export folder (default: <out folder>/<out name>-export)
+  --export-dir DIR         export root; each task writes into its own
+                           <root>/<task name>/ (default root: <out folder>/exports;
+                           a single prompt's task name is the --out name)
   --timeout SECONDS        budget per task, 1-86400 (default 600)
   --max-turns N            agent turn cap, 1-64 (default: the app's)
 
@@ -53,17 +56,27 @@ BATCH:
                                  out: out/landing.de
                                  export: [png, pdf]     # any defaults key
                            Relative paths resolve against the file's folder.
-                           A task's value beats `defaults`, which beat flags.
-  --parallel N             run up to N tasks at once (1-64, default 1)
+                           A task's own value beats the flags, which beat the
+                           file's `defaults`. Names are folder names, unique
+                           ignoring case; two tasks may not write one `out`
+                           (`..` and, on macOS / Windows, case are resolved)
+                           or export into overlapping folders.
+  --parallel N             run up to N tasks at once (1-16, default 1). All
+                           tasks share one request pacer: requests start at
+                           least 350 ms apart (DESIGN_EDITOR_BUILTIN_HTTP_MIN_GAP_MS)
+                           and every 429 widens the gap for all of them
 
 OUTPUT:
   progress goes to stderr (--quiet / -q silences it); stdout gets a summary,
-  or with --json a report: per task its status, out, exports, duration,
-  tool calls, token usage and error (stage + message), plus totals.
+  or with --json a report: per task its status (ok, failed, cancelled, or
+  interrupted: saved, then stopped by Ctrl+C before its exports), out,
+  exports, duration, tool calls, token usage and error (stage + message),
+  plus totals. `ok` is true exactly when the exit status is 0.
 
 EXIT STATUS:
-  0 every task succeeded, 1 a task failed, 2 bad arguments or provider
-  setup (nothing ran), 130 cancelled (Ctrl+C; a second Ctrl+C exits at once)
+  0 every task succeeded, 1 a task failed, 2 bad arguments, tasks file or
+  provider setup (nothing ran), 130 Ctrl+C cut a task short (a second
+  Ctrl+C exits at once)
 
 EXAMPLES:
   de agent -p "A pricing page with three plans" --out pricing.de --export png

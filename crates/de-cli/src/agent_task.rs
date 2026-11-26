@@ -5,8 +5,10 @@
 use std::path::{Path, PathBuf};
 use std::time::Duration;
 
+use de_host_services::design_agent_run::{validate_brief, DesignAgentRunError};
 use de_host_services::headless_export::HeadlessExportFormat;
 
+use crate::agent_paths::is_portable_name;
 use crate::agent_tasks_error::TaskProblem;
 
 /// Budget when neither the task, the tasks file nor `--timeout` sets one.
@@ -50,6 +52,7 @@ pub(crate) struct TaskSpec {
     pub input: Option<PathBuf>,
     pub output: PathBuf,
     pub exports: Vec<HeadlessExportFormat>,
+    /// This task's own export folder: `<export root>/<name>`.
     pub export_dir: PathBuf,
     /// A saved provider to use instead of the command line's choice.
     pub provider: Option<String>,
@@ -69,11 +72,23 @@ pub(crate) struct RawTaskFields {
 
 /// Check one task's fields. `name` is already chosen by the caller.
 pub(crate) fn build_task(name: String, raw: RawTaskFields) -> Result<TaskSpec, TaskProblem> {
+    if !is_portable_name(&name) {
+        return Err(TaskProblem::InvalidName { name });
+    }
     let prompt = raw
         .prompt
         .map(|prompt| prompt.trim().to_string())
         .filter(|prompt| !prompt.is_empty())
         .ok_or(TaskProblem::MissingPrompt)?;
+    // The engine's own check, run here so an oversized prompt stops the run
+    // before any task starts (exit 2) instead of failing task by task.
+    let prompt = match validate_brief(&prompt) {
+        Ok(prompt) => prompt,
+        Err(DesignAgentRunError::BriefTooLarge { bytes, max }) => {
+            return Err(TaskProblem::PromptTooLarge { bytes, max })
+        }
+        Err(_) => return Err(TaskProblem::MissingPrompt),
+    };
     let output = raw.output.ok_or(TaskProblem::MissingOut)?;
     if !has_extension(&output, &["de"]) {
         return Err(TaskProblem::OutNotDe {
@@ -109,9 +124,12 @@ pub(crate) fn build_task(name: String, raw: RawTaskFields) -> Result<TaskSpec, T
         Some(value) if (1..=MAX_TURNS_CEILING).contains(&value) => Some(value as usize),
         Some(value) => return Err(TaskProblem::InvalidMaxTurns { value }),
     };
+    // Every task exports into a folder of its own under the export root, so
+    // tasks sharing a root never overwrite each other's files or `assets/`.
     let export_dir = options
         .export_dir
-        .unwrap_or_else(|| default_export_dir(&output));
+        .unwrap_or_else(|| default_export_root(&output))
+        .join(&name);
     Ok(TaskSpec {
         name,
         prompt,
@@ -126,14 +144,13 @@ pub(crate) fn build_task(name: String, raw: RawTaskFields) -> Result<TaskSpec, T
     })
 }
 
-/// `<out folder>/<out stem>-export`: next to the document, never inside
-/// the document's own asset folder.
-pub(crate) fn default_export_dir(output: &Path) -> PathBuf {
-    let stem = file_stem(output);
+/// `<out folder>/exports`: the export root when none is given; the task's
+/// own folder goes inside it.
+pub(crate) fn default_export_root(output: &Path) -> PathBuf {
     output
         .parent()
         .unwrap_or_else(|| Path::new(""))
-        .join(format!("{stem}-export"))
+        .join("exports")
 }
 
 /// The file name without its extension (`design` for `out/design.de`).
