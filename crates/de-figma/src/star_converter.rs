@@ -17,18 +17,7 @@ use crate::mask::figma_mask_type;
 use crate::tree::TreeNode;
 use jian_ops_schema::node::{PenNode, PolygonNode};
 
-// de-figma does not depend on de-editor-core, so the stored range is
-// restated here; `the_star_range_matches_the_editor` keeps them equal to
-// `de_editor_core::star_shape`.
-const STAR_DEFAULT_INNER_RADIUS: f64 = 0.382;
-const STAR_MIN_INNER_RADIUS: f64 = 0.01;
-const STAR_MAX_INNER_RADIUS: f64 = 1.0;
-
-fn clamp_star_inner_radius(value: f64) -> Option<f64> {
-    value
-        .is_finite()
-        .then(|| value.clamp(STAR_MIN_INNER_RADIUS, STAR_MAX_INNER_RADIUS))
-}
+use de_editor_core::star_shape::{clamp_star_inner_radius, STAR_DEFAULT_INNER_RADIUS};
 
 /// True when `figma` is a star the parametric polygon reproduces.
 pub(crate) fn is_parametric_star(figma: &FigValue) -> bool {
@@ -173,13 +162,5 @@ mod tests {
         let masking = star(vec![("mask", FigValue::Bool(true))]);
         assert!(!is_parametric_star(&masking.figma));
         assert!(!is_parametric_star(&without(star(vec![]), "count").figma));
-    }
-
-    #[test]
-    fn the_star_range_matches_the_editor() {
-        use de_editor_core::star_shape as core;
-        assert_eq!(STAR_DEFAULT_INNER_RADIUS, core::STAR_DEFAULT_INNER_RADIUS);
-        assert_eq!(STAR_MIN_INNER_RADIUS, core::STAR_MIN_INNER_RADIUS);
-        assert_eq!(STAR_MAX_INNER_RADIUS, core::STAR_MAX_INNER_RADIUS);
     }
 }
