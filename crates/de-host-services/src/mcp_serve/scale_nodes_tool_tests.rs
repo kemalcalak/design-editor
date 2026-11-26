@@ -1,6 +1,23 @@
 use super::*;
 use de_editor_core::walkers::find_node;
 
+/// The real wire: a `tools/call` line with `nodeIds` as a JSON array
+/// passes the parser's structured-argument gate and the write applies.
+#[test]
+fn a_tools_call_with_a_node_id_array_reaches_the_tool_and_applies() {
+    let mut s = state();
+    let line = r#"{"jsonrpc":"2.0","id":7,"method":"tools/call","params":{"name":"scale_nodes","arguments":{"nodeIds":["card","sq"],"factor":2,"anchor":"top-left"}}}"#;
+    let response = crate::mcp_serve::process_message_with_applier(&mut s, line, |_, state, cmd| {
+        state.apply(cmd.clone())
+    })
+    .expect("dispatch")
+    .expect("response");
+    assert!(!response.contains(r#""isError":true"#), "{response}");
+    assert!(!response.to_lowercase().contains("malformed"), "{response}");
+    assert_eq!(field(&s, "card", "width"), json!(400.0));
+    assert_eq!(field(&s, "sq", "width"), json!(100.0));
+}
+
 /// A card with a title and a free badge, and a separate square.
 fn state() -> EditorState {
     let doc: jian_ops_schema::PenDocument = serde_json::from_value(json!({

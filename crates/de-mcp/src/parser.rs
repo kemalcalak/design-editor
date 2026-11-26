@@ -551,6 +551,7 @@ fn structured_arg_allowed(tool: &str, key: &str) -> bool {
             | ("set_interaction", "actions")
             | ("browser", "params")
             | ("set_slide_transition", "nodeIds")
+            | ("scale_nodes", "nodeIds")
     )
 }
 

@@ -112,7 +112,9 @@ const LINE_HEIGHT_MULTIPLIER_MAX: f64 = 4.0;
 impl PropScaler<'_> {
     /// Scale one node's own fields in place (`children`, `descendants`,
     /// `x` and `y` are left to the caller). `node_id` names the node in the
-    /// report.
+    /// report. Outside an instance; the tree walk calls
+    /// [`Self::scale_own_in`].
+    #[cfg(test)]
     pub fn scale_own(
         &self,
         node: &mut Map<String, Value>,
