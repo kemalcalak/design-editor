@@ -30,3 +30,4 @@ pub mod chat_sse;
 pub mod chat_tool_sse;
 pub mod chat_usage;
 pub mod design_md;
+pub mod model_pricing;
