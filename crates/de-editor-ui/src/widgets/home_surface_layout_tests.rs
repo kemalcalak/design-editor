@@ -2,8 +2,8 @@
 //! narrow frame).
 
 use super::layout::*;
-use crate::Rect;
 use crate::widgets::label_widths::LabelWidths;
+use crate::Rect;
 use de_editor_core::{HomeFamily, HomeSize, Locale, RecentView};
 
 /// Layout from the kept label widths, as hit-test runs it.

@@ -355,7 +355,12 @@ pub fn measured_chrome_layout(
     viewport_h: f32,
     backend: &mut dyn crate::RenderBackend,
 ) -> ChromeLayout {
-    chrome_layout_with(state, viewport_w, viewport_h, &mut LabelWidths::measuring(backend))
+    chrome_layout_with(
+        state,
+        viewport_w,
+        viewport_h,
+        &mut LabelWidths::measuring(backend),
+    )
 }
 
 fn chrome_layout_with(
@@ -382,9 +387,8 @@ fn chrome_layout_with(
     let pill = FilePill::for_editor_ui(ui).layout_at(Point2D::new(left, top), widths);
     let pill_right = pill.rect.origin.x + pill.rect.size.x;
     let mut place = |compact: bool| {
-        (cw >= actions_widget.width(compact, widths) + CHROME_INSET_X * 2.0).then(|| {
-            actions_widget.layout_right(cx0 + cw - CHROME_INSET_X, top, compact, widths)
-        })
+        (cw >= actions_widget.width(compact, widths) + CHROME_INSET_X * 2.0)
+            .then(|| actions_widget.layout_right(cx0 + cw - CHROME_INSET_X, top, compact, widths))
     };
     let fits = |actions: &Option<crate::widgets::canvas_actions::CanvasActionsLayout>| {
         pill_right <= actions.map_or(cx0 + cw, |a| a.rect.origin.x - CHROME_MIN_GAP)

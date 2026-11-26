@@ -342,9 +342,7 @@ impl LayerContextMenu {
         self.rows
             .iter()
             .map(|row| {
-                LABEL_X
-                    + measure(de_i18n::translate(self.locale, row.label_key))
-                    + LABEL_RIGHT_PAD
+                LABEL_X + measure(de_i18n::translate(self.locale, row.label_key)) + LABEL_RIGHT_PAD
             })
             .fold(LAYER_CONTEXT_MENU_WIDTH, f32::max)
             .ceil()

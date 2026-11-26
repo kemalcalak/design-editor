@@ -8,9 +8,10 @@ use crate::widgets::agent_settings_rows::{fit_text, SETTINGS_FONT_FAMILY};
 use crate::widgets::agent_settings_switch::{SETTINGS_SWITCH_H, SETTINGS_SWITCH_W};
 use crate::widgets::button::tokens_from_theme;
 use crate::widgets::home_surface::MONO;
-use crate::widgets::label_widths::LabelWidths;
-use crate::widgets::text_metrics::measure_in_family_weighted;
 use crate::widgets::icons::{draw_icon, Icon};
+use crate::widgets::label_widths::LabelWidths;
+use crate::widgets::text_input_backend::BaselineAdjustingBackend;
+use crate::widgets::text_metrics::measure_in_family_weighted;
 use crate::widgets::PaintCx;
 use crate::{Color, Point2D, Rect, TextLayout};
 
@@ -210,7 +211,19 @@ pub(crate) fn paint_segmented(
         hover: None,
         font_size: SEGMENT_FONT,
     }
-    .paint(cx.backend, rect, &segment_tokens(theme));
+    // `ToggleGroup` draws its labels in `SEGMENT_FAMILY` but centres them
+    // on the family-blind `measure_text`; measuring through the override
+    // face keeps each label centred in the cell `segmented_width` sized
+    // from that face (#440).
+    .paint(
+        &mut BaselineAdjustingBackend {
+            inner: &mut *cx.backend,
+            baseline_delta_y: 0.0,
+            font_family: Some(SEGMENT_FAMILY),
+        },
+        rect,
+        &segment_tokens(theme),
+    );
 }
 
 /// The active segment reads as a raised chip on the track, not as a

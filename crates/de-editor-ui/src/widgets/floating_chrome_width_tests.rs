@@ -94,7 +94,9 @@ fn the_boxes_are_exactly_as_wide_as_the_painted_labels() {
     crate::widgets::label_widths::reset();
     let narrow = actions.width(
         false,
-        &mut LabelWidths::measuring(&mut crate::widgets::test_family_gap_backend::FamilyGapBackend::uniform()),
+        &mut LabelWidths::measuring(
+            &mut crate::widgets::test_family_gap_backend::FamilyGapBackend::uniform(),
+        ),
     );
     assert!(wide > narrow, "{wide} vs {narrow}");
 }

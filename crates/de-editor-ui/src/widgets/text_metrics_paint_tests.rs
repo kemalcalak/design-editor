@@ -212,12 +212,20 @@ fn floating_chrome_holds_its_labels_in_the_painted_family() {
             ..Default::default()
         };
         let pill = FilePill::for_editor_ui(&ui);
-        let pill_layout = pill.layout_at(Point2D::new(16.0, 14.0), &mut LabelWidths::measuring(&mut measure));
+        let pill_layout = pill.layout_at(
+            Point2D::new(16.0, 14.0),
+            &mut LabelWidths::measuring(&mut measure),
+        );
         assert_no_new_overflow(&format!("file pill {locale:?}"), pill_layout.rect, |cx| {
             pill.paint_layout(cx, &pill_layout)
         });
         let actions = CanvasActions::for_editor_ui(&ui);
-        let actions_layout = actions.layout_right(1400.0, 14.0, false, &mut LabelWidths::measuring(&mut measure));
+        let actions_layout = actions.layout_right(
+            1400.0,
+            14.0,
+            false,
+            &mut LabelWidths::measuring(&mut measure),
+        );
         assert_no_new_overflow(
             &format!("canvas actions {locale:?}"),
             actions_layout.rect,

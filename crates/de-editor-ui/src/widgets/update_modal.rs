@@ -163,7 +163,13 @@ impl<'a> UpdateModal<'a> {
     /// widths are kept, so no text is shaped again on the 10 Hz download
     /// repaint.
     fn body_lines(&self, inner_w: f32, widths: &mut LabelWidths<'_>) -> Vec<String> {
-        wrap_words(&self.body_text(), inner_w, BODY_SIZE, widths)
+        widths.wrap(
+            &self.body_text(),
+            inner_w,
+            BODY_SIZE,
+            CHROME_FONT_FAMILY,
+            400,
+        )
     }
 
     fn title(&self) -> String {
@@ -245,28 +251,6 @@ pub fn download_stats(received: u64, total: Option<u64>, bytes_per_sec: f64) -> 
         }
         None => format!("{} · {speed}", format_megabytes(received)),
     }
-}
-
-/// Greedy word wrap against the painted widths.
-fn wrap_words(text: &str, max_w: f32, size: f32, widths: &mut LabelWidths<'_>) -> Vec<String> {
-    let mut lines = Vec::new();
-    let mut line = String::new();
-    for word in text.split_whitespace() {
-        let candidate = if line.is_empty() {
-            word.to_string()
-        } else {
-            format!("{line} {word}")
-        };
-        if !line.is_empty() && widths.chrome(&candidate, size) > max_w {
-            lines.push(std::mem::replace(&mut line, word.to_string()));
-        } else {
-            line = candidate;
-        }
-    }
-    if !line.is_empty() {
-        lines.push(line);
-    }
-    lines
 }
 
 fn draw(cx: &mut PaintCx<'_>, text: &str, size: f32, color: Color, x: f32, baseline: f32) {
@@ -525,7 +509,8 @@ mod tests {
                 let natural = rects
                     .iter()
                     .map(|(button, _)| {
-                        let label = LabelWidths::cached().chrome(modal.button_label(*button), BODY_SIZE);
+                        let label =
+                            LabelWidths::cached().chrome(modal.button_label(*button), BODY_SIZE);
                         (label + BUTTON_PAD_X * 2.0).max(BUTTON_MIN_W) + BUTTON_GAP
                     })
                     .sum::<f32>()

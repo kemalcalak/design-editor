@@ -3,18 +3,17 @@
 //! footer with the catalog status, Fetch models and Save. A draft also
 //! gets a provider select for the presets the list does not feature.
 
-use crate::widgets::label_widths::LabelWidths;
 use crate::theme::Theme;
 use crate::widgets::agent_settings_caret;
 use crate::widgets::agent_settings_detail_chrome::{
-    self as chrome, button_width, checklist_height, checklist_row_at, next_field,
-    paint_button, paint_checklist, paint_header, paint_icon_button, paint_input_box,
-    paint_input_value, paint_label, paint_segmented, paint_status, segment_at, segmented_width,
-    ButtonKind, CheckRow, BODY_TOP_GAP, BUTTON_H, FIELD_GAP, FOOTER_GAP, HEADER_H, INPUT_H,
-    INPUT_PAD_X, VALUE_FONT,
+    self as chrome, button_width, checklist_height, checklist_row_at, next_field, paint_button,
+    paint_checklist, paint_header, paint_icon_button, paint_input_box, paint_input_value,
+    paint_label, paint_segmented, paint_status, segment_at, segmented_width, ButtonKind, CheckRow,
+    BODY_TOP_GAP, BUTTON_H, FIELD_GAP, FOOTER_GAP, HEADER_H, INPUT_H, INPUT_PAD_X, VALUE_FONT,
 };
 use crate::widgets::agent_settings_i18n::t as t_settings;
 use crate::widgets::icons::{draw_icon, Icon};
+use crate::widgets::label_widths::LabelWidths;
 use crate::widgets::PaintCx;
 use crate::{Point2D, Rect};
 use de_editor_core::agent_settings::{

@@ -8,10 +8,7 @@
 //! language (`agent_settings_rows`), separated by hairlines.
 
 use crate::theme::Theme;
-use crate::widgets::label_widths::LabelWidths;
-use crate::widgets::agent_settings_detail_chrome::{
-    button_width, paint_button, ButtonKind,
-};
+use crate::widgets::agent_settings_detail_chrome::{button_width, paint_button, ButtonKind};
 use crate::widgets::agent_settings_i18n::t as t_settings;
 use crate::widgets::agent_settings_metrics::CONTENT_TAIL_PAD;
 use crate::widgets::agent_settings_rows::{
@@ -24,6 +21,7 @@ use crate::widgets::agent_settings_switch::{
     paint_settings_switch, SETTINGS_SWITCH_H, SETTINGS_SWITCH_W,
 };
 use crate::widgets::icons::{draw_icon, Icon};
+use crate::widgets::label_widths::LabelWidths;
 use crate::widgets::PaintCx;
 use crate::{Color, Point2D, Rect, TextLayout};
 use de_editor_core::agent_settings::AgentSettings;
@@ -533,7 +531,10 @@ fn paint_auto_update_row(
     // Measured here, so the hit-test's backend-less rect is this one.
     let button_rect = button.map(|button| {
         let mut widths = LabelWidths::measuring(&mut *cx.backend);
-        (button, row_button_rect_with(content, ui, button, &mut widths))
+        (
+            button,
+            row_button_rect_with(content, ui, button, &mut widths),
+        )
     });
     // Reserve from the leftmost control to the switch's right edge.
     let controls_left = match button_rect {
@@ -558,14 +559,7 @@ fn paint_auto_update_row(
     paint_row_status_line(cx, row, &status_text, color);
     if let Some((button, rect)) = button_rect {
         let (label, icon, kind) = row_button_face(ui, button);
-        paint_button(
-            cx,
-            theme,
-            rect,
-            label,
-            Some(icon),
-            kind,
-        );
+        paint_button(cx, theme, rect, label, Some(icon), kind);
     }
     paint_settings_switch(
         cx,

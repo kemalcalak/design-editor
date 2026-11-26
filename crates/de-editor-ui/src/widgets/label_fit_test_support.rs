@@ -29,6 +29,25 @@ pub(crate) fn run<'a>(backend: &'a FamilyGapBackend, text: &str, what: &str) -> 
         })
 }
 
+/// The run painted with exactly `text` whose baseline lies inside `rect`
+/// (the same label may be painted elsewhere on the surface too).
+pub(crate) fn run_in<'a>(
+    backend: &'a FamilyGapBackend,
+    text: &str,
+    rect: Rect,
+    what: &str,
+) -> &'a PaintedRun {
+    backend
+        .runs
+        .iter()
+        .find(|run| {
+            run.text == text
+                && run.origin.y > rect.origin.y
+                && run.origin.y <= rect.origin.y + rect.size.y
+        })
+        .unwrap_or_else(|| panic!("{what}: {text:?} was not painted whole in {rect:?}"))
+}
+
 /// `run` lies inside `rect` horizontally, inset by `inset` on each side.
 pub(crate) fn assert_inside(run: &PaintedRun, rect: Rect, inset: f32, what: &str) {
     let left = rect.origin.x + inset - EPS;

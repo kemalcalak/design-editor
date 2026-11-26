@@ -291,8 +291,8 @@ pub mod host_overlay_geometry;
 pub mod image_crop_flow;
 pub mod image_popover_input_flow;
 pub mod images_tab;
-mod layer_context_flow;
 pub mod label_widths;
+mod layer_context_flow;
 pub mod press_flow;
 mod prompt_center_press_flow;
 mod scene_template_press_flow;
@@ -489,15 +489,17 @@ pub mod window_strip;
 
 // Test-support: shared RenderBackend stubs (never ships in non-test builds).
 #[cfg(test)]
+mod agent_settings_width_tests;
+#[cfg(test)]
+mod floating_chrome_width_tests;
+#[cfg(test)]
+pub(crate) mod label_fit_test_support;
+#[cfg(test)]
 pub(crate) mod test_capture_backend;
 #[cfg(test)]
 pub(crate) mod test_family_gap_backend;
 #[cfg(test)]
 mod text_metrics_paint_tests;
-#[cfg(test)]
-pub(crate) mod label_fit_test_support;
-#[cfg(test)]
-mod floating_chrome_width_tests;
 
 pub use prop_row::PropertyRow;
 pub use text_input::TextInputWidget;

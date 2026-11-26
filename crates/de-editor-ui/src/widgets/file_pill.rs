@@ -13,8 +13,8 @@
 use crate::theme::Theme;
 use crate::widgets::chrome_hit::ChromeHit;
 use crate::widgets::editor_state_ext::{theme_for, translate};
-use crate::widgets::label_widths::LabelWidths;
 use crate::widgets::icons::{draw_icon, Icon};
+use crate::widgets::label_widths::LabelWidths;
 use crate::widgets::text_metrics::{measure_chrome_weighted, CHROME_FONT_FAMILY};
 use crate::widgets::{LayoutBox, LayoutCx, PaintCx, Widget, WidgetId};
 use crate::{Color, Point2D, Rect, TextLayout};

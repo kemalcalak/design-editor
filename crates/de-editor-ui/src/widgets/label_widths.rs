@@ -38,8 +38,10 @@ use std::cell::RefCell;
 use std::collections::HashMap;
 use std::hash::{DefaultHasher, Hash, Hasher};
 
+use super::line_break::wrap_lines;
 use super::text_metrics::{measure_in_family, measure_in_family_weighted, CHROME_FONT_FAMILY};
 use crate::RenderBackend;
+use de_editor_core::text_wrap::wrap_text_measured;
 
 /// Widths one generation holds before it rolls over (see the module docs).
 const GENERATION_CAP: usize = 4096;
@@ -132,6 +134,29 @@ impl<'a> LabelWidths<'a> {
         };
         CACHE.with(|cache| cache.borrow_mut().insert(key, width));
         width
+    }
+
+    /// Wrap `text` into lines no wider than `max_w` as a run in `family` at
+    /// `weight`: Latin at spaces, CJK between characters
+    /// (`wrap_text_measured`), and a line still too wide (Thai writes
+    /// phrases without spaces) again between clusters (`wrap_lines`).
+    /// The chrome's wrapped copy wraps here, so paint and hit-test break
+    /// the same lines.
+    pub fn wrap(
+        &mut self,
+        text: &str,
+        max_w: f32,
+        size: f32,
+        family: &str,
+        weight: u16,
+    ) -> Vec<String> {
+        let lines = wrap_text_measured(text, max_w, &mut |s: &str| {
+            self.styled(s, size, family, weight)
+        });
+        lines
+            .into_iter()
+            .flat_map(|line| wrap_lines(&line, max_w, |s| self.styled(s, size, family, weight)))
+            .collect()
     }
 }
 

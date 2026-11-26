@@ -351,8 +351,7 @@ pub(super) fn caret_rect(
         .find(|&i| {
             let line = &lines[i];
             let soft_wrapped = lines.get(i + 1).is_some_and(|next| next.start == line.end);
-            caret >= line.start
-                && (caret < line.end || (caret == line.end && !soft_wrapped))
+            caret >= line.start && (caret < line.end || (caret == line.end && !soft_wrapped))
         })
         .unwrap_or(last);
     let line = &lines[line_i];
@@ -360,8 +359,12 @@ pub(super) fn caret_rect(
         &line.text,
         caret.saturating_sub(line.start).min(line.text.len()),
     );
-    let before =
-        crate::widgets::text_metrics::measure_in_family(backend, &line.text[..rel], INPUT_FONT, INPUT_FAMILY);
+    let before = crate::widgets::text_metrics::measure_in_family(
+        backend,
+        &line.text[..rel],
+        INPUT_FONT,
+        INPUT_FAMILY,
+    );
     let first_visible = (line_i + 1).saturating_sub(INPUT_VISIBLE_LINES);
     let row = (line_i - first_visible) as f32;
     let x = input.origin.x + INPUT_PAD_X + before.min(content_w);

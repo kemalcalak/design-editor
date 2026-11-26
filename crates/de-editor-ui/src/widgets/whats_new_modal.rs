@@ -7,14 +7,12 @@
 use crate::theme::Theme;
 use crate::widgets::editor_state_ext::{theme_for, translate};
 use crate::widgets::label_widths::LabelWidths;
-use crate::widgets::line_break::wrap_lines;
 use crate::widgets::panel_controls::{paint_accent_button, paint_neutral_button, ButtonSpec};
 use crate::widgets::text_metrics::{centered_text_x, measure_chrome, CHROME_FONT_FAMILY};
 use crate::widgets::{LayoutBox, LayoutCx, PaintCx, Widget, WidgetId};
 use crate::{Color, Point2D, Rect, RenderBackend, TextLayout};
 use de_editor_core::editor_ui_state::{WhatsNewButton, WhatsNewState};
 use de_editor_core::release_notes::{note_for, ReleaseNote};
-use de_editor_core::text_wrap::wrap_text_measured;
 use de_editor_core::{EditorState, EditorUiState};
 
 const CARD_W: f32 = 480.0;
@@ -264,11 +262,7 @@ fn card_height(lines: &PageLines) -> f32 {
 /// Latin at spaces and CJK between characters; a line it leaves too wide
 /// (Thai writes phrases without spaces) is broken again between clusters.
 fn wrap(text: &str, max_w: f32, size: f32, widths: &mut LabelWidths<'_>) -> Vec<String> {
-    let lines = wrap_text_measured(text, max_w, &mut |s: &str| widths.chrome(s, size));
-    lines
-        .into_iter()
-        .flat_map(|line| wrap_lines(&line, max_w, |s| widths.chrome(s, size)))
-        .collect()
+    widths.wrap(text, max_w, size, CHROME_FONT_FAMILY, 400)
 }
 
 fn draw(cx: &mut PaintCx<'_>, text: &str, size: f32, color: Color, x: f32, baseline: f32) {

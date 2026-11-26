@@ -2,8 +2,8 @@
 //! It is opaque so the column scrolls under it.
 
 use super::copy::tr;
-use super::paint::{baseline, draw_text_weighted, outline};
 use super::layout::{NEW_FILE_WEIGHT, OPEN_FILE_WEIGHT};
+use super::paint::{baseline, draw_text_weighted, outline};
 use super::{HomeLayout, HomeSurface, SANS};
 use crate::widgets::icons::{draw_icon, Icon};
 use crate::widgets::PaintCx;

@@ -147,7 +147,12 @@ pub struct HomeLayout {
 
 /// The width of a kind chip (icon + label + padding).
 pub(crate) fn chip_width(labels: &mut LabelWidths<'_>, locale: Locale, family: HomeFamily) -> f32 {
-    let label = labels.styled(kind_label(locale, family), CHIP_FONT, SANS, CHIP_LABEL_WEIGHT);
+    let label = labels.styled(
+        kind_label(locale, family),
+        CHIP_FONT,
+        SANS,
+        CHIP_LABEL_WEIGHT,
+    );
     12.0 + 16.0 + 8.0 + label + 12.0
 }
 
@@ -177,19 +182,23 @@ pub(crate) fn locale_code(locale: Locale) -> String {
 }
 
 fn locale_button_width(labels: &mut LabelWidths<'_>, locale: Locale) -> f32 {
-    let code = labels.styled(&locale_code(locale), LOCALE_CODE_FONT, SANS, LOCALE_CODE_WEIGHT);
+    let code = labels.styled(
+        &locale_code(locale),
+        LOCALE_CODE_FONT,
+        SANS,
+        LOCALE_CODE_WEIGHT,
+    );
     10.0 + 16.0 + 6.0 + code + 4.0 + 12.0 + 8.0
 }
 
-/// A top-bar button: icon slot, the label at `weight`, `pad_r` after it.
+/// A top-bar button: icon slot, then the label at `weight`.
 fn button_width(
     labels: &mut LabelWidths<'_>,
     locale: Locale,
     key: &'static str,
     weight: u16,
-    pad_r: f32,
 ) -> f32 {
-    12.0 + 16.0 + 8.0 + labels.styled(tr(locale, key), TOP_BUTTON_FONT, SANS, weight) + pad_r
+    12.0 + 16.0 + 8.0 + labels.styled(tr(locale, key), TOP_BUTTON_FONT, SANS, weight) + 14.0
 }
 
 /// The import cards' shared height: tall enough for a two-line title as
@@ -199,7 +208,12 @@ fn button_width(
 fn import_card_height(labels: &mut LabelWidths<'_>, locale: Locale, card_w: f32) -> f32 {
     let text_w = card_w - IMPORT_TEXT_X - IMPORT_TEXT_PAD_R;
     let wraps = IMPORT_TITLE_KEYS.iter().any(|&key| {
-        labels.styled(tr(locale, key), IMPORT_TITLE_FONT, SANS, IMPORT_TITLE_WEIGHT) > text_w
+        labels.styled(
+            tr(locale, key),
+            IMPORT_TITLE_FONT,
+            SANS,
+            IMPORT_TITLE_WEIGHT,
+        ) > text_w
     });
     if wraps {
         IMPORT_H_TALL
@@ -258,8 +272,8 @@ pub fn home_layout(input: HomeLayoutInput<'_>, labels: &mut LabelWidths<'_>) -> 
     let main_x = side_w;
     let main_w = (w - side_w).max(1.0);
     let top_bar = Rect::xywh(main_x, 0.0, main_w, HOME_TOPBAR_H);
-    let new_w = button_width(labels, input.locale, "home.top.newFile", NEW_FILE_WEIGHT, 12.0);
-    let open_w = button_width(labels, input.locale, "home.top.openFile", OPEN_FILE_WEIGHT, 14.0);
+    let new_w = button_width(labels, input.locale, "home.top.newFile", NEW_FILE_WEIGHT);
+    let open_w = button_width(labels, input.locale, "home.top.openFile", OPEN_FILE_WEIGHT);
     let new_file = Rect::xywh(w - 28.0 - new_w, 13.0, new_w, 34.0);
     let open_file = Rect::xywh(new_file.origin.x - 8.0 - open_w, 13.0, open_w, 34.0);
     let locale_w = locale_button_width(labels, input.locale);

@@ -3,19 +3,19 @@
 //! remote URL), the install hint for a preset that is missing, and the
 //! environment. The footer connects a saved agent or adds the draft.
 
-use crate::widgets::label_widths::LabelWidths;
 use crate::theme::Theme;
 use crate::widgets::agent_settings_caret;
 use crate::widgets::agent_settings_detail_chrome::{
-    self as chrome, button_width, next_field, paint_button, paint_header,
-    paint_icon_button, paint_input_box, paint_input_value, paint_label, paint_segmented,
-    paint_status, segment_at, segmented_width, text, ButtonKind, BODY_TOP_GAP, BUTTON_H, FIELD_GAP,
-    FOOTER_GAP, HEADER_H, INPUT_H, INPUT_PAD_X, LABEL_FONT, VALUE_FONT,
+    self as chrome, button_width, next_field, paint_button, paint_header, paint_icon_button,
+    paint_input_box, paint_input_value, paint_label, paint_segmented, paint_status, segment_at,
+    segmented_width, text, ButtonKind, BODY_TOP_GAP, BUTTON_H, FIELD_GAP, FOOTER_GAP, HEADER_H,
+    INPUT_H, INPUT_PAD_X, LABEL_FONT, VALUE_FONT,
 };
 use crate::widgets::agent_settings_i18n::t as t_settings;
 use crate::widgets::agent_settings_install_command::{self as install, CommandLayout};
 use crate::widgets::agent_settings_rows::{fit_text, SETTINGS_FONT_FAMILY};
 use crate::widgets::icons::{draw_icon, Icon};
+use crate::widgets::label_widths::LabelWidths;
 use crate::widgets::PaintCx;
 use crate::{Point2D, Rect};
 use de_editor_core::acp_agent_presets::{

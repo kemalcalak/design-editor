@@ -113,28 +113,6 @@ impl McpPopoverLayout {
     }
 }
 
-/// Greedy word wrap against the painted widths.
-fn wrap_words(text: &str, max_w: f32, size: f32, labels: &mut LabelWidths<'_>) -> Vec<String> {
-    let mut lines = Vec::new();
-    let mut line = String::new();
-    for word in text.split_whitespace() {
-        let candidate = if line.is_empty() {
-            word.to_string()
-        } else {
-            format!("{line} {word}")
-        };
-        if !line.is_empty() && labels.styled(&candidate, size, SANS, REGULAR) > max_w {
-            lines.push(std::mem::replace(&mut line, word.to_string()));
-        } else {
-            line = candidate;
-        }
-    }
-    if !line.is_empty() {
-        lines.push(line);
-    }
-    lines
-}
-
 /// Hard-wrap mono lines at the column count that fits `max_w`.
 fn wrap_mono(text: &str, max_w: f32, size: f32) -> Vec<String> {
     wrap_snippet(text, (max_w / (size * 0.6)).floor() as usize)
@@ -180,7 +158,8 @@ pub fn mcp_popover_layout(
     } else {
         "home.mcp.stoppedIntro"
     };
-    let intro_lines = wrap_words(tr(surface.locale, intro_key), inner_w, INTRO_FONT, labels);
+    let intro = tr(surface.locale, intro_key);
+    let intro_lines = labels.wrap(intro, inner_w, INTRO_FONT, SANS, REGULAR);
     let snippet = home_mcp_manual_snippet(surface.mcp.agent, &surface.mcp.endpoint);
     let copy_w = copy_button_w(surface, labels);
     let snippet_lines = wrap_mono(&snippet, inner_w - 20.0 - copy_w - 8.0, SNIPPET_FONT);
@@ -209,7 +188,12 @@ pub fn mcp_popover_layout(
     let tabs_box = Rect::xywh(inner_x, y, inner_w, 32.0);
     let more_selected = !HOME_MCP_TABS.contains(&surface.mcp.agent);
     let more_w = if more_selected {
-        labels.styled(home_mcp_agent_name(surface.mcp.agent), TAB_FONT, SANS, SEMIBOLD) + 40.0
+        labels.styled(
+            home_mcp_agent_name(surface.mcp.agent),
+            TAB_FONT,
+            SANS,
+            SEMIBOLD,
+        ) + 40.0
     } else {
         34.0
     };
@@ -231,8 +215,11 @@ pub fn mcp_popover_layout(
     }
     y += 32.0 + 10.0;
     let auto_box = Rect::xywh(inner_x, y, inner_w, 56.0);
-    let action_w =
-        labels.styled(action_label(surface), ACTION_FONT, SANS, SEMIBOLD) + 12.0 + 13.0 + 6.0 + 12.0;
+    let action_w = labels.styled(action_label(surface), ACTION_FONT, SANS, SEMIBOLD)
+        + 12.0
+        + 13.0
+        + 6.0
+        + 12.0;
     let action = Rect::xywh(
         inner_x + inner_w - 12.0 - action_w,
         y + 13.0,

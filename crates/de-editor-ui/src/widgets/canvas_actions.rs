@@ -14,8 +14,8 @@
 use crate::theme::Theme;
 use crate::widgets::chrome_hit::ChromeHit;
 use crate::widgets::editor_state_ext::{theme_for, translate};
-use crate::widgets::label_widths::LabelWidths;
 use crate::widgets::icons::{draw_icon, Icon};
+use crate::widgets::label_widths::LabelWidths;
 use crate::widgets::text_metrics::{measure_chrome_weighted, CHROME_FONT_FAMILY};
 use crate::widgets::{LayoutBox, LayoutCx, PaintCx, Widget, WidgetId};
 use crate::{Color, Point2D, Rect, TextLayout};
@@ -130,8 +130,7 @@ impl CanvasActions {
     }
 
     fn export_width(&self, widths: &mut LabelWidths<'_>) -> f32 {
-        (widths.chrome_weighted(self.label_export, EXPORT_FONT, EXPORT_WEIGHT)
-            + EXPORT_PAD_X * 2.0)
+        (widths.chrome_weighted(self.label_export, EXPORT_FONT, EXPORT_WEIGHT) + EXPORT_PAD_X * 2.0)
             .max(EXPORT_MIN_W)
     }
 

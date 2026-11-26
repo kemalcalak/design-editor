@@ -61,7 +61,10 @@ fn the_chip_opens_settings_and_leads_the_group() {
 #[test]
 fn compact_drops_the_text_but_keeps_the_button() {
     let actions = CanvasActions::for_editor_ui(&ui());
-    assert!(actions.width(true, &mut LabelWidths::cached()) < actions.width(false, &mut LabelWidths::cached()));
+    assert!(
+        actions.width(true, &mut LabelWidths::cached())
+            < actions.width(false, &mut LabelWidths::cached())
+    );
     let layout = actions.layout_right(1400.0, 14.0, true, &mut LabelWidths::cached());
     assert!(layout.status_compact);
     assert_eq!(layout.status.size.x, BUTTON);

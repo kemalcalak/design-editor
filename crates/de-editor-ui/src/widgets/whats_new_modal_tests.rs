@@ -140,7 +140,12 @@ fn an_unspaced_run_breaks_between_characters_but_not_before_marks() {
 fn cjk_breaks_between_characters_instead_of_at_the_last_space() {
     let text = "Claude で作ったものを含む HTML のスライドを開くと、各スライドが編集できるボードになります。";
     let mut backend = fresh_backend();
-    let lines = wrap(text, 300.0, BODY_SIZE, &mut LabelWidths::measuring(&mut backend));
+    let lines = wrap(
+        text,
+        300.0,
+        BODY_SIZE,
+        &mut LabelWidths::measuring(&mut backend),
+    );
     // A space-first break would end the first line at "HTML" with room left.
     assert!(
         measure_chrome(&mut backend, &lines[0], BODY_SIZE) > 300.0 - BODY_SIZE * 1.5,
@@ -255,7 +260,11 @@ fn paint_and_hit_test_agree_in_every_locale() {
             assert_inside(label, rect, 4.0, &what);
             assert_centred(label, rect, &what);
             let edge = Point2D::new(rect.origin.x + rect.size.x - 0.5, rect.origin.y + 1.0);
-            assert_eq!(modal.hit_test(card, edge), WhatsNewHit::Button(button), "{what}");
+            assert_eq!(
+                modal.hit_test(card, edge),
+                WhatsNewHit::Button(button),
+                "{what}"
+            );
         }
     }
 }

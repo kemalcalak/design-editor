@@ -3,7 +3,6 @@
 //! leave the chat picker, D6), and Connect / Disconnect. A missing agent's
 //! card carries its whole install command with a copy button (#304).
 
-use crate::widgets::label_widths::LabelWidths;
 use crate::theme::Theme;
 use crate::widgets::agent_settings_detail_chrome::{
     self as chrome, button_width, checklist_height, checklist_row_at, paint_button,
@@ -14,6 +13,7 @@ use crate::widgets::agent_settings_i18n::t as t_settings;
 use crate::widgets::agent_settings_install_command::{self as install, CommandLayout};
 use crate::widgets::agent_settings_rows::{fit_text, SETTINGS_FONT_FAMILY};
 use crate::widgets::icons::{draw_icon, Icon};
+use crate::widgets::label_widths::LabelWidths;
 use crate::widgets::PaintCx;
 use crate::{Point2D, Rect};
 use de_editor_core::agent_settings::{AgentProvider, AgentSettings};

@@ -454,3 +454,7 @@ mod tests;
 #[cfg(test)]
 #[path = "home_surface_layout_tests.rs"]
 mod layout_tests;
+
+#[cfg(test)]
+#[path = "home_surface_width_tests.rs"]
+mod width_tests;
