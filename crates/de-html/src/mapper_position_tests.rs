@@ -206,8 +206,9 @@ fn absolute_insets_keep_the_positioned_ancestors_own_padding() {
 }
 
 #[test]
-fn root_flex_wrap_rows_fit_inside_the_body_margins() {
-    // 2 × 716 = 1432 fits the 1440 viewport but not inside 8px body margins.
+fn a_wrapping_body_becomes_a_native_wrap_root() {
+    // The body margins fold into the root's padding; the engine wraps the
+    // two 716px boxes inside them (2 × 716 > 1440 - 16).
     let result = import_html(
         "<body style='display:flex;flex-wrap:wrap;margin:8px'>\
            <div style='width:716px;height:20px'>a</div>\
@@ -218,14 +219,12 @@ fn root_flex_wrap_rows_fit_inside_the_body_margins() {
     let PenNode::Frame(root) = &result.nodes[0] else {
         panic!()
     };
-    let rows: Vec<_> = children(root)
-        .iter()
-        .map(|child| match child {
-            PenNode::Frame(frame) => frame.base.name.clone().unwrap_or_default(),
-            other => format!("{other:?}"),
-        })
-        .collect();
-    assert_eq!(rows, ["Wrap row", "Wrap row"]);
+    assert_eq!(root.container.wrap, Some(true));
+    assert_eq!(children(root).len(), 2);
+    assert_eq!(
+        root.container.padding,
+        Some(jian_ops_schema::node::Padding::Uniform(8.0))
+    );
 }
 
 #[test]

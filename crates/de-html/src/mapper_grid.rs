@@ -1,15 +1,14 @@
-use crate::import_warning::ImportWarning;
-use jian_ops_schema::node::base::{NumberOrExpression, PenNodeBase};
-use jian_ops_schema::node::container::{AlignItems, ContainerProps, LayoutMode};
-use jian_ops_schema::node::{FrameNode, PenNode};
-use jian_ops_schema::sizing::{SizingBehavior, SizingKeyword};
+use jian_ops_schema::node::PenNode;
 
 use crate::css::cascade::ComputedStyle;
 use crate::length::{parse_length, LengthCtx};
 
-use super::grid_place as place;
-use super::node_access::{node_base, set_node_width};
+use super::node_access::node_base;
 use super::MapCtx;
+
+#[path = "mapper_grid_layout.rs"]
+mod layout;
+pub(crate) use layout::apply_grid;
 
 const DEFAULT_AUTO_TRACK_MIN: f64 = 240.0;
 const MAX_GRID_COLUMNS: usize = 256;
@@ -22,131 +21,6 @@ pub(super) fn grid_column_count(style: &ComputedStyle) -> Option<usize> {
 
 pub(super) fn grid_row_gap(style: &ComputedStyle, context: &MapCtx<'_>) -> Option<f64> {
     gap_value(style, context, "row-gap")
-}
-
-pub(super) fn wrap_grid_rows(
-    context: &mut MapCtx<'_>,
-    style: &ComputedStyle,
-    mut children: Vec<PenNode>,
-) -> Vec<PenNode> {
-    // Placement carriers are stripped unconditionally: every early return
-    // below must still hand back nodes free of the private hint.
-    let placements = place::take_placements(&mut children);
-    if children.is_empty() || !is_grid(style) {
-        return children;
-    }
-    let Some(first_flow) = children.iter().position(|node| !is_grid_overlay(node)) else {
-        return children;
-    };
-    let mut front = Vec::new();
-    let mut flow = Vec::new();
-    let mut flow_placements = Vec::new();
-    let mut back = Vec::new();
-    for (index, node) in children.into_iter().enumerate() {
-        if is_grid_overlay(&node) {
-            if index < first_flow {
-                front.push(node);
-            } else {
-                back.push(node);
-            }
-        } else {
-            flow_placements.push(placements[index]);
-            flow.push(node);
-        }
-    }
-    let Some(columns) = effective_column_count(style, context, flow.len()) else {
-        front.extend(flow);
-        front.extend(back);
-        return front;
-    };
-    if columns <= 1 {
-        front.extend(flow);
-        front.extend(back);
-        return front;
-    }
-
-    let (packed, notes) = place::pack_rows(&flow_placements, columns);
-    if notes.skipped_cells {
-        context.warn_once(ImportWarning::GridEmptyCellsPacked);
-    }
-    if notes.reflowed_start {
-        context.warn_once(ImportWarning::GridSpanReflowed);
-    }
-    // The current grid element reserves its slot before synthetic rows.
-    if context.node_count.saturating_add(packed.len()) > crate::MAX_OUTPUT_NODES {
-        context.warn_once(ImportWarning::GridRowsNodeLimit);
-        front.extend(flow);
-        front.extend(back);
-        return front;
-    }
-
-    let gap = gap_value(style, context, "column-gap").unwrap_or(0.0);
-    let column_gap = (gap > 0.0).then_some(NumberOrExpression::Number(gap));
-    let track_widths = resolved_track_widths(style, context, columns, gap);
-    if track_widths.is_none()
-        && packed
-            .iter()
-            .flatten()
-            .any(|cell| cell.span > 1 || cell.start > 0)
-    {
-        context.warn_once(ImportWarning::GridTrackWidthsUnresolved);
-    }
-    let align_items = style
-        .get("align-items")
-        .and_then(AlignItems::from_css)
-        .or(Some(AlignItems::Stretch));
-    let mut source = flow.into_iter();
-    let mut rows = Vec::with_capacity(packed.len());
-    for cells in &packed {
-        let mut row_children: Vec<_> = source.by_ref().take(cells.len()).collect();
-        if row_children.is_empty() {
-            break;
-        }
-        if let Some(widths) = &track_widths {
-            for (child, cell) in row_children.iter_mut().zip(cells) {
-                if let Some(width) = place::cell_width(widths, *cell, gap) {
-                    set_node_width(child, width);
-                }
-            }
-        }
-        let row = PenNode::Frame(FrameNode {
-            base: PenNodeBase {
-                id: context.generate_id(),
-                name: Some("Grid row".to_string()),
-                ..Default::default()
-            },
-            container: ContainerProps {
-                width: Some(SizingBehavior::Keyword(SizingKeyword::FillContainer)),
-                height: Some(SizingBehavior::Keyword(SizingKeyword::FitContent)),
-                layout: Some(LayoutMode::Horizontal),
-                gap: column_gap.clone(),
-                align_items: align_items.clone(),
-                ..Default::default()
-            },
-            children: Some(row_children),
-            image_search_query: None,
-            reusable: None,
-            slot: None,
-            state: None,
-            bindings: None,
-            events: None,
-            lifecycle: None,
-            semantics: None,
-            gestures: None,
-            route: None,
-            screen: None,
-            breakpoint: None,
-            placeholder: None,
-            component_properties: None,
-            component_set: None,
-            variant_values: None,
-        });
-        context.node_count += 1;
-        rows.push(row);
-    }
-    front.extend(rows);
-    front.extend(back);
-    front
 }
 
 fn is_grid_overlay(node: &PenNode) -> bool {
@@ -600,7 +474,13 @@ fn scan_top_level(value: &str, delimiter: Option<char>) -> Option<Option<usize>>
 
 #[cfg(test)]
 mod tests {
+    use super::super::grid_place as place;
+    use super::super::node_access::{node_base_mut, node_width};
     use super::*;
+    use jian_ops_schema::node::base::{NumberOrExpression, PenNodeBase};
+    use jian_ops_schema::node::container::{AlignItems, ContainerProps, LayoutMode};
+    use jian_ops_schema::node::grid::{GridPlacement, GridTemplate, GridTrack};
+    use jian_ops_schema::sizing::{SizingBehavior, SizingKeyword};
     use std::collections::BTreeMap;
 
     fn style(columns: &str, gap: Option<&str>) -> ComputedStyle {
@@ -647,23 +527,6 @@ mod tests {
         .unwrap()
     }
 
-    fn row(node: &PenNode) -> &FrameNode {
-        let PenNode::Frame(row) = node else {
-            panic!("expected grid row")
-        };
-        row
-    }
-
-    fn width(node: &PenNode) -> f64 {
-        let PenNode::Frame(node) = node else {
-            panic!("expected frame")
-        };
-        let Some(SizingBehavior::Number(width)) = node.container.width else {
-            panic!("expected numeric width")
-        };
-        width
-    }
-
     #[test]
     fn counts_safe_explicit_tracks_and_rejects_dynamic_lists() {
         assert_eq!(
@@ -690,76 +553,121 @@ mod tests {
         }
     }
 
+    fn container() -> ContainerProps {
+        ContainerProps {
+            layout: Some(LayoutMode::Vertical),
+            gap: Some(NumberOrExpression::Number(12.0)),
+            ..Default::default()
+        }
+    }
+
     #[test]
-    fn wraps_rows_without_stretching_the_incomplete_tail() {
+    fn a_grid_becomes_native_grid_with_its_children_in_place() {
         let options = crate::HtmlImportOptions {
             viewport_width: 1000.0,
             ..Default::default()
         };
         let mut context = context(&options);
-        let rows = wrap_grid_rows(
+        let mut c = container();
+        let out = apply_grid(
             &mut context,
             &style("repeat(2, 1fr)", Some("12px")),
+            &mut c,
             (0..5).map(child).collect(),
         );
-        assert_eq!(rows.len(), 3);
-        assert_eq!(context.node_count, 3);
-        let lengths: Vec<_> = rows
-            .iter()
-            .map(|node| row(node).children.as_ref().unwrap().len())
-            .collect();
-        assert_eq!(lengths, [2, 2, 1]);
-        assert_eq!(row(&rows[0]).container.layout, Some(LayoutMode::Horizontal));
+        assert_eq!(out.len(), 5);
+        assert_eq!(context.node_count, 0);
+        assert_eq!(c.layout, Some(LayoutMode::Grid));
         assert_eq!(
-            row(&rows[0]).container.gap,
-            Some(NumberOrExpression::Number(12.0))
+            c.columns,
+            Some(GridTemplate::Tracks(vec![GridTrack::FR1; 2]))
         );
-        let tail = &row(&rows[2]).children.as_ref().unwrap()[0];
-        assert!((width(tail) - 494.0).abs() < 0.001);
+        assert_eq!(c.row_gap, Some(NumberOrExpression::Number(12.0)));
+        assert_eq!(c.column_gap, Some(NumberOrExpression::Number(12.0)));
+        assert_eq!(c.gap, None);
+        assert_eq!(c.align_items, Some(AlignItems::Stretch));
+        assert!(matches!(
+            node_width(&out[4]),
+            Some(SizingBehavior::Keyword(SizingKeyword::FillContainer))
+        ));
     }
 
     #[test]
-    fn assigns_non_uniform_pixel_percent_fr_and_minmax_tracks() {
+    fn tracks_keep_their_css_or_resolve_to_pixels() {
         let options = crate::HtmlImportOptions {
             viewport_width: 1000.0,
             ..Default::default()
         };
         let mut context = context(&options);
-        let rows = wrap_grid_rows(
+        let mut c = container();
+        apply_grid(
+            &mut context,
+            &style("120px minmax(100px, 1fr) 2fr", Some("10px")),
+            &mut c,
+            (0..3).map(child).collect(),
+        );
+        assert_eq!(
+            c.columns.as_ref().map(GridTemplate::short_text).as_deref(),
+            Some("120 minmax(100px, 1fr) 2fr")
+        );
+        // A percentage has no schema track: the row resolves to pixels.
+        let mut c = container();
+        apply_grid(
             &mut context,
             &style("120px 25% minmax(100px, 1fr) 2fr", Some("10px")),
+            &mut c,
             (0..4).map(child).collect(),
         );
-        let children = row(&rows[0]).children.as_ref().unwrap();
-        let widths: Vec<_> = children.iter().map(width).collect();
-        assert_eq!(widths, [120.0, 250.0, 200.0, 400.0]);
+        assert_eq!(
+            c.columns.as_ref().map(GridTemplate::short_text).as_deref(),
+            Some("120 250 200 400")
+        );
     }
 
     #[test]
-    fn flows_static_generated_items_but_keeps_positioned_pseudos_outside_rows() {
+    fn spans_and_pinned_starts_become_grid_column() {
+        let options = crate::HtmlImportOptions::default();
+        let mut context = context(&options);
+        let mut kids: Vec<_> = (0..3).map(child).collect();
+        let mut wide = PenNodeBase::default();
+        place::record_placement_value(&mut wide, "span 2");
+        node_base_mut(&mut kids[0]).theme = wide.theme;
+        let mut pinned = PenNodeBase::default();
+        place::record_placement_value(&mut pinned, "3");
+        node_base_mut(&mut kids[2]).theme = pinned.theme;
+        let mut c = container();
+        let out = apply_grid(&mut context, &style("repeat(3, 1fr)", None), &mut c, kids);
+        assert_eq!(
+            node_base(&out[0]).grid_column,
+            Some(GridPlacement {
+                start: None,
+                span: 2
+            })
+        );
+        assert_eq!(node_base(&out[1]).grid_column, None);
+        assert_eq!(
+            node_base(&out[2]).grid_column.and_then(|p| p.start),
+            Some(3)
+        );
+        assert!(out.iter().all(|n| node_base(n).theme.is_none()));
+    }
+
+    #[test]
+    fn keeps_positioned_pseudos_and_order() {
         let options = crate::HtmlImportOptions::default();
         let mut context = context(&options);
         let mut front = child(90);
-        let PenNode::Frame(node) = &mut front else {
-            unreachable!()
-        };
-        node.base.name = Some("::before".into());
-        node.base.x = Some(4.0);
-        let mut after = child(91);
-        let PenNode::Frame(node) = &mut after else {
-            unreachable!()
-        };
-        node.base.name = Some("::after".into());
-        let output = wrap_grid_rows(
+        node_base_mut(&mut front).x = Some(4.0);
+        let mut c = container();
+        let output = apply_grid(
             &mut context,
             &style("repeat(2, 1fr)", None),
-            vec![front, child(0), child(1), after],
+            &mut c,
+            vec![front, child(0), child(1), child(2)],
         );
-        assert_eq!(node_base(&output[0]).id, "child-90");
-        assert_eq!(row(&output[1]).children.as_ref().unwrap().len(), 2);
-        let tail = row(&output[2]).children.as_ref().unwrap();
-        assert_eq!(tail.len(), 1);
-        assert_eq!(node_base(&tail[0]).id, "child-91");
+        let ids: Vec<_> = output.iter().map(|n| node_base(n).id.clone()).collect();
+        assert_eq!(ids, ["child-90", "child-0", "child-1", "child-2"]);
+        assert_eq!(c.layout, Some(LayoutMode::Grid));
     }
 
     #[test]
@@ -779,12 +687,11 @@ mod tests {
             ),
             Some(6)
         );
+        // Native grid adds no row frames, so the node budget is untouched.
         context.node_count = crate::MAX_OUTPUT_NODES;
-        let children = vec![child(0), child(1)];
-        assert_eq!(
-            wrap_grid_rows(&mut context, &grid_style, children.clone()),
-            children
-        );
-        assert_eq!(context.warnings.len(), 1);
+        let mut c = container();
+        let out = apply_grid(&mut context, &grid_style, &mut c, vec![child(0), child(1)]);
+        assert_eq!(out.len(), 2);
+        assert!(context.warnings.is_empty());
     }
 }

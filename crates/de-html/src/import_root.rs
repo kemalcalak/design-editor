@@ -107,7 +107,7 @@ pub(crate) fn map_body_root(
         // they fold into its padding; wrapped rows must fit inside them too.
         let margins = horizontal_padding(&container) - inline_padding;
         context.containing_width = (context.containing_width - margins).max(0.0);
-        mapper::apply_flex_wrap(context, body_style, &mut container, mapped.nodes)
+        mapper::apply_flow_passes(context, body_style, &mut container, mapped.nodes)
     };
     PenNode::Frame(FrameNode {
         base,

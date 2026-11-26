@@ -258,8 +258,8 @@ pub fn apply_property_action(
             let _ = state.set_selected_fill_rule(*rule);
             Handled
         }
-        A::SetFlexLayout(mode) => {
-            layout_ops::set_selected_layout_mode(state, *mode);
+        A::SetFlexLayout(_) | A::ToggleLayoutWrap => {
+            layout_ops::apply_auto_layout_action(state, action);
             Handled
         }
         A::ToggleSizeFillWidth => {

@@ -380,7 +380,8 @@ fn is_auto_layout(map: &Map<String, Value>) -> bool {
     map.get("type").and_then(Value::as_str) == Some("frame")
         && matches!(
             map.get("layout").and_then(Value::as_str),
-            Some("horizontal" | "vertical")
+            // `grid` (#379) is carried through as written when a file has it.
+            Some("horizontal" | "vertical" | "grid")
         )
 }
 

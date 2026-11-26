@@ -8,7 +8,8 @@
 use super::assets::Assets;
 use super::ir::{Content, Decls, Element};
 use super::layout::{
-    apply_absolute, apply_container, apply_size, child_parent, is_absolute, node_sizing, Parent,
+    apply_absolute, apply_container, apply_grid_cell, apply_size, child_parent, is_absolute,
+    node_sizing, Parent,
 };
 use super::paint::{
     apply_background, apply_compositing, apply_effects, apply_stroke, fills_of, node_effects,
@@ -137,6 +138,9 @@ impl Walker<'_> {
             _ => (w, h),
         };
         apply_size(&mut el.decls, w, h, limits, parent, absolute);
+        if parent == Parent::Grid && !absolute {
+            apply_grid_cell(&mut el.decls, base);
+        }
         let size = literal_size(node);
         let mut extra_shadows = Vec::new();
 

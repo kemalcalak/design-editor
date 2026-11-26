@@ -45,6 +45,12 @@ pub enum PropertyFocus {
     SizeH,
     /// Container flex-layout gap in document px.
     LayoutGap,
+    /// Space between wrapped lines / grid rows (`rowGap`, #379).
+    LayoutRowGap,
+    /// Grid column tracks as text (`1fr 1fr 120`, `3`, #379).
+    GridColumns,
+    /// Grid row tracks as text; empty = auto rows (#379).
+    GridRows,
     /// Container padding as one CSS-style shorthand draft (`16`,
     /// `96 120`, `8 16 8 4`) — see `padding_shorthand`.
     Padding,
@@ -215,6 +221,8 @@ impl PropertyFocus {
                 | PropertyFocus::OverlayBackground(_)
                 | PropertyFocus::ComponentProp(_)
                 | PropertyFocus::VariantText(_)
+                | PropertyFocus::GridColumns
+                | PropertyFocus::GridRows
         )
     }
 
@@ -231,6 +239,7 @@ impl PropertyFocus {
                 | PropertyFocus::FillOpacity(_)
                 | PropertyFocus::ImageTileScale
                 | PropertyFocus::LayoutGap
+                | PropertyFocus::LayoutRowGap
                 | PropertyFocus::StrokeWidth
                 | PropertyFocus::StrokeTopWidth
                 | PropertyFocus::StrokeRightWidth

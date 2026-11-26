@@ -1,5 +1,5 @@
 //! End-to-end geometry assertions for the Phase-A layout compatibility work:
-//! flex-wrap row chunking, grid `span`, `translate(-50%, -50%)` centering,
+//! native flex-wrap and grid (#379), grid `span`, `translate(-50%, -50%)` centering,
 //! `aspect-ratio`, per-child `mx-auto` and `position: relative` nudges.
 
 use jian_ops_schema::node::base::NumberOrExpression;
@@ -103,56 +103,51 @@ fn shell(result: &HtmlImportResult) -> &FrameNode {
 }
 
 #[test]
-fn flex_wrap_cards_chunk_into_measured_rows() {
+fn flex_wrap_cards_become_native_wrap() {
     let result = tailwind(None);
     let shell = shell(&result);
     let cards = frame(&children(shell)[0]);
-    // 3 × 300px + 2 × 24px gap = 948 ≤ 960; the fourth card spills.
-    assert_eq!(cards.container.layout, Some(LayoutMode::Vertical));
+    // The engine breaks the line (3 × 300 + 2 × 24 = 948 ≤ 960, the fourth
+    // card spills), so the cards stay direct children of one wrapping row.
+    assert_eq!(cards.container.layout, Some(LayoutMode::Horizontal));
+    assert_eq!(cards.container.wrap, Some(true));
     assert_eq!(cards.container.gap, Some(NumberOrExpression::Number(24.0)));
-    let rows = children(cards);
-    assert_eq!(rows.len(), 2);
-    for row in rows {
-        let row = frame(row);
-        assert_eq!(row.base.name.as_deref(), Some("Wrap row"));
-        assert_eq!(row.container.layout, Some(LayoutMode::Horizontal));
-        assert_eq!(row.container.gap, Some(NumberOrExpression::Number(24.0)));
-    }
-    assert_eq!(children(frame(&rows[0])).len(), 3);
-    assert_eq!(children(frame(&rows[1])).len(), 1);
+    assert_eq!(cards.container.row_gap, None);
+    assert_eq!(children(cards).len(), 4);
     assert_eq!(
-        number(
-            frame(&children(frame(&rows[0]))[0])
-                .container
-                .width
-                .as_ref()
-        ),
+        number(frame(&children(cards)[0]).container.width.as_ref()),
         300.0
     );
 }
 
 #[test]
-fn grid_span_two_occupies_two_tracks_and_the_gap_between_them() {
+fn grid_span_two_becomes_a_native_column_span() {
     let result = tailwind(None);
     let shell = shell(&result);
     let grid = frame(&children(shell)[1]);
-    let rows = children(grid);
-    assert_eq!(rows.len(), 2, "span 2 + 1 fills the first row exactly");
-    let first = frame(&rows[0]);
-    assert_eq!(first.base.name.as_deref(), Some("Grid row"));
-    let cells = children(first);
-    assert_eq!(cells.len(), 2);
-    // Free space 960 - 2 gaps = 920 over three 1fr tracks → 306.667 each.
-    let track = 920.0 / 3.0;
-    let wide = number(frame(&cells[0]).container.width.as_ref());
-    assert!(
-        (wide - (track * 2.0 + 20.0)).abs() < 0.01,
-        "span-2 cell should be {} wide, got {wide}",
-        track * 2.0 + 20.0
+    assert_eq!(grid.container.layout, Some(LayoutMode::Grid));
+    assert_eq!(
+        grid.container.columns.as_ref().map(|t| t.short_text()),
+        Some("1fr 1fr 1fr".to_string())
     );
-    let single = number(frame(&cells[1]).container.width.as_ref());
-    assert!((single - track).abs() < 0.01, "got {single}");
-    assert_eq!(children(frame(&rows[1])).len(), 2);
+    assert_eq!(
+        grid.container.row_gap,
+        Some(NumberOrExpression::Number(20.0))
+    );
+    assert_eq!(
+        grid.container.column_gap,
+        Some(NumberOrExpression::Number(20.0))
+    );
+    let cells = children(grid);
+    assert_eq!(cells.len(), 4, "no synthetic row frames");
+    assert_eq!(
+        frame(&cells[0]).base.grid_column,
+        Some(jian_ops_schema::node::GridPlacement {
+            start: None,
+            span: 2
+        })
+    );
+    assert_eq!(frame(&cells[1]).base.grid_column, None);
 }
 
 #[test]
@@ -238,13 +233,14 @@ fn the_fixture_reports_only_the_expected_approximations() {
         })
         .collect();
     assert!(unexpected.is_empty(), "{unexpected:?}");
-    assert!(named(frame(&result.nodes[0]), "Wrap row").is_some());
+    assert!(named(frame(&result.nodes[0]), "Wrap row").is_none());
+    assert!(named(frame(&result.nodes[0]), "Grid row").is_none());
 }
 
-/// The grid-placement and wrap-margin carriers travel in `PenNodeBase::theme`;
-/// nothing may survive into a serialized document, including on the
-/// early-return paths (single-column grid, every `flex-wrap` bail) and through
-/// the offset wrapper.
+/// The grid-placement carrier travels in `PenNodeBase::theme`; nothing may
+/// survive into a serialized document, including on the early-return paths
+/// (single-column grid, every `flex-wrap` bail) and through the offset
+/// wrapper.
 #[test]
 fn grid_placement_carriers_never_reach_the_output() {
     fn assert_no_theme(node: &PenNode) {
@@ -289,14 +285,16 @@ fn grid_placement_carriers_never_reach_the_output() {
 }
 
 #[test]
-fn flex_wrap_degrades_with_a_warning_when_children_cannot_be_measured() {
+fn flex_wrap_with_auto_sized_children_still_wraps() {
+    // The engine measures the children itself, so content-sized items no
+    // longer make the importer give up on wrapping.
     let result = import_html(
         "<div style='display:flex;flex-wrap:wrap;width:400px'>\
            <div>auto</div><div>auto</div></div>",
         &HtmlImportOptions::default(),
     );
     assert!(
-        result
+        !result
             .warnings
             .iter()
             .any(|warning| warning.contains("flex-wrap ignored")),
@@ -306,7 +304,7 @@ fn flex_wrap_degrades_with_a_warning_when_children_cannot_be_measured() {
     let root = frame(&result.nodes[0]);
     let flex = frame(&children(root)[0]);
     assert_eq!(flex.container.layout, Some(LayoutMode::Horizontal));
-    assert!(named(flex, "Wrap row").is_none());
+    assert_eq!(flex.container.wrap, Some(true));
 }
 
 /// Helper: the direct child names of a frame, in output (paint) order.
@@ -324,32 +322,26 @@ fn root_child(result: &HtmlImportResult, index: usize) -> &FrameNode {
     frame(&children(frame(&result.nodes[0]))[index])
 }
 
-/// B1. Row capacity subtracts the INLINE padding. `LtrB` is
-/// `[top, right, bottom, left]` and `XY` is `[vertical, horizontal]`, so the
-/// two arms used to read the block axis and wrap the wrong containers.
+/// B1. The wrapping row keeps its padding; the engine subtracts the inline
+/// padding when it breaks lines (`de-pen-loader`'s HTML import scene tests
+/// measure the result).
 #[test]
-fn wrap_capacity_uses_the_inline_padding_axis() {
+fn wrap_keeps_the_container_padding() {
     let card = "<div style='width:230px;height:20px'>x</div>";
-    let container = |padding: &str| {
-        format!(
+    let result = import_html(
+        &format!(
             "<div style='display:flex;flex-wrap:wrap;width:700px;box-sizing:border-box;\
-             padding:{padding}'>{card}{card}{card}</div>"
-        )
-    };
-    // Content width 700 - 200 = 500: two 230px cards fit, the third spills.
-    let result = import_html(&container("0 100px"), &HtmlImportOptions::default());
+             padding:0 100px'>{card}{card}{card}</div>"
+        ),
+        &HtmlImportOptions::default(),
+    );
     let flex = root_child(&result, 0);
-    assert_eq!(flex.container.layout, Some(LayoutMode::Vertical));
-    assert_eq!(child_names(flex), ["Wrap row", "Wrap row"]);
-    assert_eq!(children(frame(&children(flex)[0])).len(), 2);
-
-    // Block-axis padding leaves the full 700 for the row: 3 × 230 = 690 fits.
-    let result = import_html(&container("100px 0"), &HtmlImportOptions::default());
-    let flex = root_child(&result, 0);
+    assert_eq!(flex.container.wrap, Some(true));
     assert_eq!(
-        flex.container.layout,
-        Some(LayoutMode::Horizontal),
-        "vertical padding must not shrink the row capacity"
+        flex.container.padding,
+        Some(jian_ops_schema::node::Padding::LtrB([
+            0.0, 100.0, 0.0, 100.0
+        ]))
     );
     assert_eq!(children(flex).len(), 3);
 }
@@ -376,8 +368,8 @@ fn wrap_preserves_the_paint_order_the_stacking_pass_computed() {
     let flex = root_child(&result, 0);
     assert_eq!(
         child_names(flex),
-        ["header", "Wrap row", "Wrap row", "footer"],
-        "synthetic rows splice in where the flow band began"
+        ["header", "div", "div", "div", "footer"],
+        "the flow band stays where the stacking pass put it"
     );
 
     // Every bail path hands the children back untouched, including the order.
@@ -545,10 +537,11 @@ fn replaced_elements_get_the_same_in_flow_post_passes_as_frames() {
         &HtmlImportOptions::default(),
     );
     let grid = root_child(&result, 0);
-    let PenNode::Image(image) = &children(frame(&children(grid)[0]))[0] else {
-        panic!("expected the image first in the grid row")
+    assert_eq!(grid.container.layout, Some(LayoutMode::Grid));
+    let PenNode::Image(image) = &children(grid)[0] else {
+        panic!("expected the image first in the grid")
     };
-    assert_eq!(image.width, Some(SizingBehavior::Number(600.0)));
+    assert_eq!(image.base.grid_column.map(|p| p.span), Some(2));
 
     // `mx-auto` on a block-level <img> rides an alignment row.
     let result = import_html(

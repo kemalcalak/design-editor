@@ -68,7 +68,7 @@ pub(crate) mod intrinsic;
 
 #[path = "mapper_wrap.rs"]
 mod wrap;
-pub(crate) use wrap::apply_flex_wrap;
+pub(crate) use wrap::apply_flow_passes;
 
 #[path = "mapper_grid_place.rs"]
 mod grid_place;
@@ -328,7 +328,7 @@ pub(crate) fn map_element_scoped(
         text_fill_override,
     );
     let children = mapped_children.nodes;
-    let children = wrap::apply_flex_wrap(context, &style, &mut container, children);
+    let children = wrap::apply_flow_passes(context, &style, &mut container, children);
     // Runs before the containing block is restored: the column widths are
     // measured against the table's own used width. That width is only real
     // when the author pinned one — a missing `width` is inferred as a fill of
@@ -523,6 +523,7 @@ fn container_props_from_impl(
         // No responsive-schema (jian formatVersion 1.2) source in HTML
         // import — this pipeline only ever emits non-responsive documents.
         limits,
+        ..Default::default()
     };
     layout_heuristics::apply_legacy_size_limits(
         &mut container,

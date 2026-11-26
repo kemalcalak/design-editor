@@ -376,9 +376,6 @@ fn resolve_edges(style: &ComputedStyle, context: &MapCtx<'_>) -> Edges {
 
 fn wrap(context: &mut MapCtx<'_>, mut node: PenNode, edges: Edges) -> PenNode {
     context.node_count += 1;
-    // The wrapper's numeric width already includes its inline margins. The
-    // flex-wrap capacity pass must not add its legacy margin carrier again.
-    super::wrap::discard_recorded_inline_margin(&mut node);
     let (explain, theme) = {
         let base = node_base_mut(&mut node);
         (base.explain.take(), base.theme.take())

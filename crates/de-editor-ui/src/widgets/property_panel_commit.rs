@@ -40,6 +40,9 @@ pub fn property_focus_initial(focus: PropertyFocus, panel: &PropertyPanel) -> St
         F::SizeH => panel.snapshot.height.to_string(),
         F::LayoutGap => format_panel_number(panel.snapshot.layout_gap),
         F::Padding => panel.snapshot.layout_padding.shorthand(),
+        F::LayoutRowGap => format_panel_number(panel.snapshot.layout_grid.row_gap),
+        F::GridColumns => panel.snapshot.layout_grid.columns.clone(),
+        F::GridRows => panel.snapshot.layout_grid.rows.clone(),
         F::Rotation => (panel.snapshot.rotation_deg.round() as i32).to_string(),
         F::PositionR => {
             if property_panel_corner::radii_are_uniform(panel.snapshot.corner_radii) {
@@ -484,6 +487,9 @@ pub fn commit_property_focus(state: &mut EditorState) -> bool {
         }
         PropertyFocus::Padding => {
             let _ = state.commit_padding_shorthand(&draft);
+        }
+        PropertyFocus::GridColumns | PropertyFocus::GridRows => {
+            let _ = state.commit_grid_tracks(focus == PropertyFocus::GridRows, &draft);
         }
         // Parsed as f64 so an untouched value writes back unchanged
         // (the generic f32 path would turn 0.8 into 0.800000011920929).

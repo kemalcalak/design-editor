@@ -244,6 +244,7 @@ pub fn map_corner_smoothing(figma: &FigValue) -> f64 {
 pub fn common_props(figma: &FigValue, id: String) -> PenNodeBase {
     let (x, y) = extract_position(figma);
     let (flip_x, flip_y) = extract_flip(figma);
+    let (grid_column, grid_row) = crate::grid_layout::child_placement(figma);
     PenNodeBase {
         id,
         name: figma
@@ -278,6 +279,10 @@ pub fn common_props(figma: &FigValue, id: String) -> PenNodeBase {
         // Figma import never authors responsive size constraints.
         constraints: None,
         variable_bindings: None,
+        grid_column,
+        grid_row,
+        justify_self: None,
+        align_self: None,
     }
 }
 

@@ -25,12 +25,48 @@ pub fn set_selected_layout_mode(state: &mut EditorState, mode: de_editor_core::F
         de_editor_core::FlexLayout::Free => "none",
         de_editor_core::FlexLayout::Vertical => "vertical",
         de_editor_core::FlexLayout::Horizontal => "horizontal",
+        de_editor_core::FlexLayout::Grid => "grid",
     };
     state.commit_history();
     let _ = state.apply(de_editor_core::EditorCommand::SetNodeLayoutProp {
         node_id: id,
         property: "layout".to_string(),
         value: de_editor_core::LayoutPropValue::Keyword(value.to_string()),
+    });
+}
+
+/// The Auto layout section's direction segments and Wrap checkbox.
+pub fn apply_auto_layout_action(
+    state: &mut EditorState,
+    action: &crate::widgets::property_panel::PropertyPanelAction,
+) {
+    use crate::widgets::property_panel::PropertyPanelAction as A;
+    match action {
+        A::SetFlexLayout(mode) => set_selected_layout_mode(state, *mode),
+        A::ToggleLayoutWrap => toggle_selected_wrap(state),
+        _ => {}
+    }
+}
+
+/// Flip `wrap` on the selected container (#379).
+pub fn toggle_selected_wrap(state: &mut EditorState) {
+    let id = state.selection.anchor.clone();
+    if !id.is_real() {
+        return;
+    }
+    let wraps = match state.selected_node() {
+        Some(PenNode::Frame(n)) | Some(PenNode::Script(ScriptNode { frame: n, .. })) => {
+            n.container.wrap == Some(true)
+        }
+        Some(PenNode::Group(n)) => n.container.wrap == Some(true),
+        Some(PenNode::Rectangle(n)) => n.container.wrap == Some(true),
+        _ => return,
+    };
+    state.commit_history();
+    let _ = state.apply(de_editor_core::EditorCommand::SetNodeLayoutProp {
+        node_id: id,
+        property: "wrap".to_string(),
+        value: de_editor_core::LayoutPropValue::Bool(!wraps),
     });
 }
 
