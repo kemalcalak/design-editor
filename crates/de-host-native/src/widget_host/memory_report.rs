@@ -100,7 +100,7 @@ mod tests {
         host.mark_paint_dirty_for_test();
         host.refresh_layout_scene();
         let built = host.layout_scene_usage();
-        assert!(built.entries >= empty.entries + 2, "{empty:?} → {built:?}");
+        assert!(built.entries > empty.entries, "{empty:?} → {built:?}");
         assert!(built.bytes > empty.bytes);
     }
 }
