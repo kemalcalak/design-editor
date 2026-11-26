@@ -209,3 +209,15 @@ fn variable_mode_parses_wire_spellings() {
     assert_eq!(VariableMode::parse("Detach"), Some(VariableMode::Detach));
     assert_eq!(VariableMode::parse("drop"), None);
 }
+
+#[test]
+fn a_px_line_height_scaled_below_the_multiplier_range_becomes_a_multiplier() {
+    let (out, _) = scale_with(
+        json!({"type": "text", "fontSize": 16, "lineHeight": 20}),
+        0.15,
+        VariableMode::KeepBound,
+    );
+    // 20 px over 16 px text is 1.25 lines, whatever the scale.
+    assert_eq!(out["lineHeight"], json!(1.25));
+    assert_eq!(out["fontSize"], json!(2.4));
+}

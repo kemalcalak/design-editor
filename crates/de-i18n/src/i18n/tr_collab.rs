@@ -491,6 +491,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "path.offsetInward" => "Yolu İçe Kaydır",
         "path.simplify" => "Yolu Sadeleştir",
         "path.reverse" => "Yol Yönünü Ters Çevir",
+        "scale.keptBound" => "Değişkenlere bağlı {{count}} değer boyutunu korudu",
         "scale.title" => "Ölçekle",
         "layerMenu.createComponentFromSimilar" => "Kopyalardan bileşen",
         "convertInstances.done" => "{{converted}} kopya artık tek bir bileşenin örneği",

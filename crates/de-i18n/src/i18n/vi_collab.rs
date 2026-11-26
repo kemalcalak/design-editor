@@ -491,6 +491,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "path.offsetInward" => "Dịch đường dẫn vào trong",
         "path.simplify" => "Đơn giản hóa đường dẫn",
         "path.reverse" => "Đảo hướng đường dẫn",
+        "scale.keptBound" => "{{count}} giá trị gắn với biến giữ nguyên kích thước",
         "scale.title" => "Thu phóng",
         "layerMenu.createComponentFromSimilar" => "Thành phần từ bản sao",
         "convertInstances.done" => "{{converted}} bản sao giờ là phiên bản của một thành phần",

@@ -493,6 +493,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "path.offsetInward" => "패스 안쪽 오프셋",
         "path.simplify" => "패스 단순화",
         "path.reverse" => "패스 방향 반전",
+        "scale.keptBound" => "변수에 연결된 값 {{count}}개는 크기를 유지했습니다",
         "scale.title" => "크기 조정",
         "layerMenu.createComponentFromSimilar" => "사본으로 컴포넌트",
         "convertInstances.done" => "사본 {{converted}}개가 한 컴포넌트의 인스턴스가 되었습니다",

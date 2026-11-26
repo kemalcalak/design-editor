@@ -103,7 +103,7 @@ impl WidgetHostNative {
             return true;
         }
         if let Some(drag) = self.scale_drag.take() {
-            drag.finish(&mut self.editor_state);
+            drag.finish(&mut self.editor_state, self.now_ms);
             self.invalidate_live_scene_for_rebuild();
             return true;
         }
@@ -282,7 +282,7 @@ impl WidgetHostNative {
             return true;
         }
         if let Some(drag) = self.scale_drag.take() {
-            drag.finish(&mut self.editor_state);
+            drag.finish(&mut self.editor_state, self.now_ms);
             self.invalidate_live_scene_for_rebuild();
             return true;
         }

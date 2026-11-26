@@ -201,7 +201,11 @@ pub fn scale_focus_initial(focus: PropertyFocus, summary: Option<&ScaleSummary>)
 /// them (the caller runs the ordinary commit), else whether the
 /// selection was scaled. An unparsable, out-of-range or unchanged value
 /// is dropped like any other bad numeric draft.
-pub fn commit_scale_focus(state: &mut EditorState, scene: &LayoutScene) -> Option<bool> {
+pub fn commit_scale_focus(
+    state: &mut EditorState,
+    scene: &LayoutScene,
+    now_ms: u64,
+) -> Option<bool> {
     let focus = state.ui.property_focus.filter(|f| f.is_scale())?;
     state.ui.property_focus = None;
     state.ui.property_draft_select_all = false;
@@ -215,6 +219,16 @@ pub fn commit_scale_focus(state: &mut EditorState, scene: &LayoutScene) -> Optio
     let Some(plan) = ScalePlan::for_selection(state, scene) else {
         return Some(false);
     };
+    // A W / H field opens on the rounded size: committing it untouched
+    // must not scale by the rounding (e.g. 399.5 → 400).
+    let shown = match focus {
+        PropertyFocus::ScaleWidth => Some(plan.bounds.w),
+        PropertyFocus::ScaleHeight => Some(plan.bounds.h),
+        _ => None,
+    };
+    if shown.is_some_and(|v| format_panel_number(v.round() as f32) == draft) {
+        return Some(false);
+    }
     let factor = match focus {
         PropertyFocus::ScaleWidth => factor_for_size(plan.bounds.w, value),
         PropertyFocus::ScaleHeight => factor_for_size(plan.bounds.h, value),
@@ -229,7 +243,13 @@ pub fn commit_scale_focus(state: &mut EditorState, scene: &LayoutScene) -> Optio
         state.editor_ui.scale_anchor,
         VariableMode::KeepBound,
     );
-    Some(scale_with_history(state, &request).is_ok())
+    match scale_with_history(state, &request) {
+        Ok(report) => {
+            crate::scale_plan::toast_kept_bound(state, &report, now_ms);
+            Some(true)
+        }
+        Err(_) => Some(false),
+    }
 }
 
 #[cfg(test)]

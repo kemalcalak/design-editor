@@ -491,6 +491,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "path.offsetInward" => "向内偏移路径",
         "path.simplify" => "简化路径",
         "path.reverse" => "反转路径方向",
+        "scale.keptBound" => "{{count}} 个绑定到变量的值保持原尺寸",
         "scale.title" => "缩放",
         "layerMenu.createComponentFromSimilar" => "从副本创建组件",
         "convertInstances.done" => "{{converted}} 个副本已成为同一组件的实例",

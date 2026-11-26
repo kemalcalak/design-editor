@@ -114,7 +114,8 @@ impl WidgetHostNative {
     }
 
     /// Scale tool: start a scale drag on a selection handle. False when
-    /// the press is not on one.
+    /// the press is not on one; a handle press with nothing to scale is
+    /// still consumed, so the K tool never falls back to a resize.
     fn press_scale_handle(&mut self, ctx: &CanvasPressCtx) -> bool {
         let Some(handle) = selection_handle_at_point(
             ctx.canvas_rect,
@@ -131,7 +132,7 @@ impl WidgetHostNative {
             handle,
             (ctx.x, ctx.y),
         ) else {
-            return false;
+            return true;
         };
         self.scale_drag = Some(drag);
         self.mark_dirty();

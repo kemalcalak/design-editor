@@ -491,6 +491,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "path.offsetInward" => "Pfad nach innen versetzen",
         "path.simplify" => "Pfad vereinfachen",
         "path.reverse" => "Pfadrichtung umkehren",
+        "scale.keptBound" => "{{count}} an Variablen gebundene Werte behielten ihre Größe",
         "scale.title" => "Skalieren",
         "layerMenu.createComponentFromSimilar" => "Komponente aus Kopien",
         "convertInstances.done" => "{{converted}} Kopien sind jetzt Instanzen einer Komponente",

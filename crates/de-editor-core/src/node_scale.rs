@@ -119,18 +119,41 @@ impl PropScaler<'_> {
         node_id: &str,
         report: &mut ScaleReport,
     ) {
+        self.scale_own_in(node, node_id, report, false);
+    }
+
+    /// [`Self::scale_own`] for a node shown by a component instance
+    /// (`in_instance`): its scaled values become overrides, and an
+    /// override cannot drop the master's `variableBindings` entry, so a
+    /// typed bound field stays bound and is reported as kept even under
+    /// [`VariableMode::Detach`].
+    pub fn scale_own_in(
+        &self,
+        node: &mut Map<String, Value>,
+        node_id: &str,
+        report: &mut ScaleReport,
+        in_instance: bool,
+    ) {
         let before = (!self.bindings(node).is_empty()).then(|| node.clone());
+        // The size a px line height is read against, before it scales.
+        let font_size = node
+            .get("fontSize")
+            .and_then(Value::as_f64)
+            .unwrap_or(f64::from(crate::text_defaults::FONT_SIZE));
         for key in LENGTH_KEYS {
             if let Some(slot) = node.get_mut(*key) {
                 self.length(slot, node_id, key, report);
             }
         }
         if let Some(slot) = node.get_mut("lineHeight") {
-            if slot
-                .as_f64()
-                .is_some_and(|v| v > LINE_HEIGHT_MULTIPLIER_MAX)
-            {
-                self.length(slot, node_id, "lineHeight", report);
+            if let Some(px) = slot.as_f64().filter(|v| *v > LINE_HEIGHT_MULTIPLIER_MAX) {
+                // A px value scaled down to 4 or less would be read as a
+                // multiplier: write the multiplier it shows instead.
+                *slot = if px * self.factor <= LINE_HEIGHT_MULTIPLIER_MAX && font_size > 0.0 {
+                    num(px / font_size)
+                } else {
+                    num(px * self.factor)
+                };
             }
         }
         for key in ["fill", "stroke", "effects"] {
@@ -183,7 +206,12 @@ impl PropScaler<'_> {
             }
         }
         if let Some(before) = before {
-            self.settle_bindings(&before, node, node_id, report);
+            let mode = if in_instance {
+                VariableMode::KeepBound
+            } else {
+                self.mode
+            };
+            self.settle_bindings(&before, node, node_id, report, mode);
         }
     }
 
@@ -322,6 +350,7 @@ impl PropScaler<'_> {
         node: &mut Map<String, Value>,
         node_id: &str,
         report: &mut ScaleReport,
+        mode: VariableMode,
     ) {
         let before = Value::Object(before.clone());
         let mut after = Value::Object(std::mem::take(node));
@@ -343,7 +372,7 @@ impl PropScaler<'_> {
                 node_id: node_id.to_owned(),
                 field: path.trim_start_matches('/').to_owned(),
             };
-            match self.mode {
+            match mode {
                 VariableMode::KeepBound => {
                     if let (Some(slot), Some(old)) = (after.pointer_mut(&pointer), old) {
                         *slot = old;

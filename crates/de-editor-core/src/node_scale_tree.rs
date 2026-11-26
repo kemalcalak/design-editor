@@ -76,7 +76,8 @@ impl<'a> TreeScaler<'a> {
         let children = node.children_mut().map(std::mem::take);
         let id = node.id_str().to_owned();
         if let Ok(Value::Object(mut map)) = serde_json::to_value(&*node) {
-            self.props.scale_own(&mut map, &id, report);
+            self.props
+                .scale_own_in(&mut map, &id, report, self.depth.get() > 0);
             if let Ok(scaled) = serde_json::from_value::<PenNode>(Value::Object(map)) {
                 *node = scaled;
             }

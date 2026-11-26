@@ -491,6 +491,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "path.offsetInward" => "Сместить контур внутрь",
         "path.simplify" => "Упростить контур",
         "path.reverse" => "Изменить направление контура",
+        "scale.keptBound" => "Значения, привязанные к переменным ({{count}}), сохранили размер",
         "scale.title" => "Масштаб",
         "layerMenu.createComponentFromSimilar" => "Компонент из копий",
         "convertInstances.done" => "Копий стало экземплярами одного компонента: {{converted}}",

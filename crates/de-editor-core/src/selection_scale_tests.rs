@@ -303,3 +303,24 @@ fn an_unresolved_instance_only_moves() {
     assert_eq!(report.unresolved_instances, vec!["lost".to_string()]);
     assert_eq!(json_of(&s, "lost")["x"], json!(20));
 }
+
+#[test]
+fn detach_inside_an_instance_keeps_typed_bindings_and_says_so() {
+    let mut s = state_with(vec![
+        node(json!({
+            "type": "frame", "id": "btn", "reusable": true, "width": 100, "height": 40,
+            "children": [{"type": "text", "id": "label", "content": "Go", "fontSize": 14,
+                "variableBindings": {"fontSize": {"variable": "body", "value": 14}}}]
+        })),
+        node(json!({"type": "ref", "id": "inst", "ref": "btn", "x": 200, "y": 0})),
+    ]);
+    let mut req = request("inst", Some((200.0, 0.0)), 2.0);
+    req.variables = VariableMode::Detach;
+    let report = s.scale_nodes(&req).expect("scaled");
+    assert!(report.detached.is_empty(), "nothing was really unbound");
+    assert_eq!(report.bound.len(), 1);
+    assert_eq!(report.bound[0].field, "fontSize");
+    let inst = json_of(&s, "inst");
+    assert!(inst["descendants"]["label"].get("fontSize").is_none());
+    assert_eq!(inst["descendants"]["btn"]["width"], json!(200));
+}

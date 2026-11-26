@@ -491,6 +491,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "path.offsetInward" => "पाथ को अंदर ऑफ़सेट करें",
         "path.simplify" => "पाथ सरल करें",
         "path.reverse" => "पाथ की दिशा उलटें",
+        "scale.keptBound" => "वेरिएबल से जुड़े {{count}} मानों का आकार नहीं बदला",
         "scale.title" => "स्केल",
         "layerMenu.createComponentFromSimilar" => "कॉपी से कंपोनेंट",
         "convertInstances.done" => "{{converted}} कॉपी अब एक कंपोनेंट के इंस्टेंस हैं",

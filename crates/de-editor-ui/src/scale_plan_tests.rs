@@ -101,7 +101,7 @@ fn a_drag_rescales_from_the_original_and_lands_as_one_undo_step() {
     };
     assert_eq!(width(&state), Some(150.0), "not compounded");
     let depth = state.history.past.len();
-    assert!(drag.finish(&mut state));
+    assert!(drag.finish(&mut state, 0));
     assert_eq!(state.history.past.len(), depth + 1);
     assert!(state.undo());
     assert_eq!(width(&state), Some(100.0));
@@ -118,4 +118,17 @@ fn a_cancelled_drag_restores_the_selection() {
     let r =
         de_editor_core::walkers::find_node(state.active_children(), &NodeId::new("r")).expect("r");
     assert_eq!(r.height_px(), Some(50.0));
+}
+
+#[test]
+fn a_rotated_node_reads_the_pointer_along_its_own_axes() {
+    let (mut state, mut scene) = fixture();
+    // `r` turned a quarter clockwise: its width now runs down the page.
+    scene.pages[0].children[1].rotation = std::f32::consts::FRAC_PI_2;
+    state.set_single_selection(NodeId::new("r"));
+    let mut drag =
+        ScaleDrag::begin(&state, &scene, SelectionHandle::Right, (0.0, 0.0)).expect("drag");
+    // Dragging the right handle 50 px down the page widens it by half.
+    assert!(drag.update(&mut state, 0.0, 50.0));
+    assert!((drag.factor - 1.5).abs() < 1e-6, "{}", drag.factor);
 }

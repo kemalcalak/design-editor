@@ -491,6 +491,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "path.offsetInward" => "Décaler le tracé vers l'intérieur",
         "path.simplify" => "Simplifier le tracé",
         "path.reverse" => "Inverser le sens du tracé",
+        "scale.keptBound" => "{{count}} valeurs liées à des variables ont gardé leur taille",
         "scale.title" => "Échelle",
         "layerMenu.createComponentFromSimilar" => "Composant des copies",
         "convertInstances.done" => "{{converted}} copies sont désormais des instances d’un composant",

@@ -491,6 +491,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "path.offsetInward" => "Offset Path Inward",
         "path.simplify" => "Simplify Path",
         "path.reverse" => "Reverse Path Direction",
+        "scale.keptBound" => "{{count}} values bound to variables kept their size",
         "scale.title" => "Scale",
         "layerMenu.createComponentFromSimilar" => "Component from copies",
         "convertInstances.done" => "{{converted}} copies are now instances of one component",

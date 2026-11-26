@@ -10,7 +10,7 @@
 use de_editor_core::geometry::DocRect;
 use de_editor_core::node_id::NodeId;
 use de_editor_core::{
-    EditorState, PenNodeExt, ScaleAnchor, ScaleRequest, ScaleTarget, VariableMode,
+    EditorState, PenNodeExt, ScaleAnchor, ScaleReport, ScaleRequest, ScaleTarget, VariableMode,
 };
 
 use crate::layout_scene::LayoutScene;
@@ -133,6 +133,21 @@ impl ScalePlan {
     }
 }
 
+/// Tell the user, with a warning toast, that values bound to variables
+/// kept their size. The canvas and the panel always keep them; MCP
+/// `scale_nodes` can detach them.
+pub fn toast_kept_bound(state: &mut EditorState, report: &ScaleReport, now_ms: u64) {
+    if report.bound.is_empty() {
+        return;
+    }
+    state.editor_ui.show_toast(
+        "scale.keptBound",
+        vec![("count".to_string(), report.bound.len().to_string())],
+        de_editor_core::editor_toast::EditorToastLevel::Warn,
+        now_ms,
+    );
+}
+
 /// The anchor a handle drag keeps in place: the opposite point.
 pub fn opposite_anchor(handle: SelectionHandle) -> ScaleAnchor {
     match handle {
@@ -190,6 +205,11 @@ pub struct ScaleDrag {
     before: EditorSnapshot,
     /// The last factor applied (1 until the pointer moves).
     pub factor: f64,
+    /// A single rotated target: its rotation (radians, clockwise) and its
+    /// own unrotated box, so the pointer is read along the node's axes.
+    local: Option<(f64, DocRect)>,
+    /// What the last rescale left bound to variables.
+    report: ScaleReport,
 }
 
 impl ScaleDrag {
@@ -201,6 +221,25 @@ impl ScaleDrag {
         start_screen: (f32, f32),
     ) -> Option<Self> {
         let plan = ScalePlan::for_selection(state, scene)?;
+        let local = match plan.targets.as_slice() {
+            [only] => scene
+                .active_page()
+                .and_then(|page| page.find(only.id.as_str()))
+                .filter(|n| n.rotation.abs() > 1e-6)
+                .map(|n| {
+                    let b = n.bounds;
+                    (
+                        f64::from(n.rotation),
+                        DocRect {
+                            x: f64::from(b.origin.x),
+                            y: f64::from(b.origin.y),
+                            w: f64::from(b.size.x),
+                            h: f64::from(b.size.y),
+                        },
+                    )
+                }),
+            _ => None,
+        };
         let originals = plan
             .ids()
             .filter_map(|id| {
@@ -215,6 +254,8 @@ impl ScaleDrag {
             originals,
             before: state.snapshot_for_history(),
             factor: 1.0,
+            local,
+            report: ScaleReport::default(),
         })
     }
 
@@ -231,7 +272,15 @@ impl ScaleDrag {
     /// Rescale for a pointer `(dx, dy)` document px from the press.
     /// Returns whether the document changed.
     pub fn update(&mut self, state: &mut EditorState, dx: f64, dy: f64) -> bool {
-        let factor = drag_factor(self.handle, self.plan.bounds, dx, dy);
+        let factor = match self.local {
+            // Undo the node's clockwise rotation to read the pointer along
+            // its own width and height.
+            Some((angle, rect)) => {
+                let (sin, cos) = angle.sin_cos();
+                drag_factor(self.handle, rect, dx * cos + dy * sin, -dx * sin + dy * cos)
+            }
+            None => drag_factor(self.handle, self.plan.bounds, dx, dy),
+        };
         if (factor - self.factor).abs() < 1e-9 {
             return false;
         }
@@ -239,19 +288,25 @@ impl ScaleDrag {
         self.put_back(state);
         let anchor = opposite_anchor(self.handle);
         let request = self.plan.request(factor, anchor, VariableMode::KeepBound);
-        if state.scale_nodes(&request).is_err() {
-            // Back at 1 (or refused): the originals are already back.
-            state.mark_document_changed();
+        match state.scale_nodes(&request) {
+            Ok(report) => self.report = report,
+            Err(_) => {
+                // Back at 1 (or refused): the originals are already back.
+                self.report = ScaleReport::default();
+                state.mark_document_changed();
+            }
         }
         true
     }
 
-    /// End the drag: one undo step when anything changed.
-    pub fn finish(self, state: &mut EditorState) -> bool {
+    /// End the drag: one undo step when anything changed, and a toast
+    /// when values bound to variables were left as they were.
+    pub fn finish(self, state: &mut EditorState, now_ms: u64) -> bool {
         if (self.factor - 1.0).abs() < 1e-9 {
             return false;
         }
         state.history_push_past(self.before);
+        toast_kept_bound(state, &self.report, now_ms);
         true
     }
 

@@ -306,6 +306,7 @@ impl WidgetHostNative {
             let scaled = de_editor_ui::widgets::property_panel_scale::commit_scale_focus(
                 &mut self.editor_state,
                 scene,
+                self.now_ms,
             );
             if scaled.is_some() {
                 self.invalidate_live_scene_for_rebuild();

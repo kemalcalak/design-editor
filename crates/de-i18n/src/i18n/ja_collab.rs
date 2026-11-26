@@ -491,6 +491,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "path.offsetInward" => "パスを内側にオフセット",
         "path.simplify" => "パスを単純化",
         "path.reverse" => "パスの方向を反転",
+        "scale.keptBound" => "変数にバインドされた {{count}} 個の値はサイズを保持しました",
         "scale.title" => "拡大縮小",
         "layerMenu.createComponentFromSimilar" => "コピーから部品化",
         "convertInstances.done" => "{{converted}} 個のコピーが同じコンポーネントのインスタンスになりました",

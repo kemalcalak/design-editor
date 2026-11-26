@@ -491,6 +491,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "path.offsetInward" => "เลื่อนเส้นทางเข้าด้านใน",
         "path.simplify" => "ลดความซับซ้อนของเส้นทาง",
         "path.reverse" => "กลับทิศทางเส้นทาง",
+        "scale.keptBound" => "ค่าที่ผูกกับตัวแปร {{count}} ค่ายังคงขนาดเดิม",
         "scale.title" => "ปรับขนาด",
         "layerMenu.createComponentFromSimilar" => "คอมโพเนนต์จากสำเนา",
         "convertInstances.done" => "สำเนา {{converted}} รายการเป็นอินสแตนซ์ของคอมโพเนนต์เดียวแล้ว",

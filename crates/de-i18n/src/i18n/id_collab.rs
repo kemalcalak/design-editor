@@ -491,6 +491,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "path.offsetInward" => "Geser Jalur ke Dalam",
         "path.simplify" => "Sederhanakan Jalur",
         "path.reverse" => "Balik Arah Jalur",
+        "scale.keptBound" => "{{count}} nilai yang terikat variabel tetap ukurannya",
         "scale.title" => "Skala",
         "layerMenu.createComponentFromSimilar" => "Komponen dari salinan",
         "convertInstances.done" => "{{converted}} salinan kini menjadi instans satu komponen",

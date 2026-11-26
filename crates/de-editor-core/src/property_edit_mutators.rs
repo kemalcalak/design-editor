@@ -351,7 +351,7 @@ impl EditorState {
             | PropertyFocus::ScaleWidth
             | PropertyFocus::ScaleHeight
             | PropertyFocus::StrokeWidth => {
-                unreachable!("corner radius / stroke width handled before node borrow")
+                unreachable!("handled before the node borrow (or refused for Scale fields)")
             }
             PropertyFocus::PolygonSides
             | PropertyFocus::StarInnerRadius

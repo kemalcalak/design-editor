@@ -7,7 +7,7 @@ use de_editor_core::{EditorState, NodeId, ScaleRequest, ScaleTarget, VariableMod
 const CARD: &str = r##"{
   "version":"1.0.0",
   "children":[{
-    "type":"frame","id":"card","x":10,"y":10,"width":160,"height":110,
+    "type":"frame","id":"card","x":10,"y":10,"width":160,"height":140,
     "layout":"vertical","gap":8,"padding":[12,14],"cornerRadius":12,
     "fill":[{"type":"solid","color":"#FFFFFF"}],
     "stroke":{"thickness":1.5,"fill":[{"type":"solid","color":"#334155"}]},
@@ -23,6 +23,8 @@ const CARD: &str = r##"{
          {"type":"rectangle","id":"bar","width":"fill_container","height":8,"cornerRadius":4,
           "fill":[{"type":"solid","color":"#94A3B8"}]}
        ]},
+      {"type":"text","id":"caption","content":"Scale me","fontSize":12,"letterSpacing":0.5,
+       "lineHeight":18,"fontWeight":"600","fill":[{"type":"solid","color":"#0F172A"}]},
       {"type":"path","id":"tick","width":16,"height":12,"d":"M1 6 L6 11 L15 1",
        "stroke":{"thickness":2,"fill":[{"type":"solid","color":"#16A34A"}]}}
     ]
