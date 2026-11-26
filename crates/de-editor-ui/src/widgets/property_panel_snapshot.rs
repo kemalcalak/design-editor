@@ -246,6 +246,10 @@ pub struct NodeSnapshot {
     /// its flip buttons active while set.
     pub flip_x: bool,
     pub flip_y: bool,
+    /// Points selected in vector edit mode (#387): X / Y above show
+    /// their top-left, and the header's two buttons set their type —
+    /// `Some(true)` all smooth, `Some(false)` all corner, `None` mixed.
+    pub vector_points: Option<Option<bool>>,
     /// Built-in preset of the primary shader fill, `None` for a custom
     /// program or a non-shader fill — highlights the preset row.
     pub shader_preset: Option<de_editor_core::ShaderPreset>,

@@ -28,7 +28,7 @@ use de_editor_core::Viewport;
 use jian_scene::path_geometry::cubic_point;
 
 /// TS `SELECTION_BLUE` (`pen-core/constants.ts:11` — `#0d99ff`).
-const SELECTION_BLUE: Color = Color {
+pub(super) const SELECTION_BLUE: Color = Color {
     r: 13.0 / 255.0,
     g: 153.0 / 255.0,
     b: 1.0,
@@ -115,7 +115,7 @@ pub(super) fn paint_path_overlays(
 /// Wrap `f` in the same root→node transform chain the path painted
 /// under. Fallback to the legacy own-node rotation when called without
 /// traversal-captured transforms.
-fn with_node_overlay_transform(
+pub(super) fn with_node_overlay_transform(
     cx: &mut PaintCx<'_>,
     node: &SceneNode,
     canvas_rect: Rect,
@@ -154,7 +154,7 @@ fn replay_legacy_node_rotation(
     true
 }
 
-fn to_screen_point(p: Point2D, canvas_rect: Rect, viewport: &Viewport) -> Point2D {
+pub(super) fn to_screen_point(p: Point2D, canvas_rect: Rect, viewport: &Viewport) -> Point2D {
     Point2D::new(
         canvas_rect.origin.x + viewport.pan_x + p.x * viewport.zoom,
         canvas_rect.origin.y + viewport.pan_y + p.y * viewport.zoom,
@@ -163,7 +163,14 @@ fn to_screen_point(p: Point2D, canvas_rect: Rect, viewport: &Viewport) -> Point2
 
 /// Fill + stroke a small circle — TS draws anchor/handle dots as two
 /// `drawCircle` calls (fill then stroke).
-fn dot(cx: &mut PaintCx<'_>, center: Point2D, r: f32, fill: Color, line: Color, line_w: f32) {
+pub(super) fn dot(
+    cx: &mut PaintCx<'_>,
+    center: Point2D,
+    r: f32,
+    fill: Color,
+    line: Color,
+    line_w: f32,
+) {
     let b = Rect {
         origin: Point2D::new(center.x - r, center.y - r),
         size: Point2D::new(r * 2.0, r * 2.0),
@@ -175,7 +182,13 @@ fn dot(cx: &mut PaintCx<'_>, center: Point2D, r: f32, fill: Color, line: Color, 
 /// Hand-segmented dashed line — the `RenderBackend` has no dash
 /// effect, so the TS `PathEffect.MakeDash([4, 4])` is emulated with
 /// 4 px screen-space on/off segments.
-fn dashed_line(cx: &mut PaintCx<'_>, from: Point2D, to: Point2D, color: Color, width: f32) {
+pub(super) fn dashed_line(
+    cx: &mut PaintCx<'_>,
+    from: Point2D,
+    to: Point2D,
+    color: Color,
+    width: f32,
+) {
     let dx = to.x - from.x;
     let dy = to.y - from.y;
     let len = dx.hypot(dy);
@@ -232,7 +245,7 @@ fn flatten_to_screen(
     out
 }
 
-fn stroke_polyline(cx: &mut PaintCx<'_>, pts: &[Point2D], color: Color, width: f32) {
+pub(super) fn stroke_polyline(cx: &mut PaintCx<'_>, pts: &[Point2D], color: Color, width: f32) {
     for pair in pts.windows(2) {
         cx.backend.stroke_line(pair[0], pair[1], color, width);
     }

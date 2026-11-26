@@ -174,6 +174,12 @@ impl WidgetHostNative {
     ) -> bool {
         self.last_viewport_w = viewport_width;
         self.last_viewport_h = viewport_height;
+        // A vector edit session whose path is no longer the selection (a
+        // layer-row pick, a page switch) ends here, so selecting the path
+        // again later does not resurrect it (#387).
+        if self.editor_state.prune_vector_edit() {
+            self.mark_dirty();
+        }
         // A press anywhere takes the keyboard from the shader source editor;
         // a press inside it (its tier) gives it back. Higher tiers (the
         // colour picker's fields, modals) would otherwise share keys with it.

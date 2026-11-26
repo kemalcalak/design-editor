@@ -418,6 +418,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "variants.addAxis" => "เพิ่มแกน",
         "variants.nearest" => "ไม่มีรูปแบบที่ตรงกัน: แสดงแบบที่ใกล้ที่สุด",
         "variants.reportToast" => "รูปแบบ: ทิ้งการแทนที่ {{dropped}} รายการ, {{nearest}} รายการแสดงรูปแบบที่ใกล้ที่สุด, {{moved}} รายการย้ายไปค่าเริ่มต้น",
+        "menu.snapPixelGrid" => "จัดชิดกริดพิกเซล",
+        "vectorEdit.pixelSnapOn" => "เปิดการจัดชิดกริดพิกเซลแล้ว",
+        "vectorEdit.pixelSnapOff" => "ปิดการจัดชิดกริดพิกเซลแล้ว",
         _ => return None,
     })
 }

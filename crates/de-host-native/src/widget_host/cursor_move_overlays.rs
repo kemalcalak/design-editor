@@ -387,6 +387,7 @@ impl WidgetHostNative {
             || self.handle_drag.is_some()
             || self.create_drag.is_some()
             || self.path_anchor_drag.is_some()
+            || self.vector_edit_host.drag.is_some()
             || self.arc_handle_drag.is_some()
             || self.marquee_drag.is_some()
             || self.layer_drag.is_some()

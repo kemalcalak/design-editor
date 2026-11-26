@@ -235,6 +235,7 @@ pub mod uikit_shadcn;
 pub mod variables;
 pub mod variables_panel_state;
 pub mod variables_resolve;
+pub mod vector_edit;
 pub mod viewport;
 pub mod walkers;
 pub mod write_scope;

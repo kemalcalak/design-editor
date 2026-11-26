@@ -418,6 +418,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "variants.addAxis" => "Thêm trục",
         "variants.nearest" => "Không có biến thể khớp: hiển thị biến thể gần nhất",
         "variants.reportToast" => "Biến thể: bỏ {{dropped}} ghi đè, {{nearest}} hiển thị biến thể gần nhất, {{moved}} chuyển về mặc định",
+        "menu.snapPixelGrid" => "Bắt dính lưới điểm ảnh",
+        "vectorEdit.pixelSnapOn" => "Đã bật bắt dính lưới điểm ảnh",
+        "vectorEdit.pixelSnapOff" => "Đã tắt bắt dính lưới điểm ảnh",
         _ => return None,
     })
 }

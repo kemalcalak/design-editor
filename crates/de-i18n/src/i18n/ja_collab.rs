@@ -418,6 +418,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "variants.addAxis" => "軸を追加",
         "variants.nearest" => "一致するバリアントがないため最も近いものを表示",
         "variants.reportToast" => "バリアント: {{dropped}} 件のオーバーライドを破棄、{{nearest}} 件は最も近いバリアントを表示、{{moved}} 件はデフォルトに変更",
+        "menu.snapPixelGrid" => "ピクセルグリッドにスナップ",
+        "vectorEdit.pixelSnapOn" => "ピクセルグリッドへのスナップ: オン",
+        "vectorEdit.pixelSnapOff" => "ピクセルグリッドへのスナップ: オフ",
         _ => return None,
     })
 }

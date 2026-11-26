@@ -135,6 +135,7 @@ impl NodeSnapshot {
             is_reusable: false,
             flip_x: false,
             flip_y: false,
+            vector_points: None,
             shader_preset: None,
             shader_custom_available: false,
             mesh_lattice: None,
@@ -227,6 +228,7 @@ impl NodeSnapshot {
             is_reusable: false,
             flip_x: false,
             flip_y: false,
+            vector_points: None,
             shader_preset: None,
             shader_custom_available: false,
             mesh_lattice: None,
@@ -352,6 +354,7 @@ impl NodeSnapshot {
             is_reusable: matches!(node, PenNode::Frame(f) if f.reusable == Some(true)),
             flip_x: base.flip_x == Some(true),
             flip_y: base.flip_y == Some(true),
+            vector_points: None,
             shader_preset: de_editor_core::shader_presets::primary_shader_preset(node),
             shader_custom_available: de_editor_core::shader_presets::primary_custom_shader(node)
                 .is_some(),

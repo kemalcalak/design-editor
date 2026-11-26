@@ -418,6 +418,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "variants.addAxis" => "Añadir eje",
         "variants.nearest" => "No hay variante exacta: se muestra la más cercana",
         "variants.reportToast" => "Variantes: {{dropped}} anulaciones descartadas, {{nearest}} muestran la variante más cercana, {{moved}} pasaron al valor predeterminado",
+        "menu.snapPixelGrid" => "Ajustar a la cuadrícula de píxeles",
+        "vectorEdit.pixelSnapOn" => "Ajuste a la cuadrícula de píxeles activado",
+        "vectorEdit.pixelSnapOff" => "Ajuste a la cuadrícula de píxeles desactivado",
         _ => return None,
     })
 }

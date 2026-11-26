@@ -418,6 +418,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "variants.addAxis" => "Adicionar eixo",
         "variants.nearest" => "Sem variante exata: a mais próxima é exibida",
         "variants.reportToast" => "Variantes: {{dropped}} substituições descartadas, {{nearest}} mostram a variante mais próxima, {{moved}} passaram ao padrão",
+        "menu.snapPixelGrid" => "Ajustar à grade de pixels",
+        "vectorEdit.pixelSnapOn" => "Ajuste à grade de pixels ativado",
+        "vectorEdit.pixelSnapOff" => "Ajuste à grade de pixels desativado",
         _ => return None,
     })
 }

@@ -258,6 +258,10 @@ mod slides_panel;
 mod slides_panel_thumbs;
 mod text_edit_press;
 mod update_modal_host;
+mod vector_edit_keys;
+mod vector_edit_press;
+#[cfg(test)]
+mod vector_edit_tests;
 mod whats_new_host;
 // Windows CI DirectWrite/Skia text layout aborts inside these text-edit
 // fixtures before Rust can report an assertion. macOS + Linux keep coverage.
@@ -504,6 +508,10 @@ pub struct WidgetHostNative {
     /// Whether Alt/Option is currently held. Node dragging uses this
     /// to duplicate the current selection before moving it.
     pub(in crate::widget_host) alt_held: bool,
+    /// Whether Cmd (macOS) / Ctrl is held — suspends vector snapping.
+    pub(in crate::widget_host) cmd_held: bool,
+    /// Vector edit mode pointer state (#387, `vector_edit_press.rs`).
+    pub(in crate::widget_host) vector_edit_host: vector_edit_press::VectorEditHost,
     /// Last viewport size seen by paint/press. Used by handlers
     /// that don't receive viewport dims (e.g. apply_cursor_move
     /// driving the color-picker drag).

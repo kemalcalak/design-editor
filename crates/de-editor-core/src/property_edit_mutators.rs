@@ -70,6 +70,15 @@ impl EditorState {
         if !sel.is_real() || !self.is_editable(&sel) {
             return false;
         }
+        // Vector edit mode: X / Y move the selected points (#387).
+        if self.vector_selection_origin().is_some() && value.is_finite() {
+            let v = Some(f64::from(value));
+            match focus {
+                PropertyFocus::PositionX => return self.vector_set_selection_origin(v, None),
+                PropertyFocus::PositionY => return self.vector_set_selection_origin(None, v),
+                _ => {}
+            }
+        }
         match focus {
             PropertyFocus::PageBackgroundHex => return false,
             PropertyFocus::MotionValue { index, field } => {

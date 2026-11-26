@@ -418,6 +418,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "variants.addAxis" => "新增軸",
         "variants.nearest" => "沒有完全相符的變體：顯示最接近的",
         "variants.reportToast" => "變體：捨棄了 {{dropped}} 個覆寫，{{nearest}} 個顯示最接近的變體，{{moved}} 個改為預設值",
+        "menu.snapPixelGrid" => "對齊像素格線",
+        "vectorEdit.pixelSnapOn" => "已開啟像素格線吸附",
+        "vectorEdit.pixelSnapOff" => "已關閉像素格線吸附",
         _ => return None,
     })
 }

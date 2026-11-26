@@ -418,6 +418,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "variants.addAxis" => "Achse hinzufügen",
         "variants.nearest" => "Keine exakte Variante: nächstliegende angezeigt",
         "variants.reportToast" => "Varianten: {{dropped}} Überschreibungen verworfen, {{nearest}} zeigen die nächstliegende Variante, {{moved}} auf den Standard gesetzt",
+        "menu.snapPixelGrid" => "Am Pixelraster ausrichten",
+        "vectorEdit.pixelSnapOn" => "Am Pixelraster ausrichten: an",
+        "vectorEdit.pixelSnapOff" => "Am Pixelraster ausrichten: aus",
         _ => return None,
     })
 }

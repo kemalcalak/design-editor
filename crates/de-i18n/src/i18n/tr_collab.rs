@@ -418,6 +418,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "variants.addAxis" => "Eksen ekle",
         "variants.nearest" => "Tam eşleşen varyant yok: en yakını gösteriliyor",
         "variants.reportToast" => "Varyantlar: {{dropped}} geçersiz kılma atıldı, {{nearest}} örnek en yakın varyantı gösteriyor, {{moved}} örnek varsayılana taşındı",
+        "menu.snapPixelGrid" => "Piksel Izgarasına Yasla",
+        "vectorEdit.pixelSnapOn" => "Piksel ızgarasına yaslama açık",
+        "vectorEdit.pixelSnapOff" => "Piksel ızgarasına yaslama kapalı",
         _ => return None,
     })
 }

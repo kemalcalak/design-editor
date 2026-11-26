@@ -418,6 +418,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "variants.addAxis" => "添加轴",
         "variants.nearest" => "没有完全匹配的变体：显示最接近的",
         "variants.reportToast" => "变体：丢弃了 {{dropped}} 个覆盖，{{nearest}} 个显示最接近的变体，{{moved}} 个改为默认值",
+        "menu.snapPixelGrid" => "对齐像素网格",
+        "vectorEdit.pixelSnapOn" => "已开启像素网格吸附",
+        "vectorEdit.pixelSnapOff" => "已关闭像素网格吸附",
         _ => return None,
     })
 }

@@ -420,6 +420,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "variants.addAxis" => "축 추가",
         "variants.nearest" => "정확한 변형 없음: 가장 가까운 변형 표시",
         "variants.reportToast" => "변형: 재정의 {{dropped}}개 삭제, {{nearest}}개는 가장 가까운 변형 표시, {{moved}}개는 기본값으로 이동",
+        "menu.snapPixelGrid" => "픽셀 그리드에 스냅",
+        "vectorEdit.pixelSnapOn" => "픽셀 그리드 스냅 켜짐",
+        "vectorEdit.pixelSnapOff" => "픽셀 그리드 스냅 꺼짐",
         _ => return None,
     })
 }

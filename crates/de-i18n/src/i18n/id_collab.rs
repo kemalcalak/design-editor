@@ -418,6 +418,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "variants.addAxis" => "Tambah sumbu",
         "variants.nearest" => "Tidak ada varian yang sama persis: yang terdekat ditampilkan",
         "variants.reportToast" => "Varian: {{dropped}} penimpaan dibuang, {{nearest}} menampilkan varian terdekat, {{moved}} dipindah ke bawaan",
+        "menu.snapPixelGrid" => "Jepret ke Kisi Piksel",
+        "vectorEdit.pixelSnapOn" => "Jepret ke kisi piksel aktif",
+        "vectorEdit.pixelSnapOff" => "Jepret ke kisi piksel nonaktif",
         _ => return None,
     })
 }

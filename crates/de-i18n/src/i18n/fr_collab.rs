@@ -418,6 +418,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "variants.addAxis" => "Ajouter un axe",
         "variants.nearest" => "Aucune variante exacte : la plus proche est affichée",
         "variants.reportToast" => "Variantes : {{dropped}} remplacements supprimés, {{nearest}} affichent la variante la plus proche, {{moved}} passés à la valeur par défaut",
+        "menu.snapPixelGrid" => "Aligner sur la grille de pixels",
+        "vectorEdit.pixelSnapOn" => "Alignement sur la grille de pixels activé",
+        "vectorEdit.pixelSnapOff" => "Alignement sur la grille de pixels désactivé",
         _ => return None,
     })
 }

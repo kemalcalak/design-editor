@@ -418,6 +418,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "variants.addAxis" => "अक्ष जोड़ें",
         "variants.nearest" => "सटीक वेरिएंट नहीं: सबसे नज़दीकी दिखाया गया",
         "variants.reportToast" => "वेरिएंट: {{dropped}} ओवरराइड हटाए गए, {{nearest}} सबसे नज़दीकी वेरिएंट दिखा रहे हैं, {{moved}} डिफ़ॉल्ट पर गए",
+        "menu.snapPixelGrid" => "पिक्सेल ग्रिड पर स्नैप करें",
+        "vectorEdit.pixelSnapOn" => "पिक्सेल ग्रिड स्नैपिंग चालू",
+        "vectorEdit.pixelSnapOff" => "पिक्सेल ग्रिड स्नैपिंग बंद",
         _ => return None,
     })
 }

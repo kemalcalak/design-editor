@@ -418,6 +418,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "variants.addAxis" => "Добавить ось",
         "variants.nearest" => "Точного варианта нет: показан ближайший",
         "variants.reportToast" => "Варианты: отброшено переопределений: {{dropped}}, показан ближайший вариант: {{nearest}}, переведено на значение по умолчанию: {{moved}}",
+        "menu.snapPixelGrid" => "Привязка к пиксельной сетке",
+        "vectorEdit.pixelSnapOn" => "Привязка к пиксельной сетке включена",
+        "vectorEdit.pixelSnapOff" => "Привязка к пиксельной сетке выключена",
         _ => return None,
     })
 }
