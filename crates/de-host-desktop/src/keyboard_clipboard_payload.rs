@@ -27,10 +27,13 @@ impl ClipboardPayload {
 
     pub(super) fn read_canvas_system() -> Self {
         let (html, image) = crate::clipboard::read_canvas_paste();
-        Self {
-            html,
-            image,
-            ..Self::default()
-        }
+        // SVG markup copied as text pastes as vectors (#399). Only read
+        // when no richer flavour won, and only kept when it is SVG.
+        let text = if html.as_deref().is_none_or(|h| h.trim().is_empty()) && image.is_none() {
+            crate::clipboard::read_text_paste().filter(|t| crate::clipboard::looks_like_svg(t))
+        } else {
+            None
+        };
+        Self { text, html, image }
     }
 }

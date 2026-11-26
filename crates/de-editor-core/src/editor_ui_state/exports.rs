@@ -11,9 +11,9 @@ pub use super::git_panel::{
     MergeResolveFile, MergeResolveState,
 };
 pub use super::groups::{
-    AssetCenterTab, CustomPrompt, DesignMdPanelState, PreviewState, PromptCenterFocus,
-    PromptCenterState, PromptFilter, PrototypeState, SceneFilter, SceneTemplateCenterState,
-    SceneTemplateFocus, SizeToggleState, StyleImportState,
+    AssetCenterTab, CanvasViewState, CustomPrompt, DesignMdPanelState, PreviewState,
+    PromptCenterFocus, PromptCenterState, PromptFilter, PrototypeState, SceneFilter,
+    SceneTemplateCenterState, SceneTemplateFocus, SizeToggleState, StyleImportState,
 };
 pub use super::home::{
     EntrySurface, HomeCopyTarget, HomeFamily, HomeHit, HomeSize, HomeState, HomeTemplate,

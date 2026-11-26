@@ -183,10 +183,99 @@ pub fn set_text(text: &str) {
     }
 }
 
+/// Put a PNG on the system clipboard as an image (Copy as PNG, #399).
+/// arboard takes raw RGBA, so the PNG is decoded first. Best-effort, like
+/// [`set_text`].
+pub fn set_png_image(png: &[u8]) {
+    let Some(image) = png_to_rgba(png) else {
+        return;
+    };
+    if let Ok(mut clipboard) = arboard::Clipboard::new() {
+        let _ = clipboard.set_image(image);
+    }
+}
+
+/// Decode `png` to tightly packed, unpremultiplied RGBA8.
+fn png_to_rgba(png: &[u8]) -> Option<arboard::ImageData<'static>> {
+    let image = skia_safe::Image::from_encoded(skia_safe::Data::new_copy(png))?;
+    let (width, height) = (image.width(), image.height());
+    let info = skia_safe::ImageInfo::new(
+        (width, height),
+        skia_safe::ColorType::RGBA8888,
+        skia_safe::AlphaType::Unpremul,
+        None,
+    );
+    let row_bytes = usize::try_from(width).ok()?.checked_mul(4)?;
+    let mut bytes = vec![0u8; row_bytes.checked_mul(usize::try_from(height).ok()?)?];
+    if !image.read_pixels(
+        &info,
+        &mut bytes,
+        row_bytes,
+        (0, 0),
+        skia_safe::image::CachingHint::Disallow,
+    ) {
+        return None;
+    }
+    Some(arboard::ImageData {
+        width: usize::try_from(width).ok()?,
+        height: usize::try_from(height).ok()?,
+        bytes: std::borrow::Cow::Owned(bytes),
+    })
+}
+
+/// Clipboard text that is an SVG document (Copy as SVG here, in Figma or
+/// a browser): it pastes as vectors (#399). Leading whitespace, an XML
+/// prolog, comments and a doctype may come before the `<svg` root.
+pub(crate) fn looks_like_svg(text: &str) -> bool {
+    let mut rest = text.trim_start();
+    loop {
+        if rest.starts_with("<svg") {
+            return true;
+        }
+        let skip = ["<?", "<!--", "<!"]
+            .iter()
+            .find(|open| rest.starts_with(**open))
+            .and_then(|open| {
+                let close = if *open == "<!--" { "-->" } else { ">" };
+                rest.find(close).map(|i| i + close.len())
+            });
+        match skip {
+            Some(i) => rest = rest[i..].trim_start(),
+            None => return false,
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use std::borrow::Cow;
+
+    #[test]
+    fn svg_text_is_recognised_behind_a_prolog() {
+        assert!(looks_like_svg(
+            "<svg xmlns=\"http://www.w3.org/2000/svg\"/>"
+        ));
+        assert!(looks_like_svg(
+            "\n<?xml version=\"1.0\"?>\n<!-- made by hand -->\n<!DOCTYPE svg>\n<svg/>"
+        ));
+        assert!(!looks_like_svg("hello <svg>"));
+        assert!(!looks_like_svg("<html><svg/></html>"));
+        assert!(!looks_like_svg("<?xml version=\"1.0\""));
+    }
+
+    #[test]
+    fn a_png_decodes_to_rgba_for_the_clipboard() {
+        let image = arboard::ImageData {
+            width: 2,
+            height: 1,
+            bytes: Cow::Owned(vec![255, 0, 0, 255, 0, 0, 255, 255]),
+        };
+        let png = encode_image(image).expect("encodes").png;
+        let rgba = png_to_rgba(&png).expect("decodes");
+        assert_eq!((rgba.width, rgba.height), (2, 1));
+        assert_eq!(&rgba.bytes[..], &[255, 0, 0, 255, 0, 0, 255, 255]);
+    }
 
     #[test]
     fn native_clipboard_rgba_is_encoded_as_png() {

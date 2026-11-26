@@ -135,6 +135,7 @@ impl WidgetHostNative {
         self.editor_state.commit_history();
         self.canvas_drop_index = None;
         self.option_drag_source_ids.clear();
+        self.node_drag_pixel_residual = (0.0, 0.0);
         self.node_drag = Some(NodeDragState {
             last_screen_x: x,
             last_screen_y: y,

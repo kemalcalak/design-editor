@@ -464,6 +464,11 @@ pub fn apply_file_menu_app_choice(
             prototype.show_links = !prototype.show_links;
             FileMenuStep::Handled
         }
+        FileMenuChoice::PixelGrid => {
+            let view = &mut state.editor_ui.canvas_view;
+            view.pixel_grid_hidden = !view.pixel_grid_hidden;
+            FileMenuStep::Handled
+        }
         FileMenuChoice::Tool(tool) => apply_file_menu_tool(state, tool, now_ms),
         _ => return None,
     };

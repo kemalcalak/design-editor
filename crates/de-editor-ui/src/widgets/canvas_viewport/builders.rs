@@ -101,6 +101,11 @@ impl<'a> CanvasViewport<'a> {
             text_layout_generation: None,
             prototype_links: crate::widgets::canvas_prototype_links::visible_links(state),
             grid_overlay: crate::widgets::canvas_grid_overlay::GridOverlay::build(state, scene),
+            show_pixel_grid: de_editor_core::pixel_grid::pixel_grid_visible(
+                state.viewport.zoom,
+                state.editor_ui.canvas_view.pixel_grid_hidden,
+            ),
+            measure: crate::widgets::canvas_measure_overlay::MeasureOverlay::build(state, scene),
             locale: state.editor_ui.locale,
         }
     }
@@ -164,6 +169,8 @@ impl<'a> CanvasViewport<'a> {
             text_layout_generation: None,
             prototype_links: Vec::new(),
             grid_overlay: None,
+            show_pixel_grid: false,
+            measure: None,
             locale: de_editor_core::Locale::EnUs,
         }
     }

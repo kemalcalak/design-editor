@@ -226,6 +226,8 @@ pub struct EditorUiState {
     pub preview: PreviewState,
     /// Canvas prototype links + the panel's frame-target request (#371).
     pub prototype: PrototypeState,
+    /// Pixel grid toggle + Alt hover measurements (#399).
+    pub canvas_view: CanvasViewState,
     /// Left-rail tab selection plus the slides tab's hover / press /
     /// drag bookkeeping. The tab row itself only appears for scenario
     /// documents that have a page navigator to offer.
@@ -781,8 +783,7 @@ pub struct EditorUiState {
     /// Active kit filter (`None` = every loaded kit). Mirrors the TS
     /// `uikit-store.ts` `activeKitId`.
     pub component_browser_kit_id: Option<String>,
-    /// Whether the kit-filter dropdown popover is open (the TS panel
-    /// uses a native `<select>`; the Rust panel paints a popover).
+    /// Whether the kit-filter dropdown popover is open.
     pub component_browser_kit_picker_open: bool,
     /// Imported-kit id awaiting delete confirmation — the TS panel's `confirmDeleteKitId`
     /// (Trash press arms it; Delete / Cancel resolve it). Transient: never serialized.

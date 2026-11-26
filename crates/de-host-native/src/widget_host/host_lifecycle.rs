@@ -78,6 +78,7 @@ impl WidgetHostNative {
             last_gesture_was_zoom: false,
             shift_held: false,
             alt_held: false,
+            node_drag_pixel_residual: (0.0, 0.0),
             cmd_held: false,
             vector_edit_host: Default::default(),
             toast_rect: None,
@@ -180,14 +181,22 @@ impl WidgetHostNative {
         self.shift_held = held;
     }
 
-    /// Alt / Option also shows every hotspot in Preview (#371); returns
-    /// whether that needs a repaint.
+    /// Alt / Option also shows every hotspot in Preview (#371) and, with
+    /// a selection, the hover measurements (#399); returns whether that
+    /// needs a repaint.
     pub fn set_modifier_alt(&mut self, held: bool) -> bool {
         self.alt_held = held;
-        let changed = self
+        let mut changed = self
             .preview
             .as_mut()
             .is_some_and(|preview| preview.set_show_hotspots(held));
+        let view = &mut self.editor_state.editor_ui.canvas_view;
+        if view.measure_modifier != held {
+            view.measure_modifier = held;
+            // Only a selection has anything to measure from; otherwise
+            // the flag flips without a repaint.
+            changed |= !self.editor_state.selection.set.is_empty();
+        }
         if changed {
             self.mark_dirty();
         }

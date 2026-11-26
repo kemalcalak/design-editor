@@ -531,6 +531,14 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "convertInstances.done" => "{{converted}} 个副本已成为同一组件的实例",
         "convertInstances.partial" => "{{converted}} 个副本已成为实例；{{skipped}} 个不同，保持原样",
         "convertInstances.failed" => "这些副本无法共用一个组件",
+        "menu.pixelGrid" => "像素网格",
+        "canvas.pixelGridOn" => "像素网格已开启",
+        "canvas.pixelGridOff" => "像素网格已关闭",
+        "layerMenu.copyAsPng" => "复制为 PNG",
+        "layerMenu.copyAsSvg" => "复制为 SVG",
+        "clipboard.copiedPng" => "已复制为 PNG",
+        "clipboard.copiedSvg" => "已复制为 SVG",
+        "clipboard.copyFailed" => "无法复制所选内容",
         _ => return None,
     })
 }

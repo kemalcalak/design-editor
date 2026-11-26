@@ -56,34 +56,42 @@ pub(super) fn paint_drop_indicator(
 /// screen-space) — the `RenderBackend` trait has no path-effect
 /// surface, so the dash is segmented by hand; backend-agnostic.
 pub(crate) fn paint_dashed_rect(cx: &mut PaintCx<'_>, rect: Rect, color: Color, width: f32) {
-    const ON: f32 = 4.0;
-    const OFF: f32 = 4.0;
-    let mut dash_line = |from: Point2D, to: Point2D| {
-        let dx = to.x - from.x;
-        let dy = to.y - from.y;
-        let len = (dx * dx + dy * dy).sqrt();
-        if len <= f32::EPSILON {
-            return;
-        }
-        let (ux, uy) = (dx / len, dy / len);
-        let mut t = 0.0;
-        while t < len {
-            let end = (t + ON).min(len);
-            cx.backend.stroke_line(
-                Point2D::new(from.x + ux * t, from.y + uy * t),
-                Point2D::new(from.x + ux * end, from.y + uy * end),
-                color,
-                width,
-            );
-            t = end + OFF;
-        }
-    };
     let tl = rect.origin;
     let tr = Point2D::new(rect.origin.x + rect.size.x, rect.origin.y);
     let br = Point2D::new(rect.origin.x + rect.size.x, rect.origin.y + rect.size.y);
     let bl = Point2D::new(rect.origin.x, rect.origin.y + rect.size.y);
-    dash_line(tl, tr);
-    dash_line(tr, br);
-    dash_line(br, bl);
-    dash_line(bl, tl);
+    paint_dashed_line(cx, tl, tr, color, width);
+    paint_dashed_line(cx, tr, br, color, width);
+    paint_dashed_line(cx, br, bl, color, width);
+    paint_dashed_line(cx, bl, tl, color, width);
+}
+
+/// Stroke one dashed segment (4 px on / 4 px off, screen space).
+pub(crate) fn paint_dashed_line(
+    cx: &mut PaintCx<'_>,
+    from: Point2D,
+    to: Point2D,
+    color: Color,
+    width: f32,
+) {
+    const ON: f32 = 4.0;
+    const OFF: f32 = 4.0;
+    let dx = to.x - from.x;
+    let dy = to.y - from.y;
+    let len = (dx * dx + dy * dy).sqrt();
+    if len <= f32::EPSILON {
+        return;
+    }
+    let (ux, uy) = (dx / len, dy / len);
+    let mut t = 0.0;
+    while t < len {
+        let end = (t + ON).min(len);
+        cx.backend.stroke_line(
+            Point2D::new(from.x + ux * t, from.y + uy * t),
+            Point2D::new(from.x + ux * end, from.y + uy * end),
+            color,
+            width,
+        );
+        t = end + OFF;
+    }
 }

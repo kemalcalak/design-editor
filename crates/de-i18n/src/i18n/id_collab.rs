@@ -531,6 +531,14 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "convertInstances.done" => "{{converted}} salinan kini menjadi instans satu komponen",
         "convertInstances.partial" => "{{converted}} salinan menjadi instans; {{skipped}} berbeda dan dibiarkan",
         "convertInstances.failed" => "Salinan ini tidak bisa berbagi satu komponen",
+        "menu.pixelGrid" => "Kisi piksel",
+        "canvas.pixelGridOn" => "Kisi piksel aktif",
+        "canvas.pixelGridOff" => "Kisi piksel nonaktif",
+        "layerMenu.copyAsPng" => "Salin sebagai PNG",
+        "layerMenu.copyAsSvg" => "Salin sebagai SVG",
+        "clipboard.copiedPng" => "Disalin sebagai PNG",
+        "clipboard.copiedSvg" => "Disalin sebagai SVG",
+        "clipboard.copyFailed" => "Tidak dapat menyalin pilihan",
         _ => return None,
     })
 }

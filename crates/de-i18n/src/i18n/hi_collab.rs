@@ -531,6 +531,14 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "convertInstances.done" => "{{converted}} कॉपी अब एक कंपोनेंट के इंस्टेंस हैं",
         "convertInstances.partial" => "{{converted}} कॉपी इंस्टेंस बनीं; {{skipped}} अलग हैं और वैसी ही छोड़ी गईं",
         "convertInstances.failed" => "ये कॉपी एक कंपोनेंट साझा नहीं कर सकतीं",
+        "menu.pixelGrid" => "पिक्सेल ग्रिड",
+        "canvas.pixelGridOn" => "पिक्सेल ग्रिड चालू",
+        "canvas.pixelGridOff" => "पिक्सेल ग्रिड बंद",
+        "layerMenu.copyAsPng" => "PNG के रूप में कॉपी करें",
+        "layerMenu.copyAsSvg" => "SVG के रूप में कॉपी करें",
+        "clipboard.copiedPng" => "PNG के रूप में कॉपी किया गया",
+        "clipboard.copiedSvg" => "SVG के रूप में कॉपी किया गया",
+        "clipboard.copyFailed" => "चयन कॉपी नहीं हो सका",
         _ => return None,
     })
 }

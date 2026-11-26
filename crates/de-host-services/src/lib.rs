@@ -49,6 +49,8 @@ pub mod cli_probe_error;
 mod cli_probe_support;
 pub mod cli_provider_probe;
 mod cli_resolver_windows;
+pub mod clipboard_export;
+pub mod clipboard_export_error;
 mod copilot_sdk_probe;
 mod deck_motion;
 #[cfg(test)]

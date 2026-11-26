@@ -160,6 +160,21 @@ pub fn serialize_node_on_page_svg_with(
     )
 }
 
+/// Serialize several nodes together (a multi-selection copy, #399),
+/// cropped tight to their combined painted bounds. The nodes are taken as
+/// given: no ancestor transform or clip applies.
+pub fn serialize_nodes_svg_with(
+    nodes: &[SceneNode],
+    options: &SvgExportOptions,
+) -> Result<SvgExport, SvgExportError> {
+    let mut acc = BoundsAcc::new();
+    for node in nodes {
+        collect_bounds(node, glam::Affine2::IDENTITY, &mut acc);
+    }
+    let bounds = acc.into_rect().ok_or(SvgExportError::NothingToExport)?;
+    serialize_svg(nodes, bounds, 0.0, glam::Affine2::IDENTITY, &[], options)
+}
+
 fn serialize_svg(
     nodes: &[SceneNode],
     bounds: Rect,

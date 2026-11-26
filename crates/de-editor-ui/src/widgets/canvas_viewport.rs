@@ -50,8 +50,8 @@ pub use hit_test::{
     arc_handle_positions, path_handle_positions, rotate_point, rotation_corner_at_point,
     selection_handle_at_point, ArcHandle, SelectionHandle, PATH_HANDLE_GHOST_PX,
 };
-pub(super) use overlays::paint_dashed_rect;
 use overlays::paint_drop_indicator;
+pub(super) use overlays::{paint_dashed_line, paint_dashed_rect};
 
 /// Caret-blink descriptor for the text node currently being edited.
 /// `pub` so the sibling `canvas_viewport_paint` module can name it in
@@ -158,6 +158,10 @@ pub struct CanvasViewport<'a> {
     pub(super) prototype_links: Vec<super::canvas_prototype_links::CanvasLink>,
     /// Track lines of the selected grid frame (#379).
     pub(super) grid_overlay: Option<super::canvas_grid_overlay::GridOverlay>,
+    /// Pixel grid over the nodes at zoom >= 400 % (#399).
+    pub(super) show_pixel_grid: bool,
+    /// Alt-hover distances from the selection (#399); `None` while off.
+    pub(super) measure: Option<std::rc::Rc<super::canvas_measure_overlay::MeasureOverlay>>,
     pub(super) locale: de_editor_core::Locale,
 }
 
@@ -384,6 +388,10 @@ impl<'a> Widget for CanvasViewport<'a> {
                     cull,
                 );
             }
+            // Pixel grid (#399): over the content, under every overlay.
+            if self.show_pixel_grid {
+                super::canvas_pixel_grid::paint_pixel_grid(cx, rect, viewport, self.cull_override);
+            }
             if let Some(indicators) = indicators.as_ref() {
                 super::canvas_agent_cursor::paint_agent_cursors(
                     cx,
@@ -538,6 +546,11 @@ impl<'a> Widget for CanvasViewport<'a> {
                     );
                 }
             }
+        }
+
+        // 4a. Alt-hover measurements (#399), over the selection chrome.
+        if let (true, Some(measure)) = (selection_chrome_visible, self.measure.as_ref()) {
+            measure.paint(cx, rect, viewport);
         }
 
         // 4b. Pen + path-editing overlays (`canvas_path_overlay.rs`):

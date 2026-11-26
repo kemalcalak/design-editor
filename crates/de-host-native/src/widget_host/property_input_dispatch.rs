@@ -234,6 +234,7 @@ impl WidgetHostNative {
                     | FileMenuChoice::Redo
                     | FileMenuChoice::Present
                     | FileMenuChoice::PrototypeLinks
+                    | FileMenuChoice::PixelGrid
                     | FileMenuChoice::Tool(_) => return,
                 });
                 self.editor_state.editor_ui.file_menu_open = false;

@@ -99,6 +99,21 @@ pub struct PrototypeState {
     pub pending_frame: Option<crate::NodeId>,
 }
 
+/// Canvas view affordances (#399): the pixel grid toggle, the Alt
+/// hover-measurement modifier and a pending Copy as PNG / SVG request.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub struct CanvasViewState {
+    /// View ▸ Pixel grid turned OFF. The grid shows at zoom >= 400 %
+    /// unless this is set (`crate::pixel_grid::pixel_grid_visible`).
+    pub pixel_grid_hidden: bool,
+    /// Alt / Option is held: the canvas measures from the selection to
+    /// the hovered layer. Pushed by the host on modifier changes.
+    pub measure_modifier: bool,
+    /// Copy as PNG / SVG asked for by a menu row; the desktop takes it
+    /// after the press and writes the OS clipboard.
+    pub pending_copy_as: Option<crate::copy_as::CopyAsFormat>,
+}
+
 /// PropertyPanel Size-section fill / hug / clip toggles.
 ///
 /// Mirrors the same-named fields on the panel's own

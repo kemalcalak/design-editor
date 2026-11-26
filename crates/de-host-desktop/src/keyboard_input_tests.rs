@@ -92,6 +92,36 @@ fn canvas_image_paste_preserves_size_selects_and_beats_internal_nodes() {
 }
 
 #[test]
+fn canvas_svg_text_paste_becomes_vectors_over_internal_nodes() {
+    let mut app = DesktopApp::new(None);
+    seed_internal_clipboard(&mut app);
+    let svg = r##"<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24">
+        <path d="M2 2 L22 22" stroke="#000"/></svg>"##;
+
+    assert!(app.handle_paste_payload(payload(Some(svg), None, None)));
+
+    let state = app.host.editor_state();
+    assert_eq!(state.active_children().len(), 2);
+    let group = state.selected_node().expect("the pasted group is selected");
+    let has_path = group
+        .children()
+        .is_some_and(|c| c.iter().any(|n| matches!(n, PenNode::Path(_))));
+    assert!(has_path, "SVG text pastes as editable vectors");
+    assert!(app.host.editor_state_mut().undo());
+    assert_eq!(app.host.editor_state().active_children().len(), 1);
+}
+
+#[test]
+fn canvas_plain_text_paste_still_uses_the_node_clipboard() {
+    let mut app = DesktopApp::new(None);
+    seed_internal_clipboard(&mut app);
+    assert!(app.handle_paste_payload(payload(Some("just words"), None, None)));
+    let state = app.host.editor_state();
+    assert_eq!(state.active_children().len(), 2);
+    assert!(!matches!(state.selected_node(), Some(PenNode::Group(_))));
+}
+
+#[test]
 fn focused_non_chat_input_pastes_text_before_every_canvas_flavour() {
     let mut app = DesktopApp::new(None);
     seed_internal_clipboard(&mut app);
