@@ -584,6 +584,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.attach.full" => "1 件のメッセージに添付できるのは 4 ファイルまでです",
         "chat.mention.skill" => "スキル",
         "chat.mention.noSkills" => "スキルがありません：.design-editor/skills に SKILL.md を追加してください",
+        "chat.context.lastReply" => "直前の返信",
+        "chat.context.chatTotal" => "このチャット",
+        "chat.usage.tokens" => "入力 {{input}} · 出力 {{output}}",
         _ => return None,
     })
 }

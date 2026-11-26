@@ -584,6 +584,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.attach.full" => "每条消息最多附加 4 个文件",
         "chat.mention.skill" => "技能",
         "chat.mention.noSkills" => "还没有技能：将 SKILL.md 文件放入 .design-editor/skills",
+        "chat.context.lastReply" => "上一条回复",
+        "chat.context.chatTotal" => "本次对话",
+        "chat.usage.tokens" => "输入 {{input}} · 输出 {{output}}",
         _ => return None,
     })
 }

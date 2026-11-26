@@ -584,6 +584,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.attach.full" => "Mỗi tin nhắn đính kèm tối đa 4 tệp",
         "chat.mention.skill" => "Kỹ năng",
         "chat.mention.noSkills" => "Chưa có kỹ năng: thêm tệp SKILL.md vào .design-editor/skills",
+        "chat.context.lastReply" => "Phản hồi gần nhất",
+        "chat.context.chatTotal" => "Cuộc trò chuyện này",
+        "chat.usage.tokens" => "{{input}} đầu vào · {{output}} đầu ra",
         _ => return None,
     })
 }

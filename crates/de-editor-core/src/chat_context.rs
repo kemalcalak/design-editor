@@ -22,6 +22,10 @@ pub enum ChatContextItem {
     Mention(usize, MentionKind),
     /// `chat.pending_attachments[i]`; ✕ unstages it.
     Attachment(usize),
+    /// Tokens (and cost, for a priced model) of the last assistant reply.
+    LastReply,
+    /// The same, summed over this chat's replies.
+    ChatTotal,
 }
 
 impl ChatContextItem {
@@ -32,12 +36,17 @@ impl ChatContextItem {
             ChatContextItem::Selection => "chat.context.selection",
             ChatContextItem::Mention(_, kind) => kind.label_key(),
             ChatContextItem::Attachment(_) => "chat.context.attachment",
+            ChatContextItem::LastReply => "chat.context.lastReply",
+            ChatContextItem::ChatTotal => "chat.context.chatTotal",
         }
     }
 
     /// Whether the row carries a ✕.
     pub fn removable(self) -> bool {
-        !matches!(self, ChatContextItem::Document)
+        !matches!(
+            self,
+            ChatContextItem::Document | ChatContextItem::LastReply | ChatContextItem::ChatTotal
+        )
     }
 }
 
@@ -49,7 +58,8 @@ pub struct ChatContextRow {
 }
 
 /// Every row the context panel lists, in a fixed order: document,
-/// selection, mentions, attachments.
+/// selection, mentions, attachments, then the usage of the last reply and of
+/// the whole chat when a provider reported any.
 pub fn chat_context_rows(state: &EditorState) -> Vec<ChatContextRow> {
     let mut rows = Vec::with_capacity(
         2 + state.chat.pending_mentions.len() + state.chat.pending_attachments.len(),
@@ -103,6 +113,27 @@ pub fn chat_context_rows(state: &EditorState) -> Vec<ChatContextRow> {
             item: ChatContextItem::Attachment(index),
             label: attachment.name.clone(),
         });
+    }
+    let locale = state.editor_ui.effective_locale();
+    let mut replies = state.chat.messages.iter().filter_map(|m| m.usage.as_ref());
+    if let Some(last) = state
+        .chat
+        .messages
+        .iter()
+        .rev()
+        .find_map(|m| m.usage.as_ref())
+    {
+        rows.push(ChatContextRow {
+            item: ChatContextItem::LastReply,
+            label: crate::chat_usage_label::usage_label(locale, last),
+        });
+        if replies.clone().count() > 1 {
+            let total = crate::chat_usage_label::sum_usage(&mut replies);
+            rows.push(ChatContextRow {
+                item: ChatContextItem::ChatTotal,
+                label: crate::chat_usage_label::usage_label(locale, &total),
+            });
+        }
     }
     rows
 }
@@ -161,5 +192,47 @@ mod tests {
             ChatContextItem::Mention(0, MentionKind::File).tag_key(),
             "chat.mention.file"
         );
+    }
+
+    #[test]
+    fn usage_rows_follow_the_replies_that_reported_usage() {
+        use crate::chat::{ChatMessage, TurnUsage};
+        use de_ai::chat_usage::TokenUsage;
+        let mut state = multi_page_state();
+        let usage_rows = |state: &EditorState| {
+            chat_context_rows(state)
+                .into_iter()
+                .filter(|r| {
+                    matches!(
+                        r.item,
+                        ChatContextItem::LastReply | ChatContextItem::ChatTotal
+                    )
+                })
+                .collect::<Vec<_>>()
+        };
+        state.chat.messages.push(ChatMessage::assistant("no usage"));
+        assert!(usage_rows(&state).is_empty(), "CLI replies report nothing");
+        let reply = |state: &mut EditorState, input: u64, cost: Option<f64>| {
+            let mut msg = ChatMessage::assistant("hi");
+            msg.usage = Some(TurnUsage::new(
+                TokenUsage {
+                    input_tokens: Some(input),
+                    output_tokens: Some(10),
+                    ..TokenUsage::default()
+                },
+                cost,
+            ));
+            state.chat.messages.push(msg);
+        };
+        reply(&mut state, 1_000, Some(0.01));
+        let rows = usage_rows(&state);
+        assert_eq!(rows.len(), 1, "one reply: no separate total");
+        assert_eq!(rows[0].label, "1000 in · 10 out · $0.010");
+        reply(&mut state, 2_000, Some(0.02));
+        let rows = usage_rows(&state);
+        assert_eq!(rows[0].item, ChatContextItem::LastReply);
+        assert_eq!(rows[0].label, "2000 in · 10 out · $0.020");
+        assert_eq!(rows[1].label, "3000 in · 20 out · $0.030");
+        assert!(!ChatContextItem::ChatTotal.removable());
     }
 }

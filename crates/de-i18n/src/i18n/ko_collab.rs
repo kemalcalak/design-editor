@@ -586,6 +586,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.attach.full" => "메시지 하나에 파일은 최대 4개까지 첨부할 수 있습니다",
         "chat.mention.skill" => "스킬",
         "chat.mention.noSkills" => "스킬이 없습니다: .design-editor/skills에 SKILL.md 파일을 추가하세요",
+        "chat.context.lastReply" => "마지막 답변",
+        "chat.context.chatTotal" => "이 대화",
+        "chat.usage.tokens" => "입력 {{input}} · 출력 {{output}}",
         _ => return None,
     })
 }

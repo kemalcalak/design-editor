@@ -91,3 +91,13 @@ fn long_prompts_switch_tier_per_request() {
     assert!(close(haiku.cost_usd(&usage(100_000, 0)).unwrap(), 0.01));
     assert!(close(haiku.cost_usd(&usage(200_000, 0)).unwrap(), 0.10));
 }
+
+#[test]
+fn only_anthropics_own_endpoint_gets_the_list_price() {
+    assert!(first_party_price("", "claude-opus-5-5").is_some());
+    assert!(first_party_price("https://api.anthropic.com", "claude-opus-5-5").is_some());
+    assert!(first_party_price("https://API.anthropic.com/v1/", "claude-opus-5-5").is_some());
+    assert!(first_party_price("https://openrouter.ai/api", "claude-opus-5-5").is_none());
+    assert!(first_party_price("https://api.anthropic.com.evil.test", "claude-opus-5-5").is_none());
+    assert!(first_party_price("https://api.anthropic.com", "glm-5.2").is_none());
+}

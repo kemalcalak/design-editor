@@ -109,6 +109,34 @@ pub struct ChatMessage {
     /// panel's per-row "Retry" button resolves through this list. Empty
     /// until a design-turn summary reports a failure.
     pub failed_subtasks: Vec<PendingSubtaskRetry>,
+    /// What the provider reported this assistant turn used (#398), written
+    /// when the turn ends; `None` when it reported nothing (CLI agents).
+    pub usage: Option<TurnUsage>,
+}
+
+/// One turn's provider-reported usage and, for a priced model, its cost.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct TurnUsage {
+    pub tokens: de_ai::chat_usage::TokenUsage,
+    /// Cost in billionths of a US dollar (kept integral so the message stays
+    /// `Eq`); `None` for a model without a published price
+    /// (`de_ai::model_pricing`).
+    pub cost_nano_usd: Option<u64>,
+}
+
+impl TurnUsage {
+    /// Build from a meter's totals and its cost in dollars.
+    pub fn new(tokens: de_ai::chat_usage::TokenUsage, cost_usd: Option<f64>) -> Self {
+        Self {
+            tokens,
+            cost_nano_usd: cost_usd.map(|cost| (cost * 1e9).round().max(0.0) as u64),
+        }
+    }
+
+    /// The cost in US dollars, when priced.
+    pub fn cost_usd(&self) -> Option<f64> {
+        self.cost_nano_usd.map(|nano| nano as f64 / 1e9)
+    }
 }
 
 impl ChatMessage {
@@ -136,6 +164,7 @@ impl ChatMessage {
             design_worker_screen: None,
             design_request_json_for_retry: None,
             failed_subtasks: Vec::new(),
+            usage: None,
         }
     }
 
@@ -164,6 +193,7 @@ impl ChatMessage {
             design_worker_screen: None,
             design_request_json_for_retry: None,
             failed_subtasks: Vec::new(),
+            usage: None,
         }
     }
 

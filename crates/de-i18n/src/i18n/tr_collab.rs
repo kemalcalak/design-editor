@@ -584,6 +584,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.attach.full" => "Bir mesaja en fazla 4 dosya eklenebilir",
         "chat.mention.skill" => "Beceri",
         "chat.mention.noSkills" => "Henüz beceri yok: .design-editor/skills klasörüne SKILL.md dosyaları ekleyin",
+        "chat.context.lastReply" => "Son yanıt",
+        "chat.context.chatTotal" => "Bu sohbet",
+        "chat.usage.tokens" => "{{input}} girdi · {{output}} çıktı",
         _ => return None,
     })
 }

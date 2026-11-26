@@ -184,6 +184,19 @@ fn pump_with_channel_interleave(
         host.mark_editor_state_dirty();
     }
     if poll.finished {
+        // The turn's provider-reported usage (#398) lands on its reply.
+        let usage = current.as_ref().and_then(ChatSession::usage);
+        if let Some(usage) = usage {
+            let messages = &mut host
+                .editor_state_mut()
+                .chat
+                .run_tab_mut(running_tab)
+                .messages;
+            if let Some(index) = agent_message_index(messages, agent_identity) {
+                messages[index].usage = Some(usage);
+                changed = true;
+            }
+        }
         // Backstop: a design loop that died early (429 / quota / abort)
         // never sent its finalize op — run the structural passes anyway so
         // the canvas isn't left with the mid-run debris a clean finish

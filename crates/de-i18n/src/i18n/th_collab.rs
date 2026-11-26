@@ -584,6 +584,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.attach.full" => "แนบไฟล์ได้สูงสุด 4 ไฟล์ต่อข้อความ",
         "chat.mention.skill" => "สกิล",
         "chat.mention.noSkills" => "ยังไม่มีสกิล: เพิ่มไฟล์ SKILL.md ไว้ใน .design-editor/skills",
+        "chat.context.lastReply" => "คำตอบล่าสุด",
+        "chat.context.chatTotal" => "แชตนี้",
+        "chat.usage.tokens" => "อินพุต {{input}} · เอาต์พุต {{output}}",
         _ => return None,
     })
 }

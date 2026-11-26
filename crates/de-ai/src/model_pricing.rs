@@ -116,6 +116,24 @@ pub fn price_for(model: &str) -> Option<ModelPrice> {
         .map(|(_, price)| *price)
 }
 
+/// The list price of `model` when it is served by Anthropic's own API at
+/// `base_url` (an empty URL is the Anthropic default). A proxy, gateway or
+/// other vendor bills at its own rates, so it gets no price.
+pub fn first_party_price(base_url: &str, model: &str) -> Option<ModelPrice> {
+    let url = base_url.trim();
+    let host = url
+        .split_once("://")
+        .map_or(url, |(_, rest)| rest)
+        .split(['/', ':', '?'])
+        .next()
+        .unwrap_or("")
+        .to_ascii_lowercase();
+    if !(url.is_empty() || host == "api.anthropic.com") {
+        return None;
+    }
+    price_for(model)
+}
+
 impl ModelPrice {
     /// The cost of ONE request in US dollars, or `None` when the usage is
     /// incomplete (input or output not reported) or uses the prompt cache

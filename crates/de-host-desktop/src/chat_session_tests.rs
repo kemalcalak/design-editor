@@ -456,7 +456,7 @@ fn selected_builtin_model_enables_canvas_tool_loop() {
         .expect("built-in model should be selectable");
     host.editor_state_mut().select_chat_model(idx);
 
-    let (provider, _tool_rx) =
+    let (provider, _tool_rx, _meter) =
         builtin_provider_with_tools(&host).expect("builtin entry must wire the tool loop");
     assert_eq!(provider.provider_label(), "Built-in Claude");
 
@@ -591,4 +591,54 @@ fn pump_executes_scripted_tool_call_against_live_state() {
     assert_eq!(v["result"]["success"], true);
     assert!(msg.content.contains("tool said:"));
     assert!(!msg.streaming);
+}
+
+#[test]
+fn a_finished_turn_writes_its_reported_usage_and_cost_onto_the_reply() {
+    // #398: the turn's meter (filled by the provider's agent loop) lands on
+    // the reply when the turn ends — tokens always, cost for a priced model.
+    let run = |meter: std::sync::Arc<de_ai::chat_usage::UsageMeter>| {
+        let mut host = WidgetHostNative::new();
+        host.editor_state_mut()
+            .chat
+            .messages
+            .push(ChatMessage::assistant_streaming());
+        let (delta_tx, delta_rx) = std::sync::mpsc::channel();
+        let mut current = Some(ChatSession::from_channels(delta_rx, None).with_usage_meter(meter));
+        delta_tx.send(ChatDelta::TextDelta("hi".into())).unwrap();
+        delta_tx
+            .send(ChatDelta::Done {
+                stop_reason: StopReason::EndTurn,
+            })
+            .unwrap();
+        pump(&mut host, &mut current, None, None, (1200.0, 800.0));
+        assert!(current.is_none());
+        host.editor_state().chat.messages.last().unwrap().usage
+    };
+    let usage = |input, output| de_ai::chat_usage::TokenUsage {
+        input_tokens: Some(input),
+        output_tokens: Some(output),
+        ..Default::default()
+    };
+    let price = de_ai::model_pricing::price_for("claude-opus-5-5").unwrap();
+    let priced = std::sync::Arc::new(de_ai::chat_usage::UsageMeter::with_price(price));
+    priced.record(usage(10_000, 1_000));
+    priced.record(usage(12_000, 2_000));
+    let reply = run(priced).expect("usage written");
+    assert_eq!(reply.tokens.input_tokens, Some(22_000));
+    assert_eq!(reply.tokens.output_tokens, Some(3_000));
+    // 22k × $4/M + 3k × $20/M = 0.088 + 0.06.
+    assert!((reply.cost_usd().unwrap() - 0.148).abs() < 1e-9);
+
+    let unpriced = std::sync::Arc::new(de_ai::chat_usage::UsageMeter::new());
+    unpriced.record(usage(500, 20));
+    let reply = run(unpriced).expect("tokens still written");
+    assert_eq!(reply.cost_usd(), None);
+
+    let silent = std::sync::Arc::new(de_ai::chat_usage::UsageMeter::new());
+    assert_eq!(
+        run(silent),
+        None,
+        "a provider that reported nothing writes nothing"
+    );
 }

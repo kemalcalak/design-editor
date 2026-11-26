@@ -39,6 +39,7 @@ pub mod chat_activity;
 pub mod chat_agent_readiness;
 pub mod chat_button_state;
 pub mod chat_context;
+pub mod chat_usage_label;
 mod chat_design_apply;
 pub mod chat_mentions;
 mod chat_model_mutators;

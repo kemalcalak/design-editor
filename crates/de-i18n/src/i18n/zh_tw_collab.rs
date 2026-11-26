@@ -584,6 +584,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.attach.full" => "每則訊息最多附加 4 個檔案",
         "chat.mention.skill" => "技能",
         "chat.mention.noSkills" => "還沒有技能：將 SKILL.md 檔案放入 .design-editor/skills",
+        "chat.context.lastReply" => "上一則回覆",
+        "chat.context.chatTotal" => "這次對話",
+        "chat.usage.tokens" => "輸入 {{input}} · 輸出 {{output}}",
         _ => return None,
     })
 }

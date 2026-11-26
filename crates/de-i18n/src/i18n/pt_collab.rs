@@ -584,6 +584,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.attach.full" => "Uma mensagem aceita até 4 arquivos",
         "chat.mention.skill" => "Habilidade",
         "chat.mention.noSkills" => "Nenhuma habilidade ainda: adicione arquivos SKILL.md em .design-editor/skills",
+        "chat.context.lastReply" => "Última resposta",
+        "chat.context.chatTotal" => "Este chat",
+        "chat.usage.tokens" => "{{input}} de entrada · {{output}} de saída",
         _ => return None,
     })
 }

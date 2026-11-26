@@ -584,6 +584,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.attach.full" => "एक संदेश में अधिकतम 4 फ़ाइलें हो सकती हैं",
         "chat.mention.skill" => "स्किल",
         "chat.mention.noSkills" => "अभी कोई स्किल नहीं: .design-editor/skills में SKILL.md फ़ाइलें जोड़ें",
+        "chat.context.lastReply" => "पिछला जवाब",
+        "chat.context.chatTotal" => "यह चैट",
+        "chat.usage.tokens" => "इनपुट {{input}} · आउटपुट {{output}}",
         _ => return None,
     })
 }

@@ -69,7 +69,9 @@ pub(crate) fn context_panel_hit(menu: Rect, rows: &[ChatContextRow], point: Poin
                 ChatContextItem::Mention(i, _) => AIChatHit::RemoveMention(i),
                 ChatContextItem::Attachment(i) => AIChatHit::RemoveAttachment(i),
                 ChatContextItem::Selection => AIChatHit::ClearSelection,
-                ChatContextItem::Document => AIChatHit::Inside,
+                ChatContextItem::Document
+                | ChatContextItem::LastReply
+                | ChatContextItem::ChatTotal => AIChatHit::Inside,
             };
         }
     }

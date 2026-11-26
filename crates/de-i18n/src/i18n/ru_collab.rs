@@ -584,6 +584,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.attach.full" => "К сообщению можно прикрепить до 4 файлов",
         "chat.mention.skill" => "Навык",
         "chat.mention.noSkills" => "Навыков пока нет: добавьте файлы SKILL.md в .design-editor/skills",
+        "chat.context.lastReply" => "Последний ответ",
+        "chat.context.chatTotal" => "Этот чат",
+        "chat.usage.tokens" => "вход {{input}} · выход {{output}}",
         _ => return None,
     })
 }
