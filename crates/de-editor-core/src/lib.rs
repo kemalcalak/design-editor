@@ -72,6 +72,7 @@ pub mod components;
 pub mod compositing;
 pub mod conversion;
 pub mod copy_as;
+pub mod corner_geometry;
 pub mod design_md;
 pub mod design_md_button_state;
 pub mod document_images;

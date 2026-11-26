@@ -17,7 +17,11 @@ use crate::payload::NodePayload;
 pub(super) fn scene_stroke_geometry(node: &NodePayload) -> Option<Arc<SceneStrokeGeometry>> {
     let stroke = node.stroke.as_ref()?;
     let ends = StrokeEnds::from_parts(stroke.stroke_start, stroke.stroke_end, stroke.cap.as_ref())?;
-    let subs = local_subpaths(node)?;
+    // Rounded vertices (#389) shape the line the ends sit on.
+    let subs = match super::corner_path::rounded_path_subpaths(node) {
+        Some(subs) => subs,
+        None => local_subpaths(node)?,
+    };
     let geometry = stroke_end_geometry(&subs, f64::from(stroke.width), ends)?;
     Some(Arc::new(SceneStrokeGeometry {
         stroke_d: geometry.stroke_d,
@@ -30,7 +34,7 @@ pub(super) fn scene_stroke_geometry(node: &NodePayload) -> Option<Arc<SceneStrok
 /// draws it: a line is its box diagonal (flips ride on the node
 /// transform), a path its `d` fitted to the box like the backends'
 /// `fit_path_to_rect`, else its anchors or points.
-fn local_subpaths(node: &NodePayload) -> Option<Vec<Subpath>> {
+pub(super) fn local_subpaths(node: &NodePayload) -> Option<Vec<Subpath>> {
     let (w, h) = (f64::from(node.w), f64::from(node.h));
     match node.kind.as_str() {
         "line" => Some(vec![Subpath::polyline(&[(0.0, 0.0), (w, h)])]),

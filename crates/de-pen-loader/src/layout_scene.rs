@@ -42,6 +42,7 @@ use jian_scene::layout_scene::SceneGradient;
 use crate::editor_scene::editor_state_to_layout_scene;
 
 mod boolean;
+mod corner_path;
 mod gradient;
 pub(crate) use boolean::KIND_PREFIX as BOOLEAN_KIND_PREFIX;
 mod stroke;
@@ -221,7 +222,6 @@ pub(crate) fn node_payload_to_scene(
     let stroke = resolve_scene_stroke(node, &node_id, var_table, paint_opacity);
     let stroke_fill_layers = resolve_stroke_fill_layers(node, &node_id, var_table, stroke.as_ref());
     let mut scene = SceneNode {
-        corner_smoothing: 0.0,
         id: node.id.clone(),
         kind: str_to_kind(&node.kind),
         bounds,
@@ -237,6 +237,7 @@ pub(crate) fn node_payload_to_scene(
         flip_y: node.flip_y,
         corner_radius: node.corner_radius,
         corner_radii: node.corner_radii,
+        corner_smoothing: node.corner_smoothing,
         clip_content: node.clip_content,
         // Paint-time `$ref` resolution: a registered fill ref wins,
         // else the node's own fill. Same precedence as the canvas
@@ -282,6 +283,7 @@ pub(crate) fn node_payload_to_scene(
         even_odd_fill: node.even_odd_fill,
         svg_path: node.svg_path.clone(),
         stroke_geometry: stroke_geometry::scene_stroke_geometry(node),
+        corner_path: corner_path::scene_corner_path(node),
         arc_start_angle: node.arc_start_angle,
         arc_sweep_angle: node.arc_sweep_angle,
         arc_inner_radius: node.arc_inner_radius,

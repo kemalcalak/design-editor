@@ -268,12 +268,23 @@ pub(crate) fn paint_node_stroke(
     let Some(stroke) = node.stroke else {
         return;
     };
+    let outline = super::canvas_viewport_corner_path::corner_outline(node);
     with_stroke_paint(cx, node, world_rect, zoom, |cx, color| {
         if let Some(sides) = stroke
             .sides
             .filter(|sides| !stroke_sides_are_uniform(*sides))
         {
             paint_sided_rect_stroke(cx, world_rect, color, sides, zoom);
+        } else if let Some(outline) = outline {
+            // Smoothed / rounded outline (#389), aligned like the rect.
+            super::canvas_viewport_corner_path::stroke_outline(
+                cx,
+                outline,
+                world_rect,
+                zoom,
+                color,
+                stroke.width * zoom,
+            );
         } else {
             let w = stroke.width * zoom;
             let (rect, r) = align_stroke_rect(world_rect, r, w, stroke.align);

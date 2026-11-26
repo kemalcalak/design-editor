@@ -22,6 +22,7 @@
 use crate::layout_scene::SceneNode;
 use crate::layout_scene::{Effect, NodeKind};
 use crate::polygon_geometry::polygon_node_points;
+use crate::widgets::canvas_viewport_corner_path as corner_path;
 use crate::widgets::canvas_viewport_fill_layers::{
     fill_layer_fallback_color, paint_clipped_fill_layers_with, paint_clipped_shape_rich_fill_layer,
     paint_fill_layers, paint_fill_layers_then_stroke,
@@ -614,6 +615,12 @@ fn paint_node_body<'a>(
                 paint_ellipse(cx, node, world_rect, zoom);
             }
         }
+        NodeKind::Polygon if node.corner_path.is_some() => {
+            // Rounded corners (#389): the precomputed outline.
+            if let Some(outline) = corner_path::corner_outline(node) {
+                corner_path::paint_outline_shape(cx, node, outline, world_rect, zoom, true);
+            }
+        }
         NodeKind::Polygon => {
             let pts = polygon_node_points(node, world_rect);
             let layered = paint_clipped_fill_layers_with(
@@ -645,8 +652,19 @@ fn paint_node_body<'a>(
         }
         NodeKind::Line => stroke_paint::paint_line_node_stroke(cx, node, world_rect, zoom),
         NodeKind::Path => {
-            if let Some(d) = node.svg_path.as_deref() {
-                paint_svg_path_node(cx, node, world_rect, zoom, d);
+            let outline = corner_path::corner_outline(node);
+            if outline.is_some() || node.svg_path.is_some() {
+                match (outline, node.svg_path.as_deref()) {
+                    // Rounded vertices (#389): the precomputed outline.
+                    (Some(outline), d) => {
+                        let filled = d.is_some() || node.path_closed;
+                        corner_path::paint_outline_shape(
+                            cx, node, outline, world_rect, zoom, filled,
+                        );
+                    }
+                    (None, Some(d)) => paint_svg_path_node(cx, node, world_rect, zoom, d),
+                    (None, None) => {}
+                }
                 if blur_sigma.is_some() {
                     cx.backend.restore();
                 }

@@ -255,6 +255,7 @@ pub mod canvas_text_layout_memo;
 pub(crate) mod canvas_text_wrap;
 pub mod canvas_viewport;
 mod canvas_viewport_background;
+mod canvas_viewport_corner_path;
 mod canvas_viewport_fill_layers;
 mod canvas_viewport_grid;
 // `pub` for the remote-image miss-queue API (`take_remote_image_requests`

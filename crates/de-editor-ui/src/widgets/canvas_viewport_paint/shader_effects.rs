@@ -77,6 +77,12 @@ pub(super) fn clip_node_silhouette(
     world_rect: Rect,
     zoom: f32,
 ) {
+    if let Some(outline) = crate::widgets::canvas_viewport_corner_path::corner_outline(node) {
+        crate::widgets::canvas_viewport_corner_path::clip_to_outline(
+            cx, node, outline, world_rect, zoom,
+        );
+        return;
+    }
     let radius = if node.kind == NodeKind::Ellipse {
         world_rect.size.x.min(world_rect.size.y) / 2.0
     } else {

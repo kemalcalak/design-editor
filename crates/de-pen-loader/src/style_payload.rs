@@ -43,6 +43,7 @@ pub(crate) fn base_payload(base: &PenNodeBase, kind: &str) -> NodePayload {
         blend_mode: base.blend_mode.clone(),
         corner_radius: 0.0,
         corner_radii: None,
+        corner_smoothing: 0.0,
         clip_content: false,
         arc_start_angle: None,
         arc_sweep_angle: None,

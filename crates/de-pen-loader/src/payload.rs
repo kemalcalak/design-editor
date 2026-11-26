@@ -113,6 +113,10 @@ pub struct NodePayload {
     /// bottom-left order. `corner_radius` remains the legacy maximum.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub corner_radii: Option<[f32; 4]>,
+    /// Corner smoothing, `0..=1` (Figma's squircle, #389), for whatever
+    /// corners `corner_radius` / `corner_radii` round. `0` = circular.
+    #[serde(default, skip_serializing_if = "is_zero")]
+    pub corner_smoothing: f32,
     /// Container clips its children to its bounds (canonical
     /// `clipContent`). The page builders also force this on for root
     /// frames, which clip like artboards (TS flattener parity).
@@ -351,6 +355,10 @@ fn default_polygon_sides() -> u32 {
 
 fn default_opacity() -> f32 {
     1.0
+}
+
+fn is_zero(value: &f32) -> bool {
+    *value == 0.0
 }
 
 fn is_default_polygon_sides(value: &u32) -> bool {
