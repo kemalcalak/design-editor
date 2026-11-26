@@ -1,9 +1,9 @@
 //! Explicit CSS grid placement (`grid-column` / `grid-row`).
 //!
-//! The row post-pass in `mapper_grid` chunks items N-per-row; an item with
-//! `grid-column: span 2` has to occupy two track widths plus the gap between
-//! them, and an explicit start line has to break the row when it points
-//! backwards. Placement is discovered while the item itself is mapped (its
+//! The grid post-pass in `mapper_grid` packs items N-per-row to learn each
+//! item's cell, then writes it as `gridColumn` on the native grid (#379): an
+//! item with `grid-column: span 2` spans two tracks, and an explicit start
+//! line breaks the row when it points backwards. Placement is discovered while the item itself is mapped (its
 //! own computed style is only available there) and travels to the parent's
 //! post-pass in `PenNodeBase::theme` under a private key, which the post-pass
 //! always strips.
@@ -87,6 +87,14 @@ pub(super) fn record_placement(
     base.theme
         .get_or_insert_with(BTreeMap::new)
         .insert(PLACEMENT_KEY.to_string(), encode(&placement));
+}
+
+/// Test hook: put the carrier for a `grid-column` value on `base`.
+#[cfg(test)]
+pub(super) fn record_placement_value(base: &mut PenNodeBase, value: &str) {
+    base.theme
+        .get_or_insert_with(BTreeMap::new)
+        .insert(PLACEMENT_KEY.to_string(), encode(&parse_axis(value)));
 }
 
 /// The axis shorthand, composed from the `-start` / `-end` longhands when the
@@ -449,7 +457,6 @@ mod tests {
 mod integration_tests {
     use crate::{import_html, HtmlImportOptions};
     use jian_ops_schema::node::{FrameNode, PenNode};
-    use jian_ops_schema::sizing::SizingBehavior;
 
     fn grid_of(html: &str) -> (FrameNode, Vec<String>) {
         let result = import_html(html, &HtmlImportOptions::default());
@@ -462,17 +469,12 @@ mod integration_tests {
         (grid.clone(), result.warnings)
     }
 
-    fn first_cell_width(grid: &FrameNode) -> f64 {
-        let PenNode::Frame(row) = &grid.children.as_ref().unwrap()[0] else {
-            panic!("expected a grid row")
-        };
-        let PenNode::Frame(cell) = &row.children.as_ref().unwrap()[0] else {
+    /// The first item's `gridColumn` span on the native grid (#379).
+    fn first_span(grid: &FrameNode) -> u16 {
+        let PenNode::Frame(cell) = &grid.children.as_ref().unwrap()[0] else {
             panic!("expected a cell")
         };
-        match cell.container.width {
-            Some(SizingBehavior::Number(width)) => width,
-            ref other => panic!("expected a numeric width, found {other:?}"),
-        }
+        cell.base.grid_column.map_or(1, |p| p.span)
     }
 
     /// C7. `grid-column: 1 / -1` is the full-bleed idiom; the negative end
@@ -484,12 +486,8 @@ mod integration_tests {
                <div style='grid-column:1 / -1'>full</div>\
                <div>b</div><div>c</div><div>d</div></div>",
         );
-        assert_eq!(grid.children.as_ref().unwrap().len(), 2);
-        assert_eq!(
-            first_cell_width(&grid),
-            900.0,
-            "the item spans all 3 tracks"
-        );
+        assert_eq!(grid.children.as_ref().unwrap().len(), 4);
+        assert_eq!(first_span(&grid), 3, "the item spans all 3 tracks");
         assert!(warnings.is_empty(), "{warnings:?}");
     }
 
@@ -501,14 +499,14 @@ mod integration_tests {
                <div style='grid-column-start:1;grid-column-end:-1'>full</div>\
                <div>b</div><div>c</div><div>d</div></div>",
         );
-        assert_eq!(first_cell_width(&grid), 900.0);
+        assert_eq!(first_span(&grid), 3);
 
         let (span_grid, _) = grid_of(
             "<div style='display:grid;grid-template-columns:repeat(3,1fr);width:900px'>\
                <div style='grid-column-end:span 2'>wide</div>\
                <div>b</div><div>c</div></div>",
         );
-        assert_eq!(first_cell_width(&span_grid), 600.0);
+        assert_eq!(first_span(&span_grid), 2);
     }
 
     /// C7. Forms that parse to something other than what the author wrote no

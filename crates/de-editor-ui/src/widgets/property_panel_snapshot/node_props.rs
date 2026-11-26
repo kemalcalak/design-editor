@@ -90,7 +90,29 @@ pub(super) fn flex_layout_of(node: &PenNode) -> de_editor_core::FlexLayout {
     match container_layout(node) {
         Some(LayoutMode::Vertical) => de_editor_core::FlexLayout::Vertical,
         Some(LayoutMode::Horizontal) => de_editor_core::FlexLayout::Horizontal,
+        Some(LayoutMode::Grid) => de_editor_core::FlexLayout::Grid,
         Some(LayoutMode::None) | None => de_editor_core::FlexLayout::Free,
+    }
+}
+
+pub(super) fn layout_grid_of(node: &PenNode) -> super::LayoutGridSummary {
+    let container = match node {
+        PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => &n.container,
+        PenNode::Group(n) => &n.container,
+        PenNode::Rectangle(n) => &n.container,
+        _ => return Default::default(),
+    };
+    let text = |t: Option<&jian_ops_schema::node::GridTemplate>| {
+        t.map(|t| t.short_text()).unwrap_or_default()
+    };
+    super::LayoutGridSummary {
+        wrap: container.wrap == Some(true),
+        row_gap: match container.row_gap_value() {
+            Some(NumberOrExpression::Number(v)) => *v as f32,
+            _ => 0.0,
+        },
+        columns: text(container.columns.as_ref()),
+        rows: text(container.rows.as_ref()),
     }
 }
 

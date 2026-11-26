@@ -64,7 +64,9 @@ pub(crate) fn map_container_children(
     }
     children = super::stack::layer_absolute_children(children);
     MappedChildren {
-        nodes: super::grid::wrap_grid_rows(context, style, children),
+        // `apply_grid` (after this returns, with the container in hand)
+        // strips the grid placement carriers.
+        nodes: children,
         collapsed,
     }
 }

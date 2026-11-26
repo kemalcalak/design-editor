@@ -12,9 +12,11 @@ use jian_ops_schema::node::PenNode;
 use jian_scene::layout_scene::{NodeKind, SceneNode, ScenePage};
 use serde_json::{json, Map, Value};
 
+use super::layout_grid::{cell_json, grid_meta, grid_of, tracks_json, GridMeta, GridTracks};
 use super::layout_problems::{child_clip, clip_problem, Area};
 use super::tools::kind_label;
 use super::{McpTool, ToolErrorCode, ToolOutcome};
+use de_editor_core::grid_geometry::GridCell;
 
 type ToolCallError = (ToolErrorCode, String);
 
@@ -50,12 +52,17 @@ struct LayoutRecord {
     /// hides part or all of the node (#169, pen.dev `ctx.problems`), and
     /// `"overlaps <id>"` for each sibling it covers (#265), comma-joined.
     problems: Option<String>,
+    /// Resolved tracks of a grid container (#379).
+    grid: Option<GridTracks>,
+    /// This node's cell in its grid parent.
+    cell: Option<GridCell>,
 }
 
 #[derive(Clone)]
 struct NodeMeta {
     name: Option<String>,
     type_label: String,
+    grid: GridMeta,
 }
 
 impl McpTool for SnapshotLayout {
@@ -168,6 +175,12 @@ fn layout_entry_value(
     obj.insert("height".into(), js_number(record.h));
     if let Some(problems) = &record.problems {
         obj.insert("problems".into(), json!(problems));
+    }
+    if let Some(grid) = &record.grid {
+        obj.insert("grid".into(), tracks_json(grid, offset));
+    }
+    if let Some(cell) = &record.cell {
+        obj.insert("cell".into(), cell_json(cell));
     }
     let children = layout_children_values(selected, &record.id, offset);
     if !children.is_empty() {
@@ -377,6 +390,7 @@ fn collect_node_meta(nodes: &[PenNode], out: &mut BTreeMap<String, NodeMeta>) {
             NodeMeta {
                 name: node.base().name.clone(),
                 type_label: kind_label(node).to_string(),
+                grid: grid_meta(node),
             },
         );
         if let Some(children) = node.children() {
@@ -392,9 +406,12 @@ fn scene_layout_records(
     meta: &BTreeMap<String, NodeMeta>,
     clip: Option<Area>,
 ) -> Vec<LayoutRecord> {
+    #[allow(clippy::too_many_arguments)]
     fn walk(
         nodes: &[SceneNode],
         meta: &BTreeMap<String, NodeMeta>,
+        grid_meta: &BTreeMap<String, GridMeta>,
+        cells: &mut BTreeMap<String, GridCell>,
         ancestors: &[String],
         clip: Option<Area>,
         depth: u32,
@@ -417,6 +434,10 @@ fn scene_layout_records(
                 problems.extend(others.iter().map(|other| format!("overlaps {other}")));
             }
             let bounds = node.aggregate_bounds();
+            let grid = grid_of(node, grid_meta).map(|(tracks, children)| {
+                cells.extend(children);
+                tracks
+            });
             out.push(LayoutRecord {
                 id: id.clone(),
                 name: node_meta.and_then(|m| m.name.clone()),
@@ -430,16 +451,32 @@ fn scene_layout_records(
                 w: f64::from(bounds.size.x),
                 h: f64::from(bounds.size.y),
                 problems: (!problems.is_empty()).then(|| problems.join(", ")),
+                grid,
+                cell: cells.remove(&id),
             });
             let mut child_ancestors = ancestors.to_vec();
             child_ancestors.push(id);
             let clip = child_clip(node, clip);
-            walk(&node.children, meta, &child_ancestors, clip, depth + 1, out);
+            walk(
+                &node.children,
+                meta,
+                grid_meta,
+                cells,
+                &child_ancestors,
+                clip,
+                depth + 1,
+                out,
+            );
         }
     }
 
+    let grid_meta: BTreeMap<String, GridMeta> = meta
+        .iter()
+        .map(|(id, m)| (id.clone(), m.grid.clone()))
+        .collect();
+    let mut cells = BTreeMap::new();
     let mut out = Vec::new();
-    walk(roots, meta, &[], clip, 0, &mut out);
+    walk(roots, meta, &grid_meta, &mut cells, &[], clip, 0, &mut out);
     out
 }
 

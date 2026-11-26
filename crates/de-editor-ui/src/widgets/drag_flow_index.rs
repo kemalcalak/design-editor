@@ -313,6 +313,12 @@ fn flex_insert_preview(
     dragged_bounds: Rect,
     direction: FlexDirection,
 ) -> (usize, Option<CanvasOverlayLine>) {
+    if direction == FlexDirection::Flow {
+        return super::drag_flow_reading::reading_order_insert(
+            &parent.flex_children,
+            dragged_bounds,
+        );
+    }
     let vertical = matches!(direction, FlexDirection::Vertical);
     let drag_mid = if vertical {
         dragged_bounds.origin.y + dragged_bounds.size.y / 2.0

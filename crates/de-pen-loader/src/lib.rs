@@ -47,6 +47,8 @@ mod boolean_scene_tests;
 #[cfg(test)]
 mod geometry_mode_scene_tests;
 #[cfg(test)]
+mod html_import_grid_scene_tests;
+#[cfg(test)]
 mod html_import_scene_tests;
 #[cfg(test)]
 mod image_drop_scene_tests;

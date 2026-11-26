@@ -104,6 +104,9 @@ mod property_panel_fill_picker;
 #[cfg(test)]
 mod property_panel_fill_tests;
 pub mod property_panel_flex;
+pub mod property_panel_flex_grid;
+#[cfg(test)]
+mod property_panel_flex_grid_tests;
 mod property_panel_flip;
 pub mod property_panel_header;
 pub mod property_panel_icon;
@@ -213,6 +216,7 @@ mod canvas_generation_scan_tests;
 pub mod canvas_generation_visibility;
 // `pub` so the native host can repaint just the animated regions (#208).
 pub mod canvas_animation_regions;
+pub mod canvas_grid_overlay;
 pub mod canvas_layout_transition;
 pub mod canvas_overlay_transform;
 mod canvas_path_overlay;
@@ -273,6 +277,7 @@ pub mod chrome_tooltip;
 pub mod cursor_hover_flow;
 pub mod drag_flow;
 mod drag_flow_index;
+mod drag_flow_reading;
 pub mod floating_panels;
 pub mod host_canvas_geometry;
 pub mod host_frame_bookkeeping;
