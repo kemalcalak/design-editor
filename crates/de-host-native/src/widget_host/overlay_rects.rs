@@ -502,8 +502,22 @@ impl WidgetHostNative {
     /// when no menu is open. Anchored at the clicked row, the menu can
     /// extend right into the canvas — so it suppresses the cursor too.
     pub(in crate::widget_host) fn layer_context_menu_rect(&self) -> Option<Rect> {
+        Some(self.measured_layer_context_menu()?.rect())
+    }
+
+    /// The open layer/page context menu, its width measured for this
+    /// locale and row set (#435). Hit-tests run outside the paint pass, so
+    /// the host measures through its measure-only backend: a hover or
+    /// press that arrives before the first redraw (winit can deliver the
+    /// cursor moves queued behind the opening right press first) sees the
+    /// width paint will draw. A matching key measures nothing.
+    pub(in crate::widget_host) fn measured_layer_context_menu(
+        &self,
+    ) -> Option<de_editor_ui::widgets::layer_context_menu::LayerContextMenu> {
         use de_editor_ui::widgets::layer_context_menu::LayerContextMenu;
         let state = self.editor_state.editor_ui.layer_context_menu.clone()?;
-        Some(LayerContextMenu::for_state(&self.editor_state, state).rect())
+        let menu = LayerContextMenu::for_state(&self.editor_state, state);
+        self.with_measure_only(|backend| menu.measured_rect(backend));
+        Some(menu)
     }
 }

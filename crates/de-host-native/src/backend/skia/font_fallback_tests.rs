@@ -14,17 +14,10 @@ fn css_font_stack_parser_preserves_quoted_families_and_expands_generics() {
     assert_ne!(families[2], "ui-sans-serif");
 }
 
-/// `jian_skia::register_bundled_fonts` is process-global and first-call-wins,
-/// so every test that needs a bundled family must register the SAME set — the
-/// first test to run decides what the whole binary sees. `tests/text_shaping.rs`
-/// and `tests/text_wrap_parity.rs` call this one list.
+/// The binary's one bundled-font set; see
+/// [`crate::font_registry_test_support::register_bundled_fonts`].
 pub(super) fn register_test_bundled_fonts() {
-    jian_skia::register_bundled_fonts(vec![
-        include_bytes!("../../../../de-host-desktop/assets/fonts/CormorantGaramond-VF.ttf")
-            .to_vec(),
-        include_bytes!("../../../../de-host-desktop/assets/fonts/Inter-VF.ttf").to_vec(),
-        include_bytes!("../../../../de-host-desktop/assets/fonts/Outfit-VF.ttf").to_vec(),
-    ]);
+    crate::font_registry_test_support::register_bundled_fonts();
 }
 
 #[cfg(target_os = "macos")]

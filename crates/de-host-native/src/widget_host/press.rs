@@ -110,7 +110,13 @@ impl WidgetHostNative {
         let panel = self.layer_panel();
         let hit = panel.hit_test(layer_rect, Point2D::new(x, y));
         match press_flow::open_layer_context_menu(&mut self.editor_state, hit, x, y) {
-            LayerContextMenuPress::Opened | LayerContextMenuPress::Dismissed => true,
+            LayerContextMenuPress::Opened => {
+                // Measure the new menu's width now, not at the first
+                // redraw: winit can deliver queued cursor moves before it.
+                let _ = self.measured_layer_context_menu();
+                true
+            }
+            LayerContextMenuPress::Dismissed => true,
             // Right-press on blank chrome — blur inputs like a left press.
             LayerContextMenuPress::Missed => self.blur_text_inputs_on_blank_press() || cancelled,
         }

@@ -461,7 +461,7 @@ impl DesktopApp {
             }
             GitPanelAction::CopyHash(rev) => {
                 // Pure clipboard write — no git op, no reload.
-                crate::clipboard::set_text(&rev);
+                self.write_clipboard_text(rev);
             }
             GitPanelAction::LoadCommitDiff(index) => self.load_expanded_commit_diff(index),
             GitPanelAction::EnterTrackedPicker => self.enter_tracked_picker(),

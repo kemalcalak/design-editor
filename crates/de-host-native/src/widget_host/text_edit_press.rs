@@ -19,7 +19,7 @@ use de_editor_ui::{Color, Point2D, Rect, RenderBackend, TextLayout};
 /// Every paint primitive is a no-op (there is no canvas outside the
 /// paint pass); only the text measurement forwards to the real
 /// FontMgr-backed advance, which is what the layout helper needs.
-struct MeasureOnly<'a> {
+pub(in crate::widget_host) struct MeasureOnly<'a> {
     inner: &'a mut crate::NativeBackend,
 }
 
@@ -101,7 +101,10 @@ fn inverse_rotate_doc(p: Point2D, node: &SceneNode) -> Point2D {
 }
 
 impl WidgetHostNative {
-    fn with_measure_only<R>(&self, f: impl FnOnce(&mut MeasureOnly<'_>) -> R) -> R {
+    pub(in crate::widget_host) fn with_measure_only<R>(
+        &self,
+        f: impl FnOnce(&mut MeasureOnly<'_>) -> R,
+    ) -> R {
         let mut measure = self
             .text_measure
             .borrow_mut()
