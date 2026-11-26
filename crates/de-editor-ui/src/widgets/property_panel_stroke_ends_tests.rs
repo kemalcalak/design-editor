@@ -6,7 +6,7 @@
 use crate::widgets::property_panel::{PropertyPanel, PropertyPanelAction};
 use crate::widgets::property_panel_sections as sections;
 use crate::widgets::property_panel_stroke::StrokeStyleRows;
-use crate::widgets::property_panel_stroke_ends::{end_menu_rows, field_rect, END_CAPS, LABEL_W};
+use crate::widgets::property_panel_stroke_ends::{end_menu_rows, END_CAPS};
 use crate::widgets::property_panel_test_support::{state_from, visible_for, CountingBackend};
 use crate::widgets::{PaintCx, Widget};
 use crate::{Point2D, Rect};
