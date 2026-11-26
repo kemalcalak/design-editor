@@ -152,7 +152,10 @@ pub fn classify_root_form_value(root: &serde_json::Value) -> DesignForm {
 pub fn classify_root_form_node(root: &PenNode) -> DesignForm {
     let container = match root {
         PenNode::Frame(node) => &node.container,
-        PenNode::Group(node) => &node.container,
+        PenNode::Group(node)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: node, .. }) => {
+            &node.container
+        }
         PenNode::Rectangle(node) => &node.container,
         _ => return DesignForm::Unknown,
     };

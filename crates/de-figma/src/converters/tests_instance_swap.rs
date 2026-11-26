@@ -532,7 +532,8 @@ fn baked_boolean_geometry_yields_to_swapped_component_operand() {
                     collect_names(child, names);
                 }
             }
-            PenNode::Group(node) => {
+            PenNode::Group(node)
+            | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: node, .. }) => {
                 names.push(node.base.name.clone().unwrap_or_default());
                 for child in node.children.as_deref().unwrap_or_default() {
                     collect_names(child, names);
@@ -558,7 +559,8 @@ fn baked_boolean_geometry_yields_to_swapped_component_operand() {
                 .unwrap_or_default()
                 .iter()
                 .find_map(|child| find_rectangle(child, name)),
-            PenNode::Group(group) => group
+            PenNode::Group(group)
+            | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group, .. }) => group
                 .children
                 .as_deref()
                 .unwrap_or_default()

@@ -159,7 +159,8 @@ fn visit_import_node(node: &jian_ops_schema::node::PenNode, f: &mut impl FnMut(&
             visit_import_stroke(&node.container.stroke, f);
             node.children.as_ref()
         }
-        PenNode::Group(node) => {
+        PenNode::Group(node)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: node, .. }) => {
             visit_import_fills(&node.container.fill, f);
             visit_import_stroke(&node.container.stroke, f);
             node.children.as_ref()

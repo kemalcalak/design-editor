@@ -224,7 +224,10 @@ pub(super) fn node_container_mut(
 ) -> Option<&mut jian_ops_schema::node::container::ContainerProps> {
     match node {
         PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => Some(&mut n.container),
-        PenNode::Group(n) => Some(&mut n.container),
+        PenNode::Group(n)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => {
+            Some(&mut n.container)
+        }
         PenNode::Rectangle(n) => Some(&mut n.container),
         _ => None,
     }

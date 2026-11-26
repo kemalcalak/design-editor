@@ -21,7 +21,7 @@ pub fn subpaths_to_path_data(subs: &[Subpath]) -> String {
 /// handle-aware bounds at scale 1, which makes the canvas fit an
 /// identity. A stale `iconId` is dropped — the shape is no longer the
 /// catalogue icon. False for a non-path node.
-pub(super) fn write_subpaths(node: &mut PenNode, subs: &[Subpath]) -> bool {
+pub(crate) fn write_subpaths(node: &mut PenNode, subs: &[Subpath]) -> bool {
     let (x, y, w, h) = subpaths_bounds(subs);
     {
         let PenNode::Path(path) = &mut *node else {

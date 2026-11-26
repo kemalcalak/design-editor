@@ -309,7 +309,10 @@ fn base_refs(node: &PenNode, refs: &mut BTreeSet<String>) {
 fn node_container(node: &PenNode) -> Option<&ContainerProps> {
     match node {
         PenNode::Frame(n) => Some(&n.container),
-        PenNode::Group(n) => Some(&n.container),
+        PenNode::Group(n)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => {
+            Some(&n.container)
+        }
         PenNode::Rectangle(n) => Some(&n.container),
         _ => None,
     }

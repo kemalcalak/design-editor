@@ -686,7 +686,8 @@ fn normalize_section_roots_for_parent_layout(nodes: &mut [PenNode]) {
                 frame.container.width = Some(SizingBehavior::Keyword(SizingKeyword::FillContainer));
                 frame.container.height = Some(SizingBehavior::Keyword(SizingKeyword::FitContent));
             }
-            PenNode::Group(group) => {
+            PenNode::Group(group)
+            | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group, .. }) => {
                 group.container.width = Some(SizingBehavior::Keyword(SizingKeyword::FillContainer));
                 group.container.height = Some(SizingBehavior::Keyword(SizingKeyword::FitContent));
             }

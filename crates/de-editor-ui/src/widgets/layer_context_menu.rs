@@ -42,6 +42,10 @@ pub enum LayerContextAction {
     BooleanSubtract,
     BooleanIntersect,
     BooleanExclude,
+    /// Bake the selection into one path (Cmd+E, #388).
+    Flatten,
+    /// Turn the selection's strokes into filled paths (Cmd+Shift+O).
+    OutlineStroke,
     CreateComponent,
     /// Shown instead of CreateComponent when the target is a reusable
     /// component — sheds the `reusable` flag (TS detach case 1).
@@ -115,6 +119,18 @@ const LAYER_ROWS: &[Row] = &[
         destructive: false,
     },
     Row {
+        icon: Icon::Layers,
+        action: LayerContextAction::Flatten,
+        label_key: "path.flatten",
+        destructive: false,
+    },
+    Row {
+        icon: Icon::Square,
+        action: LayerContextAction::OutlineStroke,
+        label_key: "path.outlineStroke",
+        destructive: false,
+    },
+    Row {
         icon: Icon::Component,
         action: LayerContextAction::CreateComponent,
         label_key: "layerMenu.createComponent",
@@ -185,6 +201,8 @@ pub struct LayerContextMenu {
 impl LayerContextMenu {
     pub fn for_state(state: &EditorState, menu: LayerContextMenuState) -> Self {
         let boolean_ok = super::align_toolbar::can_boolean_op(state);
+        let flatten_ok = super::align_toolbar::can_flatten(state);
+        let outline_ok = super::align_toolbar::can_outline_stroke(state);
         let mut rows = match &menu.target {
             LayerContextTarget::Layer(_) => LAYER_ROWS
                 .iter()
@@ -196,6 +214,8 @@ impl LayerContextMenu {
                     | LayerContextAction::BooleanSubtract
                     | LayerContextAction::BooleanIntersect
                     | LayerContextAction::BooleanExclude => boolean_ok,
+                    LayerContextAction::Flatten => flatten_ok,
+                    LayerContextAction::OutlineStroke => outline_ok,
                     _ => true,
                 })
                 .collect(),

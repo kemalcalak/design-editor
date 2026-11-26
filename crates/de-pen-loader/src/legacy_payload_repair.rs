@@ -111,7 +111,10 @@ fn is_legacy_dark_help_card_missing_stroke_fill(payload: &NodePayload) -> bool {
 fn child_name(node: &PenNode) -> Option<&str> {
     match node {
         PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => n.base.name.as_deref(),
-        PenNode::Group(n) => n.base.name.as_deref(),
+        PenNode::Group(n)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => {
+            n.base.name.as_deref()
+        }
         PenNode::Rectangle(n) => n.base.name.as_deref(),
         PenNode::Text(n) => n.base.name.as_deref(),
         PenNode::TextInput(n) => n.base.name.as_deref(),

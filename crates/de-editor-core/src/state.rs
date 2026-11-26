@@ -351,7 +351,10 @@ fn document_max_depth(doc: &jian_ops_schema::PenDocument) -> usize {
 fn node_children(node: &PenNode) -> Option<&[PenNode]> {
     match node {
         PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => n.children.as_deref(),
-        PenNode::Group(n) => n.children.as_deref(),
+        PenNode::Group(n)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => {
+            n.children.as_deref()
+        }
         PenNode::Rectangle(n) => n.children.as_deref(),
         _ => None,
     }

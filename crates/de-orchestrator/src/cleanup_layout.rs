@@ -16,7 +16,7 @@ fn intrinsic_height(node: &PenNode) -> Option<f64> {
     }
 
     match node {
-        PenNode::Frame(_) | PenNode::Group(_) | PenNode::Rectangle(_) => {
+        PenNode::Frame(_) | PenNode::Group(_) | PenNode::Boolean(_) | PenNode::Rectangle(_) => {
             container_content_height(node)
         }
         PenNode::Ref(n) => stacked_children_height(n.children.as_deref(), 0.0, 0.0),
@@ -81,7 +81,10 @@ fn stacked_children_height(children: Option<&[PenNode]>, gap: f64, padding_y: f6
 fn container_props(node: &PenNode) -> Option<&ContainerProps> {
     match node {
         PenNode::Frame(n) => Some(&n.container),
-        PenNode::Group(n) => Some(&n.container),
+        PenNode::Group(n)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => {
+            Some(&n.container)
+        }
         PenNode::Rectangle(n) => Some(&n.container),
         _ => None,
     }

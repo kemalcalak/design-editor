@@ -433,6 +433,13 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "menu.snapPixelGrid" => "Snap to Pixel Grid",
         "vectorEdit.pixelSnapOn" => "Pixel grid snapping on",
         "vectorEdit.pixelSnapOff" => "Pixel grid snapping off",
+        "menu.path" => "Path",
+        "path.flatten" => "Flatten",
+        "path.outlineStroke" => "Outline Stroke",
+        "path.offsetOutward" => "Offset Path Outward",
+        "path.offsetInward" => "Offset Path Inward",
+        "path.simplify" => "Simplify Path",
+        "path.reverse" => "Reverse Path Direction",
         _ => return None,
     })
 }

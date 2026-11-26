@@ -9,7 +9,10 @@ fn first_image_src(nodes: &[jian_ops_schema::node::PenNode]) -> Option<String> {
         }
         let children: &[PenNode] = match node {
             PenNode::Frame(frame) => frame.children.as_deref().unwrap_or_default(),
-            PenNode::Group(group) => group.children.as_deref().unwrap_or_default(),
+            PenNode::Group(group)
+            | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group, .. }) => {
+                group.children.as_deref().unwrap_or_default()
+            }
             PenNode::Rectangle(rectangle) => rectangle.children.as_deref().unwrap_or_default(),
             _ => &[],
         };

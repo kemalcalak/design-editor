@@ -433,6 +433,13 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "menu.snapPixelGrid" => "Ajustar a la cuadrícula de píxeles",
         "vectorEdit.pixelSnapOn" => "Ajuste a la cuadrícula de píxeles activado",
         "vectorEdit.pixelSnapOff" => "Ajuste a la cuadrícula de píxeles desactivado",
+        "menu.path" => "Trazado",
+        "path.flatten" => "Acoplar",
+        "path.outlineStroke" => "Contornear trazo",
+        "path.offsetOutward" => "Desplazar trazado hacia fuera",
+        "path.offsetInward" => "Desplazar trazado hacia dentro",
+        "path.simplify" => "Simplificar trazado",
+        "path.reverse" => "Invertir dirección del trazado",
         _ => return None,
     })
 }

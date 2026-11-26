@@ -356,7 +356,7 @@ fn find_node_in_doc<'a>(doc: &'a PenDocument, node_id: &str) -> Option<&'a PenNo
 fn is_component_root(node: &PenNode) -> bool {
     matches!(
         node,
-        PenNode::Frame(_) | PenNode::Group(_) | PenNode::Rectangle(_)
+        PenNode::Frame(_) | PenNode::Group(_) | PenNode::Boolean(_) | PenNode::Rectangle(_)
     )
 }
 

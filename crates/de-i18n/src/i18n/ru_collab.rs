@@ -433,6 +433,13 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "menu.snapPixelGrid" => "Привязка к пиксельной сетке",
         "vectorEdit.pixelSnapOn" => "Привязка к пиксельной сетке включена",
         "vectorEdit.pixelSnapOff" => "Привязка к пиксельной сетке выключена",
+        "menu.path" => "Контур",
+        "path.flatten" => "Объединить в контур",
+        "path.outlineStroke" => "Преобразовать обводку в контур",
+        "path.offsetOutward" => "Сместить контур наружу",
+        "path.offsetInward" => "Сместить контур внутрь",
+        "path.simplify" => "Упростить контур",
+        "path.reverse" => "Изменить направление контура",
         _ => return None,
     })
 }

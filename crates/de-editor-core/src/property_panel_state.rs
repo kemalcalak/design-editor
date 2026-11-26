@@ -196,14 +196,9 @@ impl PaddingEditMode {
     }
 }
 
-/// Path boolean ops — TS parity with Paper.js (Ctrl+Alt+U/S/I/X).
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum BooleanOp {
-    Union,
-    Subtract,
-    Intersect,
-    Exclude,
-}
+/// Path boolean ops (Ctrl+Alt+U/S/I/X) — the schema's boolean group
+/// operation, so a canvas op and a stored `boolean` node share one type.
+pub use jian_ops_schema::node::BooleanOperation as BooleanOp;
 
 /// Export dialog format. State enum ported from shell-core's
 /// `widgets/export_dialog::ExportFormat` (the widget render code stays

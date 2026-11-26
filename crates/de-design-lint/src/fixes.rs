@@ -205,7 +205,10 @@ fn find_node_mut<'a>(root: &'a mut PenNode, node_id: &str) -> Option<&'a mut Pen
     }
     match root {
         PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => n.children.as_mut(),
-        PenNode::Group(n) => n.children.as_mut(),
+        PenNode::Group(n)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => {
+            n.children.as_mut()
+        }
         PenNode::Rectangle(n) => n.children.as_mut(),
         _ => None,
     }?

@@ -435,7 +435,10 @@ fn strip_span_carriers(nodes: &mut [PenNode]) {
 fn child_nodes_mut(node: &mut PenNode) -> &mut [PenNode] {
     match node {
         PenNode::Frame(frame) => frame.children.as_deref_mut().unwrap_or_default(),
-        PenNode::Group(group) => group.children.as_deref_mut().unwrap_or_default(),
+        PenNode::Group(group)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group, .. }) => {
+            group.children.as_deref_mut().unwrap_or_default()
+        }
         PenNode::Rectangle(rectangle) => rectangle.children.as_deref_mut().unwrap_or_default(),
         PenNode::Ref(reference) => reference.children.as_deref_mut().unwrap_or_default(),
         PenNode::Tabs(tabs) => tabs.children.as_deref_mut().unwrap_or_default(),

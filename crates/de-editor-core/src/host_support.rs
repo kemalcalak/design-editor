@@ -4,12 +4,10 @@
 //! `EditorState` as its single source of truth. A handful of host
 //! operations have no 1:1 mutator on `EditorState` yet — node spawn
 //! for the active tool, a non-test sample document for the host
-//! constructor, and committing a path-boolean result. These are
+//! constructor. These are
 //! collected here as additive, tested `EditorState` methods so the
 //! host never forks tree-mutation logic of its own.
 
-use crate::command::EditorCommand;
-use crate::id_allocator::IdAllocator;
 use crate::node_id::NodeId;
 use crate::pen_node_ext::PenNodeExt;
 use crate::state::EditorState;
@@ -302,15 +300,18 @@ impl EditorState {
     }
 
     /// Refuse a canvas boolean whose sources include a container with
-    /// children, and say why. [`EditorCommand::CommitBooleanResult`]
+    /// children, and say why. A [`crate::path_ops::PathCommand::Commit`]
     /// would refuse it anyway (it removes each source with its subtree),
     /// but silently; this raises a Warn toast instead. Only a selection
     /// a boolean could otherwise apply to (two or more nodes) is checked.
     /// Returns `true` when it refused: the host stops there, nothing in
     /// the document changes.
     pub fn refuse_boolean_on_containers(&mut self, source_ids: &[NodeId], now_ms: u64) -> bool {
+        // A group or boolean group is baked whole (its outline is its
+        // children's); any other container's outline is only its box.
         let has_children = |id: &NodeId| {
             crate::walkers::find_node(self.active_children(), id)
+                .filter(|node| !node.is_group())
                 .and_then(|node| node.children())
                 .is_some_and(|kids| !kids.is_empty())
         };
@@ -325,54 +326,11 @@ impl EditorState {
         );
         true
     }
-
-    /// Commit a canvas-computed path boolean through
-    /// [`EditorCommand::CommitBooleanResult`], the same command the MCP
-    /// `boolean_op` tool sends, so both share its validation (sources
-    /// exist and have no children, id free, document not moved on),
-    /// naming, undo step and selection. The host keeps its contour math
-    /// (skia on desktop, the axis-aligned fallback on web) and its id
-    /// policy: the new id is minted from `next_id` with the sequential
-    /// allocator, and `next_id` advances only when the commit lands.
-    ///
-    /// The command is built against the live revision, so the stale
-    /// check passes by construction here: the canvas computes and
-    /// commits in one call.
-    pub fn commit_canvas_boolean(
-        &mut self,
-        source_ids: Vec<NodeId>,
-        contours: Vec<Vec<(f64, f64)>>,
-        next_id: &mut u64,
-    ) -> bool {
-        let Ok(mut allocator) = crate::SequentialIdAllocator::for_document(&self.doc, *next_id)
-        else {
-            return false;
-        };
-        let Ok(new_id) = allocator.allocate(&mut self.collect_node_ids()) else {
-            return false;
-        };
-        let command = EditorCommand::CommitBooleanResult {
-            source_ids,
-            contours,
-            new_id,
-            revision: self.document_revision(),
-        };
-        // The command carries its own id; the allocator is only the
-        // `apply_with_allocator` argument and mints nothing more.
-        let committed = self
-            .apply_with_allocator(command, &mut allocator)
-            .unwrap_or(false);
-        if committed {
-            *next_id = allocator.next_counter();
-        }
-        committed
-    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use jian_ops_schema::sizing::SizingBehavior;
 
     #[test]
     fn sample_has_the_demo_tree_and_anchors_selection() {
@@ -433,116 +391,6 @@ mod tests {
             .create_node_for_tool(Tool::Hand, &mut next, 0.0, 0.0, 1.0, 1.0)
             .is_none());
         assert!(s.active_children().is_empty());
-    }
-
-    #[test]
-    fn commit_canvas_boolean_swaps_sources_for_one_node() {
-        let mut s = EditorState::new();
-        let mut next = 100u64;
-        // Two throwaway source paths.
-        let a = s
-            .create_node_for_tool(Tool::Pen, &mut next, 0.0, 0.0, 1.0, 1.0)
-            .unwrap();
-        let b = s
-            .create_node_for_tool(Tool::Pen, &mut next, 5.0, 5.0, 1.0, 1.0)
-            .unwrap();
-        assert_eq!(s.active_children().len(), 2);
-        let depth = s.history.past.len();
-        assert!(s.commit_canvas_boolean(
-            vec![a, b],
-            vec![vec![(10.0, 10.0), (0.0, 0.0), (10.0, 0.0)]],
-            &mut next,
-        ));
-        // Both sources gone, one result node remains, selected, one
-        // undo step, and the id comes from the host counter.
-        assert_eq!(s.active_children().len(), 1);
-        assert_eq!(s.history.past.len(), depth + 1);
-        let PenNode::Path(path) = &s.active_children()[0] else {
-            panic!("boolean result should be a Path");
-        };
-        assert_eq!(path.base.id, "n102");
-        assert_eq!(next, 103);
-        assert_eq!(s.selection.set, vec![NodeId::new("n102")]);
-        assert_eq!(path.base.name.as_deref(), Some("Boolean Result"));
-        assert_eq!(path.base.x, Some(0.0));
-        assert_eq!(path.base.y, Some(0.0));
-        assert_eq!(path.width, Some(SizingBehavior::Number(10.0)));
-        assert_eq!(path.height, Some(SizingBehavior::Number(10.0)));
-        // Committed as a compound `d` (node-local coords), not anchors.
-        assert!(
-            path.anchors.is_none(),
-            "result uses a compound d, not anchors"
-        );
-        assert_eq!(
-            path.d.as_deref(),
-            Some("M 10.00 10.00 L 0.00 0.00 L 10.00 0.00 Z")
-        );
-    }
-
-    #[test]
-    fn commit_canvas_boolean_rejects_empty_input_and_keeps_the_counter() {
-        let mut s = EditorState::new();
-        let mut next = 100u64;
-        let a = s
-            .create_node_for_tool(Tool::Pen, &mut next, 0.0, 0.0, 1.0, 1.0)
-            .unwrap();
-        let next_before = next;
-        assert!(!s.commit_canvas_boolean(vec![], vec![vec![(0.0, 0.0), (1.0, 1.0)]], &mut next));
-        // A contour with <2 points is degenerate and also rejected.
-        assert!(!s.commit_canvas_boolean(vec![a], vec![vec![(1.0, 1.0)]], &mut next));
-        assert_eq!(next, next_before, "a rejected commit mints no id");
-        assert_eq!(s.active_children().len(), 1);
-    }
-
-    #[test]
-    fn commit_canvas_boolean_inherits_first_source_style() {
-        let src = r##"{
-            "version": "1.0.0",
-            "children": [
-              {"type":"rectangle","id":"n10","x":0,"y":0,"width":20,"height":20,
-               "fill":[{"type":"solid","color":"#ff0000"}]},
-              {"type":"rectangle","id":"n11","x":10,"y":0,"width":20,"height":20}
-            ]
-        }"##;
-        let doc = jian_ops_schema::load_str(src)
-            .expect("fixture parses")
-            .value;
-        let mut s = EditorState::from_document(doc);
-        let mut next = 100u64;
-        assert!(s.commit_canvas_boolean(
-            vec![NodeId::new("n10"), NodeId::new("n11")],
-            vec![vec![(0.0, 0.0), (20.0, 0.0), (20.0, 20.0)]],
-            &mut next,
-        ));
-        let PenNode::Path(path) = &s.active_children()[0] else {
-            panic!("boolean result should be a Path");
-        };
-        assert!(path.fill.is_some(), "result should keep first source fill");
-    }
-
-    #[test]
-    fn commit_canvas_boolean_refuses_a_source_with_children() {
-        let src = r##"{
-            "version": "1.0.0",
-            "children": [
-              {"type":"frame","id":"n10","x":0,"y":0,"width":20,"height":20,
-               "children":[{"type":"rectangle","id":"n12","x":0,"y":0,"width":5,"height":5}]},
-              {"type":"rectangle","id":"n11","x":10,"y":0,"width":20,"height":20}
-            ]
-        }"##;
-        let doc = jian_ops_schema::load_str(src)
-            .expect("fixture parses")
-            .value;
-        let mut s = EditorState::from_document(doc);
-        let before = s.doc.clone();
-        let mut next = 100u64;
-        assert!(!s.commit_canvas_boolean(
-            vec![NodeId::new("n10"), NodeId::new("n11")],
-            vec![vec![(0.0, 0.0), (20.0, 0.0), (20.0, 20.0)]],
-            &mut next,
-        ));
-        assert_eq!(s.doc, before, "the frame and its child survive");
-        assert_eq!(next, 100);
     }
 
     #[test]
