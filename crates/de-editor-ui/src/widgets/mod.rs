@@ -87,6 +87,7 @@ pub mod property_panel_component_props;
 mod property_panel_component_props_tests;
 pub mod property_panel_compositing;
 pub mod property_panel_corner;
+pub mod property_panel_corner_smoothing;
 pub mod property_panel_dispatch;
 mod property_panel_dispatch_interactions;
 mod property_panel_dispatch_paint;

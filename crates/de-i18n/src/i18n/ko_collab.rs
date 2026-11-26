@@ -559,6 +559,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "stroke.endReversedTriangle" => "역삼각형",
         "stroke.endCircle" => "원",
         "stroke.endDiamond" => "다이아몬드",
+        "property.cornerSmoothing" => "스무딩",
         _ => return None,
     })
 }

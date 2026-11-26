@@ -397,6 +397,8 @@ pub struct WidgetHostNative {
     /// Active bitmap pan while the selected image fill is in crop edit mode.
     pub(in crate::widget_host) image_crop_drag: Option<image_crop_drag::ImageCropDragState>,
     pub(in crate::widget_host) effect_radius_drag: Option<usize>,
+    /// The Position section's corner smoothing slider is mid-drag (#389).
+    pub(in crate::widget_host) corner_smoothing_drag: bool,
     /// Active generated-code preview text selection drag.
     pub(in crate::widget_host) code_selection_drag: Option<CodeSelectionDragState>,
     /// Active chat input text selection drag.

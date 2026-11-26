@@ -7,7 +7,9 @@ use crate::widgets::property_panel::{PropertyPanel, PropertyPanelAction};
 use crate::widgets::property_panel_sections as sections;
 use crate::widgets::property_panel_stroke::StrokeStyleRows;
 use crate::widgets::property_panel_stroke_ends::{end_menu_rows, field_rect, END_CAPS, LABEL_W};
-use crate::widgets::property_panel_test_support::{state_from, visible_for, CountingBackend};
+use crate::widgets::property_panel_test_support::{
+    chrome_width, state_from, visible_for, CountingBackend,
+};
 use crate::widgets::{PaintCx, Widget};
 use crate::{Point2D, Rect};
 use de_editor_core::fills::{node_stroke_style, StrokeStyleEdit};
@@ -101,6 +103,7 @@ fn dispatch(state: &mut EditorState, action: &PropertyPanelAction) {
             resolved_sizing_fallback: None,
             image_adjustment_drag: &mut image_adjustment_drag,
             effect_radius_drag: &mut effect_radius_drag,
+            corner_smoothing_drag: &mut false,
         },
     );
     if d::updates_document(action) && state.snapshot_for_history() != before {
@@ -358,37 +361,6 @@ fn paint_agrees_with_the_walkers() {
     );
     assert!(backend.texts.iter().any(|t| t == p.labels.stroke_start));
     assert!(backend.texts.iter().any(|t| t == "Diamond"));
-}
-
-/// Width of `text` at 12 px, the estimate the Motion sweep uses (wider
-/// than the 11 px the rows paint at).
-fn chrome_width(text: &str) -> f32 {
-    text.chars()
-        .map(|c| {
-            let code = c as u32;
-            let combining = matches!(
-                code,
-                0x0300..=0x036F
-                    | 0x0E31
-                    | 0x0E34..=0x0E3A
-                    | 0x0E47..=0x0E4E
-                    | 0x0900..=0x0903
-                    | 0x093A..=0x094F
-                    | 0x0951..=0x0957
-                    | 0x0962..=0x0963
-            );
-            if combining {
-                0.0
-            } else if code < 0x0250 {
-                0.55
-            } else if code < 0x2000 {
-                0.62
-            } else {
-                1.0
-            }
-        })
-        .sum::<f32>()
-        * 12.0
 }
 
 /// Every Start / End / Miter label and end name fits its control in

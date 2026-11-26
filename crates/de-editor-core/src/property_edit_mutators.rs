@@ -170,6 +170,13 @@ impl EditorState {
             }
             PropertyFocus::StrokeWidth => return self.cmd_set_node_stroke_width(&sel, value),
             PropertyFocus::StrokeMiterLimit => return self.set_selected_stroke_miter_limit(value),
+            PropertyFocus::CornerSmoothing => {
+                if !value.is_finite() {
+                    return false;
+                }
+                let smoothing = Some((value / 100.0).clamp(0.0, 1.0));
+                return self.cmd_set_node_corners(&sel, None, smoothing);
+            }
             PropertyFocus::StrokeTopWidth
             | PropertyFocus::StrokeRightWidth
             | PropertyFocus::StrokeBottomWidth
@@ -342,6 +349,7 @@ impl EditorState {
             | PropertyFocus::CornerTR
             | PropertyFocus::CornerBL
             | PropertyFocus::CornerBR
+            | PropertyFocus::CornerSmoothing
             | PropertyFocus::EffectRadius(_)
             | PropertyFocus::MotionValue { .. }
             | PropertyFocus::MotionColor { .. }

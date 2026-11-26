@@ -144,6 +144,15 @@ pub fn editable_input_rects(
     if per_corner_expanded {
         rects.extend(crate::widgets::property_panel_corner::input_rects(x0, y, w));
     }
+    if visible.corner_smoothing_row_h() > 0.0 {
+        let grid = if per_corner_expanded {
+            crate::widgets::property_panel_corner::CORNER_GRID_EXTRA_HEIGHT
+        } else {
+            0.0
+        };
+        let row = crate::widgets::property_panel_corner_smoothing::row_rects(x0, y + grid, w);
+        rects.push((PropertyFocus::CornerSmoothing, row.value));
+    }
     if visible.flex_layout {
         crate::widgets::property_panel_flex::push_flex_input_rects(
             &mut rects,

@@ -45,6 +45,7 @@ impl WidgetHostNative {
             image_adjustment_drag: None,
             image_crop_drag: None,
             effect_radius_drag: None,
+            corner_smoothing_drag: false,
             code_selection_drag: None,
             chat_input_selection_drag: None,
             image_input_selection_drag: None,

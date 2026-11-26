@@ -557,6 +557,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "stroke.endReversedTriangle" => "Ters üçgen",
         "stroke.endCircle" => "Daire",
         "stroke.endDiamond" => "Elmas",
+        "property.cornerSmoothing" => "Yumuşatma",
         _ => return None,
     })
 }
