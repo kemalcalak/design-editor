@@ -215,7 +215,7 @@ fn table_keys(name: &str, main: &str, git: &str) -> BTreeSet<String> {
     keys
 }
 
-fn placeholders(value: &str) -> BTreeSet<String> {
+pub(super) fn placeholders(value: &str) -> BTreeSet<String> {
     let bytes = value.as_bytes();
     let mut result = BTreeSet::new();
     let mut index = 0;
