@@ -29,6 +29,20 @@ impl SharedState {
         Self::new(state.clone())
     }
 
+    /// Move `state` into a shared handle for a while, leaving a hollow
+    /// stand-in behind (no document, kits or registry, and unlike
+    /// `EditorState::new` no process-wide side effect). Put it back with
+    /// [`Self::restore_into`].
+    pub fn take_from(state: &mut EditorState) -> Self {
+        Self::new(std::mem::replace(state, EditorState::hollow()))
+    }
+
+    /// Put the state back where [`Self::take_from`] took it, moved when
+    /// nothing else shares it, else copied.
+    pub fn restore_into(self, state: &mut EditorState) {
+        *state = self.into_owned();
+    }
+
     /// The owned state: moved out when nothing else shares it, else copied.
     pub fn into_owned(self) -> EditorState {
         Arc::unwrap_or_clone(self.0)
@@ -86,6 +100,19 @@ mod tests {
         let ptr = Arc::as_ptr(&first.0);
         first.doc.name = Some("C".into());
         assert_eq!(Arc::as_ptr(&first.0), ptr, "no copy for a sole holder");
+    }
+
+    #[test]
+    fn a_taken_state_comes_back_whole() {
+        let mut state = EditorState::new();
+        state.doc.name = Some("Live".into());
+        let kits = state.ui_kits.len();
+        let shared = SharedState::take_from(&mut state);
+        assert!(state.ui_kits.is_empty(), "the stand-in is hollow");
+        assert_eq!(shared.doc.name.as_deref(), Some("Live"));
+        shared.restore_into(&mut state);
+        assert_eq!(state.doc.name.as_deref(), Some("Live"));
+        assert_eq!(state.ui_kits.len(), kits);
     }
 
     #[test]

@@ -175,6 +175,37 @@ impl EditorState {
         }
     }
 
+    /// A stand-in left behind while a state is moved out and back
+    /// (`SharedState::take_from`, #456): an empty document, no kits, no
+    /// registry, and none of [`Self::from_document`]'s process-wide side
+    /// effects, so it costs a few small allocations. Never shown or used.
+    pub(crate) fn hollow() -> Self {
+        Self {
+            doc: empty_document(),
+            selection: SelectionState::empty(),
+            tool: Tool::default(),
+            viewport: Viewport::IDENTITY,
+            history: History::new(),
+            revision: 0,
+            saved_revision: 0,
+            revision_counter: 0,
+            document_generation: 0,
+            history_push_count: 0,
+            clipboard: Vec::new(),
+            ui: UiDraftState::new(),
+            editor_ui: EditorUiState::new(),
+            chat: ChatSessions::default(),
+            codegen: CodegenState::default(),
+            components: ComponentLibrary::default(),
+            ui_kits: Vec::new(),
+            theme_presets: Vec::new(),
+            theme_presets_dirty: false,
+            app_state_owner: std::collections::BTreeMap::new(),
+            instance_write_virtual_anchor: None,
+            script_regen: Default::default(),
+        }
+    }
+
     /// Build an editor state around an empty single-page document.
     /// `version` is set to the current Cargo package version;
     /// `children` is empty (no nodes) and `pages` is left `None` so

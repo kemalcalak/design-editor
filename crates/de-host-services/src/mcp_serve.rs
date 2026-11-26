@@ -304,7 +304,7 @@ where
     // The tools share the request's state instead of each copying it
     // (#456): a read costs no copy, and a write copies at most once, the
     // first time the applier changes a state a tool still holds.
-    let mut shared = SharedState::new(std::mem::take(state));
+    let mut shared = SharedState::take_from(state);
     let registry = rebuild_registry(&shared, requested_tool.as_deref(), save_target);
     let response = process_tool_message_with_registry(&registry, line, |tool_name, cmd| {
         // New page roots land in free canvas space, in front (#37). Placing
@@ -322,7 +322,7 @@ where
         apply(tool_name, &mut shared, &write)
     });
     drop(registry);
-    *state = shared.into_owned();
+    shared.restore_into(state);
     let response = response?;
     if requested_tool.as_deref() == Some("save_document") {
         preview_hook::after_save_document(response.as_deref());

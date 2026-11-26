@@ -189,6 +189,17 @@ fn live_mcp_call_memory_and_latency() {
         footprint_mb()
     );
 
+    // What every call adds before its tool runs: the request state moved
+    // into a shared handle and back (`SharedState::take_from`).
+    let started = Instant::now();
+    for _ in 0..100 {
+        de_editor_core::shared_state::SharedState::take_from(&mut live).restore_into(&mut live);
+    }
+    println!(
+        "shared handle take + restore: {:.1} µs",
+        started.elapsed().as_secs_f64() * 1e6 / 100.0
+    );
+
     let mut anchor = Anchor::default();
     // The first capture has no anchor and no history to share with.
     let first = live_call(
