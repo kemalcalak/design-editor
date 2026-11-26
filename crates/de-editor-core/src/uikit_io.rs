@@ -335,6 +335,22 @@ fn collect_export_refs(node: &PenNode, refs: &mut BTreeSet<String>) {
     }
 }
 
+/// `$variable` references on `node` itself (not its children): fill,
+/// stroke, opacity, enabled, gap and padding. Find layers' `var:` filter
+/// (#395).
+pub(crate) fn node_variable_refs(node: &PenNode, refs: &mut BTreeSet<String>) {
+    base_refs(node, refs);
+    if let Some(container) = node_container(node) {
+        container_refs(container, refs);
+    }
+    if let Some(fills) = node_fills(node) {
+        fill_refs(fills, refs);
+    }
+    if let Some(stroke_fills) = node_stroke_fills(node) {
+        fill_refs(stroke_fills, refs);
+    }
+}
+
 /// Instantiate-side collector — TS `kit-utils.ts::collectRefs`
 /// (export-side set PLUS stroke solid-fill colors; the TS stroke
 /// `thickness` check never fires on the Rust schema — `thickness` is

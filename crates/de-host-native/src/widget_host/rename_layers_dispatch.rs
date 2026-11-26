@@ -18,7 +18,7 @@ impl WidgetHostNative {
         // Already open: a second Cmd+Shift+R must not drop the edits.
         if self.preview.is_some()
             || self.editor_state.editor_ui.home.visible
-            || self.rename_layers_open()
+            || self.modal_dialog_open()
         {
             return false;
         }

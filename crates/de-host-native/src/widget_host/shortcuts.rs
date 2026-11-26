@@ -14,6 +14,7 @@ impl WidgetHostNative {
         if editor_ui.home.visible
             || self.preview.is_some()
             || editor_ui.rename_layers.is_some()
+            || editor_ui.command_palette.is_some()
             || editor_ui.font_picker.open
             || editor_ui.image_panel.search_open
             || editor_ui.image_panel.generate_open
@@ -144,6 +145,11 @@ impl WidgetHostNative {
     }
 
     fn apply_input_select_all(&mut self) -> bool {
+        // The command palette (#395): macOS / Windows send Cmd+A through
+        // the Edit menu, past the desktop's palette key handler.
+        if self.palette_select_all() {
+            return true;
+        }
         if self.home_select_all() {
             return true;
         }
@@ -241,7 +247,7 @@ impl WidgetHostNative {
         // The Rename-layers preview (#383) is modal over the document.
         if self.editor_state.ui.layer_rename.is_some()
             || self.editor_state.chat.focused
-            || self.rename_layers_open()
+            || self.modal_dialog_open()
         {
             return false;
         }
@@ -262,7 +268,7 @@ impl WidgetHostNative {
         self.commit_variable_row_focus_if_any();
         if self.editor_state.ui.layer_rename.is_some()
             || self.editor_state.chat.focused
-            || self.rename_layers_open()
+            || self.modal_dialog_open()
         {
             return false;
         }
@@ -284,7 +290,7 @@ impl WidgetHostNative {
         self.commit_variable_row_focus_if_any();
         if self.editor_state.ui.layer_rename.is_some()
             || self.editor_state.chat.focused
-            || self.rename_layers_open()
+            || self.modal_dialog_open()
         {
             return false;
         }
@@ -314,7 +320,7 @@ impl WidgetHostNative {
         self.commit_variable_row_focus_if_any();
         if self.editor_state.ui.layer_rename.is_some()
             || self.editor_state.chat.focused
-            || self.rename_layers_open()
+            || self.modal_dialog_open()
         {
             return false;
         }
@@ -442,7 +448,7 @@ impl WidgetHostNative {
     /// Cmd+Alt+K — promote the selected node to a component (same
     /// path as the property-panel Create Component button).
     pub fn apply_create_component(&mut self) -> bool {
-        if self.rename_layers_open() {
+        if self.modal_dialog_open() {
             return false;
         }
         self.commit_variable_row_focus_if_any();

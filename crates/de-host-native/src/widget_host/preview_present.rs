@@ -34,6 +34,10 @@ impl WidgetHostNative {
     /// [`Self::toggle_present`] against the last known canvas size — the
     /// keyboard and menu paths have no viewport of their own.
     pub fn toggle_present_with_cached_viewport(&mut self) -> bool {
+        // Not over a modal dialog (#383, #395): the menu chord still fires.
+        if self.modal_dialog_open() {
+            return false;
+        }
         let (_x, _y, width, height) =
             self.canvas_region(self.last_viewport_w, self.last_viewport_h);
         self.toggle_present((width, height))

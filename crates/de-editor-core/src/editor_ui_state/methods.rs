@@ -686,6 +686,7 @@ impl EditorUiState {
         self.hovered_page_index = None;
         self.layer_context_menu = None;
         self.rename_layers = None;
+        self.command_palette = None;
         self.layer_pages_scroll.offset = 0.0;
         self.layer_layers_scroll.offset = 0.0;
         self.layer_pages_h_scroll.offset = 0.0;

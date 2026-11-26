@@ -526,6 +526,11 @@ pub struct EditorUiState {
     pub missing_fonts_prompt: Option<crate::missing_fonts::MissingFontsPrompt>,
     /// Open Rename-layers preview (#383); `None` when closed.
     pub rename_layers: Option<crate::rename_layers::RenameLayersDialog>,
+    /// Open command palette / find layers (#395); `None` when closed.
+    pub command_palette: Option<crate::command_palette::CommandPaletteState>,
+    /// A palette activation only the desktop runner can carry out (file
+    /// dialogs, the Git session, chat tabs); the runner drains it.
+    pub palette_runner_request: Option<crate::command_palette::PaletteRunnerRequest>,
     /// Whether the one-shot modal is visible. Dismissal keeps prompt data so
     /// the Settings Fonts tab can continue to expose unresolved rows.
     pub missing_fonts_modal_open: bool,

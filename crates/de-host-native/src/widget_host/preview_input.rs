@@ -72,7 +72,7 @@ impl WidgetHostNative {
     /// preview toggles.
     pub fn toggle_preview_with_cached_viewport(&mut self) -> bool {
         // Not over the modal Rename-layers preview (#383).
-        if self.rename_layers_open() {
+        if self.modal_dialog_open() {
             return false;
         }
         let (_cx0, _cy0, cw, ch) = self.canvas_region(self.last_viewport_w, self.last_viewport_h);

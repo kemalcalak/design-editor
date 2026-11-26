@@ -20,6 +20,11 @@ impl EditorState {
                 return Some(&dialog.input);
             }
         }
+        // The command palette (#395) is modal; its focused field owns the
+        // caret.
+        if let Some(palette) = &self.editor_ui.command_palette {
+            return Some(palette.active_input());
+        }
         // Image popovers paint above every editor surface. Resolve their
         // visible field first so stale focus underneath cannot split keyboard,
         // clipboard, and IME ownership across different inputs.
@@ -123,6 +128,13 @@ impl EditorState {
                 .rename_layers
                 .as_mut()
                 .map(|dialog| &mut dialog.input);
+        }
+        if self.editor_ui.command_palette.is_some() {
+            return self
+                .editor_ui
+                .command_palette
+                .as_mut()
+                .map(|palette| palette.active_input_mut());
         }
         let generate_configured = self.editor_ui.agent_settings.image_generation_configured();
         if self.editor_ui.image_panel.search_open || self.editor_ui.image_panel.generate_open {

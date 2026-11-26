@@ -22,6 +22,12 @@ impl DesktopApp {
             self.request_redraw(true);
             return;
         }
+        // The command palette (#395) owns every key while open, and its
+        // chords open it. See `keyboard_palette`.
+        if self.handle_palette_key(logical_key, text) {
+            self.request_redraw(true);
+            return;
+        }
         let mut consumed = false;
         let nudge = if self.shift_modifier { 10.0 } else { 1.0 };
         // Settings and Git inputs retain text, navigation, and clipboard
