@@ -1,16 +1,19 @@
-//! Typed failure domain for the `run_design_agent` MCP tool.
+//! Typed failure domain for a headless design-agent run (the MCP
+//! `run_design_agent` tool and the `de agent` CLI).
 //!
-//! Every variant is a pre-flight or transport failure — a loop that starts
-//! always drains to exhaustion, and tool-level defects inside the loop are
-//! the model's to correct, not errors of this tool.
+//! Every variant is a pre-flight, budget or transport failure — a loop that
+//! starts always drains to exhaustion, and tool-level defects inside the loop
+//! are the model's to correct, not errors of the run.
 
 use std::fmt;
 
-/// Why a `run_design_agent` call could not produce a landed design.
+/// Why a headless design-agent run could not produce a landed design.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum DesignAgentRunError {
     /// The `brief` argument was missing or blank.
     EmptyBrief,
+    /// The brief is larger than the run accepts.
+    BriefTooLarge { bytes: usize, max: usize },
     /// No enabled builtin provider with an API key + saved model exists in
     /// the daemon's persisted agent settings.
     NoConfiguredProvider,
@@ -23,6 +26,9 @@ pub enum DesignAgentRunError {
     /// The wall-clock budget elapsed before the loop finished; the live
     /// document is untouched.
     Timeout { seconds: u64 },
+    /// The caller cancelled the run (Ctrl+C in the CLI); the document is
+    /// untouched.
+    Cancelled,
     /// The provider stream ended in an error delta without a usable design.
     Loop(String),
     /// The loop finished but left no top-level frames to land; the live
@@ -34,6 +40,9 @@ impl fmt::Display for DesignAgentRunError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::EmptyBrief => f.write_str("brief must be a non-empty design request"),
+            Self::BriefTooLarge { bytes, max } => {
+                write!(f, "brief is too large ({bytes} bytes; maximum {max})")
+            }
             Self::NoConfiguredProvider => f.write_str(
                 "no builtin agent provider is configured: save an enabled provider with an \
                  API key and at least one model in the daemon's agent settings",
@@ -54,6 +63,9 @@ impl fmt::Display for DesignAgentRunError {
                 "design agent loop exceeded its {seconds}s budget and was cancelled; \
                  the document is unchanged"
             ),
+            Self::Cancelled => {
+                f.write_str("design agent run was cancelled; the document is unchanged")
+            }
             Self::Loop(message) => write!(f, "design agent loop failed: {message}"),
             Self::EmptyResult => f.write_str(
                 "design agent loop finished without authoring any top-level frame; \

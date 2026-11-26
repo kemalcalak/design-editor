@@ -209,7 +209,11 @@ pub(super) async fn run_anthropic_agent_loop_inner(
         )
         .await?;
         let mut collector = AnthropicCollector::default();
-        pump_sse(resp, tx, &mut collector).await?;
+        let pumped = pump_sse(resp, tx, &mut collector).await;
+        // A request that failed mid-stream was still billed for what it
+        // streamed, so its usage counts before the error propagates.
+        cfg.record_usage(collector.usage);
+        pumped?;
         if tx.is_closed() {
             return Ok(true);
         }

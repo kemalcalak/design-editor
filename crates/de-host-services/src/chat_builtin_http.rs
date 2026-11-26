@@ -76,6 +76,9 @@ pub struct ConfiguredBuiltinProvider {
     /// caps (`DESIGN_LOOP_MAX_TURNS` when `finalize_on_exit`, else
     /// `MAX_TOOL_TURNS`); the headless `run_design_agent` tool sets it.
     max_turns_override: Option<usize>,
+    /// Optional run-wide token meter the agent loop adds each request's
+    /// reported usage to (the headless design agent's report).
+    usage_meter: Option<Arc<de_ai::chat_usage::UsageMeter>>,
 }
 
 impl ConfiguredBuiltinProvider {
@@ -141,6 +144,7 @@ impl ConfiguredBuiltinProvider {
             min_gap: builtin_http_min_gap(),
             dial_policy: crate::provider_dial::EndpointDialPolicy::Trusted,
             max_turns_override: None,
+            usage_meter: None,
         })
     }
 
@@ -186,6 +190,18 @@ impl ConfiguredBuiltinProvider {
     /// the headless `run_design_agent` MCP tool; no-op for plain streaming.
     pub fn with_max_turns(mut self, max_turns: usize) -> Self {
         self.max_turns_override = Some(max_turns.max(1));
+        self
+    }
+
+    /// The model id every request of this provider carries.
+    pub fn model(&self) -> &str {
+        &self.model
+    }
+
+    /// Add every agent-loop request's reported token usage to `meter`.
+    /// Only the tool-executing loop reports; plain streaming turns do not.
+    pub fn with_usage_meter(mut self, meter: Arc<de_ai::chat_usage::UsageMeter>) -> Self {
+        self.usage_meter = Some(meter);
         self
     }
 
@@ -338,6 +354,7 @@ impl ConfiguredBuiltinProvider {
                     finalize_on_exit: provider.finalize_on_exit,
                     disable_thinking,
                     dial_policy: provider.dial_policy,
+                    usage: provider.usage_meter.clone(),
                 };
                 match provider.kind {
                     BuiltinAgentKind::Anthropic => run_anthropic_agent_loop(cfg, &tx).await,
