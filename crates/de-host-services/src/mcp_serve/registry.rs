@@ -236,6 +236,11 @@ pub(super) fn rebuild_registry(
         "remove_component_property",
         de_mcp::remove_component_property_snapshot(doc)
     );
+    for name in de_mcp::SET_TOOL_NAMES {
+        if should_register(requested_tool, name) {
+            r.register(Box::new(de_mcp::component_set_tool_snapshot(doc, name)));
+        }
+    }
     register_tool!("create_component", create_component_snapshot());
     register_tool!("delete_component", delete_component_snapshot());
     register_tool!("rename_component", rename_component_snapshot());

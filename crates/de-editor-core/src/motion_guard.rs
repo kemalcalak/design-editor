@@ -188,6 +188,7 @@ pub(crate) fn prepare_command(cmd: &mut EditorCommand) -> Result<(), MotionWrite
         | C::SetDesignMd { .. }
         | C::Library(_)
         | C::ComponentProperty(_)
+        | C::ComponentSet(_)
         | C::CreateComponent { .. }
         | C::DeleteComponent { .. }
         | C::RenameComponent { .. }

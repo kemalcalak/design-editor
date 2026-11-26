@@ -57,8 +57,11 @@ impl EditorState {
     /// [`EditorState::from_document`], with `version` re-stamped so whatever
     /// writes it next records this release. The stamp is not an edit: the
     /// document opens clean.
+    /// Instances whose `ref` names a component set (pen.dev's form) are
+    /// pointed at the variant master they show (#368).
     pub fn from_opened_document(mut doc: PenDocument) -> Self {
         stamp_product_version(&mut doc);
+        crate::component_set::normalize_set_refs(&mut doc);
         Self::from_document(doc)
     }
 }

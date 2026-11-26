@@ -105,6 +105,7 @@ impl BatchDesign {
         // and merged by name, which also needs the snapshot.
         if super::batch_program_instance::single_line_targets_instance(&self.state, operations)
             || operations.contains("\"props\"")
+            || operations.contains("\"variant\"")
         {
             return super::batch_program::run_batch_design_program(&self.state, operations, args);
         }

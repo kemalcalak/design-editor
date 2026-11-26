@@ -544,6 +544,9 @@ pub struct ListComponents {
     pub items: Vec<(String, String)>,
     /// Component id -> `name:type,…` of the properties it declares (#367).
     pub property_names: BTreeMap<String, String>,
+    /// JSON array of the component sets with their axes and variants
+    /// (#368); their variant masters are listed there, not in `items`.
+    pub sets: Option<String>,
 }
 
 impl McpTool for ListComponents {
@@ -562,18 +565,24 @@ impl McpTool for ListComponents {
         let mut out = BTreeMap::new();
         out.insert("count".into(), self.items.len().to_string());
         out.insert("components".into(), encoded.join(";"));
+        if let Some(sets) = &self.sets {
+            out.insert("sets".into(), sets.clone());
+        }
         ToolOutcome::Ok(out)
     }
 }
 
 pub fn list_components_snapshot(state: &EditorState) -> ListComponents {
+    let (sets, variants) = crate::component_set_tools::sets_json(&state.doc);
     ListComponents {
         items: state
             .components
             .components
             .iter()
+            .filter(|c| !variants.contains(c.id.as_str()))
             .map(|c| (c.name.clone(), c.id.as_str().to_string()))
             .collect(),
+        sets,
         property_names: state
             .components
             .components
@@ -590,6 +599,8 @@ pub fn list_components_snapshot(state: &EditorState) -> ListComponents {
 /// First-party `get_component` tool.
 pub struct GetComponent {
     pub snapshot: Vec<ComponentDetail>,
+    /// Component sets by id: axes, default and variants (#368).
+    pub sets: BTreeMap<String, BTreeMap<String, String>>,
 }
 
 /// One registered component as `get_component` reports it.
@@ -606,6 +617,8 @@ pub struct ComponentDetail {
     /// JSON array of the master's component properties (#367), when it
     /// declares any.
     pub properties: Option<String>,
+    /// A variant master's `set` and `variantValues` (#368).
+    pub variant: BTreeMap<String, String>,
 }
 
 impl McpTool for GetComponent {
@@ -620,6 +633,9 @@ impl McpTool for GetComponent {
             );
         };
         let component_id: &str = raw.as_str();
+        if let Some(set) = self.sets.get(component_id) {
+            return ToolOutcome::Ok(set.clone());
+        }
         let Some(detail) = self.snapshot.iter().find(|c| c.id == component_id) else {
             return ToolOutcome::Err(
                 ToolErrorCode::ToolFailed,
@@ -634,6 +650,7 @@ impl McpTool for GetComponent {
         if let Some(properties) = &detail.properties {
             out.insert("properties".into(), properties.clone());
         }
+        out.extend(detail.variant.clone());
         ToolOutcome::Ok(out)
     }
 }
@@ -653,6 +670,13 @@ fn push_descendant_records(node: &PenNode, records: &mut Vec<String>) {
 
 pub fn get_component_snapshot(state: &EditorState) -> GetComponent {
     GetComponent {
+        sets: de_editor_core::component_set::set_summaries(&state.doc)
+            .into_iter()
+            .filter_map(|set| {
+                crate::component_set_tools::set_detail(&state.doc, &set.id)
+                    .map(|detail| (set.id, detail))
+            })
+            .collect(),
         snapshot: state
             .components
             .components
@@ -674,6 +698,15 @@ pub fn get_component_snapshot(state: &EditorState) -> GetComponent {
                         },
                         root,
                     ),
+                    variant: {
+                        let mut variant = BTreeMap::new();
+                        crate::component_set_tools::variant_detail(
+                            &state.doc,
+                            c.id.as_str(),
+                            &mut variant,
+                        );
+                        variant
+                    },
                 })
             })
             .collect(),

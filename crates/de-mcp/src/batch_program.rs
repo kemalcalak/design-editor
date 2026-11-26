@@ -183,6 +183,9 @@ pub(crate) fn run_batch_design_program(
     if !errors.is_empty() {
         envelope.insert("errors".into(), Value::Array(errors));
     }
+    if !ctx.warnings.is_empty() {
+        envelope.insert("warnings".into(), json!(ctx.warnings));
+    }
     let json = Value::Object(envelope).to_string();
 
     let mut commands = ctx.commands;
@@ -236,6 +239,9 @@ pub(crate) struct ProgramCtx {
     /// replaced it to `n16`, leaving one binding pointing at a node the
     /// caller believes is gone.
     pub(crate) id_high_water: u64,
+    /// Notes for the caller: instances showing the nearest variant,
+    /// overrides a variant switch dropped (#368).
+    pub(crate) warnings: Vec<String>,
 }
 
 impl ProgramCtx {
@@ -272,6 +278,7 @@ impl ProgramCtx {
             explicitly_sized_append_lines: BTreeSet::new(),
             replaceable_empty_root_ids: Vec::new(),
             id_high_water: 0,
+            warnings: Vec::new(),
         }
     }
 
@@ -558,6 +565,7 @@ fn execute_insert(binding: &str, args: &str, ctx: &mut ProgramCtx) -> Result<()>
     let mut nodes = vec![node];
     let map = ctx.remap(&mut nodes)?;
     super::batch_program_instance::retarget_program_instances(&mut nodes, &map, ctx);
+    super::batch_program_instance::normalize_program_variants(&mut nodes, ctx)?;
     super::batch_program_instance::check_program_props(&nodes, ctx)?;
     let root_id = map
         .first()
@@ -626,7 +634,10 @@ fn execute_update(args: &str, ctx: &mut ProgramCtx) -> Result<()> {
         return ctx.emit(cmd, &format!("Update failed for: {path}"));
     };
     let node_id = NodeId::new(target.id_str());
-    if super::batch_program_instance::emit_props_update(node_id.as_str(), &mut value, ctx)? {
+    let variant_only = super::batch_program_instance::emit_variant_update(node_id.as_str(), &mut value, ctx)?;
+    if super::batch_program_instance::emit_props_update(node_id.as_str(), &mut value, ctx)?
+        || variant_only
+    {
         return Ok(());
     }
     // `batch_direct_ops` is shared with the non-program write paths and is

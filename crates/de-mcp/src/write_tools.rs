@@ -232,6 +232,14 @@ impl McpTool for UpdateNode {
         if let Some((instance, path)) = node_id.as_str().split_once('/') {
             return update_instance_descendant(args, instance, path);
         }
+        if let Some(outcome) = crate::component_set_tools::update_node_variant(
+            self.props.as_ref().map(|props| props.doc()),
+            &node_id,
+            args,
+            |rest| self.call(rest),
+        ) {
+            return outcome;
+        }
         if let Some(outcome) =
             crate::component_property_tools::update_node_props(self.props.as_ref(), &node_id, args)
         {

@@ -157,6 +157,38 @@ pub(crate) fn check_program_props(nodes: &[PenNode], ctx: &ProgramCtx) -> Result
         .map_err(|error| ProgramError::InvalidValue(error.to_string()))
 }
 
+/// Instances an `I()` line inserts that name a set or ask for a variant
+/// point at the master they show (#368); unknown axes or values fail the
+/// line, a combination without a variant is a warning.
+pub(crate) fn normalize_program_variants(nodes: &mut [PenNode], ctx: &mut ProgramCtx) -> Result<()> {
+    let warnings =
+        super::component_set_tools::normalize_inserted_variants(&ctx.sim.doc, nodes)
+            .map_err(|error| ProgramError::InvalidValue(error.to_string()))?;
+    ctx.warnings.extend(warnings);
+    Ok(())
+}
+
+/// `U(instance, {variant:{…}})`: switch the instance's variant as its own
+/// command (props and matching overrides stay). True when the patch held
+/// nothing else.
+pub(crate) fn emit_variant_update(
+    node_id: &str,
+    value: &mut serde_json::Value,
+    ctx: &mut ProgramCtx,
+) -> Result<bool> {
+    let update = super::component_set_tools::take_variant_update(&ctx.sim.doc, node_id, value)
+        .map_err(|error| ProgramError::InvalidValue(error.to_string()))?;
+    let Some((command, warnings)) = update else {
+        return Ok(false);
+    };
+    ctx.emit(
+        de_editor_core::EditorCommand::ComponentSet(Box::new(command)),
+        &format!("Update failed for: {node_id}"),
+    )?;
+    ctx.warnings.extend(warnings);
+    Ok(value.as_object().is_none_or(serde_json::Map::is_empty))
+}
+
 /// `U(instance, {props:{…}})`: the values merge into the instance's own by
 /// name (`null` clears one) as their own command. True when the patch held
 /// nothing else.
@@ -185,7 +217,7 @@ pub(crate) fn emit_props_update(
 /// or a master whose properties bind its own children (#367).
 pub(crate) fn subtree_has_instance(node: &PenNode) -> bool {
     matches!(node, PenNode::Ref(_))
-        || matches!(node, PenNode::Frame(frame) if frame.component_properties.is_some())
+        || matches!(node, PenNode::Frame(frame) if frame.component_properties.is_some() || frame.component_set.is_some())
         || node
             .children()
             .is_some_and(|children| children.iter().any(subtree_has_instance))

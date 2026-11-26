@@ -1,0 +1,116 @@
+//! Applying set writes to the editor: one undo step each, with the
+//! component registry following moved, new, renamed and removed masters.
+
+use jian_ops_schema::node::PenNode;
+
+use super::edit::apply_to_document;
+use super::pick::variant_masters;
+use super::{ComponentSetCommand, VariantError, VariantReport};
+use crate::id_allocator::{IdAllocError, IdAllocator, SequentialIdAllocator};
+use crate::pen_node_ext::PenNodeExt;
+use crate::{EditorState, NodeId};
+
+impl EditorState {
+    /// Apply a component-set write as one undo step. The outer `Err` is
+    /// id exhaustion; the inner one a refused write (nothing changed).
+    pub fn apply_component_set_with_allocator(
+        &mut self,
+        command: &ComponentSetCommand,
+        allocator: &mut dyn IdAllocator,
+    ) -> Result<Result<VariantReport, VariantError>, IdAllocError> {
+        if let Err(error) = command.check(&self.doc) {
+            return Ok(Err(error));
+        }
+        let snapshot = self.snapshot_for_history();
+        let before: Vec<NodeId> = command
+            .set_id()
+            .and_then(|id| super::tree::find(&self.doc, id))
+            .map(|set| {
+                variant_masters(set)
+                    .iter()
+                    .map(|master| NodeId::new(master.id_str()))
+                    .collect()
+            })
+            .unwrap_or_default();
+        let report = match apply_to_document(&mut self.doc, command, allocator) {
+            Ok(Ok(report)) => report,
+            Ok(Err(error)) => return Ok(Err(error)),
+            Err(error) => {
+                self.restore(snapshot);
+                return Err(error);
+            }
+        };
+        self.refresh_set_registry(report.set_id.as_deref(), &before);
+        match command {
+            ComponentSetCommand::Create(_) => {
+                if let Some(set_id) = &report.set_id {
+                    self.set_single_selection(NodeId::new(set_id.as_str()));
+                }
+            }
+            ComponentSetCommand::AddVariant { .. } => {
+                if let Some(id) = report.created.first() {
+                    self.set_single_selection(NodeId::new(id.as_str()));
+                }
+            }
+            _ => {}
+        }
+        self.history_push_past(snapshot);
+        Ok(Ok(report))
+    }
+
+    /// [`Self::apply_component_set_with_allocator`] with a fresh
+    /// sequential allocator, for the panel.
+    pub fn apply_component_set(
+        &mut self,
+        command: &ComponentSetCommand,
+    ) -> Result<VariantReport, VariantError> {
+        let Ok(mut allocator) = SequentialIdAllocator::for_document(&self.doc, 1) else {
+            return Err(VariantError::NoMasters);
+        };
+        match self.apply_component_set_with_allocator(command, &mut allocator) {
+            Ok(result) => result,
+            Err(_) => Err(VariantError::NoMasters),
+        }
+    }
+
+    /// Register the set's masters where they now are, under their current
+    /// names; drop the ones that left.
+    fn refresh_set_registry(&mut self, set_id: Option<&str>, before: &[NodeId]) {
+        let Some(set_id) = set_id else {
+            return;
+        };
+        let masters: Vec<(NodeId, String)> = super::tree::find(&self.doc, set_id)
+            .map(|set| {
+                variant_masters(set)
+                    .iter()
+                    .filter_map(|master| {
+                        crate::component_registration::reusable_component_name(master)
+                            .map(|name| (NodeId::new(master.id_str()), name))
+                    })
+                    .collect()
+            })
+            .unwrap_or_default();
+        for id in before {
+            if !masters.iter().any(|(master, _)| master == id) {
+                self.components.remove(id);
+            }
+        }
+        self.components
+            .register_document_components(&self.doc, masters);
+    }
+
+    /// The set and variant values of the selected instance's component,
+    /// when it is a variant.
+    pub fn selected_variant_instance(&self) -> Option<(String, super::InstanceTarget)> {
+        if self.selection_count() != 1 {
+            return None;
+        }
+        let PenNode::Ref(reference) = self.selected_node()? else {
+            return None;
+        };
+        let target = super::resolve_target(&self.doc, &reference.target, reference.variant.as_ref())
+            .ok()
+            .flatten()?;
+        Some((reference.base.id.clone(), target))
+    }
+}
