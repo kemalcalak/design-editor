@@ -492,6 +492,10 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "path.simplify" => "簡化路徑",
         "path.reverse" => "反轉路徑方向",
         "scale.title" => "縮放",
+        "layerMenu.createComponentFromSimilar" => "從副本建立元件",
+        "convertInstances.done" => "{{converted}} 個副本已成為同一元件的實例",
+        "convertInstances.partial" => "{{converted}} 個副本已成為實例；{{skipped}} 個不同，保持原樣",
+        "convertInstances.failed" => "這些副本無法共用一個元件",
         _ => return None,
     })
 }

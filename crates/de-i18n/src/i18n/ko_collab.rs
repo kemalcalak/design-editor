@@ -494,6 +494,10 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "path.simplify" => "패스 단순화",
         "path.reverse" => "패스 방향 반전",
         "scale.title" => "크기 조정",
+        "layerMenu.createComponentFromSimilar" => "사본으로 컴포넌트",
+        "convertInstances.done" => "사본 {{converted}}개가 한 컴포넌트의 인스턴스가 되었습니다",
+        "convertInstances.partial" => "{{converted}}개가 인스턴스가 되었고 {{skipped}}개는 달라서 그대로 두었습니다",
+        "convertInstances.failed" => "이 사본들은 한 컴포넌트를 공유할 수 없습니다",
         _ => return None,
     })
 }
