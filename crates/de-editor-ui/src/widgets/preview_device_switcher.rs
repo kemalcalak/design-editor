@@ -82,7 +82,7 @@ impl PreviewDeviceSwitcher<'_> {
             let text_width = text_metrics::measure_chrome(cx.backend, label_text, 12.0);
             let label = TextLayout::single_run(
                 label_text,
-                "system-ui",
+                text_metrics::CHROME_FONT_FAMILY,
                 12.0,
                 theme.foreground.to_jian(),
                 Point2D::new(0.0, 0.0),

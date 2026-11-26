@@ -601,7 +601,7 @@ pub(crate) fn paint_design_block(
     ));
     let layout = TextLayout::single_run(
         &block.label,
-        "system-ui",
+        crate::widgets::text_metrics::CHROME_FONT_FAMILY,
         11.0,
         (color).to_jian(),
         Point2D::new(0.0, 0.0),
@@ -674,12 +674,17 @@ pub(crate) fn paint_design_block(
         cx.backend.stroke_round_rect(apply, 6.0, apply_border, 1.0);
         let layout = TextLayout::single_run(
             "Apply to Canvas",
-            "system-ui",
+            crate::widgets::text_metrics::CHROME_FONT_FAMILY,
             10.0,
             (theme.muted_foreground).to_jian(),
             Point2D::new(0.0, 0.0),
         );
-        let text_x = apply.origin.x + (apply.size.x - 84.0).max(0.0) / 2.0;
+        let text_x = crate::widgets::text_metrics::centered_text_x(
+            cx.backend,
+            "Apply to Canvas",
+            10.0,
+            apply,
+        );
         cx.backend
             .draw_text(&layout, Point2D::new(text_x, apply.origin.y + 20.0));
     }

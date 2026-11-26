@@ -68,7 +68,7 @@ pub fn paint_ime_preedit(
     cx.backend.draw_text(
         &TextLayout::single_run(
             text,
-            "system-ui",
+            text_metrics::CHROME_FONT_FAMILY,
             FONT_SIZE,
             (theme.foreground).to_jian(),
             Point2D::new(0.0, 0.0),

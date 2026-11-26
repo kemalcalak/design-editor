@@ -281,7 +281,11 @@ fn wide_layer_name_ellipsis_fits_backend_measured_width() {
 
     let row = first_layer_row(&panel, rect);
     let available_w = rest_edge(row) - origin.x;
-    let measured_w = backend.measure_text_family(&content, ROW_FONT, "system-ui");
+    let measured_w = backend.measure_text_family(
+        &content,
+        ROW_FONT,
+        crate::widgets::text_metrics::CHROME_FONT_FAMILY,
+    );
     assert!(
         measured_w <= available_w + f32::EPSILON,
         "backend-measured label width {measured_w} should fit budget {available_w}: {content:?}"

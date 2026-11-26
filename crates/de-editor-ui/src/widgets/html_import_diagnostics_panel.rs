@@ -311,7 +311,7 @@ fn paint_text(
 ) {
     let layout = TextLayout::single_run(
         text,
-        "system-ui",
+        text_metrics::CHROME_FONT_FAMILY,
         font_size,
         color.to_jian(),
         Point2D::new(0.0, 0.0),

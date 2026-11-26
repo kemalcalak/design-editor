@@ -29,7 +29,7 @@ const BUTTON_HEIGHT: f32 = 34.0;
 const BUTTON_WIDTH: f32 = 88.0;
 const HEADER_HEIGHT: f32 = 52.0;
 const CORNER: f32 = 12.0;
-const FONT_FAMILY: &str = "system-ui";
+const FONT_FAMILY: &str = text_metrics::CHROME_FONT_FAMILY;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ExportFormat {

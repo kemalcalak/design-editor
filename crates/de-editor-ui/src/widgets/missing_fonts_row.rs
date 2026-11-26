@@ -177,7 +177,7 @@ pub(crate) fn paint_text(
 ) {
     let layout = TextLayout::single_run(
         text,
-        "system-ui",
+        crate::widgets::text_metrics::CHROME_FONT_FAMILY,
         font_size,
         color.to_jian(),
         Point2D::new(0.0, 0.0),
@@ -210,12 +210,16 @@ pub(crate) fn paint_missing_font_row(
     }
     let text_rect = row_text_rect_before(row, download.unwrap_or(row_button_rect(row, ui)));
     let family_lines = family_label_lines(&entry.family, text_rect.size.x, |text| {
-        cx.backend
-            .measure_text_weighted(text, FAMILY_FONT_SIZE, FAMILY_FONT_WEIGHT)
+        crate::widgets::text_metrics::measure_chrome_weighted(
+            cx.backend,
+            text,
+            FAMILY_FONT_SIZE,
+            FAMILY_FONT_WEIGHT,
+        )
     });
     let usage = translate(ui, "missingFonts.usage").replace("{n}", &entry.run_count.to_string());
     let usage = crate::util::ellipsize_to_width(&usage, text_rect.size.x, |text| {
-        cx.backend.measure_text_weighted(text, 11.0, 400)
+        crate::widgets::text_metrics::measure_chrome(cx.backend, text, 11.0)
     });
     let status = font_download_status(ui, &entry.family).filter(|_| !entry.resolved);
     // A mismatch note (a wrong file was imported) outranks the download
@@ -234,7 +238,7 @@ pub(crate) fn paint_missing_font_row(
     };
     let note_line = note.map(|(note, color)| {
         let text = crate::util::ellipsize_to_width(note, text_rect.size.x, |text| {
-            cx.backend.measure_text_weighted(text, 11.0, 400)
+            crate::widgets::text_metrics::measure_chrome(cx.backend, text, 11.0)
         });
         (text, color)
     });

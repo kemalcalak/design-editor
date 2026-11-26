@@ -126,7 +126,7 @@ pub(crate) fn paint_parallel_agents_picker(
     let title_y = picker.origin.y + 20.0; // baseline
     let title_label = TextLayout::single_run(
         "PARALLEL AGENTS",
-        "system-ui",
+        crate::widgets::text_metrics::CHROME_FONT_FAMILY,
         9.0,
         (theme.muted_foreground).to_jian(),
         Point2D::new(0.0, 0.0),
@@ -166,7 +166,7 @@ pub(crate) fn paint_parallel_agents_picker(
         let label_baseline = row_y + PARALLEL_AGENTS_ROW_H / 2.0 + 11.0 * 0.35;
         let text = TextLayout::single_run(
             &label,
-            "system-ui",
+            crate::widgets::text_metrics::CHROME_FONT_FAMILY,
             11.0,
             label_color.to_jian(),
             Point2D::new(0.0, 0.0),

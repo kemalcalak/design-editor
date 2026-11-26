@@ -399,7 +399,7 @@ fn separator(cx: &mut PaintCx<'_>, theme: Theme, menu: Rect, y: f32) {
 fn draw_text(cx: &mut PaintCx<'_>, text: &str, size: f32, color: Color, x: f32, baseline_y: f32) {
     let layout = TextLayout::single_run(
         text,
-        "system-ui",
+        text_metrics::CHROME_FONT_FAMILY,
         size,
         (color).to_jian(),
         Point2D::new(0.0, 0.0),

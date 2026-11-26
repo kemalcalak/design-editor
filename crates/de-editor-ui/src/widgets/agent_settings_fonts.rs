@@ -427,8 +427,12 @@ fn paint_family_rows(
         let family_font = 13.0;
         let family_w = (remove.origin.x - row_rect.origin.x - 16.0).max(1.0);
         let family = crate::util::ellipsize_to_width(family, family_w, |text| {
-            cx.backend
-                .measure_text_family_styled(text, family_font, "system-ui", 500, false)
+            crate::widgets::text_metrics::measure_chrome_weighted(
+                cx.backend,
+                text,
+                family_font,
+                500,
+            )
         });
         cx.backend.save();
         cx.backend.clip_rect(Rect::xywh(

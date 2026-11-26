@@ -259,7 +259,7 @@ impl Widget for FigmaImportModal {
 
         let title = TextLayout::single_run(
             t(self.locale, self.source, "title"),
-            "system-ui",
+            text_metrics::CHROME_FONT_FAMILY,
             14.0,
             (self.theme.foreground).to_jian(),
             Point2D::new(0.0, 0.0),
@@ -344,7 +344,7 @@ impl Widget for FigmaImportModal {
         let head_w = text_metrics::measure_chrome(cx.backend, headline, 13.0);
         let head_layout = TextLayout::single_run(
             headline,
-            "system-ui",
+            text_metrics::CHROME_FONT_FAMILY,
             13.0,
             (self.theme.foreground).to_jian(),
             Point2D::new(0.0, 0.0),
@@ -361,7 +361,7 @@ impl Widget for FigmaImportModal {
         let sub_w = text_metrics::measure_chrome(cx.backend, sub, 11.0);
         let sub_layout = TextLayout::single_run(
             sub,
-            "system-ui",
+            text_metrics::CHROME_FONT_FAMILY,
             11.0,
             (self.theme.muted_foreground).to_jian(),
             Point2D::new(0.0, 0.0),
@@ -376,7 +376,7 @@ impl Widget for FigmaImportModal {
 
         let footer = TextLayout::single_run(
             t(self.locale, self.source, "footer"),
-            "system-ui",
+            text_metrics::CHROME_FONT_FAMILY,
             11.0,
             (self.theme.muted_foreground).to_jian(),
             Point2D::new(0.0, 0.0),
@@ -400,7 +400,7 @@ impl FigmaImportModal {
             .replace("{{count}}", &self.pages.len().to_string());
         let instruction_layout = TextLayout::single_run(
             &instruction,
-            "system-ui",
+            text_metrics::CHROME_FONT_FAMILY,
             11.0,
             self.theme.muted_foreground.to_jian(),
             Point2D::ZERO,

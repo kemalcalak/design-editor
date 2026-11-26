@@ -6,12 +6,11 @@
 //! DesignMdPanel` block keeps access to the parent's private items
 //! (`SectionLayout` / `RenderLine` / theme constants / `t` / `text`).
 
-use super::helpers::{hex_to_color, truncate};
-use super::{
-    DesignMdPanel, RenderLine, SectionLayout, BODY_INDENT, BTN, CHAR_W, PAD, SECTION_HEADER_H,
-};
+use super::helpers::hex_to_color;
+use super::{DesignMdPanel, RenderLine, SectionLayout, BODY_INDENT, BTN, PAD, SECTION_HEADER_H};
 use crate::widgets::button::paint_button_feedback_wash;
 use crate::widgets::design_md_markdown::MdRun;
+use crate::widgets::text_metrics;
 use crate::widgets::{Icon, PaintCx};
 use crate::{Color, Point2D, Rect, TextLayout};
 use de_editor_core::DesignMdButton;
@@ -106,22 +105,18 @@ impl<'a> DesignMdPanel<'a> {
         cx.backend
             .stroke_round_rect(swatch, 4.0, self.theme.border, 1.0);
         let text_x = left + 24.0;
-        self.text(
-            cx,
-            &truncate(&color.name, 28),
-            text_x,
-            y + 11.0,
-            11.0,
-            self.theme.foreground,
-        );
+        let text_w = (panel.origin.x + panel.size.x - PAD - text_x).max(0.0);
+        let name = text_metrics::fit_chrome(cx.backend, &color.name, text_w, 11.0);
+        self.text(cx, &name, text_x, y + 11.0, 11.0, self.theme.foreground);
         let detail = if color.role.is_empty() {
             color.hex.clone()
         } else {
             format!("{} — {}", color.hex, color.role)
         };
+        let detail = text_metrics::fit_chrome(cx.backend, &detail, text_w, 10.0);
         self.text(
             cx,
-            &truncate(&detail, 52),
+            &detail,
             text_x,
             y + 22.0,
             10.0,
@@ -150,14 +145,14 @@ impl<'a> DesignMdPanel<'a> {
                         self.theme.muted_foreground
                     };
                     self.text(cx, s, cur, baseline, size, color);
-                    cur += s.chars().count() as f32 * CHAR_W;
+                    cur += text_metrics::measure_chrome(cx.backend, s, size);
                 }
                 MdRun::Bold(s) => {
                     self.text(cx, s, cur, baseline, size, self.theme.foreground);
-                    cur += s.chars().count() as f32 * CHAR_W;
+                    cur += text_metrics::measure_chrome(cx.backend, s, size);
                 }
                 MdRun::Code(s) => {
-                    let w = s.chars().count() as f32 * CHAR_W;
+                    let w = text_metrics::measure_chrome(cx.backend, s, size);
                     cx.backend.fill_round_rect(
                         Rect {
                             origin: Point2D::new(cur - 2.0, baseline - 10.0),
@@ -178,7 +173,7 @@ impl<'a> DesignMdPanel<'a> {
                     cx.backend
                         .stroke_round_rect(swatch, 2.0, self.theme.border, 1.0);
                     self.text(cx, hex, cur + 14.0, baseline, size, self.theme.foreground);
-                    cur += 14.0 + hex.chars().count() as f32 * CHAR_W;
+                    cur += 14.0 + text_metrics::measure_chrome(cx.backend, hex, size);
                 }
             }
         }
@@ -249,7 +244,7 @@ impl<'a> DesignMdPanel<'a> {
     ) {
         let layout = TextLayout::single_run(
             s,
-            "system-ui",
+            text_metrics::CHROME_FONT_FAMILY,
             size,
             (color).to_jian(),
             Point2D::new(0.0, 0.0),

@@ -741,7 +741,7 @@ fn paint_name_pill(cx: &mut PaintCx<'_>, sprite: &CursorSprite, name: &str) {
     );
     let label = TextLayout::single_run(
         name,
-        "system-ui",
+        text_metrics::CHROME_FONT_FAMILY,
         FONT,
         jian_core::scene::Color::rgba(255, 255, 255, (255.0 * sprite.alpha) as u8),
         Point2D::new(0.0, 0.0),

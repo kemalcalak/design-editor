@@ -186,7 +186,7 @@ impl SlideshowToolbar<'_> {
         let counter_x = pill.origin.x + BUTTON_W + (counter_width(self.label) - text_width) / 2.0;
         let label = TextLayout::single_run(
             self.label,
-            "system-ui",
+            text_metrics::CHROME_FONT_FAMILY,
             FONT_SIZE,
             theme.foreground.to_jian(),
             Point2D::new(0.0, 0.0),
