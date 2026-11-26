@@ -121,6 +121,7 @@ mod insert_node_args;
 mod insert_node_data;
 pub mod instance_tools;
 pub mod interaction_tools;
+mod interaction_overlay;
 pub mod json_serializer;
 mod layout_overlaps;
 #[cfg(test)]

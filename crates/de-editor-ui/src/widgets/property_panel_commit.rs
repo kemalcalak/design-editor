@@ -64,6 +64,11 @@ pub fn property_focus_initial(focus: PropertyFocus, panel: &PropertyPanel) -> St
             .interactions
             .open_url(trigger)
             .unwrap_or_default(),
+        F::OverlayBackground(trigger) => panel
+            .snapshot
+            .interactions
+            .overlay_background(trigger)
+            .unwrap_or_default(),
         F::MotionValue { index, field } | F::MotionColor { index, field } => {
             match panel.snapshot.interactions.motion.get(index) {
                 Some(crate::widgets::property_panel_motion::MotionSummary::Simple(simple)) => {
@@ -472,6 +477,12 @@ pub fn commit_property_focus(state: &mut EditorState) -> bool {
         }
         PropertyFocus::InteractionUrl(trigger) => {
             let _ = state.set_selected_interaction_url(trigger, draft.trim());
+        }
+        PropertyFocus::OverlayBackground(trigger) => {
+            let edit = de_editor_core::overlay_edit::OverlayOptionEdit::BackgroundHex(
+                draft.trim().to_owned(),
+            );
+            let _ = state.set_selected_overlay_option(trigger, &edit);
         }
         _ => {
             if let Ok(value) = draft.trim().parse::<f32>() {

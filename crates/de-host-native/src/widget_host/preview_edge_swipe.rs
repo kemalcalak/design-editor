@@ -54,7 +54,7 @@ impl super::WidgetHostNative {
             return false;
         }
         self.preview_edge_swipe_start_x = None;
-        if let Some(preview) = self.preview.as_ref() {
+        if let Some(preview) = self.preview.as_mut() {
             preview.pop_screen();
         }
         true

@@ -46,6 +46,15 @@ impl WidgetHostNative {
                 return true;
             }
         }
+        // In Preview, Escape closes the top prototype overlay first (#372).
+        if self
+            .preview
+            .as_mut()
+            .is_some_and(|preview| preview.close_top_overlay())
+        {
+            self.mark_dirty();
+            return true;
+        }
         // Escape EXITS preview mode (top priority) — drops the runtime
         // and returns to the design surface.
         if self.preview.is_some() {

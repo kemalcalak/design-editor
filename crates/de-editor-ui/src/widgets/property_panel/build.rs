@@ -203,6 +203,13 @@ impl PropertyPanel {
                 crate::widgets::property_panel_interactions::document_section_targets(state);
             snapshot.interactions.screens =
                 crate::widgets::property_panel_interactions::document_screens(state);
+            // Overlay frames may sit on any page (#372).
+            snapshot.interactions.overlay_targets =
+                de_editor_core::overlay_edit::overlay_targets(
+                    &state.doc,
+                    state.ui.active_page_index,
+                    state.selection.anchor.as_str(),
+                );
             if !state.editor_ui.agent_settings.experimental_features_enabled {
                 // The Widget section is an experimental surface. Hide it
                 // unless opted in — the section's paint AND height both key

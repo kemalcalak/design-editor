@@ -39,6 +39,10 @@ pub use crate::widgets::property_panel_interactions_menu::{
     interaction_menu_viewport, paint_interaction_menu, InteractionMenuHit, INTERACTION_MENU_ROW_H,
     INTERACTION_MENU_W,
 };
+use crate::widgets::property_panel_interactions_overlay::{
+    overlay_action_label, overlay_input_focus, overlay_rows, paint_overlay_row,
+    push_overlay_rects, OverlayRow,
+};
 pub use de_editor_core::interaction_edit::{
     InteractionMenuTarget, InteractionTrigger, NavigateVerb,
 };
@@ -61,6 +65,8 @@ pub enum TapActionSummary {
     OpenUrl {
         url: String,
     },
+    /// `open_overlay` / `swap_overlay` / `close_overlay` (#372).
+    Overlay(de_editor_core::overlay_action::OverlayAction),
     Other(String),
 }
 
@@ -109,6 +115,9 @@ pub struct InteractionSummary {
     /// The page's routed screens, so a navigate row names its target and
     /// can jump to it (#371); filled by the panel builder.
     pub screens: Vec<ScreenRef>,
+    /// The frames an overlay can show, on every page (#372); filled by
+    /// the panel builder.
+    pub overlay_targets: Vec<de_editor_core::overlay_edit::OverlayTarget>,
 }
 
 impl InteractionSummary {
@@ -151,6 +160,14 @@ impl InteractionSummary {
                 self.screen_for(path).map(|screen| screen.id.clone())
             }
             [TapActionSummary::ScrollTo { target }] => Some(target.clone()),
+            // An overlay frame on this page (#372).
+            [TapActionSummary::Overlay(action)] => {
+                let target = action.target()?;
+                self.overlay_targets
+                    .iter()
+                    .find(|t| t.id == target && t.page.is_none())
+                    .map(|t| t.id.clone())
+            }
             _ => None,
         }
     }
@@ -196,6 +213,7 @@ pub(crate) fn interactions_of(node: &PenNode, is_top_level: bool) -> Interaction
             .map(de_editor_core::transition_edit::TransitionSummary::of),
         sections: Vec::new(),
         screens: Vec::new(),
+        overlay_targets: Vec::new(),
     }
 }
 
@@ -208,6 +226,9 @@ fn parse_action(action: &Action) -> TapActionSummary {
             verb,
             path: unescape_path_literal(body),
         };
+    }
+    if let Some(overlay) = de_editor_core::overlay_action::OverlayAction::parse_body(key, body) {
+        return TapActionSummary::Overlay(overlay);
     }
     match key {
         "pop" => TapActionSummary::Pop,
@@ -328,6 +349,12 @@ enum Row<'a> {
     Transition(InteractionTrigger, NavigateVerb),
     /// The URL input under a single Open URL.
     Url(InteractionTrigger),
+    /// One option row under a single overlay action (#372).
+    Overlay(
+        InteractionTrigger,
+        &'a de_editor_core::overlay_action::OverlayAction,
+        OverlayRow,
+    ),
     /// One of several actions, read-only.
     ReadOnly(InteractionTrigger, &'a TapActionSummary),
     RemoveAll(InteractionTrigger),
@@ -356,6 +383,11 @@ fn rows(summary: &InteractionSummary) -> Vec<Row<'_>> {
                         out.push(Row::Transition(t.trigger, *verb));
                     }
                     TapActionSummary::OpenUrl { .. } => out.push(Row::Url(t.trigger)),
+                    TapActionSummary::Overlay(action) => out.extend(
+                        overlay_rows(action)
+                            .into_iter()
+                            .map(|row| Row::Overlay(t.trigger, action, row)),
+                    ),
                     _ => {}
                 }
             }
@@ -449,6 +481,13 @@ pub fn push_interaction_action_rects(
             Row::ScreenMarker(edit) => {
                 out.push((PropertyPanelAction::EditScreenMarker(edit), rect));
             }
+            Row::Overlay(trigger, action, row) => {
+                let spec = match action {
+                    de_editor_core::overlay_action::OverlayAction::Open(spec) => Some(spec),
+                    _ => None,
+                };
+                push_overlay_rects(out, trigger, row, rect, spec);
+            }
             Row::Screen(_) | Row::ReadOnly(..) | Row::Url(_) => {}
         }
         row_y += ROW_STEP;
@@ -477,6 +516,20 @@ pub fn interaction_input_rects(
                 de_editor_core::PropertyFocus::InteractionUrl(trigger),
                 row_rect(x, row_y, width),
             ));
+        }
+        if let Some(focus) = match row {
+            Row::Overlay(trigger, _, overlay) => overlay_input_focus(trigger, overlay),
+            _ => None,
+        } {
+            // The hex input leaves room for the swatch at its right.
+            let rect = row_rect(x, row_y, width);
+            let input = Rect::xywh(
+                rect.origin.x,
+                rect.origin.y,
+                rect.size.x - rect.size.y - 4.0,
+                rect.size.y,
+            );
+            out.push((focus, input));
         }
         row_y += ROW_STEP;
     }
@@ -536,6 +589,17 @@ pub fn paint_interactions_section(
                 let label = action_label(locale, interactions, trigger, action);
                 paint_plain_row(cx, theme, rect, &label);
             }
+            Row::Overlay(trigger, action, row) => paint_overlay_row(
+                cx,
+                theme,
+                locale,
+                interactions,
+                edit,
+                trigger,
+                action,
+                row,
+                rect,
+            ),
             Row::RemoveAll(_) => paint_dropdown(
                 cx,
                 theme,
@@ -618,7 +682,7 @@ fn trigger_prefix(locale: de_editor_core::Locale, trigger: InteractionTrigger) -
 /// `Tap → Scroll to Pricing`, `Hover → Back (pop)` or `Long press → set`
 /// (unknown key, read-only). The verb is not repeated here: the
 /// Transition row shows it.
-fn action_label(
+pub(crate) fn action_label(
     locale: de_editor_core::Locale,
     interactions: &InteractionSummary,
     trigger: InteractionTrigger,
@@ -648,6 +712,10 @@ fn action_label(
         TapActionSummary::OpenUrl { .. } => format!(
             "{prefix} {}",
             translate(locale, "interactions.openUrl", "Open URL")
+        ),
+        TapActionSummary::Overlay(action) => format!(
+            "{prefix} {}",
+            overlay_action_label(locale, interactions, action)
         ),
         TapActionSummary::Other(key) => format!("{prefix} {key}"),
     }

@@ -759,6 +759,10 @@ pub fn apply_property_action(
         | A::SetInteractionTransition { .. }
         | A::RemoveInteraction(_)
         | A::GoToInteractionTarget(_)
+        | A::PickOverlayTarget { .. }
+        | A::SetInteractionOverlay { .. }
+        | A::SetInteractionCloseOverlay(_)
+        | A::SetOverlayOption { .. }
         | A::EditScreenMarker(_)
         | A::AddAnimation
         | A::RemoveAnimation(_)

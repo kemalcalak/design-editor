@@ -81,7 +81,9 @@ impl EditorState {
             // A hex colour: committed from the draft, never as a number.
             PropertyFocus::MotionColor { .. } => return false,
             // Free text: committed from the draft, never as a number.
-            PropertyFocus::InteractionUrl(_) => return false,
+            PropertyFocus::InteractionUrl(_) | PropertyFocus::OverlayBackground(_) => {
+                return false
+            }
             PropertyFocus::ShaderUniform {
                 target,
                 index,
@@ -327,6 +329,7 @@ impl EditorState {
             | PropertyFocus::MotionColor { .. }
             | PropertyFocus::TransitionDuration
             | PropertyFocus::InteractionUrl(_)
+            | PropertyFocus::OverlayBackground(_)
             | PropertyFocus::ShaderUniform { .. }
             | PropertyFocus::StrokeWidth => {
                 unreachable!("corner radius / stroke width handled before node borrow")

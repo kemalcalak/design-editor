@@ -140,6 +140,8 @@ mod interaction_fixture;
 pub mod interaction_graph;
 pub mod interaction_write;
 pub mod mesh_lattice;
+pub mod overlay_action;
+pub mod overlay_edit;
 pub mod missing_fonts;
 pub mod motion_edit;
 pub mod motion_guard;

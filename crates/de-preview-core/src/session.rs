@@ -169,6 +169,8 @@ pub struct PreviewSession {
     pub(crate) has_switch_widgets: bool,
     /// Every clickable shows its hotspot (the host holds Alt, #371).
     pub(crate) show_hotspots: bool,
+    /// Open prototype overlays (#372).
+    pub(crate) proto_overlays: crate::proto_overlay::PrototypeOverlays,
     #[cfg(test)]
     pub(crate) overlay_builds_for_test: std::cell::Cell<u64>,
 }
@@ -504,6 +506,8 @@ impl PreviewSession {
         let effects = crate::effects::PreviewEffectQueue::new();
         effects.set_trace(debug.trace.clone());
         crate::effects::install_on_runtime(&mut runtime, &effects, &host_capabilities);
+        let proto_overlays = crate::proto_overlay::PrototypeOverlays::default();
+        crate::proto_overlay::install(&mut runtime, &proto_overlays);
         let ui_actions = crate::ui_actions::PreviewUiActions::default();
         runtime.set_ui_mutation_sink(Rc::new(ui_actions.clone()));
         let animation = crate::animation::PreviewAnimationState::default();
@@ -542,6 +546,7 @@ impl PreviewSession {
             ui_actions,
             has_switch_widgets,
             show_hotspots: false,
+            proto_overlays,
             #[cfg(test)]
             overlay_builds_for_test: std::cell::Cell::new(0),
         };

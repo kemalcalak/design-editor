@@ -126,6 +126,12 @@ pub enum InteractionMenuTarget {
     MotionTrigger(usize),
     /// The easing list of the node-level `transition` row.
     TransitionEasing,
+    /// The frames `trigger`'s overlay can show (#372); `swap` writes a
+    /// `swap_overlay`, else an `open_overlay`.
+    OverlayTarget {
+        trigger: InteractionTrigger,
+        swap: bool,
+    },
 }
 
 /// The action an Interactions edit writes.
@@ -139,6 +145,13 @@ pub enum InteractionActionEdit {
     ScrollTo { target: String },
     /// `open_url` with this address (empty until the URL row is filled).
     OpenUrl { url: String },
+    /// `open_overlay` of the frame with this id (#372). A trigger that
+    /// already opens an overlay keeps its position, dim and animation.
+    OpenOverlay { target: String },
+    /// `swap_overlay` to the frame with this id.
+    SwapOverlay { target: String },
+    /// `close_overlay`.
+    CloseOverlay,
 }
 
 /// A navigate action body: the JSON string VALUE `"\"/path\""`, the
@@ -252,6 +265,15 @@ impl EditorState {
                 InteractionActionEdit::Back => pop_action(),
                 InteractionActionEdit::ScrollTo { target } => scroll_to_action(target),
                 InteractionActionEdit::OpenUrl { url } => open_url_action(url),
+                InteractionActionEdit::OpenOverlay { target } => {
+                    crate::overlay_edit::open_overlay_keeping(trigger.actions(handlers), target)
+                }
+                InteractionActionEdit::SwapOverlay { target } => {
+                    crate::overlay_edit::swap_overlay_keeping(trigger.actions(handlers), target)
+                }
+                InteractionActionEdit::CloseOverlay => {
+                    crate::overlay_action::OverlayAction::Close.to_action()
+                }
             };
             *trigger.slot(handlers) = Some(vec![action]);
             true
@@ -334,7 +356,7 @@ impl EditorState {
 
     /// Run `edit` on a copy of the anchor's `events` block and write the
     /// result when `edit` reports a change.
-    fn edit_selected_events(&mut self, edit: impl FnOnce(&mut EventHandlers) -> bool) -> bool {
+    pub(crate) fn edit_selected_events(&mut self, edit: impl FnOnce(&mut EventHandlers) -> bool) -> bool {
         let node_id = self.selection.anchor.clone();
         if !node_id.is_real() || !self.is_editable(&node_id) {
             return false;
