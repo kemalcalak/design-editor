@@ -186,3 +186,17 @@ fn convert_refuses_bad_arguments() {
         "not one of the listed",
     );
 }
+
+/// `nodeIds` arrives as a JSON array over the wire (#430).
+#[test]
+fn convert_node_ids_parse_through_the_wire_parser() {
+    let state = state();
+    let line = r#"{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"convert_to_instances","arguments":{"nodeIds":["a","b","c"],"dryRun":true}}}"#;
+    let call = crate::parse_tool_call(line).expect("structured arguments parse");
+    let ToolOutcome::OkJson(json) = convert_to_instances_snapshot(&state).call(&call.arguments)
+    else {
+        panic!("dry run returns JSON only");
+    };
+    let result: Value = serde_json::from_str(&json).unwrap();
+    assert_eq!(result["converted"].as_array().unwrap().len(), 3);
+}
