@@ -106,7 +106,7 @@ pub(crate) fn bounds_in_parent(node: &PenNode) -> Bounds {
             let content = children(node)
                 .iter()
                 .filter(|kid| node_y(kid).is_some())
-                .map(|kid| bounds_in_parent(kid))
+                .map(bounds_in_parent)
                 .reduce(Bounds::union);
             let content = content.map_or((0.0, 0.0), |b| (b.x + b.w, b.y + b.h));
             (
