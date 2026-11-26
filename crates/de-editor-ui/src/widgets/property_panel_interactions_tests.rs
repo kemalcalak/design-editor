@@ -416,6 +416,7 @@ fn trigger_menu_lists_screens_sections_url_back_change_to_then_remove() {
             },
             PropertyPanelAction::SetInteractionOpenUrl(TAP),
             PropertyPanelAction::SetInteractionPop(TAP),
+            PropertyPanelAction::SetInteractionCloseOverlay(TAP),
             PropertyPanelAction::MoveInteraction {
                 from: TAP,
                 to: InteractionTrigger::Hover
@@ -483,7 +484,8 @@ fn an_unauthored_trigger_menu_has_no_remove() {
         rows.into_iter().map(|(a, _)| a).collect::<Vec<_>>(),
         vec![
             PropertyPanelAction::SetInteractionOpenUrl(InteractionTrigger::LongPress),
-            PropertyPanelAction::SetInteractionPop(InteractionTrigger::LongPress)
+            PropertyPanelAction::SetInteractionPop(InteractionTrigger::LongPress),
+            PropertyPanelAction::SetInteractionCloseOverlay(InteractionTrigger::LongPress)
         ]
     );
 }

@@ -326,6 +326,8 @@ impl super::PreviewSession {
         self.runtime.set_activation(None);
         self.pending_activation = restore_activation;
         outcome.needs_redraw |= self.interaction != interaction_before;
+        outcome.needs_redraw |= self.sync_prototype_overlays();
+        outcome.needs_redraw |= self.proto_overlays.take_changed();
         outcome.effects_enqueued = self.effects.total_enqueued() - enqueued_before;
         let animation_now = self.runtime.now_ms;
         outcome.needs_redraw |=
@@ -402,6 +404,10 @@ impl super::PreviewSession {
                 PreviewDispatchOutcome::from_events(&events)
             }
             PreviewInput::Back { source: _ } => {
+                // Back closes the top overlay first (#372).
+                if self.overlay_back() {
+                    return Self::bool_outcome(true);
+                }
                 // Platform back maps to the router's pop; workbench-mode
                 // sessions have no route stack to pop.
                 let popped = self
@@ -448,6 +454,8 @@ impl super::PreviewSession {
         };
         outcome.needs_redraw |=
             self.finish_binding_update(&binding_before) != crate::InvalidationKind::None;
+        // A deferred tap's chain may have opened or closed an overlay.
+        outcome.needs_redraw |= self.sync_prototype_overlays();
         outcome
     }
 
@@ -465,6 +473,7 @@ impl super::PreviewSession {
             self.transition
                 .as_ref()
                 .and_then(|transition| transition.next_deadline_ms(self.last_now_ms)),
+            self.overlay_deadline_ms(),
         ]
         .into_iter()
         .flatten()
@@ -508,6 +517,11 @@ impl super::PreviewSession {
         use jian_core::gesture::SemanticEvent;
         if self.transition_active() {
             return PreviewDispatchOutcome::none();
+        }
+        if let Some(scrolled) =
+            self.overlay_wheel(event.position.x, event.position.y, event.delta.y)
+        {
+            return Self::bool_outcome(scrolled);
         }
         let (rt_x, rt_y) = self.scene_to_runtime(event.position.x, event.position.y);
         let delta_y = event.delta.y;

@@ -307,6 +307,8 @@ impl Walker<'_> {
         if let Some(id) = codegen_motion_css::motion_attr_value(node) {
             el.attrs.push(("data-de-motion-node".into(), id));
         }
+        // A tap that opens, swaps or closes a prototype overlay (#372).
+        el.attrs.extend(super::overlays::overlay_attrs(node));
         if self.layer_data {
             if let Some(name) = base.name.as_deref().filter(|n| !n.is_empty()) {
                 el.attrs.push(("data-name".into(), name.to_string()));

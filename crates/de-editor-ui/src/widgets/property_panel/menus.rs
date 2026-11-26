@@ -198,6 +198,11 @@ impl PropertyPanel {
             T::Trigger(t) if self.snapshot.interactions.actions(t).is_empty() => {
                 find(T::AddTrigger)
             }
+            // The frame list opened from a trigger's popover (#372) drops
+            // from that trigger's row (the "+" when it has none yet).
+            T::OverlayTarget { trigger, .. } => {
+                find(T::Trigger(trigger)).or_else(|| find(T::AddTrigger))
+            }
             _ => None,
         })
     }

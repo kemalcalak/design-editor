@@ -52,19 +52,32 @@ impl super::WidgetHostNative {
         let screen = Point2D::new(screen_x, screen_y);
         let surface = match self.preview_surface_capture {
             Some(surface) => surface,
-            None => device_surface_at(frame, screen, self.preview_scroll_y)?,
+            None => self.device_surface_for(frame, screen)?,
         };
         device_scene_point(frame, &surface, screen)
     }
 
     pub(crate) fn capture_device_preview_surface(&mut self, screen_x: f32, screen_y: f32) {
         if let Some(frame) = self.preview_device_frame.as_ref() {
-            self.preview_surface_capture = device_surface_at(
-                frame,
-                Point2D::new(screen_x, screen_y),
-                self.preview_scroll_y,
-            );
+            self.preview_surface_capture =
+                self.device_surface_for(frame, Point2D::new(screen_x, screen_y));
         }
+    }
+
+    /// The surface under a screen point. Open prototype overlays (#372)
+    /// cover the pinned strips too and are placed in the scrolled
+    /// surface's space, so a press on the nav band maps there as well.
+    fn device_surface_for(&self, frame: &DeviceFrame, screen: Point2D) -> Option<PreviewSurface> {
+        let overlays_open = self
+            .preview
+            .as_ref()
+            .is_some_and(|preview| preview.has_open_overlays());
+        if overlays_open && frame.frame.contains(screen) {
+            return Some(PreviewSurface::Scrolled {
+                scroll_y: self.preview_scroll_y,
+            });
+        }
+        device_surface_at(frame, screen, self.preview_scroll_y)
     }
 
     /// Whether preview is currently presented through a device frame.

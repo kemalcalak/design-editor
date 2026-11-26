@@ -117,6 +117,33 @@ pub fn interaction_menu_rows(
                 PropertyPanelAction::SetInteractionPop(trigger),
                 translate(locale, "interactions.back", "Back (pop)").to_string(),
             ));
+            // Overlays (#372): the frame list follows a pick.
+            if !summary.overlay_targets.is_empty() {
+                rows.push((
+                    PropertyPanelAction::PickOverlayTarget {
+                        trigger,
+                        swap: false,
+                    },
+                    format!(
+                        "{}…",
+                        translate(locale, "interactions.openOverlay", "Open overlay")
+                    ),
+                ));
+                rows.push((
+                    PropertyPanelAction::PickOverlayTarget {
+                        trigger,
+                        swap: true,
+                    },
+                    format!(
+                        "{}…",
+                        translate(locale, "interactions.swapOverlay", "Swap overlay")
+                    ),
+                ));
+            }
+            rows.push((
+                PropertyPanelAction::SetInteractionCloseOverlay(trigger),
+                translate(locale, "interactions.closeOverlay", "Close overlay").to_string(),
+            ));
             if !summary.actions(trigger).is_empty() {
                 let change_to = translate(locale, "interactions.changeTo", "Change to");
                 rows.extend(summary.unauthored_triggers().into_iter().map(|to| {
@@ -156,6 +183,11 @@ pub fn interaction_menu_rows(
         }
         // Served by the panel itself from its variant rows (#368).
         InteractionMenuTarget::VariantAxis(_) => Vec::new(),
+        InteractionMenuTarget::OverlayTarget { trigger, swap } => {
+            crate::widgets::property_panel_interactions_overlay::overlay_target_menu_rows(
+                summary, trigger, swap,
+            )
+        }
         InteractionMenuTarget::TransitionEasing => MotionEasing::ALL
             .into_iter()
             .map(|easing| {

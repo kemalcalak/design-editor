@@ -1,9 +1,7 @@
 //! Shared PropertyPanel action dispatch.
 //!
-//! `apply_property_action` used to exist as two ~500-line near-verbatim
-//! copies (`de-host-native/src/widget_host/property_dispatch.rs` and its
-//! `de-host-web` twin). Every arm that only writes `EditorState` lives
-//! here now; the hosts keep the platform glue (layout-scene size
+//! Every arm that only writes `EditorState` lives here (it was once two
+//! near-verbatim host copies); the hosts keep the platform glue (layout-scene size
 //! resolution, file dialogs, clipboard, font enumeration, crop-edit
 //! entry) and drive it through the returned outcome / follow-up.
 //!
@@ -42,8 +40,7 @@ pub enum PropertyActionFollowUp {
     /// Enumerate installed font families before the picker paints.
     /// Native resolves this synchronously (the TS app requests Local
     /// Font Access inside the click gesture for the same reason); the
-    /// web host drains its own permission flow after the press and
-    /// ignores it.
+    /// web host drains its own permission flow after the press and ignores it.
     EnsureSystemFontsLoaded,
 }
 
@@ -758,9 +755,8 @@ pub fn apply_property_action(
                 Some(de_editor_core::editor_ui_state::FileAction::PickFillImage);
             Handled
         }
-        // Interactions + Motion rows (#154) live in a sibling (800-line cap).
-        // Listed out (not a guard) so the match stays exhaustive; the same
-        // list is `is_interaction_action`, which `updates_document` reads.
+        // Interactions + Motion rows (#154, sibling module), listed out so the
+        // match stays exhaustive; `is_interaction_action` repeats the list.
         A::ToggleInteractionMenu(_)
         | A::PickInteractionTrigger(_)
         | A::SetInteractionNavigate { .. }
@@ -771,6 +767,10 @@ pub fn apply_property_action(
         | A::SetInteractionTransition { .. }
         | A::RemoveInteraction(_)
         | A::GoToInteractionTarget(_)
+        | A::PickOverlayTarget { .. }
+        | A::SetInteractionOverlay { .. }
+        | A::SetInteractionCloseOverlay(_)
+        | A::SetOverlayOption { .. }
         | A::EditScreenMarker(_)
         | A::AddAnimation
         | A::RemoveAnimation(_)

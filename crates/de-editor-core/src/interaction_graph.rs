@@ -20,6 +20,7 @@ use jian_ops_schema::node::PenNode;
 use jian_ops_schema::PenDocument;
 
 use crate::interaction_edit::{open_url_of, unquote_literal, InteractionTrigger, NavigateVerb};
+use crate::overlay_action::OverlayAction;
 use crate::pen_node_ext::PenNodeExt;
 use crate::ref_resolve::resolve_refs_for_canvas_roots;
 use crate::screen_marker_edit::route_slug;
@@ -42,6 +43,12 @@ pub enum FlowAction {
     Back,
     ScrollTo,
     OpenUrl,
+    /// `open_overlay` (#372).
+    OpenOverlay,
+    /// `swap_overlay`.
+    SwapOverlay,
+    /// `close_overlay`.
+    CloseOverlay,
     /// Any other action key (`set`, `fetch`, …), listed as is.
     Other(String),
 }
@@ -54,6 +61,9 @@ impl FlowAction {
             Self::Back => "back",
             Self::ScrollTo => "scroll_to",
             Self::OpenUrl => "open_url",
+            Self::OpenOverlay => "open_overlay",
+            Self::SwapOverlay => "swap_overlay",
+            Self::CloseOverlay => "close_overlay",
             Self::Other(key) => key,
         }
     }
@@ -90,6 +100,19 @@ pub struct FlowLink {
     pub scope: Vec<String>,
     /// Why the link goes nowhere; `None` for a working link.
     pub broken: Option<String>,
+    /// An overlay action's options as stored (`position`,
+    /// `closeOnOutsideClick`, `background`, `animation`, …).
+    pub overlay: Option<serde_json::Value>,
+}
+
+impl FlowLink {
+    /// Whether the link opens or swaps an overlay (drawn dashed).
+    pub fn is_overlay(&self) -> bool {
+        matches!(
+            self.action,
+            FlowAction::OpenOverlay | FlowAction::SwapOverlay | FlowAction::CloseOverlay
+        )
+    }
 }
 
 /// Every screen and link of the walked pages.
@@ -406,6 +429,7 @@ impl Walk<'_> {
             in_master: cx.in_master,
             scope: cx.scope.clone(),
             broken: None,
+            overlay: None,
         };
         let Some((key, body)) = action.single() else {
             return link;
@@ -445,9 +469,37 @@ impl Walk<'_> {
                     link.broken = Some("open_url has no address".to_owned());
                 }
             }
+            key if OverlayAction::is_overlay_key(key) => self.overlay_link(&mut link, key, body),
             other => link.action = FlowAction::Other(other.to_owned()),
         }
         link
+    }
+
+    /// An overlay action (#372): its target resolves on any page, since
+    /// overlays usually live off-screen or on their own page.
+    fn overlay_link(&self, link: &mut FlowLink, key: &str, body: &serde_json::Value) {
+        link.action = match key {
+            crate::overlay_action::OPEN_OVERLAY => FlowAction::OpenOverlay,
+            crate::overlay_action::SWAP_OVERLAY => FlowAction::SwapOverlay,
+            _ => FlowAction::CloseOverlay,
+        };
+        let Some(parsed) = OverlayAction::parse_body(key, body) else {
+            link.broken = Some(format!("{key} has no target"));
+            return;
+        };
+        link.overlay = Some(parsed.body()).filter(|body| !body.is_null());
+        let Some(target) = parsed.target() else {
+            return;
+        };
+        link.to = Some(target.to_owned());
+        match crate::overlay_edit::find_overlay_target(self.doc, target) {
+            Some((index, node)) => {
+                link.target_id = Some(target.to_owned());
+                link.target_name = Some(display_name(node));
+                link.target_page_id = self.pages.get(index).map(|page| page.id.clone());
+            }
+            None => link.broken = Some(format!("no frame {target} for the overlay")),
+        }
     }
 
     fn resolve_route(&self, link: &mut FlowLink, body: &serde_json::Value, in_master: bool) {

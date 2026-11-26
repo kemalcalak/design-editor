@@ -148,6 +148,8 @@ pub mod motion_guard;
 pub mod mutators;
 pub mod node_defaults;
 pub mod node_id;
+pub mod overlay_action;
+pub mod overlay_edit;
 pub mod padding_shorthand;
 pub mod page_mutators;
 pub mod path_bounds;

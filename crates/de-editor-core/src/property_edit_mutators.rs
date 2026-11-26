@@ -91,6 +91,7 @@ impl EditorState {
             PropertyFocus::MotionColor { .. } => return false,
             // Free text: committed from the draft, never as a number.
             PropertyFocus::InteractionUrl(_)
+            | PropertyFocus::OverlayBackground(_)
             | PropertyFocus::ComponentProp(_)
             | PropertyFocus::VariantText(_) => return false,
             PropertyFocus::ShaderUniform {
@@ -338,6 +339,7 @@ impl EditorState {
             | PropertyFocus::MotionColor { .. }
             | PropertyFocus::TransitionDuration
             | PropertyFocus::InteractionUrl(_)
+            | PropertyFocus::OverlayBackground(_)
             | PropertyFocus::ComponentProp(_)
             | PropertyFocus::VariantText(_)
             | PropertyFocus::ShaderUniform { .. }

@@ -1,7 +1,8 @@
 //! Prototype links on the editor canvas (#371): a curved arrow from each
 //! interactive node to the screen (or section) it navigates to, labelled
 //! with its trigger; Back and Open URL show a small badge on the node
-//! instead, and a broken link draws red.
+//! instead, and a broken link draws red. Overlay links (#372) draw dashed
+//! to the overlay frame, or badge its name when it is on another page.
 //!
 //! The links come from `de_editor_core::interaction_graph` for the active
 //! page (instances expanded, so a master's link shows once per instance
@@ -28,6 +29,12 @@ use crate::{Color, Point2D, Rect, TextLayout};
 pub enum CanvasLinkKind {
     /// An arrow to `target` (a screen frame or a scroll-to section).
     Arrow { target: String },
+    /// A dashed arrow to the frame an overlay shows (#372).
+    OverlayArrow { target: String },
+    /// An overlay whose frame is on another page: a badge with its name.
+    OverlayElsewhere { name: String },
+    /// A Close overlay badge on the node.
+    CloseOverlay,
     /// A Back badge on the node.
     Back,
     /// An Open URL badge with the host (`example.com`).
@@ -112,6 +119,18 @@ fn build(state: &EditorState) -> Vec<CanvasLink> {
                             target: link.target_id?,
                         }
                     }
+                    FlowAction::OpenOverlay | FlowAction::SwapOverlay => {
+                        if link.target_page_id.as_deref() == Some(page_id.as_str()) {
+                            CanvasLinkKind::OverlayArrow {
+                                target: link.target_id?,
+                            }
+                        } else {
+                            CanvasLinkKind::OverlayElsewhere {
+                                name: link.target_name.or(link.target_id)?,
+                            }
+                        }
+                    }
+                    FlowAction::CloseOverlay => CanvasLinkKind::CloseOverlay,
                     FlowAction::Other(_) => return None,
                 }
             };
@@ -214,9 +233,37 @@ pub(super) fn paint(
                 if !intersects(cull, bbox(start, end)) {
                     continue;
                 }
-                paint_curve(cx, start, end, LINK);
+                paint_curve(cx, start, end, LINK, false);
                 (label.to_owned(), LINK)
             }
+            CanvasLinkKind::OverlayArrow { target } => {
+                let Some(target) = page.find(target) else {
+                    continue;
+                };
+                let (start, end) = endpoints(from, to_screen(target.bounds));
+                if !intersects(cull, bbox(start, end)) {
+                    continue;
+                }
+                paint_curve(cx, start, end, LINK, true);
+                (
+                    format!("{label} · {}", t(locale, "prototype.overlay", "Overlay")),
+                    LINK,
+                )
+            }
+            CanvasLinkKind::OverlayElsewhere { name } => (
+                format!(
+                    "{label} · {} {name}",
+                    t(locale, "prototype.overlay", "Overlay")
+                ),
+                LINK,
+            ),
+            CanvasLinkKind::CloseOverlay => (
+                format!(
+                    "{label} · {}",
+                    t(locale, "prototype.closeOverlay", "Close overlay")
+                ),
+                LINK,
+            ),
             CanvasLinkKind::Back => (
                 format!("{label} · {}", t(locale, "prototype.back", "Back")),
                 LINK,
@@ -281,8 +328,9 @@ fn intersects(a: Rect, b: Rect) -> bool {
         && b.origin.y < a.origin.y + a.size.y
 }
 
-/// A horizontal S-curve from `start` to `end`, ending in an arrowhead.
-fn paint_curve(cx: &mut PaintCx<'_>, start: Point2D, end: Point2D, color: Color) {
+/// A horizontal S-curve from `start` to `end`, ending in an arrowhead;
+/// `dashed` draws every other segment (an overlay link, #372).
+fn paint_curve(cx: &mut PaintCx<'_>, start: Point2D, end: Point2D, color: Color, dashed: bool) {
     let dir = if end.x >= start.x { 1.0 } else { -1.0 };
     let reach = ((end.x - start.x).abs() / 2.0).max(40.0);
     let c1 = Point2D::new(start.x + dir * reach, start.y);
@@ -303,7 +351,9 @@ fn paint_curve(cx: &mut PaintCx<'_>, start: Point2D, end: Point2D, color: Color)
     let mut previous = start;
     for step in 1..=CURVE_STEPS {
         let point = at(step as f32 / CURVE_STEPS as f32);
-        cx.backend.stroke_line(previous, point, color, 1.5);
+        if !dashed || step % 2 == 1 {
+            cx.backend.stroke_line(previous, point, color, 1.5);
+        }
         previous = point;
     }
     cx.backend
