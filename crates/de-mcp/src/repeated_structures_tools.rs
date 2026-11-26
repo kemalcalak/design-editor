@@ -220,17 +220,15 @@ impl ConvertToInstances {
                 ))
             }
             (Some(raw), None) => id_list(raw)?,
-            (None, Some(group_id)) => group_members(
-                &snapshot.doc,
-                &snapshot.components,
-                page,
-                group_id,
-            )
-            .ok_or_else(|| {
-                invalid(format!(
+            (None, Some(group_id)) => {
+                group_members(&snapshot.doc, &snapshot.components, page, group_id).ok_or_else(
+                    || {
+                        invalid(format!(
                     "groupId not found: {group_id} (call find_repeated_structures for current ids)"
                 ))
-            })?,
+                    },
+                )?
+            }
         };
         let request = ConvertRequest {
             node_ids,

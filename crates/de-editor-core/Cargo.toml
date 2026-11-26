@@ -23,6 +23,9 @@ de-ai = { path = "../de-ai" }
 
 # Canonical hex-color parsing (dependency-free + wasm32-clean).
 de-util = { path = "../de-util" }
+# Layer naming rules + default-name detection for Rename layers (#383).
+# Pure + wasm32-clean, and it never imports de-editor-core.
+de-design-lint = { path = "../de-design-lint" }
 base64 = "0.22"
 
 # render_backend.rs uses glam::Vec2 as Point2D (spec §5.2). Pinned to the

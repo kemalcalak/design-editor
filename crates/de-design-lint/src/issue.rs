@@ -63,6 +63,9 @@ pub enum IssueCategory {
     /// letting content sit on the page surface. Report-only.
     #[serde(rename = "slop/rounded-card-wall")]
     SlopRoundedCardWall,
+    /// A layer still carries an editor default name (`Frame 1`,
+    /// `Rectangle 3`). Info; the fix is `rename_layers` (#383).
+    DefaultLayerName,
     /// Hand-built copies that could share one component (#369). Reported by
     /// MCP `lint_document` only; its fix is a `convert_to_instances` call.
     RepeatedStructure,
@@ -105,6 +108,10 @@ pub enum FixProperty {
     /// A numeric y-position used by the contract-tier bar-chart repair.
     #[serde(rename = "y")]
     Y,
+    /// The layer name (default-layer-name). Fixed by `rename_layers`, so the
+    /// apply paths treat it as a no-op like `Fill`.
+    #[serde(rename = "name")]
+    Name,
 }
 
 impl FixProperty {
@@ -127,6 +134,7 @@ impl FixProperty {
             FixProperty::Label => "label",
             FixProperty::Layout => "layout",
             FixProperty::Y => "y",
+            FixProperty::Name => "name",
         }
     }
 }
@@ -201,6 +209,7 @@ mod tests {
             FixProperty::Label,
             FixProperty::Layout,
             FixProperty::Y,
+            FixProperty::Name,
         ] {
             let serde_wire = serde_json::to_value(property).unwrap();
             assert_eq!(

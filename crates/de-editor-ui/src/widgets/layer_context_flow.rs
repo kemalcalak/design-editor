@@ -143,6 +143,15 @@ pub fn apply_layer_context_action(
             }
             LayerContextStep::Done
         }
+        (A::RenameLayersAuto, T::Layer(id)) => {
+            // Act on the whole multi-selection when the right-clicked row
+            // is part of it; otherwise retarget to just this row.
+            if !state.is_selected(&id) {
+                state.set_single_selection(id);
+            }
+            state.open_rename_layers();
+            LayerContextStep::Done
+        }
         (A::RenameLayer, T::Layer(id)) => {
             if state.start_rename_layer(id) {
                 if let Some(rename) = state.ui.layer_rename.as_mut() {

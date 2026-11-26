@@ -1,6 +1,8 @@
 use std::collections::{BTreeMap, BTreeSet};
 
-use de_design_lint::{detect_all, FixProperty, Issue, IssueCategory, IssueSeverity};
+use de_design_lint::{
+    detect_all, detect_default_layer_names, FixProperty, Issue, IssueCategory, IssueSeverity,
+};
 use de_editor_core::repeated_structures::{find_repeated_structures, DEFAULT_MIN_NODES};
 use de_editor_core::{EditorState, PenNodeExt};
 use jian_ops_schema::node::PenNode;
@@ -52,19 +54,29 @@ pub fn lint_document_snapshot(state: &EditorState) -> LintDocument {
         for page in pages {
             for root in &page.children {
                 collect_subtree_ids(root, &mut subtree_ids);
-                issues.extend(detect_all(root, &state.doc));
+                issues.extend(lint_root(root, state));
             }
         }
     }
     for root in &state.doc.children {
         collect_subtree_ids(root, &mut subtree_ids);
-        issues.extend(detect_all(root, &state.doc));
+        issues.extend(lint_root(root, state));
     }
     issues.extend(repeated_structure_issues(state));
     LintDocument {
         issues,
         subtree_ids,
     }
+}
+
+/// Design lint plus the default-layer-name Info finding (#383). Naming is
+/// editorial hygiene rather than a generation quality gate, so it is
+/// reported here and not folded into `detect_all`, which the generation
+/// pipelines' pre-validation and repair loops run.
+fn lint_root(root: &PenNode, state: &EditorState) -> Vec<Issue> {
+    let mut issues = detect_all(root, &state.doc);
+    issues.extend(detect_default_layer_names(root));
+    issues
 }
 
 fn collect_subtree_ids(

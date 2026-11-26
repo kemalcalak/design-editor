@@ -226,6 +226,7 @@ impl DesktopApp {
             current_design: None,
             current_codegen: None,
             current_design_md: None,
+            current_rename_layers: None,
             codegen_results: Default::default(),
             #[cfg(test)]
             design_md_test_provider: None,

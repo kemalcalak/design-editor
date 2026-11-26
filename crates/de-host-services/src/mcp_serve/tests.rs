@@ -19,7 +19,7 @@ fn tools_list_response_includes_all_registered_tools() {
     // TOOL_SCHEMAS without being added to the list below.
     assert_eq!(
         TOOL_SCHEMAS.len(),
-        169,
+        170,
         "tools/list catalog count must match the registered tools — add the new tool to this test \
          (the #388 path tools are listed in boolean_op_tool's path_tests)"
     );
@@ -85,6 +85,7 @@ fn tools_list_response_includes_all_registered_tools() {
         "conversion_status",
         "lint_document",
         "repair_duplicate_ids",
+        "rename_layers",
         "save_theme_preset",
         "load_theme_preset",
         "list_theme_presets",

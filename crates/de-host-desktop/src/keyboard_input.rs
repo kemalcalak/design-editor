@@ -38,6 +38,9 @@ impl DesktopApp {
             panel.search_open || panel.generate_open
         };
         let prompt_center_open = self.host.editor_state().editor_ui.prompt_center.open;
+        // The Rename-layers preview (#383) is modal: no chord may edit the
+        // document behind it.
+        let rename_layers_open = self.host.rename_layers_open();
         let home_visible = self.host.home_visible();
         match logical_key {
             // Named-key shortcuts fire only when no Cmd/Ctrl is held.
@@ -213,6 +216,7 @@ impl DesktopApp {
                     && !self.shift_modifier
                     && !settings_focused
                     && !prompt_center_open
+                    && !rename_layers_open
                     && !image_popover_open =>
             {
                 use de_editor_core::BooleanOp;
@@ -232,7 +236,9 @@ impl DesktopApp {
                 if self.zoom_modifier && !self.shift_modifier && !self.alt_modifier =>
             {
                 let lower = ch.to_lowercase();
-                if prompt_center_open && !matches!(lower.as_str(), "a" | "c" | "v" | "x") {
+                if (prompt_center_open || rename_layers_open)
+                    && !matches!(lower.as_str(), "a" | "c" | "v" | "x")
+                {
                     consumed = true;
                 } else {
                     match lower.as_str() {
@@ -322,7 +328,7 @@ impl DesktopApp {
             Key::Character(ref ch)
                 if self.zoom_modifier && self.shift_modifier && !self.alt_modifier =>
             {
-                if prompt_center_open {
+                if prompt_center_open || rename_layers_open {
                     consumed = true;
                 } else {
                     match ch.to_lowercase().as_str() {
@@ -345,6 +351,8 @@ impl DesktopApp {
                         _ if settings_focused => {}
                         "z" => consumed = self.host.apply_redo(),
                         "g" => consumed = self.host.apply_ungroup(),
+                        // Cmd+Shift+R — Rename layers (#383).
+                        "r" => consumed = self.host.apply_open_rename_layers(),
                         // Cmd+Shift+O — Outline stroke (#388).
                         "o" => {
                             consumed = self.host.apply_path_operation(
