@@ -13,7 +13,7 @@
 
 use std::collections::{BTreeMap, HashSet};
 
-use de_design_lint::{document_locale, is_default_layer_name, propose_layer_names};
+use de_design_lint::{document_locale, is_default_layer_name, propose_layer_names_on, NamingPage};
 use de_editor_core::rename_layers::ai::{language_label, rename_layer_briefs};
 use de_editor_core::rename_layers::rename_layers_command;
 use de_editor_core::{EditorState, NodeId, PenNodeExt};
@@ -25,6 +25,8 @@ use super::{McpTool, ToolErrorCode, ToolOutcome};
 pub struct RenameLayers {
     /// Top-level layers of the active page.
     roots: Vec<PenNode>,
+    /// The active page as the namer reads it, instances expanded.
+    page: NamingPage,
     /// Every node id on the active page with its current name.
     names: BTreeMap<String, Option<String>>,
     selection: Vec<String>,
@@ -44,6 +46,7 @@ pub fn rename_layers_snapshot(state: &EditorState) -> RenameLayers {
     }
     RenameLayers {
         roots,
+        page: state.naming_page(),
         names,
         selection: state
             .selection
@@ -137,8 +140,8 @@ impl RenameLayers {
         }
         let targets: HashSet<String> = ids.into_iter().collect();
         let locale = document_locale(&self.roots);
-        let proposals = propose_layer_names(
-            &self.roots,
+        let proposals = propose_layer_names_on(
+            &self.page,
             (!targets.is_empty()).then_some(&targets),
             locale,
         );

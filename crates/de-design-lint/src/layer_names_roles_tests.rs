@@ -174,11 +174,41 @@ fn repeated_siblings_are_told_apart_or_left_alone() {
         ]
     }));
     let names = names_of(std::slice::from_ref(&screen), Locale::EnUs);
-    assert_eq!(names["a"], "Secondary button");
+    // Every repeat is told apart by its own label, the first one too.
+    assert_eq!(names["a"], "Secondary button (Book a demo)");
     assert_eq!(names["b"], "Secondary button (Contact sales)");
-    assert_eq!(names["c"], "Secondary button (Book a demo)");
-    // Its qualified name is a kept sibling's, and nothing else tells it apart.
+    // Its label is taken; the plain name is still free.
+    assert_eq!(names["c"], "Secondary button");
+    // Its qualified name is a kept sibling's and the plain one is gone.
     assert!(!names.contains_key("d"), "{:?}", names.get("d"));
+}
+
+#[test]
+fn a_targeted_layer_only_avoids_the_names_its_siblings_have() {
+    let button = |id: &str, label: &str| {
+        json!({"type": "frame", "id": id, "name": "Frame", "width": 160, "height": 44,
+               "cornerRadius": 8, "stroke": {"thickness": 1, "fill": [{"type": "solid", "color": "#2563EB"}]},
+               "children": [text(&format!("{id}-label"), label, 16.0)]})
+    };
+    let screen = node(json!({
+        "type": "frame", "id": "s", "name": "Frame", "width": 400, "height": 400,
+        "children": [button("a", "Book a demo"), button("b", "Contact sales")]
+    }));
+    let roots = std::slice::from_ref(&screen);
+    let targets: HashSet<String> = ["b".to_string()].into_iter().collect();
+    let names: HashMap<String, String> = propose_layer_names(roots, Some(&targets), Locale::EnUs)
+        .into_iter()
+        .map(|p| (p.node_id, p.proposed))
+        .collect();
+    // `a` keeps `Frame`; its would-be name does not hold `b` back.
+    assert_eq!(names["b"], "Secondary button");
+    assert!(!names.contains_key("a"));
+
+    let mut value = serde_json::to_value(&screen).expect("json");
+    value["children"][0]["name"] = json!("Secondary button");
+    let renamed = node(value);
+    let names = propose_layer_names(std::slice::from_ref(&renamed), Some(&targets), Locale::EnUs);
+    assert_eq!(names[0].proposed, "Secondary button (Contact sales)");
 }
 
 // ---- Sweep: no two siblings ever get the same proposed name. ----

@@ -8,7 +8,11 @@
 //! own content counts as named.
 
 mod default_names;
+mod facts;
+mod instances;
 mod lang;
+mod money;
+mod reading;
 mod rules;
 mod text_roles;
 mod unique;
@@ -25,6 +29,7 @@ use crate::issue::{FixProperty, Issue, IssueCategory, IssueSeverity};
 use crate::node_util::{base, children};
 
 pub use default_names::is_default_layer_name;
+pub use instances::{InstanceSource, NamingPage, NoInstances};
 pub use lang::detect_document_locale;
 
 pub use rules::{collapse_whitespace, text_content};
@@ -84,7 +89,8 @@ pub fn document_locale(roots: &[PenNode]) -> Locale {
 }
 
 /// Rule-based names for the layers under `roots` (a page's top-level
-/// layers) that have no meaningful name, in tree order. `targets` limits
+/// layers) that have no meaningful name, in tree order, reading no
+/// component instances (see [`propose_layer_names_on`]). `targets` limits
 /// the proposals to those layers and their descendants; `None` covers the
 /// whole page. Role words come from `locale` — pass the document's
 /// language ([`document_locale`]).
@@ -93,7 +99,17 @@ pub fn propose_layer_names(
     targets: Option<&HashSet<String>>,
     locale: Locale,
 ) -> Vec<LayerNameProposal> {
-    candidates(roots, targets, locale)
+    propose_layer_names_on(&NamingPage::new(roots, &NoInstances), targets, locale)
+}
+
+/// [`propose_layer_names`] over a page read with its instances expanded,
+/// so a card instance is named after the texts it shows.
+pub fn propose_layer_names_on(
+    page: &NamingPage,
+    targets: Option<&HashSet<String>>,
+    locale: Locale,
+) -> Vec<LayerNameProposal> {
+    candidates(page, targets, locale)
         .into_iter()
         .filter_map(|candidate| {
             Some(LayerNameProposal {
@@ -105,13 +121,13 @@ pub fn propose_layer_names(
         .collect()
 }
 
-/// Info finding for every layer under `root` (a top-level layer of a
-/// page) whose name is an editor default. The suggested value is the
-/// rules' proposal, or `null` when they have none; the fix is
-/// `rename_layers`.
-pub fn detect_default_layer_names(root: &PenNode) -> Vec<Issue> {
-    let roots = std::slice::from_ref(root);
-    candidates(roots, None, document_locale(roots))
+/// Info finding for every layer of `page` whose name is an editor
+/// default. The page is named as one, like `rename_layers` names it, so
+/// the suggested value is exactly the name `rename_layers` applies (or
+/// `null` when the rules have none). `locale` is the page's language
+/// ([`document_locale`] of its layers).
+pub fn detect_default_layer_names(page: &NamingPage, locale: Locale) -> Vec<Issue> {
+    candidates(page, None, locale)
         .into_iter()
         .filter_map(|candidate| {
             let current = candidate.current?;
@@ -139,3 +155,7 @@ mod tests;
 #[cfg(test)]
 #[path = "layer_names_roles_tests.rs"]
 mod roles_tests;
+
+#[cfg(test)]
+#[path = "layer_names_review_tests.rs"]
+mod review_tests;

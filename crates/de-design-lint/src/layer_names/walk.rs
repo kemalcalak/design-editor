@@ -9,8 +9,11 @@ use jian_ops_schema::node::PenNode;
 
 use crate::node_util::{base, children, node_id};
 
+use super::facts::Facts;
+use super::instances::NamingPage;
+use super::reading::ordered_children;
 use super::rules::{collapse_whitespace, infer_role, text_content, Place, Role};
-use super::text_roles::{is_unit, ordered_children, UnitRoles};
+use super::text_roles::{is_unit, UnitRoles};
 use super::unique::{make_distinct, SiblingName};
 use super::{has_meaningful_name, is_default_layer_name};
 
@@ -23,8 +26,10 @@ pub(super) struct Candidate {
 }
 
 struct Walk<'a> {
+    page: &'a NamingPage,
     targets: Option<&'a HashSet<String>>,
     locale: Locale,
+    facts: Facts,
     out: Vec<Candidate>,
 }
 
@@ -62,8 +67,11 @@ impl Siblings<'_, '_> {
 }
 
 impl Walk<'_> {
-    /// The role and the proposal (before siblings are compared) of each
-    /// sibling.
+    fn in_target(&self, run: &Siblings<'_, '_>, node: &PenNode) -> bool {
+        run.in_target || self.targets.is_none_or(|t| t.contains(node_id(node)))
+    }
+
+    /// The role and the (sibling-distinct) proposal of each sibling.
     fn name_run<'n>(&self, run: &Siblings<'_, 'n>) -> (Vec<Option<Role>>, Vec<SiblingName<'n>>) {
         let roles: Vec<Option<Role>> = run
             .nodes
@@ -72,7 +80,7 @@ impl Walk<'_> {
             .map(|(index, node)| {
                 run.unit
                     .role_of(node)
-                    .or_else(|| infer_role(node, run.place(index)))
+                    .or_else(|| infer_role(node, run.place(index), &self.facts))
             })
             .collect();
         let mut names: Vec<SiblingName<'n>> = run
@@ -81,21 +89,20 @@ impl Walk<'_> {
             .zip(&roles)
             .map(|(node, role)| {
                 let current = base(node).name.clone();
-                if has_meaningful_name(node) {
-                    return SiblingName {
-                        node,
-                        kept: current,
-                        proposed: None,
-                    };
-                }
-                let proposed = role
-                    .as_ref()
-                    .map(|role| role.render(self.locale, run.section))
-                    .filter(|proposed| acceptable(node, proposed, current.as_deref()));
+                let meaningful = has_meaningful_name(node);
+                let proposed = (!meaningful)
+                    .then(|| {
+                        role.as_ref()
+                            .map(|role| role.render(self.locale, run.section))
+                            .filter(|proposed| acceptable(node, proposed, current.as_deref()))
+                    })
+                    .flatten();
                 SiblingName {
                     node,
-                    kept: None,
+                    kept: meaningful.then(|| current.clone()).flatten(),
                     proposed,
+                    renamed: self.in_target(run, node),
+                    current,
                 }
             })
             .collect();
@@ -103,27 +110,27 @@ impl Walk<'_> {
             &mut names,
             &run.reading_order(),
             self.locale,
+            &self.facts,
             |node, name| acceptable(node, name, base(node).name.as_deref()),
         );
         (roles, names)
     }
 
     /// Name a run of siblings together, record the proposals inside the
-    /// targets and walk into each sibling.
+    /// targets and walk into each sibling (not into an instance, whose
+    /// content is its master's).
     fn siblings(&mut self, run: Siblings<'_, '_>) {
         let (roles, names) = self.name_run(&run);
         for ((node, name), role) in run.nodes.iter().zip(&names).zip(&roles) {
-            let id = node_id(node);
-            let in_target = run.in_target || self.targets.is_none_or(|t| t.contains(id));
-            if in_target && name.kept.is_none() {
+            if name.renamed && name.kept.is_none() {
                 self.out.push(Candidate {
-                    node_id: id.to_string(),
-                    current: base(node).name.clone(),
+                    node_id: node_id(node).to_string(),
+                    current: name.current.clone(),
                     proposed: name.proposed.clone(),
                 });
             }
             let kids = children(node);
-            if kids.is_empty() {
+            if kids.is_empty() || self.page.is_instance(node) {
                 continue;
             }
             // A section-like layer (or any wide child of a screen) names the
@@ -131,7 +138,8 @@ impl Walk<'_> {
             let final_name = name.final_name();
             let names_section = role.as_ref().is_some_and(Role::is_section_like)
                 || (run.depth == 1 && final_name.is_some());
-            let own_unit = is_unit(node, run.depth).then(|| UnitRoles::of(node, run.depth));
+            let own_unit = is_unit(node, run.depth, &self.facts)
+                .then(|| UnitRoles::of(node, run.depth, &self.facts));
             self.siblings(Siblings {
                 parent: Some(node),
                 nodes: kids,
@@ -142,7 +150,7 @@ impl Walk<'_> {
                     run.section
                 },
                 unit: own_unit.as_ref().unwrap_or(run.unit),
-                in_target,
+                in_target: name.renamed,
             });
         }
     }
@@ -158,21 +166,23 @@ fn acceptable(node: &PenNode, proposed: &str, current: Option<&str>) -> bool {
         || text_content(node).is_some_and(|content| content == collapse_whitespace(proposed))
 }
 
-/// Every layer under `roots` without a meaningful name (inside `targets`
-/// when given), in tree order, with the rules' proposal.
+/// Every layer of `page` without a meaningful name (inside `targets` when
+/// given), in tree order, with the rules' proposal.
 pub(super) fn candidates(
-    roots: &[PenNode],
+    page: &NamingPage,
     targets: Option<&HashSet<String>>,
     locale: Locale,
 ) -> Vec<Candidate> {
     let mut walk = Walk {
+        page,
         targets,
         locale,
+        facts: Facts::default(),
         out: Vec::new(),
     };
     walk.siblings(Siblings {
         parent: None,
-        nodes: roots,
+        nodes: page.roots(),
         depth: 0,
         section: None,
         unit: &UnitRoles::default(),

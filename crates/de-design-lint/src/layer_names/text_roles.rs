@@ -2,16 +2,19 @@
 //! for: which one is the heading the unit is named after, and the distinct
 //! role each text gets (`Title`, `Subtitle`, `Price`, `Description`,
 //! `Caption`, or its own content), so two texts of one card never share a
-//! name.
+//! name. Hidden layers are never read.
 
 use std::collections::HashMap;
 
 use jian_ops_schema::node::container::LayoutMode;
 use jian_ops_schema::node::PenNode;
 
-use crate::node_util::{children, node_kind, node_x, node_y};
+use crate::node_util::{children, is_node_visible, node_x, node_y, numeric_height};
 
-use super::rules::{button_role, card_role, font_size, font_weight, layout, text_content, Role};
+use super::facts::{is_container, Facts};
+use super::money::{is_figure, is_price, opens_with_figure};
+use super::reading::{bounds_in_parent, is_free_form, sort_reading, Bounds};
+use super::rules::{font_size, font_weight, layout, text_content, Role};
 
 /// Longest text content used verbatim as a layer name.
 const MAX_CONTENT_NAME_CHARS: usize = 40;
@@ -22,10 +25,10 @@ const MAX_HEADING_CHARS: usize = 24;
 const MAX_LABEL_CHARS: usize = 32;
 /// Longest excerpt of a long text used as its name (before the ellipsis).
 const MAX_EXCERPT_CHARS: usize = 32;
-/// Letters a figure may carry besides its digits (`12k`, `24h`, `4.9`).
-const MAX_FIGURE_LETTERS: usize = 2;
-/// Letters a price may carry (`$9 / month`, `€12 per user`).
-const MAX_PRICE_LETTERS: usize = 12;
+/// A screen's first child at most this tall, holding only short texts, is
+/// its header band (the preview's rule, `wire_web_nav_links`).
+const HEADER_MAX_HEIGHT: f64 = 200.0;
+const HEADER_TEXT_MAX_CHARS: usize = 40;
 
 /// One text layer with what the roles read off it.
 pub(crate) struct TextInfo<'a> {
@@ -51,20 +54,18 @@ impl<'a> TextInfo<'a> {
         self.size >= 20.0 || (self.size >= 16.0 && self.weight >= 600)
     }
 
-    /// Words, not a figure or a unit suffix (`/mo`): the only texts that
-    /// may name a container.
+    /// Words, not a figure, a unit suffix (`/mo`) or a text opening with a
+    /// number or currency (`5-visit pass`): the only texts that may name a
+    /// container.
     fn wordy(&self) -> bool {
-        starts_a_word(&self.content) && !is_figure(&self.content)
+        starts_a_word(&self.content)
+            && !is_figure(&self.content)
+            && !opens_with_figure(&self.content)
     }
 
     fn short(&self) -> bool {
         self.content.chars().count() <= MAX_CONTENT_NAME_CHARS
     }
-}
-
-fn is_currency(c: char) -> bool {
-    // `$`, `¢`–`¥`, the Currency Symbols block, the Rial sign.
-    matches!(c, '$' | '\u{A2}'..='\u{A5}' | '\u{20A0}'..='\u{20CF}' | '\u{FDFC}')
 }
 
 /// Whether some whitespace-separated token of `text` begins with a letter
@@ -74,84 +75,89 @@ fn starts_a_word(text: &str) -> bool {
         .any(|word| word.chars().next().is_some_and(char::is_alphabetic))
 }
 
-fn letter_count(text: &str) -> usize {
-    text.chars().filter(|c| c.is_alphabetic()).count()
+/// Where a walk below a container stops, by what it is for.
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub(crate) enum Scope {
+    /// Handing out text roles: a screen's sections, cards and buttons each
+    /// hand out their own (a hero and a pricing section each get a Title).
+    Roles,
+    /// Finding a heading: only cards and buttons are skipped, so a screen
+    /// may be named after the heading in its hero, while a card's heading
+    /// never names what holds it.
+    Heading,
 }
 
-/// A number, an amount or a stat (`$9`, `12k`, `99%`, `4.9`): never a
-/// heading, never the name of a container.
-pub(crate) fn is_figure(text: &str) -> bool {
-    text.chars().any(|c| c.is_ascii_digit())
-        && (text.chars().any(is_currency) || letter_count(text) <= MAX_FIGURE_LETTERS)
-}
-
-/// An amount of money (`$9`, `€12/mo`, `₺99 per month`).
-pub(crate) fn is_price(text: &str) -> bool {
-    text.chars().any(|c| c.is_ascii_digit())
-        && text.chars().any(is_currency)
-        && letter_count(text) <= MAX_PRICE_LETTERS
-}
-
-/// `node`'s children in reading order: tree order, except that the
-/// children of a free-form (unlaid-out) container that all have a `y` are
-/// read top to bottom, then left to right.
-pub(crate) fn ordered_children(node: &PenNode) -> Vec<&PenNode> {
-    let mut kids: Vec<&PenNode> = children(node).iter().collect();
-    let free_form = matches!(layout(node), None | Some(LayoutMode::None));
-    if free_form && kids.iter().all(|kid| node_y(kid).is_some()) {
-        kids.sort_by(|a, b| {
-            let key = |n: &PenNode| (node_y(n).unwrap_or(0.0), node_x(n).unwrap_or(0.0));
-            key(a)
-                .partial_cmp(&key(b))
-                .unwrap_or(std::cmp::Ordering::Equal)
-        });
-    }
-    kids
-}
-
-fn is_container(node: &PenNode) -> bool {
-    node_kind(node).is_container() && !children(node).is_empty()
-}
-
-/// A card or a button: a unit of its own inside whatever holds it.
-pub(crate) fn is_card_or_button(node: &PenNode) -> bool {
-    is_container(node) && (button_role(node).is_some() || card_role(node).is_some())
-}
-
-/// A card that is not a button (a row of filled buttons is not a card list).
-pub(crate) fn is_card(node: &PenNode) -> bool {
-    is_container(node) && button_role(node).is_none() && card_role(node).is_some()
+/// Whether `node` (at `depth` below the page) holds texts the walk in
+/// `scope` leaves to it.
+pub(crate) fn is_boundary(node: &PenNode, depth: usize, scope: Scope, facts: &Facts) -> bool {
+    is_container(node) && ((scope == Scope::Roles && depth <= 1) || facts.is_card_or_button(node))
 }
 
 /// Whether `node` at `depth` is a unit whose texts get roles together: a
 /// screen, a section of one, a card or a button.
-pub(crate) fn is_unit(node: &PenNode, depth: usize) -> bool {
-    is_container(node) && (depth <= 1 || is_card_or_button(node))
+pub(crate) fn is_unit(node: &PenNode, depth: usize, facts: &Facts) -> bool {
+    is_boundary(node, depth, Scope::Roles, facts)
 }
 
-/// Texts below `node` in reading order, not descending into the subtrees
-/// `skip` picks (`depth` is the child's depth below the page).
+/// A text with its box in the reading container's coordinates (when the
+/// container is free-form; `None` in a laid-out one).
+struct Placed<'a> {
+    info: TextInfo<'a>,
+    at: Option<Bounds>,
+}
+
+/// The visible texts below `node` in reading order, not descending into
+/// the boundaries of `scope`. A free-form container reads its texts by
+/// their boxes in its own coordinates (through free-form descendants, so
+/// a title in one group and a price in another still read top to bottom);
+/// a laid-out child is read as one block at its own box.
 fn collect<'a>(
     node: &'a PenNode,
     depth: usize,
-    skip: &dyn Fn(&PenNode, usize) -> bool,
-    out: &mut Vec<TextInfo<'a>>,
+    scope: Scope,
+    facts: &Facts,
+    skip_first: bool,
+    out: &mut Vec<Placed<'a>>,
 ) {
-    for kid in ordered_children(node) {
+    let free = is_free_form(node);
+    let mut items: Vec<Placed<'a>> = Vec::new();
+    for (index, kid) in children(node).iter().enumerate() {
+        if !is_node_visible(kid) || (skip_first && index == 0) {
+            continue;
+        }
+        let at = free.then(|| bounds_in_parent(kid));
         if let Some(info) = TextInfo::of(kid) {
-            out.push(info);
-        } else if !skip(kid, depth + 1) {
-            collect(kid, depth + 1, skip, out);
+            items.push(Placed { info, at });
+        } else if !is_boundary(kid, depth + 1, scope, facts) {
+            let mut inner = Vec::new();
+            collect(kid, depth + 1, scope, facts, false, &mut inner);
+            let kid_free = is_free_form(kid);
+            for mut placed in inner {
+                placed.at = match (at, placed.at) {
+                    (Some(_), Some(inner_box)) if kid_free => Some(
+                        inner_box.offset(node_x(kid).unwrap_or(0.0), node_y(kid).unwrap_or(0.0)),
+                    ),
+                    (kid_box, _) => kid_box,
+                };
+                items.push(placed);
+            }
         }
     }
+    if free {
+        let mut keyed: Vec<(Bounds, Placed<'a>)> = items
+            .into_iter()
+            .map(|placed| (placed.at.expect("free-form boxes"), placed))
+            .collect();
+        sort_reading(&mut keyed);
+        items = keyed.into_iter().map(|(_, placed)| placed).collect();
+    }
+    out.extend(items);
 }
 
-/// Texts a container may be named after: everything below it except the
-/// insides of cards and buttons, which have names of their own.
-fn heading_texts(node: &PenNode) -> Vec<TextInfo<'_>> {
+fn texts<'a>(node: &'a PenNode, depth: usize, scope: Scope, facts: &Facts) -> Vec<TextInfo<'a>> {
     let mut out = Vec::new();
-    collect(node, 0, &|kid, _| is_card_or_button(kid), &mut out);
-    out
+    collect(node, depth, scope, facts, false, &mut out);
+    out.into_iter().map(|placed| placed.info).collect()
 }
 
 fn short_heading(text: &str) -> Option<String> {
@@ -177,16 +183,52 @@ fn pick_heading<'t, 'a>(texts: &'t [TextInfo<'a>]) -> Option<&'t TextInfo<'a>> {
 
 /// The heading `node` is named after (`Starter` → `Starter card`), when
 /// it is short enough. Prices and other figures never qualify, and the
-/// texts of nested cards and buttons are not looked at.
-pub(crate) fn heading(node: &PenNode) -> Option<String> {
-    let texts = heading_texts(node);
+/// texts of nested cards and buttons are not looked at. Remembered per
+/// node: ask [`Facts::heading`].
+pub(crate) fn heading_of(node: &PenNode, facts: &Facts) -> Option<String> {
+    let texts = texts(node, 0, Scope::Heading, facts);
+    short_heading(&pick_heading(&texts)?.content)
+}
+
+/// The first child of a screen that reads as its header band: at most
+/// `HEADER_MAX_HEIGHT` tall (or, without an authored height, a row),
+/// holding two or more texts, none longer than a link label.
+fn header_band(screen: &PenNode, facts: &Facts) -> bool {
+    let Some(first) = children(screen).first() else {
+        return false;
+    };
+    let band = match numeric_height(first) {
+        Some(height) => height <= HEADER_MAX_HEIGHT,
+        None => layout(first) == Some(&LayoutMode::Horizontal),
+    };
+    let labels = texts(first, 1, Scope::Heading, facts);
+    band && is_container(first)
+        && labels.len() >= 2
+        && labels
+            .iter()
+            .all(|t| t.content.chars().count() <= HEADER_TEXT_MAX_CHARS)
+}
+
+/// The heading a screen is named after: the first heading-like text of
+/// its main content, past a header band (a logo there never names it).
+pub(crate) fn screen_heading(screen: &PenNode, facts: &Facts) -> Option<String> {
+    let mut placed = Vec::new();
+    collect(
+        screen,
+        0,
+        Scope::Heading,
+        facts,
+        header_band(screen, facts),
+        &mut placed,
+    );
+    let texts: Vec<TextInfo> = placed.into_iter().map(|p| p.info).collect();
     short_heading(&pick_heading(&texts)?.content)
 }
 
 /// `node` itself as a heading: a prominent, short text of words.
 pub(crate) fn standalone_heading(node: &PenNode) -> Option<String> {
     let info = TextInfo::of(node)?;
-    (info.wordy() && info.prominent())
+    (is_node_visible(node) && info.wordy() && info.prominent())
         .then(|| short_heading(&info.content))
         .flatten()
 }
@@ -194,19 +236,19 @@ pub(crate) fn standalone_heading(node: &PenNode) -> Option<String> {
 /// The short texts of words that may label `node`, in reading order:
 /// qualifiers for a sibling that would otherwise repeat a name
 /// (`Row (10 images a month)`).
-pub(crate) fn labels(node: &PenNode) -> Vec<String> {
-    heading_texts(node)
+pub(crate) fn labels(node: &PenNode, facts: &Facts) -> Vec<String> {
+    texts(node, 0, Scope::Heading, facts)
         .into_iter()
         .filter(|t| t.wordy() && t.content.chars().count() <= MAX_LABEL_CHARS)
         .map(|t| t.content)
         .collect()
 }
 
-/// Whether any text below `node` is a price.
-pub(crate) fn holds_price(node: &PenNode) -> bool {
-    let mut out = Vec::new();
-    collect(node, 0, &|_, _| false, &mut out);
-    out.iter().any(|t| is_price(&t.content))
+/// Whether any visible text below `node` is a price.
+pub(crate) fn holds_price(node: &PenNode, facts: &Facts) -> bool {
+    texts(node, 0, Scope::Heading, facts)
+        .iter()
+        .any(|t| is_price(&t.content))
 }
 
 /// The first words of a long text, cut at a word boundary, with an
@@ -285,9 +327,14 @@ fn text_role_in(info: &TextInfo<'_>, slots: &mut Slots) -> Role {
     }
 }
 
-/// The role of a text layer on its own, outside any unit.
+/// The role of a text layer on its own, outside any unit. A hidden text,
+/// which no unit reads, is named by what it says: it never takes a role a
+/// visible sibling holds.
 pub(crate) fn text_role(node: &PenNode) -> Option<Role> {
     let info = TextInfo::of(node)?;
+    if !is_node_visible(node) {
+        return Some(by_content(&info));
+    }
     Some(text_role_in(&info, &mut Slots::default()))
 }
 
@@ -301,18 +348,16 @@ impl UnitRoles {
         self.0.get(&std::ptr::from_ref(node)).cloned()
     }
 
-    /// Hand out the roles of the texts of `unit` (at `depth`), top to
-    /// bottom: the first heading-like text is the title, the next one the
-    /// subtitle, the first price the price, the first long text the
+    /// Hand out the roles of the visible texts of `unit` (at `depth`), in
+    /// reading order: the first heading-like text is the title, the next
+    /// one the subtitle, the first price the price, the first long text the
     /// description (or caption when small); the rest are named by what they
     /// say. A button's texts are its labels, named by what they say. Texts
     /// of nested units get their roles there.
-    pub(crate) fn of(unit: &PenNode, depth: usize) -> Self {
-        let mut texts = Vec::new();
-        collect(unit, depth, &|kid, d| is_unit(kid, d), &mut texts);
-        let is_button = button_role(unit).is_some();
+    pub(crate) fn of(unit: &PenNode, depth: usize, facts: &Facts) -> Self {
+        let is_button = facts.is_button(unit);
         let mut slots = Slots::default();
-        let roles = texts
+        let roles = texts(unit, depth, Scope::Roles, facts)
             .iter()
             .map(|info| {
                 let role = if is_button {

@@ -460,7 +460,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "renameLayers.role.description" => "Açıklama",
         "renameLayers.role.subtitle" => "Alt başlık",
         "renameLayers.role.price" => "Fiyat",
-        "renameLayers.role.caption" => "Alt yazı",
+        "renameLayers.role.caption" => "Dipnot",
         "renameLayers.role.iconNamed" => "{{name}} simgesi",
         "renameLayers.role.icon" => "Simge",
         "renameLayers.role.picture" => "Fotoğraf",

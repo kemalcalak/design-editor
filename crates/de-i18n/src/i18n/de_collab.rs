@@ -449,7 +449,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "renameLayers.role.card" => "Karte",
         "renameLayers.role.cardNamed" => "Karte {{name}}",
         "renameLayers.role.cards" => "Karten",
-        "renameLayers.role.cardsNamed" => "Karten {{name}}",
+        "renameLayers.role.cardsNamed" => "{{name}}-Karten",
         "renameLayers.role.pricingCards" => "Preiskarten",
         "renameLayers.role.row" => "Zeile",
         "renameLayers.role.column" => "Spalte",

@@ -9,15 +9,16 @@ use jian_ops_schema::style::PenFill;
 
 use crate::color::{parse_hex_color, relative_luminance};
 use crate::node_util::{
-    children, corner_radius_numeric, first_fill_color, has_stroke, node_fills, node_kind,
-    numeric_height, numeric_width, NodeKind,
+    children, corner_radius_numeric, first_fill_color, has_stroke, is_node_visible, node_fills,
+    node_kind, numeric_height, numeric_width, NodeKind,
 };
 
-use super::text_roles::{self, heading, holds_price, is_card};
+use super::facts::Facts;
+use super::text_roles::{self, holds_price, screen_heading};
 
-/// How a container of repeated cards is named: after the heading right
-/// before it (`Plans` → `Plans cards`), as pricing cards when every card
-/// holds a price, else plainly.
+/// How a container of repeated cards is named: as pricing cards when at
+/// least half of them hold a price, else after the heading right before it
+/// (`Plans` → `Plans cards`), else plainly.
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) enum CardsName {
     Heading(String),
@@ -211,9 +212,9 @@ fn has_visible_fill(node: &PenNode) -> bool {
     node_fills(node).is_some_and(|fills| !fills.is_empty())
 }
 
-/// Every text layer below `node` (depth-first), with its font size.
+/// Every visible text layer below `node` (depth-first), with its font size.
 fn texts_below(node: &PenNode, out: &mut Vec<(f64, String)>) {
-    for child in children(node) {
+    for child in children(node).iter().filter(|kid| is_node_visible(kid)) {
         if let Some(text) = text_content(child) {
             if !text.is_empty() {
                 out.push((font_size(child), text));
@@ -297,7 +298,7 @@ fn covers(node: &PenNode, parent: Option<&PenNode>, share: f64) -> bool {
 }
 
 /// Section of a screen: a wide child of a top-level frame.
-fn section_role(node: &PenNode, place: Place<'_>) -> Option<Role> {
+fn section_role(node: &PenNode, place: Place<'_>, facts: &Facts) -> Option<Role> {
     let parent = place.parent?;
     if place.depth != 1 || !matches!(node_kind(parent), NodeKind::Frame | NodeKind::Group) {
         return None;
@@ -326,32 +327,36 @@ fn section_role(node: &PenNode, place: Place<'_>) -> Option<Role> {
     if siblings >= 3 && place.index + 1 == siblings && largest <= 16.0 {
         return Some(Role::Footer);
     }
-    Some(Role::Section(heading(node)))
+    Some(Role::Section(facts.heading(node)))
 }
 
-pub(crate) fn card_role(node: &PenNode) -> Option<Role> {
+/// A filled or outlined box with rounded corners or a border, holding two
+/// or more layers and some visible text: the shape of a card.
+pub(crate) fn is_card_shaped(node: &PenNode, facts: &Facts) -> bool {
     let decorated = has_stroke(node) || corner_radius_numeric(node) > 0.0;
-    if !(has_visible_fill(node) || has_stroke(node)) || !decorated || children(node).len() < 2 {
-        return None;
-    }
-    let mut texts = Vec::new();
-    texts_below(node, &mut texts);
-    (!texts.is_empty()).then(|| Role::Card(heading(node)))
+    (has_visible_fill(node) || has_stroke(node))
+        && decorated
+        && children(node).len() >= 2
+        && facts.has_text(node)
+}
+
+fn card_role(node: &PenNode, facts: &Facts) -> Option<Role> {
+    is_card_shaped(node, facts).then(|| Role::Card(facts.heading(node)))
 }
 
 /// Two or more cards side by side, named for their content, never after
-/// one of them: `Plans cards` under a `Plans` heading, `Pricing cards`
-/// when every card holds a price, else `Cards`.
-fn cards_role(node: &PenNode, place: Place<'_>) -> Option<Role> {
+/// one of them: `Pricing cards` when at least half of them hold a price,
+/// `Plans cards` under a `Plans` heading, else `Cards`.
+fn cards_role(node: &PenNode, place: Place<'_>, facts: &Facts) -> Option<Role> {
     let kids = children(node);
-    if kids.len() < 2 || !kids.iter().all(is_card) {
+    if kids.len() < 2 || !kids.iter().all(|kid| facts.is_card(kid)) {
         return None;
     }
-    if let Some(heading) = preceding_heading(place) {
-        return Some(Role::Cards(CardsName::Heading(heading)));
-    }
-    Some(Role::Cards(if kids.iter().all(holds_price) {
+    let priced = kids.iter().filter(|kid| holds_price(kid, facts)).count();
+    Some(Role::Cards(if priced * 2 >= kids.len() {
         CardsName::Pricing
+    } else if let Some(heading) = preceding_heading(place) {
+        CardsName::Heading(heading)
     } else {
         CardsName::Plain
     }))
@@ -364,17 +369,17 @@ fn preceding_heading(place: Place<'_>) -> Option<String> {
     text_roles::standalone_heading(previous)
 }
 
-fn container_role(node: &PenNode, place: Place<'_>) -> Role {
+fn container_role(node: &PenNode, place: Place<'_>, facts: &Facts) -> Role {
     if let Some(role) = button_role(node) {
         return role;
     }
-    if let Some(role) = cards_role(node, place) {
+    if let Some(role) = cards_role(node, place, facts) {
         return role;
     }
-    if let Some(role) = section_role(node, place) {
+    if let Some(role) = section_role(node, place, facts) {
         return role;
     }
-    if let Some(role) = card_role(node) {
+    if let Some(role) = card_role(node, facts) {
         return role;
     }
     match layout(node) {
@@ -407,10 +412,10 @@ fn leaf_shape_role(node: &PenNode, place: Place<'_>) -> Role {
 
 /// The role the rules read off `node`, or `None` for layers they do not
 /// name (component instances, notes, embedded browsers, empty text).
-pub(crate) fn infer_role(node: &PenNode, place: Place<'_>) -> Option<Role> {
+pub(crate) fn infer_role(node: &PenNode, place: Place<'_>, facts: &Facts) -> Option<Role> {
     let kind = node_kind(node);
     if place.depth == 0 && matches!(kind, NodeKind::Frame | NodeKind::Group) {
-        return Some(Role::Screen(heading(node)));
+        return Some(Role::Screen(screen_heading(node, facts)));
     }
     Some(match kind {
         NodeKind::Text => return text_roles::text_role(node),
@@ -441,7 +446,7 @@ pub(crate) fn infer_role(node: &PenNode, place: Place<'_>) -> Option<Role> {
         NodeKind::Progress => Role::ProgressBar,
         NodeKind::Tabs => Role::TabBar,
         NodeKind::Frame | NodeKind::Group | NodeKind::Rectangle if !children(node).is_empty() => {
-            container_role(node, place)
+            container_role(node, place, facts)
         }
         NodeKind::Frame
         | NodeKind::Group

@@ -198,3 +198,31 @@ fn reopening_an_open_preview_keeps_its_edits() {
     assert!(!state.open_rename_layers(), "already open");
     assert!(!state.editor_ui.rename_layers.as_ref().unwrap().rows[0].accepted);
 }
+
+#[test]
+fn instances_are_named_after_the_content_their_master_shows() {
+    // A plan-card master on the page and an instance that overrides the
+    // plan name: the instance reads its own override.
+    let doc = json!({"version": "1.0.0", "children": [
+        {"type": "frame", "id": "plan", "name": "Plan", "reusable": true, "width": 240,
+         "height": 200, "cornerRadius": 12, "layout": "vertical",
+         "fill": [{"type": "solid", "color": "#FFFFFF"}], "children": [
+            {"type": "text", "id": "plan-name", "content": "Starter", "fontSize": 20},
+            {"type": "text", "id": "plan-price", "content": "$9", "fontSize": 28}
+         ]},
+        {"type": "frame", "id": "screen", "name": "Frame 1", "width": 1440, "height": 900,
+         "layout": "vertical", "children": [
+            {"type": "ref", "id": "pro", "name": "Frame 4", "ref": "plan",
+             "descendants": {"plan-name": {"content": "Pro"}}}
+         ]}
+    ]});
+    let state = EditorState::from_document(
+        jian_ops_schema::load_str(&doc.to_string())
+            .expect("fixture")
+            .value,
+    );
+    let proposals = state.rename_layer_proposals(&[NodeId::new("pro")]);
+    assert_eq!(proposals.len(), 1, "{proposals:?}");
+    assert_eq!(proposals[0].node_id, "pro");
+    assert_eq!(proposals[0].proposed, "Pro card");
+}
