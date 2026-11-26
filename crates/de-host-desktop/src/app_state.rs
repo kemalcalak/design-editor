@@ -234,6 +234,7 @@ impl DesktopApp {
             current_html_import: None,
             pending_figma_paste: None,
             pending_html_paste: None,
+            clipboard: Box::new(crate::system_clipboard::OsClipboard::default()),
             model_probe,
             builtin_model_refresh: Default::default(),
             image_search: image_search_session::ImageSearchSession::new(),

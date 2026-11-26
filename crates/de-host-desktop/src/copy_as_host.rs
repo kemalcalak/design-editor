@@ -2,6 +2,7 @@
 //! `de_host_services::clipboard_export`; this writes the OS clipboard and
 //! says how it went in a toast.
 
+use crate::system_clipboard::ClipboardWrite;
 use crate::DesktopApp;
 use de_editor_core::copy_as::CopyAsFormat;
 use de_editor_core::editor_toast::EditorToastLevel;
@@ -16,13 +17,14 @@ impl DesktopApp {
             return false;
         }
         let written = match format {
-            CopyAsFormat::Png => {
-                selection_png(state).map(|png| crate::clipboard::set_png_image(&png))
-            }
-            CopyAsFormat::Svg => selection_svg(state).map(|svg| crate::clipboard::set_text(&svg)),
+            CopyAsFormat::Png => selection_png(state).map(ClipboardWrite::PngImage),
+            CopyAsFormat::Svg => selection_svg(state).map(ClipboardWrite::Text),
         };
         let (key, level) = match written {
-            Ok(()) => (format.copied_key(), EditorToastLevel::Info),
+            Ok(write) => {
+                self.clipboard.write(write);
+                (format.copied_key(), EditorToastLevel::Info)
+            }
             Err(err) => {
                 eprintln!("[copy-as] {err}");
                 (CopyAsFormat::FAILED_KEY, EditorToastLevel::Warn)

@@ -8,8 +8,15 @@
 //! own content counts as named.
 
 mod default_names;
+mod facts;
+mod instances;
 mod lang;
+mod money;
+mod reading;
 mod rules;
+mod text_roles;
+mod unique;
+mod walk;
 
 use std::collections::HashSet;
 
@@ -19,14 +26,15 @@ use serde::Serialize;
 use serde_json::Value;
 
 use crate::issue::{FixProperty, Issue, IssueCategory, IssueSeverity};
-use crate::node_util::{base, children, node_id};
+use crate::node_util::{base, children};
 
 pub use default_names::is_default_layer_name;
+pub use instances::{ExpandedInstances, InstanceSource, NamingPage, NoInstances};
 pub use lang::detect_document_locale;
 
 pub use rules::{collapse_whitespace, text_content};
 
-use rules::{infer_role, Place};
+use walk::candidates;
 
 /// One proposed rename: the layer, its name today (`None` when it has
 /// none) and the name the rules propose.
@@ -80,103 +88,9 @@ pub fn document_locale(roots: &[PenNode]) -> Locale {
     detect_document_locale(texts.iter().map(String::as_str))
 }
 
-/// A layer that has no meaningful name, with the rules' proposal for it
-/// (`None` when the rules have nothing better to offer).
-struct Candidate {
-    node_id: String,
-    current: Option<String>,
-    proposed: Option<String>,
-}
-
-struct Walk<'a> {
-    targets: Option<&'a HashSet<String>>,
-    locale: Locale,
-    out: Vec<Candidate>,
-}
-
-impl Walk<'_> {
-    fn node(&mut self, node: &PenNode, place: Place<'_>, section: Option<&str>, in_target: bool) {
-        let id = node_id(node);
-        let in_target = in_target || self.targets.is_none_or(|targets| targets.contains(id));
-        let role = infer_role(node, place);
-        let current = base(node).name.clone();
-        let final_name = if has_meaningful_name(node) {
-            current.clone()
-        } else {
-            let proposed = role
-                .as_ref()
-                .map(|role| role.render(self.locale, section))
-                .filter(|proposed| acceptable(node, proposed, current.as_deref()));
-            if in_target {
-                self.out.push(Candidate {
-                    node_id: id.to_string(),
-                    current: current.clone(),
-                    proposed: proposed.clone(),
-                });
-            }
-            proposed
-        };
-        // A section-like layer (or any wide child of a screen) names the
-        // section its descendants sit in: `Hero / Title`.
-        let names_section = role.as_ref().is_some_and(|role| role.is_section_like())
-            || (place.depth == 1 && final_name.is_some() && !children(node).is_empty());
-        let child_section = if names_section {
-            final_name.as_deref()
-        } else {
-            section
-        };
-        for (index, child) in children(node).iter().enumerate() {
-            self.node(
-                child,
-                Place {
-                    parent: Some(node),
-                    index,
-                    depth: place.depth + 1,
-                },
-                child_section,
-                in_target,
-            );
-        }
-    }
-}
-
-/// A proposal is worth making when it is not itself a default name (a
-/// text layer named after its content is fine) and it changes something.
-fn acceptable(node: &PenNode, proposed: &str, current: Option<&str>) -> bool {
-    if proposed.trim().is_empty() || current.map(str::trim) == Some(proposed.trim()) {
-        return false;
-    }
-    !is_default_layer_name(proposed)
-        || text_content(node).is_some_and(|content| content == collapse_whitespace(proposed))
-}
-
-fn candidates(
-    roots: &[PenNode],
-    targets: Option<&HashSet<String>>,
-    locale: Locale,
-) -> Vec<Candidate> {
-    let mut walk = Walk {
-        targets,
-        locale,
-        out: Vec::new(),
-    };
-    for (index, root) in roots.iter().enumerate() {
-        walk.node(
-            root,
-            Place {
-                parent: None,
-                index,
-                depth: 0,
-            },
-            None,
-            false,
-        );
-    }
-    walk.out
-}
-
 /// Rule-based names for the layers under `roots` (a page's top-level
-/// layers) that have no meaningful name, in tree order. `targets` limits
+/// layers) that have no meaningful name, in tree order, reading no
+/// component instances (see [`propose_layer_names_on`]). `targets` limits
 /// the proposals to those layers and their descendants; `None` covers the
 /// whole page. Role words come from `locale` — pass the document's
 /// language ([`document_locale`]).
@@ -185,7 +99,17 @@ pub fn propose_layer_names(
     targets: Option<&HashSet<String>>,
     locale: Locale,
 ) -> Vec<LayerNameProposal> {
-    candidates(roots, targets, locale)
+    propose_layer_names_on(&NamingPage::new(roots, &NoInstances), targets, locale)
+}
+
+/// [`propose_layer_names`] over a page read with its instances expanded,
+/// so a card instance is named after the texts it shows.
+pub fn propose_layer_names_on(
+    page: &NamingPage,
+    targets: Option<&HashSet<String>>,
+    locale: Locale,
+) -> Vec<LayerNameProposal> {
+    candidates(page, targets, locale)
         .into_iter()
         .filter_map(|candidate| {
             Some(LayerNameProposal {
@@ -197,22 +121,31 @@ pub fn propose_layer_names(
         .collect()
 }
 
-/// Info finding for every layer under `root` (a top-level layer of a
-/// page) whose name is an editor default. The suggested value is the
-/// rules' proposal, or `null` when they have none; the fix is
-/// `rename_layers`.
-pub fn detect_default_layer_names(root: &PenNode) -> Vec<Issue> {
-    let roots = std::slice::from_ref(root);
-    candidates(roots, None, document_locale(roots))
+/// Info finding for every layer of `page` whose name is an editor
+/// default. The page is named as one, like `rename_layers` names it, so
+/// the suggested value is exactly the name `rename_layers` applies. When the
+/// rules have none (`null`), the finding points to a hand-written name or
+/// `rename_layers` mode `ai` instead of the rules. `locale` is the page's language
+/// ([`document_locale`] of its layers).
+pub fn detect_default_layer_names(page: &NamingPage, locale: Locale) -> Vec<Issue> {
+    candidates(page, None, locale)
         .into_iter()
         .filter_map(|candidate| {
             let current = candidate.current?;
             is_default_layer_name(&current).then(|| Issue {
-                reason: format!(
-                    "layer name \"{}\" is an editor default; rename it after what it is \
-                     (rename_layers)",
-                    current.trim()
-                ),
+                reason: match &candidate.proposed {
+                    Some(_) => format!(
+                        "layer name \"{}\" is an editor default; rename it after what it is \
+                         (rename_layers)",
+                        current.trim()
+                    ),
+                    None => format!(
+                        "layer name \"{}\" is an editor default, and the rules cannot tell it \
+                         apart from its siblings; name it by hand or with rename_layers mode \
+                         \"ai\"",
+                        current.trim()
+                    ),
+                },
                 node_id: candidate.node_id,
                 category: IssueCategory::DefaultLayerName,
                 severity: IssueSeverity::Info,
@@ -227,3 +160,11 @@ pub fn detect_default_layer_names(root: &PenNode) -> Vec<Issue> {
 #[cfg(test)]
 #[path = "layer_names_tests.rs"]
 mod tests;
+
+#[cfg(test)]
+#[path = "layer_names_roles_tests.rs"]
+mod roles_tests;
+
+#[cfg(test)]
+#[path = "layer_names_review_tests.rs"]
+mod review_tests;

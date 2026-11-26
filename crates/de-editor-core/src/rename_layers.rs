@@ -12,10 +12,11 @@
 
 pub mod ai;
 mod dialog;
+mod instances;
 
 use std::collections::HashSet;
 
-use de_design_lint::{document_locale, propose_layer_names};
+use de_design_lint::{document_locale, propose_layer_names_on};
 use de_i18n::Locale;
 use jian_core::scroll::ScrollState;
 use jian_core::text_input::TextInputState;
@@ -27,6 +28,7 @@ pub use de_design_lint::LayerNameProposal;
 pub use dialog::{
     rename_layers_backspace, rename_layers_enter, rename_layers_escape, rename_layers_text,
 };
+pub use instances::DocumentInstances;
 
 /// One row of the preview: a layer, its name today and the name it gets
 /// when the row is accepted.
@@ -116,8 +118,8 @@ impl EditorState {
 
     fn rename_layer_proposals_in(&self, ids: &[NodeId], locale: Locale) -> Vec<LayerNameProposal> {
         let targets: HashSet<String> = ids.iter().map(|id| id.as_str().to_string()).collect();
-        propose_layer_names(
-            self.active_children(),
+        propose_layer_names_on(
+            &self.naming_page(),
             (!targets.is_empty()).then_some(&targets),
             locale,
         )

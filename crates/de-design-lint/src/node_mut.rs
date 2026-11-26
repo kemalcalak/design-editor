@@ -160,7 +160,7 @@ pub fn detach_child(parent: &mut PenNode, node_id: &str) -> bool {
 
 /// Mutable borrow of a container's `children` vec. `None` for non-container
 /// kinds and for containers whose `children` field is unset.
-fn children_mut(node: &mut PenNode) -> Option<&mut Vec<PenNode>> {
+pub(crate) fn children_mut(node: &mut PenNode) -> Option<&mut Vec<PenNode>> {
     match node {
         PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => n.children.as_mut(),
         PenNode::Group(n)
@@ -173,7 +173,7 @@ fn children_mut(node: &mut PenNode) -> Option<&mut Vec<PenNode>> {
 }
 
 /// Mutable borrow of any node kind's shared [`PenNodeBase`].
-fn base_mut(node: &mut PenNode) -> &mut jian_ops_schema::node::PenNodeBase {
+pub(crate) fn base_mut(node: &mut PenNode) -> &mut jian_ops_schema::node::PenNodeBase {
     match node {
         PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => &mut n.base,
         PenNode::Group(n)

@@ -153,6 +153,8 @@ mod keyboard_escape;
 mod keyboard_send;
 #[cfg(test)]
 mod large_doc_frame_tests;
+#[cfg(test)]
+mod layer_menu_width_tests;
 mod missing_fonts_dispatch;
 mod mode_transition_host;
 #[cfg(test)]
@@ -259,6 +261,8 @@ mod shape_picker_press;
 #[cfg(test)]
 mod shortcut_surface_tests;
 mod shortcuts;
+#[cfg(test)]
+mod shortcuts_clipboard_marker_tests;
 mod slides_panel;
 mod slides_panel_thumbs;
 mod text_edit_press;

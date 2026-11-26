@@ -49,15 +49,13 @@ impl WidgetHostNative {
                 return Some(true);
             }
         }
-        if let Some(state) = self
-            .editor_state
-            .editor_ui
-            .layer_context_menu
-            .clone()
-            .filter(|_| !over_topmost)
-        {
-            use de_editor_ui::widgets::layer_context_menu::LayerContextMenu;
-            let menu = LayerContextMenu::for_state(&self.editor_state, state.clone());
+        let layer_menu = if over_topmost {
+            None
+        } else {
+            self.measured_layer_context_menu()
+        };
+        if let Some(menu) = layer_menu {
+            let state = menu.state.clone();
             let over_menu = menu.rect().contains(Point2D::new(x, y));
             let new_hover = menu.hovered_row_at(Point2D::new(x, y));
             let menu_hover_changed = new_hover != state.menu.hover;

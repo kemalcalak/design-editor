@@ -152,6 +152,7 @@ pub mod missing_fonts;
 pub mod motion_edit;
 pub mod motion_guard;
 pub mod mutators;
+pub mod node_clipboard_marker;
 pub mod node_defaults;
 pub mod node_id;
 pub mod node_scale;
