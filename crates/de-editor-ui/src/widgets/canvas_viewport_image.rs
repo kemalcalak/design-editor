@@ -107,6 +107,21 @@ fn data_url_cache() -> &'static Mutex<DataUrlCache> {
     DATA_URL_CACHE.get_or_init(|| Mutex::new(DataUrlCache::new()))
 }
 
+/// What the decoded data-URL byte cache holds (#456): the encoded image
+/// bytes image nodes and fills paint from.
+pub fn data_url_cache_usage() -> de_editor_core::memory_report::CacheUsage {
+    let (entries, bytes) = data_url_cache()
+        .lock()
+        .map(|cache| (cache.entries.len(), cache.bytes))
+        .unwrap_or((0, 0));
+    de_editor_core::memory_report::CacheUsage::exact(
+        "image_encoded_bytes",
+        bytes as u64,
+        entries as u64,
+        Some(DATA_URL_CACHE_BYTE_BUDGET as u64),
+    )
+}
+
 /// Most remote misses a single frame can queue before the rest wait
 /// for the next paint (the host drains a few per frame anyway).
 const REMOTE_MISS_QUEUE_CAP: usize = 32;

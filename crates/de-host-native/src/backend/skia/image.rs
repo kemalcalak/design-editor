@@ -672,3 +672,14 @@ mod crop_transform_tests {
         assert_eq!([source[0] * 0.25, source[1] * 0.25], [1024.0, 1024.0]);
     }
 }
+
+impl NativeBackend {
+    /// Blur-up thumbnail cache: `(entries, bytes, byte budget)` (#456).
+    pub(super) fn thumb_cache_usage(&self) -> (usize, usize, usize) {
+        (
+            self.thumb_cache.entries.len(),
+            self.thumb_cache.bytes,
+            THUMB_CACHE_BYTE_BUDGET,
+        )
+    }
+}

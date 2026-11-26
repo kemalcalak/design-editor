@@ -97,6 +97,7 @@ pub mod model_catalog_refresh;
 pub mod model_discovery;
 mod model_probe;
 pub mod pre_validator;
+pub mod process_memory;
 mod provider_dial;
 pub mod provider_probe;
 pub mod provider_probe_host;

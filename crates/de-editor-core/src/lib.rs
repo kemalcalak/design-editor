@@ -147,6 +147,7 @@ mod interaction_fixture;
 pub mod interaction_graph;
 pub mod interaction_write;
 pub mod measure;
+pub mod memory_report;
 pub mod mesh_lattice;
 pub mod missing_fonts;
 pub mod motion_edit;
