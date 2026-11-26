@@ -63,7 +63,7 @@ fn generated_screen() -> PenNode {
     }))
 }
 
-fn page_of(root: &PenNode) -> NamingPage {
+fn page_of(root: &PenNode) -> NamingPage<'_> {
     NamingPage::new(std::slice::from_ref(root), &NoInstances)
 }
 

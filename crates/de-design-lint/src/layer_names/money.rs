@@ -1,6 +1,12 @@
 //! Prices and figures in the 15 editor languages: `$9`, `99 TL/ay`,
 //! `Rp 50.000`, `฿99`, `1.000円`, `9,900원/월`, `49 zł`, `29 €/mois`. A
 //! figure never names a container; a price gets the `Price` role.
+//!
+//! Words count as a currency or a billing period only where a price puts
+//! them: a currency code next to a number (`99 TL`, `Rp 50.000`, `US$9`),
+//! a period after a number, a currency, a `/` or another period word
+//! (`/ month`, `pro Monat`). `Join us in 2026`, `Try 14 days free` and
+//! `Pro 2026` stay words.
 
 /// Letters a figure may carry besides its digits, its currency and its
 /// period (`12k`, `24h`, `4.9`).
@@ -29,9 +35,9 @@ fn is_currency_sign(c: char) -> bool {
     )
 }
 
-/// Currency codes and words written as letters (compared lowercased).
+/// Currency codes and local words that are no ordinary word: they count
+/// on either side of a number (`Rp 50.000`, `99 TL`, `49 zł`).
 const CURRENCY_WORDS: &[&str] = &[
-    // ISO codes.
     "usd",
     "eur",
     "gbp",
@@ -46,7 +52,6 @@ const CURRENCY_WORDS: &[&str] = &[
     "idr",
     "thb",
     "vnd",
-    "try",
     "rub",
     "brl",
     "pln",
@@ -59,13 +64,10 @@ const CURRENCY_WORDS: &[&str] = &[
     "mxn",
     "sgd",
     "myr",
-    "php",
     "zar",
     "czk",
     "huf",
-    "ron",
     "uah",
-    // Local spellings.
     "tl",
     "rp",
     "rs",
@@ -73,23 +75,22 @@ const CURRENCY_WORDS: &[&str] = &[
     "zl",
     "kr",
     "kč",
-    "ft",
-    "lei",
     "đ",
     "đồng",
-    "dong",
     "руб",
     "р",
     "грн",
     "บาท",
     "रु",
     "रुपये",
-    "us",
-    "nt",
-    "hk",
 ];
 
-/// Billing periods and the words around them (compared lowercased).
+/// Codes that are also everyday words (`us`, `try`, `ron`, `php`, `ft`,
+/// `lei`, `nt`, `hk`): they count after a number, or before one only
+/// written in capitals (`US$9`, `TRY 99`, `NT$ 290`).
+const AMBIGUOUS_CURRENCY_WORDS: &[&str] = &["us", "try", "ron", "php", "ft", "lei", "nt", "hk"];
+
+/// Billing periods and the words that join them to a price.
 const PERIOD_WORDS: &[&str] = &[
     // en
     "mo",
@@ -108,8 +109,7 @@ const PERIOD_WORDS: &[&str] = &[
     "per",
     "a",
     "an",
-    "each",
-    // tr
+    "each", // tr
     "ay",
     "aylık",
     "yıl",
@@ -117,49 +117,38 @@ const PERIOD_WORDS: &[&str] = &[
     "yil",
     "hafta",
     "gün",
-    "başına",
-    // de
+    "başına", // de
     "monat",
     "monatlich",
     "jahr",
     "jährlich",
     "pro",
     "je",
-    "mtl",
-    // fr
+    "mtl", // fr
     "mois",
-    "an",
-    "par",
-    // es / pt
+    "par", // es / pt
     "mes",
     "año",
     "ano",
     "anual",
     "mês",
     "por",
-    "al",
-    // id
+    "al", // id
     "bulan",
-    "tahun",
-    "per",
-    // vi
+    "tahun", // vi
     "tháng",
-    "năm",
-    // ru
+    "năm", // ru
     "мес",
     "месяц",
     "год",
-    "в",
-    // hi
+    "в", // hi
     "माह",
     "महीना",
     "साल",
-    "प्रति",
-    // th
+    "प्रति", // th
     "เดือน",
     "ปี",
-    "ต่อ",
-    // ja / zh / ko
+    "ต่อ", // ja / zh / ko
     "月",
     "年",
     "ヶ月",
@@ -170,43 +159,116 @@ const PERIOD_WORDS: &[&str] = &[
     "매월",
 ];
 
-/// The letter-bearing words of `text`, split at whitespace, `/`, `·` and
-/// digits, trimmed of punctuation and lowercased.
-fn words(text: &str) -> impl Iterator<Item = String> + '_ {
-    text.split(|c: char| c.is_whitespace() || c == '/' || c == '·' || c.is_ascii_digit())
-        .map(|word| {
-            word.trim_matches(|c: char| !c.is_alphabetic())
-                .to_lowercase()
-        })
-        .filter(|word| !word.is_empty())
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Kind {
+    Number,
+    Word,
+    Sign,
+    Slash,
 }
 
-/// Lowercased words read as a currency (`tl`, `usd`, `円`).
-fn is_currency_word(word: &str) -> bool {
-    CURRENCY_WORDS.contains(&word)
-        || (word.chars().count() == 1 && word.chars().all(is_currency_sign))
+struct Token {
+    kind: Kind,
+    text: String,
+}
+
+/// `text` as numbers (digits with `.` `,` `'` inside), words (letters),
+/// currency signs and slashes; other punctuation and spaces separate.
+fn tokens(text: &str) -> Vec<Token> {
+    let chars: Vec<char> = text.chars().collect();
+    let mut out: Vec<Token> = Vec::new();
+    let mut i = 0;
+    while i < chars.len() {
+        let c = chars[i];
+        let (kind, mut end) = if is_currency_sign(c) {
+            (Kind::Sign, i + 1)
+        } else if c.is_numeric() {
+            (Kind::Number, i + 1)
+        } else if c.is_alphabetic() {
+            (Kind::Word, i + 1)
+        } else if c == '/' {
+            (Kind::Slash, i + 1)
+        } else {
+            i += 1;
+            continue;
+        };
+        while end < chars.len() {
+            let next = chars[end];
+            let more = match kind {
+                Kind::Number => {
+                    next.is_numeric()
+                        || (matches!(next, '.' | ',' | '\'')
+                            && chars.get(end + 1).is_some_and(|c| c.is_numeric()))
+                }
+                Kind::Word => next.is_alphabetic() && !is_currency_sign(next),
+                Kind::Sign | Kind::Slash => false,
+            };
+            if !more {
+                break;
+            }
+            end += 1;
+        }
+        out.push(Token {
+            kind,
+            text: chars[i..end].iter().collect(),
+        });
+        i = end;
+    }
+    out
 }
 
 struct Reading {
     has_digit: bool,
     has_currency: bool,
-    /// Letters outside currency and period words.
+    /// Letters outside the words read as currency or period.
     other_letters: usize,
 }
 
 fn read(text: &str) -> Reading {
-    let mut has_currency = text.chars().any(is_currency_sign);
-    let mut other_letters = 0;
-    for word in words(text) {
-        if is_currency_word(&word) {
-            has_currency = true;
-        } else if !PERIOD_WORDS.contains(&word.as_str()) {
-            other_letters += word.chars().filter(|c| c.is_alphabetic()).count();
+    let tokens = tokens(text);
+    let kind_at = |i: Option<usize>| i.and_then(|i| tokens.get(i)).map(|t| t.kind);
+    let before = |i: usize| i.checked_sub(1);
+    let mut currency = vec![false; tokens.len()];
+    for (i, token) in tokens.iter().enumerate() {
+        match token.kind {
+            Kind::Sign => currency[i] = true,
+            Kind::Word => {
+                let lower = token.text.to_lowercase();
+                let after_number = kind_at(before(i)) == Some(Kind::Number);
+                let before_number = matches!(kind_at(Some(i + 1)), Some(Kind::Number))
+                    || (kind_at(Some(i + 1)) == Some(Kind::Sign)
+                        && kind_at(Some(i + 2)) == Some(Kind::Number));
+                currency[i] = if CURRENCY_WORDS.contains(&lower.as_str()) {
+                    after_number || before_number
+                } else if AMBIGUOUS_CURRENCY_WORDS.contains(&lower.as_str()) {
+                    after_number || (before_number && token.text.chars().all(|c| !c.is_lowercase()))
+                } else {
+                    false
+                };
+            }
+            Kind::Number | Kind::Slash => {}
         }
     }
+    let mut period = vec![false; tokens.len()];
+    for (i, token) in tokens.iter().enumerate() {
+        if token.kind != Kind::Word || currency[i] {
+            continue;
+        }
+        let lower = token.text.to_lowercase();
+        let joined = before(i).is_some_and(|p| {
+            matches!(tokens[p].kind, Kind::Number | Kind::Slash) || currency[p] || period[p]
+        });
+        period[i] = joined && PERIOD_WORDS.contains(&lower.as_str());
+    }
+    let other_letters = tokens
+        .iter()
+        .enumerate()
+        .filter(|(i, t)| t.kind == Kind::Word && !currency[*i] && !period[*i])
+        .map(|(_, t)| t.text.chars().count())
+        .sum();
     Reading {
-        has_digit: text.chars().any(|c| c.is_ascii_digit() || c.is_numeric()),
-        has_currency,
+        has_digit: tokens.iter().any(|t| t.kind == Kind::Number),
+        has_currency: currency.iter().any(|c| *c),
         other_letters,
     }
 }
@@ -218,91 +280,13 @@ pub(crate) fn is_price(text: &str) -> bool {
 }
 
 /// A number, an amount or a stat (`$9`, `12k`, `99%`, `4.9`): never a
-/// heading, never the name of a container.
+/// heading, never the name of a container. A text that opens with a number
+/// and goes on in words (`2024 roadmap`, `5-visit pass`) is no figure.
 pub(crate) fn is_figure(text: &str) -> bool {
     let reading = read(text);
     reading.has_digit && (reading.has_currency || reading.other_letters <= MAX_FIGURE_LETTERS)
 }
 
-/// Whether `text` opens with a digit or a currency sign (`5-visit pass`,
-/// `$ 6`): such a text never heads a container.
-pub(crate) fn opens_with_figure(text: &str) -> bool {
-    text.trim_start()
-        .chars()
-        .next()
-        .is_some_and(|c| c.is_numeric() || is_currency_sign(c))
-}
-
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn prices_in_every_editor_language() {
-        for price in [
-            "$9",
-            "$9 / month",
-            "US$9",
-            "€12 per user / month",
-            "29 €/mois",
-            "29,00 € pro Monat",
-            "€29/mes",
-            "R$ 29/mês",
-            "99 TL/ay",
-            "₺99/ay",
-            "99 TL / yıl",
-            "Rp 50.000",
-            "Rp50.000/bulan",
-            "99.000đ/tháng",
-            "99.000 ₫",
-            "฿99",
-            "99 บาท/เดือน",
-            "1.000円",
-            "¥1,000/月",
-            "￥99/月",
-            "99元/月",
-            "NT$ 290/月",
-            "₩9,900",
-            "9,900원/월",
-            "₹499/माह",
-            "Rs 499",
-            "99 ₽/мес",
-            "990 руб./мес",
-            "49 zł",
-            "99 kr/mån",
-            "£5",
-        ] {
-            assert!(is_price(price), "{price} is a price");
-            assert!(is_figure(price), "{price} is a figure");
-        }
-    }
-
-    #[test]
-    fn words_with_numbers_are_not_prices() {
-        for text in [
-            "Save $20 with annual billing",
-            "Top 10 tips",
-            "2 days left",
-            "5-visit pass",
-            "Starter",
-            "Pricing",
-            "Fiyatlar",
-        ] {
-            assert!(!is_price(text), "{text} is no price");
-        }
-        for text in ["Top 10 tips", "2 days left", "Starter"] {
-            assert!(!is_figure(text), "{text} is no figure");
-        }
-        for figure in ["12k", "99%", "4.9", "24/7", "0"] {
-            assert!(is_figure(figure), "{figure} is a figure");
-        }
-    }
-
-    #[test]
-    fn figures_open_with_a_digit_or_a_currency_sign() {
-        assert!(opens_with_figure("5-visit pass"));
-        assert!(opens_with_figure("$ 6"));
-        assert!(opens_with_figure("¥99"));
-        assert!(!opens_with_figure("Pro"));
-    }
-}
+#[path = "money_tests.rs"]
+mod tests;

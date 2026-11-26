@@ -42,22 +42,46 @@ impl Bounds {
         }
     }
 
-    /// The box around this one turned by `degrees` about its centre.
-    fn rotated(self, degrees: f64) -> Self {
+    fn centre(&self) -> (f64, f64) {
+        (self.x + self.w / 2.0, self.y + self.h / 2.0)
+    }
+
+    /// The box around this one turned by `degrees` about `pivot`.
+    fn rotated_about(self, degrees: f64, pivot: (f64, f64)) -> Self {
         if degrees.rem_euclid(360.0) == 0.0 {
             return self;
         }
         let (sin, cos) = degrees.to_radians().sin_cos();
-        let (w, h) = (
-            self.w * cos.abs() + self.h * sin.abs(),
-            self.w * sin.abs() + self.h * cos.abs(),
-        );
-        Self {
-            x: self.x + (self.w - w) / 2.0,
-            y: self.y + (self.h - h) / 2.0,
-            w,
-            h,
+        let turn = |x: f64, y: f64| {
+            let (dx, dy) = (x - pivot.0, y - pivot.1);
+            (pivot.0 + dx * cos - dy * sin, pivot.1 + dx * sin + dy * cos)
+        };
+        let corners = [
+            turn(self.x, self.y),
+            turn(self.x + self.w, self.y),
+            turn(self.x, self.y + self.h),
+            turn(self.x + self.w, self.y + self.h),
+        ];
+        let (mut min_x, mut min_y) = (f64::INFINITY, f64::INFINITY);
+        let (mut max_x, mut max_y) = (f64::NEG_INFINITY, f64::NEG_INFINITY);
+        for (x, y) in corners {
+            min_x = min_x.min(x);
+            min_y = min_y.min(y);
+            max_x = max_x.max(x);
+            max_y = max_y.max(y);
         }
+        Self {
+            x: min_x,
+            y: min_y,
+            w: max_x - min_x,
+            h: max_y - min_y,
+        }
+    }
+
+    /// The box around this one turned by `degrees` about its centre.
+    #[cfg(test)]
+    fn rotated(self, degrees: f64) -> Self {
+        self.rotated_about(degrees, self.centre())
     }
 
     fn union(self, other: Self) -> Self {
@@ -96,42 +120,63 @@ fn text_size(node: &PenNode) -> Option<(f64, f64)> {
     ))
 }
 
-/// `node`'s box in its parent's coordinates, turned by its rotation: its
-/// authored size, a text's estimated one, or the box around a free-form
-/// container's children.
-pub(crate) fn bounds_in_parent(node: &PenNode) -> Bounds {
-    let (w, h) = match (numeric_width(node), numeric_height(node)) {
-        (Some(w), Some(h)) => (w, h),
-        _ => text_size(node).unwrap_or_else(|| {
-            let content = children(node)
-                .iter()
-                .filter(|kid| node_y(kid).is_some())
-                .map(bounds_in_parent)
-                .reduce(Bounds::union);
-            let content = content.map_or((0.0, 0.0), |b| (b.x + b.w, b.y + b.h));
-            (
-                numeric_width(node).unwrap_or(content.0),
-                numeric_height(node).unwrap_or(content.1),
-            )
-        }),
-    };
-    Bounds {
-        x: node_x(node).unwrap_or(0.0),
-        y: node_y(node).unwrap_or(0.0),
-        w,
-        h,
+/// `node`'s box in its parent's coordinates before its rotation: its
+/// authored size, a text's estimated one, or the box around a sizeless
+/// container's children (the painter's aggregate bounds).
+fn unrotated_bounds(node: &PenNode) -> Bounds {
+    let (x, y) = (node_x(node).unwrap_or(0.0), node_y(node).unwrap_or(0.0));
+    if let (Some(w), Some(h)) = (numeric_width(node), numeric_height(node)) {
+        return Bounds { x, y, w, h };
     }
-    .rotated(rotation(node))
+    if let Some((w, h)) = text_size(node) {
+        return Bounds { x, y, w, h };
+    }
+    let content = children(node)
+        .iter()
+        .filter(|kid| node_y(kid).is_some())
+        .map(bounds_in_parent)
+        .reduce(Bounds::union)
+        .map(|b| b.offset(x, y));
+    match content {
+        Some(content) => Bounds {
+            w: numeric_width(node).unwrap_or(content.w),
+            h: numeric_height(node).unwrap_or(content.h),
+            ..content
+        },
+        None => Bounds {
+            x,
+            y,
+            w: numeric_width(node).unwrap_or(0.0),
+            h: numeric_height(node).unwrap_or(0.0),
+        },
+    }
 }
 
-/// Sort `items` by their boxes into reading order: rows top to bottom
-/// (a box joins the row whose first box's centre is within
-/// `ROW_TOLERANCE_PX` or half the shorter height of its own), then left to
-/// right within a row. Equal boxes keep their order.
-pub(crate) fn sort_reading<T>(items: &mut Vec<(Bounds, T)>) {
+/// `node`'s box in its parent's coordinates, turned by its rotation about
+/// the centre of its box, as the painter turns it (`rotation` is in
+/// degrees; jian rotates about the node's centre).
+pub(crate) fn bounds_in_parent(node: &PenNode) -> Bounds {
+    let own = unrotated_bounds(node);
+    own.rotated_about(rotation(node), own.centre())
+}
+
+/// A box in `node`'s own coordinates (one of its free-form descendants)
+/// placed in `node`'s parent's coordinates: moved by `node`'s position and
+/// turned with `node` about its centre.
+pub(crate) fn to_parent(node: &PenNode, inner: Bounds) -> Bounds {
+    let own = unrotated_bounds(node);
+    inner
+        .offset(node_x(node).unwrap_or(0.0), node_y(node).unwrap_or(0.0))
+        .rotated_about(rotation(node), own.centre())
+}
+
+/// Group `items` into reading rows, top to bottom: a box joins the row
+/// whose first box's centre is within `ROW_TOLERANCE_PX` or half the
+/// shorter height of its own.
+fn rows<T>(mut items: Vec<(Bounds, T)>) -> Vec<Vec<(Bounds, T)>> {
     items.sort_by(|a, b| a.0.y.total_cmp(&b.0.y));
     let mut rows: Vec<Vec<(Bounds, T)>> = Vec::new();
-    for item in items.drain(..) {
+    for item in items {
         let joins = rows
             .last()
             .and_then(|row| row.first())
@@ -139,16 +184,26 @@ pub(crate) fn sort_reading<T>(items: &mut Vec<(Bounds, T)>) {
                 let tolerance = ROW_TOLERANCE_PX.max(first.0.h.min(item.0.h) / 2.0);
                 (first.0.centre_y() - item.0.centre_y()).abs() <= tolerance
             });
-        if joins {
-            rows.last_mut().expect("row").push(item);
-        } else {
-            rows.push(vec![item]);
+        match rows.last_mut() {
+            Some(row) if joins => row.push(item),
+            _ => rows.push(vec![item]),
         }
     }
-    for mut row in rows {
+    rows
+}
+
+/// Sort `items` by their boxes into reading order: rows top to bottom,
+/// left to right within a row. Equal boxes keep their order.
+pub(crate) fn sort_reading<T>(items: &mut Vec<(Bounds, T)>) {
+    for mut row in rows(std::mem::take(items)) {
         row.sort_by(|a, b| a.0.x.total_cmp(&b.0.x));
         items.extend(row);
     }
+}
+
+/// Whether `boxes` sit on one reading row.
+pub(crate) fn single_row(boxes: &[Bounds]) -> bool {
+    rows(boxes.iter().map(|b| (*b, ())).collect()).len() == 1
 }
 
 /// `node`'s children in reading order: by their boxes in a free-form

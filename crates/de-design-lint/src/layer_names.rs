@@ -29,7 +29,7 @@ use crate::issue::{FixProperty, Issue, IssueCategory, IssueSeverity};
 use crate::node_util::{base, children};
 
 pub use default_names::is_default_layer_name;
-pub use instances::{InstanceSource, NamingPage, NoInstances};
+pub use instances::{ExpandedInstances, InstanceSource, NamingPage, NoInstances};
 pub use lang::detect_document_locale;
 
 pub use rules::{collapse_whitespace, text_content};
@@ -123,8 +123,9 @@ pub fn propose_layer_names_on(
 
 /// Info finding for every layer of `page` whose name is an editor
 /// default. The page is named as one, like `rename_layers` names it, so
-/// the suggested value is exactly the name `rename_layers` applies (or
-/// `null` when the rules have none). `locale` is the page's language
+/// the suggested value is exactly the name `rename_layers` applies. When the
+/// rules have none (`null`), the finding points to a hand-written name or
+/// `rename_layers` mode `ai` instead of the rules. `locale` is the page's language
 /// ([`document_locale`] of its layers).
 pub fn detect_default_layer_names(page: &NamingPage, locale: Locale) -> Vec<Issue> {
     candidates(page, None, locale)
@@ -132,11 +133,19 @@ pub fn detect_default_layer_names(page: &NamingPage, locale: Locale) -> Vec<Issu
         .filter_map(|candidate| {
             let current = candidate.current?;
             is_default_layer_name(&current).then(|| Issue {
-                reason: format!(
-                    "layer name \"{}\" is an editor default; rename it after what it is \
-                     (rename_layers)",
-                    current.trim()
-                ),
+                reason: match &candidate.proposed {
+                    Some(_) => format!(
+                        "layer name \"{}\" is an editor default; rename it after what it is \
+                         (rename_layers)",
+                        current.trim()
+                    ),
+                    None => format!(
+                        "layer name \"{}\" is an editor default, and the rules cannot tell it \
+                         apart from its siblings; name it by hand or with rename_layers mode \
+                         \"ai\"",
+                        current.trim()
+                    ),
+                },
                 node_id: candidate.node_id,
                 category: IssueCategory::DefaultLayerName,
                 severity: IssueSeverity::Info,

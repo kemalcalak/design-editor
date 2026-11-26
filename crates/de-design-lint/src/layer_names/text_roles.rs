@@ -9,11 +9,11 @@ use std::collections::HashMap;
 use jian_ops_schema::node::container::LayoutMode;
 use jian_ops_schema::node::PenNode;
 
-use crate::node_util::{children, is_node_visible, node_x, node_y, numeric_height};
+use crate::node_util::{children, is_node_visible, numeric_height};
 
 use super::facts::{is_container, Facts};
-use super::money::{is_figure, is_price, opens_with_figure};
-use super::reading::{bounds_in_parent, is_free_form, sort_reading, Bounds};
+use super::money::{is_figure, is_price};
+use super::reading::{bounds_in_parent, is_free_form, single_row, sort_reading, to_parent, Bounds};
 use super::rules::{font_size, font_weight, layout, text_content, Role};
 
 /// Longest text content used verbatim as a layer name.
@@ -54,13 +54,11 @@ impl<'a> TextInfo<'a> {
         self.size >= 20.0 || (self.size >= 16.0 && self.weight >= 600)
     }
 
-    /// Words, not a figure, a unit suffix (`/mo`) or a text opening with a
-    /// number or currency (`5-visit pass`): the only texts that may name a
-    /// container.
+    /// Words, not a figure (`$9`, `12k`, `99 TL/ay`) or a unit suffix
+    /// (`/mo`): the only texts that may name a container. A number going
+    /// on in words (`2024 roadmap`, `5-visit pass`) is words.
     fn wordy(&self) -> bool {
-        starts_a_word(&self.content)
-            && !is_figure(&self.content)
-            && !opens_with_figure(&self.content)
+        has_a_word(&self.content) && !is_figure(&self.content)
     }
 
     fn short(&self) -> bool {
@@ -68,11 +66,14 @@ impl<'a> TextInfo<'a> {
     }
 }
 
-/// Whether some whitespace-separated token of `text` begins with a letter
-/// (`Pro`, `价格`; not `/mo` or `—`).
-fn starts_a_word(text: &str) -> bool {
-    text.split_whitespace()
-        .any(|word| word.chars().next().is_some_and(char::is_alphabetic))
+/// Whether some whitespace-separated token of `text` opens with a letter
+/// or digit and holds a letter (`Pro`, `价格`, `1Password`; not `/mo` or
+/// `—`).
+fn has_a_word(text: &str) -> bool {
+    text.split_whitespace().any(|word| {
+        word.chars().next().is_some_and(char::is_alphanumeric)
+            && word.chars().any(char::is_alphabetic)
+    })
 }
 
 /// Where a walk below a container stops, by what it is for.
@@ -134,9 +135,7 @@ fn collect<'a>(
             let kid_free = is_free_form(kid);
             for mut placed in inner {
                 placed.at = match (at, placed.at) {
-                    (Some(_), Some(inner_box)) if kid_free => Some(
-                        inner_box.offset(node_x(kid).unwrap_or(0.0), node_y(kid).unwrap_or(0.0)),
-                    ),
+                    (Some(_), Some(inner_box)) if kid_free => Some(to_parent(kid, inner_box)),
                     (kid_box, _) => kid_box,
                 };
                 items.push(placed);
@@ -190,23 +189,45 @@ pub(crate) fn heading_of(node: &PenNode, facts: &Facts) -> Option<String> {
     short_heading(&pick_heading(&texts)?.content)
 }
 
-/// The first child of a screen that reads as its header band: at most
-/// `HEADER_MAX_HEIGHT` tall (or, without an authored height, a row),
-/// holding two or more texts, none longer than a link label.
+/// Whether `node` lays its content out side by side: a row, or a
+/// free-form box whose children all sit on one reading row.
+fn lies_in_a_row(node: &PenNode) -> bool {
+    if layout(node) == Some(&LayoutMode::Horizontal) {
+        return true;
+    }
+    if !is_free_form(node) {
+        return false;
+    }
+    let boxes: Vec<Bounds> = children(node)
+        .iter()
+        .filter(|kid| is_node_visible(kid))
+        .map(bounds_in_parent)
+        .collect();
+    boxes.len() >= 2 && single_row(&boxes)
+}
+
+/// The first child of a screen that reads as its header band (the
+/// preview's rule, `wire_web_nav_links`, plus a navigation shape): at most
+/// `HEADER_MAX_HEIGHT` tall (or, without an authored height, a row), laid
+/// out in a row, holding two or more texts none longer than a link label,
+/// at most one of them prominent (a logo among links). A heading block
+/// (`Pricing` over `Choose a plan`) is no band.
 fn header_band(screen: &PenNode, facts: &Facts) -> bool {
     let Some(first) = children(screen).first() else {
         return false;
     };
-    let band = match numeric_height(first) {
-        Some(height) => height <= HEADER_MAX_HEIGHT,
-        None => layout(first) == Some(&LayoutMode::Horizontal),
-    };
+    if !is_container(first) || !lies_in_a_row(first) {
+        return false;
+    }
+    if numeric_height(first).is_some_and(|height| height > HEADER_MAX_HEIGHT) {
+        return false;
+    }
     let labels = texts(first, 1, Scope::Heading, facts);
-    band && is_container(first)
-        && labels.len() >= 2
+    labels.len() >= 2
         && labels
             .iter()
             .all(|t| t.content.chars().count() <= HEADER_TEXT_MAX_CHARS)
+        && labels.iter().filter(|t| t.prominent()).count() <= 1
 }
 
 /// The heading a screen is named after: the first heading-like text of

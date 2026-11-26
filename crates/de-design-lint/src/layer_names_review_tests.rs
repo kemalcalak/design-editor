@@ -231,3 +231,99 @@ fn german_rows_of_cards_read_as_compounds() {
     let row = rules::Role::Cards(rules::CardsName::Heading("Tarif".to_string()));
     assert_eq!(row.render(Locale::De, None), "Tarif-Karten");
 }
+
+#[test]
+fn a_heading_may_open_with_a_number() {
+    for (heading, expected) in [
+        ("2024 roadmap", "2024 roadmap card"),
+        ("10x faster", "10x faster card"),
+        ("5-visit pass", "5-visit pass card"),
+        ("1Password", "1Password card"),
+    ] {
+        let screen = node(json!({
+            "type": "frame", "id": "s", "name": "Frame", "width": 1440, "height": 900,
+            "layout": "horizontal",
+            "children": [card("c", vec![text("h", heading, 20.0), text("p", "$9", 28.0)])]
+        }));
+        let names = names_of(std::slice::from_ref(&screen));
+        assert_eq!(names["c"], expected, "{heading}");
+        assert_eq!(names["p"], format!("{expected} / Price"));
+    }
+}
+
+#[test]
+fn a_finding_without_a_suggestion_points_away_from_the_rules() {
+    let shape = |id: &str| {
+        json!({"type": "rectangle", "id": id, "name": "Rectangle", "width": 40, "height": 40,
+               "fill": [{"type": "solid", "color": "#E5E7EB"}]})
+    };
+    let screen = node(json!({
+        "type": "frame", "id": "s", "name": "Frame", "width": 400, "height": 400,
+        "layout": "horizontal", "children": [shape("r1"), shape("r2")]
+    }));
+    let roots = std::slice::from_ref(&screen);
+    let issues = detect_default_layer_names(&NamingPage::new(roots, &NoInstances), Locale::EnUs);
+    let named = issues.iter().find(|i| i.node_id == "r1").expect("r1");
+    assert_eq!(named.suggested_value, json!("Shape"));
+    assert!(named.reason.contains("(rename_layers)"));
+    let unnamed = issues.iter().find(|i| i.node_id == "r2").expect("r2");
+    assert_eq!(unnamed.suggested_value, Value::Null);
+    assert!(
+        unnamed.reason.contains("cannot tell it apart"),
+        "{}",
+        unnamed.reason
+    );
+    assert!(unnamed.reason.contains("mode \"ai\""), "{}", unnamed.reason);
+}
+
+#[test]
+fn a_heading_block_on_top_is_no_header_band() {
+    let screen = node(json!({
+        "type": "frame", "id": "s", "name": "Frame", "width": 1440, "height": 2000,
+        "layout": "vertical",
+        "children": [
+            {"type": "frame", "id": "intro", "name": "Frame", "width": 1440, "height": 160,
+             "layout": "vertical",
+             "children": [text("h1", "Pricing", 40.0), text("h2", "Choose a plan", 20.0)]},
+            {"type": "frame", "id": "main", "name": "Frame", "width": 1440, "height": 600,
+             "layout": "vertical", "children": [text("h3", "Questions", 32.0)]}
+        ]
+    }));
+    let names = names_of(std::slice::from_ref(&screen));
+    assert_eq!(names["s"], "Pricing screen");
+}
+
+#[test]
+fn a_turned_group_turns_the_boxes_inside_it() {
+    // A 200 × 100 group turned half a circle about its centre (120, 90)
+    // moves the text at its top (page y 50) down to y 106, under the
+    // heading at y 70; unturned it would read first.
+    let screen = node(json!({
+        "type": "frame", "id": "s", "name": "Frame", "width": 800, "height": 600,
+        "children": [
+            {"type": "frame", "id": "c", "name": "Frame", "x": 0, "y": 0, "width": 300,
+             "height": 300, "cornerRadius": 12, "fill": [{"type": "solid", "color": "#F9FAFB"}],
+             "children": [
+                {"type": "group", "id": "g", "name": "Group", "x": 20, "y": 40,
+                 "width": 200, "height": 100, "rotation": 180,
+                 "children": [{"type": "text", "id": "flipped", "content": "Upside down",
+                               "fontSize": 20, "x": 0, "y": 10}]},
+                {"type": "text", "id": "plan", "content": "Growth", "fontSize": 24, "x": 20, "y": 70}
+             ]}
+        ]
+    }));
+    let names = names_of(std::slice::from_ref(&screen));
+    assert_eq!(names["plan"], "Growth card / Title");
+    assert_eq!(names["flipped"], "Growth card / Subtitle");
+}
+
+#[test]
+fn a_page_without_instances_is_read_in_place() {
+    let screen = node(
+        json!({"type": "frame", "id": "s", "name": "Frame", "width": 10,
+                             "height": 10, "children": [text("t", "Hi", 14.0)]}),
+    );
+    let roots = std::slice::from_ref(&screen);
+    let page = NamingPage::new(roots, &NoInstances);
+    assert!(std::ptr::eq(page.roots().as_ptr(), roots.as_ptr()));
+}

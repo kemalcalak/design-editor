@@ -26,7 +26,7 @@ pub(super) struct Candidate {
 }
 
 struct Walk<'a> {
-    page: &'a NamingPage,
+    page: &'a NamingPage<'a>,
     targets: Option<&'a HashSet<String>>,
     locale: Locale,
     facts: Facts,
@@ -169,7 +169,7 @@ fn acceptable(node: &PenNode, proposed: &str, current: Option<&str>) -> bool {
 /// Every layer of `page` without a meaningful name (inside `targets` when
 /// given), in tree order, with the rules' proposal.
 pub(super) fn candidates(
-    page: &NamingPage,
+    page: &NamingPage<'_>,
     targets: Option<&HashSet<String>>,
     locale: Locale,
 ) -> Vec<Candidate> {

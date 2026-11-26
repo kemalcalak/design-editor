@@ -6,12 +6,13 @@
 //! expanded. Only the instance itself is ever proposed a name: its content
 //! belongs to the master.
 
-use std::collections::HashSet;
+use std::borrow::Cow;
+use std::collections::{HashMap, HashSet};
 
 use jian_ops_schema::node::PenNode;
 
 use crate::node_mut::{base_mut, children_mut};
-use crate::node_util::{base, node_id};
+use crate::node_util::{base, children, node_id};
 
 /// Expansions stop this deep, so a master that (through others) holds an
 /// instance of itself cannot loop.
@@ -35,21 +36,30 @@ impl InstanceSource for NoInstances {
 
 /// A page's top-level layers as the namer reads them: every instance the
 /// source can expand replaced by its content, keeping the instance's own
-/// id and name.
-pub struct NamingPage {
-    roots: Vec<PenNode>,
+/// id and name. A page without instances is read in place, not copied.
+pub struct NamingPage<'a> {
+    roots: Cow<'a, [PenNode]>,
     instances: HashSet<String>,
 }
 
-impl NamingPage {
+impl<'a> NamingPage<'a> {
     /// Read `roots` with the instances `source` expands.
-    pub fn new(roots: &[PenNode], source: &dyn InstanceSource) -> Self {
-        let mut roots = roots.to_vec();
+    pub fn new(roots: &'a [PenNode], source: &dyn InstanceSource) -> Self {
+        if !roots.iter().any(holds_instance) {
+            return Self {
+                roots: Cow::Borrowed(roots),
+                instances: HashSet::new(),
+            };
+        }
+        let mut owned = roots.to_vec();
         let mut instances = HashSet::new();
-        for root in &mut roots {
+        for root in &mut owned {
             expand_in(root, source, 0, &mut Some(&mut instances));
         }
-        Self { roots, instances }
+        Self {
+            roots: Cow::Owned(owned),
+            instances,
+        }
     }
 
     /// The page's top-level layers, instances expanded.
@@ -62,6 +72,47 @@ impl NamingPage {
     pub(crate) fn is_instance(&self, node: &PenNode) -> bool {
         self.instances.contains(node_id(node))
     }
+}
+
+/// The expansions of a page's instances, taken once (an MCP snapshot
+/// carries them to its worker instead of the whole document) and handed
+/// back by instance id.
+#[derive(Default)]
+pub struct ExpandedInstances(HashMap<String, PenNode>);
+
+impl ExpandedInstances {
+    /// Expand every instance under `roots` with `source`.
+    pub fn collect(roots: &[PenNode], source: &dyn InstanceSource) -> Self {
+        fn walk(node: &PenNode, source: &dyn InstanceSource, out: &mut HashMap<String, PenNode>) {
+            if matches!(node, PenNode::Ref(_)) {
+                let mut expanded = node.clone();
+                expand_in(&mut expanded, source, 0, &mut None);
+                if !matches!(expanded, PenNode::Ref(_)) {
+                    out.insert(node_id(node).to_string(), expanded);
+                }
+                return;
+            }
+            for kid in children(node) {
+                walk(kid, source, out);
+            }
+        }
+        let mut out = HashMap::new();
+        for root in roots {
+            walk(root, source, &mut out);
+        }
+        Self(out)
+    }
+}
+
+impl InstanceSource for ExpandedInstances {
+    fn expand(&self, instance: &PenNode) -> Option<PenNode> {
+        self.0.get(node_id(instance)).cloned()
+    }
+}
+
+/// Whether a `ref` sits anywhere in `node`'s subtree.
+fn holds_instance(node: &PenNode) -> bool {
+    matches!(node, PenNode::Ref(_)) || children(node).iter().any(holds_instance)
 }
 
 /// Expand the instances in `node`'s subtree. `page_instances` records the
