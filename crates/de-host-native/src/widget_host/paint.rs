@@ -645,7 +645,9 @@ impl WidgetHostNative {
         if let Some(state) = self.editor_state.editor_ui.layer_context_menu.clone() {
             use de_editor_ui::widgets::layer_context_menu::LayerContextMenu;
             let menu = LayerContextMenu::for_state(&self.editor_state, state);
-            let menu_rect = menu.rect();
+            // Measures the labels (only when the locale or rows changed)
+            // and records the width the press / hover hit-tests read.
+            let menu_rect = menu.measured_rect(&mut *frame);
             let mut cx = PaintCx {
                 backend: &mut *frame,
             };

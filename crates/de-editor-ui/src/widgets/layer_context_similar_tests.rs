@@ -16,7 +16,7 @@ fn row(id: &str, label: &str) -> serde_json::Value {
             {"type": "frame", "id": format!("{id}-dot"), "width": 8, "height": 8}]})
 }
 
-fn state() -> EditorState {
+pub(super) fn state() -> EditorState {
     let mut s = EditorState::new();
     s.doc.pages = None;
     s.doc.children = [
@@ -31,7 +31,7 @@ fn state() -> EditorState {
     s
 }
 
-fn menu_for(s: &EditorState, id: &str) -> LayerContextMenu {
+pub(super) fn menu_for(s: &EditorState, id: &str) -> LayerContextMenu {
     LayerContextMenu::for_state(
         s,
         LayerContextMenuState {
@@ -43,7 +43,7 @@ fn menu_for(s: &EditorState, id: &str) -> LayerContextMenu {
     )
 }
 
-fn offers(menu: &LayerContextMenu) -> bool {
+pub(super) fn offers(menu: &LayerContextMenu) -> bool {
     menu.rows
         .iter()
         .any(|row| row.action == LayerContextAction::CreateComponentFromSimilar)
@@ -134,40 +134,4 @@ fn copies_that_differ_are_named_in_the_toast() {
     assert!(toast
         .args
         .contains(&("skipped".to_string(), "1".to_string())));
-}
-
-#[test]
-fn every_row_label_fits_the_menu_in_every_locale() {
-    use de_editor_core::Locale;
-    for locale in Locale::ALL {
-        let mut s = state();
-        s.editor_ui.locale = locale;
-        let menu = menu_for(&s, "b");
-        assert!(offers(&menu));
-        for row in &menu.rows {
-            let label = de_i18n::translate(locale, row.label_key);
-            let run = super::LABEL_X
-                + crate::widgets::home_surface::estimate_width(label, super::ROW_FONT);
-            assert!(
-                run <= menu.width(),
-                "{locale:?}: {label:?} needs {run} px, the menu is {}",
-                menu.width()
-            );
-        }
-        // The menu only grows past its usual width when a label needs it.
-        let widest = menu
-            .rows
-            .iter()
-            .map(|row| {
-                super::LABEL_X
-                    + crate::widgets::home_surface::estimate_width(
-                        de_i18n::translate(locale, row.label_key),
-                        super::ROW_FONT,
-                    )
-                    + super::LABEL_RIGHT_PAD
-            })
-            .fold(super::LAYER_CONTEXT_MENU_WIDTH, f32::max);
-        assert_eq!(menu.width(), widest.ceil());
-        assert_eq!(menu.rect().size.x, menu.width());
-    }
 }

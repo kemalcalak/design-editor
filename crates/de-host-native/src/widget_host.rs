@@ -153,6 +153,8 @@ mod keyboard_escape;
 mod keyboard_send;
 #[cfg(test)]
 mod large_doc_frame_tests;
+#[cfg(test)]
+mod layer_menu_width_tests;
 mod missing_fonts_dispatch;
 mod mode_transition_host;
 #[cfg(test)]

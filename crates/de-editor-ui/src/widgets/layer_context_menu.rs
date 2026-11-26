@@ -15,25 +15,31 @@
 use crate::theme::Theme;
 use crate::widgets::editor_state_ext::theme_for;
 use crate::widgets::icons::{draw_icon, Icon};
+use crate::widgets::layer_context_menu_width::{self, WidthKey};
+use crate::widgets::text_metrics::CHROME_FONT_FAMILY;
 use crate::widgets::{LayoutBox, LayoutCx, PaintCx, Widget, WidgetId};
-use crate::{Color, Point2D, Rect, TextLayout};
+use crate::{Color, Point2D, Rect, RenderBackend, TextLayout};
 use de_editor_core::editor_ui_state::{LayerContextMenuState, LayerContextTarget};
 use de_editor_core::EditorState;
 pub use jian_widgets::components::menu::MenuHit;
 
-/// The menu's usual width; [`LayerContextMenu::rect`] grows it only when a
-/// row's label (in the active locale) would run past it.
+/// The menu's usual width; [`LayerContextMenu::measured_rect`] grows it only
+/// when a row's label (in the active locale, at the chrome font's real
+/// metrics) would run past it.
 pub const LAYER_CONTEXT_MENU_WIDTH: f32 = 168.0;
 /// Where a row's label starts (after the icon), and the room kept on its
 /// right.
-const LABEL_X: f32 = 40.0;
-const LABEL_RIGHT_PAD: f32 = 12.0;
+pub const LABEL_X: f32 = 40.0;
+pub const LABEL_RIGHT_PAD: f32 = 12.0;
 const ROW_HEIGHT: f32 = 32.0;
 const PAD_Y: f32 = 6.0;
-const ROW_FONT: f32 = 13.0;
+/// Row label font size, in the chrome family.
+pub const ROW_FONT: f32 = 13.0;
 const ICON_SIZE: f32 = 14.0;
 
 /// All actions either menu can emit. Host dispatches each on click.
+/// The measured-width key is a bitmask over these (at most 64; `DeletePage`
+/// stays last so `every_action_fits_the_row_set_key` checks the largest).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum LayerContextAction {
     // Layer-row actions
@@ -79,13 +85,15 @@ pub enum LayerContextAction {
     DeletePage,
 }
 
+/// One menu row. Each action has exactly one `label_key`, which is what
+/// lets the measured-width cache key a row set by its actions.
 #[derive(Debug, Clone, Copy)]
-struct Row {
+pub(super) struct Row {
     icon: Icon,
-    action: LayerContextAction,
+    pub(super) action: LayerContextAction,
     /// `de-i18n` key for the row label — resolved against the active
     /// locale at paint time.
-    label_key: &'static str,
+    pub(super) label_key: &'static str,
     /// True for the destructive `Delete` rows — paints the label
     /// in a red accent so the user sees the irreversible action.
     destructive: bool,
@@ -236,6 +244,9 @@ pub struct LayerContextMenu {
     rows: Vec<Row>,
     /// Active UI locale — drives row-label translation in `paint`.
     locale: de_editor_core::Locale,
+    /// Locale + shown actions: the key of the measured width paint and
+    /// hit-test share (`layer_context_menu_width`).
+    width_key: WidthKey,
 }
 
 impl LayerContextMenu {
@@ -293,12 +304,14 @@ impl LayerContextMenu {
                 }
             }
         }
+        let locale = state.editor_ui.effective_locale();
         Self {
             id: WidgetId::new(3000),
             theme: theme_for(&state.editor_ui),
             state: menu,
+            width_key: WidthKey::new(locale, &rows),
             rows,
-            locale: state.editor_ui.effective_locale(),
+            locale,
         }
     }
 
@@ -324,31 +337,39 @@ impl LayerContextMenu {
         }
     }
 
-    /// [`LAYER_CONTEXT_MENU_WIDTH`], or wider when a row's label needs it
-    /// (by the chrome's text estimate, which errs wide; hit-test has no
-    /// backend to measure with).
-    pub fn width(&self) -> f32 {
+    /// The shown rows' labels in the active locale, top to bottom.
+    pub fn row_labels(&self) -> impl Iterator<Item = &'static str> + '_ {
         self.rows
             .iter()
-            .map(|row| {
-                LABEL_X
-                    + super::home_surface::estimate_width(
-                        de_i18n::translate(self.locale, row.label_key),
-                        ROW_FONT,
-                    )
-                    + LABEL_RIGHT_PAD
-            })
-            .fold(LAYER_CONTEXT_MENU_WIDTH, f32::max)
-            .ceil()
+            .map(|row| de_i18n::translate(self.locale, row.label_key))
     }
 
+    /// The width paint measured for this locale and row set
+    /// ([`Self::measured_rect`]); [`LAYER_CONTEXT_MENU_WIDTH`] before the
+    /// menu's first paint. Hit-test has no backend, so it reads this.
+    pub fn width(&self) -> f32 {
+        layer_context_menu_width::cached(self.width_key).unwrap_or(LAYER_CONTEXT_MENU_WIDTH)
+    }
+
+    /// The menu rect hit-test uses: [`Self::width`] wide.
     pub fn rect(&self) -> Rect {
+        self.rect_with_width(self.width())
+    }
+
+    /// The menu rect to paint: measures the row labels through the chrome
+    /// family when the locale or row set changed since the last paint
+    /// (otherwise measures nothing), and records the width so
+    /// [`Self::rect`] and the hit-tests agree with what is painted.
+    pub fn measured_rect(&self, backend: &mut dyn RenderBackend) -> Rect {
+        let width =
+            layer_context_menu_width::measure(backend, self.width_key, self.locale, &self.rows);
+        self.rect_with_width(width)
+    }
+
+    fn rect_with_width(&self, width: f32) -> Rect {
         Rect {
             origin: Point2D::new(self.state.anchor_x, self.state.anchor_y),
-            size: Point2D::new(
-                self.width(),
-                PAD_Y * 2.0 + self.rows.len() as f32 * ROW_HEIGHT,
-            ),
+            size: Point2D::new(width, PAD_Y * 2.0 + self.rows.len() as f32 * ROW_HEIGHT),
         }
     }
 
@@ -427,9 +448,10 @@ impl Widget for LayerContextMenu {
                 fg,
                 1.4,
             );
+            // Painted in the chrome family the width was measured in.
             let label = TextLayout::single_run(
                 de_i18n::translate(self.locale, row.label_key),
-                "system-ui",
+                CHROME_FONT_FAMILY,
                 ROW_FONT,
                 (fg).to_jian(),
                 Point2D::new(0.0, 0.0),
@@ -451,3 +473,7 @@ impl Widget for LayerContextMenu {
 #[cfg(test)]
 #[path = "layer_context_similar_tests.rs"]
 mod similar_tests;
+
+#[cfg(test)]
+#[path = "layer_context_menu_width_tests.rs"]
+mod width_tests;
