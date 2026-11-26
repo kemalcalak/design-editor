@@ -111,14 +111,14 @@ impl ProviderResolver {
             .map(str::to_string)
             .or_else(|| (self.env)(ENV_MODEL))
             .map(|model| model.trim().to_string());
-        if let Some(query) = provider {
-            return self.saved_provider(query, model);
+        let named = provider
+            .map(str::to_string)
+            .or_else(|| (self.env)(ENV_PROVIDER));
+        if let Some(query) = named {
+            return self.saved_provider(&query, model);
         }
         if let Some((key_var, key)) = self.env_key()? {
             return self.environment_provider(key_var, key, model);
-        }
-        if let Some(query) = (self.env)(ENV_PROVIDER) {
-            return self.saved_provider(&query, model);
         }
         let (settings, agents) = self.saved()?;
         let config = agents.iter().find(|agent| agent.ready()).ok_or_else(|| {

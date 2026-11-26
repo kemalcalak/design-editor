@@ -75,6 +75,7 @@ fn a_raised_cancel_flag_stops_the_run_without_a_command() {
         RunControl {
             cancel: Some(cancel),
             on_delta: None,
+            usage: None,
         },
     );
     assert!(matches!(result, Err(DesignAgentRunError::Cancelled)));
@@ -97,6 +98,7 @@ fn progress_sees_every_delta_and_the_budget_still_applies() {
         RunControl {
             cancel: None,
             on_delta: Some(&mut on_delta),
+            usage: None,
         },
     );
     assert!(matches!(
@@ -289,4 +291,43 @@ fn an_unsaved_model_is_refused_before_any_request() {
             model: "other-model".into(),
         }
     );
+}
+
+#[test]
+fn a_failed_run_still_counts_its_requests_on_the_callers_meter() {
+    let listener = TcpListener::bind("127.0.0.1:0").expect("bind refusing provider");
+    let addr = listener.local_addr().expect("local addr");
+    std::thread::spawn(move || {
+        for stream in listener.incoming() {
+            let Ok(mut stream) = stream else { return };
+            read_request(&mut stream);
+            let body =
+                r#"{"type":"error","error":{"type":"invalid_request_error","message":"no"}}"#;
+            let response = format!(
+                "HTTP/1.1 400 Bad Request\r\ncontent-type: application/json\r\ncontent-length: {}\r\nconnection: close\r\n\r\n{body}",
+                body.len()
+            );
+            let _ = stream.write_all(response.as_bytes());
+        }
+    });
+    let meter = Arc::new(UsageMeter::new());
+    let run = DesignAgentRun {
+        brief: "a landing page".into(),
+        timeout: Duration::from_secs(30),
+        max_turns: Some(2),
+        provider: provider(&format!("http://{addr}"), true),
+        model: None,
+    };
+    let error = run_design_agent(
+        &EditorState::default(),
+        &run,
+        RunControl {
+            usage: Some(meter.clone()),
+            ..RunControl::default()
+        },
+    )
+    .expect_err("a refused request fails the run");
+    assert!(matches!(error, DesignAgentRunError::Loop(_)), "{error:?}");
+    assert!(meter.requests() >= 1);
+    assert!(!meter.total().reported());
 }

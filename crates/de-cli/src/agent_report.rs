@@ -84,10 +84,7 @@ fn task_json(result: &TaskResult) -> Value {
         "toolCalls": report.map(|r| r.tool_calls),
         "landedRoots": report.map(|r| r.landed_roots),
         "stopReason": report.and_then(|r| r.stop_reason).map(|reason| format!("{reason:?}")),
-        "usage": report.map_or_else(
-            || usage_json(&TokenUsage::default(), 0),
-            |r| usage_json(&r.usage, r.provider_requests),
-        ),
+        "usage": usage_json(&result.usage, result.requests),
         "agent": report.map(|r| r.to_json()),
         "exportDir": (!spec.exports.is_empty()).then(|| path(&spec.export_dir)),
         "exports": result.exports.iter().map(export_json).collect::<Vec<_>>(),
@@ -111,9 +108,9 @@ pub(crate) fn totals(results: &[TaskResult]) -> Totals {
     let meter = UsageMeter::new();
     let count = |status| results.iter().filter(|r| r.status == status).count();
     let mut requests = 0;
-    for report in results.iter().filter_map(|r| r.report.as_ref()) {
-        meter.record(report.usage);
-        requests += report.provider_requests;
+    for result in results {
+        meter.record(result.usage);
+        requests += result.requests;
     }
     Totals {
         succeeded: count(TaskStatus::Ok),

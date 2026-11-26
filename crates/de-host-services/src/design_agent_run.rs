@@ -64,11 +64,14 @@ pub struct DesignAgentRun {
 }
 
 /// Caller hooks for a run. `cancel` stops the loop as soon as it is raised;
-/// `on_delta` sees every streamed delta on the calling thread (progress).
+/// `on_delta` sees every streamed delta on the calling thread (progress);
+/// `usage`, when given, is the meter the run adds its token usage to, so the
+/// caller can read what a failed or cancelled run spent too.
 #[derive(Default)]
 pub struct RunControl<'a> {
     pub cancel: Option<Arc<AtomicBool>>,
     pub on_delta: Option<&'a mut dyn FnMut(&ChatDelta)>,
+    pub usage: Option<Arc<UsageMeter>>,
 }
 
 /// What a finished run did.
@@ -186,7 +189,7 @@ pub fn run_design_agent(
     let brief = validate_brief(&run.brief)?;
     let provider = build_provider(&run.provider, run.model.as_deref())?;
     let model = provider.model().to_string();
-    let meter = Arc::new(UsageMeter::new());
+    let meter = control.usage.clone().unwrap_or_default();
     let factory = |executor: Arc<HeadlessDesignExecutor>| -> Box<dyn DesignLoopDriver> {
         let provider = provider
             .clone()

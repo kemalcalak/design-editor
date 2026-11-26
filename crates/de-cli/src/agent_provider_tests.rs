@@ -179,26 +179,23 @@ fn a_named_provider_beats_an_environment_key() {
         ProviderFlags::default(),
         &[(ENV_API_KEY, "sk-env"), (ENV_PROVIDER, "builtin-2")],
     );
+    // A name from the task or --provider comes first...
     assert_eq!(
         r.resolve(Some("builtin-1"), None).unwrap().config.id,
         "builtin-1"
     );
-    // DE_AGENT_PROVIDER is a name too, but the key in the environment comes
-    // first in the documented order only when no name is given at all.
+    // ...and DE_AGENT_PROVIDER is a name too, so it beats the key.
+    assert_eq!(r.resolve(None, None).unwrap().config.id, "builtin-2");
+    let key_only = resolver(
+        "key-only",
+        ProviderFlags::default(),
+        &[(ENV_API_KEY, "sk-env")],
+    );
     assert_eq!(
-        r.resolve(None, Some("m")).unwrap().source,
+        key_only.resolve(None, Some("m")).unwrap().source,
         ProviderSource::Environment {
             key_var: ENV_API_KEY.into()
         }
-    );
-    let named_by_env = resolver(
-        "named-env",
-        ProviderFlags::default(),
-        &[(ENV_PROVIDER, "openai")],
-    );
-    assert_eq!(
-        named_by_env.resolve(None, None).unwrap().config.id,
-        "builtin-2"
     );
 }
 

@@ -207,7 +207,11 @@ pub(super) async fn run_anthropic_agent_loop_inner(
                     .json(&body)
             },
         )
-        .await?;
+        .await
+        .inspect_err(|_| {
+            // A refused request is still a request of this run (no usage).
+            cfg.record_usage(de_ai::chat_usage::TokenUsage::default());
+        })?;
         let mut collector = AnthropicCollector::default();
         let pumped = pump_sse(resp, tx, &mut collector).await;
         // A request that failed mid-stream was still billed for what it

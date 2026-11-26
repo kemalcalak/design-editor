@@ -59,9 +59,7 @@ impl Progress {
                     "ok in {took}: {} tool calls, {} frame(s), {} -> {}",
                     report.map_or(0, |r| r.tool_calls),
                     report.map_or(0, |r| r.landed_roots),
-                    report
-                        .map(|r| format_usage(&r.usage))
-                        .unwrap_or_else(|| "tokens not reported".into()),
+                    format_usage(&result.usage),
                     de_util::display_path::display_path(&result.spec.output),
                 )
             }

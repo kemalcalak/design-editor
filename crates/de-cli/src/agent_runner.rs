@@ -11,6 +11,7 @@ use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
 use de_ai::chat_provider::ChatDelta;
+use de_ai::chat_usage::{TokenUsage, UsageMeter};
 use de_editor_core::{EditorState, Locale};
 use de_host_services::design_agent_run::{
     run_design_agent, DesignAgentRun, DesignAgentRunError, DesignAgentRunReport, RunControl,
@@ -93,6 +94,10 @@ pub(crate) struct TaskResult {
     pub exports: Vec<ExportOutcome>,
     /// True once `out` was written.
     pub saved: bool,
+    /// Tokens the provider reported for this task, failed runs included.
+    pub usage: TokenUsage,
+    /// Provider requests this task made.
+    pub requests: u64,
 }
 
 /// Run every task, at most `parallel` at once, in task order of results.
@@ -138,9 +143,14 @@ fn run_one(task: &PlannedTask, cancel: &Arc<AtomicBool>, progress: &Progress) ->
         report: None,
         exports: Vec::new(),
         saved: false,
+        usage: TokenUsage::default(),
+        requests: 0,
     };
+    let meter = Arc::new(UsageMeter::new());
     let finish = |mut result: TaskResult| {
         result.duration = started.elapsed();
+        result.usage = meter.total();
+        result.requests = meter.requests();
         progress.finished(&result);
         result
     };
@@ -166,6 +176,7 @@ fn run_one(task: &PlannedTask, cancel: &Arc<AtomicBool>, progress: &Progress) ->
     let control = RunControl {
         cancel: Some(cancel.clone()),
         on_delta: Some(&mut on_delta),
+        usage: Some(meter.clone()),
     };
     let outcome = match run_design_agent(&state, &run, control) {
         Ok(outcome) => outcome,

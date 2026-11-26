@@ -8,10 +8,11 @@ USAGE:
   de agent --list-providers [--json]
 
 The design agent is the one the app's chat and MCP `run_design_agent` run:
-same prompt, tools, checks and finalize pass. It works on a copy of --in
-(or an empty document) and replaces the active page's top-level frames with
-its design. --out is written only when the run succeeds, atomically, so a
-failed, timed-out or cancelled run (Ctrl+C) leaves it untouched.
+same prompt, tools, checks and finalize pass. It designs on a copy of --in
+(or an empty document); --out gets that document as the agent left it,
+boards it did not touch included. --in is never written. --out is written
+only when the run succeeds, atomically, so a failed, timed-out or cancelled
+run (Ctrl+C) leaves it untouched.
 
 TASK OPTIONS:
   -p, --prompt TEXT        the design request
