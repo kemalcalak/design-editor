@@ -369,6 +369,14 @@ impl Widget for HtmlImportDiagnosticsPanel<'_> {
     }
 
     fn paint(&self, cx: &mut PaintCx<'_>, panel: Rect) {
+        crate::widgets::missing_fonts_row::measure_button_labels(
+            cx.backend,
+            12.0,
+            &[
+                translate(self.ui, self.toggle_key()),
+                translate(self.ui, "htmlImport.diagnostics.dismiss"),
+            ],
+        );
         cx.backend.fill_round_rect(panel, 12.0, self.theme.card);
         cx.backend
             .stroke_round_rect(panel, 12.0, self.theme.border, 1.0);

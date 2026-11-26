@@ -12,7 +12,14 @@
 //!
 //! The cross-panel guard in `text_metrics_paint_tests` is the intended
 //! consumer — assert every captured run fits the column it was painted into.
+//!
+//! [`FamilyGapBackend::chrome_strict`] goes one step further (#441): there a
+//! named family other than the chrome one is wider again, and every
+//! family-aware measurement is recorded ([`FamilyGapBackend::measured`]), so a
+//! surface that measures a label in Manrope but paints it in some other
+//! family both spills and is caught naming the two families.
 
+use crate::widgets::text_metrics::CHROME_FONT_FAMILY;
 use crate::{Color, Point2D, Rect, RenderBackend, TextLayout};
 
 /// Advance as a fraction of font size for the backend's *default* typeface —
@@ -30,6 +37,10 @@ const FAMILY_ASCII_RATIO: f32 = 0.77;
 /// to model there. The Roboto → SF Pro gap is a Latin-advance phenomenon,
 /// and inflating non-Latin here would manufacture failures no machine shows.
 const WIDE_RATIO: f32 = 1.0;
+/// Advance ratio [`FamilyGapBackend::chrome_strict`] charges a named family
+/// that is NOT the chrome one — wider than the chrome face, so a run painted
+/// in one family and fitted in the other cannot land in the right box.
+const FOREIGN_ASCII_RATIO: f32 = 0.95;
 
 fn width(text: &str, font_size: f32, ascii_ratio: f32) -> f32 {
     text.chars()
@@ -93,9 +104,19 @@ impl PaintedRun {
     }
 }
 
+/// One family-aware measurement: the text and the family it was asked in.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct MeasuredRun {
+    pub(crate) text: String,
+    pub(crate) family: String,
+}
+
 pub(crate) struct FamilyGapBackend {
     /// Every `draw_text`, in paint order.
     pub(crate) runs: Vec<PaintedRun>,
+    /// Every family-aware measurement, in call order (the family-blind
+    /// `measure_text` is recorded with an empty family).
+    pub(crate) measured: Vec<MeasuredRun>,
     /// Every `fill_rect`, in paint order (a text input's caret is one).
     pub(crate) rect_fills: Vec<Rect>,
     /// Live clip stack — `save` / `restore` / `clip_rect` are modelled so a
@@ -105,15 +126,20 @@ pub(crate) struct FamilyGapBackend {
     /// real machine; `BLIND_ASCII_RATIO` is the control where the two faces
     /// agree, which is what every other test backend models.
     family_ascii_ratio: f32,
+    /// Advance ratio for a named family other than the chrome one, when the
+    /// backend tells families apart ([`Self::chrome_strict`]).
+    foreign_ascii_ratio: Option<f32>,
 }
 
 impl Default for FamilyGapBackend {
     fn default() -> Self {
         Self {
             runs: Vec::new(),
+            measured: Vec::new(),
             rect_fills: Vec::new(),
             clip_stack: vec![None],
             family_ascii_ratio: FAMILY_ASCII_RATIO,
+            foreign_ascii_ratio: None,
         }
     }
 }
@@ -127,6 +153,37 @@ impl FamilyGapBackend {
         Self {
             family_ascii_ratio: BLIND_ASCII_RATIO,
             ..Self::default()
+        }
+    }
+
+    /// The family-strict machine (#441): the chrome family measures like
+    /// [`Self::default`], any other named family wider still. A run fitted
+    /// in one family and painted in another spills its box here, and
+    /// [`Self::measured`] names the family each width was asked in.
+    pub(crate) fn chrome_strict() -> Self {
+        Self {
+            foreign_ascii_ratio: Some(FOREIGN_ASCII_RATIO),
+            ..Self::default()
+        }
+    }
+
+    /// Families `text` was measured in, in call order.
+    pub(crate) fn families_measured_for<'a>(&'a self, text: &'a str) -> Vec<&'a str> {
+        self.measured
+            .iter()
+            .filter(|m| m.text == text)
+            .map(|m| m.family.as_str())
+            .collect()
+    }
+
+    /// Advance ratio for a run named `family`.
+    fn ratio_for(&self, family: &str) -> f32 {
+        if family.is_empty() {
+            return BLIND_ASCII_RATIO;
+        }
+        match self.foreign_ascii_ratio {
+            Some(foreign) if family != CHROME_FONT_FAMILY => foreign,
+            _ => self.family_ascii_ratio,
         }
     }
 
@@ -160,7 +217,7 @@ impl RenderBackend for FamilyGapBackend {
                 font_weight: run.font_weight,
                 origin: Point2D::new(point.x + run.origin.x, point.y + run.origin.y),
                 clip: self.clip(),
-                painted_ascii_ratio: self.family_ascii_ratio,
+                painted_ascii_ratio: self.ratio_for(&run.font_family),
             });
         }
     }
@@ -178,15 +235,18 @@ impl RenderBackend for FamilyGapBackend {
     fn stroke_round_rect(&mut self, _: Rect, _: f32, _: Color, _: f32) {}
     fn stroke_svg_path(&mut self, _: &str, _: Point2D, _: f32, _: Color, _: f32) {}
     fn measure_text(&mut self, text: &str, font_size: f32) -> f32 {
+        self.measured.push(MeasuredRun {
+            text: text.to_string(),
+            family: String::new(),
+        });
         width(text, font_size, BLIND_ASCII_RATIO)
     }
     fn measure_text_family(&mut self, text: &str, font_size: f32, family: &str) -> f32 {
-        let ratio = if family.is_empty() {
-            BLIND_ASCII_RATIO
-        } else {
-            self.family_ascii_ratio
-        };
-        width(text, font_size, ratio)
+        self.measured.push(MeasuredRun {
+            text: text.to_string(),
+            family: family.to_string(),
+        });
+        width(text, font_size, self.ratio_for(family))
     }
     /// Weight-agnostic: the gap this backend models is between families,
     /// so a weighted measurement in the painted family must see it too.

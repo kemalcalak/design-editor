@@ -9,6 +9,9 @@ use crate::{Point2D, Rect, TextLayout, Theme};
 const PILL_W: f32 = 216.0;
 const PILL_H: f32 = 28.0;
 const SEGMENT_W: f32 = 72.0;
+/// Space kept clear either side of a segment label; a longer label is
+/// ellipsized at the width it is painted at.
+const LABEL_INSET: f32 = 6.0;
 const RADIUS: f32 = 12.0;
 const TOP_GAP: f32 = 8.0;
 const ORDER: [PreviewDeviceKind; 3] = [
@@ -78,10 +81,15 @@ impl PreviewDeviceSwitcher<'_> {
                 cx.backend.fill_round_rect(rect, RADIUS, color);
             }
 
-            let label_text = self.labels[index];
-            let text_width = text_metrics::measure_chrome(cx.backend, label_text, 12.0);
+            let label_text = text_metrics::fit_chrome(
+                cx.backend,
+                self.labels[index],
+                (rect.size.x - LABEL_INSET * 2.0).max(0.0),
+                12.0,
+            );
+            let text_width = text_metrics::measure_chrome(cx.backend, &label_text, 12.0);
             let label = TextLayout::single_run(
-                label_text,
+                &label_text,
                 text_metrics::CHROME_FONT_FAMILY,
                 12.0,
                 theme.foreground.to_jian(),

@@ -259,9 +259,15 @@ impl ThemePresetMenu {
         // Saved presets list.
         if self.preset_names.is_empty() {
             let empty = row(menu, self.list_top(menu), EMPTY_ROW_H);
+            let label = text_metrics::fit_chrome(
+                cx.backend,
+                de_i18n::translate(self.locale, "variables.noPresets"),
+                (empty.size.x - PAD_X * 2.0).max(0.0),
+                12.0,
+            );
             draw_text(
                 cx,
-                de_i18n::translate(self.locale, "variables.noPresets"),
+                &label,
                 12.0,
                 (theme.muted_foreground).with_alpha(0.5),
                 empty.origin.x + PAD_X,
@@ -270,18 +276,27 @@ impl ThemePresetMenu {
         } else {
             for (idx, name) in self.preset_names.iter().enumerate() {
                 let row_rect = self.preset_row_rect(menu, idx);
+                let trash = self.delete_rect(row_rect);
+                let text_x = row_rect.origin.x + PAD_X;
+                // The name stops short of the trash button, ellipsized at
+                // the width it is painted at.
+                let name = text_metrics::fit_chrome(
+                    cx.backend,
+                    name,
+                    (trash.origin.x - PAD_X / 2.0 - text_x).max(0.0),
+                    13.0,
+                );
                 cx.backend.save();
                 cx.backend.clip_rect(row_rect);
                 draw_text(
                     cx,
-                    name,
+                    &name,
                     13.0,
                     theme.foreground,
-                    row_rect.origin.x + PAD_X,
+                    text_x,
                     row_rect.origin.y + 20.0,
                 );
                 cx.backend.restore();
-                let trash = self.delete_rect(row_rect);
                 draw_icon(
                     cx.backend,
                     Icon::Trash,
@@ -368,6 +383,13 @@ fn row(menu: Rect, y: f32, h: f32) -> Rect {
 
 fn action_row(cx: &mut PaintCx<'_>, theme: Theme, rect: Rect, icon: Icon, label: &str) {
     let center_y = rect.origin.y + rect.size.y / 2.0;
+    let text_x = rect.origin.x + PAD_X + ICON_SIZE + 10.0;
+    let label = text_metrics::fit_chrome(
+        cx.backend,
+        label,
+        (rect.origin.x + rect.size.x - PAD_X - text_x).max(0.0),
+        13.0,
+    );
     draw_icon(
         cx.backend,
         icon,
@@ -376,14 +398,7 @@ fn action_row(cx: &mut PaintCx<'_>, theme: Theme, rect: Rect, icon: Icon, label:
         theme.muted_foreground,
         1.6,
     );
-    draw_text(
-        cx,
-        label,
-        13.0,
-        theme.foreground,
-        rect.origin.x + PAD_X + ICON_SIZE + 10.0,
-        center_y + 4.5,
-    );
+    draw_text(cx, &label, 13.0, theme.foreground, text_x, center_y + 4.5);
 }
 
 fn separator(cx: &mut PaintCx<'_>, theme: Theme, menu: Rect, y: f32) {

@@ -136,12 +136,13 @@ pub(crate) fn downloaded_remove_rect(content: Rect, ui: &EditorUiState, row: usi
     remove_rect_in(downloaded_row_rect(content, ui, row), ui)
 }
 
+/// Label size of the Delete buttons on downloaded / imported rows.
+const REMOVE_FONT: f32 = 11.0;
+
 fn remove_rect_in(row: Rect, ui: &EditorUiState) -> Rect {
-    let font_size = 11.0;
     let height = REMOVE_HEIGHT;
     let width =
-        (super::missing_fonts_panel::fit_button_width(translate(ui, "common.delete"), font_size)
-            + 0.0)
+        super::missing_fonts_panel::fit_button_width(translate(ui, "common.delete"), REMOVE_FONT)
             .max(height);
     Rect::xywh(
         row.origin.x + row.size.x - width,
@@ -331,6 +332,12 @@ pub(super) fn paint_fonts_tab(
     ui: &EditorUiState,
     content: Rect,
 ) {
+    super::missing_fonts_row::measure_button_labels(
+        cx.backend,
+        REMOVE_FONT,
+        &[translate(ui, "common.delete")],
+    );
+    super::missing_fonts_row::measure_row_button_labels(cx.backend, ui);
     paint_section_title(
         cx,
         theme,

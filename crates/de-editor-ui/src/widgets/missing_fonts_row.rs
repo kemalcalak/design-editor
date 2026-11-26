@@ -4,8 +4,9 @@
 
 use crate::theme::Theme;
 use crate::widgets::editor_state_ext::translate;
+use crate::widgets::label_widths::LabelWidths;
 use crate::widgets::PaintCx;
-use crate::{Point2D, Rect, TextLayout};
+use crate::{Point2D, Rect, RenderBackend, TextLayout};
 use de_editor_core::missing_fonts::{
     can_download, font_download_status, FontDownloadStatus, MissingFontEntry, MissingFontsHover,
 };
@@ -19,26 +20,55 @@ const FAMILY_FONT_SIZE: f32 = 13.0;
 const FAMILY_FONT_WEIGHT: u16 = 600;
 const FAMILY_LINE_HEIGHT: f32 = 16.0;
 
-/// Shared choose-file geometry used by the modal and Settings Fonts tab.
-/// Fit-content pill width: label width + 12px padding each side.
+/// Weight every label-sized action button paints its label at.
+pub(crate) const BUTTON_LABEL_WEIGHT: u16 = 500;
+/// Space either side of a button's label.
+const BUTTON_LABEL_PAD: f32 = 12.0;
+/// Label size of a row's choose-file and Download buttons.
+const ROW_BUTTON_FONT: f32 = 11.0;
+
+/// Width of a label-sized action button (choose file, Download, Dismiss,
+/// Apply, …): its label as painted — chrome family, [`BUTTON_LABEL_WEIGHT`]
+/// — plus [`BUTTON_LABEL_PAD`] either side.
+///
+/// Backend-less, so hit-tests can call it: it reads the label from the
+/// shared [`LabelWidths`] cache, which paint fills first through
+/// [`measure_button_labels`]. Only a label nothing has painted yet falls back
+/// to the cache's estimate.
 pub(crate) fn fit_button_width(label: &str, font_size: f32) -> f32 {
-    // CJK glyphs are full-width (~1.0 x font size); a flat Latin
-    // factor undershoots them and clips the label.
-    let text: f32 = label
-        .chars()
-        .map(|c| {
-            if (c as u32) > 0x2E7F {
-                font_size
-            } else {
-                font_size * 0.55
-            }
-        })
-        .sum();
-    text + 24.0
+    LabelWidths::cached().chrome_weighted(label, font_size, BUTTON_LABEL_WEIGHT)
+        + BUTTON_LABEL_PAD * 2.0
+}
+
+/// Measure button `labels` at `font_size` into the shared label cache in the
+/// family and weight they are painted in, so [`fit_button_width`] — and
+/// every hit-test built on it — resolves the painted box. Paint calls this
+/// before it lays its buttons out.
+pub(crate) fn measure_button_labels(
+    backend: &mut dyn RenderBackend,
+    font_size: f32,
+    labels: &[&str],
+) {
+    let mut widths = LabelWidths::measuring(backend);
+    for label in labels {
+        widths.chrome_weighted(label, font_size, BUTTON_LABEL_WEIGHT);
+    }
+}
+
+/// Measure every label a missing-font row's buttons can show (choose file
+/// and each Download slot state), so the row's rects are the painted ones.
+pub(crate) fn measure_row_button_labels(backend: &mut dyn RenderBackend, ui: &EditorUiState) {
+    let mut labels = vec![translate(ui, "missingFonts.chooseFont")];
+    labels.extend(
+        DOWNLOAD_SLOT_STATES
+            .iter()
+            .map(|status| translate(ui, download_label(*status))),
+    );
+    measure_button_labels(backend, ROW_BUTTON_FONT, &labels);
 }
 
 pub(crate) fn row_button_rect(row: Rect, ui: &EditorUiState) -> Rect {
-    let width = fit_button_width(translate(ui, "missingFonts.chooseFont"), 11.0);
+    let width = fit_button_width(translate(ui, "missingFonts.chooseFont"), ROW_BUTTON_FONT);
     Rect {
         origin: Point2D::new(
             row.origin.x + row.size.x - width,
@@ -87,7 +117,7 @@ pub(crate) fn row_download_rect(
     }
     let width = DOWNLOAD_SLOT_STATES
         .iter()
-        .map(|status| fit_button_width(translate(ui, download_label(*status)), 11.0))
+        .map(|status| fit_button_width(translate(ui, download_label(*status)), ROW_BUTTON_FONT))
         .fold(0.0, f32::max);
     let choose = row_button_rect(row, ui);
     Some(Rect {
@@ -197,6 +227,7 @@ pub(crate) fn paint_missing_font_row(
     row: Rect,
     divider: bool,
 ) {
+    measure_row_button_labels(cx.backend, ui);
     let choose_hovered = ui.missing_fonts_hover == Some(MissingFontsHover::ChooseFile(row_index));
     let download = row_download_rect(row, ui, entry);
     if divider {

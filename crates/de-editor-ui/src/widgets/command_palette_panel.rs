@@ -10,7 +10,7 @@
 use crate::theme::Theme;
 use crate::widgets::editor_state_ext::{theme_for, translate};
 use crate::widgets::icons::{draw_icon, Icon};
-use crate::widgets::missing_fonts_row::fit_button_width;
+use crate::widgets::missing_fonts_row::{fit_button_width, measure_button_labels};
 use crate::widgets::text_metrics;
 use crate::widgets::{LayoutBox, LayoutCx, PaintCx, Widget, WidgetId};
 use crate::{Color, Point2D, Rect, TextLayout};
@@ -350,6 +350,7 @@ impl CommandPalettePanel<'_> {
 
     /// Paint with the editor clock so the focused field's caret blinks.
     pub fn paint_at(&self, cx: &mut PaintCx<'_>, panel: Rect, now_ms: u64) {
+        measure_button_labels(cx.backend, 12.0, &[self.replace_all_label()]);
         let theme = &self.theme;
         cx.backend.fill_round_rect(panel, 12.0, theme.popover);
         cx.backend.stroke_round_rect(panel, 12.0, theme.border, 1.0);

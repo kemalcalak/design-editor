@@ -491,6 +491,8 @@ pub mod window_strip;
 #[cfg(test)]
 mod agent_settings_width_tests;
 #[cfg(test)]
+mod chrome_family_paint_tests;
+#[cfg(test)]
 mod floating_chrome_width_tests;
 #[cfg(test)]
 pub(crate) mod label_fit_test_support;

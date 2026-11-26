@@ -297,6 +297,15 @@ impl Widget for MissingFontsPanel<'_> {
     }
 
     fn paint(&self, cx: &mut PaintCx<'_>, panel: Rect) {
+        crate::widgets::missing_fonts_row::measure_button_labels(
+            cx.backend,
+            12.0,
+            &[
+                translate(self.ui, "missingFonts.downloadAll"),
+                translate(self.ui, "missingFonts.dismiss"),
+            ],
+        );
+        crate::widgets::missing_fonts_row::measure_row_button_labels(cx.backend, self.ui);
         cx.backend.fill_round_rect(panel, 14.0, self.theme.card);
         cx.backend
             .stroke_round_rect(panel, 14.0, self.theme.border, 1.0);
