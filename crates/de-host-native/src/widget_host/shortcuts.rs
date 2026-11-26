@@ -84,7 +84,21 @@ impl WidgetHostNative {
             return true;
         }
         // Clipboard is transient editor state — no paint change.
-        self.editor_state.copy_selected()
+        let copied = self.editor_state.copy_selected();
+        if copied {
+            self.queue_node_clipboard_marker();
+        }
+        copied
+    }
+
+    /// After a user node copy / cut, ask the runner to put the node-copy
+    /// marker on the system clipboard so no older payload (a Copy as SVG,
+    /// an image) outranks the copied nodes on the next paste (#436).
+    fn queue_node_clipboard_marker(&mut self) {
+        self.editor_state
+            .editor_ui
+            .canvas_view
+            .pending_node_clipboard_marker = true;
     }
 
     /// Cmd/Ctrl+X — copy then delete the selection.
@@ -98,6 +112,7 @@ impl WidgetHostNative {
         self.editor_state.commit_history();
         let ok = self.editor_state.cut_selected();
         if ok {
+            self.queue_node_clipboard_marker();
             self.mark_dirty();
         }
         ok

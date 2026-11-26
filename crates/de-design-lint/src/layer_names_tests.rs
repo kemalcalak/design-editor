@@ -63,6 +63,10 @@ fn generated_screen() -> PenNode {
     }))
 }
 
+fn page_of(root: &PenNode) -> NamingPage<'_> {
+    NamingPage::new(std::slice::from_ref(root), &NoInstances)
+}
+
 fn names(proposals: &[LayerNameProposal]) -> HashMap<&str, &str> {
     proposals
         .iter()
@@ -112,7 +116,7 @@ fn rules_name_a_generated_screen() {
     assert_eq!(names["cta-2"], "Secondary button");
     assert_eq!(names["pricing"], "Pricing section");
     assert_eq!(names["pricing-title"], "Pricing section / Title");
-    assert_eq!(names["cards"], "Card list");
+    assert_eq!(names["cards"], "Pricing cards");
     assert_eq!(names["card-2"], "Pro plan card");
     assert_eq!(names["footer"], "Footer");
     assert_eq!(names["nav-2"], "Pricing");
@@ -191,7 +195,11 @@ fn no_role_word_is_a_default_name_in_any_locale() {
         rules::Role::Footer,
         rules::Role::Section(None),
         rules::Role::Card(None),
-        rules::Role::CardList,
+        rules::Role::Cards(rules::CardsName::Plain),
+        rules::Role::Cards(rules::CardsName::Pricing),
+        rules::Role::Subtitle,
+        rules::Role::Price,
+        rules::Role::Caption,
         rules::Role::Row,
         rules::Role::Column,
         rules::Role::Container,
@@ -230,7 +238,7 @@ fn no_role_word_is_a_default_name_in_any_locale() {
 #[test]
 fn lint_reports_default_names_as_info_with_the_rename() {
     let screen = generated_screen();
-    let issues = detect_default_layer_names(&screen);
+    let issues = detect_default_layer_names(&page_of(&screen), Locale::EnUs);
     let cta = issues
         .iter()
         .find(|issue| issue.node_id == "cta")
@@ -246,7 +254,7 @@ fn lint_reports_default_names_as_info_with_the_rename() {
     // Text layers named `Text` are flagged; a nameless layer is not.
     assert!(issues.iter().any(|issue| issue.node_id == "nav-1"));
     let nameless = node(json!({"type": "frame", "id": "x", "width": 10, "height": 10}));
-    assert!(detect_default_layer_names(&nameless).is_empty());
+    assert!(detect_default_layer_names(&page_of(&nameless), Locale::EnUs).is_empty());
 }
 
 fn button_with_fill(color: &str) -> PenNode {

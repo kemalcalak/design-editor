@@ -9,15 +9,22 @@ use jian_ops_schema::style::PenFill;
 
 use crate::color::{parse_hex_color, relative_luminance};
 use crate::node_util::{
-    children, corner_radius_numeric, first_fill_color, has_stroke, node_fills, node_kind,
-    numeric_height, numeric_width, NodeKind,
+    children, corner_radius_numeric, first_fill_color, has_stroke, is_node_visible, node_fills,
+    node_kind, numeric_height, numeric_width, NodeKind,
 };
 
-/// Longest text content used verbatim as a layer name.
-const MAX_CONTENT_NAME_CHARS: usize = 40;
-/// Longest heading folded into a named role (`Pricing card`).
-const MAX_HEADING_WORDS: usize = 3;
-const MAX_HEADING_CHARS: usize = 24;
+use super::facts::Facts;
+use super::text_roles::{self, holds_price, screen_heading};
+
+/// How a container of repeated cards is named: as pricing cards when at
+/// least half of them hold a price, else after the heading right before it
+/// (`Plans` → `Plans cards`), else plainly.
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) enum CardsName {
+    Heading(String),
+    Pricing,
+    Plain,
+}
 
 /// What a layer is for, as far as its structure tells.
 #[derive(Debug, Clone, PartialEq)]
@@ -28,14 +35,22 @@ pub(crate) enum Role {
     Footer,
     Section(Option<String>),
     Card(Option<String>),
-    CardList,
+    /// A container of repeated cards, named for what they hold.
+    Cards(CardsName),
     Row,
     Column,
     Container,
     PrimaryButton,
     SecondaryButton,
     Title,
+    /// A second heading under the title.
+    Subtitle,
+    /// An amount of money (`$9 / month`).
+    Price,
+    /// The body text of a unit.
     Description,
+    /// Small print (a long text at 12 px or less).
+    Caption,
     /// A short text named by what it says.
     Content(String),
     Icon(Option<String>),
@@ -67,7 +82,10 @@ impl Role {
         matches!(
             self,
             Role::Title
+                | Role::Subtitle
+                | Role::Price
                 | Role::Description
+                | Role::Caption
                 | Role::Picture
                 | Role::Illustration
                 | Role::Background
@@ -91,14 +109,21 @@ impl Role {
             Role::Section(None) => word("renameLayers.role.section"),
             Role::Card(Some(heading)) => named("renameLayers.role.cardNamed", heading),
             Role::Card(None) => word("renameLayers.role.card"),
-            Role::CardList => word("renameLayers.role.cardList"),
+            Role::Cards(CardsName::Heading(heading)) => {
+                named("renameLayers.role.cardsNamed", heading)
+            }
+            Role::Cards(CardsName::Pricing) => word("renameLayers.role.pricingCards"),
+            Role::Cards(CardsName::Plain) => word("renameLayers.role.cards"),
             Role::Row => word("renameLayers.role.row"),
             Role::Column => word("renameLayers.role.column"),
             Role::Container => word("renameLayers.role.container"),
             Role::PrimaryButton => word("renameLayers.role.primaryButton"),
             Role::SecondaryButton => word("renameLayers.role.secondaryButton"),
             Role::Title => word("renameLayers.role.title"),
+            Role::Subtitle => word("renameLayers.role.subtitle"),
+            Role::Price => word("renameLayers.role.price"),
             Role::Description => word("renameLayers.role.description"),
+            Role::Caption => word("renameLayers.role.caption"),
             Role::Content(text) => text.clone(),
             Role::Icon(Some(icon)) => named("renameLayers.role.iconNamed", icon),
             Role::Icon(None) => word("renameLayers.role.icon"),
@@ -152,14 +177,14 @@ pub fn text_content(node: &PenNode) -> Option<String> {
     Some(collapse_whitespace(&raw))
 }
 
-fn font_size(node: &PenNode) -> f64 {
+pub(crate) fn font_size(node: &PenNode) -> f64 {
     match node {
         PenNode::Text(text) => text.font_size.unwrap_or(16.0),
         _ => 0.0,
     }
 }
 
-fn font_weight(node: &PenNode) -> u32 {
+pub(crate) fn font_weight(node: &PenNode) -> u32 {
     let PenNode::Text(text) = node else {
         return 400;
     };
@@ -174,7 +199,7 @@ fn font_weight(node: &PenNode) -> u32 {
     }
 }
 
-fn layout(node: &PenNode) -> Option<&LayoutMode> {
+pub(crate) fn layout(node: &PenNode) -> Option<&LayoutMode> {
     match node {
         PenNode::Frame(n) => n.container.layout.as_ref(),
         PenNode::Group(n) => n.container.layout.as_ref(),
@@ -187,9 +212,9 @@ fn has_visible_fill(node: &PenNode) -> bool {
     node_fills(node).is_some_and(|fills| !fills.is_empty())
 }
 
-/// Every text layer below `node` (depth-first), with its font size.
+/// Every visible text layer below `node` (depth-first), with its font size.
 fn texts_below(node: &PenNode, out: &mut Vec<(f64, String)>) {
-    for child in children(node) {
+    for child in children(node).iter().filter(|kid| is_node_visible(kid)) {
         if let Some(text) = text_content(child) {
             if !text.is_empty() {
                 out.push((font_size(child), text));
@@ -197,18 +222,6 @@ fn texts_below(node: &PenNode, out: &mut Vec<(f64, String)>) {
         }
         texts_below(child, out);
     }
-}
-
-/// The biggest text below `node`, when it is short enough to name the
-/// layer after (`Pricing` → `Pricing card`).
-fn short_heading(node: &PenNode) -> Option<String> {
-    let mut texts = Vec::new();
-    texts_below(node, &mut texts);
-    let (_, heading) = texts
-        .into_iter()
-        .max_by(|a, b| a.0.partial_cmp(&b.0).unwrap_or(std::cmp::Ordering::Equal))?;
-    let words = heading.split_whitespace().count();
-    (words <= MAX_HEADING_WORDS && heading.chars().count() <= MAX_HEADING_CHARS).then_some(heading)
 }
 
 fn is_primary_fill(node: &PenNode) -> bool {
@@ -235,7 +248,7 @@ fn mostly_transparent(color: &str) -> bool {
 }
 
 /// A small filled or outlined box around one short label.
-fn button_role(node: &PenNode) -> Option<Role> {
+pub(crate) fn button_role(node: &PenNode) -> Option<Role> {
     let kids = children(node);
     if kids.is_empty() || kids.len() > 3 {
         return None;
@@ -285,7 +298,7 @@ fn covers(node: &PenNode, parent: Option<&PenNode>, share: f64) -> bool {
 }
 
 /// Section of a screen: a wide child of a top-level frame.
-fn section_role(node: &PenNode, place: Place<'_>) -> Option<Role> {
+fn section_role(node: &PenNode, place: Place<'_>, facts: &Facts) -> Option<Role> {
     let parent = place.parent?;
     if place.depth != 1 || !matches!(node_kind(parent), NodeKind::Frame | NodeKind::Group) {
         return None;
@@ -314,53 +327,66 @@ fn section_role(node: &PenNode, place: Place<'_>) -> Option<Role> {
     if siblings >= 3 && place.index + 1 == siblings && largest <= 16.0 {
         return Some(Role::Footer);
     }
-    Some(Role::Section(short_heading(node)))
+    Some(Role::Section(facts.heading(node)))
 }
 
-fn card_role(node: &PenNode) -> Option<Role> {
+/// A filled or outlined box with rounded corners or a border, holding two
+/// or more layers and some visible text: the shape of a card.
+pub(crate) fn is_card_shaped(node: &PenNode, facts: &Facts) -> bool {
     let decorated = has_stroke(node) || corner_radius_numeric(node) > 0.0;
-    if !(has_visible_fill(node) || has_stroke(node)) || !decorated || children(node).len() < 2 {
+    (has_visible_fill(node) || has_stroke(node))
+        && decorated
+        && children(node).len() >= 2
+        && facts.has_text(node)
+}
+
+fn card_role(node: &PenNode, facts: &Facts) -> Option<Role> {
+    is_card_shaped(node, facts).then(|| Role::Card(facts.heading(node)))
+}
+
+/// Two or more cards side by side, named for their content, never after
+/// one of them: `Pricing cards` when at least half of them hold a price,
+/// `Plans cards` under a `Plans` heading, else `Cards`.
+fn cards_role(node: &PenNode, place: Place<'_>, facts: &Facts) -> Option<Role> {
+    let kids = children(node);
+    if kids.len() < 2 || !kids.iter().all(|kid| facts.is_card(kid)) {
         return None;
     }
-    let mut texts = Vec::new();
-    texts_below(node, &mut texts);
-    (!texts.is_empty()).then(|| Role::Card(short_heading(node)))
+    let priced = kids.iter().filter(|kid| holds_price(kid, facts)).count();
+    Some(Role::Cards(if priced * 2 >= kids.len() {
+        CardsName::Pricing
+    } else if let Some(heading) = preceding_heading(place) {
+        CardsName::Heading(heading)
+    } else {
+        CardsName::Plain
+    }))
 }
 
-fn container_role(node: &PenNode, place: Place<'_>) -> Role {
+/// The heading text right before the layer at `place` among its siblings
+/// (`Plans` above a row of plan cards).
+fn preceding_heading(place: Place<'_>) -> Option<String> {
+    let previous = children(place.parent?).get(place.index.checked_sub(1)?)?;
+    text_roles::standalone_heading(previous)
+}
+
+fn container_role(node: &PenNode, place: Place<'_>, facts: &Facts) -> Role {
     if let Some(role) = button_role(node) {
         return role;
     }
-    if let Some(role) = section_role(node, place) {
+    if let Some(role) = cards_role(node, place, facts) {
         return role;
     }
-    if let Some(role) = card_role(node) {
+    if let Some(role) = section_role(node, place, facts) {
         return role;
     }
-    let kids = children(node);
-    if kids.len() >= 3 && kids.iter().all(|kid| card_role(kid).is_some()) {
-        return Role::CardList;
+    if let Some(role) = card_role(node, facts) {
+        return role;
     }
     match layout(node) {
         Some(LayoutMode::Horizontal) => Role::Row,
         Some(LayoutMode::Vertical) => Role::Column,
         _ => Role::Container,
     }
-}
-
-fn text_role(node: &PenNode) -> Option<Role> {
-    let content = text_content(node)?;
-    let size = font_size(node);
-    if size >= 24.0 || (size >= 20.0 && font_weight(node) >= 600) {
-        return Some(Role::Title);
-    }
-    if content.is_empty() {
-        return None;
-    }
-    if content.chars().count() <= MAX_CONTENT_NAME_CHARS {
-        return Some(Role::Content(content));
-    }
-    Some(Role::Description)
 }
 
 fn leaf_shape_role(node: &PenNode, place: Place<'_>) -> Role {
@@ -386,13 +412,13 @@ fn leaf_shape_role(node: &PenNode, place: Place<'_>) -> Role {
 
 /// The role the rules read off `node`, or `None` for layers they do not
 /// name (component instances, notes, embedded browsers, empty text).
-pub(crate) fn infer_role(node: &PenNode, place: Place<'_>) -> Option<Role> {
+pub(crate) fn infer_role(node: &PenNode, place: Place<'_>, facts: &Facts) -> Option<Role> {
     let kind = node_kind(node);
     if place.depth == 0 && matches!(kind, NodeKind::Frame | NodeKind::Group) {
-        return Some(Role::Screen(short_heading(node)));
+        return Some(Role::Screen(screen_heading(node, facts)));
     }
     Some(match kind {
-        NodeKind::Text => return text_role(node),
+        NodeKind::Text => return text_roles::text_role(node),
         NodeKind::Image => {
             let square_small = match (numeric_width(node), numeric_height(node)) {
                 (Some(w), Some(h)) => w <= 96.0 && (w - h).abs() <= 4.0,
@@ -420,7 +446,7 @@ pub(crate) fn infer_role(node: &PenNode, place: Place<'_>) -> Option<Role> {
         NodeKind::Progress => Role::ProgressBar,
         NodeKind::Tabs => Role::TabBar,
         NodeKind::Frame | NodeKind::Group | NodeKind::Rectangle if !children(node).is_empty() => {
-            container_role(node, place)
+            container_role(node, place, facts)
         }
         NodeKind::Frame
         | NodeKind::Group

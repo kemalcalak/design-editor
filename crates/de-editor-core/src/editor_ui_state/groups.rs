@@ -112,6 +112,10 @@ pub struct CanvasViewState {
     /// Copy as PNG / SVG asked for by a menu row; the desktop takes it
     /// after the press and writes the OS clipboard.
     pub pending_copy_as: Option<crate::copy_as::CopyAsFormat>,
+    /// A user node copy / cut asked the desktop to put the node-copy
+    /// marker on the system clipboard (#436,
+    /// `crate::node_clipboard_marker`); it takes the flag at once.
+    pub pending_node_clipboard_marker: bool,
 }
 
 /// PropertyPanel Size-section fill / hug / clip toggles.

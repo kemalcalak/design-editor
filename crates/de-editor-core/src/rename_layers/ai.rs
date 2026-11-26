@@ -111,6 +111,11 @@ pub fn rename_layers_prompt(briefs: &[Value], locale: Locale) -> String {
          \"Primary button\", \"Pricing card\", \"Hero / Title\". Text layers may be named after \
          what they say. Never use generic kind names like Frame, Group, Rectangle or Text, \
          and never add numbers to tell layers apart.\n\
+         Name a card after its heading (\"Starter card\"), never after a price or another \
+         number; give the texts of one card different roles (\"Starter card / Title\", \
+         \"Starter card / Price\", Description, Caption); name a container of repeated cards \
+         for what they hold (\"Pricing cards\"), not after one of them. Layers that share a \
+         parent must not share a name.\n\
          Write the names in {language}, the language of the document.\n\
          `suggested` is an offline guess; improve on it. `path` lists the parent layers.\n\
          Reply with ONLY a JSON object mapping each layer id to its new name, no prose:\n\

@@ -261,6 +261,8 @@ mod shape_picker_press;
 #[cfg(test)]
 mod shortcut_surface_tests;
 mod shortcuts;
+#[cfg(test)]
+mod shortcuts_clipboard_marker_tests;
 mod slides_panel;
 mod slides_panel_thumbs;
 mod text_edit_press;
