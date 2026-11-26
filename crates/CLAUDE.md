@@ -368,6 +368,7 @@ Native (`design-editor`) + web (`shell-web`) both dispatch the following P1 keyb
 | `Escape`                  | `apply_escape`        | One layer per press, in priority order: property-focus → locale picker → shape picker → fill-type picker → fill `⋯` menu → chat focus → selection. |
 | `Enter`                   | `apply_send`          | Commits property edit or sends chat.                                                                                               |
 | `Cmd/Ctrl+[` / `]` (Preview) | `preview_history_step` | Back / forward through the preview's browsing history (#153); the mouse Back / Forward buttons do the same. Bare `[` / `]` stay z-order reorder. |
+| `Cmd/Ctrl+K` / `Cmd/Ctrl+/` / `Cmd/Ctrl+F` | `apply_toggle_command_palette` | Command palette / Find layers (#395); see "Command palette and find layers" below. While open the palette owns every key (`de-host-desktop/src/keyboard_palette.rs`). |
 
 The shared implementation of these lives in `de_editor_core::host_keyboard_transitions` + `host_escape_transitions`; the host `keyboard*.rs` files are the platform arms.
 
@@ -561,6 +562,10 @@ Outside the widget hosts the same rule applies: settings payload serde lives in 
 
 `request_snapshot::narrowed_snapshot(&mut EditorState)` is the sanctioned way to hand editor state to a worker thread. The MCP request path, the chat-launch path, and the desktop design pump's per-apply-ack all use it: it drops `chat` / `codegen` / `theme_presets`, which grow with session length and are read by no consumer on the worker side. A full `EditorState::clone()` on a request path is a bug.
 
+## Command palette and find layers (#395)
+
+One modal, two modes. State and every transition live in `de-editor-core/src/command_palette.rs` (+ `command_palette/{commands,fuzzy,keys,rows}.rs`): `PaletteCommand` is the command table (label key, per-platform chord as `&'static str`, English keywords), `fuzzy_score` ranks (exact > prefix > word start > substring > subsequence, shorter label wins a tie), rows carry pre-resolved labels so paint never allocates. Commands mode ranks commands, pages, components (insert a linked instance), variables (open the panel) and recent files. Find layers (`de-editor-core/src/find_layers.rs`, shared with MCP `find_nodes`) searches **every page**: free text (name, then text content, then id) plus `type:` `id:` `name:` `text:` `fill:` `var:` `component:` filters; Enter switches to the match's page, selects and frames it (`command_palette_flow::frame_nodes`), Shift+Enter selects every match on that page, Tab moves to the replace field whose Enter / Replace all rewrites the matched text on every page as one undo step (styled runs per run, locked layers skipped). Widget: `de-editor-ui/src/widgets/command_palette_{panel,flow}.rs`; native arm `widget_host/command_palette_dispatch.rs` maps each command onto its shortcut call and queues runner-only ones (file dialogs, Git panel, new chat, recent files) on `editor_ui.palette_runner_request`, which `DesktopApp::drain_palette_request` runs through `apply_menu_action`. The palette is modal like Rename layers: `modal_dialog_open()` guards the document chords.
+
 ## Vector path operations (#388)
 
 - **Crate `de-path-ops`** (skia, raster-only): scene node → outline
@@ -685,7 +690,7 @@ The **`de-mcp`** crate carries the MCP wire layer that mirrors the retired TS `p
 
 ### Tool catalog
 
-**175 static-schema tools** registered today. The authoritative list
+**176 static-schema tools** registered today. The authoritative list
 is `de-host-services/src/mcp_serve/schemas.rs` — `TOOL_SCHEMAS`
 (JSON inputSchemas; `DEBUG_TOOL_SCHEMAS` is gated out of the
 production catalog) — plus the `register_tool!` calls in

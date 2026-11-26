@@ -68,6 +68,7 @@ mod keyboard_chat_tabs;
 mod keyboard_clipboard_payload;
 mod keyboard_input;
 mod keyboard_input_arrows;
+mod keyboard_palette;
 mod keyboard_presenting;
 mod keyboard_scene_template;
 mod keyboard_shader_editor;

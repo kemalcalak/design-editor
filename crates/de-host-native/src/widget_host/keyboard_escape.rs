@@ -16,6 +16,10 @@ impl WidgetHostNative {
             self.mark_dirty();
             return true;
         }
+        // Command palette (#395): close.
+        if self.palette_escape() {
+            return true;
+        }
         // Rename-layers preview (#383): drop the inline edit, then close.
         if de_editor_core::rename_layers::rename_layers_escape(&mut self.editor_state).is_some() {
             self.mark_dirty();

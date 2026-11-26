@@ -402,6 +402,10 @@ pub(crate) mod ai_chat_transcript_text;
 pub(crate) mod ai_chat_transcript_tools;
 pub mod align_toolbar;
 pub mod color_picker;
+pub mod command_palette_flow;
+pub mod command_palette_panel;
+#[cfg(test)]
+mod command_palette_panel_tests;
 mod component_browser_kits;
 mod component_browser_libraries;
 pub mod component_browser_panel;
@@ -521,6 +525,7 @@ pub use ai_chat_transcript_design::{parse_design_json_nodes, DesignParseError};
 pub use align_toolbar::{AlignToolbar, AlignToolbarHit, ALIGN_TOOLBAR_HEIGHT, ALIGN_TOOLBAR_WIDTH};
 pub use canvas_actions::{CanvasActions, CanvasActionsLayout};
 pub use chrome_hit::ChromeHit;
+pub use command_palette_panel::{CommandPaletteHit, CommandPalettePanel};
 pub use component_browser_panel::{ComponentBrowserHit, ComponentBrowserPanel};
 pub use deck_boards::BoardChip;
 pub use design_md_panel::{DesignMdHit, DesignMdPanel, DESIGN_MD_PANEL_H, DESIGN_MD_PANEL_W};

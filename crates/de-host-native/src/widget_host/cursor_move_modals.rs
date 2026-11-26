@@ -35,6 +35,10 @@ impl WidgetHostNative {
             }
             return Some(changed);
         }
+        // Command palette (#395) — modal, owns the cursor while open.
+        if let Some(changed) = self.update_command_palette_hover(x, y) {
+            return Some(changed);
+        }
         // Rename-layers preview (#383) — modal, owns the cursor while open.
         if let Some(changed) = self.update_rename_layers_hover(x, y) {
             return Some(changed);
