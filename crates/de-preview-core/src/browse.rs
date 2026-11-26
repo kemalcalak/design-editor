@@ -153,27 +153,38 @@ pub enum PreviewCursor {
 impl PreviewSession {
     /// Whether the chrome's back control has somewhere to go.
     pub fn can_go_back(&self) -> bool {
-        self.app
-            .as_ref()
-            .is_some_and(|app| app.history.can_go_back())
+        self.has_open_overlays()
+            || self
+                .app
+                .as_ref()
+                .is_some_and(|app| app.history.can_go_back())
     }
 
     /// Whether the chrome's forward control has somewhere to go.
     pub fn can_go_forward(&self) -> bool {
-        self.app
-            .as_ref()
-            .is_some_and(|app| app.history.can_go_forward())
+        !self.proto_overlays.forward.is_empty()
+            || self
+                .app
+                .as_ref()
+                .is_some_and(|app| app.history.can_go_forward())
     }
 
     /// Go back one history entry. The switch commits on the next
     /// `reconcile`, like any other navigation. A no-op (returning
     /// `None` invalidation) at the oldest entry or outside APP MODE.
+    /// An open overlay closes first, and Forward reopens it (#372).
     pub fn go_back(&mut self) -> InvalidationKind {
+        if self.overlay_back() {
+            return InvalidationKind::PaintOnly;
+        }
         self.history_step(false)
     }
 
     /// Go forward one history entry; see [`Self::go_back`].
     pub fn go_forward(&mut self) -> InvalidationKind {
+        if self.overlay_forward() {
+            return InvalidationKind::PaintOnly;
+        }
         self.history_step(true)
     }
 
@@ -221,6 +232,9 @@ impl PreviewSession {
     /// handler or is an interactive widget. `None` when nothing clickable
     /// is under the pointer.
     pub fn hovered_clickable(&self) -> Option<String> {
+        if self.has_open_overlays() {
+            return self.proto_overlays.hovered.clone();
+        }
         self.pointer_node()
             .and_then(|node| self.clickable_ancestor(&node))
     }
@@ -236,6 +250,12 @@ impl PreviewSession {
 
     /// The pointer shape for the node under the pointer.
     pub fn preview_cursor(&self) -> PreviewCursor {
+        if self.has_open_overlays() {
+            return match self.proto_overlays.hovered {
+                Some(_) => PreviewCursor::Pointer,
+                None => PreviewCursor::Default,
+            };
+        }
         let Some(hovered) = self.pointer_node() else {
             return PreviewCursor::Default;
         };

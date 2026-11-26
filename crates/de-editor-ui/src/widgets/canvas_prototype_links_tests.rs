@@ -148,6 +148,91 @@ fn paint_draws_labels_badges_and_red_for_broken_links() {
     assert!(backend.texts.is_empty());
 }
 
+const OVERLAY_DOC: &str = r#"{
+  "version": "1.0", "children": [],
+  "pages": [
+    {"id": "site", "name": "Site", "children": [
+      {"type": "frame", "id": "home", "name": "Home", "width": 400, "height": 800,
+       "children": [
+        {"type": "frame", "id": "open", "name": "Open", "width": 80, "height": 40,
+         "events": {"onTap": [{"open_overlay": {"target": "menu"}}]}},
+        {"type": "frame", "id": "far", "name": "Far", "width": 80, "height": 40,
+         "events": {"onTap": [{"swap_overlay": {"target": "sheet"}}]}},
+        {"type": "frame", "id": "shut", "name": "Shut", "width": 80, "height": 40,
+         "events": {"onTap": [{"close_overlay": null}]}}
+       ]},
+      {"type": "frame", "id": "menu", "name": "Menu", "x": 600, "width": 200, "height": 300}
+    ]},
+    {"id": "more", "name": "Overlays", "children": [
+      {"type": "frame", "id": "sheet", "name": "Sheet", "width": 400, "height": 300}
+    ]}
+  ]
+}"#;
+
+#[test]
+fn overlay_links_draw_dashed_or_badge_a_frame_elsewhere() {
+    let s = EditorState::from_document(serde_json::from_str(OVERLAY_DOC).expect("fixture"));
+    let links = page_links(&s);
+    let kind = |anchor: &str| {
+        links
+            .iter()
+            .find(|l| l.anchor == anchor)
+            .map(|l| l.kind.clone())
+            .unwrap_or_else(|| panic!("{anchor} in {links:#?}"))
+    };
+    assert_eq!(
+        kind("open"),
+        CanvasLinkKind::OverlayArrow {
+            target: "menu".into()
+        }
+    );
+    assert_eq!(
+        kind("far"),
+        CanvasLinkKind::OverlayElsewhere {
+            name: "Sheet".into()
+        }
+    );
+    assert_eq!(kind("shut"), CanvasLinkKind::CloseOverlay);
+
+    let page = ScenePage {
+        id: "site".into(),
+        name: "Site".into(),
+        children: vec![
+            node("open", 10.0, 10.0, 80.0, 40.0),
+            node("menu", 600.0, 0.0, 200.0, 300.0),
+        ],
+    };
+    let viewport = de_editor_core::Viewport {
+        pan_x: 0.0,
+        pan_y: 0.0,
+        zoom: 1.0,
+    };
+    let only_open: Vec<CanvasLink> = links
+        .iter()
+        .filter(|l| l.anchor == "open")
+        .cloned()
+        .collect();
+    let mut backend = CaptureBackend::default();
+    let mut cx = PaintCx {
+        backend: &mut backend,
+    };
+    paint(
+        &mut cx,
+        &page,
+        &only_open,
+        Rect::xywh(0.0, 0.0, 1200.0, 900.0),
+        &viewport,
+        de_editor_core::Locale::EnUs,
+    );
+    assert_eq!(
+        backend.lines,
+        CURVE_STEPS / 2,
+        "every other segment: dashed"
+    );
+    let texts: Vec<&str> = backend.texts.iter().map(|(t, _)| t.as_str()).collect();
+    assert!(texts.contains(&"Tap · Overlay"), "{texts:?}");
+}
+
 #[test]
 fn url_hosts_drop_the_scheme_path_and_www() {
     assert_eq!(url_host("https://www.example.com/a?b"), "example.com");

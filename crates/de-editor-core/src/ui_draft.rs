@@ -153,6 +153,9 @@ pub enum PropertyFocus {
     /// The address of `trigger`'s Open URL action in the Interactions
     /// section (#176). Free text.
     InteractionUrl(crate::interaction_edit::InteractionTrigger),
+    /// The dim colour (`#RRGGBBAA`) of `trigger`'s overlay (#372). Free
+    /// text.
+    OverlayBackground(crate::interaction_edit::InteractionTrigger),
     /// Row `index` of the component-property rows (#367): an instance's
     /// text or colour value, or a master property's name. Free text.
     ComponentProp(usize),
@@ -206,6 +209,7 @@ impl PropertyFocus {
                 | PropertyFocus::ScriptInput(_)
                 | PropertyFocus::BrowserUrl
                 | PropertyFocus::InteractionUrl(_)
+                | PropertyFocus::OverlayBackground(_)
                 | PropertyFocus::ComponentProp(_)
         )
     }

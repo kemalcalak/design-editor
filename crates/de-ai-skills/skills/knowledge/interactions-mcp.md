@@ -1,11 +1,11 @@
 ---
 name: interactions-mcp
-description: Prototype links over MCP - set_interaction, remove_interaction, list_interactions and capture_preview taps, with worked examples
+description: Prototype links and overlays over MCP - set_interaction, remove_interaction, list_interactions and capture_preview taps, with worked examples
 phase: [maintenance]
 trigger:
-  keywords: [set_interaction, list_interactions, prototype link, flow graph]
+  keywords: [set_interaction, list_interactions, prototype link, flow graph, open_overlay]
 priority: 20
-budget: 1600
+budget: 2200
 category: knowledge
 ---
 
@@ -44,6 +44,30 @@ actions; the node's other triggers stay. One call is one undo step.
 
 `remove_interaction {nodeId, trigger}` removes one trigger.
 
+## Overlays
+
+Modals, menus, dropdowns, sheets and toasts are overlays: a frame shown on
+top of the current screen, not a screen of their own. Draw the overlay as a
+top-level frame off to the side (or on an "Overlays" page, or as a component
+instance), then:
+
+- `{"type":"open_overlay","target":"Menu","position":"center",
+  "closeOnOutsideClick":true,"background":"#00000066",
+  "animation":"move_in","direction":"bottom"}`: `target` is the frame's id
+  or name on any page. `position`: `center` (default), `top_left`,
+  `top_center`, `top_right`, `bottom_left`, `bottom_center`, `bottom_right`,
+  or `manual` with `offset {x,y}` from the trigger's bottom-left (a
+  dropdown). `background` dims the screen (`none` by default).
+  `closeOnOutsideClick` (default true) closes it on an outside click; false
+  blocks outside clicks. `animation`: `instant`, `dissolve`, `move_in`.
+- `{"type":"swap_overlay","target":"Step 2"}` replaces the top overlay.
+- `{"type":"close_overlay"}` closes the top overlay; put it on the overlay's
+  close button. Back and Esc close the top overlay too.
+
+Overlays stack, opening one that is open does nothing, a tall one scrolls
+inside itself, and a navigate from inside one closes them all. Links on
+the overlay frame's own nodes work in Preview.
+
 ## Read it back
 
 `list_interactions {pageId?, nodeId?}` returns
@@ -56,7 +80,8 @@ Fix every broken link before you finish.
 
 `capture_preview {actions:[{"tap":"Get started"},{"wait":300}]}` taps a node
 by id, by instance path (`card1/cta`) or by layer name, and returns the
-screen it lands on.
+screen it lands on, with any open overlay painted over it; taps reach
+nodes inside an open overlay the same way.
 
 ## Worked example
 
@@ -66,6 +91,11 @@ set_interaction {nodeId:"cta", trigger:"tap",
   actions:[{"type":"navigate","to":"Pricing","transition":"slide"}]}
 set_interaction {nodeId:"card1/more", trigger:"tap",
   actions:[{"type":"scroll_to","target":"faq"}]}
+set_interaction {nodeId:"menu-btn", trigger:"tap",
+  actions:[{"type":"open_overlay","target":"Menu","position":"manual",
+            "offset":{"x":0,"y":8}}]}
+set_interaction {nodeId:"menu-close", trigger:"tap",
+  actions:[{"type":"close_overlay"}]}
 list_interactions {}
 capture_preview {actions:[{"tap":"cta"}]}
 ```

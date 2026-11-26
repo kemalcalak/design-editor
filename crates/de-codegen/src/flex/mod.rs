@@ -15,6 +15,7 @@ mod editor;
 mod ir;
 mod layout;
 mod markup;
+mod overlays;
 mod paint;
 mod print_css;
 mod print_tailwind;
@@ -182,12 +183,16 @@ fn render(
     options: &HtmlExportOptions,
 ) -> HtmlExport {
     let mut assets = assets::Assets::new(options.asset_dir.clone());
-    let elements = markup::Walker {
+    let mut walker = markup::Walker {
         assets: &mut assets,
         layer_data: options.layer_data,
         in_link: false,
-    }
-    .roots(roots);
+    };
+    let mut elements = walker.roots(roots);
+    // Prototype overlays the roots can open (#372): hidden layers.
+    let overlay_layers = walker.overlay_layers(&overlays::overlay_targets(doc, roots));
+    let has_overlays = !overlay_layers.is_empty();
+    elements.extend(overlay_layers);
     // Inside `<body>` the markup is indented one level.
     let depth = usize::from(options.scaffold);
     let motion = codegen_motion_css::render_roots(roots, doc.motion.as_ref());
@@ -227,10 +232,16 @@ fn render(
             (style, printed.markup)
         }
     };
-    let motion_style = if motion.is_empty() {
+    let mut motion_style = if motion.is_empty() {
         String::new()
     } else {
         format!("<style>\n{}</style>\n", style_safe(&motion))
+    };
+    let overlay_script = if has_overlays {
+        motion_style.push_str(&format!("<style>\n{}</style>\n", overlays::OVERLAY_CSS));
+        format!("<script>\n{}</script>\n", overlays::OVERLAY_SCRIPT)
+    } else {
+        String::new()
     };
 
     let mut html = format!(
@@ -255,11 +266,13 @@ fn render(
         html.push_str(&head_style);
         html.push_str("</head>\n<body>\n");
         html.push_str(&body);
+        html.push_str(&overlay_script);
         html.push_str("</body>\n</html>\n");
     } else {
         html.push_str(&motion_style);
         html.push_str(&head_style);
         html.push_str(&body);
+        html.push_str(&overlay_script);
     }
     HtmlExport {
         html,

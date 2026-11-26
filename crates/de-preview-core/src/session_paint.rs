@@ -116,10 +116,14 @@ impl PreviewSession {
             && !self.ui_actions.has_visual_state()
             && !self.binding_overlay.has_visual_state()
             && !self.animation.has_visual_state()
+            && !self.has_open_overlays()
         {
             &self.scene
         } else {
-            overlaid = self.overlay_runtime_state(&self.scene);
+            let mut scene = self.overlay_runtime_state(&self.scene);
+            // Open overlays sit on the screen board (#372).
+            self.compose_prototype_overlays(&mut scene, now_ms);
+            overlaid = scene;
             &overlaid
         };
         let Some(page) = scene.active_page() else {
