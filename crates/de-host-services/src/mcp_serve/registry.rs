@@ -52,6 +52,7 @@ pub(super) fn rebuild_registry(
         "repair_duplicate_ids",
         de_mcp::repair_duplicate_ids_snapshot(doc)
     );
+    register_tool!("rename_layers", de_mcp::rename_layers_snapshot(doc));
     register_tool!("save_theme_preset", save_theme_preset_snapshot(doc));
     register_tool!("load_theme_preset", load_theme_preset_snapshot());
     register_tool!("list_theme_presets", list_theme_presets_snapshot());

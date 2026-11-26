@@ -19,7 +19,7 @@ fn tools_list_response_includes_all_registered_tools() {
     // TOOL_SCHEMAS without being added to the list below.
     assert_eq!(
         TOOL_SCHEMAS.len(),
-        174,
+        175,
         "add the new tool to this test (#388 path tools: boolean_op_tool's path_tests)"
     );
     // Plus 37 kit tools and pen.dev's 6 names (#392).
@@ -84,6 +84,7 @@ fn tools_list_response_includes_all_registered_tools() {
         "conversion_status",
         "lint_document",
         "repair_duplicate_ids",
+        "rename_layers",
         "save_theme_preset",
         "load_theme_preset",
         "list_theme_presets",

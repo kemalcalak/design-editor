@@ -52,6 +52,9 @@ impl WidgetHostNative {
         if self.try_scroll_missing_fonts_picker(x, y, dy, viewport_width, viewport_height) {
             return true;
         }
+        if self.try_scroll_rename_layers(x, y, dy, viewport_width, viewport_height) {
+            return true;
+        }
         if self.try_scroll_html_import_diagnostics(x, y, dy, viewport_width, viewport_height) {
             return true;
         }

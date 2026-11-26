@@ -42,6 +42,12 @@ impl WidgetHostNative {
                 return Some(true);
             }
         }
+        // Rename-layers preview (#383) — modal, painted just under the
+        // missing-font prompt, so it owns every press while it is open.
+        if self.dispatch_rename_layers_press(x, y, viewport_width, viewport_height) {
+            self.close_image_popovers_for_higher_overlay();
+            return Some(true);
+        }
         // Transient notice banner — painted just under the missing-font modal
         // and above the diagnostics notice, so it hit-tests between the two
         // (hit-test is reverse paint order). Non-modal: only presses on the

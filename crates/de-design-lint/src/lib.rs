@@ -11,6 +11,7 @@ pub mod design_form;
 pub mod detectors;
 pub mod fixes;
 pub mod issue;
+pub mod layer_names;
 pub mod missing_progress_ring;
 pub mod node_mut;
 pub mod node_util;
@@ -30,5 +31,9 @@ pub use detectors::{
 };
 pub use fixes::{apply_fixes, detect_and_fix};
 pub use issue::{FixProperty, FixReport, Issue, IssueCategory, IssueSeverity};
+pub use layer_names::{
+    detect_default_layer_names, document_locale, has_meaningful_name, is_default_layer_name,
+    propose_layer_names, LayerNameProposal,
+};
 pub use missing_progress_ring::{detect_missing_progress_rings, MissingProgressRing};
 pub use plan::{detect_and_plan, PlannedAction, PlannedFix};

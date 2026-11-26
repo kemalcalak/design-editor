@@ -1321,6 +1321,7 @@ dependencies = [
 name = "de-design-lint"
 version = "0.6.2"
 dependencies = [
+ "de-i18n",
  "de-util",
  "jian-ops-schema",
  "serde",
@@ -1333,6 +1334,7 @@ version = "0.6.2"
 dependencies = [
  "base64 0.22.1",
  "de-ai",
+ "de-design-lint",
  "de-i18n",
  "de-orchestrator",
  "de-util",

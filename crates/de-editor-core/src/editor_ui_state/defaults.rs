@@ -148,6 +148,7 @@ impl Default for EditorUiState {
             style_import_file_picker_supported: false,
             property_color_variable_picker_scroll: Default::default(),
             property_color_variable_picker_hover: None,
+            rename_layers: None,
             html_import_diagnostics: Vec::new(),
             html_import_diagnostics_total: 0,
             html_import_diagnostics_open: false,

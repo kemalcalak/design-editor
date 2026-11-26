@@ -171,6 +171,7 @@ pub mod ref_resolve;
 mod ref_scroll_targets;
 pub mod release_notes;
 pub mod rename;
+pub mod rename_layers;
 pub mod render_backend;
 pub mod request_snapshot;
 pub mod root_placement;

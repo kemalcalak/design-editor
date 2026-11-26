@@ -155,6 +155,9 @@ impl DesktopApp {
         if self.poll_design_md_generation() {
             self.redraw_dirty = true;
         }
+        if self.poll_rename_layers_ai() {
+            self.redraw_dirty = true;
+        }
         // Drain a pending Download / Export-Bundle from the Code
         // panel — pops a native save dialog + writes the file(s).
         if crate::codegen_export::drain_codegen_file_actions(&mut self.host, &self.codegen_results)

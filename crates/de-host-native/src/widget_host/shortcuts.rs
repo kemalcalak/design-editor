@@ -13,6 +13,7 @@ impl WidgetHostNative {
         let editor_ui = &self.editor_state.editor_ui;
         if editor_ui.home.visible
             || self.preview.is_some()
+            || editor_ui.rename_layers.is_some()
             || editor_ui.font_picker.open
             || editor_ui.image_panel.search_open
             || editor_ui.image_panel.generate_open
@@ -237,7 +238,11 @@ impl WidgetHostNative {
             return false;
         }
         self.commit_variable_row_focus_if_any();
-        if self.editor_state.ui.layer_rename.is_some() || self.editor_state.chat.focused {
+        // The Rename-layers preview (#383) is modal over the document.
+        if self.editor_state.ui.layer_rename.is_some()
+            || self.editor_state.chat.focused
+            || self.rename_layers_open()
+        {
             return false;
         }
         let ok = self.editor_state.undo();
@@ -255,7 +260,10 @@ impl WidgetHostNative {
             return false;
         }
         self.commit_variable_row_focus_if_any();
-        if self.editor_state.ui.layer_rename.is_some() || self.editor_state.chat.focused {
+        if self.editor_state.ui.layer_rename.is_some()
+            || self.editor_state.chat.focused
+            || self.rename_layers_open()
+        {
             return false;
         }
         let ok = self.editor_state.redo();
@@ -274,7 +282,10 @@ impl WidgetHostNative {
             return false;
         }
         self.commit_variable_row_focus_if_any();
-        if self.editor_state.ui.layer_rename.is_some() || self.editor_state.chat.focused {
+        if self.editor_state.ui.layer_rename.is_some()
+            || self.editor_state.chat.focused
+            || self.rename_layers_open()
+        {
             return false;
         }
         if self.editor_state.selection.is_empty() {
@@ -301,7 +312,10 @@ impl WidgetHostNative {
             return false;
         }
         self.commit_variable_row_focus_if_any();
-        if self.editor_state.ui.layer_rename.is_some() || self.editor_state.chat.focused {
+        if self.editor_state.ui.layer_rename.is_some()
+            || self.editor_state.chat.focused
+            || self.rename_layers_open()
+        {
             return false;
         }
         if self.editor_state.selection.is_empty() {
@@ -428,6 +442,9 @@ impl WidgetHostNative {
     /// Cmd+Alt+K — promote the selected node to a component (same
     /// path as the property-panel Create Component button).
     pub fn apply_create_component(&mut self) -> bool {
+        if self.rename_layers_open() {
+            return false;
+        }
         self.commit_variable_row_focus_if_any();
         let id = self.editor_state.selection.anchor.clone();
         let acted = id.is_real() && self.editor_state.create_component_from_node_name(&id);
