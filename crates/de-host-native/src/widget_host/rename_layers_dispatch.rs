@@ -15,7 +15,11 @@ impl WidgetHostNative {
     /// Cmd+Shift+R / Edit ▸ Rename layers…: open the preview for the
     /// selection (the whole page when nothing is selected).
     pub fn apply_open_rename_layers(&mut self) -> bool {
-        if self.preview.is_some() || self.editor_state.editor_ui.home.visible {
+        // Already open: a second Cmd+Shift+R must not drop the edits.
+        if self.preview.is_some()
+            || self.editor_state.editor_ui.home.visible
+            || self.rename_layers_open()
+        {
             return false;
         }
         self.commit_pending_input_pub();
@@ -163,6 +167,34 @@ mod tests {
         assert!(host.apply_escape());
         assert!(!host.rename_layers_open());
         assert!(!host.dispatch_rename_layers_press(5.0, 400.0, 1200.0, 800.0));
+    }
+
+    #[test]
+    fn the_open_modal_shields_the_document_and_ignores_a_second_open() {
+        let mut host = host();
+        assert!(host.apply_open_rename_layers());
+        assert!(host.editor_state_mut().toggle_rename_layers_row(0));
+        assert!(
+            !host.apply_open_rename_layers(),
+            "a second Cmd+Shift+R is ignored"
+        );
+        assert!(
+            !host
+                .editor_state()
+                .editor_ui
+                .rename_layers
+                .as_ref()
+                .unwrap()
+                .rows[0]
+                .accepted,
+            "the user's edits survive"
+        );
+        assert!(!host.apply_group());
+        assert!(!host.apply_ungroup());
+        assert!(!host.apply_create_component());
+        assert!(!host.apply_path_operation(de_editor_core::path_ops::PathOperation::Flatten));
+        assert!(!host.toggle_preview_with_cached_viewport());
+        assert!(host.rename_layers_open());
     }
 
     #[test]

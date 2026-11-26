@@ -134,8 +134,14 @@ pub(crate) struct Place<'a> {
     pub depth: usize,
 }
 
-/// The plain text of a text layer.
-pub(crate) fn text_content(node: &PenNode) -> Option<String> {
+/// Collapse every whitespace run to one space and trim the ends.
+pub fn collapse_whitespace(text: &str) -> String {
+    text.split_whitespace().collect::<Vec<_>>().join(" ")
+}
+
+/// The plain text of a text layer (styled runs joined), whitespace
+/// collapsed; `None` for any other kind.
+pub fn text_content(node: &PenNode) -> Option<String> {
     let PenNode::Text(text) = node else {
         return None;
     };
@@ -143,7 +149,7 @@ pub(crate) fn text_content(node: &PenNode) -> Option<String> {
         TextContent::Plain(text) => text.clone(),
         TextContent::Styled(segments) => segments.iter().map(|s| s.text.as_str()).collect(),
     };
-    Some(raw.split_whitespace().collect::<Vec<_>>().join(" "))
+    Some(collapse_whitespace(&raw))
 }
 
 fn font_size(node: &PenNode) -> f64 {
@@ -210,13 +216,22 @@ fn is_primary_fill(node: &PenNode) -> bool {
         Some(PenFill::Solid(_)) => match first_fill_color(node) {
             // A design-variable colour is a brand token, not a white panel.
             Some(color) if color.starts_with('$') => true,
-            Some(color) => parse_hex_color(color)
-                .is_some_and(|rgb| relative_luminance(rgb) < 0.85 && !color.ends_with("00")),
+            Some(color) => {
+                parse_hex_color(color).is_some_and(|rgb| relative_luminance(rgb) < 0.85)
+                    && !mostly_transparent(color)
+            }
             None => false,
         },
         Some(_) => true,
         None => false,
     }
+}
+
+/// True for an `#RRGGBBAA` colour whose alpha is under one half. Only the
+/// alpha pair counts: `#FF0000` or `#008000` end in `00` and are opaque.
+fn mostly_transparent(color: &str) -> bool {
+    let hex = color.trim_start_matches('#');
+    hex.len() == 8 && u8::from_str_radix(&hex[6..8], 16).is_ok_and(|alpha| alpha < 0x80)
 }
 
 /// A small filled or outlined box around one short label.

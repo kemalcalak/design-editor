@@ -88,6 +88,8 @@ fn ai_mode_briefs_the_caller_then_applies_its_names() {
     let mut state = state();
     let brief = json_of(&call(&state, &[("mode", "ai"), ("nodeIds", "cta")]));
     assert_eq!(brief["dryRun"], true);
+    assert_eq!(brief["total"], brief["count"]);
+    assert_eq!(brief["truncated"], false);
     assert_eq!(brief["language"], "English (en-US)");
     assert_eq!(brief["layers"][0]["id"], "cta");
     assert_eq!(brief["layers"][0]["suggested"], "Primary button");
@@ -116,6 +118,7 @@ fn bad_arguments_are_rejected() {
         vec![("nodeIds", "nope")],
         vec![("mode", "ai"), ("names", "[1]")],
         vec![("mode", "ai"), ("names", r#"{"ghost": "Hero"}"#)],
+        vec![("names", r#"{"cta": "Hero"}"#)],
     ] {
         assert!(
             matches!(

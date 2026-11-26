@@ -13,6 +13,8 @@ pub(crate) enum RenameLayersAiError {
     Provider(String),
     /// The worker dropped its sender without reporting.
     WorkerVanished,
+    /// The preview closed or reopened while the turn ran.
+    Cancelled,
 }
 
 impl fmt::Display for RenameLayersAiError {
@@ -21,6 +23,7 @@ impl fmt::Display for RenameLayersAiError {
             Self::WorkerSpawn(err) => write!(f, "could not start the rename worker: {err}"),
             Self::Provider(message) => write!(f, "{message}"),
             Self::WorkerVanished => write!(f, "rename worker exited without a result"),
+            Self::Cancelled => write!(f, "rename layers turn cancelled"),
         }
     }
 }

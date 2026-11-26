@@ -5,7 +5,9 @@
 //! failure) the preview keeps the offline rules' names.
 
 use std::collections::BTreeMap;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::mpsc::{self, Receiver, TryRecvError};
+use std::sync::Arc;
 use std::thread;
 
 use de_ai::chat_provider::{ChatDelta, ChatProvider, ChatRequest, EffortLevel, ThinkingMode};
@@ -21,23 +23,36 @@ use crate::DesktopApp;
 
 type Outcome = Result<BTreeMap<String, String>, RenameLayersAiError>;
 
+/// One agent turn. Dropping it (the preview closed, or a new preview
+/// asked again) cancels the turn: a provider with an abortable transport
+/// stops at once, any other one is left to finish and its reply dropped.
 pub(crate) struct RenameLayersSession {
     rx: Receiver<Outcome>,
+    cancel: Arc<AtomicBool>,
+}
+
+impl Drop for RenameLayersSession {
+    fn drop(&mut self) {
+        self.cancel.store(true, Ordering::Release);
+    }
 }
 
 impl RenameLayersSession {
     fn start(provider: Box<dyn ChatProvider>, request: ChatRequest) -> Self {
         let (tx, rx) = mpsc::channel();
+        let cancel = Arc::new(AtomicBool::new(false));
         let worker_tx = tx.clone();
+        let worker_cancel = Arc::clone(&cancel);
         let spawned = thread::Builder::new()
             .name("de-rename-layers".into())
             .spawn(move || {
-                let _ = worker_tx.send(run_provider_blocking(provider.as_ref(), request));
+                let outcome = run_provider_blocking(provider.as_ref(), request, &worker_cancel);
+                let _ = worker_tx.send(outcome);
             });
         if let Err(err) = spawned {
             let _ = tx.send(Err(RenameLayersAiError::WorkerSpawn(err.to_string())));
         }
-        Self { rx }
+        Self { rx, cancel }
     }
 
     fn try_take(&self) -> Option<Outcome> {
@@ -79,9 +94,16 @@ fn build_request(state: &EditorState, model: Option<String>) -> Option<ChatReque
     })
 }
 
-fn run_provider_blocking(provider: &dyn ChatProvider, request: ChatRequest) -> Outcome {
+fn run_provider_blocking(
+    provider: &dyn ChatProvider,
+    request: ChatRequest,
+    cancel: &Arc<AtomicBool>,
+) -> Outcome {
     let mut reply = String::new();
-    for delta in provider.send(request) {
+    for delta in provider.send_cancellable(request, Arc::clone(cancel)) {
+        if cancel.load(Ordering::Acquire) {
+            return Err(RenameLayersAiError::Cancelled);
+        }
         match delta {
             ChatDelta::TextDelta(text) => reply.push_str(&text),
             ChatDelta::Done { .. } => break,
@@ -116,6 +138,8 @@ impl DesktopApp {
         if !requested {
             return false;
         }
+        // A new preview supersedes a turn still running for an older one.
+        self.current_rename_layers = None;
         // No model configured: the offline rules are the answer.
         let Some(provider) = provider_for_selected_model(&self.host) else {
             return false;
@@ -140,6 +164,13 @@ impl DesktopApp {
 
     /// Merge a finished agent turn into the preview.
     pub(crate) fn poll_rename_layers_ai(&mut self) -> bool {
+        // The preview closed: cancel the turn instead of waiting it out.
+        if self.current_rename_layers.is_some()
+            && self.host.editor_state().editor_ui.rename_layers.is_none()
+        {
+            self.current_rename_layers = None;
+            return false;
+        }
         let Some(outcome) = self
             .current_rename_layers
             .as_ref()
@@ -208,6 +239,20 @@ mod tests {
         let dialog = state.editor_ui.rename_layers.as_ref().expect("open");
         assert_eq!(dialog.source, RenameLayersSource::Ai);
         assert_eq!(dialog.rows[0].proposed, "Start trial button");
+    }
+
+    #[test]
+    fn a_cancelled_turn_lands_nothing() {
+        let state = state();
+        let request = build_request(&state, None).expect("rows");
+        let provider = EchoProvider {
+            script: vec![ChatDelta::TextDelta("{\"cta\": \"Go\"}".into())],
+        };
+        let cancel = Arc::new(AtomicBool::new(true));
+        assert_eq!(
+            run_provider_blocking(&provider, request, &cancel),
+            Err(RenameLayersAiError::Cancelled)
+        );
     }
 
     #[test]

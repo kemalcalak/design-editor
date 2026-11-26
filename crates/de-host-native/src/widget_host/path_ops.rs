@@ -17,6 +17,10 @@ impl WidgetHostNative {
     /// changed or the op was refused with a notice; either way the
     /// shortcut was handled and a repaint is owed.
     pub fn apply_path_operation(&mut self, op: de_editor_core::path_ops::PathOperation) -> bool {
+        // The Rename-layers preview (#383) is modal over the document.
+        if self.rename_layers_open() {
+            return false;
+        }
         // Path ops mutate the document: land a pending variable-row
         // edit first, then read geometry from the current layout.
         self.commit_variable_row_focus_if_any();

@@ -30,8 +30,16 @@ pub fn press(
         RenameLayersHit::Name(index) => {
             state.start_rename_layers_edit(index, now_ms);
         }
+        // Nothing ticked: the button is drawn disabled and does nothing.
         RenameLayersHit::Apply => {
-            state.apply_rename_layers();
+            let any_ticked = state
+                .editor_ui
+                .rename_layers
+                .as_ref()
+                .is_some_and(|dialog| dialog.accepted_count() > 0);
+            if any_ticked {
+                state.apply_rename_layers();
+            }
         }
         RenameLayersHit::Cancel => state.close_rename_layers(),
         // A press anywhere else ends an inline edit, keeping what was typed.

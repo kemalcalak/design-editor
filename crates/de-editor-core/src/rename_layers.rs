@@ -127,7 +127,8 @@ impl EditorState {
     /// is selected) with the rules' names, and ask the host's agent for
     /// better ones. `true` when the dialog opened.
     pub fn open_rename_layers(&mut self) -> bool {
-        if self.active_children().is_empty() {
+        // Reopening would drop the rows the user already ticked and edited.
+        if self.editor_ui.rename_layers.is_some() || self.active_children().is_empty() {
             return false;
         }
         let locale = self.rename_layers_locale();

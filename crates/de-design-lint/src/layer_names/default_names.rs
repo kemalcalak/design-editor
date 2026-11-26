@@ -60,13 +60,37 @@ const LOCALIZED_KIND_KEYS: &[&str] = &[
     "shapes.polygon",
     "shapes.star",
     "shapes.line",
-    "menu.group",
+];
+
+/// What localized design tools name a new group. The catalog's
+/// `menu.group` is the verb on the menu ("Grupla", "Gruppieren"), not the
+/// layer's name, so the nouns are listed here.
+const LOCALIZED_GROUP_NAMES: &[&str] = &[
+    "grup",
+    "gruppe",
+    "grupo",
+    "groupe",
+    "gruppo",
+    "группа",
+    "グループ",
+    "그룹",
+    "编组",
+    "组",
+    "群組",
+    "समूह",
+    "กลุ่ม",
+    "nhóm",
+    "kelompok",
 ];
 
 fn default_words() -> &'static HashSet<String> {
     static WORDS: OnceLock<HashSet<String>> = OnceLock::new();
     WORDS.get_or_init(|| {
-        let mut words: HashSet<String> = ENGLISH_DEFAULTS.iter().map(|w| w.to_string()).collect();
+        let mut words: HashSet<String> = ENGLISH_DEFAULTS
+            .iter()
+            .chain(LOCALIZED_GROUP_NAMES)
+            .map(|w| w.to_string())
+            .collect();
         for locale in Locale::ALL {
             for key in LOCALIZED_KIND_KEYS {
                 words.insert(de_i18n::translate(locale, key).to_lowercase());

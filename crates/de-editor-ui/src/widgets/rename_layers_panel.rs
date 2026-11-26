@@ -196,12 +196,14 @@ impl<'a> RenameLayersPanel<'a> {
 
     /// `3 layers to rename · Offline rules`.
     pub fn summary_text(&self) -> String {
-        let count = self.dialog.accepted_count().to_string();
-        let summary = de_i18n::translate_with(
-            self.ui.effective_locale(),
-            "renameLayers.summary",
-            &[("count", count.as_str())],
-        );
+        let locale = self.ui.effective_locale();
+        let accepted = self.dialog.accepted_count();
+        let key = match de_i18n::plural_category(locale, accepted as i64) {
+            de_i18n::PluralCategory::One => "renameLayers.summary_one",
+            _ => "renameLayers.summary_other",
+        };
+        let count = accepted.to_string();
+        let summary = de_i18n::translate_with(locale, key, &[("count", count.as_str())]);
         let source = translate(
             self.ui,
             match self.dialog.source {

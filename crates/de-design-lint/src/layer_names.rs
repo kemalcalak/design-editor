@@ -24,7 +24,9 @@ use crate::node_util::{base, children, node_id};
 pub use default_names::is_default_layer_name;
 pub use lang::detect_document_locale;
 
-use rules::{infer_role, text_content, Place};
+pub use rules::{collapse_whitespace, text_content};
+
+use rules::{infer_role, Place};
 
 /// One proposed rename: the layer, its name today (`None` when it has
 /// none) and the name the rules propose.
@@ -47,14 +49,10 @@ pub fn has_meaningful_name(node: &PenNode) -> bool {
     else {
         return false;
     };
-    if text_content(node).is_some_and(|content| collapse(name) == content) {
+    if text_content(node).is_some_and(|content| collapse_whitespace(name) == content) {
         return true;
     }
     !is_default_layer_name(name)
-}
-
-fn collapse(text: &str) -> String {
-    text.split_whitespace().collect::<Vec<_>>().join(" ")
 }
 
 /// Every text layer's content under `roots`, in tree order.
@@ -149,7 +147,7 @@ fn acceptable(node: &PenNode, proposed: &str, current: Option<&str>) -> bool {
         return false;
     }
     !is_default_layer_name(proposed)
-        || text_content(node).is_some_and(|content| content == collapse(proposed))
+        || text_content(node).is_some_and(|content| content == collapse_whitespace(proposed))
 }
 
 fn candidates(

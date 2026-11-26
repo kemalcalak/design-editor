@@ -248,3 +248,40 @@ fn lint_reports_default_names_as_info_with_the_rename() {
     let nameless = node(json!({"type": "frame", "id": "x", "width": 10, "height": 10}));
     assert!(detect_default_layer_names(&nameless).is_empty());
 }
+
+fn button_with_fill(color: &str) -> PenNode {
+    node(json!({
+        "type": "frame", "id": "s", "name": "Frame 1", "width": 400, "height": 400,
+        "children": [
+            {"type": "frame", "id": "b", "name": "Frame 2", "width": 120, "height": 44,
+             "fill": [{"type": "solid", "color": color}],
+             "children": [{"type": "text", "id": "l", "content": "Go", "fontSize": 16}]}
+        ]
+    }))
+}
+
+#[test]
+fn only_an_alpha_pair_makes_a_button_fill_transparent() {
+    for (color, expected) in [
+        ("#FF0000", "Primary button"),
+        ("#008000", "Primary button"),
+        ("#FFA500", "Primary button"),
+        ("#2563EBFF", "Primary button"),
+        ("#2563EB00", "Secondary button"),
+        ("#2563EB33", "Secondary button"),
+    ] {
+        let screen = button_with_fill(color);
+        let proposals = propose_layer_names(std::slice::from_ref(&screen), None, Locale::EnUs);
+        assert_eq!(names(&proposals)["b"], expected, "{color}");
+    }
+}
+
+#[test]
+fn localized_group_nouns_are_defaults_but_menu_verbs_are_not() {
+    for name in ["Grup 3", "Gruppe", "グループ 2", "Группа 4"] {
+        assert!(is_default_layer_name(name), "{name}");
+    }
+    for name in ["Grupla", "Gruppieren", "Agrupar"] {
+        assert!(!is_default_layer_name(name), "{name}");
+    }
+}

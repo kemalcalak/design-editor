@@ -8,7 +8,6 @@
 use std::collections::{BTreeMap, HashMap};
 
 use de_i18n::Locale;
-use jian_ops_schema::node::text::TextContent;
 use jian_ops_schema::node::PenNode;
 use serde_json::{json, Value};
 
@@ -25,15 +24,8 @@ const MAX_TEXT_CHARS: usize = 80;
 const MAX_NAME_CHARS: usize = 80;
 
 fn text_of(node: &PenNode) -> Option<String> {
-    let PenNode::Text(text) = node else {
-        return None;
-    };
-    let raw: String = match &text.content {
-        TextContent::Plain(text) => text.clone(),
-        TextContent::Styled(segments) => segments.iter().map(|s| s.text.as_str()).collect(),
-    };
-    let collapsed = raw.split_whitespace().collect::<Vec<_>>().join(" ");
-    Some(collapsed.chars().take(MAX_TEXT_CHARS).collect())
+    de_design_lint::layer_names::text_content(node)
+        .map(|text| text.chars().take(MAX_TEXT_CHARS).collect())
 }
 
 fn kind_of(node: &PenNode) -> String {

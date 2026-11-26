@@ -76,6 +76,26 @@ fn rows_hit_toggle_name_and_buttons() {
 }
 
 #[test]
+fn the_summary_is_singular_for_one_layer_and_a_disabled_rename_does_nothing() {
+    let mut state = state();
+    let (toggle, _) = row_points(&state, 0);
+    assert!(flow::press(&mut state, VW, VH, toggle, 0));
+    let panel = RenameLayersPanel::for_editor(&state).expect("open");
+    assert!(panel.summary_text().starts_with("1 layer to rename"));
+    let (toggle, _) = row_points(&state, 1);
+    assert!(flow::press(&mut state, VW, VH, toggle, 0));
+    let apply = {
+        let panel = RenameLayersPanel::for_editor(&state).unwrap();
+        centre(panel.apply_rect(panel.rect(VW, VH)))
+    };
+    assert!(flow::press(&mut state, VW, VH, apply, 0));
+    assert!(
+        state.editor_ui.rename_layers.is_some(),
+        "nothing ticked: still open"
+    );
+}
+
+#[test]
 fn edit_then_apply_renames_in_one_step() {
     let mut state = state();
     let (_, name) = row_points(&state, 0);

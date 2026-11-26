@@ -188,3 +188,12 @@ fn a_failed_agent_keeps_the_rules() {
     assert!(state.apply_rename_layers());
     assert_eq!(name_of(&state, "cta").as_deref(), Some("Primary button"));
 }
+
+#[test]
+fn reopening_an_open_preview_keeps_its_edits() {
+    let mut state = state();
+    open_on_screen(&mut state);
+    assert!(state.toggle_rename_layers_row(0));
+    assert!(!state.open_rename_layers(), "already open");
+    assert!(!state.editor_ui.rename_layers.as_ref().unwrap().rows[0].accepted);
+}

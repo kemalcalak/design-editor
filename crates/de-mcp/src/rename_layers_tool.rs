@@ -143,6 +143,13 @@ impl RenameLayers {
             locale,
         );
         let names = parse_names(args)?;
+        if mode == "rules" && names.is_some() {
+            return Err((
+                ToolErrorCode::InvalidArgument,
+                "names is only read with mode \"ai\"; mode \"rules\" proposes its own names"
+                    .to_string(),
+            ));
+        }
         if mode == "ai" && names.is_none() {
             let briefs = rename_layer_briefs(&self.roots, &proposals);
             return Ok(ToolOutcome::OkJson(
@@ -151,6 +158,10 @@ impl RenameLayers {
                     "dryRun": true,
                     "language": language_label(locale),
                     "count": briefs.len(),
+                    "total": proposals.len(),
+                    // A brief holds at most `MAX_BRIEF_LAYERS` layers; name
+                    // the rest with a narrower nodeIds call.
+                    "truncated": proposals.len() > briefs.len(),
                     "layers": briefs,
                     "next": "Propose a short semantic name for each layer in the document's \
                              language (role and section, e.g. \"Primary button\", \"Hero / \
