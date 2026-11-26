@@ -27,6 +27,7 @@ mod chat_attachment;
 mod chat_session;
 mod cli_probe_gate;
 mod clipboard;
+mod clipboard_backend;
 mod codegen_export;
 mod codegen_input;
 mod codegen_session;

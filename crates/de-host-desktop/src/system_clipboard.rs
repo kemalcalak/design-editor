@@ -4,11 +4,12 @@
 //!
 //! Every read and write in the desktop goes through
 //! [`DesktopApp::clipboard`](crate::DesktopApp). [`OsClipboard`] opens its
-//! `arboard` handle on first use and keeps it: a handle per call opened a
-//! fresh X11 connection each time, and dropping one blocks while the
-//! contents are handed to a clipboard manager.
+//! `arboard` handle on first use and keeps it until a call says it broke:
+//! a handle per call opened a fresh X11 connection each time, and dropping
+//! one blocks while the contents are handed to a clipboard manager.
 
 use crate::clipboard::ClipboardImage;
+use crate::clipboard_backend::{self, ClipboardBackend, Read};
 use crate::DesktopApp;
 
 /// One write to the system clipboard.
@@ -34,46 +35,82 @@ pub(crate) trait SystemClipboard {
     fn read_canvas(&mut self) -> (Option<String>, Option<ClipboardImage>);
 }
 
-/// The OS clipboard through one `arboard` handle, opened on first use.
-/// A failed open is retried on the next call.
-#[derive(Default)]
-pub(crate) struct OsClipboard {
-    handle: Option<arboard::Clipboard>,
+/// The OS clipboard through one handle, opened on first use and kept.
+/// A call whose handle may have broken (`clipboard_backend::breaks_handle`)
+/// drops it, so the next call opens a new one: a dead X11 / Wayland
+/// connection recovers on its own instead of failing every later call.
+pub(crate) struct OsClipboard<B: ClipboardBackend = arboard::Clipboard> {
+    handle: Option<B>,
+    open: Box<dyn FnMut() -> Option<B>>,
 }
 
-impl OsClipboard {
-    fn handle(&mut self) -> Option<&mut arboard::Clipboard> {
-        if self.handle.is_none() {
-            self.handle = arboard::Clipboard::new().ok();
-        }
-        self.handle.as_mut()
+impl Default for OsClipboard {
+    fn default() -> Self {
+        Self::with_opener(|| arboard::Clipboard::new().ok())
     }
 }
 
-impl SystemClipboard for OsClipboard {
+impl<B: ClipboardBackend> OsClipboard<B> {
+    /// A clipboard that opens its handles with `open` (a fake in tests).
+    pub(crate) fn with_opener(open: impl FnMut() -> Option<B> + 'static) -> Self {
+        Self {
+            handle: None,
+            open: Box::new(open),
+        }
+    }
+
+    fn handle(&mut self) -> Option<&mut B> {
+        if self.handle.is_none() {
+            self.handle = (self.open)();
+        }
+        self.handle.as_mut()
+    }
+
+    /// Drop the handle when the call reported it may have broken.
+    fn settle<T>(&mut self, read: Read<T>) -> T {
+        if read.handle_failed {
+            self.handle = None;
+        }
+        read.value
+    }
+}
+
+impl<B: ClipboardBackend> SystemClipboard for OsClipboard<B> {
     fn write(&mut self, write: ClipboardWrite) {
         let Some(handle) = self.handle() else {
             return;
         };
-        match write {
-            ClipboardWrite::Text(text) => crate::clipboard::set_text(handle, &text),
-            ClipboardWrite::PngImage(png) => crate::clipboard::set_png_image(handle, &png),
-            ClipboardWrite::NodeMarker => crate::clipboard::set_node_marker(handle),
+        let result = match write {
+            ClipboardWrite::Text(text) => clipboard_backend::set_text(handle, &text),
+            ClipboardWrite::PngImage(png) => clipboard_backend::set_png_image(handle, &png),
+            ClipboardWrite::NodeMarker => clipboard_backend::set_node_marker(handle),
+        };
+        if let Err(error) = result {
+            if clipboard_backend::breaks_handle(&error) {
+                self.handle = None;
+            }
         }
     }
 
     fn read_text(&mut self) -> Option<String> {
-        crate::clipboard::read_text_paste(self.handle()?)
+        let read = clipboard_backend::read_text_paste(self.handle()?);
+        self.settle(read)
     }
 
     fn read_chat(&mut self) -> (Option<String>, Option<ClipboardImage>) {
-        self.handle()
-            .map_or((None, None), crate::clipboard::read_chat_paste)
+        let Some(handle) = self.handle() else {
+            return (None, None);
+        };
+        let read = clipboard_backend::read_chat_paste(handle);
+        self.settle(read)
     }
 
     fn read_canvas(&mut self) -> (Option<String>, Option<ClipboardImage>) {
-        self.handle()
-            .map_or((None, None), crate::clipboard::read_canvas_paste)
+        let Some(handle) = self.handle() else {
+            return (None, None);
+        };
+        let read = clipboard_backend::read_canvas_paste(handle);
+        self.settle(read)
     }
 }
 
@@ -126,3 +163,7 @@ impl SystemClipboard for RecordingClipboard {
         (None, None)
     }
 }
+
+#[cfg(test)]
+#[path = "system_clipboard_tests.rs"]
+mod tests;
