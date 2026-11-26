@@ -49,7 +49,8 @@ pub(crate) fn is_container(node: &PenNode) -> bool {
 }
 
 impl Facts {
-    /// A small box around one short label.
+    /// A small box around one short label: a button, a badge or a circle
+    /// of initials (see `button_role`).
     pub(crate) fn is_button(&self, node: &PenNode) -> bool {
         remember(&self.button, node, || {
             is_container(node) && button_role(node).is_some()

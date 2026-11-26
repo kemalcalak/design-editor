@@ -214,7 +214,7 @@ fn a_targeted_layer_only_avoids_the_names_its_siblings_have() {
 // ---- Sweep: no two siblings ever get the same proposed name. ----
 
 /// Drop every layer name, so the rules propose one for every layer.
-fn strip_names(value: &mut Value) {
+pub(super) fn strip_names(value: &mut Value) {
     match value {
         Value::Object(map) => {
             map.remove("name");
@@ -262,7 +262,7 @@ fn sweep(label: &str, roots: &[PenNode]) -> usize {
     proposals.len()
 }
 
-fn page_roots(document: &Value) -> Vec<Vec<PenNode>> {
+pub(super) fn page_roots(document: &Value) -> Vec<Vec<PenNode>> {
     let decode = |nodes: &Value| -> Vec<PenNode> {
         nodes
             .as_array()
@@ -277,8 +277,8 @@ fn page_roots(document: &Value) -> Vec<Vec<PenNode>> {
     pages
 }
 
-#[test]
-fn no_two_siblings_share_a_proposed_name_on_generated_screens() {
+/// Every scene template, as written (names kept), with its path.
+pub(super) fn scene_templates() -> Vec<(std::path::PathBuf, Value)> {
     let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("../de-editor-core/assets/scene_templates");
     let mut files: Vec<_> = std::fs::read_dir(&dir)
@@ -288,10 +288,20 @@ fn no_two_siblings_share_a_proposed_name_on_generated_screens() {
         .collect();
     files.sort();
     assert!(files.len() >= 50, "found {} scene templates", files.len());
+    files
+        .into_iter()
+        .map(|path| {
+            let text = std::fs::read_to_string(&path).expect("read");
+            let document = serde_json::from_str(&text).expect("json");
+            (path, document)
+        })
+        .collect()
+}
+
+#[test]
+fn no_two_siblings_share_a_proposed_name_on_generated_screens() {
     let mut proposals = 0;
-    for path in &files {
-        let mut document: Value =
-            serde_json::from_str(&std::fs::read_to_string(path).expect("read")).expect("json");
+    for (path, mut document) in scene_templates() {
         strip_names(&mut document);
         for roots in page_roots(&document) {
             proposals += sweep(&path.display().to_string(), &roots);
