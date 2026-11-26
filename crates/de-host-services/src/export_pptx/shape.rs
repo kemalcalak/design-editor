@@ -193,7 +193,8 @@ pub fn emit_line(
         width,
         sides: None,
         align: SceneStrokeAlign::Center,
-        style: Default::default(),
+        // Cap, join, miter limit and arrowheads (#389) ride on `<a:ln>`.
+        style: node.stroke.map(|s| s.style).unwrap_or_default(),
     };
     let _ = write!(
         out,

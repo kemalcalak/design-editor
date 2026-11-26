@@ -88,11 +88,17 @@ fn scene_stroke(
             _ => SceneStrokeAlign::Center,
         },
         // Authored cap / join / dash (#89).
-        style: de_editor_core::fills::render_stroke_style(
-            s.cap.as_ref(),
-            s.join.as_ref(),
-            s.dash_pattern.as_deref(),
-            s.dash_offset,
+        style: de_editor_core::fills::with_stroke_shape(
+            de_editor_core::fills::render_stroke_style(
+                s.cap.as_ref(),
+                s.join.as_ref(),
+                s.dash_pattern.as_deref(),
+                s.dash_offset,
+            ),
+            s.stroke_start,
+            s.stroke_end,
+            s.miter_limit,
+            s.width_profile.as_ref(),
         ),
     }
 }

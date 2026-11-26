@@ -541,6 +541,10 @@ pub(crate) fn stroke_to_payload(s: Option<&PenStroke>) -> Option<StrokePayload> 
         dash_pattern: s.dash_pattern.clone(),
         dash_offset: s.dash_offset,
         fill_layers: rich_stroke_paint(s.fill.as_deref()),
+        stroke_start: s.stroke_start,
+        stroke_end: s.stroke_end,
+        miter_limit: s.miter_limit,
+        width_profile: s.width_profile.clone(),
     })
 }
 

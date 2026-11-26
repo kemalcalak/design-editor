@@ -143,6 +143,10 @@ pub(super) fn resolve_svg_stroke(
     }
     let style = svg_stroke_style_fields(&ctx.stroke_style, scale);
     Some(PenStroke {
+        stroke_start: None,
+        stroke_end: None,
+        miter_limit: None,
+        width_profile: None,
         thickness: StrokeThickness::Uniform(width),
         align: None,
         join: style.join,

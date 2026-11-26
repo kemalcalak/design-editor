@@ -156,6 +156,10 @@ pub(super) fn line_to_payload(n: &LineNode) -> NodePayload {
             dash_pattern: None,
             dash_offset: None,
             fill_layers: Vec::new(),
+            stroke_start: None,
+            stroke_end: None,
+            miter_limit: None,
+            width_profile: None,
         });
     }
     p

@@ -98,6 +98,9 @@ pub fn emit_icon(out: &mut String, n: &SceneNode, rect: Rect) {
 /// the stroke, which also keeps a perfectly horizontal line (zero
 /// height) from collapsing to an unrenderable zero-extent viewport.
 pub fn emit_line(out: &mut String, n: &SceneNode, origin: Point2D) {
+    if emit_stroke_geometry(out, n, origin) {
+        return;
+    }
     let (color, width) = match n.stroke {
         Some(s) => (s.color, s.width),
         None => (n.fill.unwrap_or(Color::BLACK), 1.5),
@@ -151,6 +154,9 @@ pub fn emit_polygon(out: &mut String, n: &SceneNode, origin: Point2D) {
 /// Emit a Path node — either an imported SVG `d` fitted into its box,
 /// or the pen tool's polyline through `points`.
 pub fn emit_path(out: &mut String, n: &SceneNode, origin: Point2D) {
+    if emit_stroke_geometry(out, n, origin) {
+        return;
+    }
     let rect = normalize(n.bounds);
     let stroke_pad = n.stroke.map_or(0.0, |s| s.width * 0.5);
     let (d, transform) = match &n.svg_path {
@@ -322,3 +328,50 @@ fn normalize(r: Rect) -> Rect {
 #[cfg(test)]
 #[path = "vector_tests.rs"]
 mod tests;
+
+/// A line or open path with end shapes (#389): its precomputed stroke
+/// geometry as inline SVG, the same paths the SVG export writes, placed in
+/// the node box with the node's flips. Returns `false` when it has none.
+fn emit_stroke_geometry(out: &mut String, n: &SceneNode, origin: Point2D) -> bool {
+    let (Some(stroke), Some(geometry)) = (n.stroke, n.stroke_geometry.as_deref()) else {
+        return false;
+    };
+    let rect = normalize(n.bounds);
+    let reach =
+        stroke.width + de_editor_core::stroke_geometry::head_length(f64::from(stroke.width)) as f32;
+    open_svg(out, padded_box(rect, reach), origin);
+    let (sx, tx) = if n.flip_x {
+        (-1.0, rect.origin.x + rect.size.x)
+    } else {
+        (1.0, rect.origin.x)
+    };
+    let (sy, ty) = if n.flip_y {
+        (-1.0, rect.origin.y + rect.size.y)
+    } else {
+        (1.0, rect.origin.y)
+    };
+    let place = format!(
+        r#" transform="matrix({sx} 0 0 {sy} {} {})""#,
+        css::num(tx),
+        css::num(ty)
+    );
+    if let (Some(fill), Some(d)) = (n.fill, n.svg_path.as_deref()) {
+        // An imported open path's fill under its stroke, as the canvas
+        // paints it (a pen path's open outline paints no fill).
+        let rule = if n.even_odd_fill {
+            r#" fill-rule="evenodd""#
+        } else {
+            ""
+        };
+        let _ = write!(
+            out,
+            r#"<path d="{}"{}{rule} fill="{}"/>"#,
+            de_util::xml_escape::escape_xml(d),
+            fit_transform(d, rect),
+            css::color(fill)
+        );
+    }
+    de_editor_ui::svg_export::write_stroke_geometry(out, n, geometry, &place);
+    out.push_str("</svg>");
+    true
+}

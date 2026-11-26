@@ -6,7 +6,9 @@
 //! and each returns whether the document changed.
 
 use super::*;
-use jian_ops_schema::style::{StrokeAlign, StrokeCap, StrokeJoin};
+use jian_ops_schema::style::{
+    StrokeAlign, StrokeCap, StrokeEndCap, StrokeJoin, StrokeWidthProfile,
+};
 
 /// The node's stroke alignment, `None` when it has no stroke. An absent
 /// `align` field reads as `Center`, which is how every renderer treats it.
@@ -111,6 +113,10 @@ pub fn render_stroke_style(
 ) -> jian_widgets::StrokeStyle {
     use jian_widgets::{StrokeCap as Cap, StrokeDash, StrokeJoin as Join};
     jian_widgets::StrokeStyle {
+        miter_limit: None,
+        start: None,
+        end: None,
+        width_profile: None,
         cap: cap.map(|cap| match cap {
             StrokeCap::None => Cap::Butt,
             StrokeCap::Round => Cap::Round,
@@ -125,14 +131,57 @@ pub fn render_stroke_style(
     }
 }
 
-/// [`render_stroke_style`] of a whole schema stroke.
+/// [`render_stroke_style`] of a whole schema stroke, shape fields included.
 pub fn pen_stroke_render_style(stroke: &PenStroke) -> jian_widgets::StrokeStyle {
-    render_stroke_style(
-        stroke.cap.as_ref(),
-        stroke.join.as_ref(),
-        stroke.dash_pattern.as_deref(),
-        stroke.dash_offset,
+    with_stroke_shape(
+        render_stroke_style(
+            stroke.cap.as_ref(),
+            stroke.join.as_ref(),
+            stroke.dash_pattern.as_deref(),
+            stroke.dash_offset,
+        ),
+        stroke.stroke_start,
+        stroke.stroke_end,
+        stroke.miter_limit,
+        stroke.width_profile.as_ref(),
     )
+}
+
+/// `style` with a schema stroke's per-end caps, miter limit and width
+/// profile (#389). A miter limit below 1 or not finite, and a profile that
+/// does not vary, stay unset.
+pub fn with_stroke_shape(
+    style: jian_widgets::StrokeStyle,
+    start: Option<StrokeEndCap>,
+    end: Option<StrokeEndCap>,
+    miter_limit: Option<f32>,
+    width_profile: Option<&StrokeWidthProfile>,
+) -> jian_widgets::StrokeStyle {
+    jian_widgets::StrokeStyle {
+        start: start.map(render_stroke_end),
+        end: end.map(render_stroke_end),
+        miter_limit: miter_limit.filter(|limit| limit.is_finite() && *limit >= 1.0),
+        width_profile: width_profile.and_then(|profile| {
+            let stops: Vec<[f32; 2]> = profile.stops().iter().map(|p| [p.t, p.width]).collect();
+            jian_widgets::StrokeWidthProfile::new(&stops)
+        }),
+        ..style
+    }
+}
+
+/// The render-side end of a schema end cap.
+pub fn render_stroke_end(cap: StrokeEndCap) -> jian_widgets::StrokeEnd {
+    use jian_widgets::StrokeEnd as End;
+    match cap {
+        StrokeEndCap::None => End::None,
+        StrokeEndCap::Round => End::Round,
+        StrokeEndCap::Square => End::Square,
+        StrokeEndCap::LineArrow => End::LineArrow,
+        StrokeEndCap::TriangleArrow => End::TriangleArrow,
+        StrokeEndCap::ReversedTriangle => End::ReversedTriangle,
+        StrokeEndCap::Circle => End::Circle,
+        StrokeEndCap::Diamond => End::Diamond,
+    }
 }
 
 /// A partial write of a stroke's cap / join / dash. `None` fields are

@@ -77,6 +77,10 @@ pub fn offset_path(path: &Path, delta: f32, join: OffsetJoin) -> Option<Path> {
         return Some(path.clone());
     }
     let style = StrokeStyle {
+        miter_limit: None,
+        start: None,
+        end: None,
+        width_profile: None,
         cap: Some(StrokeCap::Round),
         join: Some(match join {
             OffsetJoin::Round => StrokeJoin::Round,

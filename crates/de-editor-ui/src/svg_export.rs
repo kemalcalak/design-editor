@@ -22,6 +22,7 @@ mod node;
 #[path = "svg_export_rect.rs"]
 mod rect;
 mod shapes;
+pub use shapes::write_stroke_geometry;
 mod text;
 mod text_outline;
 mod transform;
@@ -491,11 +492,16 @@ fn fill_stroke_attrs(n: &SceneNode) -> String {
 /// `stroke-dashoffset` for a node's authored stroke style (#89); empty
 /// when it has none.
 pub(crate) fn stroke_style_attrs(n: &SceneNode) -> String {
+    n.stroke
+        .map(|stroke| style_attrs(&stroke.style))
+        .unwrap_or_default()
+}
+
+/// [`stroke_style_attrs`] of one render-side style; also writes
+/// `stroke-miterlimit` (#389).
+pub(crate) fn style_attrs(style: &crate::layout_scene::StrokeStyle) -> String {
     use crate::layout_scene::{StrokeCap as LineCap, StrokeJoin as LineJoin};
     let mut s = String::new();
-    let Some(style) = n.stroke.map(|stroke| stroke.style) else {
-        return s;
-    };
     if let Some(cap) = style.cap {
         let cap = match cap {
             LineCap::Butt => "butt",
@@ -511,6 +517,9 @@ pub(crate) fn stroke_style_attrs(n: &SceneNode) -> String {
             LineJoin::Bevel => "bevel",
         };
         let _ = write!(s, r#" stroke-linejoin="{join}""#);
+    }
+    if let Some(limit) = style.miter_limit {
+        let _ = write!(s, r#" stroke-miterlimit="{limit}""#);
     }
     if let Some(dash) = style.dash {
         let lengths: Vec<String> = dash.lengths().iter().map(|len| len.to_string()).collect();

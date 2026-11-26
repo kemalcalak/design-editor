@@ -227,6 +227,8 @@ fn path_node_from_pen_anchors(
     }
     let (min_x, min_y, max_x, max_y) = crate::svg_path_bounds::path_anchor_bounds(&anchors, closed);
     Some(PenNode::Path(PathNode {
+        corner_radius: None,
+        corner_smoothing: None,
         base: PenNodeBase {
             id: id.into(),
             name: Some("Path".to_string()),
@@ -267,6 +269,8 @@ fn path_node_from_svg_d(
 ) -> Option<PenNode> {
     let (local_d, bounds) = crate::svg_path_data::localize_svg_path(d)?;
     Some(PenNode::Path(PathNode {
+        corner_radius: None,
+        corner_smoothing: None,
         base: PenNodeBase {
             id: id.into(),
             name: Some(name.to_string()),

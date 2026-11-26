@@ -237,6 +237,7 @@ fn build_container_node(
     let (state, bindings, events) = parse_interactivity(obj);
 
     let container = ContainerProps {
+        corner_smoothing: None,
         width,
         height,
         layout,
@@ -425,6 +426,10 @@ fn build_path_node(
     //   else { fill = [solid(color)] }
     // Without icon resolution we default to stroke style.
     let stroke = Some(PenStroke {
+        stroke_start: None,
+        stroke_end: None,
+        miter_limit: None,
+        width_profile: None,
         thickness: StrokeThickness::Uniform(2.0),
         align: None,
         join: None,
@@ -437,6 +442,8 @@ fn build_path_node(
     let (state, bindings, events) = parse_interactivity(obj);
 
     Some(PenNode::Path(PathNode {
+        corner_radius: None,
+        corner_smoothing: None,
         base,
         icon_id: None, // TODO: icon resolver
         d: None,       // TODO: icon resolver

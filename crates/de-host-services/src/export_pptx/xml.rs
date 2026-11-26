@@ -222,9 +222,11 @@ pub fn line_element(stroke: SceneStroke, alpha: f32) -> Option<String> {
         return None;
     }
     Some(format!(
-        "<a:ln w=\"{}\" cap=\"flat\">{}<a:prstDash val=\"solid\"/></a:ln>",
+        "<a:ln w=\"{}\" cap=\"{}\">{}<a:prstDash val=\"solid\"/>{}</a:ln>",
         emu_extent(stroke.width),
-        solid_fill(stroke.color, alpha)
+        super::line_style::cap_attr(&stroke.style),
+        solid_fill(stroke.color, alpha),
+        super::line_style::ln_children(&stroke.style, stroke.width),
     ))
 }
 

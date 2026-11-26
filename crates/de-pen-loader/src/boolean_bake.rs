@@ -82,6 +82,8 @@ fn baked(b: &BooleanNode, scene: &LayoutScene, groups: (f64, f64)) -> Option<Pen
     base.y = Some(f64::from(found.bounds.origin.y) - oy);
     let c = &b.group.container;
     Some(PenNode::Path(PathNode {
+        corner_radius: None,
+        corner_smoothing: None,
         base,
         icon_id: None,
         d: Some(d),

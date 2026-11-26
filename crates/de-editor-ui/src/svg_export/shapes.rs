@@ -71,6 +71,12 @@ pub(super) fn emit_polygon(out: &mut String, n: &SceneNode, attrs: &str) {
 }
 
 pub(super) fn emit_line(out: &mut String, n: &SceneNode, attrs: &str) {
+    if let Some(geometry) = n.stroke_geometry.as_deref() {
+        let _ = write!(out, "<g{attrs}>");
+        write_stroke_geometry(out, n, geometry, &geometry_place(n));
+        out.push_str("</g>");
+        return;
+    }
     let (color, width) = match n.stroke {
         Some(s) => (s.color, s.width),
         None => (n.fill.unwrap_or(Color::BLACK), 1.5),
@@ -121,6 +127,22 @@ pub(super) fn emit_path(out: &mut String, n: &SceneNode, attrs: &LayerAttrs) {
         ""
     };
     let d = xml_escape(&d);
+    if let Some(geometry) = n.stroke_geometry.as_deref() {
+        // End shapes (#389): the fill (if any) on the path, then the
+        // stroke geometry in node-local coordinates.
+        let _ = write!(out, "<g{}>", attrs.attrs());
+        let fill = fill_attrs_only(n);
+        if !fill.is_empty() {
+            let _ = write!(
+                out,
+                r#"<path d="{d}" transform="{}"{fill_rule}{fill}/>"#,
+                super::transform::matrix_value(fit),
+            );
+        }
+        write_stroke_geometry(out, n, geometry, &geometry_place(n));
+        out.push_str("</g>");
+        return;
+    }
     if !attrs.filter.is_empty() && fit != glam::Affine2::IDENTITY {
         // A filter reads its region in the element's own user space; with
         // the fit on the same element that is the `d` string's space, not
@@ -165,4 +187,77 @@ fn svg_path_fit(d: &str, bounds: Rect) -> glam::Affine2 {
         0.0,
         glam::Vec2::new(tx, ty),
     )
+}
+
+/// The node's fill attributes when it paints one, else empty.
+fn fill_attrs_only(n: &SceneNode) -> String {
+    let fill = super::fill_attrs(n);
+    if fill == r#" fill="none""# {
+        String::new()
+    } else {
+        fill
+    }
+}
+
+/// A line's or open path's precomputed stroke geometry (#389): the centre
+/// line (butt caps, the stroke's join / dash / miter limit), the filled end
+/// shapes and the line-arrow arms, as plain paths placed in the node box.
+/// Written as paths rather than markers so Figma's SVG import, which
+/// drops markers, keeps the arrowheads. `place` is the attribute text
+/// (e.g. a `transform`) that puts node-local coordinates where they go.
+/// Shared with the structured HTML export, which inlines the same SVG.
+pub fn write_stroke_geometry(
+    out: &mut String,
+    n: &SceneNode,
+    geometry: &crate::layout_scene::SceneStrokeGeometry,
+    place: &str,
+) {
+    use crate::layout_scene::{StrokeCap, StrokeJoin, StrokeStyle};
+    let Some(stroke) = n.stroke else {
+        return;
+    };
+    let line = stroke_attrs(stroke.color, stroke.width);
+    if !geometry.stroke_d.is_empty() {
+        let style = StrokeStyle {
+            cap: Some(StrokeCap::Butt),
+            ..stroke.style
+        };
+        let _ = write!(
+            out,
+            r#"<path d="{}"{place} fill="none"{line}{}/>"#,
+            xml_escape(&geometry.stroke_d),
+            super::style_attrs(&style),
+        );
+    }
+    if !geometry.fill_d.is_empty() {
+        let mut fill = format!(r#" fill="{}""#, super::color_to_rgb(stroke.color));
+        if stroke.color.a < 0.999 {
+            let _ = write!(fill, r#" fill-opacity="{}""#, stroke.color.a);
+        }
+        let _ = write!(
+            out,
+            r#"<path d="{}"{place}{fill}/>"#,
+            xml_escape(&geometry.fill_d),
+        );
+    }
+    if !geometry.arms_d.is_empty() {
+        let style = StrokeStyle {
+            cap: Some(StrokeCap::Butt),
+            join: Some(StrokeJoin::Miter),
+            ..StrokeStyle::default()
+        };
+        let _ = write!(
+            out,
+            r#"<path d="{}"{place} fill="none"{line}{}/>"#,
+            xml_escape(&geometry.arms_d),
+            super::style_attrs(&style),
+        );
+    }
+}
+
+/// ` transform="translate(x y)"`: node-local geometry into the node box
+/// (the layer attributes already carry rotation and flips).
+fn geometry_place(n: &SceneNode) -> String {
+    let origin = normalize_rect(n.bounds).origin;
+    format!(r#" transform="translate({} {})""#, origin.x, origin.y)
 }

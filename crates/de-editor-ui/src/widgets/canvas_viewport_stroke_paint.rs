@@ -13,7 +13,10 @@
 //! The rect stroke helpers moved here from `canvas_viewport_overlay.rs`
 //! (pure code motion apart from the paint wrapper).
 
-use crate::layout_scene::{SceneFillLayer, SceneNode, SceneStroke, SceneStrokeAlign};
+use crate::layout_scene::{
+    SceneFillLayer, SceneNode, SceneStroke, SceneStrokeAlign, SceneStrokeGeometry, StrokeCap,
+    StrokeJoin, StrokeStyle,
+};
 use crate::widgets::canvas_viewport_fill_layers::paint_clipped_shape_rich_fill_layer;
 use crate::widgets::canvas_viewport_overlay::{align_stroke_rect, scaled_non_uniform_corner_radii};
 use crate::widgets::PaintCx;
@@ -62,7 +65,12 @@ pub(crate) fn with_stroke_paint_or(
     let paint_rect = stroke_paint_rect(world_rect, &stroke, zoom);
     // Miter joins and square caps of open paths can reach past the band;
     // the layer bounds only limit the offscreen allocation.
-    let reach = stroke.width * zoom * 2.0 + 2.0;
+    let mut reach = stroke.width * zoom * 2.0 + 2.0;
+    if node.stroke_geometry.is_some() {
+        // Arrowheads and end dots reach past the band (#389).
+        reach +=
+            de_editor_core::stroke_geometry::head_length(f64::from(stroke.width)) as f32 * zoom;
+    }
     let layer_rect = inflate(paint_rect, reach);
     cx.backend
         .push_composite_layer(layer_rect, node.opacity, ImageBlendMode::Normal);
@@ -155,8 +163,94 @@ pub(crate) fn paint_line_node_stroke(
         Some(s) => (s.color, s.width * zoom),
         None => (node.fill.unwrap_or(Color::BLACK), (1.5_f32).max(zoom)),
     };
+    if let Some(geometry) = node.stroke_geometry.as_deref() {
+        paint_stroke_geometry(cx, node, world_rect, zoom, geometry);
+        return;
+    }
     with_stroke_paint_or(cx, node, world_rect, zoom, color, |cx, color| {
         cx.backend.stroke_line(from, to, color, width);
+    });
+}
+
+/// Paint a line's or open path's precomputed stroke geometry (#389): the
+/// centre line with butt caps (the stroke's own join / dash / miter limit
+/// kept), the filled end shapes, then the line-arrow arms, all in the
+/// stroke paint. The geometry is node-local doc px, so the backends' path
+/// caches key on the same strings every frame. Restores the node's style.
+pub(crate) fn paint_stroke_geometry(
+    cx: &mut PaintCx<'_>,
+    node: &SceneNode,
+    world_rect: Rect,
+    zoom: f32,
+    geometry: &SceneStrokeGeometry,
+) {
+    let Some(stroke) = node.stroke else {
+        return;
+    };
+    let own = stroke.style.scaled(zoom);
+    let width = stroke.width * zoom;
+    let origin = world_rect.origin;
+    // `stroke_svg_path` maps a 24-unit box onto `size`.
+    let path_size = 24.0 * zoom;
+    with_stroke_paint(cx, node, world_rect, zoom, |cx, color| {
+        if !geometry.stroke_d.is_empty() {
+            cx.backend.set_stroke_style(StrokeStyle {
+                cap: Some(StrokeCap::Butt),
+                ..own
+            });
+            cx.backend
+                .stroke_svg_path(&geometry.stroke_d, origin, path_size, color, width);
+        }
+        if !geometry.fill_d.is_empty() {
+            cx.backend
+                .fill_svg_path(&geometry.fill_d, origin, zoom, 1.0, color);
+        }
+        if !geometry.arms_d.is_empty() {
+            cx.backend.set_stroke_style(StrokeStyle {
+                cap: Some(StrokeCap::Butt),
+                join: Some(StrokeJoin::Miter),
+                ..StrokeStyle::default()
+            });
+            cx.backend
+                .stroke_svg_path(&geometry.arms_d, origin, path_size, color, width);
+        }
+        cx.backend.set_stroke_style(own);
+    });
+}
+
+/// A pen path's stroke along its flattened doc-space polyline `points`.
+/// An explicit stroke always paints (through its precomputed geometry
+/// when it has end shapes); with no stroke, only an UNfilled path strokes
+/// (so it stays visible): a filled path draws no implicit outline.
+pub(crate) fn paint_polyline_path_stroke(
+    cx: &mut PaintCx<'_>,
+    node: &SceneNode,
+    world_rect: Rect,
+    zoom: f32,
+    points: &[Point2D],
+    viewport_origin: Point2D,
+    filled: bool,
+) {
+    if let (Some(_), Some(geometry)) = (node.stroke, node.stroke_geometry.as_deref()) {
+        paint_stroke_geometry(cx, node, world_rect, zoom, geometry);
+        return;
+    }
+    let (color, width) = match node.stroke {
+        Some(s) => (s.color, s.width * zoom),
+        None if !filled => (node.fill.unwrap_or(Color::BLACK), (1.5_f32).max(zoom)),
+        None => return,
+    };
+    let world = |p: Point2D| {
+        Point2D::new(
+            viewport_origin.x + p.x * zoom,
+            viewport_origin.y + p.y * zoom,
+        )
+    };
+    with_stroke_paint_or(cx, node, world_rect, zoom, color, |cx, color| {
+        for pair in points.windows(2) {
+            cx.backend
+                .stroke_line(world(pair[0]), world(pair[1]), color, width);
+        }
     });
 }
 

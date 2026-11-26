@@ -562,6 +562,8 @@ impl<'a> SnapshotCtx<'a> {
             _ => None,
         };
         Some(PenNode::Path(PathNode {
+            corner_radius: None,
+            corner_smoothing: None,
             base,
             icon_id: None,
             d: Some(data),

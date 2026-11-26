@@ -149,6 +149,8 @@ pub fn path_node(
     mask: Option<bool>,
 ) -> PenNode {
     PenNode::Path(PathNode {
+        corner_radius: None,
+        corner_smoothing: None,
         base,
         icon_id,
         d,

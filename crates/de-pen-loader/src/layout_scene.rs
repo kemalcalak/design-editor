@@ -45,6 +45,7 @@ mod boolean;
 mod gradient;
 pub(crate) use boolean::KIND_PREFIX as BOOLEAN_KIND_PREFIX;
 mod stroke;
+mod stroke_geometry;
 use gradient::{payload_gradient_to_scene, scale_gradient_opacity};
 use stroke::{resolve_scene_stroke, resolve_stroke_fill_layers};
 
@@ -220,6 +221,7 @@ pub(crate) fn node_payload_to_scene(
     let stroke = resolve_scene_stroke(node, &node_id, var_table, paint_opacity);
     let stroke_fill_layers = resolve_stroke_fill_layers(node, &node_id, var_table, stroke.as_ref());
     let mut scene = SceneNode {
+        corner_smoothing: 0.0,
         id: node.id.clone(),
         kind: str_to_kind(&node.kind),
         bounds,
@@ -279,6 +281,7 @@ pub(crate) fn node_payload_to_scene(
         mask_type,
         even_odd_fill: node.even_odd_fill,
         svg_path: node.svg_path.clone(),
+        stroke_geometry: stroke_geometry::scene_stroke_geometry(node),
         arc_start_angle: node.arc_start_angle,
         arc_sweep_angle: node.arc_sweep_angle,
         arc_inner_radius: node.arc_inner_radius,
