@@ -238,3 +238,25 @@ fn a_stale_commit_is_rejected() {
     }));
     assert!(!s.apply(crate::EditorCommand::Path(cmd)));
 }
+
+#[test]
+fn commit_inside_a_moved_group_adds_the_group_offset() {
+    let mut s = state(
+        r##"{"version":"1.0.0","children":[
+          {"type":"group","id":"g","x":100,"y":50,"children":[
+            {"type":"rectangle","id":"r","x":10,"y":10,"width":10,"height":10}]}]}"##,
+    );
+    // Document space: the group's offset moved the rect to (110, 60).
+    let mut sq = Subpath::polyline(&[(110.0, 60.0), (120.0, 60.0), (120.0, 70.0)]);
+    sq.closed = true;
+    let mut next = 100u64;
+    assert!(s.commit_canvas_path(
+        commit(vec![NodeId::new("r")], vec![sq], PathCommitKind::Flatten),
+        &mut next
+    ));
+    let group = &s.active_children()[0];
+    let PenNode::Path(p) = &crate::pen_node_ext::PenNodeExt::children(group).unwrap()[0] else {
+        panic!()
+    };
+    assert_eq!((p.base.x, p.base.y), (Some(10.0), Some(10.0)));
+}

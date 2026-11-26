@@ -122,3 +122,17 @@ fn layout_origin_skips_groups() {
     assert_eq!(layout_origin(&s, "top"), (0.0, 0.0));
     assert_eq!(layout_origin(&s, "f"), (0.0, 0.0));
 }
+
+#[test]
+fn flattening_a_lone_line_keeps_it_open() {
+    let mut line = shape("l", NodeKind::Line, 0.0, 0.0, 40.0, 0.0);
+    line.points = vec![
+        de_editor_core::render_backend::Point2D::new(0.0, 0.0),
+        de_editor_core::render_backend::Point2D::new(40.0, 0.0),
+    ];
+    let s = scene(vec![line]);
+    let p = flatten_nodes(&s, &ids(&["l"])).unwrap();
+    let subs = path_to_subpaths(&p);
+    assert_eq!(subs.len(), 1);
+    assert!(!subs[0].closed, "an open line stays a line");
+}

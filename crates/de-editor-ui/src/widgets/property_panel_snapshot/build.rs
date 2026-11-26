@@ -285,6 +285,7 @@ impl NodeSnapshot {
             // A script lays out as a frame but names its own kind (#19).
             kind: match node {
                 PenNode::Script(_) => "Script".to_string(),
+                PenNode::Boolean(_) => "Boolean".to_string(),
                 _ => kind.label().to_string(),
             },
             name: base.name.clone().unwrap_or_default(),

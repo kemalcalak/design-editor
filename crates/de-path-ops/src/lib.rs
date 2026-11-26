@@ -105,9 +105,16 @@ pub fn compute_boolean(scene: &LayoutScene, ids: &[String], op: BooleanOperation
 }
 
 /// One path covering every node in `ids` (the active page's): the union
-/// of their outlines, or a single node's own geometry, curves kept.
+/// of their outlines, or a single node's own geometry (an open line or
+/// path stays open), curves kept.
 pub fn flatten_nodes(scene: &LayoutScene, ids: &[String]) -> Option<Path> {
     let page = scene.active_page()?;
+    if let [only] = ids {
+        let node = page.find(only)?;
+        if let Some(geometry) = node_geometry(node) {
+            return (!geometry.path.is_empty()).then_some(geometry.path);
+        }
+    }
     let mut outlines = Vec::with_capacity(ids.len());
     for id in ids {
         outlines.push(node_outline(page.find(id)?)?);
@@ -118,9 +125,10 @@ pub fn flatten_nodes(scene: &LayoutScene, ids: &[String]) -> Option<Path> {
     union_all(&outlines).filter(|p| !p.is_empty())
 }
 
-/// Document-space origin of the frame `id`'s `x` / `y` are measured in:
-/// the box of the nearest ancestor that positions its children (groups
-/// and boolean groups do not), `(0, 0)` at the page root.
+/// Document-space origin of the nearest frame around `id`: the box of the
+/// nearest ancestor that is not a group or boolean group, `(0, 0)` at the
+/// page root. The scene does not carry a group's own `x` / `y`, which
+/// also moves its children; the path commit adds those from the document.
 pub fn layout_origin(scene: &LayoutScene, id: &str) -> (f64, f64) {
     fn walk(nodes: &[SceneNode], id: &str, origin: (f64, f64)) -> Option<(f64, f64)> {
         for n in nodes {

@@ -164,10 +164,7 @@ fn is_full_bleed_media_or_surface(
 fn width_sizing(node: &PenNode) -> Option<&SizingBehavior> {
     match node {
         PenNode::Frame(node) => node.container.width.as_ref(),
-        PenNode::Group(node)
-        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: node, .. }) => {
-            node.container.width.as_ref()
-        }
+        PenNode::Group(node) => node.container.width.as_ref(),
         PenNode::Rectangle(node) => node.container.width.as_ref(),
         PenNode::Image(node) => node.width.as_ref(),
         _ => None,
@@ -177,10 +174,7 @@ fn width_sizing(node: &PenNode) -> Option<&SizingBehavior> {
 fn height_sizing(node: &PenNode) -> Option<&SizingBehavior> {
     match node {
         PenNode::Frame(node) => node.container.height.as_ref(),
-        PenNode::Group(node)
-        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: node, .. }) => {
-            node.container.height.as_ref()
-        }
+        PenNode::Group(node) => node.container.height.as_ref(),
         PenNode::Rectangle(node) => node.container.height.as_ref(),
         PenNode::Image(node) => node.height.as_ref(),
         _ => None,
@@ -455,10 +449,7 @@ fn resolved_sizes(state: &EditorState) -> HashMap<String, (f64, f64)> {
 fn container(node: &PenNode) -> Option<&ContainerProps> {
     match node {
         PenNode::Frame(node) => Some(&node.container),
-        PenNode::Group(node)
-        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: node, .. }) => {
-            Some(&node.container)
-        }
+        PenNode::Group(node) => Some(&node.container),
         PenNode::Rectangle(node) => Some(&node.container),
         _ => None,
     }

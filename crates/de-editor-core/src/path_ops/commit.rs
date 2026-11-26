@@ -65,8 +65,9 @@ pub struct PathCommit {
     pub subpaths: Vec<Subpath>,
     /// Even-odd fill (skia's boolean results are even-odd).
     pub even_odd: bool,
-    /// Document origin of the frame the first source's `x` / `y` are
-    /// measured in (`(0, 0)` at the page root).
+    /// Document origin of the nearest frame around the first source
+    /// (`(0, 0)` at the page root). Groups between it and the source are
+    /// not in it: the commit adds their own `x` / `y`.
     pub origin: (f64, f64),
     /// Id for the new path.
     pub new_id: NodeId,
@@ -143,6 +144,8 @@ impl EditorState {
                 .unwrap_or_else(|| kind.default_name().to_string()),
             _ => kind.default_name().to_string(),
         };
+        let groups = group_offset(self.active_children(), &source_ids[0]);
+        let origin = (origin.0 + groups.0, origin.1 + groups.1);
         let local: Vec<Subpath> = usable
             .into_iter()
             .map(|mut s| {
@@ -175,6 +178,25 @@ impl EditorState {
         self.set_single_selection(new_id.clone());
         Ok(Some(new_id))
     }
+}
+
+/// Sum of the `x` / `y` of the groups (and boolean groups) between `id`
+/// and its nearest non-group ancestor: a group's offset moves its
+/// children, which the frame origin the host measured does not include.
+fn group_offset(children: &[PenNode], id: &NodeId) -> (f64, f64) {
+    let mut offset = (0.0, 0.0);
+    let mut current = id.clone();
+    while let Some((Some(parent), _)) = find_parent_and_index(children, &current) {
+        match find_node(children, &parent) {
+            Some(node) if node.is_group() => {
+                offset.0 += node.base().x.unwrap_or(0.0);
+                offset.1 += node.base().y.unwrap_or(0.0);
+                current = parent;
+            }
+            _ => break,
+        }
+    }
+    offset
 }
 
 fn new_path_node(id: &NodeId, name: String, style: PathStyle, even_odd: bool) -> PenNode {

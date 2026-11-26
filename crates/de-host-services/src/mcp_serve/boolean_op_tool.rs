@@ -24,6 +24,7 @@
 //! geometry.
 
 use std::collections::BTreeMap;
+use std::sync::Arc;
 
 use de_editor_core::path_ops::{
     OffsetJoin, PathCommand, PathCommitKind, DEFAULT_SIMPLIFY_TOLERANCE,
@@ -64,28 +65,48 @@ impl PathTool {
     }
 }
 
-/// What one call needs: the layout-resolved active page, the id a new
-/// node will get, and the document revision.
-pub struct PathOpTool {
-    tool: PathTool,
+/// What a call needs, shared by the six tools of one registry so the
+/// layout runs once: the active page's scene, the id a new node will get
+/// and the document revision.
+pub struct PathOpSnapshot {
     scene: LayoutScene,
     next_id: Option<NodeId>,
     revision: u64,
 }
 
-pub fn path_op_snapshot(state: &EditorState, tool: PathTool) -> PathOpTool {
-    let next_id = DocumentIdAllocator::sequential_for_document(&state.doc)
-        .and_then(|mut allocator| allocator.allocate(&mut state.collect_node_ids()))
-        .ok();
-    PathOpTool {
-        tool,
-        scene: de_pen_loader::editor_state_to_active_page_layout_scene(state),
-        next_id,
-        revision: state.document_revision(),
+impl PathOpSnapshot {
+    pub fn of(state: &EditorState) -> Arc<Self> {
+        let next_id = DocumentIdAllocator::sequential_for_document(&state.doc)
+            .and_then(|mut allocator| allocator.allocate(&mut state.collect_node_ids()))
+            .ok();
+        Arc::new(Self {
+            scene: de_pen_loader::editor_state_to_active_page_layout_scene(state),
+            next_id,
+            revision: state.document_revision(),
+        })
     }
 }
 
-/// The `boolean_op` snapshot (kept for the registry's name table).
+/// One of the path tools over a shared [`PathOpSnapshot`].
+pub struct PathOpTool {
+    tool: PathTool,
+    snap: Arc<PathOpSnapshot>,
+}
+
+impl PathOpTool {
+    pub fn new(snap: Arc<PathOpSnapshot>, tool: PathTool) -> Self {
+        Self { tool, snap }
+    }
+}
+
+/// A single tool with its own snapshot (tests).
+#[cfg(test)]
+pub fn path_op_snapshot(state: &EditorState, tool: PathTool) -> PathOpTool {
+    PathOpTool::new(PathOpSnapshot::of(state), tool)
+}
+
+/// The `boolean_op` snapshot (tests).
+#[cfg(test)]
 pub fn boolean_op_snapshot(state: &EditorState) -> PathOpTool {
     path_op_snapshot(state, PathTool::Boolean)
 }
@@ -115,14 +136,15 @@ fn locate<'a>(
 
 impl PathOpTool {
     fn node(&self, id: &str) -> Result<(&SceneNode, Option<&str>), Fail> {
-        self.scene
+        self.snap
+            .scene
             .active_page()
             .and_then(|page| locate(&page.children, id, None))
             .ok_or_else(|| invalid(format!("node {id:?} is not on the active page")))
     }
 
     fn new_id(&self) -> Result<NodeId, Fail> {
-        self.next_id.clone().ok_or_else(|| {
+        self.snap.next_id.clone().ok_or_else(|| {
             (
                 ToolErrorCode::Internal,
                 "document id counter exhausted".into(),
@@ -200,7 +222,7 @@ impl PathOpTool {
     ) -> Result<ToolOutcome, Fail> {
         let plan = plan.ok_or_else(|| (ToolErrorCode::ToolFailed, empty.to_string()))?;
         let new_id = self.new_id()?;
-        let commit = plan.into_commit(kind, new_id.clone(), self.revision);
+        let commit = plan.into_commit(kind, new_id.clone(), self.snap.revision);
         Ok(self.written(new_id.as_str(), &[], PathCommand::Commit(Box::new(commit))))
     }
 
@@ -229,7 +251,7 @@ impl PathOpTool {
         let ids = self.paint_order(ids);
         if flatten {
             return self.commit(
-                de_path_ops::plan_boolean(&self.scene, &ids, op),
+                de_path_ops::plan_boolean(&self.snap.scene, &ids, op),
                 PathCommitKind::Boolean,
                 "the result is empty (the shapes do not overlap for this operation)",
             );
@@ -264,7 +286,7 @@ impl PathOpTool {
             }
         }
         let mut order = Vec::new();
-        if let Some(page) = self.scene.active_page() {
+        if let Some(page) = self.snap.scene.active_page() {
             walk(&page.children, &mut order);
         }
         ids.sort_by_key(|id| order.iter().position(|o| o == id).unwrap_or(usize::MAX));
@@ -281,7 +303,7 @@ impl PathOpTool {
                 }
                 let ids = self.paint_order(ids);
                 self.commit(
-                    de_path_ops::plan_flatten(&self.scene, &ids),
+                    de_path_ops::plan_flatten(&self.snap.scene, &ids),
                     PathCommitKind::Flatten,
                     "nothing to flatten: the nodes have no area",
                 )
@@ -290,7 +312,7 @@ impl PathOpTool {
                 let id = Self::one_id(args)?;
                 self.node(&id)?;
                 self.commit(
-                    de_path_ops::plan_outline_stroke(&self.scene, &id),
+                    de_path_ops::plan_outline_stroke(&self.snap.scene, &id),
                     PathCommitKind::OutlineStroke,
                     "the node has no visible stroke to outline",
                 )
@@ -316,7 +338,7 @@ impl PathOpTool {
                     None => OffsetJoin::Round,
                 };
                 self.commit(
-                    de_path_ops::plan_offset(&self.scene, &id, offset, join),
+                    de_path_ops::plan_offset(&self.snap.scene, &id, offset, join),
                     PathCommitKind::Offset,
                     "the offset leaves nothing (an inset past the shape's thickness)",
                 )

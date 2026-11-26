@@ -129,11 +129,21 @@ pub(super) fn rebuild_registry(
     register_tool!("get_editor_state", get_editor_state_snapshot(doc));
     register_tool!("get_design_quality", get_design_quality_snapshot(doc));
     register_tool!("load_fonts", load_fonts_snapshot());
-    register_tool!("boolean_op", boolean_op_snapshot(doc));
-    // Path operations (#388) share the boolean tool's snapshot type.
-    for (name, tool) in boolean_op_tool::PathTool::NAMES.into_iter().skip(1) {
-        if should_register(requested_tool, name) {
-            r.register(Box::new(boolean_op_tool::path_op_snapshot(doc, tool)));
+    // `boolean_op` and the path operations (#388) share one snapshot,
+    // so the layout runs once however many of them register.
+    let path_tools = boolean_op_tool::PathTool::NAMES;
+    if path_tools
+        .iter()
+        .any(|(name, _)| should_register(requested_tool, name))
+    {
+        let snap = boolean_op_tool::PathOpSnapshot::of(doc);
+        for (name, tool) in path_tools {
+            if should_register(requested_tool, name) {
+                r.register(Box::new(boolean_op_tool::PathOpTool::new(
+                    snap.clone(),
+                    tool,
+                )));
+            }
         }
     }
     #[cfg(feature = "mcp-debug-tools")]

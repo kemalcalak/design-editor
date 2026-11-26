@@ -30,7 +30,10 @@ pub use summaries::{
 fn node_kind_of(node: &PenNode) -> NodeKind {
     match node {
         PenNode::Frame(_) | PenNode::Script(_) => NodeKind::Frame,
-        PenNode::Group(_) | PenNode::Boolean(_) => NodeKind::Group,
+        PenNode::Group(_) => NodeKind::Group,
+        // A boolean group paints as one path with its own fill and stroke
+        // (#388), so it gets a path's sections.
+        PenNode::Boolean(_) => NodeKind::Path,
         PenNode::Rectangle(_) => NodeKind::Rect,
         PenNode::Ellipse(_) => NodeKind::Ellipse,
         PenNode::Polygon(_) => NodeKind::Polygon,

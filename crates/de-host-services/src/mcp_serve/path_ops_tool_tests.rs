@@ -223,3 +223,14 @@ fn the_tools_carry_their_names() {
         assert_eq!(path_op_snapshot(&s, tool).name(), name);
     }
 }
+
+#[test]
+fn tools_list_offers_every_path_tool() {
+    let listed = super::super::tools_list_response("1", &state(), false);
+    for (name, _) in PathTool::NAMES {
+        assert!(
+            listed.contains(&format!("\"name\":\"{name}\"")),
+            "{name} missing from tools/list"
+        );
+    }
+}

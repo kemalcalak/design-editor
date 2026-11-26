@@ -211,10 +211,7 @@ fn has_horizontal_layout(node: &PenNode) -> bool {
     use jian_ops_schema::node::container::LayoutMode;
     match node {
         PenNode::Frame(node) => node.container.layout == Some(LayoutMode::Horizontal),
-        PenNode::Group(node)
-        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: node, .. }) => {
-            node.container.layout == Some(LayoutMode::Horizontal)
-        }
+        PenNode::Group(node) => node.container.layout == Some(LayoutMode::Horizontal),
         PenNode::Rectangle(node) => node.container.layout == Some(LayoutMode::Horizontal),
         _ => false,
     }
@@ -582,10 +579,7 @@ fn has_vertical_layout(node: &PenNode) -> bool {
     use jian_ops_schema::node::container::LayoutMode;
     match node {
         PenNode::Frame(node) => node.container.layout == Some(LayoutMode::Vertical),
-        PenNode::Group(node)
-        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: node, .. }) => {
-            node.container.layout == Some(LayoutMode::Vertical)
-        }
+        PenNode::Group(node) => node.container.layout == Some(LayoutMode::Vertical),
         PenNode::Rectangle(node) => node.container.layout == Some(LayoutMode::Vertical),
         _ => false,
     }
@@ -640,10 +634,7 @@ fn is_structural_bottom_nav_row(node: &PenNode) -> bool {
     use jian_ops_schema::node::container::LayoutMode;
     let is_horizontal = match node {
         PenNode::Frame(n) => matches!(n.container.layout, Some(LayoutMode::Horizontal)),
-        PenNode::Group(n)
-        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => {
-            matches!(n.container.layout, Some(LayoutMode::Horizontal))
-        }
+        PenNode::Group(n) => matches!(n.container.layout, Some(LayoutMode::Horizontal)),
         _ => false,
     };
     if !is_horizontal {
@@ -674,10 +665,7 @@ pub(super) fn is_pencil_trailing_tab_section(node: &PenNode) -> bool {
     fn props(node: &PenNode) -> Option<&ContainerProps> {
         match node {
             PenNode::Frame(node) => Some(&node.container),
-            PenNode::Group(node)
-            | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: node, .. }) => {
-                Some(&node.container)
-            }
+            PenNode::Group(node) => Some(&node.container),
             _ => None,
         }
     }

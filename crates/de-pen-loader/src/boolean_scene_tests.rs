@@ -77,3 +77,21 @@ fn nested_boolean_groups_resolve_inside_out() {
     assert!(outer.even_odd_fill, "the hole needs even-odd");
     assert_eq!(outer.children[1].kind, NodeKind::Path);
 }
+
+#[test]
+fn a_moved_group_offsets_its_children() {
+    // A group's own x / y (set when it is dragged) moves its children,
+    // so path commits and the codegen bake add it to the frame origin.
+    let json = r##"{"version":"1.0.0","children":[
+      {"type":"group","id":"g","x":100,"y":50,"children":[
+        {"type":"rectangle","id":"r","x":10,"y":10,"width":20,"height":20}]},
+      {"type":"boolean","id":"b","x":100,"y":50,"op":"union","children":[
+        {"type":"rectangle","id":"r1","x":10,"y":10,"width":20,"height":20},
+        {"type":"rectangle","id":"r2","x":20,"y":10,"width":20,"height":20}]}]}"##;
+    let scene = scene_of(json);
+    let page = &scene.pages[scene.active_page_index];
+    let r = page.find("r").unwrap();
+    let b = page.find("b").unwrap();
+    assert_eq!(r.bounds.origin.x, 110.0, "group child {:?}", r.bounds);
+    assert_eq!(b.bounds.origin.x, 110.0, "boolean {:?}", b.bounds);
+}

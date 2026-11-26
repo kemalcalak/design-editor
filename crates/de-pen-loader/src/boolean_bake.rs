@@ -27,7 +27,7 @@ pub fn bake_boolean_groups(state: &EditorState) -> Option<EditorState> {
         let scene = crate::editor_state_to_active_page_layout_scene(&probe);
         let baked = out.get_or_insert_with(|| state.clone());
         baked.ui.active_page_index = index;
-        bake_in(baked.active_children_mut(), &scene);
+        bake_in(baked.active_children_mut(), &scene, (0.0, 0.0));
     }
     if let Some(baked) = out.as_mut() {
         baked.ui.active_page_index = state.ui.active_page_index;
@@ -42,28 +42,41 @@ fn contains_boolean(node: &PenNode) -> bool {
             .is_some_and(|kids| kids.iter().any(contains_boolean))
 }
 
-fn bake_in(nodes: &mut [PenNode], scene: &LayoutScene) {
+/// `groups` is the sum of the x / y of the groups between `nodes` and
+/// their nearest positioning frame: a group's own offset moves its
+/// children (the scene origin only sees the frame).
+fn bake_in(nodes: &mut [PenNode], scene: &LayoutScene, groups: (f64, f64)) {
     for node in nodes {
         if let PenNode::Boolean(b) = node {
-            if let Some(path) = baked(b, scene) {
+            if let Some(path) = baked(b, scene, groups) {
                 *node = path;
             }
             continue;
         }
+        let inner = if node.is_group() {
+            let base = node.base();
+            (
+                groups.0 + base.x.unwrap_or(0.0),
+                groups.1 + base.y.unwrap_or(0.0),
+            )
+        } else {
+            (0.0, 0.0)
+        };
         if let Some(kids) = node.children_mut() {
-            bake_in(kids, scene);
+            bake_in(kids, scene, inner);
         }
     }
 }
 
-fn baked(b: &BooleanNode, scene: &LayoutScene) -> Option<PenNode> {
+fn baked(b: &BooleanNode, scene: &LayoutScene, groups: (f64, f64)) -> Option<PenNode> {
     let id = b.group.base.id.as_str();
     let found = scene.active_page()?.find(id)?;
     if found.kind != NodeKind::Path {
         return None;
     }
     let d = found.svg_path.clone()?;
-    let (ox, oy) = origin_of(scene, id);
+    let (fx, fy) = origin_of(scene, id);
+    let (ox, oy) = (fx + groups.0, fy + groups.1);
     let mut base = b.group.base.clone();
     base.x = Some(f64::from(found.bounds.origin.x) - ox);
     base.y = Some(f64::from(found.bounds.origin.y) - oy);
@@ -92,8 +105,8 @@ fn baked(b: &BooleanNode, scene: &LayoutScene) -> Option<PenNode> {
     }))
 }
 
-/// Document origin of the frame `id`'s x / y are measured in (groups do
-/// not position their children).
+/// Document origin of the nearest frame around `id` (groups are skipped;
+/// their own offsets are added by the caller).
 fn origin_of(scene: &LayoutScene, id: &str) -> (f64, f64) {
     fn walk(
         nodes: &[jian_scene::layout_scene::SceneNode],
