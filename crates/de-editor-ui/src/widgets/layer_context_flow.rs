@@ -89,6 +89,21 @@ pub fn apply_layer_context_action(
             let _ = state.create_component_from_node_name(&id);
             LayerContextStep::Done
         }
+        (A::CreateComponentFromSimilar, T::Layer(id)) => {
+            // The right-clicked frame is the master source (#369); members
+            // whose structure differs stay as they are.
+            let node_ids = state.similar_layer_ids(&id);
+            if node_ids.len() >= 2 {
+                let _ = state.convert_to_instances(
+                    &de_editor_core::repeated_structures::ConvertRequest {
+                        master_from: Some(id),
+                        node_ids,
+                        ..Default::default()
+                    },
+                );
+            }
+            LayerContextStep::Done
+        }
         (A::DetachComponent | A::DetachInstance, T::Layer(id)) => {
             // Reusable component sheds its flag; a Ref instance
             // materializes into an independent subtree (#22).

@@ -444,6 +444,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "path.offsetInward" => "เลื่อนเส้นทางเข้าด้านใน",
         "path.simplify" => "ลดความซับซ้อนของเส้นทาง",
         "path.reverse" => "กลับทิศทางเส้นทาง",
+        "layerMenu.createComponentFromSimilar" => "สร้างคอมโพเนนต์จากเลเยอร์ที่คล้ายกัน",
         _ => return None,
     })
 }

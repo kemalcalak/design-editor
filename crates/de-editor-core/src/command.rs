@@ -383,6 +383,10 @@ pub enum EditorCommand {
     /// Declare, change, rename or remove a master's component property, or
     /// set an instance's property values (#367). Boxed like `Instance`.
     ComponentProperty(Box<crate::component_props::ComponentPropertyCommand>),
+    /// Turn repeated hand-built frames into one master plus linked
+    /// instances (#369). Planned against the live document first; one undo
+    /// step, nothing changes when the plan is refused.
+    ConvertToInstances(Box<crate::repeated_structures::ConvertRequest>),
     /// Set or remove one trigger's actions on a node, instance
     /// descendants included (#371).
     Interaction(crate::interaction_write::InteractionCommand),

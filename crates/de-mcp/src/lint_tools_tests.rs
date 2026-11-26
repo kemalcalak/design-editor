@@ -130,3 +130,29 @@ fn lint_document_rejects_unknown_node_filter() {
         other => panic!("expected InvalidArgument, got {other:?}"),
     }
 }
+
+#[test]
+fn lint_document_reports_repeated_copies_as_info_with_the_conversion() {
+    let card = |id: &str, label: &str| {
+        json!({"type": "frame", "id": id, "width": 120, "height": 40, "children": [
+            {"type": "text", "id": format!("{id}-t"), "content": label, "fontSize": 14},
+            {"type": "frame", "id": format!("{id}-b"), "width": 8, "height": 8}]})
+    };
+    let state =
+        crate::test_fixtures::state_with(vec![node(card("c1", "One")), node(card("c2", "Two"))]);
+    let ToolOutcome::OkJson(json) = lint_document_snapshot(&state).call(&BTreeMap::new()) else {
+        panic!("lint returns JSON");
+    };
+    let value: serde_json::Value = serde_json::from_str(&json).unwrap();
+    let issue = value["issues"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|issue| issue["category"] == "repeated-structure")
+        .expect("repeated-structure finding");
+    assert_eq!(issue["severity"], "info");
+    assert_eq!(issue["nodeId"], "c1");
+    assert_eq!(issue["currentValue"]["nodeIds"], json!(["c1", "c2"]));
+    assert_eq!(issue["suggestedValue"]["tool"], "convert_to_instances");
+    assert_eq!(issue["reason"], "2 similar layers could share a component");
+}

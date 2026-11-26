@@ -444,6 +444,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "path.offsetInward" => "パスを内側にオフセット",
         "path.simplify" => "パスを単純化",
         "path.reverse" => "パスの方向を反転",
+        "layerMenu.createComponentFromSimilar" => "類似レイヤーからコンポーネントを作成",
         _ => return None,
     })
 }

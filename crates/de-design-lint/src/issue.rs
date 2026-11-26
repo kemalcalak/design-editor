@@ -63,6 +63,9 @@ pub enum IssueCategory {
     /// letting content sit on the page surface. Report-only.
     #[serde(rename = "slop/rounded-card-wall")]
     SlopRoundedCardWall,
+    /// Hand-built copies that could share one component (#369). Reported by
+    /// MCP `lint_document` only; its fix is a `convert_to_instances` call.
+    RepeatedStructure,
 }
 
 /// The node property a fix targets. `Remove` is the `"__remove"` sentinel;

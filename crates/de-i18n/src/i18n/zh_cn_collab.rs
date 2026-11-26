@@ -444,6 +444,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "path.offsetInward" => "向内偏移路径",
         "path.simplify" => "简化路径",
         "path.reverse" => "反转路径方向",
+        "layerMenu.createComponentFromSimilar" => "从相似图层创建组件",
         _ => return None,
     })
 }

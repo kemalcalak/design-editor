@@ -171,6 +171,7 @@ mod ref_scroll_targets;
 pub mod release_notes;
 pub mod rename;
 pub mod render_backend;
+pub mod repeated_structures;
 pub mod request_snapshot;
 pub mod root_placement;
 pub mod route_rename;

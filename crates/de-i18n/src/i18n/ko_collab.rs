@@ -446,6 +446,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "path.offsetInward" => "패스 안쪽 오프셋",
         "path.simplify" => "패스 단순화",
         "path.reverse" => "패스 방향 반전",
+        "layerMenu.createComponentFromSimilar" => "비슷한 레이어로 컴포넌트 만들기",
         _ => return None,
     })
 }

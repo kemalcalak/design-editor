@@ -444,6 +444,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "path.offsetInward" => "Сместить контур внутрь",
         "path.simplify" => "Упростить контур",
         "path.reverse" => "Изменить направление контура",
+        "layerMenu.createComponentFromSimilar" => "Компонент из похожих слоёв",
         _ => return None,
     })
 }

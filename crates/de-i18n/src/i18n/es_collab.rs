@@ -444,6 +444,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "path.offsetInward" => "Desplazar trazado hacia dentro",
         "path.simplify" => "Simplificar trazado",
         "path.reverse" => "Invertir dirección del trazado",
+        "layerMenu.createComponentFromSimilar" => "Crear componente de capas similares",
         _ => return None,
     })
 }

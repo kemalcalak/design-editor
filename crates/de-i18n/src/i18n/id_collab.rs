@@ -444,6 +444,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "path.offsetInward" => "Geser Jalur ke Dalam",
         "path.simplify" => "Sederhanakan Jalur",
         "path.reverse" => "Balik Arah Jalur",
+        "layerMenu.createComponentFromSimilar" => "Buat komponen dari layer serupa",
         _ => return None,
     })
 }

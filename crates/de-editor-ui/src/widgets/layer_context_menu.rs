@@ -21,7 +21,9 @@ use de_editor_core::editor_ui_state::{LayerContextMenuState, LayerContextTarget}
 use de_editor_core::EditorState;
 pub use jian_widgets::components::menu::MenuHit;
 
-pub const LAYER_CONTEXT_MENU_WIDTH: f32 = 168.0;
+/// Wide enough for the longest row label in every locale ("Create component
+/// from similar layers", #369); labels are not truncated.
+pub const LAYER_CONTEXT_MENU_WIDTH: f32 = 280.0;
 const ROW_HEIGHT: f32 = 32.0;
 const PAD_Y: f32 = 6.0;
 const ROW_FONT: f32 = 13.0;
@@ -47,6 +49,10 @@ pub enum LayerContextAction {
     /// Turn the selection's strokes into filled paths (Cmd+Shift+O).
     OutlineStroke,
     CreateComponent,
+    /// Turn the right-clicked frame and its structural copies (or the
+    /// multi-selection of copies) into one master plus instances (#369).
+    /// Shown only when there is something to convert.
+    CreateComponentFromSimilar,
     /// Shown instead of CreateComponent when the target is a reusable
     /// component — sheds the `reusable` flag (TS detach case 1).
     DetachComponent,
@@ -137,6 +143,12 @@ const LAYER_ROWS: &[Row] = &[
         destructive: false,
     },
     Row {
+        icon: Icon::Component,
+        action: LayerContextAction::CreateComponentFromSimilar,
+        label_key: "layerMenu.createComponentFromSimilar",
+        destructive: false,
+    },
+    Row {
         icon: Icon::Lock,
         action: LayerContextAction::ToggleLock,
         label_key: "layerMenu.toggleLock",
@@ -204,7 +216,7 @@ impl LayerContextMenu {
         let flatten_ok = super::align_toolbar::can_flatten(state);
         let outline_ok = super::align_toolbar::can_outline_stroke(state);
         let mut rows = match &menu.target {
-            LayerContextTarget::Layer(_) => LAYER_ROWS
+            LayerContextTarget::Layer(target) => LAYER_ROWS
                 .iter()
                 .copied()
                 .filter(|row| match row.action {
@@ -216,6 +228,9 @@ impl LayerContextMenu {
                     | LayerContextAction::BooleanExclude => boolean_ok,
                     LayerContextAction::Flatten => flatten_ok,
                     LayerContextAction::OutlineStroke => outline_ok,
+                    LayerContextAction::CreateComponentFromSimilar => {
+                        !state.similar_layer_ids(target).is_empty()
+                    }
                     _ => true,
                 })
                 .collect(),
@@ -386,3 +401,7 @@ impl Widget for LayerContextMenu {
         n
     }
 }
+
+#[cfg(test)]
+#[path = "layer_context_similar_tests.rs"]
+mod similar_tests;

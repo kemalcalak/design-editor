@@ -444,6 +444,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "path.offsetInward" => "Offset Path Inward",
         "path.simplify" => "Simplify Path",
         "path.reverse" => "Reverse Path Direction",
+        "layerMenu.createComponentFromSimilar" => "Create component from similar layers",
         _ => return None,
     })
 }

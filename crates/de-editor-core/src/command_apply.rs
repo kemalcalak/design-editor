@@ -721,6 +721,9 @@ impl EditorState {
 
             // --- Component commands -------------------------------
             EditorCommand::Instance(command) => self.apply_instance_command(*command, allocator)?,
+            EditorCommand::ConvertToInstances(request) => self
+                .convert_to_instances_with_allocator(&request, allocator)?
+                .is_some(),
             EditorCommand::ComponentProperty(command) => {
                 self.apply_component_property(&command).is_ok()
             }
