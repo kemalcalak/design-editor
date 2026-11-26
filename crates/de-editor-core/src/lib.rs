@@ -9,6 +9,7 @@
 
 pub mod acp_agent_presets;
 pub mod agent_indicators;
+pub mod agent_permission;
 mod agent_indicators_tests;
 mod agent_provider_wire;
 pub mod agent_reveals;

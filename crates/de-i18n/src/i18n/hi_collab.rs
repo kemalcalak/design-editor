@@ -588,6 +588,17 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.context.chatTotal" => "यह चैट",
         "chat.usage.tokens" => "इनपुट {{input}} · आउटपुट {{output}}",
         "layerMenu.sendToAgent" => "एजेंट को भेजें",
+        "chat.permission.deleteLayer" => "क्या एजेंट को लेयर “{{target}}” हटाने दें?",
+        "chat.permission.deletePage" => "क्या एजेंट को पेज “{{target}}” हटाने दें?",
+        "chat.permission.deleteComponent" => "क्या एजेंट को कंपोनेंट “{{target}}” हटाने दें?",
+        "chat.permission.deleteVariable" => "क्या एजेंट को वेरिएबल “{{target}}” हटाने दें?",
+        "chat.permission.replaceLayer" => "क्या एजेंट को लेयर “{{target}}” बदलने दें?",
+        "chat.permission.deleteInBatch" => "क्या एजेंट को एक बैच में लेयर हटाने दें ({{count}})?",
+        "chat.permission.writeFile" => "क्या एजेंट को फ़ाइल लिखने दें ({{target}})?",
+        "chat.permission.allow" => "अनुमति दें",
+        "chat.permission.deny" => "मना करें",
+        "settings.system.confirmAgentActions" => "विनाशकारी एजेंट कार्यों से पहले पूछें",
+        "settings.system.confirmAgentActionsDesc" => "लेयर, पेज, कंपोनेंट या वेरिएबल हटाने या फ़ाइल लिखने से पहले एजेंट आपकी अनुमति का इंतज़ार करता है",
         _ => return None,
     })
 }

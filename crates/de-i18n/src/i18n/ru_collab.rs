@@ -588,6 +588,17 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.context.chatTotal" => "Этот чат",
         "chat.usage.tokens" => "вход {{input}} · выход {{output}}",
         "layerMenu.sendToAgent" => "Отправить агенту",
+        "chat.permission.deleteLayer" => "Разрешить агенту удалить слой «{{target}}»?",
+        "chat.permission.deletePage" => "Разрешить агенту удалить страницу «{{target}}»?",
+        "chat.permission.deleteComponent" => "Разрешить агенту удалить компонент «{{target}}»?",
+        "chat.permission.deleteVariable" => "Разрешить агенту удалить переменную «{{target}}»?",
+        "chat.permission.replaceLayer" => "Разрешить агенту заменить слой «{{target}}»?",
+        "chat.permission.deleteInBatch" => "Разрешить агенту удалить слои одним пакетом ({{count}})?",
+        "chat.permission.writeFile" => "Разрешить агенту записать файл ({{target}})?",
+        "chat.permission.allow" => "Разрешить",
+        "chat.permission.deny" => "Запретить",
+        "settings.system.confirmAgentActions" => "Спрашивать перед разрушительными действиями агента",
+        "settings.system.confirmAgentActionsDesc" => "Агент ждёт разрешения, прежде чем удалять слои, страницы, компоненты или переменные или записывать файлы",
         _ => return None,
     })
 }

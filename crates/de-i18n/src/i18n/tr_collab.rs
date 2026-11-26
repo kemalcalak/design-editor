@@ -588,6 +588,17 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.context.chatTotal" => "Bu sohbet",
         "chat.usage.tokens" => "{{input}} girdi · {{output}} çıktı",
         "layerMenu.sendToAgent" => "Ajana gönder",
+        "chat.permission.deleteLayer" => "Ajan “{{target}}” katmanını silsin mi?",
+        "chat.permission.deletePage" => "Ajan “{{target}}” sayfasını silsin mi?",
+        "chat.permission.deleteComponent" => "Ajan “{{target}}” bileşenini silsin mi?",
+        "chat.permission.deleteVariable" => "Ajan “{{target}}” değişkenini silsin mi?",
+        "chat.permission.replaceLayer" => "Ajan “{{target}}” katmanını değiştirsin mi?",
+        "chat.permission.deleteInBatch" => "Ajan katmanları tek seferde silsin mi ({{count}})?",
+        "chat.permission.writeFile" => "Ajan bir dosya yazsın mı ({{target}})?",
+        "chat.permission.allow" => "İzin ver",
+        "chat.permission.deny" => "Reddet",
+        "settings.system.confirmAgentActions" => "Yıkıcı ajan işlemlerinden önce sor",
+        "settings.system.confirmAgentActionsDesc" => "Ajan katman, sayfa, bileşen veya değişken silmeden ya da dosya yazmadan önce izninizi bekler",
         _ => return None,
     })
 }

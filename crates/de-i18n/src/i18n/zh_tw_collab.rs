@@ -588,6 +588,17 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.context.chatTotal" => "這次對話",
         "chat.usage.tokens" => "輸入 {{input}} · 輸出 {{output}}",
         "layerMenu.sendToAgent" => "傳送給代理",
+        "chat.permission.deleteLayer" => "允許代理刪除圖層「{{target}}」嗎？",
+        "chat.permission.deletePage" => "允許代理刪除頁面「{{target}}」嗎？",
+        "chat.permission.deleteComponent" => "允許代理刪除元件「{{target}}」嗎？",
+        "chat.permission.deleteVariable" => "允許代理刪除變數「{{target}}」嗎？",
+        "chat.permission.replaceLayer" => "允許代理取代圖層「{{target}}」嗎？",
+        "chat.permission.deleteInBatch" => "允許代理批次刪除圖層（{{count}}）嗎？",
+        "chat.permission.writeFile" => "允許代理寫入檔案（{{target}}）嗎？",
+        "chat.permission.allow" => "允許",
+        "chat.permission.deny" => "拒絕",
+        "settings.system.confirmAgentActions" => "執行破壞性操作前先詢問",
+        "settings.system.confirmAgentActionsDesc" => "代理刪除圖層、頁面、元件或變數，或寫入檔案前，會等待你按下允許",
         _ => return None,
     })
 }

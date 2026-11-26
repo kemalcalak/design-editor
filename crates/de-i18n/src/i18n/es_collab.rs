@@ -588,6 +588,17 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.context.chatTotal" => "Este chat",
         "chat.usage.tokens" => "{{input}} de entrada · {{output}} de salida",
         "layerMenu.sendToAgent" => "Enviar al agente",
+        "chat.permission.deleteLayer" => "¿Dejar que el agente elimine la capa «{{target}}»?",
+        "chat.permission.deletePage" => "¿Dejar que el agente elimine la página «{{target}}»?",
+        "chat.permission.deleteComponent" => "¿Dejar que el agente elimine el componente «{{target}}»?",
+        "chat.permission.deleteVariable" => "¿Dejar que el agente elimine la variable «{{target}}»?",
+        "chat.permission.replaceLayer" => "¿Dejar que el agente reemplace la capa «{{target}}»?",
+        "chat.permission.deleteInBatch" => "¿Dejar que el agente elimine capas en un lote ({{count}})?",
+        "chat.permission.writeFile" => "¿Dejar que el agente escriba un archivo ({{target}})?",
+        "chat.permission.allow" => "Permitir",
+        "chat.permission.deny" => "Denegar",
+        "settings.system.confirmAgentActions" => "Preguntar antes de acciones destructivas del agente",
+        "settings.system.confirmAgentActionsDesc" => "El agente espera tu permiso antes de eliminar capas, páginas, componentes o variables, o de escribir archivos",
         _ => return None,
     })
 }

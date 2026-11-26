@@ -293,6 +293,9 @@ pub struct ChatState {
     /// Byte offset of an `@` whose popup the user dismissed with Escape;
     /// the sync leaves it closed until the caret leaves that token.
     pub mention_dismissed_at: Option<usize>,
+    /// A destructive agent tool call waiting for the user's Allow / Deny
+    /// (#398, `agent_permission`), or `None`.
+    pub permission_prompt: Option<crate::agent_permission::PermissionPrompt>,
 }
 
 /// Process-global allocator for [`ChatImage::id`]. A *global* counter
@@ -344,6 +347,7 @@ impl Default for ChatState {
             pending_mentions: Vec::new(),
             mention_popup: None,
             mention_dismissed_at: None,
+            permission_prompt: None,
         }
     }
 }

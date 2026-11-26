@@ -588,6 +588,17 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.context.chatTotal" => "Chat ini",
         "chat.usage.tokens" => "{{input}} masuk · {{output}} keluar",
         "layerMenu.sendToAgent" => "Kirim ke agen",
+        "chat.permission.deleteLayer" => "Izinkan agen menghapus layer “{{target}}”?",
+        "chat.permission.deletePage" => "Izinkan agen menghapus halaman “{{target}}”?",
+        "chat.permission.deleteComponent" => "Izinkan agen menghapus komponen “{{target}}”?",
+        "chat.permission.deleteVariable" => "Izinkan agen menghapus variabel “{{target}}”?",
+        "chat.permission.replaceLayer" => "Izinkan agen mengganti layer “{{target}}”?",
+        "chat.permission.deleteInBatch" => "Izinkan agen menghapus layer dalam satu batch ({{count}})?",
+        "chat.permission.writeFile" => "Izinkan agen menulis file ({{target}})?",
+        "chat.permission.allow" => "Izinkan",
+        "chat.permission.deny" => "Tolak",
+        "settings.system.confirmAgentActions" => "Tanya sebelum aksi agen yang merusak",
+        "settings.system.confirmAgentActionsDesc" => "Agen menunggu izin Anda sebelum menghapus layer, halaman, komponen, atau variabel, atau menulis file",
         _ => return None,
     })
 }

@@ -588,6 +588,17 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.context.chatTotal" => "Cuộc trò chuyện này",
         "chat.usage.tokens" => "{{input}} đầu vào · {{output}} đầu ra",
         "layerMenu.sendToAgent" => "Gửi cho tác tử",
+        "chat.permission.deleteLayer" => "Cho tác tử xóa lớp “{{target}}”?",
+        "chat.permission.deletePage" => "Cho tác tử xóa trang “{{target}}”?",
+        "chat.permission.deleteComponent" => "Cho tác tử xóa thành phần “{{target}}”?",
+        "chat.permission.deleteVariable" => "Cho tác tử xóa biến “{{target}}”?",
+        "chat.permission.replaceLayer" => "Cho tác tử thay thế lớp “{{target}}”?",
+        "chat.permission.deleteInBatch" => "Cho tác tử xóa các lớp trong một lượt ({{count}})?",
+        "chat.permission.writeFile" => "Cho tác tử ghi tệp ({{target}})?",
+        "chat.permission.allow" => "Cho phép",
+        "chat.permission.deny" => "Từ chối",
+        "settings.system.confirmAgentActions" => "Hỏi trước các thao tác phá hủy của tác tử",
+        "settings.system.confirmAgentActionsDesc" => "Tác tử chờ bạn cho phép trước khi xóa lớp, trang, thành phần, biến hoặc ghi tệp",
         _ => return None,
     })
 }

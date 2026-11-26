@@ -588,6 +588,17 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.context.chatTotal" => "Cette conversation",
         "chat.usage.tokens" => "{{input}} en entrée · {{output}} en sortie",
         "layerMenu.sendToAgent" => "Envoyer à l'agent",
+        "chat.permission.deleteLayer" => "Laisser l'agent supprimer le calque « {{target}} » ?",
+        "chat.permission.deletePage" => "Laisser l'agent supprimer la page « {{target}} » ?",
+        "chat.permission.deleteComponent" => "Laisser l'agent supprimer le composant « {{target}} » ?",
+        "chat.permission.deleteVariable" => "Laisser l'agent supprimer la variable « {{target}} » ?",
+        "chat.permission.replaceLayer" => "Laisser l'agent remplacer le calque « {{target}} » ?",
+        "chat.permission.deleteInBatch" => "Laisser l'agent supprimer des calques en un lot ({{count}}) ?",
+        "chat.permission.writeFile" => "Laisser l'agent écrire un fichier ({{target}}) ?",
+        "chat.permission.allow" => "Autoriser",
+        "chat.permission.deny" => "Refuser",
+        "settings.system.confirmAgentActions" => "Demander avant les actions destructives de l'agent",
+        "settings.system.confirmAgentActionsDesc" => "L'agent attend votre accord avant de supprimer des calques, pages, composants ou variables, ou d'écrire des fichiers",
         _ => return None,
     })
 }

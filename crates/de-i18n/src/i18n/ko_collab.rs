@@ -590,6 +590,17 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.context.chatTotal" => "이 대화",
         "chat.usage.tokens" => "입력 {{input}} · 출력 {{output}}",
         "layerMenu.sendToAgent" => "에이전트에게 보내기",
+        "chat.permission.deleteLayer" => "에이전트가 레이어 “{{target}}”을(를) 삭제하도록 허용할까요?",
+        "chat.permission.deletePage" => "에이전트가 페이지 “{{target}}”을(를) 삭제하도록 허용할까요?",
+        "chat.permission.deleteComponent" => "에이전트가 컴포넌트 “{{target}}”을(를) 삭제하도록 허용할까요?",
+        "chat.permission.deleteVariable" => "에이전트가 변수 “{{target}}”을(를) 삭제하도록 허용할까요?",
+        "chat.permission.replaceLayer" => "에이전트가 레이어 “{{target}}”을(를) 교체하도록 허용할까요?",
+        "chat.permission.deleteInBatch" => "에이전트가 레이어를 일괄 삭제하도록 허용할까요({{count}})?",
+        "chat.permission.writeFile" => "에이전트가 파일을 쓰도록 허용할까요({{target}})?",
+        "chat.permission.allow" => "허용",
+        "chat.permission.deny" => "거부",
+        "settings.system.confirmAgentActions" => "파괴적인 에이전트 작업 전에 묻기",
+        "settings.system.confirmAgentActionsDesc" => "레이어, 페이지, 컴포넌트, 변수를 삭제하거나 파일을 쓰기 전에 에이전트가 허용을 기다립니다",
         _ => return None,
     })
 }

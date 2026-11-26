@@ -588,6 +588,17 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.context.chatTotal" => "แชตนี้",
         "chat.usage.tokens" => "อินพุต {{input}} · เอาต์พุต {{output}}",
         "layerMenu.sendToAgent" => "ส่งให้เอเจนต์",
+        "chat.permission.deleteLayer" => "ให้เอเจนต์ลบเลเยอร์ “{{target}}” ไหม",
+        "chat.permission.deletePage" => "ให้เอเจนต์ลบหน้า “{{target}}” ไหม",
+        "chat.permission.deleteComponent" => "ให้เอเจนต์ลบคอมโพเนนต์ “{{target}}” ไหม",
+        "chat.permission.deleteVariable" => "ให้เอเจนต์ลบตัวแปร “{{target}}” ไหม",
+        "chat.permission.replaceLayer" => "ให้เอเจนต์แทนที่เลเยอร์ “{{target}}” ไหม",
+        "chat.permission.deleteInBatch" => "ให้เอเจนต์ลบเลเยอร์ในครั้งเดียว ({{count}}) ไหม",
+        "chat.permission.writeFile" => "ให้เอเจนต์เขียนไฟล์ ({{target}}) ไหม",
+        "chat.permission.allow" => "อนุญาต",
+        "chat.permission.deny" => "ปฏิเสธ",
+        "settings.system.confirmAgentActions" => "ถามก่อนการกระทำที่ทำลายของเอเจนต์",
+        "settings.system.confirmAgentActionsDesc" => "เอเจนต์จะรอการอนุญาตก่อนลบเลเยอร์ หน้า คอมโพเนนต์ หรือตัวแปร หรือก่อนเขียนไฟล์",
         _ => return None,
     })
 }

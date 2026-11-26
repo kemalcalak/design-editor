@@ -588,6 +588,17 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.context.chatTotal" => "本次对话",
         "chat.usage.tokens" => "输入 {{input}} · 输出 {{output}}",
         "layerMenu.sendToAgent" => "发送给智能体",
+        "chat.permission.deleteLayer" => "允许智能体删除图层“{{target}}”吗？",
+        "chat.permission.deletePage" => "允许智能体删除页面“{{target}}”吗？",
+        "chat.permission.deleteComponent" => "允许智能体删除组件“{{target}}”吗？",
+        "chat.permission.deleteVariable" => "允许智能体删除变量“{{target}}”吗？",
+        "chat.permission.replaceLayer" => "允许智能体替换图层“{{target}}”吗？",
+        "chat.permission.deleteInBatch" => "允许智能体批量删除图层（{{count}}）吗？",
+        "chat.permission.writeFile" => "允许智能体写入文件（{{target}}）吗？",
+        "chat.permission.allow" => "允许",
+        "chat.permission.deny" => "拒绝",
+        "settings.system.confirmAgentActions" => "执行破坏性操作前先询问",
+        "settings.system.confirmAgentActionsDesc" => "智能体删除图层、页面、组件或变量，或写入文件前，会等待你点击允许",
         _ => return None,
     })
 }

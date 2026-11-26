@@ -588,6 +588,17 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.context.chatTotal" => "このチャット",
         "chat.usage.tokens" => "入力 {{input}} · 出力 {{output}}",
         "layerMenu.sendToAgent" => "エージェントに送る",
+        "chat.permission.deleteLayer" => "エージェントにレイヤー「{{target}}」を削除させますか？",
+        "chat.permission.deletePage" => "エージェントにページ「{{target}}」を削除させますか？",
+        "chat.permission.deleteComponent" => "エージェントにコンポーネント「{{target}}」を削除させますか？",
+        "chat.permission.deleteVariable" => "エージェントに変数「{{target}}」を削除させますか？",
+        "chat.permission.replaceLayer" => "エージェントにレイヤー「{{target}}」を置き換えさせますか？",
+        "chat.permission.deleteInBatch" => "エージェントにレイヤーを一括削除させますか（{{count}}）？",
+        "chat.permission.writeFile" => "エージェントにファイルを書き込ませますか（{{target}}）？",
+        "chat.permission.allow" => "許可",
+        "chat.permission.deny" => "拒否",
+        "settings.system.confirmAgentActions" => "破壊的な操作の前に確認する",
+        "settings.system.confirmAgentActionsDesc" => "レイヤー・ページ・コンポーネント・変数の削除やファイルの書き込みの前に、エージェントは許可を待ちます",
         _ => return None,
     })
 }

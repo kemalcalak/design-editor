@@ -588,6 +588,17 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.context.chatTotal" => "This chat",
         "chat.usage.tokens" => "{{input}} in · {{output}} out",
         "layerMenu.sendToAgent" => "Send to agent",
+        "chat.permission.deleteLayer" => "Let the agent delete layer “{{target}}”?",
+        "chat.permission.deletePage" => "Let the agent delete page “{{target}}”?",
+        "chat.permission.deleteComponent" => "Let the agent delete component “{{target}}”?",
+        "chat.permission.deleteVariable" => "Let the agent delete variable “{{target}}”?",
+        "chat.permission.replaceLayer" => "Let the agent replace layer “{{target}}”?",
+        "chat.permission.deleteInBatch" => "Let the agent delete layers in one batch ({{count}})?",
+        "chat.permission.writeFile" => "Let the agent write a file ({{target}})?",
+        "chat.permission.allow" => "Allow",
+        "chat.permission.deny" => "Deny",
+        "settings.system.confirmAgentActions" => "Ask before destructive agent actions",
+        "settings.system.confirmAgentActionsDesc" => "The agent waits for Allow before deleting layers, pages, components or variables, or writing files",
         _ => return None,
     })
 }
