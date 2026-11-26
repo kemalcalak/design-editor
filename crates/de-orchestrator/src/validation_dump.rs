@@ -494,6 +494,7 @@ fn format_layout(layout: &jian_ops_schema::node::LayoutMode) -> &'static str {
         LayoutMode::None => "none",
         LayoutMode::Vertical => "vertical",
         LayoutMode::Horizontal => "horizontal",
+        LayoutMode::Grid => "grid",
     }
 }
 

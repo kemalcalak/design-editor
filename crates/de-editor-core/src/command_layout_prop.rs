@@ -5,7 +5,8 @@
 //! `opacity`, `x`, `y`, `fontFamily`, `textAlign`, `textAlignVertical`,
 //! `textGrowth`, `alignItems`, `justifyContent`, `clipContent`, and
 //! sizing keywords for `width` / `height` (`"fit_content"` /
-//! `"fill_container"`).
+//! `"fill_container"`). Wrap and grid properties live in
+//! `command_layout_grid_prop`.
 //!
 //! Each property dispatches to the canonical node field via a
 //! per-variant match, using the validate-then-mutate discipline.
@@ -51,6 +52,7 @@ fn parse_layout_mode(s: &str) -> Option<LayoutMode> {
         "none" => Some(LayoutMode::None),
         "vertical" => Some(LayoutMode::Vertical),
         "horizontal" => Some(LayoutMode::Horizontal),
+        "grid" => Some(LayoutMode::Grid),
         _ => None,
     }
 }
@@ -133,6 +135,9 @@ impl EditorState {
         property: &str,
         value: &LayoutPropValue,
     ) -> bool {
+        if let Some(written) = self.cmd_set_grid_layout_prop(node_id, property, value) {
+            return written;
+        }
         if !node_id.is_real() {
             return false;
         }
@@ -392,22 +397,18 @@ fn set_container_gap(node: &mut PenNode, gap: f64) -> bool {
 }
 
 fn set_container_layout(node: &mut PenNode, mode: LayoutMode) -> bool {
-    match node {
-        PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => {
-            n.container.layout = Some(mode);
-            true
-        }
+    let container = match node {
+        PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => &mut n.container,
         PenNode::Group(n)
-        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => {
-            n.container.layout = Some(mode);
-            true
-        }
-        PenNode::Rectangle(n) => {
-            n.container.layout = Some(mode);
-            true
-        }
-        _ => false,
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => &mut n.container,
+        PenNode::Rectangle(n) => &mut n.container,
+        _ => return false,
+    };
+    if mode == LayoutMode::Grid {
+        crate::command_layout_grid_prop::seed_grid_columns(container);
     }
+    container.layout = Some(mode);
+    true
 }
 
 fn set_container_padding(node: &mut PenNode, pad: Padding) -> bool {

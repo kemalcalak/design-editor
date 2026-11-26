@@ -100,6 +100,7 @@ impl<'a> CanvasViewport<'a> {
             pointer: None,
             text_layout_generation: None,
             prototype_links: crate::widgets::canvas_prototype_links::visible_links(state),
+            grid_overlay: crate::widgets::canvas_grid_overlay::GridOverlay::build(state, scene),
             locale: state.editor_ui.locale,
         }
     }
@@ -162,6 +163,7 @@ impl<'a> CanvasViewport<'a> {
             pointer: None,
             text_layout_generation: None,
             prototype_links: Vec::new(),
+            grid_overlay: None,
             locale: de_editor_core::Locale::EnUs,
         }
     }

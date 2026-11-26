@@ -303,19 +303,23 @@ impl EditorState {
                     &crate::LayoutPropValue::Number(value as f64),
                 );
             }
-            PropertyFocus::LayoutGap => {
+            PropertyFocus::LayoutGap | PropertyFocus::LayoutRowGap => {
                 if !value.is_finite() {
                     return false;
                 }
-                return self.cmd_set_node_layout_prop(
-                    &sel,
-                    "gap",
-                    &crate::LayoutPropValue::Number(value.max(0.0) as f64),
-                );
+                let property = match focus {
+                    PropertyFocus::LayoutGap => "gap",
+                    _ => "rowGap",
+                };
+                let gap = crate::LayoutPropValue::Number(value.max(0.0) as f64);
+                return self.cmd_set_node_layout_prop(&sel, property, &gap);
             }
-            // The shorthand `Pad` field is a string draft; it commits
-            // through `commit_padding_shorthand`, never as one number.
-            PropertyFocus::Padding => return false,
+            // The shorthand `Pad` field and the track lists are string
+            // drafts; they commit through `commit_padding_shorthand` /
+            // `commit_grid_tracks`, never as one number.
+            PropertyFocus::Padding | PropertyFocus::GridColumns | PropertyFocus::GridRows => {
+                return false
+            }
             _ => {}
         }
         let Some(node) = find_node_mut(self.active_children_mut(), &sel) else {
@@ -354,6 +358,9 @@ impl EditorState {
             | PropertyFocus::LineHeight
             | PropertyFocus::LetterSpacing
             | PropertyFocus::LayoutGap
+            | PropertyFocus::LayoutRowGap
+            | PropertyFocus::GridColumns
+            | PropertyFocus::GridRows
             | PropertyFocus::WidgetMin
             | PropertyFocus::WidgetMax
             | PropertyFocus::WidgetStep

@@ -117,6 +117,7 @@ fn normalize_pencil_autolayout_dialect(obj: &mut serde_json::Map<String, serde_j
             let mapped = match s.trim().to_ascii_lowercase().as_str() {
                 "horizontal" | "row" => Some("horizontal"),
                 "vertical" | "column" => Some("vertical"),
+                "grid" => Some("grid"),
                 "none" | "" => Some("none"),
                 _ => None,
             };
@@ -124,6 +125,34 @@ fn normalize_pencil_autolayout_dialect(obj: &mut serde_json::Map<String, serde_j
                 obj.insert("layout".into(), serde_json::Value::String(m.into()));
             }
             break;
+        }
+    }
+    // layoutWrap: "WRAP" (Figma) / flexWrap: "wrap" (CSS) → wrap: true
+    if !obj.contains_key("wrap") {
+        for alias in ["layoutWrap", "flexWrap"] {
+            let Some(v) = obj.remove(alias) else {
+                continue;
+            };
+            let wraps = match &v {
+                serde_json::Value::Bool(b) => *b,
+                serde_json::Value::String(s) => {
+                    matches!(s.trim().to_ascii_lowercase().as_str(), "wrap" | "true")
+                }
+                _ => false,
+            };
+            if wraps {
+                obj.insert("wrap".into(), serde_json::Value::Bool(true));
+            }
+            break;
+        }
+    }
+    // counterAxisSpacing (Figma's wrapped-line spacing) → rowGap
+    if !obj.contains_key("rowGap") {
+        if let Some(v) = obj
+            .remove("counterAxisSpacing")
+            .filter(serde_json::Value::is_number)
+        {
+            obj.insert("rowGap".into(), v);
         }
     }
     // itemSpacing → gap
@@ -206,6 +235,7 @@ fn normalize_layout_object(obj: &mut serde_json::Map<String, serde_json::Value>)
     let dir = match raw_dir.trim().to_ascii_lowercase().as_str() {
         "horizontal" | "row" => "horizontal",
         "vertical" | "column" => "vertical",
+        "grid" => "grid",
         "none" => "none",
         _ => return,
     };
@@ -226,6 +256,11 @@ fn normalize_layout_object(obj: &mut serde_json::Map<String, serde_json::Value>)
     }
     if let Some(a) = align {
         obj.entry("alignItems").or_insert(a);
+    }
+    for key in ["wrap", "rowGap", "columnGap", "columns", "rows"] {
+        if let Some(v) = source.get(key).cloned() {
+            obj.entry(key).or_insert(v);
+        }
     }
 }
 

@@ -10,7 +10,7 @@ category: base
 
 PenNode types (the ONLY format you output for designs):
 
-- frame: Container. Props: width, height, layout ('none'|'vertical'|'horizontal'), gap, padding, justifyContent ('start'|'center'|'end'|'space_between'|'space_around'), alignItems ('start'|'center'|'end'), clipContent (boolean), children[], cornerRadius, fill, stroke, effects. layout:"none" is ONLY for overlay stacking (children pile up at the frame origin unless given explicit x/y) — NEVER use it for a row or column of cards/items; use 'horizontal'/'vertical' for those
+- frame: Container. Props: width, height, layout ('none'|'vertical'|'horizontal'|'grid'), gap, wrap, columns (grid), padding, justifyContent ('start'|'center'|'end'|'space_between'|'space_around'), alignItems ('start'|'center'|'end'), clipContent (boolean), children[], cornerRadius, fill, stroke, effects. layout:"none" is ONLY for overlay stacking (children overlap at the origin) — NEVER use it for a row or column of cards/items; use 'horizontal'/'vertical'/'grid'
 - rectangle: Props: width, height, cornerRadius, fill, stroke, effects
 - ellipse: Props: width, height, fill, stroke, effects, innerRadius (0..1 donut hole), startAngle, sweepAngle (degrees, for pie/arc/gauge). NEVER put a ring's track and progress arc side by side as flex siblings — stack both at the same x/y inside one fixed layout:"none" wrapper
 - text: Props: content, fontFamily, fontSize, fontWeight, fontStyle ('normal'|'italic'), fill, width, height, textAlign ('left'|'center'|'right'|'justify' — NEVER 'start'/'end'; those are container-axis values), textGrowth ('auto'|'fixed-width'|'fixed-width-height'), lineHeight (multiplier), letterSpacing (px), textAlignVertical ('top'|'middle'|'bottom')

@@ -52,6 +52,32 @@ fn sized(prefix: &str, value: &str) -> String {
     }
 }
 
+/// `grid-cols-3` for `repeat(3, 1fr)`, else an arbitrary template.
+fn grid_template(prefix: &str, value: &str) -> String {
+    let count = value
+        .strip_prefix("repeat(")
+        .and_then(|r| r.strip_suffix(", 1fr)"))
+        .and_then(|n| n.parse::<u32>().ok());
+    match count {
+        Some(n) => format!("{prefix}-{n}"),
+        None => format!("{prefix}-[{}]", arb(value)),
+    }
+}
+
+/// `col-span-2`, `col-start-2`, or an arbitrary `col-[1/span_3]`.
+fn grid_line(prefix: &str, value: &str) -> String {
+    if let Some(n) = value
+        .strip_prefix("span ")
+        .filter(|n| n.parse::<u16>().is_ok())
+    {
+        return format!("{prefix}-span-{n}");
+    }
+    if value.parse::<u16>().is_ok() {
+        return format!("{prefix}-start-{value}");
+    }
+    format!("{prefix}-[{}]", arb(&value.replace(" / ", "/")))
+}
+
 fn arbitrary_property(d: &Decl) -> String {
     format!("[{}:{}]", d.prop, arb(&d.value))
 }
@@ -87,6 +113,18 @@ impl Printer {
             ("min-height", _) => vec![sized("min-h", v)],
             ("max-height", _) => vec![sized("max-h", v)],
             ("gap", _) => vec![sized("gap", v)],
+            ("row-gap", _) => vec![sized("gap-y", v)],
+            ("column-gap", _) => vec![sized("gap-x", v)],
+            ("flex-wrap", "wrap") => one("flex-wrap"),
+            ("align-content", "flex-start") => one("content-start"),
+            ("grid-template-columns", _) => vec![grid_template("grid-cols", v)],
+            ("grid-template-rows", _) => vec![grid_template("grid-rows", v)],
+            ("grid-column", _) => vec![grid_line("col", v)],
+            ("grid-row", _) => vec![grid_line("row", v)],
+            ("justify-self", "start" | "center" | "end" | "stretch") => {
+                vec![format!("justify-self-{v}")]
+            }
+            ("align-self", "start" | "center" | "end") => vec![format!("self-{v}")],
             ("padding", _) => {
                 let parts: Vec<&str> = v.split_whitespace().collect();
                 match parts.as_slice() {

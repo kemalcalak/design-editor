@@ -156,6 +156,8 @@ pub struct CanvasViewport<'a> {
     /// Prototype links to draw (#371): the selection's, or the page's
     /// with View ▸ Show prototype links.
     pub(super) prototype_links: Vec<super::canvas_prototype_links::CanvasLink>,
+    /// Track lines of the selected grid frame (#379).
+    pub(super) grid_overlay: Option<super::canvas_grid_overlay::GridOverlay>,
     pub(super) locale: de_editor_core::Locale,
 }
 
@@ -498,6 +500,9 @@ impl<'a> Widget for CanvasViewport<'a> {
         } else {
             None
         };
+        if let (true, Some(grid)) = (selection_chrome_visible, self.grid_overlay.as_ref()) {
+            grid.paint(cx, rect, viewport, &self.theme);
+        }
         if selection_chrome_visible {
             if let Some(page) = active_page {
                 let selection_input = super::canvas_selection_overlay::SelectionPaintInput {

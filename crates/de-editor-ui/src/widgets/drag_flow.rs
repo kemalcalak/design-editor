@@ -394,6 +394,16 @@ fn flex_insert_preview(
         return (0, None);
     };
     let parent_bounds = parent_scene.bounds;
+    if dir == FlexDirection::Flow {
+        let siblings: Vec<Rect> = parent
+            .children()
+            .into_iter()
+            .flatten()
+            .filter(|node| node.id_str() != dragged_id.as_str())
+            .filter_map(|node| page.find(node.id_str()).map(|s| s.aggregate_bounds()))
+            .collect();
+        return super::drag_flow_reading::reading_order_insert(&siblings, dragged_bounds);
+    }
     let vertical = matches!(dir, FlexDirection::Vertical);
     let drag_mid = if vertical {
         dragged_bounds.origin.y + dragged_bounds.size.y / 2.0

@@ -11,6 +11,11 @@ use crate::{
 use jian_ops_schema::node::PenNode;
 
 pub(super) fn emit_node_html(out: &mut String, node: &PenNode, depth: usize) {
+    emit_node_html_in(out, node, depth, false);
+}
+
+/// `in_flow`: the parent is a grid / wrap container that places this node.
+fn emit_node_html_in(out: &mut String, node: &PenNode, depth: usize, in_flow: bool) {
     if node_hidden(node) {
         return;
     }
@@ -18,13 +23,27 @@ pub(super) fn emit_node_html(out: &mut String, node: &PenNode, depth: usize) {
     let tag = if node_is_text(node) { "span" } else { "div" };
     let (x, y) = node_origin(node);
     let (w, h) = node_size(node);
-    let mut style = format!(
-        "position:absolute;left:{}px;top:{}px;width:{}px;height:{}px",
-        fmt_num(x),
-        fmt_num(y),
-        fmt_num(w),
-        fmt_num(h),
-    );
+    let mut style = if in_flow {
+        format!(
+            "position:relative;flex:none;width:{}px;height:{}px",
+            fmt_num(w),
+            fmt_num(h)
+        )
+    } else {
+        format!(
+            "position:absolute;left:{}px;top:{}px;width:{}px;height:{}px",
+            fmt_num(x),
+            fmt_num(y),
+            fmt_num(w),
+            fmt_num(h),
+        )
+    };
+    let flow = super::codegen_flow::flow_of(node);
+    if let Some(flow) = &flow {
+        style.push(';');
+        style.push_str(&flow.css());
+    }
+    let flows = flow.is_some();
     if let Some(fill) = node_fill_css(node) {
         style.push_str(&format!(";background:{}", color_to_css(&fill)));
     }
@@ -78,7 +97,7 @@ pub(super) fn emit_node_html(out: &mut String, node: &PenNode, depth: usize) {
         } else {
             out.push('\n');
             for child in children {
-                emit_node_html(out, child, depth + 1);
+                emit_node_html_in(out, child, depth + 1, flows);
             }
             out.push_str(&format!("{indent}</div>\n"));
         }
@@ -98,7 +117,7 @@ pub(super) fn emit_node_html(out: &mut String, node: &PenNode, depth: usize) {
         if !children.is_empty() {
             out.push('\n');
             for child in children {
-                emit_node_html(out, child, depth + 1);
+                emit_node_html_in(out, child, depth + 1, flows);
             }
             out.push_str(&indent);
         }

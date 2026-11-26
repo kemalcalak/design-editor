@@ -126,6 +126,9 @@ pub mod instance_tools;
 mod interaction_overlay;
 pub mod interaction_tools;
 pub mod json_serializer;
+mod layout_grid;
+#[cfg(test)]
+mod layout_grid_tests;
 mod layout_overlaps;
 #[cfg(test)]
 mod layout_overlaps_tests;

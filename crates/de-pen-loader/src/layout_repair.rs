@@ -39,6 +39,10 @@ fn repair_node(node: &PenNode, rects: &mut BTreeMap<String, [f32; 4]>, is_root: 
     }
 
     match props.layout.as_ref() {
+        // Wrapped lines and grid cells are placed by the engine alone: the
+        // single-line reflows below would undo the line breaks (#379).
+        Some(LayoutMode::Grid) => {}
+        Some(LayoutMode::Horizontal | LayoutMode::Vertical) if props.wraps() => {}
         Some(LayoutMode::Vertical) => {
             repair_vertical_container(node, props, kids, rects, is_root);
         }
