@@ -566,7 +566,11 @@ fn expired_job_cancels_work_but_holds_singleflight_until_worker_drops() {
         let mut guard = job_store()
             .lock()
             .unwrap_or_else(|poison| poison.into_inner());
-        guard.as_mut().unwrap().deadline = Instant::now() - Duration::from_millis(1);
+        // A job expires once `now >= deadline`, so a deadline of "now" has
+        // passed by the time the poll below reads the clock. Backdating it
+        // (`Instant::now() - d`) can underflow and panic on Windows, where an
+        // `Instant` counts from boot (#434).
+        guard.as_mut().unwrap().deadline = Instant::now();
     }
     let mut poll = Cursor::new(Vec::new());
     serve_design_md(

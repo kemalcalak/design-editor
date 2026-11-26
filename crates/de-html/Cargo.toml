@@ -16,3 +16,6 @@ url = "2"
 zip = { version = "9", default-features = false, features = ["deflate-flate2"] }
 jian-ops-schema = { path = "../../vendor/jian/crates/jian-ops-schema" }
 de-util = { path = "../de-util" }
+
+[lints]
+workspace = true

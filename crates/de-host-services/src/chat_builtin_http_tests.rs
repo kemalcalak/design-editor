@@ -670,8 +670,11 @@ fn throttle_wait_respects_reserved_last_request_slot() {
 
     assert_eq!(throttle_wait(None, now, min_gap), Duration::ZERO);
     assert_eq!(throttle_wait(Some(now), now, min_gap), min_gap);
+    // Move `now` forward rather than backdating the last request: on Windows
+    // an `Instant` counts from boot, so `now - d` can underflow and panic on
+    // a freshly booted runner (#434).
     assert_eq!(
-        throttle_wait(Some(now - Duration::from_millis(400)), now, min_gap),
+        throttle_wait(Some(now), now + Duration::from_millis(400), min_gap),
         Duration::ZERO
     );
 }

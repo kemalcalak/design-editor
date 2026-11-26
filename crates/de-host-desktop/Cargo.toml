@@ -338,3 +338,6 @@ accesskit_unix = "0.22"
 # image API decodes PNG to RGBA, which would force the editor to encode
 # the same screenshot back to PNG before it can build the image data URL.
 wl-clipboard-rs = "0.9"
+
+[lints]
+workspace = true

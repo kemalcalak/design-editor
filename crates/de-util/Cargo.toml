@@ -11,3 +11,6 @@ license.workspace = true
 description = "Design Editor dependency-free leaf utilities: ids, colors, escaping, and image metadata"
 
 [dependencies]
+
+[lints]
+workspace = true

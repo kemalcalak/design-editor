@@ -24,3 +24,6 @@ de-editor-ui = { path = "../de-editor-ui" }
 de-host-services = { path = "../de-host-services" }
 de-pen-loader = { path = "../de-pen-loader" }
 serde_json = { workspace = true }
+
+[lints]
+workspace = true

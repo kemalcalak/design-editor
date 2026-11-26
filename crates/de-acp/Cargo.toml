@@ -58,3 +58,6 @@ rustls = { version = "0.23.46", optional = true, default-features = false, featu
 ] }
 rustls-native-certs = { version = "0.8", optional = true }
 webpki-roots = { version = "0.26", optional = true }
+
+[lints]
+workspace = true

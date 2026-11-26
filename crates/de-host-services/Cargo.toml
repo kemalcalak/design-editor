@@ -119,3 +119,6 @@ skia-safe = { version = "0.97.0", default-features = false, features = [
 # Process-liveness probes in the subprocess / startup tests (`libc::kill`).
 [target.'cfg(unix)'.dev-dependencies]
 libc = "0.2"
+
+[lints]
+workspace = true
