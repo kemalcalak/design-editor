@@ -20,8 +20,7 @@ fn tools_list_response_includes_all_registered_tools() {
     assert_eq!(
         TOOL_SCHEMAS.len(),
         174,
-        "tools/list catalog count must match the registered tools — add the new tool to this test \
-         (the #388 path tools are listed in boolean_op_tool's path_tests)"
+        "add the new tool to this test (#388 path tools: boolean_op_tool's path_tests)"
     );
     // Plus 37 kit tools and pen.dev's 6 names (#392).
     let listed: serde_json::Value = serde_json::from_str(&r).expect("json");
