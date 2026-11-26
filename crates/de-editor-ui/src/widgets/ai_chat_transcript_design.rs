@@ -6,6 +6,9 @@ use de_editor_core::PenNodeExt;
 use jian_ops_schema::node::PenNode;
 use std::collections::BTreeMap;
 
+/// Face of the code preview lines in a design block (painted, never measured).
+const CODE_FONT_FAMILY: &str = "monospace";
+
 pub(crate) const DESIGN_BLOCK_H: f32 = 32.0;
 const DESIGN_ICON_LEFT: f32 = 12.0;
 const DESIGN_ICON_BG: f32 = 16.0;
@@ -653,7 +656,7 @@ pub(crate) fn paint_design_block(
         for line in &block.code_lines {
             let layout = TextLayout::single_run(
                 line,
-                "monospace",
+                CODE_FONT_FAMILY,
                 9.0,
                 (theme.muted_foreground).to_jian(),
                 Point2D::new(0.0, 0.0),

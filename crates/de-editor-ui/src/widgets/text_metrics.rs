@@ -2,16 +2,21 @@
 //!
 //! **Chrome code must never call `RenderBackend::measure_text` directly.**
 //! That call is family-BLIND: it resolves whatever the backend's default
-//! typeface is (the bundled Roboto on native, the CanvasKit default in the
-//! browser), while every chrome string is *drawn* as a named run —
-//! [`CHROME_FONT_FAMILY`] — which native resolves through the system
-//! `FontMgr` (`.AppleSystemUIFont` / SF Pro on macOS) and the browser
-//! resolves through CSS font matching. jian says as much on the trait
-//! itself (`jian_widgets::painter::Painter::measure_text_family`).
+//! typeface is (the bundled Roboto on native), while every chrome string is
+//! *drawn* as a named run — [`CHROME_FONT_FAMILY`], the bundled Manrope.
+//! jian says as much on the trait itself
+//! (`jian_widgets::painter::Painter::measure_text_family`).
 //!
-//! SF Pro is wider than Roboto at the same point size, so a family-blind
-//! measurement *under-reports* the painted width. The failure is silent by
-//! construction:
+//! The same goes for measuring in one named family and painting in another
+//! (#441): a run measured in Manrope but drawn as `system-ui` (SF Pro on
+//! macOS) is fitted against a face it is not painted in. Paint and
+//! measurement name the same constant; `tools/check-text-measure.sh` keeps
+//! literal families out of widget code and `chrome_family_paint_tests`
+//! checks that they agree per surface.
+//!
+//! Manrope and Roboto do not share advances, so a family-blind measurement
+//! misreports the painted width (under-reports it where the painted face is
+//! wider). The failure is silent by construction:
 //!
 //! - an ellipsizer believes a string fits, emits no `…`, and the content
 //!   clip shears the last glyph in half at the column edge;
