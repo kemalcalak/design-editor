@@ -19,6 +19,9 @@ pub mod brand_catalog;
 pub mod builtin_model_discovery;
 pub mod chat_agent_loop;
 pub mod chat_attachment;
+pub mod chat_attachment_load;
+mod chat_attachment_load_error;
+pub mod chat_attachment_prepare;
 #[cfg(test)]
 mod chat_avatar_modify_tests;
 pub mod chat_builtin_http;

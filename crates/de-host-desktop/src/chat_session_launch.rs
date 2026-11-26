@@ -112,25 +112,9 @@ fn launch_if_pending_inner(
     let launch_route = std::mem::take(&mut host.editor_state_mut().chat.launch_route);
     host.mark_editor_state_dirty();
     let routing_text = resolve_turn_user_text(host.editor_state(), &user_text);
-    // `@`-mentions (#398) resolve to compact summaries appended to what the
-    // provider reads. The keyword gates below route on `routing_text` alone,
-    // so a mentioned layer called "New page" cannot steer the turn.
-    let mentions = std::mem::take(&mut host.editor_state_mut().chat.pending_mentions);
-    let project_root = host
-        .editor_state()
-        .chat
-        .project_files
-        .root
-        .clone()
-        .map(std::path::PathBuf::from);
-    let effective_user_text = format!(
-        "{routing_text}{}",
-        de_host_services::chat_mention_context::mention_context_for_turn(
-            host.editor_state(),
-            &mentions,
-            project_root.as_deref(),
-        )
-    );
+    // What the provider reads: the typed text plus the turn's context
+    // (#398). The keyword gates below route on `routing_text` alone.
+    let effective_user_text = turn_context::compose_turn_text(host, &routing_text);
     // TS parity (ai-chat-handlers.ts:560-679): builtin / ACP entries
     // take their own early-return paths; ONLY external CLI providers
     // run the standard-mode classify → modify/new/chat pipeline.
@@ -757,6 +741,9 @@ pub(crate) fn reconcile_starter_ghost(state: &mut EditorState, any_session_runni
 pub(crate) fn active_page_is_blank_starter_frame(state: &EditorState) -> bool {
     de_editor_core::blank_starter::active_page_is_blank_starter(state)
 }
+
+#[path = "chat_session_launch_context.rs"]
+mod turn_context;
 
 #[path = "chat_session_launch_providers.rs"]
 mod providers;

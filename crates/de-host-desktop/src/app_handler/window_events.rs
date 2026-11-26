@@ -227,6 +227,14 @@ impl DesktopApp {
         self.host.editor_state_mut().editor_ui.file_drop_active = false;
         self.host.mark_editor_state_dirty();
         self.request_redraw(true);
+        // A file dropped on the chat panel is a chat attachment (#398), not
+        // a canvas import: images and text files are staged on the active
+        // chat (anything else is refused there with a toast).
+        if drop_point.is_some_and(|(x, y)| self.host.chat_panel_contains(x, y)) {
+            crate::chat_attachment::stage_attachment_file(&mut self.host, &path);
+            self.request_redraw(true);
+            return;
+        }
         if image_drop_host::is_supported_image_drop(&path) {
             let outcome = image_drop_host::apply_image_drop(
                 &mut self.host,

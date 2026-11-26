@@ -578,6 +578,10 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.context.document" => "Belge",
         "chat.context.selection" => "Seçim",
         "chat.context.attachment" => "Ek",
+        "chat.attach.unsupported" => "{{name}} eklenemiyor: yalnızca görseller ve metin dosyaları",
+        "chat.attach.tooLarge" => "{{name}} 5 MB ek sınırını aşıyor",
+        "chat.attach.readFailed" => "{{name}} okunamadı",
+        "chat.attach.full" => "Bir mesaja en fazla 4 dosya eklenebilir",
         _ => return None,
     })
 }

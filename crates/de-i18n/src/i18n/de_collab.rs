@@ -578,6 +578,10 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.context.document" => "Dokument",
         "chat.context.selection" => "Auswahl",
         "chat.context.attachment" => "Anhang",
+        "chat.attach.unsupported" => "{{name}} kann nicht angehängt werden: nur Bilder und Textdateien",
+        "chat.attach.tooLarge" => "{{name}} überschreitet das Anhangslimit von 5 MB",
+        "chat.attach.readFailed" => "{{name}} konnte nicht gelesen werden",
+        "chat.attach.full" => "Eine Nachricht kann bis zu 4 Dateien enthalten",
         _ => return None,
     })
 }
