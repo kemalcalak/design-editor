@@ -18,3 +18,6 @@ jian-ops-schema = { path = "../../vendor/jian/crates/jian-ops-schema" }
 # `Subpath` / `PenPathAnchor` (the editable path model) and the
 # `Point2D` / `Rect` geometry types.
 de-editor-core = { path = "../de-editor-core" }
+
+[lints]
+workspace = true

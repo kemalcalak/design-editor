@@ -35,3 +35,6 @@ tokio = { version = "1", features = ["sync", "rt", "macros"] }
 [dev-dependencies]
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
+
+[lints]
+workspace = true

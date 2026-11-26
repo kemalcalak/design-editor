@@ -33,7 +33,11 @@ fn selectors_become_safe_script_strings() {
 #[test]
 fn a_streamed_tab_is_never_idle_and_its_clock_restarts_when_the_stream_ends() {
     let idle = Duration::from_millis(50);
-    let long_ago = Instant::now() - Duration::from_secs(600);
+    // Let real time pass instead of backdating with `Instant::now() - d`:
+    // on Windows an `Instant` counts from boot, so on a freshly booted CI
+    // runner that subtraction underflows and panics (#434).
+    let long_ago = Instant::now();
+    std::thread::sleep(idle);
     let streams = TabStreams::default();
     assert!(
         session_is_idle(long_ago, &streams, idle),

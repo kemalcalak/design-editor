@@ -28,3 +28,6 @@ de-rpc-transport = { path = "../de-rpc-transport" }
 # Canonical JSON string escaping (dependency-free).
 de-util = { path = "../de-util" }
 serde_json = { workspace = true }
+
+[lints]
+workspace = true

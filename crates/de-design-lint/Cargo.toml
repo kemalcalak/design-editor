@@ -19,3 +19,6 @@ de-util = { path = "../de-util" }
 de-i18n = { path = "../de-i18n" }
 serde = { workspace = true }
 serde_json = { workspace = true }
+
+[lints]
+workspace = true

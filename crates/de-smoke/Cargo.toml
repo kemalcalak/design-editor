@@ -73,3 +73,6 @@ sha2 = "0.10"
 # QueryEngine can't, so M3 (reasoning) can be validated headless. rustls-tls +
 # json mirror de-host-desktop so the workspace shares one TLS backend.
 reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "json"] }
+
+[lints]
+workspace = true

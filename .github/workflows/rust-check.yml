@@ -18,6 +18,7 @@ on:
       - 'tools/check-text-measure.sh'
       - 'tools/check-rustls-client-policy.sh'
       - 'tools/check-file-line-cap.sh'
+      - 'tools/check-workspace-lints.sh'
       - '.github/workflows/rust-release.yml'
       - '.github/workflows/rust-check.yml'
       - '.github/ci/rust-check-apt-packages.txt'
@@ -38,6 +39,7 @@ on:
       - 'tools/check-text-measure.sh'
       - 'tools/check-rustls-client-policy.sh'
       - 'tools/check-file-line-cap.sh'
+      - 'tools/check-workspace-lints.sh'
       - '.github/workflows/rust-release.yml'
       - '.github/workflows/rust-check.yml'
       - '.github/ci/rust-check-apt-packages.txt'
@@ -180,6 +182,7 @@ jobs:
       - run: cargo fmt --all -- --check
       - run: tools/check-rustls-client-policy.sh
       - run: tools/check-file-line-cap.sh
+      - run: tools/check-workspace-lints.sh
       - run: cargo build --workspace
       # GitHub-hosted runners are headless with no reliable Mesa software
       # EGL, so STEP1A_REQUIRE_GPU is left unset: the de-host-native GPU

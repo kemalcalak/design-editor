@@ -57,3 +57,6 @@ default = ["skia-measure", "sksl-check"]
 skia-measure = ["dep:jian-skia", "dep:skia-safe", "dep:de-path-ops"]
 # Drop pen.dev shader paints whose translated SkSL does not compile.
 sksl-check = ["dep:skia-safe"]
+
+[lints]
+workspace = true
