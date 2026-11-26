@@ -494,6 +494,10 @@ pub(crate) mod test_capture_backend;
 pub(crate) mod test_family_gap_backend;
 #[cfg(test)]
 mod text_metrics_paint_tests;
+#[cfg(test)]
+pub(crate) mod label_fit_test_support;
+#[cfg(test)]
+mod floating_chrome_width_tests;
 
 pub use prop_row::PropertyRow;
 pub use text_input::TextInputWidget;

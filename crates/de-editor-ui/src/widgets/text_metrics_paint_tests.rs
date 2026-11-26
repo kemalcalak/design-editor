@@ -198,8 +198,13 @@ fn variables_panel_holds_its_panel_in_the_painted_family() {
 
 #[test]
 fn floating_chrome_holds_its_labels_in_the_painted_family() {
+    use crate::widgets::label_widths::LabelWidths;
     use crate::widgets::{CanvasActions, FilePill};
 
+    // Laid out the way paint lays them out: from labels measured in the
+    // painted family (#440).
+    crate::widgets::label_widths::reset();
+    let mut measure = crate::widgets::test_family_gap_backend::FamilyGapBackend::default();
     for locale in de_i18n::Locale::ALL {
         let ui = de_editor_core::editor_ui_state::EditorUiState {
             locale,
@@ -207,12 +212,12 @@ fn floating_chrome_holds_its_labels_in_the_painted_family() {
             ..Default::default()
         };
         let pill = FilePill::for_editor_ui(&ui);
-        let pill_layout = pill.layout_at(Point2D::new(16.0, 14.0));
+        let pill_layout = pill.layout_at(Point2D::new(16.0, 14.0), &mut LabelWidths::measuring(&mut measure));
         assert_no_new_overflow(&format!("file pill {locale:?}"), pill_layout.rect, |cx| {
             pill.paint_layout(cx, &pill_layout)
         });
         let actions = CanvasActions::for_editor_ui(&ui);
-        let actions_layout = actions.layout_right(1400.0, 14.0, false);
+        let actions_layout = actions.layout_right(1400.0, 14.0, false, &mut LabelWidths::measuring(&mut measure));
         assert_no_new_overflow(
             &format!("canvas actions {locale:?}"),
             actions_layout.rect,

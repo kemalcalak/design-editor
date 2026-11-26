@@ -10,6 +10,7 @@
 //! drift the invariant is meant to prevent — so it lives here and each
 //! host keeps a thin forwarding method.
 
+use crate::widgets::label_widths::LabelWidths;
 use de_editor_core::host_drag_state::{AnchorDragTarget, MarqueeDragState};
 use de_editor_core::EditorState;
 
@@ -341,6 +342,28 @@ pub struct ChromeLayout {
 }
 
 pub fn chrome_layout(state: &EditorState, viewport_w: f32, viewport_h: f32) -> ChromeLayout {
+    chrome_layout_with(state, viewport_w, viewport_h, &mut LabelWidths::cached())
+}
+
+/// [`chrome_layout`] measuring the pill's and the action group's labels
+/// through `backend` where nothing measured them yet (#440). Paint calls
+/// it, so every backend-less [`chrome_layout`] after it (press, hover,
+/// tooltip, a11y) reads the widths it painted.
+pub fn measured_chrome_layout(
+    state: &EditorState,
+    viewport_w: f32,
+    viewport_h: f32,
+    backend: &mut dyn crate::RenderBackend,
+) -> ChromeLayout {
+    chrome_layout_with(state, viewport_w, viewport_h, &mut LabelWidths::measuring(backend))
+}
+
+fn chrome_layout_with(
+    state: &EditorState,
+    viewport_w: f32,
+    viewport_h: f32,
+    widths: &mut LabelWidths<'_>,
+) -> ChromeLayout {
     if workspace_docked(state) {
         return ChromeLayout {
             file_pill: None,
@@ -356,11 +379,12 @@ pub fn chrome_layout(state: &EditorState, viewport_w: f32, viewport_h: f32) -> C
     // (#86: no rail strip any more), so the pill starts right of them.
     let controls = window_controls_inset(ui.window_fullscreen);
     let left = cx0 + CHROME_INSET_X.max(controls + CHROME_MIN_GAP);
-    let pill = FilePill::for_editor_ui(ui).layout_at(Point2D::new(left, top));
+    let pill = FilePill::for_editor_ui(ui).layout_at(Point2D::new(left, top), widths);
     let pill_right = pill.rect.origin.x + pill.rect.size.x;
-    let place = |compact: bool| {
-        (cw >= actions_widget.width(compact) + CHROME_INSET_X * 2.0)
-            .then(|| actions_widget.layout_right(cx0 + cw - CHROME_INSET_X, top, compact))
+    let mut place = |compact: bool| {
+        (cw >= actions_widget.width(compact, widths) + CHROME_INSET_X * 2.0).then(|| {
+            actions_widget.layout_right(cx0 + cw - CHROME_INSET_X, top, compact, widths)
+        })
     };
     let fits = |actions: &Option<crate::widgets::canvas_actions::CanvasActionsLayout>| {
         pill_right <= actions.map_or(cx0 + cw, |a| a.rect.origin.x - CHROME_MIN_GAP)

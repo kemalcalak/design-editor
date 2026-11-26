@@ -6,14 +6,15 @@
 //! agents and MCP servers are live matters enough to stay in view, so it
 //! kept a place when the bar went.
 //!
-//! Like the file pill, layout runs on a width estimate (the web host
-//! hit-tests without a text backend) and paint centres the real glyphs in
-//! the rects that estimate produced.
+//! Like the file pill, the labelled controls are as wide as their labels
+//! measured in the face they are painted in (#440): layout takes
+//! [`LabelWidths`], measuring while painting and reading the kept widths
+//! while hit-testing, so the painted and the clickable box are one rect.
 
 use crate::theme::Theme;
 use crate::widgets::chrome_hit::ChromeHit;
 use crate::widgets::editor_state_ext::{theme_for, translate};
-use crate::widgets::home_surface::estimate_width;
+use crate::widgets::label_widths::LabelWidths;
 use crate::widgets::icons::{draw_icon, Icon};
 use crate::widgets::text_metrics::{measure_chrome_weighted, CHROME_FONT_FAMILY};
 use crate::widgets::{LayoutBox, LayoutCx, PaintCx, Widget, WidgetId};
@@ -43,9 +44,9 @@ const LIVE_DOT: Color = Color {
     b: 0.506,
     a: 1.0,
 };
-/// The width estimate runs a little narrow of semibold Manrope; the slack
-/// keeps the real label inside its button.
-const ESTIMATE_SLACK: f32 = 1.15;
+/// Label weights, measured and painted alike.
+const EXPORT_WEIGHT: u16 = 600;
+const STATUS_WEIGHT: u16 = 500;
 
 /// The group's rects, from one layout pass shared by paint and hit-test.
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -128,12 +129,13 @@ impl CanvasActions {
         }
     }
 
-    fn export_width(&self) -> f32 {
-        (estimate_width(self.label_export, EXPORT_FONT) * ESTIMATE_SLACK + EXPORT_PAD_X * 2.0)
+    fn export_width(&self, widths: &mut LabelWidths<'_>) -> f32 {
+        (widths.chrome_weighted(self.label_export, EXPORT_FONT, EXPORT_WEIGHT)
+            + EXPORT_PAD_X * 2.0)
             .max(EXPORT_MIN_W)
     }
 
-    fn status_width(&self, compact: bool) -> f32 {
+    fn status_width(&self, compact: bool, widths: &mut LabelWidths<'_>) -> f32 {
         if compact {
             return BUTTON;
         }
@@ -145,25 +147,32 @@ impl CanvasActions {
         STATUS_PAD_X * 2.0
             + lead
             + STATUS_GAP
-            + estimate_width(&self.status_text, STATUS_FONT) * ESTIMATE_SLACK
+            + widths.chrome_weighted(&self.status_text, STATUS_FONT, STATUS_WEIGHT)
     }
 
     /// Total width of the group; `compact` drops the status chip's text.
-    pub fn width(&self, compact: bool) -> f32 {
+    pub fn width(&self, compact: bool, widths: &mut LabelWidths<'_>) -> f32 {
         PAD * 2.0
-            + self.status_width(compact)
+            + self.status_width(compact, widths)
             + GAP
             + BUTTON * 3.0
             + GAP * 3.0
-            + self.export_width()
+            + self.export_width(widths)
     }
 
     /// Lay the group out with its top-right corner at `(right, top)`.
-    pub fn layout_right(&self, right: f32, top: f32, compact: bool) -> CanvasActionsLayout {
-        let width = self.width(compact);
+    pub fn layout_right(
+        &self,
+        right: f32,
+        top: f32,
+        compact: bool,
+        widths: &mut LabelWidths<'_>,
+    ) -> CanvasActionsLayout {
+        let width = self.width(compact, widths);
         let rect = Rect::xywh(right - width, top, width, CANVAS_ACTIONS_HEIGHT);
         let y = top + (CANVAS_ACTIONS_HEIGHT - BUTTON) / 2.0;
-        let status = Rect::xywh(rect.origin.x + PAD, y, self.status_width(compact), BUTTON);
+        let status_w = self.status_width(compact, widths);
+        let status = Rect::xywh(rect.origin.x + PAD, y, status_w, BUTTON);
         let first = status.origin.x + status.size.x + GAP;
         let slot = |i: f32| Rect::xywh(first + i * (BUTTON + GAP), y, BUTTON, BUTTON);
         CanvasActionsLayout {
@@ -173,7 +182,12 @@ impl CanvasActions {
             code: slot(0.0),
             preview: slot(1.0),
             download: slot(2.0),
-            export: Rect::xywh(first + 3.0 * (BUTTON + GAP), y, self.export_width(), BUTTON),
+            export: Rect::xywh(
+                first + 3.0 * (BUTTON + GAP),
+                y,
+                self.export_width(widths),
+                BUTTON,
+            ),
         }
     }
 
@@ -293,7 +307,7 @@ impl CanvasActions {
                 color.to_jian(),
                 Point2D::ZERO,
             )
-            .with_font_weight(500),
+            .with_font_weight(STATUS_WEIGHT),
             Point2D::new(
                 x + STATUS_GAP,
                 jian_widgets::centered_text_baseline_y(rect, STATUS_FONT),
@@ -346,7 +360,8 @@ impl CanvasActions {
         };
         cx.backend
             .fill_round_rect(layout.export, EXPORT_RADIUS, fill);
-        let label_w = measure_chrome_weighted(cx.backend, self.label_export, EXPORT_FONT, 600);
+        let label_w =
+            measure_chrome_weighted(cx.backend, self.label_export, EXPORT_FONT, EXPORT_WEIGHT);
         let x = layout.export.origin.x + (layout.export.size.x - label_w) / 2.0;
         let run = TextLayout::single_run(
             self.label_export,
@@ -355,7 +370,7 @@ impl CanvasActions {
             theme.primary_foreground.to_jian(),
             Point2D::ZERO,
         )
-        .with_font_weight(600);
+        .with_font_weight(EXPORT_WEIGHT);
         cx.backend.draw_text(
             &run,
             Point2D::new(
@@ -401,16 +416,22 @@ impl Widget for CanvasActions {
         LayoutBox {
             rect: Rect {
                 origin: Point2D::ZERO,
-                size: Point2D::new(self.width(false), CANVAS_ACTIONS_HEIGHT),
+                size: Point2D::new(
+                    self.width(false, &mut LabelWidths::cached()),
+                    CANVAS_ACTIONS_HEIGHT,
+                ),
             },
         }
     }
 
     fn paint(&self, cx: &mut PaintCx<'_>, rect: Rect) {
-        self.paint_layout(
-            cx,
-            &self.layout_right(rect.origin.x + rect.size.x, rect.origin.y, false),
+        let layout = self.layout_right(
+            rect.origin.x + rect.size.x,
+            rect.origin.y,
+            false,
+            &mut LabelWidths::measuring(&mut *cx.backend),
         );
+        self.paint_layout(cx, &layout);
     }
 
     fn access_node(&self) -> accesskit::Node {

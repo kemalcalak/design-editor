@@ -1,4 +1,5 @@
 use super::*;
+use crate::widgets::label_widths::LabelWidths;
 use de_editor_core::{BuiltinAgentConfig, BuiltinAgentKind, BuiltinAgentPresetKey};
 
 fn ui() -> EditorUiState {
@@ -44,7 +45,7 @@ fn ready_builtin_agents_and_mcp_clis_both_count() {
 #[test]
 fn the_chip_opens_settings_and_leads_the_group() {
     let actions = CanvasActions::for_editor_ui(&ui());
-    let layout = actions.layout_right(1400.0, 14.0, false);
+    let layout = actions.layout_right(1400.0, 14.0, false, &mut LabelWidths::cached());
     let centre = |r: Rect| Point2D::new(r.origin.x + r.size.x / 2.0, r.origin.y + r.size.y / 2.0);
     assert_eq!(
         actions.hit_test(&layout, centre(layout.status)),
@@ -60,8 +61,8 @@ fn the_chip_opens_settings_and_leads_the_group() {
 #[test]
 fn compact_drops_the_text_but_keeps_the_button() {
     let actions = CanvasActions::for_editor_ui(&ui());
-    assert!(actions.width(true) < actions.width(false));
-    let layout = actions.layout_right(1400.0, 14.0, true);
+    assert!(actions.width(true, &mut LabelWidths::cached()) < actions.width(false, &mut LabelWidths::cached()));
+    let layout = actions.layout_right(1400.0, 14.0, true, &mut LabelWidths::cached());
     assert!(layout.status_compact);
     assert_eq!(layout.status.size.x, BUTTON);
     assert_eq!(layout.rect.origin.x + layout.rect.size.x, 1400.0);

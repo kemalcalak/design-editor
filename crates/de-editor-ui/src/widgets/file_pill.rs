@@ -4,15 +4,16 @@
 //! menu (which also carries the app-level actions the retired title bar
 //! used to hold), and the save-state label saves.
 //!
-//! Layout runs on a width estimate, like Home's (hit-testing has no text
-//! backend on the web host): paint fits the real glyphs into the rects
-//! the estimate produced, so the painted pill and its click targets can
-//! never disagree.
+//! The name and save-state slots are as wide as their labels measured in
+//! the face they are painted in (#440): layout takes [`LabelWidths`],
+//! measuring while painting and reading the kept widths while
+//! hit-testing, so the painted pill and its click targets are one set of
+//! rects. Paint still ellipsizes a name longer than `NAME_MAX_W`.
 
 use crate::theme::Theme;
 use crate::widgets::chrome_hit::ChromeHit;
 use crate::widgets::editor_state_ext::{theme_for, translate};
-use crate::widgets::home_surface::estimate_width;
+use crate::widgets::label_widths::LabelWidths;
 use crate::widgets::icons::{draw_icon, Icon};
 use crate::widgets::text_metrics::{measure_chrome_weighted, CHROME_FONT_FAMILY};
 use crate::widgets::{LayoutBox, LayoutCx, PaintCx, Widget, WidgetId};
@@ -35,9 +36,11 @@ const NAME_GAP: f32 = 10.0;
 const PAD_RIGHT: f32 = 12.0;
 /// Space before the name — divider plus breathing room.
 const NAME_LEAD: f32 = 12.0;
-/// The width estimate runs a little narrow of Manrope at these weights; the
-/// slack keeps the real glyphs inside their slots instead of ellipsizing.
-const ESTIMATE_SLACK: f32 = 1.15;
+/// Label weights, measured and painted alike.
+const NAME_WEIGHT: u16 = 600;
+const STATE_WEIGHT: u16 = 500;
+/// Float slack when a label is fitted back into the slot its width sized.
+const FIT_EPS: f32 = 0.01;
 /// Accent dot leading the "Edited" label.
 const DOT: f32 = 6.0;
 
@@ -117,21 +120,23 @@ impl FilePill {
         }
     }
 
-    fn name_width(&self) -> f32 {
-        (estimate_width(&self.file_name, NAME_FONT) * ESTIMATE_SLACK).min(NAME_MAX_W)
+    fn name_width(&self, widths: &mut LabelWidths<'_>) -> f32 {
+        widths
+            .chrome_weighted(&self.file_name, NAME_FONT, NAME_WEIGHT)
+            .min(NAME_MAX_W)
     }
 
-    fn save_width(&self) -> f32 {
+    fn save_width(&self, widths: &mut LabelWidths<'_>) -> f32 {
         let dot = if self.save_state == SaveState::Edited {
             DOT + 5.0
         } else {
             0.0
         };
-        dot + estimate_width(self.save_label(), STATE_FONT) * ESTIMATE_SLACK
+        dot + widths.chrome_weighted(self.save_label(), STATE_FONT, STATE_WEIGHT)
     }
 
     /// Lay the pill out with its top-left at `origin`.
-    pub fn layout_at(&self, origin: Point2D) -> FilePillLayout {
+    pub fn layout_at(&self, origin: Point2D, widths: &mut LabelWidths<'_>) -> FilePillLayout {
         let y = origin.y;
         let (home, divider_x, name_x) = if self.embedded {
             (None, None, origin.x + PAD_RIGHT)
@@ -142,13 +147,14 @@ impl FilePill {
         };
         // The name's click target spans the pill's height so a press just
         // above or below the glyphs still opens the menu.
-        let name = Rect::xywh(name_x - 4.0, y, self.name_width() + 8.0, FILE_PILL_HEIGHT);
+        let name_w = self.name_width(widths);
+        let name = Rect::xywh(name_x - 4.0, y, name_w + 8.0, FILE_PILL_HEIGHT);
         let mut right = name.origin.x + name.size.x;
         let save = (!self.embedded).then(|| {
             let save = Rect::xywh(
                 right + NAME_GAP - 8.0,
                 y,
-                self.save_width() + 8.0,
+                self.save_width(widths) + 8.0,
                 FILE_PILL_HEIGHT,
             );
             right = save.origin.x + save.size.x;
@@ -245,12 +251,13 @@ impl FilePill {
         }
 
         self.wash(cx, layout.name, ChromeButton::ToggleFileMenu);
-        let name = fit_weighted(cx, &self.file_name, self.name_width(), NAME_FONT, 600);
+        let name_w = layout.name.size.x - 8.0;
+        let name = fit_weighted(cx, &self.file_name, name_w, NAME_FONT, NAME_WEIGHT);
         draw_run(
             cx,
             &name,
             NAME_FONT,
-            600,
+            NAME_WEIGHT,
             theme.foreground,
             Point2D::new(
                 layout.name.origin.x + 4.0,
@@ -272,12 +279,12 @@ impl FilePill {
                 (false, _) => theme.muted_foreground,
             };
             let label_w = save.origin.x + save.size.x - 4.0 - x;
-            let label = fit_weighted(cx, self.save_label(), label_w, STATE_FONT, 500);
+            let label = fit_weighted(cx, self.save_label(), label_w, STATE_FONT, STATE_WEIGHT);
             draw_run(
                 cx,
                 &label,
                 STATE_FONT,
-                500,
+                STATE_WEIGHT,
                 color,
                 Point2D::new(
                     x,
@@ -297,13 +304,17 @@ impl Widget for FilePill {
         LayoutBox {
             rect: Rect {
                 origin: Point2D::ZERO,
-                size: self.layout_at(Point2D::ZERO).rect.size,
+                size: self
+                    .layout_at(Point2D::ZERO, &mut LabelWidths::cached())
+                    .rect
+                    .size,
             },
         }
     }
 
     fn paint(&self, cx: &mut PaintCx<'_>, rect: Rect) {
-        self.paint_layout(cx, &self.layout_at(rect.origin));
+        let layout = self.layout_at(rect.origin, &mut LabelWidths::measuring(&mut *cx.backend));
+        self.paint_layout(cx, &layout);
     }
 
     fn access_node(&self) -> accesskit::Node {
@@ -313,11 +324,12 @@ impl Widget for FilePill {
     }
 }
 
-/// Ellipsize `text` into `max_w`, measured at the weight it is drawn in —
-/// the slot comes from a width estimate, so the real glyphs must be fitted
-/// into it rather than trusted to agree.
+/// Ellipsize `text` into `max_w`, measured at the weight it is drawn in: a
+/// name past `NAME_MAX_W` gets an ellipsis; a label that fits is unchanged.
+/// The slot was laid out from that same width, so `FIT_EPS` only absorbs the
+/// float error of placing the label inside it.
 fn fit_weighted(cx: &mut PaintCx<'_>, text: &str, max_w: f32, size: f32, weight: u16) -> String {
-    crate::util::ellipsize_to_width(text, max_w, |s| {
+    crate::util::ellipsize_to_width(text, max_w + FIT_EPS, |s| {
         measure_chrome_weighted(cx.backend, s, size, weight)
     })
 }
