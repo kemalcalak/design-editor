@@ -10,7 +10,7 @@ use std::sync::Arc;
 
 use de_editor_core::EditorState;
 use de_mcp::script_execute::{
-    execute_snapshot_with_renderer, Execute, ExportFormat, ExportRequest, ExportWritten,
+    execute_shared_with_renderer, Execute, ExportFormat, ExportRequest, ExportWritten,
     ScriptRenderError, ScriptRenderer,
 };
 use de_mcp::ImageContent;
@@ -131,8 +131,14 @@ fn write(path: &Path, bytes: &[u8]) -> Result<String, ScriptRenderError> {
     ))
 }
 
+#[cfg(test)]
 pub(crate) fn execute_snapshot(state: &EditorState) -> Execute {
-    execute_snapshot_with_renderer(state, Arc::new(HostScriptRenderer))
+    de_mcp::script_execute::execute_snapshot_with_renderer(state, Arc::new(HostScriptRenderer))
+}
+
+/// [`execute_snapshot`] over the request's shared state (#456).
+pub(crate) fn execute_shared(state: de_editor_core::shared_state::SharedState) -> Execute {
+    execute_shared_with_renderer(state, Arc::new(HostScriptRenderer))
 }
 
 #[cfg(test)]

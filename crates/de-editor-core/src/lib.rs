@@ -209,6 +209,7 @@ pub mod shader_presets;
 pub mod shader_source_editor;
 pub mod shader_textures;
 pub mod shader_uniform_specs;
+pub mod shared_state;
 pub mod slide_transition;
 pub mod star_shape;
 pub mod state;

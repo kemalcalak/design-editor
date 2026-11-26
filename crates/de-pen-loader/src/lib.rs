@@ -104,7 +104,8 @@ pub mod variables;
 pub use editor_scene::{
     editor_state_to_active_page_layout_scene, editor_state_to_active_page_layout_scene_with_names,
     editor_state_to_active_page_root_layout_scene, editor_state_to_layout_scene,
-    editor_state_to_layout_scene_with_names, scene_node_size, SceneLayerNames,
+    editor_state_to_layout_scene_with_names, editor_state_to_page_layout_scene, scene_node_size,
+    SceneLayerNames,
 };
 pub use layout_scene::{
     blend_mode_to_scene, pen_document_to_layout_scene, pen_document_to_layout_scene_for_preview,

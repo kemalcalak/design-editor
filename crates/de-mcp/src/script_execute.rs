@@ -29,6 +29,7 @@ use std::rc::Rc;
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
+use de_editor_core::shared_state::SharedState;
 use de_editor_core::EditorState;
 use rquickjs::context::EvalOptions;
 use rquickjs::{Context, Function, Runtime};
@@ -107,14 +108,14 @@ pub struct ExportWritten {
 /// each copy is hundreds of MB). A registry is built per request and calls
 /// each tool once, so a second call on the same tool is refused.
 pub struct Execute {
-    state: Mutex<Option<EditorState>>,
+    state: Mutex<Option<SharedState>>,
     renderer: Option<Arc<dyn ScriptRenderer>>,
 }
 
 /// `execute` without rendering: `TakeScreenshot` / `Export` throw.
 pub fn execute_snapshot(state: &EditorState) -> Execute {
     Execute {
-        state: Mutex::new(Some(state.clone())),
+        state: Mutex::new(Some(SharedState::copied(state))),
         renderer: None,
     }
 }
@@ -124,8 +125,17 @@ pub fn execute_snapshot_with_renderer(
     state: &EditorState,
     renderer: Arc<dyn ScriptRenderer>,
 ) -> Execute {
+    execute_shared_with_renderer(SharedState::copied(state), renderer)
+}
+
+/// [`execute_snapshot_with_renderer`] over a state the caller already
+/// shares: a script that only reads copies nothing (#456).
+pub fn execute_shared_with_renderer(
+    state: SharedState,
+    renderer: Arc<dyn ScriptRenderer>,
+) -> Execute {
     Execute {
-        state: Mutex::new(Some(state.clone())),
+        state: Mutex::new(Some(state)),
         renderer: Some(renderer),
     }
 }
@@ -175,7 +185,7 @@ impl McpTool for Execute {
 
 /// Run `script` against `snapshot` and build the tool result.
 fn run(
-    snapshot: EditorState,
+    snapshot: SharedState,
     script: &str,
     page_id: Option<String>,
     renderer: Option<&dyn ScriptRenderer>,

@@ -241,8 +241,8 @@ pub use de_editor_core::{
 pub use batch_design::{
     design_content_snapshot, design_skeleton_snapshot, DesignContent, DesignSkeleton,
 };
-pub use batch_design_result::{batch_design_snapshot, BatchDesign};
-pub use batch_get::{batch_get_snapshot, BatchGet};
+pub use batch_design_result::{batch_design_shared, batch_design_snapshot, BatchDesign};
+pub use batch_get::{batch_get_shared, batch_get_snapshot, BatchGet};
 pub use batch_program_objects::parse_program_objects;
 pub use bulk_vars::{
     apply_design_system_snapshot, get_variables_snapshot, set_themes_snapshot,
@@ -292,7 +292,7 @@ pub use design_refine_result::{design_refine_snapshot, DesignRefine};
 pub use document_save::{save_document_snapshot_to, SaveDocument};
 pub use export_html_tool::{export_html_snapshot, ExportHtml};
 pub use extra_read_tools::{get_node_children_snapshot, ChildRecord, GetNodeChildren};
-pub use find_nodes_tool::{find_nodes_snapshot, FindNodes};
+pub use find_nodes_tool::{find_nodes_shared, find_nodes_snapshot, FindNodes};
 pub use guidelines_tools::{get_guidelines_snapshot, GetGuidelines};
 pub use interaction_tools::{
     list_interactions_snapshot, remove_interaction_snapshot, set_interaction_snapshot,
@@ -326,7 +326,7 @@ pub use page_tools::{
     Undo,
 };
 pub use parser::parse_tool_call;
-pub use read_nodes::{read_nodes_snapshot, ReadNodes};
+pub use read_nodes::{read_nodes_shared, read_nodes_snapshot, ReadNodes};
 pub use rename_layers_tool::{rename_layers_snapshot, RenameLayers};
 pub use repair_duplicate_ids_tool::{repair_duplicate_ids_snapshot, RepairDuplicateIds};
 pub use reparent_tools::{copy_node_snapshot, move_node_snapshot, CopyNode, MoveNode};
@@ -372,15 +372,16 @@ pub use theme_presets::{
 };
 pub use tool_search::{tool_search, tool_search_snapshot, ToolSearch};
 pub use tools::{
-    count_nodes_snapshot, document_info_snapshot, find_empty_space_snapshot,
-    find_node_by_name_snapshot, get_active_theme_snapshot, get_canvas_bounds_snapshot,
-    get_component_snapshot, get_history_depth_snapshot, get_node_parent_snapshot,
-    get_node_snapshot, get_selection_set_snapshot, get_viewport_snapshot, list_components_snapshot,
-    list_node_kinds_snapshot, list_pages_snapshot, list_variables_snapshot, selection_snapshot,
-    snapshot_layout_snapshot, CountNodes, FindEmptySpace, FindNodeByName, GetActiveTheme,
-    GetCanvasBounds, GetComponent, GetDocumentInfo, GetHistoryDepth, GetNode, GetNodeParent,
-    GetSelection, GetSelectionSet, GetViewport, ListComponents, ListNodeKinds, ListPages,
-    ListVariables, NodeRecord, SnapshotLayout, VariableRecord,
+    count_nodes_snapshot, document_info_snapshot, find_empty_space_shared,
+    find_empty_space_snapshot, find_node_by_name_snapshot, get_active_theme_snapshot,
+    get_canvas_bounds_snapshot, get_component_snapshot, get_history_depth_snapshot,
+    get_node_parent_snapshot, get_node_snapshot, get_selection_set_snapshot, get_viewport_snapshot,
+    list_components_snapshot, list_node_kinds_snapshot, list_pages_snapshot,
+    list_variables_snapshot, selection_snapshot, snapshot_layout_shared, snapshot_layout_snapshot,
+    CountNodes, FindEmptySpace, FindNodeByName, GetActiveTheme, GetCanvasBounds, GetComponent,
+    GetDocumentInfo, GetHistoryDepth, GetNode, GetNodeParent, GetSelection, GetSelectionSet,
+    GetViewport, ListComponents, ListNodeKinds, ListPages, ListVariables, NodeRecord,
+    SnapshotLayout, VariableRecord,
 };
 pub use write_tools::{
     delete_node_snapshot, import_svg_snapshot, insert_node_snapshot, insert_node_snapshot_for,
