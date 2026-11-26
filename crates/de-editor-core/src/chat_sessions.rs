@@ -24,6 +24,9 @@ use crate::chat::ChatState;
 pub struct ChatSessions {
     tabs: Vec<ChatState>,
     active: usize,
+    /// Project-folder files the `@` popup offers (#398) — shared by every
+    /// tab; see [`crate::chat_mentions::ProjectFiles`].
+    pub project_files: crate::chat_mentions::ProjectFiles,
 }
 
 impl Default for ChatSessions {
@@ -31,6 +34,7 @@ impl Default for ChatSessions {
         Self {
             tabs: vec![ChatState::default()],
             active: 0,
+            project_files: Default::default(),
         }
     }
 }

@@ -110,6 +110,11 @@ impl ChatState {
             }
         }
         self.messages.push(user_msg);
+        // Mentions whose `@Label` the user typed away no longer belong to
+        // this turn; the rest stay staged for the host to resolve.
+        self.pending_mentions.retain(|m| m.is_in(&trimmed));
+        self.mention_popup = None;
+        self.mention_dismissed_at = None;
         // Empty streaming assistant bubble — provider deltas append here.
         let mut assistant_msg = ChatMessage::assistant_streaming();
         assistant_msg.agent_name = agent_name;
@@ -197,6 +202,9 @@ impl ChatState {
         self.transcript_scroll.offset = 0.0;
         self.pending_attachments.clear();
         self.pending_attachment_pick = false;
+        self.pending_mentions.clear();
+        self.mention_popup = None;
+        self.mention_dismissed_at = None;
         self.pending_new_chat = true;
     }
 

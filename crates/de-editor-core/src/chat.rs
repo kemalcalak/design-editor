@@ -281,6 +281,18 @@ pub struct ChatState {
     ///
     /// [`input_scroll`]: ChatState::input_scroll
     pub input_scroll_caret: usize,
+    /// `@`-mentions staged for the next turn (#398), in pick order. Pruned
+    /// whenever their `@Label` token leaves the draft; drained by the host
+    /// at send, like [`pending_attachments`].
+    ///
+    /// [`pending_attachments`]: ChatState::pending_attachments
+    pub pending_mentions: Vec<crate::chat_mentions::ChatMention>,
+    /// The open `@` popup, or `None`. Kept in sync with the draft by
+    /// `EditorState::sync_chat_mentions`.
+    pub mention_popup: Option<crate::chat_mentions::MentionPopup>,
+    /// Byte offset of an `@` whose popup the user dismissed with Escape;
+    /// the sync leaves it closed until the caret leaves that token.
+    pub mention_dismissed_at: Option<usize>,
 }
 
 /// Process-global allocator for [`ChatImage::id`]. A *global* counter
@@ -329,6 +341,9 @@ impl Default for ChatState {
             pending_subtask_retry: None,
             input_scroll: 0.0,
             input_scroll_caret: 0,
+            pending_mentions: Vec::new(),
+            mention_popup: None,
+            mention_dismissed_at: None,
         }
     }
 }
