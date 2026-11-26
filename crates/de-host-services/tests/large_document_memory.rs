@@ -10,11 +10,12 @@
 //! system allocator hands pages back. The process footprint
 //! (`de_host_services::process_memory`) is printed next to it.
 //!
-//! Each call goes the way a live MCP call goes: the UI side shares the
-//! document (`request_snapshot::shared_snapshot`, anchored on the previous
-//! capture like the pump), the connection side materializes its state
-//! (`SharedRequestSnapshot::into_state`) and dispatches the tool
-//! (`mcp_serve::process_message_with_write_applier`).
+//! Each call goes the way a live MCP call goes: the UI side shares what the
+//! call reads (`de_mcp::snapshot_pages` → `request_snapshot_pages::kept_pages`
+//! → `request_snapshot::shared_snapshot_pages`, anchored on the previous
+//! capture like the pump's `SnapshotAnchor`), the connection side
+//! materializes its state (`SharedRequestSnapshot::into_state`) and
+//! dispatches the tool (`mcp_serve::process_message_with_write_applier`).
 //!
 //! The fixture follows #412 (14 pages × 100 boards × 46 rows, ~195k nodes)
 //! plus what a real file has: a component page whose master every board
@@ -24,7 +25,8 @@
 mod support;
 
 use de_editor_core::history_snapshot::SharedDoc;
-use de_editor_core::request_snapshot::shared_snapshot;
+use de_editor_core::request_snapshot::shared_snapshot_pages;
+use de_editor_core::request_snapshot_pages::{kept_pages, PageNeeds};
 use de_editor_core::EditorState;
 use std::time::{Duration, Instant};
 use support::counting_alloc::{self, Counting};
@@ -104,17 +106,35 @@ struct Sample {
 
 /// One live call: UI-side capture, connection-side copy, dispatch. A write
 /// is applied to the live state too, as the UI thread would.
-fn live_call(
-    live: &mut EditorState,
-    anchor: &mut Option<SharedDoc>,
-    id: usize,
-    call: &Call,
-) -> Sample {
+/// The pump's side of live snapshots: the sharing anchor and the page
+/// needs it keeps per document revision.
+#[derive(Default)]
+struct Anchor {
+    doc: Option<SharedDoc>,
+    needs: Option<PageNeeds>,
+}
+
+fn live_call(live: &mut EditorState, anchor: &mut Anchor, id: usize, call: &Call) -> Sample {
     let line = request_line(id, call);
     let before = counting_alloc::reset_peak();
     let started = Instant::now();
-    let snapshot = shared_snapshot(live, anchor.as_ref());
-    *anchor = Some(snapshot.shared_doc().clone());
+    let pages = de_mcp::snapshot_pages::for_request(&line);
+    let keep = if pages == de_mcp::snapshot_pages::SnapshotPages::All {
+        None
+    } else {
+        if !anchor.needs.as_ref().is_some_and(|n| n.is_current(live)) {
+            anchor.needs = Some(PageNeeds::of(live));
+        }
+        anchor
+            .needs
+            .as_ref()
+            .and_then(|needs| kept_pages(live, &pages, needs))
+    };
+    let snapshot = shared_snapshot_pages(live, anchor.doc.as_ref(), keep.as_deref());
+    anchor.doc = Some(match (&keep, anchor.doc.as_ref()) {
+        (Some(keep), Some(doc)) => doc.merged_pages(snapshot.shared_doc(), keep),
+        _ => snapshot.shared_doc().clone(),
+    });
     let mut state = snapshot.into_state();
     let response = de_host_services::mcp_serve::process_message_with_write_applier(
         &mut state,
@@ -169,7 +189,7 @@ fn live_mcp_call_memory_and_latency() {
         footprint_mb()
     );
 
-    let mut anchor: Option<SharedDoc> = None;
+    let mut anchor = Anchor::default();
     // The first capture has no anchor and no history to share with.
     let first = live_call(
         &mut live,

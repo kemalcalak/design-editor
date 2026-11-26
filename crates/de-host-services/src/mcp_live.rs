@@ -56,11 +56,6 @@ const MCP_CLIENT_FALLBACK_NAME: &str = "MCP Client";
 /// external MCP client isn't one of the app's own named agents.
 const MCP_CLIENT_COLOR: &str = "#8A8F98";
 
-/// How long `McpLiveServer::last_snapshot_doc` outlives the last snapshot
-/// request. Agents call in bursts, so the anchor covers a burst and is
-/// dropped once the client goes quiet, freeing nodes no edit still shares.
-const SNAPSHOT_ANCHOR_IDLE: Duration = Duration::from_secs(30);
-
 pub struct McpLiveServer {
     port: u16,
     /// Per-instance identity token, reported in the live `ping` reply and
@@ -93,14 +88,9 @@ pub struct McpLiveServer {
     /// The UI thread's side of what the connection threads share (#406):
     /// `pump` tells it the UI is answering and which kits it holds.
     ui_side: LiveUiSide,
-    /// The document of the last snapshot handed to a connection, the
-    /// sharing anchor for the next one (#352): unchanged top-level nodes
-    /// reuse its `Arc`s, so a read call does not copy the document on
-    /// the UI thread. Stamped with when it was handed out: `pump` lets go
-    /// of it after `SNAPSHOT_ANCHOR_IDLE`, so a document the host replaced
-    /// (File > Open, revert) is not kept alive by a client that went quiet.
-    /// UI-thread-only, like `last_mcp_epoch`.
-    last_snapshot_doc: Option<(SharedDoc, Instant)>,
+    /// The sharing anchor for the next snapshot and the pages a narrowed
+    /// one keeps (#352, #456); see `snapshot_anchor`.
+    snapshot_anchor: snapshot_anchor::SnapshotAnchor,
     /// Validated extension evidence waiting for the desktop's asynchronous
     /// provider worker. Kept separate from `EditorState`: this route neither
     /// reads nor mutates the live document.
@@ -191,6 +181,8 @@ enum UiRequest {
         /// Set by the connection once it stopped waiting (`UI_ACK_TIMEOUT`):
         /// the pump then skips the capture nobody will read (#350).
         abandoned: Arc<AtomicBool>,
+        /// What the call reads: the pump captures only that (#456).
+        pages: de_editor_core::request_snapshot_pages::SnapshotPages,
     },
     /// Lightweight read snapshot for `list_pages`. Copying only page metadata
     /// avoids cloning every node in a large live document just to report page
@@ -309,7 +301,7 @@ impl McpLiveServer {
             client_identity,
             last_mcp_epoch: 0,
             ui_side: LiveUiSide::new(shared),
-            last_snapshot_doc: None,
+            snapshot_anchor: Default::default(),
             pending_design_md: VecDeque::new(),
             saved_documents: Vec::new(),
             host_document_epoch: 0,
@@ -353,24 +345,17 @@ impl McpLiveServer {
     pub fn pump(&mut self, state: &mut EditorState) -> McpPumpOutcome {
         let mut outcome = McpPumpOutcome::default();
         self.ui_side.pumped(&state.ui_kits);
-        if self
-            .last_snapshot_doc
-            .as_ref()
-            .is_some_and(|(_, at)| at.elapsed() > SNAPSHOT_ANCHOR_IDLE)
-        {
-            self.last_snapshot_doc = None;
-        }
+        self.snapshot_anchor.expire_idle();
         let mut abandoned_reads = 0usize;
         for _ in 0..UI_PUMP_REQUEST_BUDGET {
             match self.req_rx.try_recv() {
-                Ok(UiRequest::Snapshot { ack, abandoned }) => {
-                    if let Some(snapshot) = snapshot_unless_abandoned(
-                        &abandoned,
-                        state,
-                        self.last_snapshot_doc.as_ref().map(|(doc, _)| doc),
-                    ) {
-                        self.last_snapshot_doc =
-                            Some((snapshot.shared_doc().clone(), Instant::now()));
+                Ok(UiRequest::Snapshot {
+                    ack,
+                    abandoned,
+                    pages,
+                }) => {
+                    if let Some(snapshot) = self.snapshot_anchor.capture(&abandoned, state, &pages)
+                    {
                         let _ = ack.send(LiveSnapshot {
                             snapshot,
                             document_epoch: self.host_document_epoch,
@@ -444,9 +429,7 @@ impl McpLiveServer {
                     // by the renderer at paint, so the swap + dirty flag
                     // repaints the new document with no extra layout pass here.
                     state.replace_document(*doc);
-                    // Nothing in the old document can be shared any more;
-                    // do not keep it alive until the next snapshot.
-                    self.last_snapshot_doc = None;
+                    self.snapshot_anchor.clear();
                     de_pen_loader::apply_editor_meta(state, editor_meta);
                     let _ = ack.send(());
                     outcome.repaint = true;
@@ -652,36 +635,6 @@ impl Drop for McpLiveServer {
     }
 }
 
-/// The state a `UiRequest::Snapshot` asked for, or `None` when its
-/// connection already gave up waiting.
-///
-/// Narrowed: the MCP registry + applier never read `chat` / `codegen` /
-/// `theme_presets`, and those are the sub-states that grow with SESSION
-/// length rather than with the document. See `de_editor_core::request_snapshot`
-/// for the field audit.
-///
-/// The document is shared against `anchor` rather than copied (#352): a
-/// deep copy cost hundreds of MB and ~150 ms per call on a 180k-node
-/// document. The connection materializes its own owned copy off the UI
-/// thread (`ui_requests::request_snapshot`). A request that timed out
-/// before the UI got to it is still skipped, so stale requests piling up
-/// behind a slow frame cost nothing.
-fn snapshot_unless_abandoned(
-    abandoned: &AtomicBool,
-    state: &mut EditorState,
-    anchor: Option<&SharedDoc>,
-) -> Option<SharedRequestSnapshot> {
-    // A timeout that lands while the capture below runs still costs that
-    // one capture; the flag only stops requests that were stale before the UI got
-    // to them, which is where the queue piled up.
-    if abandoned.load(Ordering::Acquire) {
-        return None;
-    }
-    Some(de_editor_core::request_snapshot::shared_snapshot(
-        state, anchor,
-    ))
-}
-
 fn command_invalidates_layout(cmd: &EditorCommand) -> bool {
     match cmd {
         EditorCommand::ClearSelection
@@ -704,6 +657,7 @@ mod design_md_output;
 pub(crate) mod design_md_route;
 mod doc_sync;
 mod live_shared;
+mod snapshot_anchor;
 /// `pub(crate)` for two consts only: the shared HTTP parser
 /// (`mcp_serve::read_http_request`) has to recognise this route's path to
 /// apply its smaller body cap before reading a body.
@@ -722,6 +676,9 @@ mod busy_tests;
 #[cfg(test)]
 #[path = "mcp_live_memory_tests.rs"]
 mod memory_tests;
+#[cfg(test)]
+#[path = "mcp_live_pages_tests.rs"]
+mod pages_tests;
 #[cfg(test)]
 #[path = "mcp_live_placement_tests.rs"]
 mod placement_tests;

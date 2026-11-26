@@ -280,7 +280,7 @@ pub(super) fn serve_connection<S: std::io::Read + std::io::Write>(
 /// under the state lock. Returns the response body; the caller writes it
 /// once the lock is released, so a slow or dead client never holds the
 /// editor while its socket drains.
-fn serve_stateful(
+pub(super) fn serve_stateful(
     body: &str,
     req_tx: &Sender<UiRequest>,
     shared: &LiveShared,
@@ -333,6 +333,10 @@ fn serve_stateful(
     if let Some(response) = process_lightweight_live_tool(body, req_tx, wake_ui, shared)? {
         return Ok(response);
     }
+    // A read that names one page (or none) gets only that (#456).
+    if let Some(response) = serve_narrowed_read(body, req_tx, wake_ui, shared)? {
+        return Ok(response);
+    }
     let (mut state, document_epoch) = request_snapshot_with_epoch(req_tx, wake_ui, shared)?;
     let response = crate::mcp_serve::process_message_with_write_applier(
         &mut state,
@@ -366,6 +370,34 @@ fn serve_stateful(
     };
     report_saved_document(body, &response, Some(saved_from), req_tx, wake_ui);
     Ok(response)
+}
+
+/// Answer a read from a snapshot of only what it reads (#456): the page it
+/// names, or no page at all (`de_mcp::snapshot_pages`). `None` when the
+/// call needs the whole document, or when it tried to write after all (an
+/// `execute` script reaching a write the source check did not see): that
+/// write is refused here, never applied, and the caller runs the call again
+/// on the whole document, so no write is ever computed against a partial
+/// one.
+fn serve_narrowed_read(
+    body: &str,
+    req_tx: &Sender<UiRequest>,
+    wake_ui: &UiWake,
+    shared: &LiveShared,
+) -> Result<Option<String>, McpLiveError> {
+    let pages = de_mcp::snapshot_pages::for_request(body);
+    if pages == de_mcp::snapshot_pages::SnapshotPages::All {
+        return Ok(None);
+    }
+    let (mut state, _) = request_snapshot_pages(req_tx, wake_ui, shared, pages)?;
+    let mut wrote = false;
+    let response =
+        crate::mcp_serve::process_message_with_write_applier(&mut state, body, |_, _, _| {
+            wrote = true;
+            false
+        })?
+        .unwrap_or_default();
+    Ok((!wrote).then_some(response))
 }
 
 /// What the watchdog and busy answers call a request: its tool, and the
