@@ -108,6 +108,8 @@ struct SvgStrokeStyle {
     linejoin: Option<String>,
     dasharray: Option<String>,
     dashoffset: Option<String>,
+    /// `stroke-miterlimit` (#389).
+    miterlimit: Option<String>,
 }
 
 impl Default for StyleCtx {

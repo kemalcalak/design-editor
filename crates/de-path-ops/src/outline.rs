@@ -222,14 +222,10 @@ fn line_path(node: &SceneNode) -> Option<Path> {
     if node.points.len() >= 2 {
         return polyline(&node.points, false);
     }
-    let b = node.bounds;
-    polyline(
-        &[
-            b.origin,
-            Point2D::new(b.origin.x + b.size.x, b.origin.y + b.size.y),
-        ],
-        false,
-    )
+    // Start to end as drawn: an up-right line is not its box's
+    // top-left → bottom-right diagonal (#389).
+    let (from, to) = node.line_endpoints();
+    polyline(&[from, to], false)
 }
 
 /// Scale + translate `path` so its tight bounds fill `rect`: the canvas
