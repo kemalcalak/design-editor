@@ -230,6 +230,12 @@ jobs:
       - name: Clippy non-default feature surfaces
         if: runner.os == 'Linux'
         run: cargo clippy -p de-host-native --features gl-host --all-targets -- -D warnings
+      # `de agent` sits behind de-cli's default `agent` feature (it links
+      # de-host-services: skia, tokio, reqwest). Keep the slim CLI build,
+      # which leaves all of that out, compiling and lint-clean.
+      - name: Check the slim CLI (de-cli without the agent feature)
+        if: runner.os == 'Linux'
+        run: cargo clippy -p de-cli --no-default-features --all-targets -- -D warnings
       # de-editor-core / de-editor-ui stay wasm32-clean, and the Chrome
       # extension core ships as wasm: keep them compiling for wasm32.
       - name: Check wasm32-clean crates

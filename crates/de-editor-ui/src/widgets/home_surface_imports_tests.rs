@@ -93,13 +93,14 @@ fn no_import_title_leaves_its_text_box_in_any_locale() {
         );
         for w in narrowest_widths() {
             let mut backend = CaptureBackend::default();
-            let layout = home.layout(w, 900.0);
             home.paint(
                 &mut PaintCx {
                     backend: &mut backend,
                 },
                 Rect::xywh(0.0, 0.0, w, 900.0),
             );
+            // After paint measured the titles, as a hit-test reads it.
+            let layout = home.layout(w, 900.0);
             let height = layout.imports[0].size.y;
             for card in layout.imports {
                 assert_eq!(card.size.y, height, "{locale:?} at {w}: one card height");
@@ -150,8 +151,6 @@ fn no_import_title_leaves_its_text_box_in_any_locale() {
 fn the_turkish_screenshot_title_wraps_onto_a_taller_row() {
     let state = home_state(Locale::Tr);
     let home = HomeSurface::for_editor(&state).unwrap();
-    let layout = home.layout(1440.0, 900.0);
-    assert!(layout.imports.iter().all(|c| c.size.y == IMPORT_H_TALL));
     let mut backend = CaptureBackend::default();
     home.paint(
         &mut PaintCx {
@@ -159,6 +158,8 @@ fn the_turkish_screenshot_title_wraps_onto_a_taller_row() {
         },
         Rect::xywh(0.0, 0.0, 1440.0, 900.0),
     );
+    let layout = home.layout(1440.0, 900.0);
+    assert!(layout.imports.iter().all(|c| c.size.y == IMPORT_H_TALL));
     let x = import_text_box(layout.imports[2]).origin.x;
     let lines: Vec<&str> = backend
         .texts

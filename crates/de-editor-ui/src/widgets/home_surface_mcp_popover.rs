@@ -1,13 +1,16 @@
 //! The "Connect an agent" popover the sidebar MCP card opens: endpoint,
 //! agent tabs, one-click set-up, the manual snippet, connected agents.
-//! Geometry, hit-test and paint share one `McpPopoverLayout`.
+//! Geometry, hit-test and paint share one `McpPopoverLayout`, its
+//! labelled controls and wrapped copy sized from the widths paint measured
+//! in the face and weight it draws them in (`label_widths`, #440).
 
 use super::composer::paint_popover_card;
-use super::copy::{estimate_width, tr};
+use super::copy::tr;
 use super::icons::{draw_glyph, HomeGlyph};
 use super::paint::{baseline, caption, draw_text, draw_text_weighted};
 use super::{HomeLayout, HomeSurface, MONO, SANS};
 use crate::widgets::icons::{draw_icon, Icon};
+use crate::widgets::label_widths::LabelWidths;
 use crate::widgets::PaintCx;
 use crate::{Point2D, Rect};
 use de_editor_core::agent_settings::McpCli;
@@ -28,6 +31,14 @@ const SNIPPET_LINE: f32 = 17.0;
 const TAB_FONT: f32 = 11.5;
 const MORE_ROW_H: f32 = 30.0;
 const MORE_W: f32 = 200.0;
+const COPY_FONT: f32 = 11.0;
+const START_FONT: f32 = 11.5;
+const ACTION_FONT: f32 = 12.0;
+const LINK_FONT: f32 = 12.0;
+/// Weights of the semibold runs; a tab is sized for its semibold
+/// (selected) run so selecting it never resizes it.
+const SEMIBOLD: u16 = 600;
+const REGULAR: u16 = 400;
 
 /// Every rect and wrapped line the popover paints.
 #[derive(Debug, Clone, PartialEq)]
@@ -36,7 +47,7 @@ pub struct McpPopoverLayout {
     pub header: Rect,
     /// "Start server" (zero while MCP runs).
     pub start: Rect,
-    pub intro_lines: Vec<String>,
+    pub intro_lines: std::rc::Rc<[String]>,
     pub intro_y: f32,
     pub endpoint_label_y: f32,
     pub endpoint_box: Rect,
@@ -102,28 +113,6 @@ impl McpPopoverLayout {
     }
 }
 
-/// Greedy word wrap against the layout-time width estimate.
-fn wrap_words(text: &str, max_w: f32, size: f32) -> Vec<String> {
-    let mut lines = Vec::new();
-    let mut line = String::new();
-    for word in text.split_whitespace() {
-        let candidate = if line.is_empty() {
-            word.to_string()
-        } else {
-            format!("{line} {word}")
-        };
-        if !line.is_empty() && estimate_width(&candidate, size) > max_w {
-            lines.push(std::mem::replace(&mut line, word.to_string()));
-        } else {
-            line = candidate;
-        }
-    }
-    if !line.is_empty() {
-        lines.push(line);
-    }
-    lines
-}
-
 /// Hard-wrap mono lines at the column count that fits `max_w`.
 fn wrap_mono(text: &str, max_w: f32, size: f32) -> Vec<String> {
     wrap_snippet(text, (max_w / (size * 0.6)).floor() as usize)
@@ -144,9 +133,12 @@ fn action_label(surface: &HomeSurface<'_>) -> &'static str {
     )
 }
 
-fn copy_button_w(surface: &HomeSurface<'_>) -> f32 {
-    let copy = estimate_width(tr(surface.locale, "home.mcp.copy"), 11.0);
-    let copied = estimate_width(tr(surface.locale, "home.mcp.copied"), 11.0);
+/// Wide enough for "Copy" and for "Copied", so the button keeps its size
+/// when it flips.
+fn copy_button_w(surface: &HomeSurface<'_>, labels: &mut LabelWidths<'_>) -> f32 {
+    let mut label = |key| labels.styled(tr(surface.locale, key), COPY_FONT, SANS, REGULAR);
+    let copy = label("home.mcp.copy");
+    let copied = label("home.mcp.copied");
     8.0 + 12.0 + 5.0 + copy.max(copied) + 8.0
 }
 
@@ -154,6 +146,7 @@ pub fn mcp_popover_layout(
     surface: &HomeSurface<'_>,
     home: &HomeLayout,
     viewport_w: f32,
+    labels: &mut LabelWidths<'_>,
 ) -> McpPopoverLayout {
     let x = home.sidebar.size.x + 8.0;
     let width = WIDTH.min(viewport_w - x - 8.0).max(280.0);
@@ -165,9 +158,10 @@ pub fn mcp_popover_layout(
     } else {
         "home.mcp.stoppedIntro"
     };
-    let intro_lines = wrap_words(tr(surface.locale, intro_key), inner_w, INTRO_FONT);
+    let intro = tr(surface.locale, intro_key);
+    let intro_lines = labels.wrap(intro, inner_w, INTRO_FONT, SANS, REGULAR);
     let snippet = home_mcp_manual_snippet(surface.mcp.agent, &surface.mcp.endpoint);
-    let copy_w = copy_button_w(surface);
+    let copy_w = copy_button_w(surface, labels);
     let snippet_lines = wrap_mono(&snippet, inner_w - 20.0 - copy_w - 8.0, SNIPPET_FONT);
 
     // Lay out top-down from 0, then shift so the card's bottom meets the
@@ -177,7 +171,8 @@ pub fn mcp_popover_layout(
     let start = if running {
         Rect::ZERO
     } else {
-        let w = estimate_width(tr(surface.locale, "home.mcp.start"), 11.5) + 20.0;
+        let start = tr(surface.locale, "home.mcp.start");
+        let w = labels.styled(start, START_FONT, SANS, SEMIBOLD) + 20.0;
         Rect::xywh(inner_x + inner_w - w, y - 4.0, w, 28.0)
     };
     y += 20.0 + GAP;
@@ -193,7 +188,12 @@ pub fn mcp_popover_layout(
     let tabs_box = Rect::xywh(inner_x, y, inner_w, 32.0);
     let more_selected = !HOME_MCP_TABS.contains(&surface.mcp.agent);
     let more_w = if more_selected {
-        estimate_width(home_mcp_agent_name(surface.mcp.agent), TAB_FONT) + 40.0
+        labels.styled(
+            home_mcp_agent_name(surface.mcp.agent),
+            TAB_FONT,
+            SANS,
+            SEMIBOLD,
+        ) + 40.0
     } else {
         34.0
     };
@@ -205,7 +205,7 @@ pub fn mcp_popover_layout(
     let mut overflow = Vec::new();
     let mut tab_x = inner_x + 3.0;
     for cli in HOME_MCP_TABS {
-        let w = estimate_width(home_mcp_agent_name(cli), TAB_FONT) + 20.0;
+        let w = labels.styled(home_mcp_agent_name(cli), TAB_FONT, SANS, SEMIBOLD) + 20.0;
         if overflow.is_empty() && tab_x + w <= more_button.origin.x - 4.0 {
             tabs.push((cli, Rect::xywh(tab_x, y + 3.0, w, 26.0)));
             tab_x += w + 2.0;
@@ -215,7 +215,11 @@ pub fn mcp_popover_layout(
     }
     y += 32.0 + 10.0;
     let auto_box = Rect::xywh(inner_x, y, inner_w, 56.0);
-    let action_w = estimate_width(action_label(surface), 12.0) + 12.0 + 13.0 + 6.0 + 12.0;
+    let action_w = labels.styled(action_label(surface), ACTION_FONT, SANS, SEMIBOLD)
+        + 12.0
+        + 13.0
+        + 6.0
+        + 12.0;
     let action = Rect::xywh(
         inner_x + inner_w - 12.0 - action_w,
         y + 13.0,
@@ -236,7 +240,8 @@ pub fn mcp_popover_layout(
     let connected_row = Rect::xywh(inner_x, y, inner_w, 18.0);
     y += 18.0 + GAP;
     let footer = Rect::xywh(inner_x, y, inner_w, 18.0);
-    let link_w = estimate_width(tr(surface.locale, "home.mcp.settings"), 12.0) + 18.0;
+    let link = tr(surface.locale, "home.mcp.settings");
+    let link_w = labels.styled(link, LINK_FONT, SANS, REGULAR) + 18.0;
     let settings_link = Rect::xywh(inner_x + inner_w - link_w, y - 4.0, link_w, 26.0);
     y += 18.0 + PAD;
     let height = y;

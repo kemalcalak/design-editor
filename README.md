@@ -26,6 +26,7 @@ https://github.com/user-attachments/assets/ed3abf77-70f7-4ebd-bc37-2ff855917423
 - **Agents design live.** A built-in MCP server lets Claude Code and other agents build on the canvas while you watch.
 - **Bring your own model.** The in-app chat works with major providers, any OpenAI-compatible endpoint, or agents installed on your machine.
 - **Local-first.** No account, no cloud, no telemetry. Rust and Skia, on macOS, Windows and Linux.
+- **Headless for batch and CI.** `de agent -p "..." --out design.de --export png` runs the same design agent without the app; a tasks file runs many prompts in sequence or in parallel with a JSON report ([CLI guide](./docs/guide/cli.md#headless-design-agent)).
 - **Design as code.** Open `.de` documents, Figma / SVG / web import, export to images, decks and React, SwiftUI, Flutter and more.
 
 ## Where it comes from

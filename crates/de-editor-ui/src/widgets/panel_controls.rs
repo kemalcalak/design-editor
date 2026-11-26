@@ -13,10 +13,10 @@
 //! is how a control ends up half a pixel from where it looks.
 
 use crate::theme::Theme;
+use crate::widgets::label_widths::LabelWidths;
 use crate::widgets::panel_control_metrics::{
     control_fill, mix, CHIP_LABEL_SIZE, CHIP_PAD_X, CHIP_RADIUS, SEGMENT_MIN_W, SEGMENT_TRACK_PAD,
 };
-use crate::widgets::prompt_center_panel::estimated_text_width;
 use crate::widgets::text_metrics::{fit_chrome, measure_chrome};
 use crate::widgets::PaintCx;
 use crate::{Color, Point2D, Rect, TextLayout};
@@ -56,14 +56,13 @@ pub(crate) fn segment_rects(track: Rect, count: usize) -> Vec<Rect> {
 /// constant distance, and a group whose labels differ in length does not
 /// look like it was laid out by accident.
 ///
-/// Measured on the shared estimate rather than through a backend because
-/// this is geometry — hit-testing runs with no painter in hand, and paint
-/// and hit-test disagreeing about where a segment is defeats the point of
-/// having one rect function.
-pub(crate) fn segment_width_for(labels: &[&str]) -> f32 {
+/// The labels are read through `widths` in the chrome face they are
+/// painted in (#440): paint measures them, the backend-less hit-test reads
+/// the same widths, so both resolve one segment rect.
+pub(crate) fn segment_width_for(widths: &mut LabelWidths<'_>, labels: &[&str]) -> f32 {
     labels
         .iter()
-        .map(|label| estimated_text_width(label, CHIP_LABEL_SIZE) + CHIP_PAD_X * 2.0)
+        .map(|label| widths.chrome(label, CHIP_LABEL_SIZE) + CHIP_PAD_X * 2.0)
         .fold(SEGMENT_MIN_W, f32::max)
 }
 

@@ -9,7 +9,7 @@ use super::similar_tests::{menu_for, offers, state};
 use super::{
     LayerContextMenu, MenuHit, LABEL_RIGHT_PAD, LABEL_X, LAYER_CONTEXT_MENU_WIDTH, ROW_FONT,
 };
-use crate::widgets::layer_context_menu_width::reset;
+use crate::widgets::label_widths::reset;
 use crate::widgets::test_capture_backend::CaptureBackend;
 use crate::widgets::test_family_gap_backend::FamilyGapBackend;
 use crate::widgets::text_metrics::{measure_chrome, CHROME_FONT_FAMILY};
@@ -61,11 +61,6 @@ fn the_menu_is_168_where_labels_fit_and_exactly_wide_enough_otherwise() {
     for locale in Locale::ALL {
         for menu in menus_in(locale) {
             reset();
-            assert_eq!(
-                menu.rect().size.x,
-                LAYER_CONTEXT_MENU_WIDTH,
-                "unpainted menu"
-            );
             let expected = expected_width(&menu, &mut CaptureBackend::default());
             let rect = menu.measured_rect(&mut CaptureBackend::default());
             assert_eq!(rect.size.x, expected, "{locale:?}");
@@ -158,24 +153,25 @@ fn paint_and_hit_test_agree_in_every_locale() {
     }
 }
 
-/// A repaint with the same locale and rows measures nothing; a locale or
-/// row-set change measures again.
+/// A repaint measures nothing it measured before; a locale change
+/// measures the new labels; menus with different rows keep their widths
+/// side by side (no single slot to thrash).
 #[test]
-fn the_width_is_measured_once_per_locale_and_row_set() {
+fn the_width_is_measured_once_per_label() {
     reset();
     let [layer, page] = menus_in(Locale::EnUs);
     let first = layer.measured_rect(&mut CaptureBackend::default()).size.x;
-    // A backend that would measure wider is never asked: same key.
+    // A backend that would measure wider is never asked: same labels.
     let again = layer.measured_rect(&mut FamilyGapBackend::default()).size.x;
     assert_eq!(first, again);
-    // Rebuilding the menu (as every frame does) keeps the key.
+    // Rebuilding the menu (as every frame does) reads the same widths.
     let [rebuilt, _] = menus_in(Locale::EnUs);
     assert_eq!(rebuilt.width(), first);
-    // A different row set is a different key.
-    assert_eq!(page.width(), LAYER_CONTEXT_MENU_WIDTH);
-    page.measured_rect(&mut CaptureBackend::default());
-    assert_eq!(layer.width(), LAYER_CONTEXT_MENU_WIDTH, "slot moved on");
-    // A different locale is a different key.
+    // Measuring the page menu leaves the layer menu's width in place.
+    let page_width = page.measured_rect(&mut CaptureBackend::default()).size.x;
+    assert_eq!(page.width(), page_width);
+    assert_eq!(layer.width(), first);
+    // A different locale is a different set of labels.
     let [de_layer, _] = menus_in(Locale::De);
     let de_width = de_layer
         .measured_rect(&mut CaptureBackend::default())
@@ -185,10 +181,5 @@ fn the_width_is_measured_once_per_locale_and_row_set() {
         de_width,
         expected_width(&de_layer, &mut CaptureBackend::default())
     );
-}
-
-/// The row-set key is a bitmask over the actions; every action must fit.
-#[test]
-fn every_action_fits_the_row_set_key() {
-    assert!((super::LayerContextAction::DeletePage as u32) < u64::BITS);
+    assert_eq!(de_layer.width(), de_width);
 }

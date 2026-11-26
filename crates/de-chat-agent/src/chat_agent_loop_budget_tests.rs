@@ -51,6 +51,7 @@ fn openai_loop_replays_screenshot_result_as_image_url_part() {
         finalize_on_exit: true,
         disable_thinking: false,
         dial_policy: crate::provider_dial::EndpointDialPolicy::Trusted,
+        usage: None,
     };
     let (outcome, _deltas) = run_loop_collect(cfg, false);
     assert_eq!(outcome, Ok(true));
@@ -150,6 +151,7 @@ fn openai_loop_keeps_only_latest_screenshot_without_dropping_user_intent() {
         finalize_on_exit: true,
         disable_thinking: false,
         dial_policy: crate::provider_dial::EndpointDialPolicy::Trusted,
+        usage: None,
     };
     let (outcome, _deltas) = run_loop_collect(cfg, false);
     assert_eq!(outcome, Ok(true));
@@ -222,6 +224,7 @@ fn model_stop_with_budget_left_gets_a_fill_round_then_reports_nothing_once_fille
         finalize_on_exit: true,
         disable_thinking: false,
         dial_policy: crate::provider_dial::EndpointDialPolicy::Trusted,
+        usage: None,
     };
     let (outcome, deltas) = run_loop_collect(cfg, true);
     assert_eq!(outcome, Ok(true));
@@ -297,6 +300,7 @@ fn model_stop_repeatedly_failing_the_same_screen_is_capped_then_honestly_reporte
         finalize_on_exit: true,
         disable_thinking: false,
         dial_policy: crate::provider_dial::EndpointDialPolicy::Trusted,
+        usage: None,
     };
     let (outcome, deltas) = run_loop_collect(cfg, true);
     assert_eq!(outcome, Ok(true));
@@ -354,6 +358,7 @@ fn turn_cap_exhausted_with_unfilled_committed_screen_gets_exactly_one_salvage_ro
         finalize_on_exit: true,
         disable_thinking: false,
         dial_policy: crate::provider_dial::EndpointDialPolicy::Trusted,
+        usage: None,
     };
     let (outcome, deltas) = run_loop_collect(cfg, true);
     assert_eq!(outcome, Ok(true));
@@ -412,6 +417,7 @@ fn turn_cap_exhausted_without_unfilled_committed_screens_spends_zero_salvage_rou
         finalize_on_exit: true,
         disable_thinking: false,
         dial_policy: crate::provider_dial::EndpointDialPolicy::Trusted,
+        usage: None,
     };
     let (outcome, deltas) = run_loop_collect(cfg, true);
     assert_eq!(outcome, Ok(true));

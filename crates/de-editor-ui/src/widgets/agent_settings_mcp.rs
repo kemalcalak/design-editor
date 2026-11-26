@@ -11,7 +11,10 @@
 //! `agent_settings_mcp_paint.rs`.
 
 use crate::widgets::agent_settings_metrics::CONTENT_TAIL_PAD;
-use crate::widgets::agent_settings_rows::{tab_intro_height, SECTION_GAP, SECTION_HEADER_H};
+use crate::widgets::agent_settings_rows::{
+    tab_intro_height, SECTION_GAP, SECTION_HEADER_H, SETTINGS_FONT_FAMILY,
+};
+use crate::widgets::label_widths::LabelWidths;
 use crate::{Point2D, Rect};
 use de_editor_core::agent_settings::{AgentSettings, McpCli};
 use de_editor_core::home_mcp_setup::{home_mcp_manual_snippet, wrap_snippet};
@@ -54,10 +57,8 @@ pub(super) const COPY_CHIP_PAD: f32 = 8.0;
 pub(super) const COPY_CHIP_ICON: f32 = 12.0;
 pub(super) const COPY_CHIP_GAP: f32 = 5.0;
 const COPY_CHIP_LEAD: f32 = COPY_CHIP_PAD + COPY_CHIP_ICON + COPY_CHIP_GAP;
-/// Headroom over the backend-free width estimate: hit-test has no backend,
-/// so the chip is sized from `estimate_width`, and the real glyphs must
-/// still fit inside it.
-const COPY_LABEL_SLACK: f32 = 1.12;
+/// Weight the chip's label is painted (and measured) at.
+pub(super) const COPY_CHIP_WEIGHT: u16 = 500;
 const CONNECTED_H: f32 = 20.0;
 /// Same span as Home's acknowledgement, so the two read alike.
 pub(super) const COPY_FEEDBACK_MS: u64 = de_editor_core::HOME_COPIED_MS;
@@ -105,24 +106,44 @@ pub(super) fn port_field_rect(content: Rect) -> Rect {
 /// Width of the Copy chip in `locale`: lead + the wider of its two labels
 /// ("Copy" / "Copied", so the acknowledgement never overflows either) +
 /// the trailing pad.
+/// The labels are read from the widths paint measured in the face the chip
+/// draws them in (`label_widths`, #440; [`measure_copy_chips`]).
 pub(super) fn copy_chip_width(locale: Locale) -> f32 {
-    let label = |key| {
-        crate::widgets::home_surface::estimate_width(
+    copy_chip_width_with(&mut LabelWidths::cached(), locale)
+}
+
+fn copy_chip_width_with(widths: &mut LabelWidths<'_>, locale: Locale) -> f32 {
+    let mut label = |key| {
+        widths.styled(
             de_i18n::translate(locale, key),
             COPY_CHIP_FONT,
+            SETTINGS_FONT_FAMILY,
+            COPY_CHIP_WEIGHT,
         )
     };
     let text = label("home.mcp.copy").max(label("home.mcp.copied"));
-    (COPY_CHIP_LEAD + text * COPY_LABEL_SLACK + COPY_CHIP_PAD).ceil()
+    (COPY_CHIP_LEAD + text + COPY_CHIP_PAD).ceil()
 }
 
 /// The widest Copy chip across every shipped locale. The snippet box
 /// reserves this much so its wrapping does not change with the language.
 fn copy_chip_reserve() -> f32 {
+    copy_chip_reserve_with(&mut LabelWidths::cached())
+}
+
+fn copy_chip_reserve_with(widths: &mut LabelWidths<'_>) -> f32 {
     Locale::ALL
         .iter()
-        .map(|locale| copy_chip_width(*locale))
+        .map(|locale| copy_chip_width_with(widths, *locale))
         .fold(0.0, f32::max)
+}
+
+/// Measure every Copy / Copied run the chip geometry reads (every locale's,
+/// for [`copy_chip_reserve`]) where nothing measured it yet. The tab's
+/// paint calls it first, so its rects and the backend-less hit-test read
+/// the painted widths.
+pub(super) fn measure_copy_chips(backend: &mut dyn crate::RenderBackend) {
+    copy_chip_reserve_with(&mut LabelWidths::measuring(backend));
 }
 
 /// The endpoint field: an inset mono well holding the URL, with the Copy

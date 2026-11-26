@@ -10,10 +10,12 @@
 mod default_names;
 mod facts;
 mod instances;
+mod label_box;
 mod lang;
 mod money;
 mod reading;
 mod rules;
+mod tell_apart;
 mod text_roles;
 mod unique;
 mod walk;
@@ -168,3 +170,7 @@ mod roles_tests;
 #[cfg(test)]
 #[path = "layer_names_review_tests.rs"]
 mod review_tests;
+
+#[cfg(test)]
+#[path = "layer_names_followup_tests.rs"]
+mod followup_tests;

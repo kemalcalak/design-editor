@@ -1,6 +1,7 @@
 //! Scene Template Center chrome painting, split from geometry to keep both
 //! compact. The cards themselves live in `scene_template_card_paint.rs`.
 
+use crate::widgets::label_widths::LabelWidths;
 use de_editor_core::SceneTemplateFocus;
 
 use super::asset_center_style_layout::STYLE_SECTION_HEADER_H;
@@ -70,13 +71,9 @@ impl SceneTemplatePanel<'_> {
                 pressed: self.is_pressed(tab_hover_token(index)),
             })
             .collect();
-        paint_segmented_control(
-            cx,
-            &self.theme,
-            self.tab_track_rect(panel),
-            &labels,
-            &states,
-        );
+        // Measured here, so the hit-test's backend-less track is this one.
+        let track = self.tab_track_rect_with(panel, &mut LabelWidths::measuring(&mut *cx.backend));
+        paint_segmented_control(cx, &self.theme, track, &labels, &states);
     }
 
     fn paint_header(&self, cx: &mut PaintCx<'_>, panel: Rect) {

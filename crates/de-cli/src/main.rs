@@ -3,6 +3,34 @@
 
 use std::collections::BTreeMap;
 
+#[cfg(feature = "agent")]
+mod agent_args;
+#[cfg(feature = "agent")]
+mod agent_args_error;
+#[cfg(feature = "agent")]
+mod agent_cli;
+#[cfg(feature = "agent")]
+mod agent_paths;
+#[cfg(feature = "agent")]
+mod agent_progress;
+#[cfg(feature = "agent")]
+mod agent_provider;
+#[cfg(feature = "agent")]
+mod agent_provider_error;
+#[cfg(feature = "agent")]
+mod agent_report;
+#[cfg(feature = "agent")]
+mod agent_runner;
+#[cfg(feature = "agent")]
+mod agent_runner_error;
+#[cfg(feature = "agent")]
+mod agent_task;
+#[cfg(feature = "agent")]
+mod agent_tasks;
+#[cfg(feature = "agent")]
+mod agent_tasks_error;
+#[cfg(feature = "agent")]
+mod agent_thumbs;
 mod app_control_cli;
 mod cli_conversion;
 mod cli_error;
@@ -46,6 +74,11 @@ const USAGE: &str = include_str!("usage.txt");
 
 fn main() {
     let args: Vec<String> = std::env::args().skip(1).collect();
+    // `de agent` has its own parser (short `-p`, repeatable flags) and its
+    // own exit statuses, so it is dispatched before the generic parser.
+    if args.first().map(String::as_str) == Some("agent") {
+        std::process::exit(run_agent(&args[1..]));
+    }
     match run(&args) {
         Ok(out) => {
             println!("{out}");
@@ -55,6 +88,25 @@ fn main() {
             std::process::exit(1);
         }
     }
+}
+
+/// `de agent <args>`: the exit status.
+#[cfg(feature = "agent")]
+fn run_agent(args: &[String]) -> i32 {
+    agent_cli::run(args)
+}
+
+/// What a slim `de` (built without the `agent` feature) says to `de agent`.
+#[cfg(not(feature = "agent"))]
+const AGENT_UNAVAILABLE: &str = "de agent: this de was built without the `agent` feature, \
+     so it cannot run the design agent; use a release build of de, or build it with \
+     `cargo build -p de-cli` (the feature is on by default)";
+
+/// `de agent <args>` in a slim build: usage error, nothing runs.
+#[cfg(not(feature = "agent"))]
+fn run_agent(_args: &[String]) -> i32 {
+    eprintln!("{AGENT_UNAVAILABLE}");
+    2
 }
 
 /// Parse `args`, perform the request, return the text to print.
@@ -540,3 +592,12 @@ mod cli_start_tests;
 mod tests;
 #[cfg(test)]
 mod tests_arg_mapping;
+
+#[cfg(all(test, not(feature = "agent")))]
+mod slim_build_tests {
+    #[test]
+    fn de_agent_says_it_is_not_in_this_build() {
+        assert_eq!(super::run_agent(&["-p".into(), "x".into()]), 2);
+        assert!(super::AGENT_UNAVAILABLE.contains("without the `agent` feature"));
+    }
+}

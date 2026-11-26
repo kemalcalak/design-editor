@@ -60,6 +60,7 @@ fn glm_and_deepseek_second_requests_never_carry_screenshot_base64() {
             finalize_on_exit: false,
             disable_thinking: true,
             dial_policy: crate::provider_dial::EndpointDialPolicy::Trusted,
+            usage: None,
         };
 
         let (outcome, _deltas) = run_loop_collect(cfg, false);

@@ -104,8 +104,9 @@ fn the_track_reads_as_inset_against_the_panel_surface() {
 /// selection travels a constant distance.
 #[test]
 fn segments_are_equal_width_and_sized_to_the_longest_label() {
-    let short = segment_width_for(&["A", "B"]);
-    let long = segment_width_for(&["A", "A considerably longer label"]);
+    let mut widths = crate::widgets::label_widths::LabelWidths::cached();
+    let short = segment_width_for(&mut widths, &["A", "B"]);
+    let long = segment_width_for(&mut widths, &["A", "A considerably longer label"]);
 
     assert_eq!(
         short, SEGMENT_MIN_W,

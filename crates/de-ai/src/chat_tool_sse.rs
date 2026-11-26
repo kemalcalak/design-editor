@@ -21,6 +21,7 @@ use std::collections::BTreeMap;
 use serde_json::{json, Value};
 
 use crate::chat_provider::ChatDelta;
+use crate::chat_usage::TokenUsage;
 
 /// One fully-accumulated model tool call.
 #[derive(Debug, Clone)]
@@ -71,6 +72,8 @@ pub struct OpenAiToolCollector {
     pub tool_calls: BTreeMap<u64, OpenAiToolCallAcc>,
     pub finish_reason: Option<String>,
     pub error: Option<String>,
+    /// The `usage` chunk, when the endpoint sends one.
+    pub usage: TokenUsage,
 }
 
 impl OpenAiToolCollector {
@@ -85,6 +88,11 @@ impl OpenAiToolCollector {
         if let Some(message) = value.pointer("/error/message").and_then(Value::as_str) {
             self.error = Some(message.to_string());
             return Vec::new();
+        }
+        // The usage chunk usually arrives with an empty `choices` array, so
+        // read it before the choice lookup below returns early.
+        if let Some(usage) = value.get("usage").filter(|usage| usage.is_object()) {
+            self.usage.merge_latest(TokenUsage::from_openai(usage));
         }
         let Some(choice) = value
             .get("choices")
@@ -187,6 +195,8 @@ pub struct AnthropicToolCollector {
     pub blocks: BTreeMap<u64, AnthropicBlock>,
     pub stop_reason: Option<String>,
     pub error: Option<String>,
+    /// Input tokens from `message_start`, output from `message_delta`.
+    pub usage: TokenUsage,
 }
 
 impl AnthropicToolCollector {
@@ -196,6 +206,12 @@ impl AnthropicToolCollector {
             return Vec::new();
         };
         match value.get("type").and_then(Value::as_str).unwrap_or("") {
+            "message_start" => {
+                if let Some(usage) = value.pointer("/message/usage") {
+                    self.usage.merge_latest(TokenUsage::from_anthropic(usage));
+                }
+                Vec::new()
+            }
             "content_block_start" => {
                 let index = value.get("index").and_then(Value::as_u64).unwrap_or(0);
                 let block = value.get("content_block");
@@ -267,6 +283,9 @@ impl AnthropicToolCollector {
             "message_delta" => {
                 if let Some(reason) = value.pointer("/delta/stop_reason").and_then(Value::as_str) {
                     self.stop_reason = Some(reason.to_string());
+                }
+                if let Some(usage) = value.get("usage") {
+                    self.usage.merge_latest(TokenUsage::from_anthropic(usage));
                 }
                 Vec::new()
             }
@@ -364,5 +383,30 @@ mod tests {
         let calls = collector.pending_calls();
         assert_eq!(calls.len(), 1);
         assert_eq!(calls[0].1.name, "update_node");
+    }
+
+    #[test]
+    fn anthropic_collector_reads_input_and_output_usage() {
+        let mut collector = AnthropicToolCollector::default();
+        collector.handle(
+            r#"{"type":"message_start","message":{"usage":{"input_tokens":120,"cache_read_input_tokens":30,"output_tokens":1}}}"#,
+        );
+        collector.handle(
+            r#"{"type":"message_delta","delta":{"stop_reason":"end_turn"},"usage":{"output_tokens":42}}"#,
+        );
+        assert_eq!(collector.usage.input_tokens, Some(150));
+        assert_eq!(collector.usage.output_tokens, Some(42));
+    }
+
+    #[test]
+    fn openai_collector_reads_the_trailing_usage_chunk() {
+        let mut collector = OpenAiToolCollector::default();
+        collector.handle(r#"{"choices":[{"delta":{"content":"hi"}}]}"#);
+        assert!(!collector.usage.reported());
+        collector.handle(
+            r#"{"choices":[],"usage":{"prompt_tokens":11,"completion_tokens":3,"total_tokens":14}}"#,
+        );
+        assert_eq!(collector.usage.input_tokens, Some(11));
+        assert_eq!(collector.usage.output_tokens, Some(3));
     }
 }
