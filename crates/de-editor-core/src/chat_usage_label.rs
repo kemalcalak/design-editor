@@ -49,7 +49,7 @@ pub fn usage_label(locale: Locale, usage: &TurnUsage) -> String {
 
 /// Sum replies: a token side is known when any reply reported it; the cost
 /// is known only when every reply was priced.
-pub fn sum_usage<'a>(replies: &mut dyn Iterator<Item = &'a TurnUsage>) -> TurnUsage {
+pub fn sum_usage(replies: &mut dyn Iterator<Item = &TurnUsage>) -> TurnUsage {
     fn add(total: &mut Option<u64>, part: Option<u64>) {
         if let Some(part) = part {
             *total = Some(total.unwrap_or(0) + part);

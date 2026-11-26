@@ -99,6 +99,14 @@ fn provider_for_selected_model_impl(
     )
 }
 
+/// A built-in provider wired for the tool-executing loop: the provider,
+/// the UI tool channel it sends calls on, and the turn's usage meter.
+pub(crate) type BuiltinToolTurn = (
+    Box<dyn ChatProvider>,
+    Receiver<ChatToolRequest>,
+    Arc<de_ai::chat_usage::UsageMeter>,
+);
+
 /// When the selected chat model is a ready builtin (API-key) entry,
 /// build its provider with the canvas tool set + a fresh UI tool
 /// channel — the GAP #32 tool-executing path. `None` falls through to
@@ -107,13 +115,7 @@ fn provider_for_selected_model_impl(
 /// The third value is the turn's usage meter (#398): every request of the
 /// agent loop records its provider-reported tokens there, priced when the
 /// model is served by Anthropic's own API (`de_ai::model_pricing`).
-pub(crate) fn builtin_provider_with_tools(
-    host: &WidgetHostNative,
-) -> Option<(
-    Box<dyn ChatProvider>,
-    Receiver<ChatToolRequest>,
-    Arc<de_ai::chat_usage::UsageMeter>,
-)> {
+pub(crate) fn builtin_provider_with_tools(host: &WidgetHostNative) -> Option<BuiltinToolTurn> {
     let state = host.editor_state();
     let entry = state.chat.selected_model_entry()?;
     let config = selected_builtin_agent_config(state, entry)?;
