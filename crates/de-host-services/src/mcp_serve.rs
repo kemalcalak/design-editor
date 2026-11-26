@@ -707,6 +707,7 @@ pub(crate) mod design_quality_tool;
 use design_quality_tool::get_design_quality_snapshot;
 pub(crate) mod boolean_op_tool;
 pub(crate) mod font_tools;
+pub(crate) mod scale_nodes_tool;
 use font_tools::load_fonts_snapshot;
 pub(crate) mod enrich_images_generate;
 pub(crate) mod enrich_images_tool;

@@ -372,6 +372,8 @@ Native (`design-editor`) + web (`shell-web`) both dispatch the following P1 keyb
 
 The shared implementation of these lives in `de_editor_core::host_keyboard_transitions` + `host_escape_transitions`; the host `keyboard*.rs` files are the platform arms.
 
+Desktop only (#395): Cmd/Ctrl+K, Cmd/Ctrl+/ (command palette) and Cmd/Ctrl+F (Find layers) go through `WidgetHostNative::apply_toggle_command_palette`; while the palette is open `de-host-desktop/src/keyboard_palette.rs` takes every key before the table above (macOS also binds Cmd+K / Cmd+F as View / Edit menu items). See "Command palette and find layers" below.
+
 ### Browsing the preview (#153)
 
 A routed (APP MODE) preview browses like a website. `de-preview-core/src/browse.rs` keeps browser-style history over every committed screen switch (whatever verb caused it), the address (page title + route), the clickable under the pointer (pointer cursor, derived hover / pressed state) and section links: a `scroll_to` aimed at the page itself becomes a `PageScrollRequest` the host applies to its device-frame scroll or Canvas pan. The browser bar widget is `de-editor-ui/src/widgets/preview_browser_bar.rs` (under the device switcher; the screen pills sit below it); its paint / press / hover / release flow, the cursor and the scroll / pan math are host-shared in `de-preview-core/src/browse_chrome.rs`, and the host arms are `widget_host/preview_browser.rs` in both hosts. Preview entry's auto-wire also runs `de_orchestrator::wire_screen_navigation::wire_web_nav_links` (header / footer links → pages or same-page sections), desktop only like the rest of auto-wire.
@@ -461,6 +463,10 @@ Mirrored on native (`widget_host/property_dispatch.rs::commit_settings_focus_if_
 - `pending_pen_history: Option<DocumentSnapshot>` — snapshot captured BEFORE `start_pen_path` mutates the tree. Pushed onto the undo stack only when the path commits with ≥ 2 anchors; a lone-anchor (invisible) path is stripped without polluting history.
 
 Press while `tool == Pen` calls `start_pen_path` or `add_pen_point` depending on `pen_in_progress`. Enter / Escape / tool change → `finish_pen_path`. Canvas paints the path through `node.points` as a polyline, plus a dashed preview line from `points.last()` to `pen_cursor_doc` while authoring.
+
+## Scale tool (#394)
+
+`Tool::Scale` (bare K; Cmd+Shift+K stays Components) scales a selection and everything in it proportionally. Core: `de_editor_core::node_scale` holds the property rules over the serialized node (one key table for every node kind and widget `states`: sizes, limits, gap / padding, radii, stroke width / dash, blur / shadow, font size, letter spacing, px line height above 4, path anchors and `d`, line `x2` / `y2`, px grid tracks, image `tileScale`; percentages, ratios, keywords, gradient geometry and image `transform` stay), `node_scale_tree` the subtree walk (descendant `x` / `y` scale, a root moves about its pivot, flow children keep `None`) and instances (the displayed master + overrides is scaled and the difference written to `descendants`: root to `descendants[ref]`, nested instances to `nested/…`; the master is untouched), `selection_scale` the validated `ScaleRequest` (per-target pivot in parent space, factor 0.01–100, typed `ScaleError` in `scale_error.rs`), `scale_with_history` (one undo step) and `EditorCommand::Scale`. Bound values: `VariableMode::KeepBound` (default) leaves `$var`s and `variableBindings` fields and lists them; `Detach` scales and unbinds. `de_editor_ui::scale_plan` turns ids + factor + anchor into a request from the layout-resolved scene (union bounds, `ScaleTarget::from_resolved`) and owns the live handle drag (`ScaleDrag`: rescales from the press-time originals, one history entry on release, restore on cancel). The properties card shows the Scale section (`property_panel_scale.rs`: W, H, factor, 3 × 3 anchor grid in `editor_ui.scale_anchor`) while the tool is active; the host commits its fields with the scene (`commit_scale_focus`). MCP `scale_nodes { nodeIds, factor | width | height, anchor, variables }` (`de-host-services/src/mcp_serve/scale_nodes_tool.rs`) builds the same request. Pixel check: `de-render-export/src/scale_pixel_tests.rs`.
 
 ## Pencil tool (#88)
 
@@ -561,6 +567,10 @@ Outside the widget hosts the same rule applies: settings payload serde lives in 
 `de-editor-core/src/editor_ui_state.rs` is a spine over seven siblings (`chrome`, `defaults`, `git_panel`, `groups`, `methods`, `pickers`, `tests`), with re-exports keeping every import path stable. Three measured field clusters became substructs in `editor_ui_state/groups.rs` — `PreviewState`, `SizeToggleState`, `DesignMdPanelState` (192 → 176 flat fields). Larger clusters were rejected on workspace touch-count, so don't group further without measuring.
 
 `request_snapshot::narrowed_snapshot(&mut EditorState)` is the sanctioned way to hand editor state to a worker thread. The MCP request path, the chat-launch path, and the desktop design pump's per-apply-ack all use it: it drops `chat` / `codegen` / `theme_presets`, which grow with session length and are read by no consumer on the worker side. A full `EditorState::clone()` on a request path is a bug.
+
+## Command palette and find layers (#395)
+
+One modal, two modes. State and every transition live in `de-editor-core/src/command_palette.rs` (+ `command_palette/{commands,fuzzy,keys,rows}.rs`): `PaletteCommand` is the command table (label key, per-platform chord as `&'static str`, English keywords), `fuzzy_score` ranks (exact > prefix > word start > substring > subsequence, shorter label wins a tie), rows carry pre-resolved labels so paint never allocates. Commands mode ranks commands, pages, components (insert a linked instance), variables (open the panel) and recent files. Find layers (`de-editor-core/src/find_layers.rs`, shared with MCP `find_nodes`) searches **every page**: free text (name, then text content, then id) plus `type:` `id:` `name:` `text:` `fill:` `var:` `component:` filters; Enter switches to the match's page, selects and frames it (`command_palette_flow::frame_nodes`), Shift+Enter selects every match on that page, Tab moves to the replace field whose Enter / Replace all rewrites the matched text on every page as one undo step (styled runs per run, locked layers skipped). Widget: `de-editor-ui/src/widgets/command_palette_{panel,flow}.rs`; native arm `widget_host/command_palette_dispatch.rs` maps each command onto its shortcut call and queues runner-only ones (file dialogs, Git panel, new chat, recent files) on `editor_ui.palette_runner_request`, which `DesktopApp::drain_palette_request` runs through `apply_menu_action`. The palette is modal like Rename layers: `modal_dialog_open()` guards the document chords. Shift+Enter and Replace run on every match (`find_all_layer_matches`, uncapped), the rows on show stop at `MAX_FIND_RESULTS` (500). Text matches compare the raw content (lowercased), the same text a replace rewrites; rows show it whitespace-collapsed. Opening the palette ends an inline canvas text edit (`text_edit_commit`). Known cost: each query edit re-walks the document and lowercases names / ids / text (no index); fine for documents of tens of thousands of layers, an index keyed on the document revision would be the next step.
 
 ## Vector path operations (#388)
 
@@ -686,7 +696,7 @@ The **`de-mcp`** crate carries the MCP wire layer that mirrors the retired TS `p
 
 ### Tool catalog
 
-**177 static-schema tools** registered today. The authoritative list
+**179 static-schema tools** registered today. The authoritative list
 is `de-host-services/src/mcp_serve/schemas.rs` — `TOOL_SCHEMAS`
 (JSON inputSchemas; `DEBUG_TOOL_SCHEMAS` is gated out of the
 production catalog) — plus the `register_tool!` calls in

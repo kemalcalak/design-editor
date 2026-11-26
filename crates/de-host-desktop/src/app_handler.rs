@@ -630,6 +630,10 @@ impl ApplicationHandler<DesktopEvent> for DesktopApp {
         if self.drain_design_md_action() {
             self.request_redraw(true);
         }
+        // A command-palette row may have queued a runner command (#395).
+        if self.drain_palette_request() {
+            self.request_redraw(true);
+        }
         // A freshly opened Rename-layers preview asks the agent (#383).
         if self.drain_rename_layers_ai() {
             self.request_redraw(true);

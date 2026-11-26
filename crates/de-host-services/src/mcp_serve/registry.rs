@@ -53,6 +53,7 @@ pub(super) fn rebuild_registry(
         de_mcp::repair_duplicate_ids_snapshot(doc)
     );
     register_tool!("rename_layers", de_mcp::rename_layers_snapshot(doc));
+    register_tool!("find_nodes", de_mcp::find_nodes_snapshot(doc));
     register_tool!("save_theme_preset", save_theme_preset_snapshot(doc));
     register_tool!("load_theme_preset", load_theme_preset_snapshot());
     register_tool!("list_theme_presets", list_theme_presets_snapshot());
@@ -147,6 +148,8 @@ pub(super) fn rebuild_registry(
             }
         }
     }
+    // The Scale tool's twin (#394): resolves bounds on the layout scene.
+    register_tool!("scale_nodes", scale_nodes_tool::scale_nodes_snapshot(doc));
     #[cfg(feature = "mcp-debug-tools")]
     if debug_tools_enabled() {
         register_tool!(

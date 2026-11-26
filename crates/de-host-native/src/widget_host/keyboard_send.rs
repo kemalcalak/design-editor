@@ -33,6 +33,10 @@ impl WidgetHostNative {
                 return sent;
             }
         }
+        // Command palette (#395): Enter runs the highlighted row.
+        if self.palette_activate(false) {
+            return true;
+        }
         // Rename-layers preview (#383): Enter commits the edited name, or
         // applies the renames as one undo step.
         if de_editor_core::rename_layers::rename_layers_enter(&mut self.editor_state).is_some() {

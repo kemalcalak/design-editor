@@ -82,3 +82,15 @@ fn an_empty_selection_is_a_typed_error() {
         Err(ClipboardExportError::NothingSelected)
     ));
 }
+
+#[test]
+fn a_multi_copy_paints_in_layer_order_not_click_order() {
+    // `dot` sits above `card`; picking it first must not put `card` on top.
+    let s = state(&["dot", "card"]);
+    let scene = de_pen_loader::editor_state_to_active_page_layout_scene(&s);
+    let page = scene.active_page().unwrap();
+    assert_eq!(
+        topmost_selected(&s, page),
+        vec!["card".to_string(), "dot".to_string()]
+    );
+}

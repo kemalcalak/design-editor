@@ -253,6 +253,8 @@ pub enum ComponentButtonState {
 /// Whether each section currently paints.
 #[derive(Debug, Clone, Copy)]
 pub struct VisibleSections {
+    /// The Scale section (#394): the Scale tool is active.
+    pub scale: bool,
     pub create_component: bool,
     /// Which Create-component variant paints (see
     /// [`ComponentButtonState`]). Only read when `create_component`.
@@ -429,6 +431,8 @@ impl VisibleSections {
     }
 
     pub const ALL: Self = Self {
+        // Tool-mode only (#394), not a node section.
+        scale: false,
         create_component: true,
         component_button: ComponentButtonState::Create,
         component_props: crate::widgets::property_panel_component_props::PropRowsLayout::None,

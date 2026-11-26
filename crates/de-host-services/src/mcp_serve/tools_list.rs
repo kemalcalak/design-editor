@@ -141,3 +141,7 @@ fn build_tools(catalog: &KitToolCatalog, debug_enabled: bool) -> String {
 fn wrap_tools(id_raw: &str, tools: &str) -> String {
     format!(r#"{{"jsonrpc":"2.0","id":{id_raw},"result":{{"tools":{tools}}}}}"#)
 }
+
+#[cfg(test)]
+#[path = "tools_list_tests.rs"]
+mod tests;

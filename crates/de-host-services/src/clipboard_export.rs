@@ -69,17 +69,36 @@ fn topmost_selected(state: &EditorState, page: &ScenePage) -> Vec<String> {
         .map(|id| id.as_str())
         .filter(|id| page.find(id).is_some())
         .collect();
-    ids.iter()
+    let topmost: Vec<&str> = ids
+        .iter()
+        .copied()
         .filter(|id| {
             !ids.iter().any(|other| {
-                other != *id
+                other != id
                     && page
                         .find(other)
                         .is_some_and(|n| n.children.iter().any(|c| c.find(id).is_some()))
             })
         })
-        .map(|id| id.to_string())
-        .collect()
+        .collect();
+    // Paint order, not click order: a later sibling sits on top, so a
+    // Shift+click that picked the upper layer first still copies it on top.
+    let mut ordered = Vec::with_capacity(topmost.len());
+    for root in &page.children {
+        collect_in_paint_order(root, &topmost, &mut ordered);
+    }
+    ordered
+}
+
+/// Depth-first walk in paint order, keeping the nodes named in `wanted`.
+fn collect_in_paint_order(node: &SceneNode, wanted: &[&str], out: &mut Vec<String>) {
+    if wanted.contains(&node.id.as_str()) {
+        out.push(node.id.clone());
+        return;
+    }
+    for child in &node.children {
+        collect_in_paint_order(child, wanted, out);
+    }
 }
 
 #[cfg(test)]

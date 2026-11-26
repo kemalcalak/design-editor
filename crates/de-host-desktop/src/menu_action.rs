@@ -70,8 +70,27 @@ impl DesktopApp {
         action: menu::MenuAction,
         event_loop: &ActiveEventLoop,
     ) {
+        let consumed = if action == menu::MenuAction::Quit {
+            // Route through the unsaved-changes prompt — Cancel
+            // there aborts the quit.
+            if self.confirm_close() {
+                event_loop.exit();
+            }
+            false
+        } else {
+            self.apply_menu_action(action)
+        };
+        if consumed {
+            self.request_redraw(true);
+        }
+    }
+
+    /// Every menu action but Quit (which needs the event loop); also the
+    /// command palette's runner-side commands (#395). `true` when a
+    /// repaint is owed.
+    pub(crate) fn apply_menu_action(&mut self, action: menu::MenuAction) -> bool {
         use menu::MenuAction as A;
-        let consumed = match action {
+        match action {
             A::Home => {
                 let outcome = persistence::run_action(
                     de_editor_core::editor_ui_state::FileAction::Home,
@@ -246,14 +265,13 @@ impl DesktopApp {
                 self.host.mark_editor_state_dirty();
                 true
             }
-            A::Quit => {
-                // Route through the unsaved-changes prompt — Cancel
-                // there aborts the quit.
-                if self.confirm_close() {
-                    event_loop.exit();
-                }
-                false
-            }
+            A::Quit => false,
+            A::CommandPalette => self.host.apply_toggle_command_palette(
+                de_editor_core::command_palette::PaletteMode::Commands,
+            ),
+            A::FindLayers => self.host.apply_toggle_command_palette(
+                de_editor_core::command_palette::PaletteMode::FindLayers,
+            ),
             A::CheckUpdates => {
                 // Make every manual check visible immediately. An automatic
                 // startup probe may already be running, so reveal that same
@@ -271,9 +289,6 @@ impl DesktopApp {
                 update_check::open_url("https://github.com/kemalcalak/design-editor");
                 false
             }
-        };
-        if consumed {
-            self.request_redraw(true);
         }
     }
 }

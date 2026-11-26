@@ -60,6 +60,7 @@ impl WidgetHostNative {
             path_anchor_drag: None,
             arc_handle_drag: None,
             handle_drag: None,
+            scale_drag: None,
             rotate_drag: None,
             create_drag: None,
             marquee_drag: None,

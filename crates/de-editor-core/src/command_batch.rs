@@ -139,6 +139,7 @@ fn batchable(cmd: &EditorCommand) -> bool {
         | C::SetNodeStrokeStyle { .. }
         | C::AlignSelected { .. }
         | C::Path(_)
+        | C::Scale(_)
         | C::SetNodeFillHex { .. }
         | C::SetNodeName { .. }
         | C::SetImageVideoSrc { .. }

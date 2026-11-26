@@ -56,6 +56,7 @@ fn bundled() -> Vec<String> {
 
 fn visible_text() -> VisibleSections {
     VisibleSections {
+        scale: false,
         text: true,
         create_component: false,
         flex_layout: false,

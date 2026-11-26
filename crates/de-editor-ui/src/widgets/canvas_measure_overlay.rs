@@ -14,7 +14,7 @@ use std::rc::Rc;
 
 use crate::layout_scene::LayoutScene;
 use crate::widgets::canvas_viewport::paint_dashed_line;
-use crate::widgets::PaintCx;
+use crate::widgets::{text_metrics, PaintCx};
 use crate::{Color, Point2D, Rect, TextLayout};
 use de_editor_core::measure::{format_measure_value, measure, MeasureGuide, MeasureLine};
 use de_editor_core::Viewport as DocViewport;
@@ -68,15 +68,15 @@ impl MeasureOverlay {
             return None;
         }
         let page = scene.active_page()?;
-        let target = page.find(hovered.as_str())?.bounds;
+        let target = page.find(hovered.as_str())?.aggregate_bounds();
         let mut sel: Option<Rect> = None;
         for id in state.selection.set.iter().filter(|id| id.is_real()) {
             let Some(node) = page.find(id.as_str()) else {
                 continue;
             };
             sel = Some(match sel {
-                Some(acc) => union(acc, node.bounds),
-                None => node.bounds,
+                Some(acc) => union(acc, node.aggregate_bounds()),
+                None => node.aggregate_bounds(),
             });
         }
         let sel = sel?;
@@ -101,7 +101,7 @@ impl MeasureOverlay {
                 let label_text = format_measure_value(line.value);
                 let label = TextLayout::single_run(
                     &label_text,
-                    "system-ui",
+                    text_metrics::CHROME_FONT_FAMILY,
                     LABEL_FONT,
                     Color::WHITE.to_jian(),
                     Point2D::new(0.0, 0.0),
@@ -143,7 +143,8 @@ impl MeasureOverlay {
         for l in &self.lines {
             let a = to_screen(l.line.from);
             let b = to_screen(l.line.to);
-            let w = cx.backend.measure_text(&l.label_text, LABEL_FONT) + LABEL_PAD_X * 2.0;
+            let w = text_metrics::measure_chrome(cx.backend, &l.label_text, LABEL_FONT)
+                + LABEL_PAD_X * 2.0;
             let (cx_mid, cy_mid) = ((a.x + b.x) / 2.0, (a.y + b.y) / 2.0);
             // Horizontal distances sit under their line, vertical ones
             // beside it, so the pill never hides the line it labels.

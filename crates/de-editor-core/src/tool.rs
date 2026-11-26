@@ -46,12 +46,16 @@ pub enum Tool {
     /// Live browser (#20): a click drops a desktop-sized `browser` node,
     /// picked from the shape menu.
     Browser,
+    /// Scale (#394, K): a selection-handle drag scales the selection and
+    /// everything in it proportionally instead of resizing it; the
+    /// properties card shows the Scale section.
+    Scale,
 }
 
 impl Tool {
     /// All tools, in toolbar display order. Single source of truth for
     /// the toolbar build path.
-    pub const ALL: [Tool; 23] = [
+    pub const ALL: [Tool; 24] = [
         Tool::Select,
         Tool::Rect,
         Tool::Ellipse,
@@ -75,6 +79,7 @@ impl Tool {
         Tool::Tabs,
         Tool::Note,
         Tool::Browser,
+        Tool::Scale,
     ];
 
     /// The ten form-widget tools, in toolbar / flyout display order.
@@ -120,6 +125,7 @@ impl Tool {
             Tool::Tabs => "tabs",
             Tool::Note => "note",
             Tool::Browser => "browser",
+            Tool::Scale => "scale",
         }
     }
 

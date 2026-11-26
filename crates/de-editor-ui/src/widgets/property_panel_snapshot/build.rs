@@ -138,6 +138,7 @@ impl NodeSnapshot {
             flip_y: false,
             vector_points: None,
             path_ops: Default::default(),
+            scale: None,
             shader_preset: None,
             shader_custom_available: false,
             mesh_lattice: None,
@@ -233,6 +234,7 @@ impl NodeSnapshot {
             flip_y: false,
             vector_points: None,
             path_ops: Default::default(),
+            scale: None,
             shader_preset: None,
             shader_custom_available: false,
             mesh_lattice: None,
@@ -362,6 +364,7 @@ impl NodeSnapshot {
             flip_y: base.flip_y == Some(true),
             vector_points: None,
             path_ops: Default::default(),
+            scale: None,
             shader_preset: de_editor_core::shader_presets::primary_shader_preset(node),
             shader_custom_available: de_editor_core::shader_presets::primary_custom_shader(node)
                 .is_some(),

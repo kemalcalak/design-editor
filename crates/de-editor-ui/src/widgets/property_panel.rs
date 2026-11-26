@@ -381,6 +381,7 @@ impl PropertyPanel {
         let variant_rows =
             crate::widgets::property_panel_variants::VariantRowsLayout::of(&self.variants);
         sections::VisibleSections {
+            scale: self.snapshot.scale.is_some(),
             create_component: self.snapshot.is_instance
                 || self.snapshot.instance_override
                 || component_props.rows() > 0

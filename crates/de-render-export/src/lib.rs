@@ -476,6 +476,9 @@ mod shader_effect_tests;
 mod text_fill_tests;
 
 #[cfg(test)]
+mod scale_pixel_tests;
+
+#[cfg(test)]
 mod convert_instances_tests;
 
 #[cfg(test)]

@@ -272,6 +272,9 @@ pub fn action_button_rects_with_fill_picker(
         fills,
         interactions,
     );
+    if visible.scale {
+        crate::widgets::property_panel_scale::push_scale_action_rects(&mut out, x0, tops.scale, w);
+    }
     if visible.create_component {
         use crate::widgets::property_panel_component_props as props;
         use crate::widgets::property_panel_variants as variants;

@@ -259,7 +259,7 @@ impl WidgetHostNative {
             // The Pencil draws over nodes too, so it never drops to the
             // node-hover arrow.
             Tool::Pencil => CursorHint::Crosshair,
-            Tool::Select => {
+            Tool::Select | Tool::Scale => {
                 if let Some(editing) = self.editor_state.editor_ui.image_crop_editing.as_ref() {
                     let over_editing_node = self
                         .layout_scene

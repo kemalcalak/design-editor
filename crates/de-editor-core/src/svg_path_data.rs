@@ -52,6 +52,33 @@ pub(crate) fn svg_path_bounds(d: &str) -> Option<SvgPathBounds> {
     segment_bounds(&absolute_segments(d)?)
 }
 
+/// `d` with every coordinate and arc radius multiplied by `factor`
+/// about the origin (#394, the Scale tool). Arc rotation and flags stay.
+/// `None` when `d` does not parse.
+pub(crate) fn scale_svg_path(d: &str, factor: f64) -> Option<String> {
+    let f = factor;
+    let scaled: Vec<Segment> = absolute_segments(d)?
+        .into_iter()
+        .map(|seg| match seg {
+            Segment::Move(x, y) => Segment::Move(x * f, y * f),
+            Segment::Line(x, y) => Segment::Line(x * f, y * f),
+            Segment::HLine(x) => Segment::HLine(x * f),
+            Segment::VLine(y) => Segment::VLine(y * f),
+            Segment::Cubic(a, b, c, d, x, y) => {
+                Segment::Cubic(a * f, b * f, c * f, d * f, x * f, y * f)
+            }
+            Segment::SmoothCubic(a, b, x, y) => Segment::SmoothCubic(a * f, b * f, x * f, y * f),
+            Segment::Quad(a, b, x, y) => Segment::Quad(a * f, b * f, x * f, y * f),
+            Segment::SmoothQuad(x, y) => Segment::SmoothQuad(x * f, y * f),
+            Segment::Arc(rx, ry, rot, large, sweep, x, y) => {
+                Segment::Arc(rx * f, ry * f, rot, large, sweep, x * f, y * f)
+            }
+            Segment::Close => Segment::Close,
+        })
+        .collect();
+    Some(serialize_local_segments(&scaled, 0.0, 0.0))
+}
+
 fn absolute_segments(d: &str) -> Option<Vec<Segment>> {
     let tokens = tokenize_path(d);
     if tokens.is_empty() {

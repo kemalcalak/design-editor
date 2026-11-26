@@ -51,6 +51,8 @@ impl WidgetHostNative {
         // Rename-layers preview (#383) — modal with its scrim, under the
         // missing-font prompt, mirroring its press tier.
         self.paint_rename_layers(frame, viewport_width, viewport_height);
+        // Command palette (#395) — same layer; the two are never open together.
+        self.paint_command_palette(frame, viewport_width, viewport_height);
 
         // Missing-font prompt — absolute top-most modal after every other
         // overlay, matching its first-tier press routing.

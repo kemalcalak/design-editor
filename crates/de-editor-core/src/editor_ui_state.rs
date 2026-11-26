@@ -528,6 +528,11 @@ pub struct EditorUiState {
     pub missing_fonts_prompt: Option<crate::missing_fonts::MissingFontsPrompt>,
     /// Open Rename-layers preview (#383); `None` when closed.
     pub rename_layers: Option<crate::rename_layers::RenameLayersDialog>,
+    /// Open command palette / find layers (#395); `None` when closed.
+    pub command_palette: Option<crate::command_palette::CommandPaletteState>,
+    /// A palette activation only the desktop runner can carry out (file
+    /// dialogs, the Git session, chat tabs); the runner drains it.
+    pub palette_runner_request: Option<crate::command_palette::PaletteRunnerRequest>,
     /// Whether the one-shot modal is visible. Dismissal keeps prompt data so
     /// the Settings Fonts tab can continue to expose unresolved rows.
     pub missing_fonts_modal_open: bool,
@@ -749,6 +754,9 @@ pub struct EditorUiState {
     /// means typing goes to it: a press in the search box (or Cmd+Shift+K)
     /// focuses it, a press elsewhere or Escape lets go.
     pub component_browser_search_focused: bool,
+    /// The Scale section's anchor (#394): the point of the selection's
+    /// bounds a panel scale keeps in place.
+    pub scale_anchor: crate::selection_scale::ScaleAnchor,
     /// Vertical scroll of the Components tab's card grid.
     pub component_browser_scroll: jian_core::scroll::ScrollState,
     /// Vertical scroll of the Images tab's thumbnail grid.
@@ -775,8 +783,7 @@ pub struct EditorUiState {
     /// Active kit filter (`None` = every loaded kit). Mirrors the TS
     /// `uikit-store.ts` `activeKitId`.
     pub component_browser_kit_id: Option<String>,
-    /// Whether the kit-filter dropdown popover is open (the TS panel
-    /// uses a native `<select>`; the Rust panel paints a popover).
+    /// Whether the kit-filter dropdown popover is open.
     pub component_browser_kit_picker_open: bool,
     /// Imported-kit id awaiting delete confirmation — the TS panel's `confirmDeleteKitId`
     /// (Trash press arms it; Delete / Cancel resolve it). Transient: never serialized.

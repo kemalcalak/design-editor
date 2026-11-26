@@ -92,6 +92,9 @@ impl PropertyPanel {
         now_ms: u64,
     ) -> Option<Self> {
         let mut panel = Self::for_selection_at(state, now_ms)?;
+        if let Some(scale) = panel.snapshot.scale.as_mut() {
+            scale.refine(state, scene);
+        }
         if !panel.page_only && state.selection_count() == 1 {
             if let Some(node) = scene
                 .active_page()
@@ -299,13 +302,14 @@ impl PropertyPanel {
 
     fn build_from_snapshot(
         state: &EditorState,
-        snapshot: NodeSnapshot,
+        mut snapshot: NodeSnapshot,
         fill_type: de_editor_core::FillType,
         now_ms: u64,
         is_multi: bool,
         fill_variable_ref: Option<String>,
         stroke_variable_ref: Option<String>,
     ) -> Self {
+        snapshot.scale = crate::widgets::property_panel_scale::ScaleSummary::for_state(state);
         let ui = &state.editor_ui;
         let property_tab = ui.property_tab;
         let color_variables = color_variable_options(state);

@@ -48,6 +48,8 @@ pub(crate) fn apply_paint_option_action(state: &mut EditorState, action: &Proper
         A::FlipSelection(axis) => {
             let _ = state.flip_selected(*axis);
         }
+        // UI state: the anchor the next panel scale keeps in place.
+        A::SetScaleAnchor(anchor) => state.editor_ui.scale_anchor = *anchor,
         A::SetShaderPreset(preset) => {
             let _ = state.set_selected_shader_preset(*preset);
         }
