@@ -92,13 +92,18 @@ fn bands(spans: &[(f64, f64)]) -> (Vec<usize>, usize) {
     (band_of, band + 1)
 }
 
-/// Each member's (row, column) and the row and column counts, from their
-/// boxes when `parent` places its children freely (or they are a page's
-/// top-level layers), from their order in a laid-out row or column.
-fn cells(
-    members: &[&PenNode],
-    parent: Option<&PenNode>,
-) -> Option<(Vec<(usize, usize)>, usize, usize)> {
+/// Where siblings sit: each one's (row, column) and the row and column
+/// counts.
+struct Grid {
+    cells: Vec<(usize, usize)>,
+    rows: usize,
+    columns: usize,
+}
+
+/// The grid `members` sit in, from their boxes when `parent` places its
+/// children freely (or they are a page's top-level layers), from their
+/// order in a laid-out row or column.
+fn grid(members: &[&PenNode], parent: Option<&PenNode>) -> Option<Grid> {
     let laid_out = parent
         .and_then(layout)
         .filter(|mode| **mode != LayoutMode::None);
@@ -106,17 +111,18 @@ fn cells(
         // A wrapping row breaks lines where the layout decides.
         return None;
     }
+    let count = members.len();
     match laid_out {
-        Some(LayoutMode::Horizontal) => Some((
-            (0..members.len()).map(|i| (0, i)).collect(),
-            1,
-            members.len(),
-        )),
-        Some(LayoutMode::Vertical) => Some((
-            (0..members.len()).map(|i| (i, 0)).collect(),
-            members.len(),
-            1,
-        )),
+        Some(LayoutMode::Horizontal) => Some(Grid {
+            cells: (0..count).map(|i| (0, i)).collect(),
+            rows: 1,
+            columns: count,
+        }),
+        Some(LayoutMode::Vertical) => Some(Grid {
+            cells: (0..count).map(|i| (i, 0)).collect(),
+            rows: count,
+            columns: 1,
+        }),
         Some(_) => None,
         None => {
             let placed = match parent {
@@ -129,7 +135,11 @@ fn cells(
             let boxes: Vec<Bounds> = members.iter().map(|node| bounds_in_parent(node)).collect();
             let (rows, row_count) = bands(&boxes.iter().map(|b| (b.y, b.h)).collect::<Vec<_>>());
             let (cols, col_count) = bands(&boxes.iter().map(|b| (b.x, b.w)).collect::<Vec<_>>());
-            Some((rows.into_iter().zip(cols).collect(), row_count, col_count))
+            Some(Grid {
+                cells: rows.into_iter().zip(cols).collect(),
+                rows: row_count,
+                columns: col_count,
+            })
         }
     }
 }
@@ -192,7 +202,11 @@ pub(crate) fn position_words(
     if members.len() < 2 {
         return None;
     }
-    let (cells, rows, columns) = cells(members, parent)?;
+    let Grid {
+        cells,
+        rows,
+        columns,
+    } = grid(members, parent)?;
     if rows > MAX_BANDS || columns > MAX_BANDS {
         return None;
     }

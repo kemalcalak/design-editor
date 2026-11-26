@@ -380,14 +380,14 @@ fn template_names_follow_what_their_authors_called_them() {
     let en = |key| de_i18n::translate(Locale::EnUs, key);
     // Pills as roomy around their labels as a small button (`VOL.12 Tech
     // Meetup`, `$50 off at launch`, `Lunch break & networking`): their
-    // geometry cannot tell them from one.
+    // geometry cannot tell them from one (#453).
     let roomy_badges = [
         "conference-agenda-card.de n105",
         "event-invitation-card.de n7",
         "product-launch-card.de n94",
     ];
     // A date filter as compact as a chip (`Last 7 Days` beside a calendar
-    // icon), wired to nothing.
+    // icon), wired to nothing (#453).
     let compact_buttons = ["product-landing-light.de n1445"];
     let mut navigation = Vec::new();
     let (mut badges, mut placed) = (0, 0);
