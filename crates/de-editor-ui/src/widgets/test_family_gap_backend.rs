@@ -96,6 +96,8 @@ impl PaintedRun {
 pub(crate) struct FamilyGapBackend {
     /// Every `draw_text`, in paint order.
     pub(crate) runs: Vec<PaintedRun>,
+    /// Every `fill_rect`, in paint order (a text input's caret is one).
+    pub(crate) rect_fills: Vec<Rect>,
     /// Live clip stack — `save` / `restore` / `clip_rect` are modelled so a
     /// run's recorded clip is the one actually in effect when it was drawn.
     clip_stack: Vec<Option<Rect>>,
@@ -109,6 +111,7 @@ impl Default for FamilyGapBackend {
     fn default() -> Self {
         Self {
             runs: Vec::new(),
+            rect_fills: Vec::new(),
             clip_stack: vec![None],
             family_ascii_ratio: FAMILY_ASCII_RATIO,
         }
@@ -144,7 +147,9 @@ impl FamilyGapBackend {
 impl RenderBackend for FamilyGapBackend {
     fn begin_frame(&mut self) {}
     fn end_frame(&mut self) {}
-    fn fill_rect(&mut self, _: Rect, _: Color) {}
+    fn fill_rect(&mut self, rect: Rect, _: Color) {
+        self.rect_fills.push(rect);
+    }
     fn stroke_rect(&mut self, _: Rect, _: Color, _: f32) {}
     fn draw_text(&mut self, layout: &TextLayout, point: Point2D) {
         for run in layout.runs() {

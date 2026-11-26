@@ -47,7 +47,7 @@ pub struct McpPopoverLayout {
     pub header: Rect,
     /// "Start server" (zero while MCP runs).
     pub start: Rect,
-    pub intro_lines: Vec<String>,
+    pub intro_lines: std::rc::Rc<[String]>,
     pub intro_y: f32,
     pub endpoint_label_y: f32,
     pub endpoint_box: Rect,

@@ -102,7 +102,7 @@ pub(super) fn paint_composer(surface: &HomeSurface<'_>, cx: &mut PaintCx<'_>, la
         font_size: INPUT_FONT,
         now_ms: surface.now_ms,
         pad_x: INPUT_PAD_X,
-        max_visible_lines: 3,
+        max_visible_lines: INPUT_VISIBLE_LINES,
     };
     // `draw_text` is baseline-relative but jian's TextArea positions glyph
     // runs from the line top, so every draw shifts down by the ascent —
@@ -317,31 +317,35 @@ pub(super) fn paint_popover_card(cx: &mut PaintCx<'_>, surface: &HomeSurface<'_>
     cx.backend.stroke_round_rect(rect, 10.0, p.border, 1.0);
 }
 
-/// The face jian's `TextArea` paints (and measures) its text in
-/// (`jian_widgets::components::text_area`), so the IME caret is measured
-/// in it too.
-const INPUT_FAMILY: &str = "Inter";
-/// `TextArea`'s line height (1.35 em) and the inset above its first line.
+/// Copies of jian `TextArea` constants, which jian keeps private
+/// (`jian_widgets::components::text_area`): the face it paints and measures
+/// its text in, its line height (1.35 em) and the inset above the first
+/// line. `the_ime_caret_is_where_the_text_area_paints_its_caret` paints a
+/// real `TextArea` and fails if any of them drifts from jian.
+pub(super) const INPUT_FAMILY: &str = "Inter";
 const INPUT_LINE_H: f32 = INPUT_FONT * 1.35;
 const TEXT_AREA_PAD_Y: f32 = 4.0;
-/// Lines the composer shows before it scrolls (`max_visible_lines`).
-const INPUT_VISIBLE_LINES: usize = 3;
+/// Lines the composer shows before it scrolls (its `max_visible_lines`).
+pub(super) const INPUT_VISIBLE_LINES: usize = 3;
+/// The caret `TextArea` paints: 1.5 px wide, one font size plus 3 tall.
+const CARET_W: f32 = 1.5;
 
-/// The caret rect for the platform IME panel, where the input paints the
-/// caret: the input's lines are wrapped and the text before the caret is
-/// measured through `backend` in the face the input draws (#440), and the
-/// row is the caret's line among the visible ones.
+/// The caret rect for the platform IME panel, where `TextArea` paints the
+/// caret (#440): the input's lines are wrapped and the text before the
+/// caret, plus the preedit before its own cursor, is measured through
+/// `backend` in the face the input draws, on the caret's line among the
+/// visible ones.
 pub(super) fn caret_rect(
     surface: &HomeSurface<'_>,
     layout: &HomeLayout,
     backend: &mut dyn RenderBackend,
 ) -> Rect {
+    use crate::widgets::text_metrics::measure_in_family;
+    use jian_core::text_input::prev_char_boundary;
     let input = layout.input_box;
-    let text = surface.state.input.text();
-    let caret = jian_core::text_input::prev_char_boundary(
-        text,
-        surface.state.input.caret().min(text.len()),
-    );
+    let state = &surface.state.input;
+    let text = state.text();
+    let caret = prev_char_boundary(text, state.caret().min(text.len()));
     let content_w = (input.size.x - 2.0 * INPUT_PAD_X).max(0.0);
     let lines = TextArea::layout_lines(backend, text, INPUT_FONT, content_w);
     let last = lines.len() - 1;
@@ -355,23 +359,26 @@ pub(super) fn caret_rect(
         })
         .unwrap_or(last);
     let line = &lines[line_i];
-    let rel = jian_core::text_input::prev_char_boundary(
+    let rel = prev_char_boundary(
         &line.text,
         caret.saturating_sub(line.start).min(line.text.len()),
     );
-    let before = crate::widgets::text_metrics::measure_in_family(
-        backend,
-        &line.text[..rel],
-        INPUT_FONT,
-        INPUT_FAMILY,
-    );
+    let mut before = measure_in_family(backend, &line.text[..rel], INPUT_FONT, INPUT_FAMILY);
+    // The preedit is drawn at the caret; the caret sits at its cursor.
+    if let Some(composition) = state.composition().filter(|c| !c.text.is_empty()) {
+        let cursor = prev_char_boundary(
+            &composition.text,
+            composition.cursor.min(composition.text.len()),
+        );
+        let preedit = &composition.text[..cursor];
+        before += measure_in_family(backend, preedit, INPUT_FONT, INPUT_FAMILY);
+    }
     let first_visible = (line_i + 1).saturating_sub(INPUT_VISIBLE_LINES);
     let row = (line_i - first_visible) as f32;
-    let x = input.origin.x + INPUT_PAD_X + before.min(content_w);
     Rect::xywh(
-        x,
+        input.origin.x + INPUT_PAD_X + before,
         text_rect(input).origin.y + TEXT_AREA_PAD_Y + row * INPUT_LINE_H,
-        1.5,
-        INPUT_LINE_H,
+        CARET_W,
+        INPUT_FONT + 3.0,
     )
 }

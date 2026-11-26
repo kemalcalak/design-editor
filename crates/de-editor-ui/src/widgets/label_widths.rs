@@ -29,6 +29,10 @@
 //! frames painted therefore survives a rollover; only widths nothing has
 //! used for a whole generation are dropped.
 //!
+//! Wrapped copy is kept separately, as whole lines ([`LabelWidths::wrap`]):
+//! a wrap measures many prefixes once, and keeping each of them as a width
+//! would fill the width map with strings nothing reads again.
+//!
 //! A run nothing has measured yet (a unit test without a backend, a press
 //! that lands before the first frame painted a new label) reads
 //! [`estimate_width`], a backend-free heuristic. It is the one place that
@@ -37,6 +41,7 @@
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::hash::{DefaultHasher, Hash, Hasher};
+use std::rc::Rc;
 
 use super::line_break::wrap_lines;
 use super::text_metrics::{measure_in_family, measure_in_family_weighted, CHROME_FONT_FAMILY};
@@ -45,37 +50,87 @@ use de_editor_core::text_wrap::wrap_text_measured;
 
 /// Widths one generation holds before it rolls over (see the module docs).
 const GENERATION_CAP: usize = 4096;
+/// Wrapped texts one generation holds: a wrap is a whole paragraph, so far
+/// fewer are live at once than single runs.
+const WRAP_GENERATION_CAP: usize = 256;
 
 /// The regular weight, measured without a weight argument (as
 /// `text_metrics::measure_chrome` does).
 const REGULAR: u16 = 400;
 
-#[derive(Default)]
-struct Generations {
-    current: HashMap<u64, f32>,
-    previous: HashMap<u64, f32>,
+/// A map bounded by two generations of `cap` entries: a full current
+/// generation becomes the previous one, and a hit in the previous one is
+/// copied forward, so whatever recent frames used survives a rollover.
+struct Generations<V> {
+    cap: usize,
+    current: HashMap<u64, V>,
+    previous: HashMap<u64, V>,
 }
 
-impl Generations {
-    fn get(&mut self, key: u64) -> Option<f32> {
-        if let Some(width) = self.current.get(&key) {
-            return Some(*width);
+impl<V: Clone> Generations<V> {
+    fn new(cap: usize) -> Self {
+        Self {
+            cap,
+            current: HashMap::new(),
+            previous: HashMap::new(),
         }
-        let width = self.previous.get(&key).copied()?;
-        self.insert(key, width);
-        Some(width)
     }
 
-    fn insert(&mut self, key: u64, width: f32) {
-        if self.current.len() >= GENERATION_CAP {
+    fn get(&mut self, key: u64) -> Option<V> {
+        if let Some(value) = self.current.get(&key) {
+            return Some(value.clone());
+        }
+        let value = self.previous.get(&key).cloned()?;
+        self.insert(key, value.clone());
+        Some(value)
+    }
+
+    fn insert(&mut self, key: u64, value: V) {
+        if self.current.len() >= self.cap {
             self.previous = std::mem::take(&mut self.current);
         }
-        self.current.insert(key, width);
+        self.current.insert(key, value);
     }
 }
 
 thread_local! {
-    static CACHE: RefCell<Generations> = RefCell::new(Generations::default());
+    static CACHE: RefCell<Generations<f32>> = RefCell::new(Generations::new(GENERATION_CAP));
+    /// Wrapped lines, keyed on the text and everything its breaks depend
+    /// on (`wrap_key`). The per-prefix measurements a wrap makes are not
+    /// kept: only the lines are, so a long CJK or Thai paragraph costs one
+    /// entry here instead of one width entry per prefix in `CACHE`.
+    static WRAPS: RefCell<Generations<Rc<[String]>>> =
+        RefCell::new(Generations::new(WRAP_GENERATION_CAP));
+}
+
+fn wrap_key(text: &str, max_w: f32, size: f32, family: &str, weight: u16) -> u64 {
+    let mut hasher = DefaultHasher::new();
+    key(text, size, family, weight).hash(&mut hasher);
+    max_w.to_bits().hash(&mut hasher);
+    hasher.finish()
+}
+
+/// Width of one run through `backend`, in `family` at `weight`.
+fn measure_run(
+    backend: &mut dyn RenderBackend,
+    text: &str,
+    size: f32,
+    family: &str,
+    weight: u16,
+) -> f32 {
+    if weight == REGULAR {
+        measure_in_family(backend, text, size, family)
+    } else {
+        measure_in_family_weighted(backend, text, size, family, weight)
+    }
+}
+
+/// Break `text` with `measure` (see [`LabelWidths::wrap`]).
+fn wrap_with(text: &str, max_w: f32, measure: &mut dyn FnMut(&str) -> f32) -> Vec<String> {
+    wrap_text_measured(text, max_w, measure)
+        .into_iter()
+        .flat_map(|line| wrap_lines(&line, max_w, &mut *measure))
+        .collect()
 }
 
 /// What decides one run's painted width.
@@ -127,11 +182,7 @@ impl<'a> LabelWidths<'a> {
         let Some(backend) = self.backend.as_deref_mut() else {
             return estimate_width(text, size);
         };
-        let width = if weight == REGULAR {
-            measure_in_family(backend, text, size, family)
-        } else {
-            measure_in_family_weighted(backend, text, size, family, weight)
-        };
+        let width = measure_run(backend, text, size, family, weight);
         CACHE.with(|cache| cache.borrow_mut().insert(key, width));
         width
     }
@@ -142,6 +193,11 @@ impl<'a> LabelWidths<'a> {
     /// phrases without spaces) again between clusters (`wrap_lines`).
     /// The chrome's wrapped copy wraps here, so paint and hit-test break
     /// the same lines.
+    ///
+    /// The lines are kept whole (`WRAPS`), so a repaint or a hit-test
+    /// reads them with one lookup and never re-measures a prefix. Only a
+    /// measuring pass keeps a wrap; a cached pass that misses breaks
+    /// against the estimate and keeps nothing.
     pub fn wrap(
         &mut self,
         text: &str,
@@ -149,14 +205,20 @@ impl<'a> LabelWidths<'a> {
         size: f32,
         family: &str,
         weight: u16,
-    ) -> Vec<String> {
-        let lines = wrap_text_measured(text, max_w, &mut |s: &str| {
-            self.styled(s, size, family, weight)
-        });
+    ) -> Rc<[String]> {
+        let key = wrap_key(text, max_w, size, family, weight);
+        if let Some(lines) = WRAPS.with(|wraps| wraps.borrow_mut().get(key)) {
+            return lines;
+        }
+        let Some(backend) = self.backend.as_deref_mut() else {
+            return wrap_with(text, max_w, &mut |s| estimate_width(s, size)).into();
+        };
+        let lines: Rc<[String]> = wrap_with(text, max_w, &mut |s| {
+            measure_run(backend, s, size, family, weight)
+        })
+        .into();
+        WRAPS.with(|wraps| wraps.borrow_mut().insert(key, lines.clone()));
         lines
-            .into_iter()
-            .flat_map(|line| wrap_lines(&line, max_w, |s| self.styled(s, size, family, weight)))
-            .collect()
     }
 }
 
@@ -188,7 +250,17 @@ fn is_wide(c: char) -> bool {
 /// Empty the cache, so a test starts from unmeasured labels.
 #[cfg(test)]
 pub(crate) fn reset() {
-    CACHE.with(|cache| *cache.borrow_mut() = Generations::default());
+    CACHE.with(|cache| *cache.borrow_mut() = Generations::new(GENERATION_CAP));
+    WRAPS.with(|wraps| *wraps.borrow_mut() = Generations::new(WRAP_GENERATION_CAP));
+}
+
+/// How many widths and wrapped texts the current generations hold.
+#[cfg(test)]
+pub(crate) fn kept() -> (usize, usize) {
+    (
+        CACHE.with(|cache| cache.borrow().current.len()),
+        WRAPS.with(|wraps| wraps.borrow().current.len()),
+    )
 }
 
 /// What an unmeasured run reads, for tests that pin the fallback.

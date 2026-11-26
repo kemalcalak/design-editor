@@ -162,7 +162,7 @@ impl<'a> UpdateModal<'a> {
     /// so hit-test (no backend) and paint agree on the card height; the
     /// widths are kept, so no text is shaped again on the 10 Hz download
     /// repaint.
-    fn body_lines(&self, inner_w: f32, widths: &mut LabelWidths<'_>) -> Vec<String> {
+    fn body_lines(&self, inner_w: f32, widths: &mut LabelWidths<'_>) -> std::rc::Rc<[String]> {
         widths.wrap(
             &self.body_text(),
             inner_w,
@@ -304,9 +304,9 @@ impl Widget for UpdateModal<'_> {
                 self.button_rects_with(rect, &mut widths),
             )
         };
-        for line in body {
+        for line in body.iter() {
             // Baseline sits a little above the line box's bottom.
-            draw(cx, &line, BODY_SIZE, body_color, x, y + LINE_H - 5.0);
+            draw(cx, line, BODY_SIZE, body_color, x, y + LINE_H - 5.0);
             y += LINE_H;
         }
 

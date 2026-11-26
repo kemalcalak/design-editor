@@ -4,6 +4,8 @@
 //! lives in `EditorUiState::whats_new`; buttons map to `WhatsNewButton`s
 //! that `EditorUiState::press_whats_new_button` applies.
 
+use std::rc::Rc;
+
 use crate::theme::Theme;
 use crate::widgets::editor_state_ext::{theme_for, translate};
 use crate::widgets::label_widths::LabelWidths;
@@ -58,9 +60,9 @@ pub struct WhatsNewModal<'a> {
 /// The text blocks of a page, wrapped to the card's inner width. Paint and
 /// hit-test both walk this one stack, so they agree on the card height.
 struct PageLines {
-    title: Vec<String>,
-    intro: Vec<String>,
-    items: Vec<Vec<String>>,
+    title: Rc<[String]>,
+    intro: Rc<[String]>,
+    items: Vec<Rc<[String]>>,
 }
 
 impl<'a> WhatsNewModal<'a> {
@@ -234,7 +236,7 @@ fn lines_for(note: &ReleaseNote, inner_w: f32, widths: &mut LabelWidths<'_>) -> 
             .intro
             .as_deref()
             .map(|intro| wrap(intro, inner_w, BODY_SIZE, widths))
-            .unwrap_or_default(),
+            .unwrap_or_else(|| Rc::from([])),
         items: note
             .items
             .iter()
@@ -251,7 +253,7 @@ fn card_height(lines: &PageLines) -> f32 {
         h += SECTION_GAP / 2.0 + lines.intro.len() as f32 * LINE_H;
     }
     h += SECTION_GAP;
-    let item_lines: usize = lines.items.iter().map(Vec::len).sum();
+    let item_lines: usize = lines.items.iter().map(|item| item.len()).sum();
     h += item_lines as f32 * LINE_H;
     h += ITEM_GAP * lines.items.len().saturating_sub(1) as f32;
     h + SECTION_GAP * 2.0 + BUTTON_H + PAD
@@ -261,7 +263,7 @@ fn card_height(lines: &PageLines) -> f32 {
 /// backend) and paint agree on the card height. The canvas wrap breaks
 /// Latin at spaces and CJK between characters; a line it leaves too wide
 /// (Thai writes phrases without spaces) is broken again between clusters.
-fn wrap(text: &str, max_w: f32, size: f32, widths: &mut LabelWidths<'_>) -> Vec<String> {
+fn wrap(text: &str, max_w: f32, size: f32, widths: &mut LabelWidths<'_>) -> Rc<[String]> {
     widths.wrap(text, max_w, size, CHROME_FONT_FAMILY, 400)
 }
 
@@ -339,7 +341,7 @@ impl Widget for WhatsNewModal<'_> {
         );
         y += SECTION_GAP;
 
-        for line in &lines.title {
+        for line in lines.title.iter() {
             draw(
                 cx,
                 line,
@@ -352,7 +354,7 @@ impl Widget for WhatsNewModal<'_> {
         }
         if !lines.intro.is_empty() {
             y += SECTION_GAP / 2.0;
-            for line in &lines.intro {
+            for line in lines.intro.iter() {
                 draw(
                     cx,
                     line,
@@ -372,7 +374,7 @@ impl Widget for WhatsNewModal<'_> {
             let dot_y = y + LINE_H / 2.0 - 2.0;
             cx.backend
                 .fill_round_rect(Rect::xywh(x + 2.0, dot_y, 4.0, 4.0), 2.0, theme.primary);
-            for line in item {
+            for line in item.iter() {
                 let baseline = y + LINE_H - BODY_BASELINE_INSET;
                 draw(
                     cx,

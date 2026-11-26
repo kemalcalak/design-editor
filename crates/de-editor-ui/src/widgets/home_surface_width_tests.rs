@@ -239,35 +239,67 @@ fn the_mcp_popover_agrees_in_every_locale() {
             assert_inside(copy, rect, 8.0, &what);
             assert_eq!(hit(right_edge(rect)), Some(target));
         }
-        for line in &popover.intro_lines {
+        for line in popover.intro_lines.iter() {
             let width = LabelWidths::cached().styled(line, 12.0, super::SANS, 400);
             assert!(width <= popover.header.size.x + 0.01, "{what}: {line:?}");
         }
     }
 }
 
-/// The IME caret sits where the composer paints its caret: after the text
-/// before it measured in the input's own face (jian's `TextArea` draws in
-/// Inter), on the caret's wrapped line.
-#[test]
-fn the_ime_caret_follows_the_painted_text() {
-    let mut state = home_state(Locale::EnUs);
-    state.editor_ui.home.input.set_text("Design a pricing page");
-    state.editor_ui.home.input.set_caret("Design".len(), 0);
-    let home = HomeSurface::for_editor(&state).unwrap();
-    let layout = home.layout(W, H);
-    let mut backend = fresh_backend();
-    let caret = home.focused_input_caret_rect(W, H, &mut backend);
-    let before =
-        crate::widgets::text_metrics::measure_in_family(&mut backend, "Design", 15.0, "Inter");
-    assert_eq!(caret.origin.x, layout.input_box.origin.x + 20.0 + before);
-    let first_row = caret.origin.y;
+/// Text, caret byte, and an optional preedit with its cursor byte.
+type Case<'a> = (&'a str, usize, Option<(&'a str, usize)>);
 
-    // A text long enough to wrap: the caret at its end is on a lower row.
+/// The IME caret is the caret jian's `TextArea` paints: the composer is
+/// painted with a focused input and the rect the host anchors the IME
+/// panel to must be the caret rect found in the paint (on the first line,
+/// on a wrapped and scrolled line, and after a preedit). This is also what
+/// keeps the composer's copies of `TextArea`'s private constants (face,
+/// line height, top inset) in sync with jian.
+#[test]
+fn the_ime_caret_is_where_the_text_area_paints_its_caret() {
+    const NOW: u64 = 1_000;
     let long = "word ".repeat(80);
-    state.editor_ui.home.input.set_text(long.trim_end());
-    let home = HomeSurface::for_editor(&state).unwrap();
-    let wrapped = home.focused_input_caret_rect(W, H, &mut backend);
-    assert!(wrapped.origin.y > first_row, "{wrapped:?}");
-    assert!(wrapped.origin.x <= layout.input_box.origin.x + layout.input_box.size.x - 20.0 + 0.01);
+    let long = long.trim_end();
+    let cases: [Case<'_>; 4] = [
+        ("Design a pricing page", "Design".len(), None),
+        (long, long.len(), None),
+        (long, 30, None),
+        ("Design ", "Design ".len(), Some(("にほんご", "にほ".len()))),
+    ];
+    for (text, caret, preedit) in cases {
+        let mut state = home_state(Locale::EnUs);
+        let input = &mut state.editor_ui.home.input;
+        input.set_text(text);
+        input.set_caret(caret, NOW);
+        if let Some((composition, cursor)) = preedit {
+            input.set_composition(composition, cursor, NOW);
+        }
+        let home = HomeSurface::for_editor_at(&state, NOW).unwrap();
+        let layout = home.layout(W, H);
+        let mut backend = fresh_backend();
+        paint(&home, &mut backend);
+        let painted: Vec<Rect> = backend
+            .rect_fills
+            .iter()
+            .copied()
+            .filter(|r| r.size.x == 1.5 && layout.input_box.contains(r.origin))
+            .collect();
+        assert_eq!(
+            painted.len(),
+            1,
+            "{text:?}@{caret}: one painted caret, got {painted:?}"
+        );
+        let ime = home.focused_input_caret_rect(W, H, &mut backend);
+        assert_eq!(ime, painted[0], "{text:?}@{caret} {preedit:?}");
+        let face = backend
+            .runs
+            .iter()
+            .find(|run| layout.input_box.contains(run.origin))
+            .expect("the input text");
+        assert_eq!(
+            face.family,
+            super::composer::INPUT_FAMILY,
+            "the input's face"
+        );
+    }
 }

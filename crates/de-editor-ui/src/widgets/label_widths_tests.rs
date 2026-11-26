@@ -92,3 +92,35 @@ fn a_rollover_keeps_recently_used_widths() {
         "a width unused for two generations is dropped"
     );
 }
+
+/// A wrap is kept whole: its prefix measurements do not land in the width
+/// cache, a cached pass reads the same lines, and a repaint measures
+/// nothing (a backend that would break differently is never asked).
+#[test]
+fn a_wrap_is_kept_as_lines_not_as_prefix_widths() {
+    reset();
+    let text = "Claude で作ったものを含む HTML のスライドを開くと、各スライドが編集できるボードになります。";
+    let mut gap = FamilyGapBackend::default();
+    let lines = LabelWidths::measuring(&mut gap).wrap(text, 200.0, 13.0, "Manrope", 400);
+    assert!(lines.len() > 2, "{lines:?}");
+    assert_eq!(super::kept(), (0, 1), "one wrap entry, no prefix widths");
+    let cached = LabelWidths::cached().wrap(text, 200.0, 13.0, "Manrope", 400);
+    assert_eq!(cached, lines);
+    let mut uniform = FamilyGapBackend::uniform();
+    let again = LabelWidths::measuring(&mut uniform).wrap(text, 200.0, 13.0, "Manrope", 400);
+    assert_eq!(again, lines);
+    // Another width is another wrap.
+    let wider = LabelWidths::measuring(&mut gap).wrap(text, 400.0, 13.0, "Manrope", 400);
+    assert!(wider.len() < lines.len());
+    assert_eq!(super::kept(), (0, 2));
+}
+
+/// A cached pass that misses breaks against the estimate and keeps
+/// nothing, so a later paint still measures.
+#[test]
+fn an_unmeasured_wrap_is_not_kept() {
+    reset();
+    let lines = LabelWidths::cached().wrap("a b c d e f g h", 30.0, 13.0, "Manrope", 400);
+    assert!(lines.len() > 1);
+    assert_eq!(super::kept(), (0, 0));
+}

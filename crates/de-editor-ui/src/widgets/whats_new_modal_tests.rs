@@ -107,7 +107,12 @@ fn every_locale_wraps_inside_the_card_and_fits_the_viewport() {
         let card = modal.measured_rect(1200.0, 800.0, &mut backend);
         let inner = card.size.x - PAD * 2.0;
         let lines = modal.lines(inner, &mut LabelWidths::cached());
-        for line in lines.items.iter().flatten().chain(&lines.intro) {
+        for line in lines
+            .items
+            .iter()
+            .flat_map(|item| item.iter())
+            .chain(lines.intro.iter())
+        {
             assert!(
                 measure_chrome(&mut backend, line, BODY_SIZE) <= inner,
                 "{}: {line}",
@@ -286,4 +291,39 @@ fn a_long_label_grows_its_button() {
         grown += usize::from(expected > BUTTON_MIN_W);
     }
     assert!(grown > 0, "a label past the floor is under test");
+}
+
+/// Several releases of CJK / Thai notes keep one wrap entry per paragraph
+/// and no per-prefix widths, so the width cache stays far from a rollover,
+/// and hovers after the paint read the card without wrapping again.
+#[test]
+fn many_cjk_releases_stay_small_in_the_cache() {
+    for locale in [
+        Locale::Ja,
+        Locale::ZhCn,
+        Locale::ZhTw,
+        Locale::Ko,
+        Locale::Th,
+    ] {
+        let mut state = state_with(12);
+        state.editor_ui.locale = locale;
+        let modal = WhatsNewModal::for_editor(&state).unwrap();
+        let mut backend = fresh_backend();
+        let card = modal.measured_rect(1200.0, 800.0, &mut backend);
+        modal.paint(
+            &mut PaintCx {
+                backend: &mut backend,
+            },
+            card,
+        );
+        let kept = crate::widgets::label_widths::kept();
+        assert!(kept.0 < 64, "{locale:?}: {} widths kept", kept.0);
+        assert!(kept.1 < 64, "{locale:?}: {} wraps kept", kept.1);
+        let mut hovered = state.clone();
+        for _ in 0..50 {
+            assert_eq!(modal.rect(1200.0, 800.0), card);
+            whats_new_flow::hover(&mut hovered, centre(card), 1200.0, 800.0);
+        }
+        assert_eq!(crate::widgets::label_widths::kept(), kept, "{locale:?}");
+    }
 }

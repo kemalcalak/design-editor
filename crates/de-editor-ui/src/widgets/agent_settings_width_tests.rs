@@ -7,6 +7,7 @@ use crate::widgets::agent_settings_acp_detail::{acp_layout, acp_target, paint_ac
 use crate::widgets::agent_settings_api_detail::{api_layout, api_target, paint_api_detail};
 use crate::widgets::agent_settings_cli_detail::{cli_layout, paint_cli_detail};
 use crate::widgets::agent_settings_i18n::t as t_settings;
+use crate::widgets::agent_settings_panel::{AgentSettingsHit, AgentSettingsPanel};
 use crate::widgets::label_fit_test_support::{assert_inside, fresh_backend, run_in};
 use crate::widgets::test_family_gap_backend::FamilyGapBackend;
 use crate::widgets::PaintCx;
@@ -223,4 +224,108 @@ fn a_button_follows_its_painted_label() {
             .x
             < wide
     );
+}
+
+/// The panel painted into the family-aware backend, and its rect.
+fn painted_panel(state: &de_editor_core::EditorState) -> (Rect, FamilyGapBackend) {
+    use crate::widgets::Widget;
+    let panel = AgentSettingsPanel::for_editor(state);
+    let rect = panel.rect(1200.0, 800.0);
+    let mut backend = fresh_backend();
+    panel.paint(&mut cx(&mut backend), rect);
+    (rect, backend)
+}
+
+/// The System row's Update / Restart / Check now button: in every locale
+/// its label is painted whole, and both ends of the painted run are inside
+/// the box the backend-less hit-test resolves for the button.
+#[test]
+fn the_system_row_button_agrees_in_every_locale() {
+    use de_editor_core::editor_ui_state::{UpdateModalState, UpdatePhase};
+    use de_editor_core::{AgentSettingsTab, EditorState, UpdateStatus};
+    for locale in Locale::ALL {
+        let cases = [
+            (
+                "settings.system.checkButton",
+                AgentSettingsHit::CheckUpdatesButton,
+            ),
+            (
+                "settings.system.updateButton",
+                AgentSettingsHit::UpdateButton,
+            ),
+            (
+                "settings.system.restartButton",
+                AgentSettingsHit::UpdateButton,
+            ),
+        ];
+        for (key, expected) in cases {
+            let mut state = EditorState::default();
+            state.editor_ui.locale = locale;
+            state.editor_ui.agent_settings.tab = AgentSettingsTab::System;
+            match key {
+                "settings.system.updateButton" => {
+                    state.editor_ui.update_status = UpdateStatus::Available {
+                        version: "9.8.7".to_string(),
+                    };
+                }
+                "settings.system.restartButton" => {
+                    let mut modal = UpdateModalState::new("9.8.7", UpdatePhase::ReadyToRestart);
+                    modal.visible = false;
+                    state.editor_ui.update_modal = Some(modal);
+                }
+                _ => {}
+            }
+            let (rect, backend) = painted_panel(&state);
+            let label = t_settings(&state.editor_ui, key);
+            let what = format!("{locale:?} {key}");
+            let run = backend
+                .runs
+                .iter()
+                .find(|run| run.text == label)
+                .unwrap_or_else(|| panic!("{what}: {label:?} was not painted whole"));
+            let panel = AgentSettingsPanel::for_editor(&state);
+            let y = run.origin.y - 4.0;
+            for x in [run.origin.x + 0.5, run.right_edge() - 0.5] {
+                let hit = panel.hit_test(rect, crate::Point2D::new(x, y));
+                assert_eq!(hit, expected, "{what} at x={x}");
+            }
+        }
+    }
+}
+
+/// The MCP tab's Copy chip: in every locale its label is painted whole
+/// inside the chip rect the backend-less hit-test resolves.
+#[test]
+fn the_mcp_copy_chip_agrees_in_every_locale() {
+    use crate::widgets::agent_settings_mcp::client_config_copy_button_rect;
+    use crate::widgets::agent_settings_panel::content_viewport;
+    use de_editor_core::{AgentSettingsTab, EditorState};
+    for locale in Locale::ALL {
+        let mut state = EditorState::default();
+        state.editor_ui.locale = locale;
+        state.editor_ui.agent_settings.tab = AgentSettingsTab::Mcp;
+        state.editor_ui.agent_settings.mcp_server.running = true;
+        let (rect, backend) = painted_panel(&state);
+        let chip = client_config_copy_button_rect(
+            content_viewport(rect),
+            &state.editor_ui.agent_settings,
+            locale,
+        );
+        let what = format!("{locale:?} mcp copy");
+        let label = run_in(
+            &backend,
+            de_i18n::translate(locale, "home.mcp.copy"),
+            chip,
+            &what,
+        );
+        // Pad, icon and gap on the left; the pad on the right.
+        assert_inside(label, chip, 8.0, &what);
+        let panel = AgentSettingsPanel::for_editor(&state);
+        let edge = crate::Point2D::new(chip.origin.x + chip.size.x - 0.5, chip.origin.y + 1.0);
+        assert_eq!(
+            panel.hit_test(rect, edge),
+            AgentSettingsHit::CopyMcpClientConfig,
+            "{what}"
+        );
+    }
 }

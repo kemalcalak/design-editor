@@ -416,9 +416,9 @@ pub(crate) fn paint_button(
         }
     };
     let icon_w = if icon.is_some() { ICON_SLOT } else { 0.0 };
-    // A button narrower than its label (capped by its column) fits it
+    // The label is fitted and centred at the face and weight it is drawn
+    // in; a button narrower than its label (capped by its column) fits it
     // rather than letting it spill past the border.
-    // Fitted and centred at the weight it is drawn in.
     let mut measure = |s: &str| {
         measure_in_family_weighted(
             cx.backend,
