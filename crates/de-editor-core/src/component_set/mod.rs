@@ -35,6 +35,7 @@ pub use pick::{
     variant_masters, variant_name, variant_values_of, SetIndex, VariantPick,
 };
 pub use report::{values_label, DroppedOverride, VariantFallback, VariantReport};
+pub(crate) use resolve::shown_master;
 pub use resolve::{
     check_values, normalize_inserted, normalize_set_refs, resolve_target, InstanceTarget,
 };

@@ -441,6 +441,8 @@ pub enum PropertyPanelAction {
     /// User clicked a path operation button in the Position header
     /// (#388): host-owned, the geometry needs skia.
     PathOperation(de_editor_core::path_ops::PathOperation),
+    /// User picked a cell of the Scale section's anchor grid (#394).
+    SetScaleAnchor(de_editor_core::ScaleAnchor),
     /// User picked a preset in a primary shader fill's preset row.
     SetShaderPreset(de_editor_core::ShaderPreset),
     /// User clicked the preset row's "Custom" cell: restore the custom

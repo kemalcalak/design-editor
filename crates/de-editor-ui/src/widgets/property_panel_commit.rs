@@ -32,6 +32,12 @@ use crate::Color;
 /// freshly-focused `PropertyFocus` row.
 pub fn property_focus_initial(focus: PropertyFocus, panel: &PropertyPanel) -> String {
     use PropertyFocus as F;
+    if let Some(draft) = crate::widgets::property_panel_scale::scale_focus_initial(
+        focus,
+        panel.snapshot.scale.as_ref(),
+    ) {
+        return draft;
+    }
     match focus {
         F::PageBackgroundHex => panel.page_background.clone().unwrap_or_default(),
         F::PositionX => panel.snapshot.x.to_string(),
@@ -263,6 +269,8 @@ pub fn property_focus_initial(focus: PropertyFocus, panel: &PropertyPanel) -> St
             .get(i)
             .map(|s| ((s.offset * 100.0).round() as i32).to_string())
             .unwrap_or_else(|| "0".to_string()),
+        // Seeded above while the Scale section shows (#394).
+        F::ScaleFactor | F::ScaleWidth | F::ScaleHeight => String::new(),
     }
 }
 

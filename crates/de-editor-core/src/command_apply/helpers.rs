@@ -38,6 +38,7 @@ pub(super) fn parse_tool(s: &str) -> Option<Tool> {
         "frame" => Some(Tool::Frame),
         "hand" => Some(Tool::Hand),
         "pencil" => Some(Tool::Pencil),
+        "scale" => Some(Tool::Scale),
         "text_input" => Some(Tool::TextInput),
         "text_area" => Some(Tool::TextArea),
         "number_input" => Some(Tool::NumberInput),

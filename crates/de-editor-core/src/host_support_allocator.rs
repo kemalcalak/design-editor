@@ -42,7 +42,7 @@ impl EditorState {
             Tool::Note => ("note", "Note"),
             Tool::Browser => ("browser", "Browser"),
             // The Pencil builds its path on release (`pencil.rs`), not here.
-            Tool::Select | Tool::Hand | Tool::Pencil => return Ok(None),
+            Tool::Select | Tool::Hand | Tool::Pencil | Tool::Scale => return Ok(None),
         };
         let default_size = crate::widget_default_size(kind).or_else(|| {
             tool.keeps_default_size()

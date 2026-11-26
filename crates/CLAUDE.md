@@ -461,6 +461,10 @@ Mirrored on native (`widget_host/property_dispatch.rs::commit_settings_focus_if_
 
 Press while `tool == Pen` calls `start_pen_path` or `add_pen_point` depending on `pen_in_progress`. Enter / Escape / tool change → `finish_pen_path`. Canvas paints the path through `node.points` as a polyline, plus a dashed preview line from `points.last()` to `pen_cursor_doc` while authoring.
 
+## Scale tool (#394)
+
+`Tool::Scale` (bare K; Cmd+Shift+K stays Components) scales a selection and everything in it proportionally. Core: `de_editor_core::node_scale` holds the property rules over the serialized node (one key table for every node kind and widget `states`: sizes, limits, gap / padding, radii, stroke width / dash, blur / shadow, font size, letter spacing, px line height above 4, path anchors and `d`, line `x2` / `y2`, px grid tracks, image `tileScale`; percentages, ratios, keywords, gradient geometry and image `transform` stay), `node_scale_tree` the subtree walk (descendant `x` / `y` scale, a root moves about its pivot, flow children keep `None`) and instances (the displayed master + overrides is scaled and the difference written to `descendants`: root to `descendants[ref]`, nested instances to `nested/…`; the master is untouched), `selection_scale` the validated `ScaleRequest` (per-target pivot in parent space, factor 0.01–100, typed `ScaleError` in `scale_error.rs`), `scale_with_history` (one undo step) and `EditorCommand::Scale`. Bound values: `VariableMode::KeepBound` (default) leaves `$var`s and `variableBindings` fields and lists them; `Detach` scales and unbinds. `de_editor_ui::scale_plan` turns ids + factor + anchor into a request from the layout-resolved scene (union bounds, `ScaleTarget::from_resolved`) and owns the live handle drag (`ScaleDrag`: rescales from the press-time originals, one history entry on release, restore on cancel). The properties card shows the Scale section (`property_panel_scale.rs`: W, H, factor, 3 × 3 anchor grid in `editor_ui.scale_anchor`) while the tool is active; the host commits its fields with the scene (`commit_scale_focus`). MCP `scale_nodes { nodeIds, factor | width | height, anchor, variables }` (`de-host-services/src/mcp_serve/scale_nodes_tool.rs`) builds the same request. Pixel check: `de-render-export/src/scale_pixel_tests.rs`.
+
 ## Pencil tool (#88)
 
 `Tool::Pencil` (rail button after Pen, Shift+P). A press starts `ui.pencil_stroke` (UI state only; the document is untouched during the drag), cursor moves append samples at least 1 screen px apart, and the release runs `de_editor_core::pencil_fit::fit_freehand_path` (Schneider least-squares bezier fit) at `editor_ui.pencil_smoothing.tolerance_screen_px() / zoom`, then inserts one ordinary `PenNode::Path` with `anchors` and pushes one history entry. A click without a drag inserts nothing. Escape mid-drag discards the stroke (`host_escape_transitions::escape_pencil_stroke`, after the rename / text-edit rungs and before the pen rung in both ladders, #141). Tool switch and undo / redo drop an in-flight stroke; a native wheel / pan cancel commits it. The live preview is `canvas_path_overlay::paint_pencil_preview`. Host arms: `widget_host/pencil_press.rs` in both hosts.
@@ -685,7 +689,7 @@ The **`de-mcp`** crate carries the MCP wire layer that mirrors the retired TS `p
 
 ### Tool catalog
 
-**175 static-schema tools** registered today. The authoritative list
+**176 static-schema tools** registered today. The authoritative list
 is `de-host-services/src/mcp_serve/schemas.rs` — `TOOL_SCHEMAS`
 (JSON inputSchemas; `DEBUG_TOOL_SCHEMAS` is gated out of the
 production catalog) — plus the `register_tool!` calls in

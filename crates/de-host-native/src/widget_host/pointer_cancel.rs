@@ -129,6 +129,11 @@ impl WidgetHostNative {
         cancelled |= self.variables_resize.take().is_some();
         cancelled |= self.node_drag.take().is_some();
         cancelled |= self.handle_drag.take().is_some();
+        if let Some(drag) = self.scale_drag.take() {
+            drag.cancel(&mut self.editor_state);
+            self.invalidate_live_scene_for_rebuild();
+            cancelled = true;
+        }
         cancelled |= self.rotate_drag.take().is_some();
         cancelled |= self.create_drag.take().is_some();
         // A Pencil stroke commits instead of vanishing: a stray momentum

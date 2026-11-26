@@ -226,6 +226,7 @@ impl Default for EditorUiState {
             libraries: crate::library_link::LibraryLinks::default(),
             kit_masters: Default::default(),
             component_browser_search_focused: false,
+            scale_anchor: Default::default(),
             canvas_hover_node: None,
             entered_container: None,
             component_browser_scroll: jian_core::scroll::ScrollState::default(),

@@ -491,6 +491,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "path.offsetInward" => "向内偏移路径",
         "path.simplify" => "简化路径",
         "path.reverse" => "反转路径方向",
+        "scale.title" => "缩放",
         _ => return None,
     })
 }

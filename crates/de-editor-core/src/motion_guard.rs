@@ -229,6 +229,7 @@ pub(crate) fn prepare_command(cmd: &mut EditorCommand) -> Result<(), MotionWrite
         | C::SetNodeStrokeStyle { .. }
         | C::AlignSelected { .. }
         | C::Path(_)
+        | C::Scale(_)
         | C::SetNodeFillHex { .. }
         | C::SetNodeName { .. }
         | C::SetImageVideoSrc { .. }

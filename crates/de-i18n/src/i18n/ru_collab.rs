@@ -491,6 +491,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "path.offsetInward" => "Сместить контур внутрь",
         "path.simplify" => "Упростить контур",
         "path.reverse" => "Изменить направление контура",
+        "scale.title" => "Масштаб",
         _ => return None,
     })
 }

@@ -649,6 +649,9 @@ impl EditorState {
                 self.align_selected(parsed)
             }
             EditorCommand::Path(command) => self.apply_path_command(command, allocator)?,
+            EditorCommand::Scale(request) => {
+                crate::selection_scale::scale_with_history(self, &request).is_ok()
+            }
 
             // --- Clipboard -----------------------------------------
             cmd @ (EditorCommand::CopySelected

@@ -491,6 +491,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "path.offsetInward" => "Desplazar trazado hacia dentro",
         "path.simplify" => "Simplificar trazado",
         "path.reverse" => "Invertir dirección del trazado",
+        "scale.title" => "Escalar",
         _ => return None,
     })
 }

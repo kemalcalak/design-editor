@@ -493,6 +493,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "path.offsetInward" => "패스 안쪽 오프셋",
         "path.simplify" => "패스 단순화",
         "path.reverse" => "패스 방향 반전",
+        "scale.title" => "크기 조정",
         _ => return None,
     })
 }

@@ -661,12 +661,12 @@ pub fn apply_property_action(
             state.editor_ui.toggle_effect_add_picker();
             Handled
         }
-        // Effect adds and the #90 paint options (stroke alignment, flip,
-        // shader presets) live in a sibling (800-line cap).
+        // Effect adds, #90 paint options and the #394 scale anchor: sibling.
         A::AddEffect(_)
         | A::SetStrokeAlign(_)
         | A::SetStrokeStyle(_)
         | A::FlipSelection(_)
+        | A::SetScaleAnchor(_)
         | A::SetShaderPreset(_)
         | A::RestoreCustomShader
         | A::EditMeshLattice(_)

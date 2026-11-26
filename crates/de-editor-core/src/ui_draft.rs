@@ -175,6 +175,11 @@ pub enum PropertyFocus {
         index: usize,
         component: usize,
     },
+    /// The Scale section's factor, target width and target height
+    /// (#394, shown while the Scale tool is active).
+    ScaleFactor,
+    ScaleWidth,
+    ScaleHeight,
 }
 
 impl PropertyFocus {
@@ -190,6 +195,15 @@ impl PropertyFocus {
             PropertyFocus::StrokeHex | PropertyFocus::GradientStopHex(_) => Some(7),
             _ => None,
         }
+    }
+
+    /// One of the Scale section's fields (#394): the host commits them
+    /// with the layout scene, never as a node property.
+    pub fn is_scale(self) -> bool {
+        matches!(
+            self,
+            PropertyFocus::ScaleFactor | PropertyFocus::ScaleWidth | PropertyFocus::ScaleHeight
+        )
     }
 
     /// True when the focused row carries hex colour input — drives
@@ -257,6 +271,9 @@ impl PropertyFocus {
                 | PropertyFocus::WidgetMin
                 | PropertyFocus::WidgetMax
                 | PropertyFocus::WidgetStep
+                | PropertyFocus::ScaleFactor
+                | PropertyFocus::ScaleWidth
+                | PropertyFocus::ScaleHeight
                 | PropertyFocus::MotionValue { .. }
                 | PropertyFocus::ShaderUniform { .. }
         )

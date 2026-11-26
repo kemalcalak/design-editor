@@ -491,6 +491,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "path.offsetInward" => "Yolu İçe Kaydır",
         "path.simplify" => "Yolu Sadeleştir",
         "path.reverse" => "Yol Yönünü Ters Çevir",
+        "scale.title" => "Ölçekle",
         _ => return None,
     })
 }

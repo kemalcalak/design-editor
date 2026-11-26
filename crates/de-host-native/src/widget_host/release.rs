@@ -102,6 +102,11 @@ impl WidgetHostNative {
             self.invalidate_live_scene_for_rebuild();
             return true;
         }
+        if let Some(drag) = self.scale_drag.take() {
+            drag.finish(&mut self.editor_state);
+            self.invalidate_live_scene_for_rebuild();
+            return true;
+        }
         if self.create_drag.take().is_some() {
             // Switch back to Select for immediate shape refinement.
             self.editor_state.tool = de_editor_core::Tool::Select;
@@ -273,6 +278,11 @@ impl WidgetHostNative {
             return true;
         }
         if self.handle_drag.take().is_some() {
+            self.invalidate_live_scene_for_rebuild();
+            return true;
+        }
+        if let Some(drag) = self.scale_drag.take() {
+            drag.finish(&mut self.editor_state);
             self.invalidate_live_scene_for_rebuild();
             return true;
         }

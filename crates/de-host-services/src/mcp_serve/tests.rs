@@ -19,8 +19,8 @@ fn tools_list_response_includes_all_registered_tools() {
     // TOOL_SCHEMAS without being added to the list below.
     assert_eq!(
         TOOL_SCHEMAS.len(),
-        175,
-        "add the new tool to this test (#388 path tools: boolean_op_tool's path_tests)"
+        176,
+        "add the new tool to this test (#388 path tools: boolean_op_tool's path_tests; #394 scale_nodes)"
     );
     // Plus 37 kit tools and pen.dev's 6 names (#392).
     let listed: serde_json::Value = serde_json::from_str(&r).expect("json");
@@ -165,6 +165,7 @@ fn tools_list_response_includes_all_registered_tools() {
         "set_shader_source",
         "align_selected",
         "boolean_op",
+        "scale_nodes",
         "set_node_fill_hex",
         "set_node_flip",
         "set_ellipse_arc",

@@ -119,6 +119,9 @@ pub fn editable_input_rects(
         (PropertyFocus::Rotation, rotation_rect),
     ];
     rects.extend(size_rects.into_iter().flatten());
+    if visible.scale {
+        crate::widgets::property_panel_scale::push_scale_input_rects(&mut rects, x0, tops.scale, w);
+    }
     if visible.create_component {
         use crate::widgets::property_panel_component_props as props;
         use crate::widgets::property_panel_variants as variants;
