@@ -30,8 +30,8 @@ item = "Bileşenlerin artık varyantları ve özellikleri olabiliyor: tek bir bi
 item = "Aynı tasarımın tekrarlanan kopyaları tek adımda bağlantılı bileşenlere dönüştürülebiliyor; sonraki değişiklikler hepsine ulaşıyor."
 item = "Katmanları yapay zekâyla ya da basit kurallarla tek seferde yeniden adlandırın. Yeni adlar belgenizin yazıldığı dili izliyor."
 item = "Otomatik yerleşim öğeleri alt satıra geçirebiliyor ya da ızgarada dizebiliyor. Vektör düzenleme modunda tek tek noktaları taşıyabiliyorsunuz; şekilleri birleştirmek artık eğrileri koruyor."
-item = "Prototiplemede ilk adımlar: çerçeveleri etkileşimlerle bağlayın, akışı tuvalde görün ve ekranları üst katman olarak açın."
-item = "Daha hızlı düzenleme: komut paleti (Cmd/Ctrl+K), katmanlarda bul ve değiştir (Cmd/Ctrl+F), ölçekleme aracı (K), çok yakınlaştırınca piksel ızgarası, Alt basılıyken gösterilen mesafeler ve PNG ya da SVG olarak kopyalama."
+item = "Prototiplemede ilk adımlar: çerçeveleri etkileşimlerle bağlayın, akışı tuvalde görün ve ekranları katman olarak açın."
+item = "Daha hızlı düzenleme: komut paleti (Cmd/Ctrl+K), katmanlarda bul ve değiştir (Cmd/Ctrl+F), Ölçekle aracı (K), çok yakınlaştırınca piksel ızgarası, Alt basılıyken gösterilen mesafeler ve PNG ya da SVG olarak kopyalama."
 item = "Design Editor artık yalnızca bir masaüstü uygulaması; tarayıcı sürümü kaldırıldı. Ayrıca düzeltildi: katman kopyalamak artık eski pano içeriğini yapıştırmıyor, menüler etiketlerine sığıyor ve ajanlar araçlarının tüm seçeneklerini kullanabiliyor."
 
 [[note]]
@@ -55,7 +55,7 @@ item = "同一設計的重複副本可以一步轉換為連結元件,之後的�
 item = "使用 AI 或簡單規則一次重新命名圖層。新名稱會沿用文件所使用的語言。"
 item = "自動佈局可以將項目換行排列或排成格線。在向量編輯模式中可以單獨移動錨點,合併形狀時也會保留曲線。"
 item = "原型設計的第一步:用互動連接畫框,在畫布上查看流程,並以浮層方式開啟畫面。"
-item = "更快的編輯:指令面板(Cmd/Ctrl+K)、跨圖層尋找與取代(Cmd/Ctrl+F)、縮放工具(K)、放大到足夠倍率時顯示的像素格線、按住 Alt 時顯示的間距,以及複製為 PNG 或 SVG。"
+item = "更快的編輯:命令面板(Cmd/Ctrl+K)、跨圖層尋找與取代(Cmd/Ctrl+F)、縮放工具(K)、放大到足夠倍率時顯示的像素格線、按住 Alt 時顯示的間距,以及複製為 PNG 或 SVG。"
 item = "Design Editor 現在只提供桌面應用程式,瀏覽器版本已移除。另有修正:複製圖層後不再貼上舊的剪貼簿內容,選單能容納完整標籤,代理可以使用工具的所有選項。"
 
 [[note]]
@@ -79,7 +79,7 @@ item = "같은 디자인의 반복된 사본을 한 번에 연결된 컴포넌�
 item = "AI나 간단한 규칙으로 레이어 이름을 한꺼번에 바꿀 수 있습니다. 새 이름은 문서에 쓰인 언어를 따릅니다."
 item = "자동 레이아웃에서 항목을 다음 줄로 넘기거나 그리드로 배치할 수 있습니다. 벡터 편집 모드에서는 점을 하나씩 옮길 수 있고, 도형을 합쳐도 곡선이 유지됩니다."
 item = "프로토타이핑의 첫걸음: 인터랙션으로 프레임을 연결하고, 캔버스에서 흐름을 확인하고, 화면을 오버레이로 열 수 있습니다."
-item = "더 빠른 편집: 명령 팔레트(Cmd/Ctrl+K), 레이어 전체 찾기 및 바꾸기(Cmd/Ctrl+F), 크기 조절 도구(K), 크게 확대했을 때의 픽셀 그리드, Alt를 누르고 있을 때 보이는 간격, PNG 또는 SVG로 복사."
+item = "더 빠른 편집: 명령 팔레트(Cmd/Ctrl+K), 레이어 전체 찾기 및 바꾸기(Cmd/Ctrl+F), 크기 조정 도구(K), 크게 확대했을 때의 픽셀 그리드, Alt를 누르고 있을 때 보이는 간격, PNG 또는 SVG로 복사."
 item = "Design Editor는 이제 데스크톱 앱으로만 제공되며 브라우저 버전은 제거되었습니다. 그 밖의 수정: 레이어를 복사해도 더 이상 이전 클립보드 내용이 붙여 넣어지지 않고, 메뉴가 레이블에 맞는 크기로 표시되며, 에이전트가 도구의 모든 옵션을 사용할 수 있습니다."
 
 [[note]]
@@ -91,7 +91,7 @@ item = "Les copies répétées d'un même design se transforment en composants l
 item = "Renommez vos calques d'un coup, avec l'IA ou avec des règles simples. Les nouveaux noms suivent la langue de votre document."
 item = "La mise en page auto peut renvoyer les éléments à la ligne ou les disposer en grille. Le mode d'édition vectorielle permet de déplacer chaque point, et combiner des formes conserve désormais leurs courbes."
 item = "Premiers pas en prototypage : reliez des cadres par des interactions, visualisez le parcours sur le canevas et ouvrez des écrans en superposition."
-item = "Édition plus rapide : une palette de commandes (Cmd/Ctrl+K), rechercher et remplacer dans les calques (Cmd/Ctrl+F), un outil de mise à l'échelle (K), une grille de pixels en zoom rapproché, les distances affichées en maintenant Alt, et la copie en PNG ou SVG."
+item = "Édition plus rapide : une palette de commandes (Cmd/Ctrl+K), rechercher et remplacer dans les calques (Cmd/Ctrl+F), l'outil Échelle (K), une grille de pixels en zoom rapproché, les distances affichées en maintenant Alt, et la copie en PNG ou SVG."
 item = "Design Editor est désormais uniquement une application de bureau ; la version navigateur a été retirée. Également corrigé : copier des calques ne colle plus l'ancien contenu du presse-papiers, les menus s'adaptent à leurs libellés et les agents peuvent utiliser toutes les options de leurs outils."
 
 [[note]]
@@ -103,7 +103,7 @@ item = "Las copias repetidas de un mismo diseño se convierten en componentes vi
 item = "Renombra capas de una vez, con IA o con reglas sencillas. Los nombres nuevos siguen el idioma en que está escrito tu documento."
 item = "El diseño automático puede pasar elementos a nuevas filas u ordenarlos en una cuadrícula. En el modo de edición vectorial puedes mover puntos sueltos, y al combinar formas ahora se conservan sus curvas."
 item = "Primeros pasos en prototipos: enlaza marcos con interacciones, mira el flujo en el lienzo y abre pantallas como superposición."
-item = "Edición más rápida: paleta de comandos (Cmd/Ctrl+K), buscar y reemplazar en las capas (Cmd/Ctrl+F), herramienta de escala (K), cuadrícula de píxeles al acercar mucho el zoom, distancias visibles mientras mantienes Alt y copiar como PNG o SVG."
+item = "Edición más rápida: paleta de comandos (Cmd/Ctrl+K), buscar y reemplazar en las capas (Cmd/Ctrl+F), herramienta Escalar (K), cuadrícula de píxeles al acercar mucho el zoom, distancias visibles mientras mantienes Alt y copiar como PNG o SVG."
 item = "Design Editor ahora es solo una aplicación de escritorio; la versión para navegador se ha retirado. También corregido: copiar capas ya no pega contenido antiguo del portapapeles, los menús se ajustan a sus etiquetas y los agentes pueden usar todas las opciones de sus herramientas."
 
 [[note]]
@@ -115,7 +115,7 @@ item = "Wiederholte Kopien desselben Designs lassen sich in einem Schritt in ver
 item = "Benenne Ebenen in einem Durchgang um, mit KI oder mit einfachen Regeln. Neue Namen folgen der Sprache deines Dokuments."
 item = "Auto-Layout kann Elemente in neue Zeilen umbrechen oder in einem Raster anordnen. Im Vektor-Bearbeitungsmodus verschiebst du einzelne Punkte, und beim Kombinieren von Formen bleiben ihre Kurven jetzt erhalten."
 item = "Erste Schritte im Prototyping: Verbinde Rahmen mit Interaktionen, sieh den Ablauf auf der Leinwand und öffne Screens als Overlay."
-item = "Schnelleres Bearbeiten: eine Befehlspalette (Cmd/Strg+K), Suchen und Ersetzen über alle Ebenen (Cmd/Strg+F), ein Skalierwerkzeug (K), ein Pixelraster bei starkem Zoom, Abstände beim Halten von Alt und Kopieren als PNG oder SVG."
+item = "Schnelleres Bearbeiten: eine Befehlspalette (Cmd/Strg+K), Suchen und Ersetzen über alle Ebenen (Cmd/Strg+F), das Werkzeug Skalieren (K), ein Pixelraster bei starkem Zoom, Abstände beim Halten von Alt und Kopieren als PNG oder SVG."
 item = "Design Editor gibt es jetzt nur noch als Desktop-App; die Browser-Version wurde entfernt. Außerdem behoben: Beim Kopieren von Ebenen wird kein alter Zwischenablage-Inhalt mehr eingefügt, Menüs passen zu ihren Beschriftungen und Agenten können alle Optionen ihrer Werkzeuge nutzen."
 
 [[note]]
@@ -127,7 +127,7 @@ item = "Cópias repetidas do mesmo design podem virar componentes vinculados em 
 item = "Renomeie camadas de uma vez, com IA ou com regras simples. Os novos nomes seguem o idioma em que o documento está escrito."
 item = "O layout automático pode quebrar itens em novas linhas ou organizá-los em grade. No modo de edição vetorial você move pontos individuais, e combinar formas agora preserva as curvas."
 item = "Primeiros passos em prototipagem: ligue quadros com interações, veja o fluxo no canvas e abra telas como sobreposição."
-item = "Edição mais rápida: paleta de comandos (Cmd/Ctrl+K), localizar e substituir nas camadas (Cmd/Ctrl+F), ferramenta de escala (K), grade de pixels com zoom bem próximo, distâncias exibidas enquanto você segura Alt e copiar como PNG ou SVG."
+item = "Edição mais rápida: paleta de comandos (Cmd/Ctrl+K), localizar e substituir nas camadas (Cmd/Ctrl+F), ferramenta Escalar (K), grade de pixels com zoom bem próximo, distâncias exibidas enquanto você segura Alt e copiar como PNG ou SVG."
 item = "O Design Editor agora é apenas um aplicativo para desktop; a versão para navegador foi removida. Também corrigido: copiar camadas não cola mais conteúdo antigo da área de transferência, os menus se ajustam aos rótulos e os agentes podem usar todas as opções das ferramentas."
 
 [[note]]
@@ -139,15 +139,15 @@ item = "Повторяющиеся копии одного дизайна мож
 item = "Переименовывайте слои разом, с помощью ИИ или простых правил. Новые имена следуют языку вашего документа."
 item = "Автолейаут умеет переносить элементы на новые строки или выстраивать их в сетку. В режиме редактирования векторов можно двигать отдельные точки, а объединение фигур теперь сохраняет кривые."
 item = "Первые шаги в прототипировании: связывайте фреймы взаимодействиями, смотрите поток на холсте и открывайте экраны как оверлеи."
-item = "Быстрее работа: палитра команд (Cmd/Ctrl+K), поиск и замена по слоям (Cmd/Ctrl+F), инструмент масштабирования (K), пиксельная сетка при сильном увеличении, расстояния при зажатом Alt и копирование в PNG или SVG."
+item = "Быстрее работа: палитра команд (Cmd/Ctrl+K), поиск и замена по слоям (Cmd/Ctrl+F), инструмент «Масштаб» (K), пиксельная сетка при сильном увеличении, расстояния при зажатом Alt и копирование в PNG или SVG."
 item = "Design Editor теперь только настольное приложение; браузерная версия удалена. Также исправлено: копирование слоёв больше не вставляет старое содержимое буфера обмена, меню подстраиваются под подписи, а агенты могут использовать все параметры своих инструментов."
 
 [[note]]
 version = "0.6.3"
 locale = "hi"
 title = "वेरिएंट, प्रोटोटाइपिंग और तेज़ एडिटिंग"
-item = "कॉम्पोनेंट में अब वेरिएंट और प्रॉपर्टी हो सकती हैं: एक कॉम्पोनेंट हर स्थिति और आकार को संभालता है, और हर कॉपी पैनल से अपना टेक्स्ट, दिखना या वेरिएंट बदल सकती है।"
-item = "एक ही डिज़ाइन की दोहराई गई कॉपियों को एक कदम में जुड़े हुए कॉम्पोनेंट में बदला जा सकता है, ताकि आगे के बदलाव सभी तक पहुँचें।"
+item = "कंपोनेंट में अब वेरिएंट और प्रॉपर्टी हो सकती हैं: एक कंपोनेंट हर स्थिति और आकार को संभालता है, और हर कॉपी पैनल से अपना टेक्स्ट, दिखना या वेरिएंट बदल सकती है।"
+item = "एक ही डिज़ाइन की दोहराई गई कॉपियों को एक कदम में जुड़े हुए कंपोनेंट में बदला जा सकता है, ताकि आगे के बदलाव सभी तक पहुँचें।"
 item = "AI या आसान नियमों से एक बार में लेयर के नाम बदलें। नए नाम उसी भाषा में होते हैं जिसमें आपका दस्तावेज़ लिखा है।"
 item = "ऑटो लेआउट आइटम को नई पंक्तियों में ले जा सकता है या ग्रिड में सजा सकता है। वेक्टर एडिट मोड में आप एक-एक पॉइंट हिला सकते हैं, और आकार जोड़ने पर अब उनके कर्व बने रहते हैं।"
 item = "प्रोटोटाइपिंग के पहले कदम: इंटरैक्शन से फ़्रेम जोड़ें, कैनवस पर फ़्लो देखें और स्क्रीन को ओवरले के रूप में खोलें।"
@@ -158,12 +158,12 @@ item = "Design Editor अब सिर्फ़ डेस्कटॉप ऐप 
 version = "0.6.3"
 locale = "th"
 title = "รูปแบบ โปรโตไทป์ และการแก้ไขที่เร็วขึ้น"
-item = "คอมโพเนนต์มีรูปแบบและพร็อพเพอร์ตีได้แล้ว คอมโพเนนต์เดียวครอบคลุมทุกสถานะและทุกขนาด และแต่ละสำเนาเปลี่ยนข้อความ การแสดงผล หรือรูปแบบได้จากแผง"
+item = "คอมโพเนนต์มีรูปแบบและคุณสมบัติได้แล้ว คอมโพเนนต์เดียวครอบคลุมทุกสถานะและทุกขนาด และแต่ละสำเนาเปลี่ยนข้อความ การแสดงผล หรือรูปแบบได้จากแผง"
 item = "สำเนาที่ซ้ำกันของดีไซน์เดียวกันแปลงเป็นคอมโพเนนต์ที่เชื่อมกันได้ในขั้นตอนเดียว การแก้ไขครั้งต่อไปจึงไปถึงทุกสำเนา"
 item = "เปลี่ยนชื่อเลเยอร์ทีเดียวทั้งหมดด้วย AI หรือกฎง่าย ๆ ชื่อใหม่จะใช้ภาษาเดียวกับเอกสารของคุณ"
 item = "เลย์เอาต์อัตโนมัติขึ้นบรรทัดใหม่หรือจัดรายการเป็นตารางกริดได้ ในโหมดแก้ไขเวกเตอร์ย้ายจุดทีละจุดได้ และการรวมรูปทรงจะคงเส้นโค้งไว้แล้ว"
 item = "ก้าวแรกของการทำโปรโตไทป์: เชื่อมเฟรมด้วยการโต้ตอบ ดูโฟลว์บนแคนวาส และเปิดหน้าจอเป็นโอเวอร์เลย์"
-item = "แก้ไขได้เร็วขึ้น: พาเลตต์คำสั่ง (Cmd/Ctrl+K) ค้นหาและแทนที่ในเลเยอร์ (Cmd/Ctrl+F) เครื่องมือปรับขนาด (K) กริดพิกเซลเมื่อซูมเข้าใกล้ ระยะห่างที่แสดงขณะกด Alt ค้างไว้ และคัดลอกเป็น PNG หรือ SVG"
+item = "แก้ไขได้เร็วขึ้น: จานคำสั่ง (Cmd/Ctrl+K) ค้นหาและแทนที่ในเลเยอร์ (Cmd/Ctrl+F) เครื่องมือปรับขนาด (K) ตารางพิกเซลเมื่อซูมเข้าใกล้ ระยะห่างที่แสดงขณะกด Alt ค้างไว้ และคัดลอกเป็น PNG หรือ SVG"
 item = "Design Editor เป็นแอปเดสก์ท็อปเท่านั้นแล้ว และเวอร์ชันเบราว์เซอร์ถูกนำออก แก้ไขเพิ่มเติม: การคัดลอกเลเยอร์ไม่วางเนื้อหาคลิปบอร์ดเก่าอีกต่อไป เมนูมีขนาดพอดีกับป้ายกำกับ และเอเจนต์ใช้ตัวเลือกทั้งหมดของเครื่องมือได้"
 
 [[note]]
@@ -175,7 +175,7 @@ item = "Các bản sao lặp lại của cùng một thiết kế có thể chuy
 item = "Đổi tên lớp hàng loạt bằng AI hoặc bằng quy tắc đơn giản. Tên mới theo ngôn ngữ của tài liệu."
 item = "Bố cục tự động có thể xuống dòng các phần tử hoặc xếp chúng thành lưới. Trong chế độ chỉnh sửa vector, bạn có thể di chuyển từng điểm, và việc kết hợp hình giờ giữ nguyên các đường cong."
 item = "Những bước đầu của tạo nguyên mẫu: nối các khung bằng tương tác, xem luồng trên canvas và mở màn hình dưới dạng lớp phủ."
-item = "Chỉnh sửa nhanh hơn: bảng lệnh (Cmd/Ctrl+K), tìm và thay thế trong các lớp (Cmd/Ctrl+F), công cụ co giãn (K), lưới điểm ảnh khi phóng to sát, khoảng cách hiện ra khi giữ Alt, và sao chép dưới dạng PNG hoặc SVG."
+item = "Chỉnh sửa nhanh hơn: bảng lệnh (Cmd/Ctrl+K), tìm và thay thế trong các lớp (Cmd/Ctrl+F), công cụ Thu phóng (K), lưới điểm ảnh khi phóng to sát, khoảng cách hiện ra khi giữ Alt, và sao chép dưới dạng PNG hoặc SVG."
 item = "Design Editor giờ chỉ còn là ứng dụng máy tính; phiên bản trình duyệt đã bị gỡ bỏ. Cũng đã sửa: sao chép lớp không còn dán nội dung cũ trong bộ nhớ tạm, menu vừa với nhãn của chúng, và tác nhân có thể dùng mọi tùy chọn của công cụ."
 
 [[note]]
@@ -184,11 +184,11 @@ locale = "id"
 title = "Varian, prototipe, dan pengeditan lebih cepat"
 item = "Komponen kini bisa punya varian dan properti: satu komponen mencakup semua status dan ukuran, dan setiap salinan bisa mengganti teks, visibilitas, atau variannya dari panel."
 item = "Salinan berulang dari desain yang sama bisa diubah menjadi komponen tertaut dalam satu langkah, jadi perubahan berikutnya sampai ke semuanya."
-item = "Ganti nama lapisan sekaligus, dengan AI atau aturan sederhana. Nama baru mengikuti bahasa dokumen Anda."
+item = "Ganti nama layer sekaligus, dengan AI atau aturan sederhana. Nama baru mengikuti bahasa dokumen Anda."
 item = "Tata letak otomatis bisa memindahkan item ke baris baru atau menyusunnya dalam grid. Di mode edit vektor Anda bisa memindahkan titik satu per satu, dan menggabungkan bentuk kini mempertahankan lengkungannya."
 item = "Langkah pertama prototipe: hubungkan frame dengan interaksi, lihat alurnya di kanvas, dan buka layar sebagai overlay."
-item = "Pengeditan lebih cepat: palet perintah (Cmd/Ctrl+K), cari dan ganti di seluruh lapisan (Cmd/Ctrl+F), alat skala (K), grid piksel saat diperbesar dekat, jarak yang tampil saat menahan Alt, dan salin sebagai PNG atau SVG."
-item = "Design Editor kini hanya berupa aplikasi desktop; versi browser telah dihapus. Juga diperbaiki: menyalin lapisan tidak lagi menempelkan isi clipboard lama, menu menyesuaikan labelnya, dan agen bisa memakai semua opsi alatnya."
+item = "Pengeditan lebih cepat: palet perintah (Cmd/Ctrl+K), cari dan ganti di seluruh layer (Cmd/Ctrl+F), alat skala (K), kisi piksel saat diperbesar dekat, jarak yang tampil saat menahan Alt, dan salin sebagai PNG atau SVG."
+item = "Design Editor kini hanya berupa aplikasi desktop; versi browser telah dihapus. Juga diperbaiki: menyalin layer tidak lagi menempelkan isi clipboard lama, menu menyesuaikan labelnya, dan agen bisa memakai semua opsi alatnya."
 
 [[note]]
 version = "0.6.2"
