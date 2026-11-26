@@ -193,7 +193,7 @@ impl SetSnapshot {
                 },
                 json!({}),
             ),
-            _ => {
+            "set_instance_variant" => {
                 let node_id = required(args, &["nodeId", "node_id", "instanceId"])?.to_string();
                 let variant: VariantValues =
                     json_arg(args, &["variant"], "an object of axis to value")?
@@ -206,6 +206,7 @@ impl SetSnapshot {
                     json!({"nodeId": node_id}),
                 )
             }
+            other => return Err(invalid(format!("unknown component set tool {other}"))),
         })
     }
 }
@@ -266,20 +267,24 @@ pub fn set_detail(doc: &PenDocument, id: &str) -> Option<BTreeMap<String, String
     Some(out)
 }
 
-/// `get_component` on a variant master: its set and values.
-pub fn variant_detail(doc: &PenDocument, master_id: &str, out: &mut BTreeMap<String, String>) {
-    let Some(set) = de_editor_core::component_set::set_containing(doc, master_id) else {
-        return;
-    };
-    out.insert(
-        "set".into(),
-        de_editor_core::PenNodeExt::id_str(set).to_string(),
-    );
-    let values = set_summary(doc, de_editor_core::PenNodeExt::id_str(set))
-        .and_then(|summary| summary.variants.into_iter().find(|v| v.id == master_id))
-        .map(|variant| variant.values)
-        .unwrap_or_default();
-    out.insert("variantValues".into(), json!(values).to_string());
+/// `get_component`'s `set` and `variantValues` for every variant master,
+/// from one walk over the document's sets.
+pub fn variant_details(
+    sets: &[de_editor_core::component_set::SetSummary],
+) -> std::collections::HashMap<String, BTreeMap<String, String>> {
+    let mut out = std::collections::HashMap::new();
+    for set in sets {
+        for variant in &set.variants {
+            let mut detail = BTreeMap::new();
+            detail.insert("set".to_string(), set.id.clone());
+            detail.insert(
+                "variantValues".to_string(),
+                json!(variant.values).to_string(),
+            );
+            out.insert(variant.id.clone(), detail);
+        }
+    }
+    out
 }
 
 /// Instances about to be inserted that name a set or ask for a variant

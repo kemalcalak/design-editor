@@ -571,13 +571,17 @@ mod tests {
     #[test]
     fn kit_filter_narrows_cards_and_strip_height_tracks_imports() {
         let mut state = open_state_with_import();
-        // The six kit buttons are one Button card (#368).
+        // Each kit set is one card (#368): its other members are hidden.
+        let hidden: usize = de_editor_core::kit_sets::KIT_SETS
+            .iter()
+            .map(|spec| spec.members.len() - 1)
+            .sum();
         let total: usize = state
             .ui_kits
             .iter()
             .map(|k| k.components.len())
             .sum::<usize>()
-            - 5;
+            - hidden;
         {
             let panel = ComponentBrowserPanel::for_editor(&state).expect("open");
             assert_eq!(panel.filtered().len(), total);

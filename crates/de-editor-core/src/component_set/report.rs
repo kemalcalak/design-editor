@@ -33,6 +33,8 @@ pub struct VariantReport {
     pub dropped_overrides: Vec<DroppedOverride>,
     /// Instances moved to the axis default because their value went.
     pub moved_to_default: Vec<String>,
+    /// Masters a new set moved over from another page.
+    pub moved_masters: Vec<String>,
 }
 
 impl VariantReport {
@@ -51,6 +53,11 @@ impl VariantReport {
             out.push(format!(
                 "instance {}: override {} has no target in the new variant and was dropped",
                 dropped.instance, dropped.key
+            ));
+        }
+        for master in &self.moved_masters {
+            out.push(format!(
+                "component {master} moved from its page into the set"
             ));
         }
         for instance in &self.moved_to_default {

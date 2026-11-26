@@ -82,6 +82,38 @@ pub(crate) fn siblings_mut<'a>(
     }
 }
 
+/// The ancestors of node `id`, outermost first (empty for a page root or
+/// an unknown id).
+pub(crate) fn ancestors_of<'a>(doc: &'a PenDocument, id: &str) -> Vec<&'a PenNode> {
+    fn walk<'a>(nodes: &'a [PenNode], id: &str, path: &mut Vec<&'a PenNode>) -> bool {
+        for node in nodes {
+            if node.id_str() == id {
+                return true;
+            }
+            path.push(node);
+            if node
+                .children()
+                .is_some_and(|children| walk(children, id, path))
+            {
+                return true;
+            }
+            path.pop();
+        }
+        false
+    }
+    let mut path = Vec::new();
+    for page in doc.pages.iter().flatten() {
+        if walk(&page.children, id, &mut path) {
+            return path;
+        }
+    }
+    path.clear();
+    if walk(&doc.children, id, &mut path) {
+        return path;
+    }
+    Vec::new()
+}
+
 /// Take node `id` out of the document.
 pub(crate) fn take(doc: &mut PenDocument, id: &str) -> Option<PenNode> {
     let place = place_of(doc, id)?;

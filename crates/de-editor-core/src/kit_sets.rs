@@ -72,6 +72,31 @@ pub fn kit_set_of(
     })
 }
 
+/// Check a `K()` `variant` override against the kit set holding the
+/// component (installed or not).
+pub fn check_kit_variant(
+    kit_id: &str,
+    component_id: &str,
+    requested: &VariantValues,
+) -> Result<(), crate::component_set::VariantError> {
+    use crate::component_set::VariantError;
+    let Some((spec, _)) = kit_set_of(kit_id, component_id) else {
+        return Err(VariantError::NotAVariant(format!(
+            "{kit_id}/{component_id}"
+        )));
+    };
+    let variants: Vec<String> = spec.members.iter().map(|(v, _)| v.to_string()).collect();
+    let sizes: Vec<String> = SIZES.iter().map(|(s, ..)| s.to_string()).collect();
+    let set = ComponentSet {
+        axes: VariantAxes(vec![
+            ("variant".to_string(), variants),
+            ("size".to_string(), sizes),
+        ]),
+        default: VariantValues::new(),
+    };
+    crate::component_set::check_values(&set, requested)
+}
+
 /// How many variants the set installs.
 pub fn variant_count(spec: &KitSetSpec) -> usize {
     spec.members.len() * SIZES.len()

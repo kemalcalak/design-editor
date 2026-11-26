@@ -17,7 +17,7 @@ use serde_json::json;
 
 use super::pick::{component_set_of, parse_variant_name, set_containing, variant_masters};
 use super::report::values_label;
-use super::tree::{find, place_of, siblings_mut, take};
+use super::tree::{find, place_of, siblings_mut, take, Place};
 use super::VariantError;
 use crate::pen_node_ext::PenNodeExt;
 
@@ -119,6 +119,14 @@ impl CreateSet {
                     set: set.id_str().to_string(),
                 });
             }
+            // A master nested in another component (or a set) would leave
+            // a hole there; moving it is refused rather than half done.
+            if super::tree::ancestors_of(doc, id).iter().any(|ancestor| {
+                matches!(ancestor, PenNode::Frame(frame) if frame.reusable == Some(true))
+                    || component_set_of(ancestor).is_some()
+            }) {
+                return Err(VariantError::NestedMaster(id.clone()));
+            }
             masters.push(master);
         }
         let values = self.master_values(&masters)?;
@@ -144,6 +152,7 @@ impl CreateSet {
         }
         let default = complete(&axes, values.first());
         let set_id = match &self.set_id {
+            Some(id) if find(doc, id).is_some() => return Err(VariantError::IdTaken(id.clone())),
             Some(id) => id.clone(),
             None => unique_id(&self.name, &taken_ids(doc)),
         };
@@ -276,7 +285,12 @@ fn complete(axes: &VariantAxes, values: Option<&VariantValues>) -> VariantValues
 
 /// Build the set: masters move into a new set frame at the first
 /// master's place. The plan must come from [`CreateSet::plan`] on `doc`.
-pub(crate) fn apply_create(doc: &mut PenDocument, create: &CreateSet, planned: PlannedSet) {
+pub(crate) fn apply_create(
+    doc: &mut PenDocument,
+    create: &CreateSet,
+    planned: PlannedSet,
+    moved: &mut Vec<String>,
+) {
     let Some(place) = place_of(doc, &create.master_ids[0]) else {
         return;
     };
@@ -289,6 +303,9 @@ pub(crate) fn apply_create(doc: &mut PenDocument, create: &CreateSet, planned: P
         if let Some(other) = place_of(doc, id) {
             if other.page == place.page && other.parent == place.parent && other.index < index {
                 index -= 1;
+            }
+            if other.page != place.page {
+                moved.push(id.clone());
             }
         }
         if let Some(mut master) = take(doc, id) {
@@ -318,9 +335,24 @@ pub(crate) fn apply_create(doc: &mut PenDocument, create: &CreateSet, planned: P
         frame.children = Some(masters);
     }
     layout_grid(&mut set_node);
-    if let Some(siblings) = siblings_mut(doc, &place) {
-        let at = index.min(siblings.len());
-        siblings.insert(at, set_node);
+    // The first master's parent is never one of the moved masters (nested
+    // masters are refused), so its sibling list still exists; a page root
+    // is the fallback so no master is ever lost.
+    let roots = Place {
+        parent: None,
+        index: 0,
+        ..place.clone()
+    };
+    match siblings_mut(doc, &place) {
+        Some(siblings) => {
+            let at = index.min(siblings.len());
+            siblings.insert(at, set_node);
+        }
+        None => {
+            if let Some(siblings) = siblings_mut(doc, &roots) {
+                siblings.push(set_node);
+            }
+        }
     }
 }
 

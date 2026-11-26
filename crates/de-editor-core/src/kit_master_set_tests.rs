@@ -175,4 +175,17 @@ fn an_older_single_master_keeps_serving_its_kit_id() {
     let placed = instances(&s);
     assert_eq!(placed[0]["ref"], "shadcn-btn-primary");
     assert!(placed[0].get("variant").is_none());
+
+    // Another button installs the set (fresh ids, the old id is taken);
+    // primary keeps resolving to the older master.
+    assert!(s.apply(kit("shadcn-btn-ghost", None)));
+    assert!(s.apply(kit("shadcn-btn-primary", None)));
+    let placed = instances(&s);
+    assert!(placed[1]["variant"]["variant"] == "ghost");
+    assert_eq!(placed[2]["ref"], "shadcn-btn-primary");
+    assert!(!s
+        .editor_ui
+        .kit_masters
+        .contains_key(&kit_master_key(SHADCN, "shadcn-btn-primary")));
+    assert!(s.duplicate_ids().is_empty());
 }

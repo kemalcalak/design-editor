@@ -327,3 +327,86 @@ fn instantiate_component_takes_a_set_id_and_a_variant() {
         json!({"size":"sm","state":"default","variant":"primary"})
     );
 }
+
+#[test]
+fn plain_inserts_naming_the_set_resolve_and_check_their_variant() {
+    let mut state = with_set();
+    // A one-line I() without `variant` takes the simulator path too.
+    let (envelope, command) =
+        call_operations(&state, r#"plain=I("screen",{"type":"ref","ref":"button"})"#);
+    assert!(state.apply(command.expect("insert")));
+    let plain = node(&state, &binding_id(&envelope, "plain"));
+    assert_eq!(plain["ref"], "btn-primary-md-default");
+
+    let insert = crate::insert_node_snapshot_for(&state);
+    let refused = error(insert.call(&args(&[
+        ("parent", "screen"),
+        (
+            "data",
+            r#"{"type":"ref","ref":"button","variant":{"size":"xl"}}"#,
+        ),
+    ])));
+    assert_eq!(
+        refused,
+        "unknown value xl for axis size; values: md, sm, lg"
+    );
+    let (_, command) = ok(insert.call(&args(&[
+        ("parent", "screen"),
+        (
+            "data",
+            r#"{"type":"ref","id":"lg","ref":"button","variant":{"size":"lg"}}"#,
+        ),
+    ])));
+    assert!(state.apply(command));
+    let screen = node(&state, "screen");
+    assert!(
+        screen["children"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|child| child["ref"] == "btn-primary-lg-default"),
+        "{screen}"
+    );
+}
+
+#[test]
+fn k_refuses_a_variant_the_kit_set_lacks() {
+    let state = state();
+    let (envelope, command) = call_operations(
+        &state,
+        r#"b=K("shadcn/btn-primary", "screen", {"variant":{"size":"xl"}})"#,
+    );
+    assert!(command.is_none());
+    assert!(envelope["errors"][0]["error"]
+        .as_str()
+        .unwrap()
+        .contains("unknown value xl for axis size; values: sm, md, lg"));
+}
+
+#[test]
+fn html_export_shows_the_variant_an_instance_picked() {
+    let mut state = with_set();
+    let export = |state: &EditorState| {
+        let outcome = crate::export_html_snapshot(state).call(&args(&[
+            ("nodeIds", r#"["screen"]"#),
+            ("format", "html-css"),
+        ]));
+        let ToolOutcome::OkJson(json) = outcome else {
+            panic!("export failed: {outcome:?}");
+        };
+        serde_json::from_str::<Value>(&json).unwrap()["html"]
+            .as_str()
+            .unwrap()
+            .to_string()
+    };
+    assert!(export(&state).contains("120px"), "md is 120 px wide");
+    let (_, command) = ok(call(
+        &state,
+        "set_instance_variant",
+        &[("nodeId", "b1"), ("variant", r#"{"size":"lg"}"#)],
+    ));
+    assert!(state.apply(command));
+    let html = export(&state);
+    assert!(html.contains("160px"), "lg is 160 px wide: {html}");
+    assert!(html.contains("Save"), "props stay: {html}");
+}

@@ -68,11 +68,11 @@ impl EditorState {
         command: &ComponentSetCommand,
     ) -> Result<VariantReport, VariantError> {
         let Ok(mut allocator) = SequentialIdAllocator::for_document(&self.doc, 1) else {
-            return Err(VariantError::NoMasters);
+            return Err(VariantError::IdsExhausted);
         };
         let result = match self.apply_component_set_with_allocator(command, &mut allocator) {
             Ok(result) => result,
-            Err(_) => Err(VariantError::NoMasters),
+            Err(_) => Err(VariantError::IdsExhausted),
         };
         if let Ok(report) = &result {
             if !report.is_quiet() {

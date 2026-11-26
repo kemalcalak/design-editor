@@ -200,7 +200,7 @@ impl EditorState {
 
     /// The recorded master, else a master on the `Components` page under
     /// the template's own root id.
-    fn find_kit_master(&self, key: &str, template: &PenNode) -> Option<KitMaster> {
+    pub(crate) fn find_kit_master(&self, key: &str, template: &PenNode) -> Option<KitMaster> {
         let recorded = self.editor_ui.kit_masters.get(key).map(String::as_str);
         recorded
             .into_iter()

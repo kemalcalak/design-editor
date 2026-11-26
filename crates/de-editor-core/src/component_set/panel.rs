@@ -13,7 +13,7 @@
 use jian_ops_schema::component_set::VariantValues;
 use jian_ops_schema::node::PenNode;
 
-use super::pick::{component_set_of, variant_masters, variant_values_of};
+use super::pick::{component_set_of, variant_values_of};
 use super::{ComponentSetCommand, CreateSet, VariantError, VariantReport};
 use crate::pen_node_ext::PenNodeExt;
 use crate::EditorState;
@@ -263,12 +263,5 @@ impl EditorState {
             _ => return None,
         };
         Some(self.apply_component_set(&command))
-    }
-
-    /// The names of a set's variants, for a set frame's layer label.
-    pub fn variant_count(&self, set_id: &str) -> usize {
-        super::tree::find(&self.doc, set_id)
-            .map(|node| variant_masters(node).len())
-            .unwrap_or(0)
     }
 }

@@ -126,11 +126,32 @@ pub fn normalize_inserted(
     doc: &PenDocument,
     nodes: &mut [PenNode],
 ) -> Result<Vec<VariantFallback>, VariantError> {
+    let index = SetIndex::build(doc);
+    // Without sets only a `variant` (refused below) needs a look.
+    if index.is_empty() && !nodes.iter().any(asks_variant) {
+        return Ok(Vec::new());
+    }
+    normalize_with(doc, &index, nodes)
+}
+
+fn asks_variant(node: &PenNode) -> bool {
+    matches!(node, PenNode::Ref(reference) if reference.variant.is_some())
+        || node
+            .children()
+            .is_some_and(|children| children.iter().any(asks_variant))
+}
+
+fn normalize_with(
+    doc: &PenDocument,
+    index: &SetIndex,
+    nodes: &mut [PenNode],
+) -> Result<Vec<VariantFallback>, VariantError> {
     let mut fallbacks = Vec::new();
     for node in nodes {
         if let PenNode::Ref(reference) = node {
+            let set_of = |id: &str| index.set_of(id).and_then(|set| find(doc, set));
             if let Some(target) =
-                resolve_target(doc, &reference.target, reference.variant.as_ref())?
+                resolve_target_in(doc, &reference.target, reference.variant.as_ref(), &set_of)?
             {
                 if !target.exact {
                     fallbacks.push(VariantFallback {
@@ -152,7 +173,7 @@ pub fn normalize_inserted(
             }
         }
         if let Some(children) = node.children_mut() {
-            fallbacks.extend(normalize_inserted(doc, children)?);
+            fallbacks.extend(normalize_with(doc, index, children)?);
         }
     }
     Ok(fallbacks)

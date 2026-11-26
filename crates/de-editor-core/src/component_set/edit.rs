@@ -115,7 +115,7 @@ impl ComponentSetCommand {
                 }
                 if let Some(id) = new_id {
                     if find(doc, id).is_some() {
-                        return Err(VariantError::DuplicateMaster(id.clone()));
+                        return Err(VariantError::IdTaken(id.clone()));
                     }
                 }
                 Ok(())
@@ -192,13 +192,7 @@ impl ComponentSetCommand {
                 Ok(())
             }
             Self::SetInstanceVariant { node_id, variant } => {
-                let Some(PenNode::Ref(reference)) = find(doc, node_id) else {
-                    return Err(VariantError::InstanceNotFound(node_id.clone()));
-                };
-                match resolve_target(doc, &reference.target, Some(variant))? {
-                    Some(_) => Ok(()),
-                    None => Err(VariantError::NotAVariant(node_id.clone())),
-                }
+                instance_switch(doc, node_id, variant).map(|_| ())
             }
         }
     }
@@ -215,6 +209,38 @@ impl ComponentSetCommand {
             Self::SetInstanceVariant { .. } => None,
         }
     }
+}
+
+/// What a switch of instance `node_id` to `variant` resolves to, with the
+/// master it shows now. The stored `variant` fills the axes the call leaves
+/// out; stored values the set no longer has are dropped first, so they
+/// never block a switch. The one check `check` and the apply share.
+fn instance_switch(
+    doc: &PenDocument,
+    node_id: &str,
+    variant: &VariantValues,
+) -> Result<(super::InstanceTarget, Option<PenNode>), VariantError> {
+    let Some(PenNode::Ref(reference)) = find(doc, node_id) else {
+        return Err(VariantError::InstanceNotFound(node_id.to_string()));
+    };
+    let set = match resolve_target(doc, &reference.target, Some(&VariantValues::new()))? {
+        Some(current) => find(doc, &current.set_id).and_then(component_set_of),
+        None => None,
+    };
+    let mut requested: VariantValues = reference
+        .variant
+        .iter()
+        .flatten()
+        .filter(|(axis, value)| set.is_some_and(|set| set.axes.has_value(axis, value)))
+        .map(|(axis, value)| (axis.clone(), value.clone()))
+        .collect();
+    requested.extend(variant.clone());
+    let target = resolve_target(doc, &reference.target, Some(&requested))?
+        .ok_or_else(|| VariantError::NotAVariant(node_id.to_string()))?;
+    Ok((
+        target,
+        super::resolve::shown_master(doc, reference).cloned(),
+    ))
 }
 
 /// The master `from` names (it must be a variant of the set), else the
@@ -340,7 +366,7 @@ pub(crate) fn apply_to_document(
                 Err(error) => return Ok(Err(error)),
             };
             report.set_id = Some(planned.set_id.clone());
-            apply_create(doc, create, planned);
+            apply_create(doc, create, planned, &mut report.moved_masters);
         }
         ComponentSetCommand::AddVariant {
             set_id,
@@ -408,12 +434,10 @@ pub(crate) fn apply_to_document(
             edit_master_values(doc, set_id, &mut |values| {
                 values.insert(axis.clone(), value.clone());
             });
-            let mut instances = |reference: &mut jian_ops_schema::node::RefNode| {
-                if let Some(variant) = reference.variant.as_mut() {
-                    variant.entry(axis.clone()).or_insert_with(|| value.clone());
-                }
-            };
-            super::tree::for_each_ref_mut(doc, &mut instances);
+            // Only this set's instances learn the new axis.
+            rename_in_instances(doc, set_id, &mut |variant| {
+                variant.entry(axis.clone()).or_insert_with(|| value.clone());
+            });
         }
         ComponentSetCommand::RenameAxis { set_id, from, to } => {
             report.set_id = Some(set_id.clone());
@@ -511,22 +535,9 @@ pub(crate) fn apply_to_document(
             );
         }
         ComponentSetCommand::SetInstanceVariant { node_id, variant } => {
-            let (target, old_master) = {
-                let Some(PenNode::Ref(reference)) = find(doc, node_id) else {
-                    return Ok(Ok(report));
-                };
-                let mut requested = reference.variant.clone().unwrap_or_default();
-                requested.extend(variant.clone());
-                let target = resolve_target(doc, &reference.target, Some(&requested))
-                    .ok()
-                    .flatten();
-                (
-                    target,
-                    super::resolve::shown_master(doc, reference).cloned(),
-                )
-            };
-            let Some(target) = target else {
-                return Ok(Ok(report));
+            let (target, old_master) = match instance_switch(doc, node_id, variant) {
+                Ok(switch) => switch,
+                Err(error) => return Ok(Err(error)),
             };
             report.set_id = Some(target.set_id.clone());
             let Some(new_master) = find(doc, &target.master_id).cloned() else {
@@ -608,10 +619,10 @@ pub fn preview_command(
 ) -> Result<(PenDocument, VariantReport), VariantError> {
     let mut copy = doc.clone();
     let mut allocator = crate::id_allocator::SequentialIdAllocator::for_document(doc, 1)
-        .map_err(|_| VariantError::NoMasters)?;
+        .map_err(|_| VariantError::IdsExhausted)?;
     match apply_to_document(&mut copy, command, &mut allocator) {
         Ok(Ok(report)) => Ok((copy, report)),
         Ok(Err(error)) => Err(error),
-        Err(_) => Err(VariantError::NoMasters),
+        Err(_) => Err(VariantError::IdsExhausted),
     }
 }

@@ -669,8 +669,10 @@ fn push_descendant_records(node: &PenNode, records: &mut Vec<String>) {
 }
 
 pub fn get_component_snapshot(state: &EditorState) -> GetComponent {
+    let sets = de_editor_core::component_set::set_summaries(&state.doc);
+    let mut variants = crate::component_set_tools::variant_details(&sets);
     GetComponent {
-        sets: de_editor_core::component_set::set_summaries(&state.doc)
+        sets: sets
             .into_iter()
             .filter_map(|set| {
                 crate::component_set_tools::set_detail(&state.doc, &set.id)
@@ -698,15 +700,7 @@ pub fn get_component_snapshot(state: &EditorState) -> GetComponent {
                         },
                         root,
                     ),
-                    variant: {
-                        let mut variant = BTreeMap::new();
-                        crate::component_set_tools::variant_detail(
-                            &state.doc,
-                            c.id.as_str(),
-                            &mut variant,
-                        );
-                        variant
-                    },
+                    variant: variants.remove(c.id.as_str()).unwrap_or_default(),
                 })
             })
             .collect(),

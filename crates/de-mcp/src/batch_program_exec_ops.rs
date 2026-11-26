@@ -146,11 +146,25 @@ pub(crate) fn execute_kit_instantiate(
                     ))
                 }
             }
+            // A `variant` must name the kit set's axes and values (#368).
+            if let Some(raw) = object.get("variant") {
+                let requested: jian_ops_schema::component_set::VariantValues =
+                    serde_json::from_value(raw.clone()).map_err(|_| {
+                        ProgramError::InvalidValue(
+                            "K() variant must be an object of axis to value".into(),
+                        )
+                    })?;
+                de_editor_core::kit_sets::check_kit_variant(&kit_id, &component_id, &requested)
+                    .map_err(|error| ProgramError::InvalidValue(error.to_string()))?;
+            }
             de_editor_core::motion_guard::prepare_motion_json(&mut value)
                 .map_err(|e| ProgramError::Json(e.to_string()))?;
             Some(value.to_string())
         }
     };
+    let asked_variant = overrides_json
+        .as_deref()
+        .is_some_and(|raw| raw.contains("\"variant\""));
     ctx.emit(
         EditorCommand::InstantiateKitComponent {
             kit_id: kit_id.into(),
@@ -165,11 +179,18 @@ pub(crate) fn execute_kit_instantiate(
         "K() kit/component not found, parent is not a container, or overrides are invalid",
     )?;
     let node_id = ctx.sim.selection.anchor.clone();
-    if !node_id.is_real()
-        || de_editor_core::walkers::find_node(ctx.sim.active_children(), &node_id).is_none()
-    {
+    let Some(inserted) = de_editor_core::walkers::find_node(ctx.sim.active_children(), &node_id)
+        .filter(|_| node_id.is_real())
+    else {
         return Err(ProgramError::Rejected(
             "K() did not produce a selected node".into(),
+        ));
+    };
+    if asked_variant
+        && matches!(inserted, jian_ops_schema::node::PenNode::Ref(r) if r.variant.is_none())
+    {
+        ctx.warnings.push(format!(
+            "{kit_component_id}: this document holds it as a single master from before the kit set, so variant was ignored"
         ));
     }
     ctx.bind(binding, node_id.as_str());

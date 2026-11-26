@@ -40,6 +40,16 @@ impl EditorState {
                 Some((id.to_string(), component.template.clone()))
             })
             .collect();
+        // Members the document already holds as single masters (from before
+        // the set) keep resolving to them; only the others join the set.
+        let kept: Vec<String> = templates
+            .iter()
+            .filter(|(id, template)| {
+                self.find_kit_master(&kit_master_key(spec.kit_id, id), template)
+                    .is_some()
+            })
+            .map(|(id, _)| id.clone())
+            .collect();
         let (x, y) = self.next_master_slot();
         set.base_mut().x = Some(x);
         set.base_mut().y = Some(y);
@@ -85,7 +95,7 @@ impl EditorState {
             let Some(node) = md(template_id) else {
                 continue;
             };
-            if fresh_ids {
+            if fresh_ids && !kept.contains(template_id) {
                 self.editor_ui.kit_masters.insert(
                     kit_master_key(spec.kit_id, template_id),
                     node.id_str().to_string(),

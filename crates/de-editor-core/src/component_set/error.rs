@@ -40,6 +40,12 @@ pub enum VariantError {
     ValueTaken { axis: String, value: String },
     /// An axis keeps at least one value.
     LastValue { axis: String },
+    /// A new set or variant would take an id the document already uses.
+    IdTaken(String),
+    /// The document has no free node ids left.
+    IdsExhausted,
+    /// A master sits inside another component; it cannot move into a set.
+    NestedMaster(String),
 }
 
 impl fmt::Display for VariantError {
@@ -81,6 +87,12 @@ impl fmt::Display for VariantError {
                 write!(f, "axis {axis} already has value {value}")
             }
             Self::LastValue { axis } => write!(f, "axis {axis} must keep at least one value"),
+            Self::IdTaken(id) => write!(f, "id {id} is already used in the document"),
+            Self::IdsExhausted => f.write_str("the document has no free node ids left"),
+            Self::NestedMaster(id) => write!(
+                f,
+                "component {id} sits inside another component and cannot move into a set"
+            ),
         }
     }
 }

@@ -50,18 +50,25 @@ pub(super) fn parse_node_id(
 
 /// First-party `insert_node` tool — creates a fresh node on the active
 /// page. The applier allocates a non-colliding id.
-pub struct InsertNode;
+pub struct InsertNode {
+    /// The document an inserted instance's set or `variant` is checked
+    /// against (#368); `None` for callers without a snapshot.
+    doc: Option<Box<jian_ops_schema::PenDocument>>,
+}
 
 impl McpTool for InsertNode {
     fn name(&self) -> &str {
         "insert_node"
     }
     fn call(&self, args: &BTreeMap<String, String>) -> ToolOutcome {
-        match ts_data_tree_command(args) {
-            Ok(Some(command)) => {
+        match ts_data_tree_command(args, self.doc.as_deref()) {
+            Ok(Some((command, warnings))) => {
                 let mut out = BTreeMap::new();
                 out.insert("wrote".into(), "true".into());
                 out.insert("count".into(), "1".into());
+                if !warnings.is_empty() {
+                    out.insert("warnings".into(), serde_json::json!(warnings).to_string());
+                }
                 return ToolOutcome::OkWithCommand(out, command);
             }
             Ok(None) => {}
@@ -173,13 +180,21 @@ pub(super) const ALLOWED_KINDS: &[&str] = &[
 ];
 
 pub fn insert_node_snapshot() -> InsertNode {
-    InsertNode
+    InsertNode { doc: None }
+}
+
+/// `insert_node` that checks inserted instances against `state`'s document.
+pub fn insert_node_snapshot_for(state: &de_editor_core::EditorState) -> InsertNode {
+    InsertNode {
+        doc: Some(Box::new(state.doc.clone())),
+    }
 }
 
 #[allow(clippy::result_large_err)]
 fn ts_data_tree_command(
     args: &BTreeMap<String, String>,
-) -> Result<Option<EditorCommand>, ToolOutcome> {
+    doc: Option<&jian_ops_schema::PenDocument>,
+) -> Result<Option<(EditorCommand, Vec<String>)>, ToolOutcome> {
     let Some(node) = ts_data_tree_node(args)? else {
         return Ok(None);
     };
@@ -197,14 +212,24 @@ fn ts_data_tree_command(
         .filter(|s| !s.is_empty())
         .map(str::to_string);
     let mut nodes = vec![node];
+    // A `ref` naming a component set, or a `variant`, resolves to the
+    // variant master now (#368).
+    let warnings = match doc {
+        Some(doc) => super::component_set_tools::normalize_inserted_variants(doc, &mut nodes)
+            .map_err(|error| ToolOutcome::Err(ToolErrorCode::InvalidArgument, error.to_string()))?,
+        None => Vec::new(),
+    };
     let hoist = super::batch_design::hoist_generation_state(&mut nodes);
-    Ok(Some(super::batch_design::with_hoisted_state(
-        hoist,
-        EditorCommand::InsertSubtree {
-            nodes,
-            parent_id,
-            page_id,
-        },
+    Ok(Some((
+        super::batch_design::with_hoisted_state(
+            hoist,
+            EditorCommand::InsertSubtree {
+                nodes,
+                parent_id,
+                page_id,
+            },
+        ),
+        warnings,
     )))
 }
 
