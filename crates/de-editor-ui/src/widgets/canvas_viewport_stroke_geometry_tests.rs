@@ -11,7 +11,7 @@ use std::sync::Arc;
 
 #[derive(Debug, Clone, PartialEq)]
 enum Op {
-    Style(StrokeStyle),
+    Style(Box<StrokeStyle>),
     StrokePath(String, Point2D, f32, f32),
     FillPath(String, Point2D, f32, f32),
     Line,
@@ -44,7 +44,7 @@ impl RenderBackend for Recorder {
         self.ops.push(Op::FillPath(d.into(), at, size, viewbox));
     }
     fn set_stroke_style(&mut self, style: StrokeStyle) {
-        self.ops.push(Op::Style(style));
+        self.ops.push(Op::Style(Box::new(style)));
     }
     fn resize(&mut self, _: u32, _: u32) {}
     fn dpi_scale(&self) -> f32 {
@@ -128,7 +128,7 @@ fn geometry_replaces_the_plain_line_and_scales_with_zoom() {
     let Some(Op::Style(last)) = ops.last() else {
         panic!("{ops:?}");
     };
-    assert_eq!(*last, line(None).stroke.unwrap().style.scaled(2.0));
+    assert_eq!(**last, line(None).stroke.unwrap().style.scaled(2.0));
 }
 
 #[test]
