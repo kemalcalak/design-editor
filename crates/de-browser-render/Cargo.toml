@@ -22,3 +22,6 @@ de-process-io = { path = "../de-process-io" }
 # The real-Chrome input test drives the page through the editor's own
 # event translation (`browser_input_cdp`).
 de-editor-core = { path = "../de-editor-core" }
+
+[lints]
+workspace = true

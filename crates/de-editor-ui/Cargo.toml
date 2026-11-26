@@ -61,3 +61,6 @@ jian-scene = { path = "../../vendor/jian/crates/jian-scene", features = ["test-s
 
 [features]
 default = []
+
+[lints]
+workspace = true

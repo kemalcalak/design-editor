@@ -51,6 +51,18 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 # (`de-host-desktop`) + `jian-skia`, where the fork was byte-identical anyway.
 # No `[patch.crates-io]` needed.
 
+# Lints every member crate inherits (`[lints] workspace = true`, enforced by
+# tools/check-workspace-lints.sh).
+[workspace.lints.clippy]
+# Catches both `Instant - Duration` and `Duration - Duration` (not
+# `Instant - Instant`, which std saturates). The first panics when the result
+# would fall before the clock's origin: on Windows an `Instant` counts from
+# boot, so on a freshly booted CI runner backdating by a few minutes
+# underflows (#434). The second panics when the result would be negative.
+# Use `checked_sub` / `saturating_sub`, or move the other side forward /
+# compare `elapsed()` instead.
+unchecked_time_subtraction = "deny"
+
 # Release profile. Previously unset → Rust defaults (no LTO, codegen-units=16,
 # symbols kept), which shipped a ~70 MB desktop binary. This governs every
 # release build in the graph, including the excluded vendor/* path deps (their
