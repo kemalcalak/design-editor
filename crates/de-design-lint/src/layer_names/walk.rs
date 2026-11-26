@@ -109,6 +109,7 @@ impl Walk<'_> {
         make_distinct(
             &mut names,
             &run.reading_order(),
+            run.parent,
             self.locale,
             &self.facts,
             |node, name| acceptable(node, name, base(node).name.as_deref()),
@@ -133,11 +134,15 @@ impl Walk<'_> {
             if kids.is_empty() || self.page.is_instance(node) {
                 continue;
             }
-            // A section-like layer (or any wide child of a screen) names the
-            // section its descendants sit in: `Hero / Title`.
+            // A section-like layer (or any child of a screen with a name
+            // that says something) names the section its descendants sit
+            // in: `Hero / Title`. A generic role (`Row`, `Column`,
+            // `Container`) says nothing about the part of the screen, so it
+            // never prefixes what it holds.
             let final_name = name.final_name();
+            let generic = name.kept.is_none() && role.as_ref().is_some_and(Role::is_generic);
             let names_section = role.as_ref().is_some_and(Role::is_section_like)
-                || (run.depth == 1 && final_name.is_some());
+                || (run.depth == 1 && final_name.is_some() && !generic);
             let own_unit = is_unit(node, run.depth, &self.facts)
                 .then(|| UnitRoles::of(node, run.depth, &self.facts));
             self.siblings(Siblings {

@@ -14,6 +14,7 @@ use crate::node_util::{
 };
 
 use super::facts::Facts;
+use super::label_box::{label_box_kind, LabelBox};
 use super::text_roles::{self, holds_price, screen_heading};
 
 /// How a container of repeated cards is named: as pricing cards when at
@@ -42,6 +43,8 @@ pub(crate) enum Role {
     Container,
     PrimaryButton,
     SecondaryButton,
+    /// A small label that is not pressed: a tag, chip, pill or marker.
+    Badge,
     Title,
     /// A second heading under the title.
     Subtitle,
@@ -75,6 +78,12 @@ impl Role {
             self,
             Role::Hero | Role::Navigation | Role::Footer | Role::Section(_) | Role::Card(_)
         )
+    }
+
+    /// Layout-only roles, which say how a layer arranges its content but
+    /// not what part of the screen it is.
+    pub(crate) fn is_generic(&self) -> bool {
+        matches!(self, Role::Row | Role::Column | Role::Container)
     }
 
     /// Generic roles that read better with their section in front.
@@ -119,6 +128,7 @@ impl Role {
             Role::Container => word("renameLayers.role.container"),
             Role::PrimaryButton => word("renameLayers.role.primaryButton"),
             Role::SecondaryButton => word("renameLayers.role.secondaryButton"),
+            Role::Badge => word("renameLayers.role.badge"),
             Role::Title => word("renameLayers.role.title"),
             Role::Subtitle => word("renameLayers.role.subtitle"),
             Role::Price => word("renameLayers.role.price"),
@@ -247,7 +257,9 @@ fn mostly_transparent(color: &str) -> bool {
     hex.len() == 8 && u8::from_str_radix(&hex[6..8], 16).is_ok_and(|alpha| alpha < 0x80)
 }
 
-/// A small filled or outlined box around one short label.
+/// A small filled or outlined box around one short label: a button, a
+/// badge when it is compact and nothing taps it, or an avatar when it is a
+/// circle of initials (see `label_box`).
 pub(crate) fn button_role(node: &PenNode) -> Option<Role> {
     let kids = children(node);
     if kids.is_empty() || kids.len() > 3 {
@@ -258,30 +270,34 @@ pub(crate) fn button_role(node: &PenNode) -> Option<Role> {
     {
         return None;
     }
-    let labels: Vec<String> = kids.iter().filter_map(text_content).collect();
+    let texts: Vec<&PenNode> = kids
+        .iter()
+        .filter(|kid| node_kind(kid) == NodeKind::Text)
+        .collect();
     let others_are_icons = kids.iter().all(|kid| {
         matches!(
             node_kind(kid),
             NodeKind::Text | NodeKind::IconFont | NodeKind::Path
         )
     });
-    let [label] = labels.as_slice() else {
+    let [label_node] = texts.as_slice() else {
         return None;
     };
+    let label = text_content(label_node).unwrap_or_default();
     if !others_are_icons
         || label.is_empty()
         || label.split_whitespace().count() > 4
         || label.chars().count() > 32
+        || !(has_stroke(node) || has_visible_fill(node))
     {
         return None;
     }
-    if is_primary_fill(node) {
-        Some(Role::PrimaryButton)
-    } else if has_stroke(node) || has_visible_fill(node) {
-        Some(Role::SecondaryButton)
-    } else {
-        None
-    }
+    Some(match label_box_kind(node, label_node, kids.len()) {
+        LabelBox::Avatar => Role::Avatar,
+        LabelBox::Badge => Role::Badge,
+        LabelBox::Button if is_primary_fill(node) => Role::PrimaryButton,
+        LabelBox::Button => Role::SecondaryButton,
+    })
 }
 
 fn covers(node: &PenNode, parent: Option<&PenNode>, share: f64) -> bool {
@@ -295,6 +311,16 @@ fn covers(node: &PenNode, parent: Option<&PenNode>, share: f64) -> bool {
         (Some(pw), Some(ph)) => w >= pw * share && h >= ph * share,
         _ => false,
     }
+}
+
+/// A section holding a text this large (px) may be the hero.
+const HERO_MIN_TEXT: f64 = 32.0;
+
+/// The largest font size among the visible texts below `node`.
+fn largest_text(node: &PenNode) -> f64 {
+    let mut texts = Vec::new();
+    texts_below(node, &mut texts);
+    texts.iter().map(|(size, _)| *size).fold(0.0, f64::max)
 }
 
 /// Section of a screen: a wide child of a top-level frame.
@@ -311,17 +337,22 @@ fn section_role(node: &PenNode, place: Place<'_>, facts: &Facts) -> Option<Role>
         return None;
     }
     let siblings = children(parent).len();
-    let short = numeric_height(node).is_none_or(|h| h <= 120.0);
-    let mut texts = Vec::new();
-    texts_below(node, &mut texts);
-    let largest = texts.iter().map(|(size, _)| *size).fold(0.0, f64::max);
-    if place.index == 0
-        && short
-        && (texts.len() >= 3 || layout(node) == Some(&LayoutMode::Horizontal))
-    {
+    let largest = largest_text(node);
+    // Only a bar that looks like one: the screen's header band (links in a
+    // row at the top), the band a screen's heading search skips too.
+    let band = facts.header_band(parent);
+    if place.index == 0 && band {
         return Some(Role::Navigation);
     }
-    if place.index <= 1 && largest >= 32.0 {
+    // The first section with a display-size text, right under the band
+    // when there is one: a screen has one hero.
+    let first_is_hero = || {
+        !band
+            && children(parent)
+                .first()
+                .is_some_and(|first| largest_text(first) >= HERO_MIN_TEXT)
+    };
+    if largest >= HERO_MIN_TEXT && (place.index == 0 || (place.index == 1 && !first_is_hero())) {
         return Some(Role::Hero);
     }
     if siblings >= 3 && place.index + 1 == siblings && largest <= 16.0 {
