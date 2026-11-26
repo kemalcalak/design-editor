@@ -258,6 +258,8 @@ mod shader_source_editor;
 mod shape_picker_press;
 #[cfg(test)]
 mod shortcut_surface_tests;
+#[cfg(test)]
+mod shortcuts_clipboard_marker_tests;
 mod shortcuts;
 mod slides_panel;
 mod slides_panel_thumbs;

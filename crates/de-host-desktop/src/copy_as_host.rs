@@ -1,6 +1,6 @@
 //! Copy as PNG / SVG (#399) — the desktop arm. The render is
 //! `de_host_services::clipboard_export`; this writes the OS clipboard and
-//! says how it went in a toast.
+//! says how it went in a toast. Also flushes queued copy text.
 
 use crate::DesktopApp;
 use de_editor_core::copy_as::CopyAsFormat;
@@ -35,6 +35,16 @@ impl DesktopApp {
             .show_toast(key, Vec::new(), level, now);
         self.host.mark_editor_state_dirty();
         true
+    }
+
+    /// Write the text a copy affordance or shortcut queued
+    /// (`chat.pending_copy_text`: code, transcript, the node-copy marker of
+    /// #436) to the OS clipboard. Called right after Cmd+C / Cmd+X as well
+    /// as after a press, so the next Cmd+V never reads an older clipboard.
+    pub(crate) fn flush_pending_copy_text(&mut self) {
+        if let Some(text) = self.host.editor_state_mut().chat.pending_copy_text.take() {
+            crate::clipboard::set_text(&text);
+        }
     }
 
     /// Run a Copy as … request a layer-menu row left on the state.

@@ -196,9 +196,7 @@ impl DesktopApp {
         if self.drain_save_current_template_request() {
             self.request_redraw(true);
         }
-        if let Some(text) = self.host.editor_state_mut().chat.pending_copy_text.take() {
-            crate::clipboard::set_text(&text);
-        }
+        self.flush_pending_copy_text();
         // A layer-menu Copy as PNG / SVG row (#399).
         if self.drain_copy_as_request() {
             self.request_redraw(true);

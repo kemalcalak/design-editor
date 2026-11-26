@@ -512,7 +512,9 @@ impl DesktopApp {
             }
             return true;
         }
-        self.host.apply_copy()
+        let copied = self.host.apply_copy();
+        self.flush_pending_copy_text();
+        copied
     }
 
     /// Cmd+X dispatch. Cuts the focused text input's selection to the OS
@@ -531,7 +533,9 @@ impl DesktopApp {
             }
             return true;
         }
-        self.host.apply_cut()
+        let cut = self.host.apply_cut();
+        self.flush_pending_copy_text();
+        cut
     }
 
     /// Cmd+V dispatch. Pastes OS clipboard text into whichever text
@@ -559,7 +563,7 @@ impl DesktopApp {
         // via Cmd+,) while the chat input is focused routes the paste
         // to the modal's field instead of the chat.
         if self.host.non_chat_input_owns_keyboard_pub() {
-            if let Some(text) = payload.text.as_deref() {
+            if let Some(text) = payload.input_text() {
                 self.host.apply_input_paste(text);
             }
             return true;
@@ -569,10 +573,13 @@ impl DesktopApp {
             // chat input; the paste is consumed either way.
             if let Some(image) = payload.image.take() {
                 self.paste_image_into_chat(image);
-            } else if let Some(text) = payload.text.as_deref() {
+            } else if let Some(text) = payload.input_text() {
                 self.host.chat_input_paste(text);
             }
             return true;
+        }
+        if payload.holds_node_marker() {
+            return self.host.apply_paste();
         }
         if let Some(html) = payload.html.take() {
             if let Some(result) = self.try_figma_clipboard_paste(html.clone()) {
