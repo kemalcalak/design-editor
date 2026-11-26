@@ -12,3 +12,6 @@ description = "Design Editor i18n — Locale enum + 15-locale string tables"
 # Test-only: the HTML-import warning key guard reads the importer's code list
 # directly, so a new `ImportWarning` variant cannot ship without its copy.
 de-html = { path = "../de-html" }
+
+[lints]
+workspace = true

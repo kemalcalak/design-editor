@@ -68,3 +68,6 @@ gl-host = ["dep:de-orchestrator"]
 # tests to access preview testing methods that would otherwise be gated by
 # #[cfg(test)] in a non-test build of this crate.
 testing = []
+
+[lints]
+workspace = true

@@ -40,3 +40,6 @@ tracing = { workspace = true }
 # can only ever be a dev-dependency (a legal cycle in Cargo).
 [dev-dependencies]
 de-orchestrator = { path = "../de-orchestrator" }
+
+[lints]
+workspace = true

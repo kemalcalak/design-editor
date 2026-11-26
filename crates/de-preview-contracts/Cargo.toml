@@ -13,3 +13,6 @@ description = "Dependency-light Preview contract DTOs — host capabilities, act
 serde = { workspace = true }
 serde_json = { workspace = true }
 thiserror = { workspace = true }
+
+[lints]
+workspace = true

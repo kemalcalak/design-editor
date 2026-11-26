@@ -34,3 +34,6 @@ zip = { version = "9", default-features = false, features = ["deflate-flate2"] }
 [features]
 # Gates the AI code-generation pipeline (src/ai/). Off by default.
 ai = ["dep:de-ai", "dep:serde"]
+
+[lints]
+workspace = true
