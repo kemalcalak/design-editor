@@ -148,6 +148,7 @@ mod property_panel_paint_options_tests;
 mod property_panel_path_ops;
 #[cfg(test)]
 mod property_panel_press_tests;
+pub mod property_panel_scale;
 pub mod property_panel_script;
 pub mod property_panel_section_tops;
 pub mod property_panel_sections;

@@ -411,6 +411,8 @@ impl DesktopApp {
                     "y" => self.host.apply_set_tool(de_editor_core::Tool::Polygon),
                     "h" => self.host.apply_set_tool(de_editor_core::Tool::Hand),
                     "n" => self.host.apply_set_tool(de_editor_core::Tool::Note),
+                    // K — the Scale tool (#394); Cmd+Shift+K stays Components.
+                    "k" => self.host.apply_set_tool(de_editor_core::Tool::Scale),
                     // Q toggles lasso selection in vector edit mode (#387).
                     "q" => handled = self.host.apply_vector_lasso_toggle(),
                     "[" => {

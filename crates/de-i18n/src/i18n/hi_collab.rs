@@ -491,6 +491,8 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "path.offsetInward" => "पाथ को अंदर ऑफ़सेट करें",
         "path.simplify" => "पाथ सरल करें",
         "path.reverse" => "पाथ की दिशा उलटें",
+        "scale.keptBound" => "वेरिएबल से जुड़े {{count}} मानों का आकार नहीं बदला",
+        "scale.title" => "स्केल",
         "palette.cmd.findLayers" => "लेयर खोजें…",
         "palette.cmd.flipHorizontal" => "क्षैतिज पलटें",
         "palette.cmd.flipVertical" => "लंबवत पलटें",

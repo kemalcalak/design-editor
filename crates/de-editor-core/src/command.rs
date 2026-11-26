@@ -562,6 +562,9 @@ pub enum EditorCommand {
     /// flatten, Flatten, Outline stroke, Offset), create a boolean group,
     /// switch its op, Simplify, Reverse. One undo step each.
     Path(crate::path_ops::PathCommand),
+    /// Scale nodes and everything inside them about a pivot (#394,
+    /// MCP `scale_nodes`). One undo step.
+    Scale(crate::selection_scale::ScaleRequest),
     /// Set the fill color on a node by id.
     SetNodeFillHex { node_id: NodeId, hex: String },
     /// Rename a node by id.

@@ -14,6 +14,9 @@ use crate::widgets::property_panel_visibility::VisibleSections;
 /// top equals the next visible section's.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct SectionTops {
+    /// The Scale section (#394) sits above everything while the Scale
+    /// tool is active.
+    pub scale: f32,
     pub component: f32,
     pub position: f32,
     pub flex: f32,
@@ -51,6 +54,10 @@ pub fn section_tops(
     };
     let shown = |on: bool, h: f32| if on { h } else { 0.0 };
     SectionTops {
+        scale: next(shown(
+            visible.scale,
+            crate::widgets::property_panel_scale::scale_section_height(),
+        )),
         component: next(visible.component_block_h()),
         position: next(visible.position_section_h()),
         flex: next(shown(

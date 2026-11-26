@@ -58,7 +58,7 @@ impl EditorState {
     /// True on a real, editable selection.
     pub fn commit_property_edit(&mut self, focus: PropertyFocus, value: f32) -> bool {
         let instance_scope = self.begin_instance_write_for_anchor();
-        let wrote = self.commit_property_edit_inner(focus, value);
+        let wrote = !focus.is_scale() && self.commit_property_edit_inner(focus, value);
         if let Some(scope) = instance_scope {
             self.finish_instance_write(scope);
         }
@@ -347,8 +347,11 @@ impl EditorState {
             | PropertyFocus::ComponentProp(_)
             | PropertyFocus::VariantText(_)
             | PropertyFocus::ShaderUniform { .. }
+            | PropertyFocus::ScaleFactor
+            | PropertyFocus::ScaleWidth
+            | PropertyFocus::ScaleHeight
             | PropertyFocus::StrokeWidth => {
-                unreachable!("corner radius / stroke width handled before node borrow")
+                unreachable!("handled before the node borrow (or refused for Scale fields)")
             }
             PropertyFocus::PolygonSides
             | PropertyFocus::StarInnerRadius

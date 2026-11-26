@@ -134,6 +134,19 @@ impl Widget for PropertyPanel {
             &self.snapshot.fills,
             &self.snapshot.interactions,
         );
+        if let Some(summary) = self.snapshot.scale.as_ref() {
+            y = crate::widgets::property_panel_scale::paint_scale_section(
+                cx,
+                &self.theme,
+                &edit_ctx,
+                summary,
+                de_i18n::translate(self.locale, "scale.title"),
+                x,
+                y,
+                w,
+            );
+        }
+        y = section_start(y, tops.component, "scale");
         if self.visible_sections().create_component {
             use crate::widgets::property_panel_component_props as props;
             let visible = self.visible_sections();

@@ -148,6 +148,8 @@ pub(super) fn rebuild_registry(
             }
         }
     }
+    // The Scale tool's twin (#394): resolves bounds on the layout scene.
+    register_tool!("scale_nodes", scale_nodes_tool::scale_nodes_snapshot(doc));
     #[cfg(feature = "mcp-debug-tools")]
     if debug_tools_enabled() {
         register_tool!(

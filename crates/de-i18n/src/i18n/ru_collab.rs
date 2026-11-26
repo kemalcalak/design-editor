@@ -491,6 +491,8 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "path.offsetInward" => "Сместить контур внутрь",
         "path.simplify" => "Упростить контур",
         "path.reverse" => "Изменить направление контура",
+        "scale.keptBound" => "Значения, привязанные к переменным ({{count}}), сохранили размер",
+        "scale.title" => "Масштаб",
         "palette.cmd.findLayers" => "Найти слои…",
         "palette.cmd.flipHorizontal" => "Отразить по горизонтали",
         "palette.cmd.flipVertical" => "Отразить по вертикали",

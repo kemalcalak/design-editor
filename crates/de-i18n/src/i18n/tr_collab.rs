@@ -491,6 +491,8 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "path.offsetInward" => "Yolu İçe Kaydır",
         "path.simplify" => "Yolu Sadeleştir",
         "path.reverse" => "Yol Yönünü Ters Çevir",
+        "scale.keptBound" => "Değişkenlere bağlı {{count}} değer boyutunu korudu",
+        "scale.title" => "Ölçekle",
         "palette.cmd.findLayers" => "Katmanları bul…",
         "palette.cmd.flipHorizontal" => "Yatay çevir",
         "palette.cmd.flipVertical" => "Dikey çevir",

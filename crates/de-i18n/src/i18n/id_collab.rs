@@ -491,6 +491,8 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "path.offsetInward" => "Geser Jalur ke Dalam",
         "path.simplify" => "Sederhanakan Jalur",
         "path.reverse" => "Balik Arah Jalur",
+        "scale.keptBound" => "{{count}} nilai yang terikat variabel tetap ukurannya",
+        "scale.title" => "Skala",
         "palette.cmd.findLayers" => "Cari layer…",
         "palette.cmd.flipHorizontal" => "Balik horizontal",
         "palette.cmd.flipVertical" => "Balik vertikal",

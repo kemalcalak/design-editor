@@ -491,6 +491,8 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "path.offsetInward" => "Décaler le tracé vers l'intérieur",
         "path.simplify" => "Simplifier le tracé",
         "path.reverse" => "Inverser le sens du tracé",
+        "scale.keptBound" => "{{count}} valeurs liées à des variables ont gardé leur taille",
+        "scale.title" => "Échelle",
         "palette.cmd.findLayers" => "Rechercher des calques…",
         "palette.cmd.flipHorizontal" => "Retourner horizontalement",
         "palette.cmd.flipVertical" => "Retourner verticalement",

@@ -491,6 +491,8 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "path.offsetInward" => "Dịch đường dẫn vào trong",
         "path.simplify" => "Đơn giản hóa đường dẫn",
         "path.reverse" => "Đảo hướng đường dẫn",
+        "scale.keptBound" => "{{count}} giá trị gắn với biến giữ nguyên kích thước",
+        "scale.title" => "Thu phóng",
         "palette.cmd.findLayers" => "Tìm lớp…",
         "palette.cmd.flipHorizontal" => "Lật ngang",
         "palette.cmd.flipVertical" => "Lật dọc",

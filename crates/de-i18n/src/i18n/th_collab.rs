@@ -491,6 +491,8 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "path.offsetInward" => "เลื่อนเส้นทางเข้าด้านใน",
         "path.simplify" => "ลดความซับซ้อนของเส้นทาง",
         "path.reverse" => "กลับทิศทางเส้นทาง",
+        "scale.keptBound" => "ค่าที่ผูกกับตัวแปร {{count}} ค่ายังคงขนาดเดิม",
+        "scale.title" => "ปรับขนาด",
         "palette.cmd.findLayers" => "ค้นหาเลเยอร์…",
         "palette.cmd.flipHorizontal" => "พลิกแนวนอน",
         "palette.cmd.flipVertical" => "พลิกแนวตั้ง",

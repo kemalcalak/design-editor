@@ -491,6 +491,8 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "path.offsetInward" => "パスを内側にオフセット",
         "path.simplify" => "パスを単純化",
         "path.reverse" => "パスの方向を反転",
+        "scale.keptBound" => "変数にバインドされた {{count}} 個の値はサイズを保持しました",
+        "scale.title" => "拡大縮小",
         "palette.cmd.findLayers" => "レイヤーを検索…",
         "palette.cmd.flipHorizontal" => "左右反転",
         "palette.cmd.flipVertical" => "上下反転",

@@ -294,6 +294,26 @@ impl WidgetHostNative {
         self.commit_variables_panel_header_focus_if_any();
         self.commit_variable_row_focus_if_any();
         self.commit_effect_param_focus_if_any();
+        // Scale section (#394): scaled about the resolved bounds.
+        if self
+            .editor_state
+            .ui
+            .property_focus
+            .is_some_and(|f| f.is_scale())
+        {
+            self.refresh_layout_scene();
+            let scene = &self.layout_scene;
+            let scaled = de_editor_ui::widgets::property_panel_scale::commit_scale_focus(
+                &mut self.editor_state,
+                scene,
+                self.now_ms,
+            );
+            if scaled.is_some() {
+                self.invalidate_live_scene_for_rebuild();
+                self.mark_dirty();
+            }
+            return;
+        }
         if commit::commit_property_focus(&mut self.editor_state) {
             self.mark_dirty();
         }

@@ -270,6 +270,8 @@ pub struct NodeSnapshot {
     pub vector_points: Option<Option<bool>>,
     /// Path operation buttons in the Position header (#388).
     pub path_ops: crate::widgets::property_panel_path_ops::PathOpsButtons,
+    /// The Scale section (#394), while the Scale tool is active.
+    pub scale: Option<crate::widgets::property_panel_scale::ScaleSummary>,
     /// Built-in preset of the primary shader fill, `None` for a custom
     /// program or a non-shader fill — highlights the preset row.
     pub shader_preset: Option<de_editor_core::ShaderPreset>,

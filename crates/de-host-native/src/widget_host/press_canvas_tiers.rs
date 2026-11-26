@@ -64,8 +64,8 @@ impl WidgetHostNative {
         if let Some(handled) = self.apply_vector_edit_press(x, y) {
             return Some(handled);
         }
-        if matches!(self.editor_state.tool, Tool::Select) {
-            return Some(self.press_canvas_select_tier(&CanvasPressCtx {
+        if matches!(self.editor_state.tool, Tool::Select | Tool::Scale) {
+            let ctx = CanvasPressCtx {
                 x,
                 y,
                 viewport_width,
@@ -74,7 +74,13 @@ impl WidgetHostNative {
                 doc_point,
                 text_edit_was_active,
                 blurred,
-            }));
+            };
+            // Scale tool (#394): a selection handle scales instead of
+            // resizing; any other press selects like the Select tool.
+            if matches!(self.editor_state.tool, Tool::Scale) && self.press_scale_handle(&ctx) {
+                return Some(true);
+            }
+            return Some(self.press_canvas_select_tier(&ctx));
         }
 
         // Pen tool: anchor edit / author (`pen_press.rs`).
@@ -105,6 +111,32 @@ impl WidgetHostNative {
             last_y: y,
         });
         Some(blurred || rename_committed || text_edit_committed)
+    }
+
+    /// Scale tool: start a scale drag on a selection handle. False when
+    /// the press is not on one; a handle press with nothing to scale is
+    /// still consumed, so the K tool never falls back to a resize.
+    fn press_scale_handle(&mut self, ctx: &CanvasPressCtx) -> bool {
+        let Some(handle) = selection_handle_at_point(
+            ctx.canvas_rect,
+            &self.layout_scene,
+            &self.editor_state,
+            Point2D::new(ctx.x, ctx.y),
+        ) else {
+            return false;
+        };
+        self.refresh_layout_scene();
+        let Some(drag) = de_editor_ui::scale_plan::ScaleDrag::begin(
+            &self.editor_state,
+            &self.layout_scene,
+            handle,
+            (ctx.x, ctx.y),
+        ) else {
+            return true;
+        };
+        self.scale_drag = Some(drag);
+        self.mark_dirty();
+        true
     }
 
     /// Select-tool canvas press. Always consumes, so it returns the

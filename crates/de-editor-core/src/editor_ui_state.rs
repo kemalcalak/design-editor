@@ -752,6 +752,9 @@ pub struct EditorUiState {
     /// means typing goes to it: a press in the search box (or Cmd+Shift+K)
     /// focuses it, a press elsewhere or Escape lets go.
     pub component_browser_search_focused: bool,
+    /// The Scale section's anchor (#394): the point of the selection's
+    /// bounds a panel scale keeps in place.
+    pub scale_anchor: crate::selection_scale::ScaleAnchor,
     /// Vertical scroll of the Components tab's card grid.
     pub component_browser_scroll: jian_core::scroll::ScrollState,
     /// Vertical scroll of the Images tab's thumbnail grid.

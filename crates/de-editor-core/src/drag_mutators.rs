@@ -122,7 +122,7 @@ pub fn parent_of(children: &[PenNode], target: &NodeId) -> Option<NodeId> {
 /// `x` / `y` on any other flex child, so writing one would be dead. Keep in
 /// sync with jian-core's `layout::flow_child::keeps_absolute`. Overlays inside
 /// a flex container must still accept parent-relative left/top resize writes.
-fn selected_is_flow_child(children: &[PenNode], target: &NodeId) -> bool {
+pub(crate) fn selected_is_flow_child(children: &[PenNode], target: &NodeId) -> bool {
     let Some((Some(parent_id), _)) = walkers::find_parent_and_index(children, target) else {
         return false;
     };

@@ -62,6 +62,17 @@ impl WidgetHostNative {
             self.finish_live_rotation_update(new_rotation);
             return Some(true);
         }
+        if let Some(mut drag) = self.scale_drag.take() {
+            let zoom = f64::from(self.editor_state.viewport.zoom.max(0.0001));
+            let dx = f64::from(x - drag.start_screen.0) / zoom;
+            let dy = f64::from(y - drag.start_screen.1) / zoom;
+            if drag.update(&mut self.editor_state, dx, dy) {
+                self.invalidate_live_scene_for_rebuild();
+                self.mark_dirty();
+            }
+            self.scale_drag = Some(drag);
+            return Some(true);
+        }
         if let Some(drag) = self.handle_drag {
             let patch_scene = self.prepare_live_bounds_update();
             let zoom = self.editor_state.viewport.zoom.max(0.0001);

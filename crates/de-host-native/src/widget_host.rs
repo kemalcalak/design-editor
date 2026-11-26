@@ -438,6 +438,9 @@ pub struct WidgetHostNative {
     /// the original bounds so each move computes a fresh
     /// `new_bounds = start_bounds + delta`.
     pub(in crate::widget_host) handle_drag: Option<HandleDragState>,
+    /// Scale-tool handle drag (#394): the selection as it was at press,
+    /// rescaled from it on every move.
+    pub(in crate::widget_host) scale_drag: Option<de_editor_ui::scale_plan::ScaleDrag>,
     /// Active rotation drag — set when the user pressed in the
     /// rotation ring just outside one of the four corners.
     pub(in crate::widget_host) rotate_drag: Option<RotateDragState>,

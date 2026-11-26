@@ -491,6 +491,8 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "path.offsetInward" => "向内偏移路径",
         "path.simplify" => "简化路径",
         "path.reverse" => "反转路径方向",
+        "scale.keptBound" => "{{count}} 个绑定到变量的值保持原尺寸",
+        "scale.title" => "缩放",
         "palette.cmd.findLayers" => "查找图层…",
         "palette.cmd.flipHorizontal" => "水平翻转",
         "palette.cmd.flipVertical" => "垂直翻转",

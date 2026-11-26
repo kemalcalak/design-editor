@@ -491,6 +491,8 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "path.offsetInward" => "Pfad nach innen versetzen",
         "path.simplify" => "Pfad vereinfachen",
         "path.reverse" => "Pfadrichtung umkehren",
+        "scale.keptBound" => "{{count}} an Variablen gebundene Werte behielten ihre Größe",
+        "scale.title" => "Skalieren",
         "palette.cmd.findLayers" => "Ebenen suchen…",
         "palette.cmd.flipHorizontal" => "Horizontal spiegeln",
         "palette.cmd.flipVertical" => "Vertikal spiegeln",
