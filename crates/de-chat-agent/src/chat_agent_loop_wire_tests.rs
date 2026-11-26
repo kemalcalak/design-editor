@@ -42,6 +42,7 @@ fn capture_agent_body(model: &str) -> Value {
         finalize_on_exit: false,
         disable_thinking: true,
         dial_policy: crate::provider_dial::EndpointDialPolicy::Trusted,
+        usage: None,
     };
     let (outcome, deltas) = run_loop_collect(cfg, false);
     assert_eq!(outcome, Ok(true), "model={model}, deltas={deltas:?}");

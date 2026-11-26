@@ -12,6 +12,8 @@
 //! - [`chat_sse`] — transport-free Anthropic / OpenAI-compatible SSE
 //!   payload → `ChatDelta` parsers shared by the desktop/daemon
 //!   transports (`de-host-services`).
+//! - [`chat_usage`] — provider-reported token counts and the per-run
+//!   meter the tool loops add them to.
 //! - [`agent_settings_state`] — state types for the Cmd+, settings
 //!   modal (`AgentSettingsTab`, `AgentProvider`, …).
 //! - [`design_md`] — the shared design.md generation system prompt +
@@ -26,4 +28,5 @@ pub mod chat_models;
 pub mod chat_provider;
 pub mod chat_sse;
 pub mod chat_tool_sse;
+pub mod chat_usage;
 pub mod design_md;

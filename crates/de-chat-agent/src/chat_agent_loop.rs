@@ -62,9 +62,20 @@ pub struct AgentLoopConfig {
     /// Dial policy inherited from the provider that spawned this loop —
     /// browser-originated endpoints resolve + pin per request.
     pub dial_policy: crate::provider_dial::EndpointDialPolicy,
+    /// Running token total for the whole run: every provider request the
+    /// loop makes adds the usage its stream reported. `None` skips the
+    /// accounting (the in-app chat does not show it).
+    pub usage: Option<Arc<de_ai::chat_usage::UsageMeter>>,
 }
 
 impl AgentLoopConfig {
+    /// Add one finished request's reported usage to the run's meter.
+    fn record_usage(&self, usage: de_ai::chat_usage::TokenUsage) {
+        if let Some(meter) = &self.usage {
+            meter.record(usage);
+        }
+    }
+
     fn level_for(&self, tool: &str) -> String {
         self.tools
             .iter()

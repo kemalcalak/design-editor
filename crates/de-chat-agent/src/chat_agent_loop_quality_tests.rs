@@ -45,6 +45,7 @@ fn base_cfg(
         finalize_on_exit,
         disable_thinking: false,
         dial_policy: crate::provider_dial::EndpointDialPolicy::Trusted,
+        usage: None,
     }
 }
 

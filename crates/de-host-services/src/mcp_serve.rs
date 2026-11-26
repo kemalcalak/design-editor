@@ -715,7 +715,6 @@ use enrich_images_tool::enrich_images_snapshot;
 pub(crate) mod generate_tool;
 mod generate_tool_transforms;
 use generate_tool::{generate_snapshot, generation_status_snapshot};
-pub(crate) mod design_agent_run_error;
 pub(crate) mod design_agent_run_tool;
 use design_agent_run_tool::run_design_agent_snapshot;
 
