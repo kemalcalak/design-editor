@@ -224,7 +224,8 @@ fn collect_node_refs(node: &PenNode, refs: &mut ReferencedImages) {
             collect_stroke_refs(frame.container.stroke.as_ref(), refs);
             frame.children.as_ref()
         }
-        PenNode::Group(group) => {
+        PenNode::Group(group)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group, .. }) => {
             collect_fill_refs(group.container.fill.as_deref(), refs);
             collect_stroke_refs(group.container.stroke.as_ref(), refs);
             group.children.as_ref()
@@ -399,7 +400,8 @@ fn patch_node(node: &mut PenNode, cache: &mut BlobCache) -> usize {
             count += patch_stroke(&mut f.container.stroke, cache);
             f.children.as_mut()
         }
-        PenNode::Group(g) => {
+        PenNode::Group(g)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: g, .. }) => {
             count += patch_fills(&mut g.container.fill, cache);
             count += patch_stroke(&mut g.container.stroke, cache);
             g.children.as_mut()

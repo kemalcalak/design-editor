@@ -244,7 +244,7 @@ fn collect_counts(
 fn node_kind(node: &PenNode) -> &'static str {
     match node {
         PenNode::Frame(_) => "frame",
-        PenNode::Group(_) => "group",
+        PenNode::Group(_) | PenNode::Boolean(_) => "group",
         PenNode::Rectangle(_) => "rectangle",
         PenNode::Ellipse(_) => "ellipse",
         PenNode::Line(_) => "line",

@@ -176,7 +176,10 @@ fn replace_slot(slot: &mut Option<String>, from: &str, to: &str) -> usize {
 fn existing_children_mut(node: &mut PenNode) -> Option<&mut Vec<PenNode>> {
     match node {
         PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => n.children.as_mut(),
-        PenNode::Group(n) => n.children.as_mut(),
+        PenNode::Group(n)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => {
+            n.children.as_mut()
+        }
         PenNode::Rectangle(n) => n.children.as_mut(),
         PenNode::Tabs(n) => n.children.as_mut(),
         PenNode::Ref(n) => n.children.as_mut(),

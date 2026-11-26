@@ -111,6 +111,8 @@ raw-window-handle = "0.6.2"
 # Desktop-side (depends on skia via jian-skia's SkiaMeasure), so it
 # is gated outside wasm32 alongside the rest of the native stack.
 de-pen-loader = { path = "../de-pen-loader" }
+# Path operations (#388): booleans, flatten, outline stroke, offset.
+de-path-ops = { path = "../de-path-ops" }
 
 # The canonical `.de` schema — `WidgetHostNative` names
 # `VariableScalar` when committing variable-row edits onto

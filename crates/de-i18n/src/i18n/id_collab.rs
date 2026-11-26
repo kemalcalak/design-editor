@@ -415,6 +415,13 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "menu.snapPixelGrid" => "Jepret ke Kisi Piksel",
         "vectorEdit.pixelSnapOn" => "Jepret ke kisi piksel aktif",
         "vectorEdit.pixelSnapOff" => "Jepret ke kisi piksel nonaktif",
+        "menu.path" => "Jalur",
+        "path.flatten" => "Ratakan",
+        "path.outlineStroke" => "Garis Luar Goresan",
+        "path.offsetOutward" => "Geser Jalur ke Luar",
+        "path.offsetInward" => "Geser Jalur ke Dalam",
+        "path.simplify" => "Sederhanakan Jalur",
+        "path.reverse" => "Balik Arah Jalur",
         _ => return None,
     })
 }

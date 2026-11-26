@@ -30,7 +30,7 @@ pub use summaries::{
 fn node_kind_of(node: &PenNode) -> NodeKind {
     match node {
         PenNode::Frame(_) | PenNode::Script(_) => NodeKind::Frame,
-        PenNode::Group(_) => NodeKind::Group,
+        PenNode::Group(_) | PenNode::Boolean(_) => NodeKind::Group,
         PenNode::Rectangle(_) => NodeKind::Rect,
         PenNode::Ellipse(_) => NodeKind::Ellipse,
         PenNode::Polygon(_) => NodeKind::Polygon,
@@ -250,6 +250,8 @@ pub struct NodeSnapshot {
     /// their top-left, and the header's two buttons set their type —
     /// `Some(true)` all smooth, `Some(false)` all corner, `None` mixed.
     pub vector_points: Option<Option<bool>>,
+    /// Path operation buttons in the Position header (#388).
+    pub path_ops: crate::widgets::property_panel_path_ops::PathOpsButtons,
     /// Built-in preset of the primary shader fill, `None` for a custom
     /// program or a non-shader fill — highlights the preset row.
     pub shader_preset: Option<de_editor_core::ShaderPreset>,

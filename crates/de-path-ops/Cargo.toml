@@ -1,0 +1,20 @@
+[package]
+name = "de-path-ops"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "Design Editor vector path operations on skia: curve-preserving booleans, outline stroke, offset path (#388)"
+
+[dependencies]
+# Path ops run on skia's `Path::op` and stroker. Raster-only (no `gl`),
+# with the feature set jian-skia's text layout links, so a standalone
+# `-p de-path-ops` build reuses the same prebuilt skia binaries.
+skia-safe = { version = "0.97.0", features = ["textlayout"] }
+# The layout-resolved render scene the operations read outlines from.
+jian-scene = { path = "../../vendor/jian/crates/jian-scene" }
+# `BooleanOperation` lives on the schema's boolean group node.
+jian-ops-schema = { path = "../../vendor/jian/crates/jian-ops-schema" }
+# `Subpath` / `PenPathAnchor` (the editable path model) and the
+# `Point2D` / `Rect` geometry types.
+de-editor-core = { path = "../de-editor-core" }

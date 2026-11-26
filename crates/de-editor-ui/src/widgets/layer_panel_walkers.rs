@@ -150,7 +150,11 @@ fn item_for(node: &PenNode, cx: &WalkCx<'_>, depth: usize) -> LayerItem {
         // (layer-panel.tsx:14 — frame/group/rectangle/ref).
         is_container: matches!(
             node,
-            PenNode::Frame(_) | PenNode::Group(_) | PenNode::Rectangle(_) | PenNode::Ref(_)
+            PenNode::Frame(_)
+                | PenNode::Group(_)
+                | PenNode::Boolean(_)
+                | PenNode::Rectangle(_)
+                | PenNode::Ref(_)
         ),
         renaming: false,
         is_reusable: matches!(node, PenNode::Frame(f) if f.reusable == Some(true)),
@@ -246,6 +250,7 @@ pub(super) fn kind_label(node: &PenNode) -> &'static str {
         PenNode::Frame(_) => "Frame",
         PenNode::Script(_) => "Script",
         PenNode::Group(_) => "Group",
+        PenNode::Boolean(_) => "Boolean",
         PenNode::Rectangle(_) => "Rectangle",
         PenNode::Ellipse(_) => "Ellipse",
         PenNode::Line(_) => "Line",
@@ -285,6 +290,13 @@ pub(crate) fn icon_for_node(node: &PenNode) -> Icon {
         PenNode::Frame(_) => Icon::Hash,
         PenNode::Script(_) => Icon::Code,
         PenNode::Group(_) => Icon::Square,
+        // A boolean group shows its operation (#388).
+        PenNode::Boolean(b) => match b.op {
+            de_editor_core::BooleanOp::Union => Icon::SquaresUnite,
+            de_editor_core::BooleanOp::Subtract => Icon::SquaresSubtract,
+            de_editor_core::BooleanOp::Intersect => Icon::SquaresIntersect,
+            de_editor_core::BooleanOp::Exclude => Icon::SquaresExclude,
+        },
         PenNode::Rectangle(_) => Icon::Square,
         PenNode::Ellipse(_) => Icon::Circle,
         PenNode::Polygon(_) => Icon::Triangle,

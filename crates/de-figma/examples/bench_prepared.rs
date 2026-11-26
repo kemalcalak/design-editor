@@ -287,7 +287,10 @@ fn count_nodes(nodes: &[PenNode]) -> usize {
 fn children(node: &PenNode) -> &[PenNode] {
     match node {
         PenNode::Frame(node) => node.children.as_deref().unwrap_or(&[]),
-        PenNode::Group(node) => node.children.as_deref().unwrap_or(&[]),
+        PenNode::Group(node)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: node, .. }) => {
+            node.children.as_deref().unwrap_or(&[])
+        }
         PenNode::Rectangle(node) => node.children.as_deref().unwrap_or(&[]),
         PenNode::Tabs(node) => node.children.as_deref().unwrap_or(&[]),
         PenNode::Ref(node) => node.children.as_deref().unwrap_or(&[]),

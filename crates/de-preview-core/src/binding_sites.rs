@@ -27,7 +27,10 @@ pub(super) struct BindingSite {
 fn node_bindings(node: &PenNode) -> Option<&jian_ops_schema::events::Bindings> {
     match node {
         PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => n.bindings.as_ref(),
-        PenNode::Group(n) => n.bindings.as_ref(),
+        PenNode::Group(n)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => {
+            n.bindings.as_ref()
+        }
         PenNode::Rectangle(n) => n.bindings.as_ref(),
         PenNode::Ellipse(n) => n.bindings.as_ref(),
         PenNode::Line(n) => n.bindings.as_ref(),

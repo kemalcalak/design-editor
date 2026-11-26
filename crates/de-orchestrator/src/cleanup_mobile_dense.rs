@@ -225,7 +225,10 @@ fn width_keyword(node: &PenNode, keyword: SizingKeyword) -> bool {
         PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => {
             n.container.width.as_ref()
         }
-        PenNode::Group(n) => n.container.width.as_ref(),
+        PenNode::Group(n)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => {
+            n.container.width.as_ref()
+        }
         PenNode::Rectangle(n) => n.container.width.as_ref(),
         PenNode::Ellipse(n) => n.width.as_ref(),
         PenNode::Polygon(n) => n.width.as_ref(),
@@ -253,7 +256,10 @@ fn width_keyword(node: &PenNode, keyword: SizingKeyword) -> bool {
 fn container_props(node: &PenNode) -> Option<&ContainerProps> {
     match node {
         PenNode::Frame(n) => Some(&n.container),
-        PenNode::Group(n) => Some(&n.container),
+        PenNode::Group(n)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => {
+            Some(&n.container)
+        }
         PenNode::Rectangle(n) => Some(&n.container),
         _ => None,
     }

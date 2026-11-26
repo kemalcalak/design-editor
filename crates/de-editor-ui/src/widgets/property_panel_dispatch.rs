@@ -795,5 +795,7 @@ pub fn apply_property_action(
         | A::OpenImageGenSettings => HostOwned,
         // Clipboard / download / bundle export are platform IO.
         A::Codegen(_) => HostOwned,
+        // Path operations run skia geometry on the host (#388).
+        A::PathOperation(_) => HostOwned,
     }
 }

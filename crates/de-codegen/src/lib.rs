@@ -249,7 +249,10 @@ pub(crate) fn node_corner_radius(node: &PenNode) -> f64 {
         PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => {
             uniform(&n.container.corner_radius)
         }
-        PenNode::Group(n) => uniform(&n.container.corner_radius),
+        PenNode::Group(n)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => {
+            uniform(&n.container.corner_radius)
+        }
         PenNode::Rectangle(n) => uniform(&n.container.corner_radius),
         PenNode::Ellipse(n) => n.corner_radius.unwrap_or(0.0),
         PenNode::Polygon(n) => n.corner_radius.unwrap_or(0.0),
@@ -301,7 +304,10 @@ pub(crate) fn node_fills(node: &PenNode) -> Option<&Vec<PenFill>> {
         PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => {
             n.container.fill.as_ref()
         }
-        PenNode::Group(n) => n.container.fill.as_ref(),
+        PenNode::Group(n)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => {
+            n.container.fill.as_ref()
+        }
         PenNode::Rectangle(n) => n.container.fill.as_ref(),
         PenNode::Ellipse(n) => n.fill.as_ref(),
         PenNode::Polygon(n) => n.fill.as_ref(),
@@ -361,7 +367,10 @@ pub(crate) fn node_stroke(node: &PenNode) -> Option<&jian_ops_schema::style::Pen
         PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => {
             n.container.stroke.as_ref()
         }
-        PenNode::Group(n) => n.container.stroke.as_ref(),
+        PenNode::Group(n)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => {
+            n.container.stroke.as_ref()
+        }
         PenNode::Rectangle(n) => n.container.stroke.as_ref(),
         PenNode::Ellipse(n) => n.stroke.as_ref(),
         PenNode::Polygon(n) => n.stroke.as_ref(),

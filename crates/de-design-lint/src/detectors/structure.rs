@@ -304,7 +304,10 @@ fn border_stroke(doc: &PenDocument) -> Value {
 fn existing_stroke(node: &PenNode) -> Value {
     let stroke = match node {
         PenNode::Frame(n) => n.container.stroke.as_ref(),
-        PenNode::Group(n) => n.container.stroke.as_ref(),
+        PenNode::Group(n)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => {
+            n.container.stroke.as_ref()
+        }
         PenNode::Rectangle(n) => n.container.stroke.as_ref(),
         _ => None,
     };

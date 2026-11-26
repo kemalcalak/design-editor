@@ -130,6 +130,12 @@ pub(super) fn rebuild_registry(
     register_tool!("get_design_quality", get_design_quality_snapshot(doc));
     register_tool!("load_fonts", load_fonts_snapshot());
     register_tool!("boolean_op", boolean_op_snapshot(doc));
+    // Path operations (#388) share the boolean tool's snapshot type.
+    for (name, tool) in boolean_op_tool::PathTool::NAMES.into_iter().skip(1) {
+        if should_register(requested_tool, name) {
+            r.register(Box::new(boolean_op_tool::path_op_snapshot(doc, tool)));
+        }
+    }
     #[cfg(feature = "mcp-debug-tools")]
     if debug_tools_enabled() {
         register_tool!(

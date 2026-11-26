@@ -41,6 +41,8 @@ de-ai-skills = { path = "../de-ai-skills" }
 de-orchestrator = { path = "../de-orchestrator" }
 de-design-lint = { path = "../de-design-lint" }
 de-pen-loader = { path = "../de-pen-loader" }
+# Path operations for the MCP path tools (#388).
+de-path-ops = { path = "../de-path-ops" }
 de-render-export = { path = "../de-render-export" }
 # Raster-only native host lib: the canvas's skia boolean math for the MCP
 # `boolean_op` tool (already in this closure through de-render-export).

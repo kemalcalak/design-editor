@@ -166,7 +166,10 @@ pub(super) fn is_mobile_root(root: &PenNode) -> bool {
 pub(super) fn root_has_explicit_fit_content_height(root: &PenNode) -> bool {
     let height = match root {
         PenNode::Frame(node) => node.container.height.as_ref(),
-        PenNode::Group(node) => node.container.height.as_ref(),
+        PenNode::Group(node)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: node, .. }) => {
+            node.container.height.as_ref()
+        }
         PenNode::Rectangle(node) => node.container.height.as_ref(),
         _ => None,
     };
@@ -222,7 +225,10 @@ pub(super) fn has_explicit_mobile_viewport_contract(root: &PenNode) -> bool {
 pub(super) fn viewport_contract_container_props(node: &PenNode) -> Option<&ContainerProps> {
     match node {
         PenNode::Frame(node) => Some(&node.container),
-        PenNode::Group(node) => Some(&node.container),
+        PenNode::Group(node)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: node, .. }) => {
+            Some(&node.container)
+        }
         PenNode::Rectangle(node) => Some(&node.container),
         _ => None,
     }

@@ -223,7 +223,7 @@ fn is_visible_ring_visual(node: &PenNode, candidate_min_size: f64) -> bool {
             contains_ring_visual_word(&label)
                 || contains_semantic_word(&label, &["arc", "track", "progress"])
         }
-        PenNode::Frame(_) | PenNode::Group(_) | PenNode::Rectangle(_) => {
+        PenNode::Frame(_) | PenNode::Group(_) | PenNode::Boolean(_) | PenNode::Rectangle(_) => {
             has_stroke(node) && corner_radius_numeric(node) >= width.min(height) * 0.4
         }
         _ => false,
@@ -250,7 +250,10 @@ fn near_square_numeric_size(node: &PenNode) -> Option<(f64, f64)> {
 fn explicit_numeric_size(node: &PenNode) -> Option<(f64, f64)> {
     let (width, height) = match node {
         PenNode::Frame(frame) => (&frame.container.width, &frame.container.height),
-        PenNode::Group(group) => (&group.container.width, &group.container.height),
+        PenNode::Group(group)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group, .. }) => {
+            (&group.container.width, &group.container.height)
+        }
         PenNode::Rectangle(rectangle) => (&rectangle.container.width, &rectangle.container.height),
         PenNode::Ellipse(ellipse) => (&ellipse.width, &ellipse.height),
         PenNode::Path(path) => (&path.width, &path.height),
@@ -267,7 +270,10 @@ fn explicit_numeric_size(node: &PenNode) -> Option<(f64, f64)> {
 fn node_name(node: &PenNode) -> Option<&str> {
     match node {
         PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => n.base.name.as_deref(),
-        PenNode::Group(n) => n.base.name.as_deref(),
+        PenNode::Group(n)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => {
+            n.base.name.as_deref()
+        }
         PenNode::Rectangle(n) => n.base.name.as_deref(),
         PenNode::Ellipse(n) => n.base.name.as_deref(),
         PenNode::Line(n) => n.base.name.as_deref(),

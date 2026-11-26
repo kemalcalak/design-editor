@@ -89,7 +89,9 @@ impl LayerAttrs {
 
 /// Whether `n` is written as a `<g>` of layers.
 pub(super) fn is_container(n: &SceneNode) -> bool {
-    n.kind == NodeKind::Group || !n.children.is_empty()
+    // A path holding children is a resolved boolean group (#388): its
+    // computed outline is the layer; the hidden sources are not written.
+    n.kind == NodeKind::Group || (n.kind != NodeKind::Path && !n.children.is_empty())
 }
 
 /// Whether the node is part of the exported design.

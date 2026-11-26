@@ -553,6 +553,50 @@ Outside the widget hosts the same rule applies: settings payload serde lives in 
 
 `request_snapshot::narrowed_snapshot(&mut EditorState)` is the sanctioned way to hand editor state to a worker thread. The MCP request path, the chat-launch path, and the desktop design pump's per-apply-ack all use it: it drops `chat` / `codegen` / `theme_presets`, which grow with session length and are read by no consumer on the worker side. A full `EditorState::clone()` on a request path is a bug.
 
+## Vector path operations (#388)
+
+- **Crate `de-path-ops`** (skia, raster-only): scene node → outline
+  (`outline.rs`: rect / frame corner radii per corner, ellipse arcs and
+  donuts as conics, polygons and stars, path `d` fitted like the painter
+  or its anchors' cubics, a line / open path contributes its stroke's
+  outline, a group the union of its children; rotation and flips about the
+  painter's pivot), booleans over `Path::op`, `stroke.rs` (outline stroke
+  with cap / join / dash / inside-centre-outside alignment, offset path
+  with round / miter / bevel joins), `convert.rs` (skia verbs → editable
+  `Subpath`s **without sampling**: quads raised exactly, conics to cubic
+  arcs, split past a quarter turn; 1/1000 px rounding), `plan.rs` (result
+  + sources + frame origin) and `apply.rs` (`apply_path_operation`, the
+  one entry the desktop keyboard, Edit ▸ Path menu, layer context menu,
+  align toolbar and property panel share). Two circles union to ≤ 8 cubics.
+- **Boolean groups**: `PenNode::Boolean` (jian `BooleanNode` = a flattened
+  `GroupNode` + `op`, kemalcalak/jian#28); `PenNode::group_body()` covers
+  group logic for both. The loader turns its payload (kind `boolean:<op>`)
+  into a scene `Path` whose `svg_path` is the boolean of the children
+  (`de-pen-loader/src/layout_scene/boolean.rs`), painted with the group's
+  own fill / stroke; the children stay in the scene **hidden** (no paint,
+  hit-test or export) for selection. So paint, hit-test, SVG / PPTX /
+  structured-HTML export all see the computed path; the authored-tree
+  codegen (HTML / framework export, MCP `codegen_export` / `export_html`)
+  runs on `de_pen_loader::bake_boolean_groups`. Subtract removes the
+  others from the bottom-most child. Without `skia-measure` a boolean
+  group paints as a plain group.
+- **Core** (`de-editor-core/src/path_ops/`): `EditorCommand::Path(PathCommand)`
+  = `Commit` (sources replaced by one path at the first source's slot,
+  doc-space subpaths mapped into its frame; kinds Boolean / Flatten /
+  OutlineStroke — paints with the stroke's paint and keeps a filled source
+  under it — / Offset), `CreateBooleanGroup` (same-parent nodes, paint
+  order), `SetBooleanOp`, `Simplify` (`vector_edit::simplify_subpaths`:
+  straight-run corners, duplicates, smooth points one cubic replaces),
+  `Reverse`. Canvas entry points mint ids from the host counter
+  (`commit_canvas_path`, `create_canvas_boolean_group`).
+- **UI**: Cmd+Alt+U/S/I/X make a boolean group (or switch a selected
+  group's op), Cmd+E Flatten, Cmd+Shift+O Outline stroke; Edit ▸ Path
+  (macOS menu) adds Offset outward / inward (1 px, round), Simplify and
+  Reverse; the Position header shows a boolean group's four ops + Flatten,
+  or a shape's Flatten / Outline stroke / Simplify / Reverse
+  (`property_panel_path_ops.rs`); the layer menu adds Flatten and Outline
+  stroke; the layer row shows a boolean group's op icon.
+
 ## Canonical `.de` loader (v0.8.0+)
 
 The document extension is `.de`; `.op` and the old `.pen` alias no longer open. pen.dev `.pen` files are an import only: they open as an untitled document and are never written back.
@@ -633,7 +677,7 @@ The **`de-mcp`** crate carries the MCP wire layer that mirrors the retired TS `p
 
 ### Tool catalog
 
-**162 static-schema tools** registered today. The authoritative list
+**167 static-schema tools** registered today. The authoritative list
 is `de-host-services/src/mcp_serve/schemas.rs` — `TOOL_SCHEMAS`
 (JSON inputSchemas; `DEBUG_TOOL_SCHEMAS` is gated out of the
 production catalog) — plus the `register_tool!` calls in
@@ -691,17 +735,18 @@ By category:
   drives the clock frame by frame like a host), waits `timeMs`, and returns a PNG of the shown screen
   root (or `nodeId`). The editor's own preview and the document are untouched. `entryNodeId` opens on the board holding that node, like the editor's selection (#223).
 - **Preview screens** — `set_screen` (#223, `de-mcp/src/screen_tools.rs`): `nodeId` + `mode` mark / start / remove, the property panel's screen-marker writes (`de_editor_core::screen_marker_edit`), one `Batch` (one undo step).
-- **Path booleans** — `boolean_op` (`nodeIds` + `union|subtract|intersect|exclude`;
-  `de-host-services/src/mcp_serve/boolean_op_tool.rs`). Runs the desktop
-  canvas's own `de_host_native::boolean_ops::compute_boolean_op` on the snapshot
-  (on every host; the web canvas keeps its axis-aligned fallback) and commits
-  through `EditorCommand::CommitBooleanResult` (one undo step). The command
-  carries the predicted path id and the snapshot's document revision, so a
-  document edited since the snapshot rejects. Sources with children are refused.
-  The canvas boolean (desktop skia, web axis-aligned fallback) commits through the
-  same command via `EditorState::commit_canvas_boolean`, minting the id from the
-  host's `next_node_id` counter. On the canvas a source with children is refused
-  up front with a Warn toast (`refuse_boolean_on_containers`, #141).
+- **Path booleans and path operations (#388)** — `boolean_op` (`nodeIds` +
+  `union|subtract|intersect|exclude` + `mode: group|flatten`, default
+  group), `flatten`, `outline_stroke`, `offset_path` (`offset`, `join`),
+  `simplify_path` (`tolerance`), `reverse_path`
+  (`de-host-services/src/mcp_serve/boolean_op_tool.rs`, one `PathTool`
+  snapshot type for all six). Geometry is `de_path_ops` on the snapshot's
+  scene; every write is one `EditorCommand::Path` (one undo step). A
+  computed result (`PathCommand::Commit`) carries the predicted id and the
+  snapshot's document revision, so a document edited since the snapshot
+  rejects. Flatten / boolean flatten refuse a source holding children
+  unless it is a group or boolean group (baked whole). See "Vector path
+  operations (#388)" below.
 - **Image generation (#10)** — `generate` (pen.dev `Generate`: `type` `ai` | `stock`, `nodeId`,
   `prompt` | `query`) and `get_generation_status` (`de-host-services/src/mcp_serve/generate_tool.rs`).
   Async: the call writes a `de:pending-image-<id>` image fill and returns; a worker in the

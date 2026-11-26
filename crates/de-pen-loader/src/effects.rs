@@ -124,7 +124,10 @@ pub(crate) fn canonical_node_effects(node: &PenNode) -> Option<&[PenEffect]> {
         PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => {
             n.container.effects.as_deref()
         }
-        PenNode::Group(n) => n.container.effects.as_deref(),
+        PenNode::Group(n)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => {
+            n.container.effects.as_deref()
+        }
         PenNode::Rectangle(n) => n.container.effects.as_deref(),
         PenNode::Ellipse(n) => n.effects.as_deref(),
         PenNode::Line(n) => n.effects.as_deref(),

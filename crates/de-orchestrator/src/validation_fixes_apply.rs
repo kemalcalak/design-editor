@@ -560,7 +560,10 @@ fn node_sizing_width(
     use jian_ops_schema::node::PenNode;
     match node {
         PenNode::Frame(n) => n.container.width.as_ref(),
-        PenNode::Group(n) => n.container.width.as_ref(),
+        PenNode::Group(n)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => {
+            n.container.width.as_ref()
+        }
         PenNode::Rectangle(n) => n.container.width.as_ref(),
         PenNode::Text(n) => n.width.as_ref(),
         PenNode::TextInput(n) => n.width.as_ref(),
@@ -579,7 +582,10 @@ fn node_sizing_height(
     use jian_ops_schema::node::PenNode;
     match node {
         PenNode::Frame(n) => n.container.height.as_ref(),
-        PenNode::Group(n) => n.container.height.as_ref(),
+        PenNode::Group(n)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => {
+            n.container.height.as_ref()
+        }
         PenNode::Rectangle(n) => n.container.height.as_ref(),
         PenNode::Text(n) => n.height.as_ref(),
         PenNode::TextInput(n) => n.height.as_ref(),
@@ -597,7 +603,10 @@ fn node_has_layout(node: &jian_ops_schema::node::PenNode) -> bool {
     use jian_ops_schema::node::PenNode;
     match node {
         PenNode::Frame(n) => !matches!(n.container.layout, None | Some(LayoutMode::None)),
-        PenNode::Group(n) => !matches!(n.container.layout, None | Some(LayoutMode::None)),
+        PenNode::Group(n)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => {
+            !matches!(n.container.layout, None | Some(LayoutMode::None))
+        }
         PenNode::Rectangle(n) => !matches!(n.container.layout, None | Some(LayoutMode::None)),
         _ => false,
     }
@@ -609,7 +618,10 @@ fn node_child_count(node: &jian_ops_schema::node::PenNode) -> usize {
         PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => {
             n.children.as_ref().map(|c| c.len()).unwrap_or(0)
         }
-        PenNode::Group(n) => n.children.as_ref().map(|c| c.len()).unwrap_or(0),
+        PenNode::Group(n)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => {
+            n.children.as_ref().map(|c| c.len()).unwrap_or(0)
+        }
         PenNode::Rectangle(n) => n.children.as_ref().map(|c| c.len()).unwrap_or(0),
         _ => 0,
     }
@@ -663,7 +675,8 @@ fn collect_node(node: &jian_ops_schema::node::PenNode, out: &mut Vec<NodeSnapsho
             let cc = n.children.as_ref().map(|c| c.len()).unwrap_or(0);
             (layout, jc, gap, cc)
         }
-        PenNode::Group(n) => {
+        PenNode::Group(n)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => {
             let layout = n.container.layout.as_ref().map(|l| match l {
                 LayoutMode::None => "none".to_string(),
                 LayoutMode::Vertical => "vertical".to_string(),
@@ -719,7 +732,10 @@ fn collect_node(node: &jian_ops_schema::node::PenNode, out: &mut Vec<NodeSnapsho
     // Recurse into children.
     if let Some(children) = match node {
         PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => n.children.as_ref(),
-        PenNode::Group(n) => n.children.as_ref(),
+        PenNode::Group(n)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => {
+            n.children.as_ref()
+        }
         PenNode::Rectangle(n) => n.children.as_ref(),
         _ => None,
     } {

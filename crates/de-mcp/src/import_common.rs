@@ -140,7 +140,8 @@ pub fn count_subtree_nodes(nodes: &[PenNode]) -> usize {
                     .as_deref()
                     .map(count_subtree_nodes)
                     .unwrap_or_default(),
-                PenNode::Group(node) => node
+                PenNode::Group(node)
+                | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: node, .. }) => node
                     .children
                     .as_deref()
                     .map(count_subtree_nodes)

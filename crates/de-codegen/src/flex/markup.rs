@@ -35,7 +35,7 @@ pub(crate) struct Walker<'a> {
 fn kind(node: &PenNode) -> &'static str {
     match node {
         PenNode::Frame(_) | PenNode::Script(_) => "frame",
-        PenNode::Group(_) => "group",
+        PenNode::Group(_) | PenNode::Boolean(_) => "group",
         PenNode::Rectangle(_) => "rect",
         PenNode::Ellipse(_) => "ellipse",
         PenNode::Line(_) => "line",
@@ -64,7 +64,10 @@ fn kind(node: &PenNode) -> &'static str {
 fn container_of(node: &PenNode) -> Option<&ContainerProps> {
     match node {
         PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => Some(&n.container),
-        PenNode::Group(n) => Some(&n.container),
+        PenNode::Group(n)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => {
+            Some(&n.container)
+        }
         PenNode::Rectangle(n) => Some(&n.container),
         _ => None,
     }
@@ -138,7 +141,11 @@ impl Walker<'_> {
         let mut extra_shadows = Vec::new();
 
         match node {
-            PenNode::Frame(_) | PenNode::Script(_) | PenNode::Group(_) | PenNode::Rectangle(_) => {
+            PenNode::Frame(_)
+            | PenNode::Script(_)
+            | PenNode::Group(_)
+            | PenNode::Boolean(_)
+            | PenNode::Rectangle(_) => {
                 let c = container_of(node).expect("container variant");
                 apply_background(&mut el.decls, fills_of(node), size, self.assets, &hint);
                 extra_shadows = apply_stroke(&mut el.decls, node);

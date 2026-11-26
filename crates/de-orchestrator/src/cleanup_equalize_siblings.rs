@@ -498,7 +498,10 @@ fn majority_of<T: PartialEq + Clone>(values: &[T]) -> Option<T> {
 fn container_props(node: &PenNode) -> Option<&ContainerProps> {
     match node {
         PenNode::Frame(frame) => Some(&frame.container),
-        PenNode::Group(group) => Some(&group.container),
+        PenNode::Group(group)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group, .. }) => {
+            Some(&group.container)
+        }
         PenNode::Rectangle(rect) => Some(&rect.container),
         _ => None,
     }

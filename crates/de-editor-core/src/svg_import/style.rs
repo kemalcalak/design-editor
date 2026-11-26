@@ -167,7 +167,10 @@ pub(super) fn set_node_stroke(node: &mut PenNode, stroke: PenStroke) {
         PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => {
             n.container.stroke = Some(stroke)
         }
-        PenNode::Group(n) => n.container.stroke = Some(stroke),
+        PenNode::Group(n)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => {
+            n.container.stroke = Some(stroke)
+        }
         PenNode::Rectangle(n) => n.container.stroke = Some(stroke),
         PenNode::Ellipse(n) => n.stroke = Some(stroke),
         PenNode::Polygon(n) => n.stroke = Some(stroke),
@@ -197,7 +200,10 @@ pub(super) fn set_node_stroke(node: &mut PenNode, stroke: PenStroke) {
 pub(super) fn clear_node_fill(node: &mut PenNode) {
     match node {
         PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => n.container.fill = None,
-        PenNode::Group(n) => n.container.fill = None,
+        PenNode::Group(n)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => {
+            n.container.fill = None
+        }
         PenNode::Rectangle(n) => n.container.fill = None,
         PenNode::Ellipse(n) => n.fill = None,
         PenNode::Polygon(n) => n.fill = None,

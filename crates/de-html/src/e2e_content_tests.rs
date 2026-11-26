@@ -89,7 +89,10 @@ fn first_image(nodes: &[PenNode]) -> Option<&jian_ops_schema::node::ImageNode> {
         }
         let nested: &[PenNode] = match node {
             PenNode::Frame(frame) => frame.children.as_deref().unwrap_or_default(),
-            PenNode::Group(group) => group.children.as_deref().unwrap_or_default(),
+            PenNode::Group(group)
+            | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group, .. }) => {
+                group.children.as_deref().unwrap_or_default()
+            }
             _ => &[],
         };
         if let Some(found) = first_image(nested) {

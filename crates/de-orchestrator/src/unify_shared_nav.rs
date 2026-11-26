@@ -656,7 +656,10 @@ fn clear_position_metadata(node: &mut PenNode) {
 fn set_events(node: &mut PenNode, events: Option<jian_ops_schema::events::EventHandlers>) {
     match node {
         PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => n.events = events,
-        PenNode::Group(n) => n.events = events,
+        PenNode::Group(n)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => {
+            n.events = events
+        }
         PenNode::Rectangle(n) => n.events = events,
         PenNode::Ellipse(n) => n.events = events,
         PenNode::Line(n) => n.events = events,

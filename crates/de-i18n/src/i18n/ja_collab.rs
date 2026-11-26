@@ -415,6 +415,13 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "menu.snapPixelGrid" => "ピクセルグリッドにスナップ",
         "vectorEdit.pixelSnapOn" => "ピクセルグリッドへのスナップ: オン",
         "vectorEdit.pixelSnapOff" => "ピクセルグリッドへのスナップ: オフ",
+        "menu.path" => "パス",
+        "path.flatten" => "平坦化",
+        "path.outlineStroke" => "線のアウトライン",
+        "path.offsetOutward" => "パスを外側にオフセット",
+        "path.offsetInward" => "パスを内側にオフセット",
+        "path.simplify" => "パスを単純化",
+        "path.reverse" => "パスの方向を反転",
         _ => return None,
     })
 }

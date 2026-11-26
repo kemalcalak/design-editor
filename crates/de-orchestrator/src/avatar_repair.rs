@@ -192,7 +192,10 @@ fn node_layout_is_horizontal(node: &PenNode) -> bool {
     use jian_ops_schema::node::container::LayoutMode;
     let layout = match node {
         PenNode::Frame(n) => n.container.layout.as_ref(),
-        PenNode::Group(n) => n.container.layout.as_ref(),
+        PenNode::Group(n)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => {
+            n.container.layout.as_ref()
+        }
         PenNode::Rectangle(n) => n.container.layout.as_ref(),
         _ => None,
     };

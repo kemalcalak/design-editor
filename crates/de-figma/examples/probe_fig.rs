@@ -15,7 +15,7 @@ fn variant_name(n: &PenNode) -> &'static str {
     match n {
         PenNode::Frame(_) => "Frame",
         PenNode::Script(_) => "Script",
-        PenNode::Group(_) => "Group",
+        PenNode::Group(_) | PenNode::Boolean(_) => "Group",
         PenNode::Rectangle(_) => "Rectangle",
         PenNode::Ellipse(_) => "Ellipse",
         PenNode::Line(_) => "Line",
@@ -213,7 +213,8 @@ fn type_str(n: &PenNode) -> &'static str {
 fn base_of(n: &PenNode) -> &jian_ops_schema::node::base::PenNodeBase {
     match n {
         PenNode::Frame(x) | PenNode::Script(ScriptNode { frame: x, .. }) => &x.base,
-        PenNode::Group(x) => &x.base,
+        PenNode::Group(x)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: x, .. }) => &x.base,
         PenNode::Rectangle(x) => &x.base,
         PenNode::Ellipse(x) => &x.base,
         PenNode::Line(x) => &x.base,
@@ -241,7 +242,10 @@ fn base_of(n: &PenNode) -> &jian_ops_schema::node::base::PenNodeBase {
 fn width_json(n: &PenNode) -> String {
     let w = match n {
         PenNode::Frame(x) => x.container.width.as_ref(),
-        PenNode::Group(x) => x.container.width.as_ref(),
+        PenNode::Group(x)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: x, .. }) => {
+            x.container.width.as_ref()
+        }
         PenNode::Rectangle(x) => x.container.width.as_ref(),
         PenNode::Ellipse(x) => x.width.as_ref(),
         PenNode::Polygon(x) => x.width.as_ref(),
@@ -258,7 +262,10 @@ fn width_json(n: &PenNode) -> String {
 fn height_json(n: &PenNode) -> String {
     let h = match n {
         PenNode::Frame(x) => x.container.height.as_ref(),
-        PenNode::Group(x) => x.container.height.as_ref(),
+        PenNode::Group(x)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: x, .. }) => {
+            x.container.height.as_ref()
+        }
         PenNode::Rectangle(x) => x.container.height.as_ref(),
         PenNode::Ellipse(x) => x.height.as_ref(),
         PenNode::Polygon(x) => x.height.as_ref(),

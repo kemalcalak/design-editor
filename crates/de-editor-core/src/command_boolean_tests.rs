@@ -1,27 +1,44 @@
-//! `EditorCommand::CommitBooleanResult` apply tests.
+//! `EditorCommand::Path(PathCommand::Commit)` apply tests (a boolean
+//! committed destructively, as `boolean_op` with `mode: "flatten"` does).
 
 use crate::command::EditorCommand;
 use crate::node_id::NodeId;
+use crate::path_ops::{PathCommand, PathCommit, PathCommitKind};
 use crate::pen_node_ext::PenNodeExt;
 use crate::state::EditorState;
 use crate::test_support::{frame, rect, state_with};
+use crate::vector_edit::Subpath;
 use jian_ops_schema::node::PenNode;
 
 fn id(s: &str) -> NodeId {
     NodeId::new(s)
 }
 
-fn square() -> Vec<Vec<(f64, f64)>> {
-    vec![vec![(0.0, 0.0), (20.0, 0.0), (20.0, 20.0), (0.0, 20.0)]]
+fn square() -> Vec<Subpath> {
+    let mut s = Subpath::polyline(&[(0.0, 0.0), (20.0, 0.0), (20.0, 20.0), (0.0, 20.0)]);
+    s.closed = true;
+    vec![s]
+}
+
+fn command(
+    source_ids: &[&str],
+    subpaths: Vec<Subpath>,
+    new_id: &str,
+    revision: u64,
+) -> EditorCommand {
+    EditorCommand::Path(PathCommand::Commit(Box::new(PathCommit {
+        source_ids: source_ids.iter().map(|s| id(s)).collect(),
+        subpaths,
+        even_odd: true,
+        origin: (0.0, 0.0),
+        new_id: id(new_id),
+        revision,
+        kind: PathCommitKind::Boolean,
+    })))
 }
 
 fn commit(s: &EditorState, source_ids: &[&str], new_id: &str) -> EditorCommand {
-    EditorCommand::CommitBooleanResult {
-        source_ids: source_ids.iter().map(|s| id(s)).collect(),
-        contours: square(),
-        new_id: id(new_id),
-        revision: s.document_revision(),
-    }
+    command(source_ids, square(), new_id, s.document_revision())
 }
 
 #[test]
@@ -36,8 +53,9 @@ fn commit_boolean_result_swaps_sources_selects_and_undoes_in_one_step() {
     assert!(s.apply(commit(&s, &["a", "b"], "n7")));
 
     let ids: Vec<&str> = s.active_children().iter().map(|n| n.id_str()).collect();
-    assert_eq!(ids, ["c", "n7"]);
-    assert!(matches!(s.active_children()[1], PenNode::Path(_)));
+    // The result takes the first source's slot.
+    assert_eq!(ids, ["n7", "c"]);
+    assert!(matches!(s.active_children()[0], PenNode::Path(_)));
     assert_eq!(s.selection.set, vec![id("n7")]);
     assert_eq!(s.history.past.len(), depth + 1);
 
@@ -73,12 +91,8 @@ fn commit_boolean_result_rejects_degenerate_contours() {
         rect("b", "B", 5.0, 5.0, 15.0, 15.0),
     ]);
     let before = s.doc.clone();
-    assert!(!s.apply(EditorCommand::CommitBooleanResult {
-        source_ids: vec![id("a"), id("b")],
-        contours: vec![vec![(1.0, 1.0)]],
-        new_id: id("n7"),
-        revision: s.document_revision(),
-    }));
+    let lone = vec![Subpath::polyline(&[(1.0, 1.0)])];
+    assert!(!s.apply(command(&["a", "b"], lone, "n7", s.document_revision())));
     assert_eq!(s.doc, before);
     assert!(s.history.past.is_empty());
 }

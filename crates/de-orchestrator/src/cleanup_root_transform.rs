@@ -141,7 +141,8 @@ pub(super) fn collect_redundant_borders(node: &PenNode, out: &mut Vec<NodeId>) {
 pub(super) fn has_redundant_shadowed_border(node: &PenNode) -> bool {
     let container = match node {
         PenNode::Frame(n) => &n.container,
-        PenNode::Group(n) => &n.container,
+        PenNode::Group(n)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => &n.container,
         PenNode::Rectangle(n) => &n.container,
         _ => return false,
     };

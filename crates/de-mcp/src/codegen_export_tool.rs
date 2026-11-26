@@ -39,8 +39,11 @@ pub fn codegen_export_targets() -> Vec<&'static str> {
 }
 
 pub fn codegen_export_snapshot(state: &EditorState) -> CodegenExport {
+    // Boolean groups export as the path the canvas paints (#388).
+    let doc =
+        de_pen_loader::bake_boolean_groups(state).map_or_else(|| state.doc.clone(), |s| s.doc);
     CodegenExport {
-        doc: state.doc.clone(),
+        doc,
         active_page: state.ui.active_page_index,
         selection: state
             .selection

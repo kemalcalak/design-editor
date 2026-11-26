@@ -415,6 +415,13 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "menu.snapPixelGrid" => "对齐像素网格",
         "vectorEdit.pixelSnapOn" => "已开启像素网格吸附",
         "vectorEdit.pixelSnapOff" => "已关闭像素网格吸附",
+        "menu.path" => "路径",
+        "path.flatten" => "拼合",
+        "path.outlineStroke" => "轮廓化描边",
+        "path.offsetOutward" => "向外偏移路径",
+        "path.offsetInward" => "向内偏移路径",
+        "path.simplify" => "简化路径",
+        "path.reverse" => "反转路径方向",
         _ => return None,
     })
 }

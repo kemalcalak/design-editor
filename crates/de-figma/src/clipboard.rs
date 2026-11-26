@@ -561,7 +561,10 @@ fn replace_unresolved_image_fills(node: &mut PenNode) {
 fn node_fill_mut(node: &mut PenNode) -> Option<&mut Vec<PenFill>> {
     match node {
         PenNode::Frame(n) => n.container.fill.as_mut(),
-        PenNode::Group(n) => n.container.fill.as_mut(),
+        PenNode::Group(n)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => {
+            n.container.fill.as_mut()
+        }
         PenNode::Rectangle(n) => n.container.fill.as_mut(),
         PenNode::Ellipse(n) => n.fill.as_mut(),
         PenNode::Polygon(n) => n.fill.as_mut(),
@@ -580,7 +583,8 @@ fn recurse_children_mut(node: &mut PenNode, f: fn(&mut [PenNode])) {
                 f(c);
             }
         }
-        PenNode::Group(n) => {
+        PenNode::Group(n)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => {
             if let Some(c) = n.children.as_mut() {
                 f(c);
             }
@@ -613,7 +617,10 @@ pub fn enrich_nodes_from_html_hints(nodes: &mut [PenNode], hints: &HashMap<Strin
         // Recurse into children.
         let kids: Option<&mut Vec<PenNode>> = match node {
             PenNode::Frame(n) => n.children.as_mut(),
-            PenNode::Group(n) => n.children.as_mut(),
+            PenNode::Group(n)
+            | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => {
+                n.children.as_mut()
+            }
             PenNode::Rectangle(n) => n.children.as_mut(),
             PenNode::Ref(n) => n.children.as_mut(),
             _ => None,

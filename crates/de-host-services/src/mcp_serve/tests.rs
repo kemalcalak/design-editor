@@ -19,7 +19,7 @@ fn tools_list_response_includes_all_registered_tools() {
     // TOOL_SCHEMAS without being added to the list below.
     assert_eq!(
         TOOL_SCHEMAS.len(),
-        162,
+        167,
         "tools/list catalog count must match the registered tools — add the new tool to this test"
     );
     // Plus 37 kit tools and pen.dev's 6 names (#392).
@@ -164,6 +164,11 @@ fn tools_list_response_includes_all_registered_tools() {
         "set_shader_source",
         "align_selected",
         "boolean_op",
+        "flatten",
+        "outline_stroke",
+        "offset_path",
+        "simplify_path",
+        "reverse_path",
         "set_node_fill_hex",
         "set_node_flip",
         "set_ellipse_arc",
