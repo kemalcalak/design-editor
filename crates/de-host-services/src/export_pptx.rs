@@ -47,6 +47,7 @@ use crate::deck_motion::{board_motion, BoardMotion};
 use crate::export::ExportError;
 use crate::export_html::board_name;
 
+mod cust_geom;
 mod fallback;
 mod line_style;
 mod media;
@@ -339,10 +340,10 @@ impl Emitter<'_> {
                     let id = self.take_id();
                     picture::emit(&mut self.out, node, rect, alpha, &rel_id, source_px, id);
                 } else if shape::paints_anything(node) {
-                    let geom = if matches!(kind, NodeKind::Ellipse) {
-                        xml::Geom::Ellipse
-                    } else {
-                        xml::Geom::Rect
+                    let geom = match kind {
+                        NodeKind::Ellipse => xml::Geom::Ellipse,
+                        NodeKind::Polygon => xml::Geom::Polygon,
+                        _ => xml::Geom::Rect,
                     };
                     shape::emit_box(&mut self.out, node, rect, alpha, geom, &mut self.next_id);
                 }
@@ -489,12 +490,16 @@ fn unexpressible(n: &SceneNode, is_board: bool) -> Option<&'static str> {
         }
     }
     match &n.kind {
-        // Preset geometry cannot state an arbitrary polygon or path.
-        // `custGeom` could, but the path grammar is long-tail enough
-        // (bezier segments, winding rules, imported SVG `d` strings)
-        // that a wrong curve is likelier than a right one; v1 rasters
-        // and keeps the option open.
-        NodeKind::Polygon => return Some("polygon geometry"),
+        // Polygons and stars, sharp or rounded (#389), are a `custGeom`
+        // over their vertices / outline; an image cannot be cut to one.
+        NodeKind::Polygon if n.image_src.is_some() || n.fill_type == SceneFillType::Image => {
+            return Some("polygon image fill")
+        }
+        // Preset geometry cannot state an arbitrary path. `custGeom`
+        // could, but the path grammar is long-tail enough (winding rules,
+        // imported SVG `d` strings) that a wrong curve is likelier than a
+        // right one; paths raster, rounded vertices included.
+        NodeKind::Path => return Some("vector path"),
         NodeKind::Line => {
             if let Some(reason) = n
                 .stroke
@@ -503,7 +508,6 @@ fn unexpressible(n: &SceneNode, is_board: bool) -> Option<&'static str> {
                 return Some(reason);
             }
         }
-        NodeKind::Path => return Some("vector path"),
         NodeKind::Other(tag) if tag == "icon_font" => return Some("icon glyph"),
         NodeKind::Other(_) => return Some("unknown node kind"),
         NodeKind::Ellipse => {

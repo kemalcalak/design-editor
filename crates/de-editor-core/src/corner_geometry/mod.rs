@@ -126,6 +126,20 @@ pub fn outline_path_data(subs: &[Subpath]) -> String {
     d
 }
 
+/// Path data `d` moved by `(dx, dy)` and rewritten like
+/// [`outline_path_data`]; empty when `d` does not parse. Exports place a
+/// node-local outline in document coordinates with it.
+pub fn translate_path_data(d: &str, dx: f64, dy: f64) -> String {
+    let Some(mut subs) = crate::vector_edit::parse_path_data(d) else {
+        return String::new();
+    };
+    for anchor in subs.iter_mut().flat_map(|s| s.anchors.iter_mut()) {
+        anchor.x += dx;
+        anchor.y += dy;
+    }
+    outline_path_data(&subs)
+}
+
 /// `sub` flattened to a polyline: each curved segment sampled in
 /// `steps` pieces, straight ones kept as they are. A closed subpath does
 /// not repeat its first point.

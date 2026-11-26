@@ -25,16 +25,24 @@ use super::css;
 
 /// Open the node's box. `ellipse` rounds it to a full oval.
 pub fn open(out: &mut String, n: &SceneNode, rect: Rect, ellipse: bool) {
+    // Smoothed corners (#389): the background paints in its own layer
+    // clipped to the outline, and a clipping container clips to it too.
+    // The box keeps the circular radius only so a box-shadow follows it.
+    let outline = outline_clip(n, ellipse);
     let mut style = String::new();
     css::place(&mut style, rect);
-    write_background(&mut style, n, rect);
+    if outline.is_none() {
+        write_background(&mut style, n, rect);
+    }
     if ellipse {
         css::decl(&mut style, "border-radius", "50%");
     } else if let Some(radius) = css::corner_radius(n) {
         css::decl(&mut style, "border-radius", &radius);
     }
-    if n.clip_content {
-        css::decl(&mut style, "overflow", "hidden");
+    match (&outline, n.clip_content) {
+        (Some(clip), true) => css::decl(&mut style, "clip-path", clip),
+        (None, true) => css::decl(&mut style, "overflow", "hidden"),
+        (_, false) => {}
     }
     // `SceneNode::opacity` is already baked into every resolved fill,
     // stroke and shadow alpha at scene-build time. Only
@@ -64,14 +72,32 @@ pub fn open(out: &mut String, n: &SceneNode, rect: Rect, ellipse: bool) {
     }
 
     let _ = write!(out, r#"<div class="n" style="{style}">"#);
+    if let Some(clip) = &outline {
+        let mut layer = String::new();
+        css::place(&mut layer, Rect::xywh(0.0, 0.0, rect.size.x, rect.size.y));
+        write_background(&mut layer, n, rect);
+        css::decl(&mut layer, "clip-path", clip);
+        let _ = write!(out, r#"<div class="n" style="{layer}"></div>"#);
+    }
     super::video::emit(out, n);
+}
+
+/// The CSS `clip-path` of a box with a corner outline (node-local, which
+/// is the element's border box), or `None` for a plain or round box.
+fn outline_clip(n: &SceneNode, ellipse: bool) -> Option<String> {
+    let outline = n.corner_path.as_deref().filter(|_| !ellipse)?;
+    Some(format!("path('{}')", outline.d))
 }
 
 /// Close the node's box, laying the stroke overlay over the children
 /// first so a container's outline is not painted under its own content.
 pub fn close(out: &mut String, n: &SceneNode, rect: Rect, ellipse: bool) {
-    if let Some(stroke) = n.stroke {
-        emit_stroke_overlay(out, stroke, rect, n, ellipse);
+    match (n.stroke, n.corner_path.as_deref().filter(|_| !ellipse)) {
+        (Some(stroke), Some(outline)) if stroke.sides.is_none() => {
+            emit_outline_stroke(out, stroke, rect, outline)
+        }
+        (Some(stroke), _) => emit_stroke_overlay(out, stroke, rect, n, ellipse),
+        (None, _) => {}
     }
     out.push_str("</div>");
 }
@@ -215,4 +241,37 @@ fn emit_stroke_overlay(
         css::decl(&mut style, "border-radius", &radius);
     }
     let _ = write!(out, r#"<div class="n k" style="{style}"></div>"#);
+}
+
+/// A smoothed box's stroke (#389): an inline SVG over the box, in its local
+/// coordinates, stroking the aligned centre line (or the outline itself
+/// for a centred stroke).
+fn emit_outline_stroke(
+    out: &mut String,
+    stroke: SceneStroke,
+    rect: Rect,
+    outline: &de_editor_ui::layout_scene::SceneCornerPath,
+) {
+    let d = if outline.stroke_d.is_empty() {
+        &outline.d
+    } else {
+        &outline.stroke_d
+    };
+    let pad = stroke.width.max(0.0);
+    let view = Rect::xywh(-pad, -pad, rect.size.x + pad * 2.0, rect.size.y + pad * 2.0);
+    let mut style = String::new();
+    css::place(&mut style, view);
+    css::decl(&mut style, "overflow", "visible");
+    css::decl(&mut style, "pointer-events", "none");
+    let _ = write!(
+        out,
+        r#"<svg class="n k" style="{style}" viewBox="{} {} {} {}"><path d="{}" fill="none" stroke="{}" stroke-width="{}"/></svg>"#,
+        css::num(view.origin.x),
+        css::num(view.origin.y),
+        css::num(view.size.x),
+        css::num(view.size.y),
+        de_util::xml_escape::escape_xml(d),
+        css::color(stroke.color),
+        css::num(stroke.width.max(0.0)),
+    );
 }

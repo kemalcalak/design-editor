@@ -55,6 +55,11 @@ pub(super) fn emit_polygon(out: &mut String, n: &SceneNode, attrs: &str) {
     if r.size.x == 0.0 || r.size.y == 0.0 {
         return;
     }
+    if let Some(d) = super::outline::node_outline(n) {
+        // Rounded corners (#389): the precomputed outline.
+        let _ = write!(out, r#"<path{attrs} d="{d}"{}/>"#, fill_stroke_attrs(n));
+        return;
+    }
     let points = crate::polygon_geometry::polygon_node_points(n, r);
     let mut point_attr = String::new();
     for (i, p) in points.iter().enumerate() {
@@ -94,7 +99,11 @@ pub(super) fn emit_line(out: &mut String, n: &SceneNode, attrs: &str) {
 }
 
 pub(super) fn emit_path(out: &mut String, n: &SceneNode, attrs: &LayerAttrs) {
-    let (d, fit) = if let Some(d) = &n.svg_path {
+    let outline = super::outline::node_outline(n);
+    let (d, fit) = if let Some(d) = &outline {
+        // Rounded vertices (#389): the outline, already in place (escaped).
+        (d.clone(), glam::Affine2::IDENTITY)
+    } else if let Some(d) = &n.svg_path {
         (d.clone(), svg_path_fit(d, n.bounds))
     } else {
         if n.points.len() < 2 {
@@ -116,7 +125,7 @@ pub(super) fn emit_path(out: &mut String, n: &SceneNode, attrs: &LayerAttrs) {
     } else {
         fill_stroke_attrs(n)
     };
-    let vector_effect = if n.svg_path.is_some() && n.stroke.is_some() {
+    let vector_effect = if n.svg_path.is_some() && n.stroke.is_some() && outline.is_none() {
         r#" vector-effect="non-scaling-stroke""#
     } else {
         ""
@@ -126,7 +135,7 @@ pub(super) fn emit_path(out: &mut String, n: &SceneNode, attrs: &LayerAttrs) {
     } else {
         ""
     };
-    let d = xml_escape(&d);
+    let d = if outline.is_some() { d } else { xml_escape(&d) };
     if let Some(geometry) = n.stroke_geometry.as_deref() {
         // End shapes (#389): the fill (if any) on the path, then the
         // stroke geometry in node-local coordinates.

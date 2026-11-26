@@ -21,6 +21,8 @@ use super::units::{color_element, degrees_60k, emu, emu_extent, pct_1000, rot_60
 pub enum Geom {
     Rect,
     Ellipse,
+    /// A polygon or star, as a custom geometry (#389).
+    Polygon,
 }
 
 /// `<p:nvSpPr>` — the identity block every shape opens with.
@@ -82,6 +84,11 @@ fn plain_xfrm(rect: Rect, attrs: &str) -> String {
 pub fn prst_geom(node: &SceneNode, geom: Geom, rect: Rect) -> String {
     match geom {
         Geom::Ellipse => "<a:prstGeom prst=\"ellipse\"><a:avLst/></a:prstGeom>".to_string(),
+        Geom::Polygon => super::cust_geom::polygon_geom(node, rect)
+            .unwrap_or_else(|| "<a:prstGeom prst=\"rect\"><a:avLst/></a:prstGeom>".to_string()),
+        // Smoothed corners (#389) and the per-corner radii they carry.
+        Geom::Rect if node.corner_path.is_some() => super::cust_geom::box_outline_geom(node, rect)
+            .unwrap_or_else(|| "<a:prstGeom prst=\"rect\"><a:avLst/></a:prstGeom>".to_string()),
         Geom::Rect => match corner_radius(node) {
             Some(radius) => {
                 let shorter = rect.size.x.min(rect.size.y).max(0.01);

@@ -206,3 +206,14 @@ fn path_data_writes_lines_curves_and_a_close() {
     let square = rect_outline(4.0, 4.0, [0.0; 4], 0.0).unwrap();
     assert_eq!(outline_path_data(&[square]), "M 0 0 L 4 0 L 4 4 L 0 4 Z");
 }
+
+#[test]
+fn translated_path_data_keeps_its_shape() {
+    let sub = rect_outline(40.0, 20.0, [5.0; 4], 0.5).unwrap();
+    let d = outline_path_data(&[sub]);
+    let moved = translate_path_data(&d, 10.0, -2.5);
+    let (x, y, w, h) = subpaths_bounds(&parse_path_data(&moved).unwrap());
+    assert!(close(x, 10.0, 1e-3) && close(y, -2.5, 1e-3), "{moved}");
+    assert!(close(w, 40.0, 1e-3) && close(h, 20.0, 1e-3), "{moved}");
+    assert_eq!(translate_path_data("not a path", 1.0, 1.0), "");
+}
