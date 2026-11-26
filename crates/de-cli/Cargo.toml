@@ -4,7 +4,7 @@ version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
-description = "Design Editor `de` CLI — drives the editor via the HTTP MCP transport"
+description = "Design Editor `de` CLI — drives the editor via the HTTP MCP transport and runs the design agent headless"
 
 # The binary is `de` (the command users type); the crate is `de-cli`.
 [[bin]]
@@ -13,6 +13,8 @@ path = "src/main.rs"
 
 [dependencies]
 base64 = "0.22"
+# `de agent`: progress deltas and token counts of the shared design-agent engine.
+de-ai = { path = "../de-ai" }
 de-ai-skills = { path = "../de-ai-skills" }
 de-config-store = { path = "../de-config-store" }
 # Shared MCP defaults (port + local endpoint URL helpers). Already in the
@@ -20,6 +22,10 @@ de-config-store = { path = "../de-config-store" }
 de-editor-core = { path = "../de-editor-core" }
 jian-ops-schema = { path = "../../vendor/jian/crates/jian-ops-schema" }
 de-figma = { path = "../de-figma" }
+# `de agent` runs the in-app design agent in process: the shared
+# `design_agent_run` engine, document load / atomic save, the exporters and
+# the app's saved provider settings.
+de-host-services = { path = "../de-host-services" }
 de-pptx = { path = "../de-pptx" }
 de-html = { path = "../de-html" }
 de-pen-loader = { path = "../de-pen-loader", default-features = false }
@@ -27,7 +33,17 @@ de-process-io = { path = "../de-process-io" }
 de-rpc-transport = { path = "../de-rpc-transport" }
 # Canonical JSON string escaping (dependency-free).
 de-util = { path = "../de-util" }
+serde = { workspace = true }
 serde_json = { workspace = true }
+# `de agent --tasks`: YAML (and JSON) task files. Panic-free parser with
+# line / column error reports; pinned exactly like the other parsers.
+serde-saphyr = { version = "=2.1.1", default-features = false, features = ["deserialize"] }
+# `de agent`: Ctrl+C cancels the run instead of killing it mid-save.
+signal-hook = "0.3"
+
+[target.'cfg(unix)'.dev-dependencies]
+# The Ctrl+C integration test signals the child `de` process.
+libc = "0.2"
 
 [lints]
 workspace = true

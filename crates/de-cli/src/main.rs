@@ -3,6 +3,17 @@
 
 use std::collections::BTreeMap;
 
+mod agent_args;
+mod agent_args_error;
+mod agent_cli;
+mod agent_progress;
+mod agent_provider;
+mod agent_provider_error;
+mod agent_report;
+mod agent_runner;
+mod agent_task;
+mod agent_tasks;
+mod agent_tasks_error;
 mod app_control_cli;
 mod cli_conversion;
 mod cli_error;
@@ -46,6 +57,11 @@ const USAGE: &str = include_str!("usage.txt");
 
 fn main() {
     let args: Vec<String> = std::env::args().skip(1).collect();
+    // `de agent` has its own parser (short `-p`, repeatable flags) and its
+    // own exit statuses, so it is dispatched before the generic parser.
+    if args.first().map(String::as_str) == Some("agent") {
+        std::process::exit(agent_cli::run(&args[1..]));
+    }
     match run(&args) {
         Ok(out) => {
             println!("{out}");
