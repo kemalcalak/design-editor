@@ -390,18 +390,19 @@ fn empty_document() -> jian_ops_schema::PenDocument {
     }
 }
 
+/// Serializes this crate's tests that publish or read the process-wide
+/// `image_thumbs` registry.
+#[cfg(test)]
+pub(crate) fn lock_thumbnail_registry() -> std::sync::MutexGuard<'static, ()> {
+    static THUMB_TEST_LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
+    THUMB_TEST_LOCK
+        .lock()
+        .unwrap_or_else(|poisoned| poisoned.into_inner())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::sync::Mutex;
-
-    static THUMB_TEST_LOCK: Mutex<()> = Mutex::new(());
-
-    fn lock_thumbnail_registry() -> std::sync::MutexGuard<'static, ()> {
-        THUMB_TEST_LOCK
-            .lock()
-            .unwrap_or_else(|poisoned| poisoned.into_inner())
-    }
 
     #[test]
     fn new_state_is_empty_and_quiescent() {
