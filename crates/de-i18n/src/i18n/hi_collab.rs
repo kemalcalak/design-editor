@@ -587,6 +587,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.context.lastReply" => "पिछला जवाब",
         "chat.context.chatTotal" => "यह चैट",
         "chat.usage.tokens" => "इनपुट {{input}} · आउटपुट {{output}}",
+        "layerMenu.sendToAgent" => "एजेंट को भेजें",
         _ => return None,
     })
 }

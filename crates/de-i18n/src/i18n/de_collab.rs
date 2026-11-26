@@ -587,6 +587,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.context.lastReply" => "Letzte Antwort",
         "chat.context.chatTotal" => "Dieser Chat",
         "chat.usage.tokens" => "{{input}} Eingabe · {{output}} Ausgabe",
+        "layerMenu.sendToAgent" => "An Agent senden",
         _ => return None,
     })
 }

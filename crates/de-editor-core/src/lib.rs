@@ -20,6 +20,7 @@ pub mod agent_settings_button_state;
 pub mod agent_settings_connection;
 pub mod align;
 pub mod align_guides;
+pub mod annotation_agent;
 mod annotation_edit;
 pub mod blank_starter;
 pub mod bridge_protocol;
