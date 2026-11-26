@@ -45,6 +45,10 @@ pub enum MenuAction {
     Ungroup,
     /// Edit ▸ Rename layers… (Cmd+Shift+R, #383).
     RenameLayers,
+    /// Edit ▸ Find layers… (Cmd+F, #395).
+    FindLayers,
+    /// View ▸ Command Palette… (Cmd+K, #395).
+    CommandPalette,
     /// Edit ▸ Path ▸ … (#388): booleans and path operations.
     PathOp(PathMenuOp),
     ToggleFullscreen,
@@ -176,6 +180,8 @@ mod backend {
     const ID_GROUP: &str = "group";
     const ID_UNGROUP: &str = "ungroup";
     const ID_RENAME_LAYERS: &str = "rename-layers";
+    const ID_FIND_LAYERS: &str = "find-layers";
+    const ID_COMMAND_PALETTE: &str = "command-palette";
     const ID_FULLSCREEN: &str = "fullscreen";
     const ID_PRESENT: &str = "present";
     const ID_PROTOTYPE_LINKS: &str = "prototype-links";
@@ -221,6 +227,8 @@ mod backend {
             ID_GROUP => MenuAction::Group,
             ID_UNGROUP => MenuAction::Ungroup,
             ID_RENAME_LAYERS => MenuAction::RenameLayers,
+            ID_FIND_LAYERS => MenuAction::FindLayers,
+            ID_COMMAND_PALETTE => MenuAction::CommandPalette,
             ID_FULLSCREEN => MenuAction::ToggleFullscreen,
             ID_PRESENT => MenuAction::Present,
             ID_PROTOTYPE_LINKS => MenuAction::TogglePrototypeLinks,
@@ -387,12 +395,23 @@ mod backend {
                     tr(locale, "layerMenu.renameLayers"),
                     Some(accel_shift(Code::KeyR)),
                 ),
+                &item(
+                    ID_FIND_LAYERS,
+                    tr(locale, "palette.cmd.findLayers"),
+                    Some(accel(Code::KeyF)),
+                ),
                 &path_submenu(locale),
             ]);
             let _ = menu.append(&edit);
 
             // View menu.
             let view = Submenu::new(tr(locale, "menu.view"), true);
+            let _ = view.append(&item(
+                ID_COMMAND_PALETTE,
+                tr(locale, "menu.commandPalette"),
+                Some(accel(Code::KeyK)),
+            ));
+            let _ = view.append(&PredefinedMenuItem::separator());
             let fullscreen_accel =
                 Accelerator::new(Some(Modifiers::META | Modifiers::CONTROL), Code::KeyF);
             let _ = view.append(&item(
@@ -522,6 +541,8 @@ mod backend {
                 ID_GROUP,
                 ID_UNGROUP,
                 ID_RENAME_LAYERS,
+                ID_FIND_LAYERS,
+                ID_COMMAND_PALETTE,
                 ID_FULLSCREEN,
                 ID_GIT_PANEL,
                 ID_DESIGN_MD,

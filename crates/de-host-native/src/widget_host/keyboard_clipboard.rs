@@ -31,6 +31,10 @@ impl WidgetHostNative {
     /// field's `!cloning` lock) still applies. Returns `true` if anything was
     /// inserted.
     pub fn apply_input_paste(&mut self, text: &str) -> bool {
+        // The command palette (#395) is modal: a paste lands in its field.
+        if self.command_palette_open() {
+            return self.palette_paste(text);
+        }
         // The Rename-layers preview (#383) is modal: a paste lands in the
         // edited name, or nowhere.
         if self.rename_layers_open() {

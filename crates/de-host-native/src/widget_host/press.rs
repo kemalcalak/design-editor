@@ -65,7 +65,7 @@ impl WidgetHostNative {
     /// a layer row OR page row.
     pub fn apply_right_press(&mut self, x: f32, y: f32, viewport_w: f32, viewport_h: f32) -> bool {
         let cancelled = self.cancel_pointer_gestures();
-        if self.editor_state.editor_ui.agent_settings_open || self.rename_layers_open() {
+        if self.editor_state.editor_ui.agent_settings_open || self.modal_dialog_open() {
             return true;
         }
         // Codex stop-gate: right-click outside the variables panel

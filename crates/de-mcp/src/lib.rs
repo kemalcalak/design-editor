@@ -110,6 +110,7 @@ pub mod export_html_tool;
 pub mod extra_read_tools;
 #[cfg(test)]
 mod extra_read_tools_tests;
+pub mod find_nodes_tool;
 pub mod guidelines_tools;
 pub mod import_common;
 pub mod import_html_tool;
@@ -291,6 +292,7 @@ pub use design_refine_result::{design_refine_snapshot, DesignRefine};
 pub use document_save::{save_document_snapshot_to, SaveDocument};
 pub use export_html_tool::{export_html_snapshot, ExportHtml};
 pub use extra_read_tools::{get_node_children_snapshot, ChildRecord, GetNodeChildren};
+pub use find_nodes_tool::{find_nodes_snapshot, FindNodes};
 pub use guidelines_tools::{get_guidelines_snapshot, GetGuidelines};
 pub use interaction_tools::{
     list_interactions_snapshot, remove_interaction_snapshot, set_interaction_snapshot,

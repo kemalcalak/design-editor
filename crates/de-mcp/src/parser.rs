@@ -504,7 +504,12 @@ fn parse_flat_object_body(body: &str, tool: &str) -> Option<BTreeMap<String, Str
     Some(out)
 }
 
-fn structured_arg_allowed(tool: &str, key: &str) -> bool {
+/// Whether `tool` takes an array or object value under `key`; any other
+/// structured argument fails the parse. Keyed by the name the client sent,
+/// so pen.dev aliases are listed under their own names. `de-host-services`
+/// checks every advertised tool schema against this list (#430), because
+/// the schema catalog sits above this crate and cannot be read here.
+pub fn structured_arg_allowed(tool: &str, key: &str) -> bool {
     if tool.starts_with("add_") {
         return !key.is_empty();
     }
@@ -552,6 +557,13 @@ fn structured_arg_allowed(tool: &str, key: &str) -> bool {
             | ("browser", "params")
             | ("set_slide_transition", "nodeIds")
             | ("scale_nodes", "nodeIds")
+            | ("rename_layers", "nodeIds")
+            | ("rename_layers", "names")
+            | ("convert_to_instances", "nodeIds")
+            | ("export_nodes", "nodeIds")
+            | ("boolean_op", "nodeIds")
+            | ("flatten", "nodeIds")
+            | ("spawn_agents", "config")
     )
 }
 

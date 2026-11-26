@@ -29,7 +29,7 @@ impl WidgetHostNative {
         if self.preview.is_some() {
             return true;
         }
-        if self.editor_state.rename_layers_owns_keyboard() {
+        if self.editor_state.rename_layers_owns_keyboard() || self.command_palette_open() {
             return true;
         }
         let ui = &self.editor_state.ui;

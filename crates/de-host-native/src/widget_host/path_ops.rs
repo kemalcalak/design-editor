@@ -18,7 +18,7 @@ impl WidgetHostNative {
     /// shortcut was handled and a repaint is owed.
     pub fn apply_path_operation(&mut self, op: de_editor_core::path_ops::PathOperation) -> bool {
         // The Rename-layers preview (#383) is modal over the document.
-        if self.rename_layers_open() {
+        if self.modal_dialog_open() {
             return false;
         }
         // Path ops mutate the document: land a pending variable-row

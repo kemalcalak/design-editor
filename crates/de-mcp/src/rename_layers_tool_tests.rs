@@ -129,3 +129,20 @@ fn bad_arguments_are_rejected() {
         );
     }
 }
+
+/// Over the wire `nodeIds` and `names` arrive as a JSON array and object,
+/// which the parser used to refuse, so ai mode could never apply (#430).
+#[test]
+fn ai_names_apply_through_the_wire_parser() {
+    let mut state = state();
+    let line = r#"{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"rename_layers","arguments":{"mode":"ai","nodeIds":["cta"],"names":{"cta":"Start button"}}}}"#;
+    let call = crate::parse_tool_call(line).expect("structured arguments parse");
+    assert_eq!(call.arguments["nodeIds"], r#"["cta"]"#);
+    let ToolOutcome::OkJsonWithCommand(_, command) =
+        rename_layers_snapshot(&state).call(&call.arguments)
+    else {
+        panic!("names apply");
+    };
+    assert!(state.apply(command));
+    assert_eq!(name_of(&state, "cta").as_deref(), Some("Start button"));
+}

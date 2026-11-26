@@ -42,6 +42,12 @@ impl WidgetHostNative {
                 return Some(true);
             }
         }
+        // Command palette (#395) — modal, painted just under the missing-font
+        // prompt (it never shares the screen with the Rename-layers preview).
+        if self.dispatch_command_palette_press(x, y, viewport_width, viewport_height) {
+            self.close_image_popovers_for_higher_overlay();
+            return Some(true);
+        }
         // Rename-layers preview (#383) — modal, painted just under the
         // missing-font prompt, so it owns every press while it is open.
         if self.dispatch_rename_layers_press(x, y, viewport_width, viewport_height) {

@@ -24,6 +24,10 @@ impl WidgetHostNative {
             }
             return self.home_text(c);
         }
+        // The command palette (#395) is modal: it owns every key.
+        if self.command_palette_open() {
+            return self.palette_text(c);
+        }
         // The Rename-layers preview (#383) is modal: it owns every key.
         if let Some(changed) = de_editor_core::rename_layers::rename_layers_text(
             &mut self.editor_state,

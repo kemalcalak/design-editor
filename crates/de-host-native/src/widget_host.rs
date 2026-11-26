@@ -76,6 +76,7 @@ mod click;
 #[cfg(test)]
 mod codegen_framework_tests;
 mod color_picker_press;
+mod command_palette_dispatch;
 mod component_browser_press;
 mod cursor_hint;
 mod cursor_move_chrome;

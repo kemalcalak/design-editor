@@ -123,7 +123,7 @@ impl WidgetHostNative {
         }
         // The Rename-layers preview (#383) is modal: the candidate lands in
         // the edited name through the typed-char route.
-        if self.rename_layers_open() || self.editor_state.editor_ui.prompt_center.open {
+        if self.modal_dialog_open() || self.editor_state.editor_ui.prompt_center.open {
             let mut consumed = false;
             for ch in text.chars() {
                 if !ch.is_control() && self.apply_text(ch) {
