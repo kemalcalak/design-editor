@@ -36,6 +36,9 @@ use de_editor_core::{BuiltinAgentKind, ImageGenProvider};
 mod settings_io_checked;
 #[path = "settings_io_temp.rs"]
 mod settings_io_temp;
+#[path = "settings_io_providers.rs"]
+mod settings_io_providers;
+pub use settings_io_providers::{read_builtin_agents, settings_file_path};
 use settings_io_temp::create_unique_settings_temp;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]

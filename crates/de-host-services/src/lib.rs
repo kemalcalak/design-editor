@@ -88,6 +88,8 @@ mod font_host_error;
 pub mod generate_jobs;
 pub mod google_fonts;
 pub mod google_fonts_error;
+pub mod headless_export;
+mod headless_export_error;
 pub mod home_preview;
 pub mod image_relevance_judge;
 mod import_html_url;
