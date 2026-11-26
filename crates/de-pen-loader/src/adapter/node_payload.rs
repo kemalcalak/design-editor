@@ -20,6 +20,15 @@ pub(super) fn node_to_payload_with_text_context(
             frame_to_payload(n, rects)
         }
         PenNode::Group(n) => group_to_payload(n, rects),
+        PenNode::Boolean(b) => {
+            let mut p = group_to_payload(&b.group, rects);
+            p.kind = format!(
+                "{}{}",
+                crate::layout_scene::BOOLEAN_KIND_PREFIX,
+                b.op.as_str()
+            );
+            p
+        }
         PenNode::Rectangle(n) => rect_to_payload(n, rects),
         PenNode::Ellipse(n) => ellipse_to_payload(n),
         PenNode::Line(n) => line_to_payload(n),

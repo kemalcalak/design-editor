@@ -41,7 +41,9 @@ use jian_scene::layout_scene::SceneGradient;
 #[cfg(test)]
 use crate::editor_scene::editor_state_to_layout_scene;
 
+mod boolean;
 mod gradient;
+pub(crate) use boolean::KIND_PREFIX as BOOLEAN_KIND_PREFIX;
 mod stroke;
 use gradient::{payload_gradient_to_scene, scale_gradient_opacity};
 use stroke::{resolve_scene_stroke, resolve_stroke_fill_layers};
@@ -217,7 +219,7 @@ pub(crate) fn node_payload_to_scene(
     let variable_fill = var_table.fill_for(&node_id);
     let stroke = resolve_scene_stroke(node, &node_id, var_table, paint_opacity);
     let stroke_fill_layers = resolve_stroke_fill_layers(node, &node_id, var_table, stroke.as_ref());
-    SceneNode {
+    let mut scene = SceneNode {
         id: node.id.clone(),
         kind: str_to_kind(&node.kind),
         bounds,
@@ -321,7 +323,9 @@ pub(crate) fn node_payload_to_scene(
         widget: node.widget.as_ref().map(widget_payload_to_scene),
         placeholder: node.placeholder,
         children,
-    }
+    };
+    boolean::resolve_boolean_group(&node.kind, &mut scene);
+    scene
 }
 
 /// Convert a payload [`WidgetPayload`] into the paint-only
@@ -666,7 +670,9 @@ fn array_to_color(a: [f32; 4]) -> Color {
 fn str_to_kind(s: &str) -> NodeKind {
     match s {
         "frame" => NodeKind::Frame,
+        // A boolean group the resolver could not compute stays a group.
         "group" => NodeKind::Group,
+        other if other.starts_with(boolean::KIND_PREFIX) => NodeKind::Group,
         "rect" => NodeKind::Rect,
         "ellipse" => NodeKind::Ellipse,
         "polygon" => NodeKind::Polygon,

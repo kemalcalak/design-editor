@@ -473,6 +473,13 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "renameLayers.sourceAiFailed" => "Agent unavailable — offline rules",
         "renameLayers.apply" => "Rename",
         "renameLayers.empty" => "Every layer already has a meaningful name",
+        "menu.path" => "Path",
+        "path.flatten" => "Flatten",
+        "path.outlineStroke" => "Outline Stroke",
+        "path.offsetOutward" => "Offset Path Outward",
+        "path.offsetInward" => "Offset Path Inward",
+        "path.simplify" => "Simplify Path",
+        "path.reverse" => "Reverse Path Direction",
         _ => return None,
     })
 }

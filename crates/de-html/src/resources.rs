@@ -279,7 +279,8 @@ fn embed_node_images(
             );
             frame.children.as_mut()
         }
-        PenNode::Group(group) => {
+        PenNode::Group(group)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group, .. }) => {
             count += embed_fills(
                 &mut group.container.fill,
                 base_url,

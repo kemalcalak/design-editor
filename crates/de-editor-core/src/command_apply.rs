@@ -35,7 +35,6 @@ use jian_ops_schema::conversion::{ConversionEntry, ConversionKind};
 use jian_ops_schema::variable::{VariableKind, VariableScalar};
 
 mod app_state;
-mod boolean;
 mod clipboard;
 mod helpers;
 mod instance;
@@ -649,12 +648,7 @@ impl EditorState {
                 // motion.
                 self.align_selected(parsed)
             }
-            EditorCommand::CommitBooleanResult {
-                source_ids,
-                contours,
-                new_id,
-                revision,
-            } => self.commit_boolean_result(&source_ids, &contours, new_id, revision)?,
+            EditorCommand::Path(command) => self.apply_path_command(command, allocator)?,
 
             // --- Clipboard -----------------------------------------
             cmd @ (EditorCommand::CopySelected

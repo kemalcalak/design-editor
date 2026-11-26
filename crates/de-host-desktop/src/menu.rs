@@ -45,6 +45,8 @@ pub enum MenuAction {
     Ungroup,
     /// Edit ▸ Rename layers… (Cmd+Shift+R, #383).
     RenameLayers,
+    /// Edit ▸ Path ▸ … (#388): booleans and path operations.
+    PathOp(PathMenuOp),
     ToggleFullscreen,
     /// View ▸ Present (Cmd+Enter, #157).
     Present,
@@ -60,12 +62,84 @@ pub enum MenuAction {
     OpenGithub,
 }
 
+/// The Edit ▸ Path submenu's rows (#388), in menu order.
+#[cfg_attr(not(target_os = "macos"), allow(dead_code))]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum PathMenuOp {
+    Union,
+    Subtract,
+    Intersect,
+    Exclude,
+    Flatten,
+    OutlineStroke,
+    OffsetOutward,
+    OffsetInward,
+    Simplify,
+    Reverse,
+}
+
+#[cfg_attr(not(target_os = "macos"), allow(dead_code))]
+impl PathMenuOp {
+    pub const ALL: [PathMenuOp; 10] = [
+        PathMenuOp::Union,
+        PathMenuOp::Subtract,
+        PathMenuOp::Intersect,
+        PathMenuOp::Exclude,
+        PathMenuOp::Flatten,
+        PathMenuOp::OutlineStroke,
+        PathMenuOp::OffsetOutward,
+        PathMenuOp::OffsetInward,
+        PathMenuOp::Simplify,
+        PathMenuOp::Reverse,
+    ];
+
+    /// Menu item id suffix and label key.
+    pub fn id_and_label(self) -> (&'static str, &'static str) {
+        match self {
+            PathMenuOp::Union => ("path:union", "layerMenu.booleanUnion"),
+            PathMenuOp::Subtract => ("path:subtract", "layerMenu.booleanSubtract"),
+            PathMenuOp::Intersect => ("path:intersect", "layerMenu.booleanIntersect"),
+            PathMenuOp::Exclude => ("path:exclude", "layerMenu.booleanExclude"),
+            PathMenuOp::Flatten => ("path:flatten", "path.flatten"),
+            PathMenuOp::OutlineStroke => ("path:outline", "path.outlineStroke"),
+            PathMenuOp::OffsetOutward => ("path:offset-out", "path.offsetOutward"),
+            PathMenuOp::OffsetInward => ("path:offset-in", "path.offsetInward"),
+            PathMenuOp::Simplify => ("path:simplify", "path.simplify"),
+            PathMenuOp::Reverse => ("path:reverse", "path.reverse"),
+        }
+    }
+
+    /// The operation the row runs.
+    pub fn operation(self) -> de_editor_core::path_ops::PathOperation {
+        use de_editor_core::path_ops::{OffsetJoin, PathOperation as P, OFFSET_MENU_STEP};
+        use de_editor_core::BooleanOp as B;
+        match self {
+            PathMenuOp::Union => P::Boolean(B::Union),
+            PathMenuOp::Subtract => P::Boolean(B::Subtract),
+            PathMenuOp::Intersect => P::Boolean(B::Intersect),
+            PathMenuOp::Exclude => P::Boolean(B::Exclude),
+            PathMenuOp::Flatten => P::Flatten,
+            PathMenuOp::OutlineStroke => P::OutlineStroke,
+            PathMenuOp::OffsetOutward => P::Offset {
+                delta: OFFSET_MENU_STEP,
+                join: OffsetJoin::Round,
+            },
+            PathMenuOp::OffsetInward => P::Offset {
+                delta: -OFFSET_MENU_STEP,
+                join: OffsetJoin::Round,
+            },
+            PathMenuOp::Simplify => P::Simplify,
+            PathMenuOp::Reverse => P::Reverse,
+        }
+    }
+}
+
 // --------------------------------------------------------------------
 // macOS — the real `muda` backend.
 // --------------------------------------------------------------------
 #[cfg(target_os = "macos")]
 mod backend {
-    use super::MenuAction;
+    use super::{MenuAction, PathMenuOp};
     use de_editor_core::Locale;
     use muda::accelerator::{Accelerator, Code, Modifiers};
     use muda::{Menu, MenuEvent, MenuItem, PredefinedMenuItem, Submenu};
@@ -123,6 +197,12 @@ mod backend {
         if let Some(index) = id.strip_prefix(ID_OPEN_RECENT_PREFIX) {
             return index.parse::<usize>().ok().map(MenuAction::OpenRecent);
         }
+        if let Some(op) = PathMenuOp::ALL
+            .into_iter()
+            .find(|op| op.id_and_label().0 == id)
+        {
+            return Some(MenuAction::PathOp(op));
+        }
         Some(match id {
             ID_HOME => MenuAction::Home,
             ID_NEW => MenuAction::New,
@@ -177,6 +257,26 @@ mod backend {
 
     fn accel_shift(code: Code) -> Accelerator {
         Accelerator::new(Some(primary() | Modifiers::SHIFT), code)
+    }
+
+    /// Edit ▸ Path (#388): the booleans (their Cmd+Alt chords live in
+    /// the keyboard table), Flatten (Cmd+E), Outline stroke
+    /// (Cmd+Shift+O), Offset, Simplify and Reverse.
+    fn path_submenu(locale: Locale) -> Submenu {
+        let path = Submenu::new(tr(locale, "menu.path"), true);
+        for op in PathMenuOp::ALL {
+            let (id, label) = op.id_and_label();
+            let accel = match op {
+                PathMenuOp::Flatten => Some(accel(Code::KeyE)),
+                PathMenuOp::OutlineStroke => Some(accel_shift(Code::KeyO)),
+                _ => None,
+            };
+            if op == PathMenuOp::Flatten || op == PathMenuOp::OffsetOutward {
+                let _ = path.append(&PredefinedMenuItem::separator());
+            }
+            let _ = path.append(&item(id, tr(locale, label), accel));
+        }
+        path
     }
 
     /// A custom, id-tagged menu item with an accelerator.
@@ -287,6 +387,7 @@ mod backend {
                     tr(locale, "layerMenu.renameLayers"),
                     Some(accel_shift(Code::KeyR)),
                 ),
+                &path_submenu(locale),
             ]);
             let _ = menu.append(&edit);
 

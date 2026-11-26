@@ -60,7 +60,8 @@ fn is_intentional_horizontal_scroller(node: &PenNode) -> bool {
             node.container.layout == Some(LayoutMode::Horizontal)
                 && node.container.clip_content == Some(true)
         }
-        PenNode::Group(node) => {
+        PenNode::Group(node)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: node, .. }) => {
             node.container.layout == Some(LayoutMode::Horizontal)
                 && node.container.clip_content == Some(true)
         }

@@ -286,7 +286,8 @@ fn apply_result_paint_to_artwork(
                 }
             }
         }
-        PenNode::Group(group) => {
+        PenNode::Group(group)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group, .. }) => {
             if paint_self {
                 // Empty boolean GROUP operands have no canonical geometry or
                 // authored container paint. Their bounds are the historical

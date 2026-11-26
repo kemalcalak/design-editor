@@ -164,6 +164,7 @@ fn kind_stem(node: &PenNode) -> &'static str {
         PenNode::Frame(_) => "frame",
         PenNode::Script(_) => "script",
         PenNode::Group(_) => "group",
+        PenNode::Boolean(_) => "boolean",
         PenNode::Rectangle(_) => "rectangle",
         PenNode::Ellipse(_) => "ellipse",
         PenNode::Line(_) => "line",

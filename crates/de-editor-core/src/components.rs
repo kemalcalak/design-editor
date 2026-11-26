@@ -353,7 +353,7 @@ fn add_conversion_components(
 fn is_component_root(node: &PenNode) -> bool {
     matches!(
         node,
-        PenNode::Frame(_) | PenNode::Group(_) | PenNode::Rectangle(_)
+        PenNode::Frame(_) | PenNode::Group(_) | PenNode::Boolean(_) | PenNode::Rectangle(_)
     )
 }
 

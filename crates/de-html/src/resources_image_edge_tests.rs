@@ -26,7 +26,10 @@ fn collect_images<'a>(nodes: &'a [PenNode], output: &mut Vec<&'a ImageNode>) {
         }
         let children = match node {
             PenNode::Frame(node) => node.children.as_deref(),
-            PenNode::Group(node) => node.children.as_deref(),
+            PenNode::Group(node)
+            | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: node, .. }) => {
+                node.children.as_deref()
+            }
             PenNode::Rectangle(node) => node.children.as_deref(),
             PenNode::Ref(node) => node.children.as_deref(),
             PenNode::Tabs(node) => node.children.as_deref(),

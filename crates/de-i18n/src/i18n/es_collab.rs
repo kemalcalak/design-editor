@@ -473,6 +473,13 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "renameLayers.sourceAiFailed" => "Agente no disponible: reglas sin conexión",
         "renameLayers.apply" => "Renombrar",
         "renameLayers.empty" => "Todas las capas ya tienen un nombre significativo",
+        "menu.path" => "Trazado",
+        "path.flatten" => "Acoplar",
+        "path.outlineStroke" => "Contornear trazo",
+        "path.offsetOutward" => "Desplazar trazado hacia fuera",
+        "path.offsetInward" => "Desplazar trazado hacia dentro",
+        "path.simplify" => "Simplificar trazado",
+        "path.reverse" => "Invertir dirección del trazado",
         _ => return None,
     })
 }

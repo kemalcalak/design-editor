@@ -667,7 +667,9 @@ fn is_frame(node: &PenNode) -> bool {
 }
 
 fn is_unbounded_group(node: &PenNode, props: &ContainerProps) -> bool {
-    matches!(node, PenNode::Group(_)) && props.width.is_none() && props.height.is_none()
+    matches!(node, PenNode::Group(_) | PenNode::Boolean(_))
+        && props.width.is_none()
+        && props.height.is_none()
 }
 
 fn child_has_fill_container_axis(node: &PenNode) -> bool {
@@ -693,7 +695,10 @@ fn authored_numeric_size(node: &PenNode) -> (Option<f32>, Option<f32>) {
 fn node_sizing(node: &PenNode) -> (Option<&SizingBehavior>, Option<&SizingBehavior>) {
     match node {
         PenNode::Frame(n) => (n.container.width.as_ref(), n.container.height.as_ref()),
-        PenNode::Group(n) => (n.container.width.as_ref(), n.container.height.as_ref()),
+        PenNode::Group(n)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => {
+            (n.container.width.as_ref(), n.container.height.as_ref())
+        }
         PenNode::Rectangle(n) => (n.container.width.as_ref(), n.container.height.as_ref()),
         PenNode::Ellipse(n) => (n.width.as_ref(), n.height.as_ref()),
         PenNode::Text(n) => (n.width.as_ref(), n.height.as_ref()),
@@ -718,7 +723,8 @@ fn node_id(node: &PenNode) -> &str {
 fn base(node: &PenNode) -> Option<&jian_ops_schema::node::base::PenNodeBase> {
     Some(match node {
         PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => &n.base,
-        PenNode::Group(n) => &n.base,
+        PenNode::Group(n)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => &n.base,
         PenNode::Rectangle(n) => &n.base,
         PenNode::Text(n) => &n.base,
         PenNode::TextInput(n) => &n.base,
@@ -746,7 +752,10 @@ fn base(node: &PenNode) -> Option<&jian_ops_schema::node::base::PenNodeBase> {
 fn container_props(node: &PenNode) -> Option<&ContainerProps> {
     match node {
         PenNode::Frame(n) => Some(&n.container),
-        PenNode::Group(n) => Some(&n.container),
+        PenNode::Group(n)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => {
+            Some(&n.container)
+        }
         PenNode::Rectangle(n) => Some(&n.container),
         _ => None,
     }
@@ -755,7 +764,10 @@ fn container_props(node: &PenNode) -> Option<&ContainerProps> {
 fn children(node: &PenNode) -> Option<&[PenNode]> {
     match node {
         PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => n.children.as_deref(),
-        PenNode::Group(n) => n.children.as_deref(),
+        PenNode::Group(n)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => {
+            n.children.as_deref()
+        }
         PenNode::Rectangle(n) => n.children.as_deref(),
         PenNode::Tabs(n) => n.children.as_deref(),
         _ => None,

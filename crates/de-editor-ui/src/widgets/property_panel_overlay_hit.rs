@@ -23,8 +23,9 @@ impl PropertyPanel {
         &self,
         panel_rect: Rect,
     ) -> Vec<(crate::widgets::property_panel::PropertyPanelAction, Rect)> {
-        crate::widgets::property_panel_sections::action_button_rects_with_fill_picker(
-            self.scrolled_rect(panel_rect),
+        let rect = self.scrolled_rect(panel_rect);
+        let mut out = crate::widgets::property_panel_sections::action_button_rects_with_fill_picker(
+            rect,
             self.visible_sections(),
             &self.snapshot.effects,
             &self.snapshot.fills,
@@ -36,7 +37,24 @@ impl PropertyPanel {
             self.export_scale_picker_open,
             self.export_format_picker_open,
             self.layout_align_popover_open,
-        )
+        );
+        // The Position header's path operation buttons (#388) depend on
+        // the node, which the shared walker does not see.
+        let tops = crate::widgets::property_panel_section_tops::section_tops(
+            rect.origin.y,
+            self.visible_sections(),
+            &self.snapshot.effects,
+            &self.snapshot.fills,
+            &self.snapshot.interactions,
+        );
+        crate::widgets::property_panel_path_ops::push_action_rects(
+            &mut out,
+            &self.snapshot.path_ops,
+            rect.origin.x,
+            tops.position,
+            rect.size.x,
+        );
+        out
     }
 
     /// Whether `point` falls inside either open Export scale / format

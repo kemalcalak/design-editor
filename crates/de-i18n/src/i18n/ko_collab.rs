@@ -475,6 +475,13 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "renameLayers.sourceAiFailed" => "에이전트를 사용할 수 없어 오프라인 규칙 사용",
         "renameLayers.apply" => "이름 바꾸기",
         "renameLayers.empty" => "모든 레이어에 이미 의미 있는 이름이 있습니다",
+        "menu.path" => "패스",
+        "path.flatten" => "병합",
+        "path.outlineStroke" => "윤곽선 획",
+        "path.offsetOutward" => "패스 바깥쪽 오프셋",
+        "path.offsetInward" => "패스 안쪽 오프셋",
+        "path.simplify" => "패스 단순화",
+        "path.reverse" => "패스 방향 반전",
         _ => return None,
     })
 }

@@ -40,7 +40,6 @@ mod arc_drag;
 mod blur_inputs;
 #[cfg(test)]
 mod blur_inputs_tests;
-mod boolean_op;
 mod browser_interact;
 #[cfg(test)]
 mod browser_interact_tests;
@@ -173,6 +172,7 @@ mod pan_cache_scroll_tests;
 mod pan_cache_tests;
 #[cfg(test)]
 mod panel_history_tests;
+mod path_ops;
 mod pen_press;
 #[cfg(test)]
 mod pen_press_tests;

@@ -189,8 +189,16 @@ fn selected_sizing(node: &PenNode, width: bool) -> Option<&SizingBehavior> {
         (PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }), false) => {
             n.container.height.as_ref()
         }
-        (PenNode::Group(n), true) => n.container.width.as_ref(),
-        (PenNode::Group(n), false) => n.container.height.as_ref(),
+        (
+            PenNode::Group(n)
+            | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }),
+            true,
+        ) => n.container.width.as_ref(),
+        (
+            PenNode::Group(n)
+            | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }),
+            false,
+        ) => n.container.height.as_ref(),
         (PenNode::Rectangle(n), true) => n.container.width.as_ref(),
         (PenNode::Rectangle(n), false) => n.container.height.as_ref(),
         (PenNode::Ellipse(n), true) => n.width.as_ref(),
@@ -238,7 +246,10 @@ fn selected_clip_content(node: &PenNode) -> bool {
         PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => {
             n.container.clip_content.unwrap_or(false)
         }
-        PenNode::Group(n) => n.container.clip_content.unwrap_or(false),
+        PenNode::Group(n)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => {
+            n.container.clip_content.unwrap_or(false)
+        }
         PenNode::Rectangle(n) => n.container.clip_content.unwrap_or(false),
         _ => false,
     }

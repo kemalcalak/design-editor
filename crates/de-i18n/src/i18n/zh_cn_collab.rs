@@ -473,6 +473,13 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "renameLayers.sourceAiFailed" => "智能体不可用，已使用离线规则",
         "renameLayers.apply" => "重命名",
         "renameLayers.empty" => "所有图层都已有含义明确的名称",
+        "menu.path" => "路径",
+        "path.flatten" => "拼合",
+        "path.outlineStroke" => "轮廓化描边",
+        "path.offsetOutward" => "向外偏移路径",
+        "path.offsetInward" => "向内偏移路径",
+        "path.simplify" => "简化路径",
+        "path.reverse" => "反转路径方向",
         _ => return None,
     })
 }

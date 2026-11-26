@@ -435,7 +435,10 @@ pub fn roots_have_tokens(nodes: &[PenNode]) -> bool {
             PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => {
                 container_has_token(&n.container)
             }
-            PenNode::Group(n) => container_has_token(&n.container),
+            PenNode::Group(n)
+            | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => {
+                container_has_token(&n.container)
+            }
             PenNode::Rectangle(n) => container_has_token(&n.container),
             _ => false,
         };

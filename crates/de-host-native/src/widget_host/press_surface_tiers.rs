@@ -148,10 +148,7 @@ impl WidgetHostNative {
                     self.mark_dirty();
                 }
                 de_editor_ui::widgets::AlignToolbarHit::Boolean(op) => {
-                    #[cfg(feature = "gl-host")]
                     let _ = self.apply_boolean_op(op);
-                    #[cfg(not(feature = "gl-host"))]
-                    let _ = op;
                 }
             }
             return Some(true);

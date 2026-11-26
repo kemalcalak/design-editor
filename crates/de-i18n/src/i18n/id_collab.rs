@@ -473,6 +473,13 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "renameLayers.sourceAiFailed" => "Agen tidak tersedia — aturan offline",
         "renameLayers.apply" => "Ganti nama",
         "renameLayers.empty" => "Semua layer sudah punya nama yang bermakna",
+        "menu.path" => "Jalur",
+        "path.flatten" => "Ratakan",
+        "path.outlineStroke" => "Garis Luar Goresan",
+        "path.offsetOutward" => "Geser Jalur ke Luar",
+        "path.offsetInward" => "Geser Jalur ke Dalam",
+        "path.simplify" => "Sederhanakan Jalur",
+        "path.reverse" => "Balik Arah Jalur",
         _ => return None,
     })
 }

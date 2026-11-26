@@ -21,7 +21,8 @@ pub const UNPLANNED_APP_STATE_IDX: usize = usize::MAX;
 fn take_node_state(node: &mut PenNode) -> Option<StateSchema> {
     match node {
         PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => n.state.take(),
-        PenNode::Group(n) => n.state.take(),
+        PenNode::Group(n)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => n.state.take(),
         PenNode::Rectangle(n) => n.state.take(),
         PenNode::Ellipse(n) => n.state.take(),
         PenNode::Line(n) => n.state.take(),
@@ -53,7 +54,10 @@ fn take_node_state(node: &mut PenNode) -> Option<StateSchema> {
 fn children_mut(node: &mut PenNode) -> Option<&mut Vec<PenNode>> {
     match node {
         PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => n.children.as_mut(),
-        PenNode::Group(n) => n.children.as_mut(),
+        PenNode::Group(n)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => {
+            n.children.as_mut()
+        }
         PenNode::Rectangle(n) => n.children.as_mut(),
         PenNode::Tabs(n) => n.children.as_mut(),
         PenNode::Ref(n) => n.children.as_mut(),

@@ -36,11 +36,8 @@ impl WidgetHostNative {
             LayerContextStep::Group => {
                 let _ = self.apply_group();
             }
-            LayerContextStep::Boolean(op) => {
-                #[cfg(feature = "gl-host")]
-                let _ = self.apply_boolean_op(op);
-                #[cfg(not(feature = "gl-host"))]
-                let _ = op;
+            LayerContextStep::Path(op) => {
+                let _ = self.apply_path_operation(op);
             }
             LayerContextStep::Refit => {
                 self.fit_active_page_after_switch(self.last_viewport_w, self.last_viewport_h);

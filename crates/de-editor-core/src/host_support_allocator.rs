@@ -2,19 +2,11 @@
 
 use crate::command_node::build_leaf_node;
 use crate::fills::{set_primary_fill_hex, set_primary_stroke_hex};
-use crate::walkers::find_node;
 use crate::{EditorState, IdAllocError, IdAllocator, NodeId, Tool};
 use jian_ops_schema::node::image::ImageNode;
-use jian_ops_schema::node::{IconFontNode, PathNode, PenNode, PenNodeBase, ScriptNode};
+use jian_ops_schema::node::{IconFontNode, PathNode, PenNode, PenNodeBase};
 use jian_ops_schema::sizing::SizingBehavior;
-use jian_ops_schema::style::{PenEffect, PenFill, PenStroke, SolidFillBody};
-
-#[derive(Default)]
-struct BooleanPathStyle {
-    fill: Option<Vec<PenFill>>,
-    stroke: Option<PenStroke>,
-    effects: Option<Vec<PenEffect>>,
-}
+use jian_ops_schema::style::{PenFill, SolidFillBody};
 
 impl EditorState {
     /// Spawn a node for a creatable tool using the caller's id policy.
@@ -309,86 +301,6 @@ impl EditorState {
         self.set_single_selection(id.clone());
         Ok(Some(id))
     }
-
-    /// Replace boolean-op sources with one path using the caller's id policy.
-    /// Crate-private: hosts commit through `EditorCommand::CommitBooleanResult`
-    /// (`EditorState::commit_canvas_boolean`), which validates first.
-    pub(crate) fn replace_paths_with_polyline_with_allocator(
-        &mut self,
-        source_ids: &[NodeId],
-        contours: &[Vec<(f64, f64)>],
-        allocator: &mut dyn IdAllocator,
-    ) -> Result<Option<NodeId>, IdAllocError> {
-        let usable: Vec<&Vec<(f64, f64)>> = contours
-            .iter()
-            .filter(|contour| contour.len() >= 2)
-            .collect();
-        if usable.is_empty() {
-            return Ok(None);
-        }
-        let style = source_ids
-            .iter()
-            .find_map(|id| find_node(self.active_children(), id).map(boolean_path_style))
-            .unwrap_or_default();
-        let bounds = usable.iter().flat_map(|contour| contour.iter()).fold(
-            (
-                f64::INFINITY,
-                f64::INFINITY,
-                f64::NEG_INFINITY,
-                f64::NEG_INFINITY,
-            ),
-            |(min_x, min_y, max_x, max_y), (x, y)| {
-                (min_x.min(*x), min_y.min(*y), max_x.max(*x), max_y.max(*y))
-            },
-        );
-        let mut d = String::new();
-        for contour in usable {
-            for (index, (x, y)) in contour.iter().enumerate() {
-                let point = (*x - bounds.0, *y - bounds.1);
-                if index == 0 {
-                    d.push_str(&format!("M {:.2} {:.2}", point.0, point.1));
-                } else {
-                    d.push_str(&format!(" L {:.2} {:.2}", point.0, point.1));
-                }
-            }
-            d.push_str(" Z");
-        }
-        let mut taken = self.collect_node_ids();
-        let id = allocator.allocate(&mut taken)?;
-        let node = PenNode::Path(PathNode {
-            base: PenNodeBase {
-                id: id.as_str().to_string(),
-                name: Some("Boolean Result".to_string()),
-                x: Some(bounds.0),
-                y: Some(bounds.1),
-                ..Default::default()
-            },
-            icon_id: None,
-            d: Some(d),
-            anchors: None,
-            closed: Some(true),
-            fill_rule: None,
-            mask: None,
-            width: Some(SizingBehavior::Number((bounds.2 - bounds.0).max(0.0))),
-            height: Some(SizingBehavior::Number((bounds.3 - bounds.1).max(0.0))),
-            fill: style.fill,
-            stroke: style.stroke,
-            effects: style.effects,
-            state: None,
-            bindings: None,
-            events: None,
-            lifecycle: None,
-            semantics: None,
-            gestures: None,
-            route: None,
-            limits: Default::default(),
-        });
-        for source_id in source_ids {
-            crate::walkers::remove_from_children(self.active_children_mut(), source_id);
-        }
-        self.active_children_mut().push(node);
-        Ok(Some(id))
-    }
 }
 
 fn scaled_image_size(pixel_width: u32, pixel_height: u32) -> Option<(f64, f64)> {
@@ -409,42 +321,4 @@ fn default_icon_fill() -> PenFill {
         opacity: None,
         blend_mode: None,
     })
-}
-
-fn boolean_path_style(node: &PenNode) -> BooleanPathStyle {
-    match node {
-        PenNode::Frame(node) | PenNode::Script(ScriptNode { frame: node, .. }) => {
-            BooleanPathStyle {
-                fill: node.container.fill.clone(),
-                stroke: node.container.stroke.clone(),
-                effects: node.container.effects.clone(),
-            }
-        }
-        PenNode::Rectangle(node) => BooleanPathStyle {
-            fill: node.container.fill.clone(),
-            stroke: node.container.stroke.clone(),
-            effects: node.container.effects.clone(),
-        },
-        PenNode::Ellipse(node) => BooleanPathStyle {
-            fill: node.fill.clone(),
-            stroke: node.stroke.clone(),
-            effects: node.effects.clone(),
-        },
-        PenNode::Polygon(node) => BooleanPathStyle {
-            fill: node.fill.clone(),
-            stroke: node.stroke.clone(),
-            effects: node.effects.clone(),
-        },
-        PenNode::Path(node) => BooleanPathStyle {
-            fill: node.fill.clone(),
-            stroke: node.stroke.clone(),
-            effects: node.effects.clone(),
-        },
-        PenNode::Line(node) => BooleanPathStyle {
-            fill: None,
-            stroke: node.stroke.clone(),
-            effects: node.effects.clone(),
-        },
-        _ => BooleanPathStyle::default(),
-    }
 }

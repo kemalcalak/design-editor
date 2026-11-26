@@ -188,7 +188,10 @@ fn walk_card_rows(node: &PenNode, issues: &mut Vec<Issue>) {
 fn is_horizontal_layout(node: &PenNode) -> bool {
     let layout = match node {
         PenNode::Frame(n) => &n.container.layout,
-        PenNode::Group(n) => &n.container.layout,
+        PenNode::Group(n)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => {
+            &n.container.layout
+        }
         PenNode::Rectangle(n) => &n.container.layout,
         _ => return false,
     };

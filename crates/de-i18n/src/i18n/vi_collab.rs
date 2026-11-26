@@ -473,6 +473,13 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "renameLayers.sourceAiFailed" => "Tác nhân không khả dụng — dùng quy tắc ngoại tuyến",
         "renameLayers.apply" => "Đổi tên",
         "renameLayers.empty" => "Mọi lớp đều đã có tên rõ nghĩa",
+        "menu.path" => "Đường dẫn",
+        "path.flatten" => "Làm phẳng",
+        "path.outlineStroke" => "Chuyển nét thành đường viền",
+        "path.offsetOutward" => "Dịch đường dẫn ra ngoài",
+        "path.offsetInward" => "Dịch đường dẫn vào trong",
+        "path.simplify" => "Đơn giản hóa đường dẫn",
+        "path.reverse" => "Đảo hướng đường dẫn",
         _ => return None,
     })
 }

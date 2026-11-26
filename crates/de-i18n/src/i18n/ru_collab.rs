@@ -473,6 +473,13 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "renameLayers.sourceAiFailed" => "Агент недоступен — офлайн-правила",
         "renameLayers.apply" => "Переименовать",
         "renameLayers.empty" => "У всех слоёв уже есть осмысленные имена",
+        "menu.path" => "Контур",
+        "path.flatten" => "Объединить в контур",
+        "path.outlineStroke" => "Преобразовать обводку в контур",
+        "path.offsetOutward" => "Сместить контур наружу",
+        "path.offsetInward" => "Сместить контур внутрь",
+        "path.simplify" => "Упростить контур",
+        "path.reverse" => "Изменить направление контура",
         _ => return None,
     })
 }

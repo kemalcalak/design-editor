@@ -43,7 +43,10 @@ fn on_deep_test_stack(name: &str, test: impl FnOnce() + Send + 'static) {
 fn children(node: &PenNode) -> Option<&[PenNode]> {
     match node {
         PenNode::Frame(n) => n.children.as_deref(),
-        PenNode::Group(n) => n.children.as_deref(),
+        PenNode::Group(n)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => {
+            n.children.as_deref()
+        }
         PenNode::Rectangle(n) => n.children.as_deref(),
         _ => None,
     }
@@ -64,7 +67,8 @@ fn max_depth(nodes: &[PenNode]) -> usize {
 fn node_id(node: &PenNode) -> &str {
     match node {
         PenNode::Frame(node) | PenNode::Script(ScriptNode { frame: node, .. }) => &node.base.id,
-        PenNode::Group(node) => &node.base.id,
+        PenNode::Group(node)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: node, .. }) => &node.base.id,
         PenNode::Rectangle(node) => &node.base.id,
         PenNode::Ellipse(node) => &node.base.id,
         PenNode::Line(node) => &node.base.id,

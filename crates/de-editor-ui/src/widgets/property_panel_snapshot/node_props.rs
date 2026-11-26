@@ -77,7 +77,10 @@ fn container_layout(node: &PenNode) -> Option<&LayoutMode> {
         PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => {
             n.container.layout.as_ref()
         }
-        PenNode::Group(n) => n.container.layout.as_ref(),
+        PenNode::Group(n)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => {
+            n.container.layout.as_ref()
+        }
         PenNode::Rectangle(n) => n.container.layout.as_ref(),
         _ => None,
     }
@@ -96,7 +99,10 @@ pub(super) fn layout_justify_of(node: &PenNode) -> LayoutJustifyValue {
         PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => {
             n.container.justify_content.as_ref()
         }
-        PenNode::Group(n) => n.container.justify_content.as_ref(),
+        PenNode::Group(n)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => {
+            n.container.justify_content.as_ref()
+        }
         PenNode::Rectangle(n) => n.container.justify_content.as_ref(),
         _ => None,
     };
@@ -114,7 +120,10 @@ pub(super) fn layout_align_of(node: &PenNode) -> LayoutAlignValue {
         PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => {
             n.container.align_items.as_ref()
         }
-        PenNode::Group(n) => n.container.align_items.as_ref(),
+        PenNode::Group(n)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => {
+            n.container.align_items.as_ref()
+        }
         PenNode::Rectangle(n) => n.container.align_items.as_ref(),
         _ => None,
     };
@@ -133,7 +142,10 @@ pub(super) fn layout_gap_of(node: &PenNode) -> f32 {
         PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => {
             n.container.gap.as_ref()
         }
-        PenNode::Group(n) => n.container.gap.as_ref(),
+        PenNode::Group(n)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => {
+            n.container.gap.as_ref()
+        }
         PenNode::Rectangle(n) => n.container.gap.as_ref(),
         _ => None,
     };
@@ -148,7 +160,10 @@ pub(super) fn layout_padding_of(node: &PenNode) -> LayoutPaddingSummary {
         PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => {
             n.container.padding.as_ref()
         }
-        PenNode::Group(n) => n.container.padding.as_ref(),
+        PenNode::Group(n)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => {
+            n.container.padding.as_ref()
+        }
         PenNode::Rectangle(n) => n.container.padding.as_ref(),
         _ => None,
     };
@@ -183,7 +198,10 @@ pub(super) fn node_width_sizing(node: &PenNode) -> Option<&SizingBehavior> {
         PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => {
             n.container.width.as_ref()
         }
-        PenNode::Group(n) => n.container.width.as_ref(),
+        PenNode::Group(n)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => {
+            n.container.width.as_ref()
+        }
         PenNode::Rectangle(n) => n.container.width.as_ref(),
         PenNode::Ellipse(n) => n.width.as_ref(),
         PenNode::Polygon(n) => n.width.as_ref(),
@@ -212,7 +230,10 @@ pub(super) fn node_height_sizing(node: &PenNode) -> Option<&SizingBehavior> {
         PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => {
             n.container.height.as_ref()
         }
-        PenNode::Group(n) => n.container.height.as_ref(),
+        PenNode::Group(n)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => {
+            n.container.height.as_ref()
+        }
         PenNode::Rectangle(n) => n.container.height.as_ref(),
         PenNode::Ellipse(n) => n.height.as_ref(),
         PenNode::Polygon(n) => n.height.as_ref(),
@@ -245,7 +266,10 @@ pub(super) fn clip_content_of(node: &PenNode) -> bool {
         PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => {
             n.container.clip_content.unwrap_or(false)
         }
-        PenNode::Group(n) => n.container.clip_content.unwrap_or(false),
+        PenNode::Group(n)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => {
+            n.container.clip_content.unwrap_or(false)
+        }
         PenNode::Rectangle(n) => n.container.clip_content.unwrap_or(false),
         _ => false,
     }
@@ -254,7 +278,7 @@ pub(super) fn clip_content_of(node: &PenNode) -> bool {
 pub(super) fn can_clip_content(node: &PenNode) -> bool {
     matches!(
         node,
-        PenNode::Frame(_) | PenNode::Group(_) | PenNode::Rectangle(_)
+        PenNode::Frame(_) | PenNode::Group(_) | PenNode::Boolean(_) | PenNode::Rectangle(_)
     )
 }
 
@@ -302,7 +326,11 @@ pub(super) fn has_corner_radius(node: &PenNode) -> bool {
 pub(super) fn can_create_component(node: &PenNode) -> bool {
     matches!(
         node,
-        PenNode::Frame(_) | PenNode::Group(_) | PenNode::Rectangle(_) | PenNode::Ref(_)
+        PenNode::Frame(_)
+            | PenNode::Group(_)
+            | PenNode::Boolean(_)
+            | PenNode::Rectangle(_)
+            | PenNode::Ref(_)
     )
 }
 
@@ -315,7 +343,10 @@ pub(super) fn container_corner_radius(node: &PenNode) -> f32 {
         PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => {
             n.container.corner_radius.as_ref()
         }
-        PenNode::Group(n) => n.container.corner_radius.as_ref(),
+        PenNode::Group(n)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: n, .. }) => {
+            n.container.corner_radius.as_ref()
+        }
         PenNode::Rectangle(n) => n.container.corner_radius.as_ref(),
         PenNode::Image(n) => n.corner_radius.as_ref(),
         PenNode::Browser(n) => n.corner_radius.as_ref(),
@@ -338,7 +369,10 @@ pub(super) fn container_corner_radii(node: &PenNode) -> Option<[f32; 4]> {
         PenNode::Frame(node) | PenNode::Script(ScriptNode { frame: node, .. }) => {
             node.container.corner_radius.as_ref()
         }
-        PenNode::Group(node) => node.container.corner_radius.as_ref(),
+        PenNode::Group(node)
+        | PenNode::Boolean(jian_ops_schema::node::BooleanNode { group: node, .. }) => {
+            node.container.corner_radius.as_ref()
+        }
         PenNode::Rectangle(node) => node.container.corner_radius.as_ref(),
         PenNode::Image(node) => node.corner_radius.as_ref(),
         PenNode::Browser(node) => node.corner_radius.as_ref(),
