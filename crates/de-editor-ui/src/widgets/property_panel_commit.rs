@@ -62,6 +62,10 @@ pub fn property_focus_initial(focus: PropertyFocus, panel: &PropertyPanel) -> St
                 .map(format_panel_number)
                 .unwrap_or_else(|| "0".to_string())
         }
+        F::CornerSmoothing => {
+            let smoothing = panel.snapshot.corner_smoothing.unwrap_or(0.0);
+            ((smoothing * 100.0).round() as i32).to_string()
+        }
         F::TransitionDuration => panel
             .snapshot
             .interactions

@@ -119,4 +119,55 @@ impl NativeBackend {
     pub(crate) fn family_typeface_cache_len(&self) -> usize {
         self.font_resolver.cache_len()
     }
+
+    /// Report every backend cache into `report` (#456): decoded image
+    /// rasters, blur-up thumbnails, parsed and rasterized SVG paths, the
+    /// frame's shader textures and compiled shaders.
+    pub fn report_memory(&self, report: &mut de_editor_core::memory_report::MemoryReport) {
+        use de_editor_core::memory_report::CacheUsage;
+        report.push(CacheUsage::exact(
+            "image_rasters",
+            self.image_cache_bytes as u64,
+            self.image_cache.len() as u64,
+            Some(IMAGE_CACHE_BYTE_BUDGET as u64),
+        ));
+        let (thumbs, thumb_bytes, thumb_budget) = self.thumb_cache_usage();
+        report.push(CacheUsage::exact(
+            "image_thumbnails",
+            thumb_bytes as u64,
+            thumbs as u64,
+            Some(thumb_budget as u64),
+        ));
+        let (paths, path_bytes, path_budget) = self.svg_path_cache_usage();
+        report.push(CacheUsage::estimate(
+            "svg_paths",
+            path_bytes as u64,
+            paths as u64,
+            Some(path_budget as u64),
+        ));
+        let (svg_rasters, svg_raster_bytes) = self.svg_raster_cache_usage();
+        report.push(CacheUsage::exact(
+            "svg_rasters",
+            svg_raster_bytes as u64,
+            svg_rasters as u64,
+            None,
+        ));
+        let texture_bytes: usize = self
+            .frame_textures
+            .values()
+            .map(|texture| path::raster_bytes(&texture.image))
+            .sum();
+        report.push(CacheUsage::exact(
+            "shader_textures",
+            texture_bytes as u64,
+            self.frame_textures.len() as u64,
+            None,
+        ));
+        report.push(CacheUsage::estimate(
+            "compiled_shaders",
+            self.effect_sources.values().map(String::len).sum::<usize>() as u64,
+            self.shader_cache.compile_count() + self.effect_sources.len() as u64,
+            None,
+        ));
+    }
 }

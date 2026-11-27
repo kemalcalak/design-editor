@@ -12,6 +12,9 @@ path = "src/lib.rs"
 
 [dependencies]
 jian-ops-schema = { path = "../../vendor/jian/crates/jian-ops-schema" }
+# Shared geometry the import must match the editor on: star ranges and
+# corner rounding / smoothing (#389).
+de-editor-core = { path = "../de-editor-core" }
 # Binary `.fig` pipeline. flate2's default miniz_oxide backend + ruzstd are
 # pure-Rust (no C toolchain, wasm32-clean); base64 builds the image data URLs.
 flate2 = "1"
@@ -19,7 +22,6 @@ ruzstd = "0.9.1"
 base64 = "0.22"
 
 [dev-dependencies]
-de-editor-core = { path = "../de-editor-core" }
 de-editor-ui = { path = "../de-editor-ui" }
 de-host-services = { path = "../de-host-services" }
 de-pen-loader = { path = "../de-pen-loader" }

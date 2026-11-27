@@ -88,6 +88,7 @@ pub mod property_panel_component_props;
 mod property_panel_component_props_tests;
 pub mod property_panel_compositing;
 pub mod property_panel_corner;
+pub mod property_panel_corner_smoothing;
 pub mod property_panel_dispatch;
 mod property_panel_dispatch_interactions;
 mod property_panel_dispatch_paint;
@@ -256,6 +257,7 @@ pub mod canvas_text_layout_memo;
 pub(crate) mod canvas_text_wrap;
 pub mod canvas_viewport;
 mod canvas_viewport_background;
+mod canvas_viewport_corner_path;
 mod canvas_viewport_fill_layers;
 mod canvas_viewport_grid;
 // `pub` for the remote-image miss-queue API (`take_remote_image_requests`

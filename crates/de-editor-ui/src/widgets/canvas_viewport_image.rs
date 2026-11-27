@@ -1,6 +1,5 @@
 use super::canvas_viewport_stroke_paint::with_stroke_paint;
 use crate::layout_scene::{stable_image_source_id, SceneNode};
-use crate::widgets::canvas_viewport_overlay::scaled_non_uniform_corner_radii;
 use crate::widgets::PaintCx;
 use crate::Color;
 use crate::Rect;
@@ -105,6 +104,21 @@ static DATA_URL_CACHE: OnceLock<Mutex<DataUrlCache>> = OnceLock::new();
 
 fn data_url_cache() -> &'static Mutex<DataUrlCache> {
     DATA_URL_CACHE.get_or_init(|| Mutex::new(DataUrlCache::new()))
+}
+
+/// What the decoded data-URL byte cache holds (#456): the encoded image
+/// bytes image nodes and fills paint from.
+pub fn data_url_cache_usage() -> de_editor_core::memory_report::CacheUsage {
+    let (entries, bytes) = data_url_cache()
+        .lock()
+        .map(|cache| (cache.entries.len(), cache.bytes))
+        .unwrap_or((0, 0));
+    de_editor_core::memory_report::CacheUsage::exact(
+        "image_encoded_bytes",
+        bytes as u64,
+        entries as u64,
+        Some(DATA_URL_CACHE_BYTE_BUDGET as u64),
+    )
 }
 
 /// Most remote misses a single frame can queue before the rest wait
@@ -444,11 +458,16 @@ fn paint_image_node_with_stroke(
     // A raster that is merely too coarse still draws: sharpening must
     // refine the picture in place, never flash back to placeholder art.
     let decode_ready = sharp_enough || (bytes.is_some() && cx.backend.image_resident(id));
-    let r = node.corner_radius * zoom;
-    let use_round = r > 0.5;
-    let per_corner = scaled_non_uniform_corner_radii(node, zoom);
+    let (r, per_corner) = super::canvas_viewport_corner_path::box_fill_radii(node, zoom);
+    let use_round = r > 0.0;
     if !decode_ready && !show_placeholder {
         return;
+    }
+    // A smoothed outline (#389) clips the square image and placeholder.
+    let outline = super::canvas_viewport_corner_path::corner_outline(node);
+    if let Some(outline) = outline {
+        cx.backend.save();
+        super::canvas_viewport_corner_path::clip_to_outline(cx, node, outline, world_rect, zoom);
     }
     if !decode_ready {
         // Keep every placeholder layer inside the image node's authored
@@ -545,10 +564,17 @@ fn paint_image_node_with_stroke(
             cx.backend.restore();
         }
     }
+    if outline.is_some() {
+        cx.backend.restore();
+    }
     if let Some(stroke) = node.stroke.filter(|_| paint_stroke) {
         let width = stroke.width * zoom;
         with_stroke_paint(cx, node, world_rect, zoom, |cx, color| {
-            if let Some(radii) = per_corner {
+            if let Some(outline) = outline {
+                super::canvas_viewport_corner_path::stroke_outline(
+                    cx, outline, world_rect, zoom, color, width,
+                );
+            } else if let Some(radii) = per_corner {
                 cx.backend
                     .stroke_round_rect_per_corner(world_rect, radii, color, width);
             } else if use_round {

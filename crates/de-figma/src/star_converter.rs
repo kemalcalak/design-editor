@@ -6,29 +6,25 @@
 //! with `polygon_count` + `inner_radius`, which the editor paints with
 //! the same box-fitted geometry Figma uses.
 //!
-//! Stars the parametric node cannot reproduce keep the vector path:
-//! rounded corners (no rounded-star renderer yet) and masks (the vector
-//! converter owns Figma's path-mask semantics).
+//! A rounded star keeps its `cornerRadius` and `cornerSmoothing` (#389):
+//! the editor rounds every outer tip and inner valley the way Figma does,
+//! through the shared `de_editor_core::corner_geometry` (see "Corner
+//! smoothing, rounded vertices and drawing constraints" in
+//! `crates/CLAUDE.md` for why de-figma depends on de-editor-core).
+//!
+//! Masking stars keep the vector path: the vector converter owns Figma's
+//! path-mask semantics.
 
-use crate::common::{common_props, resolve_height, resolve_width, ConversionContext};
+use crate::common::{
+    common_props, map_corner_smoothing, resolve_height, resolve_width, ConversionContext,
+};
 use crate::kiwi::FigValue;
 use crate::mappers::{map_figma_effects, map_figma_fills, map_figma_stroke};
 use crate::mask::figma_mask_type;
 use crate::tree::TreeNode;
 use jian_ops_schema::node::{PenNode, PolygonNode};
 
-// de-figma does not depend on de-editor-core, so the stored range is
-// restated here; `the_star_range_matches_the_editor` keeps them equal to
-// `de_editor_core::star_shape`.
-const STAR_DEFAULT_INNER_RADIUS: f64 = 0.382;
-const STAR_MIN_INNER_RADIUS: f64 = 0.01;
-const STAR_MAX_INNER_RADIUS: f64 = 1.0;
-
-fn clamp_star_inner_radius(value: f64) -> Option<f64> {
-    value
-        .is_finite()
-        .then(|| value.clamp(STAR_MIN_INNER_RADIUS, STAR_MAX_INNER_RADIUS))
-}
+use de_editor_core::star_shape::{clamp_star_inner_radius, STAR_DEFAULT_INNER_RADIUS};
 
 /// True when `figma` is a star the parametric polygon reproduces.
 pub(crate) fn is_parametric_star(figma: &FigValue) -> bool {
@@ -36,7 +32,6 @@ pub(crate) fn is_parametric_star(figma: &FigValue) -> bool {
         && figma
             .get_f64("count")
             .is_some_and(|c| c.is_finite() && c >= 3.0)
-        && figma.get_f64("cornerRadius").unwrap_or(0.0) <= 0.0
         && figma_mask_type(figma).is_none()
 }
 
@@ -57,13 +52,19 @@ pub(crate) fn convert_star(
         .get_f64("starInnerScale")
         .and_then(clamp_star_inner_radius)
         .unwrap_or(STAR_DEFAULT_INNER_RADIUS);
+    let corner_radius = figma
+        .get_f64("cornerRadius")
+        .filter(|r| r.is_finite() && *r > 0.0);
+    let corner_smoothing = corner_radius
+        .map(|_| map_corner_smoothing(figma))
+        .filter(|s| *s > 0.0);
     PenNode::Polygon(PolygonNode {
-        corner_smoothing: None,
+        corner_smoothing,
         base: common_props(figma, id),
         polygon_count: points,
         width: Some(resolve_width(figma, parent_stack_mode, ctx)),
         height: Some(resolve_height(figma, parent_stack_mode, ctx)),
-        corner_radius: None,
+        corner_radius,
         inner_radius: Some(inner_radius),
         fill: map_figma_fills(figma.get_array("fillPaints")),
         stroke: map_figma_stroke(figma),
@@ -166,20 +167,34 @@ mod tests {
     }
 
     #[test]
-    fn rounded_masking_or_countless_stars_stay_vector() {
-        assert!(is_parametric_star(&star(vec![]).figma));
-        let rounded = star(vec![("cornerRadius", FigValue::Float(4.0))]);
-        assert!(!is_parametric_star(&rounded.figma));
-        let masking = star(vec![("mask", FigValue::Bool(true))]);
-        assert!(!is_parametric_star(&masking.figma));
-        assert!(!is_parametric_star(&without(star(vec![]), "count").figma));
+    fn a_rounded_figma_star_stays_a_rounded_star() {
+        let tree = star(vec![
+            ("cornerRadius", FigValue::Float(4.0)),
+            ("cornerSmoothing", FigValue::Float(0.5)),
+        ]);
+        assert!(is_parametric_star(&tree.figma));
+        let mut ctx = ctx();
+        let node = crate::converters::convert_node(&tree, None, &mut ctx).expect("star converts");
+        let PenNode::Polygon(polygon) = node else {
+            panic!("expected a rounded star polygon, got {node:?}");
+        };
+        assert_eq!(polygon.corner_radius, Some(4.0));
+        assert_eq!(polygon.corner_smoothing, Some(0.5));
+        assert_eq!(polygon.inner_radius, Some(0.5));
+        // Smoothing without a radius rounds nothing, so it is not written.
+        let flat = star(vec![("cornerSmoothing", FigValue::Float(0.6))]);
+        let PenNode::Polygon(polygon) = convert_star(&flat, None, &mut ctx) else {
+            panic!("expected a polygon");
+        };
+        assert_eq!(polygon.corner_radius, None);
+        assert_eq!(polygon.corner_smoothing, None);
     }
 
     #[test]
-    fn the_star_range_matches_the_editor() {
-        use de_editor_core::star_shape as core;
-        assert_eq!(STAR_DEFAULT_INNER_RADIUS, core::STAR_DEFAULT_INNER_RADIUS);
-        assert_eq!(STAR_MIN_INNER_RADIUS, core::STAR_MIN_INNER_RADIUS);
-        assert_eq!(STAR_MAX_INNER_RADIUS, core::STAR_MAX_INNER_RADIUS);
+    fn masking_or_countless_stars_stay_vector() {
+        assert!(is_parametric_star(&star(vec![]).figma));
+        let masking = star(vec![("mask", FigValue::Bool(true))]);
+        assert!(!is_parametric_star(&masking.figma));
+        assert!(!is_parametric_star(&without(star(vec![]), "count").figma));
     }
 }

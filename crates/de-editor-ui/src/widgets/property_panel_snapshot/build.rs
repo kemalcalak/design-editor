@@ -91,6 +91,7 @@ impl NodeSnapshot {
             corner_radius: 0.0,
             corner_radii: [0.0; 4],
             supports_per_corner: false,
+            corner_smoothing: None,
             polygon_sides: None,
             star_inner_percent: None,
             ellipse_arc: None,
@@ -177,6 +178,7 @@ impl NodeSnapshot {
             corner_radius: 0.0,
             corner_radii: [0.0; 4],
             supports_per_corner: false,
+            corner_smoothing: None,
             polygon_sides: None,
             star_inner_percent: None,
             ellipse_arc: None,
@@ -306,6 +308,10 @@ impl NodeSnapshot {
             corner_radius,
             corner_radii,
             supports_per_corner: container_corner_radii(node).is_some(),
+            // Only a rounded corner has anything to smooth.
+            corner_smoothing: (has_corner_radius(node) && corner_radii.iter().any(|r| *r > 0.0))
+                .then(|| de_editor_core::command_node_attrs::corners::node_corner_smoothing(node))
+                .flatten(),
             polygon_sides: polygon_sides_of(node),
             star_inner_percent: star_inner_percent_of(node),
             ellipse_arc: ellipse_arc_of(node),

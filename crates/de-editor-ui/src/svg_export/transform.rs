@@ -7,6 +7,8 @@ pub(super) struct AncestorClip {
     id: String,
     bounds: Rect,
     corner_radius: f32,
+    /// The clip's smoothed outline (#389), placed.
+    outline: Option<super::outline::PathD>,
     xform: glam::Affine2,
 }
 
@@ -37,6 +39,7 @@ fn find_node_inner<'a>(
                 id: format!("ancestor-clip-{}", svg_id(&node.id)),
                 bounds: normalize_rect(node.bounds),
                 corner_radius: node.corner_radius.max(0.0),
+                outline: super::outline::node_outline(node),
                 xform: child_xform,
             });
         }
@@ -76,6 +79,15 @@ pub(super) fn emit_affine_group_start(out: &mut String, xform: glam::Affine2) {
 
 pub(super) fn emit_ancestor_clip_defs(out: &mut String, clips: &[AncestorClip]) {
     for clip in clips {
+        if let Some(d) = &clip.outline {
+            let _ = write!(
+                out,
+                r#"<clipPath id="{}" clipPathUnits="userSpaceOnUse"><path d="{d}" transform="{}"/></clipPath>"#,
+                clip.id,
+                matrix_value(clip.xform),
+            );
+            continue;
+        }
         let r = clip.bounds;
         let _ = write!(
             out,

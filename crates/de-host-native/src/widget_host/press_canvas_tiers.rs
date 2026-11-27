@@ -100,6 +100,7 @@ impl WidgetHostNative {
             self.create_drag = Some(CreateDragState {
                 start_doc_x: doc_point.x,
                 start_doc_y: doc_point.y,
+                cursor_doc: None,
             });
             self.mark_dirty();
             return Some(true);

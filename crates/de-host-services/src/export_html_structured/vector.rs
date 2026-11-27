@@ -137,6 +137,12 @@ pub fn emit_polygon(out: &mut String, n: &SceneNode, origin: Point2D) {
     }
     let stroke_pad = n.stroke.map_or(0.0, |s| s.width * 0.5);
     open_svg(out, padded_box(rect, stroke_pad), origin);
+    if let Some(d) = placed_outline(n) {
+        // Rounded corners (#389): the precomputed outline.
+        let _ = write!(out, r#"<path d="{d}"{}/>"#, paint_attrs(n));
+        out.push_str("</svg>");
+        return;
+    }
     let mut points = String::new();
     for (i, p) in polygon_node_points(n, rect).iter().enumerate() {
         if i > 0 {
@@ -156,6 +162,28 @@ pub fn emit_path(out: &mut String, n: &SceneNode, origin: Point2D) {
     }
     let rect = normalize(n.bounds);
     let stroke_pad = n.stroke.map_or(0.0, |s| s.width * 0.5);
+    if let Some(d) = placed_outline(n) {
+        // Rounded vertices (#389): the precomputed outline.
+        open_svg(out, padded_box(rect, stroke_pad), origin);
+        let filled = n.svg_path.is_some() || n.path_closed;
+        let attrs = if n.stroke.is_none() && !(filled && n.fill.is_some()) {
+            format!(
+                r#" fill="none" stroke="{}" stroke-width="1.5""#,
+                css::color(n.fill.unwrap_or(Color::BLACK))
+            )
+        } else {
+            // An open pen path paints no fill on the canvas.
+            paint_attrs_with_fill(n, filled)
+        };
+        let rule = if n.even_odd_fill {
+            r#" fill-rule="evenodd""#
+        } else {
+            ""
+        };
+        let _ = write!(out, r#"<path d="{d}"{rule}{attrs}/>"#);
+        out.push_str("</svg>");
+        return;
+    }
     let (d, transform) = match &n.svg_path {
         Some(authored) => (authored.clone(), fit_transform(authored, rect)),
         None => {
@@ -269,8 +297,13 @@ fn points_bounds(points: &[Point2D]) -> Rect {
 /// left off: SVG's initial `fill` is opaque black, so omitting the
 /// attribute would flood an unfilled shape solid.
 fn paint_attrs(n: &SceneNode) -> String {
+    paint_attrs_with_fill(n, true)
+}
+
+/// [`paint_attrs`], with the fill left out (`fill="none"`) unless `filled`.
+fn paint_attrs_with_fill(n: &SceneNode, filled: bool) -> String {
     let mut attrs = String::new();
-    match n.fill {
+    match n.fill.filter(|_| filled) {
         Some(fill) => {
             let _ = write!(attrs, r#" fill="{}""#, css::color(fill));
         }
@@ -332,6 +365,20 @@ fn fit_transform(d: &str, rect: Rect) -> String {
     )
 }
 
+/// The node's corner outline (#389) moved into absolute doc coordinates
+/// (the inline SVG's viewBox space), escaped; `None` without one.
+fn placed_outline(n: &SceneNode) -> Option<String> {
+    let outline = n.corner_path.as_deref()?;
+    let origin = normalize(n.bounds).origin;
+    Some(escape_xml(
+        &de_editor_core::corner_geometry::translate_path_data(
+            &outline.d,
+            f64::from(origin.x),
+            f64::from(origin.y),
+        ),
+    ))
+}
+
 fn normalize(r: Rect) -> Rect {
     de_editor_ui::scene_bounds::normalize_rect(r)
 }
@@ -366,7 +413,18 @@ fn emit_stroke_geometry(out: &mut String, n: &SceneNode, origin: Point2D) -> boo
         css::num(tx),
         css::num(ty)
     );
-    if let (Some(fill), Some(d)) = (n.fill, n.svg_path.as_deref()) {
+    if let (Some(fill), Some(outline)) = (n.fill, n.corner_path.as_deref()) {
+        // Rounded vertices (#389): the fill follows the rounded outline,
+        // which is node-local like the geometry.
+        if n.svg_path.is_some() {
+            let _ = write!(
+                out,
+                r#"<path d="{}"{place} fill="{}"/>"#,
+                de_util::xml_escape::escape_xml(&outline.d),
+                css::color(fill)
+            );
+        }
+    } else if let (Some(fill), Some(d)) = (n.fill, n.svg_path.as_deref()) {
         // An imported open path's fill under its stroke, as the canvas
         // paints it (a pen path's open outline paints no fill).
         let rule = if n.even_odd_fill {

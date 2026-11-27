@@ -19,9 +19,11 @@ fn a_timed_out_snapshot_request_is_not_copied_by_the_ui() {
     };
     assert!(abandoned.load(Ordering::Acquire), "the timeout marks it");
     let mut state = EditorState::new();
-    assert!(snapshot_unless_abandoned(&abandoned, &mut state, None).is_none());
+    let mut anchor = snapshot_anchor::SnapshotAnchor::default();
+    let all = de_editor_core::request_snapshot_pages::SnapshotPages::All;
+    assert!(anchor.capture(&abandoned, &mut state, &all).is_none());
     let live = AtomicBool::new(false);
-    assert!(snapshot_unless_abandoned(&live, &mut state, None).is_some());
+    assert!(anchor.capture(&live, &mut state, &all).is_some());
 }
 
 #[test]
@@ -39,6 +41,7 @@ fn a_write_whose_connection_gave_up_still_lands() {
         .send(UiRequest::Snapshot {
             ack: snapshot_tx,
             abandoned: Arc::new(AtomicBool::new(true)),
+            pages: Default::default(),
         })
         .expect("queue snapshot");
     let (apply_tx, apply_rx) = mpsc::sync_channel(1);

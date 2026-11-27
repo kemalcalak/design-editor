@@ -84,7 +84,10 @@ pub(super) fn paint_interaction_ring(
         origin: Point2D::new(rect.origin.x - outset, rect.origin.y - outset),
         size: Point2D::new(rect.size.x + outset * 2.0, rect.size.y + outset * 2.0),
     };
-    let radius = (node.corner_radius * input.viewport.zoom).max(0.0) + outset;
+    let radius = (super::canvas_viewport_corner_path::box_corner_radius(node)
+        * input.viewport.zoom)
+        .max(0.0)
+        + outset;
     cx.backend
         .stroke_round_rect(ring, radius, input.theme.primary, INTERACTION_RING_W);
 }

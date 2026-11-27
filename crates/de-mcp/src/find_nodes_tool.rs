@@ -13,6 +13,7 @@ use de_editor_core::find_layers::{
     document_pages, find_layers_on, is_known_kind, node_text_content, normalize_hex, FindQuery,
     MAX_FIND_RESULTS,
 };
+use de_editor_core::shared_state::SharedState;
 use de_editor_core::walkers::find_node;
 use de_editor_core::EditorState;
 use serde_json::json;
@@ -23,26 +24,32 @@ use super::{McpTool, ToolErrorCode, ToolOutcome};
 const DEFAULT_LIMIT: usize = 100;
 
 pub struct FindNodes {
-    /// The document and component registry, detached from the live state.
-    state: EditorState,
+    /// The request's state, shared (#456): the document, component registry
+    /// and active page the search reads.
+    state: SharedState,
     page_ids: Vec<String>,
 }
 
 pub fn find_nodes_snapshot(state: &EditorState) -> FindNodes {
+    // Only the document, the registry and the active page are read: copy
+    // those, not the session state around them.
     let mut detached = EditorState::new();
     detached.doc = state.doc.clone();
     detached.components = state.components.clone();
     detached.ui.active_page_index = state.ui.active_page_index;
+    find_nodes_shared(SharedState::new(detached))
+}
+
+/// [`find_nodes_snapshot`] over a state the caller already shares: no
+/// copy (#456).
+pub fn find_nodes_shared(state: SharedState) -> FindNodes {
     let page_ids = state
         .doc
         .pages
         .as_ref()
         .map(|pages| pages.iter().map(|page| page.id.clone()).collect())
         .unwrap_or_default();
-    FindNodes {
-        state: detached,
-        page_ids,
-    }
+    FindNodes { state, page_ids }
 }
 
 type ToolError = (ToolErrorCode, String);

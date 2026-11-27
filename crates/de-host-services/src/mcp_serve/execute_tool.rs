@@ -10,7 +10,7 @@ use std::sync::Arc;
 
 use de_editor_core::EditorState;
 use de_mcp::script_execute::{
-    execute_snapshot_with_renderer, Execute, ExportFormat, ExportRequest, ExportWritten,
+    execute_shared_with_renderer, Execute, ExportFormat, ExportRequest, ExportWritten,
     ScriptRenderError, ScriptRenderer,
 };
 use de_mcp::ImageContent;
@@ -20,9 +20,18 @@ use crate::export::{render_node_raster_bytes, RasterFormat};
 use crate::export_pdf::render_nodes_pdf_bytes;
 
 /// The host renderer handed to every `execute` snapshot.
-pub(crate) struct HostScriptRenderer;
+pub(crate) struct HostScriptRenderer {
+    /// The call runs on a narrowed live snapshot (#456): a script that
+    /// writes is refused and run again on the whole document, so it renders
+    /// and exports nothing here.
+    narrowed_read: bool,
+}
 
 impl ScriptRenderer for HostScriptRenderer {
+    fn only_for_read_only_scripts(&self) -> bool {
+        self.narrowed_read
+    }
+
     fn screenshot(
         &self,
         state: &EditorState,
@@ -131,8 +140,23 @@ fn write(path: &Path, bytes: &[u8]) -> Result<String, ScriptRenderError> {
     ))
 }
 
+#[cfg(test)]
 pub(crate) fn execute_snapshot(state: &EditorState) -> Execute {
-    execute_snapshot_with_renderer(state, Arc::new(HostScriptRenderer))
+    de_mcp::script_execute::execute_snapshot_with_renderer(
+        state,
+        Arc::new(HostScriptRenderer {
+            narrowed_read: false,
+        }),
+    )
+}
+
+/// [`execute_snapshot`] over the request's shared state (#456);
+/// `narrowed_read` for a call answered from a narrowed live snapshot.
+pub(crate) fn execute_shared(
+    state: de_editor_core::shared_state::SharedState,
+    narrowed_read: bool,
+) -> Execute {
+    execute_shared_with_renderer(state, Arc::new(HostScriptRenderer { narrowed_read }))
 }
 
 #[cfg(test)]
@@ -224,6 +248,74 @@ Export([f], "png", {dir:?}, {{scale: 1}});"##,
         assert_eq!(paths.len(), 1, "{json}");
         let path = std::path::Path::new(paths[0].as_str().expect("path"));
         assert!(path.exists(), "{json}");
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    fn execute_line(script: &str) -> String {
+        serde_json::json!({
+            "jsonrpc": "2.0",
+            "id": 1,
+            "method": "tools/call",
+            "params": {"name": "execute", "arguments": {"script": script}},
+        })
+        .to_string()
+    }
+
+    /// A live host answers a read from a narrowed snapshot and runs a
+    /// script that writes there again on the whole document (#456), so the
+    /// narrowed run must leave the export to that run; a read-only script
+    /// still exports from the narrowed run.
+    #[test]
+    fn a_narrowed_run_exports_only_when_its_script_writes_nothing() {
+        let dir = std::env::temp_dir().join(format!("de-execute-narrowed-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        let doc: jian_ops_schema::PenDocument = serde_json::from_str(
+            r##"{"version":"1.0","children":[
+              {"type":"frame","id":"box","x":0,"y":0,"width":20,"height":20,
+               "fill":[{"type":"solid","color":"#00FF00"}]}]}"##,
+        )
+        .expect("document");
+        let mut state = de_editor_core::EditorState::from_document(doc);
+        let dir_arg = format!("{:?}", dir.display().to_string());
+
+        // Writes through a name the source check does not see.
+        let writing = execute_line(&format!(
+            r#"globalThis["Ins" + "ert"](document, {{type: "rectangle", width: 4, height: 4}});
+Export(["box"], "png", {dir_arg}, {{scale: 1}});
+TakeScreenshot(["box"]);"#
+        ));
+        let mut wrote = false;
+        let reply = crate::mcp_serve::process_narrowed_read(&mut state, &writing, |_, _, _| {
+            wrote = true;
+            false
+        })
+        .expect("dispatch")
+        .expect("reply");
+        assert!(wrote, "the narrowed run reached the write");
+        assert!(!dir.exists(), "no file from the refused run: {reply}");
+        assert!(!reply.contains("image/png"), "no screenshot either");
+
+        // The whole-document run that follows does export.
+        let reply = crate::mcp_serve::process_message_with_write_applier(
+            &mut state,
+            &writing,
+            |_, local, write| local.apply(write.command.clone()),
+        )
+        .expect("dispatch")
+        .expect("reply");
+        assert!(dir.join("box.png").exists(), "{reply}");
+        let _ = std::fs::remove_dir_all(&dir);
+
+        // A read-only script exports from the narrowed run itself.
+        let reading = execute_line(&format!(
+            r#"Export(["box"], "png", {dir_arg}, {{scale: 1}});"#
+        ));
+        let reply = crate::mcp_serve::process_narrowed_read(&mut state, &reading, |_, _, _| {
+            panic!("a read-only script writes nothing")
+        })
+        .expect("dispatch")
+        .expect("reply");
+        assert!(dir.join("box.png").exists(), "{reply}");
         let _ = std::fs::remove_dir_all(&dir);
     }
 }
