@@ -131,3 +131,18 @@ fn draw_kinds_follow_the_tool() {
     }
     assert_eq!(DrawKind::for_tool(Tool::Text), DrawKind::Free);
 }
+
+#[test]
+fn a_snapped_shift_diagonal_keeps_equal_legs() {
+    // 3.5 / 3.4999 legs round a pixel apart; Shift keeps them equal.
+    assert_eq!(
+        snap_line(10.0, 10.0, 3.5, -3.4999, true),
+        (10.0, 10.0, 4.0, -4.0)
+    );
+    assert_eq!(
+        snap_line(10.0, 10.0, 3.5, -3.4999, false),
+        (10.0, 10.0, 4.0, -3.0)
+    );
+    // A flat Shift line stays flat.
+    assert_eq!(snap_line(10.2, 9.8, 6.6, 0.0, true), (10.0, 10.0, 7.0, 0.0));
+}

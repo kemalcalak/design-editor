@@ -116,3 +116,28 @@ fn a_modifier_change_without_a_drag_needs_no_repaint() {
     assert!(!host.set_modifier_shift(true));
     assert!(!host.set_modifier_shift(true));
 }
+
+#[test]
+fn shift_with_pixel_snapping_stays_square_and_on_45_degrees() {
+    // The start snaps before the constraint, so a fractional press point
+    // cannot round the two sides (or legs) a pixel apart.
+    for tool in [Tool::Rect, Tool::Line] {
+        let mut host = WidgetHostNative::new();
+        host.editor_state_mut().viewport.zoom = de_editor_core::pixel_grid::PIXEL_GRID_ZOOM;
+        assert!(host.editor_state().pixel_snap_active());
+        host.set_modifier_shift(true);
+        let id = begin(&mut host, tool, Point2D::new(100.4, 100.6));
+        if tool == Tool::Line {
+            host.apply_create_drag(Point2D::new(130.6, 130.0));
+            let (x, y, dx, dy) = line(&host, &id);
+            assert_eq!((x, y), (100.0, 101.0));
+            assert!(dx > 0.0 && dx == dy, "{dx} {dy}");
+        } else {
+            host.apply_create_drag(Point2D::new(130.7, 112.2));
+            host.refresh_layout_scene();
+            let (x, y, w, h) = scene_box(&mut host, &id);
+            assert_eq!((x, y), (100.0, 101.0));
+            assert_eq!(w, h, "{w} {h}");
+        }
+    }
+}

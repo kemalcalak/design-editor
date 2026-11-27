@@ -103,6 +103,21 @@ pub fn drawn_shape(
     }
 }
 
+/// A drawn line on whole document pixels. The caller snaps the drag's
+/// start before `drawn_shape`; this rounds the end and, under Shift,
+/// keeps a diagonal exactly 45° (sin and cos of a quarter turn differ in
+/// the last bit, so rounding alone could leave the two legs a pixel apart).
+pub fn snap_line(x: f64, y: f64, dx: f64, dy: f64, shift: bool) -> (f64, f64, f64, f64) {
+    let (x0, y0) = (x.round(), y.round());
+    let (mut dx, mut dy) = ((x + dx).round() - x0, (y + dy).round() - y0);
+    if shift && dx != 0.0 && dy != 0.0 {
+        let leg = dx.abs().max(dy.abs());
+        dx = leg.copysign(dx);
+        dy = leg.copysign(dy);
+    }
+    (x0, y0, dx, dy)
+}
+
 #[cfg(test)]
 #[path = "draw_constraints_tests.rs"]
 mod tests;

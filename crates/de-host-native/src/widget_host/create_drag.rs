@@ -4,7 +4,9 @@
 
 use super::input::rect_to_doc_rect;
 use super::WidgetHostNative;
-use de_editor_core::draw_constraints::{drawn_shape, DrawKind, DrawModifiers, DrawnShape};
+use de_editor_core::draw_constraints::{
+    drawn_shape, snap_line, DrawKind, DrawModifiers, DrawnShape,
+};
 use de_editor_core::Tool;
 use de_editor_ui::{Point2D, Rect};
 
@@ -16,7 +18,13 @@ impl WidgetHostNative {
             return;
         };
         drag.cursor_doc = Some(cursor);
-        let start = (f64::from(drag.start_doc_x), f64::from(drag.start_doc_y));
+        let snap = self.editor_state.pixel_snap_active();
+        let mut start = (f64::from(drag.start_doc_x), f64::from(drag.start_doc_y));
+        if snap {
+            // Snap the start first, so the constrained shape built from it
+            // stays square / on 45° once its far edges round too.
+            start = (start.0.round(), start.1.round());
+        }
         let tool = self.editor_state.tool;
         if tool.keeps_default_size() {
             // A note keeps the size it was dropped at.
@@ -32,7 +40,6 @@ impl WidgetHostNative {
             (f64::from(cursor.x), f64::from(cursor.y)),
             mods,
         );
-        let snap = self.editor_state.pixel_snap_active();
         // A reversed line's scene data is built from its direction, which
         // a bounds patch does not carry, so it rebuilds. The patch check
         // reads the line as it was, so the new end decides here.
@@ -41,8 +48,7 @@ impl WidgetHostNative {
         match shape {
             DrawnShape::Line { x, y, dx, dy } => {
                 let (x, y, dx, dy) = if snap {
-                    let (x0, y0) = (x.round(), y.round());
-                    (x0, y0, (x + dx).round() - x0, (y + dy).round() - y0)
+                    snap_line(x, y, dx, dy, mods.shift)
                 } else {
                     (x, y, dx, dy)
                 };
