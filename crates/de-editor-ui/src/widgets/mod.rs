@@ -156,6 +156,9 @@ pub(crate) mod property_panel_segments;
 pub mod property_panel_shader_body;
 pub mod property_panel_snapshot;
 pub mod property_panel_stroke;
+pub mod property_panel_stroke_ends;
+#[cfg(test)]
+mod property_panel_stroke_ends_tests;
 pub(crate) mod property_panel_stroke_style;
 #[cfg(test)]
 mod property_panel_stroke_style_tests;
@@ -262,7 +265,7 @@ pub mod canvas_viewport_overlay;
 pub mod canvas_viewport_paint;
 #[cfg(test)]
 mod canvas_viewport_paint_pop_tests;
-mod canvas_viewport_stroke_paint;
+pub(crate) mod canvas_viewport_stroke_paint;
 mod canvas_viewport_text;
 mod canvas_viewport_text_fill;
 mod canvas_viewport_text_stroke;

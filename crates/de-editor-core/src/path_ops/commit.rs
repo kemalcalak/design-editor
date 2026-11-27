@@ -201,6 +201,8 @@ fn group_offset(children: &[PenNode], id: &NodeId) -> (f64, f64) {
 
 fn new_path_node(id: &NodeId, name: String, style: PathStyle, even_odd: bool) -> PenNode {
     PenNode::Path(PathNode {
+        vertex_radius: None,
+        corner_smoothing: None,
         base: PenNodeBase {
             id: id.as_str().to_string(),
             name: Some(name),

@@ -103,6 +103,9 @@ pub enum PropertyFocus {
     StrokeRightWidth,
     StrokeBottomWidth,
     StrokeLeftWidth,
+    /// The Stroke section's miter limit (#389), shown while the join is
+    /// Miter; committed clamped to `1..=100` as one undo step.
+    StrokeMiterLimit,
     /// Widget-section text fields (placeholder / value / label) on a
     /// widget-kind node (TextInput / Select / Checkbox / …). The host
     /// commit path writes the raw draft string onto the matching prop.
@@ -259,6 +262,7 @@ impl PropertyFocus {
                 | PropertyFocus::StrokeRightWidth
                 | PropertyFocus::StrokeBottomWidth
                 | PropertyFocus::StrokeLeftWidth
+                | PropertyFocus::StrokeMiterLimit
                 | PropertyFocus::GradientAngle
                 | PropertyFocus::GradientStopOffset(_)
                 | PropertyFocus::EllipseStart

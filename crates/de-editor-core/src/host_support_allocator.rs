@@ -269,6 +269,8 @@ impl EditorState {
         let id = allocator.allocate(&mut taken)?;
         let icon_id = format!("{}:{icon_name}", family.trim());
         let node = PenNode::Path(PathNode {
+            vertex_radius: None,
+            corner_smoothing: None,
             base: PenNodeBase {
                 id: id.as_str().to_string(),
                 name: Some(icon_id.clone()),

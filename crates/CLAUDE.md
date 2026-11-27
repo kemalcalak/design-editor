@@ -618,6 +618,74 @@ One modal, two modes. State and every transition live in `de-editor-core/src/com
   (`property_panel_path_ops.rs`); the layer menu adds Flatten and Outline
   stroke; the layer row shows a boolean group's op icon.
 
+## Stroke ends and miter limit (#389)
+
+- **Schema** (kemalcalak/jian#30): `PenStroke.strokeStart` / `strokeEnd`
+  (`StrokeEndCap`: none · round · square · line_arrow · triangle_arrow ·
+  reversed_triangle · circle · diamond; an unset end uses `cap`, an absent
+  cap on an open stroke is round) and `miterLimit` (absent = 4). They ride
+  through `StrokePayload` onto jian's render `StrokeStyle` (`start` / `end`
+  / `miter_limit`, `fills::StrokeShape::apply`); backends apply only the
+  miter limit (`backend/skia/stroke_style.rs`). `StrokeStyle` stays small
+  and `Copy` (a size test guards it): a `widthProfile` (boxed on the
+  schema stroke) is baked into geometry by the scene builder, never carried
+  on the render style; `StrokeWidthProfile::stops()` is the one place its
+  limits apply (width clamp 16, 32-stop resample). A path's vertex radius
+  is `vertexRadius`, not `cornerRadius`: older files carry a path
+  `cornerRadius` whose outline is already rounded, and it stays ignored.
+- **Lines keep their direction.** The scene keeps a line's box normalised
+  and `SceneNode::line_direction` (`SceneLineDirection`, from the signs of
+  `x2` / `y2`) beside it; `SceneNode::line_endpoints()` is the start and
+  end every consumer draws (canvas, SVG / HTML `<line>`, PPTX `flipH` /
+  `flipV`, path-ops outline, hit-test), so an up-right line is not its
+  box's top-left → bottom-right diagonal and `strokeStart` stays on the
+  start.
+- **Geometry** is built once per scene, never per frame:
+  `de_editor_core::stroke_geometry::stroke_end_geometry` turns a line's
+  segment or an open path's subpaths into SVG strings in node-local doc px
+  — the centre line trimmed under filled heads, the filled end shapes, the
+  line-arrow arms (`head_length(w) = 4 + 3w`, tip on the end point) — plus
+  a disc per marker for hit-testing (`SceneStrokeGeometry::head_hits`), and
+  the scene builder stores them on `SceneNode::stroke_geometry`
+  (`de-pen-loader/src/layout_scene/stroke_geometry.rs`; a `d` path is
+  fitted to its box like `fit_path_to_rect`). `CentreLine::Solid` strokes
+  the centre line with butt caps and draws every open end as a fill shape
+  (the inner ends of a multi-subpath stroke get the authored cap);
+  `CentreLine::Dashed` keeps the authored cap on every dash (dots are
+  zero-length dashes only a round cap draws, so a dotted line never goes
+  invisible) and shortens the head ends by half a width so no dash cap
+  pokes past them. Every filled shape winds the same way and fills
+  nonzero, so overlapping heads never cancel. `StrokeEnds::from_parts` is
+  `None` when no end is set or both equal the authored cap (the backends
+  draw it). Closed shapes have no ends. A live bounds patch never touches
+  a node with stroke ends or a reversed line (`canvas_scene_patch`): their
+  scene data is built from the box, so they rebuild.
+- **Paint / exports**: the canvas draws the geometry instead of the plain
+  stroke (`canvas_viewport_stroke_paint::paint_stroke_geometry`: centre line
+  in `centre_line_style`, `fill_svg_path_with_fill_rule` heads (nonzero),
+  mitred undashed arms; rich stroke paints mask it like any stroke), so PNG
+  / PDF match. SVG and the structured HTML export write the same three
+  paths (`svg_export::write_stroke_geometry`), as paths rather than
+  `<marker>`s because Figma's SVG import drops markers; SVG writes
+  `stroke-miterlimit` and SVG import reads it; the HTML export's inline
+  polygons and paths write `stroke-linejoin` / `stroke-miterlimit`. PPTX
+  writes the line's `cap`, join / `<a:miter lim>` and `<a:headEnd>` /
+  `<a:tailEnd>` (`export_pptx/line_style.rs`, `xml::line_element_open`;
+  closed shapes go through `line_element`, which drops the ends); a
+  reversed triangle or different caps on the two ends rasters the line
+  (`unexpressible`). Hit-testing (jian `layout_scene_hit.rs`) adds the head
+  discs to the line / path segment test.
+- **Panel**: Start / End rows (dropdowns on the shared Interactions popover,
+  `InteractionMenuTarget::StrokeEnd`, plus a swap button) on lines and open
+  paths, and a Miter field while the join is miter
+  (`property_panel_stroke_ends.rs`, `PropertyFocus::StrokeMiterLimit`). The
+  snapshot's open-path check keeps the answer for the last `d` it parsed.
+  The labels' fit is checked on the native backend's real metrics in all
+  15 locales (`cut_end_labels`, `widget_host/stroke_ends_width_tests.rs`).
+  MCP: `set_node_stroke_style` takes `stroke_start`, `stroke_end`
+  (`"auto"` / null unsets an end, so it falls back to `cap`),
+  `miter_limit`.
+
 ## Canonical `.de` loader (v0.8.0+)
 
 The document extension is `.de`; `.op` and the old `.pen` alias no longer open. pen.dev `.pen` files are an import only: they open as an untitled document and are never written back.
