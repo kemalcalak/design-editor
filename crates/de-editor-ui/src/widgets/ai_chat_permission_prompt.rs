@@ -144,8 +144,7 @@ pub(crate) fn paint_permission_prompt(
 
     cx.backend
         .fill_round_rect(layout.allow, RADIUS, theme.accent);
-    let allow_x =
-        text_metrics::centered_text_x(cx.backend, view.allow, BUTTON_FONT, layout.allow);
+    let allow_x = text_metrics::centered_text_x(cx.backend, view.allow, BUTTON_FONT, layout.allow);
     label(
         cx,
         view.allow,

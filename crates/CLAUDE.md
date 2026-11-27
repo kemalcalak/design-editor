@@ -1224,14 +1224,27 @@ CLI side (`crates/de-cli/src/agent_*.rs`, dispatched in `main` before the generi
 - Permission prompts: Settings ▸ System ▸ "Ask before destructive agent
   actions" (`AgentSettings::confirm_destructive_agent_actions`, off by
   default, persisted as `confirm_destructive_agent_actions`). With it on,
-  `execute_tool_requests` asks `EditorState::gate_agent_tool` before running a
-  call (`de-editor-core/src/agent_permission.rs`: `destructive_action` flags
+  every agent tool call is gated by `EditorState::gate_agent_tool_with`
+  (`de-editor-core/src/agent_permission.rs`: `destructive_action` flags
   delete_node / delete_page / remove_page / delete_component /
-  delete_variable / replace_node, `batch_design` operations with `D(...)`,
-  and the file-writing save / export / codegen tools). A flagged call gets a
-  `PermissionPrompt` on its run tab and is deferred
-  (`ChatSession::defer_tool_request`; the agent's worker blocks on the ack)
-  until the user answers in the band above the input
-  (`ai_chat_permission_prompt.rs`, the MCP notice's slot; Allow / Deny sized
-  through `LabelWidths`); Allow runs it, Deny answers `DECLINED_RESULT`. Stop,
-  New chat and a new send drop a waiting prompt.
+  delete_variable / replace_node, `batch_design` operations with `D(...)` or
+  `R(...)` (a `script` is run to its operations first,
+  `de_host_services::agent_permission_classify`; one that does not expand
+  asks as `ScriptedBatch`; `nodes_json` only inserts), and the file-writing
+  save / export / codegen tools): the chat and design-agent loops and their
+  sub-agents in the desktop's `execute_tool_requests`, and agents on the
+  live MCP server (CLI / ACP) in `mcp_live/permission.rs`, where the
+  connection asks the UI thread before taking the state lock and the pump
+  settles the question. A flagged call gets a `PermissionPrompt` on its run
+  tab (the active one for MCP) and is deferred
+  (`ChatSession::defer_tool_request`) until the user answers in the band
+  above the input (`ai_chat_permission_prompt.rs`, the MCP notice's slot;
+  Allow / Deny sized through `LabelWidths`; the sentence is made once with
+  the prompt and the labels are the catalog's strings, so a frame allocates
+  nothing); Allow runs it, Deny answers `DECLINED_RESULT`. While held, the
+  worker waits past its 60 s tool timeout (`ChatToolRequest::hold`), and a
+  held call the host drops (stop, a closed tab or document, quit) reads as
+  declined, so a call never runs after its agent was told it timed out and
+  never hangs. A prompt opened on a tab that is not on screen, or with the
+  chat minimized, raises `chat.permission.waiting`. Stop, New chat and a new
+  send drop a waiting prompt.

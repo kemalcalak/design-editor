@@ -369,6 +369,7 @@ fn execute_tool_requests(
             });
             continue;
         }
+        let now_ms = host.now_ms();
         let state = host.editor_state_mut();
         // Intercept `spawn_agents`: parse the specs, stash them for the
         // host to launch after this (parent) pump, and ack immediately
@@ -411,15 +412,34 @@ fn execute_tool_requests(
             continue;
         }
         // #398: with "Ask before destructive agent actions" on, a call that
-        // deletes or overwrites waits for the user's Allow / Deny.
-        match state.gate_agent_tool(running_tab, &req.name, &req.args_json) {
-            de_editor_core::agent_permission::ToolGate::Run => {}
-            de_editor_core::agent_permission::ToolGate::Wait => {
+        // deletes or overwrites waits for the user's Allow / Deny. Chat and
+        // design-agent loops (and their sub-agents) all come through here.
+        use de_editor_core::agent_permission::ToolGate;
+        let gate = state.gate_agent_tool_with(running_tab, &req.name, &req.args_json, || {
+            de_host_services::agent_permission_classify::classify_agent_tool(
+                &req.name,
+                &req.args_json,
+            )
+        });
+        match gate {
+            ToolGate::Run => {}
+            ToolGate::Asked | ToolGate::Wait => {
+                // The worker keeps waiting past its timeout while the user
+                // decides; dropping the session still ends that wait.
+                req.hold_for_user();
+                if gate == ToolGate::Asked && state.permission_prompt_hidden(running_tab) {
+                    state.editor_ui.show_toast(
+                        de_editor_core::agent_permission::WAITING_TOAST,
+                        Vec::new(),
+                        de_editor_core::editor_toast::EditorToastLevel::Info,
+                        now_ms,
+                    );
+                }
                 session.defer_tool_request(req);
                 changed = true;
                 continue;
             }
-            de_editor_core::agent_permission::ToolGate::Declined => {
+            ToolGate::Declined => {
                 let result = ChatToolResult {
                     content: de_editor_core::agent_permission::DECLINED_RESULT.to_string(),
                     is_error: true,

@@ -744,3 +744,7 @@ impl Drop for ChatSession {
         }
     }
 }
+
+#[cfg(test)]
+#[path = "chat_tool_hold_tests.rs"]
+mod tool_hold_tests;

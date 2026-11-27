@@ -291,6 +291,21 @@ impl EditorState {
         tool: &str,
         args_json: &str,
     ) -> ToolGate {
+        self.gate_agent_tool_with(running_tab, tool, args_json, || {
+            destructive_action(tool, args_json)
+        })
+    }
+
+    /// [`Self::gate_agent_tool`] with the host's own classification
+    /// (`classify` runs only while the setting is on and this call has no
+    /// prompt yet: a host may expand a `batch_design` script there).
+    pub fn gate_agent_tool_with(
+        &mut self,
+        running_tab: Option<usize>,
+        tool: &str,
+        args_json: &str,
+        classify: impl FnOnce() -> Option<DestructiveAction>,
+    ) -> ToolGate {
         if !self
             .editor_ui
             .agent_settings
@@ -298,29 +313,40 @@ impl EditorState {
         {
             return ToolGate::Run;
         }
-        let Some(action) = destructive_action(tool, args_json) else {
+        let tab = self.chat.run_tab_mut(running_tab);
+        if let Some(open) = tab
+            .permission_prompt
+            .as_ref()
+            .filter(|open| open.tool == tool && open.args == args_json)
+        {
+            // This call's own prompt: waiting, or answered.
+            return match open.decision {
+                None => ToolGate::Wait,
+                Some(allow) => {
+                    tab.permission_prompt = None;
+                    if allow {
+                        ToolGate::Run
+                    } else {
+                        ToolGate::Declined
+                    }
+                }
+            };
+        }
+        let Some(action) = classify() else {
             return ToolGate::Run;
         };
-        let prompt = PermissionPrompt::new(self, tool, action, args_json);
-        let tab = self.chat.run_tab_mut(running_tab);
-        let Some(open) = tab.permission_prompt.as_ref() else {
-            tab.permission_prompt = Some(prompt);
-            return ToolGate::Asked;
-        };
-        if open.tool != tool || open.args != args_json {
+        if self
+            .chat
+            .run_tab_mut(running_tab)
+            .permission_prompt
+            .is_some()
+        {
+            // Another call's prompt is open: this one waits its turn.
             return ToolGate::Wait;
         }
-        match open.decision {
-            None => ToolGate::Wait,
-            Some(allow) => {
-                tab.permission_prompt = None;
-                if allow {
-                    ToolGate::Run
-                } else {
-                    ToolGate::Declined
-                }
-            }
-        }
+        let prompt = PermissionPrompt::new(self, tool, action, args_json);
+        self.chat.run_tab_mut(running_tab).permission_prompt = Some(prompt);
+        ToolGate::Asked
     }
 
     /// Whether the prompt on chat tab `running_tab` is out of the user's
@@ -333,7 +359,12 @@ impl EditorState {
     /// Answer the open prompt on chat tab `running_tab` as declined, if one
     /// is waiting (the turn is ending: stop, tab or document closed, quit).
     pub fn decline_agent_permission(&mut self, running_tab: Option<usize>) {
-        if let Some(prompt) = self.chat.run_tab_mut(running_tab).permission_prompt.as_mut() {
+        if let Some(prompt) = self
+            .chat
+            .run_tab_mut(running_tab)
+            .permission_prompt
+            .as_mut()
+        {
             prompt.decision.get_or_insert(false);
         }
     }

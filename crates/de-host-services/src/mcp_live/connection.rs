@@ -296,6 +296,13 @@ pub(super) fn serve_stateful(
     // applies cannot interleave, and file-backed writes cannot race. The wait
     // is bounded (`STATE_LOCK_WAIT`, then busy naming the holder), and a
     // poisoned lock (a panicked sibling connection) is tolerated.
+    // #398: a destructive call asks the user first, before the lock, so a
+    // call waiting on an answer never blocks other clients.
+    if let Some((id, tool, args, action)) = super::permission::destructive_call(body) {
+        if !super::permission::request_permission(req_tx, wake_ui, tool, args, action) {
+            return Ok(super::permission::declined_response(&id));
+        }
+    }
     let _guard = shared.lock_state(&request_label(body))?;
     // pen.dev's pathless `save` saves the open document to its file (#392).
     use crate::mcp_serve::pen_dev_save::{bind_save, SaveDispatch};

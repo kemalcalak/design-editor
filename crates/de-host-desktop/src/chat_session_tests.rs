@@ -557,6 +557,7 @@ fn pump_executes_scripted_tool_call_against_live_state() {
                 name: "insert_node".into(),
                 args_json: args.into(),
                 ack: ack_tx,
+                hold: Default::default(),
             })
             .unwrap();
     });

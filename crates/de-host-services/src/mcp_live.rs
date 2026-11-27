@@ -106,6 +106,8 @@ pub struct McpLiveServer {
     /// The page root the last write added, for the host to bring into view
     /// (#264). Taken by [`McpLiveServer::take_follow_target`].
     follow_target: Option<McpFollowTarget>,
+    /// Destructive calls waiting for the user's Allow / Deny (#398).
+    pending_permissions: Vec<permission::PendingPermission>,
 }
 
 /// A file a client wrote with `save_document`.
@@ -223,6 +225,8 @@ enum UiRequest {
     },
     /// A client saved a document with `save_document`.
     DocumentSaved(McpSavedDocument),
+    /// A destructive call asks the user first (#398, `permission`).
+    Permission(permission::PendingPermission),
     /// `debug_screenshot` against the LIVE canvas — the connection
     /// thread blocks on `ack` while the UI pump renders the active
     /// page / node through the raster export pipeline
@@ -302,6 +306,7 @@ impl McpLiveServer {
             ui_side: LiveUiSide::new(shared),
             snapshot_anchor: Default::default(),
             pending_design_md: VecDeque::new(),
+            pending_permissions: Vec::new(),
             saved_documents: Vec::new(),
             host_document_epoch: 0,
             follow_target: None,
@@ -449,6 +454,9 @@ impl McpLiveServer {
                     self.saved_documents.push(saved);
                     outcome.repaint = true;
                 }
+                Ok(UiRequest::Permission(pending)) => {
+                    self.pending_permissions.push(pending);
+                }
                 #[cfg(feature = "mcp-debug-tools")]
                 Ok(UiRequest::Screenshot { spec, ack }) => {
                     // Read-only render of the live state — no repaint needed.
@@ -465,6 +473,7 @@ impl McpLiveServer {
                 "design-editor mcp: the editor came back to {abandoned_reads} snapshot request(s) their calls had already given up on"
             );
         }
+        self.pump_permissions(state, &mut outcome);
         self.land_generations(state, &mut outcome);
         outcome
     }
@@ -656,6 +665,7 @@ mod design_md_output;
 pub(crate) mod design_md_route;
 mod doc_sync;
 mod live_shared;
+mod permission;
 mod snapshot_anchor;
 /// `pub(crate)` for two consts only: the shared HTTP parser
 /// (`mcp_serve::read_http_request`) has to recognise this route's path to

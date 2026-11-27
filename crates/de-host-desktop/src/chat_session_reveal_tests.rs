@@ -98,6 +98,7 @@ fn enqueue_tool_request(
         name: name.to_string(),
         args_json: args_json.to_string(),
         ack: ack_tx,
+        hold: Default::default(),
     })
     .expect("tool request should be queued");
     ack_rx

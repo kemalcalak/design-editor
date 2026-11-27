@@ -51,7 +51,10 @@ fn destructive_calls_are_recognised() {
     );
     // A replacement is destructive too.
     assert_eq!(
-        destructive_action("batch_design", &ops("R(\"a\",{\"type\":\"text\"})\nD(\"b\")")),
+        destructive_action(
+            "batch_design",
+            &ops("R(\"a\",{\"type\":\"text\"})\nD(\"b\")")
+        ),
         Some(A::DeleteInBatch { count: 2 })
     );
     // A script is unknown until expanded; inserts through nodes_json never ask.
@@ -104,7 +107,7 @@ fn prompts_name_targets_the_way_the_user_sees_them() {
     );
     assert_eq!(
         batch.sentence(Locale::EnUs),
-        "Let the agent delete layers in one batch (3)?"
+        "Let the agent delete or replace layers in one batch (3)?"
     );
 }
 
@@ -220,7 +223,11 @@ fn the_sentence_is_made_once_per_prompt() {
         prompt.sentence_in(locale),
         std::borrow::Cow::Borrowed(_)
     ));
-    let other = if locale == Locale::Ja { Locale::EnUs } else { Locale::Ja };
+    let other = if locale == Locale::Ja {
+        Locale::EnUs
+    } else {
+        Locale::Ja
+    };
     assert!(matches!(
         prompt.sentence_in(other),
         std::borrow::Cow::Owned(_)

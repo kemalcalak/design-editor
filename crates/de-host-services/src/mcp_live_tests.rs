@@ -175,6 +175,7 @@ fn pump_yields_after_ui_request_budget() {
         saved_documents: Vec::new(),
         host_document_epoch: 0,
         follow_target: None,
+        pending_permissions: Vec::new(),
     };
     let mut state = EditorState::new();
     let mut acks = Vec::new();
@@ -225,6 +226,7 @@ fn pump_fulfills_screenshot_requests_off_the_live_state() {
         saved_documents: Vec::new(),
         host_document_epoch: 0,
         follow_target: None,
+        pending_permissions: Vec::new(),
     };
     let mut state = EditorState::new();
     assert!(state.apply(EditorCommand::InsertNode {
@@ -278,6 +280,7 @@ fn pump_marks_layout_dirty_only_for_layout_affecting_commands() {
         saved_documents: Vec::new(),
         host_document_epoch: 0,
         follow_target: None,
+        pending_permissions: Vec::new(),
     };
     let mut state = EditorState::new();
     state.selection.anchor = de_editor_core::NodeId::new("n1");
@@ -354,6 +357,7 @@ fn pump_flags_document_replaced_only_for_replace_document_requests() {
         saved_documents: Vec::new(),
         host_document_epoch: 0,
         follow_target: None,
+        pending_permissions: Vec::new(),
     };
     let mut state = EditorState::new();
     let replacement_doc = de_pen_loader::load_canonical(
@@ -564,6 +568,7 @@ pub(super) fn fresh_mcp_server(req_rx: Receiver<UiRequest>, stop_tx: Sender<()>)
         saved_documents: Vec::new(),
         host_document_epoch: 0,
         follow_target: None,
+        pending_permissions: Vec::new(),
     }
 }
 
@@ -757,6 +762,7 @@ fn client_name_reports_the_initialize_identity() {
         saved_documents: Vec::new(),
         host_document_epoch: 0,
         follow_target: None,
+        pending_permissions: Vec::new(),
     };
     assert_eq!(server.client_name(), None);
     *identity.lock().unwrap() = Some(("Claude Code".to_string(), "#8A8F98".to_string()));

@@ -39,6 +39,7 @@ fn request_delete(
             name: "delete_node".into(),
             args_json: r#"{"nodeId":"hero"}"#.into(),
             ack: ack_tx,
+            hold: Default::default(),
         })
         .unwrap();
     pump(host, current, None, None, (1200.0, 800.0));
@@ -95,4 +96,44 @@ fn with_the_setting_off_the_call_runs_at_once() {
     let ack = request_delete(&mut host, &mut current, &tool_tx);
     assert!(ack.try_recv().is_ok());
     assert!(host.editor_state().chat.permission_prompt.is_none());
+}
+
+#[test]
+fn a_design_loop_call_is_gated_held_and_announced_off_screen() {
+    let mut host = host_with_frame();
+    let (_delta_tx, delta_rx) = channel::<de_ai::chat_provider::ChatDelta>();
+    let (tool_tx, tool_rx) = channel();
+    let baseline = de_editor_core::write_scope::WriteBaseline::capture(host.editor_state());
+    let mut current =
+        Some(ChatSession::from_channels(delta_rx, Some(tool_rx)).into_design_loop(baseline));
+    // The run's tab (0) is not the one on screen.
+    host.editor_state_mut().chat.new_tab();
+    let (ack_tx, ack_rx) = sync_channel(1);
+    let hold = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
+    tool_tx
+        .send(de_editor_host_core::chat::ChatToolRequest {
+            name: "delete_node".into(),
+            args_json: r#"{"nodeId":"hero"}"#.into(),
+            ack: ack_tx,
+            hold: std::sync::Arc::clone(&hold),
+        })
+        .unwrap();
+    pump(&mut host, &mut current, Some(0), None, (1200.0, 800.0));
+    assert!(ack_rx.try_recv().is_err(), "the design loop waits too");
+    assert!(
+        hold.load(std::sync::atomic::Ordering::SeqCst),
+        "the worker is told to keep waiting"
+    );
+    let toast = host.editor_state().editor_ui.editor_toast.clone().unwrap();
+    assert_eq!(
+        toast.i18n_key,
+        de_editor_core::agent_permission::WAITING_TOAST
+    );
+    // Stopping the turn drops the held call, which its worker reads as a
+    // decline (`ChatToolRequest::hold`).
+    drop(current.take());
+    assert!(matches!(
+        ack_rx.try_recv(),
+        Err(std::sync::mpsc::TryRecvError::Disconnected)
+    ));
 }
