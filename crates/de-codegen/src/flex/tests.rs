@@ -327,6 +327,66 @@ fn rounded_polygons_and_paths_write_their_rounded_outline() {
     assert!(zig.contains('C') || zig.contains('A'), "{zig}");
 }
 
+/// #389: a stretched path is fitted to its box before its vertices round,
+/// as on the canvas, so the radius is in node px, not the path's units.
+#[test]
+fn a_stretched_rounded_path_rounds_in_node_px() {
+    use de_editor_core::{corner_geometry, vector_edit};
+    let doc = load(
+        r##"{"version":"1.0","children":[
+          {"type":"path","id":"p","name":"Zig","width":80,"height":10,"d":"M0 0 L10 10 L20 0",
+           "vertexRadius":4}
+        ]}"##,
+    );
+    let html = css(&doc);
+    let zig = html.split("class=\"zig\"").nth(1).expect("zig svg");
+    let zig = zig.split("</svg>").next().unwrap();
+    assert!(zig.contains("viewBox=\"0 0 80 10\""), "{zig}");
+    // The canvas's order: fit the 20 × 10 path to 80 × 10, then round.
+    let mut subs = vector_edit::parse_path_data("M0 0 L10 10 L20 0").unwrap();
+    vector_edit::fit_subpaths_to_box(&mut subs, 80.0, 10.0);
+    let rounded: Vec<_> = subs
+        .iter()
+        .map(|sub| corner_geometry::round_corners(sub, &[4.0; 3], 0.0))
+        .collect();
+    let expected = corner_geometry::outline_path_data(&rounded);
+    assert!(
+        zig.contains(&format!("d=\"{expected}\"")),
+        "{zig}\n{expected}"
+    );
+}
+
+/// Polygon and star vertices come from jian's `polygon_points`, so a
+/// star's tips touch the box edges as on the canvas.
+#[test]
+fn star_points_follow_the_canvas_geometry() {
+    let doc = load(
+        r##"{"version":"1.0","children":[
+          {"type":"polygon","id":"s","name":"Star","width":20,"height":20,"polygonCount":5,"innerRadius":0.5}
+        ]}"##,
+    );
+    let html = css(&doc);
+    let points = html
+        .split("points=\"")
+        .nth(1)
+        .and_then(|rest| rest.split('"').next())
+        .expect("points");
+    let xs: Vec<f64> = points
+        .split(' ')
+        .map(|pt| pt.split(',').next().unwrap().parse().unwrap())
+        .collect();
+    let ys: Vec<f64> = points
+        .split(' ')
+        .map(|pt| pt.split(',').nth(1).unwrap().parse().unwrap())
+        .collect();
+    let span = |v: &[f64]| {
+        v.iter().cloned().fold(f64::MIN, f64::max) - v.iter().cloned().fold(f64::MAX, f64::min)
+    };
+    assert_eq!(xs.len(), 10, "{points}");
+    assert!((span(&xs) - 100.0).abs() < 0.02, "{points}");
+    assert!((span(&ys) - 100.0).abs() < 0.02, "{points}");
+}
+
 fn outlined_text(align: &str) -> PenDocument {
     load(&format!(
         r##"{{"version":"1.0","children":[{{"type":"text","id":"t","content":"x",

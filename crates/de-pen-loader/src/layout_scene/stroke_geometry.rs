@@ -7,7 +7,7 @@ use std::sync::Arc;
 
 use de_editor_core::render_backend::{Point2D, Rect};
 use de_editor_core::stroke_geometry::{stroke_end_geometry, CentreLine, StrokeEnds};
-use de_editor_core::vector_edit::{parse_path_data, subpaths_bounds, Subpath};
+use de_editor_core::vector_edit::{fit_subpaths_to_box, parse_path_data, Subpath};
 use jian_ops_schema::node::{PenPathAnchor, PenPathHandle};
 use jian_scene::layout_scene::{SceneLineDirection, SceneStrokeGeometry, SceneStrokeHead};
 
@@ -76,7 +76,7 @@ pub(super) fn local_subpaths(node: &NodePayload) -> Option<Vec<Subpath>> {
         "path" => {
             if let Some(d) = node.svg_path.as_deref() {
                 let mut subs = parse_path_data(d)?;
-                fit_to_box(&mut subs, w, h);
+                fit_subpaths_to_box(&mut subs, w, h);
                 return Some(subs);
             }
             let (ox, oy) = (f64::from(node.x), f64::from(node.y));
@@ -115,28 +115,6 @@ pub(super) fn local_subpaths(node: &NodePayload) -> Option<Vec<Subpath>> {
             })
         }
         _ => None,
-    }
-}
-
-/// Map `subs` from their tight bounds onto `(0, 0, w, h)`; a degenerate
-/// axis keeps scale 1 (the backends' rule).
-fn fit_to_box(subs: &mut [Subpath], w: f64, h: f64) {
-    let (bx, by, bw, bh) = subpaths_bounds(subs);
-    if !(bx.is_finite() && by.is_finite()) {
-        return;
-    }
-    let sx = if bw.abs() > 0.01 { w / bw } else { 1.0 };
-    let sy = if bh.abs() > 0.01 { h / bh } else { 1.0 };
-    for anchor in subs.iter_mut().flat_map(|s| s.anchors.iter_mut()) {
-        anchor.x = (anchor.x - bx) * sx;
-        anchor.y = (anchor.y - by) * sy;
-        for handle in [&mut anchor.handle_in, &mut anchor.handle_out]
-            .into_iter()
-            .flatten()
-        {
-            handle.x *= sx;
-            handle.y *= sy;
-        }
     }
 }
 
