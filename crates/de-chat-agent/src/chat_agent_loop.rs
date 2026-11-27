@@ -470,6 +470,7 @@ async fn dispatch_event<C: SseCollector>(
 
 mod anthropic;
 mod openai;
+mod openai_stream_usage;
 
 pub use anthropic::*;
 pub use openai::*;
@@ -513,3 +514,10 @@ mod zero_write_tests;
 #[cfg(test)]
 #[path = "chat_agent_loop_wire_tests.rs"]
 mod wire_tests;
+
+// `stream_options.include_usage` on the OpenAI-compatible wire (#446): the
+// field is sent, the usage chunk reaches the meter, and a strict endpoint
+// that refuses the field gets one retry without it.
+#[cfg(test)]
+#[path = "chat_agent_loop_usage_wire_tests.rs"]
+mod usage_wire_tests;
