@@ -8,10 +8,24 @@
 //! undo steps while the history holds more than [`HISTORY_BYTE_BUDGET`]
 //! beyond the document itself, never below [`HISTORY_MIN_STEPS`].
 //!
-//! It walks every snapshot once, so it is not run per edit: the host calls
-//! it after the editor has been idle for a while
+//! It walks every snapshot once, so it is not run per edit: the desktop
+//! calls it after the editor has been idle for a while
 //! ([`crate::memory_idle::IdleTrim`]), which keeps edits, undo and redo at
-//! their old cost.
+//! their old cost, and the file-backed MCP server every tenth write
+//! ([`EditorState::trim_history_after_write`]). The dropped steps come back
+//! to the caller, which frees them off its UI thread: a step that held the
+//! only copy of a large board takes tens of milliseconds to free.
+//!
+//! What a step is counted at (estimates, `memory_report::approx_node_bytes_fast`):
+//! each shared top-level node once however many steps hold it (node count ×
+//! the measured per-node size, 2,952 bytes on #412's document), plus the
+//! step's variable-ref maps. Not counted: the component library a step
+//! keeps (`SharedComponents`, shared by `Arc` between steps and copied only
+//! when a component changes), the document skeleton each step clones
+//! (variables, themes, page metadata; small unless a document holds very
+//! large variable sets), and strings inside nodes beyond the per-node
+//! average (long text, inline `data:` images). A history heavy in those
+//! reaches the budget later than its real size.
 
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -19,6 +33,9 @@ use std::sync::Arc;
 use jian_ops_schema::node::PenNode;
 
 use crate::history::EditorSnapshot;
+
+/// How often the file-backed MCP server trims: every this many writes.
+pub const TRIM_EVERY_WRITES: u64 = 10;
 use crate::memory_report::approx_node_bytes_fast;
 use crate::state::EditorState;
 
@@ -43,11 +60,11 @@ fn nodes(snapshot: &EditorSnapshot) -> impl Iterator<Item = &Arc<PenNode>> {
 impl EditorState {
     /// Drop the oldest undo steps while the history holds more than
     /// `budget` bytes beyond one copy of the document, keeping at least
-    /// `min_steps`. Returns how many steps were dropped. Redo steps are
-    /// never dropped.
-    pub fn trim_history_to_budget(&mut self, budget: u64, min_steps: usize) -> usize {
+    /// `min_steps`. Redo steps are never dropped. Returns the dropped
+    /// steps for the caller to free, off its UI thread.
+    pub fn trim_history_to_budget(&mut self, budget: u64, min_steps: usize) -> Vec<EditorSnapshot> {
         if self.history.past.len() <= min_steps {
-            return 0;
+            return Vec::new();
         }
         // How many snapshots hold each shared node, and the bytes of each.
         let mut holders: HashMap<*const PenNode, (u32, u64)> = HashMap::new();
@@ -74,7 +91,7 @@ impl EditorState {
             .map(approx_node_bytes_fast)
             .sum();
         let limit = budget.saturating_add(document);
-        let mut dropped = 0;
+        let mut dropped = Vec::new();
         while total > limit && self.history.past.len() > min_steps {
             let Some(oldest) = self.history.past.pop_front() else {
                 break;
@@ -88,9 +105,19 @@ impl EditorState {
                     }
                 }
             }
-            dropped += 1;
+            dropped.push(oldest);
         }
         dropped
+    }
+
+    /// The budget for a host with no idle loop and no UI thread (the
+    /// file-backed MCP server): every [`TRIM_EVERY_WRITES`]-th write, by
+    /// the host's own `write_count`, so a write pays the walk rarely.
+    pub fn trim_history_after_write(&mut self, write_count: u64) -> Vec<EditorSnapshot> {
+        if !write_count.is_multiple_of(TRIM_EVERY_WRITES) {
+            return Vec::new();
+        }
+        self.trim_history_to_budget(HISTORY_BYTE_BUDGET, HISTORY_MIN_STEPS)
     }
 }
 

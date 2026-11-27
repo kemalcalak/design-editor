@@ -40,8 +40,15 @@ impl WidgetHostNative {
         self.memory_idle.deadline_ms()
     }
 
+    /// Hold the idle memory trim off: the host calls this on every wake
+    /// while an agent works, since its writes are not input (#456).
+    pub fn note_memory_activity(&mut self) {
+        self.memory_idle.note_activity(self.now_ms);
+    }
+
     /// Run the idle memory trim when it is due: the undo history is cut to
-    /// its byte budget. `Some` when it ran, so the host can ask the
+    /// its byte budget. `Some` when it ran; the report carries the dropped
+    /// steps for the host to free off the UI thread, before it asks the
     /// allocator to give freed pages back.
     pub fn run_idle_memory_trim(&mut self) -> Option<de_editor_core::memory_idle::IdleTrimReport> {
         self.memory_idle

@@ -43,6 +43,12 @@ fn show_gpu_init_error_dialog(err: &SharedSkiaError) {
 }
 
 impl DesktopApp {
+    /// A chat, a design run or a sub-agent is working: their writes are
+    /// not input, so the idle memory trim waits for them (#456).
+    pub(crate) fn agent_work_running(&self) -> bool {
+        self.current_chat.is_some() || self.current_design.is_some() || !self.sub_agents.is_empty()
+    }
+
     pub(super) fn refresh_host_clock(&mut self) {
         let now_ms = self.clock_start.elapsed().as_millis() as u64;
         self.host.set_now_ms(now_ms);

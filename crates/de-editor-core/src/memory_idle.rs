@@ -2,10 +2,12 @@
 //!
 //! Work that walks large structures to give memory back (the undo history's
 //! byte budget, the allocator's free pages) must not run while a person
-//! pans, edits or undoes, so hosts run it here: [`IdleTrim`] remembers the
-//! last activity, asks for one wake [`IDLE_TRIM_AFTER_MS`] later, and trims
-//! once per quiet spell (again only after new activity).
+//! pans, zooms, edits or undoes, or while an agent works, so hosts run it
+//! here: [`IdleTrim`] remembers the last activity, asks for one wake
+//! [`IDLE_TRIM_AFTER_MS`] later, and trims once per quiet spell (again only
+//! after new activity).
 
+use crate::history::EditorSnapshot;
 use crate::history_budget::{HISTORY_BYTE_BUDGET, HISTORY_MIN_STEPS};
 use crate::state::EditorState;
 
@@ -13,10 +15,11 @@ use crate::state::EditorState;
 pub const IDLE_TRIM_AFTER_MS: u64 = 30_000;
 
 /// What one idle trim did.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+#[derive(Debug, Clone, PartialEq, Default)]
 pub struct IdleTrimReport {
-    /// Undo steps dropped to fit the history's byte budget.
-    pub history_steps_dropped: usize,
+    /// Undo steps dropped to fit the history's byte budget, still alive:
+    /// the host frees them off its UI thread.
+    pub released: Vec<EditorSnapshot>,
 }
 
 /// The idle-trim clock a host keeps.
@@ -28,7 +31,9 @@ pub struct IdleTrim {
 }
 
 impl IdleTrim {
-    /// Something happened (input, an edit, a repaint with new content).
+    /// The editor is in use: a document or UI change (`mark_dirty`), a pan
+    /// or zoom tick, or an agent at work (the host notes it every wake
+    /// while one runs).
     pub fn note_activity(&mut self, now_ms: u64) {
         self.last_activity_ms = now_ms;
         self.trimmed = false;
@@ -49,8 +54,7 @@ impl IdleTrim {
         }
         self.trimmed = true;
         Some(IdleTrimReport {
-            history_steps_dropped: state
-                .trim_history_to_budget(HISTORY_BYTE_BUDGET, HISTORY_MIN_STEPS),
+            released: state.trim_history_to_budget(HISTORY_BYTE_BUDGET, HISTORY_MIN_STEPS),
         })
     }
 }

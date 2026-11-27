@@ -147,6 +147,8 @@ impl NativeBackend {
             dpi_bits: dpi.to_bits(),
         };
         if self.svg_raster_cache.contains_key(&key) {
+            // Least recently used goes first (#456): a hit moves to the back.
+            self.touch_svg_raster(key);
             return self.svg_raster_cache.get(&key);
         }
 
