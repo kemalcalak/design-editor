@@ -2,8 +2,8 @@
 //!
 //! Appearance, the auto-update preference plus its live release-probe
 //! status, the experimental-features opt-in, the generation-overlay
-//! pencil-cursor picker, the Pencil tool's smoothing level (#88) and the
-//! Live pages switch (#324) —
+//! pencil-cursor picker, the Pencil tool's smoothing level (#88), the
+//! Live pages switch (#324) and the memory line (#456) —
 //! each on one borderless row in the modal's shared row
 //! language (`agent_settings_rows`), separated by hairlines.
 
@@ -117,6 +117,7 @@ enum SystemRow {
     PencilCursor,
     PencilSmoothing,
     LivePages,
+    Memory,
 }
 
 fn visible_rows() -> &'static [SystemRow] {
@@ -128,6 +129,7 @@ fn visible_rows() -> &'static [SystemRow] {
             SystemRow::PencilCursor,
             SystemRow::PencilSmoothing,
             SystemRow::LivePages,
+            SystemRow::Memory,
         ]
     } else {
         &[
@@ -136,6 +138,7 @@ fn visible_rows() -> &'static [SystemRow] {
             SystemRow::PencilCursor,
             SystemRow::PencilSmoothing,
             SystemRow::LivePages,
+            SystemRow::Memory,
         ]
     }
 }
@@ -146,7 +149,10 @@ impl SystemRow {
     /// pages a description; the others are label-only.
     fn lines(self) -> RowLines {
         match self {
-            SystemRow::AutoUpdate | SystemRow::Experimental | SystemRow::LivePages => RowLines::Two,
+            SystemRow::AutoUpdate
+            | SystemRow::Experimental
+            | SystemRow::LivePages
+            | SystemRow::Memory => RowLines::Two,
             SystemRow::Appearance | SystemRow::PencilCursor | SystemRow::PencilSmoothing => {
                 RowLines::One
             }
@@ -415,6 +421,9 @@ pub(super) fn paint_system_tab(
                     switch_rect_for(content, SystemRow::LivePages),
                     ui.browser_live.live_pages(),
                 );
+            }
+            SystemRow::Memory => {
+                super::agent_settings_system_memory::paint_memory_row(cx, theme, ui, rect)
             }
         }
         if index != last {
