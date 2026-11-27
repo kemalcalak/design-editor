@@ -1231,7 +1231,10 @@ CLI side (`crates/de-cli/src/agent_*.rs`, dispatched in `main` before the generi
   `replace`, `batch_design` operations with `D(...)` or `R(...)` (a `script`
   is run to its operations first, `de_host_services::agent_permission_classify`;
   one that does not expand asks; `nodes_json` only inserts), an `execute`
-  script naming `Delete` / `Replace` / `Export` / `SetVariables`, and file
+  script whose dry run on the request's snapshot
+  (`de_mcp::script_execute::execute_effects`, nothing applied, rendered or
+  written) deletes, replaces, exports or overwrites the variables, or that
+  cannot be judged (a throw, a failed write, the time limit), and file
   writes: the saves (`save_document`, `save_theme_preset`), any
   `outputPath` / `outputDir`, and a `filePath` on a tool that is not
   read-only (it rewrites that `.de`); inline exports write nothing and do
@@ -1239,7 +1242,10 @@ CLI side (`crates/de-cli/src/agent_*.rs`, dispatched in `main` before the generi
   the desktop's `execute_tool_requests`, and agents on the live MCP server
   (CLI / ACP) in `mcp_live/permission.rs`. A prompt belongs to one call id
   on one chat tab, so an answer never approves another, identical call; an
-  MCP prompt opens on the tab on screen and stays there. The desktop holds a
+  MCP prompt opens on the tab on screen and stays there. MCP call ids start
+  at `EXTERNAL_CALL_IDS`: those prompts are not the chat's, so Stop, a new
+  send and New chat leave them alone. An answered chat prompt whose call is
+  gone does not block its tab. The desktop holds a
   flagged call (`ChatSession::defer_tool_request`) until the user answers
   in the band above the input (`ai_chat_permission_prompt.rs`, the MCP
   notice's slot; Allow / Deny sized through `LabelWidths`; the sentence is
@@ -1247,11 +1253,16 @@ CLI side (`crates/de-cli/src/agent_*.rs`, dispatched in `main` before the generi
   frame allocates nothing); Allow runs it, Deny answers `DECLINED_RESULT`.
   `ChatToolRequest::hold` settles the worker's 60 s timeout against the
   host: whichever moves first wins (compare-and-swap), so a held call waits
-  however long and a call its worker gave up on is never run; a held call
-  the host drops (Stop, New chat or a new send drop the turn; a closed tab;
-  quit) reads as declined. The MCP connection reads the setting from
-  `LiveShared` (nothing is classified or asked with it off), asks before
-  taking the state lock, and waits at most 50 s (`PERMISSION_DEADLINE`):
+  however long and a call its worker gave up on is never run. Stop, New
+  chat (also the "+" tab's) and a new send end the turn: its prompt is
+  dropped from the run's tab (`ChatState::drop_turn_permission`, also when
+  Stop comes from another tab, as closing the document does) and its held
+  call reads as declined; a closed tab and quit do the same. The MCP
+  connection reads the setting from `LiveShared` (published at server
+  start by `McpLiveServer::note_editor` and on every pump; nothing is
+  classified or asked with it off), asks before taking the state lock
+  (`execute` asks after it, since its dry run needs the snapshot), and
+  waits at most 50 s (`PERMISSION_DEADLINE`):
   then it refuses the call, the pump closes the prompt, and a late Allow
   runs nothing. Replacing or opening the document and quitting decline
   every open prompt (`decline_all_agent_permissions`); switching the

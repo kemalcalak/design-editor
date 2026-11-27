@@ -174,3 +174,79 @@ fn a_stopped_server_declines_a_waiting_question() {
     drop(req_rx);
     assert_eq!(asker.join().unwrap(), PermissionAnswer::Declined);
 }
+
+#[test]
+fn a_fresh_server_asks_before_its_first_pump() {
+    let mut server = server();
+    assert!(!server.ui_side.shared().asks_permission());
+    server.note_editor(&asking_state());
+    assert!(server.ui_side.shared().asks_permission());
+    server.stop();
+}
+
+fn execute_body(script: &str) -> String {
+    serde_json::json!({
+        "jsonrpc": "2.0",
+        "id": 9,
+        "method": "tools/call",
+        "params": {"name": "execute", "arguments": {"script": script}},
+    })
+    .to_string()
+}
+
+fn state_with_hero() -> EditorState {
+    let doc = jian_ops_schema::load_str(
+        r#"{"version":"1.0.0","children":[
+          {"type":"frame","id":"hero","name":"Hero","x":0,"y":0,"width":100,"height":100}
+        ]}"#,
+    )
+    .unwrap()
+    .value;
+    EditorState::from_document(doc)
+}
+
+#[test]
+fn an_execute_script_is_gated_by_what_its_dry_run_does() {
+    let wake: UiWake = Arc::new(|| {});
+    let (req_tx, req_rx) = mpsc::channel();
+    let mut state = state_with_hero();
+    // A read-only script runs without a question, and the state is put back.
+    assert!(gate_execute(&execute_body("Get('hero')"), &mut state, &req_tx, &wake).is_none());
+    assert!(req_rx.try_recv().is_err());
+    assert_eq!(state.active_children().len(), 1);
+    // A delete spelled through globalThis asks; the user says no.
+    let answerer = std::thread::spawn(move || {
+        let Ok(UiRequest::Permission(question)) = req_rx.recv() else {
+            panic!("asked");
+        };
+        assert_eq!(question.action, DestructiveAction::ScriptedBatch);
+        question.ack.send(false).unwrap();
+    });
+    let reply = gate_execute(
+        &execute_body("globalThis['Del' + 'ete']('hero')"),
+        &mut state,
+        &req_tx,
+        &wake,
+    )
+    .expect("refused");
+    assert!(reply.contains("declined"), "{reply}");
+    answerer.join().unwrap();
+    assert_eq!(
+        state.active_children().len(),
+        1,
+        "the dry run applied nothing"
+    );
+}
+
+#[test]
+fn an_execute_aimed_at_another_file_asks_before_the_lock() {
+    let body = serde_json::json!({
+        "jsonrpc": "2.0",
+        "id": 3,
+        "method": "tools/call",
+        "params": {"name": "execute", "arguments": {"script": "Get('a')", "filePath": "/tmp/x.de"}},
+    })
+    .to_string();
+    assert!(destructive_call(&body).is_some());
+    assert!(destructive_call(&execute_body("Delete('a')")).is_none());
+}

@@ -324,6 +324,19 @@ impl McpLiveServer {
         self.ui_side.pumped(kits);
     }
 
+    /// Publish what a fresh server needs from the editor before its first
+    /// pump: the kits for `tools/list` and whether destructive calls ask
+    /// first (#398), so no call slips through before that pump.
+    pub fn note_editor(&mut self, state: &EditorState) {
+        self.note_ui_kits(&state.ui_kits);
+        self.ui_side.publish_permission_setting(
+            state
+                .editor_ui
+                .agent_settings
+                .confirm_destructive_agent_actions,
+        );
+    }
+
     pub fn port(&self) -> u16 {
         self.port
     }

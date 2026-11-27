@@ -354,6 +354,12 @@ pub(super) fn serve_stateful(
         return Ok(response);
     }
     let (mut state, document_epoch) = request_snapshot_with_epoch(req_tx, wake_ui, shared)?;
+    // #398: an `execute` script is judged by a dry run on this snapshot.
+    if shared.asks_permission() {
+        if let Some(response) = super::permission::gate_execute(body, &mut state, req_tx, wake_ui) {
+            return Ok(response);
+        }
+    }
     let response = crate::mcp_serve::process_message_with_write_applier(
         &mut state,
         body,

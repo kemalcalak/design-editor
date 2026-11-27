@@ -101,6 +101,60 @@ pub trait ScriptRenderer: Send + Sync {
     }
 }
 
+/// The destructive calls one `execute` script makes when it runs: what the
+/// "ask before destructive agent actions" gate (#398) judges an `execute`
+/// call by. A script is judged by running it ([`execute_effects`]), since no
+/// reading of its text can tell (`globalThis["Del" + "ete"](…)`).
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub struct ExecuteEffects {
+    pub deletes: usize,
+    pub replaces: usize,
+    /// `Export` calls (they write files).
+    pub exports: usize,
+    /// A `SetVariables(…, true)`: every variable not listed is removed.
+    pub replaces_variables: bool,
+}
+
+impl ExecuteEffects {
+    /// Count one host call (`op` is the prelude's `call` name).
+    pub(crate) fn note(&mut self, op: &str, args: &Value) {
+        match op {
+            "delete" => self.deletes += 1,
+            "replace" => self.replaces += 1,
+            "export" => self.exports += 1,
+            "setVariables" => {
+                self.replaces_variables |=
+                    args.get("replace").and_then(Value::as_bool) == Some(true)
+            }
+            _ => {}
+        }
+    }
+
+    /// Whether any of it deletes, replaces or writes a file.
+    pub fn is_destructive(&self) -> bool {
+        self.deletes + self.replaces + self.exports > 0 || self.replaces_variables
+    }
+}
+
+/// Run `script` against `snapshot` without applying, rendering or writing
+/// anything, and say which destructive calls it made. Exports are recorded,
+/// never rendered. `None` when the script could not be judged (it threw, a
+/// write failed, it ran out of time, or the source is empty or too large).
+pub fn execute_effects(
+    snapshot: SharedState,
+    script: &str,
+    page_id: Option<String>,
+) -> Option<ExecuteEffects> {
+    let script = strip_fences(script);
+    if script.trim().is_empty() || script.len() > MAX_SCRIPT_BYTES {
+        return None;
+    }
+    let session = Rc::new(RefCell::new(ExecSession::new(snapshot, page_id, true)));
+    eval(&script, session.clone(), EXECUTE_BUDGET).ok()?;
+    let session = session.borrow();
+    session.failed_write.is_none().then_some(session.effects)
+}
+
 /// What one `Export` call wrote.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct ExportWritten {
@@ -385,3 +439,7 @@ fn finish(mut session: ExecSession, renderer: Option<&dyn ScriptRenderer>) -> To
 #[cfg(test)]
 #[path = "script_execute_tests.rs"]
 mod tests;
+
+#[cfg(test)]
+#[path = "script_execute_effects_tests.rs"]
+mod effects_tests;

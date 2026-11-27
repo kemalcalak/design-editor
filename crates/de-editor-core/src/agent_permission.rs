@@ -6,7 +6,7 @@
 //! component or variable, replaces a layer or all variables, deletes or
 //! replaces inside a `batch_design` program, runs a script that may delete,
 //! replace or write files (`batch_design` scripts the host expands are
-//! counted; `execute` scripts are read for those calls), or writes a file
+//! counted; `execute` scripts the host dry-runs on the document), or writes a file
 //! (an output path, a save, or a write aimed at another `.de` through
 //! `filePath`) waits for the user: the chat shows a prompt with Allow /
 //! Deny, and the agent gets the tool's result or "the user declined" once
@@ -96,25 +96,6 @@ const READ_ONLY_PREFIXES: &[&str] = &[
     "open_document",
 ];
 
-/// The `execute` script calls that delete, replace or write files
-/// (`de_mcp::script_execute_prelude`). Any mention asks, including one
-/// passed around as a value: what a script does is not known before it
-/// runs.
-const EXECUTE_DESTRUCTIVE_CALLS: &[&str] = &["Delete", "Replace", "Export", "SetVariables"];
-
-/// Whether `script` names one of [`EXECUTE_DESTRUCTIVE_CALLS`] as a whole
-/// identifier.
-fn execute_script_is_destructive(script: &str) -> bool {
-    EXECUTE_DESTRUCTIVE_CALLS.iter().any(|name| {
-        script.match_indices(name).any(|(at, _)| {
-            let ident = |c: char| c.is_alphanumeric() || c == '_' || c == '$';
-            let before = script[..at].chars().next_back();
-            let after = script[at + name.len()..].chars().next();
-            !before.is_some_and(|c| ident(c) || c == '.') && !after.is_some_and(ident)
-        })
-    })
-}
-
 fn arg_is_true(args: &Value, key: &str) -> bool {
     match args.get(key) {
         Some(Value::Bool(b)) => *b,
@@ -170,11 +151,12 @@ pub fn destructive_action(tool: &str, args_json: &str) -> Option<DestructiveActi
             .map(count_batch_deletes)
             .filter(|count| *count > 0)
             .map(|count| DestructiveAction::DeleteInBatch { count }),
-        "execute" => args
-            .get("script")
-            .and_then(Value::as_str)
-            .filter(|script| execute_script_is_destructive(script))
-            .map(|_| DestructiveAction::ScriptedBatch),
+        // What an `execute` script does is only known by running it: the
+        // host dry-runs it against the document
+        // (`de_mcp::script_execute::execute_effects`) and asks when it would
+        // delete, replace or write, or cannot be judged. Without a host
+        // that can, every script asks.
+        "execute" if has_arg(&args, "script") => Some(DestructiveAction::ScriptedBatch),
         _ => None,
     };
     if action.is_some() {
@@ -214,6 +196,11 @@ pub fn classify_with_expanded_script(
         None => Some(DestructiveAction::ScriptedBatch),
     }
 }
+
+/// Call ids from this value up belong to agents outside the chat (the live
+/// MCP server): their prompts outlive the chat's turns, so Stop, a new send
+/// and New chat leave them alone ([`PermissionPrompt::is_external`]).
+pub const EXTERNAL_CALL_IDS: u64 = 1 << 62;
 
 /// The question on screen, and the user's answer once given.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -325,6 +312,12 @@ impl PermissionPrompt {
         };
         prompt.sentence = prompt.sentence(locale);
         prompt
+    }
+
+    /// Whether the call belongs to an agent outside the chat's turns (see
+    /// [`EXTERNAL_CALL_IDS`]).
+    pub fn is_external(&self) -> bool {
+        self.call_id >= EXTERNAL_CALL_IDS
     }
 
     /// The sentence for painting in `locale`: the one made with the prompt,
@@ -439,9 +432,15 @@ impl EditorState {
             .chat
             .run_tab_mut(running_tab)
             .permission_prompt
-            .is_some()
+            .as_ref()
+            .is_some_and(|open| open.decision != Some(false) || open.is_external())
         {
-            // Another call's prompt is open: this one waits its turn.
+            // Another call's prompt is open: this one waits its turn. A
+            // declined chat prompt of another call does not block: one whose
+            // turn is gone (a prompt declined with its replaced document)
+            // must not hold the tab for good, and if its turn is still alive
+            // it is asked again rather than run. An allowed one waits for its
+            // call, and an external one is taken by the MCP pump.
             return ToolGate::Wait;
         }
         let prompt = PermissionPrompt::new(self, call_id, tool, action, args_json);
@@ -501,6 +500,21 @@ impl EditorState {
                 true
             }
             _ => false,
+        }
+    }
+}
+
+impl crate::ChatState {
+    /// Drop the prompt a chat turn's call was waiting on (Stop, a new send,
+    /// New chat: the turn is gone, and its held call reads as declined). An
+    /// external agent's prompt stays: it does not belong to the turn.
+    pub fn drop_turn_permission(&mut self) {
+        if self
+            .permission_prompt
+            .as_ref()
+            .is_some_and(|open| !open.is_external())
+        {
+            self.permission_prompt = None;
         }
     }
 }

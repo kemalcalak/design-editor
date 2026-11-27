@@ -7,7 +7,8 @@
 //! the pump on `LiveShared`, so with it off a call costs nothing more), then
 //! classifies the call and, when it is destructive, asks the UI thread
 //! BEFORE taking the state lock (a call waiting on the user never blocks
-//! other clients). The prompt is pinned to the chat tab on screen when it
+//! other clients). An `execute` call is the exception: its script is judged
+//! by a dry run on the request's snapshot, so it asks after the lock. The prompt is pinned to the chat tab on screen when it
 //! opens and to this call's own id. The connection waits at most
 //! [`PERMISSION_DEADLINE`], under the clients' own tool timeouts: past it
 //! the call is refused, its prompt closed, and a late Allow can no longer
@@ -31,7 +32,7 @@ use super::{McpLiveServer, McpPumpOutcome, UiRequest, UiWake};
 pub(super) const PERMISSION_DEADLINE: Duration = Duration::from_secs(50);
 
 /// MCP question ids, apart from the in-app loops' request ids.
-static NEXT_ID: AtomicU64 = AtomicU64::new(1 << 62);
+static NEXT_ID: AtomicU64 = AtomicU64::new(de_editor_core::agent_permission::EXTERNAL_CALL_IDS);
 
 /// One question waiting for the user.
 pub(super) struct PendingPermission {
@@ -62,9 +63,26 @@ pub(super) fn destructive_call(
     body: &str,
 ) -> Option<(RequestId, String, String, DestructiveAction)> {
     let call = de_mcp::parse_tool_call(body.trim())?;
+    if call.tool == "execute" && !call.arguments.contains_key("filePath") {
+        // Judged later by a dry run on the snapshot ([`execute_call`]); one
+        // aimed at another file runs before any snapshot, so it asks here.
+        return None;
+    }
     let args = serde_json::to_string(&call.arguments).ok()?;
     let action = crate::agent_permission_classify::classify_agent_tool(&call.tool, &args)?;
     Some((call.id, call.tool, args, action))
+}
+
+/// The `execute` call in `body`, if any: its id and arguments (as JSON).
+/// Its script is dry-run on the request's snapshot, under the state lock
+/// (`classify_execute`), so unlike other calls it asks while holding the
+/// lock.
+pub(super) fn execute_call(body: &str) -> Option<(RequestId, String)> {
+    let call = de_mcp::parse_tool_call(body.trim())?;
+    if call.tool != "execute" {
+        return None;
+    }
+    Some((call.id, serde_json::to_string(&call.arguments).ok()?))
 }
 
 /// Ask the UI thread whether the destructive call may run, waiting at most
@@ -101,6 +119,31 @@ pub(super) fn request_permission(
             PermissionAnswer::TimedOut
         }
     }
+}
+
+/// Gate an `execute` call in `body` on a dry run of its script against
+/// `state` (the request's snapshot, put back unchanged). `Some(reply)` when
+/// the call is refused; `None` lets it run.
+pub(super) fn gate_execute(
+    body: &str,
+    state: &mut EditorState,
+    req_tx: &Sender<UiRequest>,
+    wake_ui: &UiWake,
+) -> Option<String> {
+    let (id, args) = execute_call(body)?;
+    let snapshot = de_editor_core::shared_state::SharedState::take_from(state);
+    let action = crate::agent_permission_classify::classify_execute(snapshot.clone(), &args);
+    snapshot.restore_into(state);
+    let action = action?;
+    let answer = request_permission(
+        req_tx,
+        wake_ui,
+        "execute".into(),
+        args,
+        action,
+        PERMISSION_DEADLINE,
+    );
+    (answer != PermissionAnswer::Allowed).then(|| refused_response(&id, answer))
 }
 
 /// The reply to a call that was not allowed: the tool-level error the

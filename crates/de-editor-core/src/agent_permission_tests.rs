@@ -279,30 +279,13 @@ fn more_destructive_calls_are_recognised() {
         Some(A::ReplaceVariables)
     );
     assert_eq!(destructive_action("set_variables", "{}"), None);
-    // `execute` asks when its script names a delete, replace, export or
-    // variable overwrite, also when it only passes one around.
+    // Core cannot run a script: every `execute` asks until a host judges it
+    // by a dry run (`de_mcp::script_execute::execute_effects`).
     let exec = |script: &str| json(serde_json::json!({ "script": script }));
-    for script in [
-        "Delete('a')",
-        "const r = Replace;",
-        "Export(['a'], 'png', '/tmp/a.png')",
-        "SetVariables({}, true)",
-    ] {
+    for script in ["Get('a')", "globalThis.Delete('a')", "x.Delete()"] {
         assert_eq!(
             destructive_action("execute", &exec(script)),
             Some(A::ScriptedBatch),
-            "{script}"
-        );
-    }
-    for script in [
-        "Get('a')",
-        "Print(Deleted)",
-        "x.Delete()",
-        "TakeScreenshot(['a'])",
-    ] {
-        assert_eq!(
-            destructive_action("execute", &exec(script)),
-            None,
             "{script}"
         );
     }
@@ -383,5 +366,44 @@ fn replacing_the_document_declines_open_prompts_and_a_lost_wait_closes_one() {
     );
     state.gate_agent_tool(None, 7, "delete_node", "{}");
     state.close_agent_permission(7);
+    assert!(state.chat.permission_prompt.is_none());
+}
+
+#[test]
+fn an_answered_prompt_left_without_its_call_does_not_block_the_tab() {
+    let mut state = asking();
+    state.gate_agent_tool(None, 1, "delete_node", "{}");
+    // The document was replaced: the prompt is declined, and its turn gone.
+    state.decline_all_agent_permissions();
+    assert_eq!(
+        state.gate_agent_tool(None, 2, "remove_page", "{}"),
+        ToolGate::Asked,
+        "a later call is asked, not held for good"
+    );
+}
+
+#[test]
+fn stop_and_send_leave_an_external_agents_prompt_alone() {
+    let mut state = asking();
+    let external = EXTERNAL_CALL_IDS + 1;
+    state.gate_agent_tool(None, external, "delete_node", "{}");
+    state.chat.stop_streaming();
+    state.chat.input.set_text("hi");
+    state.chat.begin_send();
+    assert!(state
+        .chat
+        .permission_prompt
+        .as_ref()
+        .is_some_and(PermissionPrompt::is_external));
+    // An answered external prompt still holds the tab for its MCP pump.
+    state.answer_agent_permission(false);
+    assert_eq!(
+        state.gate_agent_tool(None, 3, "remove_page", "{}"),
+        ToolGate::Wait
+    );
+    // A chat turn's own prompt goes with the turn.
+    let mut state = asking();
+    state.gate_agent_tool(None, 1, "delete_node", "{}");
+    state.chat.stop_streaming();
     assert!(state.chat.permission_prompt.is_none());
 }
