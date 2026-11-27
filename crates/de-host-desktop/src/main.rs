@@ -352,9 +352,10 @@ struct DesktopApp {
     /// Background auto-search jobs that replace generated empty image
     /// nodes with freely licensed remote images.
     image_search: image_search_session::ImageSearchSession,
-    /// Background, cached listing of the document's folder for the chat's
-    /// `@` popup (#398).
+    /// The chat's `@` popup (#398): the document folder's cached listing
+    /// and the worker reads of the files staged from it.
     mention_files: de_host_services::chat_mention_scan::ProjectFileScanner,
+    mention_reads: de_host_services::chat_mention_prefetch::MentionFileReader,
     /// Property-panel image-section workers: Search / Generate
     /// popover requests + the local-asset existence check.
     image_panel: image_panel_host::ImagePanelJobs,

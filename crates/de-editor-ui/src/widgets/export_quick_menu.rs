@@ -178,7 +178,7 @@ impl<'a> Widget for ExportQuickMenu<'a> {
             let label = self.label(*row);
             let layout = TextLayout::single_run(
                 &label,
-                "system-ui",
+                crate::widgets::text_metrics::CHROME_FONT_FAMILY,
                 13.0,
                 (self.theme.foreground).to_jian(),
                 Point2D::new(0.0, 0.0),

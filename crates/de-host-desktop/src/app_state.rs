@@ -239,6 +239,7 @@ impl DesktopApp {
             builtin_model_refresh: Default::default(),
             image_search: image_search_session::ImageSearchSession::new(),
             mention_files: de_host_services::chat_mention_scan::ProjectFileScanner::new(),
+            mention_reads: de_host_services::chat_mention_prefetch::MentionFileReader::new(),
             image_panel: image_panel_host::ImagePanelJobs::new(),
             remote_images: remote_image_host::RemoteImageSession::new(),
             browser_renders: crate::browser_render_host::BrowserRenderHost::new(),

@@ -25,6 +25,52 @@ fn a_token_does_not_match_inside_a_longer_one() {
 }
 
 #[test]
+fn cjk_punctuation_and_dashes_end_a_token() {
+    let mentions = [node("a", "Hero")];
+    for draft in [
+        "改一下 @Hero，谢谢",
+        "@Hero。",
+        "@Hero—then",
+        "@Hero、@x",
+        "「@Hero」",
+    ] {
+        assert_eq!(live_mentions(draft, &mentions), [true], "{draft}");
+    }
+    // Letters of any script still continue it.
+    assert_eq!(live_mentions("@Hero按钮", &mentions), [false]);
+    assert_eq!(live_mentions("@Heroé", &mentions), [false]);
+    // So do the characters names and paths are made of.
+    assert_eq!(live_mentions("@Hero-card", &mentions), [false]);
+}
+
+#[test]
+fn the_draft_fingerprint_follows_text_and_staged_count() {
+    let a = identity::draft_fingerprint("fix @Hero", 1);
+    assert_eq!(a, identity::draft_fingerprint("fix @Hero", 1));
+    assert_ne!(a, identity::draft_fingerprint("fix @Her", 1));
+    assert_ne!(a, identity::draft_fingerprint("fix @Hero", 2));
+}
+
+#[test]
+fn an_unchanged_draft_skips_the_token_check() {
+    let mut state = multi_page_state();
+    state.chat.pending_mentions = vec![node("a", "Hero")];
+    state.chat.input.set_text("@Hero go");
+    state.sync_chat_mentions();
+    let checked = state.chat.mentions_checked_draft;
+    assert!(checked.is_some());
+    // A mention staged behind the sync's back is only dropped once the
+    // draft (or the staged count) moves.
+    state.chat.pending_mentions[0] = node("a", "Gone");
+    state.chat.input.set_text("@Hero go");
+    assert!(!state.sync_chat_mentions());
+    assert_eq!(state.chat.pending_mentions.len(), 1);
+    state.chat.input.set_text("@Hero go!");
+    assert!(state.sync_chat_mentions());
+    assert!(state.chat.pending_mentions.is_empty());
+}
+
+#[test]
 fn same_named_targets_get_numbered_labels() {
     let staged = [node("a", "Hero")];
     assert_eq!(unique_label(&node("b", "Hero"), &staged), "Hero#2");

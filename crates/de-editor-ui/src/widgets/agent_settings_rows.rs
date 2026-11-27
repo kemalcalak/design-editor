@@ -154,6 +154,9 @@ pub(super) const fn tab_intro_height(has_desc: bool) -> f32 {
 /// at most one muted line. Both are ellipsized to the content width so a
 /// long translation can't run past the modal edge. Shares its baselines
 /// with [`tab_intro_height`].
+/// Weight of a tab's intro title; it is fitted at this weight too.
+const INTRO_TITLE_WEIGHT: u16 = 700;
+
 pub(super) fn paint_tab_intro(
     cx: &mut PaintCx<'_>,
     theme: &Theme,
@@ -161,7 +164,13 @@ pub(super) fn paint_tab_intro(
     title: &str,
     desc: Option<&str>,
 ) {
-    let title_text = fit_text(cx, title, content.size.x, INTRO_TITLE_FONT);
+    let title_text = crate::widgets::text_metrics::fit_chrome_weighted(
+        cx.backend,
+        title,
+        content.size.x,
+        INTRO_TITLE_FONT,
+        INTRO_TITLE_WEIGHT,
+    );
     let title_layout = TextLayout::single_run(
         &title_text,
         SETTINGS_FONT_FAMILY,
@@ -169,7 +178,7 @@ pub(super) fn paint_tab_intro(
         (theme.foreground).to_jian(),
         Point2D::new(0.0, 0.0),
     )
-    .with_font_weight(700);
+    .with_font_weight(INTRO_TITLE_WEIGHT);
     cx.backend.draw_text(
         &title_layout,
         Point2D::new(content.origin.x, content.origin.y + intro_title_baseline()),

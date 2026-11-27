@@ -392,7 +392,7 @@ fn paint_transition_row(
     cx.backend.draw_text(
         &TextLayout::single_run(
             &label,
-            "system-ui",
+            text_metrics::CHROME_FONT_FAMILY,
             LABEL_FONT,
             theme.muted_foreground.to_jian(),
             Point2D::ZERO,
@@ -465,7 +465,7 @@ fn paint_duration_stepper(cx: &mut PaintCx<'_>, theme: &Theme, layout: &SlidesAc
     cx.backend.draw_text(
         &TextLayout::single_run(
             &text,
-            "system-ui",
+            text_metrics::CHROME_FONT_FAMILY,
             LABEL_FONT,
             theme.foreground.to_jian(),
             Point2D::ZERO,
@@ -528,7 +528,13 @@ pub fn paint_menu(
             (rect.size.x - MENU_PAD_X * 2.0).max(0.0),
         );
         cx.backend.draw_text(
-            &TextLayout::single_run(&label, "system-ui", 13.0, color.to_jian(), Point2D::ZERO),
+            &TextLayout::single_run(
+                &label,
+                text_metrics::CHROME_FONT_FAMILY,
+                13.0,
+                color.to_jian(),
+                Point2D::ZERO,
+            ),
             Point2D::new(
                 rect.origin.x + MENU_PAD_X,
                 centered_text_baseline_y(rect, 13.0),
@@ -584,7 +590,7 @@ fn paint_present_button(
         cx.backend.draw_text(
             &TextLayout::single_run(
                 &label,
-                "system-ui",
+                text_metrics::CHROME_FONT_FAMILY,
                 LABEL_FONT,
                 theme.primary_foreground.to_jian(),
                 Point2D::ZERO,
@@ -634,7 +640,7 @@ fn paint_export_button(
         cx.backend.draw_text(
             &TextLayout::single_run(
                 &label,
-                "system-ui",
+                text_metrics::CHROME_FONT_FAMILY,
                 LABEL_FONT,
                 theme.foreground.to_jian(),
                 Point2D::ZERO,

@@ -23,8 +23,8 @@ use de_editor_core::scene_template_catalog::SceneTemplateDefinition;
 use de_editor_core::AssetCenterTab;
 
 use super::panel_control_metrics::{CHIP_H, CHIP_LABEL_SIZE};
-use super::prompt_center_panel::estimated_text_width;
 use super::scene_template_panel::{SceneTemplateHit, SceneTemplatePanel, GENERATE_INPUT_H};
+use crate::widgets::label_widths::LabelWidths;
 use crate::{Point2D, Rect};
 
 /// Hover-token band for the "add to canvas" button of card `index`.
@@ -230,29 +230,44 @@ impl SceneTemplatePanel<'_> {
         SceneTemplateHit::AddTemplateToCanvas(template.id.clone())
     }
 
-    /// The basis chip's rect in the generate row, when one is set.
+    /// The basis chip's rect in the generate row, when one is set — sized
+    /// from its label as paint measured it (#451).
     pub fn basis_chip_rect(&self, panel: Rect) -> Option<Rect> {
+        self.basis_chip_rect_with(panel, &mut LabelWidths::cached())
+    }
+
+    /// [`basis_chip_rect`](Self::basis_chip_rect) through `widths`: paint
+    /// passes a measuring pass, every hit-test the cached one.
+    pub(super) fn basis_chip_rect_with(
+        &self,
+        panel: Rect,
+        widths: &mut LabelWidths<'_>,
+    ) -> Option<Rect> {
         let label = self.basis_chip_label()?;
         let input_row_y = self.generate_row_top(panel) + 6.0;
         let chip_h = CHIP_H;
         Some(Rect::xywh(
             Self::content_rect(panel).origin.x,
             input_row_y + (GENERATE_INPUT_H - chip_h) / 2.0,
-            basis_chip_width(&label),
+            basis_chip_width(widths, &label),
             chip_h,
         ))
     }
 
     /// The dismiss target inside the basis chip.
     pub(super) fn basis_chip_dismiss_rect(&self, panel: Rect) -> Option<Rect> {
-        let chip = self.basis_chip_rect(panel)?;
+        self.basis_chip_rect(panel).map(Self::basis_chip_dismiss_in)
+    }
+
+    /// The dismiss target inside `chip`, anchored to its right edge.
+    pub(super) fn basis_chip_dismiss_in(chip: Rect) -> Rect {
         let dismiss_w = BASIS_CHIP_DISMISS_W;
-        Some(Rect::xywh(
+        Rect::xywh(
             chip.origin.x + chip.size.x - dismiss_w,
             chip.origin.y,
             dismiss_w,
             chip.size.y,
-        ))
+        )
     }
 
     /// "Based on: Minimal Keynote" — the chip's full text, or `None` when the row is
@@ -277,11 +292,11 @@ impl SceneTemplatePanel<'_> {
     }
 }
 
-/// Chip width for `label`, capped so the topic field always has room.
-pub(super) fn basis_chip_width(label: &str) -> f32 {
-    (estimated_text_width(label, BASIS_CHIP_LABEL_SIZE)
-        + BASIS_CHIP_PAD_X * 2.0
-        + BASIS_CHIP_DISMISS_W)
+/// Chip width for `label` as painted (chrome face, [`BASIS_CHIP_LABEL_SIZE`],
+/// read through `widths`), capped so the topic field always has room; paint
+/// ellipsizes a label the cap cuts.
+pub(super) fn basis_chip_width(widths: &mut LabelWidths<'_>, label: &str) -> f32 {
+    (widths.chrome(label, BASIS_CHIP_LABEL_SIZE) + BASIS_CHIP_PAD_X * 2.0 + BASIS_CHIP_DISMISS_W)
         .min(BASIS_CHIP_MAX_W)
 }
 

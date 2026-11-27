@@ -309,7 +309,7 @@ impl<'a> Widget for CanvasViewport<'a> {
                 let mf = self.theme.muted_foreground;
                 let label = crate::TextLayout::single_run(
                     "Frame",
-                    "system-ui",
+                    crate::widgets::text_metrics::CHROME_FONT_FAMILY,
                     11.0,
                     jian_core::scene::Color::rgba(
                         (mf.r * 255.0) as u8,

@@ -99,7 +99,7 @@ pub fn paint_attachment_row(
         let cy = chip.origin.y + chip.size.y / 2.0;
         let name = TextLayout::single_run(
             &truncate_name(&att.name),
-            "system-ui",
+            crate::widgets::text_metrics::CHROME_FONT_FAMILY,
             11.0,
             (theme.foreground).to_jian(),
             Point2D::new(0.0, 0.0),

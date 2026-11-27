@@ -366,6 +366,8 @@ fn raw_thumbnail_extraction_is_local_and_schema_bounded() {
 #[test]
 fn canonical_saved_active_page_and_image_round_trip_through_parse_and_adopt() {
     let _registry_guard = crate::user_scene_templates::exclusive_registry_for_tests();
+    // The thumbnail registry is process-wide too.
+    let _thumbs_guard = crate::state::lock_thumbnail_registry();
     let image_source = format!(
         "data:image/png;base64,scene-template-round-trip{}",
         "A".repeat(4_096)
