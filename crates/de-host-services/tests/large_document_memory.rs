@@ -332,6 +332,26 @@ fn undo_history_memory() {
             );
         }
     }
+    // What the idle trim costs on the UI thread at this size (#456): a
+    // walk of the history and the document, run once per quiet spell.
+    for (label, budget) in [
+        (
+            "default budget",
+            de_editor_core::history_budget::HISTORY_BYTE_BUDGET,
+        ),
+        ("1-byte budget", 1),
+    ] {
+        let mut trimmed = live.clone();
+        let base = counting_alloc::live();
+        let started = Instant::now();
+        let dropped = trimmed
+            .trim_history_to_budget(budget, de_editor_core::history_budget::HISTORY_MIN_STEPS);
+        println!(
+            "idle trim ({label}): {:.1} ms, dropped {dropped} steps, freed {:.0} MB",
+            started.elapsed().as_secs_f64() * 1e3,
+            mb(base.saturating_sub(counting_alloc::live()) as f64)
+        );
+    }
     let undo_started = Instant::now();
     let mut undone = 0;
     while live.undo() {
