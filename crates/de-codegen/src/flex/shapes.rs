@@ -7,6 +7,7 @@
 use super::paint::fills_of;
 use super::value::{color_alpha, round2};
 use crate::{fmt_num, html_escape, node_stroke};
+use de_editor_core::corner_geometry;
 use jian_ops_schema::node::{LineNode, PathNode, PenNode, PenPathAnchor, PolygonNode};
 use jian_ops_schema::style::{PenFill, StrokeThickness};
 
@@ -112,6 +113,9 @@ pub(crate) fn path_svg(node: &PenNode, p: &PathNode) -> Option<(String, String)>
             de_editor_core::path_bounds::path_bounds_from_anchors(anchors, closed),
         )
     };
+    // The radius is in the path's own units, which the view box maps onto
+    // the node's box (the same px unless the path was stretched).
+    let d = rounded_path_d(d, p);
     let rule = match p.fill_rule {
         Some(jian_ops_schema::node::PathFillRule::Evenodd) => " fill-rule=\"evenodd\"",
         _ => "",
@@ -127,8 +131,17 @@ pub(crate) fn path_svg(node: &PenNode, p: &PathNode) -> Option<(String, String)>
     ))
 }
 
-/// `(viewBox, inner markup)` for a regular polygon or star in a 100×100 box.
-pub(crate) fn polygon_svg(node: &PenNode, p: &PolygonNode) -> (String, String) {
+/// `(viewBox, inner markup)` for a regular polygon or star in a 100×100 box,
+/// or, rounded (#389), its outline in the node's own px so the radius is
+/// not stretched with the box.
+pub(crate) fn polygon_svg(
+    node: &PenNode,
+    p: &PolygonNode,
+    size: Option<(f64, f64)>,
+) -> (String, String) {
+    if let Some(rounded) = rounded_polygon_svg(node, p, size) {
+        return rounded;
+    }
     let count = p.polygon_count.max(3) as usize;
     let inner = p.inner_radius.filter(|r| *r > 0.0 && *r < 1.0);
     let steps = if inner.is_some() { count * 2 } else { count };
@@ -156,6 +169,63 @@ pub(crate) fn polygon_svg(node: &PenNode, p: &PolygonNode) -> (String, String) {
             svg_stroke(node)
         ),
     )
+}
+
+/// A polygon or star with a corner radius as its rounded (and smoothed)
+/// outline, the editor's own geometry (`corner_geometry`), in node px.
+fn rounded_polygon_svg(
+    node: &PenNode,
+    p: &PolygonNode,
+    size: Option<(f64, f64)>,
+) -> Option<(String, String)> {
+    let radius = p.corner_radius.filter(|r| r.is_finite() && *r > 0.0)?;
+    let (w, h) = size.filter(|(w, h)| *w > 0.0 && *h > 0.0)?;
+    let count = p.polygon_count.max(3) as usize;
+    let inner = p.inner_radius.filter(|r| *r > 0.0 && *r < 1.0);
+    let steps = if inner.is_some() { count * 2 } else { count };
+    let points: Vec<(f64, f64)> = (0..steps)
+        .map(|i| {
+            let angle =
+                -std::f64::consts::FRAC_PI_2 + std::f64::consts::TAU * i as f64 / steps as f64;
+            let r = match inner {
+                Some(ir) if i % 2 == 1 => ir,
+                _ => 1.0,
+            };
+            (
+                w / 2.0 * (1.0 + r * angle.cos()),
+                h / 2.0 * (1.0 + r * angle.sin()),
+            )
+        })
+        .collect();
+    let smoothing = p.corner_smoothing.unwrap_or(0.0);
+    let outline = corner_geometry::polygon_outline(&points, radius, smoothing)?;
+    let d = corner_geometry::outline_path_data(&[outline]);
+    Some((
+        format!("0 0 {} {}", n(w), n(h)),
+        format!(
+            "<path d=\"{}\" fill=\"{}\"{}/>",
+            html_escape(&d),
+            html_escape(&svg_fill(node)),
+            svg_stroke(node)
+        ),
+    ))
+}
+
+/// A path's `d` with its sharp vertices rounded by `vertexRadius` (#389),
+/// as the canvas draws it; the plain `d` without a radius.
+fn rounded_path_d(d: String, p: &PathNode) -> String {
+    let Some(radius) = p.vertex_radius.filter(|r| r.is_finite() && *r > 0.0) else {
+        return d;
+    };
+    let Some(subs) = de_editor_core::vector_edit::parse_path_data(&d) else {
+        return d;
+    };
+    let smoothing = p.corner_smoothing.unwrap_or(0.0);
+    let rounded: Vec<_> = subs
+        .iter()
+        .map(|sub| corner_geometry::round_corners(sub, &vec![radius; sub.anchors.len()], smoothing))
+        .collect();
+    corner_geometry::outline_path_data(&rounded)
 }
 
 /// `(width, height, viewBox, inner markup)` for a line: `x2` / `y2` are the

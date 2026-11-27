@@ -255,7 +255,7 @@ impl Walker<'_> {
                 }
             }
             PenNode::Polygon(p) => {
-                let (view_box, inner) = polygon_svg(node, p);
+                let (view_box, inner) = polygon_svg(node, p, size);
                 svg(&mut el, view_box, inner);
             }
             PenNode::Line(l) => {
