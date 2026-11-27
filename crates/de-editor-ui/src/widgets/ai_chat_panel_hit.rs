@@ -141,7 +141,19 @@ impl<'a> AIChatPlaceholder<'a> {
             // row below is measured from `rows_rect`, the input block with
             // the notice already taken off the top, so their geometry is
             // identical whether or not the notice is up.
-            if let Some(notice) = self.mcp_notice_row(rect) {
+            if let (Some(band), Some(view)) = (self.mcp_notice_row(rect), self.permission.as_ref())
+            {
+                if band.contains(point) {
+                    return Some(
+                        match crate::widgets::ai_chat_permission_prompt::permission_hit(
+                            band, view, point,
+                        ) {
+                            Some(allow) => AIChatHit::AnswerPermission(allow),
+                            None => AIChatHit::Inside,
+                        },
+                    );
+                }
+            } else if let Some(notice) = self.mcp_notice_row(rect) {
                 if crate::widgets::ai_chat_mcp_notice::notice_rect(notice).contains(point) {
                     return Some(AIChatHit::OpenMcpSettings);
                 }

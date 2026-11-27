@@ -370,6 +370,7 @@ mod ai_chat_hit;
 pub(crate) mod ai_chat_input_text;
 pub mod ai_chat_mcp_notice;
 pub(crate) mod ai_chat_mention_popup;
+pub(crate) mod ai_chat_permission_prompt;
 pub mod ai_chat_model_picker;
 #[cfg(test)]
 mod ai_chat_model_picker_tests;

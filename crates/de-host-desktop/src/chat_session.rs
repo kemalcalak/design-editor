@@ -410,6 +410,31 @@ fn execute_tool_requests(
             });
             continue;
         }
+        // #398: with "Ask before destructive agent actions" on, a call that
+        // deletes or overwrites waits for the user's Allow / Deny.
+        match state.gate_agent_tool(running_tab, &req.name, &req.args_json) {
+            de_editor_core::agent_permission::ToolGate::Run => {}
+            de_editor_core::agent_permission::ToolGate::Wait => {
+                session.defer_tool_request(req);
+                changed = true;
+                continue;
+            }
+            de_editor_core::agent_permission::ToolGate::Declined => {
+                let result = ChatToolResult {
+                    content: de_editor_core::agent_permission::DECLINED_RESULT.to_string(),
+                    is_error: true,
+                };
+                attach_tool_result_to_transcript_with(
+                    state.chat.run_tab_mut(running_tab),
+                    &req.name,
+                    &result,
+                    agent_identity,
+                );
+                let _ = req.ack.send(result);
+                changed = true;
+                continue;
+            }
+        }
         let (result, mutated) = execute_agent_tool(state, &req.name, &req.args_json);
         if mutated {
             changed = true;
@@ -610,3 +635,7 @@ mod reveal_tests;
 #[cfg(test)]
 #[path = "chat_session_finalize_teardown_tests.rs"]
 mod finalize_teardown_tests;
+
+#[cfg(test)]
+#[path = "chat_session_permission_tests.rs"]
+mod permission_tests;

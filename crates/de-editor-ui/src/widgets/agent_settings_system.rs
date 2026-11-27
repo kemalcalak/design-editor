@@ -63,6 +63,8 @@ pub enum SystemHit {
     SelectPencilSmoothing(de_editor_core::PencilSmoothing),
     /// The Live pages switch (#324).
     ToggleLivePages,
+    /// "Ask before destructive agent actions" (#398).
+    ToggleConfirmAgentActions,
     None,
 }
 
@@ -117,6 +119,7 @@ enum SystemRow {
     PencilCursor,
     PencilSmoothing,
     LivePages,
+    ConfirmAgentActions,
 }
 
 fn visible_rows() -> &'static [SystemRow] {
@@ -128,6 +131,7 @@ fn visible_rows() -> &'static [SystemRow] {
             SystemRow::PencilCursor,
             SystemRow::PencilSmoothing,
             SystemRow::LivePages,
+            SystemRow::ConfirmAgentActions,
         ]
     } else {
         &[
@@ -136,6 +140,7 @@ fn visible_rows() -> &'static [SystemRow] {
             SystemRow::PencilCursor,
             SystemRow::PencilSmoothing,
             SystemRow::LivePages,
+            SystemRow::ConfirmAgentActions,
         ]
     }
 }
@@ -146,7 +151,10 @@ impl SystemRow {
     /// pages a description; the others are label-only.
     fn lines(self) -> RowLines {
         match self {
-            SystemRow::AutoUpdate | SystemRow::Experimental | SystemRow::LivePages => RowLines::Two,
+            SystemRow::AutoUpdate
+            | SystemRow::Experimental
+            | SystemRow::LivePages
+            | SystemRow::ConfirmAgentActions => RowLines::Two,
             SystemRow::Appearance | SystemRow::PencilCursor | SystemRow::PencilSmoothing => {
                 RowLines::One
             }
@@ -353,6 +361,9 @@ pub fn hit_test(content: Rect, ui: &EditorUiState, scrolled: Point2D) -> SystemH
     if switch_rect_for(content, SystemRow::LivePages).contains(scrolled) {
         return SystemHit::ToggleLivePages;
     }
+    if switch_rect_for(content, SystemRow::ConfirmAgentActions).contains(scrolled) {
+        return SystemHit::ToggleConfirmAgentActions;
+    }
     SystemHit::None
 }
 
@@ -414,6 +425,22 @@ pub(super) fn paint_system_tab(
                     theme,
                     switch_rect_for(content, SystemRow::LivePages),
                     ui.browser_live.live_pages(),
+                );
+            }
+            SystemRow::ConfirmAgentActions => {
+                paint_row_label(
+                    cx,
+                    theme,
+                    rect,
+                    t_settings(ui, "settings.system.confirmAgentActions"),
+                    Some(t_settings(ui, "settings.system.confirmAgentActionsDesc")),
+                    SETTINGS_SWITCH_W + 16.0,
+                );
+                paint_settings_switch(
+                    cx,
+                    theme,
+                    switch_rect_for(content, SystemRow::ConfirmAgentActions),
+                    settings.confirm_destructive_agent_actions,
                 );
             }
         }

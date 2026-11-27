@@ -270,6 +270,11 @@ pub fn apply_agent_settings_hit(
             state.editor_ui.pencil_smoothing = level;
             SettingsPressOutcome::handled()
         }
+        AgentSettingsHit::ToggleConfirmAgentActions => {
+            let settings = &mut state.editor_ui.agent_settings;
+            settings.confirm_destructive_agent_actions ^= true;
+            SettingsPressOutcome::handled()
+        }
         AgentSettingsHit::ToggleLivePages => {
             let live = &mut state.editor_ui.browser_live;
             live.set_live_pages(!live.live_pages());

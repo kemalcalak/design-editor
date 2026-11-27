@@ -89,6 +89,8 @@ pub enum AIChatHit {
     RemoveMention(usize),
     /// The footer's context button — opens / closes the context panel.
     ToggleContextPanel,
+    /// Allow (`true`) or Deny (`false`) on the permission prompt (#398).
+    AnswerPermission(bool),
     /// Click on the selected-count chip's clear target — host clears
     /// the current canvas selection.
     ClearSelection,

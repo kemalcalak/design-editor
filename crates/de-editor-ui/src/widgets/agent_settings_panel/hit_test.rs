@@ -209,6 +209,9 @@ impl AgentSettingsPanel<'_> {
                         return AgentSettingsHit::SelectPencilSmoothing(level)
                     }
                     SystemHit::ToggleLivePages => return AgentSettingsHit::ToggleLivePages,
+                    SystemHit::ToggleConfirmAgentActions => {
+                        return AgentSettingsHit::ToggleConfirmAgentActions
+                    }
                     SystemHit::None => {}
                 }
             }

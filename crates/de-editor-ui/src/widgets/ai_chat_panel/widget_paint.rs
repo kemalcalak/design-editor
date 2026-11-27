@@ -154,7 +154,13 @@ impl<'a> Widget for AIChatPlaceholder<'a> {
         }
         // Above even the chips: a turn that cannot start at all outranks
         // anything describing what the turn would do.
-        if let (Some(row), Some(label)) = (self.mcp_notice_row(rect), self.mcp_notice.as_deref()) {
+        if let (Some(row), Some(view)) = (self.mcp_notice_row(rect), self.permission.as_ref()) {
+            crate::widgets::ai_chat_permission_prompt::paint_permission_prompt(
+                cx, row, self.theme, view,
+            );
+        } else if let (Some(row), Some(label)) =
+            (self.mcp_notice_row(rect), self.mcp_notice.as_deref())
+        {
             crate::widgets::ai_chat_mcp_notice::paint_mcp_notice(cx, row, self.theme, label);
         }
         // The chips describe the next turn and what it is aimed at; they sit
