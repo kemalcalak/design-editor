@@ -602,7 +602,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.skill.projectOverBuiltin" => "プロジェクト · 組み込みを置換",
         "chat.skill.userOverBuiltin" => "個人 · 組み込みを置換",
         "chat.mention.skill" => "スキル",
-        "chat.mention.noSkills" => "スキルがありません：.design-editor/skills に SKILL.md を追加してください",
+        "chat.mention.noSkills" => "スキルはまだありません：プロジェクトの .design-editor/skills フォルダ、または Design Editor 設定フォルダ内の skills フォルダに SKILL.md を追加してください",
+        "chat.skill.overridesApplied" => "このプロジェクトのスキルが組み込みスキルを置き換えます：{{names}}",
+        "chat.skill.cut" => "選択したスキルはこのメッセージ用に {{count}} 文字に切り詰められました",
         _ => return None,
     })
 }

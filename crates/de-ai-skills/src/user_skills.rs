@@ -53,6 +53,12 @@ pub struct UserSkill {
     pub meta: SkillMeta,
     pub source: SkillSource,
     pub path: PathBuf,
+    /// The skills folder it was listed from (canonical); a read at use
+    /// checks the file is still inside it.
+    pub folder: PathBuf,
+    /// The front matter names its phases; without them a skill that
+    /// replaces a built-in one keeps the built-in's phases.
+    pub declares_phase: bool,
     /// A built-in skill of the same name is replaced by this one.
     pub overrides_builtin: bool,
     /// A project skill hiding the user's own skill of the same name.
@@ -97,9 +103,7 @@ fn valid_name(name: &str) -> bool {
 /// generation-phase skill, so both shapes load.
 pub fn parse_user_skill(text: &str) -> Result<(SkillMeta, String), UserSkillError> {
     let (front, _) = split_frontmatter(text).ok_or(UserSkillError::NoFrontMatter)?;
-    let declares_phase = front
-        .lines()
-        .any(|line| line.trim_start().starts_with("phase:") && !line.starts_with(' '));
+    let declares_phase = front_declares_phase(&front);
     let parsed = if declares_phase {
         parse_skill_frontmatter(text)
     } else {
@@ -127,8 +131,16 @@ pub fn parse_user_skill(text: &str) -> Result<(SkillMeta, String), UserSkillErro
     Ok((meta, content))
 }
 
-/// Parse only the front matter of `head` (the start of a skill file).
-fn parse_front_matter(head: &str) -> Result<SkillMeta, UserSkillError> {
+/// Whether the front matter `front` has its own top-level `phase:` line.
+fn front_declares_phase(front: &str) -> bool {
+    front
+        .lines()
+        .any(|line| line.trim_start().starts_with("phase:") && !line.starts_with(' '))
+}
+
+/// Parse only the front matter of `head` (the start of a skill file), and
+/// say whether it declares its phases.
+fn parse_front_matter(head: &str) -> Result<(SkillMeta, bool), UserSkillError> {
     let mut lines = head.split_inclusive('\n');
     let mut end = lines.next().ok_or(UserSkillError::NoFrontMatter)?.len();
     let mut closed = false;
@@ -145,18 +157,22 @@ fn parse_front_matter(head: &str) -> Result<SkillMeta, UserSkillError> {
     // The body is checked when the skill is used; a stand-in keeps the
     // shared parser's "has a body" rule out of the listing.
     let header = format!("{}\nbody\n", head[..end].trim_end());
-    parse_user_skill(&header).map(|(meta, _)| meta)
+    let declares = front_declares_phase(&head[..end]);
+    parse_user_skill(&header).map(|(meta, _)| (meta, declares))
 }
 
 /// The candidate skill files directly in `folder`: `<name>/SKILL.md` and
 /// `<name>.md`, each resolved through symlinks and kept only when it stays
 /// inside the folder.
-fn skill_files(folder: &Path) -> Vec<Result<PathBuf, (PathBuf, UserSkillError)>> {
+/// Candidate skill files of one folder (see [`skill_files`]).
+type FolderFiles = Vec<Result<PathBuf, (PathBuf, UserSkillError)>>;
+
+fn skill_files(folder: &Path) -> (PathBuf, FolderFiles) {
     let Ok(root) = fs::canonicalize(folder) else {
-        return Vec::new();
+        return (folder.to_path_buf(), Vec::new());
     };
     let Ok(entries) = fs::read_dir(&root) else {
-        return Vec::new();
+        return (root, Vec::new());
     };
     let mut paths: Vec<PathBuf> = entries
         .flatten()
@@ -177,19 +193,27 @@ fn skill_files(folder: &Path) -> Vec<Result<PathBuf, (PathBuf, UserSkillError)>>
         })
         .collect();
     paths.sort();
+    let dropped = paths.len().saturating_sub(MAX_SKILLS_PER_FOLDER);
     paths.truncate(MAX_SKILLS_PER_FOLDER);
-    paths
+    let mut files: FolderFiles = paths
         .into_iter()
         .map(|path| match fs::canonicalize(&path) {
             Ok(real) if real.starts_with(&root) => Ok(path),
             Ok(_) => Err((path, UserSkillError::OutsideFolder)),
             Err(source) => Err((path, UserSkillError::Io { source })),
         })
-        .collect()
+        .collect();
+    if dropped > 0 {
+        files.push(Err((
+            root.clone(),
+            UserSkillError::TooManySkills { dropped },
+        )));
+    }
+    (root, files)
 }
 
 /// Read the front matter of the skill at `path`.
-fn read_skill_meta(path: &Path) -> Result<SkillMeta, UserSkillError> {
+fn read_skill_meta(path: &Path) -> Result<(SkillMeta, bool), UserSkillError> {
     let io = |source| UserSkillError::Io { source };
     let size = fs::metadata(path).map_err(io)?.len();
     if size > MAX_SKILL_BYTES {
@@ -212,17 +236,37 @@ fn read_skill_meta(path: &Path) -> Result<SkillMeta, UserSkillError> {
     parse_front_matter(head)
 }
 
-/// Read the instructions of the skill at `path` (the whole file, checked
-/// again in full).
-pub fn read_skill_body(path: &Path) -> Result<String, UserSkillError> {
+/// Read the instructions of the skill listed as `name` from `path` in skills
+/// folder `folder`, checking everything again: the file (through any
+/// symlink) is still inside the folder, at most [`MAX_SKILL_BYTES`] (never
+/// read past it), valid, and still names `name`.
+pub fn read_skill_body(path: &Path, folder: &Path, name: &str) -> Result<String, UserSkillError> {
     let io = |source| UserSkillError::Io { source };
-    let size = fs::metadata(path).map_err(io)?.len();
-    if size > MAX_SKILL_BYTES {
-        return Err(UserSkillError::TooLarge { bytes: size });
+    let root = fs::canonicalize(folder).map_err(io)?;
+    let real = fs::canonicalize(path).map_err(io)?;
+    if !real.starts_with(&root) {
+        return Err(UserSkillError::OutsideFolder);
     }
-    let bytes = fs::read(path).map_err(io)?;
+    let mut bytes = Vec::new();
+    fs::File::open(&real)
+        .map_err(io)?
+        .take(MAX_SKILL_BYTES + 1)
+        .read_to_end(&mut bytes)
+        .map_err(io)?;
+    if bytes.len() as u64 > MAX_SKILL_BYTES {
+        return Err(UserSkillError::TooLarge {
+            bytes: bytes.len() as u64,
+        });
+    }
     let text = String::from_utf8(bytes).map_err(|_| UserSkillError::NotUtf8)?;
-    parse_user_skill(&text).map(|(_, body)| body)
+    let (meta, body) = parse_user_skill(&text)?;
+    if meta.name != name {
+        return Err(UserSkillError::NameChanged {
+            listed: name.to_string(),
+            found: meta.name,
+        });
+    }
+    Ok(body)
 }
 
 /// List the skills of every `(source, folder)` pair, in the order given
@@ -234,15 +278,15 @@ pub fn load_user_skills(
 ) -> UserSkillSet {
     let mut set = UserSkillSet::default();
     for (source, folder) in folders {
-        for found in skill_files(folder) {
+        let (root, files) = skill_files(folder);
+        for found in files {
             let meta = found.and_then(|path| match read_skill_meta(&path) {
                 Ok(meta) => Ok((path, meta)),
                 Err(error) => Err((path, error)),
             });
             match meta {
-                Ok((path, meta)) => {
-                    if let Some(winner) = set.skills.iter_mut().find(|s| s.meta.name == meta.name)
-                    {
+                Ok((path, (meta, declares_phase))) => {
+                    if let Some(winner) = set.skills.iter_mut().find(|s| s.meta.name == meta.name) {
                         // A higher-precedence folder already has it.
                         winner.shadows_user |=
                             winner.source == SkillSource::Project && *source == SkillSource::User;
@@ -253,6 +297,8 @@ pub fn load_user_skills(
                         meta,
                         source: *source,
                         path,
+                        folder: root.clone(),
+                        declares_phase,
                         overrides_builtin,
                         shadows_user: false,
                     });

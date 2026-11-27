@@ -604,7 +604,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.skill.projectOverBuiltin" => "프로젝트 · 기본 제공 대체",
         "chat.skill.userOverBuiltin" => "개인 · 기본 제공 대체",
         "chat.mention.skill" => "스킬",
-        "chat.mention.noSkills" => "스킬이 없습니다: .design-editor/skills에 SKILL.md 파일을 추가하세요",
+        "chat.mention.noSkills" => "아직 스킬이 없습니다: 프로젝트의 .design-editor/skills 폴더나 Design Editor 설정 폴더의 skills 폴더에 SKILL.md 파일을 추가하세요",
+        "chat.skill.overridesApplied" => "이 프로젝트의 스킬이 기본 제공 스킬을 대체합니다: {{names}}",
+        "chat.skill.cut" => "선택한 스킬이 이 메시지에서 {{count}}자로 잘렸습니다",
         _ => return None,
     })
 }

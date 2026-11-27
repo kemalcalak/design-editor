@@ -602,7 +602,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.skill.projectOverBuiltin" => "Projet · remplace l'intégré",
         "chat.skill.userOverBuiltin" => "Personnel · remplace l'intégré",
         "chat.mention.skill" => "Compétence",
-        "chat.mention.noSkills" => "Aucune compétence : ajoutez des fichiers SKILL.md dans .design-editor/skills",
+        "chat.mention.noSkills" => "Aucune compétence : ajoutez des fichiers SKILL.md au dossier .design-editor/skills du projet ou au dossier skills du dossier de configuration de Design Editor",
+        "chat.skill.overridesApplied" => "Les compétences de ce projet remplacent des compétences intégrées : {{names}}",
+        "chat.skill.cut" => "Les compétences choisies ont été coupées à {{count}} caractères pour ce message",
         _ => return None,
     })
 }

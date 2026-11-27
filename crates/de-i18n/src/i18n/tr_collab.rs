@@ -602,7 +602,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.skill.projectOverBuiltin" => "Proje · yerleşiği değiştirir",
         "chat.skill.userOverBuiltin" => "Kişisel · yerleşiği değiştirir",
         "chat.mention.skill" => "Beceri",
-        "chat.mention.noSkills" => "Henüz beceri yok: .design-editor/skills klasörüne SKILL.md dosyaları ekleyin",
+        "chat.mention.noSkills" => "Henüz beceri yok: SKILL.md dosyalarını projenin .design-editor/skills klasörüne ya da Design Editor yapılandırma klasöründeki skills klasörüne ekleyin",
+        "chat.skill.overridesApplied" => "Bu projenin becerileri yerleşik becerilerin yerine geçiyor: {{names}}",
+        "chat.skill.cut" => "Seçilen beceriler bu mesaj için {{count}} karaktere kısaltıldı",
         _ => return None,
     })
 }

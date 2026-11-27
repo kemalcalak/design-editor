@@ -21,6 +21,11 @@ pub enum UserSkillError {
     NotUtf8,
     /// A symlink that resolves outside its skills folder.
     OutsideFolder,
+    /// The file's front matter no longer names the skill it was listed as.
+    NameChanged { listed: String, found: String },
+    /// A folder held more skills than `MAX_SKILLS_PER_FOLDER`; the path is
+    /// the folder.
+    TooManySkills { dropped: usize },
     /// Reading the file failed.
     Io { source: io::Error },
 }
@@ -44,6 +49,14 @@ impl fmt::Display for UserSkillError {
             ),
             UserSkillError::NotUtf8 => write!(f, "not UTF-8 text"),
             UserSkillError::OutsideFolder => write!(f, "links to a file outside the skills folder"),
+            UserSkillError::NameChanged { listed, found } => {
+                write!(f, "now names \"{found}\", not \"{listed}\"")
+            }
+            UserSkillError::TooManySkills { dropped } => write!(
+                f,
+                "{dropped} skill files past the {} per folder were not loaded",
+                crate::user_skills::MAX_SKILLS_PER_FOLDER
+            ),
             UserSkillError::Io { source } => write!(f, "{source}"),
         }
     }

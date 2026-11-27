@@ -60,7 +60,8 @@ pub fn resolve_skills(phase: Phase, user_message: &str, options: &ResolveOptions
 }
 
 /// The phase's candidates: built-in skills, each replaced by an override
-/// of the same name (which joins only the phases it declares itself).
+/// of the same name. An override joins the phases it declares itself; one
+/// that declares none (an empty `phase`) keeps the replaced built-in's.
 fn phase_candidates(phase: Phase, overrides: &[SkillEntry]) -> Vec<SkillEntry> {
     let mut skills: Vec<SkillEntry> = get_skills_by_phase(phase)
         .into_iter()
@@ -70,7 +71,14 @@ fn phase_candidates(phase: Phase, overrides: &[SkillEntry]) -> Vec<SkillEntry> {
     skills.extend(
         overrides
             .iter()
-            .filter(|o| o.meta.phase.contains(&phase))
+            .filter(|o| {
+                if o.meta.phase.is_empty() {
+                    crate::loader::get_skill_by_name(&o.meta.name)
+                        .is_some_and(|builtin| builtin.meta.phase.contains(&phase))
+                } else {
+                    o.meta.phase.contains(&phase)
+                }
+            })
             .cloned(),
     );
     skills
@@ -519,6 +527,18 @@ mod tests {
             .collect();
         assert_eq!(same_name.len(), 1, "the built-in is gone, not doubled");
         assert_eq!(same_name[0].content, "PROJECT HOUSE RULES");
+        // One that declares no phases keeps the built-in's.
+        replacement.meta.phase = Vec::new();
+        let ctx = resolve_skills_with_overrides(
+            Phase::Generation,
+            prompt,
+            &ResolveOptions::default(),
+            std::slice::from_ref(&replacement),
+        );
+        assert!(ctx
+            .skills
+            .iter()
+            .any(|s| s.meta.name == builtin.meta.name && s.content == "PROJECT HOUSE RULES"));
         // An override that declares other phases leaves this one without it.
         replacement.meta.phase = vec![Phase::Validation];
         let ctx = resolve_skills_with_overrides(

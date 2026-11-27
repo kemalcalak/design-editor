@@ -602,7 +602,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.skill.projectOverBuiltin" => "Proyecto · sustituye al integrado",
         "chat.skill.userOverBuiltin" => "Personal · sustituye al integrado",
         "chat.mention.skill" => "Habilidad",
-        "chat.mention.noSkills" => "Aún no hay habilidades: añade archivos SKILL.md en .design-editor/skills",
+        "chat.mention.noSkills" => "Aún no hay habilidades: añade archivos SKILL.md a la carpeta .design-editor/skills del proyecto o a la carpeta skills de la carpeta de configuración de Design Editor",
+        "chat.skill.overridesApplied" => "Las habilidades de este proyecto sustituyen a habilidades integradas: {{names}}",
+        "chat.skill.cut" => "Las habilidades elegidas se recortaron a {{count}} caracteres para este mensaje",
         _ => return None,
     })
 }

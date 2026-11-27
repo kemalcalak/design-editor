@@ -602,7 +602,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.skill.projectOverBuiltin" => "Project · replaces built-in",
         "chat.skill.userOverBuiltin" => "Personal · replaces built-in",
         "chat.mention.skill" => "Skill",
-        "chat.mention.noSkills" => "No skills yet: add SKILL.md files to .design-editor/skills",
+        "chat.mention.noSkills" => "No skills yet: add SKILL.md files to the project's .design-editor/skills folder or to the skills folder in the Design Editor config folder",
+        "chat.skill.overridesApplied" => "This project's skills replace built-in skills: {{names}}",
+        "chat.skill.cut" => "The picked skills were cut to {{count}} characters for this message",
         _ => return None,
     })
 }

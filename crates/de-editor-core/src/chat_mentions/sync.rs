@@ -6,8 +6,8 @@
 //! the popup re-ranked, only when they did.
 
 use super::{
-    active_mention_query, mention_candidates, skill_candidates, MentionCandidate,
-    MentionPopup, SKILL_TRIGGER,
+    active_mention_query, mention_candidates, skill_candidates, MentionCandidate, MentionPopup,
+    SKILL_TRIGGER,
 };
 use crate::EditorState;
 

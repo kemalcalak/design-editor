@@ -602,7 +602,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.skill.projectOverBuiltin" => "專案 · 取代內建",
         "chat.skill.userOverBuiltin" => "個人 · 取代內建",
         "chat.mention.skill" => "技能",
-        "chat.mention.noSkills" => "還沒有技能：將 SKILL.md 檔案放入 .design-editor/skills",
+        "chat.mention.noSkills" => "尚無技能：將 SKILL.md 檔案加入專案的 .design-editor/skills 資料夾，或 Design Editor 設定資料夾中的 skills 資料夾",
+        "chat.skill.overridesApplied" => "此專案的技能取代了內建技能：{{names}}",
+        "chat.skill.cut" => "所選技能已在此訊息中截斷為 {{count}} 個字元",
         _ => return None,
     })
 }

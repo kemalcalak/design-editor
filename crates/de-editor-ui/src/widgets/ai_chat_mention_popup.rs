@@ -11,10 +11,12 @@
 use super::ai_chat_panel::AIChatPlaceholder;
 use crate::widgets::ai_chat_chrome::{chat_label, dropdown_card, fit_label, label_baseline};
 use crate::widgets::home_surface::HomePalette;
+use crate::widgets::home_surface::SANS;
 use crate::widgets::icons::{draw_icon, Icon};
+use crate::widgets::label_widths::LabelWidths;
 use crate::widgets::{text_metrics, PaintCx};
 use crate::{Point2D, Rect};
-use de_editor_core::chat_mentions::{MentionKind, MentionPopup};
+use de_editor_core::chat_mentions::{MentionKind, MentionPopup, SKILL_TRIGGER};
 use de_editor_core::Locale;
 
 const ROW_H: f32 = 32.0;
@@ -26,6 +28,19 @@ const GLYPH: f32 = 14.0;
 const LABEL_FONT: f32 = 13.0;
 const DETAIL_FONT: f32 = 11.5;
 const TAG_FONT: f32 = 11.0;
+/// Rows of height the empty `/` popup takes: its note names both skill
+/// folders, so it wraps over several lines.
+const EMPTY_SKILL_ROWS: usize = 3;
+const NOTE_LINE_H: f32 = 17.0;
+
+/// The rows of height a popup with `rows` rows takes.
+fn popup_rows(popup: &MentionPopup) -> usize {
+    if popup.rows.is_empty() && popup.trigger == SKILL_TRIGGER {
+        EMPTY_SKILL_ROWS
+    } else {
+        popup.rows.len()
+    }
+}
 
 /// The kind glyph shown at the start of a row.
 pub(crate) fn kind_icon(kind: MentionKind) -> Icon {
@@ -70,7 +85,7 @@ impl<'a> AIChatPlaceholder<'a> {
         }
         Some(mention_popup_rect(
             self.composer_card(rect),
-            popup.rows.len(),
+            popup_rows(popup),
         ))
     }
 
@@ -92,19 +107,36 @@ pub(crate) fn paint_mention_popup(
     locale: Locale,
 ) {
     dropdown_card(cx, palette, menu);
+    if popup.rows.is_empty() && popup.trigger == SKILL_TRIGGER {
+        // An empty `/` list says where skills come from, wrapped over the
+        // popup's rows.
+        let note = de_i18n::translate(locale, "chat.mention.noSkills");
+        let width = (menu.size.x - PAD * 2.0 - 20.0).max(1.0);
+        let lines = LabelWidths::measuring(cx.backend).wrap(note, width, LABEL_FONT, SANS, 400);
+        let room = ((menu.size.y - PAD * 2.0 - 8.0) / NOTE_LINE_H)
+            .floor()
+            .max(1.0) as usize;
+        let top = menu.origin.y + PAD + 4.0;
+        for (i, line) in lines.iter().take(room).enumerate() {
+            chat_label(
+                cx,
+                line,
+                LABEL_FONT,
+                palette.text_3,
+                400,
+                Point2D::new(
+                    menu.origin.x + PAD + 10.0,
+                    top + i as f32 * NOTE_LINE_H + LABEL_FONT,
+                ),
+            );
+        }
+        return;
+    }
     if popup.rows.is_empty() {
         let row = row_rect(menu, 0);
         chat_label(
             cx,
-            // An empty `/` list says where skills come from.
-            de_i18n::translate(
-                locale,
-                if popup.trigger == de_editor_core::chat_mentions::SKILL_TRIGGER {
-                    "chat.mention.noSkills"
-                } else {
-                    "chat.mention.noMatches"
-                },
-            ),
+            de_i18n::translate(locale, "chat.mention.noMatches"),
             LABEL_FONT,
             palette.text_3,
             400,

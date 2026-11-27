@@ -6,13 +6,18 @@
 use std::path::Path;
 use std::sync::Arc;
 
-use de_editor_core::chat_mentions::{ProjectFileSource, SkillListSource};
+use de_editor_core::chat_mentions::{
+    ProjectFileSource, SkillListSource, SkillOrigin, SkillsListedFor,
+};
 use de_editor_core::editor_toast::EditorToastLevel;
 
 use super::WidgetHostNative;
 
 /// The toast raised when a folder listing was cut short.
 pub const SCAN_LIMITED_TOAST: &str = "chat.mention.scanLimited";
+/// The notice raised once per project folder whose skills replace built-in
+/// skills.
+pub const OVERRIDES_TOAST: &str = "chat.skill.overridesApplied";
 
 impl WidgetHostNative {
     /// Bring the `@` popup in line with the chat draft, before painting.
@@ -31,10 +36,11 @@ impl WidgetHostNative {
         files: &mut dyn ProjectFileSource,
         skills: &mut dyn SkillListSource,
     ) -> bool {
-        let root = project_root.map(|p| p.to_string_lossy().into_owned());
         let project = &mut self.editor_state.chat.project_files;
-        if project.root != root {
-            project.root = root;
+        // Compared as paths, so a redraw with the folder unchanged allocates
+        // nothing.
+        if project.root.as_deref().map(Path::new) != project_root {
+            project.root = project_root.map(|p| p.to_string_lossy().into_owned());
             project.files = Arc::from(Vec::new());
             project.summaries.clear();
         }
@@ -75,12 +81,11 @@ impl WidgetHostNative {
         project_root: Option<&Path>,
         skills: &mut dyn SkillListSource,
     ) -> bool {
-        let root = project_root.map(|p| p.to_string_lossy().into_owned());
         let chat_skills = &mut self.editor_state.chat.skills;
-        let moved = chat_skills.listed_for.as_ref() != Some(&root);
+        let moved = !chat_skills.listed_for.is(project_root);
         let mut landed = None;
         if std::mem::take(&mut chat_skills.rescan_requested) || moved {
-            chat_skills.listed_for = Some(root);
+            chat_skills.listed_for = SkillsListedFor::of(project_root);
             landed = skills.request(project_root);
         }
         if let Some(list) = skills.poll() {
@@ -88,11 +93,50 @@ impl WidgetHostNative {
         }
         match landed.filter(|list| list.root.as_deref() == project_root) {
             Some(list) => {
-                self.editor_state.chat.skills.skills = list.skills;
-                self.editor_state.refresh_chat_mention_rows()
+                let chat_skills = &mut self.editor_state.chat.skills;
+                chat_skills.skills = list.skills;
+                // Staged skills are read again against the new listing.
+                chat_skills.instructions.clear();
+                self.announce_project_overrides(project_root);
+                self.editor_state.refresh_chat_mention_rows();
+                true
             }
             None => false,
         }
+    }
+
+    /// The first time a project folder's skills replace built-in skills,
+    /// say which (once per folder): a project's `.design-editor/skills`
+    /// changes how the agent designs, so opening a repository never does
+    /// that silently.
+    fn announce_project_overrides(&mut self, project_root: Option<&Path>) {
+        let Some(root) = project_root else {
+            return;
+        };
+        let chat_skills = &mut self.editor_state.chat.skills;
+        let names: Vec<&str> = chat_skills
+            .skills
+            .iter()
+            .filter(|s| s.origin == SkillOrigin::Project && s.overrides_builtin)
+            .map(|s| s.name.as_str())
+            .collect();
+        if names.is_empty() {
+            return;
+        }
+        let names = names.join(", ");
+        if !chat_skills
+            .overrides_announced
+            .insert(root.to_string_lossy().into_owned())
+        {
+            return;
+        }
+        let now = self.now_ms;
+        self.editor_state.editor_ui.show_toast(
+            OVERRIDES_TOAST,
+            vec![("names".to_string(), names)],
+            EditorToastLevel::Info,
+            now,
+        );
     }
 
     /// Whether the `@` popup is open with rows — it then owns Up, Down,
@@ -263,6 +307,42 @@ mod tests {
         // Another document folder lists again.
         host.sync_chat_mentions(Some(Path::new("/other")), &mut files, &mut skills);
         assert_eq!(skills.requests.last(), Some(&Some(PathBuf::from("/other"))));
+    }
+
+    #[test]
+    fn project_overrides_of_built_in_skills_are_announced_once_per_folder() {
+        let mut host = host_typing("hello");
+        let mut files = FakeSource::default();
+        let mut skills = FakeSkills::default();
+        let overriding = |root: &str| SkillList {
+            root: Some(PathBuf::from(root)),
+            skills: vec![SkillOption {
+                name: "layout".into(),
+                origin: SkillOrigin::Project,
+                overrides_builtin: true,
+                ..SkillOption::default()
+            }]
+            .into(),
+        };
+        let a = Path::new("/repo-a");
+        skills.landing = Some(overriding("/repo-a"));
+        host.sync_chat_mentions(Some(a), &mut files, &mut skills);
+        let toast = host.editor_state().editor_ui.editor_toast.clone().unwrap();
+        assert_eq!(toast.i18n_key, OVERRIDES_TOAST);
+        assert_eq!(
+            toast.args,
+            vec![("names".to_string(), "layout".to_string())]
+        );
+        host.editor_state_mut().editor_ui.editor_toast = None;
+        // The same folder listed again: no second notice.
+        skills.landing = Some(overriding("/repo-a"));
+        host.sync_chat_mentions(Some(a), &mut files, &mut skills);
+        assert!(host.editor_state().editor_ui.editor_toast.is_none());
+        // Another repository gets its own.
+        let b = Path::new("/repo-b");
+        skills.landing = Some(overriding("/repo-b"));
+        host.sync_chat_mentions(Some(b), &mut files, &mut skills);
+        assert!(host.editor_state().editor_ui.editor_toast.is_some());
     }
 
     #[test]

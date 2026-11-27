@@ -102,10 +102,14 @@ fn launch_if_pending_inner(
     current_chat: &mut Option<ChatSession>,
     current_design: &mut Option<DesignSession>,
 ) -> bool {
-    // A file staged as a mention (#398) is read on a worker; the send waits
-    // for it rather than reading the disk here (`MentionFileReader`).
+    // Files and skills staged as mentions (#398) are read on a worker; the
+    // send waits for them rather than reading the disk here
+    // (`MentionFileReader`).
     let chat = &host.editor_state().chat;
-    if chat.pending_send.is_some() && chat.project_files.reading_any(&chat.pending_mentions) {
+    if chat.pending_send.is_some()
+        && (chat.project_files.reading_any(&chat.pending_mentions)
+            || chat.skills.reading_any(&chat.pending_mentions))
+    {
         return false;
     }
     let Some(user_text) = host.editor_state_mut().chat.pending_send.take() else {

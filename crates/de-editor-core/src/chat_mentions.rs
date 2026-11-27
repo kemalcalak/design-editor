@@ -34,7 +34,8 @@ mod sync;
 #[cfg(test)]
 mod tests;
 
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
+use std::path::Path;
 use std::sync::Arc;
 
 pub use candidates::{mention_candidates, skill_candidates, MAX_MENTION_ROWS};
@@ -162,6 +163,9 @@ pub struct SkillOption {
     /// The file, absolute; the host reads the instructions from it when the
     /// skill is used.
     pub path: String,
+    /// The skills folder it was listed from (canonical); the read at use
+    /// checks the file is still inside it.
+    pub folder: String,
     /// A project skill hiding the user's skill of the same name.
     pub shadows_user: bool,
     /// Replaces the built-in skill of the same name.
@@ -190,10 +194,59 @@ pub struct ChatSkills {
     pub skills: Arc<[SkillOption]>,
     /// Raised when a `/` popup opens, so the host lists the folders again.
     pub rescan_requested: bool,
-    /// The project folder the list was last asked for (`Some(None)`: no
-    /// project; `None`: never). A change asks again, so overrides of
-    /// built-in skills follow the open document without a `/` popup.
-    pub listed_for: Option<Option<String>>,
+    /// The project folder the list was last asked for. A change asks
+    /// again, so overrides of built-in skills follow the open document
+    /// without a `/` popup.
+    pub listed_for: SkillsListedFor,
+    /// Instructions of the staged skills, read by the host on a worker as
+    /// soon as a skill is staged (`None` while the read runs; a failed read
+    /// is `Some` of nothing), keyed by skill name, dropped after the turn
+    /// uses them and when a new listing lands.
+    pub instructions: HashMap<String, Option<Option<String>>>,
+    /// Project folders whose overrides of built-in skills the user was told
+    /// about (one notice per folder).
+    pub overrides_announced: HashSet<String>,
+}
+
+/// Which project folder the skill list was last asked for.
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub enum SkillsListedFor {
+    /// Not asked yet.
+    #[default]
+    Never,
+    /// Asked with no project folder (an unsaved document).
+    NoProject,
+    /// Asked for this project folder.
+    Project(String),
+}
+
+impl SkillsListedFor {
+    /// Whether the list was asked for `root` (no allocation).
+    pub fn is(&self, root: Option<&Path>) -> bool {
+        match (self, root) {
+            (Self::NoProject, None) => true,
+            (Self::Project(listed), Some(root)) => Path::new(listed) == root,
+            _ => false,
+        }
+    }
+
+    /// The value for `root`.
+    pub fn of(root: Option<&Path>) -> Self {
+        match root {
+            None => Self::NoProject,
+            Some(root) => Self::Project(root.to_string_lossy().into_owned()),
+        }
+    }
+}
+
+impl ChatSkills {
+    /// Whether a staged skill in `mentions` is still being read (the send
+    /// waits for it).
+    pub fn reading_any(&self, mentions: &[ChatMention]) -> bool {
+        mentions.iter().any(|m| {
+            m.kind == MentionKind::Skill && matches!(self.instructions.get(&m.key), Some(None))
+        })
+    }
 }
 
 /// Files the `@` popup offers, scanned by the host from the project folder.

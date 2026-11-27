@@ -1080,18 +1080,30 @@ CLI side (`crates/de-cli/src/agent_*.rs`, dispatched in `main` before the generi
   `<config dir>/skills/` (`de_host_services::chat_skill_context`): project
   beats user (`shadows_user`); a symlink that resolves outside its folder is
   refused (`OutsideFolder`); a broken file is a typed `UserSkillError` next
-  to the skills that loaded (logged; listing it in Settings is #338).
-  Listing reads front matter only (`load_user_skills`); the instructions are
-  read at use (`read_skill_body`). `/` at the draft start or after
-  whitespace opens the same popup with the skills (`MentionKind::Skill`,
-  `SKILL_TRIGGER`; a path such as `docs/brief` never triggers it,
-  `@docs/brief` stays a file mention). Listing runs on a worker
-  (`ChatSkillScanner`, core seam `SkillListSource`, 2 s cache) when a `/`
-  popup opens or the project folder changes (`ChatSkills::listed_for`), so
-  a new skill needs no restart; each row's tag says where it comes from and
-  what it hides (`SkillOption::tag_key`, `chat.skill.*`). A skill named like
-  a built-in skill replaces it in routing: the listing installs it through
-  `de_ai_skills::loader::set_skill_overrides`, and `resolve_skills` swaps it
-  in for the built-in (it joins only the phases it declares). A picked
-  `/skill` puts its description and instructions (read from its file, cut
-  at 12 000 chars) into the turn's context block.
+  to the skills that loaded (logged; listing it in Settings is #338; past
+  200 files a folder reports `TooManySkills`). Listing reads front matter
+  only (`load_user_skills`); the instructions are read at use
+  (`read_skill_body`, which checks again that the file is inside its
+  folder, at most 64 KiB without reading past it, valid and still the
+  listed name). `/` at the draft start or after whitespace opens the same
+  popup with the skills (`MentionKind::Skill`, `SKILL_TRIGGER`; a path such
+  as `docs/brief` never triggers it, `@docs/brief` stays a file mention);
+  an empty list names both folders. Listing runs on a worker
+  (`ChatSkillScanner`, core seam `SkillListSource`, 2 s cache; tests build
+  it with `with_folders`) when a `/` popup opens or the project folder
+  changes (`ChatSkills::listed_for`, a `SkillsListedFor`), so a new skill
+  needs no restart; each row's tag says where it comes from and what it
+  hides (`SkillOption::tag_key`, `chat.skill.*`). A skill named like a
+  built-in skill replaces it in routing: the scanner installs it through
+  `de_ai_skills::loader::set_skill_overrides` on the UI side, only for the
+  listing of the folder last asked for (a late listing for a folder left
+  behind is dropped), and `resolve_skills` swaps it in for the built-in (in
+  the phases it declares, else the built-in's). Project skills that replace
+  built-in skills apply (a deliberate choice: a project may set its own
+  design rules), but the first listing of each project folder that has any
+  raises one notice naming them (`chat.skill.overridesApplied`), so opening
+  an untrusted repository never changes the agent silently. A staged
+  `/skill` is read on a worker (`chat_mention_prefetch`, into
+  `ChatSkills::instructions`; the send waits for it); its description and
+  instructions (cut at 12 000 chars, all picked skills together at 24 000,
+  with a `chat.skill.cut` notice) go into the turn's context block.

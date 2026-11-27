@@ -22,6 +22,26 @@ fn write_skill(dir: &Path, name: &str, description: &str, body: &str) {
     .unwrap();
 }
 
+/// A scanner reading only `<project>/.design-editor/skills`, never the real
+/// config folder.
+fn project_only_scanner() -> ChatSkillScanner {
+    ChatSkillScanner::with_folders(|root| {
+        root.map(|r| vec![(SkillSource::Project, r.join(PROJECT_SKILLS_DIR))])
+            .unwrap_or_default()
+    })
+}
+
+fn wait_for(scanner: &mut ChatSkillScanner) -> SkillList {
+    let deadline = Instant::now() + Duration::from_secs(10);
+    loop {
+        if let Some(list) = scanner.poll() {
+            return list;
+        }
+        assert!(Instant::now() < deadline, "the listing never landed");
+        thread::sleep(Duration::from_millis(5));
+    }
+}
+
 #[test]
 fn project_folder_comes_first() {
     let folders = skill_folders(Some(Path::new("/work/site")));
@@ -55,6 +75,7 @@ fn options_carry_origin_path_and_shadows() {
     assert!(tone.shadows_user);
     assert_eq!(tone.description, "Project tone");
     assert!(tone.path.ends_with("tone.md"));
+    assert!(!tone.folder.is_empty());
     assert_eq!(tone.tag_key(), "chat.skill.projectOverUser");
     let mine = options.iter().find(|o| o.name == "mine").unwrap();
     assert_eq!(mine.origin, SkillOrigin::User);
@@ -87,20 +108,29 @@ fn instructions_are_read_from_the_file_at_use() {
 #[test]
 fn long_instructions_are_cut() {
     let dir = temp("long");
-    write_skill(&dir, "big", "Big", &"x".repeat(MAX_SKILL_CONTEXT_CHARS + 10));
+    write_skill(
+        &dir,
+        "big",
+        "Big",
+        &"x".repeat(MAX_SKILL_CONTEXT_CHARS + 10),
+    );
     let set = load_chat_skills(&[(SkillSource::User, dir.clone())]);
     let text = skill_instructions(&skill_options(&set)[0]).unwrap();
     assert!(text.ends_with("[…skill cut at the context limit]"));
     fs::remove_dir_all(&dir).ok();
 }
 
+fn builtin_name() -> String {
+    de_ai_skills::loader::get_skill_registry()[0]
+        .meta
+        .name
+        .clone()
+}
+
 #[test]
 fn a_skill_named_like_a_built_in_becomes_its_override() {
     let dir = temp("override");
-    let builtin = de_ai_skills::loader::get_skill_registry()[0]
-        .meta
-        .name
-        .clone();
+    let builtin = builtin_name();
     write_skill(&dir, &builtin, "Ours", "PROJECT HOUSE RULES");
     write_skill(&dir, "plain", "Plain", "Not an override.");
     let set = load_chat_skills(&[(SkillSource::Project, dir.clone())]);
@@ -108,6 +138,8 @@ fn a_skill_named_like_a_built_in_becomes_its_override() {
     assert_eq!(overrides.len(), 1);
     assert_eq!(overrides[0].meta.name, builtin);
     assert_eq!(overrides[0].content.trim(), "PROJECT HOUSE RULES");
+    // No `phase` of its own: it keeps the built-in's (an empty list).
+    assert!(overrides[0].meta.phase.is_empty());
     let option = skill_options(&set)
         .into_iter()
         .find(|o| o.name == builtin)
@@ -122,17 +154,10 @@ fn the_scanner_lists_off_thread_and_then_answers_from_its_cache() {
     let skills = root.join(PROJECT_SKILLS_DIR);
     fs::create_dir_all(&skills).unwrap();
     write_skill(&skills, "tone", "House tone", "Write calmly.");
-    let mut scanner = ChatSkillScanner::new();
+    let mut scanner = project_only_scanner();
     assert!(scanner.request(Some(&root)).is_none(), "nothing cached yet");
     assert!(scanner.is_pending());
-    let deadline = Instant::now() + Duration::from_secs(10);
-    let list = loop {
-        if let Some(list) = scanner.poll() {
-            break list;
-        }
-        assert!(Instant::now() < deadline, "the listing never landed");
-        thread::sleep(Duration::from_millis(5));
-    };
+    let list = wait_for(&mut scanner);
     assert!(!scanner.is_pending());
     assert_eq!(list.root.as_deref(), Some(root.as_path()));
     assert!(list
@@ -143,4 +168,31 @@ fn the_scanner_lists_off_thread_and_then_answers_from_its_cache() {
     assert!(cached.skills.iter().any(|s| s.name == "tone"));
     assert!(!scanner.is_pending(), "a fresh cache lists nothing again");
     fs::remove_dir_all(&root).ok();
+}
+
+#[test]
+fn a_stale_listing_for_a_folder_left_behind_is_not_installed() {
+    let a = temp("stale-a");
+    let b = temp("stale-b");
+    let mut scanner = project_only_scanner();
+    let builtin = builtin_name();
+    let a_skills = a.join(PROJECT_SKILLS_DIR);
+    fs::create_dir_all(&a_skills).unwrap();
+    write_skill(&a_skills, &builtin, "A's", "A RULES");
+    // B is open now; A's listing arrives late.
+    scanner.request(Some(&b));
+    let stale = list_chat_skills(Some(&a), &[(SkillSource::Project, a_skills.clone())]);
+    assert_eq!(stale.1.len(), 1, "A's listing carries an override");
+    assert!(scanner.land(stale.0, stale.1).is_none());
+    assert!(scanner.overrides().is_empty(), "A's override did not win");
+    // B's own listing lands and is installed.
+    let list = wait_for(&mut scanner);
+    assert_eq!(list.root.as_deref(), Some(b.as_path()));
+    assert!(scanner.overrides().is_empty());
+    // Back to A: its override is installed now.
+    scanner.request(Some(&a));
+    wait_for(&mut scanner);
+    assert_eq!(scanner.overrides()[0].content.trim(), "A RULES");
+    fs::remove_dir_all(&a).ok();
+    fs::remove_dir_all(&b).ok();
 }

@@ -602,7 +602,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.skill.projectOverBuiltin" => "Proyek · mengganti bawaan",
         "chat.skill.userOverBuiltin" => "Pribadi · mengganti bawaan",
         "chat.mention.skill" => "Skill",
-        "chat.mention.noSkills" => "Belum ada skill: tambahkan file SKILL.md ke .design-editor/skills",
+        "chat.mention.noSkills" => "Belum ada skill: tambahkan file SKILL.md ke folder .design-editor/skills proyek atau ke folder skills di folder konfigurasi Design Editor",
+        "chat.skill.overridesApplied" => "Skill proyek ini menggantikan skill bawaan: {{names}}",
+        "chat.skill.cut" => "Skill yang dipilih dipotong menjadi {{count}} karakter untuk pesan ini",
         _ => return None,
     })
 }
