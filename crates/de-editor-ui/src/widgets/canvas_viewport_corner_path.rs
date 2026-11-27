@@ -18,6 +18,17 @@ pub(crate) fn corner_outline(node: &SceneNode) -> Option<&SceneCornerPath> {
     node.corner_path.as_deref()
 }
 
+/// The radius of the node's BOX corners, for chrome drawn around its box
+/// (the reveal ghost, the interaction ring). A polygon's or a path's
+/// `corner_radius` rounds its vertices, not its box, so it gives 0.
+pub(crate) fn box_corner_radius(node: &SceneNode) -> f32 {
+    use crate::layout_scene::NodeKind;
+    match node.kind {
+        NodeKind::Path | NodeKind::Polygon | NodeKind::Line => 0.0,
+        _ => node.corner_radius,
+    }
+}
+
 /// Node-local `bounds` placed on screen: offset from `world_rect`'s origin
 /// and scaled by `zoom` — the rect the backends fit outline data into.
 pub(crate) fn outline_rect(world_rect: Rect, bounds: Rect, zoom: f32) -> Rect {

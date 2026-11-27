@@ -186,7 +186,7 @@ fn paint_node_body<'a>(
             let t = elapsed_ms as f32 / REVEAL_WIREFRAME_MS as f32;
             // Brighten in fast, hold; the pop right after replaces it.
             let ramp = (t * 3.0).clamp(0.3, 1.0);
-            let radius = node.corner_radius * zoom;
+            let radius = corner_path::box_corner_radius(node) * zoom;
             cx.backend
                 .fill_rect(world_rect, blue.with_alpha(0.08 * ramp));
             if radius > 0.5 {
