@@ -3,6 +3,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use de_editor_core::pen_node_ext::PenNodeExt;
+use de_editor_core::shared_state::SharedState;
 use de_editor_core::walkers::find_node;
 use de_editor_core::{EditorState, NodeId};
 use jian_ops_schema::node::PenNode;
@@ -10,21 +11,21 @@ use jian_ops_schema::variable::VariableScalar;
 use regex::{Regex, RegexBuilder};
 use serde_json::{json, Value};
 
-use super::read_nodes::{node_snapshot_value, page_nodes_snapshots, PageNodes};
+use super::read_nodes::node_snapshot_value;
 use super::{McpTool, ToolErrorCode, ToolOutcome};
 
 type ToolCallError = (ToolErrorCode, String);
 
 pub struct BatchGet {
-    pages: Vec<PageNodes>,
-    active_page_id: String,
+    /// The request's state, shared (#456): pages are read in place.
+    state: SharedState,
     /// Snapshot of every variable resolved to its concrete scalar under the
     /// active theme (name → value), for `resolveRefs=true`. Mirrors the
     /// inputs TS `resolveNodeForCanvas` resolves against.
     resolved_vars: BTreeMap<String, VariableScalar>,
-    /// The document, kept only when it has instances: `instanceId/childId`
-    /// node ids resolve against it (#166).
-    instance_doc: Option<jian_ops_schema::PenDocument>,
+    /// Whether the document has instances: `instanceId/childId` node ids
+    /// resolve against it (#166).
+    has_refs: bool,
 }
 
 struct SearchPattern {
@@ -43,8 +44,8 @@ impl McpTool for BatchGet {
             arg_alias(args, &["resolveRefs", "resolve_refs"]),
             Some("true")
         );
-        let page = match self.page_nodes(args) {
-            Ok(page) => page,
+        let roots = match self.page_roots(args) {
+            Ok(roots) => roots,
             Err((code, msg)) => return ToolOutcome::Err(code, msg),
         };
         let read_depth = match parse_i32_arg(args, &["readDepth", "read_depth", "depth"], 1) {
@@ -64,7 +65,7 @@ impl McpTool for BatchGet {
             Err((code, msg)) => return ToolOutcome::Err(code, msg),
         };
         let parent_id = arg_alias(args, &["parentId", "parent_id", "parent"]);
-        let search_roots = search_roots(&page.roots, parent_id);
+        let search_roots = search_roots(roots, parent_id);
         let mut nodes: Vec<std::borrow::Cow<'_, PenNode>> = Vec::new();
         let mut seen = BTreeSet::new();
 
@@ -91,10 +92,10 @@ impl McpTool for BatchGet {
                     continue;
                 }
                 if let Some(nid) = NodeId::new_opt(id) {
-                    if let Some(node) = find_node(&page.roots, &nid) {
+                    if let Some(node) = find_node(roots, &nid) {
                         seen.insert(id.clone());
                         nodes.push(std::borrow::Cow::Borrowed(node));
-                    } else if let Some(node) = self.instance_node(&page.roots, id) {
+                    } else if let Some(node) = self.instance_node(roots, id) {
                         seen.insert(id.clone());
                         nodes.push(std::borrow::Cow::Owned(node));
                     }
@@ -219,7 +220,12 @@ pub(crate) fn resolve_refs_in_node(value: &mut Value, vars: &BTreeMap<String, Va
 }
 
 pub fn batch_get_snapshot(state: &EditorState) -> BatchGet {
-    let (pages, active_page_id) = page_nodes_snapshots(state);
+    batch_get_shared(SharedState::copied(state))
+}
+
+/// [`batch_get_snapshot`] over a state the caller already shares: no
+/// copy (#456).
+pub fn batch_get_shared(state: SharedState) -> BatchGet {
     // Resolve every variable to its concrete scalar under the active theme
     // now, so `resolveRefs=true` reads stay `&self` (no live state needed).
     let resolved_vars = state
@@ -236,13 +242,11 @@ pub fn batch_get_snapshot(state: &EditorState) -> BatchGet {
                 .collect()
         })
         .unwrap_or_default();
-    let instance_doc =
-        de_editor_core::ref_resolve::document_has_refs(&state.doc).then(|| state.doc.clone());
+    let has_refs = de_editor_core::ref_resolve::document_has_refs(&state.doc);
     BatchGet {
-        pages,
-        active_page_id,
+        state,
         resolved_vars,
-        instance_doc,
+        has_refs,
     }
 }
 
@@ -253,25 +257,35 @@ impl BatchGet {
         if !path.contains('/') {
             return None;
         }
-        let doc = self.instance_doc.as_ref()?;
+        let doc = self.has_refs.then_some(&self.state.doc)?;
         let hit = de_editor_core::instance_anchor::locate_document_path(roots, doc, path)?;
         let mut node = hit.display;
         node.base_mut().id = path.to_string();
         Some(node)
     }
 
-    fn page_nodes(&self, args: &BTreeMap<String, String>) -> Result<&PageNodes, ToolCallError> {
-        let target =
-            arg_alias(args, &["pageId", "page_id", "page"]).unwrap_or(&self.active_page_id);
-        self.pages
-            .iter()
-            .find(|page| page.id == target)
-            .ok_or_else(|| {
-                (
-                    ToolErrorCode::ToolFailed,
-                    format!("page not found: {target}"),
-                )
-            })
+    /// The roots of the page a call reads (`pageId`, else the active page;
+    /// a document without pages has the one page `0`).
+    fn page_roots(&self, args: &BTreeMap<String, String>) -> Result<&[PenNode], ToolCallError> {
+        let target = arg_alias(args, &["pageId", "page_id", "page"]);
+        let doc = &self.state.doc;
+        let found = match doc.pages.as_ref() {
+            Some(pages) if !pages.is_empty() => match target {
+                Some(id) => pages.iter().find(|page| page.id == id),
+                None => pages.get(self.state.ui.active_page_index.min(pages.len() - 1)),
+            }
+            .map(|page| page.children.as_slice()),
+            _ => match target {
+                None | Some("0") => Some(doc.children.as_slice()),
+                Some(_) => None,
+            },
+        };
+        found.ok_or_else(|| {
+            (
+                ToolErrorCode::ToolFailed,
+                format!("page not found: {}", target.unwrap_or("0")),
+            )
+        })
     }
 }
 

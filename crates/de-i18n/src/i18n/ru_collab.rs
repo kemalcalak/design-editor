@@ -591,6 +591,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.context.document" => "Документ",
         "chat.context.selection" => "Выделение",
         "chat.context.attachment" => "Вложение",
+        "property.cornerSmoothing" => "Сглаживание",
         "chat.attach.unsupported" => "Нельзя прикрепить {{name}}: только изображения и текстовые файлы",
         "chat.attach.tooLarge" => "{{name}} больше лимита вложения в {{size}} МБ",
         "chat.attach.readFailed" => "Не удалось прочитать {{name}}",

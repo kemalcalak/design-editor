@@ -164,7 +164,7 @@ fn a_line_without_geometry_strokes_as_before() {
 /// shapes), the authored cap on a dashed one, whose dashes need it.
 #[test]
 fn solid_centre_lines_are_butt_and_dashed_ones_keep_their_cap() {
-    use super::centre_line_style;
+    use crate::stroke_centre_line::centre_line_style;
     let solid = StrokeStyle {
         cap: Some(StrokeCap::Round),
         ..StrokeStyle::default()

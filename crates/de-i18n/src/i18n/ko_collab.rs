@@ -593,6 +593,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.context.document" => "문서",
         "chat.context.selection" => "선택",
         "chat.context.attachment" => "첨부",
+        "property.cornerSmoothing" => "스무딩",
         "chat.attach.unsupported" => "{{name}}을(를) 첨부할 수 없습니다: 이미지와 텍스트 파일만 가능합니다",
         "chat.attach.tooLarge" => "{{name}}이(가) 첨부 한도 {{size}}MB를 넘습니다",
         "chat.attach.readFailed" => "{{name}}을(를) 읽을 수 없습니다",

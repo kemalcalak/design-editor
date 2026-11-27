@@ -81,6 +81,7 @@ impl WidgetHostNative {
                 resolved_sizing_fallback,
                 image_adjustment_drag: &mut self.image_adjustment_drag,
                 effect_radius_drag: &mut self.effect_radius_drag,
+                corner_smoothing_drag: &mut self.corner_smoothing_drag,
             },
         );
         match outcome {

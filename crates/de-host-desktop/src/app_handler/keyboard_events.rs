@@ -42,9 +42,10 @@ impl DesktopApp {
         // Forward shift state into the host so the next
         // mouse press can branch on shift+click for
         // multi-select.
-        self.host.set_modifier_shift(self.shift_modifier);
+        // A shape being drawn reshapes at once (#389).
+        let shift_repaint = self.host.set_modifier_shift(self.shift_modifier);
         // Alt also shows Preview's hotspots (#371).
-        if self.host.set_modifier_alt(self.alt_modifier) {
+        if self.host.set_modifier_alt(self.alt_modifier) || shift_repaint {
             self.request_redraw(true);
         }
         self.host.set_modifier_cmd(self.zoom_modifier);

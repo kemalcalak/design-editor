@@ -304,6 +304,8 @@ pub struct VisibleSections {
     pub corner_radius: bool,
     pub corner_per_corner: bool,
     pub corner_expand: bool,
+    /// The corner smoothing row under the radius row (#389).
+    pub corner_smoothing: bool,
     pub path_fill_rule: Option<jian_ops_schema::node::path::PathFillRule>,
     pub polygon_sides: bool,
     /// The star inner-radius row under a star polygon's point count.
@@ -385,6 +387,15 @@ impl VisibleSections {
         self.corner_radius && self.corner_per_corner && self.corner_expand
     }
 
+    /// Height of the corner smoothing row, `0` when it is hidden.
+    pub fn corner_smoothing_row_h(&self) -> f32 {
+        if self.corner_radius && self.corner_smoothing {
+            crate::widgets::property_panel_corner_smoothing::SMOOTHING_ROW_HEIGHT
+        } else {
+            0.0
+        }
+    }
+
     /// Height of the Position section: X / Y, W / H, rotation / radius
     /// (plus the expanded corner grid), trailing gap included. Every
     /// y-walk advances past Position with this.
@@ -403,6 +414,7 @@ impl VisibleSections {
             + self.position_size_row_h()
             + INPUT_HEIGHT
             + corner_grid
+            + self.corner_smoothing_row_h()
             + 12.0
             + SECTION_GAP
     }
@@ -462,6 +474,8 @@ impl VisibleSections {
         corner_radius: true,
         corner_per_corner: true,
         corner_expand: false,
+        // Selection-specific, like the expanded grid.
+        corner_smoothing: false,
         path_fill_rule: None,
         polygon_sides: false,
         star_inner: false,

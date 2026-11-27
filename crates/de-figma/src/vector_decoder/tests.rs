@@ -306,9 +306,11 @@ fn vn_corner_radius_rounds_straight_region_vertices() {
     node.set("cornerRadius", FigValue::Float(2.0));
 
     let decoded = decode_vector_network_blob(&node, &blobs).expect("rounded network decodes");
+    // The editor's own corner geometry (#389): circular arcs as cubics.
     assert_eq!(
         decoded.d,
-        "M2 0 L8 0 Q10 0 10 2 L10 8 Q10 10 8 10 L2 10 Q0 10 0 8 L0 2 Q0 0 2 0 Z"
+        "M 0 2 C 0 0.895 0.895 0 2 0 L 8 0 C 9.105 0 10 0.895 10 2 L 10 8 \
+         C 10 9.105 9.105 10 8 10 L 2 10 C 0.895 10 0 9.105 0 8 Z"
     );
 }
 

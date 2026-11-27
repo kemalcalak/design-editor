@@ -111,6 +111,9 @@ pub mod model_catalog_refresh;
 pub mod model_discovery;
 mod model_probe;
 pub mod pre_validator;
+/// Moved to `de-editor-core` so the native host's benchmarks read it too
+/// (#456); re-exported to keep this path.
+pub use de_editor_core::process_memory;
 mod provider_dial;
 pub mod provider_probe;
 pub mod provider_probe_host;

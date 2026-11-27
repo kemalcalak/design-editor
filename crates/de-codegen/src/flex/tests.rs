@@ -300,6 +300,93 @@ fn vectors_are_inline_svg() {
     assert!(html.contains("<line x1=\"0\" y1=\"0\" x2=\"100\" y2=\"0\" stroke=\"rgb(255,0,0)\" stroke-width=\"2\""), "{html}");
 }
 
+/// #389: a rounded polygon / star and a path with a vertex radius are
+/// written as the outline the canvas paints, not their sharp points.
+#[test]
+fn rounded_polygons_and_paths_write_their_rounded_outline() {
+    let doc = load(
+        r##"{"version":"1.0","children":[
+          {"type":"polygon","id":"s","name":"Star","width":40,"height":20,"polygonCount":5,
+           "innerRadius":0.5,"cornerRadius":3,"cornerSmoothing":0.6},
+          {"type":"path","id":"p","name":"Zig","width":20,"height":10,"d":"M0 0 L10 10 L20 0",
+           "vertexRadius":4}
+        ]}"##,
+    );
+    let html = css(&doc);
+    assert!(!html.contains("<polygon"), "{html}");
+    assert!(html.contains("viewBox=\"0 0 40 20\""), "{html}");
+    // The rounded star is cubic arcs; the zigzag's middle vertex rounds.
+    let star = html.split("class=\"star\"").nth(1).expect("star svg");
+    assert!(
+        star.split("</svg>").next().unwrap().contains(" C"),
+        "{star}"
+    );
+    let zig = html.split("class=\"zig\"").nth(1).expect("zig svg");
+    let zig = zig.split("</svg>").next().unwrap();
+    assert!(!zig.contains("L10 10"), "{zig}");
+    assert!(zig.contains('C') || zig.contains('A'), "{zig}");
+}
+
+/// #389: a stretched path is fitted to its box before its vertices round,
+/// as on the canvas, so the radius is in node px, not the path's units.
+#[test]
+fn a_stretched_rounded_path_rounds_in_node_px() {
+    use de_editor_core::{corner_geometry, vector_edit};
+    let doc = load(
+        r##"{"version":"1.0","children":[
+          {"type":"path","id":"p","name":"Zig","width":80,"height":10,"d":"M0 0 L10 10 L20 0",
+           "vertexRadius":4}
+        ]}"##,
+    );
+    let html = css(&doc);
+    let zig = html.split("class=\"zig\"").nth(1).expect("zig svg");
+    let zig = zig.split("</svg>").next().unwrap();
+    assert!(zig.contains("viewBox=\"0 0 80 10\""), "{zig}");
+    // The canvas's order: fit the 20 × 10 path to 80 × 10, then round.
+    let mut subs = vector_edit::parse_path_data("M0 0 L10 10 L20 0").unwrap();
+    vector_edit::fit_subpaths_to_box(&mut subs, 80.0, 10.0);
+    let rounded: Vec<_> = subs
+        .iter()
+        .map(|sub| corner_geometry::round_corners(sub, &[4.0; 3], 0.0))
+        .collect();
+    let expected = corner_geometry::outline_path_data(&rounded);
+    assert!(
+        zig.contains(&format!("d=\"{expected}\"")),
+        "{zig}\n{expected}"
+    );
+}
+
+/// Polygon and star vertices come from jian's `polygon_points`, so a
+/// star's tips touch the box edges as on the canvas.
+#[test]
+fn star_points_follow_the_canvas_geometry() {
+    let doc = load(
+        r##"{"version":"1.0","children":[
+          {"type":"polygon","id":"s","name":"Star","width":20,"height":20,"polygonCount":5,"innerRadius":0.5}
+        ]}"##,
+    );
+    let html = css(&doc);
+    let points = html
+        .split("points=\"")
+        .nth(1)
+        .and_then(|rest| rest.split('"').next())
+        .expect("points");
+    let xs: Vec<f64> = points
+        .split(' ')
+        .map(|pt| pt.split(',').next().unwrap().parse().unwrap())
+        .collect();
+    let ys: Vec<f64> = points
+        .split(' ')
+        .map(|pt| pt.split(',').nth(1).unwrap().parse().unwrap())
+        .collect();
+    let span = |v: &[f64]| {
+        v.iter().cloned().fold(f64::MIN, f64::max) - v.iter().cloned().fold(f64::MAX, f64::min)
+    };
+    assert_eq!(xs.len(), 10, "{points}");
+    assert!((span(&xs) - 100.0).abs() < 0.02, "{points}");
+    assert!((span(&ys) - 100.0).abs() < 0.02, "{points}");
+}
+
 fn outlined_text(align: &str) -> PenDocument {
     load(&format!(
         r##"{{"version":"1.0","children":[{{"type":"text","id":"t","content":"x",

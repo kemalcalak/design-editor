@@ -591,6 +591,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.context.document" => "文档",
         "chat.context.selection" => "选区",
         "chat.context.attachment" => "附件",
+        "property.cornerSmoothing" => "平滑",
         "chat.attach.unsupported" => "无法附加 {{name}}：仅支持图片和文本文件",
         "chat.attach.tooLarge" => "{{name}} 超过 {{size}} MB 附件上限",
         "chat.attach.readFailed" => "无法读取 {{name}}",

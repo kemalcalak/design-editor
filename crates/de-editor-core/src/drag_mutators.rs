@@ -205,6 +205,31 @@ impl EditorState {
         }
     }
 
+    /// Place the selected line (#389): its start at `(x, y)` (parent px,
+    /// like `set_selected_bounds`) and its end `(dx, dy)` away, written
+    /// as the line's own `x2` / `y2`. A drag that draws a line keeps its
+    /// direction this way; a box cannot say which end is the start.
+    pub fn set_selected_line(&mut self, x: f64, y: f64, dx: f64, dy: f64) {
+        let sel = self.selection.anchor.clone();
+        if !sel.is_real()
+            || !self.is_editable(&sel)
+            || ![x, y, dx, dy].iter().all(|v| v.is_finite())
+        {
+            return;
+        }
+        let is_flow_child = selected_is_flow_child(self.active_children(), &sel);
+        let Some(PenNode::Line(line)) = find_node_mut(self.active_children_mut(), &sel) else {
+            return;
+        };
+        if !is_flow_child {
+            line.base.x = Some(x);
+            line.base.y = Some(y);
+        }
+        line.x2 = Some(dx);
+        line.y2 = Some(dy);
+        self.mark_document_changed();
+    }
+
     /// Move `child` to position `index` within `parent`'s children
     /// (index counted in the list WITHOUT the child — TS
     /// `moveNode(id, parentId, newIndex)` after the midpoint walk).

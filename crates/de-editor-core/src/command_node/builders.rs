@@ -166,8 +166,10 @@ pub fn build_leaf_node(
         }),
         "line" => PenNode::Line(LineNode {
             base,
-            x2: Some((x + width) as f64),
-            y2: Some((y + height) as f64),
+            // The end relative to the start, as the loader, scale and
+            // import read it.
+            x2: Some(width as f64),
+            y2: Some(height as f64),
             stroke: None,
             effects: None,
             state: None,

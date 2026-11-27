@@ -85,6 +85,18 @@ pub(in crate::widget_host) struct SlideThumbCache {
 }
 
 impl SlideThumbCache {
+    /// `(thumbnails, raster bytes)` held (#456).
+    pub(in crate::widget_host) fn usage(&self) -> (usize, usize) {
+        let bytes = self
+            .entries
+            .values()
+            .map(|thumb| {
+                (thumb.image.width().max(0) as usize) * (thumb.image.height().max(0) as usize) * 4
+            })
+            .sum();
+        (self.entries.len(), bytes)
+    }
+
     /// Note the current document revision and return whether the
     /// document has been still long enough to re-render stale rows.
     pub(in crate::widget_host) fn tick(&mut self, revision: u64, now_ms: u64) -> bool {

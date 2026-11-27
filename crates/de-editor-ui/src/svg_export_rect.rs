@@ -41,6 +41,17 @@ fn emit_rect_shape(out: &mut String, node: &SceneNode, attrs: &str, paint: &str,
     if rect.size.x == 0.0 && rect.size.y == 0.0 {
         return;
     }
+    // Smoothed corners (#389): the precomputed outline, or for an inside /
+    // outside stroke its aligned centre line (the same shift as below).
+    let outline = if stroked {
+        super::outline::stroked_outline(node)
+    } else {
+        super::outline::node_outline(node)
+    };
+    if let Some(d) = outline {
+        let _ = write!(out, r#"<path{attrs} d="{d}"{paint}/>"#);
+        return;
+    }
     let (rect, radius) = if stroked {
         stroke_aligned(node, rect, node.corner_radius)
     } else {

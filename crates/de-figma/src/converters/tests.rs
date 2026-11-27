@@ -80,9 +80,8 @@ pub(super) fn solid_paint(r: f32, g: f32, b: f32) -> FigValue {
     ])
 }
 
-// tesla.fig blob 1480, Vector 711 fillGeometry (82 bytes).
 #[test]
-fn smoothed_rounded_rectangle_imports_as_bounded_cubic_path() {
+fn smoothed_rounded_rectangle_keeps_its_smoothing() {
     let tree = TreeNode {
         figma: obj(vec![
             ("type", FigValue::Str("ROUNDED_RECTANGLE".into())),
@@ -102,20 +101,31 @@ fn smoothed_rounded_rectangle_imports_as_bounded_cubic_path() {
     let mut ctx = fresh_ctx();
 
     let node = convert_rectangle(&tree, None, &mut ctx);
-    let PenNode::Path(path) = node else {
-        panic!("expected smoothed rectangle to bake into a Path");
+    // The editor draws Figma's squircle itself (#389), so the rectangle
+    // stays a rectangle with its radius and smoothing.
+    let PenNode::Rectangle(rect) = node else {
+        panic!("expected the smoothed rectangle to stay a rectangle");
     };
-    let d = path.d.expect("smoothed path data");
-    assert!(d.contains('C'), "squircle corners must be cubic: {d}");
-    assert!(
-        !d.contains('A'),
-        "squircle must not retain arc commands: {d}"
-    );
-    let bounds = compute_svg_path_bounds(&d).expect("smoothed path bounds");
+    assert_eq!(rect.container.corner_smoothing, Some(1.0));
+    assert!(matches!(
+        rect.container.corner_radius,
+        Some(jian_ops_schema::node::container::CornerRadius::Uniform(r)) if r == 20.0
+    ));
+}
+
+#[test]
+fn rounded_vector_joins_use_the_editor_corner_geometry() {
+    let square = [(0.0, 0.0), (40.0, 0.0), (40.0, 40.0), (0.0, 40.0)];
+    let d = crate::corner_geometry::rounded_polyline_path(&square, true, 8.0, 0.0).unwrap();
+    assert!(d.starts_with("M 0 8 C ") && d.ends_with(" Z"), "{d}");
+    let bounds = compute_svg_path_bounds(&d).expect("bounds");
     assert_eq!(
         (bounds.min_x, bounds.min_y, bounds.max_x, bounds.max_y),
-        (0.0, 0.0, 100.0, 60.0)
+        (0.0, 0.0, 40.0, 40.0)
     );
+    let open = crate::corner_geometry::rounded_polyline_path(&square, false, 8.0, 0.6).unwrap();
+    assert!(open.starts_with("M 0 0 L "), "{open}");
+    assert!(!open.ends_with('Z'), "{open}");
 }
 
 #[test]

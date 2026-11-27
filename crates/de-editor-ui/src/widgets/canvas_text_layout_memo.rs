@@ -138,6 +138,31 @@ pub fn computed_layouts() -> u64 {
     MEMO.with(|memo| memo.borrow().computed)
 }
 
+/// Text layouts this thread keeps (#456). Entries hold line breaks and
+/// line starts; the bytes are an estimate from the lines they hold.
+pub fn memory_usage() -> de_editor_core::memory_report::CacheUsage {
+    let (entries, lines) = MEMO.with(|memo| {
+        let memo = memo.borrow();
+        let lines: usize = memo
+            .entries
+            .values()
+            .map(|(_, layout)| {
+                layout.lines.len() * 48 + layout.lines.iter().map(String::len).sum::<usize>()
+            })
+            .sum();
+        (memo.entries.len(), lines)
+    });
+    // Node id key + layout header per entry, plus each line's text and
+    // its `String` + start records.
+    let bytes = entries * 160 + lines;
+    de_editor_core::memory_report::CacheUsage::estimate(
+        "text_layouts",
+        bytes as u64,
+        entries as u64,
+        None,
+    )
+}
+
 /// [`text_edit_layout`] for `node`, reused from an earlier frame when the
 /// node's text inputs and the font generation are unchanged.
 pub(crate) fn text_layout(backend: &mut dyn RenderBackend, node: &SceneNode) -> Rc<TextEditLayout> {

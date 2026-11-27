@@ -164,7 +164,7 @@ fn a_caught_read_failure_does_not_fail_the_run() {
 #[test]
 fn a_runaway_script_times_out() {
     let outcome = super::run(
-        empty(),
+        empty().into(),
         "while (true) {}",
         None,
         None,
@@ -610,7 +610,7 @@ fn empty_and_oversized_scripts_are_invalid_arguments() {
 
 #[test]
 fn a_write_past_the_cap_counts_as_a_failed_write() {
-    let mut session = crate::script_execute_session::ExecSession::new(sample(), None, false);
+    let mut session = crate::script_execute_session::ExecSession::new(sample().into(), None, false);
     session.max_writes = 2;
     let patch = serde_json::json!({"path": "n11", "data": {"name": "T"}});
     assert!(session.dispatch("update", &patch).is_ok());

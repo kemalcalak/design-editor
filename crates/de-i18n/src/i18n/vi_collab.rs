@@ -591,6 +591,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.context.document" => "Tài liệu",
         "chat.context.selection" => "Vùng chọn",
         "chat.context.attachment" => "Tệp đính kèm",
+        "property.cornerSmoothing" => "Làm mịn",
         "chat.attach.unsupported" => "Không thể đính kèm {{name}}: chỉ hỗ trợ ảnh và tệp văn bản",
         "chat.attach.tooLarge" => "{{name}} vượt giới hạn đính kèm {{size}} MB",
         "chat.attach.readFailed" => "Không đọc được {{name}}",
