@@ -15,6 +15,16 @@ impl WidgetHostNative {
     pub fn memory_report(&self, backend: &NativeBackend) -> MemoryReport {
         let mut report = MemoryReport::default();
         report.push(memory_report::history_usage(&self.editor_state));
+        report.caches.extend(self.cache_report(backend).caches);
+        report
+    }
+
+    /// [`Self::memory_report`] without the undo history: no line here
+    /// walks the document, so a timer on the UI thread may build it
+    /// (Settings ▸ System, #456). The history is estimated off the thread
+    /// from [`Self::history_docs`].
+    pub fn cache_report(&self, backend: &NativeBackend) -> MemoryReport {
+        let mut report = MemoryReport::default();
         report.push(memory_report::chat_usage(&self.editor_state));
         report.push(self.layout_scene_usage());
         report.push(self.pan_cache_usage());
@@ -30,6 +40,19 @@ impl WidgetHostNative {
         report.push(de_editor_ui::widgets::browser_textures::memory_usage());
         backend.report_memory(&mut report);
         report
+    }
+
+    /// The undo history's shared documents, for a worker to estimate
+    /// (`memory_report::history_usage_of`); one `Arc` per top-level node.
+    pub fn history_docs(&self) -> Vec<(de_editor_core::history_snapshot::SharedDoc, usize)> {
+        memory_report::history_docs(&self.editor_state)
+    }
+
+    /// Whether Settings ▸ System, which shows the memory row, is on screen.
+    pub fn settings_system_tab_open(&self) -> bool {
+        let ui = &self.editor_state.editor_ui;
+        ui.agent_settings_open
+            && ui.agent_settings.tab == de_editor_core::agent_settings::AgentSettingsTab::System
     }
 
     /// When the host should wake for the idle memory trim (#456): once per

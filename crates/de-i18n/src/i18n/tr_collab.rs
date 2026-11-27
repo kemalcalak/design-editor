@@ -568,6 +568,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "clipboard.copiedPng" => "PNG olarak kopyalandı",
         "clipboard.copiedSvg" => "SVG olarak kopyalandı",
         "clipboard.copyFailed" => "Seçim kopyalanamadı",
+        "settings.system.memory" => "Bellek",
+        "settings.system.memoryUsage" => "{used} kullanımda · düzenleyici önbellekleri {caches} · geri alma geçmişi {history}",
+        "settings.system.memoryMeasuring" => "Ölçülüyor…",
         _ => return None,
     })
 }

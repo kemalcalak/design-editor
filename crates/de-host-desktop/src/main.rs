@@ -87,6 +87,7 @@ mod mcp_integrations_dsh;
 mod mcp_port_file;
 mod mcp_runtime;
 mod mcp_serve;
+mod memory_refresh;
 mod menu;
 mod menu_action;
 mod message_dialog;
@@ -462,6 +463,8 @@ struct DesktopApp {
     git_status_job: Option<git_jobs::GitStatusJob>,
     /// In-flight background Git diff (`git diff` / `git show`), if any.
     git_diff_job: Option<git_jobs::GitDiffJob>,
+    /// Keeps the Settings memory row and the debug memory tool current (#456).
+    memory_refresh: memory_refresh::MemoryRefresh,
     /// In-flight background `git clone`, if any — set while the inline
     /// clone wizard's job runs; drained by `poll_git_clone_job`.
     git_clone_job: Option<git_jobs::GitCloneJob>,

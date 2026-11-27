@@ -568,6 +568,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "clipboard.copiedPng" => "PNG としてコピーしました",
         "clipboard.copiedSvg" => "SVG としてコピーしました",
         "clipboard.copyFailed" => "選択範囲をコピーできませんでした",
+        "settings.system.memory" => "メモリ",
+        "settings.system.memoryUsage" => "使用中 {used} · エディタのキャッシュ {caches} · 取り消し履歴 {history}",
+        "settings.system.memoryMeasuring" => "測定中…",
         _ => return None,
     })
 }

@@ -568,6 +568,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "clipboard.copiedPng" => "Đã sao chép dạng PNG",
         "clipboard.copiedSvg" => "Đã sao chép dạng SVG",
         "clipboard.copyFailed" => "Không thể sao chép vùng chọn",
+        "settings.system.memory" => "Bộ nhớ",
+        "settings.system.memoryUsage" => "Đang dùng {used} · bộ nhớ đệm trình chỉnh sửa {caches} · lịch sử hoàn tác {history}",
+        "settings.system.memoryMeasuring" => "Đang đo…",
         _ => return None,
     })
 }

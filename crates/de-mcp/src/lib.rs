@@ -91,6 +91,8 @@ mod conversion_tools_tests;
 #[cfg(test)]
 mod copy_node_tests;
 #[cfg(feature = "debug-tools")]
+pub mod debug_memory;
+#[cfg(feature = "debug-tools")]
 pub mod debug_tools;
 pub mod design_agent_prompt_tool;
 pub mod design_md_tools;
@@ -269,6 +271,8 @@ pub use conversion_tools::{
     upsert_component_snapshot, upsert_screen_snapshot, upsert_variables_snapshot,
     UpsertComponentTool, UpsertScreenTool, UpsertVariablesTool,
 };
+#[cfg(feature = "debug-tools")]
+pub use debug_memory::{debug_memory_report_snapshot, DebugMemoryReport};
 #[cfg(feature = "debug-tools")]
 pub use debug_tools::{
     debug_logs_tail_snapshot, debug_screenshot_snapshot, debug_tools_enabled,

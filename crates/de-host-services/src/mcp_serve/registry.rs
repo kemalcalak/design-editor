@@ -170,6 +170,10 @@ pub(super) fn rebuild_registry(
         );
         register_tool!("debug_logs_tail", debug_logs_tail_snapshot());
         register_tool!("debug_screenshot", debug_screenshot_snapshot());
+        register_tool!(
+            "debug_memory_report",
+            de_mcp::debug_memory_report_snapshot(doc)
+        );
     }
     register_tool!("clear_selection", clear_selection_snapshot());
     register_tool!("set_selection", set_selection_snapshot());

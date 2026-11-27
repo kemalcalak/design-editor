@@ -568,6 +568,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "clipboard.copiedPng" => "คัดลอกเป็น PNG แล้ว",
         "clipboard.copiedSvg" => "คัดลอกเป็น SVG แล้ว",
         "clipboard.copyFailed" => "คัดลอกรายการที่เลือกไม่ได้",
+        "settings.system.memory" => "หน่วยความจำ",
+        "settings.system.memoryUsage" => "ใช้อยู่ {used} · แคชของเอดิเตอร์ {caches} · ประวัติการเลิกทำ {history}",
+        "settings.system.memoryMeasuring" => "กำลังวัด…",
         _ => return None,
     })
 }

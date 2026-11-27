@@ -39,6 +39,7 @@ fn tools_list_response_includes_all_registered_tools() {
             "debug_validation_report",
             "debug_logs_tail",
             "debug_screenshot",
+            "debug_memory_report",
         ] {
             assert!(
                 !r_forced_debug.contains(name),
@@ -239,6 +240,7 @@ fn tools_list_response_includes_all_registered_tools() {
         "debug_validation_report",
         "debug_logs_tail",
         "debug_screenshot",
+        "debug_memory_report",
     ] {
         assert!(
             r_debug.contains(name),

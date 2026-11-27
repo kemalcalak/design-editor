@@ -568,6 +568,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "clipboard.copiedPng" => "PNG के रूप में कॉपी किया गया",
         "clipboard.copiedSvg" => "SVG के रूप में कॉपी किया गया",
         "clipboard.copyFailed" => "चयन कॉपी नहीं हो सका",
+        "settings.system.memory" => "मेमोरी",
+        "settings.system.memoryUsage" => "{used} उपयोग में · एडिटर कैश {caches} · पूर्ववत इतिहास {history}",
+        "settings.system.memoryMeasuring" => "माप रहे हैं…",
         _ => return None,
     })
 }

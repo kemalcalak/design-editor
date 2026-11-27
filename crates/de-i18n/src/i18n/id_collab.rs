@@ -568,6 +568,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "clipboard.copiedPng" => "Disalin sebagai PNG",
         "clipboard.copiedSvg" => "Disalin sebagai SVG",
         "clipboard.copyFailed" => "Tidak dapat menyalin pilihan",
+        "settings.system.memory" => "Memori",
+        "settings.system.memoryUsage" => "{used} terpakai · cache editor {caches} · riwayat urungkan {history}",
+        "settings.system.memoryMeasuring" => "Mengukur…",
         _ => return None,
     })
 }

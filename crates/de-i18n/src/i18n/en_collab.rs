@@ -568,6 +568,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "clipboard.copiedPng" => "Copied as PNG",
         "clipboard.copiedSvg" => "Copied as SVG",
         "clipboard.copyFailed" => "Couldn't copy the selection",
+        "settings.system.memory" => "Memory",
+        "settings.system.memoryUsage" => "{used} in use · editor caches {caches} · undo history {history}",
+        "settings.system.memoryMeasuring" => "Measuring…",
         _ => return None,
     })
 }

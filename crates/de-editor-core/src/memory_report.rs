@@ -158,18 +158,37 @@ impl Write for ByteCounter {
 /// demand only (Settings' memory line, a debug tool), off the paint path
 /// and never per frame.
 pub fn history_usage(state: &EditorState) -> CacheUsage {
+    history_usage_of(&history_docs(state))
+}
+
+/// What [`history_usage_of`] reads from each undo / redo snapshot: its
+/// shared document and how many variable-ref entries it keeps. Cheap to
+/// take on the UI thread (one `Arc` per top-level node), so the walk can
+/// run on a worker (#456).
+pub fn history_docs(state: &EditorState) -> Vec<(SharedDoc, usize)> {
+    state
+        .history
+        .past
+        .iter()
+        .chain(state.history.future.iter())
+        .map(|snapshot| {
+            let refs = snapshot.fill_refs.len() + snapshot.stroke_refs.len();
+            (snapshot.doc.clone(), refs)
+        })
+        .collect()
+}
+
+/// [`history_usage`] over what [`history_docs`] took; seconds on a large
+/// document, so run it off the UI thread.
+pub fn history_usage_of(docs: &[(SharedDoc, usize)]) -> CacheUsage {
     let mut seen: HashSet<*const PenNode> = HashSet::new();
     let mut bytes = 0u64;
-    let snapshots = state.history.past.iter().chain(state.history.future.iter());
-    let mut count = 0u64;
-    for snapshot in snapshots {
-        count += 1;
-        bytes += shared_doc_new_bytes(&snapshot.doc, &mut seen);
-        let refs = snapshot.fill_refs.len() + snapshot.stroke_refs.len();
+    for (doc, refs) in docs {
+        bytes += shared_doc_new_bytes(doc, &mut seen);
         // Key (NodeId) + value (String) + table slot, per entry.
-        bytes += refs as u64 * 96;
+        bytes += *refs as u64 * 96;
     }
-    CacheUsage::estimate("undo_history", bytes, count, None)
+    CacheUsage::estimate("undo_history", bytes, docs.len() as u64, None)
 }
 
 fn shared_doc_new_bytes(doc: &SharedDoc, seen: &mut HashSet<*const PenNode>) -> u64 {

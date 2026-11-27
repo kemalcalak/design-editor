@@ -570,6 +570,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "clipboard.copiedPng" => "PNG로 복사됨",
         "clipboard.copiedSvg" => "SVG로 복사됨",
         "clipboard.copyFailed" => "선택 항목을 복사할 수 없습니다",
+        "settings.system.memory" => "메모리",
+        "settings.system.memoryUsage" => "사용 중 {used} · 편집기 캐시 {caches} · 실행 취소 기록 {history}",
+        "settings.system.memoryMeasuring" => "측정 중…",
         _ => return None,
     })
 }

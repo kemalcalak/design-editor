@@ -568,6 +568,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "clipboard.copiedPng" => "Скопировано как PNG",
         "clipboard.copiedSvg" => "Скопировано как SVG",
         "clipboard.copyFailed" => "Не удалось скопировать выделение",
+        "settings.system.memory" => "Память",
+        "settings.system.memoryUsage" => "Используется {used} · кэши редактора {caches} · история отмены {history}",
+        "settings.system.memoryMeasuring" => "Измерение…",
         _ => return None,
     })
 }

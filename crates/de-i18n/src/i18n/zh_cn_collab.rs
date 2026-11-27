@@ -568,6 +568,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "clipboard.copiedPng" => "已复制为 PNG",
         "clipboard.copiedSvg" => "已复制为 SVG",
         "clipboard.copyFailed" => "无法复制所选内容",
+        "settings.system.memory" => "内存",
+        "settings.system.memoryUsage" => "已使用 {used} · 编辑器缓存 {caches} · 撤销历史 {history}",
+        "settings.system.memoryMeasuring" => "正在测量…",
         _ => return None,
     })
 }

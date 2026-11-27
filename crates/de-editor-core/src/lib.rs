@@ -149,6 +149,7 @@ pub mod interaction_graph;
 pub mod interaction_write;
 pub mod measure;
 pub mod memory_idle;
+pub mod memory_reading;
 pub mod memory_report;
 pub mod mesh_lattice;
 pub mod missing_fonts;

@@ -32,6 +32,14 @@ impl ApplicationHandler<DesktopEvent> for DesktopApp {
         if self.host.run_idle_memory_trim().is_some() {
             crate::heap_pressure::schedule_relief("idle memory trim");
         }
+        // The Settings memory row and the debug memory tool read what this
+        // publishes; never measured from paint (#456).
+        if self
+            .memory_refresh
+            .tick(&self.host, self.backend.as_ref())
+        {
+            self.request_redraw(true);
+        }
         // Live MCP requests must not wait for `RedrawRequested`. Window systems
         // may throttle redraws while a window is occluded or while a previous
         // paint is expensive, but CLI/MCP snapshot/apply acks should still be
