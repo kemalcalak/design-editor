@@ -123,3 +123,44 @@ fn paths_round_their_sharp_vertices_and_their_ends_follow() {
     );
     assert!(scene_corner_path(&legacy).is_none());
 }
+
+#[test]
+fn outline_bounds_match_the_written_path_data() {
+    let star = payload(
+        r#"{"type":"polygon","id":"n","width":80,"height":70,"polygonCount":5,"innerRadius":0.4,"cornerRadius":3,"cornerSmoothing":0.5}"#,
+        [0.0, 0.0, 80.0, 70.0],
+    );
+    let card = payload(
+        r##"{"type":"frame","id":"n","width":100,"height":60,"cornerRadius":[4,12,20,0],"cornerSmoothing":0.6,"stroke":{"thickness":4,"align":"outside","fill":[{"type":"solid","color":"#000000"}]}}"##,
+        [0.0, 0.0, 100.0, 60.0],
+    );
+    let parsed = |d: &str| {
+        let subs = de_editor_core::vector_edit::parse_path_data(d).expect("parse");
+        outline_bounds(&subs)
+    };
+    // Written coordinates are rounded, so the boxes agree to that.
+    let near = |a: Rect, b: Rect| {
+        (a.origin.x - b.origin.x).abs() < 0.01
+            && (a.origin.y - b.origin.y).abs() < 0.01
+            && (a.size.x - b.size.x).abs() < 0.01
+            && (a.size.y - b.size.y).abs() < 0.01
+    };
+    for node in [&star, &card] {
+        let outline = scene_corner_path(node).expect("outline");
+        let from_d = parsed(&outline.d);
+        assert!(
+            near(outline.bounds, from_d),
+            "{:?} {from_d:?}",
+            outline.bounds
+        );
+        if !outline.stroke_d.is_empty() {
+            let from_d = parsed(&outline.stroke_d);
+            assert!(near(outline.stroke_bounds, from_d), "{from_d:?}");
+        }
+    }
+    let stroke = scene_corner_path(&card).expect("card");
+    assert!(
+        !stroke.stroke_d.is_empty(),
+        "outside stroke has its own line"
+    );
+}
