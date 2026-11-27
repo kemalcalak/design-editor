@@ -25,10 +25,11 @@
 
 use de_editor_core::SceneTemplateFocus;
 
-use super::prompt_center_panel::estimated_text_width;
 use super::scene_template_panel::{SceneTemplateHit, SceneTemplatePanel};
-use super::scene_template_panel_paint::truncate_to_width;
 use crate::widgets::button::paint_button_feedback_wash;
+use crate::widgets::label_widths::LabelWidths;
+use crate::widgets::line_break::clusters;
+use crate::widgets::panel_controls::paint_fitted_label;
 use crate::widgets::PaintCx;
 use crate::{Point2D, Rect};
 
@@ -47,6 +48,8 @@ const TITLE_SIZE: f32 = 16.0;
 const HINT_SIZE: f32 = 11.5;
 const TEXT_SIZE: f32 = 11.5;
 const TEXT_LINE_H: f32 = 16.0;
+/// Size the box's buttons paint their labels at.
+const ACTION_LABEL_SIZE: f32 = HINT_SIZE + 1.0;
 const BUTTON_W: f32 = 92.0;
 const BUTTON_GAP: f32 = 10.0;
 /// Wider than the confirm / cancel pair: its label is a phrase rather than a
@@ -198,19 +201,22 @@ impl SceneTemplatePanel<'_> {
         let row = ((point.y - (rect.origin.y + 10.0)) / TEXT_LINE_H).max(0.0) as usize;
         let relative_x = (point.x - (rect.origin.x + 10.0)).max(0.0);
 
-        let lines = wrap_document(text, inner_w, TEXT_SIZE);
-        let Some((start, line)) = lines.get(row) else {
+        let mut widths = LabelWidths::cached();
+        let mut advance = |cluster: &str| cluster_advance(&mut widths, cluster);
+        let Some((start, end)) = document_lines(text, inner_w, &mut advance).nth(row) else {
             return text.len();
         };
+        // Cluster by cluster, so the caret never lands inside an accented
+        // letter, a conjunct or an emoji sequence.
         let mut width = 0.0;
-        for (offset, character) in line.char_indices() {
-            let advance = estimated_text_width(&character.to_string(), TEXT_SIZE);
+        for (offset, cluster) in clusters(&text[start..end]) {
+            let advance = advance(cluster);
             if relative_x < width + advance / 2.0 {
                 return start + offset;
             }
             width += advance;
         }
-        start + line.len()
+        end
     }
 
     /// Paint the paste box over the gallery.
@@ -248,9 +254,10 @@ impl SceneTemplatePanel<'_> {
                 "Paste the whole DESIGN.md, then confirm the import.",
             )
         };
-        self.paint_text(
+        paint_fitted_label(
             cx,
-            &truncate_to_width(hint, inner_w, HINT_SIZE),
+            hint,
+            inner_w,
             Point2D::new(left, box_rect.origin.y + BOX_PAD + 40.0),
             HINT_SIZE,
             self.theme.muted_foreground,
@@ -269,23 +276,21 @@ impl SceneTemplatePanel<'_> {
         // used to be painted.
         let status_y = box_rect.origin.y + box_rect.size.y - BOX_PAD - 32.0 - 14.0;
         match self.state.editor_ui.scene_template_center.import.error_key {
-            Some(key) => self.paint_text(
+            Some(key) => paint_fitted_label(
                 cx,
-                &truncate_to_width(de_i18n::translate(self.locale, key), inner_w, HINT_SIZE),
+                de_i18n::translate(self.locale, key),
+                inner_w,
                 Point2D::new(left, status_y),
                 HINT_SIZE,
                 self.theme.destructive,
             ),
-            None => self.paint_text(
+            None => paint_fitted_label(
                 cx,
-                &truncate_to_width(
-                    self.t(
-                        "assetCenter.style.importSource",
-                        "You can copy a style from a DESIGN.md library such as styles.refero.design.",
-                    ),
-                    inner_w,
-                    HINT_SIZE,
+                self.t(
+                    "assetCenter.style.importSource",
+                    "You can copy a style from a DESIGN.md library such as styles.refero.design.",
                 ),
+                inner_w,
                 Point2D::new(left, status_y),
                 HINT_SIZE,
                 self.theme.muted_foreground,
@@ -296,11 +301,7 @@ impl SceneTemplatePanel<'_> {
             self.paint_style_import_action(
                 cx,
                 rect,
-                &truncate_to_width(
-                    self.t("assetCenter.style.importPickFile", "Choose file…"),
-                    (rect.size.x - 12.0).max(0.0),
-                    HINT_SIZE + 1.0,
-                ),
+                self.t("assetCenter.style.importPickFile", "Choose file…"),
                 STYLE_IMPORT_PICK_HOVER,
                 false,
             );
@@ -365,14 +366,26 @@ impl SceneTemplatePanel<'_> {
         // The head of the document, not a scrolling view of it. A paste is
         // reviewed by recognizing it, and the parser reads the whole text
         // regardless of how much of it is on screen.
-        for (index, (_, line)) in wrap_document(text, inner_w, TEXT_SIZE)
-            .into_iter()
+        //
+        // Measure the visible head's clusters first, then wrap it again
+        // reading those widths: the second pass is the one the press-to-caret
+        // hit-test repeats without a backend, so both break the same lines.
+        {
+            let mut widths = LabelWidths::measuring(&mut *cx.backend);
+            let mut advance = |cluster: &str| cluster_advance(&mut widths, cluster);
+            document_lines(text, inner_w, &mut advance)
+                .take(rows)
+                .for_each(drop);
+        }
+        let mut widths = LabelWidths::cached();
+        let mut advance = |cluster: &str| cluster_advance(&mut widths, cluster);
+        for (index, (start, end)) in document_lines(text, inner_w, &mut advance)
             .take(rows)
             .enumerate()
         {
             self.paint_text(
                 cx,
-                &line,
+                &text[start..end],
                 Point2D::new(
                     rect.origin.x + 10.0,
                     rect.origin.y + 22.0 + index as f32 * TEXT_LINE_H,
@@ -406,55 +419,105 @@ impl SceneTemplatePanel<'_> {
             self.state.editor_ui.scene_template_center.hover == Some(token),
             self.is_pressed(token),
         );
-        let label_w = estimated_text_width(label, HINT_SIZE + 1.0);
+        let size = ACTION_LABEL_SIZE;
+        let (label, label_w) = {
+            let mut widths = LabelWidths::measuring(&mut *cx.backend);
+            let label = widths.fit_chrome(label, (rect.size.x - 12.0).max(0.0), size);
+            let label_w = widths.chrome(&label, size);
+            (label, label_w)
+        };
         self.paint_text(
             cx,
-            label,
+            &label,
             Point2D::new(
                 rect.origin.x + ((rect.size.x - label_w) / 2.0).max(6.0),
-                jian_widgets::centered_text_baseline_y(rect, HINT_SIZE + 1.0),
+                jian_widgets::centered_text_baseline_y(rect, size),
             ),
-            HINT_SIZE + 1.0,
+            size,
             foreground,
         );
     }
 }
 
-/// Wrap a markdown document into display lines, honouring its own newlines.
+/// One cluster's painted width in the text area (chrome face, `TEXT_SIZE`),
+/// read through `widths`: a measuring pass keeps it, a cached pass reads it
+/// back. Measured per cluster (`line_break::clusters`), never per `char`, so
+/// a combining mark, a conjunct or a ZWJ emoji sequence is shaped whole; the
+/// set kept is the clusters the paste uses, not one entry per prefix. A
+/// line's sum can still differ from its shaped run by the kerning and
+/// ligatures between clusters: a fraction of a px per pair, well inside the
+/// area's 10 px inset, and paint and the press-to-caret walk read the same
+/// sums, so they break the same lines.
+fn cluster_advance(widths: &mut LabelWidths<'_>, cluster: &str) -> f32 {
+    widths.chrome(cluster, TEXT_SIZE)
+}
+
+/// Wrap a markdown document into display lines no wider than `max_width`,
+/// breaking only between clusters,
+/// honouring its own newlines, lazily: each line is the byte range
+/// `start..end` it covers in the original text.
 ///
-/// Each entry carries the byte offset the line starts at in the original
-/// text, which is what lets a click resolve to a caret position — the
+/// Byte ranges are what let a click resolve to a caret position — the
 /// alternative, re-deriving offsets by summing line lengths, silently
-/// miscounts every line the wrapper broke rather than the author.
+/// miscounts every line the wrapper broke rather than the author — and they
+/// cost nothing to paint from. Laziness keeps a large paste cheap: paint and
+/// the hit-test only walk the head of the document that is on screen.
 ///
 /// Blank lines are preserved: a markdown document's paragraph breaks are part
 /// of how it reads, and collapsing them would make the pasted text look like
 /// a different document from the one the user copied.
-fn wrap_document(text: &str, max_width: f32, size: f32) -> Vec<(usize, String)> {
-    let mut lines = Vec::new();
-    let mut paragraph_start = 0_usize;
-    for paragraph in text.split('\n') {
-        let mut current = String::new();
-        let mut current_start = paragraph_start;
-        let mut width = 0.0;
-        for (offset, character) in paragraph.char_indices() {
-            let advance = estimated_text_width(&character.to_string(), size);
-            if width + advance > max_width && !current.is_empty() {
-                lines.push((current_start, std::mem::take(&mut current)));
-                current_start = paragraph_start + offset;
-                width = 0.0;
-            }
-            current.push(character);
-            width += advance;
-        }
-        lines.push((current_start, current));
-        // The `\n` the split consumed still occupies a byte.
-        paragraph_start += paragraph.len() + 1;
-        if lines.len() > 4096 {
-            break;
-        }
+fn document_lines<'t, 'm>(
+    text: &'t str,
+    max_width: f32,
+    advance: &'m mut dyn FnMut(&str) -> f32,
+) -> DocumentLines<'t, 'm> {
+    DocumentLines {
+        text,
+        pos: 0,
+        max_width,
+        advance,
+        done: false,
     }
-    lines
+}
+
+/// The iterator [`document_lines`] returns.
+struct DocumentLines<'t, 'm> {
+    text: &'t str,
+    /// Where the next line starts.
+    pos: usize,
+    max_width: f32,
+    advance: &'m mut dyn FnMut(&str) -> f32,
+    done: bool,
+}
+
+impl Iterator for DocumentLines<'_, '_> {
+    type Item = (usize, usize);
+
+    fn next(&mut self) -> Option<(usize, usize)> {
+        if self.done {
+            return None;
+        }
+        let start = self.pos;
+        let mut end = start;
+        let mut width = 0.0;
+        for (offset, cluster) in clusters(&self.text[start..]) {
+            let at = start + offset;
+            if cluster.starts_with('\n') {
+                // The `\n` still occupies a byte; the next line starts past it.
+                self.pos = at + 1;
+                return Some((start, at));
+            }
+            let advance = (self.advance)(cluster);
+            if width + advance > self.max_width && end > start {
+                self.pos = end;
+                return Some((start, end));
+            }
+            width += advance;
+            end = at + cluster.len();
+        }
+        self.done = true;
+        Some((start, self.text.len()))
+    }
 }
 
 #[cfg(test)]

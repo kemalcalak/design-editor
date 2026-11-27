@@ -13,7 +13,8 @@
 //! only agreed because they were reading the same constants.
 
 use crate::theme::Theme;
-use crate::widgets::ai_chat_panel::{footer_label_width, AIChatPlaceholder};
+use crate::widgets::ai_chat_panel::AIChatPlaceholder;
+use crate::widgets::label_widths::LabelWidths;
 use crate::widgets::text_metrics;
 use crate::widgets::PaintCx;
 use crate::{Point2D, Rect, TextLayout};
@@ -132,7 +133,8 @@ pub(crate) fn paint_chip_row(
     widget: &AIChatPlaceholder<'_>,
     input_rect: Rect,
 ) {
-    let layout = widget.chip_row(input_rect);
+    // Measured here, so the hit-test's backend-less chips are these.
+    let layout = widget.chip_row_with(input_rect, &mut LabelWidths::measuring(&mut *cx.backend));
     if let (Some(chip), Some(receipt), Some(label)) = (
         layout.style,
         widget.style_receipt.as_ref(),
@@ -149,7 +151,7 @@ pub(crate) fn paint_chip_row(
 fn paint_selection_chip(cx: &mut PaintCx<'_>, theme: &Theme, label: &str, chip: Rect) {
     fill_chip(cx, theme, chip);
     let label_max = (chip.size.x - CHIP_PAD_X - CHIP_CLEAR_W).max(0.0);
-    let fitted = text_metrics::fit_chrome(cx.backend, label, label_max, CHIP_FONT);
+    let fitted = LabelWidths::measuring(&mut *cx.backend).fit_chrome(label, label_max, CHIP_FONT);
     draw_chip_text(cx, theme, &fitted, chip.origin.x + CHIP_PAD_X, chip);
     draw_chip_clear(cx, theme, chip);
 }
@@ -182,9 +184,10 @@ pub(crate) fn draw_chip_text(cx: &mut PaintCx<'_>, theme: &Theme, text: &str, x:
     );
 }
 
-/// Natural width of a chip holding `label` plus a trailing ✕.
-pub(crate) fn label_chip_width(label: &str) -> f32 {
-    CHIP_PAD_X + footer_label_width(label, CHIP_FONT) + 4.0 + CHIP_CLEAR_W
+/// Natural width of a chip holding `label` plus a trailing ✕: the label as
+/// painted (chrome face, [`CHIP_FONT`]), read through `widths`.
+pub(crate) fn label_chip_width(widths: &mut LabelWidths<'_>, label: &str) -> f32 {
+    CHIP_PAD_X + widths.chrome(label, CHIP_FONT) + 4.0 + CHIP_CLEAR_W
 }
 
 #[cfg(test)]

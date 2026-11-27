@@ -13,11 +13,12 @@ use de_editor_core::missing_fonts::MissingFontsPrompt;
 use de_editor_core::{EditorState, EditorUiState};
 use jian_widgets::centered_text_baseline_y;
 
+use crate::widgets::chrome_buttons::fit_button_width;
 #[cfg(test)]
 use crate::widgets::missing_fonts_row::{family_label_lines, row_text_rect, TEXT_BUTTON_GAP};
 pub(crate) use crate::widgets::missing_fonts_row::{
-    fit_button_width, paint_missing_font_row, paint_text, row_button_rect, row_download_hit_rect,
-    BUTTON_HEIGHT, ROW_HEIGHT,
+    paint_missing_font_row, paint_text, row_button_rect, row_download_hit_rect, BUTTON_HEIGHT,
+    ROW_HEIGHT,
 };
 
 const PANEL_WIDTH: f32 = 480.0;
@@ -297,6 +298,15 @@ impl Widget for MissingFontsPanel<'_> {
     }
 
     fn paint(&self, cx: &mut PaintCx<'_>, panel: Rect) {
+        crate::widgets::chrome_buttons::measure_button_labels(
+            cx.backend,
+            12.0,
+            &[
+                translate(self.ui, "missingFonts.downloadAll"),
+                translate(self.ui, "missingFonts.dismiss"),
+            ],
+        );
+        crate::widgets::missing_fonts_row::measure_row_button_labels(cx.backend, self.ui);
         cx.backend.fill_round_rect(panel, 14.0, self.theme.card);
         cx.backend
             .stroke_round_rect(panel, 14.0, self.theme.border, 1.0);

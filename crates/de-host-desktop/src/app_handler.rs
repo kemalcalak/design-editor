@@ -75,12 +75,12 @@ impl ApplicationHandler<DesktopEvent> for DesktopApp {
         }
         // A file drag owns the pointer, so the drop-target ring has to be
         // re-probed on each wake rather than driven by cursor events.
-        if self.refresh_image_drop_hover() {
+        if self.refresh_file_drop_hover() {
             self.request_redraw(true);
         }
         // A file drag owns the pointer, so the drop-target ring has to be
         // re-probed on each wake rather than driven by cursor events.
-        if self.refresh_image_drop_hover() {
+        if self.refresh_file_drop_hover() {
             self.request_redraw(true);
         }
         // Native-menu selections arrive on `muda`'s global channel.

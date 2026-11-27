@@ -29,6 +29,10 @@ pub struct ChatSessions {
     pub project_files: crate::chat_mentions::ProjectFiles,
     /// User skills the `/` popup offers (#398).
     pub skills: crate::chat_mentions::ChatSkills,
+    /// A file is being dragged over the chat panel, where dropping it makes
+    /// it an attachment (#398): the chat shows its drop indicator and the
+    /// canvas drop overlay stands aside. Set by the host's drag probe.
+    pub file_drop_hover: bool,
 }
 
 impl Default for ChatSessions {
@@ -38,6 +42,7 @@ impl Default for ChatSessions {
             active: 0,
             project_files: Default::default(),
             skills: Default::default(),
+            file_drop_hover: false,
         }
     }
 }
@@ -169,6 +174,12 @@ impl ChatSessions {
     /// tab rather than the (now different) active tab.
     pub fn tab_mut(&mut self, idx: usize) -> Option<&mut ChatState> {
         self.tabs.get_mut(idx)
+    }
+
+    /// The tab whose [`ChatState::tab_id`] is `id`, or `None` once it was
+    /// closed.
+    pub fn tab_by_id_mut(&mut self, id: u64) -> Option<&mut ChatState> {
+        self.tabs.iter_mut().find(|tab| tab.tab_id == id)
     }
 
     /// Resolve the tab a running turn should write to.

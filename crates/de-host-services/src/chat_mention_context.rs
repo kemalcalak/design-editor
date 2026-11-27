@@ -1,98 +1,27 @@
-//! Host half of chat `@`-mentions (#398): listing the project folder for
-//! the popup, and resolving a turn's mentions into the context block that
-//! rides the provider-bound user message.
+//! Host half of chat `@`-mentions (#398): resolving a turn's mentions into
+//! the context block that rides the provider-bound user message. The folder
+//! listing behind the popup is `crate::chat_mention_scan`.
 //!
 //! Document mentions resolve in `de_editor_core::chat_mentions::summary`;
-//! files are read here, because `de-editor-core` stays I/O-free. Both the
-//! scan and the reads are bounded so a mention can never stall the UI
-//! thread on a huge folder or file.
+//! files are read here, because `de-editor-core` stays I/O-free. Reads are
+//! bounded so a mention can never stall the turn on a huge file.
 
 use std::fs;
 use std::io::Read;
 use std::path::{Component, Path, PathBuf};
 
-use de_ai_skills::user_skills::UserSkillSet;
 use de_editor_core::chat_mentions::{
     context_block, summarize_document_mention, ChatMention, MentionKind, MentionSummary,
 };
 use de_editor_core::EditorState;
 
+use crate::chat_skill_context::MAX_TURN_SKILL_CHARS;
 use crate::chat_text_excerpt::text_excerpt;
 
 pub use crate::chat_mention_context_error::MentionFileError;
 
-/// Files the popup is offered at most.
-pub const MAX_PROJECT_FILES: usize = 2_000;
-/// Folder levels below the project root the scan descends.
-pub const MAX_SCAN_DEPTH: usize = 4;
 /// Bytes read from a mentioned file.
 const MAX_READ_BYTES: u64 = 64 * 1024;
-
-/// Folders never worth offering: VCS internals, dependency and build
-/// output trees.
-const SKIPPED_DIRS: &[&str] = &["node_modules", "target", "dist", "build", "__pycache__"];
-
-fn skipped(name: &str, is_dir: bool) -> bool {
-    name.starts_with('.') || (is_dir && SKIPPED_DIRS.contains(&name))
-}
-
-/// Project-relative paths (`/`-separated, sorted) of the files under
-/// `root`, breadth-first, at most [`MAX_PROJECT_FILES`] and
-/// [`MAX_SCAN_DEPTH`] levels deep. Hidden entries and dependency / build
-/// folders are skipped; unreadable folders are passed over silently.
-pub fn scan_project_files(root: &Path) -> Vec<String> {
-    let mut files = Vec::new();
-    let mut queue: Vec<(PathBuf, usize)> = vec![(root.to_path_buf(), 0)];
-    let mut next = 0;
-    while next < queue.len() && files.len() < MAX_PROJECT_FILES {
-        let (dir, depth) = queue[next].clone();
-        next += 1;
-        let Ok(entries) = fs::read_dir(&dir) else {
-            continue;
-        };
-        let mut entries: Vec<_> = entries.flatten().collect();
-        entries.sort_by_key(|e| e.file_name());
-        for entry in entries {
-            let Ok(kind) = entry.file_type() else {
-                continue;
-            };
-            let name = entry.file_name();
-            let Some(name) = name.to_str() else {
-                continue;
-            };
-            if skipped(name, kind.is_dir()) || kind.is_symlink() {
-                continue;
-            }
-            let path = entry.path();
-            if kind.is_dir() {
-                if depth < MAX_SCAN_DEPTH {
-                    queue.push((path, depth + 1));
-                }
-            } else if kind.is_file() {
-                if let Some(rel) = relative_slash_path(root, &path) {
-                    files.push(rel);
-                    if files.len() >= MAX_PROJECT_FILES {
-                        break;
-                    }
-                }
-            }
-        }
-    }
-    files.sort();
-    files
-}
-
-fn relative_slash_path(root: &Path, path: &Path) -> Option<String> {
-    let rel = path.strip_prefix(root).ok()?;
-    let parts: Option<Vec<&str>> = rel
-        .components()
-        .map(|c| match c {
-            Component::Normal(part) => part.to_str(),
-            _ => None,
-        })
-        .collect();
-    Some(parts?.join("/"))
-}
 
 /// Resolve `rel` under `root`, refusing anything that escapes it (`..`,
 /// an absolute path, a symlink pointing outside).
@@ -172,43 +101,52 @@ pub fn summarize_project_file(root: &Path, rel: &str) -> Result<String, MentionF
     Ok(format!("text file, {size} bytes{more}:\n```\n{body}\n```"))
 }
 
-/// Resolve every mention of a turn, in order. Skills are read from the
-/// project's and the user's skills folders (only when one was picked).
+/// A file mention's text: the summary the host read when it was staged
+/// (`ProjectFiles::summaries`), else read now (hosts without a prefetch).
+fn file_mention_text(state: &EditorState, rel: &str, project_root: Option<&Path>) -> String {
+    if let Some(Some(text)) = state.chat.project_files.summaries.get(rel) {
+        return text.clone();
+    }
+    match project_root {
+        Some(root) => read_file_mention(root, rel),
+        None => format!("unreadable — {}", MentionFileError::NoProjectFolder),
+    }
+}
+
+/// A staged skill's instructions: what the host read when it was staged
+/// (`ChatSkills::instructions`), else read now (hosts without a prefetch).
+/// `None` when the skill is no longer listed or readable.
+fn skill_mention_text(state: &EditorState, name: &str) -> Option<String> {
+    let skills = &state.chat.skills;
+    if let Some(Some(text)) = skills.instructions.get(name) {
+        return text.clone();
+    }
+    skills
+        .skills
+        .iter()
+        .find(|skill| skill.name == name)
+        .and_then(crate::chat_skill_context::skill_instructions)
+}
+
+/// The context-block text for project file `rel` (disk I/O).
+pub fn read_file_mention(root: &Path, rel: &str) -> String {
+    summarize_project_file(root, rel).unwrap_or_else(|err| format!("unreadable — {err}"))
+}
+
+/// Resolve every mention of a turn, in order. A skill is looked up in the
+/// popup's listing (`state.chat.skills`) and its instructions read from its
+/// file; one no longer listed or readable resolves to `None`.
 pub fn resolve_mentions(
     state: &EditorState,
     mentions: &[ChatMention],
     project_root: Option<&Path>,
 ) -> Vec<MentionSummary> {
-    let skills = mentions
-        .iter()
-        .any(|m| m.kind == MentionKind::Skill)
-        .then(|| {
-            crate::chat_skill_context::load_chat_skills(&crate::chat_skill_context::skill_folders(
-                project_root,
-            ))
-        });
-    resolve_mentions_with(state, mentions, project_root, skills.as_ref())
-}
-
-/// [`resolve_mentions`] against an already loaded skill set.
-pub fn resolve_mentions_with(
-    state: &EditorState,
-    mentions: &[ChatMention],
-    project_root: Option<&Path>,
-    skills: Option<&UserSkillSet>,
-) -> Vec<MentionSummary> {
     mentions
         .iter()
         .map(|mention| {
             let text = match mention.kind {
-                MentionKind::File => Some(match project_root {
-                    Some(root) => summarize_project_file(root, &mention.key)
-                        .unwrap_or_else(|err| format!("unreadable — {err}")),
-                    None => format!("unreadable — {}", MentionFileError::NoProjectFolder),
-                }),
-                MentionKind::Skill => skills.and_then(|set| {
-                    crate::chat_skill_context::skill_instructions(set, &mention.key)
-                }),
+                MentionKind::File => Some(file_mention_text(state, &mention.key, project_root)),
+                MentionKind::Skill => skill_mention_text(state, &mention.key),
                 _ => summarize_document_mention(state, mention),
             };
             MentionSummary {
@@ -230,6 +168,77 @@ pub fn mention_context_for_turn(
         return String::new();
     }
     context_block(&resolve_mentions(state, mentions, project_root))
+}
+
+/// The toast raised when the picked skills' instructions were cut to
+/// [`MAX_TURN_SKILL_CHARS`] together.
+pub const SKILLS_CUT_TOAST: &str = "chat.skill.cut";
+
+/// Cut the skill summaries of a turn so their instructions stay within
+/// [`MAX_TURN_SKILL_CHARS`] together (in pick order). True when any was cut.
+pub fn cap_skill_text(summaries: &mut [MentionSummary]) -> bool {
+    let mut left = MAX_TURN_SKILL_CHARS;
+    let mut cut = false;
+    for summary in summaries
+        .iter_mut()
+        .filter(|s| s.mention.kind == MentionKind::Skill)
+    {
+        let Some(text) = summary.text.as_mut() else {
+            continue;
+        };
+        let chars = text.chars().count();
+        if chars <= left {
+            left -= chars;
+            continue;
+        }
+        cut = true;
+        if left == 0 {
+            summary.text = Some("[left out: the turn's skill limit was reached]".to_string());
+            continue;
+        }
+        let kept: String = text.chars().take(left).collect();
+        *text = format!("{kept}\n[…cut at the turn's skill limit]");
+        left = 0;
+    }
+    cut
+}
+
+/// Take the active tab's staged mentions for the turn being sent and
+/// return their context block. Each turn reads its files and skills afresh,
+/// so the prefetched texts it used are dropped. The picked skills share one
+/// budget; when it cuts them, a toast says so.
+pub fn take_turn_mentions(state: &mut EditorState, now_ms: u64) -> String {
+    let mentions = std::mem::take(&mut state.chat.pending_mentions);
+    if mentions.is_empty() {
+        return String::new();
+    }
+    let root = state
+        .chat
+        .project_files
+        .root
+        .as_deref()
+        .map(std::path::PathBuf::from);
+    let mut summaries = resolve_mentions(state, &mentions, root.as_deref());
+    if cap_skill_text(&mut summaries) {
+        state.editor_ui.show_toast(
+            SKILLS_CUT_TOAST,
+            vec![("count".to_string(), MAX_TURN_SKILL_CHARS.to_string())],
+            de_editor_core::editor_toast::EditorToastLevel::Info,
+            now_ms,
+        );
+    }
+    for mention in &mentions {
+        match mention.kind {
+            MentionKind::File => {
+                state.chat.project_files.summaries.remove(&mention.key);
+            }
+            MentionKind::Skill => {
+                state.chat.skills.instructions.remove(&mention.key);
+            }
+            _ => {}
+        }
+    }
+    context_block(&summaries)
 }
 
 #[cfg(test)]

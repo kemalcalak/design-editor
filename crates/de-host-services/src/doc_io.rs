@@ -56,6 +56,8 @@ mod load_report_tests;
 mod pen_dev;
 mod pptx;
 #[cfg(test)]
+mod thumbnail_load_tests;
+#[cfg(test)]
 mod version_stamp_tests;
 
 use asset_layout::{write_document_bytes, write_document_with_asset_folder};

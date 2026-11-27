@@ -29,8 +29,9 @@ use de_editor_core::{
 };
 
 use super::asset_center_style_cards::{filtered_style_guide_cards, StyleGuideCard};
-use super::panel_controls::{segment_rects, segment_track_width, segment_width_for};
-use super::prompt_center_panel::estimated_text_width;
+use super::panel_controls::{
+    chip_width_for, segment_rects, segment_track_width, segment_width_for,
+};
 use super::scene_template_card_actions::basis_chip_reserved_width;
 use crate::theme::Theme;
 use crate::widgets::editor_state_ext::theme_for;
@@ -91,7 +92,7 @@ pub(super) const TITLE_SIZE: f32 = 24.0;
 pub(super) const TAB_ROW_H: f32 = 48.0;
 pub(super) const SEARCH_ROW_H: f32 = 52.0;
 pub(super) const FILTER_ROW_H: f32 = 44.0;
-use crate::widgets::panel_control_metrics::{CHIP_GAP, CHIP_PAD_X};
+use crate::widgets::panel_control_metrics::CHIP_GAP;
 /// Every control in this panel measures against the shared ladder in
 /// `panel_control_metrics` rather than declaring its own box. The four
 /// aliases below exist only so the call sites already written against these
@@ -485,7 +486,16 @@ impl<'a> SceneTemplatePanel<'a> {
             .map(|index| (index, segments[index].1))
     }
 
+    /// The filter chips, sized from the labels paint measured (#451).
     pub(super) fn filter_chip_rects(&self, panel: Rect) -> Vec<(Rect, SceneFilter)> {
+        self.filter_chip_rects_with(panel, &mut LabelWidths::cached())
+    }
+
+    pub(super) fn filter_chip_rects_with(
+        &self,
+        panel: Rect,
+        widths: &mut LabelWidths<'_>,
+    ) -> Vec<(Rect, SceneFilter)> {
         if self.tab() != AssetCenterTab::Templates {
             return Vec::new();
         }
@@ -494,7 +504,7 @@ impl<'a> SceneTemplatePanel<'a> {
         let mut x = content.origin.x;
         let mut rects = Vec::new();
         for filter in self.filters() {
-            let width = chip_width(self.filter_label(filter)).min(content.size.x);
+            let width = chip_width_for(widths, self.filter_label(filter)).min(content.size.x);
             let rect = Rect::xywh(x, row_top + (FILTER_ROW_H - CHIP_H) / 2.0, width, CHIP_H);
             rects.push((rect, filter));
             x += width + CHIP_GAP;
@@ -692,28 +702,6 @@ impl<'a> SceneTemplatePanel<'a> {
         self.card_rects_for_count(panel, self.visible_card_count())
     }
 
-    /// Caret index for a press inside a text field of this panel.
-    pub(super) fn caret_at(
-        &self,
-        input: &jian_core::text_input::TextInputState,
-        rect: Rect,
-        pad_x: f32,
-        size: f32,
-        point: Point2D,
-    ) -> usize {
-        let text = input.text();
-        let relative = (point.x - (rect.origin.x + pad_x)).max(0.0);
-        let mut width = 0.0;
-        for (index, character) in text.char_indices() {
-            let advance = estimated_text_width(&character.to_string(), size);
-            if relative < width + advance / 2.0 {
-                return index;
-            }
-            width += advance;
-        }
-        text.len()
-    }
-
     /// Whether `field` is the one the caret paints in.
     pub(super) fn field_focused(&self, field: SceneTemplateFocus) -> bool {
         let center = &self.state.editor_ui.scene_template_center;
@@ -731,13 +719,6 @@ impl<'a> SceneTemplatePanel<'a> {
         }
         center.focus == field
     }
-}
-
-pub(super) fn chip_width(label: &str) -> f32 {
-    // Reuses the Prompt Center's estimate on purpose: the tab row and the
-    // filter row use the same chip shape, and a second width model would
-    // drift them apart for the same label.
-    estimated_text_width(label, CHIP_LABEL_SIZE) + CHIP_PAD_X * 2.0
 }
 
 /// Gallery rects the hosts would hand the widget, for tests.

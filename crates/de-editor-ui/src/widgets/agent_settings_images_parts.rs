@@ -35,7 +35,7 @@ pub(super) fn paint_search_input_row(
     let label_size = 13.0;
     let label_lay = TextLayout::single_run(
         label,
-        "system-ui",
+        text_metrics::CHROME_FONT_FAMILY,
         label_size,
         (theme.muted_foreground).to_jian(),
         Point2D::new(0.0, 0.0),
@@ -95,7 +95,7 @@ pub(super) fn paint_search_input_row(
         if showing_placeholder {
             let lay = TextLayout::single_run(
                 placeholder,
-                "system-ui",
+                text_metrics::CHROME_FONT_FAMILY,
                 font_size,
                 theme.muted_foreground.to_jian(),
                 Point2D::new(0.0, 0.0),
@@ -117,7 +117,7 @@ pub(super) fn paint_search_input_row(
         );
         let lay = TextLayout::single_run(
             &value,
-            "system-ui",
+            text_metrics::CHROME_FONT_FAMILY,
             font_size,
             (if showing_placeholder {
                 theme.muted_foreground
@@ -170,7 +170,7 @@ pub(super) fn paint_profile_field(
     };
     let label_lay = TextLayout::single_run(
         label,
-        "system-ui",
+        text_metrics::CHROME_FONT_FAMILY,
         label_size,
         (theme.muted_foreground).to_jian(),
         Point2D::new(0.0, 0.0),
@@ -212,7 +212,7 @@ pub(super) fn paint_profile_field(
         let clipped = ellipsize(cx, value, input.size.x - 12.0, font_size);
         let value_lay = TextLayout::single_run(
             &clipped,
-            "system-ui",
+            text_metrics::CHROME_FONT_FAMILY,
             font_size,
             (theme.foreground).to_jian(),
             Point2D::new(0.0, 0.0),
@@ -244,7 +244,7 @@ pub(super) fn paint_profile_test_button(
     let label_w = text_metrics::measure_chrome(cx.backend, label, font_size);
     let layout = TextLayout::single_run(
         label,
-        "system-ui",
+        text_metrics::CHROME_FONT_FAMILY,
         font_size,
         (if enabled {
             theme.foreground
@@ -294,7 +294,7 @@ fn paint_profile_test_status(
             let label = "Invalid";
             let layout = TextLayout::single_run(
                 label,
-                "system-ui",
+                text_metrics::CHROME_FONT_FAMILY,
                 10.0,
                 (theme.destructive).to_jian(),
                 Point2D::new(0.0, 0.0),
@@ -320,7 +320,7 @@ pub(super) fn paint_provider_field(
 ) {
     let label_lay = TextLayout::single_run(
         label,
-        "system-ui",
+        text_metrics::CHROME_FONT_FAMILY,
         11.0,
         (theme.muted_foreground).to_jian(),
         Point2D::new(0.0, 0.0),
@@ -383,7 +383,7 @@ pub(super) fn paint_provider_menu(
         }
         let label = TextLayout::single_run(
             provider.label(),
-            "system-ui",
+            text_metrics::CHROME_FONT_FAMILY,
             11.0,
             (theme.foreground).to_jian(),
             Point2D::new(0.0, 0.0),

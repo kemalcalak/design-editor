@@ -73,7 +73,7 @@ mod wrap_tests {
 
     fn face(weight: u16) -> TextFace<'static> {
         TextFace {
-            family: "system-ui",
+            family: de_editor_core::text_defaults::FONT_FAMILY,
             weight,
             italic: false,
         }
