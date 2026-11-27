@@ -686,6 +686,65 @@ One modal, two modes. State and every transition live in `de-editor-core/src/com
   (`"auto"` / null unsets an end, so it falls back to `cap`),
   `miter_limit`.
 
+## Corner smoothing, rounded vertices and drawing constraints (#389)
+
+- **Schema** (kemalcalak/jian#30): `cornerSmoothing` (`0..=1`, Figma's
+  corner smoothing; absent = 0) on frames, groups and rectangles
+  (`ContainerProps`), polygons / stars and paths; a polygon's
+  `cornerRadius` (one number) rounds every vertex, a path's `vertexRadius`
+  rounds its sharp vertices between straight segments.
+- **Geometry** (`de_editor_core::corner_geometry`, pure, tested): Figma's
+  squircle (the `figma-squircle` construction: the corner starts
+  `p = (1 + s)·t` from the vertex, a circular arc covers the middle
+  `(1 − s)` of the turn, cubics ease in from the edges), generalised to any
+  vertex angle; neighbouring corners share an edge largest first and a
+  corner over its share loses smoothing before radius
+  (`corner_geometry/budget.rs`). `rect_outline`, `polygon_outline`,
+  `round_corners`, `outline_path_data`.
+- **Scene**: the builder (`de-pen-loader/src/layout_scene/corner_path.rs`)
+  stores the outline once per scene on `SceneNode::corner_path`
+  (`SceneCornerPath`: `d`, bounds, the inside / outside stroke centre line,
+  a flattened `hit_ring`) for a smoothed rect / frame / group, a rounded
+  polygon or star and a path with a vertex radius; a path's stroke ends
+  follow the rounded line. A rect with smoothing 0 or radius 0 gets none,
+  so the rounded-rect fast paths are unchanged. A live bounds patch never
+  touches a node with an outline (`canvas_scene_patch::box_shaped_scene_data`):
+  it rebuilds, like stroke ends and reversed lines.
+- **Paint / hit-test**: fills draw inside a clip to the outline, strokes
+  follow it (or its own centre line for inside / outside), `clipContent`,
+  backdrop effects and image fills clip to it
+  (`canvas_viewport_corner_path.rs`); jian's hit-test reads `hit_ring`.
+- **Exports**: SVG writes the outline as a `<path>` and clips to it
+  (per-corner radii are exact there, so they no longer warn); the
+  structured HTML export clips a smoothed box's background layer and its
+  children with `clip-path: path()` and draws polygons and paths as their
+  outline; PPTX writes a `custGeom` (`export_pptx/cust_geom.rs`) for
+  smoothed boxes and every polygon and star; path ops (boolean, flatten,
+  outline stroke) read the same outline; the HTML / Tailwind codegen draws
+  rounded polygons and paths as their outline (`flex/shapes.rs`; CSS
+  `border-radius` cannot smooth, so a smoothed box there keeps plain
+  rounded corners). PNG / PDF use the canvas painter. Figma import keeps
+  `cornerSmoothing` natively and rounds vector networks with the same
+  geometry.
+- **Editing**: `EditorCommand::SetNodeCorners { radii, smoothing }`
+  (`command_node_attrs/corners.rs`) writes per-corner radii and smoothing
+  in one step and refuses, untouched, what a kind cannot store
+  (`corner_support`). The Position section's Smoothing row (slider +
+  percentage, under the radius row once a corner is rounded) is one undo
+  step per drag; paths get the radius field. MCP `set_node_corner_radius`
+  (`de-mcp/src/node_attr_corners.rs`) takes `radius` as one number or
+  `[tl, tr, br, bl]` (an array argument, listed in `structured_arg_allowed`)
+  and `smoothing` as a fraction `0..=1` or a percentage string `"60%"`;
+  a bare `60` is refused.
+- **Drawing** (`de_editor_core::draw_constraints`): Shift keeps a drawn
+  rect / ellipse / frame / polygon / star square and a line on 45° steps,
+  Alt / Option draws from the press point, both combine and apply mid-drag
+  (`set_modifier_shift` / `set_modifier_alt` redraw an in-flight create
+  drag and return whether to repaint). The host arm is
+  `widget_host/create_drag.rs`. A drawn line writes its start and its end
+  relative to it (`EditorState::set_selected_line`, `x2` / `y2` as the
+  loader reads them), so it keeps its direction.
+
 ## Canonical `.de` loader (v0.8.0+)
 
 The document extension is `.de`; `.op` and the old `.pen` alias no longer open. pen.dev `.pen` files are an import only: they open as an untitled document and are never written back.
