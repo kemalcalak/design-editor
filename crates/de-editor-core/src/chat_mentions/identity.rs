@@ -90,6 +90,7 @@ pub fn unique_label(mention: &ChatMention, staged: &[ChatMention]) -> String {
     let clashes = |label: &str| {
         staged.iter().any(|other| {
             (other.kind, other.key.as_str()) != (mention.kind, mention.key.as_str())
+                && other.kind.trigger() == mention.kind.trigger()
                 && other.label == label
         })
     };

@@ -102,10 +102,14 @@ fn launch_if_pending_inner(
     current_chat: &mut Option<ChatSession>,
     current_design: &mut Option<DesignSession>,
 ) -> bool {
-    // A file staged as a mention (#398) is read on a worker; the send waits
-    // for it rather than reading the disk here (`MentionFileReader`).
+    // Files and skills staged as mentions (#398) are read on a worker; the
+    // send waits for them rather than reading the disk here
+    // (`MentionFileReader`).
     let chat = &host.editor_state().chat;
-    if chat.pending_send.is_some() && chat.project_files.reading_any(&chat.pending_mentions) {
+    if chat.pending_send.is_some()
+        && (chat.project_files.reading_any(&chat.pending_mentions)
+            || chat.skills.reading_any(&chat.pending_mentions))
+    {
         return false;
     }
     let Some(user_text) = host.editor_state_mut().chat.pending_send.take() else {
@@ -118,12 +122,9 @@ fn launch_if_pending_inner(
     let launch_route = std::mem::take(&mut host.editor_state_mut().chat.launch_route);
     host.mark_editor_state_dirty();
     let routing_text = resolve_turn_user_text(host.editor_state(), &user_text);
-    // `@`-mentions (#398) resolve to compact summaries appended to what the
-    // provider reads. The keyword gates below route on `routing_text` alone,
-    // so a mentioned layer called "New page" cannot steer the turn.
-    let mentions =
-        de_host_services::chat_mention_context::take_turn_mentions(host.editor_state_mut());
-    let effective_user_text = format!("{routing_text}{mentions}");
+    // What the provider reads: the typed text plus the turn's context
+    // (#398). The keyword gates below route on `routing_text` alone.
+    let effective_user_text = turn_context::compose_turn_text(host, &routing_text);
     // TS parity (ai-chat-handlers.ts:560-679): builtin / ACP entries
     // take their own early-return paths; ONLY external CLI providers
     // run the standard-mode classify → modify/new/chat pipeline.
@@ -251,7 +252,7 @@ fn launch_if_pending_inner(
     // Builtin (API-key) providers run the tool-executing agent loop
     // (GAP #32): canvas tool defs ride the request and the UI thread
     // executes each call via the session's tool channel.
-    if let Some((provider, tool_rx)) = builtin_provider_with_tools(host) {
+    if let Some((provider, tool_rx, usage_meter)) = builtin_provider_with_tools(host) {
         let system_prompt = build_agent_system_prompt(host.editor_state());
         // This builtin agent loop carries the full canvas toolset (`batch_design`
         // included), so a design request runs *here* for an API-key model like
@@ -277,7 +278,10 @@ fn launch_if_pending_inner(
             model: None,
         };
         super::finalize_design_session_if_needed(host, current_chat, "teardown-backstop");
-        *current_chat = Some(ChatSession::start_with_tools(provider, req, Some(tool_rx)));
+        *current_chat = Some(
+            ChatSession::start_with_tools(provider, req, Some(tool_rx))
+                .with_usage_meter(usage_meter),
+        );
         return true;
     }
     let Some(provider) = chat_provider_for_selected_model(host) else {
@@ -696,6 +700,10 @@ pub fn drain_stop_request(
         session.abort();
         crate::design_session::stop_design_transcript(host, running_tab);
     }
+    // The requests that finished before Stop were billed: keep their usage.
+    if let Some(session) = current_chat.as_ref() {
+        super::write_turn_usage(host, session, running_tab, None);
+    }
     *current_chat = None;
     *current_design = None;
     if let Some(epoch) = de_editor_core::agent_indicators::active_epoch() {
@@ -768,6 +776,9 @@ pub(crate) fn reconcile_starter_ghost(state: &mut EditorState, any_session_runni
 pub(crate) fn active_page_is_blank_starter_frame(state: &EditorState) -> bool {
     de_editor_core::blank_starter::active_page_is_blank_starter(state)
 }
+
+#[path = "chat_session_launch_context.rs"]
+mod turn_context;
 
 #[path = "chat_session_launch_providers.rs"]
 mod providers;

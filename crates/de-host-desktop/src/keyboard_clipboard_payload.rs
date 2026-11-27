@@ -9,6 +9,8 @@ pub(crate) struct ClipboardPayload {
     pub(crate) text: Option<String>,
     pub(crate) html: Option<String>,
     pub(crate) image: Option<crate::clipboard::ClipboardImage>,
+    /// Files copied in a file manager (chat paste only, #398).
+    pub(crate) files: Vec<std::path::PathBuf>,
 }
 
 impl ClipboardPayload {
@@ -20,6 +22,15 @@ impl ClipboardPayload {
     }
 
     pub(super) fn read_chat_system(clipboard: &mut dyn SystemClipboard) -> Self {
+        // Copied files win: a file manager also puts the names as text and,
+        // on macOS, the file icons as an image, neither of which is meant.
+        let files = clipboard.read_files();
+        if !files.is_empty() {
+            return Self {
+                files,
+                ..Self::default()
+            };
+        }
         let (text, image) = clipboard.read_chat();
         Self {
             text,
@@ -39,7 +50,12 @@ impl ClipboardPayload {
         } else {
             None
         };
-        Self { text, html, image }
+        Self {
+            text,
+            html,
+            image,
+            files: Vec::new(),
+        }
     }
 
     /// The system clipboard's HTML is the editor's node-copy marker: the

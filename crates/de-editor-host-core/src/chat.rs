@@ -11,6 +11,7 @@ use de_ai::chat_provider::{
     ChatToolResult, FinalizeReport, QualitySummary, UnfilledScreensReport, CHECK_BLOCKERS_OP,
     LOOP_FINALIZE_OP,
 };
+use de_ai::chat_usage::UsageMeter;
 use de_editor_core::write_scope::WriteBaseline;
 use de_editor_core::{ChatMessage, ChatRole, ChatToolCall};
 
@@ -245,6 +246,9 @@ pub struct ChatSession {
     /// the roots created since (#116). `None` for plain chat.
     run_baseline: Option<WriteBaseline>,
     viewport_fitted: bool,
+    /// The meter the provider adds each request's reported usage to (#398);
+    /// read when the turn ends. `None` for transports that report none.
+    usage_meter: Option<Arc<UsageMeter>>,
 }
 
 /// Result of a single non-blocking [`ChatSession::poll`].
@@ -520,6 +524,7 @@ impl ChatSession {
             loop_finalized: false,
             run_baseline: None,
             viewport_fitted: false,
+            usage_meter: None,
         }
     }
 
@@ -539,6 +544,23 @@ impl ChatSession {
     pub fn with_run_baseline(mut self, run_baseline: WriteBaseline) -> Self {
         self.run_baseline = Some(run_baseline);
         self
+    }
+
+    /// Keep the meter the turn's provider records usage into, so the host
+    /// can write the turn's tokens and cost onto its reply. Chainable.
+    pub fn with_usage_meter(mut self, meter: Arc<UsageMeter>) -> Self {
+        self.usage_meter = Some(meter);
+        self
+    }
+
+    /// The turn's usage so far (tokens + cost for a priced model), or
+    /// `None` when the transport reports no usage or reported nothing yet.
+    pub fn usage(&self) -> Option<de_editor_core::chat::TurnUsage> {
+        let meter = self.usage_meter.as_ref()?;
+        let tokens = meter.total();
+        tokens
+            .reported()
+            .then(|| de_editor_core::chat::TurnUsage::new(tokens, meter.total_cost_usd()))
     }
 
     /// The page as this turn's design run found it; `None` for plain chat.
@@ -611,6 +633,7 @@ impl ChatSession {
             loop_finalized: false,
             run_baseline: None,
             viewport_fitted: false,
+            usage_meter: None,
         }
     }
 

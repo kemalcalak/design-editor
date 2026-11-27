@@ -99,17 +99,45 @@ fn provider_for_selected_model_impl(
     )
 }
 
+/// A built-in provider wired for the tool-executing loop: the provider,
+/// the UI tool channel it sends calls on, and the turn's usage meter.
+pub(crate) type BuiltinToolTurn = (
+    Box<dyn ChatProvider>,
+    Receiver<ChatToolRequest>,
+    Arc<de_ai::chat_usage::UsageMeter>,
+);
+
+/// A fresh usage meter for one built-in turn: priced when `entry`'s model
+/// is served by Anthropic's own API (`de_ai::model_pricing`), tokens only
+/// otherwise. Shared by the chat loop and the design-agent loop.
+pub(crate) fn turn_usage_meter(
+    entry: &ModelEntry,
+    config: &BuiltinAgentConfig,
+) -> Arc<de_ai::chat_usage::UsageMeter> {
+    let price = entry
+        .builtin_model_id()
+        .and_then(|model| de_ai::model_pricing::first_party_price(&config.base_url, model));
+    Arc::new(match price {
+        Some(price) => de_ai::chat_usage::UsageMeter::with_price(price),
+        None => de_ai::chat_usage::UsageMeter::new(),
+    })
+}
+
 /// When the selected chat model is a ready builtin (API-key) entry,
 /// build its provider with the canvas tool set + a fresh UI tool
 /// channel — the GAP #32 tool-executing path. `None` falls through to
 /// the plain provider routing.
-pub(crate) fn builtin_provider_with_tools(
-    host: &WidgetHostNative,
-) -> Option<(Box<dyn ChatProvider>, Receiver<ChatToolRequest>)> {
+///
+/// The third value is the turn's usage meter (#398): every request of the
+/// agent loop records its provider-reported tokens there, priced when the
+/// model is served by Anthropic's own API (`de_ai::model_pricing`).
+pub(crate) fn builtin_provider_with_tools(host: &WidgetHostNative) -> Option<BuiltinToolTurn> {
     let state = host.editor_state();
     let entry = state.chat.selected_model_entry()?;
     let config = selected_builtin_agent_config(state, entry)?;
-    let provider = ConfiguredBuiltinProvider::from_builtin_agent(&config)?;
+    let meter = turn_usage_meter(entry, &config);
+    let provider = ConfiguredBuiltinProvider::from_builtin_agent(&config)?
+        .with_usage_meter(Arc::clone(&meter));
     let (executor, tool_rx) = chat_tool_channel();
     // Issue #209: the full CRUD set is advertised regardless of the current
     // canvas selection. Gating write tools on a selected Frame made the
@@ -119,7 +147,7 @@ pub(crate) fn builtin_provider_with_tools(
     // enforced at the execution sink (`execute_tool_requests`'s per-tool
     // validation), not by hiding definitions.
     let provider = provider.with_canvas_tools(chat_tool_defs(), Arc::new(executor));
-    Some((Box::new(provider), tool_rx))
+    Some((Box::new(provider), tool_rx, meter))
 }
 
 /// Model id to forward to the routed CLI transport, from the chat

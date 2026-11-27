@@ -23,6 +23,7 @@ fn query_opens_at_text_start_or_after_whitespace_only() {
         active_mention_query("@her", 4),
         Some(MentionQuery {
             start: 0,
+            trigger: MENTION_TRIGGER,
             query: "her"
         })
     );
@@ -307,4 +308,114 @@ fn context_block_lists_each_mention_and_flags_missing_ones() {
     assert!(block.starts_with("\n\n---\nReferenced context"));
     assert!(block.contains("\n- @Hero (layer): frame \"Hero\""));
     assert!(block.contains("\n- @a.md (file): could not be read"));
+}
+
+fn skills() -> std::sync::Arc<[SkillOption]> {
+    vec![
+        SkillOption {
+            name: "brand-voice".into(),
+            description: "House tone for copy".into(),
+            origin: SkillOrigin::Project,
+            shadows_user: true,
+            ..SkillOption::default()
+        },
+        SkillOption {
+            name: "grid".into(),
+            description: "Spacing rules".into(),
+            overrides_builtin: true,
+            ..SkillOption::default()
+        },
+    ]
+    .into()
+}
+
+#[test]
+fn slash_opens_skills_and_paths_do_not() {
+    assert_eq!(
+        active_mention_query("/bra", 4).map(|q| (q.trigger, q.query)),
+        Some((SKILL_TRIGGER, "bra"))
+    );
+    assert_eq!(active_mention_query("see docs/brief", 14), None);
+    assert_eq!(active_mention_query("/a/b", 4), None);
+    // A file mention keeps its folders.
+    assert_eq!(
+        active_mention_query("@docs/deep/brief", 16).map(|q| (q.trigger, q.query)),
+        Some((MENTION_TRIGGER, "docs/deep/brief"))
+    );
+}
+
+#[test]
+fn slash_popup_lists_skills_and_picks_a_slash_token() {
+    let mut state = multi_page_state();
+    state.chat.skills.skills = skills();
+    typed(&mut state, "/sp");
+    assert!(state.sync_chat_mentions());
+    assert!(state.chat.skills.rescan_requested);
+    assert!(!state.chat.project_files.rescan_requested);
+    // "Spacing rules" is a description prefix hit; the other skill only
+    // matches as a scattered subsequence, so it ranks below.
+    assert_eq!(labels(&state)[0], "grid", "a description hit ranks too");
+    assert!(state.pick_chat_mention(None, 0));
+    assert_eq!(state.chat.input.text(), "/grid ");
+    let mention = &state.chat.pending_mentions[0];
+    assert_eq!(
+        (mention.kind, mention.token()),
+        (MentionKind::Skill, "/grid".to_string())
+    );
+    // Switching from `@` to `/` at the same spot re-ranks and rescans.
+    typed(&mut state, "@");
+    state.sync_chat_mentions();
+    state.chat.skills.rescan_requested = false;
+    typed(&mut state, "/");
+    assert!(state.sync_chat_mentions());
+    assert!(state.chat.skills.rescan_requested);
+    assert_eq!(labels(&state), ["brand-voice", "grid"]);
+}
+
+#[test]
+fn skill_block_line_uses_the_slash_token() {
+    let block = context_block(&[MentionSummary {
+        mention: ChatMention {
+            kind: MentionKind::Skill,
+            key: "grid".into(),
+            label: "grid".into(),
+        },
+        text: None,
+    }]);
+    assert!(block.contains("\n- /grid (skill): is no longer installed"));
+}
+
+#[test]
+fn skill_rows_name_their_source_and_what_they_hide() {
+    let rows = skill_candidates(&skills(), "");
+    let tag = |name: &str| {
+        rows.iter()
+            .find(|r| r.mention.key == name)
+            .and_then(|r| r.tag_key)
+    };
+    assert_eq!(tag("brand-voice"), Some("chat.skill.projectOverUser"));
+    assert_eq!(tag("grid"), Some("chat.skill.userOverBuiltin"));
+    let plain = SkillOption {
+        origin: SkillOrigin::Project,
+        ..SkillOption::default()
+    };
+    assert_eq!(plain.tag_key(), "chat.skill.project");
+    assert_eq!(SkillOption::default().tag_key(), "chat.skill.user");
+}
+
+#[test]
+fn a_skill_and_a_layer_may_share_a_name() {
+    // `/hero` and `@hero` are different tokens, so neither is renamed.
+    let layer = ChatMention {
+        kind: MentionKind::Node,
+        key: "n1".into(),
+        label: "hero".into(),
+    };
+    let skill = ChatMention {
+        kind: MentionKind::Skill,
+        key: "hero".into(),
+        label: "hero".into(),
+    };
+    assert_eq!(unique_label(&skill, std::slice::from_ref(&layer)), "hero");
+    assert_eq!(live_mentions("@hero /hero", &[layer, skill]), [true, true]);
 }

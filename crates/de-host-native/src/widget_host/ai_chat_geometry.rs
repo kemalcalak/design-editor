@@ -7,6 +7,14 @@ use de_editor_ui::widgets::{AI_CHAT_MINIMIZED_HEIGHT, AI_CHAT_MIN_HEIGHT, AI_CHA
 use de_editor_ui::{Point2D, Rect};
 
 impl WidgetHostNative {
+    /// Whether the window point `(x, y)` lies on the chat panel as last
+    /// laid out — where a dropped file becomes a chat attachment (#398)
+    /// instead of a canvas import.
+    pub fn chat_panel_contains(&self, x: f32, y: f32) -> bool {
+        self.ai_chat_rect(self.last_viewport_w, self.last_viewport_h)
+            .is_some_and(|rect| rect.contains(Point2D::new(x, y)))
+    }
+
     /// The panel's width in BOTH states — minimizing changes the height
     /// only, so the bar and the panel must read this one function or their
     /// edges drift apart as soon as the user resizes.

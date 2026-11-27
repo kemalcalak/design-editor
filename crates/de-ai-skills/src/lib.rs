@@ -42,6 +42,8 @@ mod shader_effect_corpus_tests;
 mod shader_fill_corpus_tests;
 pub mod style_guide;
 pub mod types;
+pub mod user_skills;
+mod user_skills_error;
 
 pub use compose::compose_system_prompt;
 pub use loader::{get_skill_by_name, get_skill_registry, get_skills_by_phase, SkillEntry};

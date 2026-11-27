@@ -106,6 +106,34 @@ fn turn_context_resolves_documents_and_files_in_order() {
 }
 
 #[test]
+fn a_picked_skill_brings_its_instructions() {
+    use de_ai_skills::user_skills::SkillSource;
+    let dir = temp_project("skill");
+    fs::write(
+        dir.join("tone.md"),
+        "---\nname: tone\ndescription: House tone\n---\nWrite calmly.\n",
+    )
+    .unwrap();
+    let set = crate::chat_skill_context::load_chat_skills(&[(SkillSource::Project, dir.clone())]);
+    let mut state = EditorState::default();
+    state.chat.skills.skills = crate::chat_skill_context::skill_options(&set).into();
+    let skill = |name: &str| ChatMention {
+        kind: MentionKind::Skill,
+        key: name.into(),
+        label: name.into(),
+    };
+    let summaries = resolve_mentions(&state, &[skill("tone"), skill("gone")], None);
+    assert_eq!(
+        summaries[0].text.as_deref(),
+        Some("House tone\nWrite calmly.")
+    );
+    assert_eq!(summaries[1].text, None);
+    let block = de_editor_core::chat_mentions::context_block(&summaries);
+    assert!(block.contains("- /tone (skill): House tone\nWrite calmly."));
+    fs::remove_dir_all(&dir).ok();
+}
+
+#[test]
 fn taking_the_turn_mentions_uses_and_drops_the_prefetched_summaries() {
     let mut state = EditorState::default();
     state.chat.project_files.root = Some("/no/such/folder".into());
@@ -115,11 +143,34 @@ fn taking_the_turn_mentions_uses_and_drops_the_prefetched_summaries() {
         .project_files
         .summaries
         .insert("brief.md".into(), Some("text file, 4 bytes: calm".into()));
-    let block = take_turn_mentions(&mut state);
+    let block = take_turn_mentions(&mut state, 0);
     assert!(
         block.contains("- @brief.md (file): text file, 4 bytes: calm"),
         "{block}"
     );
     assert!(state.chat.pending_mentions.is_empty());
     assert!(state.chat.project_files.summaries.is_empty());
+}
+
+#[test]
+fn the_picked_skills_share_one_budget_and_a_cut_is_announced() {
+    let skill = |name: &str| ChatMention {
+        kind: MentionKind::Skill,
+        key: name.into(),
+        label: name.into(),
+    };
+    let mut state = EditorState::default();
+    state.chat.pending_mentions = vec![skill("a"), skill("b"), skill("c")];
+    let big = "x".repeat(MAX_TURN_SKILL_CHARS - 10);
+    let instructions = &mut state.chat.skills.instructions;
+    instructions.insert("a".into(), Some(Some(big.clone())));
+    instructions.insert("b".into(), Some(Some("y".repeat(100))));
+    instructions.insert("c".into(), Some(Some("z".repeat(100))));
+    let block = take_turn_mentions(&mut state, 7);
+    assert!(block.contains(&big));
+    assert!(block.contains("[…cut at the turn's skill limit]"));
+    assert!(block.contains("[left out: the turn's skill limit was reached]"));
+    let toast = state.editor_ui.editor_toast.clone().unwrap();
+    assert_eq!(toast.i18n_key, SKILLS_CUT_TOAST);
+    assert!(state.chat.skills.instructions.is_empty());
 }

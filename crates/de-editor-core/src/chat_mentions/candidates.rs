@@ -8,7 +8,7 @@
 use jian_ops_schema::node::PenNode;
 use jian_ops_schema::variable::{VariableKind, VariableScalar, VariableValue};
 
-use super::{ChatMention, MentionCandidate, MentionKind};
+use super::{ChatMention, MentionCandidate, MentionKind, SkillOption};
 use crate::command_palette::fuzzy::fuzzy_score;
 use crate::find_layers::document_pages;
 use crate::pen_node_ext::PenNodeExt;
@@ -72,6 +72,7 @@ fn node_candidate(node: &PenNode, label: &str, page: Option<&str>) -> MentionCan
             label: label.to_string(),
         },
         detail,
+        tag_key: None,
     }
 }
 
@@ -119,6 +120,7 @@ fn file_candidate(path: &str) -> MentionCandidate {
             label: path.to_string(),
         },
         detail: folder.to_string(),
+        tag_key: None,
     }
 }
 
@@ -183,6 +185,7 @@ pub fn mention_candidates(
                             label,
                         },
                         detail: String::new(),
+                        tag_key: None,
                     },
                 );
             }
@@ -236,6 +239,7 @@ pub fn mention_candidates(
                         label: component.name.clone(),
                     },
                     detail: String::new(),
+                    tag_key: None,
                 },
             );
         }
@@ -253,6 +257,7 @@ pub fn mention_candidates(
                             label: name.clone(),
                         },
                         detail: variable_detail(&def.kind, &def.value),
+                        tag_key: None,
                     },
                 );
             }
@@ -277,5 +282,37 @@ pub fn mention_candidates(
         .into_iter()
         .take(MAX_MENTION_ROWS)
         .map(|r| r.candidate)
+        .collect()
+}
+
+/// The `/` popup rows for `raw_query`: user skills ranked by name (a
+/// description hit counts for half), best first, at most
+/// [`MAX_MENTION_ROWS`].
+pub fn skill_candidates(skills: &[SkillOption], raw_query: &str) -> Vec<MentionCandidate> {
+    let query = raw_query.trim().to_lowercase();
+    let mut ranked: Vec<(u32, usize, &SkillOption)> = skills
+        .iter()
+        .enumerate()
+        .filter_map(|(order, skill)| {
+            let by_name = fuzzy_score(&query, &skill.name);
+            let by_description = fuzzy_score(&query, &skill.description).map(|s| s / 2);
+            by_name
+                .max(by_description)
+                .map(|score| (score, order, skill))
+        })
+        .collect();
+    ranked.sort_by(|a, b| b.0.cmp(&a.0).then(a.1.cmp(&b.1)));
+    ranked
+        .into_iter()
+        .take(MAX_MENTION_ROWS)
+        .map(|(_, _, skill)| MentionCandidate {
+            mention: ChatMention {
+                kind: MentionKind::Skill,
+                key: skill.name.clone(),
+                label: skill.name.clone(),
+            },
+            detail: skill.description.clone(),
+            tag_key: Some(skill.tag_key()),
+        })
         .collect()
 }

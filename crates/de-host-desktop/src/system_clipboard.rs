@@ -31,6 +31,10 @@ pub(crate) trait SystemClipboard {
     fn read_text(&mut self) -> Option<String>;
     /// Image, else text, for the chat input.
     fn read_chat(&mut self) -> (Option<String>, Option<ClipboardImage>);
+    /// Files copied in a file manager, for the chat input (#398).
+    fn read_files(&mut self) -> Vec<std::path::PathBuf> {
+        Vec::new()
+    }
     /// HTML, else image, for a canvas paste.
     fn read_canvas(&mut self) -> (Option<String>, Option<ClipboardImage>);
 }
@@ -102,6 +106,14 @@ impl<B: ClipboardBackend> SystemClipboard for OsClipboard<B> {
             return (None, None);
         };
         let read = clipboard_backend::read_chat_paste(handle);
+        self.settle(read)
+    }
+
+    fn read_files(&mut self) -> Vec<std::path::PathBuf> {
+        let Some(handle) = self.handle() else {
+            return Vec::new();
+        };
+        let read = clipboard_backend::read_file_paste(handle);
         self.settle(read)
     }
 

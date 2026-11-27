@@ -1,9 +1,12 @@
-//! Where the `@` popup's file list comes from (#398). Core only defines the
-//! seam: listing a folder is disk I/O, which the host does off the UI
-//! thread (`de_host_services::chat_mention_scan::ProjectFileScanner`).
+//! Where the popup's file and skill lists come from (#398). Core only
+//! defines the seams: listing a folder is disk I/O, which the host does off
+//! the UI thread (`de_host_services::chat_mention_scan::ProjectFileScanner`,
+//! `de_host_services::chat_skill_context::ChatSkillScanner`).
 
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
+
+use super::SkillOption;
 
 /// One listing of a project folder for the `@` popup.
 #[derive(Debug, Clone)]
@@ -26,4 +29,23 @@ pub trait ProjectFileSource {
     fn request(&mut self, root: &Path) -> Option<ProjectFileList>;
     /// A listing that finished since the last call, if any.
     fn poll(&mut self) -> Option<ProjectFileList>;
+}
+
+/// One listing of the skill folders for a project (or none).
+#[derive(Debug, Clone)]
+pub struct SkillList {
+    /// The project folder the list was made for.
+    pub root: Option<PathBuf>,
+    pub skills: Arc<[SkillOption]>,
+}
+
+/// A host's skill lister. Nothing behind it may touch the disk on the UI
+/// thread.
+pub trait SkillListSource {
+    /// Ask for a current listing for `root`; answers from the cache at once
+    /// when there is one, else [`SkillListSource::poll`] hands it over
+    /// later.
+    fn request(&mut self, root: Option<&Path>) -> Option<SkillList>;
+    /// A listing that finished since the last call, if any.
+    fn poll(&mut self) -> Option<SkillList>;
 }

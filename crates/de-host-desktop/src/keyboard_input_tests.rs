@@ -26,6 +26,7 @@ fn payload(
         text: text.map(str::to_string),
         html: html.map(str::to_string),
         image,
+        files: Vec::new(),
     }
 }
 

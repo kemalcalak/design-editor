@@ -190,23 +190,22 @@ impl DesktopApp {
             self.host.mark_editor_state_dirty();
             self.request_redraw(true);
         }
-        // An image can land INSIDE a node, so from here on the drag
-        // position is polled every frame to ring the node under it
-        // (`new_events`); winit reports no cursor moves during a drag.
-        if image_drop_host::is_supported_image_drop(path) {
-            self.hovered_image_drop = true;
-            if self.refresh_image_drop_hover() {
-                // Repaint only: the ring lives in `editor_ui`, so
-                // marking the document dirty here would rebuild the
-                // whole layout scene on every pointer move.
-                self.request_redraw(true);
-            }
+        // From here on the drag position is polled every frame
+        // (`new_events`; winit reports no cursor moves during a drag): over
+        // the chat the file would become an attachment, and an image can
+        // land INSIDE a node, which gets a ring.
+        self.hovered_file_drop = Some(image_drop_host::is_supported_image_drop(path));
+        if self.refresh_file_drop_hover() {
+            // Repaint only: the ring and the chat indicator live in UI
+            // state, so marking the document dirty here would rebuild the
+            // whole layout scene on every pointer move.
+            self.request_redraw(true);
         }
     }
 
     pub(super) fn on_hovered_file_cancelled(&mut self) {
         // The drag left the window without dropping — hide it.
-        self.clear_image_drop_hover();
+        self.clear_file_drop_hover();
         if self.host.editor_state().editor_ui.file_drop_active {
             self.host.editor_state_mut().editor_ui.file_drop_active = false;
             self.host.mark_editor_state_dirty();
@@ -222,11 +221,19 @@ impl DesktopApp {
             .as_ref()
             .and_then(crate::drag_cursor::window_cursor_position)
             .or(self.drop_cursor);
-        self.clear_image_drop_hover();
+        self.clear_file_drop_hover();
         // Clear the drag overlay now that the drop has landed.
         self.host.editor_state_mut().editor_ui.file_drop_active = false;
         self.host.mark_editor_state_dirty();
         self.request_redraw(true);
+        // A file dropped on the chat panel is a chat attachment (#398), not
+        // a canvas import: images and text files are staged on the active
+        // chat (anything else is refused there with a toast), read on a
+        // worker thread.
+        if drop_point.is_some_and(|(x, y)| self.host.chat_panel_contains(x, y)) {
+            self.attachment_loads.queue(&self.host, path);
+            return;
+        }
         if image_drop_host::is_supported_image_drop(&path) {
             let outcome = image_drop_host::apply_image_drop(
                 &mut self.host,
