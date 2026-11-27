@@ -99,3 +99,16 @@ fn priced_meter_sums_per_request_costs() {
     meter.record(io(Some(10), None));
     assert_eq!(meter.total_cost_usd(), None);
 }
+
+#[test]
+fn a_refused_request_costs_nothing_rather_than_an_unknown() {
+    // #398: a request refused before any output (429 after retries) records
+    // an empty usage; it was not billed, so the total stays priced.
+    let price = crate::model_pricing::price_for("claude-haiku-5-5").unwrap();
+    let meter = UsageMeter::with_price(price);
+    meter.record(io(Some(100_000), Some(0)));
+    meter.record(TokenUsage::default());
+    assert_eq!(meter.requests(), 2);
+    let cost = meter.total_cost_usd().expect("still priced");
+    assert!((cost - 0.01).abs() < 1e-9, "{cost}");
+}

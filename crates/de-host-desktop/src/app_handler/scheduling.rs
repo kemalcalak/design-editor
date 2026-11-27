@@ -43,6 +43,17 @@ fn show_gpu_init_error_dialog(err: &SharedSkiaError) {
 }
 
 impl DesktopApp {
+    /// A chat, a design run, a code export, a design.md run or a sub-agent
+    /// is working: their writes are not input, so the idle memory trim
+    /// waits for them (#456).
+    pub(crate) fn agent_work_running(&self) -> bool {
+        self.current_chat.is_some()
+            || self.current_design.is_some()
+            || self.current_codegen.is_some()
+            || self.current_design_md.is_some()
+            || !self.sub_agents.is_empty()
+    }
+
     pub(super) fn refresh_host_clock(&mut self) {
         let now_ms = self.clock_start.elapsed().as_millis() as u64;
         self.host.set_now_ms(now_ms);
@@ -145,6 +156,10 @@ impl DesktopApp {
             // A visible Home rescans its Recent files for outside changes.
             let period = crate::home_previews::RESCAN.as_millis() as u64;
             event_loop.set_control_flow(ControlFlow::WaitUntil(self.periodic_wake_instant(period)));
+        } else if let Some(deadline_ms) = self.host.memory_idle_deadline_ms() {
+            // One wake per quiet spell for the idle memory trim (#456).
+            let deadline = self.clock_start + Duration::from_millis(deadline_ms);
+            event_loop.set_control_flow(ControlFlow::WaitUntil(deadline));
         } else {
             event_loop.set_control_flow(ControlFlow::Wait);
         }

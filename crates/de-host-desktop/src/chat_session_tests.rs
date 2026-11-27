@@ -646,6 +646,44 @@ fn a_finished_turn_writes_its_reported_usage_and_cost_onto_the_reply() {
 }
 
 #[test]
+fn a_stopped_turn_keeps_the_usage_of_its_finished_requests() {
+    // #398 review: Stop drops the session, but the requests that finished
+    // before it were billed, so their usage still lands on the reply.
+    let _guard = crate::agent_indicator_test_lock::LOCK
+        .lock()
+        .unwrap_or_else(|e| e.into_inner());
+    de_editor_core::agent_indicators::clear();
+    let meter = std::sync::Arc::new(de_ai::chat_usage::UsageMeter::new());
+    meter.record(de_ai::chat_usage::TokenUsage {
+        input_tokens: Some(9_000),
+        output_tokens: Some(400),
+        ..Default::default()
+    });
+    let (_delta_tx, delta_rx) = std::sync::mpsc::channel::<ChatDelta>();
+    let mut current = Some(ChatSession::from_channels(delta_rx, None).with_usage_meter(meter));
+    let mut current_design = None;
+    let mut host = WidgetHostNative::new();
+    host.editor_state_mut()
+        .chat
+        .messages
+        .push(ChatMessage::assistant_streaming());
+    assert!(host.editor_state_mut().chat.stop_streaming());
+    assert!(drain_stop_request(
+        &mut host,
+        &mut current,
+        &mut current_design,
+        None,
+    ));
+    assert!(current.is_none());
+    let usage = host.editor_state().chat.messages[0]
+        .usage
+        .expect("usage kept on Stop");
+    assert_eq!(usage.tokens.input_tokens, Some(9_000));
+    assert_eq!(usage.tokens.output_tokens, Some(400));
+    de_editor_core::agent_indicators::clear();
+}
+
+#[test]
 fn the_design_agent_loop_gets_a_usage_meter_like_the_chat_loop() {
     // #398 review: design-loop turns feed the same meter as chat turns, so
     // a design run's tokens and cost land on its reply too.

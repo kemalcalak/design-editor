@@ -185,17 +185,8 @@ fn pump_with_channel_interleave(
     }
     if poll.finished {
         // The turn's provider-reported usage (#398) lands on its reply.
-        let usage = current.as_ref().and_then(ChatSession::usage);
-        if let Some(usage) = usage {
-            let messages = &mut host
-                .editor_state_mut()
-                .chat
-                .run_tab_mut(running_tab)
-                .messages;
-            if let Some(index) = agent_message_index(messages, agent_identity) {
-                messages[index].usage = Some(usage);
-                changed = true;
-            }
+        if let Some(session) = current.as_ref() {
+            changed |= write_turn_usage(host, session, running_tab, agent_identity);
         }
         // Backstop: a design loop that died early (429 / quota / abort)
         // never sent its finalize op — run the structural passes anyway so
@@ -206,6 +197,31 @@ fn pump_with_channel_interleave(
         *current = None;
     }
     changed
+}
+
+/// Write the turn's provider-reported usage (#398) onto its reply. Called
+/// when the turn finishes and when the user stops it: a stopped turn has
+/// already paid for every request that completed, so dropping its meter
+/// would undercount the chat. Returns whether a reply was updated.
+pub(crate) fn write_turn_usage(
+    host: &mut WidgetHostNative,
+    session: &ChatSession,
+    running_tab: Option<usize>,
+    agent_identity: Option<(&str, &str)>,
+) -> bool {
+    let Some(usage) = session.usage() else {
+        return false;
+    };
+    let messages = &mut host
+        .editor_state_mut()
+        .chat
+        .run_tab_mut(running_tab)
+        .messages;
+    let Some(index) = agent_message_index(messages, agent_identity) else {
+        return false;
+    };
+    messages[index].usage = Some(usage);
+    true
 }
 
 fn agent_message_index(
