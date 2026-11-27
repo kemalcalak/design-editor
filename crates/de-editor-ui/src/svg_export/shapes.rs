@@ -230,7 +230,7 @@ pub fn write_stroke_geometry(
     };
     let line = stroke_attrs(stroke.color, stroke.width);
     if !geometry.stroke_d.is_empty() {
-        let style = crate::widgets::canvas_viewport_stroke_paint::centre_line_style(stroke.style);
+        let style = crate::stroke_centre_line::centre_line_style(stroke.style);
         let _ = write!(
             out,
             r#"<path d="{}"{place} fill="none"{line}{}/>"#,

@@ -90,19 +90,49 @@ impl WidgetHostNative {
 
 /// Whether the scene holds more for `node` than its box, built from the
 /// box at scene build time, so moving the box alone would leave it stale
-/// (#389): stroke end geometry (arrowheads, the trimmed centre line) is
-/// node-local and fitted to the box, and a line drawn right to left or
-/// bottom to top keeps its direction beside the box.
+/// (#389): a line's stroke end geometry (arrowheads, the trimmed centre
+/// line) is node-local and fitted to the box, a line drawn right to left
+/// or bottom to top keeps its direction beside the box, and a smoothed
+/// rect / frame or a rounded polygon paints an outline built for its box.
+/// Ends that only repeat the cap build no geometry, so they patch.
 fn box_shaped_scene_data(node: &jian_ops_schema::node::PenNode) -> bool {
-    let ends = de_editor_core::fills::node_stroke_style(node)
-        .is_some_and(|style| style.stroke_start.is_some() || style.stroke_end.is_some());
-    let reversed_line = match node {
-        jian_ops_schema::node::PenNode::Line(line) => {
-            line.x2.is_some_and(|x| x < 0.0) || line.y2.is_some_and(|y| y < 0.0)
+    use jian_ops_schema::node::PenNode;
+    match node {
+        PenNode::Line(line) => {
+            let ends = de_editor_core::fills::node_stroke_style(node).is_some_and(|style| {
+                de_editor_core::stroke_geometry::StrokeEnds::from_parts(
+                    style.stroke_start,
+                    style.stroke_end,
+                    style.cap.as_ref(),
+                )
+                .is_some()
+            });
+            let reversed = line.x2.is_some_and(|x| x < 0.0) || line.y2.is_some_and(|y| y < 0.0);
+            ends || reversed
         }
+        PenNode::Rectangle(_) | PenNode::Frame(_) => {
+            de_editor_core::command_node_attrs::corners::node_corner_smoothing(node)
+                .is_some_and(|s| s > 0.0)
+                && node_has_radius(node)
+        }
+        PenNode::Polygon(polygon) => polygon.corner_radius.is_some_and(|r| r > 0.0),
         _ => false,
+    }
+}
+
+/// Whether any corner of a rect / frame is rounded.
+fn node_has_radius(node: &jian_ops_schema::node::PenNode) -> bool {
+    use jian_ops_schema::node::{CornerRadius, PenNode};
+    let radius = match node {
+        PenNode::Rectangle(n) => n.container.corner_radius.as_ref(),
+        PenNode::Frame(n) => n.container.corner_radius.as_ref(),
+        _ => None,
     };
-    ends || reversed_line
+    match radius {
+        Some(CornerRadius::Uniform(r)) => *r > 0.0,
+        Some(CornerRadius::PerCorner(r)) => r.iter().any(|r| *r > 0.0),
+        None => false,
+    }
 }
 
 fn patch_scene_bounds(
