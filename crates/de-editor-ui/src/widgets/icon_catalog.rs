@@ -468,8 +468,21 @@ fn points_path(points: &str, close: bool) -> Option<String> {
 mod tests {
     use super::*;
 
+    /// Settle every process-global input of the search cache key before a
+    /// test counts rebuilds. The cache and its counter are thread-local, but
+    /// `brand_loaded` reads `BRAND_CATALOG`, which other tests on other
+    /// threads install (`icons_tests`). Landing between two calls here flips
+    /// the key and forces a legitimate rebuild, which read as a missed cache
+    /// hit (#474). Both catalogs are set-once, so after this the key can no
+    /// longer change under the test.
+    fn settle_catalogs() {
+        set_brand_catalog(include_str!("../../assets/iconify-catalog-brands.json"));
+        super::super::icon_catalog_extended::request_all_extended_icon_catalogs();
+    }
+
     #[test]
     fn search_icons_cache_hits_on_unchanged_query() {
+        settle_catalogs();
         let before = search_icons_build_count();
         let first = search_icons("arrow", 10);
         let after_first = search_icons_build_count();
@@ -497,6 +510,7 @@ mod tests {
 
     #[test]
     fn search_icons_cache_recomputes_on_query_change() {
+        settle_catalogs();
         let _ = search_icons("arrow", 10);
         let before = search_icons_build_count();
 
@@ -511,6 +525,7 @@ mod tests {
 
     #[test]
     fn search_icons_cache_recomputes_on_limit_change() {
+        settle_catalogs();
         let _ = search_icons("arrow", 10);
         let before = search_icons_build_count();
 
