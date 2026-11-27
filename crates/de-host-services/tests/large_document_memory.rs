@@ -84,6 +84,9 @@ fn write_call(fixture: &Fixture, i: usize) -> Call {
     }
 }
 
+/// Builds the `i`-th call of one kind.
+type MakeCall = fn(&Fixture, usize) -> Call;
+
 /// What an agent's generation step sends: a `batch_design` program that
 /// adds a small card to a board.
 fn generate_call(fixture: &Fixture, i: usize) -> Call {
@@ -230,7 +233,7 @@ fn live_mcp_call_memory_and_latency() {
             if ok { "" } else { "  (tool error)" }
         );
     }
-    let writes: [(&str, fn(&Fixture, usize) -> Call); 2] = [
+    let writes: [(&str, MakeCall); 2] = [
         ("update_node (write)", write_call),
         ("batch_design (write)", generate_call),
     ];
