@@ -120,8 +120,8 @@ fn a_merged_anchor_keeps_left_out_pages_and_takes_captured_ones() {
     let keep = kept(&state, SnapshotPages::Page(Some("unrelated".into()))).expect("narrowed");
     let partial = shared_snapshot_pages(&mut state, Some(&full), Some(&keep));
     let merged = full.merged_pages(partial.shared_doc(), &keep);
-    for index in 0..7 {
-        let expected = if keep[index] {
+    for (index, &kept) in keep.iter().enumerate() {
+        let expected = if kept {
             partial.shared_doc().page_children(index)
         } else {
             full.page_children(index)
