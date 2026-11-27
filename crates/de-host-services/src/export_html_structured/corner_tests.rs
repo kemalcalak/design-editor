@@ -46,7 +46,8 @@ fn a_smoothed_box_clips_its_background_layer_to_the_outline() {
     n.corner_path = outline("M 0 0 L 40 0 L 40 20 Z", "M 1 1 L 39 1 L 39 19 Z");
     let html = boxed(&n);
     let clip = "clip-path:path('M 0 0 L 40 0 L 40 20 Z')";
-    // The box clips its children; the background lives in a clipped layer.
+    // The background lives in a clipped layer, the children in a clipped
+    // wrapper; the box itself is not clipped.
     assert_eq!(html.matches(clip).count(), 2, "{html}");
     assert!(!html.contains("overflow:hidden"), "{html}");
     let (box_style, rest) = html.split_once('>').expect("box");
@@ -107,4 +108,46 @@ fn rounded_polygons_and_paths_write_their_placed_outline() {
     );
     // An open pen path paints no fill, as on the canvas.
     assert!(out.contains(r#"fill="none" stroke="rgb(0,0,0)""#), "{out}");
+}
+
+#[test]
+fn a_smoothed_clipping_card_keeps_its_shadow_and_outside_stroke_unclipped() {
+    use de_editor_ui::layout_scene::{DropShadow, Effect};
+    let mut n = SceneNode::leaf("card", NodeKind::Frame);
+    n.bounds = Rect::xywh(0.0, 0.0, 40.0, 20.0);
+    n.corner_radius = 8.0;
+    n.fill = Some(Color::WHITE);
+    n.clip_content = true;
+    n.effects = vec![Effect::DropShadow(DropShadow {
+        offset_x: 0.0,
+        offset_y: 4.0,
+        blur: 8.0,
+        color: Color::BLACK,
+        inner: false,
+        blend_mode: Default::default(),
+    })];
+    n.stroke = stroke(SceneStrokeAlign::Outside);
+    n.corner_path = outline("M 0 0 L 40 0 L 40 20 Z", "M -1 -1 L 41 -1 L 41 21 Z");
+    let html = boxed(&n);
+    let clip = "clip-path:path('M 0 0 L 40 0 L 40 20 Z')";
+    // The outer box carries the shadow and no clip.
+    let (box_style, rest) = html.split_once('>').expect("box");
+    assert!(box_style.contains("box-shadow"), "{html}");
+    assert!(!box_style.contains("clip-path"), "{html}");
+    // Background layer, then the open children wrapper, both clipped.
+    let wrapper =
+        format!(r#"<div class="n" style="left:0px;top:0px;width:40px;height:20px;{clip};">"#);
+    let at = rest
+        .find(&wrapper)
+        .unwrap_or_else(|| panic!("children wrapper: {html}"));
+    // The wrapper closes before the stroke, so the outside stroke is not
+    // clipped by it.
+    let after = &rest[at + wrapper.len()..];
+    let (inside, outside) = after.split_once("</div>").expect("wrapper close");
+    assert!(!inside.contains("<path"), "{html}");
+    assert!(
+        outside.contains(r#"<path d="M -1 -1 L 41 -1 L 41 21 Z""#),
+        "{html}"
+    );
+    assert!(html.ends_with("</div>"), "{html}");
 }

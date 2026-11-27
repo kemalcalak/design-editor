@@ -26,7 +26,9 @@ use super::css;
 /// Open the node's box. `ellipse` rounds it to a full oval.
 pub fn open(out: &mut String, n: &SceneNode, rect: Rect, ellipse: bool) {
     // Smoothed corners (#389): the background paints in its own layer
-    // clipped to the outline, and a clipping container clips to it too.
+    // clipped to the outline, and a clipping container clips its
+    // children in an inner wrapper (`clip_wrapper`), so the box's
+    // shadow, filters and an outside / centre stroke stay unclipped.
     // The box keeps the circular radius only so a box-shadow follows it.
     let outline = outline_clip(n, ellipse);
     let mut style = String::new();
@@ -39,10 +41,8 @@ pub fn open(out: &mut String, n: &SceneNode, rect: Rect, ellipse: bool) {
     } else if let Some(radius) = css::corner_radius(n) {
         css::decl(&mut style, "border-radius", &radius);
     }
-    match (&outline, n.clip_content) {
-        (Some(clip), true) => css::decl(&mut style, "clip-path", clip),
-        (None, true) => css::decl(&mut style, "overflow", "hidden"),
-        (_, false) => {}
+    if outline.is_none() && n.clip_content {
+        css::decl(&mut style, "overflow", "hidden");
     }
     // `SceneNode::opacity` is already baked into every resolved fill,
     // stroke and shadow alpha at scene-build time. Only
@@ -78,8 +78,21 @@ pub fn open(out: &mut String, n: &SceneNode, rect: Rect, ellipse: bool) {
         write_background(&mut layer, n, rect);
         css::decl(&mut layer, "clip-path", clip);
         let _ = write!(out, r#"<div class="n" style="{layer}"></div>"#);
+        if n.clip_content {
+            // The wrapper sits on the box's own origin, so children keep
+            // the coordinates they resolve against the box.
+            let mut wrapper = String::new();
+            css::place(&mut wrapper, Rect::xywh(0.0, 0.0, rect.size.x, rect.size.y));
+            css::decl(&mut wrapper, "clip-path", clip);
+            let _ = write!(out, r#"<div class="n" style="{wrapper}">"#);
+        }
     }
     super::video::emit(out, n);
+}
+
+/// Whether `open` left a children clip wrapper open inside the box.
+fn clip_wrapper(n: &SceneNode, ellipse: bool) -> bool {
+    n.clip_content && !ellipse && n.corner_path.is_some()
 }
 
 /// The CSS `clip-path` of a box with a corner outline (node-local, which
@@ -92,6 +105,9 @@ fn outline_clip(n: &SceneNode, ellipse: bool) -> Option<String> {
 /// Close the node's box, laying the stroke overlay over the children
 /// first so a container's outline is not painted under its own content.
 pub fn close(out: &mut String, n: &SceneNode, rect: Rect, ellipse: bool) {
+    if clip_wrapper(n, ellipse) {
+        out.push_str("</div>");
+    }
     match (n.stroke, n.corner_path.as_deref().filter(|_| !ellipse)) {
         (Some(stroke), Some(outline)) if stroke.sides.is_none() => {
             emit_outline_stroke(out, stroke, rect, outline)
