@@ -15,6 +15,7 @@ fn page(children: Vec<SceneNode>) -> ScenePage {
         id: "p1".into(),
         name: "Page 1".into(),
         children,
+        image_thumbs: Default::default(),
     }
 }
 

@@ -54,6 +54,7 @@ fn scene() -> LayoutScene {
                 shape("c2", NodeKind::Ellipse, 60.0, 100.0),
                 r,
             ],
+            image_thumbs: Default::default(),
         }],
         active_page_index: 0,
     }

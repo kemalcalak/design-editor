@@ -83,7 +83,8 @@ pub fn capture_scene(
         None => {
             let bounds: Rect = page_bounds(page).ok_or(ExportError::NothingToCapture)?;
             let png = render(bounds, scale, padding, time_ms, |canvas| {
-                paint_nodes(canvas, &page.children);
+                page.image_thumbs
+                    .scope(|| paint_nodes(canvas, &page.children));
             })?;
             (None, png)
         }
@@ -97,7 +98,7 @@ pub fn capture_scene(
                 node_id: node_id.clone(),
             })?;
             let png = render(bounds, scale, padding, time_ms, |canvas| {
-                paint_node(canvas, node)
+                page.image_thumbs.scope(|| paint_node(canvas, node))
             })?;
             (
                 Some((

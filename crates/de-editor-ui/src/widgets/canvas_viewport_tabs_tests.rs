@@ -76,6 +76,7 @@ fn laid_out_tabs_scene(value: Option<&str>) -> LayoutScene {
             id: "p".into(),
             name: "P".into(),
             children: vec![node],
+            image_thumbs: Default::default(),
         }],
         active_page_index: 0,
     }

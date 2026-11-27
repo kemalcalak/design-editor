@@ -445,13 +445,15 @@ mod tests {
             surface.canvas(),
             de_editor_ui::Rect::xywh(0.0, 0.0, 20.0, 20.0),
             0xDEC0_0032,
-            &encode_test_jpeg(16, 16),
+            &oversized,
         );
         let diagnostics = de_host_native::end_image_paint_diagnostics();
 
+        // The negative entry holds for these bytes; other bytes under the
+        // same id are another document's thumbnail and decode anew (#469).
         assert_eq!(
             diagnostics.successful_thumbnail_draws, 0,
-            "oversized dimensions are rejected and the id stays negatively cached"
+            "oversized dimensions are rejected and the payload stays negatively cached"
         );
         assert_eq!(diagnostics.paint_thread_full_decodes, 0);
     }

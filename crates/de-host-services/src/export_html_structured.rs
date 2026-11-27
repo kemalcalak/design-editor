@@ -123,6 +123,17 @@ pub fn board_slide_markup_with_motion(
     name: String,
     animated: &BTreeSet<String>,
 ) -> Result<SlideMarkup, ExportError> {
+    // Raster fallbacks paint with the page's own thumbnails (#469).
+    page.image_thumbs
+        .scope(|| slide_markup_in_scope(page, board_id, name, animated))
+}
+
+fn slide_markup_in_scope(
+    page: &ScenePage,
+    board_id: &str,
+    name: String,
+    animated: &BTreeSet<String>,
+) -> Result<SlideMarkup, ExportError> {
     let board = page
         .find(board_id)
         .ok_or_else(|| ExportError::NodeNotFoundOnPage {

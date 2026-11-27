@@ -39,6 +39,7 @@ fn three_board_scene() -> crate::layout_scene::LayoutScene {
                 board("slide-2", 2100.0),
                 board("slide-3", 4200.0),
             ],
+            image_thumbs: Default::default(),
         }],
         active_page_index: 0,
     }

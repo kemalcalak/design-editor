@@ -205,6 +205,10 @@ impl WidgetHostNative {
         self.drop_preview_runtime();
         // Another file: it gets exactly its own thumbnails (#469), an empty
         // table when it was saved without any, never the previous file's.
+        // Taken here, before `replace_document`, on purpose: that call keeps
+        // the current table for a replacement without one (a sync of the
+        // same document), and finding the seed already taken it does just
+        // that, so the assignment below is the only table change.
         let thumbs = jian_ops_schema::image_thumbs::ImageThumbs::take_for_document(&document)
             .unwrap_or_default();
         // `replace_document` deliberately preserves editor chrome and app

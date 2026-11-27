@@ -21,6 +21,7 @@ fn scene() -> LayoutScene {
             id: "p".into(),
             name: "P".into(),
             children: vec![f],
+            image_thumbs: Default::default(),
         }],
         active_page_index: 0,
     }

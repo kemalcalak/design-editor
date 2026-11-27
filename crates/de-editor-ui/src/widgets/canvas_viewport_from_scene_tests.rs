@@ -74,6 +74,7 @@ fn from_scene_paints_background_and_nodes_without_editor_state() {
             id: "p".into(),
             name: "Page".into(),
             children: vec![],
+            image_thumbs: Default::default(),
         }],
         active_page_index: 0,
     };

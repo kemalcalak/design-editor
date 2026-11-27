@@ -193,6 +193,7 @@ mod tests {
             id: "p".into(),
             name: "p".into(),
             children: vec![root_a, root_b],
+            image_thumbs: Default::default(),
         }
     }
 
@@ -260,6 +261,7 @@ mod tests {
             id: "p".into(),
             name: "p".into(),
             children: vec![content, mask],
+            image_thumbs: Default::default(),
         };
         let mut be = FillCaptureBackend::default();
         {

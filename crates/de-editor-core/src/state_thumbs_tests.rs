@@ -52,9 +52,23 @@ fn replacements_bring_their_own_table_and_absence_keeps_the_current_one() {
         "a clone of the old document keeps the old table"
     );
 
+    let before_undoable = state.image_thumbs.clone();
     state.replace_document_with_undo(parsed_with_thumb(9_100_005));
     assert!(state.image_thumbs.contains(9_100_005));
-    assert!(!state.image_thumbs.contains(9_100_004));
+    assert!(
+        state.image_thumbs.contains(9_100_004),
+        "an undoable replace keeps the old document's thumbnails"
+    );
+    assert!(!state.image_thumbs.same_table(&before_undoable));
+    assert!(
+        !before_undoable.contains(9_100_005),
+        "the old table itself is left as it was"
+    );
+    assert!(state.undo());
+    assert!(
+        state.image_thumbs.contains(9_100_004),
+        "after undo the restored document still has its thumbnails"
+    );
 
     let kept = state.image_thumbs.clone();
     let plain = jian_ops_schema::load_str(r#"{"version":"0.8.0","children":[]}"#)

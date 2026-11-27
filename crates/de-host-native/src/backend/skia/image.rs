@@ -17,6 +17,17 @@ struct ThumbCacheEntry {
     image: Option<skia_safe::Image>,
     bytes: usize,
     last_used: u64,
+    /// Which encoded thumbnail the entry decoded. Two documents may name
+    /// the same image source (one paint id) with different thumbnails
+    /// (#469), so a hit must be the same bytes, not just the same id.
+    fingerprint: u64,
+}
+
+/// FNV-1a over a thumbnail's encoded bytes (at most 4 KiB).
+fn thumb_fingerprint(jpeg: &[u8]) -> u64 {
+    jpeg.iter().fold(0xcbf2_9ce4_8422_2325_u64, |hash, byte| {
+        (hash ^ u64::from(*byte)).wrapping_mul(0x0000_0100_0000_01b3)
+    })
 }
 
 /// Aspect-cover (`fill` / `crop`) `img_w × img_h` over `outer`, centered.
@@ -73,9 +84,15 @@ impl NativeBackend {
     fn thumbnail_image(&mut self, id: u64, jpeg: &[u8]) -> Option<skia_safe::Image> {
         self.thumb_cache.tick = self.thumb_cache.tick.wrapping_add(1);
         let tick = self.thumb_cache.tick;
+        let fingerprint = thumb_fingerprint(jpeg);
         if let Some(hit) = self.thumb_cache.entries.get_mut(&id) {
-            hit.last_used = tick;
-            return hit.image.clone();
+            if hit.fingerprint == fingerprint {
+                hit.last_used = tick;
+                return hit.image.clone();
+            }
+            let stale = hit.bytes;
+            self.thumb_cache.entries.remove(&id);
+            self.thumb_cache.bytes = self.thumb_cache.bytes.saturating_sub(stale);
         }
 
         let image = (jpeg.len() <= THUMB_ENCODED_BYTE_LIMIT)
@@ -106,6 +123,7 @@ impl NativeBackend {
                 image: image.clone(),
                 bytes,
                 last_used: tick,
+                fingerprint,
             },
         );
         self.evict_thumbnails_over_budget();

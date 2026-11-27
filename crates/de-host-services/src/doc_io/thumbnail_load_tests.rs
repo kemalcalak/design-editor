@@ -184,13 +184,16 @@ fn concurrent_loads_and_saves_keep_exactly_their_own_thumbnails() {
         let stop = std::sync::Arc::clone(&stop);
         std::thread::spawn(move || {
             // The canvas document's table, written the way paint-side code
-            // does, the whole time.
+            // does (a thread scope, so the process-wide table is untouched
+            // for the other tests in this binary), the whole time.
             let canvas = image_thumbs::ImageThumbs::new();
-            image_thumbs::set_active(&canvas);
-            while !stop.load(std::sync::atomic::Ordering::Relaxed) {
-                image_thumbs::store_thumb(shared_id, vec![0xff, 0xd8, 0xee, 0xff, 0xd9]);
-                std::thread::yield_now();
-            }
+            image_thumbs::with_thread_table(&canvas, || {
+                while !stop.load(std::sync::atomic::Ordering::Relaxed) {
+                    image_thumbs::store_thumb(shared_id, vec![0xff, 0xd8, 0xee, 0xff, 0xd9]);
+                    std::thread::yield_now();
+                }
+            });
+            assert!(canvas.contains(shared_id));
         })
     };
     let start = std::sync::Arc::new(std::sync::Barrier::new(THREADS));

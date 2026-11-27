@@ -14,6 +14,7 @@ fn page(node: SceneNode) -> LayoutScene {
             id: "p1".into(),
             name: "Page 1".into(),
             children: vec![node],
+            image_thumbs: Default::default(),
         }],
         active_page_index: 0,
     }

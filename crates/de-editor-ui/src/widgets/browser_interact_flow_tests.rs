@@ -33,6 +33,7 @@ fn rig() -> (EditorState, LayoutScene) {
             id: "p".into(),
             name: "Page".into(),
             children: vec![node],
+            image_thumbs: Default::default(),
         }],
         active_page_index: 0,
     };

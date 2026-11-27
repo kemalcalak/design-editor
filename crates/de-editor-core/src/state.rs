@@ -247,7 +247,7 @@ impl EditorState {
     /// cleared via [`EditorUiState::clear_document_derived`].
     pub fn replace_document(&mut self, doc: jian_ops_schema::PenDocument) {
         self.components = ComponentLibrary::from_document(&doc);
-        self.adopt_thumbnails_of(&doc);
+        self.adopt_thumbnails_of(&doc, false);
         let old_doc = std::mem::replace(&mut self.doc, doc);
         self.selection = SelectionState::empty();
         self.history = History::new();
@@ -281,7 +281,7 @@ impl EditorState {
     pub fn replace_document_with_undo(&mut self, doc: jian_ops_schema::PenDocument) {
         let snap = self.snapshot_for_history();
         self.components = ComponentLibrary::from_document(&doc);
-        self.adopt_thumbnails_of(&doc);
+        self.adopt_thumbnails_of(&doc, true);
         let old_doc = std::mem::replace(&mut self.doc, doc);
         self.selection = SelectionState::empty();
         self.history_push_past(snap);
@@ -300,10 +300,18 @@ impl EditorState {
     /// A replacement parsed with an `imageThumbs` table brings its own
     /// table (a fresh one, so request snapshots still sharing the old table
     /// keep it); one parsed without keeps the current table, whose entries
-    /// still describe the same image sources.
-    fn adopt_thumbnails_of(&mut self, doc: &jian_ops_schema::PenDocument) {
+    /// still describe the same image sources. When the replacement can be
+    /// undone (`keep_current`), the fresh table also keeps the current
+    /// entries: an undo brings the old document back without its table, and
+    /// its next save must still write its thumbnails (saves only write the
+    /// entries the saved document references).
+    fn adopt_thumbnails_of(&mut self, doc: &jian_ops_schema::PenDocument, keep_current: bool) {
         if let Some(thumbs) = jian_ops_schema::image_thumbs::ImageThumbs::take_for_document(doc) {
-            self.image_thumbs = thumbs;
+            self.image_thumbs = if keep_current {
+                self.image_thumbs.merged_with(&thumbs)
+            } else {
+                thumbs
+            };
         }
     }
 

@@ -28,7 +28,8 @@ pub fn selection_png(state: &EditorState) -> Result<Vec<u8>, ClipboardExportErro
         [id] => render_node_on_page_raster_bytes(page, id, RasterFormat::Png, COPY_PNG_SCALE)?,
         _ => {
             let nodes: Vec<&SceneNode> = ids.iter().filter_map(|id| page.find(id)).collect();
-            render_nodes_raster_bytes(&nodes, RasterFormat::Png, COPY_PNG_SCALE)?
+            page.image_thumbs
+                .scope(|| render_nodes_raster_bytes(&nodes, RasterFormat::Png, COPY_PNG_SCALE))?
         }
     };
     Ok(bytes)

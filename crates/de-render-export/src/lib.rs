@@ -120,7 +120,8 @@ pub fn export_raster(
     let page = scene.active_page().ok_or(ExportError::NoActivePage)?;
     let bounds = page_bounds(page).ok_or(ExportError::NothingToExport)?;
     render_raster(bounds, target, format, scale, MARGIN, |canvas| {
-        paint_nodes(canvas, &page.children);
+        page.image_thumbs
+            .scope(|| paint_nodes(canvas, &page.children));
     })
 }
 
@@ -167,7 +168,7 @@ pub fn export_node_raster_with_margin(
             node_id: node_id.to_string(),
         })?;
     render_raster(bounds, target, format, scale, margin.max(0.0), |canvas| {
-        paint_node(canvas, node);
+        page.image_thumbs.scope(|| paint_node(canvas, node));
     })
 }
 
@@ -197,7 +198,8 @@ pub fn render_page_raster_bytes(
         page_id: page.id.clone(),
     })?;
     render_raster_bytes(bounds, format, clamp_scale(scale), MARGIN, |canvas| {
-        paint_nodes(canvas, &page.children);
+        page.image_thumbs
+            .scope(|| paint_nodes(canvas, &page.children));
     })
 }
 
@@ -227,7 +229,7 @@ pub fn render_node_on_page_raster_bytes(
             node_id: node_id.to_string(),
         })?;
     render_raster_bytes(bounds, format, clamp_scale(scale), MARGIN, |canvas| {
-        paint_node(canvas, node);
+        page.image_thumbs.scope(|| paint_node(canvas, node));
     })
 }
 
@@ -446,6 +448,7 @@ pub mod test_support {
                 id: "p1".into(),
                 name: "Page 1".into(),
                 children,
+                image_thumbs: Default::default(),
             }],
             active_page_index: 0,
         }

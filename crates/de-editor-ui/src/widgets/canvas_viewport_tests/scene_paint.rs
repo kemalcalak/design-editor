@@ -241,6 +241,7 @@ fn group_kind_recurses_without_own_paint() {
             id: "n1".into(),
             name: "p".into(),
             children: vec![group],
+            image_thumbs: Default::default(),
         }],
         active_page_index: 0,
     };
@@ -277,6 +278,7 @@ fn selection_overlay_waits_for_future_reveal_nodes() {
             id: "p".into(),
             name: "p".into(),
             children: vec![frame],
+            image_thumbs: Default::default(),
         }],
         active_page_index: 0,
     };

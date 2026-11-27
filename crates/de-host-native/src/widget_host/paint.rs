@@ -22,10 +22,22 @@ impl WidgetHostNative {
         viewport_width: f32,
         viewport_height: f32,
     ) {
+        // Paint reads this document's thumbnails (#469). A thread-local
+        // scope, not the process-wide table: a headless render on another
+        // thread (an MCP call on another file) keeps its own meanwhile.
+        let thumbs = self.editor_state.image_thumbs.clone();
+        jian_ops_schema::image_thumbs::with_thread_table(&thumbs, || {
+            self.paint_with_document_thumbs(frame, viewport_width, viewport_height)
+        });
+    }
+
+    fn paint_with_document_thumbs(
+        &mut self,
+        frame: &mut NativeFrameBackend<'_>,
+        viewport_width: f32,
+        viewport_height: f32,
+    ) {
         self.image_input_geometry = None;
-        // Paint (and the decode jobs it queues) reads this document's
-        // thumbnails (#469); a pointer compare when nothing changed.
-        jian_ops_schema::image_thumbs::set_active(&self.editor_state.image_thumbs);
         self.publish_viewport_geometry(viewport_width, viewport_height);
         self.refresh_shader_checks();
         // Rotate the transcript-cache owner if the active chat session changed

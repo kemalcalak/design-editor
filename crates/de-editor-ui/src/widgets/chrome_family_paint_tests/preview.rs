@@ -170,6 +170,7 @@ fn slides_tab_paints_in_the_chrome_family() {
             id: "page-1".into(),
             name: "Page 1".into(),
             children: vec![board("slide-1", 0.0), board("slide-2", 2100.0)],
+            image_thumbs: Default::default(),
         }],
         active_page_index: 0,
     };

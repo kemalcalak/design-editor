@@ -115,6 +115,8 @@ pub mod pre_validator;
 /// Moved to `de-editor-core` so the native host's benchmarks read it too
 /// (#456); re-exported to keep this path.
 pub use de_editor_core::process_memory;
+#[cfg(test)]
+mod headless_thumbs_tests;
 mod provider_dial;
 pub mod provider_probe;
 pub mod provider_probe_host;

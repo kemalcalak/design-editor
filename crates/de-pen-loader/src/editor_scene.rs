@@ -91,6 +91,7 @@ fn layout_scene(
                     .iter()
                     .map(|node| crate::layout_scene::node_payload_to_scene(node, &var_table, 1.0))
                     .collect(),
+                image_thumbs: state.image_thumbs.clone().into(),
             })
             .collect(),
         active_page_index: state
@@ -156,6 +157,7 @@ fn active_page_layout_scene(
                 id: page.id.clone(),
                 name: page.name.clone(),
                 children: Vec::new(),
+                image_thumbs: state.image_thumbs.clone().into(),
             })
             .collect();
         (
@@ -177,6 +179,7 @@ fn active_page_layout_scene(
                 id,
                 name,
                 children: Vec::new(),
+                image_thumbs: state.image_thumbs.clone().into(),
             }],
             0,
             state.doc.children.as_slice(),

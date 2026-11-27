@@ -301,6 +301,7 @@ fn sample_scene() -> LayoutScene {
             id: "p1".into(),
             name: "Page 1".into(),
             children: vec![frame],
+            image_thumbs: Default::default(),
         }],
         active_page_index: 0,
     }
@@ -342,6 +343,7 @@ fn hover_hierarchy_scene() -> LayoutScene {
             id: "p".into(),
             name: "Page".into(),
             children: vec![focus],
+            image_thumbs: Default::default(),
         }],
         active_page_index: 0,
     }
