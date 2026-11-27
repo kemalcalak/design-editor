@@ -127,3 +127,20 @@ fn rounded_polygons_and_paths_are_written_as_their_outline() {
     );
     assert!(!body.contains("non-scaling-stroke"), "{body}");
 }
+
+#[test]
+fn path_data_is_escaped_exactly_once() {
+    // An imported `d` with markup characters comes out escaped once,
+    // never twice, and `PathD` is the one place that escapes.
+    let mut plain = SceneNode::leaf("p", NodeKind::Path);
+    plain.bounds = Rect::xywh(0.0, 0.0, 40.0, 20.0);
+    plain.svg_path = Some(r#"M0 0 L40 20"&<"#.into());
+    plain.fill = Some(Color::rgba_u8(0, 0, 0, 1.0));
+    let body = serialize_node_svg(&scene_with(vec![plain]), "p").expect("svg");
+    assert!(body.contains("&quot;&amp;&lt;"), "{body}");
+    assert!(!body.contains("&amp;quot;"), "{body}");
+    assert_eq!(
+        super::outline::PathD::new(r#"M0 0"<"#).to_string(),
+        "M0 0&quot;&lt;"
+    );
+}

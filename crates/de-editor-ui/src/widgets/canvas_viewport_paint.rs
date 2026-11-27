@@ -654,16 +654,12 @@ fn paint_node_body<'a>(
         NodeKind::Path => {
             let outline = corner_path::corner_outline(node);
             if outline.is_some() || node.svg_path.is_some() {
-                match (outline, node.svg_path.as_deref()) {
+                if let Some(outline) = outline {
                     // Rounded vertices (#389): the precomputed outline.
-                    (Some(outline), d) => {
-                        let filled = d.is_some() || node.path_closed;
-                        corner_path::paint_outline_shape(
-                            cx, node, outline, world_rect, zoom, filled,
-                        );
-                    }
-                    (None, Some(d)) => paint_svg_path_node(cx, node, world_rect, zoom, d),
-                    (None, None) => {}
+                    let filled = node.svg_path.is_some() || node.path_closed;
+                    corner_path::paint_outline_shape(cx, node, outline, world_rect, zoom, filled);
+                } else if let Some(d) = node.svg_path.as_deref() {
+                    paint_svg_path_node(cx, node, world_rect, zoom, d);
                 }
                 if blur_sigma.is_some() {
                     cx.backend.restore();

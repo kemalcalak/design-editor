@@ -7,8 +7,8 @@ pub(super) struct AncestorClip {
     id: String,
     bounds: Rect,
     corner_radius: f32,
-    /// The clip's smoothed outline (#389), placed and escaped.
-    outline: Option<String>,
+    /// The clip's smoothed outline (#389), placed.
+    outline: Option<super::outline::PathD>,
     xform: glam::Affine2,
 }
 

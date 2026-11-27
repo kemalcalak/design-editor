@@ -2,7 +2,8 @@
 //! the layer attributes of the node it stands for (`node.rs`).
 
 use super::node::LayerAttrs;
-use super::{fill_stroke_attrs, normalize_rect, stroke_attrs, stroke_style_attrs, xml_escape};
+use super::outline::PathD;
+use super::{fill_stroke_attrs, normalize_rect, stroke_attrs, stroke_style_attrs};
 use crate::layout_scene::{SceneNode, SceneStrokeAlign};
 use crate::{Color, Rect};
 use std::fmt::Write as _;
@@ -102,11 +103,12 @@ pub(super) fn emit_line(out: &mut String, n: &SceneNode, attrs: &str) {
 
 pub(super) fn emit_path(out: &mut String, n: &SceneNode, attrs: &LayerAttrs) {
     let outline = super::outline::node_outline(n);
-    let (d, fit) = if let Some(d) = &outline {
-        // Rounded vertices (#389): the outline, already in place (escaped).
-        (d.clone(), glam::Affine2::IDENTITY)
+    let rounded = outline.is_some();
+    let (d, fit) = if let Some(d) = outline {
+        // Rounded vertices (#389): the outline, already in place.
+        (d, glam::Affine2::IDENTITY)
     } else if let Some(d) = &n.svg_path {
-        (d.clone(), svg_path_fit(d, n.bounds))
+        (PathD::new(d), svg_path_fit(d, n.bounds))
     } else {
         if n.points.len() < 2 {
             return;
@@ -119,7 +121,7 @@ pub(super) fn emit_path(out: &mut String, n: &SceneNode, attrs: &LayerAttrs) {
         if n.path_closed {
             d.push_str(" Z");
         }
-        (d, glam::Affine2::IDENTITY)
+        (PathD::new(&d), glam::Affine2::IDENTITY)
     };
     let paint = if n.svg_path.is_none() && !n.path_closed && n.stroke.is_none() {
         let color = n.fill.unwrap_or(Color::BLACK);
@@ -127,7 +129,7 @@ pub(super) fn emit_path(out: &mut String, n: &SceneNode, attrs: &LayerAttrs) {
     } else {
         fill_stroke_attrs(n)
     };
-    let vector_effect = if n.svg_path.is_some() && n.stroke.is_some() && outline.is_none() {
+    let vector_effect = if n.svg_path.is_some() && n.stroke.is_some() && !rounded {
         r#" vector-effect="non-scaling-stroke""#
     } else {
         ""
@@ -137,7 +139,6 @@ pub(super) fn emit_path(out: &mut String, n: &SceneNode, attrs: &LayerAttrs) {
     } else {
         ""
     };
-    let d = if outline.is_some() { d } else { xml_escape(&d) };
     if let Some(geometry) = n.stroke_geometry.as_deref() {
         // End shapes (#389): the fill (if any) on the path, then the
         // stroke geometry in node-local coordinates.
@@ -234,7 +235,7 @@ pub fn write_stroke_geometry(
         let _ = write!(
             out,
             r#"<path d="{}"{place} fill="none"{line}{}/>"#,
-            xml_escape(&geometry.stroke_d),
+            PathD::new(&geometry.stroke_d),
             super::style_attrs(&style),
         );
     }
@@ -249,7 +250,7 @@ pub fn write_stroke_geometry(
         let _ = write!(
             out,
             r#"<path d="{}"{place}{fill}/>"#,
-            xml_escape(&geometry.fill_d),
+            PathD::new(&geometry.fill_d),
         );
     }
     if !geometry.arms_d.is_empty() {
@@ -261,7 +262,7 @@ pub fn write_stroke_geometry(
         let _ = write!(
             out,
             r#"<path d="{}"{place} fill="none"{line}{}/>"#,
-            xml_escape(&geometry.arms_d),
+            PathD::new(&geometry.arms_d),
             super::style_attrs(&style),
         );
     }
