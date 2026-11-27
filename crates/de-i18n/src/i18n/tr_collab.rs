@@ -585,6 +585,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.mention.component" => "Bileşen",
         "chat.mention.variable" => "Değişken",
         "chat.mention.file" => "Dosya",
+        "chat.mention.scanLimited" => "@ anmaları için bu klasörün yalnızca bir kısmı sunuluyor: klasör çok büyük ya da ana klasörünüz. Tümünü listelemek için belgeyi bir proje klasörüne kaydedin.",
         "chat.mention.noMatches" => "Eşleşme yok",
         "chat.context.title" => "Bağlamda",
         "chat.context.document" => "Belge",

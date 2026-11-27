@@ -585,6 +585,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.mention.component" => "元件",
         "chat.mention.variable" => "變數",
         "chat.mention.file" => "檔案",
+        "chat.mention.scanLimited" => "@ 提及僅提供此資料夾的一部分：它非常大，或是你的主資料夾。將文件儲存到專案資料夾即可列出全部內容。",
         "chat.mention.noMatches" => "沒有相符項目",
         "chat.context.title" => "上下文",
         "chat.context.document" => "文件",

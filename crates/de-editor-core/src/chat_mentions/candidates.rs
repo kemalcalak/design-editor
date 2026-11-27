@@ -39,6 +39,19 @@ fn page_label(index: usize, name: &str) -> String {
     }
 }
 
+/// The stable id of page `index` (a mention must survive pages being
+/// reordered, added or removed before it is sent). Only multi-page documents
+/// offer pages, so the page list exists.
+fn page_id(state: &EditorState, index: usize) -> String {
+    state
+        .doc
+        .pages
+        .as_ref()
+        .and_then(|pages| pages.get(index))
+        .map(|page| page.id.clone())
+        .unwrap_or_default()
+}
+
 fn node_label(node: &PenNode) -> Option<&str> {
     node.base()
         .name
@@ -166,7 +179,7 @@ pub fn mention_candidates(
                     MentionCandidate {
                         mention: ChatMention {
                             kind: MentionKind::Page,
-                            key: index.to_string(),
+                            key: page_id(state, *index),
                             label,
                         },
                         detail: String::new(),

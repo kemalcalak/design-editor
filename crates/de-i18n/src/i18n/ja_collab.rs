@@ -585,6 +585,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.mention.component" => "コンポーネント",
         "chat.mention.variable" => "変数",
         "chat.mention.file" => "ファイル",
+        "chat.mention.scanLimited" => "@ メンションにはこのフォルダの一部のみを表示しています。フォルダが非常に大きいか、ホームフォルダです。すべて表示するには、ドキュメントをプロジェクトフォルダに保存してください。",
         "chat.mention.noMatches" => "一致なし",
         "chat.context.title" => "コンテキスト",
         "chat.context.document" => "ドキュメント",

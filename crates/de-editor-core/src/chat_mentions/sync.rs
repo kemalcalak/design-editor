@@ -3,7 +3,7 @@
 //! mention. Hosts call [`EditorState::sync_chat_mentions`] once before
 //! painting; it returns early (no allocation) when nothing moved.
 
-use super::{active_mention_query, mention_candidates, ChatMention, MentionPopup};
+use super::{active_mention_query, mention_candidates, MentionPopup};
 use crate::EditorState;
 
 impl EditorState {
@@ -17,11 +17,9 @@ impl EditorState {
     /// list and then calls [`EditorState::refresh_chat_mention_rows`].
     pub fn sync_chat_mentions(&mut self) -> bool {
         let mut changed = false;
-        let text = self.chat.input.text();
-        if !self.chat.pending_mentions.iter().all(|m| m.is_in(text)) {
-            let text = text.to_string();
-            self.chat.pending_mentions.retain(|m| m.is_in(&text));
-            changed = true;
+        if !self.chat.pending_mentions.is_empty() {
+            let chat = &mut *self.chat;
+            changed |= super::retain_live(chat.input.text(), &mut chat.pending_mentions);
         }
         let usable = self.chat.focused && !self.chat.has_streaming_turn();
         // Byte range of the query (after the `@`), so nothing borrowed from
@@ -143,12 +141,24 @@ impl EditorState {
             return false;
         };
         let end = (popup.start + 1 + popup.query.len()).min(self.chat.input.text().len());
-        let mut replacement = candidate.mention.token();
+        // The same target picked again reuses its token; a different target
+        // whose name a staged mention already uses gets `Name#2`, so every
+        // token names exactly one target.
+        let mention = match self.chat.pending_mentions.iter().find(|m| {
+            (m.kind, m.key.as_str()) == (candidate.mention.kind, candidate.mention.key.as_str())
+        }) {
+            Some(staged) => staged.clone(),
+            None => {
+                let mut mention = candidate.mention;
+                mention.label = super::unique_label(&mention, &self.chat.pending_mentions);
+                mention
+            }
+        };
+        let mut replacement = mention.token();
         replacement.push(' ');
         self.chat
             .input
             .replace_range(popup.start, end, &replacement, now_ms);
-        let mention = candidate.mention;
         if !self.chat.pending_mentions.contains(&mention) {
             self.chat.pending_mentions.push(mention);
         }
@@ -162,10 +172,10 @@ impl EditorState {
         if index >= self.chat.pending_mentions.len() {
             return false;
         }
-        let mention: ChatMention = self.chat.pending_mentions.remove(index);
-        let token = mention.token();
-        if let Some(start) = self.chat.input.text().find(&token) {
-            let mut end = start + token.len();
+        let span = super::mention_spans(self.chat.input.text(), &self.chat.pending_mentions)[index];
+        self.chat.pending_mentions.remove(index);
+        if let Some((start, end)) = span {
+            let mut end = end;
             if self.chat.input.text()[end..].starts_with(' ') {
                 end += 1;
             }

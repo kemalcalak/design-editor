@@ -1012,20 +1012,32 @@ CLI side (`crates/de-cli/src/agent_*.rs`, dispatched in `main` before the generi
   `ChatState::{pending_mentions, mention_popup, mention_dismissed_at}`, the
   shared file list on `ChatSessions::project_files`. The host calls
   `WidgetHostNative::sync_chat_mentions` once per redraw (no allocation
-  unless the `@query` moved); opening the popup rescans the folder with
-  `de_host_services::chat_mention_context::scan_project_files` (bounded:
-  2000 files, 4 levels, hidden / dependency / build folders skipped).
+  unless the `@query` moved); opening the popup asks its
+  `ProjectFileSource` for the folder. The desktop's
+  `de_host_services::chat_mention_scan::ProjectFileScanner` answers from a
+  10 s cache and lists on a worker thread (never the UI thread; bounded:
+  2000 files, 400 folders, 4 levels, hidden / dependency / build folders and
+  symlinks skipped). A document saved in the home folder (or above it) is
+  listed one level deep, and a cut listing raises `chat.mention.scanLimited`
+  once per folder.
 - Up / Down / Tab / Enter belong to the popup while it has rows; Escape
   dismisses it until the caret leaves that `@` token. A pick writes
-  `@Label ` and stages a `ChatMention`; deleting the token unstages it.
+  `@Label ` and stages a `ChatMention` keyed by id (a page by its page id,
+  not its index). Matching is by identity (`chat_mentions::identity`): a
+  second target with a staged name is written `@Name#2`, a token only counts
+  whole (end of text, whitespace or punctuation after it) and longer tokens
+  claim their span first, so `@Hero` never matches inside `@Hero card`.
+  Deleting a token unstages exactly that mention.
 - At launch (`chat_session_launch.rs`) the staged mentions resolve to compact
   summaries (`chat_mentions::summary` for document items, capped at 1200
   chars; `chat_mention_context::summarize_project_file` for files: an
   80-line / 4000-char excerpt, binaries described, paths outside the folder
   refused) and are appended to the provider-bound text as a "Referenced
   context" block. The keyword gates (`classify_intent`, direct-modify,
-  append detection, scenario stamp) read `routing_text` — what the user
-  typed — so a mentioned layer's name cannot steer routing.
+  append detection, scenario stamp, the CLI route's intent classifier and
+  `build_modify_plan`'s target pick) read `routing_text` — what the user
+  typed — so a mentioned layer's name cannot steer routing. The modify
+  plan's message gets the context block appended once, after the plan.
 - The footer's context button (right of "+") opens `ai_chat_context_panel`:
   document, selection, mentions and attachments (`chat_context::chat_context_rows`,
   built only while the panel is open), each staged item with a ✕.

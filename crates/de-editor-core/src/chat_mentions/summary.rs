@@ -194,7 +194,13 @@ fn variable_summary(state: &EditorState, name: &str) -> Option<String> {
 pub fn summarize_document_mention(state: &EditorState, mention: &ChatMention) -> Option<String> {
     let text = match mention.kind {
         MentionKind::Page => {
-            let index: usize = mention.key.parse().ok()?;
+            // Keyed by page id: the index it had when picked may have moved.
+            let index = state
+                .doc
+                .pages
+                .as_ref()?
+                .iter()
+                .position(|page| page.id == mention.key)?;
             let pages = document_pages(state);
             let (index, name, children) = pages.get(index)?;
             page_summary(*index, name, children)

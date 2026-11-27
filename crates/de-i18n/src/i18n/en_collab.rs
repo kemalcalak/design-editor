@@ -585,6 +585,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.mention.component" => "Component",
         "chat.mention.variable" => "Variable",
         "chat.mention.file" => "File",
+        "chat.mention.scanLimited" => "Only part of this folder is offered for @ mentions: it is very large, or it is your home folder. Save the document in a project folder to list it all.",
         "chat.mention.noMatches" => "No matches",
         "chat.context.title" => "In context",
         "chat.context.document" => "Document",

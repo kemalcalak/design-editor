@@ -67,7 +67,7 @@ fn candidates_rank_layers_pages_components_variables_and_files() {
 
     let pages = mention_candidates(&state, &[], "sett");
     assert_eq!(pages[0].mention.kind, MentionKind::Page);
-    assert_eq!(pages[0].mention.key, "1");
+    assert_eq!(pages[0].mention.key, "p2");
 
     let vars = mention_candidates(&state, &[], "primary");
     assert_eq!(vars[0].mention.kind, MentionKind::Variable);
@@ -214,7 +214,7 @@ fn begin_send_keeps_only_live_mentions() {
         },
         ChatMention {
             kind: MentionKind::Page,
-            key: "1".into(),
+            key: "p2".into(),
             label: "Settings".into(),
         },
     ];
@@ -243,7 +243,7 @@ fn summaries_are_compact_and_specific() {
 
     let page = ChatMention {
         kind: MentionKind::Page,
-        key: "1".into(),
+        key: "p2".into(),
         label: "Settings".into(),
     };
     let page = summarize_document_mention(&state, &page).unwrap();
