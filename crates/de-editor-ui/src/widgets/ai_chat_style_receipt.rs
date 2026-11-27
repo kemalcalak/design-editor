@@ -27,7 +27,7 @@ use crate::widgets::ai_chat_chip_row::{
     chip_clear_rect, draw_chip_clear, draw_chip_text, fill_chip, CHIP_CLEAR_W, CHIP_FONT,
     CHIP_PAD_X,
 };
-use crate::widgets::text_metrics;
+use crate::widgets::label_widths::LabelWidths;
 use crate::widgets::PaintCx;
 use crate::{Color, Point2D, Rect};
 
@@ -114,12 +114,15 @@ fn trailing_width(clearable: bool) -> f32 {
     }
 }
 
-/// Width the chip needs for `label` plus its band and clear button.
-pub(crate) fn chip_width(label: &str, swatches: usize, clearable: bool) -> f32 {
-    CHIP_PAD_X
-        + crate::widgets::ai_chat_panel::footer_label_width(label, CHIP_FONT)
-        + band_width(swatches)
-        + trailing_width(clearable)
+/// Width the chip needs for `label` plus its band and clear button, the
+/// label as painted (chrome face, [`CHIP_FONT`]) read through `widths`.
+pub(crate) fn chip_width(
+    widths: &mut LabelWidths<'_>,
+    label: &str,
+    swatches: usize,
+    clearable: bool,
+) -> f32 {
+    CHIP_PAD_X + widths.chrome(label, CHIP_FONT) + band_width(swatches) + trailing_width(clearable)
 }
 
 /// The ✕ target inside `chip`, or `None` when this receipt has nothing to
@@ -144,11 +147,16 @@ pub(crate) fn paint_style_chip(
     let trailing = trailing_width(receipt.clearable);
     let free = (chip.size.x - CHIP_PAD_X - trailing).max(0.0);
     let band = band_width(receipt.swatches.len()).min(free * 0.5);
-    let fitted = text_metrics::fit_chrome(cx.backend, label, free - band, CHIP_FONT);
+    let (fitted, fitted_w) = {
+        let mut widths = LabelWidths::measuring(&mut *cx.backend);
+        let fitted = widths.fit_chrome(label, free - band, CHIP_FONT);
+        let fitted_w = widths.chrome(&fitted, CHIP_FONT);
+        (fitted, fitted_w)
+    };
     let label_x = chip.origin.x + CHIP_PAD_X;
     draw_chip_text(cx, theme, &fitted, label_x, chip);
 
-    let label_end = label_x + text_metrics::measure_chrome(cx.backend, &fitted, CHIP_FONT);
+    let label_end = label_x + fitted_w;
     paint_band(cx, receipt, chip, label_end, trailing);
 
     if receipt.clearable {

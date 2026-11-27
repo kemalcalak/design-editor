@@ -10,14 +10,14 @@
 //! so no locale key can be missing and no label can be shown in the wrong
 //! language.
 //!
-//! Geometry is computed WITHOUT measuring text — the counter's width comes
-//! from its character count — so paint and the host's hit-test derive the
-//! same rects from the same inputs. Measurement only affects where the
-//! label is centred inside its own segment, never where the segment is.
+//! The counter's segment is sized from its label as painted (#451): paint
+//! measures it through [`LabelWidths`] and the host's backend-less hit-test
+//! reads the kept width, so both derive the same rects.
 
 use de_editor_core::preview_slideshow::SlideshowToolbarButton;
 
 use crate::widgets::icons::{draw_icon, Icon};
+use crate::widgets::label_widths::LabelWidths;
 use crate::widgets::text_metrics;
 use crate::widgets::PaintCx;
 use crate::{Color, Point2D, Rect, TextLayout, Theme};
@@ -29,10 +29,6 @@ const RADIUS: f32 = 22.0;
 const BUTTON_W: f32 = 44.0;
 /// Floor for the counter segment; wider labels grow it (see [`counter_width`]).
 const COUNTER_MIN_W: f32 = 62.0;
-/// Upper-bound advance per counter character at [`FONT_SIZE`]. Digits and
-/// `" / "` all measure under this, so the segment can never be too narrow
-/// for its label.
-const COUNTER_CHAR_W: f32 = 8.0;
 const COUNTER_PAD_X: f32 = 14.0;
 const BOTTOM_MARGIN: f32 = 16.0;
 const ICON_SIZE: f32 = 18.0;
@@ -45,10 +41,48 @@ const PILL_ALPHA: f32 = 0.92;
 /// exists — the deck simply has nothing that way — without inviting a click.
 const DISABLED_ALPHA: f32 = 0.35;
 
-/// Width of the counter segment for a given label, from character count
-/// alone so hit-test and paint agree without a backend.
-fn counter_width(label: &str) -> f32 {
-    COUNTER_MIN_W.max(label.chars().count() as f32 * COUNTER_CHAR_W + COUNTER_PAD_X * 2.0)
+/// Longest deck total the counter template spells out; a longer one is
+/// measured as the label itself.
+const COUNTER_MAX_DIGITS: usize = 6;
+
+/// Width of the counter segment for a given label (`"3 / 12"`): the widest
+/// label the deck can show, so stepping from slide 9 to 10 never moves Next
+/// and Exit. That is `"8 / 8"` in the face's widest digit, with both sides
+/// as many digits as the total has, measured as painted (chrome face,
+/// [`FONT_SIZE`]) through `widths`, padded, never below [`COUNTER_MIN_W`].
+fn counter_width(widths: &mut LabelWidths<'_>, label: &str) -> f32 {
+    let mut buf = [0_u8; 2 * COUNTER_MAX_DIGITS + 3];
+    let measured = counter_template(widths, label, &mut buf).unwrap_or(label);
+    COUNTER_MIN_W.max(widths.chrome(measured, FONT_SIZE) + COUNTER_PAD_X * 2.0)
+}
+
+/// `"d / d"` with the total's digit count on both sides, `d` the widest
+/// digit, written into `buf` (no allocation). `None` for a label that is
+/// not `<number> / <number>` or whose total is longer than the buffer.
+fn counter_template<'b>(
+    widths: &mut LabelWidths<'_>,
+    label: &str,
+    buf: &'b mut [u8; 2 * COUNTER_MAX_DIGITS + 3],
+) -> Option<&'b str> {
+    let (current, total) = label.split_once(" / ")?;
+    let digits = total.len();
+    let all_digits = |s: &str| !s.is_empty() && s.bytes().all(|b| b.is_ascii_digit());
+    if !all_digits(current) || !all_digits(total) || digits > COUNTER_MAX_DIGITS {
+        return None;
+    }
+    let mut widest = (b'0', 0.0_f32);
+    for digit in b'0'..=b'9' {
+        let glyph = [digit];
+        let text = std::str::from_utf8(&glyph).ok()?;
+        let w = widths.chrome(text, FONT_SIZE);
+        if w > widest.1 {
+            widest = (digit, w);
+        }
+    }
+    buf[..digits].fill(widest.0);
+    buf[digits..digits + 3].copy_from_slice(b" / ");
+    buf[digits + 3..2 * digits + 3].fill(widest.0);
+    std::str::from_utf8(&buf[..2 * digits + 3]).ok()
 }
 
 pub struct SlideshowToolbar<'a> {
@@ -67,7 +101,11 @@ pub struct SlideshowToolbar<'a> {
 impl SlideshowToolbar<'_> {
     /// Outer pill rect, centred on the bottom edge of `canvas`.
     pub fn pill_rect(canvas: Rect, label: &str) -> Rect {
-        let width = BUTTON_W * 3.0 + counter_width(label);
+        Self::pill_rect_with(canvas, label, &mut LabelWidths::cached())
+    }
+
+    fn pill_rect_with(canvas: Rect, label: &str, widths: &mut LabelWidths<'_>) -> Rect {
+        let width = BUTTON_W * 3.0 + counter_width(widths, label);
         Rect {
             origin: Point2D::new(
                 canvas.origin.x + (canvas.size.x - width) / 2.0,
@@ -82,13 +120,21 @@ impl SlideshowToolbar<'_> {
     /// press on it resolves to `None` and does nothing, which is what makes
     /// the middle of the pill safe to click.
     pub fn button_rects(canvas: Rect, label: &str) -> [(SlideshowToolbarButton, Rect); 3] {
-        let pill = Self::pill_rect(canvas, label);
+        Self::button_rects_with(canvas, label, &mut LabelWidths::cached())
+    }
+
+    fn button_rects_with(
+        canvas: Rect,
+        label: &str,
+        widths: &mut LabelWidths<'_>,
+    ) -> [(SlideshowToolbarButton, Rect); 3] {
+        let pill = Self::pill_rect_with(canvas, label, widths);
         let segment = |x: f32, w: f32| Rect {
             origin: Point2D::new(x, pill.origin.y),
             size: Point2D::new(w, HEIGHT),
         };
         let previous_x = pill.origin.x;
-        let next_x = previous_x + BUTTON_W + counter_width(label);
+        let next_x = previous_x + BUTTON_W + counter_width(widths, label);
         let exit_x = next_x + BUTTON_W;
         [
             (
@@ -121,7 +167,16 @@ impl SlideshowToolbar<'_> {
     }
 
     pub fn paint(&self, cx: &mut PaintCx<'_>, canvas: Rect, theme: &Theme) {
-        let pill = Self::pill_rect(canvas, self.label);
+        // Measured here, so the host's backend-less hit-test reads this pill.
+        let (pill, buttons, counter_w, text_width) = {
+            let mut widths = LabelWidths::measuring(&mut *cx.backend);
+            (
+                Self::pill_rect_with(canvas, self.label, &mut widths),
+                Self::button_rects_with(canvas, self.label, &mut widths),
+                counter_width(&mut widths, self.label),
+                widths.chrome(self.label, FONT_SIZE),
+            )
+        };
         cx.backend.fill_round_rect(
             pill,
             RADIUS,
@@ -136,7 +191,7 @@ impl SlideshowToolbar<'_> {
         // Exit is intentionally a visible terminal segment. It remains a
         // calm neutral surface, but the divider and persistent wash make the
         // way out discoverable on touch without turning it into an alarm.
-        let exit_rect = Self::button_rects(canvas, self.label)[2].1;
+        let exit_rect = buttons[2].1;
         cx.backend.fill_round_rect(
             inset(exit_rect, 4.0),
             RADIUS - 4.0,
@@ -155,7 +210,7 @@ impl SlideshowToolbar<'_> {
             1.0,
         );
 
-        for (button, rect) in Self::button_rects(canvas, self.label) {
+        for (button, rect) in buttons {
             let enabled = self.enabled(button);
             if enabled && (self.pressed == Some(button) || self.hover == Some(button)) {
                 cx.backend
@@ -182,8 +237,7 @@ impl SlideshowToolbar<'_> {
             );
         }
 
-        let text_width = text_metrics::measure_chrome(cx.backend, self.label, FONT_SIZE);
-        let counter_x = pill.origin.x + BUTTON_W + (counter_width(self.label) - text_width) / 2.0;
+        let counter_x = pill.origin.x + BUTTON_W + (counter_w - text_width) / 2.0;
         let label = TextLayout::single_run(
             self.label,
             text_metrics::CHROME_FONT_FAMILY,
@@ -254,7 +308,10 @@ mod tests {
     fn the_pill_is_centred_on_the_bottom_edge() {
         let pill = SlideshowToolbar::pill_rect(canvas(), "3 / 6");
         assert_eq!(pill.size.y, HEIGHT);
-        assert_eq!(pill.size.x, BUTTON_W * 3.0 + counter_width("3 / 6"));
+        assert_eq!(
+            pill.size.x,
+            BUTTON_W * 3.0 + counter_width(&mut LabelWidths::cached(), "3 / 6")
+        );
         let pill_centre = pill.origin.x + pill.size.x / 2.0;
         assert!((pill_centre - 600.0).abs() < 0.5, "centre {pill_centre}");
         assert!((pill.origin.y - (740.0 - HEIGHT - BOTTOM_MARGIN)).abs() < 0.5);
@@ -283,6 +340,30 @@ mod tests {
         }
     }
 
+    /// Stepping through a deck never moves Next and Exit: every position of
+    /// a 12-slide deck is laid out in the same pill, measured or not.
+    #[test]
+    fn the_counter_keeps_one_width_for_the_whole_deck() {
+        let mut backend = crate::widgets::label_fit_test_support::fresh_backend();
+        let mut measuring = LabelWidths::measuring(&mut backend);
+        let at = |widths: &mut LabelWidths<'_>, label: &str| {
+            SlideshowToolbar::pill_rect_with(canvas(), label, widths)
+        };
+        let first = at(&mut measuring, "1 / 12");
+        for index in 2..=12 {
+            let label = format!("{index} / 12");
+            assert_eq!(at(&mut measuring, &label), first, "{label}");
+            assert_eq!(
+                SlideshowToolbar::pill_rect(canvas(), &label),
+                first,
+                "{label}"
+            );
+        }
+        // The template is wide enough for the widest label it stands for.
+        let widest = measuring.chrome("12 / 12", FONT_SIZE);
+        assert!(counter_width(&mut measuring, "1 / 12") >= widest + COUNTER_PAD_X * 2.0);
+    }
+
     #[test]
     fn a_long_counter_widens_the_pill_without_moving_it_off_centre() {
         let short = SlideshowToolbar::pill_rect(canvas(), "3 / 6");
@@ -309,7 +390,7 @@ mod tests {
         // The counter sits between the two step buttons and is not a control.
         let pill = SlideshowToolbar::pill_rect(canvas(), label);
         let counter_centre = Point2D::new(
-            pill.origin.x + BUTTON_W + counter_width(label) / 2.0,
+            pill.origin.x + BUTTON_W + counter_width(&mut LabelWidths::cached(), label) / 2.0,
             pill.origin.y + HEIGHT / 2.0,
         );
         assert_eq!(
