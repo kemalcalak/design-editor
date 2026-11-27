@@ -229,10 +229,13 @@ struct DesktopApp {
     /// Cursor moves coalesced between paints; drained on RedrawRequested
     /// and right before apply_press/release so drag-end frames aren't lost.
     pending_cursor_move: Option<(f32, f32)>,
-    /// True while a raster image file is being dragged over the window.
-    /// Drives the per-frame drop-target probe — the platform gives no
-    /// cursor stream during a drag, so the position has to be polled.
-    hovered_image_drop: bool,
+    /// `Some(is_image)` while a file is being dragged over the window.
+    /// Drives the per-frame drop probe (the node an image would fill, or
+    /// the chat panel) — the platform gives no cursor stream during a drag,
+    /// so the position has to be polled.
+    hovered_file_drop: Option<bool>,
+    /// Chat attachments being read on worker threads (#398).
+    attachment_loads: crate::chat_attachment::AttachmentLoads,
     /// Last polled drag position (logical, top-left origin). Used as the drop
     /// point when the release itself cannot be re-probed.
     drop_cursor: Option<(f32, f32)>,

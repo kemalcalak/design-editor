@@ -592,6 +592,11 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.context.selection" => "選択",
         "chat.context.attachment" => "添付",
         "property.cornerSmoothing" => "スムージング",
+        "chat.attach.unsupported" => "{{name}} は添付できません：画像とテキストファイルのみ対応",
+        "chat.attach.tooLarge" => "{{name}} は添付の上限 {{size}} MB を超えています",
+        "chat.attach.readFailed" => "{{name}} を読み込めませんでした",
+        "chat.attach.full" => "1 件のメッセージに添付できるのは {{count}} ファイルまでです",
+        "chat.attach.dropHint" => "ドロップしてチャットに添付",
         _ => return None,
     })
 }

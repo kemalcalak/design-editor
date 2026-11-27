@@ -57,6 +57,10 @@ impl DesktopApp {
         {
             self.redraw_dirty = true;
         }
+        // Chat attachments read on a worker land here.
+        if self.attachment_loads.drain(&mut self.host) {
+            self.redraw_dirty = true;
+        }
         // Files staged as mentions are read on a worker before the send.
         if self.mention_reads.sync(self.host.editor_state_mut()) {
             self.redraw_dirty = true;

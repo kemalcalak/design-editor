@@ -31,22 +31,13 @@ pub fn attachment_to_base64(att: &ChatAttachment) -> String {
     base64::engine::general_purpose::STANDARD.encode(&att.data)
 }
 
-/// Best-effort MIME type from a file path's extension. Falls back to
-/// `application/octet-stream` for an unknown / missing extension.
+/// Best-effort MIME type from a file path's extension, read from the
+/// chat's one type table (`chat_attachment_load::ATTACHMENT_TYPES`). Falls
+/// back to `application/octet-stream` for an unknown / missing extension.
 pub fn media_type_for_path(path: &Path) -> String {
-    let ext = path
-        .extension()
-        .and_then(|e| e.to_str())
-        .map(|e| e.to_ascii_lowercase());
-    match ext.as_deref() {
-        Some("png") => "image/png",
-        Some("jpg") | Some("jpeg") => "image/jpeg",
-        Some("gif") => "image/gif",
-        Some("webp") => "image/webp",
-        Some("svg") => "image/svg+xml",
-        _ => "application/octet-stream",
-    }
-    .to_string()
+    crate::chat_attachment_load::known_media_type(path)
+        .unwrap_or("application/octet-stream")
+        .to_string()
 }
 
 /// Strip directory separators from a file name so a crafted

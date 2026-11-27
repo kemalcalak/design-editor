@@ -592,6 +592,11 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.context.selection" => "चयन",
         "chat.context.attachment" => "अटैचमेंट",
         "property.cornerSmoothing" => "चिकनाई",
+        "chat.attach.unsupported" => "{{name}} संलग्न नहीं किया जा सकता: केवल इमेज और टेक्स्ट फ़ाइलें",
+        "chat.attach.tooLarge" => "{{name}} {{size}} MB की अटैचमेंट सीमा से बड़ी है",
+        "chat.attach.readFailed" => "{{name}} पढ़ी नहीं जा सकी",
+        "chat.attach.full" => "एक संदेश में अधिकतम {{count}} फ़ाइलें हो सकती हैं",
+        "chat.attach.dropHint" => "चैट में जोड़ने के लिए छोड़ें",
         _ => return None,
     })
 }

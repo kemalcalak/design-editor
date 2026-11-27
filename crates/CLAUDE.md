@@ -1086,7 +1086,7 @@ real CLI agents, not a stub:
 
 CLI side (`crates/de-cli/src/agent_*.rs`, dispatched in `main` before the generic parser): `agent_args` (own argv parser, `-p`), `agent_tasks` (YAML / JSON tasks file via `serde-saphyr`, `deny_unknown_fields`, task > flags > file `defaults`; `check_plan` refuses duplicate `out`s and overlapping export folders by `agent_paths::path_key`: absolute, `..` resolved, Windows `\\?\` prefix dropped, NFC on macOS, case-folded on macOS / Windows; lexical, so symlinks, UNC vs mapped drives and case-insensitive Linux disks are documented misses), `agent_task` (shared checks: portable task names, the engine's 32 KiB prompt limit, export folder `<root>/<task name>`), `agent_provider` (saved providers through the read-only `settings_io::read_builtin_agents`, or an unsaved one from `DE_AGENT_API_KEY` etc.; keys never on argv or in output), `agent_runner` (load → engine → `state.apply` → atomic save → `headless_export::export_document`; typed `TaskError` in `agent_runner_error.rs`; statuses ok / failed / cancelled / interrupted; `--parallel N` worker threads, at most 16, sharing the builtin HTTP pacer in `de-chat-agent/src/backoff.rs`), `agent_thumbs` (the `image_thumbs` registry is process-wide and replaced by each load: every task takes `capture_snapshot()` right after its load, whatever form the file kept the thumbnails in (inline base64 or `<name>.assets/` paths), and `restore_snapshot`s it right before its save; load + snapshot and restore + save hold one lock, so no other task's load lands in between), `agent_report` (`--json`, report `version` 1), `agent_progress` (stderr). Exit 0 / 1 (a task failed) / 2 (usage, tasks file or provider setup, nothing ran) / 130 (Ctrl+C via `signal-hook` cut a task short; `--out` untouched unless it was already saved). Provider errors never print a value that may be a secret (`agent_provider_error.rs`: base URL, the `--api-key-env` value (only its length), serde's quoted settings values), and `--list-providers --json` shows base URLs without user info, query or fragment (`redact_url`). All of it sits behind de-cli's default `agent` feature, which links `de-host-services` (skia raster, no GL; the release `de` grows from ~10 to ~62 MiB). Releases build it (the release script compiles de-cli together with `de-host-desktop`, so `pinned-skia-binaries` unifies); `--no-default-features` gives a slim `de` whose `de agent` prints that it is not in this build and exits 2. CI lints that slim build (`cargo clippy -p de-cli --no-default-features`), and `tests/agent_cli.rs` is `cfg(feature = "agent")`. Integration tests (`crates/de-cli/tests/agent_cli.rs`) run the binary against a loopback Anthropic-wire fake provider (`tests/agent_cli/fake_provider.rs`: `<<frame:Name>>`, `<<fail>>`, `<<hang>>` prompt markers). User docs: `docs/guide/cli.md#headless-design-agent`.
 
-## Chat context: `@`-mentions and the context panel (#398)
+## Chat context: `@`-mentions, attachments and the context panel (#398)
 
 - Typing `@` (at the draft start or after whitespace, so an email address
   never triggers it) opens a popup above the composer card ranked by the
@@ -1131,3 +1131,29 @@ CLI side (`crates/de-cli/src/agent_*.rs`, dispatched in `main` before the generi
 - The footer's context button (right of "+") opens `ai_chat_context_panel`:
   document, selection, mentions and attachments (`chat_context::chat_context_rows`,
   built only while the panel is open), each staged item with a ✕.
+- Attachments: the "+" menu's Attach row opens a picker for images and
+  text files, a file dropped on the chat panel is staged instead of imported,
+  and a paste stages copied files (the clipboard's file list wins over its
+  text and icon image), a pasted image, or a pasted `file://` URL to an
+  attachable file (`file:///C:/…` on Windows); a plain pasted path stays
+  text and is never looked up on the UI thread. Files are queued
+  (desktop `chat_attachment::AttachmentLoads::queue`, only as many as fit
+  under `MAX_ATTACHMENTS` minus staged and in-flight, the rest refused with
+  one `full` toast), read as one batch per drop or paste on one worker in
+  the given order, and staged on the tab they were started for
+  (`ChatState::tab_id`, `ChatSessions::tab_by_id_mut`); refusals are Warn toasts
+  (`chat.attach.unsupported` / `tooLarge {{size}}` / `readFailed` / `full
+  {{count}}`, limits passed as placeholders). While a file is dragged over
+  the chat, `ChatSessions::file_drop_hover` swaps the canvas drop overlay
+  for the chat's own indicator (`file_drop_overlay::paint_chat_drop_indicator`).
+  Reading, the `is_file` check and the size rule are
+  `de_host_services::chat_attachment_load`, whose `ATTACHMENT_TYPES` is the
+  one extension → MIME table (picker filters and
+  `chat_attachment::media_type_for_path` read it). At launch
+  (`chat_session_launch_context::compose_turn_text`, which also resolves the
+  mentions) `chat_attachment_prepare::prepare_turn_attachments` keeps raster
+  images as attachments when the model sees images (`model_sees_images`: CLI
+  and ACP agents yes, built-in models per
+  `de_chat_agent::chat_agent_context::model_supports_inline_images`) and
+  turns text files (the shared `chat_text_excerpt` cut), SVG and images a
+  text-only model cannot see into an "Attached files" caption block.

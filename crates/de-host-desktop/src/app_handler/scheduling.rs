@@ -76,8 +76,8 @@ impl DesktopApp {
             || self.current_codegen.is_some()
             || self.current_design_md.is_some()
             || !self.sub_agents.is_empty()
-            // Poll the drag position while an image file hovers the window.
-            || self.hovered_image_drop
+            // Poll the drag position while a file hovers the window.
+            || self.hovered_file_drop.is_some()
         {
             event_loop.set_control_flow(ControlFlow::WaitUntil(self.periodic_wake_instant(33)));
         } else if self
@@ -98,6 +98,7 @@ impl DesktopApp {
             || self.model_probe.is_pending()
             || self.image_search.is_pending()
             || self.mention_files.is_pending()
+            || self.attachment_loads.is_pending()
             || self.mention_reads.is_pending()
             || self.image_panel.is_pending()
             // Remote-image fetches in flight, or fresh misses the last
@@ -199,6 +200,7 @@ impl DesktopApp {
             || self.model_probe.is_pending()
             || self.image_search.is_pending()
             || self.mention_files.is_pending()
+            || self.attachment_loads.is_pending()
             || self.mention_reads.is_pending()
             || self.image_panel.is_pending()
             || self.image_decodes.is_pending()
