@@ -62,6 +62,10 @@ const WRAP_GENERATION_CAP: usize = 256;
 /// its box, so far fewer than whole widths.
 const FIT_GENERATION_CAP: usize = 1024;
 
+/// How far past `max_w` a whole label may measure and still fit: float
+/// noise, far below a device pixel.
+const FIT_SLACK: f32 = 0.01;
+
 /// The regular weight, measured without a weight argument (as
 /// `text_metrics::measure_chrome` does).
 const REGULAR: u16 = 400;
@@ -299,7 +303,9 @@ impl LabelWidths<'_> {
         family: &str,
         weight: u16,
     ) -> Fitted<'t> {
-        if self.styled(text, size, family, weight) <= max_w {
+        // `max_w` is usually a box sized from this very width with padding
+        // added and taken off again; the slack absorbs that float noise.
+        if self.styled(text, size, family, weight) <= max_w + FIT_SLACK {
             return Fitted::Whole(text);
         }
         let key = wrap_key(text, max_w, size, family, weight);

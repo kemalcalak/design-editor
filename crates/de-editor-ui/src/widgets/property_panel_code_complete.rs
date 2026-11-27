@@ -721,25 +721,33 @@ fn paint_action_chip(
     cx.backend
         .stroke_round_rect(rect, INPUT_RADIUS, theme.border, 1.0);
     let cy = rect.origin.y + rect.size.y / 2.0;
-    draw_icon(
-        cx.backend,
-        icon,
-        Point2D::new(
-            rect.origin.x + ACTION_CHIP_PAD_X,
-            cy - ACTION_CHIP_ICON_SIZE / 2.0,
-        ),
-        ACTION_CHIP_ICON_SIZE,
-        theme.foreground,
-        1.4,
-    );
     // A row too narrow for every label falls back to equal chips; a label
-    // that then outgrows its chip is ellipsized rather than painted past it.
+    // that then outgrows its chip is ellipsized rather than painted past it,
+    // and a chip with no room for even one character and the ellipsis shows
+    // its icon alone, centred.
     let label_room = (rect.size.x - ACTION_CHIP_LEAD - ACTION_CHIP_PAD_X).max(0.0);
     let label = LabelWidths::measuring(&mut *cx.backend).fit_chrome(
         label,
         label_room,
         ACTION_LABEL_FONT_SIZE,
     );
+    let icon_only = &*label == "…";
+    let icon_x = if icon_only {
+        rect.origin.x + (rect.size.x - ACTION_CHIP_ICON_SIZE) / 2.0
+    } else {
+        rect.origin.x + ACTION_CHIP_PAD_X
+    };
+    draw_icon(
+        cx.backend,
+        icon,
+        Point2D::new(icon_x, cy - ACTION_CHIP_ICON_SIZE / 2.0),
+        ACTION_CHIP_ICON_SIZE,
+        theme.foreground,
+        1.4,
+    );
+    if icon_only {
+        return;
+    }
     draw_line(
         cx,
         &label,

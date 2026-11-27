@@ -19,7 +19,8 @@ use crate::widgets::design_md_markdown::{parse_blocks, parse_inline, MdBlock, Md
 use crate::widgets::design_md_wrap::wrap_md_runs;
 use crate::widgets::editor_state_ext::theme_for;
 use crate::widgets::label_widths::LabelWidths;
-use crate::widgets::text_metrics;
+
+use crate::widgets::text_metrics::{self, CHROME_FONT_FAMILY};
 use crate::widgets::{Icon, PaintCx};
 use crate::{Point2D, Rect};
 use de_editor_core::{ButtonPressTarget, DesignMdButton, DesignMdSpec, EditorState, Locale};
@@ -538,22 +539,36 @@ impl<'a> DesignMdPanel<'a> {
         let cy = rect.origin.y + rect.size.y / 2.0;
         let heading = self.t("designMd.empty");
         let hint = self.t("designMd.emptyHint");
+        // Centred on the widths they are painted at, not a per-character
+        // guess (#451); the hint wraps where a locale spells it wider than
+        // the panel, each line centred on its own width.
+        let (heading_w, hint_lines) = {
+            let mut widths = LabelWidths::measuring(&mut *cx.backend);
+            let lines = widths.wrap(hint, rect.size.x - PAD * 2.0, 11.0, CHROME_FONT_FAMILY, 400);
+            for line in lines.iter() {
+                widths.chrome(line, 11.0);
+            }
+            (widths.chrome(heading, 13.0), lines)
+        };
         self.text(
             cx,
             heading,
-            cx_mid - heading.chars().count() as f32 * 3.5,
+            cx_mid - heading_w / 2.0,
             cy - 6.0,
             13.0,
             self.theme.foreground,
         );
-        self.text(
-            cx,
-            hint,
-            cx_mid - hint.chars().count() as f32 * 3.0,
-            cy + 14.0,
-            11.0,
-            self.theme.muted_foreground,
-        );
+        for (index, line) in hint_lines.iter().enumerate() {
+            let line_w = LabelWidths::cached().chrome(line, 11.0);
+            self.text(
+                cx,
+                line,
+                cx_mid - line_w / 2.0,
+                cy + 14.0 + index as f32 * 14.0,
+                11.0,
+                self.theme.muted_foreground,
+            );
+        }
         for (_, button, mut icon, button_rect) in Self::empty_action_buttons(rect) {
             if button == DesignMdButton::AutoGenerate && self.generating {
                 icon = Icon::Loader;

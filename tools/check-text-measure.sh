@@ -39,7 +39,7 @@
 #   R3  no string-literal font family in a paint run (`TextLayout::single_run`)
 #       or a family-aware measurement (`measure_text_family[_styled]`,
 #       `measure_in_family[_weighted]`, `fit_in_family`, `LabelWidths::styled`
-#       / `wrap`): a family is a named constant, so the run and its
+#       / `wrap` / `fit`): a family is a named constant, so the run and its
 #       measurement can be seen to name the same one. A paint run may name
 #       `""` (the backend's default face: canvas mock-widget labels, measured
 #       blind under R1's allowlist).
@@ -90,9 +90,10 @@ scan_hits="$(perl -0777 -ne '
     "fit_in_family"              => [4, 0],
     "styled"                     => [2, 4],
     "wrap"                       => [3, 5],
+    "fit"                        => [3, 5],
   );
   my $src = $_;
-  while ($src =~ /(?<!fn )\b(single_run|measure_text_family_styled|measure_text_family|measure_in_family_weighted|measure_in_family|fit_in_family|styled|wrap)\s*\(/g) {
+  while ($src =~ /(?<!fn )\b(single_run|measure_text_family_styled|measure_text_family|measure_in_family_weighted|measure_in_family|fit_in_family|styled|wrap|fit)\s*\(/g) {
     my ($name, $start) = ($1, pos($src));
     my ($depth, $i, $cur) = (1, $start, "");
     my @args;

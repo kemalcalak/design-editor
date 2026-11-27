@@ -87,6 +87,9 @@ pub(crate) struct EmptyState<'a> {
     pub(crate) content_bottom: f32,
 }
 
+/// Weight the empty state's title is painted at.
+const TITLE_WEIGHT: u16 = 600;
+
 pub(crate) fn paint_empty_state(
     cx: &mut PaintCx<'_>,
     palette: &HomePalette,
@@ -96,13 +99,21 @@ pub(crate) fn paint_empty_state(
     let width = (rect.size.x - PAD * 2.0).max(0.0);
     let left = rect.origin.x + PAD;
     let title_top = rect.origin.y + HEADER_HEIGHT + EMPTY_TOP;
-    let title = fit_label(cx, empty.title, TITLE_FONT, width);
+    // Fitted at the weight it is painted at: a semibold title is wider than
+    // the regular face would fit it to.
+    let title = crate::widgets::text_metrics::fit_chrome_weighted(
+        cx.backend,
+        empty.title,
+        width,
+        TITLE_FONT,
+        TITLE_WEIGHT,
+    );
     chat_label(
         cx,
         &title,
         TITLE_FONT,
         palette.text,
-        600,
+        TITLE_WEIGHT,
         Point2D::new(
             left,
             label_baseline(Rect::xywh(left, title_top, width, 20.0), TITLE_FONT),

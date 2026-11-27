@@ -26,6 +26,7 @@ use crate::widgets::text_metrics::CHROME_FONT_FAMILY;
 use crate::widgets::PaintCx;
 use crate::Rect;
 
+mod chips;
 mod modals;
 mod overlays;
 mod preview;
@@ -37,6 +38,9 @@ fn paint_into(
     f: &impl Fn(&mut PaintCx<'_>) -> Rect,
 ) -> (FamilyGapBackend, Rect) {
     reset();
+    // design.md keeps its wrapped body across frames; the two worlds have
+    // different metrics, so each wraps its own.
+    crate::widgets::design_md_line_cache::reset();
     let container = {
         let mut cx = PaintCx {
             backend: &mut backend,
@@ -52,7 +56,7 @@ fn paint_into(
 /// label cache is left holding the widths it measured, so a hit-test right
 /// after reads the painted widths.
 #[track_caller]
-pub(super) fn assert_drawn_as_measured(
+pub(crate) fn assert_drawn_as_measured(
     what: &str,
     also: &[&str],
     f: impl Fn(&mut PaintCx<'_>) -> Rect,
@@ -76,14 +80,29 @@ pub(super) fn assert_drawn_as_measured(
         // Family-blind measurements (`""`) come from jian components and are
         // kept out of widget code by `tools/check-text-measure.sh`; what is
         // checked here is that no NAMED family other than the painted one
-        // sized this run, and none at another weight.
+        // sized this run, and none at another weight. The same text may be
+        // painted twice in different faces on purpose (a heading in the
+        // chrome face over a jian `Button` in Inter, #451): a measurement in
+        // a style some run of that text is painted in sized that run, so it
+        // only fails this run when it names this run's family at another
+        // weight, or a style nothing of that text is painted in.
         let measured: Vec<(&str, u16)> = strict
             .styles_measured_for(&run.text)
             .into_iter()
             .filter(|(family, _)| !family.is_empty())
             .collect();
+        let own = (run.family.as_str(), run.font_weight);
+        let painted_in = |style: &(&str, u16)| {
+            strict.runs.iter().any(|other| {
+                other.text == run.text && (other.family.as_str(), other.font_weight) == *style
+            })
+        };
+        let consistent = measured.contains(&own)
+            || measured
+                .iter()
+                .all(|style| style.0 != own.0 && painted_in(style));
         assert!(
-            measured.is_empty() || measured.contains(&(run.family.as_str(), run.font_weight)),
+            measured.is_empty() || consistent,
             "{what}: {:?} is painted in {:?} at {} but measured in {measured:?}",
             run.text,
             run.family,

@@ -109,6 +109,13 @@ pub(super) fn resolve(
     built
 }
 
+/// Empty every slot, so a test that paints into a backend with other font
+/// metrics wraps again instead of reading another backend's lines.
+#[cfg(test)]
+pub(crate) fn reset() {
+    CACHE.with(|cell| *cell.borrow_mut() = [None, None, None, None, None, None]);
+}
+
 /// Number of fresh parse + wrap builds performed so far on this
 /// thread — a monotonic counter used by tests to assert cache hits do
 /// not recompute.
