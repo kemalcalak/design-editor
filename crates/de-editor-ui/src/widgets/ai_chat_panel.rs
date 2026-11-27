@@ -10,6 +10,7 @@ use crate::widgets::ai_chat_panel_paint::paint_panel_surface;
 use crate::widgets::editor_state_ext::translate;
 use crate::widgets::home_surface::{chrome_theme, HomePalette};
 use crate::widgets::icons::Icon;
+use crate::widgets::label_widths::LabelWidths;
 use crate::widgets::{LayoutBox, LayoutCx, PaintCx, Widget, WidgetId};
 use crate::{Point2D, Rect};
 use de_editor_core::chat::ChatState;
@@ -349,21 +350,33 @@ impl<'a> AIChatPlaceholder<'a> {
     }
 
     /// Where the live chips sit. The single rect source paint and hit-test
-    /// both read — see `ai_chat_chip_row`.
+    /// both read — see `ai_chat_chip_row`. The chips are sized from their
+    /// labels as paint measured them (#451).
     pub(crate) fn chip_row(&self, input_rect: Rect) -> ChipRowLayout {
+        self.chip_row_with(input_rect, &mut LabelWidths::cached())
+    }
+
+    /// [`chip_row`](Self::chip_row) through `widths`: paint passes a
+    /// measuring pass, every hit-test the cached one.
+    pub(crate) fn chip_row_with(
+        &self,
+        input_rect: Rect,
+        widths: &mut LabelWidths<'_>,
+    ) -> ChipRowLayout {
         let style_w = self
             .style_receipt
             .as_ref()
             .zip(self.style_receipt_label())
             .map(|(receipt, label)| {
                 crate::widgets::ai_chat_style_receipt::chip_width(
+                    widths,
                     &label,
                     receipt.swatches.len(),
                     receipt.clearable,
                 )
             });
         let selection_w = (self.selected_count > 0).then(|| {
-            crate::widgets::ai_chat_chip_row::label_chip_width(&self.selection_chip_label())
+            crate::widgets::ai_chat_chip_row::label_chip_width(widths, &self.selection_chip_label())
         });
         crate::widgets::ai_chat_chip_row::chip_row_layout(style_w, selection_w, input_rect)
     }
@@ -690,12 +703,6 @@ pub(crate) struct FooterLayout {
     pub(crate) stop: Rect,
     /// Round send button.
     pub(crate) send: Rect,
-}
-
-pub(crate) fn footer_label_width(label: &str, size: f32) -> f32 {
-    label.chars().fold(0.0, |w, c| {
-        w + if c.is_ascii() { size * 0.55 } else { size }
-    })
 }
 
 #[path = "ai_chat_panel/widget_paint.rs"]

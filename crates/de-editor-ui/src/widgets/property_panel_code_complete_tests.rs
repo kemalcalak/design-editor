@@ -86,3 +86,68 @@ fn host_handoff_notice_reserves_one_row_above_the_source() {
     state.degraded = true;
     assert_eq!(code_area_y(&state, 20.0, 24.0), 68.0);
 }
+
+/// The action chips are sized from their labels as painted (#451): in every
+/// locale each label sits whole inside the chip the backend-less hit-test
+/// resolves when the row has room, and ellipsized inside it when the row
+/// falls back to equal chips.
+#[test]
+fn action_chips_hold_their_labels_in_every_locale() {
+    use crate::widgets::chrome_family_paint_tests::assert_drawn_as_measured;
+    use crate::widgets::label_fit_test_support::assert_inside;
+    use de_i18n::Locale;
+
+    let state = CodegenState::default();
+    for locale in Locale::ALL {
+        let strings = CodePanelStrings::new(locale);
+        let labels = [
+            strings.copy(),
+            strings.save(),
+            strings.bundle(),
+            strings.regen(),
+        ];
+        for w in [272.0, 1400.0] {
+            let layout = CompleteLayout {
+                x: 0.0,
+                y: 0.0,
+                w,
+                progress_row_h: 24.0,
+                panel_bottom: None,
+            };
+            let what = format!("code actions {locale:?} at {w}");
+            let backend = assert_drawn_as_measured(&what, &[CODE_FONT_FAMILY], |cx| {
+                paint_complete_body_in_panel(cx, &Theme::dark(), &state, strings, layout, None);
+                Rect {
+                    origin: Point2D::new(0.0, 0.0),
+                    size: Point2D::new(w, 2000.0),
+                }
+            });
+            let row_y = complete_action_row_y_in_panel(&state, layout);
+            let rects = action_chip_rects(layout.x, row_y, w, strings);
+            for (label, chip) in labels.iter().zip(rects) {
+                let label_box = Rect {
+                    origin: Point2D::new(chip.origin.x + ACTION_CHIP_LEAD, chip.origin.y),
+                    size: Point2D::new(
+                        (chip.size.x - ACTION_CHIP_LEAD - ACTION_CHIP_PAD_X).max(0.0),
+                        chip.size.y,
+                    ),
+                };
+                let run = backend.runs.iter().find(|run| {
+                    (run.text == *label || run.text.ends_with('…'))
+                        && (run.origin.x - label_box.origin.x).abs() < 0.01
+                });
+                if w > 1000.0 {
+                    let run = run.unwrap_or_else(|| panic!("{what}: {label:?} not painted"));
+                    assert_eq!(
+                        run.text, *label,
+                        "{what}: a wide row fits every label whole"
+                    );
+                }
+                // A chip too narrow for any of its label shows its icon alone.
+                if let Some(run) = run {
+                    assert_inside(run, label_box, 0.0, &what);
+                }
+            }
+        }
+    }
+}

@@ -101,7 +101,7 @@ pub fn paint_tooltip_frame(
         .stroke_round_rect(rect, TOOLTIP_RADIUS, theme.border, 1.0);
     let text = TextLayout::single_run(
         label,
-        "system-ui",
+        text_metrics::CHROME_FONT_FAMILY,
         TOOLTIP_FONT_SIZE,
         theme.popover_foreground.to_jian(),
         Point2D::new(0.0, 0.0),
@@ -117,7 +117,7 @@ pub fn paint_tooltip_frame(
         let width = text_metrics::measure_chrome(cx.backend, shortcut, TOOLTIP_FONT_SIZE);
         let hint = TextLayout::single_run(
             shortcut,
-            "system-ui",
+            text_metrics::CHROME_FONT_FAMILY,
             TOOLTIP_FONT_SIZE,
             theme.muted_foreground.to_jian(),
             Point2D::new(0.0, 0.0),

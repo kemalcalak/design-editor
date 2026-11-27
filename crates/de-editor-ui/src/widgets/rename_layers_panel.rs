@@ -5,9 +5,9 @@
 //! step; Cancel, Escape or the scrim leave the document untouched.
 
 use crate::theme::Theme;
+use crate::widgets::chrome_buttons::{fit_button_width, measure_button_labels};
 use crate::widgets::editor_state_ext::{theme_for, translate};
 use crate::widgets::icons::{draw_icon, Icon};
-use crate::widgets::missing_fonts_row::fit_button_width;
 use crate::widgets::text_metrics;
 use crate::widgets::{LayoutBox, LayoutCx, PaintCx, Widget, WidgetId};
 use crate::{Color, Point2D, Rect, TextLayout};
@@ -227,7 +227,7 @@ fn paint_text(
 ) {
     let layout = TextLayout::single_run(
         text,
-        "system-ui",
+        text_metrics::CHROME_FONT_FAMILY,
         size,
         color.to_jian(),
         Point2D::new(0.0, 0.0),
@@ -383,6 +383,11 @@ impl RenameLayersPanel<'_> {
 
     /// Paint with the editor clock so the inline field's caret blinks.
     pub fn paint_at(&self, cx: &mut PaintCx<'_>, panel: Rect, now_ms: u64) {
+        measure_button_labels(
+            cx.backend,
+            13.0,
+            &[self.apply_label(), translate(self.ui, "common.cancel")],
+        );
         let theme = &self.theme;
         cx.backend.fill_round_rect(panel, 12.0, theme.card);
         cx.backend.stroke_round_rect(panel, 12.0, theme.border, 1.0);
@@ -394,9 +399,15 @@ impl RenameLayersPanel<'_> {
             600,
             theme.foreground,
         );
+        let summary = text_metrics::fit_chrome(
+            cx.backend,
+            &self.summary_text(),
+            (panel.size.x - PAD * 2.0).max(0.0),
+            FONT,
+        );
         paint_text(
             cx,
-            &self.summary_text(),
+            &summary,
             Point2D::new(panel.origin.x + PAD, panel.origin.y + 52.0),
             FONT,
             400,

@@ -459,6 +459,7 @@ fn build_node(variant: FigmaNodeVariant, base: PenNodeBase) -> PenNode {
             route: None,
         }),
         FigmaNodeVariant::Polygon => PenNode::Polygon(PolygonNode {
+            corner_smoothing: None,
             base,
             // Figma `POLYGON` / `REGULAR_POLYGON` default to a
             // triangle; the real point count ports with the
@@ -482,6 +483,8 @@ fn build_node(variant: FigmaNodeVariant, base: PenNodeBase) -> PenNode {
             limits: Default::default(),
         }),
         FigmaNodeVariant::Path => PenNode::Path(PathNode {
+            vertex_radius: None,
+            corner_smoothing: None,
             base,
             icon_id: None,
             d: None,

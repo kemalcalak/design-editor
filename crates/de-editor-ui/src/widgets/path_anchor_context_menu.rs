@@ -125,7 +125,7 @@ impl PathAnchorContextMenu {
             let fg = self.theme.foreground;
             let layout = TextLayout::single_run(
                 label,
-                "system-ui",
+                crate::widgets::text_metrics::CHROME_FONT_FAMILY,
                 ROW_FONT,
                 jian_core::scene::Color::rgba(
                     (fg.r * 255.0) as u8,

@@ -28,7 +28,7 @@ fn paint_search_header(
     let title_str = t_settings(ui, "settings.images.search");
     let title = TextLayout::single_run(
         title_str,
-        "system-ui",
+        text_metrics::CHROME_FONT_FAMILY,
         title_font,
         theme.foreground.to_jian(),
         Point2D::new(0.0, 0.0),
@@ -62,7 +62,7 @@ fn paint_search_header(
     };
     let status = TextLayout::single_run(
         status_text,
-        "system-ui",
+        text_metrics::CHROME_FONT_FAMILY,
         status_font,
         theme.muted_foreground.to_jian(),
         Point2D::new(0.0, 0.0),
@@ -101,7 +101,7 @@ fn paint_advanced(
     let label_font = 13.0;
     let advanced = TextLayout::single_run(
         t_settings(ui, "settings.images.advanced"),
-        "system-ui",
+        text_metrics::CHROME_FONT_FAMILY,
         label_font,
         theme.foreground.to_jian(),
         Point2D::new(0.0, 0.0),
@@ -124,7 +124,7 @@ fn paint_advanced(
     let subtitle_font = 12.0;
     let oauth = TextLayout::single_run(
         t_settings(ui, "settings.images.oauthLabel"),
-        "system-ui",
+        text_metrics::CHROME_FONT_FAMILY,
         subtitle_font,
         theme.muted_foreground.to_jian(),
         Point2D::new(0.0, 0.0),
@@ -184,7 +184,7 @@ fn paint_register_link(
     );
     let layout = TextLayout::single_run(
         &text,
-        "system-ui",
+        text_metrics::CHROME_FONT_FAMILY,
         font,
         theme.primary.to_jian(),
         Point2D::new(0.0, 0.0),
@@ -243,7 +243,7 @@ fn paint_search_test(
     let text_w = text_metrics::measure_chrome(cx.backend, text, font);
     let layout = TextLayout::single_run(
         text,
-        "system-ui",
+        text_metrics::CHROME_FONT_FAMILY,
         font,
         if search_test_enabled(settings) {
             theme.foreground
@@ -274,7 +274,7 @@ fn paint_generation(
     let title_font = 15.0;
     let title = TextLayout::single_run(
         t_settings(ui, "settings.images.generation"),
-        "system-ui",
+        text_metrics::CHROME_FONT_FAMILY,
         title_font,
         theme.foreground.to_jian(),
         Point2D::new(0.0, 0.0),
@@ -294,7 +294,7 @@ fn paint_generation(
         let hint_w = text_metrics::measure_chrome(cx.backend, &hint, font);
         let layout = TextLayout::single_run(
             &hint,
-            "system-ui",
+            text_metrics::CHROME_FONT_FAMILY,
             font,
             theme.muted_foreground.to_jian(),
             Point2D::new(0.0, 0.0),
@@ -353,7 +353,7 @@ fn paint_add_button(
     let text_w = text_metrics::measure_chrome(cx.backend, &text, font);
     let layout = TextLayout::single_run(
         &text,
-        "system-ui",
+        text_metrics::CHROME_FONT_FAMILY,
         font,
         theme.foreground.to_jian(),
         Point2D::new(0.0, 0.0),
@@ -406,7 +406,7 @@ fn paint_invalid(cx: &mut PaintCx<'_>, theme: &Theme, btn: Rect) {
     let font = 10.0;
     let layout = TextLayout::single_run(
         "Invalid",
-        "system-ui",
+        text_metrics::CHROME_FONT_FAMILY,
         font,
         theme.destructive.to_jian(),
         Point2D::new(0.0, 0.0),
@@ -550,7 +550,7 @@ fn paint_profile_header(
     let name = ellipsize(cx, raw_name, row.size.x - 180.0, name_font);
     let name_layout = TextLayout::single_run(
         &name,
-        "system-ui",
+        text_metrics::CHROME_FONT_FAMILY,
         name_font,
         theme.foreground.to_jian(),
         Point2D::new(0.0, 0.0),
@@ -567,7 +567,7 @@ fn paint_profile_header(
         text_metrics::measure_chrome(cx.backend, profile.provider.label(), provider_font);
     let provider_layout = TextLayout::single_run(
         profile.provider.label(),
-        "system-ui",
+        text_metrics::CHROME_FONT_FAMILY,
         provider_font,
         theme.muted_foreground.to_jian(),
         Point2D::new(0.0, 0.0),

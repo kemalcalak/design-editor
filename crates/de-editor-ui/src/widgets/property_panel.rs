@@ -431,7 +431,9 @@ impl PropertyPanel {
             stroke: caps.stroke,
             stroke_edit_mode: self.stroke_edit_mode,
             stroke_mode_popover_open: self.stroke_mode_popover_open,
-            stroke_style_rows: self.snapshot.stroke.is_some(),
+            stroke_style_rows: crate::widgets::property_panel_stroke::StrokeStyleRows::of(
+                &self.snapshot,
+            ),
             fill_menu: self.fill_menu_open,
             export_open: self.export_section_open,
             export_scale_row: self.export_format.uses_scale(),

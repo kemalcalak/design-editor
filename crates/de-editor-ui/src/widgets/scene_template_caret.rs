@@ -12,7 +12,7 @@ use de_editor_core::SceneTemplateFocus;
 use super::scene_template_panel::{
     SceneTemplatePanel, GENERATE_INPUT_PAD_X, GENERATE_TEXT_SIZE, SEARCH_PAD_X, SEARCH_TEXT_SIZE,
 };
-use super::text_input::single_line_caret_rect;
+use super::text_input_measured::measured_caret_rect as single_line_caret_rect;
 use crate::Rect;
 
 impl SceneTemplatePanel<'_> {

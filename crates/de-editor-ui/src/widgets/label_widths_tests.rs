@@ -124,3 +124,74 @@ fn an_unmeasured_wrap_is_not_kept() {
     assert!(lines.len() > 1);
     assert_eq!(super::kept(), (0, 0));
 }
+
+/// A label that fits is handed back borrowed; one that does not is cut once,
+/// kept, and read back by the hit-test as the same cut (#451).
+#[test]
+fn a_fit_borrows_a_label_that_fits_and_keeps_a_cut_one() {
+    use super::Fitted;
+    use std::rc::Rc;
+
+    reset();
+    let mut backend = FamilyGapBackend::default();
+    let short = LabelWidths::measuring(&mut backend).fit_chrome("Save", 200.0, 13.0);
+    assert!(matches!(short, Fitted::Whole("Save")));
+
+    let text = "A very long provider name that cannot fit";
+    let cut = LabelWidths::measuring(&mut backend).fit_chrome(text, 60.0, 13.0);
+    let Fitted::Cut(cut) = cut else {
+        panic!("expected a cut")
+    };
+    assert!(cut.ends_with('…'));
+    assert!(measure_chrome(&mut backend, &cut, 13.0) <= 60.0);
+    let Fitted::Cut(again) = LabelWidths::cached().fit_chrome(text, 60.0, 13.0) else {
+        panic!("expected the kept cut")
+    };
+    assert!(Rc::ptr_eq(&cut, &again), "the hit-test reads the kept cut");
+}
+
+#[test]
+fn an_unmeasured_fit_is_not_kept() {
+    use super::Fitted;
+    use std::rc::Rc;
+
+    reset();
+    let text = "A very long provider name that cannot fit";
+    let first = LabelWidths::cached().fit_chrome(text, 60.0, 13.0);
+    let second = LabelWidths::cached().fit_chrome(text, 60.0, 13.0);
+    match (first, second) {
+        (Fitted::Cut(a), Fitted::Cut(b)) => assert!(!Rc::ptr_eq(&a, &b)),
+        other => panic!("expected two estimated cuts, got {other:?}"),
+    }
+}
+
+/// The binary search cuts where a character-by-character walk would, and a
+/// box a fraction of a px wider or narrower reads the same kept cut.
+#[test]
+fn a_cut_is_the_longest_fitting_prefix_and_is_shared_within_a_px() {
+    use super::Fitted;
+    use std::rc::Rc;
+
+    reset();
+    let mut backend = FamilyGapBackend::default();
+    let text = "Минимальная презентация для команды дизайна";
+    for max_w in [20.0, 61.0, 95.0, 140.0] {
+        let Fitted::Cut(cut) = LabelWidths::measuring(&mut backend).fit_chrome(text, max_w, 13.0)
+        else {
+            panic!("expected a cut at {max_w}")
+        };
+        let linear =
+            crate::util::ellipsize_to_width(text, max_w, |s| measure_chrome(&mut backend, s, 13.0));
+        assert_eq!(&*cut, linear.as_str(), "at {max_w}");
+    }
+    let at = |max_w: f32, backend: &mut FamilyGapBackend| match LabelWidths::measuring(backend)
+        .fit_chrome(text, max_w, 13.0)
+    {
+        Fitted::Cut(cut) => cut,
+        Fitted::Whole(_) => panic!("expected a cut"),
+    };
+    let a = at(80.2, &mut backend);
+    let b = at(80.9, &mut backend);
+    assert!(Rc::ptr_eq(&a, &b), "one cut per whole px");
+    assert!(measure_chrome(&mut backend, &a, 13.0) <= 80.2);
+}

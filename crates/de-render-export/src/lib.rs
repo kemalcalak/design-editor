@@ -479,6 +479,9 @@ mod text_fill_tests;
 mod scale_pixel_tests;
 
 #[cfg(test)]
+mod stroke_ends_pixel_tests;
+
+#[cfg(test)]
 mod convert_instances_tests;
 
 #[cfg(test)]

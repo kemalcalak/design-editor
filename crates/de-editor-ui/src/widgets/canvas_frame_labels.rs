@@ -1,11 +1,13 @@
 use crate::layout_scene::SceneNode;
 use crate::widgets::icons::{draw_icon, Icon};
+use crate::widgets::label_widths::LabelWidths;
 use crate::widgets::PaintCx;
 use crate::{Color, Point2D, Rect, TextLayout};
 use de_editor_core::Viewport;
 
 const LABEL_SIDE_PADDING: f32 = 4.0;
 const LABEL_FONT_SIZE: f32 = 12.0;
+const LABEL_FONT_WEIGHT: u16 = 500;
 const GENERATING_ICON_SIZE: f32 = 14.0;
 const GENERATING_ICON_GAP: f32 = 4.0;
 
@@ -101,8 +103,15 @@ fn label_id_matches(node_id: &str, label_id: &str) -> bool {
     node_id == label_id
 }
 
-fn label_width(label: &FrameLabel) -> f32 {
-    let text_width = (label.text.chars().count() as f32 * 7.0).max(1.0);
+/// Width of the label row: the name as painted (chrome family, weight
+/// [`LABEL_FONT_WEIGHT`]), plus the sparkles icon while generating. Paint
+/// measures it ([`LabelWidths::measuring`]) and the press hit-test reads
+/// the kept width ([`LabelWidths::cached`]), so the clickable box is the
+/// painted one.
+fn label_width(label: &FrameLabel, widths: &mut LabelWidths<'_>) -> f32 {
+    let text_width = widths
+        .chrome_weighted(&label.text, LABEL_FONT_SIZE, LABEL_FONT_WEIGHT)
+        .max(1.0);
     if label.generating {
         GENERATING_ICON_SIZE + GENERATING_ICON_GAP + text_width
     } else {
@@ -115,6 +124,7 @@ fn label_rect(
     label: &FrameLabel,
     viewport_origin: Point2D,
     viewport: &Viewport,
+    widths: &mut LabelWidths<'_>,
 ) -> Rect {
     let b = node.aggregate_bounds();
     let sx = viewport_origin.x + b.origin.x * viewport.zoom;
@@ -122,7 +132,7 @@ fn label_rect(
     Rect::xywh(
         sx - LABEL_SIDE_PADDING,
         sy - LABEL_BOX_TOP_OFFSET,
-        label_width(label) + LABEL_SIDE_PADDING * 2.0,
+        label_width(label, widths) + LABEL_SIDE_PADDING * 2.0,
         LABEL_BOX_HEIGHT,
     )
 }
@@ -147,7 +157,15 @@ pub(super) fn frame_label_at_point(
             continue;
         }
         let label = labels.next().expect("peeked label exists");
-        if (label_rect(node, label, viewport_origin, viewport)).contains(point) {
+        if label_rect(
+            node,
+            label,
+            viewport_origin,
+            viewport,
+            &mut LabelWidths::cached(),
+        )
+        .contains(point)
+        {
             return Some(label.id.clone());
         }
     }
@@ -184,10 +202,16 @@ pub(super) fn paint_frame_labels(
         if sx > clip.origin.x + clip.size.x || sx + 600.0 < clip.origin.x {
             continue;
         }
-        let hit_rect = label_rect(node, label, viewport_origin, viewport);
+        let hit_rect = label_rect(
+            node,
+            label,
+            viewport_origin,
+            viewport,
+            &mut LabelWidths::measuring(&mut *cx.backend),
+        );
         let layout = TextLayout::single_run(
             &label.text,
-            "system-ui",
+            crate::widgets::text_metrics::CHROME_FONT_FAMILY,
             LABEL_FONT_SIZE,
             jian_core::scene::Color::rgba(
                 (label.color.r * 255.0) as u8,
@@ -197,7 +221,7 @@ pub(super) fn paint_frame_labels(
             ),
             Point2D::ZERO,
         )
-        .with_font_weight(500);
+        .with_font_weight(LABEL_FONT_WEIGHT);
         let text_baseline_y = sy - LABEL_BASELINE_OFFSET;
         let mut text_x = hit_rect.origin.x + LABEL_SIDE_PADDING;
         if label.generating {
@@ -262,7 +286,13 @@ mod tests {
                 viewport.zoom = zoom;
                 let node = frame_at(doc_y);
                 let label = label();
-                let rect = label_rect(&node, &label, Point2D::ZERO, &viewport);
+                let rect = label_rect(
+                    &node,
+                    &label,
+                    Point2D::ZERO,
+                    &viewport,
+                    &mut LabelWidths::cached(),
+                );
 
                 let frame_top = doc_y * zoom;
                 let box_bottom = rect.origin.y + rect.size.y;
@@ -321,7 +351,13 @@ mod tests {
         let viewport = Viewport::IDENTITY;
         let node = frame_at(100.0);
         let label = label();
-        let rect = label_rect(&node, &label, Point2D::ZERO, &viewport);
+        let rect = label_rect(
+            &node,
+            &label,
+            Point2D::ZERO,
+            &viewport,
+            &mut LabelWidths::cached(),
+        );
 
         let baseline = 100.0 - LABEL_BASELINE_OFFSET;
         let text_top = baseline - LABEL_CAP_HEIGHT;
