@@ -240,6 +240,38 @@ fn post_reap_cleanup_is_a_noop_for_an_unverified_process_target() {
         .expect("post-reap cleanup must not signal an unverified numeric pid");
 }
 
+#[test]
+fn post_exit_cleanup_of_a_group_holding_only_a_zombie_is_not_an_error() {
+    // Darwin answers `killpg` with EPERM, not ESRCH, while the group's only
+    // member is a zombie. `kill_graceful` used to return that as an error
+    // after it had read the leader's exit status, so the chat bridge
+    // reported "exited with status ?" (#474). Waiting with WNOWAIT keeps the
+    // exited leader unreaped, which holds the group in exactly that state
+    // with no timing involved.
+    let mut child = Command::new("sh")
+        .args(["-c", "exit 3"])
+        .process_group(0)
+        .spawn()
+        .expect("spawn group leader");
+    let tree = ProcessTree::from_child(&child).expect("capture process group");
+    let pid = libc::pid_t::try_from(child.id()).expect("pid fits pid_t");
+    // SAFETY: `info` is a valid out-pointer and `pid` is our own child.
+    let waited = unsafe {
+        let mut info: libc::siginfo_t = std::mem::zeroed();
+        libc::waitid(
+            libc::P_PID,
+            pid as libc::id_t,
+            &mut info,
+            libc::WEXITED | libc::WNOWAIT,
+        )
+    };
+    assert_eq!(waited, 0, "waitid: {}", std::io::Error::last_os_error());
+
+    tree.kill_after_leader_exit()
+        .expect("a group left with only a zombie has nothing to clean up");
+    assert_eq!(child.wait().expect("reap leader").code(), Some(3));
+}
+
 #[tokio::test]
 async fn post_reap_cleanup_can_kill_a_verified_unix_process_group() {
     let mut command = TokioCommand::new("sh");

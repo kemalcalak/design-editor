@@ -106,11 +106,22 @@ impl ProcessTree {
     /// leader is reaped. Windows tree discovery requires the leader to still
     /// be alive, so this deliberately becomes a no-op there instead of
     /// risking `taskkill` against a reused numeric PID.
+    ///
+    /// On Unix an `EPERM` from the group is not a failure here. Darwin
+    /// answers `EPERM`, not `ESRCH`, when every member left in the group is a
+    /// zombie, which is the normal state for an instant after a member
+    /// exits; the only other cause is a member running as another user,
+    /// which this process could never kill. Neither leaves anything to do,
+    /// and reporting it as an error made `LineStreamChild::kill_graceful`
+    /// throw away the leader's exit status it had already read (#474).
     pub fn kill_after_leader_exit(self) -> io::Result<()> {
-        if self.can_signal_after_leader_exit() {
-            self.kill()
-        } else {
-            Ok(())
+        if !self.can_signal_after_leader_exit() {
+            return Ok(());
+        }
+        match self.kill() {
+            #[cfg(unix)]
+            Err(error) if error.raw_os_error() == Some(libc::EPERM) => Ok(()),
+            result => result,
         }
     }
 
