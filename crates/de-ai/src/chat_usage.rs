@@ -161,7 +161,10 @@ impl UsageMeter {
         self.cache_read.add(usage.cache_read_tokens);
         self.cache_write.add(usage.cache_write_tokens);
         self.cache_write_1h.add(usage.cache_write_1h_tokens);
-        if let Some(price) = &self.price {
+        // A request that reported nothing (refused before any output, e.g. a
+        // 429 after retries) was not billed: a known $0, not an unknown cost.
+        let reported_nothing = usage == TokenUsage::default();
+        if let Some(price) = self.price.as_ref().filter(|_| !reported_nothing) {
             match price.cost_usd(&usage) {
                 Some(cost) => {
                     let nano = (cost * 1e9).round().max(0.0) as u64;

@@ -1198,8 +1198,10 @@ CLI side (`crates/de-cli/src/agent_*.rs`, dispatched in `main` before the generi
   first-party list prices recorded 2026-11-03 (source and update rule in its
   module docs, every row pinned by a test); `first_party_price` prices only a
   model served by `api.anthropic.com`, an unknown model or a proxy gets
-  `None`, and a request that used the cache on a model without a published
-  cache-read price is not priced either. A `UsageMeter::with_price` prices
+  `None`, and a request that read from the cache on a model without a
+  published cache-read price is not priced either (cache writes are priced
+  from the input price); a request that reported no usage at all (refused)
+  costs a known $0. A `UsageMeter::with_price` prices
   each request as it records it (so a per-request tier such as Haiku 5.5's
   long prompts is right) and its total cost is `None` once any request could
   not be priced. The built-in chat route and the design-agent loop build

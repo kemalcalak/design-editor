@@ -13,7 +13,8 @@ use crate::chat::TurnUsage;
 pub fn compact_count(count: u64) -> String {
     match count {
         0..=9_999 => count.to_string(),
-        10_000..=999_999 => format!("{:.1}k", count as f64 / 1_000.0),
+        // 999,950 and up would round to "1000.0k".
+        10_000..=999_949 => format!("{:.1}k", count as f64 / 1_000.0),
         _ => format!("{:.1}M", count as f64 / 1_000_000.0),
     }
 }
@@ -21,9 +22,11 @@ pub fn compact_count(count: u64) -> String {
 /// `$1.23`, `$0.123`, `$0.0042`: more decimals as the amount shrinks, so a
 /// cheap reply never rounds to `$0.00`.
 pub fn format_usd(cost: f64) -> String {
-    if cost >= 1.0 {
+    // Thresholds sit where the finer format would round up into the coarser
+    // one, so 0.9995 reads `$1.00`, never `$1.000`.
+    if cost >= 0.995 {
         format!("${cost:.2}")
-    } else if cost >= 0.01 {
+    } else if cost >= 0.00995 {
         format!("${cost:.3}")
     } else {
         format!("${cost:.4}")
@@ -103,6 +106,11 @@ mod tests {
         assert_eq!(format_usd(1.234), "$1.23");
         assert_eq!(format_usd(0.1234), "$0.123");
         assert_eq!(format_usd(0.00042), "$0.0004");
+        // Rounding never crosses into the next unit's spelling.
+        assert_eq!(compact_count(999_949), "999.9k");
+        assert_eq!(compact_count(999_950), "1.0M");
+        assert_eq!(format_usd(0.9995), "$1.00");
+        assert_eq!(format_usd(0.0099_6), "$0.010");
     }
 
     #[test]

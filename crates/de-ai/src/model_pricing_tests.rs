@@ -81,8 +81,14 @@ fn cache_reads_and_writes_are_priced_at_their_own_rates() {
     // A model with no published cache-read price is not guessed at.
     let opus5 = price_for("claude-opus-5").unwrap();
     assert_eq!(opus5.cost_usd(&cached), None);
-    // …but its uncached requests still are.
+    // …but its uncached requests still are, and cache writes are priced
+    // from the input price, which is published.
     assert!(opus5.cost_usd(&usage(1_000_000, 0)).is_some());
+    let writes_only = TokenUsage {
+        cache_write_tokens: Some(400_000),
+        ..usage(1_000_000, 0)
+    };
+    assert!(opus5.cost_usd(&writes_only).is_some());
 }
 
 #[test]

@@ -700,6 +700,10 @@ pub fn drain_stop_request(
         session.abort();
         crate::design_session::stop_design_transcript(host, running_tab);
     }
+    // The requests that finished before Stop were billed: keep their usage.
+    if let Some(session) = current_chat.as_ref() {
+        super::write_turn_usage(host, session, running_tab, None);
+    }
     *current_chat = None;
     *current_design = None;
     if let Some(epoch) = de_editor_core::agent_indicators::active_epoch() {

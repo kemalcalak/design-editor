@@ -9,10 +9,10 @@
 //!
 //! **Rule.** A model that is not in [`PRICES`] has no price, and the chat
 //! then shows tokens only: a cost is never estimated or borrowed from a
-//! similar model. Likewise a request that read or wrote the prompt cache is
-//! priced only when the table has that model's cache-read price; cache
-//! writes cost 1.25× the input price (five-minute lifetime) or 2× (one
-//! hour), Anthropic's published multipliers.
+//! similar model. Likewise a request that read from the prompt cache is
+//! priced only when the table has that model's cache-read price. Cache
+//! writes are always priced from the input price: 1.25× (five-minute
+//! lifetime) or 2× (one hour), Anthropic's published multipliers.
 //!
 //! **Updating.** Edit [`PRICES`] and [`PRICES_RECORDED`] together when the
 //! published prices change; `model_pricing_tests.rs` pins every row.
@@ -136,8 +136,8 @@ pub fn first_party_price(base_url: &str, model: &str) -> Option<ModelPrice> {
 
 impl ModelPrice {
     /// The cost of ONE request in US dollars, or `None` when the usage is
-    /// incomplete (input or output not reported) or uses the prompt cache
-    /// on a model whose cache-read price is not published here.
+    /// incomplete (input or output not reported) or reads from the prompt
+    /// cache on a model whose cache-read price is not published here.
     pub fn cost_usd(&self, usage: &TokenUsage) -> Option<f64> {
         let input = usage.input_tokens?;
         let output = usage.output_tokens?;
