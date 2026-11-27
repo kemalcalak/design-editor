@@ -1,6 +1,10 @@
-//! Reading a file the user picked or dropped onto the chat into a staged
-//! `ChatAttachment` (#398). Shared by the attach picker and drag-and-drop
-//! so both apply the same size cap and type rules.
+//! Reading a file the user picked, dropped or pasted onto the chat into a
+//! staged `ChatAttachment` (#398). Shared by the attach picker, drag-and-
+//! drop and paste so all three apply the same size cap and type rules.
+//!
+//! [`ATTACHMENT_TYPES`] is the one table of what the chat takes and the
+//! MIME type each extension carries; the picker's filters, the type check
+//! and `chat_attachment::media_type_for_path` all read it.
 
 use std::fs;
 use std::path::Path;
@@ -9,71 +13,91 @@ use de_editor_core::chat::{ChatAttachment, MAX_ATTACHMENT_BYTES};
 
 pub use crate::chat_attachment_load_error::AttachmentLoadError;
 
-/// Extensions the chat accepts: raster images (sent to vision models) and
-/// text formats (quoted into the message).
-pub const ATTACHABLE_IMAGE_EXTENSIONS: &[&str] = &["png", "jpg", "jpeg", "gif", "webp"];
-pub const ATTACHABLE_TEXT_EXTENSIONS: &[&str] = &[
-    "txt", "md", "markdown", "json", "csv", "tsv", "html", "htm", "css", "js", "ts", "tsx", "jsx",
-    "svg", "xml", "yaml", "yml", "toml",
+/// How the chat uses an attachment.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum AttachmentClass {
+    /// A raster image, sent to vision models.
+    Image,
+    /// A text format, quoted into the message (SVG included: its MIME type
+    /// is an image one, but the model reads it as markup).
+    Text,
+}
+
+/// Every extension the chat accepts, with its MIME type and class.
+pub const ATTACHMENT_TYPES: &[(&str, &str, AttachmentClass)] = &[
+    ("png", "image/png", AttachmentClass::Image),
+    ("jpg", "image/jpeg", AttachmentClass::Image),
+    ("jpeg", "image/jpeg", AttachmentClass::Image),
+    ("gif", "image/gif", AttachmentClass::Image),
+    ("webp", "image/webp", AttachmentClass::Image),
+    ("svg", "image/svg+xml", AttachmentClass::Text),
+    ("txt", "text/plain", AttachmentClass::Text),
+    ("md", "text/markdown", AttachmentClass::Text),
+    ("markdown", "text/markdown", AttachmentClass::Text),
+    ("json", "application/json", AttachmentClass::Text),
+    ("csv", "text/csv", AttachmentClass::Text),
+    ("tsv", "text/tab-separated-values", AttachmentClass::Text),
+    ("html", "text/html", AttachmentClass::Text),
+    ("htm", "text/html", AttachmentClass::Text),
+    ("css", "text/css", AttachmentClass::Text),
+    ("js", "text/javascript", AttachmentClass::Text),
+    ("jsx", "text/javascript", AttachmentClass::Text),
+    ("ts", "text/typescript", AttachmentClass::Text),
+    ("tsx", "text/typescript", AttachmentClass::Text),
+    ("xml", "application/xml", AttachmentClass::Text),
+    ("yaml", "application/yaml", AttachmentClass::Text),
+    ("yml", "application/yaml", AttachmentClass::Text),
+    ("toml", "application/toml", AttachmentClass::Text),
 ];
 
-fn extension(path: &Path) -> Option<String> {
-    path.extension()
-        .and_then(|e| e.to_str())
-        .map(str::to_ascii_lowercase)
+/// The extensions of one class (the picker's filters).
+pub fn attachable_extensions(class: AttachmentClass) -> Vec<&'static str> {
+    ATTACHMENT_TYPES
+        .iter()
+        .filter(|(_, _, c)| *c == class)
+        .map(|(ext, _, _)| *ext)
+        .collect()
 }
 
-/// Whether `path` names a file the chat can take as an attachment.
+/// The table row for `path`'s extension (case-insensitive).
+fn attachment_type(path: &Path) -> Option<(&'static str, AttachmentClass)> {
+    let ext = path.extension()?.to_str()?;
+    ATTACHMENT_TYPES
+        .iter()
+        .find(|(e, _, _)| e.eq_ignore_ascii_case(ext))
+        .map(|(_, media, class)| (*media, *class))
+}
+
+/// The MIME type `path`'s extension carries, when the chat knows it.
+pub fn known_media_type(path: &Path) -> Option<&'static str> {
+    attachment_type(path).map(|(media, _)| media)
+}
+
+/// Whether `path` names a file type the chat can take as an attachment.
 pub fn is_attachable(path: &Path) -> bool {
-    extension(path).is_some_and(|ext| {
-        ATTACHABLE_IMAGE_EXTENSIONS.contains(&ext.as_str())
-            || ATTACHABLE_TEXT_EXTENSIONS.contains(&ext.as_str())
-    })
+    attachment_type(path).is_some()
 }
 
-/// The MIME type a staged attachment carries: images by extension, text
-/// formats as `text/<subtype>` (SVG keeps `image/svg+xml`; preparation
-/// quotes it as text).
-pub fn attachment_media_type(path: &Path) -> String {
-    let ext = extension(path).unwrap_or_default();
-    let media = match ext.as_str() {
-        "png" => "image/png",
-        "jpg" | "jpeg" => "image/jpeg",
-        "gif" => "image/gif",
-        "webp" => "image/webp",
-        "svg" => "image/svg+xml",
-        "md" | "markdown" => "text/markdown",
-        "json" => "application/json",
-        "csv" => "text/csv",
-        "tsv" => "text/tab-separated-values",
-        "html" | "htm" => "text/html",
-        "css" => "text/css",
-        "js" | "jsx" => "text/javascript",
-        "ts" | "tsx" => "text/typescript",
-        "xml" => "application/xml",
-        "yaml" | "yml" => "application/yaml",
-        "toml" => "application/toml",
-        _ => "text/plain",
-    };
-    media.to_string()
-}
-
-/// Read `path` into an attachment, refusing unsupported types and files
-/// over [`MAX_ATTACHMENT_BYTES`] before reading them whole.
+/// Read `path` into an attachment, refusing unsupported types, anything
+/// that is not a regular file and files over [`MAX_ATTACHMENT_BYTES`]
+/// before reading them whole. Disk I/O: hosts call it off the UI thread.
 pub fn load_attachment(path: &Path) -> Result<ChatAttachment, AttachmentLoadError> {
     let display = path.display().to_string();
-    if !is_attachable(path) {
+    let Some((media_type, _)) = attachment_type(path) else {
         return Err(AttachmentLoadError::Unsupported { path: display });
-    }
+    };
     let io = |source| AttachmentLoadError::Io {
         path: path.display().to_string(),
         source,
     };
-    let len = fs::metadata(path).map_err(io)?.len();
-    if len > MAX_ATTACHMENT_BYTES as u64 {
+    let meta = fs::metadata(path).map_err(io)?;
+    if !meta.is_file() {
+        return Err(AttachmentLoadError::NotAFile { path: display });
+    }
+    if meta.len() > MAX_ATTACHMENT_BYTES as u64 {
         return Err(AttachmentLoadError::TooLarge {
             path: display,
-            bytes: len,
+            bytes: meta.len(),
         });
     }
     let data = fs::read(path).map_err(io)?;
@@ -90,7 +114,36 @@ pub fn load_attachment(path: &Path) -> Result<ChatAttachment, AttachmentLoadErro
         .to_string();
     Ok(ChatAttachment {
         name,
-        media_type: attachment_media_type(path),
+        media_type: media_type.to_string(),
         data,
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn the_table_answers_type_class_and_filters() {
+        assert_eq!(known_media_type(Path::new("a.PNG")), Some("image/png"));
+        assert_eq!(
+            known_media_type(Path::new("notes.md")),
+            Some("text/markdown")
+        );
+        assert_eq!(known_media_type(Path::new("tool.exe")), None);
+        assert!(attachable_extensions(AttachmentClass::Image).contains(&"webp"));
+        assert!(attachable_extensions(AttachmentClass::Text).contains(&"svg"));
+        assert!(!attachable_extensions(AttachmentClass::Image).contains(&"svg"));
+    }
+
+    #[test]
+    fn a_folder_named_like_a_file_is_refused() {
+        let dir = std::env::temp_dir().join(format!("de-attach-dir-{}.md", std::process::id()));
+        fs::create_dir_all(&dir).unwrap();
+        assert!(matches!(
+            load_attachment(&dir),
+            Err(AttachmentLoadError::NotAFile { .. })
+        ));
+        fs::remove_dir_all(&dir).ok();
+    }
 }

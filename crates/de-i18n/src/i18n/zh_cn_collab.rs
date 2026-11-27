@@ -592,9 +592,10 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.context.selection" => "选区",
         "chat.context.attachment" => "附件",
         "chat.attach.unsupported" => "无法附加 {{name}}：仅支持图片和文本文件",
-        "chat.attach.tooLarge" => "{{name}} 超过 5 MB 附件上限",
+        "chat.attach.tooLarge" => "{{name}} 超过 {{size}} MB 附件上限",
         "chat.attach.readFailed" => "无法读取 {{name}}",
-        "chat.attach.full" => "每条消息最多附加 4 个文件",
+        "chat.attach.full" => "每条消息最多附加 {{count}} 个文件",
+        "chat.attach.dropHint" => "松开以附加到聊天",
         _ => return None,
     })
 }

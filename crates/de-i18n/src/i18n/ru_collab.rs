@@ -592,9 +592,10 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.context.selection" => "Выделение",
         "chat.context.attachment" => "Вложение",
         "chat.attach.unsupported" => "Нельзя прикрепить {{name}}: только изображения и текстовые файлы",
-        "chat.attach.tooLarge" => "{{name}} больше лимита вложения в 5 МБ",
+        "chat.attach.tooLarge" => "{{name}} больше лимита вложения в {{size}} МБ",
         "chat.attach.readFailed" => "Не удалось прочитать {{name}}",
-        "chat.attach.full" => "К сообщению можно прикрепить до 4 файлов",
+        "chat.attach.full" => "К сообщению можно прикрепить до {{count}} файлов",
+        "chat.attach.dropHint" => "Отпустите, чтобы прикрепить к чату",
         _ => return None,
     })
 }

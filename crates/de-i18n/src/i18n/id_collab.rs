@@ -592,9 +592,10 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.context.selection" => "Pilihan",
         "chat.context.attachment" => "Lampiran",
         "chat.attach.unsupported" => "Tidak bisa melampirkan {{name}}: hanya gambar dan file teks",
-        "chat.attach.tooLarge" => "{{name}} melebihi batas lampiran 5 MB",
+        "chat.attach.tooLarge" => "{{name}} melebihi batas lampiran {{size}} MB",
         "chat.attach.readFailed" => "Tidak bisa membaca {{name}}",
-        "chat.attach.full" => "Satu pesan bisa membawa hingga 4 file",
+        "chat.attach.full" => "Satu pesan bisa membawa hingga {{count}} file",
+        "chat.attach.dropHint" => "Lepaskan untuk melampirkan ke chat",
         _ => return None,
     })
 }

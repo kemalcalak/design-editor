@@ -592,9 +592,10 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.context.selection" => "Vùng chọn",
         "chat.context.attachment" => "Tệp đính kèm",
         "chat.attach.unsupported" => "Không thể đính kèm {{name}}: chỉ hỗ trợ ảnh và tệp văn bản",
-        "chat.attach.tooLarge" => "{{name}} vượt giới hạn đính kèm 5 MB",
+        "chat.attach.tooLarge" => "{{name}} vượt giới hạn đính kèm {{size}} MB",
         "chat.attach.readFailed" => "Không đọc được {{name}}",
-        "chat.attach.full" => "Mỗi tin nhắn đính kèm tối đa 4 tệp",
+        "chat.attach.full" => "Mỗi tin nhắn đính kèm tối đa {{count}} tệp",
+        "chat.attach.dropHint" => "Thả để đính kèm vào cuộc trò chuyện",
         _ => return None,
     })
 }

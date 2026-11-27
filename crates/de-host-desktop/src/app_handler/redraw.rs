@@ -57,6 +57,10 @@ impl DesktopApp {
         {
             self.redraw_dirty = true;
         }
+        // Chat attachments read on a worker land here.
+        if self.attachment_loads.drain(&mut self.host) {
+            self.redraw_dirty = true;
+        }
         if (self.ctx.is_none() || self.backend.is_none())
             && !self.try_init_render_context(event_loop)
         {

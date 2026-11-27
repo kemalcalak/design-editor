@@ -1,6 +1,6 @@
 use super::*;
 use crate::chat_attachment_load::AttachmentLoadError;
-use crate::chat_attachment_load::{attachment_media_type, is_attachable, load_attachment};
+use crate::chat_attachment_load::{is_attachable, known_media_type, load_attachment};
 use std::path::{Path, PathBuf};
 
 fn att(name: &str, media: &str, data: &[u8]) -> ChatAttachment {
@@ -96,9 +96,9 @@ fn attachable_types_and_media_types() {
     assert!(is_attachable(Path::new("a.json")));
     assert!(!is_attachable(Path::new("a.de")));
     assert!(!is_attachable(Path::new("noext")));
-    assert_eq!(attachment_media_type(Path::new("a.jpeg")), "image/jpeg");
-    assert_eq!(attachment_media_type(Path::new("a.svg")), "image/svg+xml");
-    assert_eq!(attachment_media_type(Path::new("a.txt")), "text/plain");
+    assert_eq!(known_media_type(Path::new("a.jpeg")), Some("image/jpeg"));
+    assert_eq!(known_media_type(Path::new("a.svg")), Some("image/svg+xml"));
+    assert_eq!(known_media_type(Path::new("a.txt")), Some("text/plain"));
 }
 
 #[test]

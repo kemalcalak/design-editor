@@ -190,17 +190,16 @@ impl DesktopApp {
             self.host.mark_editor_state_dirty();
             self.request_redraw(true);
         }
-        // An image can land INSIDE a node, so from here on the drag
-        // position is polled every frame to ring the node under it
-        // (`new_events`); winit reports no cursor moves during a drag.
-        if image_drop_host::is_supported_image_drop(path) {
-            self.hovered_image_drop = true;
-            if self.refresh_image_drop_hover() {
-                // Repaint only: the ring lives in `editor_ui`, so
-                // marking the document dirty here would rebuild the
-                // whole layout scene on every pointer move.
-                self.request_redraw(true);
-            }
+        // From here on the drag position is polled every frame
+        // (`new_events`; winit reports no cursor moves during a drag): over
+        // the chat the file would become an attachment, and an image can
+        // land INSIDE a node, which gets a ring.
+        self.hovered_file_drop = Some(image_drop_host::is_supported_image_drop(path));
+        if self.refresh_image_drop_hover() {
+            // Repaint only: the ring and the chat indicator live in UI
+            // state, so marking the document dirty here would rebuild the
+            // whole layout scene on every pointer move.
+            self.request_redraw(true);
         }
     }
 
@@ -229,10 +228,10 @@ impl DesktopApp {
         self.request_redraw(true);
         // A file dropped on the chat panel is a chat attachment (#398), not
         // a canvas import: images and text files are staged on the active
-        // chat (anything else is refused there with a toast).
+        // chat (anything else is refused there with a toast), read on a
+        // worker thread.
         if drop_point.is_some_and(|(x, y)| self.host.chat_panel_contains(x, y)) {
-            crate::chat_attachment::stage_attachment_file(&mut self.host, &path);
-            self.request_redraw(true);
+            self.attachment_loads.start(path);
             return;
         }
         if image_drop_host::is_supported_image_drop(&path) {

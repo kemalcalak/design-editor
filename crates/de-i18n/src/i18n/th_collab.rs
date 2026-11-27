@@ -592,9 +592,10 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.context.selection" => "ส่วนที่เลือก",
         "chat.context.attachment" => "ไฟล์แนบ",
         "chat.attach.unsupported" => "แนบ {{name}} ไม่ได้: รองรับเฉพาะรูปภาพและไฟล์ข้อความ",
-        "chat.attach.tooLarge" => "{{name}} ใหญ่เกินขีดจำกัดไฟล์แนบ 5 MB",
+        "chat.attach.tooLarge" => "{{name}} ใหญ่เกินขีดจำกัดไฟล์แนบ {{size}} MB",
         "chat.attach.readFailed" => "อ่าน {{name}} ไม่ได้",
-        "chat.attach.full" => "แนบไฟล์ได้สูงสุด 4 ไฟล์ต่อข้อความ",
+        "chat.attach.full" => "แนบไฟล์ได้สูงสุด {{count}} ไฟล์ต่อข้อความ",
+        "chat.attach.dropHint" => "วางเพื่อแนบในแชต",
         _ => return None,
     })
 }

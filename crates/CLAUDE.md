@@ -1042,11 +1042,20 @@ CLI side (`crates/de-cli/src/agent_*.rs`, dispatched in `main` before the generi
   document, selection, mentions and attachments (`chat_context::chat_context_rows`,
   built only while the panel is open), each staged item with a ✕.
 - Attachments: the "+" menu's Attach row opens a picker for images and
-  text files, a file dropped on the chat panel is staged instead of imported
-  (`chat_attachment::stage_attachment_file`; refusals are Warn toasts:
-  `chat.attach.unsupported` / `tooLarge` / `readFailed` / `full`), and a
-  pasted image is staged as before. Reading and the size / type rules are
-  `de_host_services::chat_attachment_load`. At launch
+  text files, a file dropped on the chat panel is staged instead of imported,
+  and a paste stages copied files (the clipboard's file list wins over its
+  text and icon image), a pasted image, or a pasted absolute path /
+  `file://` URL to an attachable file. Files are read on worker threads
+  (desktop `chat_attachment::AttachmentLoads`, drained per redraw) and
+  staged on the active chat; refusals are Warn toasts
+  (`chat.attach.unsupported` / `tooLarge {{size}}` / `readFailed` / `full
+  {{count}}`, limits passed as placeholders). While a file is dragged over
+  the chat, `ChatSessions::file_drop_hover` swaps the canvas drop overlay
+  for the chat's own indicator (`file_drop_overlay::paint_chat_drop_indicator`).
+  Reading, the `is_file` check and the size rule are
+  `de_host_services::chat_attachment_load`, whose `ATTACHMENT_TYPES` is the
+  one extension → MIME table (picker filters and
+  `chat_attachment::media_type_for_path` read it). At launch
   (`chat_session_launch_context::compose_turn_text`, which also resolves the
   mentions) `chat_attachment_prepare::prepare_turn_attachments` keeps raster
   images as attachments when the model sees images (`model_sees_images`: CLI

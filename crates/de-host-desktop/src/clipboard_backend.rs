@@ -21,6 +21,10 @@ pub(crate) trait ClipboardBackend {
     fn get_text(&mut self) -> Result<String, Error>;
     fn get_html(&mut self) -> Result<String, Error>;
     fn get_image(&mut self) -> Result<ImageData<'static>, Error>;
+    /// Files copied in a file manager (none on a backend without them).
+    fn get_file_list(&mut self) -> Result<Vec<std::path::PathBuf>, Error> {
+        Err(Error::ContentNotAvailable)
+    }
     fn set_text(&mut self, text: &str) -> Result<(), Error>;
     fn set_image(&mut self, image: ImageData<'static>) -> Result<(), Error>;
     /// HTML with no plain-text flavour, kept out of clipboard history.
@@ -43,6 +47,10 @@ impl ClipboardBackend for arboard::Clipboard {
 
     fn get_image(&mut self) -> Result<ImageData<'static>, Error> {
         arboard::Clipboard::get_image(self)
+    }
+
+    fn get_file_list(&mut self) -> Result<Vec<std::path::PathBuf>, Error> {
+        self.get().file_list()
     }
 
     fn set_text(&mut self, text: &str) -> Result<(), Error> {
@@ -125,6 +133,18 @@ fn flavour<T>(result: Result<T, Error>, handle_failed: &mut bool) -> Option<T> {
 pub(crate) fn read_text_paste(clipboard: &mut impl ClipboardBackend) -> Read<Option<String>> {
     let mut handle_failed = false;
     let value = flavour(clipboard.get_text(), &mut handle_failed);
+    Read {
+        value,
+        handle_failed,
+    }
+}
+
+/// Files copied in a file manager, for a chat paste (#398).
+pub(crate) fn read_file_paste(
+    clipboard: &mut impl ClipboardBackend,
+) -> Read<Vec<std::path::PathBuf>> {
+    let mut handle_failed = false;
+    let value = flavour(clipboard.get_file_list(), &mut handle_failed).unwrap_or_default();
     Read {
         value,
         handle_failed,
