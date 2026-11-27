@@ -137,6 +137,9 @@ impl WidgetHostNative {
     pub(in crate::widget_host) fn note_viewport_gesture(&mut self) {
         self.interaction_hot_until_ms = self.now_ms.saturating_add(INTERACTION_HOT_MS);
         self.last_gesture_was_zoom = false;
+        // A pan is use too: the idle memory trim must not land mid-scroll
+        // (#456). A pan does not `mark_dirty`, so it notes it here.
+        self.memory_idle.note_activity(self.now_ms);
     }
 
     /// Record a live canvas ZOOM gesture tick. Same degrade window as
@@ -146,6 +149,7 @@ impl WidgetHostNative {
     pub(in crate::widget_host) fn note_viewport_zoom_gesture(&mut self) {
         self.interaction_hot_until_ms = self.now_ms.saturating_add(INTERACTION_HOT_MS);
         self.last_gesture_was_zoom = true;
+        self.memory_idle.note_activity(self.now_ms);
     }
 
     /// Whether the current frame should paint in interactive-degrade
