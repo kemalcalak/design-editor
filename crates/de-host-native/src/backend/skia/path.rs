@@ -764,3 +764,29 @@ fn color_key(c: Color) -> u32 {
     }
     (ch(c.r) << 24) | (ch(c.g) << 16) | (ch(c.b) << 8) | ch(c.a)
 }
+
+impl NativeBackend {
+    /// Parsed SVG paths: `(entries, d-string bytes, byte budget)` (#456).
+    pub(super) fn svg_path_cache_usage(&self) -> (usize, usize, usize) {
+        (
+            self.svg_path_cache.len(),
+            self.svg_path_cache_bytes,
+            SVG_PATH_CACHE_BYTE_BUDGET,
+        )
+    }
+
+    /// Rasterized SVG paths: `(entries, raster bytes)` (#456).
+    pub(super) fn svg_raster_cache_usage(&self) -> (usize, usize) {
+        let bytes = self
+            .svg_raster_cache
+            .values()
+            .map(|entry| raster_bytes(&entry.image))
+            .sum();
+        (self.svg_raster_cache.len(), bytes)
+    }
+}
+
+/// Four bytes per pixel of a raster image.
+pub(super) fn raster_bytes(image: &skia_safe::Image) -> usize {
+    (image.width().max(0) as usize) * (image.height().max(0) as usize) * 4
+}
