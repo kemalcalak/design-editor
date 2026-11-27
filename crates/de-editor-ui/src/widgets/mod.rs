@@ -421,9 +421,9 @@ pub mod deck_boards;
 pub(crate) mod design_md_line_cache;
 pub mod design_md_markdown;
 pub mod design_md_panel;
-mod design_md_wrap;
 #[cfg(test)]
 mod design_md_panel_tests;
+mod design_md_wrap;
 pub mod editor_toast;
 pub mod editor_toast_flow;
 #[cfg(test)]
@@ -462,7 +462,6 @@ pub mod icon_picker_panel;
 pub mod ime_preedit_overlay;
 pub mod import_menu;
 mod line_break;
-mod text_input_measured;
 pub mod locale_picker;
 pub mod marquee_flow;
 pub(crate) mod menu_paint;
@@ -484,6 +483,7 @@ pub mod slides_panel_actions;
 pub mod slides_panel_flow;
 pub mod slideshow_toolbar;
 pub mod status_bar;
+mod text_input_measured;
 pub mod tooltip;
 pub mod update_modal;
 pub mod variables_panel;
