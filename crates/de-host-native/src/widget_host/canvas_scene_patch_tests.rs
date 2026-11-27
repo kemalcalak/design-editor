@@ -89,10 +89,10 @@ fn shape_doc(node: &str) -> String {
     format!(r#"{{"version":"1.0.0","children":[{node}]}}"#)
 }
 
-/// A smoothed box or a rounded polygon paints an outline built for its
-/// box, so it rebuilds; plain rounded corners and sharp polygons patch.
+/// Every box shape patches: a smoothed box or a rounded polygon gets its
+/// outline rebuilt alone for the new box instead of a scene rebuild.
 #[test]
-fn corner_outlines_rebuild_and_plain_corners_patch() {
+fn corner_outlines_patch_like_plain_corners() {
     let mut host = WidgetHostNative::new();
     let id = NodeId::new("s");
     for (node, safe) in [
@@ -102,7 +102,7 @@ fn corner_outlines_rebuild_and_plain_corners_patch() {
         ),
         (
             r#"{"type":"rectangle","id":"s","width":80,"height":60,"cornerRadius":12,"cornerSmoothing":0.6}"#,
-            false,
+            true,
         ),
         (
             r#"{"type":"rectangle","id":"s","width":80,"height":60,"cornerSmoothing":0.6}"#,
@@ -110,7 +110,7 @@ fn corner_outlines_rebuild_and_plain_corners_patch() {
         ),
         (
             r#"{"type":"frame","id":"s","width":80,"height":60,"cornerRadius":[0,8,0,0],"cornerSmoothing":1}"#,
-            false,
+            true,
         ),
         (
             r#"{"type":"polygon","id":"s","width":80,"height":60,"polygonCount":5}"#,
@@ -118,7 +118,7 @@ fn corner_outlines_rebuild_and_plain_corners_patch() {
         ),
         (
             r#"{"type":"polygon","id":"s","width":80,"height":60,"polygonCount":5,"cornerRadius":6}"#,
-            false,
+            true,
         ),
     ] {
         seed(&mut host, &shape_doc(node));
@@ -127,7 +127,7 @@ fn corner_outlines_rebuild_and_plain_corners_patch() {
 }
 
 /// While a smoothed rect is resized, the outline the canvas paints
-/// follows the box on every frame.
+/// follows the box on every frame, through the cheap patch.
 #[test]
 fn a_smoothed_rect_outline_follows_a_live_resize() {
     let mut host = WidgetHostNative::new();
@@ -141,6 +141,7 @@ fn a_smoothed_rect_outline_follows_a_live_resize() {
     start_resize(&mut host);
     for (cursor_x, width) in [(520.0, 140.0), (540.0, 160.0)] {
         assert!(host.apply_cursor_move(cursor_x, 500.0));
+        assert!(!host.editor_state_dirty, "patched, not rebuilt");
         let scene = host.layout_scene();
         let rect = scene
             .active_page()
@@ -154,4 +155,32 @@ fn a_smoothed_rect_outline_follows_a_live_resize() {
             outline.bounds
         );
     }
+}
+
+/// The outline a patch rebuilds is the one a full scene build makes.
+#[test]
+fn a_patched_outline_matches_a_rebuilt_one() {
+    let mut host = WidgetHostNative::new();
+    let star = r##"{"type":"polygon","id":"l","x":100,"y":80,"width":120,"height":40,
+        "polygonCount":5,"innerRadius":0.5,"cornerRadius":6,"cornerSmoothing":0.4,
+        "stroke":{"thickness":4,"align":"inside","fill":[{"type":"solid","color":"#000000"}]}}"##;
+    seed(&mut host, &shape_doc(star));
+    start_resize(&mut host);
+    assert!(host.apply_cursor_move(540.0, 500.0));
+    let patched = host
+        .layout_scene()
+        .active_page()
+        .and_then(|page| page.find("l"))
+        .and_then(|n| n.corner_path.clone())
+        .expect("patched outline");
+    host.invalidate_live_scene_for_rebuild();
+    host.refresh_layout_scene();
+    let rebuilt = host
+        .layout_scene()
+        .active_page()
+        .and_then(|page| page.find("l"))
+        .and_then(|n| n.corner_path.clone())
+        .expect("rebuilt outline");
+    assert_eq!(patched.d, rebuilt.d);
+    assert_eq!(patched.bounds, rebuilt.bounds);
 }

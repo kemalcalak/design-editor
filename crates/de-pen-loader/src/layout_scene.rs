@@ -43,6 +43,7 @@ use crate::editor_scene::editor_state_to_layout_scene;
 
 mod boolean;
 mod corner_path;
+pub use corner_path::rebuild_box_corner_path;
 mod gradient;
 pub(crate) use boolean::KIND_PREFIX as BOOLEAN_KIND_PREFIX;
 mod stroke;

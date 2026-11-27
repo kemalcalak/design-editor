@@ -91,10 +91,11 @@ impl WidgetHostNative {
 /// Whether the scene holds more for `node` than its box, built from the
 /// box at scene build time, so moving the box alone would leave it stale
 /// (#389): a line's stroke end geometry (arrowheads, the trimmed centre
-/// line) is node-local and fitted to the box, a line drawn right to left
-/// or bottom to top keeps its direction beside the box, and a smoothed
-/// rect / frame or a rounded polygon paints an outline built for its box.
-/// Ends that only repeat the cap build no geometry, so they patch.
+/// line) is node-local and fitted to the box, and a line drawn right to
+/// left or bottom to top keeps its direction beside the box. Ends that
+/// only repeat the cap build no geometry, so they patch. A smoothed rect /
+/// frame or a rounded polygon patches too: `patch_node_bounds` rebuilds
+/// its outline alone for the new box.
 fn box_shaped_scene_data(node: &jian_ops_schema::node::PenNode) -> bool {
     use jian_ops_schema::node::PenNode;
     match node {
@@ -110,28 +111,7 @@ fn box_shaped_scene_data(node: &jian_ops_schema::node::PenNode) -> bool {
             let reversed = line.x2.is_some_and(|x| x < 0.0) || line.y2.is_some_and(|y| y < 0.0);
             ends || reversed
         }
-        PenNode::Rectangle(_) | PenNode::Frame(_) => {
-            de_editor_core::command_node_attrs::corners::node_corner_smoothing(node)
-                .is_some_and(|s| s > 0.0)
-                && node_has_radius(node)
-        }
-        PenNode::Polygon(polygon) => polygon.corner_radius.is_some_and(|r| r > 0.0),
         _ => false,
-    }
-}
-
-/// Whether any corner of a rect / frame is rounded.
-fn node_has_radius(node: &jian_ops_schema::node::PenNode) -> bool {
-    use jian_ops_schema::node::{CornerRadius, PenNode};
-    let radius = match node {
-        PenNode::Rectangle(n) => n.container.corner_radius.as_ref(),
-        PenNode::Frame(n) => n.container.corner_radius.as_ref(),
-        _ => None,
-    };
-    match radius {
-        Some(CornerRadius::Uniform(r)) => *r > 0.0,
-        Some(CornerRadius::PerCorner(r)) => r.iter().any(|r| *r > 0.0),
-        None => false,
     }
 }
 
@@ -152,6 +132,9 @@ fn patch_node_bounds(nodes: &mut [SceneNode], id: &str, bounds: Rect) -> bool {
             node.bounds = bounds;
             node.aggregate_bounds_cache =
                 SceneNode::compute_aggregate_bounds(bounds, &node.children);
+            // A smoothed box or rounded polygon's outline is built for its
+            // box: rebuild this node's alone (`None` for the rest).
+            node.corner_path = de_pen_loader::rebuild_box_corner_path(node);
             return true;
         }
         if patch_node_bounds(&mut node.children, id, bounds) {
