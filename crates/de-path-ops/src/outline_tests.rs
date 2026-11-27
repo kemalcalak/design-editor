@@ -106,3 +106,51 @@ fn a_group_outline_is_the_union_of_its_children() {
     let path = node_outline(&g).unwrap();
     assert_eq!(coverage(&path, 30, 10), 200);
 }
+
+/// A scene corner outline (#389) built the way the loader builds one.
+fn corner_path(d: String) -> Option<std::sync::Arc<jian_scene::layout_scene::SceneCornerPath>> {
+    Some(std::sync::Arc::new(
+        jian_scene::layout_scene::SceneCornerPath {
+            d,
+            ..Default::default()
+        },
+    ))
+}
+
+#[test]
+fn smoothed_and_rounded_outlines_replace_the_plain_shape() {
+    use de_editor_core::corner_geometry::{outline_path_data, polygon_outline, rect_outline};
+    // A smoothed square at (10, 10): the corner is cut deeper than the
+    // circular one, so it covers less than the plain rounded square.
+    let mut r = node(NodeKind::Rect, 10.0, 10.0, 40.0, 40.0);
+    r.corner_radius = 10.0;
+    let plain = coverage(&node_outline(&r).unwrap(), 60, 60) as f32;
+    let smooth = rect_outline(40.0, 40.0, [10.0; 4], 1.0).unwrap();
+    r.corner_path = corner_path(outline_path_data(&[smooth]));
+    let path = node_outline(&r).unwrap();
+    assert!(covered(&path, 30.0, 30.0));
+    assert!(!covered(&path, 11.0, 11.0));
+    let px = coverage(&path, 60, 60) as f32;
+    assert!(px < plain && px > 1400.0, "{px} vs {plain}");
+    // A rounded triangle loses its sharp tips.
+    let mut p = node(NodeKind::Polygon, 0.0, 0.0, 40.0, 40.0);
+    p.polygon_sides = 3;
+    p.corner_radius = 6.0;
+    let sharp = coverage(&node_outline(&p).unwrap(), 40, 40);
+    let tri: Vec<(f64, f64)> = polygon_points(Rect::xywh(0.0, 0.0, 40.0, 40.0), 3, None)
+        .iter()
+        .map(|q| (f64::from(q.x), f64::from(q.y)))
+        .collect();
+    p.corner_path = corner_path(outline_path_data(&[
+        polygon_outline(&tri, 6.0, 0.0).unwrap()
+    ]));
+    let rounded_path = node_outline(&p).unwrap();
+    let rounded = coverage(&rounded_path, 40, 40);
+    // Three 60° corners at r = 6 each lose r²·(cot 30° − π/3) ≈ 24.7 px.
+    assert!(
+        (sharp - rounded) as f32 > 60.0 && (sharp - rounded) < 90,
+        "{rounded} vs {sharp}"
+    );
+    let apex = tri[0];
+    assert!(!covered(&rounded_path, apex.0 as f32, apex.1 as f32 + 0.5));
+}

@@ -222,6 +222,10 @@ pub struct NodeSnapshot {
     /// Canonical TL/TR/BR/BL radii for the per-corner editor.
     pub corner_radii: [f32; 4],
     pub supports_per_corner: bool,
+    /// Corner smoothing (`0..=1`, #389) for the kinds with a radius row
+    /// that store it (frame, rectangle, polygon, path) once a corner is
+    /// rounded; `None` otherwise.
+    pub corner_smoothing: Option<f32>,
     /// Polygon side count, only present for Polygon selections (a
     /// star's point count).
     pub polygon_sides: Option<u32>,

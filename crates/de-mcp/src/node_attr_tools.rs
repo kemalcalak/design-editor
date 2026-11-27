@@ -78,43 +78,7 @@ pub fn set_node_text_snapshot() -> SetNodeText {
     SetNodeText
 }
 
-/// First-party `set_node_corner_radius` tool — write the corner radius
-/// (doc-px). Rejects negative values + nan/inf.
-pub struct SetNodeCornerRadius;
-
-impl McpTool for SetNodeCornerRadius {
-    fn name(&self) -> &str {
-        "set_node_corner_radius"
-    }
-    fn call(&self, args: &BTreeMap<String, String>) -> ToolOutcome {
-        let node_id = match parse_node_id(args, "node_id") {
-            Ok(v) => v,
-            Err(e) => return e,
-        };
-        let Some(raw_r) = args.get("radius") else {
-            return ToolOutcome::Err(
-                ToolErrorCode::MissingArgument,
-                "radius is required (non-negative f32 doc-px)".into(),
-            );
-        };
-        let radius: f32 = match raw_r.parse::<f32>() {
-            Ok(r) if r.is_finite() && r >= 0.0 => r,
-            _ => {
-                return ToolOutcome::Err(
-                    ToolErrorCode::InvalidArgument,
-                    format!("radius must be a non-negative finite f32, got {raw_r:?}"),
-                );
-            }
-        };
-        let mut out = BTreeMap::new();
-        out.insert("wrote".into(), "true".into());
-        ToolOutcome::OkWithCommand(out, EditorCommand::SetNodeCornerRadius { node_id, radius })
-    }
-}
-
-pub fn set_node_corner_radius_snapshot() -> SetNodeCornerRadius {
-    SetNodeCornerRadius
-}
+pub use super::node_attr_corners::{set_node_corner_radius_snapshot, SetNodeCornerRadius};
 
 /// First-party `set_node_font_size` tool — write `font_size` (doc-px)
 /// on a Text-kind node.

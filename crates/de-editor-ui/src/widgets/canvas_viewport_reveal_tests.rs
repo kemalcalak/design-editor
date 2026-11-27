@@ -9,6 +9,7 @@ struct RevealCaptureBackend {
     ops: Vec<String>,
     scales: usize,
     strokes: usize,
+    round_strokes: usize,
     translations: Vec<Point2D>,
 }
 
@@ -42,6 +43,7 @@ impl RenderBackend for RevealCaptureBackend {
     fn fill_round_rect(&mut self, _: Rect, _: f32, _: Color) {}
     fn stroke_round_rect(&mut self, _: Rect, _: f32, _: Color, _: f32) {
         self.strokes += 1;
+        self.round_strokes += 1;
     }
     fn stroke_svg_path(&mut self, _: &str, _: Point2D, _: f32, _: Color, _: f32) {}
     fn resize(&mut self, _: u32, _: u32) {}
@@ -276,4 +278,19 @@ fn delayed_child_pops_alone_after_parent_settles() {
         "child pops on its own independent window"
     );
     assert!(backend.ops.contains(&"fill(10,10)".to_string()));
+}
+
+#[test]
+fn the_wireframe_ghost_rounds_box_corners_not_path_vertices() {
+    // A path's corner_radius is its vertex radius (#389): the ghost box
+    // stays square. A rect's rounds the ghost.
+    for (kind, rounded) in [(NodeKind::Path, false), (NodeKind::Rect, true)] {
+        let mut node = SceneNode::leaf("c", kind.clone());
+        node.bounds = Rect::xywh(10.0, 10.0, 50.0, 30.0);
+        node.corner_radius = 8.0;
+        let reveals = HashMap::from([("c".to_string(), 1_000)]);
+        let backend = paint_with_reveals(&node, &reveals, 1_010);
+        assert_eq!(backend.strokes, 1, "{kind:?}: the ghost outline");
+        assert_eq!(backend.round_strokes, usize::from(rounded), "{kind:?}");
+    }
 }

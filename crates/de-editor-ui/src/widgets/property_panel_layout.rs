@@ -308,6 +308,20 @@ pub fn action_button_rects_with_fill_picker(
             crate::widgets::property_panel_corner::uniform_and_toggle_rects(x0, radius_row_y, w).1,
         ));
     }
+    if visible.corner_smoothing_row_h() > 0.0 {
+        let grid = if visible.corner_grid_expanded() {
+            crate::widgets::property_panel_corner::CORNER_GRID_EXTRA_HEIGHT
+        } else {
+            0.0
+        };
+        let row = crate::widgets::property_panel_corner_smoothing::row_rects(
+            x0,
+            radius_row_y + INPUT_HEIGHT + grid,
+            w,
+        );
+        // The press value comes from the pointer (`hit.rs`).
+        out.push((PropertyPanelAction::SetCornerSmoothing(0.0), row.slider));
+    }
 
     if visible.flex_layout {
         crate::widgets::property_panel_flex::push_flex_action_rects(

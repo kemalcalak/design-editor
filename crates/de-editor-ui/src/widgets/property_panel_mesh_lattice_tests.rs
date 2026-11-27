@@ -83,6 +83,7 @@ fn press(state: &mut EditorState, edit: MeshLatticeEdit) {
             resolved_sizing_fallback: None,
             image_adjustment_drag: &mut image_adjustment_drag,
             effect_radius_drag: &mut effect_radius_drag,
+            corner_smoothing_drag: &mut false,
         },
     );
     if state.snapshot_for_history() != before {

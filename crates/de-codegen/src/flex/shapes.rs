@@ -7,6 +7,7 @@
 use super::paint::fills_of;
 use super::value::{color_alpha, round2};
 use crate::{fmt_num, html_escape, node_stroke};
+use de_editor_core::corner_geometry;
 use jian_ops_schema::node::{LineNode, PathNode, PenNode, PenPathAnchor, PolygonNode};
 use jian_ops_schema::style::{PenFill, StrokeThickness};
 
@@ -97,7 +98,27 @@ pub(crate) fn anchors_d(anchors: &[PenPathAnchor], closed: bool) -> String {
 }
 
 /// `(viewBox, inner markup)` for a path node, or `None` without geometry.
-pub(crate) fn path_svg(node: &PenNode, p: &PathNode) -> Option<(String, String)> {
+/// `size` is the node's literal box, which a rounded path (#389) needs.
+pub(crate) fn path_svg(
+    node: &PenNode,
+    p: &PathNode,
+    size: Option<(f64, f64)>,
+) -> Option<(String, String)> {
+    let rule = match p.fill_rule {
+        Some(jian_ops_schema::node::PathFillRule::Evenodd) => " fill-rule=\"evenodd\"",
+        _ => "",
+    };
+    let markup = |d: &str| {
+        format!(
+            "<path d=\"{}\" fill=\"{}\"{rule}{}/>",
+            html_escape(d),
+            html_escape(&svg_fill(node)),
+            svg_stroke(node)
+        )
+    };
+    if let Some((view_box, d)) = rounded_path(p, size) {
+        return Some((view_box, markup(&d)));
+    }
     let (d, (x, y, w, h)) = if let Some(d) = p.d.as_deref().filter(|d| !d.trim().is_empty()) {
         let (x, y, w, h) = de_editor_core::svg_path_data_bounds(d)?;
         (
@@ -112,40 +133,41 @@ pub(crate) fn path_svg(node: &PenNode, p: &PathNode) -> Option<(String, String)>
             de_editor_core::path_bounds::path_bounds_from_anchors(anchors, closed),
         )
     };
-    let rule = match p.fill_rule {
-        Some(jian_ops_schema::node::PathFillRule::Evenodd) => " fill-rule=\"evenodd\"",
-        _ => "",
-    };
     Some((
         format!("{} {} {} {}", n(x), n(y), n(w.max(1.0)), n(h.max(1.0))),
-        format!(
-            "<path d=\"{}\" fill=\"{}\"{rule}{}/>",
-            html_escape(&d),
-            html_escape(&svg_fill(node)),
-            svg_stroke(node)
-        ),
+        markup(&d),
     ))
 }
 
-/// `(viewBox, inner markup)` for a regular polygon or star in a 100×100 box.
-pub(crate) fn polygon_svg(node: &PenNode, p: &PolygonNode) -> (String, String) {
-    let count = p.polygon_count.max(3) as usize;
-    let inner = p.inner_radius.filter(|r| *r > 0.0 && *r < 1.0);
-    let steps = if inner.is_some() { count * 2 } else { count };
-    let points: Vec<String> = (0..steps)
-        .map(|i| {
-            let angle =
-                -std::f64::consts::FRAC_PI_2 + std::f64::consts::TAU * i as f64 / steps as f64;
-            let r = match inner {
-                Some(ir) if i % 2 == 1 => ir,
-                _ => 1.0,
-            };
-            format!(
-                "{},{}",
-                n(50.0 + 50.0 * r * angle.cos()),
-                n(50.0 + 50.0 * r * angle.sin())
-            )
-        })
+/// The vertices of a polygon or star fitted into `w × h`: jian's
+/// `polygon_points`, the geometry the canvas paints (a star's tips touch
+/// every edge).
+fn polygon_vertices(p: &PolygonNode, w: f64, h: f64) -> Vec<(f64, f64)> {
+    let inner = p.inner_radius.map(|r| r as f32).filter(|r| r.is_finite());
+    jian_scene::layout_scene::polygon_points(
+        de_editor_core::render_backend::Rect::xywh(0.0, 0.0, w as f32, h as f32),
+        p.polygon_count,
+        inner,
+    )
+    .iter()
+    .map(|pt| (f64::from(pt.x), f64::from(pt.y)))
+    .collect()
+}
+
+/// `(viewBox, inner markup)` for a regular polygon or star in a 100×100 box,
+/// or, rounded (#389), its outline in the node's own px so the radius is
+/// not stretched with the box.
+pub(crate) fn polygon_svg(
+    node: &PenNode,
+    p: &PolygonNode,
+    size: Option<(f64, f64)>,
+) -> (String, String) {
+    if let Some(rounded) = rounded_polygon_svg(node, p, size) {
+        return rounded;
+    }
+    let points: Vec<String> = polygon_vertices(p, 100.0, 100.0)
+        .iter()
+        .map(|(x, y)| format!("{},{}", n(*x), n(*y)))
         .collect();
     (
         "0 0 100 100".into(),
@@ -156,6 +178,69 @@ pub(crate) fn polygon_svg(node: &PenNode, p: &PolygonNode) -> (String, String) {
             svg_stroke(node)
         ),
     )
+}
+
+/// A polygon or star with a corner radius as its rounded (and smoothed)
+/// outline, the editor's own geometry (`corner_geometry`), in node px.
+fn rounded_polygon_svg(
+    node: &PenNode,
+    p: &PolygonNode,
+    size: Option<(f64, f64)>,
+) -> Option<(String, String)> {
+    let radius = p.corner_radius.filter(|r| r.is_finite() && *r > 0.0)?;
+    let (w, h) = size.filter(|(w, h)| *w > 0.0 && *h > 0.0)?;
+    let points = polygon_vertices(p, w, h);
+    let smoothing = p.corner_smoothing.unwrap_or(0.0);
+    let outline = corner_geometry::polygon_outline(&points, radius, smoothing)?;
+    let d = corner_geometry::outline_path_data(&[outline]);
+    Some((
+        format!("0 0 {} {}", n(w), n(h)),
+        format!(
+            "<path d=\"{}\" fill=\"{}\"{}/>",
+            html_escape(&d),
+            html_escape(&svg_fill(node)),
+            svg_stroke(node)
+        ),
+    ))
+}
+
+/// A path with a `vertexRadius` (#389) as `(viewBox, d)` in node px: like
+/// the canvas, the geometry is fitted to the node's box first and then
+/// rounded, so a stretched path keeps the radius it shows in the editor.
+/// A path without a fixed size (`fill_container` / hug) keeps its own
+/// bounds as the box. `None` without a radius or parseable geometry.
+fn rounded_path(p: &PathNode, size: Option<(f64, f64)>) -> Option<(String, String)> {
+    use de_editor_core::vector_edit::{
+        fit_subpaths_to_box, parse_path_data, subpaths_bounds, Subpath,
+    };
+    let radius = p.vertex_radius.filter(|r| r.is_finite() && *r > 0.0)?;
+    // `d` first, then the anchors, as the scene builder reads them.
+    let mut subs = match p.d.as_deref().filter(|d| !d.trim().is_empty()) {
+        Some(d) => parse_path_data(d)?,
+        None => vec![Subpath {
+            anchors: p.anchors.clone().filter(|a| !a.is_empty())?,
+            closed: p.closed.unwrap_or(false),
+        }],
+    };
+    let own = || {
+        let (_, _, bw, bh) = subpaths_bounds(&subs);
+        (bw, bh)
+    };
+    let (w, h) = size
+        .filter(|(w, h)| *w > 0.0 && *h > 0.0)
+        .unwrap_or_else(own);
+    if !(w.is_finite() && h.is_finite() && w > 0.0 && h > 0.0) {
+        return None;
+    }
+    fit_subpaths_to_box(&mut subs, w, h);
+    let smoothing = p.corner_smoothing.unwrap_or(0.0);
+    for sub in &mut subs {
+        *sub = corner_geometry::round_corners(sub, &vec![radius; sub.anchors.len()], smoothing);
+    }
+    Some((
+        format!("0 0 {} {}", n(w), n(h)),
+        corner_geometry::outline_path_data(&subs),
+    ))
 }
 
 /// `(width, height, viewBox, inner markup)` for a line: `x2` / `y2` are the
@@ -196,5 +281,19 @@ mod tests {
         let a = [anchor(0.0, 0.0), anchor(10.0, 0.0), anchor(10.0, 10.0)];
         assert_eq!(anchors_d(&a, true), "M0 0 L10 0 L10 10 L0 0 Z");
         assert_eq!(anchors_d(&a, false), "M0 0 L10 0 L10 10");
+    }
+
+    #[test]
+    fn a_path_without_a_fixed_size_still_rounds_in_its_own_bounds() {
+        let path: PathNode = serde_json::from_value(serde_json::json!({
+            "id": "p", "d": "M10 10 L110 10 L110 60", "vertexRadius": 8
+        }))
+        .unwrap();
+        let (view_box, d) = rounded_path(&path, None).expect("rounded outline");
+        assert_eq!(view_box, "0 0 100 50");
+        // The sharp vertex became a curve.
+        assert!(d.contains('C') || d.contains('A'), "{d}");
+        let sized = rounded_path(&path, Some((200.0, 100.0))).expect("sized");
+        assert_eq!(sized.0, "0 0 200 100");
     }
 }

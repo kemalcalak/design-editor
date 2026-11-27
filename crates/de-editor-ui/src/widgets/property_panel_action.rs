@@ -172,6 +172,8 @@ pub enum PropertyPanelAction {
     /// Auto layout Wrap checkbox (horizontal layout, #379).
     ToggleLayoutWrap,
     ToggleCornerExpand,
+    /// Corner smoothing slider press / drag step, in percent (#389).
+    SetCornerSmoothing(f32),
     SetFillRule(jian_ops_schema::node::path::PathFillRule),
     /// Open or close one of the Layer / Fill compositing dropdowns.
     ToggleCompositingPicker(CompositingTarget),

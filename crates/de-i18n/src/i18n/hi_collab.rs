@@ -580,6 +580,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "stroke.endReversedTriangle" => "उल्टा त्रिभुज",
         "stroke.endCircle" => "वृत्त",
         "stroke.endDiamond" => "हीरा",
+        "property.cornerSmoothing" => "चिकनाई",
         _ => return None,
     })
 }

@@ -131,6 +131,7 @@ fn batchable(cmd: &EditorCommand) -> bool {
         | C::SetNodeRotation { .. }
         | C::SetNodeText { .. }
         | C::SetNodeCornerRadius { .. }
+        | C::SetNodeCorners { .. }
         | C::SetNodeFontSize { .. }
         | C::SetNodeFontWeight { .. }
         | C::SetNodeStrokeHex { .. }
