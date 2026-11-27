@@ -125,6 +125,18 @@ pub fn shared_snapshot(
     state: &mut EditorState,
     anchor: Option<&SharedDoc>,
 ) -> SharedRequestSnapshot {
+    shared_snapshot_pages(state, anchor, None)
+}
+
+/// [`shared_snapshot`] of the pages `keep` marks (`None`: every page),
+/// from [`crate::request_snapshot_pages::kept_pages`] (#456). The other
+/// pages keep their metadata and carry no nodes, so neither the compare
+/// pass here nor the consumer's copy walks them.
+pub fn shared_snapshot_pages(
+    state: &mut EditorState,
+    anchor: Option<&SharedDoc>,
+    keep: Option<&[bool]>,
+) -> SharedRequestSnapshot {
     let anchor = anchor.or_else(|| {
         state
             .history
@@ -133,7 +145,10 @@ pub fn shared_snapshot(
             .or_else(|| state.history.past.back())
             .map(|snapshot| &snapshot.doc)
     });
-    let doc = SharedDoc::capture_parallel(&state.doc, anchor);
+    let doc = match keep {
+        Some(keep) => SharedDoc::capture_parallel_pages(&state.doc, anchor, keep),
+        None => SharedDoc::capture_parallel(&state.doc, anchor),
+    };
     // Clone the rest of the state around a children-stripped stand-in so
     // the node tree is not copied a second time; same straight-line
     // take/clone/restore as `narrowed_snapshot`.

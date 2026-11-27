@@ -709,7 +709,8 @@ pub fn get_component_snapshot(state: &EditorState) -> GetComponent {
 
 // The remaining read tools live in `read_tools.rs` (800-line cap).
 pub use super::read_tools::{
-    find_empty_space_snapshot, snapshot_layout_snapshot, FindEmptySpace, SnapshotLayout,
+    find_empty_space_shared, find_empty_space_snapshot, snapshot_layout_shared,
+    snapshot_layout_snapshot, FindEmptySpace, SnapshotLayout,
 };
 pub use super::read_tools_extra::{
     count_nodes_snapshot, find_node_by_name_snapshot, get_canvas_bounds_snapshot,

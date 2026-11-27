@@ -46,17 +46,25 @@ impl DesktopApp {
     pub(super) fn on_redraw_requested(&mut self, event_loop: &ActiveEventLoop) -> bool {
         crate::prompt_center_store::flush_user_prompts_if_dirty(&mut self.host);
         // The chat's `@` / `/` popup (#398) follows the draft before this
-        // frame paints; opening it rescans the document's folder for files
-        // (`@`) or the skill folders (`/`).
+        // frame paints; opening it lists the document's folder (`@`) or the
+        // skill folders (`/`) on a worker thread.
         let project_root = self
             .current_path
             .as_deref()
             .and_then(std::path::Path::parent);
         if self.host.sync_chat_mentions(
             project_root,
-            &de_host_services::chat_mention_context::scan_project_files,
-            &de_host_services::chat_skill_context::scan_chat_skills,
+            &mut self.mention_files,
+            &mut self.chat_skills,
         ) {
+            self.redraw_dirty = true;
+        }
+        // Chat attachments read on a worker land here.
+        if self.attachment_loads.drain(&mut self.host) {
+            self.redraw_dirty = true;
+        }
+        // Files staged as mentions are read on a worker before the send.
+        if self.mention_reads.sync(self.host.editor_state_mut()) {
             self.redraw_dirty = true;
         }
         if (self.ctx.is_none() || self.backend.is_none())

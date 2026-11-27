@@ -11,7 +11,6 @@ use de_editor_ui::widgets::host_canvas_geometry as canvas_geometry;
 use de_editor_ui::widgets::{
     ChatResizeEdge, AI_CHAT_MAX_RATIO, AI_CHAT_MIN_HEIGHT, AI_CHAT_MIN_WIDTH,
 };
-use de_editor_ui::Rect;
 
 impl WidgetHostNative {
     /// A live rail-resize drag owns the cursor outright. `None` — no
@@ -101,38 +100,9 @@ impl WidgetHostNative {
             self.finish_live_bounds_update(new_bounds, patch_scene);
             return Some(true);
         }
-        if let Some(drag) = self.create_drag {
-            if self.editor_state.tool.keeps_default_size() {
-                // A note keeps the size it was dropped at.
-                return Some(true);
-            }
-            let patch_scene = self.prepare_live_bounds_update();
+        if self.create_drag.is_some() {
             let cur = canvas_geometry::canvas_doc_point_unclamped(&self.editor_state, x, y);
-            let min_x = drag.start_doc_x.min(cur.x);
-            let min_y = drag.start_doc_y.min(cur.y);
-            // Text needs room for placeholder glyphs.
-            let (min_w, min_h) = match self.editor_state.tool {
-                de_editor_core::Tool::Text => (
-                    de_editor_core::DEFAULT_TEXT_NODE_WIDTH as f32,
-                    de_editor_core::DEFAULT_TEXT_NODE_HEIGHT as f32,
-                ),
-                _ => (1.0_f32, 1.0_f32),
-            };
-            let w = (drag.start_doc_x - cur.x).abs().max(min_w);
-            let h = (drag.start_doc_y - cur.y).abs().max(min_h);
-            let mut new_bounds = Rect::xywh(min_x, min_y, w, h);
-            if self.editor_state.pixel_snap_active() {
-                let (x, y, w, h) = de_editor_core::pixel_grid::snap_rect_edges(
-                    f64::from(min_x),
-                    f64::from(min_y),
-                    f64::from(w),
-                    f64::from(h),
-                );
-                new_bounds = Rect::xywh(x as f32, y as f32, w as f32, h as f32);
-            }
-            self.editor_state
-                .set_selected_bounds(rect_to_doc_rect(new_bounds));
-            self.finish_live_bounds_update(new_bounds, patch_scene);
+            self.apply_create_drag(cur);
             return Some(true);
         }
         // Path-anchor / handle drag — TS `movePathControl` semantics

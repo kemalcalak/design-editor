@@ -165,7 +165,7 @@ mod tests {
         state.selection.set.push(NodeId::new("hero"));
         state.chat.pending_mentions.push(ChatMention {
             kind: MentionKind::Page,
-            key: "1".into(),
+            key: "p2".into(),
             label: "Settings".into(),
         });
         state.chat.pending_attachments.push(ChatAttachment {

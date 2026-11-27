@@ -15,6 +15,7 @@ use std::path::{Path, PathBuf};
 use std::time::Instant;
 
 use crate::import_html_url::import_html_url_snapshot;
+use de_editor_core::shared_state::{SharedState, TakenState};
 use de_editor_core::{EditorCommand, EditorState};
 use de_mcp::import_html_tool::import_html_snapshot;
 use de_mcp::import_pen_dev_tool::import_pen_dev_snapshot;
@@ -22,46 +23,45 @@ use de_mcp::import_pptx_tool::import_pptx_snapshot;
 use de_mcp::import_snapshot_tool::import_web_snapshot_tool;
 use de_mcp::{
     add_library_snapshot, add_node_effect_snapshot, add_page_snapshot, align_selected_snapshot,
-    apply_design_system_snapshot, batch_design_snapshot, batch_get_snapshot,
-    clear_selection_snapshot, codegen_assemble_snapshot, codegen_clean_snapshot,
-    codegen_export_snapshot, codegen_plan_snapshot, codegen_submit_chunk_snapshot,
-    conversion_status_snapshot, copy_node_snapshot, copy_selected_snapshot, count_nodes_snapshot,
-    create_component_snapshot, create_variable_snapshot, cut_selected_snapshot,
-    cycle_active_axis_value_snapshot, debug_tools_enabled, delete_component_snapshot,
-    delete_node_snapshot, delete_page_snapshot, delete_selected_snapshot, delete_variable_snapshot,
-    design_content_snapshot, design_refine_snapshot, design_skeleton_snapshot,
-    document_info_snapshot, duplicate_page_snapshot, duplicate_selected_snapshot,
-    export_design_md_snapshot, find_empty_space_snapshot, find_node_by_name_snapshot,
-    get_active_theme_snapshot, get_canvas_bounds_snapshot, get_component_snapshot,
-    get_design_agent_prompt_snapshot, get_design_md_snapshot, get_design_prompt_snapshot,
-    get_editor_state_snapshot, get_guidelines_snapshot, get_history_depth_snapshot,
-    get_node_children_snapshot, get_node_parent_snapshot, get_node_snapshot,
-    get_selection_set_snapshot, get_style_guide_snapshot, get_style_guide_tags_snapshot,
-    get_variables_snapshot, get_viewport_snapshot, group_selected_snapshot, import_svg_snapshot,
-    instantiate_component_snapshot, lint_document_snapshot, list_components_snapshot,
-    list_libraries_snapshot, list_node_kinds_snapshot, list_pages_snapshot,
-    list_style_guides_snapshot, list_theme_presets_snapshot, list_ui_kits_snapshot,
-    list_variables_snapshot, load_theme_preset_snapshot, move_node_snapshot,
-    nudge_selected_snapshot, open_document_snapshot, paste_clipboard_snapshot, read_nodes_snapshot,
-    redo_snapshot, remove_library_snapshot, remove_node_effect_snapshot, remove_page_snapshot,
-    rename_component_snapshot, rename_page_snapshot, rename_variable_snapshot,
-    reorder_page_snapshot, reorder_selected_snapshot, replace_all_matching_properties_snapshot,
-    replace_node_snapshot, run_stdio_with_applier, save_document_snapshot_to,
-    save_theme_preset_snapshot, search_all_unique_properties_snapshot, selection_snapshot,
-    set_active_axis_value_snapshot, set_active_page_snapshot, set_active_tool_snapshot,
-    set_design_md_snapshot, set_ellipse_arc_snapshot, set_node_collapsed_snapshot,
-    set_node_corner_radius_snapshot, set_node_fill_hex_snapshot, set_node_flip_snapshot,
-    set_node_font_size_snapshot, set_node_font_weight_snapshot, set_node_hidden_snapshot,
-    set_node_locked_snapshot, set_node_name_snapshot, set_node_rotation_snapshot,
-    set_node_stroke_hex_snapshot, set_node_stroke_side_width_snapshot,
-    set_node_stroke_style_snapshot, set_node_stroke_width_snapshot, set_node_text_snapshot,
-    set_selection_set_snapshot, set_selection_snapshot, set_shader_source_snapshot,
-    set_shader_uniform_snapshot, set_themes_snapshot, set_variable_boolean_snapshot,
-    set_variable_color_snapshot, set_variable_number_snapshot, set_variable_string_snapshot,
-    set_variables_snapshot, set_viewport_snapshot, snapshot_layout_snapshot, spawn_agents_snapshot,
-    toggle_node_selection_snapshot, tool_search_snapshot, undo_snapshot, ungroup_selected_snapshot,
-    upsert_component_snapshot, upsert_screen_snapshot, upsert_variables_snapshot, McpTool,
-    ToolRegistry,
+    apply_design_system_snapshot, clear_selection_snapshot, codegen_assemble_snapshot,
+    codegen_clean_snapshot, codegen_export_snapshot, codegen_plan_snapshot,
+    codegen_submit_chunk_snapshot, conversion_status_snapshot, copy_node_snapshot,
+    copy_selected_snapshot, count_nodes_snapshot, create_component_snapshot,
+    create_variable_snapshot, cut_selected_snapshot, cycle_active_axis_value_snapshot,
+    debug_tools_enabled, delete_component_snapshot, delete_node_snapshot, delete_page_snapshot,
+    delete_selected_snapshot, delete_variable_snapshot, design_content_snapshot,
+    design_refine_snapshot, design_skeleton_snapshot, document_info_snapshot,
+    duplicate_page_snapshot, duplicate_selected_snapshot, export_design_md_snapshot,
+    find_node_by_name_snapshot, get_active_theme_snapshot, get_canvas_bounds_snapshot,
+    get_component_snapshot, get_design_agent_prompt_snapshot, get_design_md_snapshot,
+    get_design_prompt_snapshot, get_editor_state_snapshot, get_guidelines_snapshot,
+    get_history_depth_snapshot, get_node_children_snapshot, get_node_parent_snapshot,
+    get_node_snapshot, get_selection_set_snapshot, get_style_guide_snapshot,
+    get_style_guide_tags_snapshot, get_variables_snapshot, get_viewport_snapshot,
+    group_selected_snapshot, import_svg_snapshot, instantiate_component_snapshot,
+    lint_document_snapshot, list_components_snapshot, list_libraries_snapshot,
+    list_node_kinds_snapshot, list_pages_snapshot, list_style_guides_snapshot,
+    list_theme_presets_snapshot, list_ui_kits_snapshot, list_variables_snapshot,
+    load_theme_preset_snapshot, move_node_snapshot, nudge_selected_snapshot,
+    open_document_snapshot, paste_clipboard_snapshot, redo_snapshot, remove_library_snapshot,
+    remove_node_effect_snapshot, remove_page_snapshot, rename_component_snapshot,
+    rename_page_snapshot, rename_variable_snapshot, reorder_page_snapshot,
+    reorder_selected_snapshot, replace_all_matching_properties_snapshot, replace_node_snapshot,
+    run_stdio_with_applier, save_document_snapshot_to, save_theme_preset_snapshot,
+    search_all_unique_properties_snapshot, selection_snapshot, set_active_axis_value_snapshot,
+    set_active_page_snapshot, set_active_tool_snapshot, set_design_md_snapshot,
+    set_ellipse_arc_snapshot, set_node_collapsed_snapshot, set_node_corner_radius_snapshot,
+    set_node_fill_hex_snapshot, set_node_flip_snapshot, set_node_font_size_snapshot,
+    set_node_font_weight_snapshot, set_node_hidden_snapshot, set_node_locked_snapshot,
+    set_node_name_snapshot, set_node_rotation_snapshot, set_node_stroke_hex_snapshot,
+    set_node_stroke_side_width_snapshot, set_node_stroke_style_snapshot,
+    set_node_stroke_width_snapshot, set_node_text_snapshot, set_selection_set_snapshot,
+    set_selection_snapshot, set_shader_source_snapshot, set_shader_uniform_snapshot,
+    set_themes_snapshot, set_variable_boolean_snapshot, set_variable_color_snapshot,
+    set_variable_number_snapshot, set_variable_string_snapshot, set_variables_snapshot,
+    set_viewport_snapshot, spawn_agents_snapshot, toggle_node_selection_snapshot,
+    tool_search_snapshot, undo_snapshot, ungroup_selected_snapshot, upsert_component_snapshot,
+    upsert_screen_snapshot, upsert_variables_snapshot, McpTool, ToolRegistry,
 };
 #[cfg(feature = "mcp-debug-tools")]
 use de_mcp::{
@@ -230,19 +230,9 @@ fn mcp_response_succeeded(response: &str) -> bool {
         != Some(true)
 }
 
-/// One MCP write as the host should apply it.
-pub struct McpWrite<'a> {
-    /// The command to apply: the tool's own, or its root-placed form (#37).
-    pub command: &'a EditorCommand,
-    /// The tool's own command when `command` is the placed form. Placement
-    /// names the new roots by the ids the insert will mint on the state it
-    /// was computed against, so a host whose document may have moved on
-    /// since (the live UI thread) applies this instead when the revision
-    /// differs: an unplaced insert, never a move of somebody else's node.
-    pub unplaced: Option<&'a EditorCommand>,
-    /// `document_revision()` of the state placement was computed against.
-    pub revision: u64,
-}
+// Split out at the 800-line cap; the path stays `mcp_serve::McpWrite`.
+mod mcp_write;
+pub use mcp_write::McpWrite;
 
 /// [`process_message_with_write_applier`] for hosts that apply against the
 /// same state the call was dispatched on, so the placed command is always
@@ -263,6 +253,34 @@ where
 pub fn process_message_with_write_applier<F>(
     state: &mut EditorState,
     line: &str,
+    apply: F,
+) -> Result<Option<String>, McpServeError>
+where
+    F: FnMut(&str, &mut EditorState, &McpWrite) -> bool,
+{
+    dispatch_message(state, line, false, apply)
+}
+
+/// [`process_message_with_write_applier`] for a read a live host answers
+/// from a narrowed snapshot (#456). The host refuses any write the call
+/// makes and runs it again on the whole document, so `execute` renders and
+/// exports here only when its script writes nothing: the full run does it
+/// otherwise, once.
+pub(crate) fn process_narrowed_read<F>(
+    state: &mut EditorState,
+    line: &str,
+    apply: F,
+) -> Result<Option<String>, McpServeError>
+where
+    F: FnMut(&str, &mut EditorState, &McpWrite) -> bool,
+{
+    dispatch_message(state, line, true, apply)
+}
+
+fn dispatch_message<F>(
+    state: &mut EditorState,
+    line: &str,
+    narrowed_read: bool,
     mut apply: F,
 ) -> Result<Option<String>, McpServeError>
 where
@@ -301,22 +319,37 @@ where
         .filter(|call| call.tool == "save_document")
         .and_then(|call| call.arguments.get("filePath"))
         .map(String::as_str);
-    let registry = rebuild_registry(state, requested_tool.as_deref(), save_target);
+    // The tools share the request's state instead of each copying it
+    // (#456): a read costs no copy, and a write copies at most once, the
+    // first time the applier changes a state a tool still holds. The guard
+    // puts the state back when it drops, also while a panicking tool
+    // unwinds, so `state` is never left hollow.
+    let mut shared = TakenState::new(state);
+    let registry = rebuild_registry(
+        &shared,
+        requested_tool.as_deref(),
+        save_target,
+        narrowed_read,
+    );
     let response = process_tool_message_with_registry(&registry, line, |tool_name, cmd| {
         // New page roots land in free canvas space, in front (#37). Placing
         // here, before the host applier runs, gives every transport the
         // same command to apply.
-        let revision = state.document_revision();
+        let revision = shared.document_revision();
         let placed = call.as_ref().and_then(|call| {
-            de_mcp::root_placement::place_new_roots(state, tool_name, &call.arguments, cmd)
+            de_mcp::root_placement::place_new_roots(&mut shared, tool_name, &call.arguments, cmd)
         });
         let write = McpWrite {
             command: placed.as_ref().unwrap_or(cmd),
             unplaced: placed.is_some().then_some(cmd),
             revision,
         };
-        apply(tool_name, state, &write)
-    })?;
+        apply(tool_name, &mut shared, &write)
+    });
+    // The registry's handles go first, so the state moves back uncopied.
+    drop(registry);
+    drop(shared);
+    let response = response?;
     if requested_tool.as_deref() == Some("save_document") {
         preview_hook::after_save_document(response.as_deref());
     }
@@ -690,7 +723,6 @@ use browser_tool::browser_tool_snapshot;
 pub(crate) mod export_tool;
 use export_tool::export_nodes_snapshot;
 pub(crate) mod execute_tool;
-use execute_tool::execute_snapshot;
 
 pub(crate) mod export_item_tool;
 use export_item_tool::export_item_snapshot;

@@ -102,6 +102,16 @@ fn launch_if_pending_inner(
     current_chat: &mut Option<ChatSession>,
     current_design: &mut Option<DesignSession>,
 ) -> bool {
+    // Files and skills staged as mentions (#398) are read on a worker; the
+    // send waits for them rather than reading the disk here
+    // (`MentionFileReader`).
+    let chat = &host.editor_state().chat;
+    if chat.pending_send.is_some()
+        && (chat.project_files.reading_any(&chat.pending_mentions)
+            || chat.skills.reading_any(&chat.pending_mentions))
+    {
+        return false;
+    }
     let Some(user_text) = host.editor_state_mut().chat.pending_send.take() else {
         return false;
     };
@@ -137,7 +147,13 @@ fn launch_if_pending_inner(
         // CLI transport construction failed — fall through to the
         // honest-error path below.
     } else if should_launch_direct_modify(host.editor_state(), &routing_text) {
-        if launch_direct_modify_turn(host, &effective_user_text, current_chat, current_design) {
+        if launch_direct_modify_turn(
+            host,
+            &routing_text,
+            &effective_user_text,
+            current_chat,
+            current_design,
+        ) {
             return true;
         }
     } else if !de_host_services::chat_intent::is_non_request_text(&routing_text)
@@ -330,6 +346,12 @@ fn launch_if_pending_inner(
     true
 }
 
+/// The `@`-mention context block `user_text` carries after `routing_text`
+/// (empty when there is none).
+fn mention_suffix<'a>(routing_text: &str, user_text: &'a str) -> &'a str {
+    user_text.strip_prefix(routing_text).unwrap_or("")
+}
+
 fn resolve_turn_user_text(state: &EditorState, user_text: &str) -> String {
     let history = trim_chat_history(
         &chat_history_from_transcript(&state.chat.messages),
@@ -396,8 +418,12 @@ fn should_launch_direct_modify(state: &EditorState, user_text: &str) -> bool {
         && de_host_services::chat_intent::build_modify_plan(state, user_text).is_some()
 }
 
+/// Run a direct modify turn. The plan (target pick, context nodes) is built
+/// from `routing_text` alone; the `@`-mention context `user_text` adds is
+/// appended to the plan's message once.
 fn launch_direct_modify_turn(
     host: &mut WidgetHostNative,
+    routing_text: &str,
     user_text: &str,
     current_chat: &mut Option<ChatSession>,
     current_design: &mut Option<DesignSession>,
@@ -406,14 +432,14 @@ fn launch_direct_modify_turn(
         return false;
     };
     let Some(plan) =
-        de_host_services::chat_intent::build_modify_plan(host.editor_state(), user_text)
+        de_host_services::chat_intent::build_modify_plan(host.editor_state(), routing_text)
     else {
         return false;
     };
     let target_frame_ids = plan.target_frame_ids;
     let request = ChatRequest {
         system_prompt: plan.system_prompt,
-        user_message: plan.user_message,
+        user_message: plan.user_message + mention_suffix(routing_text, user_text),
         max_output_tokens: 8192,
         model: selected_cli_model_id(host),
         // Structured-JSON turn: reasoning models (MiniMax-M3, GLM-5.x)
@@ -508,7 +534,7 @@ fn launch_cli_standard_turn(
         DEFAULT_MAX_CHARS,
     );
     let system_prompt = build_chat_system_prompt(state, routing_text);
-    let modify_plan = de_host_services::chat_intent::build_modify_plan(state, user_text);
+    let modify_plan = de_host_services::chat_intent::build_modify_plan(state, routing_text);
     let append_context = de_host_services::chat_intent::detect_append_intent(state, routing_text);
     let (design_request, initial_state) =
         prepare_design_request_and_snapshot(host, user_text.to_string(), append_context);
@@ -544,7 +570,7 @@ fn launch_cli_standard_turn(
     // history, no attachments, provider-default thinking.
     let modify_request = modify_plan.map(|plan| ChatRequest {
         system_prompt: plan.system_prompt,
-        user_message: plan.user_message,
+        user_message: plan.user_message + mention_suffix(routing_text, user_text),
         max_output_tokens: 8192,
         model: model.clone(),
         ..Default::default()
@@ -572,7 +598,9 @@ fn launch_cli_standard_turn(
     ));
 
     let plan = de_host_services::chat_intent::CliTurnPlan {
-        user_text: user_text.to_string(),
+        // The classifier routes on what the user typed, never on the
+        // mention context.
+        user_text: routing_text.to_string(),
         page_children_empty,
         classify_provider,
         chat_provider,

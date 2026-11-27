@@ -8,7 +8,6 @@ use crate::common::{
     resolve_height, resolve_width, round2, round3, ConversionContext, FigLayoutMode, IconStyle,
     SKIPPED_TYPES,
 };
-use crate::corner_geometry::smoothed_rect_path;
 use crate::figma_types::FigVec2;
 use crate::instance::{apply_instance_overrides_memoized, merge_symbol_props};
 use crate::kiwi::FigValue;
@@ -131,6 +130,7 @@ fn build_container(
         apply_layout(l, &mut container);
     }
     container.corner_radius = map_corner_radius(figma);
+    container.corner_smoothing = corner_smoothing(figma);
     container.fill = map_figma_fills(figma.get_array("fillPaints"))
         .or_else(|| map_figma_fills(figma.get_array("backgroundPaints")));
     container.stroke = map_figma_stroke(figma);
@@ -338,39 +338,12 @@ fn convert_rectangle(
     let id = ctx.generate_id();
     let figma = &tree.figma;
     let corner_radius = map_corner_radius(figma);
-    let smoothing = map_corner_smoothing(figma);
-    if smoothing > 0.0 {
-        let size = figma.get("size");
-        let width_px = size.and_then(|value| value.get_f64("x")).unwrap_or(0.0);
-        let height_px = size.and_then(|value| value.get_f64("y")).unwrap_or(0.0);
-        let radii = match corner_radius.as_ref() {
-            Some(jian_ops_schema::node::container::CornerRadius::Uniform(radius)) => {
-                Some([*radius; 4])
-            }
-            Some(jian_ops_schema::node::container::CornerRadius::PerCorner(radii)) => Some(*radii),
-            None => None,
-        };
-        if let Some(path_d) =
-            radii.and_then(|radii| smoothed_rect_path(width_px, height_px, radii, smoothing))
-        {
-            return path_node(
-                common_props(figma, id),
-                Some(path_d),
-                None,
-                None,
-                resolve_width(figma, parent_stack_mode, ctx),
-                resolve_height(figma, parent_stack_mode, ctx),
-                map_figma_fills(figma.get_array("fillPaints")),
-                map_figma_stroke(figma),
-                map_figma_effects(figma.get_array("effects")),
-                figma_path_mask(figma),
-            );
-        }
-    }
     let container = ContainerProps {
         width: Some(resolve_width(figma, parent_stack_mode, ctx)),
         height: Some(resolve_height(figma, parent_stack_mode, ctx)),
         corner_radius,
+        // Figma's squircle is native (#389): the editor draws it.
+        corner_smoothing: corner_smoothing(figma),
         fill: map_figma_fills(figma.get_array("fillPaints")),
         stroke: map_figma_stroke(figma),
         effects: map_figma_effects(figma.get_array("effects")),
@@ -782,3 +755,8 @@ mod tests_instance_scale;
 mod tests_instance_swap;
 #[cfg(test)]
 mod tests_vector_regressions;
+
+/// A node's `cornerSmoothing` when it smooths anything (#389).
+fn corner_smoothing(figma: &FigValue) -> Option<f64> {
+    Some(map_corner_smoothing(figma)).filter(|s| *s > 0.0)
+}

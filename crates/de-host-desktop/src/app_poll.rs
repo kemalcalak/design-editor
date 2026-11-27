@@ -234,6 +234,11 @@ impl DesktopApp {
             self.launch_chat_if_pending();
             should_paint = true;
         }
+        // A send that waited for a staged file's read (#398) goes out once
+        // the read landed.
+        if self.host.editor_state().chat.pending_send.is_some() && self.launch_chat_if_pending() {
+            should_paint = true;
+        }
         should_paint
     }
 }

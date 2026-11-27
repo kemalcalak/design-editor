@@ -154,7 +154,7 @@ impl<'a> HtmlImportDiagnosticsPanel<'a> {
 
     pub fn toggle_rect(&self, panel: Rect) -> Rect {
         let label = translate(self.ui, self.toggle_key());
-        let width = crate::widgets::missing_fonts_panel::fit_button_width(label, 12.0);
+        let width = crate::widgets::chrome_buttons::fit_button_width(label, 12.0);
         Rect {
             origin: Point2D::new(
                 panel.origin.x + HORIZONTAL_PAD,
@@ -166,7 +166,7 @@ impl<'a> HtmlImportDiagnosticsPanel<'a> {
 
     pub fn dismiss_rect(&self, panel: Rect) -> Rect {
         let label = translate(self.ui, "htmlImport.diagnostics.dismiss");
-        let width = crate::widgets::missing_fonts_panel::fit_button_width(label, 12.0);
+        let width = crate::widgets::chrome_buttons::fit_button_width(label, 12.0);
         Rect {
             origin: Point2D::new(
                 panel.origin.x + panel.size.x - HORIZONTAL_PAD - width,
@@ -311,7 +311,7 @@ fn paint_text(
 ) {
     let layout = TextLayout::single_run(
         text,
-        "system-ui",
+        text_metrics::CHROME_FONT_FAMILY,
         font_size,
         color.to_jian(),
         Point2D::new(0.0, 0.0),
@@ -369,6 +369,14 @@ impl Widget for HtmlImportDiagnosticsPanel<'_> {
     }
 
     fn paint(&self, cx: &mut PaintCx<'_>, panel: Rect) {
+        crate::widgets::chrome_buttons::measure_button_labels(
+            cx.backend,
+            12.0,
+            &[
+                translate(self.ui, self.toggle_key()),
+                translate(self.ui, "htmlImport.diagnostics.dismiss"),
+            ],
+        );
         cx.backend.fill_round_rect(panel, 12.0, self.theme.card);
         cx.backend
             .stroke_round_rect(panel, 12.0, self.theme.border, 1.0);

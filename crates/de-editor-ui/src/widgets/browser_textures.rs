@@ -66,6 +66,15 @@ fn registry() -> MutexGuard<'static, Registry> {
         .unwrap_or_else(|e| e.into_inner())
 }
 
+/// Browser pages the registry keeps a picture for (#456): still snapshots
+/// plus live streams. The pixels sit in the backend's image cache, so the
+/// line counts entries only.
+pub fn memory_usage() -> de_editor_core::memory_report::CacheUsage {
+    let registry = registry();
+    let entries = registry.ready.len() + registry.live.len();
+    de_editor_core::memory_report::CacheUsage::exact("browser_pages", 0, entries as u64, None)
+}
+
 /// Paint side: the editor canvas starts painting the page; what it notes
 /// from here on replaces the previous frame's visible set. A `partial`
 /// repaint (pan-cache strips and tiles, animated regions) only adds to it.

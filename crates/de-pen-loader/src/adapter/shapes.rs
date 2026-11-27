@@ -13,6 +13,7 @@ pub(super) fn frame_to_payload(n: &FrameNode, _rects: &BTreeMap<String, [f32; 4]
         n.container.stroke.as_ref(),
         n.container.corner_radius.as_ref(),
     );
+    p.corner_smoothing = smoothing_of(n.container.corner_smoothing);
     let child_text_center = text_child_center_context(&n.base, &n.container, _rects);
     p.children = n
         .children
@@ -33,6 +34,7 @@ pub(super) fn group_to_payload(n: &GroupNode, _rects: &BTreeMap<String, [f32; 4]
         n.container.stroke.as_ref(),
         n.container.corner_radius.as_ref(),
     );
+    p.corner_smoothing = smoothing_of(n.container.corner_smoothing);
     let child_text_center = text_child_center_context(&n.base, &n.container, _rects);
     p.children = n
         .children
@@ -56,6 +58,7 @@ pub(super) fn rect_to_payload(
         n.container.stroke.as_ref(),
         n.container.corner_radius.as_ref(),
     );
+    p.corner_smoothing = smoothing_of(n.container.corner_smoothing);
     let child_text_center = text_child_center_context(&n.base, &n.container, _rects);
     p.children = n
         .children
@@ -65,6 +68,11 @@ pub(super) fn rect_to_payload(
         .map(|c| node_to_payload_with_text_context(c, _rects, child_text_center))
         .collect();
     p
+}
+
+/// A schema `cornerSmoothing` as the payload's `0..=1` factor.
+fn smoothing_of(value: Option<f64>) -> f32 {
+    de_editor_core::corner_geometry::clamp_smoothing(value.unwrap_or(0.0)) as f32
 }
 
 fn text_child_center_context(
@@ -174,6 +182,7 @@ pub(super) fn polygon_to_payload(n: &PolygonNode) -> NodePayload {
     assign_first_fill(&mut p, n.fill.as_deref());
     p.stroke = stroke_to_payload(n.stroke.as_ref());
     p.corner_radius = n.corner_radius.unwrap_or(0.0) as f32;
+    p.corner_smoothing = smoothing_of(n.corner_smoothing);
     p.polygon_sides = n.polygon_count.clamp(3, 100);
     // A star rides the ellipse's inner-radius slot (#87): the scene has no
     // polygon-specific field and the polygon painters read it from here.
@@ -202,6 +211,13 @@ pub(super) fn path_to_payload(n: &PathNode) -> NodePayload {
     assign_first_fill(&mut p, n.fill.as_deref());
     p.stroke = stroke_to_payload(n.stroke.as_ref());
     p.svg_path = n.d.clone();
+    // Rounded vertices (#389): the scene builder rounds the outline.
+    p.corner_radius = n
+        .vertex_radius
+        .filter(|r| r.is_finite())
+        .unwrap_or(0.0)
+        .max(0.0) as f32;
+    p.corner_smoothing = smoothing_of(n.corner_smoothing);
     if let Some(anchors) = &n.anchors {
         // `points` is the path's anchor polyline — kept 1:1 with the
         // schema anchors so the pen-tool anchor hit-test (which maps a

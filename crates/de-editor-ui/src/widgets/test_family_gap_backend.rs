@@ -1,7 +1,7 @@
 //! Test-only `RenderBackend` whose named-family measurement is 40% wider
 //! than its family-blind one — the shape of the real native gap, where
-//! `measure_text` resolves the bundled Roboto but a `system-ui` run paints
-//! as `.AppleSystemUIFont` (SF Pro).
+//! `measure_text` resolves the bundled Roboto but a named run paints in
+//! its own face.
 //!
 //! Every other test backend measures blind and family-aware identically, so
 //! a widget that fits / centres / sizes against `RenderBackend::measure_text`
@@ -12,7 +12,17 @@
 //!
 //! The cross-panel guard in `text_metrics_paint_tests` is the intended
 //! consumer — assert every captured run fits the column it was painted into.
+//!
+//! [`FamilyGapBackend::chrome_strict`] goes further (#441). There every face
+//! differs the way real faces do: a named family other than the chrome one
+//! is wider in Latin, Cyrillic and CJK alike, Cyrillic is narrower than a
+//! full em in either, and a heavier weight is wider than a lighter one. Every
+//! family-aware measurement is recorded with its family and weight
+//! ([`FamilyGapBackend::measured`]), so a surface that measures a label in
+//! one family or weight and paints it in another both spills its box and is
+//! caught naming the two.
 
+use crate::widgets::text_metrics::CHROME_FONT_FAMILY;
 use crate::{Color, Point2D, Rect, RenderBackend, TextLayout};
 
 /// Advance as a fraction of font size for the backend's *default* typeface —
@@ -24,24 +34,102 @@ const BLIND_ASCII_RATIO: f32 = 0.55;
 /// Same, for any *named* family — what `draw_text` will actually paint.
 /// Deliberately 40% wider, the shape of the Roboto → SF Pro gap.
 const FAMILY_ASCII_RATIO: f32 = 0.77;
-/// Non-ASCII advances are ~1em, and they are the SAME in both faces on
-/// purpose: a CJK / Cyrillic / Devanagari glyph resolves through the same
-/// system fallback whichever Latin family the run names, so there is no gap
-/// to model there. The Roboto → SF Pro gap is a Latin-advance phenomenon,
-/// and inflating non-Latin here would manufacture failures no machine shows.
+/// Non-ASCII advances outside [`FamilyGapBackend::chrome_strict`] are ~1em
+/// and the SAME in every face: those backends model the Latin-advance gap
+/// between the default face and a named one, and inflating non-Latin there
+/// would manufacture failures the cross-panel guard was not built for.
 const WIDE_RATIO: f32 = 1.0;
 
-fn width(text: &str, font_size: f32, ascii_ratio: f32) -> f32 {
-    text.chars()
-        .map(|c| {
-            font_size
-                * if c.is_ascii() {
-                    ascii_ratio
-                } else {
-                    WIDE_RATIO
-                }
-        })
-        .sum()
+/// Per-script advances of one face in [`FamilyGapBackend::chrome_strict`].
+#[derive(Debug, Clone, Copy)]
+struct ScriptAdvances {
+    /// ASCII and the Latin supplements (é, ı, ş, ã …).
+    latin: f32,
+    /// Cyrillic (and Greek).
+    cyrillic: f32,
+    /// CJK, kana and Hangul — full-width glyphs.
+    wide: f32,
+}
+
+/// The chrome face in the strict machine.
+const STRICT_CHROME: ScriptAdvances = ScriptAdvances {
+    latin: FAMILY_ASCII_RATIO,
+    cyrillic: 0.7,
+    wide: 1.0,
+};
+/// Every other named face in the strict machine: wider in every script, so a
+/// run painted in one family and fitted in the other cannot land in the
+/// right box whichever language it is in.
+const STRICT_FOREIGN: ScriptAdvances = ScriptAdvances {
+    latin: 0.95,
+    cyrillic: 0.85,
+    wide: 1.1,
+};
+/// Extra advance per 100 weight units above regular (400) in the strict
+/// machine: a 600 run is 8% wider than the same text at 400.
+const WEIGHT_STEP: f32 = 0.04;
+
+/// Width model of one backend: blind, uniform, default, or strict.
+#[derive(Debug, Clone, Copy)]
+struct Faces {
+    /// Latin advance of a named family outside the strict machine.
+    family_ascii_ratio: f32,
+    /// Whether families, scripts and weights are told apart (#441).
+    strict: bool,
+}
+
+impl Faces {
+    fn width(&self, text: &str, font_size: f32, family: &str, weight: u16) -> f32 {
+        if family.is_empty() {
+            return text
+                .chars()
+                .map(|c| {
+                    font_size
+                        * if c.is_ascii() {
+                            BLIND_ASCII_RATIO
+                        } else {
+                            WIDE_RATIO
+                        }
+                })
+                .sum();
+        }
+        if !self.strict {
+            return text
+                .chars()
+                .map(|c| {
+                    font_size
+                        * if c.is_ascii() {
+                            self.family_ascii_ratio
+                        } else {
+                            WIDE_RATIO
+                        }
+                })
+                .sum();
+        }
+        let face = if family == CHROME_FONT_FAMILY {
+            STRICT_CHROME
+        } else {
+            STRICT_FOREIGN
+        };
+        let weight_factor = 1.0 + f32::from(weight.saturating_sub(400)) / 100.0 * WEIGHT_STEP;
+        text.chars()
+            .map(|c| {
+                let advance = match c as u32 {
+                    0x00..=0x024F => face.latin,
+                    0x0370..=0x04FF => face.cyrillic,
+                    0x1100..=0x115F
+                    | 0x2E80..=0xA4CF
+                    | 0xAC00..=0xD7A3
+                    | 0xF900..=0xFAFF
+                    | 0xFF00..=0xFF60 => face.wide,
+                    // Thai, Devanagari and the rest resolve through the
+                    // same system fallback whichever family a run names.
+                    _ => WIDE_RATIO,
+                };
+                font_size * advance * weight_factor
+            })
+            .sum()
+    }
 }
 
 /// One `draw_text` call, with everything needed to re-measure it the way it
@@ -51,9 +139,6 @@ pub(crate) struct PaintedRun {
     pub(crate) text: String,
     pub(crate) family: String,
     pub(crate) font_size: f32,
-    /// Captured so a future guard can measure a weighted run in its own
-    /// face; the width model here is weight-independent.
-    #[allow(dead_code)]
     pub(crate) font_weight: u16,
     /// Origin passed to `draw_text` — x is the run's left edge.
     pub(crate) origin: Point2D,
@@ -61,19 +146,16 @@ pub(crate) struct PaintedRun {
     /// than this is SHEARED on screen — glyphs cut mid-stroke with no
     /// ellipsis, which is the exact symptom this whole guard exists for.
     pub(crate) clip: Option<Rect>,
-    /// Advance ratio the painting backend charges a named family.
-    painted_ascii_ratio: f32,
+    /// The painting backend's width model.
+    faces: Faces,
 }
 
 impl PaintedRun {
-    /// Width this run occupies on screen, measured in the family it names.
+    /// Width this run occupies on screen, measured in the family and weight
+    /// it names.
     pub(crate) fn width_in_paint_family(&self) -> f32 {
-        let ratio = if self.family.is_empty() {
-            BLIND_ASCII_RATIO
-        } else {
-            self.painted_ascii_ratio
-        };
-        width(&self.text, self.font_size, ratio)
+        self.faces
+            .width(&self.text, self.font_size, &self.family, self.font_weight)
     }
 
     /// Right edge of the painted run.
@@ -93,27 +175,40 @@ impl PaintedRun {
     }
 }
 
+/// One family-aware measurement: the text and the family and weight it was
+/// asked in.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct MeasuredRun {
+    pub(crate) text: String,
+    pub(crate) family: String,
+    pub(crate) weight: u16,
+}
+
 pub(crate) struct FamilyGapBackend {
     /// Every `draw_text`, in paint order.
     pub(crate) runs: Vec<PaintedRun>,
+    /// Every measurement, in call order (the family-blind ones are recorded
+    /// with an empty family).
+    pub(crate) measured: Vec<MeasuredRun>,
     /// Every `fill_rect`, in paint order (a text input's caret is one).
     pub(crate) rect_fills: Vec<Rect>,
     /// Live clip stack — `save` / `restore` / `clip_rect` are modelled so a
     /// run's recorded clip is the one actually in effect when it was drawn.
     clip_stack: Vec<Option<Rect>>,
-    /// Advance ratio charged for a NAMED family. `FAMILY_ASCII_RATIO` is the
-    /// real machine; `BLIND_ASCII_RATIO` is the control where the two faces
-    /// agree, which is what every other test backend models.
-    family_ascii_ratio: f32,
+    faces: Faces,
 }
 
 impl Default for FamilyGapBackend {
     fn default() -> Self {
         Self {
             runs: Vec::new(),
+            measured: Vec::new(),
             rect_fills: Vec::new(),
             clip_stack: vec![None],
-            family_ascii_ratio: FAMILY_ASCII_RATIO,
+            faces: Faces {
+                family_ascii_ratio: FAMILY_ASCII_RATIO,
+                strict: false,
+            },
         }
     }
 }
@@ -125,9 +220,35 @@ impl FamilyGapBackend {
     /// `text_metrics_paint_tests`.
     pub(crate) fn uniform() -> Self {
         Self {
-            family_ascii_ratio: BLIND_ASCII_RATIO,
+            faces: Faces {
+                family_ascii_ratio: BLIND_ASCII_RATIO,
+                strict: false,
+            },
             ..Self::default()
         }
+    }
+
+    /// The family-strict machine (#441): see the module docs. A run fitted
+    /// in one family or weight and painted in another spills its box here,
+    /// and [`Self::measured`] names the family and weight each width was
+    /// asked in.
+    pub(crate) fn chrome_strict() -> Self {
+        Self {
+            faces: Faces {
+                family_ascii_ratio: FAMILY_ASCII_RATIO,
+                strict: true,
+            },
+            ..Self::default()
+        }
+    }
+
+    /// The (family, weight) pairs `text` was measured in, in call order.
+    pub(crate) fn styles_measured_for<'a>(&'a self, text: &'a str) -> Vec<(&'a str, u16)> {
+        self.measured
+            .iter()
+            .filter(|m| m.text == text)
+            .map(|m| (m.family.as_str(), m.weight))
+            .collect()
     }
 
     /// Runs that do not fit the box they were painted into — either
@@ -141,6 +262,15 @@ impl FamilyGapBackend {
 
     fn clip(&self) -> Option<Rect> {
         self.clip_stack.last().copied().flatten()
+    }
+
+    fn record(&mut self, text: &str, font_size: f32, family: &str, weight: u16) -> f32 {
+        self.measured.push(MeasuredRun {
+            text: text.to_string(),
+            family: family.to_string(),
+            weight,
+        });
+        self.faces.width(text, font_size, family, weight)
     }
 }
 
@@ -160,7 +290,7 @@ impl RenderBackend for FamilyGapBackend {
                 font_weight: run.font_weight,
                 origin: Point2D::new(point.x + run.origin.x, point.y + run.origin.y),
                 clip: self.clip(),
-                painted_ascii_ratio: self.family_ascii_ratio,
+                faces: self.faces,
             });
         }
     }
@@ -178,27 +308,23 @@ impl RenderBackend for FamilyGapBackend {
     fn stroke_round_rect(&mut self, _: Rect, _: f32, _: Color, _: f32) {}
     fn stroke_svg_path(&mut self, _: &str, _: Point2D, _: f32, _: Color, _: f32) {}
     fn measure_text(&mut self, text: &str, font_size: f32) -> f32 {
-        width(text, font_size, BLIND_ASCII_RATIO)
+        self.record(text, font_size, "", 400)
+    }
+    fn measure_text_weighted(&mut self, text: &str, font_size: f32, weight: u16) -> f32 {
+        self.record(text, font_size, "", weight)
     }
     fn measure_text_family(&mut self, text: &str, font_size: f32, family: &str) -> f32 {
-        let ratio = if family.is_empty() {
-            BLIND_ASCII_RATIO
-        } else {
-            self.family_ascii_ratio
-        };
-        width(text, font_size, ratio)
+        self.record(text, font_size, family, 400)
     }
-    /// Weight-agnostic: the gap this backend models is between families,
-    /// so a weighted measurement in the painted family must see it too.
     fn measure_text_family_styled(
         &mut self,
         text: &str,
         font_size: f32,
         family: &str,
-        _weight: u16,
+        weight: u16,
         _italic: bool,
     ) -> f32 {
-        self.measure_text_family(text, font_size, family)
+        self.record(text, font_size, family, weight)
     }
     fn save(&mut self) {
         self.clip_stack.push(self.clip());

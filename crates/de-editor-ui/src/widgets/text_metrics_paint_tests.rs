@@ -252,7 +252,7 @@ fn the_guard_catches_a_family_blind_fitter() {
         });
         let layout = TextLayout::single_run(
             &fitted,
-            "system-ui",
+            crate::widgets::text_metrics::CHROME_FONT_FAMILY,
             12.0,
             Color::WHITE.to_jian(),
             Point2D::ZERO,

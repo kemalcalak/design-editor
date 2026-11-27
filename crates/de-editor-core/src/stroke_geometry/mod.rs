@@ -12,7 +12,7 @@ mod heads;
 mod measure;
 
 use crate::vector_edit::{segment_controls, segment_count, Pt, Subpath};
-use jian_ops_schema::style::{PenStroke, StrokeCap, StrokeEndCap};
+use jian_ops_schema::style::{StrokeCap, StrokeEndCap};
 
 pub use heads::head_length;
 
@@ -28,16 +28,17 @@ pub struct StrokeEnds {
 }
 
 impl StrokeEnds {
-    /// The ends a stroke asks for, or `None` when there is nothing the
-    /// backends' own `cap` does not already draw: it sets neither
-    /// `strokeStart` nor `strokeEnd`, or both equal its authored `cap`.
-    /// An unset end falls back to `cap`; an absent `cap` is round, which
-    /// is what every renderer draws on an open stroke.
-    pub fn of(stroke: &PenStroke) -> Option<Self> {
+    /// [`Self::from_parts`] on a schema stroke (tests).
+    #[cfg(test)]
+    pub(crate) fn of(stroke: &jian_ops_schema::style::PenStroke) -> Option<Self> {
         Self::from_parts(stroke.stroke_start, stroke.stroke_end, stroke.cap.as_ref())
     }
 
-    /// [`Self::of`] from a stroke's `strokeStart`, `strokeEnd` and `cap`.
+    /// The ends a stroke's `strokeStart`, `strokeEnd` and `cap` ask for,
+    /// or `None` when there is nothing the backends' own `cap` does not
+    /// already draw: neither end is set, or both equal the authored
+    /// `cap`. An unset end falls back to `cap`; an absent `cap` is round,
+    /// which is what every renderer draws on an open stroke.
     pub fn from_parts(
         start: Option<StrokeEndCap>,
         end: Option<StrokeEndCap>,

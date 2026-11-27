@@ -217,7 +217,7 @@ impl DesktopApp {
         }
         // A click on the attach button raises
         // `pending_attachment_pick` — open the file picker.
-        if chat_attachment::drain_attachment_pick(&mut self.host) {
+        if chat_attachment::drain_attachment_pick(&mut self.host, &mut self.attachment_loads) {
             self.request_redraw(true);
         }
         // #20 theme presets — drain the preset dropdown's

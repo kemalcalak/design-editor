@@ -21,6 +21,30 @@ pub fn subpaths_bounds(subs: &[Subpath]) -> (f64, f64, f64, f64) {
     (min.0, min.1, max.0 - min.0, max.1 - min.1)
 }
 
+/// Stretch `subs` so their handle-aware bounds fill a `w × h` box at the
+/// origin: how the scene builder fits a path's `d` to its node box before
+/// rounding vertices (#389), so a radius stays in node px. An axis whose
+/// span is under 0.01 keeps its scale.
+pub fn fit_subpaths_to_box(subs: &mut [Subpath], w: f64, h: f64) {
+    let (bx, by, bw, bh) = subpaths_bounds(subs);
+    if !(bx.is_finite() && by.is_finite()) {
+        return;
+    }
+    let sx = if bw.abs() > 0.01 { w / bw } else { 1.0 };
+    let sy = if bh.abs() > 0.01 { h / bh } else { 1.0 };
+    for anchor in subs.iter_mut().flat_map(|s| s.anchors.iter_mut()) {
+        anchor.x = (anchor.x - bx) * sx;
+        anchor.y = (anchor.y - by) * sy;
+        for handle in [&mut anchor.handle_in, &mut anchor.handle_out]
+            .into_iter()
+            .flatten()
+        {
+            handle.x *= sx;
+            handle.y *= sy;
+        }
+    }
+}
+
 /// The path's geometry as subpaths in its parent-local frame, or `None`
 /// for a non-path / empty / unparseable node.
 ///

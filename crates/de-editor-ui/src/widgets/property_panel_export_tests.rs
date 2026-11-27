@@ -109,6 +109,7 @@ fn format_pick_closes_scale_picker_only_for_non_raster() {
                 resolved_sizing_fallback: None,
                 image_adjustment_drag: &mut image_adjustment_drag,
                 effect_radius_drag: &mut effect_radius_drag,
+                corner_smoothing_drag: &mut false,
             },
         );
         assert_eq!(state.editor_ui.export_format, format);

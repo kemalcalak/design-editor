@@ -68,7 +68,7 @@ fn candidates_rank_layers_pages_components_variables_and_files() {
 
     let pages = mention_candidates(&state, &[], "sett");
     assert_eq!(pages[0].mention.kind, MentionKind::Page);
-    assert_eq!(pages[0].mention.key, "1");
+    assert_eq!(pages[0].mention.key, "p2");
 
     let vars = mention_candidates(&state, &[], "primary");
     assert_eq!(vars[0].mention.kind, MentionKind::Variable);
@@ -215,7 +215,7 @@ fn begin_send_keeps_only_live_mentions() {
         },
         ChatMention {
             kind: MentionKind::Page,
-            key: "1".into(),
+            key: "p2".into(),
             label: "Settings".into(),
         },
     ];
@@ -244,7 +244,7 @@ fn summaries_are_compact_and_specific() {
 
     let page = ChatMention {
         kind: MentionKind::Page,
-        key: "1".into(),
+        key: "p2".into(),
         label: "Settings".into(),
     };
     let page = summarize_document_mention(&state, &page).unwrap();
@@ -315,10 +315,15 @@ fn skills() -> std::sync::Arc<[SkillOption]> {
         SkillOption {
             name: "brand-voice".into(),
             description: "House tone for copy".into(),
+            origin: SkillOrigin::Project,
+            shadows_user: true,
+            ..SkillOption::default()
         },
         SkillOption {
             name: "grid".into(),
             description: "Spacing rules".into(),
+            overrides_builtin: true,
+            ..SkillOption::default()
         },
     ]
     .into()
@@ -378,4 +383,39 @@ fn skill_block_line_uses_the_slash_token() {
         text: None,
     }]);
     assert!(block.contains("\n- /grid (skill): is no longer installed"));
+}
+
+#[test]
+fn skill_rows_name_their_source_and_what_they_hide() {
+    let rows = skill_candidates(&skills(), "");
+    let tag = |name: &str| {
+        rows.iter()
+            .find(|r| r.mention.key == name)
+            .and_then(|r| r.tag_key)
+    };
+    assert_eq!(tag("brand-voice"), Some("chat.skill.projectOverUser"));
+    assert_eq!(tag("grid"), Some("chat.skill.userOverBuiltin"));
+    let plain = SkillOption {
+        origin: SkillOrigin::Project,
+        ..SkillOption::default()
+    };
+    assert_eq!(plain.tag_key(), "chat.skill.project");
+    assert_eq!(SkillOption::default().tag_key(), "chat.skill.user");
+}
+
+#[test]
+fn a_skill_and_a_layer_may_share_a_name() {
+    // `/hero` and `@hero` are different tokens, so neither is renamed.
+    let layer = ChatMention {
+        kind: MentionKind::Node,
+        key: "n1".into(),
+        label: "hero".into(),
+    };
+    let skill = ChatMention {
+        kind: MentionKind::Skill,
+        key: "hero".into(),
+        label: "hero".into(),
+    };
+    assert_eq!(unique_label(&skill, std::slice::from_ref(&layer)), "hero");
+    assert_eq!(live_mentions("@hero /hero", &[layer, skill]), [true, true]);
 }

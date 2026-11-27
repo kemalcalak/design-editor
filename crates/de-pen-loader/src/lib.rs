@@ -104,11 +104,12 @@ pub mod variables;
 pub use editor_scene::{
     editor_state_to_active_page_layout_scene, editor_state_to_active_page_layout_scene_with_names,
     editor_state_to_active_page_root_layout_scene, editor_state_to_layout_scene,
-    editor_state_to_layout_scene_with_names, scene_node_size, SceneLayerNames,
+    editor_state_to_layout_scene_with_names, editor_state_to_page_layout_scene, scene_node_size,
+    SceneLayerNames,
 };
 pub use layout_scene::{
     blend_mode_to_scene, pen_document_to_layout_scene, pen_document_to_layout_scene_for_preview,
-    pen_document_to_layout_scene_with_geometry_mode,
+    pen_document_to_layout_scene_with_geometry_mode, rebuild_box_corner_path,
 };
 /// Skips the layout-scene rebuild when the document / active theme / active page
 /// are unchanged — the hosts hold one and drive `refresh_layout_scene` through it.

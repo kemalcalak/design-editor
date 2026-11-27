@@ -536,6 +536,17 @@ pub enum EditorCommand {
     SetNodeText { node_id: NodeId, text: String },
     /// Set corner-radius (doc-px) on a node.
     SetNodeCornerRadius { node_id: NodeId, radius: f32 },
+    /// Set a node's corners in one step (#389): `radii` per corner in
+    /// top-left, top-right, bottom-right, bottom-left order (equal values
+    /// store one radius; a polygon or path takes only equal values) and
+    /// `smoothing` (`0..=1`, Figma's corner smoothing; `0` clears it).
+    /// `None` leaves that part as it is. Rejected as a whole when the node
+    /// cannot take what is asked.
+    SetNodeCorners {
+        node_id: NodeId,
+        radii: Option<[f32; 4]>,
+        smoothing: Option<f32>,
+    },
     /// Set the font size (doc-px) on a Text-kind node.
     SetNodeFontSize { node_id: NodeId, font_size: f32 },
     /// Set the font weight (1..=1000) on a Text-kind node.

@@ -669,7 +669,20 @@ impl WidgetHostNative {
 
         // 13. File-drop overlay — top-most layer, above every panel and
         //     modal, while a file is dragged over the window.
-        if self.editor_state.editor_ui.file_drop_active {
+        let chat_drop = self.editor_state.chat.file_drop_hover;
+        if let Some(chat_rect) = chat_drop
+            .then(|| self.ai_chat_rect(viewport_width, viewport_height))
+            .flatten()
+        {
+            // Over the chat the file becomes an attachment (#398): the chat
+            // shows its own indicator instead of the canvas overlay.
+            de_editor_ui::widgets::file_drop_overlay::paint_chat_drop_indicator(
+                &mut *frame,
+                &self.theme,
+                self.editor_state.editor_ui.effective_locale(),
+                chat_rect,
+            );
+        } else if self.editor_state.editor_ui.file_drop_active {
             let drop_rect =
                 canvas_geometry::canvas_rect(&self.editor_state, viewport_width, viewport_height);
             let target = self
