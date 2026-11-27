@@ -1,7 +1,9 @@
 //! `impl EditorState` for the `@` popup: keeping it in step with the
 //! draft, moving the highlight, picking a row and removing a staged
 //! mention. Hosts call [`EditorState::sync_chat_mentions`] once before
-//! painting; it returns early (no allocation) when nothing moved.
+//! painting. While neither the draft nor the staged mentions changed it only
+//! hashes the draft (no allocation); the staged tokens are re-checked, and
+//! the popup re-ranked, only when they did.
 
 use super::{
     active_mention_query, mention_candidates, skill_candidates, MentionCandidate,
@@ -23,7 +25,15 @@ impl EditorState {
         let mut changed = false;
         if !self.chat.pending_mentions.is_empty() {
             let chat = &mut *self.chat;
-            changed |= super::retain_live(chat.input.text(), &mut chat.pending_mentions);
+            let seen =
+                super::identity::draft_fingerprint(chat.input.text(), chat.pending_mentions.len());
+            if chat.mentions_checked_draft != Some(seen) {
+                changed |= super::retain_live(chat.input.text(), &mut chat.pending_mentions);
+                chat.mentions_checked_draft = Some(super::identity::draft_fingerprint(
+                    chat.input.text(),
+                    chat.pending_mentions.len(),
+                ));
+            }
         }
         let usable = self.chat.focused && !self.chat.has_streaming_turn();
         // Byte range of the query (after the `@`), so nothing borrowed from

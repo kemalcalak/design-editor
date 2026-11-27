@@ -100,6 +100,23 @@ pub fn summarize_project_file(root: &Path, rel: &str) -> Result<String, MentionF
     Ok(format!("text file, {size} bytes{more}:\n```\n{body}\n```"))
 }
 
+/// A file mention's text: the summary the host read when it was staged
+/// (`ProjectFiles::summaries`), else read now (hosts without a prefetch).
+fn file_mention_text(state: &EditorState, rel: &str, project_root: Option<&Path>) -> String {
+    if let Some(Some(text)) = state.chat.project_files.summaries.get(rel) {
+        return text.clone();
+    }
+    match project_root {
+        Some(root) => read_file_mention(root, rel),
+        None => format!("unreadable — {}", MentionFileError::NoProjectFolder),
+    }
+}
+
+/// The context-block text for project file `rel` (disk I/O).
+pub fn read_file_mention(root: &Path, rel: &str) -> String {
+    summarize_project_file(root, rel).unwrap_or_else(|err| format!("unreadable — {err}"))
+}
+
 /// Resolve every mention of a turn, in order. A skill is looked up in the
 /// popup's listing (`state.chat.skills`) and its instructions read from its
 /// file; one no longer listed or readable resolves to `None`.
@@ -112,11 +129,7 @@ pub fn resolve_mentions(
         .iter()
         .map(|mention| {
             let text = match mention.kind {
-                MentionKind::File => Some(match project_root {
-                    Some(root) => summarize_project_file(root, &mention.key)
-                        .unwrap_or_else(|err| format!("unreadable — {err}")),
-                    None => format!("unreadable — {}", MentionFileError::NoProjectFolder),
-                }),
+                MentionKind::File => Some(file_mention_text(state, &mention.key, project_root)),
                 MentionKind::Skill => state
                     .chat
                     .skills
@@ -145,6 +158,25 @@ pub fn mention_context_for_turn(
         return String::new();
     }
     context_block(&resolve_mentions(state, mentions, project_root))
+}
+
+/// Take the active tab's staged mentions for the turn being sent and
+/// return their context block. Each turn reads its files afresh, so the
+/// prefetched summaries it used are dropped.
+pub fn take_turn_mentions(state: &mut EditorState) -> String {
+    let mentions = std::mem::take(&mut state.chat.pending_mentions);
+    let root = state
+        .chat
+        .project_files
+        .root
+        .as_deref()
+        .map(std::path::PathBuf::from);
+    let block = mention_context_for_turn(state, &mentions, root.as_deref());
+    let summaries = &mut state.chat.project_files.summaries;
+    for mention in &mentions {
+        summaries.remove(&mention.key);
+    }
+    block
 }
 
 #[cfg(test)]

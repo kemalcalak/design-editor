@@ -8,6 +8,7 @@
 //! home folder (or above it) is listed one level deep only, with a warning,
 //! instead of walking the whole account.
 
+use std::collections::HashSet;
 use std::fs;
 use std::path::{Component, Path, PathBuf};
 use std::sync::mpsc::{self, Receiver, TryRecvError};
@@ -133,9 +134,9 @@ struct Cached {
 pub struct ProjectFileScanner {
     cache: Option<Cached>,
     inflight: Option<(PathBuf, Receiver<ProjectScan>)>,
-    /// The root the "listing was cut" warning was last raised for, so it
-    /// shows once per folder rather than on every popup.
-    warned: Option<PathBuf>,
+    /// The roots the "listing was cut" warning was raised for, so it shows
+    /// once per folder (also across A → B → A) rather than on every popup.
+    warned: HashSet<PathBuf>,
 }
 
 impl ProjectFileScanner {
@@ -195,10 +196,7 @@ impl ProjectFileSource for ProjectFileScanner {
         };
         let root = root.clone();
         self.inflight = None;
-        let warn = scan.limited && self.warned.as_deref() != Some(root.as_path());
-        if warn {
-            self.warned = Some(root.clone());
-        }
+        let warn = scan.limited && self.warned.insert(root.clone());
         let files: Arc<[String]> = Arc::from(scan.files);
         self.cache = Some(Cached {
             root: root.clone(),

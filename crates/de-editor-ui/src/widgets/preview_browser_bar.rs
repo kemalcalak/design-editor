@@ -150,7 +150,7 @@ impl PreviewBrowserBar<'_> {
         let max_w = (address.size.x - ADDRESS_PAD_X * 2.0).max(0.0);
         let baseline_y = address.origin.y + address.size.y / 2.0 + 4.0;
         let title = truncate_to_width(cx, self.title, FONT, max_w);
-        let title_w = cx.backend.measure_text_family(&title, FONT, "system-ui");
+        let title_w = crate::widgets::text_metrics::measure_chrome(cx.backend, &title, FONT);
         let mut x = address.origin.x + ADDRESS_PAD_X;
         self.text(cx, &title, x, baseline_y, theme.foreground);
         x += title_w + 8.0;
@@ -164,7 +164,7 @@ impl PreviewBrowserBar<'_> {
     fn text(&self, cx: &mut PaintCx<'_>, text: &str, x: f32, baseline_y: f32, color: crate::Color) {
         let layout = TextLayout::single_run(
             text,
-            "system-ui",
+            crate::widgets::text_metrics::CHROME_FONT_FAMILY,
             FONT,
             color.to_jian(),
             Point2D::new(0.0, 0.0),

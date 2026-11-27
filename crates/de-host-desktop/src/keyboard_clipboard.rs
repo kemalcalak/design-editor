@@ -91,18 +91,19 @@ impl DesktopApp {
             return true;
         }
         if self.host.chat_input_owns_keyboard_pub() {
-            // Copied files, then clipboard image data, then a pasted path to
-            // an attachable file become attachments (#398); other text is
-            // typed. The paste is consumed either way.
+            // Copied files, then clipboard image data, then a pasted
+            // `file://` URL of an attachable file become attachments (#398);
+            // other text, a plain path included, is typed. The paste is
+            // consumed either way.
             if !payload.files.is_empty() {
                 for path in payload.files {
-                    self.attachment_loads.start(path);
+                    self.attachment_loads.queue(&self.host, path);
                 }
             } else if let Some(image) = payload.image.take() {
                 self.paste_image_into_chat(image);
             } else if let Some(text) = payload.text.as_deref() {
-                match crate::chat_attachment::pasted_file_path(text) {
-                    Some(path) => self.attachment_loads.start(path),
+                match crate::chat_attachment::pasted_file_url(text) {
+                    Some(path) => self.attachment_loads.queue(&self.host, path),
                     None => {
                         self.host.chat_input_paste(text);
                     }

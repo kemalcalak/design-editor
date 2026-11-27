@@ -8,7 +8,7 @@
 
 use de_host_native::WidgetHostNative;
 use de_host_services::chat_attachment_prepare::{model_sees_images, prepare_turn_attachments};
-use de_host_services::chat_mention_context::mention_context_for_turn;
+use de_host_services::chat_mention_context::take_turn_mentions;
 
 /// Drain the turn's staged context and return `routing_text` with it
 /// appended:
@@ -19,14 +19,8 @@ use de_host_services::chat_mention_context::mention_context_for_turn;
 ///   sees them (every route takes them from there), while text files, SVG
 ///   and images a text-only model cannot see become captions.
 pub(super) fn compose_turn_text(host: &mut WidgetHostNative, routing_text: &str) -> String {
-    let mentions = std::mem::take(&mut host.editor_state_mut().chat.pending_mentions);
-    let project_root = host
-        .editor_state()
-        .chat
-        .project_files
-        .root
-        .clone()
-        .map(std::path::PathBuf::from);
+    // Mentioned files were read on a worker when staged (`MentionFileReader`).
+    let mention_block = take_turn_mentions(host.editor_state_mut());
     let sees_images = host
         .editor_state()
         .chat
@@ -35,7 +29,5 @@ pub(super) fn compose_turn_text(host: &mut WidgetHostNative, routing_text: &str)
     let staged = std::mem::take(&mut host.editor_state_mut().chat.pending_attachments);
     let prepared = prepare_turn_attachments(staged, sees_images);
     host.editor_state_mut().chat.pending_attachments = prepared.send;
-    let mention_block =
-        mention_context_for_turn(host.editor_state(), &mentions, project_root.as_deref());
     format!("{routing_text}{mention_block}{}", prepared.captions)
 }

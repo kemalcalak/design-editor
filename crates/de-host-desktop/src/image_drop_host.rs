@@ -126,7 +126,7 @@ impl DesktopApp {
     /// swallows cursor moves for the duration of the drag — so the position is
     /// polled from the window system instead (see [`crate::drag_cursor`]).
     /// Returns `true` when the highlight changed.
-    pub(crate) fn refresh_image_drop_hover(&mut self) -> bool {
+    pub(crate) fn refresh_file_drop_hover(&mut self) -> bool {
         let Some(is_image) = self.hovered_file_drop else {
             return false;
         };
@@ -150,7 +150,7 @@ impl DesktopApp {
 
     /// Clear every drag-hover trace. Called on drop and on drag-cancel so a
     /// stale ring can never outlive the gesture.
-    pub(crate) fn clear_image_drop_hover(&mut self) {
+    pub(crate) fn clear_file_drop_hover(&mut self) {
         self.hovered_file_drop = None;
         self.host.editor_state_mut().chat.file_drop_hover = false;
         self.drop_cursor = None;

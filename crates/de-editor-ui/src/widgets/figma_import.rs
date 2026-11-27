@@ -259,7 +259,7 @@ impl Widget for FigmaImportModal {
 
         let title = TextLayout::single_run(
             t(self.locale, self.source, "title"),
-            "system-ui",
+            text_metrics::CHROME_FONT_FAMILY,
             14.0,
             (self.theme.foreground).to_jian(),
             Point2D::new(0.0, 0.0),
@@ -340,11 +340,20 @@ impl Widget for FigmaImportModal {
             ),
         }
 
-        let headline = t(self.locale, self.source, "drop");
-        let head_w = text_metrics::measure_chrome(cx.backend, headline, 13.0);
+        // Every line is fitted to the box it sits in at the width it is
+        // painted at, so a long translation ends in "…" instead of running
+        // out of the drop zone or the card.
+        let drop_text_w = (drop.size.x - PAD * 2.0).max(0.0);
+        let headline = text_metrics::fit_chrome(
+            cx.backend,
+            t(self.locale, self.source, "drop"),
+            drop_text_w,
+            13.0,
+        );
+        let head_w = text_metrics::measure_chrome(cx.backend, &headline, 13.0);
         let head_layout = TextLayout::single_run(
-            headline,
-            "system-ui",
+            &headline,
+            text_metrics::CHROME_FONT_FAMILY,
             13.0,
             (self.theme.foreground).to_jian(),
             Point2D::new(0.0, 0.0),
@@ -357,11 +366,16 @@ impl Widget for FigmaImportModal {
             ),
         );
 
-        let sub = t(self.locale, self.source, "browse");
-        let sub_w = text_metrics::measure_chrome(cx.backend, sub, 11.0);
+        let sub = text_metrics::fit_chrome(
+            cx.backend,
+            t(self.locale, self.source, "browse"),
+            drop_text_w,
+            11.0,
+        );
+        let sub_w = text_metrics::measure_chrome(cx.backend, &sub, 11.0);
         let sub_layout = TextLayout::single_run(
-            sub,
-            "system-ui",
+            &sub,
+            text_metrics::CHROME_FONT_FAMILY,
             11.0,
             (self.theme.muted_foreground).to_jian(),
             Point2D::new(0.0, 0.0),
@@ -374,9 +388,15 @@ impl Widget for FigmaImportModal {
             ),
         );
 
-        let footer = TextLayout::single_run(
+        let footer = text_metrics::fit_chrome(
+            cx.backend,
             t(self.locale, self.source, "footer"),
-            "system-ui",
+            (rect.size.x - PAD * 2.0).max(0.0),
+            11.0,
+        );
+        let footer = TextLayout::single_run(
+            &footer,
+            text_metrics::CHROME_FONT_FAMILY,
             11.0,
             (self.theme.muted_foreground).to_jian(),
             Point2D::new(0.0, 0.0),
@@ -396,11 +416,16 @@ impl Widget for FigmaImportModal {
 
 impl FigmaImportModal {
     fn paint_page_selector(&self, cx: &mut PaintCx<'_>, rect: Rect) {
-        let instruction = de_i18n::translate(self.locale, "figma.selectPage")
-            .replace("{{count}}", &self.pages.len().to_string());
+        let instruction = text_metrics::fit_chrome(
+            cx.backend,
+            &de_i18n::translate(self.locale, "figma.selectPage")
+                .replace("{{count}}", &self.pages.len().to_string()),
+            (rect.size.x - PAD * 2.0).max(0.0),
+            11.0,
+        );
         let instruction_layout = TextLayout::single_run(
             &instruction,
-            "system-ui",
+            text_metrics::CHROME_FONT_FAMILY,
             11.0,
             self.theme.muted_foreground.to_jian(),
             Point2D::ZERO,

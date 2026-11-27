@@ -1,7 +1,5 @@
 use crate::Color;
 
-pub(super) use crate::util::truncate_ellipsis as truncate;
-
 pub(super) fn hex_to_color(hex: &str) -> Color {
     match de_editor_core::parse_hex_rgb(hex) {
         Some((r, g, b)) => Color { r, g, b, a: 1.0 },

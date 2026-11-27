@@ -100,6 +100,7 @@ impl DesktopApp {
             || self.mention_files.is_pending()
             || self.chat_skills.is_pending()
             || self.attachment_loads.is_pending()
+            || self.mention_reads.is_pending()
             || self.image_panel.is_pending()
             // Remote-image fetches in flight, or fresh misses the last
             // paint recorded (the next pump picks them up).
@@ -202,6 +203,7 @@ impl DesktopApp {
             || self.mention_files.is_pending()
             || self.chat_skills.is_pending()
             || self.attachment_loads.is_pending()
+            || self.mention_reads.is_pending()
             || self.image_panel.is_pending()
             || self.image_decodes.is_pending()
             || de_editor_ui::widgets::canvas_viewport_image::has_pending_decodes()

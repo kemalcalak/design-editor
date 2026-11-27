@@ -34,6 +34,7 @@ mod sync;
 #[cfg(test)]
 mod tests;
 
+use std::collections::HashMap;
 use std::sync::Arc;
 
 pub use candidates::{mention_candidates, skill_candidates, MAX_MENTION_ROWS};
@@ -210,4 +211,19 @@ pub struct ProjectFiles {
     /// Raised by the popup sync when the popup opens, so the host rescans
     /// the folder (files come and go while the editor is open).
     pub rescan_requested: bool,
+    /// Summaries of the staged file mentions, read by the host on a worker
+    /// as soon as a file is staged (`None` while the read runs), so a send
+    /// never reads the disk on the UI thread. Keyed by project-relative
+    /// path; dropped when the folder changes and after the turn uses them.
+    pub summaries: HashMap<String, Option<String>>,
+}
+
+impl ProjectFiles {
+    /// Whether a staged file in `mentions` is still being read (the send
+    /// waits for it).
+    pub fn reading_any(&self, mentions: &[ChatMention]) -> bool {
+        mentions.iter().any(|m| {
+            m.kind == MentionKind::File && matches!(self.summaries.get(&m.key), Some(None))
+        })
+    }
 }

@@ -176,6 +176,12 @@ impl ChatSessions {
         self.tabs.get_mut(idx)
     }
 
+    /// The tab whose [`ChatState::tab_id`] is `id`, or `None` once it was
+    /// closed.
+    pub fn tab_by_id_mut(&mut self, id: u64) -> Option<&mut ChatState> {
+        self.tabs.iter_mut().find(|tab| tab.tab_id == id)
+    }
+
     /// Resolve the tab a running turn should write to.
     ///
     /// `running_tab` is the index the run was bound to when it launched

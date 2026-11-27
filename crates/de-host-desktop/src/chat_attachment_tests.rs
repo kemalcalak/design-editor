@@ -9,7 +9,28 @@ fn temp_file(name: &str, bytes: &[u8]) -> PathBuf {
 }
 
 fn load_now(host: &mut WidgetHostNative, path: &Path) -> bool {
-    stage_loaded(host, &file_name(path), load_attachment(path))
+    let tab = host.editor_state().chat.active().tab_id;
+    stage_loaded(host, tab, &file_name(path), load_attachment(path))
+}
+
+fn settle(loads: &mut AttachmentLoads, host: &mut WidgetHostNative) {
+    for _ in 0..500 {
+        loads.drain(host);
+        if !loads.is_pending() {
+            return;
+        }
+        std::thread::sleep(std::time::Duration::from_millis(5));
+    }
+    panic!("the reads never landed");
+}
+
+fn staged_names(host: &WidgetHostNative) -> Vec<String> {
+    host.editor_state()
+        .chat
+        .pending_attachments
+        .iter()
+        .map(|a| a.name.clone())
+        .collect()
 }
 
 #[test]
@@ -68,58 +89,99 @@ fn an_oversized_file_names_the_limit() {
 fn a_background_read_is_staged_when_drained() {
     let mut host = WidgetHostNative::new();
     let mut loads = AttachmentLoads::default();
-    loads.start(temp_file("later.md", b"# Later"));
+    loads.queue(&host, temp_file("later.md", b"# Later"));
     assert!(loads.is_pending());
-    for _ in 0..500 {
-        if loads.drain(&mut host) {
-            break;
-        }
-        std::thread::sleep(std::time::Duration::from_millis(5));
-    }
-    assert!(!loads.is_pending());
+    settle(&mut loads, &mut host);
     assert_eq!(host.editor_state().chat.pending_attachments.len(), 1);
 }
 
 #[test]
-fn a_pasted_path_to_an_attachable_file_is_recognised() {
-    let path = temp_file("pasted brief.md", b"x");
-    let text = path.to_str().unwrap();
-    assert_eq!(pasted_file_path(text), Some(path.clone()));
-    assert_eq!(pasted_file_path(&format!("  {text}\n")), Some(path.clone()));
-    let url = format!("file://{}", text.replace(' ', "%20"));
-    assert_eq!(pasted_file_path(&url), Some(path.clone()));
-    // Not a path, two lines, relative, missing or an unsupported type.
-    assert_eq!(pasted_file_path("make it blue"), None);
-    assert_eq!(pasted_file_path(&format!("{text}\n{text}")), None);
-    assert_eq!(pasted_file_path("brief.md"), None);
-    assert_eq!(pasted_file_path("/no/such/file.md"), None);
-    let exe = temp_file("tool.exe", b"MZ");
-    assert_eq!(pasted_file_path(exe.to_str().unwrap()), None);
+fn a_drop_past_the_cap_reads_only_what_fits_in_order_with_one_toast() {
+    let mut host = WidgetHostNative::new();
+    let mut loads = AttachmentLoads::default();
+    let names = [
+        "f1.txt", "f2.txt", "f3.txt", "f4.txt", "f5.txt", "f6.txt", "f7.txt",
+    ];
+    for name in names {
+        loads.queue(&host, temp_file(name, b"x"));
+    }
+    // Everything fitting is one batch on one worker.
+    loads.flush();
+    assert_eq!(loads.pending, MAX_ATTACHMENTS);
+    settle(&mut loads, &mut host);
+    assert_eq!(staged_names(&host), names[..MAX_ATTACHMENTS]);
+    let toast = host.editor_state().editor_ui.editor_toast.clone().unwrap();
+    assert_eq!(toast.i18n_key, "chat.attach.full");
+    assert!(toast
+        .args
+        .contains(&("name".to_string(), names[MAX_ATTACHMENTS].to_string())));
 }
 
 #[test]
-fn pasting_copied_files_or_a_path_into_the_chat_attaches_them() {
+fn a_batch_lands_in_the_tab_it_was_started_for() {
+    let mut host = WidgetHostNative::new();
+    let mut loads = AttachmentLoads::default();
+    let first = host.editor_state().chat.active().tab_id;
+    loads.queue(&host, temp_file("for-first.md", b"x"));
+    loads.flush();
+    host.editor_state_mut().chat.new_tab();
+    settle(&mut loads, &mut host);
+    assert!(host.editor_state().chat.pending_attachments.is_empty());
+    let chat = host.editor_state_mut().chat.tab_by_id_mut(first).unwrap();
+    assert_eq!(chat.pending_attachments.len(), 1);
+}
+
+#[test]
+fn a_pasted_file_url_is_recognised_and_a_plain_path_is_not() {
+    let path = temp_file("pasted brief.md", b"x");
+    let text = path.to_str().unwrap();
+    let url = format!("file://{}", text.replace(' ', "%20"));
+    assert_eq!(pasted_file_url(&url), Some(path.clone()));
+    assert_eq!(pasted_file_url(&format!("  {url}\n")), Some(path.clone()));
+    // A plain path stays text, and nothing is checked on disk.
+    assert_eq!(pasted_file_url(text), None);
+    assert_eq!(
+        pasted_file_url("file:///no/such/file.md"),
+        Some(PathBuf::from("/no/such/file.md"))
+    );
+    assert_eq!(pasted_file_url("make it blue"), None);
+    assert_eq!(pasted_file_url(&format!("{url}\n{url}")), None);
+    assert_eq!(pasted_file_url("file:///tmp/tool.exe"), None);
+    assert_eq!(
+        file_url_path("file:///C:/Users/me/brief%20v2.md", true),
+        Some(PathBuf::from("C:/Users/me/brief v2.md"))
+    );
+    assert_eq!(
+        file_url_path("file://localhost/srv/a.md", false),
+        Some(PathBuf::from("/srv/a.md"))
+    );
+}
+
+#[test]
+fn pasting_copied_files_or_a_file_url_into_the_chat_attaches_them() {
     use crate::keyboard_clipboard_payload::ClipboardPayload;
     let mut app = crate::DesktopApp::new(None);
     app.host.editor_state_mut().chat.focused = true;
     let copied = temp_file("copied.md", b"# Copied");
     let typed = temp_file("typed path.txt", b"typed");
+    let plain = temp_file("plain.txt", b"plain");
     assert!(app.handle_paste_payload(ClipboardPayload {
         files: vec![copied],
         text: Some("copied.md".to_string()),
         ..ClipboardPayload::default()
     }));
+    let url = format!("file://{}", typed.to_string_lossy().replace(' ', "%20"));
     assert!(app.handle_paste_payload(ClipboardPayload {
-        text: Some(typed.to_string_lossy().into_owned()),
+        text: Some(url),
         ..ClipboardPayload::default()
     }));
-    for _ in 0..500 {
-        app.attachment_loads.drain(&mut app.host);
-        if !app.attachment_loads.is_pending() {
-            break;
-        }
-        std::thread::sleep(std::time::Duration::from_millis(5));
-    }
+    // A plain path is typed, not attached.
+    let plain_text = plain.to_string_lossy().into_owned();
+    assert!(app.handle_paste_payload(ClipboardPayload {
+        text: Some(plain_text.clone()),
+        ..ClipboardPayload::default()
+    }));
+    settle(&mut app.attachment_loads, &mut app.host);
     let chat = &app.host.editor_state().chat;
     let mut names: Vec<&str> = chat
         .pending_attachments
@@ -128,5 +190,9 @@ fn pasting_copied_files_or_a_path_into_the_chat_attaches_them() {
         .collect();
     names.sort_unstable();
     assert_eq!(names, ["copied.md", "typed path.txt"]);
-    assert_eq!(chat.input.text(), "", "nothing was typed into the draft");
+    assert_eq!(
+        chat.input.text(),
+        plain_text,
+        "only the plain path was typed"
+    );
 }

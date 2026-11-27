@@ -4,14 +4,30 @@
 //! every staged mention's token is unique (a second layer called "Hero" is
 //! written `@Hero#2`, see [`unique_label`]), and a token only counts where
 //! the draft holds it whole — followed by the end of the text, whitespace or
-//! punctuation — and not inside a longer token already matched. So `@Hero`
-//! is neither found inside `@Hero#2` nor inside `@Hero card`.
+//! punctuation in any script (`@Hero，`, `@Hero。`, `@Hero—`) — and not inside
+//! a longer token already matched. So `@Hero` is neither found inside
+//! `@Hero#2` nor inside `@Hero card`.
 
 use super::ChatMention;
 
-/// Characters that may follow a token: anything else continues it.
+/// Whether the character after a token ends it. Letters and digits of any
+/// script continue it, as do `#` (the `Name#2` suffix) and the `-` `_` `/`
+/// that layer names and paths are made of; every other character (space,
+/// ASCII or CJK punctuation, dashes, emoji) ends it.
 fn ends_token(next: Option<char>) -> bool {
-    next.is_none_or(|c| c.is_whitespace() || ",.;:!?)]}\"'".contains(c))
+    next.is_none_or(|c| !c.is_alphanumeric() && !"#-_/".contains(c))
+}
+
+/// A fingerprint of the draft and how many mentions are staged, so the
+/// per-redraw sync re-checks the staged tokens only when either moved
+/// (FNV-1a; no allocation).
+pub(crate) fn draft_fingerprint(text: &str, staged: usize) -> u64 {
+    let mut hash: u64 = 0xcbf2_9ce4_8422_2325;
+    for byte in text.bytes().chain(staged.to_le_bytes()) {
+        hash ^= u64::from(byte);
+        hash = hash.wrapping_mul(0x0100_0000_01b3);
+    }
+    hash
 }
 
 /// Byte span of the first whole occurrence of `token` in `text` that does
