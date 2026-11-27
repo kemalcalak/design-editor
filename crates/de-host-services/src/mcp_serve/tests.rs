@@ -6,6 +6,9 @@
 use super::*;
 use de_editor_core::pen_node_ext::PenNodeExt;
 
+mod debug_catalog;
+use debug_catalog::DEBUG_TOOL_NAMES;
+
 #[test]
 fn tools_list_response_includes_all_registered_tools() {
     // Debug gating is passed explicitly (no process-global env mutation,
@@ -35,11 +38,7 @@ fn tools_list_response_includes_all_registered_tools() {
     #[cfg(not(feature = "mcp-debug-tools"))]
     {
         let r_forced_debug = tools_list_response("3", &state, true);
-        for name in [
-            "debug_validation_report",
-            "debug_logs_tail",
-            "debug_screenshot",
-        ] {
+        for name in DEBUG_TOOL_NAMES {
             assert!(
                 !r_forced_debug.contains(name),
                 "formal release catalog must exclude {name} even if debug listing is requested: {r_forced_debug}"
@@ -235,11 +234,7 @@ fn tools_list_response_includes_all_registered_tools() {
     // to the debug tools catalog.
     let r_debug = tools_list_response("3", &state, true);
     #[cfg(feature = "mcp-debug-tools")]
-    for name in [
-        "debug_validation_report",
-        "debug_logs_tail",
-        "debug_screenshot",
-    ] {
+    for name in DEBUG_TOOL_NAMES {
         assert!(
             r_debug.contains(name),
             "debug tools/list must advertise {name}: {r_debug}"

@@ -35,6 +35,17 @@ impl ApplicationHandler<DesktopEvent> for DesktopApp {
         } else if let Some(report) = self.host.run_idle_memory_trim() {
             crate::heap_pressure::release_then_relieve(report.released, "idle memory trim");
         }
+        // The Settings memory row and the debug memory tool read what this
+        // publishes; never measured from paint (#456).
+        let hidden = self.surface_hidden();
+        if self.memory_refresh.tick(
+            std::time::Instant::now(),
+            &self.host,
+            self.backend.as_ref(),
+            hidden,
+        ) {
+            self.request_redraw(true);
+        }
         // Live MCP requests must not wait for `RedrawRequested`. Window systems
         // may throttle redraws while a window is occluded or while a previous
         // paint is expensive, but CLI/MCP snapshot/apply acks should still be

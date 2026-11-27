@@ -13,6 +13,9 @@ path = "src/lib.rs"
 [features]
 default = []
 debug-tools = []
+# Lets another crate's tests force the debug-tool gate on their own thread
+# (`debug_tools::debug_gate_override`); never on in a product build.
+test-support = []
 # Native-only QuickJS script→program expansion for batch_design + the
 # orchestrator. Never enabled by wasm consumers (bundled C engine).
 script = ["dep:rquickjs", "dep:tracing"]
