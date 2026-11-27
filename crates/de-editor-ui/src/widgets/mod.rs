@@ -373,7 +373,6 @@ mod ai_chat_hit;
 pub(crate) mod ai_chat_input_text;
 pub mod ai_chat_mcp_notice;
 pub(crate) mod ai_chat_mention_popup;
-pub(crate) mod ai_chat_permission_prompt;
 pub mod ai_chat_model_picker;
 #[cfg(test)]
 mod ai_chat_model_picker_tests;
@@ -385,6 +384,7 @@ mod ai_chat_panel_hit;
 mod ai_chat_panel_menus;
 mod ai_chat_panel_minimized;
 pub mod ai_chat_panel_paint;
+pub(crate) mod ai_chat_permission_prompt;
 pub(crate) mod ai_chat_plus_menu;
 pub(crate) mod ai_chat_session_menu;
 pub mod ai_chat_style_card;
