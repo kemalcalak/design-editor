@@ -88,6 +88,7 @@ impl WidgetHostNative {
             plus_hover,
             example_hover,
             style_chip_hover,
+            mention_hover,
         ) = if let Some(chat_rect) = self.ai_chat_rect(self.last_viewport_w, self.last_viewport_h) {
             let point = Point2D::new(x, y);
             let panel = AIChatPlaceholder::from_editor_at(&self.editor_state, self.now_ms)
@@ -100,9 +101,10 @@ impl WidgetHostNative {
                 panel.plus_menu_hover_at(chat_rect, point),
                 panel.example_hover_at(chat_rect, point),
                 panel.style_chip_hover_at(chat_rect, point),
+                panel.mention_hover_at(chat_rect, point),
             )
         } else {
-            (None, None, None, None, None, None, false)
+            (None, None, None, None, None, None, false, None)
         };
         // `cursor_probe.hit` is the authoritative Chat ownership result: it is
         // Some for every painted body point and for the invisible resize
@@ -139,6 +141,11 @@ impl WidgetHostNative {
             chat_hover_changed = true;
         }
         // Like web's: a row under a higher surface must not light up.
+        // The `@` popup (#398): hover moves the same highlight the arrow keys
+        // do, so Enter picks what the pointer last rested on.
+        if let Some(row) = mention_hover.filter(|_| !over_topmost) {
+            chat_hover_changed |= self.editor_state.set_chat_mention_highlight(row);
+        }
         let plus_hover = plus_hover.filter(|_| !over_topmost);
         if plus_hover != self.editor_state.editor_ui.chat_plus_menu_hover {
             self.editor_state.editor_ui.chat_plus_menu_hover = plus_hover;

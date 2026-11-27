@@ -109,6 +109,11 @@ pub struct AIChatPlaceholder<'a> {
     /// Whether the composer's "+" menu is open, and its hovered row.
     pub(crate) plus_menu_open: bool,
     pub(crate) plus_menu_hover: Option<u8>,
+    /// The context panel's rows (#398), resolved only while it is open.
+    pub(crate) context_rows: Option<Vec<de_editor_core::chat_context::ChatContextRow>>,
+    /// Staged mentions + attachments: the context button shows a dot when
+    /// this is non-zero.
+    pub(crate) staged_context: usize,
     /// Number of currently selected canvas nodes.
     /// Kept for future affordances; paint tests verify it is seeded correctly.
     #[allow(dead_code)]
@@ -238,6 +243,10 @@ impl<'a> AIChatPlaceholder<'a> {
             session_menu_open: ui.chat_session_menu_open,
             plus_menu_open: ui.chat_plus_menu_open,
             plus_menu_hover: ui.chat_plus_menu_hover,
+            context_rows: ui
+                .chat_context_panel_open
+                .then(|| de_editor_core::chat_context::chat_context_rows(state)),
+            staged_context: de_editor_core::chat_context::staged_context_count(state),
             label_tip_select_elements: translate(ui, "ai.tipSelectElements").to_string(),
             label_no_models: translate(ui, "home.model.addProvider").to_string(),
             selected_count: state.selection_count(),
@@ -697,6 +706,8 @@ fn selection_chip_label_for_state(state: &EditorState) -> Option<String> {
 pub(crate) struct FooterLayout {
     /// "+" — opens the menu with attach, library, thinking and agents.
     pub(crate) plus: Rect,
+    /// The context button (#398) — opens the list of what the turn carries.
+    pub(crate) context: Rect,
     /// "model · provider" chip, or the "Add a model provider" link.
     pub(crate) model: Rect,
     /// Stop — shares the send slot while a turn streams.
@@ -726,3 +737,7 @@ mod tests_transcript;
 #[cfg(test)]
 #[path = "ai_chat_panel/tests_selected_chip.rs"]
 mod tests_selected_chip;
+
+#[cfg(test)]
+#[path = "ai_chat_panel/tests_context.rs"]
+mod tests_context;

@@ -136,6 +136,7 @@ impl EditorUiState {
     pub fn escape_chat_menus(&mut self) -> bool {
         if !self.chat_session_menu_open
             && !self.chat_plus_menu_open
+            && !self.chat_context_panel_open
             && !self.parallel_agents_picker_open
         {
             return false;
@@ -286,6 +287,7 @@ impl EditorUiState {
         self.chat_session_menu_open = false;
         self.chat_plus_menu_open = false;
         self.chat_plus_menu_hover = None;
+        self.chat_context_panel_open = false;
         self.fill_type_picker = Default::default();
         self.fill_type_picker_index = 0;
         self.compositing_picker = Default::default();

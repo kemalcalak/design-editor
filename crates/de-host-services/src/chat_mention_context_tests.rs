@@ -1,0 +1,125 @@
+use super::*;
+use de_editor_core::chat_mentions::ChatMention;
+
+fn temp_project(tag: &str) -> PathBuf {
+    let dir = std::env::temp_dir().join(format!(
+        "de-mention-{tag}-{}-{}",
+        std::process::id(),
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map(|d| d.as_nanos())
+            .unwrap_or(0)
+    ));
+    fs::create_dir_all(&dir).unwrap();
+    dir
+}
+
+fn file(kind_key: &str) -> ChatMention {
+    ChatMention {
+        kind: MentionKind::File,
+        key: kind_key.into(),
+        label: kind_key.into(),
+    }
+}
+
+#[test]
+fn text_files_are_quoted_and_cut() {
+    let root = temp_project("text");
+    fs::write(root.join("notes.md"), "line one\nline two").unwrap();
+    let long: String = (0..200).map(|i| format!("row {i}\n")).collect();
+    fs::write(root.join("long.txt"), &long).unwrap();
+    assert_eq!(
+        summarize_project_file(&root, "notes.md").unwrap(),
+        "text file, 17 bytes:\n```\nline one\nline two\n```"
+    );
+    let cut = summarize_project_file(&root, "long.txt").unwrap();
+    assert!(cut.contains(", excerpt:"));
+    assert!(cut.contains("row 79") && !cut.contains("row 80"));
+    fs::remove_dir_all(&root).ok();
+}
+
+#[test]
+fn binary_files_are_described_not_quoted() {
+    let root = temp_project("bin");
+    fs::write(root.join("shot.png"), [0x89, b'P', b'N', b'G', 0, 1, 2]).unwrap();
+    assert_eq!(
+        summarize_project_file(&root, "shot.png").unwrap(),
+        "binary file (image/png), 7 bytes — attach the image to send its pixels"
+    );
+    fs::remove_dir_all(&root).ok();
+}
+
+#[test]
+fn paths_outside_the_project_are_refused() {
+    let root = temp_project("escape");
+    for rel in ["../secret.txt", "/etc/hosts", "docs/../../x"] {
+        assert!(matches!(
+            summarize_project_file(&root, rel),
+            Err(MentionFileError::OutsideProject { .. })
+        ));
+    }
+    assert!(matches!(
+        summarize_project_file(&root, "missing.txt"),
+        Err(MentionFileError::Io { .. })
+    ));
+    fs::remove_dir_all(&root).ok();
+}
+
+#[cfg(unix)]
+#[test]
+fn symlinks_out_of_the_project_are_refused() {
+    let root = temp_project("link");
+    let outside = temp_project("outside");
+    fs::write(outside.join("secret.txt"), "s").unwrap();
+    std::os::unix::fs::symlink(outside.join("secret.txt"), root.join("link.txt")).unwrap();
+    assert!(matches!(
+        summarize_project_file(&root, "link.txt"),
+        Err(MentionFileError::OutsideProject { .. })
+    ));
+    fs::remove_dir_all(&root).ok();
+    fs::remove_dir_all(&outside).ok();
+}
+
+#[test]
+fn turn_context_resolves_documents_and_files_in_order() {
+    let root = temp_project("turn");
+    fs::write(root.join("brief.md"), "Make it calm.").unwrap();
+    let state = EditorState::default();
+    assert_eq!(mention_context_for_turn(&state, &[], Some(&root)), "");
+    let block = mention_context_for_turn(
+        &state,
+        &[
+            file("brief.md"),
+            ChatMention {
+                kind: MentionKind::Node,
+                key: "gone".into(),
+                label: "Gone".into(),
+            },
+        ],
+        Some(&root),
+    );
+    assert!(block.contains("- @brief.md (file): text file, 13 bytes:\n```\nMake it calm.\n```"));
+    assert!(block.contains("- @Gone (layer): no longer exists in the document"));
+    let unsaved = mention_context_for_turn(&state, &[file("brief.md")], None);
+    assert!(unsaved.contains("unreadable — the document is not saved"));
+    fs::remove_dir_all(&root).ok();
+}
+
+#[test]
+fn taking_the_turn_mentions_uses_and_drops_the_prefetched_summaries() {
+    let mut state = EditorState::default();
+    state.chat.project_files.root = Some("/no/such/folder".into());
+    state.chat.pending_mentions = vec![file("brief.md")];
+    state
+        .chat
+        .project_files
+        .summaries
+        .insert("brief.md".into(), Some("text file, 4 bytes: calm".into()));
+    let block = take_turn_mentions(&mut state);
+    assert!(
+        block.contains("- @brief.md (file): text file, 4 bytes: calm"),
+        "{block}"
+    );
+    assert!(state.chat.pending_mentions.is_empty());
+    assert!(state.chat.project_files.summaries.is_empty());
+}

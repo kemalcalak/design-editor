@@ -258,6 +258,29 @@ impl<'a> Widget for AIChatPlaceholder<'a> {
                 },
             );
         }
+        if let (Some(menu), Some(rows)) =
+            (self.context_panel_bounds(rect), self.context_rows.as_ref())
+        {
+            crate::widgets::ai_chat_context_panel::paint_context_panel(
+                cx,
+                &self.palette,
+                menu,
+                rows,
+                self.locale,
+            );
+        }
+        if let (Some(menu), Some(popup)) = (
+            self.mention_popup_bounds(rect),
+            self.state.mention_popup.as_ref(),
+        ) {
+            crate::widgets::ai_chat_mention_popup::paint_mention_popup(
+                cx,
+                &self.palette,
+                menu,
+                popup,
+                self.locale,
+            );
+        }
         if self.parallel_agents_picker_open {
             crate::widgets::ai_chat_panel_footer::paint_parallel_agents_picker(
                 cx,

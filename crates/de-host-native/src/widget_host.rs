@@ -61,6 +61,8 @@ mod chat_design_hover;
 mod chat_design_hover_tests;
 #[cfg(test)]
 mod chat_input_caret_tests;
+mod chat_mentions_keys;
+pub use chat_mentions_keys::SCAN_LIMITED_TOAST;
 mod chat_model_picker_caret;
 #[cfg(test)]
 mod chat_model_picker_caret_tests;

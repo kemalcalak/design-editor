@@ -82,6 +82,13 @@ pub enum AIChatHit {
     /// Click on a staged-attachment chip — payload is the index
     /// into `chat.pending_attachments` to drop.
     RemoveAttachment(usize),
+    /// Click on row `i` of the open `@` popup (#398) — stage that mention.
+    PickMention(usize),
+    /// The ✕ of staged mention `i` in the context panel — unstage it and
+    /// drop its `@Label` from the draft.
+    RemoveMention(usize),
+    /// The footer's context button — opens / closes the context panel.
+    ToggleContextPanel,
     /// Click on the selected-count chip's clear target — host clears
     /// the current canvas selection.
     ClearSelection,

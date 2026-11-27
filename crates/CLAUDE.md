@@ -1102,3 +1102,49 @@ real CLI agents, not a stub:
 `de_host_services::design_agent_run` is the ONE headless design-agent engine: MCP `run_design_agent` (`mcp_serve/design_agent_run_tool.rs`, now only argument parsing + saved-provider choice) and the `de agent` CLI both call `run_design_agent(state, &DesignAgentRun, RunControl)`. It runs the builtin provider's tool loop (`ConfiguredBuiltinProvider` + `design_tool_defs` + `with_loop_finalize`) on a clone of the document through `HeadlessDesignExecutor` (`design_agent_run_executor.rs`) and returns one landing `EditorCommand::Batch` plus a `DesignAgentRunReport`, or a typed `DesignAgentRunError` (`design_agent_run_error.rs`) and no command. `RunControl` carries a cancel flag (polled every 100 ms by the drain), a per-delta progress callback and an optional `UsageMeter`. Token use: the SSE collectors read Anthropic `message_start` / `message_delta` and an OpenAI-compatible `usage` chunk into `de_ai::chat_usage::TokenUsage`; `AgentLoopConfig::usage` adds every request (refused ones as zero-token requests) to the run's meter (`ConfiguredBuiltinProvider::with_usage_meter`); counts stay `None` when the provider sent none. The in-app chat passes no meter.
 
 CLI side (`crates/de-cli/src/agent_*.rs`, dispatched in `main` before the generic parser): `agent_args` (own argv parser, `-p`), `agent_tasks` (YAML / JSON tasks file via `serde-saphyr`, `deny_unknown_fields`, task > flags > file `defaults`; `check_plan` refuses duplicate `out`s and overlapping export folders by `agent_paths::path_key`: absolute, `..` resolved, Windows `\\?\` prefix dropped, NFC on macOS, case-folded on macOS / Windows; lexical, so symlinks, UNC vs mapped drives and case-insensitive Linux disks are documented misses), `agent_task` (shared checks: portable task names, the engine's 32 KiB prompt limit, export folder `<root>/<task name>`), `agent_provider` (saved providers through the read-only `settings_io::read_builtin_agents`, or an unsaved one from `DE_AGENT_API_KEY` etc.; keys never on argv or in output), `agent_runner` (load → engine → `state.apply` → atomic save → `headless_export::export_document`; typed `TaskError` in `agent_runner_error.rs`; statuses ok / failed / cancelled / interrupted; `--parallel N` worker threads, at most 16, sharing the builtin HTTP pacer in `de-chat-agent/src/backoff.rs`), `agent_thumbs` (the `image_thumbs` registry is process-wide and replaced by each load: every task takes `capture_snapshot()` right after its load, whatever form the file kept the thumbnails in (inline base64 or `<name>.assets/` paths), and `restore_snapshot`s it right before its save; load + snapshot and restore + save hold one lock, so no other task's load lands in between), `agent_report` (`--json`, report `version` 1), `agent_progress` (stderr). Exit 0 / 1 (a task failed) / 2 (usage, tasks file or provider setup, nothing ran) / 130 (Ctrl+C via `signal-hook` cut a task short; `--out` untouched unless it was already saved). Provider errors never print a value that may be a secret (`agent_provider_error.rs`: base URL, the `--api-key-env` value (only its length), serde's quoted settings values), and `--list-providers --json` shows base URLs without user info, query or fragment (`redact_url`). All of it sits behind de-cli's default `agent` feature, which links `de-host-services` (skia raster, no GL; the release `de` grows from ~10 to ~62 MiB). Releases build it (the release script compiles de-cli together with `de-host-desktop`, so `pinned-skia-binaries` unifies); `--no-default-features` gives a slim `de` whose `de agent` prints that it is not in this build and exits 2. CI lints that slim build (`cargo clippy -p de-cli --no-default-features`), and `tests/agent_cli.rs` is `cfg(feature = "agent")`. Integration tests (`crates/de-cli/tests/agent_cli.rs`) run the binary against a loopback Anthropic-wire fake provider (`tests/agent_cli/fake_provider.rs`: `<<frame:Name>>`, `<<fail>>`, `<<hang>>` prompt markers). User docs: `docs/guide/cli.md#headless-design-agent`.
+
+## Chat context: `@`-mentions and the context panel (#398)
+
+- Typing `@` (at the draft start or after whitespace, so an email address
+  never triggers it) opens a popup above the composer card ranked by the
+  command palette's `fuzzy_score`: the canvas selection first, then pages,
+  layers on every page, components, variables and files in the document's
+  folder. State and transitions are core (`de-editor-core/src/chat_mentions/`):
+  `ChatState::{pending_mentions, mention_popup, mention_dismissed_at}`, the
+  shared file list on `ChatSessions::project_files`. The host calls
+  `WidgetHostNative::sync_chat_mentions` once per redraw (it hashes the
+  draft and allocates only when the draft, the staged mentions or the
+  `@query` moved); opening the popup asks its
+  `ProjectFileSource` for the folder. The desktop's
+  `de_host_services::chat_mention_scan::ProjectFileScanner` answers from a
+  10 s cache and lists on a worker thread (never the UI thread; bounded:
+  2000 files, 400 folders, 4 levels, hidden / dependency / build folders and
+  symlinks skipped). A document saved in the home folder (or above it) is
+  listed one level deep, and a cut listing raises `chat.mention.scanLimited`
+  once per folder.
+- Up / Down / Tab / Enter belong to the popup while it has rows; Escape
+  dismisses it until the caret leaves that `@` token. A pick writes
+  `@Label ` and stages a `ChatMention` keyed by id (a page by its page id,
+  not its index). Matching is by identity (`chat_mentions::identity`): a
+  second target with a staged name is written `@Name#2`, a token only counts
+  whole (end of text, whitespace or punctuation in any script after it:
+  letters and digits, `#`, `-`, `_` and `/` continue it) and longer tokens
+  claim their span first, so `@Hero` never matches inside `@Hero card`.
+  Deleting a token unstages exactly that mention.
+- At launch (`chat_session_launch.rs`, `take_turn_mentions`) the staged
+  mentions resolve to compact summaries (`chat_mentions::summary` for
+  document items, capped at 1200 chars;
+  `chat_mention_context::summarize_project_file` for files: an 80-line /
+  4000-char excerpt, binaries described, paths outside the folder refused)
+  and are appended to the provider-bound text as a "Referenced context"
+  block. A file is read on a worker as soon as it is staged
+  (`chat_mention_prefetch::MentionFileReader` into
+  `ProjectFiles::summaries`); a send waits while a read runs, so the UI
+  thread never reads a mentioned file. The keyword gates (`classify_intent`, direct-modify,
+  append detection, scenario stamp, the CLI route's intent classifier and
+  `build_modify_plan`'s target pick) read `routing_text` — what the user
+  typed — so a mentioned layer's name cannot steer routing. The modify
+  plan's message gets the context block appended once, after the plan.
+- The footer's context button (right of "+") opens `ai_chat_context_panel`:
+  document, selection, mentions and attachments (`chat_context::chat_context_rows`,
+  built only while the panel is open), each staged item with a ✕.

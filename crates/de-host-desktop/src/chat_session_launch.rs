@@ -102,6 +102,12 @@ fn launch_if_pending_inner(
     current_chat: &mut Option<ChatSession>,
     current_design: &mut Option<DesignSession>,
 ) -> bool {
+    // A file staged as a mention (#398) is read on a worker; the send waits
+    // for it rather than reading the disk here (`MentionFileReader`).
+    let chat = &host.editor_state().chat;
+    if chat.pending_send.is_some() && chat.project_files.reading_any(&chat.pending_mentions) {
+        return false;
+    }
     let Some(user_text) = host.editor_state_mut().chat.pending_send.take() else {
         return false;
     };
@@ -111,7 +117,13 @@ fn launch_if_pending_inner(
     // reasoning-budget models.
     let launch_route = std::mem::take(&mut host.editor_state_mut().chat.launch_route);
     host.mark_editor_state_dirty();
-    let effective_user_text = resolve_turn_user_text(host.editor_state(), &user_text);
+    let routing_text = resolve_turn_user_text(host.editor_state(), &user_text);
+    // `@`-mentions (#398) resolve to compact summaries appended to what the
+    // provider reads. The keyword gates below route on `routing_text` alone,
+    // so a mentioned layer called "New page" cannot steer the turn.
+    let mentions =
+        de_host_services::chat_mention_context::take_turn_mentions(host.editor_state_mut());
+    let effective_user_text = format!("{routing_text}{mentions}");
     // TS parity (ai-chat-handlers.ts:560-679): builtin / ACP entries
     // take their own early-return paths; ONLY external CLI providers
     // run the standard-mode classify → modify/new/chat pipeline.
@@ -122,23 +134,35 @@ fn launch_if_pending_inner(
         .map(|entry| entry.builtin_provider_id.is_some() || entry.acp_agent_id().is_some())
         .unwrap_or(false);
     if !is_builtin_or_acp {
-        if launch_cli_standard_turn(host, &effective_user_text, current_chat, current_design) {
+        if launch_cli_standard_turn(
+            host,
+            &routing_text,
+            &effective_user_text,
+            current_chat,
+            current_design,
+        ) {
             return true;
         }
         // CLI transport construction failed — fall through to the
         // honest-error path below.
-    } else if should_launch_direct_modify(host.editor_state(), &effective_user_text) {
-        if launch_direct_modify_turn(host, &effective_user_text, current_chat, current_design) {
+    } else if should_launch_direct_modify(host.editor_state(), &routing_text) {
+        if launch_direct_modify_turn(
+            host,
+            &routing_text,
+            &effective_user_text,
+            current_chat,
+            current_design,
+        ) {
             return true;
         }
-    } else if !de_host_services::chat_intent::is_non_request_text(&effective_user_text)
+    } else if !de_host_services::chat_intent::is_non_request_text(&routing_text)
         && (launch_route.implies_design_intent()
-            || matches!(classify_intent(&effective_user_text), Intent::Design))
+            || matches!(classify_intent(&routing_text), Intent::Design))
     {
         // Record what this turn establishes the document to be BEFORE either
         // design route can clear the starter frame — once the page is empty
         // the "was it empty?" fact is gone. See `design_turn_scenario`.
-        stamp_design_turn_scenario(host.editor_state_mut(), &effective_user_text);
+        stamp_design_turn_scenario(host.editor_state_mut(), &routing_text);
         // Phase 2.3: When the design-agent-loop flag is ON and a built-in
         // provider is configured, run the agentic tool-loop with the 14-tool
         // design toolset instead of the orchestrator pipeline. Flag OFF falls
@@ -172,7 +196,7 @@ fn launch_if_pending_inner(
             }
             let append_context = de_host_services::chat_intent::detect_append_intent(
                 host.editor_state(),
-                &effective_user_text,
+                &routing_text,
             );
             let (request, initial_state) = prepare_design_request_and_snapshot(
                 host,
@@ -297,7 +321,7 @@ fn launch_if_pending_inner(
     // this turn only. Every turn now carries the context-rich chat
     // system prompt (TS buildChatSystemPrompt port) — CLI transports
     // fold it (plus a history digest) into their prompt string.
-    let system_prompt = build_chat_system_prompt(host.editor_state(), &effective_user_text);
+    let system_prompt = build_chat_system_prompt(host.editor_state(), &routing_text);
     let model = selected_cli_model_id(host);
     let chat = &mut host.editor_state_mut().chat;
     let thinking = chat.thinking_mode;
@@ -316,6 +340,12 @@ fn launch_if_pending_inner(
     super::finalize_design_session_if_needed(host, current_chat, "teardown-backstop");
     *current_chat = Some(ChatSession::start(provider, req));
     true
+}
+
+/// The `@`-mention context block `user_text` carries after `routing_text`
+/// (empty when there is none).
+fn mention_suffix<'a>(routing_text: &str, user_text: &'a str) -> &'a str {
+    user_text.strip_prefix(routing_text).unwrap_or("")
 }
 
 fn resolve_turn_user_text(state: &EditorState, user_text: &str) -> String {
@@ -384,8 +414,12 @@ fn should_launch_direct_modify(state: &EditorState, user_text: &str) -> bool {
         && de_host_services::chat_intent::build_modify_plan(state, user_text).is_some()
 }
 
+/// Run a direct modify turn. The plan (target pick, context nodes) is built
+/// from `routing_text` alone; the `@`-mention context `user_text` adds is
+/// appended to the plan's message once.
 fn launch_direct_modify_turn(
     host: &mut WidgetHostNative,
+    routing_text: &str,
     user_text: &str,
     current_chat: &mut Option<ChatSession>,
     current_design: &mut Option<DesignSession>,
@@ -394,14 +428,14 @@ fn launch_direct_modify_turn(
         return false;
     };
     let Some(plan) =
-        de_host_services::chat_intent::build_modify_plan(host.editor_state(), user_text)
+        de_host_services::chat_intent::build_modify_plan(host.editor_state(), routing_text)
     else {
         return false;
     };
     let target_frame_ids = plan.target_frame_ids;
     let request = ChatRequest {
         system_prompt: plan.system_prompt,
-        user_message: plan.user_message,
+        user_message: plan.user_message + mention_suffix(routing_text, user_text),
         max_output_tokens: 8192,
         model: selected_cli_model_id(host),
         // Structured-JSON turn: reasoning models (MiniMax-M3, GLM-5.x)
@@ -450,9 +484,12 @@ fn launch_direct_modify_turn(
 /// classification needs an LLM round-trip and must not block the UI.
 ///
 /// Returns false when any transport fails to build (caller falls to
-/// the honest-error path).
+/// the honest-error path). `routing_text` is what the user typed (the
+/// keyword gates read it); `user_text` adds the resolved `@`-mention
+/// context and is what the providers receive.
 fn launch_cli_standard_turn(
     host: &mut WidgetHostNative,
+    routing_text: &str,
     user_text: &str,
     current_chat: &mut Option<ChatSession>,
     current_design: &mut Option<DesignSession>,
@@ -474,10 +511,10 @@ fn launch_cli_standard_turn(
     // starter sample clears eagerly when the keyword pre-gate already
     // reads design intent. A keyword-design turn the LLM later
     // classifies as chat loses only the untouched starter sample.
-    if matches!(classify_intent(user_text), Intent::Design) {
+    if matches!(classify_intent(routing_text), Intent::Design) {
         // Same ordering rule as the builtin route: the scenario fact is read
         // while the page still shows what the user had.
-        stamp_design_turn_scenario(host.editor_state_mut(), user_text);
+        stamp_design_turn_scenario(host.editor_state_mut(), routing_text);
         if clear_fresh_starter_frame_for_design(host.editor_state_mut()) {
             host.mark_editor_state_dirty();
         }
@@ -492,9 +529,9 @@ fn launch_cli_standard_turn(
         DEFAULT_MAX_MESSAGES,
         DEFAULT_MAX_CHARS,
     );
-    let system_prompt = build_chat_system_prompt(state, user_text);
-    let modify_plan = de_host_services::chat_intent::build_modify_plan(state, user_text);
-    let append_context = de_host_services::chat_intent::detect_append_intent(state, user_text);
+    let system_prompt = build_chat_system_prompt(state, routing_text);
+    let modify_plan = de_host_services::chat_intent::build_modify_plan(state, routing_text);
+    let append_context = de_host_services::chat_intent::detect_append_intent(state, routing_text);
     let (design_request, initial_state) =
         prepare_design_request_and_snapshot(host, user_text.to_string(), append_context);
     // Narrowed clone — `CliTurnPlan::initial_state` ends up as the design
@@ -529,7 +566,7 @@ fn launch_cli_standard_turn(
     // history, no attachments, provider-default thinking.
     let modify_request = modify_plan.map(|plan| ChatRequest {
         system_prompt: plan.system_prompt,
-        user_message: plan.user_message,
+        user_message: plan.user_message + mention_suffix(routing_text, user_text),
         max_output_tokens: 8192,
         model: model.clone(),
         ..Default::default()
@@ -557,7 +594,9 @@ fn launch_cli_standard_turn(
     ));
 
     let plan = de_host_services::chat_intent::CliTurnPlan {
-        user_text: user_text.to_string(),
+        // The classifier routes on what the user typed, never on the
+        // mention context.
+        user_text: routing_text.to_string(),
         page_children_empty,
         classify_provider,
         chat_provider,
