@@ -1277,10 +1277,18 @@ CLI side (`crates/de-cli/src/agent_*.rs`, dispatched in `main` before the generi
   call reads as declined; a closed tab and quit do the same. The MCP
   connection reads the setting from `LiveShared` (published at server
   start by `McpLiveServer::note_editor` and on every pump; nothing is
-  classified or asked with it off), asks before taking the state lock
-  (`execute` asks after it, since its dry run needs the snapshot), and
-  waits at most 50 s (`PERMISSION_DEADLINE`):
-  then it refuses the call, the pump closes the prompt, and a late Allow
+  classified or asked with it off), never asks while holding the state
+  lock, and waits at most 50 s (`PERMISSION_DEADLINE`). A live `execute`
+  (no `filePath`, or `live://canvas`) is asked about once, from its dry
+  run: under the lock on a snapshot, which is let go before the question;
+  the real run retakes the lock on a fresh snapshot inside
+  `de_mcp::script_execute::pinned`, on the dry run's `ExecuteClock`
+  (`Math.random` seeded and `Date` frozen from it in every run, so both
+  take the same branches), and fails, applying nothing, when it would make
+  a destructive call the dry run did not (the document changed while the
+  prompt was open). An `execute` on another file asks before the lock like
+  any other call. Past the deadline the connection
+  refuses the call, the pump closes the prompt, and a late Allow
   runs nothing. Replacing or opening the document and quitting decline
   every open prompt (`decline_all_agent_permissions`); switching the
   setting off lets each waiting call run and closes its prompt. A prompt

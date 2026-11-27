@@ -82,7 +82,7 @@ pub(crate) struct ExecSession {
     /// A copy of the sim shared by screenshots taken with no write between.
     frozen: Option<(u64, SharedState)>,
     /// The destructive calls the script made (#398's dry run).
-    pub(crate) effects: super::script_execute::ExecuteEffects,
+    pub(crate) effects: super::script_execute_effects::ExecuteEffects,
 }
 
 impl ExecSession {

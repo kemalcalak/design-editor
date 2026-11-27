@@ -21,7 +21,9 @@
 //! lands all-or-nothing. A script that throws, times out, or caught a failed
 //! write returns an error and applies nothing (no screenshots, no exports,
 //! no `Print` output). Each call is a fresh sandbox: pass ids between calls
-//! as strings.
+//! as strings. `Math.random` is seeded and `Date` frozen per run
+//! (`script_execute_effects.rs`), so a permission gate's dry run and the
+//! real run on one clock do the same thing (#398).
 
 use std::cell::RefCell;
 use std::collections::BTreeMap;
@@ -42,6 +44,7 @@ use super::script_execute_session::ExecSession;
 use super::script_runner::{strip_fences, MAX_SCRIPT_BYTES, MEMORY_LIMIT_BYTES};
 use super::{EditorCommand, ImageContent, McpTool, ToolErrorCode, ToolOutcome};
 
+pub use super::script_execute_effects::{execute_effects, pinned, ExecuteClock, ExecuteEffects};
 pub use super::script_execute_error::ScriptRenderError;
 pub use super::script_execute_session::{
     MAX_EXPORT_NODES, MAX_PRINT_BYTES, MAX_SCREENSHOTS, MAX_WRITES,
@@ -99,60 +102,6 @@ pub trait ScriptRenderer: Send + Sync {
     fn only_for_read_only_scripts(&self) -> bool {
         false
     }
-}
-
-/// The destructive calls one `execute` script makes when it runs: what the
-/// "ask before destructive agent actions" gate (#398) judges an `execute`
-/// call by. A script is judged by running it ([`execute_effects`]), since no
-/// reading of its text can tell (`globalThis["Del" + "ete"](…)`).
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
-pub struct ExecuteEffects {
-    pub deletes: usize,
-    pub replaces: usize,
-    /// `Export` calls (they write files).
-    pub exports: usize,
-    /// A `SetVariables(…, true)`: every variable not listed is removed.
-    pub replaces_variables: bool,
-}
-
-impl ExecuteEffects {
-    /// Count one host call (`op` is the prelude's `call` name).
-    pub(crate) fn note(&mut self, op: &str, args: &Value) {
-        match op {
-            "delete" => self.deletes += 1,
-            "replace" => self.replaces += 1,
-            "export" => self.exports += 1,
-            "setVariables" => {
-                self.replaces_variables |=
-                    args.get("replace").and_then(Value::as_bool) == Some(true)
-            }
-            _ => {}
-        }
-    }
-
-    /// Whether any of it deletes, replaces or writes a file.
-    pub fn is_destructive(&self) -> bool {
-        self.deletes + self.replaces + self.exports > 0 || self.replaces_variables
-    }
-}
-
-/// Run `script` against `snapshot` without applying, rendering or writing
-/// anything, and say which destructive calls it made. Exports are recorded,
-/// never rendered. `None` when the script could not be judged (it threw, a
-/// write failed, it ran out of time, or the source is empty or too large).
-pub fn execute_effects(
-    snapshot: SharedState,
-    script: &str,
-    page_id: Option<String>,
-) -> Option<ExecuteEffects> {
-    let script = strip_fences(script);
-    if script.trim().is_empty() || script.len() > MAX_SCRIPT_BYTES {
-        return None;
-    }
-    let session = Rc::new(RefCell::new(ExecSession::new(snapshot, page_id, true)));
-    eval(&script, session.clone(), EXECUTE_BUDGET).ok()?;
-    let session = session.borrow();
-    session.failed_write.is_none().then_some(session.effects)
 }
 
 /// What one `Export` call wrote.
@@ -264,26 +213,37 @@ fn run(
             max: MAX_SCRIPT_BYTES,
         });
     }
+    let pin = super::script_execute_effects::current_pin();
     let session = Rc::new(RefCell::new(ExecSession::new(
         snapshot,
         page_id,
         renderer.is_some(),
     )));
-    eval(&script, session.clone(), budget)?;
+    eval(&script, session.clone(), budget, pin.clock)?;
     let session = Rc::try_unwrap(session)
         .map_err(|_| ExecuteError::Sandbox("the script sandbox outlived its run".into()))?
         .into_inner();
     if let Some(error) = session.failed_write.clone() {
         return Err(ExecuteError::WriteFailed(error.to_string()));
     }
+    // #398: a gated call may not do more than its dry run showed the user.
+    if pin
+        .allowed
+        .as_ref()
+        .is_some_and(|allowed| !allowed.permits(&session.effects))
+    {
+        return Err(ExecuteError::NotAsked);
+    }
     Ok(finish(session, renderer))
 }
 
-/// Evaluate the prelude and the script in a fresh limited QuickJS context.
-fn eval(
+/// Evaluate the prelude and the script in a fresh limited QuickJS context,
+/// with `Date` and `Math.random` fixed by `clock`.
+pub(crate) fn eval(
     script: &str,
     session: Rc<RefCell<ExecSession>>,
     budget: Duration,
+    clock: ExecuteClock,
 ) -> Result<(), ExecuteError> {
     let rt = Runtime::new().map_err(|e| ExecuteError::Sandbox(format!("js runtime: {e}")))?;
     rt.set_memory_limit(MEMORY_LIMIT_BYTES);
@@ -298,6 +258,8 @@ fn eval(
         ctx.globals()
             .set("__host", host)
             .map_err(|e| ExecuteError::Sandbox(format!("set host: {e}")))?;
+        ctx.eval::<(), _>(clock.prelude())
+            .map_err(|e| ExecuteError::Sandbox(format!("clock prelude: {e}")))?;
         ctx.eval::<(), _>(EXECUTE_PRELUDE)
             .map_err(|e| ExecuteError::Sandbox(format!("prelude: {e}")))?;
         let mut options = EvalOptions::default();

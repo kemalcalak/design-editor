@@ -16,25 +16,44 @@ pub fn classify_agent_tool(tool: &str, args_json: &str) -> Option<DestructiveAct
     })
 }
 
-/// An `execute` call judged by a dry run of its script on `snapshot`
-/// (nothing applied, rendered or written): `None` when it would only read or
-/// make plain writes, [`DestructiveAction::ScriptedBatch`] when it would
-/// delete, replace, export or overwrite the variables, or when it cannot be
-/// judged (it throws, a write fails, it runs out of time).
+/// An `execute` call's dry run: what it did, and whether it asks.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ExecuteVerdict {
+    /// The destructive calls it made; `None` when it could not be judged.
+    pub effects: Option<de_mcp::script_execute::ExecuteEffects>,
+    /// [`DestructiveAction::ScriptedBatch`] when it would delete, replace,
+    /// export or overwrite the variables, or could not be judged (it threw,
+    /// a write failed, it ran out of time); `None` when it only reads or
+    /// makes plain writes.
+    pub action: Option<DestructiveAction>,
+}
+
+/// Judge an `execute` call by a dry run of its script on `snapshot` on
+/// `clock` (nothing applied, rendered or written). The real run must use
+/// the same clock (`de_mcp::script_execute::pinned`) to do the same.
 pub fn classify_execute(
     snapshot: de_editor_core::shared_state::SharedState,
     args_json: &str,
-) -> Option<DestructiveAction> {
+    clock: de_mcp::script_execute::ExecuteClock,
+) -> ExecuteVerdict {
     let args: serde_json::Value = serde_json::from_str(args_json).unwrap_or_default();
-    let script = args.get("script").and_then(serde_json::Value::as_str)?;
+    let Some(script) = args.get("script").and_then(serde_json::Value::as_str) else {
+        // No script: the call fails without running anything.
+        return ExecuteVerdict {
+            effects: Some(Default::default()),
+            action: None,
+        };
+    };
     let page_id = args
         .get("pageId")
         .and_then(serde_json::Value::as_str)
         .map(str::to_string);
-    match de_mcp::script_execute::execute_effects(snapshot, script, page_id) {
+    let effects = de_mcp::script_execute::execute_effects(snapshot, script, page_id, clock);
+    let action = match &effects {
         Some(effects) if !effects.is_destructive() => None,
         _ => Some(DestructiveAction::ScriptedBatch),
-    }
+    };
+    ExecuteVerdict { effects, action }
 }
 
 #[cfg(test)]
@@ -69,7 +88,8 @@ mod tests {
         let state = de_editor_core::EditorState::from_document(doc);
         let run = |script: &str| {
             let args = serde_json::json!({ "script": script }).to_string();
-            classify_execute(SharedState::copied(&state), &args)
+            let clock = de_mcp::script_execute::ExecuteClock::now();
+            classify_execute(SharedState::copied(&state), &args, clock).action
         };
         for asks in [
             "globalThis.Delete('hero')",

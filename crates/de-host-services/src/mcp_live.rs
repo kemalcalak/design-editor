@@ -708,6 +708,9 @@ mod busy_tests;
 #[path = "mcp_live_memory_tests.rs"]
 mod memory_tests;
 #[cfg(test)]
+#[path = "mcp_live_execute_gate_tests.rs"]
+mod execute_gate_tests;
+#[cfg(test)]
 #[path = "mcp_live_pages_tests.rs"]
 mod pages_tests;
 #[cfg(test)]

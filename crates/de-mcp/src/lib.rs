@@ -183,6 +183,8 @@ pub mod screen_tools;
 #[cfg(feature = "script")]
 pub mod script_execute;
 #[cfg(feature = "script")]
+mod script_execute_effects;
+#[cfg(feature = "script")]
 mod script_execute_error;
 #[cfg(feature = "script")]
 mod script_execute_prelude;

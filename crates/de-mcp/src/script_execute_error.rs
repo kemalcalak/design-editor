@@ -42,6 +42,9 @@ pub(crate) enum ExecuteError {
     LimitReached { what: &'static str, max: usize },
     /// `TakeScreenshot` / `Export` on a host that cannot render.
     NoRenderer(&'static str),
+    /// The run would make a destructive call its permission prompt did not
+    /// show (#398): the document changed after the dry run judged it.
+    NotAsked,
 }
 
 impl fmt::Display for ExecuteError {
@@ -72,6 +75,10 @@ impl fmt::Display for ExecuteError {
             ExecuteError::NoRenderer(call) => {
                 write!(f, "{call} needs a host that renders; this one cannot")
             }
+            ExecuteError::NotAsked => f.write_str(
+                "the script would delete, replace, export or overwrite something the permission \
+                 prompt did not show (the document changed while it was open); run it again",
+            ),
         }
     }
 }

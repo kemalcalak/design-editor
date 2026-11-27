@@ -205,15 +205,40 @@ fn state_with_hero() -> EditorState {
     EditorState::from_document(doc)
 }
 
+const CLOCK: ExecuteClock = ExecuteClock {
+    now_ms: 1_700_000_000_000,
+};
+
+/// The live `execute` in `body` judged on `state` and asked about.
+fn gate_on(
+    body: &str,
+    state: &EditorState,
+    req_tx: &Sender<UiRequest>,
+    wake: &UiWake,
+) -> ExecuteGate {
+    let (id, args) = live_execute_call(body).expect("a live execute");
+    let verdict = crate::agent_permission_classify::classify_execute(
+        SharedState::copied(state),
+        &args,
+        CLOCK,
+    );
+    ask_for_execute(&id, args, verdict, CLOCK, req_tx, wake)
+}
+
 #[test]
 fn an_execute_script_is_gated_by_what_its_dry_run_does() {
     let wake: UiWake = Arc::new(|| {});
     let (req_tx, req_rx) = mpsc::channel();
-    let mut state = state_with_hero();
-    // A read-only script runs without a question, and the state is put back.
-    assert!(gate_execute(&execute_body("Get('hero')"), &mut state, &req_tx, &wake).is_none());
+    let state = state_with_hero();
+    // A read-only script runs without a question, held to doing nothing
+    // destructive.
+    let ExecuteGate::Run(pin) = gate_on(&execute_body("Get('hero')"), &state, &req_tx, &wake)
+    else {
+        panic!("runs");
+    };
     assert!(req_rx.try_recv().is_err());
-    assert_eq!(state.active_children().len(), 1);
+    assert_eq!(pin.clock, CLOCK);
+    assert!(pin.allowed.is_some_and(|allowed| !allowed.is_destructive()));
     // A delete spelled through globalThis asks; the user says no.
     let answerer = std::thread::spawn(move || {
         let Ok(UiRequest::Permission(question)) = req_rx.recv() else {
@@ -222,13 +247,14 @@ fn an_execute_script_is_gated_by_what_its_dry_run_does() {
         assert_eq!(question.action, DestructiveAction::ScriptedBatch);
         question.ack.send(false).unwrap();
     });
-    let reply = gate_execute(
+    let ExecuteGate::Refused(reply) = gate_on(
         &execute_body("globalThis['Del' + 'ete']('hero')"),
-        &mut state,
+        &state,
         &req_tx,
         &wake,
-    )
-    .expect("refused");
+    ) else {
+        panic!("refused");
+    };
     assert!(reply.contains("declined"), "{reply}");
     answerer.join().unwrap();
     assert_eq!(
@@ -238,15 +264,35 @@ fn an_execute_script_is_gated_by_what_its_dry_run_does() {
     );
 }
 
-#[test]
-fn an_execute_aimed_at_another_file_asks_before_the_lock() {
-    let body = serde_json::json!({
+fn execute_with_file(file_path: &str) -> String {
+    serde_json::json!({
         "jsonrpc": "2.0",
         "id": 3,
         "method": "tools/call",
-        "params": {"name": "execute", "arguments": {"script": "Get('a')", "filePath": "/tmp/x.de"}},
+        "params": {"name": "execute", "arguments": {"script": "Delete('a')", "filePath": file_path}},
     })
-    .to_string();
-    assert!(destructive_call(&body).is_some());
+    .to_string()
+}
+
+#[test]
+fn an_execute_aimed_at_another_file_asks_before_the_lock() {
+    let other = execute_with_file("/tmp/x.de");
+    assert!(destructive_call(&other).is_some());
+    assert!(live_execute_call(&other).is_none());
     assert!(destructive_call(&execute_body("Delete('a')")).is_none());
+}
+
+#[test]
+fn an_execute_on_the_live_canvas_is_asked_about_once() {
+    for sentinel in ["live://canvas", "live://canvas/current"] {
+        let body = execute_with_file(sentinel);
+        assert!(
+            destructive_call(&body).is_none(),
+            "{sentinel}: not before the lock"
+        );
+        assert!(
+            live_execute_call(&body).is_some(),
+            "{sentinel}: by its dry run"
+        );
+    }
 }
