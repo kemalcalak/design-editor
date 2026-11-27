@@ -70,6 +70,16 @@ pub fn for_call(tool: &str, args: &BTreeMap<String, String>) -> SnapshotPages {
 /// What the JSON-RPC request `line` reads; [`SnapshotPages::All`] for
 /// anything that is not a parsable tool call.
 pub fn for_request(line: &str) -> SnapshotPages {
+    // A line that names no listed tool is not parsed twice: writes carry
+    // the large payloads.
+    let listed = NO_NODE_TOOLS
+        .iter()
+        .chain(PAGE_TOOLS)
+        .chain(&["get_screenshot", "execute"])
+        .any(|tool| line.contains(tool));
+    if !listed {
+        return SnapshotPages::All;
+    }
     match crate::parse_tool_call(line) {
         Some(call) => for_call(&call.tool, &call.arguments),
         None => SnapshotPages::All,
