@@ -14,8 +14,9 @@ use std::sync::Arc;
 
 use crate::state::EditorState;
 
-/// Shared, copy-on-write [`EditorState`].
-#[derive(Debug, Clone, Default)]
+/// Shared, copy-on-write [`EditorState`]. No `Default`: an empty state is
+/// never what a tool should be handed by accident.
+#[derive(Debug, Clone)]
 pub struct SharedState(Arc<EditorState>);
 
 impl SharedState {
@@ -51,6 +52,47 @@ impl SharedState {
     /// Whether `self` and `other` are the same allocation (tests).
     pub fn ptr_eq(&self, other: &Self) -> bool {
         Arc::ptr_eq(&self.0, &other.0)
+    }
+}
+
+/// [`SharedState::take_from`] that puts the state back when it drops,
+/// also while a panic unwinds, so the caller's state is never left hollow.
+/// Drop every other handle first and the state moves back uncopied.
+pub struct TakenState<'a> {
+    home: &'a mut EditorState,
+    shared: Option<SharedState>,
+}
+
+impl<'a> TakenState<'a> {
+    /// Take `state` into a shared handle until the guard drops.
+    pub fn new(state: &'a mut EditorState) -> Self {
+        let shared = SharedState::take_from(state);
+        Self {
+            home: state,
+            shared: Some(shared),
+        }
+    }
+}
+
+impl Deref for TakenState<'_> {
+    type Target = SharedState;
+
+    fn deref(&self) -> &SharedState {
+        self.shared.as_ref().expect("held until drop")
+    }
+}
+
+impl DerefMut for TakenState<'_> {
+    fn deref_mut(&mut self) -> &mut SharedState {
+        self.shared.as_mut().expect("held until drop")
+    }
+}
+
+impl Drop for TakenState<'_> {
+    fn drop(&mut self) {
+        if let Some(shared) = self.shared.take() {
+            shared.restore_into(self.home);
+        }
     }
 }
 
@@ -113,6 +155,28 @@ mod tests {
         shared.restore_into(&mut state);
         assert_eq!(state.doc.name.as_deref(), Some("Live"));
         assert_eq!(state.ui_kits.len(), kits);
+    }
+
+    #[test]
+    fn a_taken_state_comes_back_when_the_holder_panics() {
+        let mut state = EditorState::new();
+        state.doc.name = Some("Live".into());
+        let kits = state.ui_kits.len();
+        let caught = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+            let taken = TakenState::new(&mut state);
+            assert_eq!(taken.doc.name.as_deref(), Some("Live"));
+            panic!("a tool panics while it holds the state");
+        }));
+        assert!(caught.is_err());
+        assert_eq!(state.doc.name.as_deref(), Some("Live"), "restored");
+        assert_eq!(state.ui_kits.len(), kits, "not the hollow stand-in");
+
+        // And on the normal path, a write through the guard lands.
+        {
+            let mut taken = TakenState::new(&mut state);
+            taken.doc.name = Some("Edited".into());
+        }
+        assert_eq!(state.doc.name.as_deref(), Some("Edited"));
     }
 
     #[test]

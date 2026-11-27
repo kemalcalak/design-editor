@@ -10,15 +10,16 @@
 //! (`de-host-services` `mcp_live`), so an unlisted write path can never act
 //! on a partial document.
 //!
-//! `mcp_serve` tests run each listed call on the whole and on the narrowed
-//! state and require byte-identical replies.
+//! `de-host-services/src/mcp_live_pages_tests.rs` runs each listed call on
+//! the whole and on the narrowed state and requires byte-identical replies,
+//! and checks that every tool listed here has a call there.
 
 use std::collections::BTreeMap;
 
 pub use de_editor_core::request_snapshot_pages::SnapshotPages;
 
 /// Read-only tools that touch no page's nodes.
-const NO_NODE_TOOLS: &[&str] = &[
+pub const NO_NODE_TOOLS: &[&str] = &[
     "get_history_depth",
     "get_viewport",
     "get_variables",
@@ -28,7 +29,7 @@ const NO_NODE_TOOLS: &[&str] = &[
 
 /// Read-only tools that read one page: `pageId` (`page_id`, `page`), else
 /// the active page.
-const PAGE_TOOLS: &[&str] = &[
+pub const PAGE_TOOLS: &[&str] = &[
     "snapshot_layout",
     "read_nodes",
     "batch_get",

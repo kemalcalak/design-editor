@@ -12,13 +12,19 @@
 //!
 //! What a tool reads is decided by its caller (`de_mcp::snapshot_pages`);
 //! anything it does not list gets [`SnapshotPages::All`], the old snapshot.
+//!
+//! [`PageAnchor`] is the capturing side's memory between captures (the
+//! sharing anchor and the needs of the current revision): the live MCP pump
+//! wraps it with an idle timeout, and the benchmark drives the same type.
 
 use std::collections::HashSet;
 
 use jian_ops_schema::node::PenNode;
 use serde_json::Value;
 
+use crate::history_snapshot::SharedDoc;
 use crate::pen_node_ext::PenNodeExt;
+use crate::request_snapshot::{shared_snapshot_pages, SharedRequestSnapshot};
 use crate::state::EditorState;
 
 /// The part of the document a request reads.
@@ -94,7 +100,7 @@ pub fn kept_pages(
     }
     match pages {
         SnapshotPages::All => None,
-        SnapshotPages::NoNodes => Some(vec![false; doc_pages.len()]),
+        SnapshotPages::NoNodes => no_node_pages(state),
         SnapshotPages::Page(id) => {
             let index = match id {
                 Some(id) => doc_pages.iter().position(|page| page.id == *id)?,
@@ -103,6 +109,87 @@ pub fn kept_pages(
             let mut keep = needs.always.clone();
             keep[index] = true;
             Some(keep)
+        }
+    }
+}
+
+/// The pages a [`SnapshotPages::NoNodes`] capture keeps: none. Needs no
+/// [`PageNeeds`], so a document-level read never walks the document.
+fn no_node_pages(state: &EditorState) -> Option<Vec<bool>> {
+    let pages = state
+        .doc
+        .pages
+        .as_deref()
+        .filter(|pages| !pages.is_empty())?;
+    Some(vec![false; pages.len()])
+}
+
+/// What the capturing side remembers between request snapshots: the
+/// document the last capture handed out (merged with the pages earlier
+/// captures kept), which the next capture shares unchanged nodes with, and
+/// the [`PageNeeds`] of the current document revision.
+#[derive(Default)]
+pub struct PageAnchor {
+    doc: Option<SharedDoc>,
+    needs: Option<PageNeeds>,
+}
+
+impl PageAnchor {
+    /// Capture what `pages` reads from `state`, sharing unchanged nodes
+    /// with the previous capture, and keep the result as the next anchor.
+    pub fn capture(
+        &mut self,
+        state: &mut EditorState,
+        pages: &SnapshotPages,
+    ) -> SharedRequestSnapshot {
+        let keep = self.kept(state, pages);
+        let snapshot = shared_snapshot_pages(state, self.doc.as_ref(), keep.as_deref());
+        let next = match (&keep, self.doc.as_ref()) {
+            (Some(keep), Some(anchor)) => anchor.merged_pages(snapshot.shared_doc(), keep),
+            _ => snapshot.shared_doc().clone(),
+        };
+        self.doc = Some(next);
+        snapshot
+    }
+
+    /// Let go of the anchor document (a client that went quiet); the page
+    /// needs stay, they hold no nodes.
+    pub fn release_doc(&mut self) {
+        self.doc = None;
+    }
+
+    /// Forget everything: the document was replaced.
+    pub fn clear(&mut self) {
+        self.doc = None;
+        self.needs = None;
+    }
+
+    /// Whether page needs were computed at all (tests: a document-level
+    /// read must not compute them).
+    pub fn has_needs(&self) -> bool {
+        self.needs.is_some()
+    }
+
+    /// Whether the page needs were computed for `state`'s current
+    /// revision (tests).
+    pub fn needs_are_current(&self, state: &EditorState) -> bool {
+        self.needs
+            .as_ref()
+            .is_some_and(|needs| needs.is_current(state))
+    }
+
+    /// The pages to capture for `pages` (`None`: all). Only a one-page read
+    /// needs the [`PageNeeds`] walk, and only once per document revision.
+    fn kept(&mut self, state: &EditorState, pages: &SnapshotPages) -> Option<Vec<bool>> {
+        match pages {
+            SnapshotPages::All => None,
+            SnapshotPages::NoNodes => no_node_pages(state),
+            SnapshotPages::Page(_) => {
+                if !self.needs_are_current(state) {
+                    self.needs = Some(PageNeeds::of(state));
+                }
+                kept_pages(state, pages, self.needs.as_ref()?)
+            }
         }
     }
 }

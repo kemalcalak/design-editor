@@ -90,6 +90,15 @@ pub trait ScriptRenderer: Send + Sync {
         state: &EditorState,
         request: &ExportRequest,
     ) -> Result<ExportWritten, ScriptRenderError>;
+
+    /// Whether screenshots and exports run only for a script that writes
+    /// nothing. A live host answers a read from a narrowed snapshot (#456);
+    /// a script that turns out to write there is refused and runs again on
+    /// the whole document, so its narrowed run must not render or write
+    /// files: the full run does, once.
+    fn only_for_read_only_scripts(&self) -> bool {
+        false
+    }
 }
 
 /// What one `Export` call wrote.
@@ -315,6 +324,8 @@ fn finish(mut session: ExecSession, renderer: Option<&dyn ScriptRenderer>) -> To
     let mut images = Vec::new();
     let mut shots = Vec::new();
     let mut written = Vec::new();
+    let writes = !session.ctx.commands.is_empty();
+    let renderer = renderer.filter(|renderer| !(writes && renderer.only_for_read_only_scripts()));
     if let Some(renderer) = renderer {
         for shot in &session.shots {
             let label = shot.node_id.as_deref().unwrap_or("document");

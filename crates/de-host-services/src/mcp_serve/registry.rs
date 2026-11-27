@@ -8,10 +8,13 @@ use super::*;
 
 /// `save_target` is the requested call's `filePath`, which a
 /// `save_document` snapshot needs to write its library links relative to.
+/// `narrowed_read`: the call runs on a narrowed live snapshot (#456), so
+/// `execute` renders and exports only when its script writes nothing.
 pub(super) fn rebuild_registry(
     doc: &SharedState,
     requested_tool: Option<&str>,
     save_target: Option<&str>,
+    narrowed_read: bool,
 ) -> ToolRegistry {
     let mut r = ToolRegistry::default();
 
@@ -99,7 +102,10 @@ pub(super) fn rebuild_registry(
     register_tool!("add_library", add_library_snapshot(doc));
     register_tool!("remove_library", remove_library_snapshot(doc));
     register_tool!("get_component", get_component_snapshot(doc));
-    register_tool!("execute", execute_tool::execute_shared(doc.clone()));
+    register_tool!(
+        "execute",
+        execute_tool::execute_shared(doc.clone(), narrowed_read)
+    );
     register_tool!("batch_get", de_mcp::batch_get_shared(doc.clone()));
     register_tool!("read_nodes", de_mcp::read_nodes_shared(doc.clone()));
     register_tool!("codegen_export", codegen_export_snapshot(doc));
