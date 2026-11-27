@@ -4,6 +4,7 @@
 //! out of `mcp_live.rs` to keep the spine under the 800-line cap.
 
 use super::*;
+use de_editor_core::request_snapshot_pages::SnapshotPages;
 
 /// Ask the UI thread for a snapshot, waiting at most [`UI_BUSY_WAIT`]
 /// (less while the UI is known to be stalled): past it the call is answered
@@ -35,6 +36,27 @@ pub(super) fn request_snapshot_within(
     shared: &LiveShared,
     timeout: Duration,
 ) -> Result<(EditorState, u64), McpLiveError> {
+    request_snapshot_scoped(req_tx, wake_ui, shared, timeout, SnapshotPages::All)
+}
+
+/// [`request_snapshot_with_epoch`] of only what a call reads (#456): the
+/// pages `pages` names, plus what instances on them resolve against.
+pub(super) fn request_snapshot_pages(
+    req_tx: &Sender<UiRequest>,
+    wake_ui: &UiWake,
+    shared: &LiveShared,
+    pages: SnapshotPages,
+) -> Result<(EditorState, u64), McpLiveError> {
+    request_snapshot_scoped(req_tx, wake_ui, shared, UI_BUSY_WAIT, pages)
+}
+
+fn request_snapshot_scoped(
+    req_tx: &Sender<UiRequest>,
+    wake_ui: &UiWake,
+    shared: &LiveShared,
+    timeout: Duration,
+    pages: SnapshotPages,
+) -> Result<(EditorState, u64), McpLiveError> {
     let timeout = shared.ui_wait(timeout);
     let (ack_tx, ack_rx) = mpsc::sync_channel(1);
     let abandoned = Arc::new(AtomicBool::new(false));
@@ -42,6 +64,7 @@ pub(super) fn request_snapshot_within(
         .send(UiRequest::Snapshot {
             ack: ack_tx,
             abandoned: Arc::clone(&abandoned),
+            pages,
         })
         .map_err(|_| {
             McpLiveError::UiThread("UI thread is not accepting MCP snapshot requests".to_string())

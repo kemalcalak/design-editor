@@ -14,6 +14,7 @@
 use std::collections::{BTreeMap, HashSet};
 
 use de_editor_core::command_node::remap_subtree_ids_mapping;
+use de_editor_core::shared_state::SharedState;
 use de_editor_core::{EditorState, NodeId, PenNodeExt};
 use jian_ops_schema::node::PenNode;
 use jian_ops_schema::promote::PromoteNote;
@@ -25,20 +26,18 @@ use super::batch_design::{
 };
 use super::batch_direct_ops::is_direct_image_operation;
 use super::batch_page::optional_page_id;
-use super::read_nodes::{page_nodes_snapshots, PageNodes};
 use super::{EditorCommand, McpTool, ToolErrorCode, ToolOutcome};
 
 /// `batch_design` — insert a node forest in one shot. Holds a document snapshot
 /// (page node sets + the doc-wide id state) so the operations path can report
 /// the TS result; the mutation still flows through `EditorCommand::InsertSubtree`.
 pub struct BatchDesign {
-    /// Full editor-state snapshot — the multi-op DSL program executor
-    /// (`batch_program.rs`) simulates each program line against a clone
-    /// of this; any failing line rolls back the whole batch (the
-    /// agent-facing transactional contract).
-    state: EditorState,
-    pages: Vec<PageNodes>,
-    active_page_id: String,
+    /// Full editor-state snapshot, shared with the request (#456) — the
+    /// multi-op DSL program executor (`batch_program.rs`) simulates each
+    /// program line on it, copying it at the first write; any failing line
+    /// rolls back the whole batch (the agent-facing transactional
+    /// contract).
+    state: SharedState,
     existing_ids: HashSet<NodeId>,
     id_seed: Option<u64>,
     /// Report overlapping siblings the write creates (#265). Off by
@@ -111,7 +110,11 @@ impl BatchDesign {
             || (operations.contains("\"ref\"")
                 && !de_editor_core::component_set::SetIndex::build(&self.state.doc).is_empty())
         {
-            return super::batch_program::run_batch_design_program(&self.state, operations, args);
+            return super::batch_program::run_batch_design_program(
+                self.state.clone(),
+                operations,
+                args,
+            );
         }
         match parse_operations(operations) {
             Ok(ParsedOperations::Insert {
@@ -135,7 +138,7 @@ impl BatchDesign {
             // its target slot. The flat direct parser has no parent geometry,
             // so route even a single G through the program simulator.
             Ok(ParsedOperations::Direct(_)) if is_direct_image_operation(operations) => {
-                super::batch_program::run_batch_design_program(&self.state, operations, args)
+                super::batch_program::run_batch_design_program(self.state.clone(), operations, args)
             }
             // Other single direct ops keep the flat command-per-op shape.
             Ok(ParsedOperations::Direct(_)) => dispatch_batch_design(args, None),
@@ -144,19 +147,24 @@ impl BatchDesign {
             // default (any failing line rolls back the whole batch);
             // internal callers may opt into TS best-effort via
             // `_line_policy` (see `batch_program.rs` module docs).
-            Err(_) => super::batch_program::run_batch_design_program(&self.state, operations, args),
+            Err(_) => {
+                super::batch_program::run_batch_design_program(self.state.clone(), operations, args)
+            }
         }
     }
 }
 
 pub fn batch_design_snapshot(state: &EditorState) -> BatchDesign {
-    let (pages, active_page_id) = page_nodes_snapshots(state);
+    batch_design_shared(SharedState::copied(state))
+}
+
+/// [`batch_design_snapshot`] over a state the caller already shares: no
+/// copy until the program writes (#456).
+pub fn batch_design_shared(state: SharedState) -> BatchDesign {
     BatchDesign {
-        state: state.clone(),
-        pages,
-        active_page_id,
         existing_ids: state.collect_node_ids(),
         id_seed: state.next_node_id_seed(),
+        state,
         overlap_warnings: false,
     }
 }
@@ -270,10 +278,7 @@ impl BatchDesign {
 
         // TS nodeCount = countNodes(getDocChildren(doc, pageId)) AFTER insert =
         // target page's pre-insert node count + every inserted node (map.len()).
-        let base = self
-            .resolve_page(args)
-            .map(|page| count_forest(&page.roots))
-            .unwrap_or(0);
+        let base = self.resolve_page(args).map(count_forest).unwrap_or(0);
         let node_count = base + map.len();
 
         // Phase E3 — report the legacy role frames normalized into widget
@@ -321,23 +326,27 @@ impl BatchDesign {
 
     /// Resolve the target page for the node-count base, mirroring the host's
     /// `command_apply::command_page_index` (id-match → numeric index → active).
-    fn resolve_page(&self, args: &BTreeMap<String, String>) -> Option<&PageNodes> {
-        match optional_page_id(args)
+    fn resolve_page(&self, args: &BTreeMap<String, String>) -> Option<&[PenNode]> {
+        let doc = &self.state.doc;
+        let Some(pages) = doc.pages.as_ref().filter(|pages| !pages.is_empty()) else {
+            // A document without pages is the one page `0`.
+            return match optional_page_id(args).as_deref().map(str::trim) {
+                None | Some("") | Some("0") => Some(doc.children.as_slice()),
+                Some(_) => None,
+            };
+        };
+        let page = match optional_page_id(args)
             .as_deref()
             .map(str::trim)
             .filter(|s| !s.is_empty())
         {
-            None => self
-                .pages
+            None => pages.get(self.state.ui.active_page_index.min(pages.len() - 1)),
+            Some(raw) => pages
                 .iter()
-                .find(|p| p.id == self.active_page_id)
-                .or_else(|| self.pages.first()),
-            Some(raw) => self.pages.iter().find(|p| p.id == raw).or_else(|| {
-                raw.parse::<usize>()
-                    .ok()
-                    .and_then(|idx| self.pages.get(idx))
-            }),
-        }
+                .find(|p| p.id == raw)
+                .or_else(|| raw.parse::<usize>().ok().and_then(|idx| pages.get(idx))),
+        };
+        page.map(|page| page.children.as_slice())
     }
 }
 
