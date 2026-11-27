@@ -3,6 +3,9 @@
 //! `formatVersion`, `version` used as the schema marker) and files an older
 //! release wrote used to open without them, because the re-stamp of
 //! `version` dropped the parsed thumbnail seed.
+//!
+//! Each document keeps its own table (#469): concurrent loads and saves of
+//! different documents never trade thumbnails.
 
 use super::{load_editor_state, save_single_file_to_path, save_to_path};
 use base64::Engine as _;
@@ -58,15 +61,17 @@ fn write_fixture(dir: &Path, stem: &str, versions: &str, form: ThumbForm) -> (Pa
     (path, paint_id)
 }
 
-/// Open `path` on an empty registry and check its thumbnail is the one
-/// painted.
+/// Open `path` and check its thumbnail is in the state's own table (#469).
 fn open_and_check(path: &Path, paint_id: u64, label: &str) -> de_editor_core::EditorState {
-    image_thumbs::clear_registry();
     let state = load_editor_state(path, de_editor_core::Locale::EnUs).expect(label);
     assert_eq!(
-        image_thumbs::thumb_for(paint_id).as_deref(),
+        state.image_thumbs.get(paint_id).as_deref(),
         Some(JPEG),
         "{label}: thumbnail registered on open"
+    );
+    assert!(
+        image_thumbs::thumb_for(paint_id).is_none(),
+        "{label}: opening never publishes to the paint-active table"
     );
     state
 }
@@ -83,7 +88,6 @@ fn saved_thumb(path: &Path, paint_id: u64) -> String {
 /// Open, save both ways, reopen each save: the thumbnail is registered every
 /// time and written in the form the save uses.
 fn check_round_trip(tag: &str, versions: &str, form: ThumbForm) {
-    let _guard = crate::test_support::lock_thumbnail_registry();
     let dir = temp_dir(tag);
     let (path, paint_id) = write_fixture(&dir, tag, versions, form);
     let state = open_and_check(&path, paint_id, &format!("{tag}: open"));
@@ -144,4 +148,109 @@ fn current_format_thumbnails_still_load_and_save() {
     let versions = format!(r#""version":"{PRODUCT_VERSION}","formatVersion":"1.0""#);
     check_round_trip("current-inline", &versions, ThumbForm::Inline);
     check_round_trip("current-folder", &versions, ThumbForm::Folder);
+}
+
+/// Stress for #469: several threads load and save different documents at
+/// once, all naming the SAME image source (one paint id) with a different
+/// thumbnail each, while a decode-worker stand-in stores a runtime thumbnail
+/// into each document's table and another thread keeps writing the
+/// paint-active table. With one process-wide registry the documents traded
+/// thumbnails; every save must now write exactly its own.
+#[test]
+fn concurrent_loads_and_saves_keep_exactly_their_own_thumbnails() {
+    const THREADS: usize = 8;
+    const ROUNDS: usize = 12;
+    let dir = temp_dir("concurrent");
+    let shared_src = "https://example.com/shared.png";
+    let shared_id = jian_ops_schema::node::image_src::paint_image_id(shared_src);
+    let thumb = |doc: usize, slot: u8| vec![0xff, 0xd8, doc as u8, slot, 0xff, 0xd9];
+    let runtime_src = |doc: usize| format!("https://example.com/runtime-{doc}.png");
+
+    let sources: Vec<PathBuf> = (0..THREADS)
+        .map(|doc| {
+            let encoded = base64::engine::general_purpose::STANDARD.encode(thumb(doc, 0));
+            let runtime = runtime_src(doc);
+            let source = format!(
+                r#"{{"version":"{PRODUCT_VERSION}","children":[{{"type":"image","id":"a","x":0,"y":0,"width":10,"height":10,"src":"{shared_src}"}},{{"type":"image","id":"b","x":20,"y":0,"width":10,"height":10,"src":"{runtime}"}}],"imageThumbs":{{"{shared_id}":"{encoded}"}}}}"#
+            );
+            let path = dir.join(format!("doc-{doc}.de"));
+            std::fs::write(&path, source).expect("fixture");
+            path
+        })
+        .collect();
+
+    let stop = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
+    let painter = {
+        let stop = std::sync::Arc::clone(&stop);
+        std::thread::spawn(move || {
+            // The canvas document's table, written the way paint-side code
+            // does, the whole time.
+            let canvas = image_thumbs::ImageThumbs::new();
+            image_thumbs::set_active(&canvas);
+            while !stop.load(std::sync::atomic::Ordering::Relaxed) {
+                image_thumbs::store_thumb(shared_id, vec![0xff, 0xd8, 0xee, 0xff, 0xd9]);
+                std::thread::yield_now();
+            }
+        })
+    };
+    let start = std::sync::Arc::new(std::sync::Barrier::new(THREADS));
+    let workers: Vec<_> = sources
+        .into_iter()
+        .enumerate()
+        .map(|(doc, source)| {
+            let start = std::sync::Arc::clone(&start);
+            let dir = dir.clone();
+            let runtime_id = jian_ops_schema::node::image_src::paint_image_id(&runtime_src(doc));
+            std::thread::spawn(move || {
+                start.wait();
+                let mut path = source;
+                for round in 0..ROUNDS {
+                    let state =
+                        load_editor_state(&path, de_editor_core::Locale::EnUs).expect("load");
+                    assert_eq!(
+                        state.image_thumbs.get(shared_id).as_deref(),
+                        Some(thumb(doc, 0).as_slice()),
+                        "doc {doc} round {round}: loaded its own thumbnail"
+                    );
+                    // A decode worker finishing for this document.
+                    let worker_thumbs = state.image_thumbs.clone();
+                    std::thread::spawn(move || {
+                        worker_thumbs.store_if_absent(runtime_id, thumb(doc, 1));
+                    })
+                    .join()
+                    .expect("decode worker");
+                    let out = dir.join(format!("doc-{doc}-round-{round}.de"));
+                    if round % 2 == 0 {
+                        save_to_path(&state, &out).expect("folder save");
+                    } else {
+                        save_single_file_to_path(&state, &out).expect("single-file save");
+                    }
+                    let reopened =
+                        load_editor_state(&out, de_editor_core::Locale::EnUs).expect("reopen");
+                    assert_eq!(
+                        reopened.image_thumbs.usage().0,
+                        2,
+                        "doc {doc} round {round}: exactly its two thumbnails"
+                    );
+                    assert_eq!(
+                        reopened.image_thumbs.get(shared_id).as_deref(),
+                        Some(thumb(doc, 0).as_slice()),
+                        "doc {doc} round {round}: saved its own shared-source thumbnail"
+                    );
+                    assert_eq!(
+                        reopened.image_thumbs.get(runtime_id).as_deref(),
+                        Some(thumb(doc, 1).as_slice()),
+                        "doc {doc} round {round}: saved the worker's thumbnail"
+                    );
+                    path = out;
+                }
+            })
+        })
+        .collect();
+    for worker in workers {
+        worker.join().expect("document thread");
+    }
+    stop.store(true, std::sync::atomic::Ordering::Relaxed);
+    painter.join().expect("painter thread");
+    let _ = std::fs::remove_dir_all(dir);
 }

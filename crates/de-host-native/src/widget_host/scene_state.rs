@@ -203,9 +203,14 @@ impl WidgetHostNative {
         file_name: Option<String>,
     ) {
         self.drop_preview_runtime();
+        // Another file: it gets exactly its own thumbnails (#469), an empty
+        // table when it was saved without any, never the previous file's.
+        let thumbs = jian_ops_schema::image_thumbs::ImageThumbs::take_for_document(&document)
+            .unwrap_or_default();
         // `replace_document` deliberately preserves editor chrome and app
         // preferences while clearing every document-scoped draft and stale id.
         self.editor_state.replace_document(document);
+        self.editor_state.image_thumbs = thumbs;
         // ...and that preservation would carry a stale workspace across
         // the swap. Clear it here for the same reason as
         // `replace_editor_state` above.

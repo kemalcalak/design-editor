@@ -29,16 +29,6 @@ pub use paint_payloads::{
 };
 pub use video_alias::normalize_video_alias;
 
-#[cfg(test)]
-static THUMBNAIL_REGISTRY_TEST_LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
-
-#[cfg(test)]
-fn lock_thumbnail_registry_for_test() -> std::sync::MutexGuard<'static, ()> {
-    THUMBNAIL_REGISTRY_TEST_LOCK
-        .lock()
-        .unwrap_or_else(|poisoned| poisoned.into_inner())
-}
-
 pub use compatibility::{
     write_normalized_source_with_current_schema, CanonicalLoad, CompatibilityReport,
     NormalizedWriteError,

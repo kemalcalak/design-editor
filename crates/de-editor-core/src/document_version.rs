@@ -39,7 +39,7 @@ pub const PRODUCT_VERSION: &str = env!("CARGO_PKG_VERSION");
 /// (`jian_ops_schema::image_thumbs::attach_to_document`) is keyed on the
 /// `version` buffer this replaces, so stamping a parsed document that has
 /// not been activated yet loses its thumbnails; open documents through
-/// [`EditorState::from_opened_document`], which activates the seed first.
+/// [`EditorState::from_opened_document`], which takes the seed first.
 pub fn stamp_product_version(doc: &mut PenDocument) {
     if doc.version == PRODUCT_VERSION {
         return;
@@ -66,19 +66,21 @@ impl EditorState {
     /// Instances whose `ref` names a component set (pen.dev's form) are
     /// pointed at the variant master they show (#368).
     ///
-    /// The document's `imageThumbs` are published before the stamp: the
-    /// schema keys a parsed document's pending thumbnail seed on its
-    /// `version` buffer, which the stamp replaces, so activating afterwards
-    /// (in `from_document`) found nothing for every file this release did
-    /// not write: legacy-schema files and older releases' alike (#458).
-    /// `from_document` would activate it in this same call anyway, so the
-    /// earlier activation changes nothing else; its own call is then a
-    /// no-op.
+    /// The document's `imageThumbs` table is taken into the state's own
+    /// table before the stamp: the schema keys a parsed document's pending
+    /// thumbnail seed on its `version` buffer, which the stamp replaces, so
+    /// taking it afterwards (in `from_document`) found nothing for every file
+    /// this release did not write: legacy-schema files and older releases'
+    /// alike (#458).
     pub fn from_opened_document(mut doc: PenDocument) -> Self {
-        jian_ops_schema::image_thumbs::activate_for_document(&doc);
+        let thumbs = jian_ops_schema::image_thumbs::ImageThumbs::take_for_document(&doc);
         stamp_product_version(&mut doc);
         crate::component_set::normalize_set_refs(&mut doc);
-        Self::from_document(doc)
+        let mut state = Self::from_document(doc);
+        if let Some(thumbs) = thumbs {
+            state.image_thumbs = thumbs;
+        }
+        state
     }
 }
 
@@ -141,8 +143,6 @@ mod tests {
     /// the stamp replaced the `version` buffer their seed was keyed on.
     #[test]
     fn opening_registers_thumbnails_for_every_version_shape() {
-        use jian_ops_schema::image_thumbs;
-        let _guard = crate::state::lock_thumbnail_registry();
         // A minimal JPEG (SOI, EOI) and its base64.
         let jpeg: &[u8] = &[0xff, 0xd8, 0xff, 0xd9];
         let current = format!(r#""version":"{PRODUCT_VERSION}","formatVersion":"1.0""#);
@@ -157,14 +157,13 @@ mod tests {
         ];
         for (index, (label, versions)) in cases.iter().enumerate() {
             let paint_id = 9_458_000 + index as u64;
-            image_thumbs::clear_registry();
             let source = format!(
                 r#"{{{versions},"imageThumbs":{{"{paint_id}":"/9j/2Q=="}},"children":[]}}"#
             );
             let state = crate::EditorState::from_opened_document(doc(&source));
             assert_eq!(state.doc.version, PRODUCT_VERSION, "{label}");
             assert_eq!(
-                image_thumbs::thumb_for(paint_id).as_deref(),
+                state.image_thumbs.get(paint_id).as_deref(),
                 Some(jpeg),
                 "{label}: thumbnail registered on open"
             );

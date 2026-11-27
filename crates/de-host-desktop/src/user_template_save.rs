@@ -8,7 +8,7 @@
 //! back — a template that is not on disk must not masquerade as one.
 //!
 //! The document is serialized through the same document-only canonical
-//! writer `de_host_services::doc_io::save_document_to_path` wraps, so the
+//! writer `de_host_services::doc_io::save_to_path` uses, so the
 //! registry string and the on-disk `document.de` are the same bytes by
 //! construction. The preview is a single JPEG of the active page's first
 //! top-level node — deliberately not the shipped templates' collage
@@ -114,11 +114,16 @@ fn save_template_from_state(
     let active_page_index = state.ui.active_page_index;
 
     // Canonical `.de` JSON once, through the same document-only serializer
-    // `save_document_to_path` wraps — the registry entry and the file the
+    // `save_to_path` uses — the registry entry and the file the
     // store writes are the same bytes by construction.
     let mut buffer: Vec<u8> = Vec::new();
-    de_host_services::doc_io::write_canonical_document(&mut buffer, &state.doc, active_page_index)
-        .map_err(SaveTemplateError::Document)?;
+    de_host_services::doc_io::write_canonical_document(
+        &mut buffer,
+        &state.doc,
+        active_page_index,
+        &state.image_thumbs,
+    )
+    .map_err(SaveTemplateError::Document)?;
     let document = String::from_utf8(buffer).map_err(SaveTemplateError::Utf8)?;
 
     // The preview and the frame size both come from the same resolved scene,

@@ -45,7 +45,7 @@ impl CanonicalSaveSnapshot {
         Self {
             document: SharedDoc::capture(&state.doc, anchor),
             editor_meta: EditorMeta::from_state(state),
-            image_thumbnails: jian_ops_schema::image_thumbs::capture_snapshot(),
+            image_thumbnails: state.image_thumbs.snapshot(),
         }
     }
 
@@ -77,15 +77,16 @@ pub struct StreamingSaveStats {
     pub wrote_image_thumbs: bool,
 }
 
-/// Stream a canonical document using a fresh snapshot of the active thumbnail
-/// registry. Disk save jobs should prefer `CanonicalSaveSnapshot` so this
+/// Stream a canonical document with `thumbs`, the document's own thumbnail
+/// table (#469). Disk save jobs should prefer `CanonicalSaveSnapshot` so the
 /// capture happens before the job leaves the UI thread.
 pub fn write_canonical_document<W: Write>(
     writer: &mut W,
     document: &PenDocument,
     active_page_index: usize,
+    thumbs: &jian_ops_schema::image_thumbs::ImageThumbs,
 ) -> Result<StreamingSaveStats, DocIoError> {
-    let thumbnails = jian_ops_schema::image_thumbs::capture_snapshot();
+    let thumbnails = thumbs.snapshot();
     // Document-only entry point: with no `EditorState` in hand the active page
     // is the only truthful field, and every other one keeps its legacy default.
     write_canonical_document_with_thumbnails(
@@ -150,7 +151,13 @@ mod tests {
 
     fn stream(document: &PenDocument, page: usize) -> (String, StreamingSaveStats) {
         let mut bytes = Vec::new();
-        let stats = write_canonical_document(&mut bytes, document, page).expect("stream save");
+        let stats = write_canonical_document(
+            &mut bytes,
+            document,
+            page,
+            &jian_ops_schema::image_thumbs::active(),
+        )
+        .expect("stream save");
         (String::from_utf8(bytes).expect("UTF-8 JSON"), stats)
     }
 

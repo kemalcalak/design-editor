@@ -78,7 +78,8 @@ pub fn save_document_snapshot_to(state: &EditorState, file_path: Option<&str>) -
     // externalizes shared images while serializing, avoiding both a
     // document-sized `Value` and a second final `String` allocation.
     let mut document_payload = Vec::new();
-    let thumbnails = jian_ops_schema::image_thumbs::capture_snapshot();
+    // The document's own thumbnails (#469), never another file's.
+    let thumbnails = state.image_thumbs.snapshot();
     if jian_ops_schema::image_table::write_document_with_extension(
         &mut document_payload,
         &state.doc,

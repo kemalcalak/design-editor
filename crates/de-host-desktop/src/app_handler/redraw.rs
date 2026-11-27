@@ -395,7 +395,10 @@ impl DesktopApp {
             self.redraw_dirty = true;
         }
         if let Some(backend) = self.backend.as_mut() {
-            if self.image_decodes.pump(backend) {
+            if self
+                .image_decodes
+                .pump(backend, &self.host.editor_state().image_thumbs)
+            {
                 self.redraw_dirty = true;
             }
         }

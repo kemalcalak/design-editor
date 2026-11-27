@@ -33,7 +33,6 @@ fn deeply_nested_invalid_document_with_thumb(paint_id: u64) -> String {
 
 #[test]
 fn deep_load_recognizes_image_thumbs_as_a_seeded_table() {
-    let _guard = lock_thumbnail_registry_for_test();
     std::thread::Builder::new()
         .name("deep-thumb-loader-test".into())
         .stack_size(64 * 1024 * 1024)
@@ -55,8 +54,10 @@ fn deep_load_recognizes_image_thumbs_as_a_seeded_table() {
             );
             let state = de_editor_core::EditorState::from_document(loaded.value);
             assert_eq!(
-                &*jian_ops_schema::image_thumbs::thumb_for(7_654_321)
-                    .expect("EditorState transition activates the deep seed"),
+                &*state
+                    .image_thumbs
+                    .get(7_654_321)
+                    .expect("the state takes the deep seed into its own table"),
                 &[0xff, 0xd8, 0xff, 0xd9]
             );
             std::mem::forget(state);
@@ -68,7 +69,6 @@ fn deep_load_recognizes_image_thumbs_as_a_seeded_table() {
 
 #[test]
 fn failed_deep_typed_load_preserves_the_thumbnail_registry() {
-    let _guard = lock_thumbnail_registry_for_test();
     std::thread::Builder::new()
         .name("deep-thumb-transaction-test".into())
         .stack_size(64 * 1024 * 1024)

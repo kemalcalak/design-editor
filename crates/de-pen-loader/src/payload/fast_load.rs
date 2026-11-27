@@ -198,7 +198,6 @@ mod tests {
 
     #[test]
     fn fast_preserve_load_resolves_shared_images_and_attaches_thumbnails() {
-        let _guard = super::super::lock_thumbnail_registry_for_test();
         let source = "data:image/png;base64,c2hhcmVkLWltYWdl";
         let paint_id = jian_ops_schema::node::image_src::paint_image_id(source);
         let src = format!(
@@ -232,13 +231,10 @@ mod tests {
         assert_eq!(second.src.as_str(), source);
         assert!(Arc::ptr_eq(&first.src.as_arc(), &second.src.as_arc()));
 
-        assert!(
-            jian_ops_schema::image_thumbs::activate_for_document(&loaded.value),
-            "the decoded table must stay attached to the typed document"
-        );
+        let thumbs = jian_ops_schema::image_thumbs::ImageThumbs::take_for_document(&loaded.value)
+            .expect("the decoded table must stay attached to the typed document");
         assert_eq!(
-            &*jian_ops_schema::image_thumbs::thumb_for(paint_id)
-                .expect("attached thumbnail activates"),
+            &*thumbs.get(paint_id).expect("attached thumbnail is taken"),
             &[0xff, 0xd8, 0xff, 0xd9]
         );
     }

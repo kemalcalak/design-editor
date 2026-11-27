@@ -366,8 +366,6 @@ fn raw_thumbnail_extraction_is_local_and_schema_bounded() {
 #[test]
 fn canonical_saved_active_page_and_image_round_trip_through_parse_and_adopt() {
     let _registry_guard = crate::user_scene_templates::exclusive_registry_for_tests();
-    // The thumbnail registry is process-wide too.
-    let _thumbs_guard = crate::state::lock_thumbnail_registry();
     let image_source = format!(
         "data:image/png;base64,scene-template-round-trip{}",
         "A".repeat(4_096)
@@ -375,18 +373,21 @@ fn canonical_saved_active_page_and_image_round_trip_through_parse_and_adopt() {
     let image_paint_id = jian_ops_schema::node::image_src::paint_image_id(image_source.as_str());
     let image_thumbnail = vec![0xff, 0xd8, 0x51, 0xd9];
 
-    // The writer snapshots the live registry. Restore the pre-template state
-    // immediately after writing so the parse/adopt assertions prove the
-    // thumbnail came back from canonical `imageThumbs`, not this setup.
+    // The template is written from its own document's table; the destination
+    // document has a table of its own (#469), so the parse/adopt assertions
+    // prove the thumbnail came back from canonical `imageThumbs`.
     let retained_source = "data:image/png;base64,scene-template-retained-thumb";
     let retained_paint_id = jian_ops_schema::node::image_src::paint_image_id(retained_source);
     let retained_thumbnail = vec![0xff, 0xd8, 0x52, 0xd9];
     let concurrent_source = "data:image/png;base64,scene-template-concurrent-thumb";
     let concurrent_paint_id = jian_ops_schema::node::image_src::paint_image_id(concurrent_source);
     let concurrent_thumbnail = vec![0xff, 0xd8, 0x53, 0xd9];
-    jian_ops_schema::image_thumbs::store_thumb(retained_paint_id, retained_thumbnail.clone());
-    let registry_without_template = jian_ops_schema::image_thumbs::capture_snapshot();
-    jian_ops_schema::image_thumbs::store_thumb(image_paint_id, image_thumbnail.clone());
+    let template_thumbs = jian_ops_schema::image_thumbs::ImageThumbs::new();
+    template_thumbs.store(image_paint_id, image_thumbnail.clone());
+    let mut state = EditorState::new();
+    state
+        .image_thumbs
+        .store(retained_paint_id, retained_thumbnail.clone());
 
     let image: PenNode = serde_json::from_value(serde_json::json!({
         "type": "image",
@@ -424,7 +425,7 @@ fn canonical_saved_active_page_and_image_round_trip_through_parse_and_adopt() {
     let stats = jian_ops_schema::image_table::write_document_with_extension(
         &mut saved,
         &document,
-        &jian_ops_schema::image_thumbs::capture_snapshot(),
+        &template_thumbs.snapshot(),
         "editorMeta",
         &serde_json::json!({
             "activePageIndex": 1,
@@ -449,18 +450,18 @@ fn canonical_saved_active_page_and_image_round_trip_through_parse_and_adopt() {
         .and_then(serde_json::Value::as_object)
         .is_some_and(|table| table.contains_key(&image_paint_id.to_string())));
 
-    jian_ops_schema::image_thumbs::restore_snapshot(registry_without_template);
-    assert!(jian_ops_schema::image_thumbs::thumb_for(image_paint_id).is_none());
+    assert!(!state.image_thumbs.contains(image_paint_id));
 
     // Model a thumbnail decode landing in the still-open destination while
-    // the saved template is parsed. Parsing must never replace that active
-    // registry, even transiently.
+    // the saved template is parsed. Parsing must never replace that
+    // document's table, even transiently.
     let decode_start = std::sync::Arc::new(std::sync::Barrier::new(2));
     let worker_start = std::sync::Arc::clone(&decode_start);
     let worker_thumbnail = concurrent_thumbnail.clone();
+    let worker_thumbs = state.image_thumbs.clone();
     let decode_worker = std::thread::spawn(move || {
         worker_start.wait();
-        jian_ops_schema::image_thumbs::store_thumb(concurrent_paint_id, worker_thumbnail);
+        worker_thumbs.store(concurrent_paint_id, worker_thumbnail);
     });
     decode_start.wait();
     let parsed = template_boards(&saved, "user:canonical-round-trip")
@@ -477,17 +478,17 @@ fn canonical_saved_active_page_and_image_round_trip_through_parse_and_adopt() {
     };
     assert_eq!(parsed_image.src.as_str(), image_source);
     assert_eq!(
-        jian_ops_schema::image_thumbs::thumb_for(retained_paint_id).as_deref(),
+        state.image_thumbs.get(retained_paint_id).as_deref(),
         Some(retained_thumbnail.as_slice()),
         "parsing preserved the current document's thumbnail registry"
     );
     assert_eq!(
-        jian_ops_schema::image_thumbs::thumb_for(concurrent_paint_id).as_deref(),
+        state.image_thumbs.get(concurrent_paint_id).as_deref(),
         Some(concurrent_thumbnail.as_slice()),
-        "template extraction must not overwrite a decode landing in the active registry"
+        "template extraction must not overwrite a decode landing in the document's table"
     );
     assert!(
-        jian_ops_schema::image_thumbs::thumb_for(image_paint_id).is_none(),
+        !state.image_thumbs.contains(image_paint_id),
         "parsing alone does not publish template thumbnails"
     );
 
@@ -503,7 +504,6 @@ fn canonical_saved_active_page_and_image_round_trip_through_parse_and_adopt() {
         },
     )
     .expect("register canonical template");
-    let mut state = EditorState::new();
     assert!(state.apply(crate::EditorCommand::AdoptSceneTemplate {
         template_id: "user:canonical-round-trip".into(),
     }));
@@ -513,19 +513,23 @@ fn canonical_saved_active_page_and_image_round_trip_through_parse_and_adopt() {
     };
     assert_eq!(adopted_image.src.as_str(), image_source);
     assert_eq!(
-        jian_ops_schema::image_thumbs::thumb_for(image_paint_id).as_deref(),
+        state.image_thumbs.get(image_paint_id).as_deref(),
         Some(image_thumbnail.as_slice()),
         "successful adopt merged the template thumbnail"
     );
     assert_eq!(
-        jian_ops_schema::image_thumbs::thumb_for(retained_paint_id).as_deref(),
+        state.image_thumbs.get(retained_paint_id).as_deref(),
         Some(retained_thumbnail.as_slice()),
         "adopt preserved the current document's thumbnail"
     );
     assert_eq!(
-        jian_ops_schema::image_thumbs::thumb_for(concurrent_paint_id).as_deref(),
+        state.image_thumbs.get(concurrent_paint_id).as_deref(),
         Some(concurrent_thumbnail.as_slice()),
         "adopt preserved the independently decoded thumbnail"
+    );
+    assert!(
+        jian_ops_schema::image_thumbs::thumb_for(image_paint_id).is_none(),
+        "adopting into a document never touches the paint-active table"
     );
     assert!(state.undo(), "adopt is one undoable transaction");
     assert!(state.active_children().is_empty());

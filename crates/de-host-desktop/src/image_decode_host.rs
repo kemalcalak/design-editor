@@ -30,6 +30,10 @@ struct DecodeJob {
     bytes: Arc<[u8]>,
     /// Longest raster edge paint asked for (device px).
     max_edge_px: u32,
+    /// The thumbnail table of the document whose paint queued this decode
+    /// (#469). The fallback thumbnail lands there even when another
+    /// document is open by the time the worker finishes.
+    thumbs: jian_ops_schema::image_thumbs::ImageThumbs,
 }
 
 struct DecodeResult {
@@ -119,7 +123,15 @@ impl ImageDecodeHost {
     /// run of byte-less ids at its head consumed the whole budget, the pump
     /// reported no change, and a decodable image waited a further frame for
     /// every four dead entries ahead of it.
-    pub fn pump(&mut self, backend: &mut NativeBackend) -> bool {
+    ///
+    /// `thumbs` is the painted document's table: the ids queued since the
+    /// last pump came from its paint, so their fallback thumbnails belong
+    /// there (#469).
+    pub fn pump(
+        &mut self,
+        backend: &mut NativeBackend,
+        thumbs: &jian_ops_schema::image_thumbs::ImageThumbs,
+    ) -> bool {
         let mut changed = self.poll_results(backend);
         let mut budget = MAX_QUEUED_DECODES.saturating_sub(self.in_flight);
         let mut discarded = 0_usize;
@@ -144,6 +156,7 @@ impl ImageDecodeHost {
                     id,
                     bytes,
                     max_edge_px: pending.max_edge_px,
+                    thumbs: thumbs.clone(),
                 }) {
                     Ok(()) => {
                         self.in_flight += 1;
@@ -208,17 +221,15 @@ fn decode_worker(
         let covers_edge_px = decoded.as_ref().map(|(_, covers)| *covers).unwrap_or(0);
         let decoded = decoded.map(|(image, _)| image);
         let thumbnail = decoded.as_ref().and_then(|image| {
-            if jian_ops_schema::image_thumbs::thumb_for(job.id).is_none() {
-                crate::image_downscale::make_blur_thumbnail_from_image(image)
-            } else {
+            if job.thumbs.contains(job.id) {
                 None
+            } else {
+                crate::image_downscale::make_blur_thumbnail_from_image(image)
             }
         });
         let image = decoded.and_then(|image| image.wrap_send().ok());
         if let (Some(_), Some(thumbnail)) = (&image, thumbnail) {
-            if jian_ops_schema::image_thumbs::thumb_for(job.id).is_none() {
-                jian_ops_schema::image_thumbs::store_thumb(job.id, thumbnail);
-            }
+            job.thumbs.store_if_absent(job.id, thumbnail);
         }
         if results
             .send(DecodeResult {
@@ -330,12 +341,16 @@ mod tests {
 
         let mut host = ImageDecodeHost::new();
         let mut backend = NativeBackend::with_dpi(1.0);
+        let thumbs = jian_ops_schema::image_thumbs::ImageThumbs::new();
         assert!(!backend.image_decoded(id, &[], 64));
-        assert!(host.pump(&mut backend), "first pump submits queued decode");
+        assert!(
+            host.pump(&mut backend, &thumbs),
+            "first pump submits queued decode"
+        );
 
         let deadline = Instant::now() + Duration::from_secs(5);
         while !backend.image_decoded(id, &[], 64) {
-            host.pump(&mut backend);
+            host.pump(&mut backend, &thumbs);
             assert!(Instant::now() < deadline, "decode worker never landed");
             std::thread::yield_now();
         }
@@ -353,17 +368,26 @@ mod tests {
 
         let mut host = ImageDecodeHost::new();
         let mut backend = NativeBackend::with_dpi(1.0);
-        assert!(host.pump(&mut backend), "first pump submits queued decode");
+        let thumbs = jian_ops_schema::image_thumbs::ImageThumbs::new();
+        assert!(
+            host.pump(&mut backend, &thumbs),
+            "first pump submits queued decode"
+        );
 
         let deadline = Instant::now() + Duration::from_secs(5);
         while host.is_pending() {
-            host.pump(&mut backend);
+            host.pump(&mut backend, &thumbs);
             assert!(Instant::now() < deadline, "decode worker never landed");
             std::thread::yield_now();
         }
 
-        let thumb = jian_ops_schema::image_thumbs::thumb_for(id)
+        let thumb = thumbs
+            .get(id)
             .expect("successful full decode generates a fallback thumbnail");
+        assert!(
+            jian_ops_schema::image_thumbs::thumb_for(id).is_none(),
+            "the thumbnail lands in the document's table, not the active one"
+        );
         assert!(thumb.starts_with(&[0xff, 0xd8]));
         assert!(thumb.len() <= 4 * 1024);
         if let Some(stats) = host.stats_snapshot() {
@@ -382,11 +406,15 @@ mod tests {
 
         let mut host = ImageDecodeHost::new();
         let mut backend = NativeBackend::with_dpi(1.0);
-        assert!(host.pump(&mut backend), "first pump submits queued decode");
+        let thumbs = jian_ops_schema::image_thumbs::ImageThumbs::new();
+        assert!(
+            host.pump(&mut backend, &thumbs),
+            "first pump submits queued decode"
+        );
 
         let deadline = Instant::now() + Duration::from_secs(5);
         while host.is_pending() {
-            host.pump(&mut backend);
+            host.pump(&mut backend, &thumbs);
             assert!(Instant::now() < deadline, "failed decode never completed");
             std::thread::yield_now();
         }

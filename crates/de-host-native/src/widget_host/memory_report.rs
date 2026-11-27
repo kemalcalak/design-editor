@@ -26,6 +26,7 @@ impl WidgetHostNative {
     pub fn cache_report(&self, backend: &NativeBackend) -> MemoryReport {
         let mut report = MemoryReport::default();
         report.push(memory_report::chat_usage(&self.editor_state));
+        report.push(memory_report::image_thumbs_usage(&self.editor_state));
         report.push(self.layout_scene_usage());
         report.push(self.pan_cache_usage());
         let (thumbs, thumb_bytes) = self.slide_thumbs.usage();
