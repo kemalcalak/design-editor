@@ -13,8 +13,7 @@ use crate::widgets::test_family_gap_backend::{FamilyGapBackend, PaintedRun};
 use crate::widgets::Widget;
 use crate::Rect;
 
-/// jian's `TextInputView` / `TextArea` / `Button` paint in their own face.
-const JIAN_COMPONENT_FAMILY: &str = "Inter";
+use super::JIAN_COMPONENT_FAMILY;
 
 /// The run whose pen starts inside `rect` (its baseline within the box's
 /// height, its left edge within its width), other than the `skip` glyphs.

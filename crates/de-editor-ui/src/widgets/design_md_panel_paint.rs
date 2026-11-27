@@ -10,8 +10,7 @@ use super::helpers::hex_to_color;
 use super::{DesignMdPanel, RenderLine, SectionLayout, BODY_INDENT, BTN, PAD, SECTION_HEADER_H};
 use crate::widgets::button::paint_button_feedback_wash;
 use crate::widgets::design_md_markdown::MdRun;
-use crate::widgets::design_md_wrap::{run_width, COLOR_SWATCH_W};
-use crate::widgets::label_widths::LabelWidths;
+use crate::widgets::design_md_wrap::{PlacedRun, COLOR_SWATCH_W};
 use crate::widgets::text_metrics;
 use crate::widgets::{Icon, PaintCx};
 use crate::{Color, Point2D, Rect, TextLayout};
@@ -131,17 +130,17 @@ impl<'a> DesignMdPanel<'a> {
     fn paint_runs(
         &self,
         cx: &mut PaintCx<'_>,
-        runs: &[MdRun],
+        runs: &[PlacedRun],
         x: f32,
         baseline: f32,
         size: f32,
         heading: bool,
     ) {
-        // Every run advances by the width the body wrapped it at
-        // (`design_md_wrap::run_width`), read from the kept widths.
+        // Every run advances by the width the body wrapped it at, carried
+        // on the run: a repaint measures nothing.
         let mut cur = x;
-        for run in runs {
-            let advance = run_width(&mut LabelWidths::measuring(&mut *cx.backend), run, size);
+        for PlacedRun { run, advance } in runs {
+            let advance = *advance;
             match run {
                 MdRun::Plain(s) => {
                     let color = if heading {

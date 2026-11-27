@@ -28,6 +28,8 @@ use de_editor_core::SceneTemplateFocus;
 use super::scene_template_panel::{SceneTemplateHit, SceneTemplatePanel};
 use crate::widgets::button::paint_button_feedback_wash;
 use crate::widgets::label_widths::LabelWidths;
+use crate::widgets::line_break::clusters;
+use crate::widgets::panel_controls::paint_fitted_label;
 use crate::widgets::PaintCx;
 use crate::{Point2D, Rect};
 
@@ -200,13 +202,15 @@ impl SceneTemplatePanel<'_> {
         let relative_x = (point.x - (rect.origin.x + 10.0)).max(0.0);
 
         let mut widths = LabelWidths::cached();
-        let mut advance = |ch: char| char_advance(&mut widths, ch);
+        let mut advance = |cluster: &str| cluster_advance(&mut widths, cluster);
         let Some((start, end)) = document_lines(text, inner_w, &mut advance).nth(row) else {
             return text.len();
         };
+        // Cluster by cluster, so the caret never lands inside an accented
+        // letter, a conjunct or an emoji sequence.
         let mut width = 0.0;
-        for (offset, character) in text[start..end].char_indices() {
-            let advance = advance(character);
+        for (offset, cluster) in clusters(&text[start..end]) {
+            let advance = advance(cluster);
             if relative_x < width + advance / 2.0 {
                 return start + offset;
             }
@@ -250,7 +254,7 @@ impl SceneTemplatePanel<'_> {
                 "Paste the whole DESIGN.md, then confirm the import.",
             )
         };
-        self.paint_fitted(
+        paint_fitted_label(
             cx,
             hint,
             inner_w,
@@ -272,7 +276,7 @@ impl SceneTemplatePanel<'_> {
         // used to be painted.
         let status_y = box_rect.origin.y + box_rect.size.y - BOX_PAD - 32.0 - 14.0;
         match self.state.editor_ui.scene_template_center.import.error_key {
-            Some(key) => self.paint_fitted(
+            Some(key) => paint_fitted_label(
                 cx,
                 de_i18n::translate(self.locale, key),
                 inner_w,
@@ -280,7 +284,7 @@ impl SceneTemplatePanel<'_> {
                 HINT_SIZE,
                 self.theme.destructive,
             ),
-            None => self.paint_fitted(
+            None => paint_fitted_label(
                 cx,
                 self.t(
                     "assetCenter.style.importSource",
@@ -363,18 +367,18 @@ impl SceneTemplatePanel<'_> {
         // reviewed by recognizing it, and the parser reads the whole text
         // regardless of how much of it is on screen.
         //
-        // Measure the visible head's characters first, then wrap it again
+        // Measure the visible head's clusters first, then wrap it again
         // reading those widths: the second pass is the one the press-to-caret
         // hit-test repeats without a backend, so both break the same lines.
         {
             let mut widths = LabelWidths::measuring(&mut *cx.backend);
-            let mut advance = |ch: char| char_advance(&mut widths, ch);
+            let mut advance = |cluster: &str| cluster_advance(&mut widths, cluster);
             document_lines(text, inner_w, &mut advance)
                 .take(rows)
                 .for_each(drop);
         }
         let mut widths = LabelWidths::cached();
-        let mut advance = |ch: char| char_advance(&mut widths, ch);
+        let mut advance = |cluster: &str| cluster_advance(&mut widths, cluster);
         for (index, (start, end)) in document_lines(text, inner_w, &mut advance)
             .take(rows)
             .enumerate()
@@ -435,17 +439,21 @@ impl SceneTemplatePanel<'_> {
     }
 }
 
-/// One character's painted width in the text area (chrome face,
-/// `TEXT_SIZE`), read through `widths`: a measuring pass keeps it, a cached
-/// pass reads it back. Per character so the set kept is the alphabet in use,
-/// not one entry per prefix of the paste; a line's sum differs from its
-/// shaped run only by kerning, a fraction of the area's 10 px inset.
-fn char_advance(widths: &mut LabelWidths<'_>, ch: char) -> f32 {
-    let mut buf = [0; 4];
-    widths.chrome(ch.encode_utf8(&mut buf), TEXT_SIZE)
+/// One cluster's painted width in the text area (chrome face, `TEXT_SIZE`),
+/// read through `widths`: a measuring pass keeps it, a cached pass reads it
+/// back. Measured per cluster (`line_break::clusters`), never per `char`, so
+/// a combining mark, a conjunct or a ZWJ emoji sequence is shaped whole; the
+/// set kept is the clusters the paste uses, not one entry per prefix. A
+/// line's sum can still differ from its shaped run by the kerning and
+/// ligatures between clusters: a fraction of a px per pair, well inside the
+/// area's 10 px inset, and paint and the press-to-caret walk read the same
+/// sums, so they break the same lines.
+fn cluster_advance(widths: &mut LabelWidths<'_>, cluster: &str) -> f32 {
+    widths.chrome(cluster, TEXT_SIZE)
 }
 
 /// Wrap a markdown document into display lines no wider than `max_width`,
+/// breaking only between clusters,
 /// honouring its own newlines, lazily: each line is the byte range
 /// `start..end` it covers in the original text.
 ///
@@ -461,7 +469,7 @@ fn char_advance(widths: &mut LabelWidths<'_>, ch: char) -> f32 {
 fn document_lines<'t, 'm>(
     text: &'t str,
     max_width: f32,
-    advance: &'m mut dyn FnMut(char) -> f32,
+    advance: &'m mut dyn FnMut(&str) -> f32,
 ) -> DocumentLines<'t, 'm> {
     DocumentLines {
         text,
@@ -478,7 +486,7 @@ struct DocumentLines<'t, 'm> {
     /// Where the next line starts.
     pos: usize,
     max_width: f32,
-    advance: &'m mut dyn FnMut(char) -> f32,
+    advance: &'m mut dyn FnMut(&str) -> f32,
     done: bool,
 }
 
@@ -492,20 +500,20 @@ impl Iterator for DocumentLines<'_, '_> {
         let start = self.pos;
         let mut end = start;
         let mut width = 0.0;
-        for (offset, character) in self.text[start..].char_indices() {
+        for (offset, cluster) in clusters(&self.text[start..]) {
             let at = start + offset;
-            if character == '\n' {
+            if cluster.starts_with('\n') {
                 // The `\n` still occupies a byte; the next line starts past it.
                 self.pos = at + 1;
                 return Some((start, at));
             }
-            let advance = (self.advance)(character);
+            let advance = (self.advance)(cluster);
             if width + advance > self.max_width && end > start {
                 self.pos = end;
                 return Some((start, end));
             }
             width += advance;
-            end = at + character.len_utf8();
+            end = at + cluster.len();
         }
         self.done = true;
         Some((start, self.text.len()))

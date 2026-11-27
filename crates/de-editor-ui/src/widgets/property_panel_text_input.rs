@@ -82,6 +82,9 @@ pub(crate) fn paint_text_input_view(
     placeholder: &str,
     focused: bool,
 ) {
+    // Keep the field's widths, so a press-to-caret or IME caret resolved
+    // without a backend (`text_input_measured`) reads the painted glyphs.
+    crate::widgets::text_input_measured::measure_single_line(cx.backend, input, font_size);
     paint_text_input_view_in_family(
         cx,
         theme,

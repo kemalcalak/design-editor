@@ -164,3 +164,34 @@ fn an_unmeasured_fit_is_not_kept() {
         other => panic!("expected two estimated cuts, got {other:?}"),
     }
 }
+
+/// The binary search cuts where a character-by-character walk would, and a
+/// box a fraction of a px wider or narrower reads the same kept cut.
+#[test]
+fn a_cut_is_the_longest_fitting_prefix_and_is_shared_within_a_px() {
+    use super::Fitted;
+    use std::rc::Rc;
+
+    reset();
+    let mut backend = FamilyGapBackend::default();
+    let text = "Минимальная презентация для команды дизайна";
+    for max_w in [20.0, 61.0, 95.0, 140.0] {
+        let Fitted::Cut(cut) = LabelWidths::measuring(&mut backend).fit_chrome(text, max_w, 13.0)
+        else {
+            panic!("expected a cut at {max_w}")
+        };
+        let linear =
+            crate::util::ellipsize_to_width(text, max_w, |s| measure_chrome(&mut backend, s, 13.0));
+        assert_eq!(&*cut, linear.as_str(), "at {max_w}");
+    }
+    let at = |max_w: f32, backend: &mut FamilyGapBackend| match LabelWidths::measuring(backend)
+        .fit_chrome(text, max_w, 13.0)
+    {
+        Fitted::Cut(cut) => cut,
+        Fitted::Whole(_) => panic!("expected a cut"),
+    };
+    let a = at(80.2, &mut backend);
+    let b = at(80.9, &mut backend);
+    assert!(Rc::ptr_eq(&a, &b), "one cut per whole px");
+    assert!(measure_chrome(&mut backend, &a, 13.0) <= 80.2);
+}

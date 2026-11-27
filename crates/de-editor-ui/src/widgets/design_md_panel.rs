@@ -15,11 +15,10 @@ use std::rc::Rc;
 
 use crate::theme::Theme;
 use crate::widgets::button::paint_ghost_button_feedback;
-use crate::widgets::design_md_markdown::{parse_blocks, parse_inline, MdBlock, MdRun};
-use crate::widgets::design_md_wrap::wrap_md_runs;
+use crate::widgets::design_md_markdown::{parse_blocks, parse_inline, MdBlock};
+use crate::widgets::design_md_wrap::{place_runs, wrap_md_runs, PlacedRun};
 use crate::widgets::editor_state_ext::theme_for;
 use crate::widgets::label_widths::LabelWidths;
-
 use crate::widgets::text_metrics::{self, CHROME_FONT_FAMILY};
 use crate::widgets::{Icon, PaintCx};
 use crate::{Point2D, Rect};
@@ -100,11 +99,11 @@ pub struct DesignMdPanel<'a> {
 #[derive(Clone)]
 pub(super) enum RenderLine {
     /// A markdown heading — font size + pre-split inline runs.
-    Heading(f32, Vec<MdRun>),
+    Heading(f32, Vec<PlacedRun>),
     /// A paragraph / bullet continuation line.
-    Body(Vec<MdRun>),
+    Body(Vec<PlacedRun>),
     /// A bullet's first line (gets a `•` marker).
-    Bullet(Vec<MdRun>),
+    Bullet(Vec<PlacedRun>),
     /// A colour-palette row — index into `color_palette`.
     Color(usize),
     /// Vertical spacing between blocks.
@@ -307,7 +306,8 @@ impl<'a> DesignMdPanel<'a> {
                 match block {
                     MdBlock::Heading { level, text } => {
                         let size = if level <= 3 { 12.0 } else { 11.5 };
-                        lines.push(RenderLine::Heading(size, parse_inline(&text)));
+                        let runs = place_runs(widths, parse_inline(&text), size);
+                        lines.push(RenderLine::Heading(size, runs));
                     }
                     MdBlock::Paragraph(text) => {
                         for wl in wrap_md_runs(&parse_inline(&text), BODY_W, BODY_SIZE, widths) {

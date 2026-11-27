@@ -277,7 +277,7 @@ impl<'a> PromptCenterPanel<'a> {
         }
         if Self::search_rect(panel).contains(point) {
             let input = &self.state.editor_ui.prompt_center.search;
-            let offset = crate::widgets::text_input::single_line_byte_offset_at(
+            let offset = crate::widgets::text_input_measured::measured_byte_offset_at(
                 input,
                 Self::search_rect(panel),
                 point,
@@ -295,7 +295,7 @@ impl<'a> PromptCenterPanel<'a> {
         if self.state.editor_ui.prompt_center.save_open {
             if Self::save_title_rect(panel).contains(point) {
                 let input = &self.state.editor_ui.prompt_center.save_title;
-                let offset = crate::widgets::text_input::single_line_byte_offset_at(
+                let offset = crate::widgets::text_input_measured::measured_byte_offset_at(
                     input,
                     Self::save_title_rect(panel),
                     point,
@@ -453,7 +453,7 @@ impl<'a> PromptCenterPanel<'a> {
         let prompt_center = &self.state.editor_ui.prompt_center;
         match prompt_center.focus {
             de_editor_core::PromptCenterFocus::Search => {
-                crate::widgets::text_input::single_line_caret_rect(
+                crate::widgets::text_input_measured::measured_caret_rect(
                     &prompt_center.search,
                     Self::search_rect(panel),
                     SEARCH_TEXT_SIZE,
@@ -461,7 +461,7 @@ impl<'a> PromptCenterPanel<'a> {
                 )
             }
             de_editor_core::PromptCenterFocus::SaveTitle => {
-                crate::widgets::text_input::single_line_caret_rect(
+                crate::widgets::text_input_measured::measured_caret_rect(
                     &prompt_center.save_title,
                     Self::save_title_rect(panel),
                     SEARCH_TEXT_SIZE,

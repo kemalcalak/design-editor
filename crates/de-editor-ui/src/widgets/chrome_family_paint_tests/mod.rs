@@ -26,6 +26,10 @@ use crate::widgets::text_metrics::CHROME_FONT_FAMILY;
 use crate::widgets::PaintCx;
 use crate::Rect;
 
+/// The face jian's `Button` / `Select` / `TextInputView` paint and measure
+/// their own labels in.
+const JIAN_COMPONENT_FAMILY: &str = "Inter";
+
 mod chips;
 mod modals;
 mod overlays;
@@ -80,27 +84,29 @@ pub(crate) fn assert_drawn_as_measured(
         // Family-blind measurements (`""`) come from jian components and are
         // kept out of widget code by `tools/check-text-measure.sh`; what is
         // checked here is that no NAMED family other than the painted one
-        // sized this run, and none at another weight. The same text may be
-        // painted twice in different faces on purpose (a heading in the
-        // chrome face over a jian `Button` in Inter, #451): a measurement in
-        // a style some run of that text is painted in sized that run, so it
-        // only fails this run when it names this run's family at another
-        // weight, or a style nothing of that text is painted in.
+        // sized this run, and none at another weight.
+        //
+        // One exemption, scoped to jian components (#451): the same text may
+        // be painted both as a chrome run and as the label of a jian
+        // `Button` / `Select`, which measures it itself in its own face (the
+        // export dialog's "Export" heading over its "Export" button). A
+        // chrome run that was not measured itself passes only when every
+        // measurement of its text is in the jian face AND a jian run of that
+        // text is painted in it.
         let measured: Vec<(&str, u16)> = strict
             .styles_measured_for(&run.text)
             .into_iter()
             .filter(|(family, _)| !family.is_empty())
             .collect();
         let own = (run.family.as_str(), run.font_weight);
-        let painted_in = |style: &(&str, u16)| {
-            strict.runs.iter().any(|other| {
-                other.text == run.text && (other.family.as_str(), other.font_weight) == *style
-            })
+        let jian_label = |style: &(&str, u16)| {
+            style.0 == JIAN_COMPONENT_FAMILY
+                && own.0 != JIAN_COMPONENT_FAMILY
+                && strict.runs.iter().any(|other| {
+                    other.text == run.text && (other.family.as_str(), other.font_weight) == *style
+                })
         };
-        let consistent = measured.contains(&own)
-            || measured
-                .iter()
-                .all(|style| style.0 != own.0 && painted_in(style));
+        let consistent = measured.contains(&own) || measured.iter().all(jian_label);
         assert!(
             measured.is_empty() || consistent,
             "{what}: {:?} is painted in {:?} at {} but measured in {measured:?}",
@@ -208,6 +214,34 @@ fn the_check_catches_a_label_painted_at_another_weight() {
             Point2D::ZERO,
         )
         .with_font_weight(600);
+        cx.backend.draw_text(&layout, Point2D::ZERO);
+        container
+    });
+}
+
+/// …and the jian-label exemption does not cover a chrome run fitted in the
+/// jian face when no jian run of that text is painted in it.
+#[test]
+#[should_panic(expected = "is painted in")]
+fn the_jian_exemption_needs_a_jian_run() {
+    use crate::{Color, Point2D, TextLayout};
+
+    assert_drawn_as_measured("chrome fitted in Inter", &[], |cx| {
+        let container = Rect::xywh(0.0, 0.0, 200.0, 30.0);
+        let fitted = crate::widgets::text_metrics::fit_in_family(
+            cx.backend,
+            "Export",
+            container.size.x,
+            12.0,
+            JIAN_COMPONENT_FAMILY,
+        );
+        let layout = TextLayout::single_run(
+            &fitted,
+            CHROME_FONT_FAMILY,
+            12.0,
+            Color::WHITE.to_jian(),
+            Point2D::ZERO,
+        );
         cx.backend.draw_text(&layout, Point2D::ZERO);
         container
     });

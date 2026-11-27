@@ -462,6 +462,7 @@ pub mod icon_picker_panel;
 pub mod ime_preedit_overlay;
 pub mod import_menu;
 mod line_break;
+mod text_input_measured;
 pub mod locale_picker;
 pub mod marquee_flow;
 pub(crate) mod menu_paint;

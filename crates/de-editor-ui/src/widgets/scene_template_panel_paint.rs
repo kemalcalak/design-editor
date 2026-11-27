@@ -6,7 +6,8 @@ use de_editor_core::SceneTemplateFocus;
 
 use super::asset_center_style_layout::STYLE_SECTION_HEADER_H;
 use super::panel_controls::{
-    paint_accent_button, paint_panel_chip, paint_segmented_control, ButtonSpec, SegmentState,
+    paint_accent_button, paint_fitted_label, paint_panel_chip, paint_segmented_control, ButtonSpec,
+    SegmentState,
 };
 use super::scene_template_card_actions::{
     BASIS_CHIP_LABEL_SIZE, BASIS_CHIP_PAD_X, SCENE_TEMPLATE_BASIS_CHIP_HOVER,
@@ -338,7 +339,7 @@ impl SceneTemplatePanel<'_> {
 
         let dismiss = Self::basis_chip_dismiss_in(chip);
         let text_w = (chip.size.x - BASIS_CHIP_PAD_X - dismiss.size.x).max(0.0);
-        self.paint_fitted(
+        paint_fitted_label(
             cx,
             &label,
             text_w,
@@ -380,22 +381,6 @@ impl SceneTemplatePanel<'_> {
         } else {
             translated
         }
-    }
-
-    /// Paint `text` at `position` ellipsized to `max_w`, both measured in
-    /// the chrome face it is painted in; a repaint reads the kept fit.
-    pub(super) fn paint_fitted(
-        &self,
-        cx: &mut PaintCx<'_>,
-        text: &str,
-        max_w: f32,
-        position: Point2D,
-        size: f32,
-        color: Color,
-    ) {
-        let fitted =
-            LabelWidths::measuring(&mut *cx.backend).fit_chrome(text, max_w.max(0.0), size);
-        self.paint_text(cx, &fitted, position, size, color);
     }
 
     pub(super) fn paint_text(

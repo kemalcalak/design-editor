@@ -42,6 +42,7 @@ use crate::widgets::canvas_viewport_image::{
     has_cached_image_bytes, note_pending_decode, required_raster_edge, store_remote_image_bytes,
 };
 use crate::widgets::label_widths::{Fitted, LabelWidths};
+use crate::widgets::panel_controls::paint_fitted_label;
 use crate::widgets::scene_template_previews::scene_template_preview;
 use crate::widgets::text_metrics::{fit_chrome, measure_chrome, CHROME_FONT_FAMILY};
 use crate::widgets::PaintCx;
@@ -56,6 +57,8 @@ const SCENE_CHIP_H: f32 = 20.0;
 const SUMMARY_SIZE: f32 = 11.5;
 const SUMMARY_LINE_H: f32 = 16.0;
 const SUMMARY_LINES: usize = 2;
+/// The hover summary paints at the regular weight.
+const SUMMARY_WEIGHT: u16 = 400;
 /// Inset of the caption text from the card edge. Wider than the preview's so
 /// the title reads as hanging off the card rather than off the picture.
 const TEXT_INSET: f32 = 14.0;
@@ -604,7 +607,7 @@ impl SceneTemplatePanel<'_> {
         let title_w = (right - meta_w - 10.0 - left).max(0.0);
         // The name is verbatim — the user's own word, deliberately not
         // translated — so it is truncated to the room the metadata leaves.
-        self.paint_fitted(
+        paint_fitted_label(
             cx,
             &template.name,
             title_w,
@@ -658,20 +661,44 @@ fn summary_lines<'t>(
     text: &'t str,
     max_w: f32,
 ) -> (std::rc::Rc<[String]>, Option<Fitted<'t>>) {
-    let lines = widths.wrap(text, max_w, SUMMARY_SIZE, CHROME_FONT_FAMILY, 400);
+    let lines = widths.wrap(
+        text,
+        max_w,
+        SUMMARY_SIZE,
+        CHROME_FONT_FAMILY,
+        SUMMARY_WEIGHT,
+    );
     if lines.len() <= SUMMARY_LINES {
         return (lines, None);
     }
-    // Where the last shown line starts in `text`: the wrapped lines are its
-    // substrings in order, less the spaces dropped at each break.
+    // Where the last shown line starts in `text`. `LabelWidths::wrap` hands
+    // back consecutive slices of the text, dropping only the whitespace at
+    // each break (`wrap_text_measured` drops the space a line ends on,
+    // `wrap_lines` trims), so each line starts where the previous ended once
+    // that whitespace is skipped. A line that does not (a summary with a
+    // newline inside a break would) shows the wrapped lines as they are.
     let mut cursor = 0;
     for line in lines.iter().take(SUMMARY_LINES - 1) {
-        cursor = text[cursor..]
-            .find(line.as_str())
-            .map_or(cursor, |at| cursor + at + line.len());
+        let rest = &text[cursor..];
+        let skipped = rest.len() - rest.trim_start().len();
+        let follows = rest[skipped..].starts_with(line.as_str());
+        debug_assert!(
+            follows,
+            "{line:?} does not follow at byte {cursor} of {text:?}"
+        );
+        if !follows {
+            return (lines, None);
+        }
+        cursor += skipped + line.len();
     }
     let rest = text[cursor..].trim_start();
-    let last = widths.fit(rest, max_w, SUMMARY_SIZE, CHROME_FONT_FAMILY, 400);
+    let last = widths.fit(
+        rest,
+        max_w,
+        SUMMARY_SIZE,
+        CHROME_FONT_FAMILY,
+        SUMMARY_WEIGHT,
+    );
     (lines, Some(last))
 }
 

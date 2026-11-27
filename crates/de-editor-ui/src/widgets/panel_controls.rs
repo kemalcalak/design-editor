@@ -225,6 +225,29 @@ fn paint_centered_label(cx: &mut PaintCx<'_>, rect: Rect, label: &str, color: Co
     paint_label(cx, rect, label, CHIP_LABEL_SIZE, color);
 }
 
+/// Paint `text` at `position` in the chrome face, ellipsized to `max_w`.
+/// The fit and the label's width are kept ([`LabelWidths::fit`]), so a
+/// repaint neither measures nor allocates. The one fitted-label painter the
+/// gallery panels (Prompt Center, Asset Center) share.
+pub(crate) fn paint_fitted_label(
+    cx: &mut PaintCx<'_>,
+    text: &str,
+    max_w: f32,
+    position: Point2D,
+    size: f32,
+    color: Color,
+) {
+    let fitted = LabelWidths::measuring(&mut *cx.backend).fit_chrome(text, max_w.max(0.0), size);
+    let layout = TextLayout::single_run(
+        &fitted,
+        crate::widgets::text_metrics::CHROME_FONT_FAMILY,
+        size,
+        color.to_jian(),
+        Point2D::new(0.0, 0.0),
+    );
+    cx.backend.draw_text(&layout, position);
+}
+
 /// Paint `label` centred in `rect`, ellipsized when it does not fit. Both
 /// the fit and the width are read through [`LabelWidths`], so a repaint
 /// measures and allocates nothing.

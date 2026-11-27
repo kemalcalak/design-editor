@@ -41,11 +41,48 @@ const PILL_ALPHA: f32 = 0.92;
 /// exists — the deck simply has nothing that way — without inviting a click.
 const DISABLED_ALPHA: f32 = 0.35;
 
-/// Width of the counter segment for a given label: the label as painted
-/// (chrome face, [`FONT_SIZE`]) read through `widths`, padded, never below
-/// [`COUNTER_MIN_W`].
+/// Longest deck total the counter template spells out; a longer one is
+/// measured as the label itself.
+const COUNTER_MAX_DIGITS: usize = 6;
+
+/// Width of the counter segment for a given label (`"3 / 12"`): the widest
+/// label the deck can show, so stepping from slide 9 to 10 never moves Next
+/// and Exit. That is `"8 / 8"` in the face's widest digit, with both sides
+/// as many digits as the total has, measured as painted (chrome face,
+/// [`FONT_SIZE`]) through `widths`, padded, never below [`COUNTER_MIN_W`].
 fn counter_width(widths: &mut LabelWidths<'_>, label: &str) -> f32 {
-    COUNTER_MIN_W.max(widths.chrome(label, FONT_SIZE) + COUNTER_PAD_X * 2.0)
+    let mut buf = [0_u8; 2 * COUNTER_MAX_DIGITS + 3];
+    let measured = counter_template(widths, label, &mut buf).unwrap_or(label);
+    COUNTER_MIN_W.max(widths.chrome(measured, FONT_SIZE) + COUNTER_PAD_X * 2.0)
+}
+
+/// `"d / d"` with the total's digit count on both sides, `d` the widest
+/// digit, written into `buf` (no allocation). `None` for a label that is
+/// not `<number> / <number>` or whose total is longer than the buffer.
+fn counter_template<'b>(
+    widths: &mut LabelWidths<'_>,
+    label: &str,
+    buf: &'b mut [u8; 2 * COUNTER_MAX_DIGITS + 3],
+) -> Option<&'b str> {
+    let (current, total) = label.split_once(" / ")?;
+    let digits = total.len();
+    let all_digits = |s: &str| !s.is_empty() && s.bytes().all(|b| b.is_ascii_digit());
+    if !all_digits(current) || !all_digits(total) || digits > COUNTER_MAX_DIGITS {
+        return None;
+    }
+    let mut widest = (b'0', 0.0_f32);
+    for digit in b'0'..=b'9' {
+        let glyph = [digit];
+        let text = std::str::from_utf8(&glyph).ok()?;
+        let w = widths.chrome(text, FONT_SIZE);
+        if w > widest.1 {
+            widest = (digit, w);
+        }
+    }
+    buf[..digits].fill(widest.0);
+    buf[digits..digits + 3].copy_from_slice(b" / ");
+    buf[digits + 3..2 * digits + 3].fill(widest.0);
+    std::str::from_utf8(&buf[..2 * digits + 3]).ok()
 }
 
 pub struct SlideshowToolbar<'a> {
@@ -301,6 +338,30 @@ mod tests {
             assert!(pill.origin.x + pill.size.x <= canvas.origin.x + canvas.size.x);
             assert!(pill.origin.y + pill.size.y <= canvas.origin.y + canvas.size.y);
         }
+    }
+
+    /// Stepping through a deck never moves Next and Exit: every position of
+    /// a 12-slide deck is laid out in the same pill, measured or not.
+    #[test]
+    fn the_counter_keeps_one_width_for_the_whole_deck() {
+        let mut backend = crate::widgets::label_fit_test_support::fresh_backend();
+        let mut measuring = LabelWidths::measuring(&mut backend);
+        let at = |widths: &mut LabelWidths<'_>, label: &str| {
+            SlideshowToolbar::pill_rect_with(canvas(), label, widths)
+        };
+        let first = at(&mut measuring, "1 / 12");
+        for index in 2..=12 {
+            let label = format!("{index} / 12");
+            assert_eq!(at(&mut measuring, &label), first, "{label}");
+            assert_eq!(
+                SlideshowToolbar::pill_rect(canvas(), &label),
+                first,
+                "{label}"
+            );
+        }
+        // The template is wide enough for the widest label it stands for.
+        let widest = measuring.chrome("12 / 12", FONT_SIZE);
+        assert!(counter_width(&mut measuring, "1 / 12") >= widest + COUNTER_PAD_X * 2.0);
     }
 
     #[test]

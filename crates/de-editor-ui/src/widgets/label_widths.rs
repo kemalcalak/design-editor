@@ -97,6 +97,14 @@ impl<V: Clone> Generations<V> {
         Some(value)
     }
 
+    /// Read without copying forward: a lookup that keeps nothing new.
+    fn peek(&self, key: u64) -> Option<V> {
+        self.current
+            .get(&key)
+            .or_else(|| self.previous.get(&key))
+            .cloned()
+    }
+
     fn insert(&mut self, key: u64, value: V) {
         if self.current.len() >= self.cap {
             self.previous = std::mem::take(&mut self.current);
@@ -149,21 +157,35 @@ fn wrap_with(text: &str, max_w: f32, measure: &mut dyn FnMut(&str) -> f32) -> Ve
         .collect()
 }
 
-/// Cut `text` until it and a trailing `…` fit `max_w` as `measure` reports
-/// it (a bare `…` when not even one character does).
+/// Cut `text` to the longest prefix (at a char boundary) that, with a
+/// trailing `…`, fits `max_w` as `measure` reports it — a bare `…` when not
+/// even one character does. A binary search over the char boundaries, so a
+/// long title costs O(log n) shaped prefixes, not one per character; widths
+/// grow with the prefix, which is what makes the search valid.
 fn ellipsize_with(text: &str, max_w: f32, measure: &mut dyn FnMut(&str) -> f32) -> Rc<str> {
+    let ends: Vec<usize> = text
+        .char_indices()
+        .map(|(index, ch)| index + ch.len_utf8())
+        .collect();
     let mut cut = String::with_capacity(text.len() + '…'.len_utf8());
-    let mut fitting = 0;
-    for (index, ch) in text.char_indices() {
-        cut.truncate(0);
-        cut.push_str(&text[..index + ch.len_utf8()]);
+    let mut fits = |end: usize, cut: &mut String| {
+        cut.clear();
+        cut.push_str(&text[..end]);
         cut.push('…');
-        if measure(&cut) > max_w {
-            break;
+        measure(cut) <= max_w
+    };
+    // Invariant: `ends[..lo]` all fit, `ends[hi..]` none does.
+    let (mut lo, mut hi) = (0, ends.len());
+    while lo < hi {
+        let mid = lo + (hi - lo) / 2;
+        if fits(ends[mid], &mut cut) {
+            lo = mid + 1;
+        } else {
+            hi = mid;
         }
-        fitting = index + ch.len_utf8();
     }
-    cut.truncate(0);
+    let fitting = if lo == 0 { 0 } else { ends[lo - 1] };
+    cut.clear();
     cut.push_str(&text[..fitting]);
     cut.push('…');
     cut.into()
@@ -251,6 +273,22 @@ impl<'a> LabelWidths<'a> {
         width
     }
 
+    /// Width of a run in `family` at `weight` WITHOUT keeping it: a
+    /// measuring pass measures through the backend, a cached pass reads a
+    /// width something else kept, else the estimate. For runs whose layout
+    /// is kept elsewhere as a whole (the design.md body's lines), so a long
+    /// document does not crowd chrome labels out of the shared cache.
+    pub fn unkept(&mut self, text: &str, size: f32, family: &str, weight: u16) -> f32 {
+        let key = key(text, size, family, weight);
+        if let Some(width) = CACHE.with(|cache| cache.borrow().peek(key)) {
+            return width;
+        }
+        match self.backend.as_deref_mut() {
+            Some(backend) => measure_run(backend, text, size, family, weight),
+            None => estimate_width(text, size),
+        }
+    }
+
     /// Wrap `text` into lines no wider than `max_w` as a run in `family` at
     /// `weight`: Latin at spaces, CJK between characters
     /// (`wrap_text_measured`), and a line still too wide (Thai writes
@@ -308,16 +346,21 @@ impl LabelWidths<'_> {
         if self.styled(text, size, family, weight) <= max_w + FIT_SLACK {
             return Fitted::Whole(text);
         }
-        let key = wrap_key(text, max_w, size, family, weight);
+        // A cut is made for, and kept under, the whole px below `max_w`: a
+        // box that moves by a fraction of a px (a resize, a scaled chip row)
+        // reads the same cut instead of shaping and keeping a new one, and
+        // the cut still fits every width it is read for.
+        let budget = max_w.max(0.0).floor();
+        let key = wrap_key(text, budget, size, family, weight);
         if let Some(cut) = FITS.with(|fits| fits.borrow_mut().get(key)) {
             return Fitted::Cut(cut);
         }
         let Some(backend) = self.backend.as_deref_mut() else {
-            return Fitted::Cut(ellipsize_with(text, max_w, &mut |s| {
+            return Fitted::Cut(ellipsize_with(text, budget, &mut |s| {
                 estimate_width(s, size)
             }));
         };
-        let cut = ellipsize_with(text, max_w, &mut |s| {
+        let cut = ellipsize_with(text, budget, &mut |s| {
             measure_run(backend, s, size, family, weight)
         });
         FITS.with(|fits| fits.borrow_mut().insert(key, cut.clone()));

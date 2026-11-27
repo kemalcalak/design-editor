@@ -14,6 +14,7 @@ use crate::widgets::canvas_viewport_image::{
     has_cached_image_bytes, note_pending_decode, required_raster_edge, store_remote_image_bytes,
 };
 use crate::widgets::label_widths::LabelWidths;
+use crate::widgets::panel_controls::paint_fitted_label;
 use crate::widgets::prompt_center_previews::prompt_center_preview;
 use crate::widgets::property_panel_text_input::paint_text_input_view;
 use crate::widgets::{draw_icon, Icon, PaintCx};
@@ -85,7 +86,7 @@ impl PromptCenterPanel<'_> {
                 self.theme.muted_foreground,
                 1.4,
             );
-            self.paint_fitted(
+            paint_fitted_label(
                 cx,
                 self.t("promptCenter.saveCurrent"),
                 rect.size.x - 38.0,
@@ -348,7 +349,7 @@ impl PromptCenterPanel<'_> {
         );
 
         let title_right_pad = 14.0;
-        self.paint_fitted(
+        paint_fitted_label(
             cx,
             &card.title,
             rect.size.x - 14.0 - title_right_pad,
@@ -369,7 +370,7 @@ impl PromptCenterPanel<'_> {
             }
         };
         if !metadata.is_empty() {
-            self.paint_fitted(
+            paint_fitted_label(
                 cx,
                 &metadata,
                 rect.size.x - 28.0,
@@ -477,21 +478,6 @@ impl PromptCenterPanel<'_> {
             self.theme.foreground.with_alpha(0.72),
             1.35,
         );
-    }
-
-    /// Paint `text` at `position`, ellipsized to `max_w` as painted.
-    fn paint_fitted(
-        &self,
-        cx: &mut PaintCx<'_>,
-        text: &str,
-        max_w: f32,
-        position: Point2D,
-        size: f32,
-        color: Color,
-    ) {
-        let fitted =
-            LabelWidths::measuring(&mut *cx.backend).fit_chrome(text, max_w.max(0.0), size);
-        self.paint_text(cx, &fitted, position, size, color);
     }
 
     /// Paint `label` centred in `rect`, ellipsized to leave `inset` either

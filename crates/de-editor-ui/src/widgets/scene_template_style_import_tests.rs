@@ -9,7 +9,7 @@ use de_editor_core::{AssetCenterTab, EditorState};
 /// estimated) character widths the hit-test reads.
 fn wrap_document(text: &str, max_width: f32) -> Vec<(usize, String)> {
     let mut widths = LabelWidths::cached();
-    let mut advance = |ch: char| char_advance(&mut widths, ch);
+    let mut advance = |cluster: &str| cluster_advance(&mut widths, cluster);
     document_lines(text, max_width, &mut advance)
         .map(|(start, end)| (start, text[start..end].to_string()))
         .collect()
@@ -182,4 +182,18 @@ fn center_of(rect: Rect) -> Point2D {
         rect.origin.x + rect.size.x / 2.0,
         rect.origin.y + rect.size.y / 2.0,
     )
+}
+
+/// A combining mark or a ZWJ emoji sequence never ends up on another line
+/// than its base, however narrow the box.
+#[test]
+fn a_cluster_is_never_split_across_lines() {
+    let family = "\u{1F468}\u{200D}\u{1F469}\u{200D}\u{1F467}";
+    let text = format!("e\u{301}e\u{301}{family}{family}");
+    for (start, line) in wrap_document(&text, 1.0) {
+        assert!(
+            !line.starts_with('\u{301}') && !line.starts_with('\u{200D}'),
+            "line at {start} starts inside a cluster: {line:?}"
+        );
+    }
 }

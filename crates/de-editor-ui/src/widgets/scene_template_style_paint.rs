@@ -16,6 +16,7 @@ use super::scene_template_style_geometry::{
 };
 use crate::widgets::button::paint_button_feedback_wash;
 use crate::widgets::label_widths::LabelWidths;
+use crate::widgets::panel_controls::paint_fitted_label;
 use crate::widgets::PaintCx;
 use crate::{Point2D, Rect};
 
@@ -173,7 +174,7 @@ impl SceneTemplatePanel<'_> {
         } else {
             pin_w
         };
-        self.paint_fitted(
+        paint_fitted_label(
             cx,
             &card.name,
             text_w - corner_w,
@@ -198,7 +199,7 @@ impl SceneTemplatePanel<'_> {
 
         self.paint_swatch_band(cx, Self::swatch_band_rect(rect), card);
 
-        self.paint_fitted(
+        paint_fitted_label(
             cx,
             &card.summary,
             text_w,

@@ -19,7 +19,7 @@ use super::scene_template_style_geometry::SCENE_TEMPLATE_IMPORT_HOVER;
 use super::scene_template_style_import::{
     STYLE_IMPORT_CANCEL_HOVER, STYLE_IMPORT_CONFIRM_HOVER, STYLE_IMPORT_PICK_HOVER,
 };
-use crate::widgets::text_input::single_line_byte_offset_at;
+use crate::widgets::text_input_measured::measured_byte_offset_at as single_line_byte_offset_at;
 use crate::{Point2D, Rect};
 
 impl SceneTemplatePanel<'_> {

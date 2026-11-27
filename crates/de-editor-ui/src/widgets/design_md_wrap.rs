@@ -4,9 +4,14 @@
 //! character), so a line of wide glyphs ran past the panel and a line of
 //! narrow ones broke early, and CJK paragraphs — one "word" with no spaces —
 //! never broke at all. It now wraps at the width the runs are painted at:
-//! every run is measured in the chrome face at the body size through
-//! [`LabelWidths`], the same widths [`paint_runs`] advances by, so a line
-//! that wraps to fit is a line that paints inside the panel.
+//! every word is measured in the chrome face at the body size, and each
+//! wrapped run carries the advance it was measured at ([`PlacedRun`]), which
+//! is what [`paint_runs`] moves the pen by, so a line that wraps to fit is a
+//! line that paints inside the panel.
+//!
+//! These widths go through [`LabelWidths::unkept`]: the finished lines are
+//! kept whole by `design_md_line_cache`, so keeping every word of a brief in
+//! the shared label cache as well would only crowd chrome labels out of it.
 //!
 //! The body is styled runs, not plain text: a `` `code` `` span paints on a
 //! chip [`CODE_PAD_W`] wider than its text, a `#HEX` token behind a
@@ -30,9 +35,31 @@ pub(super) const COLOR_SWATCH_W: f32 = 14.0;
 /// weight, in this panel).
 const REGULAR: u16 = 400;
 
-/// Painted width of `text` in the body face at `size`.
+/// Painted width of `text` in the body face at `size`, not kept.
 pub(super) fn text_width(widths: &mut LabelWidths<'_>, text: &str, size: f32) -> f32 {
-    widths.styled(text, size, CHROME_FONT_FAMILY, REGULAR)
+    widths.unkept(text, size, CHROME_FONT_FAMILY, REGULAR)
+}
+
+/// A run with the advance it was measured at.
+#[derive(Debug, Clone, PartialEq)]
+pub(super) struct PlacedRun {
+    pub(super) run: MdRun,
+    /// How far painting it moves the pen ([`run_width`]).
+    pub(super) advance: f32,
+}
+
+/// `runs` with their advances at `size`, for a line painted as it is.
+pub(super) fn place_runs(
+    widths: &mut LabelWidths<'_>,
+    runs: Vec<MdRun>,
+    size: f32,
+) -> Vec<PlacedRun> {
+    runs.into_iter()
+        .map(|run| PlacedRun {
+            advance: run_width(widths, &run, size),
+            run,
+        })
+        .collect()
 }
 
 /// How far painting `run` at `size` advances the pen.
@@ -50,7 +77,7 @@ pub(super) fn wrap_md_runs(
     max_w: f32,
     size: f32,
     widths: &mut LabelWidths<'_>,
-) -> Vec<Vec<MdRun>> {
+) -> Vec<Vec<PlacedRun>> {
     let mut wrap = Wrap {
         widths,
         size,
@@ -90,7 +117,11 @@ pub(super) fn wrap_md_runs(
     if wrap.lines.is_empty() {
         wrap.lines.push(Vec::new());
     }
-    wrap.lines
+    let Wrap { widths, lines, .. } = wrap;
+    lines
+        .into_iter()
+        .map(|line| place_runs(widths, line, size))
+        .collect()
 }
 
 /// The line being filled and the lines already full.
