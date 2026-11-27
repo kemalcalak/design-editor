@@ -1,0 +1,181 @@
+//! "Ask before destructive agent actions" (#398) through the real pump: a
+//! gated call is held unanswered until the user decides, then runs or is
+//! declined.
+
+use super::*;
+use de_editor_core::ChatMessage;
+use std::sync::mpsc::{channel, sync_channel, Receiver};
+
+fn host_with_frame() -> WidgetHostNative {
+    let mut host = WidgetHostNative::new();
+    let doc = jian_ops_schema::load_str(
+        r#"{"version":"1.0.0","children":[
+          {"type":"frame","id":"hero","name":"Hero","x":0,"y":0,"width":100,"height":100}
+        ]}"#,
+    )
+    .unwrap()
+    .value;
+    *host.editor_state_mut() = de_editor_core::EditorState::from_document(doc);
+    host.editor_state_mut()
+        .chat
+        .messages
+        .push(ChatMessage::assistant_streaming());
+    host.editor_state_mut()
+        .editor_ui
+        .agent_settings
+        .confirm_destructive_agent_actions = true;
+    host
+}
+
+/// Send one `delete_node hero` request and pump once; returns the ack.
+fn request_delete(
+    host: &mut WidgetHostNative,
+    current: &mut Option<ChatSession>,
+    tool_tx: &std::sync::mpsc::Sender<de_editor_host_core::chat::ChatToolRequest>,
+) -> Receiver<ChatToolResult> {
+    let (ack_tx, ack_rx) = sync_channel(1);
+    tool_tx
+        .send(de_editor_host_core::chat::ChatToolRequest {
+            name: "delete_node".into(),
+            args_json: r#"{"nodeId":"hero"}"#.into(),
+            ack: ack_tx,
+            hold: Default::default(),
+            id: 0,
+        })
+        .unwrap();
+    pump(host, current, None, None, (1200.0, 800.0));
+    ack_rx
+}
+
+#[test]
+fn a_gated_call_waits_then_runs_on_allow() {
+    let mut host = host_with_frame();
+    let (_delta_tx, delta_rx) = channel::<de_ai::chat_provider::ChatDelta>();
+    let (tool_tx, tool_rx) = channel();
+    let mut current = Some(ChatSession::from_channels(delta_rx, Some(tool_rx)));
+    let ack = request_delete(&mut host, &mut current, &tool_tx);
+    assert!(ack.try_recv().is_err(), "held until the user answers");
+    let prompt = host.editor_state().chat.permission_prompt.clone().unwrap();
+    assert_eq!(prompt.target, "Hero");
+    assert_eq!(host.editor_state().active_children().len(), 1);
+    // Pumping again changes nothing while it waits.
+    pump(&mut host, &mut current, None, None, (1200.0, 800.0));
+    assert!(ack.try_recv().is_err());
+    assert!(host.editor_state_mut().answer_agent_permission(true));
+    pump(&mut host, &mut current, None, None, (1200.0, 800.0));
+    let result = ack.try_recv().expect("runs after Allow");
+    assert!(!result.is_error, "{}", result.content);
+    assert!(host.editor_state().active_children().is_empty());
+    assert!(host.editor_state().chat.permission_prompt.is_none());
+}
+
+#[test]
+fn deny_answers_the_agent_and_keeps_the_layer() {
+    let mut host = host_with_frame();
+    let (_delta_tx, delta_rx) = channel::<de_ai::chat_provider::ChatDelta>();
+    let (tool_tx, tool_rx) = channel();
+    let mut current = Some(ChatSession::from_channels(delta_rx, Some(tool_rx)));
+    let ack = request_delete(&mut host, &mut current, &tool_tx);
+    host.editor_state_mut().answer_agent_permission(false);
+    pump(&mut host, &mut current, None, None, (1200.0, 800.0));
+    let result = ack.try_recv().expect("declined result");
+    assert!(result.is_error);
+    assert!(result.content.contains("declined"));
+    assert_eq!(host.editor_state().active_children().len(), 1);
+}
+
+#[test]
+fn with_the_setting_off_the_call_runs_at_once() {
+    let mut host = host_with_frame();
+    host.editor_state_mut()
+        .editor_ui
+        .agent_settings
+        .confirm_destructive_agent_actions = false;
+    let (_delta_tx, delta_rx) = channel::<de_ai::chat_provider::ChatDelta>();
+    let (tool_tx, tool_rx) = channel();
+    let mut current = Some(ChatSession::from_channels(delta_rx, Some(tool_rx)));
+    let ack = request_delete(&mut host, &mut current, &tool_tx);
+    assert!(ack.try_recv().is_ok());
+    assert!(host.editor_state().chat.permission_prompt.is_none());
+}
+
+#[test]
+fn a_design_loop_call_is_gated_held_and_announced_off_screen() {
+    let mut host = host_with_frame();
+    let (_delta_tx, delta_rx) = channel::<de_ai::chat_provider::ChatDelta>();
+    let (tool_tx, tool_rx) = channel();
+    let baseline = de_editor_core::write_scope::WriteBaseline::capture(host.editor_state());
+    let mut current =
+        Some(ChatSession::from_channels(delta_rx, Some(tool_rx)).into_design_loop(baseline));
+    // The run's tab (0) is not the one on screen.
+    host.editor_state_mut().chat.new_tab();
+    let (ack_tx, ack_rx) = sync_channel(1);
+    let hold = std::sync::Arc::new(std::sync::atomic::AtomicU8::new(0));
+    tool_tx
+        .send(de_editor_host_core::chat::ChatToolRequest {
+            name: "delete_node".into(),
+            args_json: r#"{"nodeId":"hero"}"#.into(),
+            ack: ack_tx,
+            hold: std::sync::Arc::clone(&hold),
+            id: 0,
+        })
+        .unwrap();
+    pump(&mut host, &mut current, Some(0), None, (1200.0, 800.0));
+    assert!(ack_rx.try_recv().is_err(), "the design loop waits too");
+    assert!(
+        hold.load(std::sync::atomic::Ordering::SeqCst) == 1,
+        "the worker is told to keep waiting"
+    );
+    let toast = host.editor_state().editor_ui.editor_toast.clone().unwrap();
+    assert_eq!(
+        toast.i18n_key,
+        de_editor_core::agent_permission::WAITING_TOAST
+    );
+    // Stopping the turn drops the held call, which its worker reads as a
+    // decline (`ChatToolRequest::hold`).
+    drop(current.take());
+    assert!(matches!(
+        ack_rx.try_recv(),
+        Err(std::sync::mpsc::TryRecvError::Disconnected)
+    ));
+}
+
+#[test]
+fn a_call_its_worker_gave_up_on_never_runs_even_after_allow() {
+    let mut host = host_with_frame();
+    let (_delta_tx, delta_rx) = channel::<de_ai::chat_provider::ChatDelta>();
+    let (tool_tx, tool_rx) = channel();
+    let mut current = Some(ChatSession::from_channels(delta_rx, Some(tool_rx)));
+    let (ack_tx, _ack_rx) = sync_channel(1);
+    let request = de_editor_host_core::chat::ChatToolRequest::new(
+        "delete_node",
+        r#"{"nodeId":"hero"}"#,
+        ack_tx,
+    );
+    // The worker's 60 s passed before the host got to the call.
+    request.hold.store(2, std::sync::atomic::Ordering::SeqCst);
+    tool_tx.send(request).unwrap();
+    pump(&mut host, &mut current, None, None, (1200.0, 800.0));
+    assert!(host.editor_state().chat.permission_prompt.is_none());
+    assert!(!host.editor_state_mut().answer_agent_permission(true));
+    pump(&mut host, &mut current, None, None, (1200.0, 800.0));
+    assert_eq!(
+        host.editor_state().active_children().len(),
+        1,
+        "the layer stays"
+    );
+}
+
+#[test]
+fn a_waiting_prompt_does_not_repaint_every_pump() {
+    let mut host = host_with_frame();
+    let (_delta_tx, delta_rx) = channel::<de_ai::chat_provider::ChatDelta>();
+    let (tool_tx, tool_rx) = channel();
+    let mut current = Some(ChatSession::from_channels(delta_rx, Some(tool_rx)));
+    let _ack = request_delete(&mut host, &mut current, &tool_tx);
+    assert!(host.editor_state().chat.permission_prompt.is_some());
+    assert!(
+        !pump(&mut host, &mut current, None, None, (1200.0, 800.0)),
+        "nothing changed while the user decides"
+    );
+}

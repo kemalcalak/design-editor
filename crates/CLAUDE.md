@@ -446,7 +446,7 @@ The invariant now has **one implementation**: `de-editor-ui/src/widgets/host_can
 - **Agents** (#26) — a list on the left and the selected entry's detail on the right (`agent_settings_agents.rs` spine; `_agents_list`, `_api_detail` + `_api_preset_menu`, `_cli_detail`, `_acp_detail`, shared `_detail_chrome`). The list: API providers (saved ones plus the featured presets not set up yet) closed by "Add custom endpoint", then the agents on this machine (CLI agents, ACP agents) closed by "Add ACP agent"; the web build lists API providers only. Selection is `AgentSettings::agents_selected` (by id; read it through `resolved_agents_entry`). API detail: API format, base URL, masked key with a reveal eye, a model checklist fed by the catalog (free text when the endpoint cannot list models), Fetch models / Save. CLI detail: probe status with Check again, the agent's discovered models as a checklist whose unticked ids persist as `cli_hidden_models` and leave the chat picker, Connect / Disconnect. ACP detail: preset + connection segments, command/args or URL, install hint, environment. Host tests press controls through `AgentSettingsPanel::point_for_hit` rather than copied coordinates.
 - **MCP** — server status card with port input + Start/Stop button, then a grid of 7 CLI integration toggles (Claude Code / Codex / OpenCode / Kiro / GitHub Copilot / Antigravity / Grok Build). Port input is editable (see "Settings input editing" below).
 - **Images** — Image Search Ready/Not-configured indicator + collapsible Advanced section (Openverse OAuth Client ID / Secret + Register link + Test button), then Image Generation section with `+ Add` empty state.
-- **System** — Appearance, auto-update switch with the release probe's status line, Experimental, Pencil cursor (the AI generation overlay), Pencil smoothing (#88, the Pencil tool's fit tolerance), Live pages, and Memory (#456: process footprint, editor caches, undo history; see "Memory on large documents"). When a newer release is known the auto-update row carries an **Update** button (desktop only); it opens the in-app update modal (#111, `update_modal.rs`, state `editor_ui_state/update_state.rs`), which the desktop host drives through `update_install.rs` (download with progress, SHA-256 check against `SHA256SUMS.txt`, stage) and `update_install_platform.rs` (macOS bundle swap / Windows silent NSIS / Linux binary rename from `design-editor-linux-x86_64.tar.gz`, #51, then relaunch).
+- **System** — Appearance, auto-update switch with the release probe's status line, Experimental, Pencil cursor (the AI generation overlay), Pencil smoothing (#88, the Pencil tool's fit tolerance), Live pages, Ask before destructive agent actions (#398), and Memory (#456: process footprint, editor caches, undo history; see "Memory on large documents"). When a newer release is known the auto-update row carries an **Update** button (desktop only); it opens the in-app update modal (#111, `update_modal.rs`, state `editor_ui_state/update_state.rs`), which the desktop host drives through `update_install.rs` (download with progress, SHA-256 check against `SHA256SUMS.txt`, stage) and `update_install_platform.rs` (macOS bundle swap / Windows silent NSIS / Linux binary rename from `design-editor-linux-x86_64.tar.gz`, #51, then relaunch).
 
 `agent_settings_i18n.rs` is a thin widget-layer adapter over the shared `de-i18n` lookup. All `settings.*` strings (`settings.tab.*` / `settings.agents.*` / `settings.mcp.*` / `settings.images.*` / `settings.system.*` / `settings.provider.*`) live directly in every one of the 15 canonical locale tables.
 
@@ -1103,7 +1103,7 @@ real CLI agents, not a stub:
 
 CLI side (`crates/de-cli/src/agent_*.rs`, dispatched in `main` before the generic parser): `agent_args` (own argv parser, `-p`), `agent_tasks` (YAML / JSON tasks file via `serde-saphyr`, `deny_unknown_fields`, task > flags > file `defaults`; `check_plan` refuses duplicate `out`s and overlapping export folders by `agent_paths::path_key`: absolute, `..` resolved, Windows `\\?\` prefix dropped, NFC on macOS, case-folded on macOS / Windows; lexical, so symlinks, UNC vs mapped drives and case-insensitive Linux disks are documented misses), `agent_task` (shared checks: portable task names, the engine's 32 KiB prompt limit, export folder `<root>/<task name>`), `agent_provider` (saved providers through the read-only `settings_io::read_builtin_agents`, or an unsaved one from `DE_AGENT_API_KEY` etc.; keys never on argv or in output), `agent_runner` (load → engine → `state.apply` → atomic save → `headless_export::export_document`; typed `TaskError` in `agent_runner_error.rs`; statuses ok / failed / cancelled / interrupted; `--parallel N` worker threads, at most 16, sharing the builtin HTTP pacer in `de-chat-agent/src/backoff.rs`), `agent_thumbs` (the `image_thumbs` registry is process-wide and replaced by each load: every task takes `capture_snapshot()` right after its load, whatever form the file kept the thumbnails in (inline base64 or `<name>.assets/` paths), and `restore_snapshot`s it right before its save; load + snapshot and restore + save hold one lock, so no other task's load lands in between), `agent_report` (`--json`, report `version` 1), `agent_progress` (stderr). Exit 0 / 1 (a task failed) / 2 (usage, tasks file or provider setup, nothing ran) / 130 (Ctrl+C via `signal-hook` cut a task short; `--out` untouched unless it was already saved). Provider errors never print a value that may be a secret (`agent_provider_error.rs`: base URL, the `--api-key-env` value (only its length), serde's quoted settings values), and `--list-providers --json` shows base URLs without user info, query or fragment (`redact_url`). All of it sits behind de-cli's default `agent` feature, which links `de-host-services` (skia raster, no GL; the release `de` grows from ~10 to ~62 MiB). Releases build it (the release script compiles de-cli together with `de-host-desktop`, so `pinned-skia-binaries` unifies); `--no-default-features` gives a slim `de` whose `de agent` prints that it is not in this build and exits 2. CI lints that slim build (`cargo clippy -p de-cli --no-default-features`), and `tests/agent_cli.rs` is `cfg(feature = "agent")`. Integration tests (`crates/de-cli/tests/agent_cli.rs`) run the binary against a loopback Anthropic-wire fake provider (`tests/agent_cli/fake_provider.rs`: `<<frame:Name>>`, `<<fail>>`, `<<hang>>` prompt markers). User docs: `docs/guide/cli.md#headless-design-agent`.
 
-## Chat context: `@`-mentions, attachments, `/` skills, usage, notes and the context panel (#398)
+## Chat context: `@`-mentions, attachments, `/` skills, usage, notes, permissions and the context panel (#398)
 
 - Typing `@` (at the draft start or after whitespace, so an email address
   never triggers it) opens a popup above the composer card ranked by the
@@ -1240,3 +1240,59 @@ CLI side (`crates/de-cli/src/agent_*.rs`, dispatched in `main` before the generi
   3; a note inside a frame is placed in page coordinates first). The note
   itself is staged only when it is blank, so its text reaches the model
   once. Nothing is sent until the user presses Send.
+- Permission prompts: Settings ▸ System ▸ "Ask before destructive agent
+  actions" (`AgentSettings::confirm_destructive_agent_actions`, off by
+  default, persisted as `confirm_destructive_agent_actions`). With it on,
+  every agent tool call is gated by `EditorState::gate_agent_tool_with`
+  (`de-editor-core/src/agent_permission.rs`). `destructive_action` flags
+  delete_node / delete_selected / cut_selected / delete_page / remove_page /
+  delete_component / delete_variable / replace_node, `set_variables` with
+  `replace`, `batch_design` operations with `D(...)` or `R(...)` (a `script`
+  is run to its operations first, `de_host_services::agent_permission_classify`;
+  one that does not expand asks; `nodes_json` only inserts), an `execute`
+  script whose dry run on the request's snapshot
+  (`de_mcp::script_execute::execute_effects`, nothing applied, rendered or
+  written) deletes, replaces, exports or overwrites the variables, or that
+  cannot be judged (a throw, a failed write, the time limit), and file
+  writes: the saves (`save_document`, `save_theme_preset`), any
+  `outputPath` / `outputDir`, and a `filePath` on a tool that is not
+  read-only (it rewrites that `.de`); inline exports write nothing and do
+  not ask. Callers: the chat and design-agent loops and their sub-agents in
+  the desktop's `execute_tool_requests`, and agents on the live MCP server
+  (CLI / ACP) in `mcp_live/permission.rs`. A prompt belongs to one call id
+  on one chat tab, so an answer never approves another, identical call; an
+  MCP prompt opens on the tab on screen and stays there. MCP call ids start
+  at `EXTERNAL_CALL_IDS`: those prompts are not the chat's, so Stop, a new
+  send and New chat leave them alone. An answered chat prompt whose call is
+  gone does not block its tab. The desktop holds a
+  flagged call (`ChatSession::defer_tool_request`) until the user answers
+  in the band above the input (`ai_chat_permission_prompt.rs`, the MCP
+  notice's slot; Allow / Deny sized through `LabelWidths`; the sentence is
+  made once with the prompt and the labels are the catalog's strings, so a
+  frame allocates nothing); Allow runs it, Deny answers `DECLINED_RESULT`.
+  `ChatToolRequest::hold` settles the worker's 60 s timeout against the
+  host: whichever moves first wins (compare-and-swap), so a held call waits
+  however long and a call its worker gave up on is never run. Stop, New
+  chat (also the "+" tab's) and a new send end the turn: its prompt is
+  dropped from the run's tab (`ChatState::drop_turn_permission`, also when
+  Stop comes from another tab, as closing the document does) and its held
+  call reads as declined; a closed tab and quit do the same. The MCP
+  connection reads the setting from `LiveShared` (published at server
+  start by `McpLiveServer::note_editor` and on every pump; nothing is
+  classified or asked with it off), never asks while holding the state
+  lock, and waits at most 50 s (`PERMISSION_DEADLINE`). A live `execute`
+  (no `filePath`, or `live://canvas`) is asked about once, from its dry
+  run: under the lock on a snapshot, which is let go before the question;
+  the real run retakes the lock on a fresh snapshot inside
+  `de_mcp::script_execute::pinned`, on the dry run's `ExecuteClock`
+  (`Math.random` seeded and `Date` frozen from it in every run, so both
+  take the same branches), and fails, applying nothing, when it would make
+  a destructive call the dry run did not (the document changed while the
+  prompt was open). An `execute` on another file asks before the lock like
+  any other call. Past the deadline the connection
+  refuses the call, the pump closes the prompt, and a late Allow
+  runs nothing. Replacing or opening the document and quitting decline
+  every open prompt (`decline_all_agent_permissions`); switching the
+  setting off lets each waiting call run and closes its prompt. A prompt
+  opened on a tab that is not on screen, or with the chat minimized, raises
+  `chat.permission.waiting`; only a new prompt repaints.

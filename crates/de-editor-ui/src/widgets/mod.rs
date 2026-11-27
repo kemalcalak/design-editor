@@ -388,6 +388,7 @@ mod ai_chat_panel_hit;
 mod ai_chat_panel_menus;
 mod ai_chat_panel_minimized;
 pub mod ai_chat_panel_paint;
+pub(crate) mod ai_chat_permission_prompt;
 pub(crate) mod ai_chat_plus_menu;
 pub(crate) mod ai_chat_session_menu;
 pub mod ai_chat_style_card;

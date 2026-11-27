@@ -106,6 +106,10 @@ pub struct McpLiveServer {
     /// The page root the last write added, for the host to bring into view
     /// (#264). Taken by [`McpLiveServer::take_follow_target`].
     follow_target: Option<McpFollowTarget>,
+    /// Destructive calls waiting for the user's Allow / Deny (#398).
+    pending_permissions: Vec<permission::PendingPermission>,
+    /// The host's clock for this pump ([`McpLiveServer::set_now_ms`]).
+    now_ms: u64,
 }
 
 /// A file a client wrote with `save_document`.
@@ -223,6 +227,8 @@ enum UiRequest {
     },
     /// A client saved a document with `save_document`.
     DocumentSaved(McpSavedDocument),
+    /// A destructive call asks the user first (#398, `permission`).
+    Permission(permission::PendingPermission),
     /// `debug_screenshot` against the LIVE canvas — the connection
     /// thread blocks on `ack` while the UI pump renders the active
     /// page / node through the raster export pipeline
@@ -302,6 +308,8 @@ impl McpLiveServer {
             ui_side: LiveUiSide::new(shared),
             snapshot_anchor: Default::default(),
             pending_design_md: VecDeque::new(),
+            pending_permissions: Vec::new(),
+            now_ms: 0,
             saved_documents: Vec::new(),
             host_document_epoch: 0,
             follow_target: None,
@@ -314,6 +322,19 @@ impl McpLiveServer {
     /// keeps it current after that.
     pub fn note_ui_kits(&mut self, kits: &[de_editor_core::UIKit]) {
         self.ui_side.pumped(kits);
+    }
+
+    /// Publish what a fresh server needs from the editor before its first
+    /// pump: the kits for `tools/list` and whether destructive calls ask
+    /// first (#398), so no call slips through before that pump.
+    pub fn note_editor(&mut self, state: &EditorState) {
+        self.note_ui_kits(&state.ui_kits);
+        self.ui_side.publish_permission_setting(
+            state
+                .editor_ui
+                .agent_settings
+                .confirm_destructive_agent_actions,
+        );
     }
 
     pub fn port(&self) -> u16 {
@@ -449,6 +470,9 @@ impl McpLiveServer {
                     self.saved_documents.push(saved);
                     outcome.repaint = true;
                 }
+                Ok(UiRequest::Permission(pending)) => {
+                    self.pending_permissions.push(pending);
+                }
                 #[cfg(feature = "mcp-debug-tools")]
                 Ok(UiRequest::Screenshot { spec, ack }) => {
                     // Read-only render of the live state — no repaint needed.
@@ -465,6 +489,7 @@ impl McpLiveServer {
                 "design-editor mcp: the editor came back to {abandoned_reads} snapshot request(s) their calls had already given up on"
             );
         }
+        self.pump_permissions(state, &mut outcome);
         self.land_generations(state, &mut outcome);
         outcome
     }
@@ -497,6 +522,12 @@ impl McpLiveServer {
     /// call, oldest first.
     pub fn take_saved_documents(&mut self) -> Vec<McpSavedDocument> {
         std::mem::take(&mut self.saved_documents)
+    }
+
+    /// Record the host's clock before [`Self::pump`] (its notices are timed
+    /// with it).
+    pub fn set_now_ms(&mut self, now_ms: u64) {
+        self.now_ms = now_ms;
     }
 
     /// Record the host's current document epoch before [`Self::pump`], so
@@ -656,6 +687,7 @@ mod design_md_output;
 pub(crate) mod design_md_route;
 mod doc_sync;
 mod live_shared;
+mod permission;
 mod snapshot_anchor;
 /// `pub(crate)` for two consts only: the shared HTTP parser
 /// (`mcp_serve::read_http_request`) has to recognise this route's path to
@@ -672,6 +704,9 @@ use ui_requests::*;
 #[cfg(test)]
 #[path = "mcp_live_busy_tests.rs"]
 mod busy_tests;
+#[cfg(test)]
+#[path = "mcp_live_execute_gate_tests.rs"]
+mod execute_gate_tests;
 #[cfg(test)]
 #[path = "mcp_live_memory_tests.rs"]
 mod memory_tests;

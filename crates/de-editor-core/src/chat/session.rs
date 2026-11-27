@@ -115,6 +115,8 @@ impl ChatState {
         crate::chat_mentions::retain_live(&trimmed, &mut self.pending_mentions);
         self.mention_popup = None;
         self.mention_dismissed_at = None;
+        // A new send replaces the turn whose call was waiting.
+        self.drop_turn_permission();
         // Empty streaming assistant bubble — provider deltas append here.
         let mut assistant_msg = ChatMessage::assistant_streaming();
         assistant_msg.agent_name = agent_name;
@@ -171,6 +173,8 @@ impl ChatState {
     /// transcript. Returns true when either a queued send or streaming
     /// bubble was actually cancelled.
     pub fn stop_streaming(&mut self) -> bool {
+        // Stop drops the turn, and with it the call that was waiting.
+        self.drop_turn_permission();
         let had_pending = self.pending_send.take().is_some();
         let mut had_streaming = false;
         for msg in &mut self.messages {
@@ -205,6 +209,7 @@ impl ChatState {
         self.pending_mentions.clear();
         self.mention_popup = None;
         self.mention_dismissed_at = None;
+        self.drop_turn_permission();
         self.pending_new_chat = true;
     }
 

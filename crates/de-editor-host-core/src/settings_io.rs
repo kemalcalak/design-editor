@@ -71,6 +71,7 @@ pub struct Fingerprint {
     openverse_credential_owner: Option<String>,
     auto_update_enabled: bool,
     experimental_features_enabled: bool,
+    confirm_destructive_agent_actions: bool,
     connected: [bool; 7],
     cli_hidden_models: [std::collections::BTreeSet<String>; 7],
     builtin_agents: Vec<BuiltinAgentConfig>,
@@ -98,6 +99,7 @@ pub fn fingerprint(state: &EditorState) -> Fingerprint {
         openverse_credential_owner: eui.agent_settings.openverse_credential_owner.clone(),
         auto_update_enabled: eui.agent_settings.auto_update_enabled,
         experimental_features_enabled: eui.agent_settings.experimental_features_enabled,
+        confirm_destructive_agent_actions: eui.agent_settings.confirm_destructive_agent_actions,
         connected: eui.agent_settings.connected,
         cli_hidden_models: eui.agent_settings.cli_hidden_models.clone(),
         builtin_agents: eui.agent_settings.builtin_agents.clone(),
@@ -187,6 +189,9 @@ struct SettingsPayload {
     auto_update_enabled: Option<bool>,
     #[serde(default)]
     experimental_features_enabled: Option<bool>,
+    /// Ask before destructive agent actions (#398); absent = off.
+    #[serde(default)]
+    confirm_destructive_agent_actions: Option<bool>,
     /// Per-provider connect state, indexed by `AgentProvider::ALL`.
     /// Restored on launch so the chat model picker survives a restart.
     #[serde(default)]
@@ -287,6 +292,9 @@ fn to_payload(state: &EditorState) -> SettingsPayload {
         openverse_credential_owner: eui.agent_settings.openverse_credential_owner.clone(),
         auto_update_enabled: Some(eui.agent_settings.auto_update_enabled),
         experimental_features_enabled: Some(eui.agent_settings.experimental_features_enabled),
+        confirm_destructive_agent_actions: Some(
+            eui.agent_settings.confirm_destructive_agent_actions,
+        ),
         connected: Some(eui.agent_settings.connected.to_vec()),
         cli_hidden_models: Some(cli_hidden_models_to_payload(
             &eui.agent_settings.cli_hidden_models,
@@ -370,6 +378,9 @@ fn apply_payload_with_options(
     }
     if let Some(b) = payload.experimental_features_enabled {
         eui.agent_settings.experimental_features_enabled = b;
+    }
+    if let Some(b) = payload.confirm_destructive_agent_actions {
+        eui.agent_settings.confirm_destructive_agent_actions = b;
     }
     if let Some(c) = payload.connected {
         eui.agent_settings.connected = migrate_connected_provider_flags(c);

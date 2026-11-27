@@ -13,6 +13,7 @@
 
 // Migrated headless modules (Phases 2-5), kept alphabetical.
 pub mod acp_agent_probe_host;
+pub mod agent_permission_classify;
 #[cfg(test)]
 mod boolean_export_tests;
 pub mod brand_catalog;

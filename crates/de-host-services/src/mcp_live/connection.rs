@@ -296,6 +296,44 @@ pub(super) fn serve_stateful(
     // applies cannot interleave, and file-backed writes cannot race. The wait
     // is bounded (`STATE_LOCK_WAIT`, then busy naming the holder), and a
     // poisoned lock (a panicked sibling connection) is tolerated.
+    // #398: a destructive call asks the user first, never while holding the
+    // lock, so a call waiting on an answer never blocks other clients. A live
+    // `execute` is judged by a dry run under the lock, which is let go before
+    // the question; its real run below retakes it, held to what the dry run
+    // showed. With the setting off nothing is classified or asked.
+    if shared.asks_permission() {
+        use super::permission::{
+            destructive_call, gate_execute, refused_response, request_permission, ExecuteGate,
+            PermissionAnswer, PERMISSION_DEADLINE,
+        };
+        if let Some((id, tool, args, action)) = destructive_call(body) {
+            let answer =
+                request_permission(req_tx, wake_ui, tool, args, action, PERMISSION_DEADLINE);
+            if answer != PermissionAnswer::Allowed {
+                return Ok(refused_response(&id, answer));
+            }
+        }
+        match gate_execute(body, &request_label(body), shared, req_tx, wake_ui)? {
+            Some(ExecuteGate::Refused(reply)) => return Ok(reply),
+            Some(ExecuteGate::Run(pin)) => {
+                return de_mcp::script_execute::pinned(pin.clock, pin.allowed, || {
+                    serve_locked(body, req_tx, shared, wake_ui)
+                });
+            }
+            None => {}
+        }
+    }
+    serve_locked(body, req_tx, shared, wake_ui)
+}
+
+/// [`serve_stateful`] past the permission gate: everything under the state
+/// lock.
+fn serve_locked(
+    body: &str,
+    req_tx: &Sender<UiRequest>,
+    shared: &LiveShared,
+    wake_ui: &UiWake,
+) -> Result<String, McpLiveError> {
     let _guard = shared.lock_state(&request_label(body))?;
     // pen.dev's pathless `save` saves the open document to its file (#392).
     use crate::mcp_serve::pen_dev_save::{bind_save, SaveDispatch};

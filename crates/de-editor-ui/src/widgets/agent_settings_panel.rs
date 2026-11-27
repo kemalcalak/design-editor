@@ -262,6 +262,8 @@ pub enum AgentSettingsHit {
     SelectPencilSmoothing(de_editor_core::PencilSmoothing),
     /// System tab Live pages switch (#324).
     ToggleLivePages,
+    /// System tab "Ask before destructive agent actions" (#398).
+    ToggleConfirmAgentActions,
     FocusMcpPort,
     Outside,
     Inside,

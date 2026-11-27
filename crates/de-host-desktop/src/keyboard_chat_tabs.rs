@@ -59,6 +59,8 @@ impl DesktopApp {
                 chat.agents_running = (0, 0);
                 chat.pending_send = None;
                 chat.pending_stop_chat = false;
+                // The aborted turn's waiting call is gone with it (#398).
+                chat.drop_turn_permission();
                 for message in &mut chat.messages {
                     message.streaming = false;
                 }
@@ -81,6 +83,13 @@ impl DesktopApp {
         if drained {
             crate::sub_agent_session::abort_all(&mut self.sub_agents, &mut self.active_sub_agent);
             self.host.editor_state_mut().chat.agents_running = (0, 0);
+            // Stop may come from another tab than the run's (closing the
+            // document): the run's waiting call goes with it (#398).
+            if let Some(chat) =
+                running_tab.and_then(|idx| self.host.editor_state_mut().chat.tab_mut(idx))
+            {
+                chat.drop_turn_permission();
+            }
             self.chat_running_tab = None;
         }
         drained
@@ -197,5 +206,49 @@ mod tests {
             .available_models
             .iter()
             .any(|entry| entry.builtin_model_id() == Some("old-private-model")));
+    }
+
+    /// A run on tab 0 waiting on a permission prompt (chat-owned call 5),
+    /// with tab 1 on screen.
+    fn app_with_waiting_run() -> DesktopApp {
+        let mut app = DesktopApp::new(None);
+        let state = app.host.editor_state_mut();
+        state
+            .editor_ui
+            .agent_settings
+            .confirm_destructive_agent_actions = true;
+        state.gate_agent_tool(Some(0), 5, "delete_node", "{}");
+        state.chat.new_tab();
+        app.chat_running_tab = Some(0);
+        app
+    }
+
+    fn run_tab_prompt(app: &DesktopApp) -> bool {
+        app.host.editor_state().chat.tabs()[0]
+            .permission_prompt
+            .is_some()
+    }
+
+    #[test]
+    fn new_chat_drops_the_running_tabs_prompt() {
+        let mut app = app_with_waiting_run();
+        app.host.editor_state_mut().chat.pending_new_chat = true;
+        assert!(app.drain_new_chat());
+        assert!(!run_tab_prompt(&app), "no prompt left without its turn");
+    }
+
+    #[test]
+    fn stop_from_another_tab_drops_the_running_tabs_prompt() {
+        // Closing the document to Home stops from whichever tab is shown.
+        let mut app = app_with_waiting_run();
+        app.host.editor_state_mut().chat.pending_stop_chat = true;
+        assert!(app.drain_stop_chat());
+        assert!(!run_tab_prompt(&app));
+        // A later call on that tab is asked, not blocked for good.
+        let state = app.host.editor_state_mut();
+        assert_eq!(
+            state.gate_agent_tool(Some(0), 6, "delete_node", "{}"),
+            de_editor_core::agent_permission::ToolGate::Asked
+        );
     }
 }

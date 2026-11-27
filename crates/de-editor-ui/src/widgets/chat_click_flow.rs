@@ -304,6 +304,10 @@ pub fn apply_chat_hit(state: &mut EditorState, hit: AIChatHit, now_ms: u64) -> C
             state.remove_chat_mention(idx, now_ms);
             ChatClickStep::Dirty
         }
+        AIChatHit::AnswerPermission(allow) => {
+            state.answer_agent_permission(allow);
+            ChatClickStep::Dirty
+        }
         AIChatHit::ToggleContextPanel => {
             state.editor_ui.toggle_chat_context_panel();
             ChatClickStep::Dirty

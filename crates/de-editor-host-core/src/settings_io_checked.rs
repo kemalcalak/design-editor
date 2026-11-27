@@ -22,6 +22,7 @@ pub(super) fn validate_payload_fields(raw: &serde_json::Value) -> Result<()> {
             "openverse_credential_owner",
             "auto_update_enabled",
             "experimental_features_enabled",
+            "confirm_destructive_agent_actions",
             "connected",
             "cli_hidden_models",
             "builtin_agents",

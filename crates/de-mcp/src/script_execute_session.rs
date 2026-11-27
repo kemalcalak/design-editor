@@ -81,6 +81,8 @@ pub(crate) struct ExecSession {
     layout: Option<(u64, LayoutCache)>,
     /// A copy of the sim shared by screenshots taken with no write between.
     frozen: Option<(u64, SharedState)>,
+    /// The destructive calls the script made (#398's dry run).
+    pub(crate) effects: super::script_execute_effects::ExecuteEffects,
 }
 
 impl ExecSession {
@@ -103,12 +105,14 @@ impl ExecSession {
             max_writes: MAX_WRITES,
             layout: None,
             frozen: None,
+            effects: Default::default(),
         }
     }
 
     /// One host call. `args` is the JSON the prelude sent; the op names are
     /// the `call("…")` names in `script_execute_prelude.rs`.
     pub(crate) fn dispatch(&mut self, op: &str, args: &Value) -> Result<Value> {
+        self.effects.note(op, args);
         match op {
             "insert" => self.write(|s| s.insert(args)),
             "copy" => self.write(|s| s.copy(args)),

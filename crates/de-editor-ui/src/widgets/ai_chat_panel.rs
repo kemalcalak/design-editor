@@ -177,6 +177,9 @@ pub struct AIChatPlaceholder<'a> {
     /// integration, or `None` when it can run a canvas turn. See
     /// `ai_chat_mcp_notice`.
     pub(crate) mcp_notice: Option<String>,
+    /// A destructive agent call waiting for Allow / Deny (#398); takes the
+    /// notice band's place while it shows.
+    pub(crate) permission: Option<crate::widgets::ai_chat_permission_prompt::PermissionView<'a>>,
     /// Opaque, stable per-panel-INSTANCE id used to scope the thread-local
     /// transcript cache. A host allocates ONE id (`Self::next_owner`) for its
     /// persistent widget-host state and stamps every constructed panel with it
@@ -275,6 +278,7 @@ impl<'a> AIChatPlaceholder<'a> {
             },
             examples: example_cards(ui.effective_locale()),
             mcp_notice: mcp_notice_label(ui),
+            permission: crate::widgets::ai_chat_permission_prompt::permission_view(state),
             locale: ui.effective_locale(),
             tabs_snapshot,
             active_tab_index,
@@ -325,7 +329,7 @@ impl<'a> AIChatPlaceholder<'a> {
     /// run a canvas turn, so a correctly configured panel never pays a row
     /// for it (same rule as the attachment and chip rows above).
     pub(crate) fn mcp_notice_row_h(&self) -> f32 {
-        if self.mcp_notice.is_some() {
+        if self.mcp_notice.is_some() || self.permission.is_some() {
             crate::widgets::ai_chat_mcp_notice::MCP_NOTICE_ROW_HEIGHT
         } else {
             0.0

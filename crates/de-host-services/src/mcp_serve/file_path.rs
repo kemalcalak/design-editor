@@ -66,6 +66,13 @@ pub fn process_message_for_file_path_arg(
     Ok(response)
 }
 
+/// Whether [`process_message_for_file_path_arg`] would run `line` on another
+/// file than the server's own document (a `live://canvas` sentinel or the
+/// document's own path is not another file).
+pub fn targets_another_file(current_path: Option<&Path>, line: &str) -> bool {
+    !matches!(target_file_call(line, current_path), Ok(None))
+}
+
 /// Restores a captured thumbnail registry when dropped.
 struct RestoreThumbnails(jian_ops_schema::image_thumbs::ImageThumbSnapshot);
 

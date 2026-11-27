@@ -270,6 +270,11 @@ fn execute_tool_requests(
     }
     let mut changed = false;
     for req in requests {
+        // The worker's timeout passed before this call was held for the
+        // user: its agent was told it timed out, so it never runs (#398).
+        if req.abandoned() {
+            continue;
+        }
         // Intercept the reserved loop-finalize op (Track-1 Step 4): the
         // agentic design loop sends this at loop end so the host runs the
         // deterministic structural-quality backstop over the screens this run
@@ -385,6 +390,7 @@ fn execute_tool_requests(
             });
             continue;
         }
+        let now_ms = host.now_ms();
         let state = host.editor_state_mut();
         // Intercept `spawn_agents`: parse the specs, stash them for the
         // host to launch after this (parent) pump, and ack immediately
@@ -425,6 +431,60 @@ fn execute_tool_requests(
                 is_error: false,
             });
             continue;
+        }
+        // #398: with "Ask before destructive agent actions" on, a call that
+        // deletes or overwrites waits for the user's Allow / Deny. Chat and
+        // design-agent loops (and their sub-agents) all come through here.
+        use de_editor_core::agent_permission::ToolGate;
+        let gate =
+            state.gate_agent_tool_with(running_tab, req.id, &req.name, &req.args_json, || {
+                de_host_services::agent_permission_classify::classify_agent_tool(
+                    &req.name,
+                    &req.args_json,
+                )
+            });
+        match gate {
+            ToolGate::Run => {}
+            ToolGate::Asked | ToolGate::Wait => {
+                // The worker keeps waiting past its timeout while the user
+                // decides; dropping the session still ends that wait. Lost
+                // the race to the worker's timeout: drop it unrun.
+                if !req.hold_for_user() {
+                    state.close_agent_permission(req.id);
+                    changed = true;
+                    continue;
+                }
+                if gate == ToolGate::Asked {
+                    if state.permission_prompt_hidden(running_tab) {
+                        state.editor_ui.show_toast(
+                            de_editor_core::agent_permission::WAITING_TOAST,
+                            Vec::new(),
+                            de_editor_core::editor_toast::EditorToastLevel::Info,
+                            now_ms,
+                        );
+                    }
+                    // Only a new prompt repaints; a waiting one changes
+                    // nothing on screen.
+                    changed = true;
+                }
+                session.defer_tool_request(req);
+                continue;
+            }
+            ToolGate::Declined => {
+                let result = ChatToolResult {
+                    content: de_editor_core::agent_permission::DECLINED_RESULT.to_string(),
+                    is_error: true,
+                };
+                attach_tool_result_to_transcript_with(
+                    state.chat.run_tab_mut(running_tab),
+                    &req.name,
+                    &result,
+                    agent_identity,
+                );
+                let _ = req.ack.send(result);
+                changed = true;
+                continue;
+            }
         }
         let (result, mutated) = execute_agent_tool(state, &req.name, &req.args_json);
         if mutated {
@@ -626,3 +686,7 @@ mod reveal_tests;
 #[cfg(test)]
 #[path = "chat_session_finalize_teardown_tests.rs"]
 mod finalize_teardown_tests;
+
+#[cfg(test)]
+#[path = "chat_session_permission_tests.rs"]
+mod permission_tests;

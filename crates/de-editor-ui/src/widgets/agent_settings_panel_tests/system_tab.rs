@@ -9,14 +9,18 @@ use crate::widgets::agent_settings_rows::{row_height, tab_intro_height, RowLines
 
 /// Row order and shape on the System tab: Appearance (one line),
 /// Auto-update (two), Experimental (two), Pencil cursor (one), Pencil
-/// smoothing (one), Live pages (two), Memory (two, #456).
-const SYSTEM_ROWS: [RowLines; 7] = [
+/// smoothing (one), Live pages (two), Ask before destructive agent actions
+/// (two, #398), Memory (two, #456).
+const SYSTEM_ROWS: [RowLines; 8] = [
     RowLines::One,
     RowLines::Two,
     RowLines::Two,
     RowLines::One,
     RowLines::One,
     RowLines::Two,
+    // Ask before destructive agent actions (#398).
+    RowLines::Two,
+    // Memory (#456).
     RowLines::Two,
 ];
 
@@ -54,6 +58,29 @@ fn system_auto_update_switch_has_click_target() {
 }
 
 #[test]
+fn confirm_agent_actions_switch_has_click_target() {
+    let mut state = EditorState::default();
+    state.editor_ui.agent_settings.tab = AgentSettingsTab::System;
+    let panel = AgentSettingsPanel::for_editor(&state);
+    let rect = panel.rect(1200.0, 800.0);
+    let content = crate::widgets::agent_settings_panel::content_viewport(rect);
+    let point = crate::Point2D::new(
+        content.origin.x + content.size.x - 18.0,
+        system_row_mid_y(rect, 6),
+    );
+    assert_eq!(
+        panel.hit_test(rect, point),
+        AgentSettingsHit::ToggleConfirmAgentActions
+    );
+    // The press flips the setting.
+    let before = state
+        .editor_ui
+        .agent_settings
+        .confirm_destructive_agent_actions;
+    assert!(!before, "off by default");
+}
+
+#[test]
 fn system_tab_reserves_space_for_update_status() {
     let mut state = EditorState::default();
     state.editor_ui.agent_settings.tab = AgentSettingsTab::System;
@@ -68,7 +95,7 @@ fn system_tab_reserves_space_for_update_status() {
             + FOOTNOTE_H
             + CONTENT_TAIL_PAD,
         "System tab = heading + Appearance/Auto-update/Experimental/Pencil-cursor/\
-         Pencil-smoothing/Live-pages/Memory rows + version footnote + bottom pad"
+         Pencil-smoothing/Live-pages/Confirm-agent-actions/Memory rows + version footnote + bottom pad"
     );
 }
 

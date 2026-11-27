@@ -21,7 +21,9 @@
 //! lands all-or-nothing. A script that throws, times out, or caught a failed
 //! write returns an error and applies nothing (no screenshots, no exports,
 //! no `Print` output). Each call is a fresh sandbox: pass ids between calls
-//! as strings.
+//! as strings. `Math.random` is seeded and `Date` frozen per run
+//! (`script_execute_effects.rs`), so a permission gate's dry run and the
+//! real run on one clock do the same thing (#398).
 
 use std::cell::RefCell;
 use std::collections::BTreeMap;
@@ -42,6 +44,7 @@ use super::script_execute_session::ExecSession;
 use super::script_runner::{strip_fences, MAX_SCRIPT_BYTES, MEMORY_LIMIT_BYTES};
 use super::{EditorCommand, ImageContent, McpTool, ToolErrorCode, ToolOutcome};
 
+pub use super::script_execute_effects::{execute_effects, pinned, ExecuteClock, ExecuteEffects};
 pub use super::script_execute_error::ScriptRenderError;
 pub use super::script_execute_session::{
     MAX_EXPORT_NODES, MAX_PRINT_BYTES, MAX_SCREENSHOTS, MAX_WRITES,
@@ -210,26 +213,37 @@ fn run(
             max: MAX_SCRIPT_BYTES,
         });
     }
+    let pin = super::script_execute_effects::current_pin();
     let session = Rc::new(RefCell::new(ExecSession::new(
         snapshot,
         page_id,
         renderer.is_some(),
     )));
-    eval(&script, session.clone(), budget)?;
+    eval(&script, session.clone(), budget, pin.clock)?;
     let session = Rc::try_unwrap(session)
         .map_err(|_| ExecuteError::Sandbox("the script sandbox outlived its run".into()))?
         .into_inner();
     if let Some(error) = session.failed_write.clone() {
         return Err(ExecuteError::WriteFailed(error.to_string()));
     }
+    // #398: a gated call may not do more than its dry run showed the user.
+    if pin
+        .allowed
+        .as_ref()
+        .is_some_and(|allowed| !allowed.permits(&session.effects))
+    {
+        return Err(ExecuteError::NotAsked);
+    }
     Ok(finish(session, renderer))
 }
 
-/// Evaluate the prelude and the script in a fresh limited QuickJS context.
-fn eval(
+/// Evaluate the prelude and the script in a fresh limited QuickJS context,
+/// with `Date` and `Math.random` fixed by `clock`.
+pub(crate) fn eval(
     script: &str,
     session: Rc<RefCell<ExecSession>>,
     budget: Duration,
+    clock: ExecuteClock,
 ) -> Result<(), ExecuteError> {
     let rt = Runtime::new().map_err(|e| ExecuteError::Sandbox(format!("js runtime: {e}")))?;
     rt.set_memory_limit(MEMORY_LIMIT_BYTES);
@@ -244,6 +258,8 @@ fn eval(
         ctx.globals()
             .set("__host", host)
             .map_err(|e| ExecuteError::Sandbox(format!("set host: {e}")))?;
+        ctx.eval::<(), _>(clock.prelude())
+            .map_err(|e| ExecuteError::Sandbox(format!("clock prelude: {e}")))?;
         ctx.eval::<(), _>(EXECUTE_PRELUDE)
             .map_err(|e| ExecuteError::Sandbox(format!("prelude: {e}")))?;
         let mut options = EvalOptions::default();
@@ -385,3 +401,7 @@ fn finish(mut session: ExecSession, renderer: Option<&dyn ScriptRenderer>) -> To
 #[cfg(test)]
 #[path = "script_execute_tests.rs"]
 mod tests;
+
+#[cfg(test)]
+#[path = "script_execute_effects_tests.rs"]
+mod effects_tests;

@@ -329,6 +329,9 @@ pub struct AgentSettings {
     /// Opt-in gate for experimental surfaces (canvas Preview mode +
     /// the property-panel Widget section). Off by default.
     pub experimental_features_enabled: bool,
+    /// Ask before the agent deletes or overwrites something (#398):
+    /// Settings ▸ System. Off by default. See `agent_permission`.
+    pub confirm_destructive_agent_actions: bool,
     /// Currently-focused editable input on the modal.
     pub focus: Option<SettingsFocus>,
     /// Sidebar nav item under the cursor; `None` = no hover.
@@ -407,6 +410,7 @@ impl Default for AgentSettings {
             next_image_gen_profile_id: 1,
             auto_update_enabled: true,
             experimental_features_enabled: false,
+            confirm_destructive_agent_actions: false,
             focus: None,
             hover_nav: None,
             agents_selected: None,

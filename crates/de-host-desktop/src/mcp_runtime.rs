@@ -91,7 +91,7 @@ impl DesktopApp {
             self.mcp_wake_callback(),
         ) {
             Ok(mut server) => {
-                server.note_ui_kits(&self.host.editor_state().ui_kits);
+                server.note_editor(self.host.editor_state());
                 let bound_port = server.port();
                 self.mcp_server = Some(server);
                 self.note_bound_mcp_port(forced, setting_running, bound_port);
@@ -105,7 +105,7 @@ impl DesktopApp {
                         self.mcp_wake_callback(),
                     ) {
                         Ok(mut server) => {
-                            server.note_ui_kits(&self.host.editor_state().ui_kits);
+                            server.note_editor(self.host.editor_state());
                             let bound_port = server.port();
                             eprintln!("design-editor mcp: fell back to 127.0.0.1:{bound_port}/mcp");
                             self.mcp_server = Some(server);
@@ -172,6 +172,7 @@ impl DesktopApp {
                 return self.sync_home_mcp_client(None);
             };
             server.set_document_epoch(document_epoch);
+            server.set_now_ms(self.host.now_ms());
             server.set_document_path(self.current_path.as_deref());
             let outcome = server.pump(self.host.editor_state_mut());
             let pending_design_md = server.take_pending_design_md_request();
