@@ -107,6 +107,13 @@ pub struct PropertyLabels {
     pub stroke_dash_solid: &'static str,
     pub stroke_dash_dashed: &'static str,
     pub stroke_dash_dotted: &'static str,
+    /// Start / End / Miter rows and the swap tooltip (#389); the end
+    /// names follow `property_panel_stroke_ends::END_CAPS`.
+    pub stroke_start: &'static str,
+    pub stroke_end: &'static str,
+    pub stroke_miter: &'static str,
+    pub stroke_swap_ends: &'static str,
+    pub stroke_end_names: [&'static str; 8],
     pub effects: &'static str,
     pub fill_rule_nonzero: &'static str,
     pub fill_rule_evenodd: &'static str,
@@ -186,6 +193,12 @@ impl PropertyLabels {
             stroke_dash_solid: pick("stroke.dashSolid", "Solid"),
             stroke_dash_dashed: pick("stroke.dashDashed", "Dashed"),
             stroke_dash_dotted: pick("stroke.dashDotted", "Dotted"),
+            stroke_start: pick("stroke.start", "Start"),
+            stroke_end: pick("stroke.end", "End"),
+            stroke_miter: pick("stroke.miter", "Miter"),
+            stroke_swap_ends: pick("stroke.swapEnds", "Swap ends"),
+            stroke_end_names: crate::widgets::property_panel_stroke_ends::END_CAP_KEYS
+                .map(|(key, fallback)| pick(key, fallback)),
             effects: pick("effects.title", "Effects"),
             fill_rule_nonzero: pick("fill.ruleNonzero", "Nonzero"),
             fill_rule_evenodd: pick("fill.ruleEvenodd", "Even-odd"),

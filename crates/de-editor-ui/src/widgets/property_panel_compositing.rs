@@ -149,7 +149,7 @@ pub fn paint_fill_trigger(
     paint_trigger(cx, theme, rect, &label);
 }
 
-const TRIGGER_FONT_SIZE: f32 = 11.0;
+pub(crate) const TRIGGER_FONT_SIZE: f32 = 11.0;
 
 pub(crate) fn paint_trigger(cx: &mut PaintCx<'_>, theme: &Theme, rect: Rect, label: &str) {
     // jian's SelectTrigger clips its value instead of ellipsizing it — see

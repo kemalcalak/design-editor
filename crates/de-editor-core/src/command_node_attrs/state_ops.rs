@@ -220,6 +220,10 @@ impl EditorState {
                 Some(stroke) => set_stroke_width_preserving_sides(stroke, width),
                 none @ None => {
                     *none = Some(PenStroke {
+                        stroke_start: None,
+                        stroke_end: None,
+                        miter_limit: None,
+                        width_profile: None,
                         thickness: StrokeThickness::Uniform(width),
                         align: None,
                         join: None,
@@ -265,6 +269,10 @@ impl EditorState {
             Some(stroke) => set_stroke_side_width(stroke, side, width),
             none @ None => {
                 *none = Some(PenStroke {
+                    stroke_start: None,
+                    stroke_end: None,
+                    miter_limit: None,
+                    width_profile: None,
                     thickness: sided_stroke_thickness(widths),
                     align: None,
                     join: None,
