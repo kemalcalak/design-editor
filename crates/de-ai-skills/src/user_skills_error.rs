@@ -19,6 +19,8 @@ pub enum UserSkillError {
     TooLarge { bytes: u64 },
     /// Not UTF-8 text.
     NotUtf8,
+    /// A symlink that resolves outside its skills folder.
+    OutsideFolder,
     /// Reading the file failed.
     Io { source: io::Error },
 }
@@ -41,6 +43,7 @@ impl fmt::Display for UserSkillError {
                 crate::user_skills::MAX_SKILL_BYTES
             ),
             UserSkillError::NotUtf8 => write!(f, "not UTF-8 text"),
+            UserSkillError::OutsideFolder => write!(f, "links to a file outside the skills folder"),
             UserSkillError::Io { source } => write!(f, "{source}"),
         }
     }

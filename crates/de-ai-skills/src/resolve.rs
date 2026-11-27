@@ -47,8 +47,42 @@ fn format_recent_history(history: &[crate::types::HistoryEntry]) -> String {
         .join("\n")
 }
 
-/// Resolve the skill set for `phase` against `user_message`.
+/// Resolve the skill set for `phase` against `user_message`, with the
+/// user's overrides of built-in skills applied
+/// ([`crate::loader::set_skill_overrides`]).
 pub fn resolve_skills(phase: Phase, user_message: &str, options: &ResolveOptions) -> AgentContext {
+    resolve_skills_with_overrides(
+        phase,
+        user_message,
+        options,
+        &crate::loader::skill_overrides(),
+    )
+}
+
+/// The phase's candidates: built-in skills, each replaced by an override
+/// of the same name (which joins only the phases it declares itself).
+fn phase_candidates(phase: Phase, overrides: &[SkillEntry]) -> Vec<SkillEntry> {
+    let mut skills: Vec<SkillEntry> = get_skills_by_phase(phase)
+        .into_iter()
+        .filter(|builtin| !overrides.iter().any(|o| o.meta.name == builtin.meta.name))
+        .cloned()
+        .collect();
+    skills.extend(
+        overrides
+            .iter()
+            .filter(|o| o.meta.phase.contains(&phase))
+            .cloned(),
+    );
+    skills
+}
+
+/// [`resolve_skills`] against an explicit override set.
+pub fn resolve_skills_with_overrides(
+    phase: Phase,
+    user_message: &str,
+    options: &ResolveOptions,
+    overrides: &[SkillEntry],
+) -> AgentContext {
     let total_budget = options
         .budget_override
         .unwrap_or_else(|| phase.default_budget());
@@ -59,7 +93,7 @@ pub fn resolve_skills(phase: Phase, user_message: &str, options: &ResolveOptions
     // admits them. Empty gates pass unchanged (the historical behaviour) and
     // an empty model id admits nothing gated, so callers without a known
     // model resolve byte-for-byte as before.
-    let phase_skills: Vec<SkillEntry> = get_skills_by_phase(phase).into_iter().cloned().collect();
+    let phase_skills = phase_candidates(phase, overrides);
     let (phase_skills, gated_out) = filter_by_model_family(&phase_skills, &options.model_id);
     let matched = filter_by_intent(&phase_skills, user_message, &options.flags);
 
@@ -455,5 +489,44 @@ mod tests {
         // strictly 500 — but the override must not grow the set).
         assert!(low.budget_used <= high.budget_used);
         assert!(low.skills.len() <= high.skills.len());
+    }
+
+    #[test]
+    fn an_override_replaces_the_built_in_skill_of_its_name() {
+        let prompt = "design a landing page for a coffee shop";
+        let plain = resolve_skills_with_overrides(
+            Phase::Generation,
+            prompt,
+            &ResolveOptions::default(),
+            &[],
+        );
+        let builtin = plain.skills.first().expect("a generation skill loads");
+        let mut replacement = SkillEntry {
+            meta: builtin.meta.clone(),
+            content: "PROJECT HOUSE RULES".to_string(),
+        };
+        replacement.meta.description = "the project's own".to_string();
+        let ctx = resolve_skills_with_overrides(
+            Phase::Generation,
+            prompt,
+            &ResolveOptions::default(),
+            std::slice::from_ref(&replacement),
+        );
+        let same_name: Vec<_> = ctx
+            .skills
+            .iter()
+            .filter(|s| s.meta.name == builtin.meta.name)
+            .collect();
+        assert_eq!(same_name.len(), 1, "the built-in is gone, not doubled");
+        assert_eq!(same_name[0].content, "PROJECT HOUSE RULES");
+        // An override that declares other phases leaves this one without it.
+        replacement.meta.phase = vec![Phase::Validation];
+        let ctx = resolve_skills_with_overrides(
+            Phase::Generation,
+            prompt,
+            &ResolveOptions::default(),
+            &[replacement],
+        );
+        assert!(ctx.skills.iter().all(|s| s.meta.name != builtin.meta.name));
     }
 }

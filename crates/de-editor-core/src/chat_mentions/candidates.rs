@@ -39,6 +39,19 @@ fn page_label(index: usize, name: &str) -> String {
     }
 }
 
+/// The stable id of page `index` (a mention must survive pages being
+/// reordered, added or removed before it is sent). Only multi-page documents
+/// offer pages, so the page list exists.
+fn page_id(state: &EditorState, index: usize) -> String {
+    state
+        .doc
+        .pages
+        .as_ref()
+        .and_then(|pages| pages.get(index))
+        .map(|page| page.id.clone())
+        .unwrap_or_default()
+}
+
 fn node_label(node: &PenNode) -> Option<&str> {
     node.base()
         .name
@@ -59,6 +72,7 @@ fn node_candidate(node: &PenNode, label: &str, page: Option<&str>) -> MentionCan
             label: label.to_string(),
         },
         detail,
+        tag_key: None,
     }
 }
 
@@ -106,6 +120,7 @@ fn file_candidate(path: &str) -> MentionCandidate {
             label: path.to_string(),
         },
         detail: folder.to_string(),
+        tag_key: None,
     }
 }
 
@@ -166,10 +181,11 @@ pub fn mention_candidates(
                     MentionCandidate {
                         mention: ChatMention {
                             kind: MentionKind::Page,
-                            key: index.to_string(),
+                            key: page_id(state, *index),
                             label,
                         },
                         detail: String::new(),
+                        tag_key: None,
                     },
                 );
             }
@@ -223,6 +239,7 @@ pub fn mention_candidates(
                         label: component.name.clone(),
                     },
                     detail: String::new(),
+                    tag_key: None,
                 },
             );
         }
@@ -240,6 +257,7 @@ pub fn mention_candidates(
                             label: name.clone(),
                         },
                         detail: variable_detail(&def.kind, &def.value),
+                        tag_key: None,
                     },
                 );
             }
@@ -294,6 +312,7 @@ pub fn skill_candidates(skills: &[SkillOption], raw_query: &str) -> Vec<MentionC
                 label: skill.name.clone(),
             },
             detail: skill.description.clone(),
+            tag_key: Some(skill.tag_key()),
         })
         .collect()
 }

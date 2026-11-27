@@ -129,7 +129,10 @@ pub(crate) fn paint_mention_popup(
             1.5,
         );
         let right = row.origin.x + row.size.x - 10.0;
-        let tag = de_i18n::translate(locale, candidate.mention.kind.label_key());
+        let tag_key = candidate
+            .tag_key
+            .unwrap_or_else(|| candidate.mention.kind.label_key());
+        let tag = de_i18n::translate(locale, tag_key);
         let tag_w = text_metrics::measure_chrome(cx.backend, tag, TAG_FONT);
         let tag_x = right - tag_w;
         chat_label(

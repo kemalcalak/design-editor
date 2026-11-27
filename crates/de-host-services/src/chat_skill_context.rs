@@ -7,13 +7,23 @@
 //! 1. `<document folder>/.design-editor/skills/` — the project's skills,
 //! 2. `<config dir>/skills/` — the user's own (`de_config_store`).
 //!
-//! The folders are read again whenever the `/` popup opens and at send, so
-//! a skill dropped into a folder is picked up without a rebuild or restart.
+//! Listing reads only front matter and runs on a worker thread
+//! ([`ChatSkillScanner`]): the folders are listed again when the `/` popup
+//! opens or the project folder changes, so a skill dropped into a folder is
+//! picked up without a restart. The same listing installs the skills named
+//! like a built-in skill as its replacements
+//! (`de_ai_skills::loader::set_skill_overrides`). A picked skill's
+//! instructions are read from its file at send.
 
 use std::path::{Path, PathBuf};
+use std::sync::mpsc::{self, Receiver, TryRecvError};
+use std::sync::Arc;
+use std::thread;
+use std::time::{Duration, Instant};
 
-use de_ai_skills::user_skills::{load_user_skills, SkillSource, UserSkillSet};
-use de_editor_core::chat_mentions::SkillOption;
+use de_ai_skills::loader::{set_skill_overrides, SkillEntry};
+use de_ai_skills::user_skills::{load_user_skills, read_skill_body, SkillSource, UserSkillSet};
+use de_editor_core::chat_mentions::{SkillList, SkillListSource, SkillOption, SkillOrigin};
 
 /// The project skills folder, relative to the document's folder.
 pub const PROJECT_SKILLS_DIR: &str = ".design-editor/skills";
@@ -21,6 +31,8 @@ pub const PROJECT_SKILLS_DIR: &str = ".design-editor/skills";
 pub const USER_SKILLS_DIR: &str = "skills";
 /// Characters of a skill's instructions handed to the model in one turn.
 pub const MAX_SKILL_CONTEXT_CHARS: usize = 12_000;
+/// A listing younger than this is served without listing again.
+const FRESH_FOR: Duration = Duration::from_secs(2);
 
 /// The folders skills are read from, project first. The user folder is left
 /// out when the config directory cannot be resolved.
@@ -35,8 +47,8 @@ pub fn skill_folders(project_root: Option<&Path>) -> Vec<(SkillSource, PathBuf)>
     folders
 }
 
-/// Load the chat's skills from `folders`, marking those that shadow a
-/// built-in skill. Broken files are logged and left out (see
+/// List the chat's skills in `folders` (front matter only), marking those
+/// that replace a built-in skill. Broken files are logged and left out (see
 /// `UserSkillSet::issues`); a settings page for them is #338.
 pub fn load_chat_skills(folders: &[(SkillSource, PathBuf)]) -> UserSkillSet {
     let builtin: Vec<&str> = de_ai_skills::loader::get_skill_registry()
@@ -54,105 +66,154 @@ pub fn load_chat_skills(folders: &[(SkillSource, PathBuf)]) -> UserSkillSet {
     set
 }
 
-/// The `/` popup's rows for a loaded set.
+/// The `/` popup's rows for a listed set.
 pub fn skill_options(set: &UserSkillSet) -> Vec<SkillOption> {
     set.skills
         .iter()
         .map(|skill| SkillOption {
             name: skill.meta.name.clone(),
             description: skill.meta.description.clone(),
+            origin: match skill.source {
+                SkillSource::Project => SkillOrigin::Project,
+                SkillSource::User => SkillOrigin::User,
+            },
+            path: skill.path.to_string_lossy().into_owned(),
+            shadows_user: skill.shadows_user,
+            overrides_builtin: skill.overrides_builtin,
         })
         .collect()
 }
 
-/// List the skills for the popup: the project's and the user's folders.
-pub fn scan_chat_skills(project_root: Option<&Path>) -> Vec<SkillOption> {
-    skill_options(&load_chat_skills(&skill_folders(project_root)))
+/// The skills of `set` that replace a built-in skill, with their
+/// instructions read. One that cannot be read is logged and left out, so
+/// the built-in stays.
+pub fn builtin_overrides(set: &UserSkillSet) -> Vec<SkillEntry> {
+    set.skills
+        .iter()
+        .filter(|skill| skill.overrides_builtin)
+        .filter_map(|skill| match read_skill_body(&skill.path) {
+            Ok(content) => Some(SkillEntry {
+                meta: skill.meta.clone(),
+                content,
+            }),
+            Err(err) => {
+                eprintln!(
+                    "design-editor: skipped skill {}: {err}",
+                    skill.path.display()
+                );
+                None
+            }
+        })
+        .collect()
+}
+
+/// List the skills for `project_root` and install the built-in overrides
+/// they carry. Disk I/O: runs on the scanner's worker thread.
+pub fn list_chat_skills(project_root: Option<&Path>) -> SkillList {
+    let set = load_chat_skills(&skill_folders(project_root));
+    set_skill_overrides(builtin_overrides(&set));
+    SkillList {
+        root: project_root.map(Path::to_path_buf),
+        skills: Arc::from(skill_options(&set)),
+    }
 }
 
 /// A picked skill's text for the context block: its description and its
-/// instructions, cut at [`MAX_SKILL_CONTEXT_CHARS`]. `None` when no folder
-/// holds a skill of that name any more.
-pub fn skill_instructions(set: &UserSkillSet, name: &str) -> Option<String> {
-    let skill = set.get(name)?;
-    let body = skill.content.trim();
+/// instructions read from its file, cut at [`MAX_SKILL_CONTEXT_CHARS`].
+/// `None` when the file is gone or no longer a valid skill.
+pub fn skill_instructions(skill: &SkillOption) -> Option<String> {
+    let body = match read_skill_body(Path::new(&skill.path)) {
+        Ok(body) => body,
+        Err(err) => {
+            eprintln!("design-editor: skill {} unreadable: {err}", skill.path);
+            return None;
+        }
+    };
+    let body = body.trim();
     let mut text: String = body.chars().take(MAX_SKILL_CONTEXT_CHARS).collect();
     if body.chars().nth(MAX_SKILL_CONTEXT_CHARS).is_some() {
         text.push_str("\n[…skill cut at the context limit]");
     }
-    Some(format!("{}\n{text}", skill.meta.description.trim()))
+    Some(format!("{}\n{text}", skill.description.trim()))
+}
+
+struct Cached {
+    list: SkillList,
+    at: Instant,
+}
+
+/// Background, cached [`SkillListSource`] for the desktop host.
+#[derive(Default)]
+pub struct ChatSkillScanner {
+    cache: Option<Cached>,
+    inflight: Option<(Option<PathBuf>, Receiver<SkillList>)>,
+}
+
+impl ChatSkillScanner {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    /// Whether a listing is running on its worker (the host keeps waking
+    /// to collect it).
+    pub fn is_pending(&self) -> bool {
+        self.inflight.is_some()
+    }
+
+    fn spawn(&mut self, root: Option<&Path>) {
+        let (tx, rx) = mpsc::channel();
+        let dir = root.map(Path::to_path_buf);
+        let spawned = thread::Builder::new()
+            .name("de-skill-scan".into())
+            .spawn(move || {
+                // The receiver may be gone (another folder was opened); the
+                // listing is then simply dropped.
+                let _ = tx.send(list_chat_skills(dir.as_deref()));
+            });
+        match spawned {
+            Ok(_) => self.inflight = Some((root.map(Path::to_path_buf), rx)),
+            Err(err) => eprintln!("design-editor: spawn skill scan failed: {err}"),
+        }
+    }
+}
+
+impl SkillListSource for ChatSkillScanner {
+    fn request(&mut self, root: Option<&Path>) -> Option<SkillList> {
+        let cached = self
+            .cache
+            .as_ref()
+            .filter(|c| c.list.root.as_deref() == root);
+        let fresh = cached.is_some_and(|c| c.at.elapsed() < FRESH_FOR);
+        let answer = cached.map(|c| c.list.clone());
+        let running = self
+            .inflight
+            .as_ref()
+            .is_some_and(|(r, _)| r.as_deref() == root);
+        if !fresh && !running {
+            self.spawn(root);
+        }
+        answer
+    }
+
+    fn poll(&mut self) -> Option<SkillList> {
+        let (_, rx) = self.inflight.as_ref()?;
+        let list = match rx.try_recv() {
+            Ok(list) => list,
+            Err(TryRecvError::Empty) => return None,
+            Err(TryRecvError::Disconnected) => {
+                self.inflight = None;
+                return None;
+            }
+        };
+        self.inflight = None;
+        self.cache = Some(Cached {
+            list: list.clone(),
+            at: Instant::now(),
+        });
+        Some(list)
+    }
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-    use std::fs;
-
-    fn temp(tag: &str) -> PathBuf {
-        let dir = std::env::temp_dir().join(format!(
-            "de-chat-skills-{tag}-{}-{}",
-            std::process::id(),
-            std::time::SystemTime::now()
-                .duration_since(std::time::UNIX_EPOCH)
-                .map(|d| d.as_nanos())
-                .unwrap_or(0)
-        ));
-        fs::create_dir_all(&dir).unwrap();
-        dir
-    }
-
-    #[test]
-    fn project_folder_comes_first() {
-        let folders = skill_folders(Some(Path::new("/work/site")));
-        assert_eq!(
-            folders[0],
-            (
-                SkillSource::Project,
-                PathBuf::from("/work/site/.design-editor/skills")
-            )
-        );
-        assert!(folders.iter().skip(1).all(|(s, _)| *s == SkillSource::User));
-        assert!(skill_folders(None)
-            .iter()
-            .all(|(s, _)| *s == SkillSource::User));
-    }
-
-    #[test]
-    fn options_and_instructions_come_from_the_loaded_set() {
-        let dir = temp("set");
-        fs::write(
-            dir.join("tone.md"),
-            "---\nname: tone\ndescription: House tone\n---\nWrite calmly.\n",
-        )
-        .unwrap();
-        let set = load_chat_skills(&[(SkillSource::Project, dir.clone())]);
-        assert_eq!(
-            skill_options(&set),
-            vec![SkillOption {
-                name: "tone".into(),
-                description: "House tone".into()
-            }]
-        );
-        assert_eq!(
-            skill_instructions(&set, "tone").as_deref(),
-            Some("House tone\nWrite calmly.")
-        );
-        assert_eq!(skill_instructions(&set, "gone"), None);
-        fs::remove_dir_all(&dir).ok();
-    }
-
-    #[test]
-    fn long_instructions_are_cut() {
-        let dir = temp("long");
-        let body = "x".repeat(MAX_SKILL_CONTEXT_CHARS + 10);
-        fs::write(
-            dir.join("big.md"),
-            format!("---\nname: big\ndescription: Big\n---\n{body}\n"),
-        )
-        .unwrap();
-        let set = load_chat_skills(&[(SkillSource::User, dir.clone())]);
-        let text = skill_instructions(&set, "big").unwrap();
-        assert!(text.ends_with("[…skill cut at the context limit]"));
-        fs::remove_dir_all(&dir).ok();
-    }
-}
+#[path = "chat_skill_context_tests.rs"]
+mod tests;

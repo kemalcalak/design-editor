@@ -18,11 +18,17 @@
 //! - this spine — the types and re-exports
 //! - [`query`] — finding the `@query` the caret sits in
 //! - [`candidates`] — ranking the popup rows
+//! - [`identity`] — which token in the draft is which staged mention
+//! - [`source`] — the host seam that lists the project folder
 //! - [`summary`] — compact summaries of document mentions + the context block
 //! - `sync` — `impl EditorState`: popup sync, pick, highlight, removal
 
 pub mod candidates;
+pub mod identity;
+#[cfg(test)]
+mod identity_tests;
 pub mod query;
+pub mod source;
 pub mod summary;
 mod sync;
 #[cfg(test)]
@@ -31,7 +37,9 @@ mod tests;
 use std::sync::Arc;
 
 pub use candidates::{mention_candidates, skill_candidates, MAX_MENTION_ROWS};
+pub use identity::{live_mentions, mention_spans, retain_live, unique_label};
 pub use query::{active_mention_query, MentionQuery, MENTION_TRIGGER, SKILL_TRIGGER};
+pub use source::{ProjectFileList, ProjectFileSource, SkillList, SkillListSource};
 pub use summary::{context_block, summarize_document_mention, MentionSummary};
 
 /// What a mention points at.
@@ -89,7 +97,7 @@ impl MentionKind {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ChatMention {
     pub kind: MentionKind,
-    /// Stable key: a page index (decimal), a node / component id, a
+    /// Stable key: a page id, a node / component id, a
     /// variable name, or a project-relative file path.
     pub key: String,
     /// What the draft shows after the `@` (the layer / page / component /
@@ -106,11 +114,6 @@ impl ChatMention {
         token.push_str(&self.label);
         token
     }
-
-    /// Whether `text` still carries this mention's token.
-    pub fn is_in(&self, text: &str) -> bool {
-        text.contains(&self.token())
-    }
 }
 
 /// One popup row: the mention it would stage plus a secondary line
@@ -119,6 +122,9 @@ impl ChatMention {
 pub struct MentionCandidate {
     pub mention: ChatMention,
     pub detail: String,
+    /// The i18n key of the row's tag when it is not the kind's own
+    /// (a skill's source: project / personal, and what it overrides).
+    pub tag_key: Option<&'static str>,
 }
 
 /// The open `@` popup for the active chat tab.
@@ -136,21 +142,57 @@ pub struct MentionPopup {
     pub highlight: usize,
 }
 
-/// One user skill the `/` popup offers: its name and one-line description.
-#[derive(Debug, Clone, PartialEq, Eq)]
+/// Which skills folder a skill was listed from.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub enum SkillOrigin {
+    /// The project's `.design-editor/skills/`.
+    Project,
+    /// The user's own skills folder.
+    #[default]
+    User,
+}
+
+/// One user skill the `/` popup offers (its front matter, not its text).
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct SkillOption {
     pub name: String,
     pub description: String,
+    pub origin: SkillOrigin,
+    /// The file, absolute; the host reads the instructions from it when the
+    /// skill is used.
+    pub path: String,
+    /// A project skill hiding the user's skill of the same name.
+    pub shadows_user: bool,
+    /// Replaces the built-in skill of the same name.
+    pub overrides_builtin: bool,
 }
 
-/// The user skills the `/` popup offers, loaded by the host (project
-/// folder first, then the user's skills folder). Shared by every tab, on
-/// `ChatSessions`, like [`ProjectFiles`].
+impl SkillOption {
+    /// The i18n key of the popup row's tag: where the skill comes from and
+    /// what it hides.
+    pub fn tag_key(&self) -> &'static str {
+        match (self.origin, self.shadows_user, self.overrides_builtin) {
+            (SkillOrigin::Project, true, _) => "chat.skill.projectOverUser",
+            (SkillOrigin::Project, false, true) => "chat.skill.projectOverBuiltin",
+            (SkillOrigin::Project, false, false) => "chat.skill.project",
+            (SkillOrigin::User, _, true) => "chat.skill.userOverBuiltin",
+            (SkillOrigin::User, _, false) => "chat.skill.user",
+        }
+    }
+}
+
+/// The user skills the `/` popup offers, listed by the host off the UI
+/// thread (project folder first, then the user's skills folder). Shared by
+/// every tab, on `ChatSessions`, like [`ProjectFiles`].
 #[derive(Debug, Clone, Default)]
 pub struct ChatSkills {
     pub skills: Arc<[SkillOption]>,
-    /// Raised when a `/` popup opens, so the host reloads the folders.
+    /// Raised when a `/` popup opens, so the host lists the folders again.
     pub rescan_requested: bool,
+    /// The project folder the list was last asked for (`Some(None)`: no
+    /// project; `None`: never). A change asks again, so overrides of
+    /// built-in skills follow the open document without a `/` popup.
+    pub listed_for: Option<Option<String>>,
 }
 
 /// Files the `@` popup offers, scanned by the host from the project folder.
