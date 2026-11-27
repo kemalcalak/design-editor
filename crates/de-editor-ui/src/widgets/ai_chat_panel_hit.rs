@@ -210,6 +210,9 @@ impl<'a> AIChatPlaceholder<'a> {
                 if footer.plus.contains(point) {
                     return Some(AIChatHit::TogglePlusMenu);
                 }
+                if footer.context.contains(point) {
+                    return Some(AIChatHit::ToggleContextPanel);
+                }
                 if footer.model.size.x > 0.0 && footer.model.contains(point) {
                     return Some(if !self.usable_agent {
                         AIChatHit::OpenProviderSettings
@@ -508,6 +511,9 @@ impl<'a> AIChatPlaceholder<'a> {
         let streaming = self.is_streaming();
         if footer.plus.contains(point) {
             return Some(de_editor_core::ChatFooterButton::PlusMenu);
+        }
+        if footer.context.contains(point) {
+            return Some(de_editor_core::ChatFooterButton::Context);
         }
         if footer.model.size.x > 0.0 && footer.model.contains(point) {
             return Some(de_editor_core::ChatFooterButton::ModelPicker);

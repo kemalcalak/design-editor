@@ -371,9 +371,11 @@ mod agent_settings_switch_style_tests;
 pub mod agent_settings_system;
 pub(crate) mod ai_chat_chip_row;
 pub(crate) mod ai_chat_chrome;
+pub(crate) mod ai_chat_context_panel;
 mod ai_chat_hit;
 pub(crate) mod ai_chat_input_text;
 pub mod ai_chat_mcp_notice;
+pub(crate) mod ai_chat_mention_popup;
 pub mod ai_chat_model_picker;
 #[cfg(test)]
 mod ai_chat_model_picker_tests;

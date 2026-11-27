@@ -568,15 +568,27 @@ impl EditorUiState {
         opening
     }
 
-    /// Close the session list, the "+" menu and the parallel-agents
-    /// picker. Returns `true` when something changed.
+    /// Toggle the composer's context panel (#398), closing every other chat
+    /// dropdown.
+    pub fn toggle_chat_context_panel(&mut self) -> bool {
+        let opening = !self.chat_context_panel_open;
+        self.close_chat_menus();
+        self.close_chat_model_picker();
+        self.chat_context_panel_open = opening;
+        opening
+    }
+
+    /// Close the session list, the "+" menu, the context panel and the
+    /// parallel-agents picker. Returns `true` when something changed.
     pub fn close_chat_menus(&mut self) -> bool {
         let changed = self.chat_session_menu_open
             || self.chat_plus_menu_open
+            || self.chat_context_panel_open
             || self.chat_plus_menu_hover.is_some()
             || self.chat_tab_hover.is_some();
         self.chat_session_menu_open = false;
         self.chat_plus_menu_open = false;
+        self.chat_context_panel_open = false;
         self.chat_plus_menu_hover = None;
         self.chat_tab_hover = None;
         self.close_parallel_agents_picker() || changed

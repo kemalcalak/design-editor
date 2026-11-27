@@ -94,6 +94,7 @@ impl Default for EditorUiState {
             chat_session_menu_open: false,
             chat_plus_menu_open: false,
             chat_plus_menu_hover: None,
+            chat_context_panel_open: false,
             chat_style_chip_hover_since_ms: None,
             chat_selected_agent: 0,
             parallel_agents_picker_open: false,

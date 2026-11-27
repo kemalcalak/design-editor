@@ -31,8 +31,6 @@ pub mod whats_new_state;
 pub mod workspace;
 
 pub use exports::*;
-pub use host_capabilities::HostCapabilities;
-pub use panel_motion::{PanelMotion, PANEL_MOTION_MS};
 
 use crate::node_id::NodeId;
 use crate::tool::Tool;
@@ -292,6 +290,8 @@ pub struct EditorUiState {
     pub chat_plus_menu_open: bool,
     /// Which "+" menu row the cursor is over.
     pub chat_plus_menu_hover: Option<u8>,
+    /// Whether the composer's context panel (#398) is open.
+    pub chat_context_panel_open: bool,
     /// When the cursor came to rest on the pinned-style chip — the dwell clock
     /// its detail card waits out.
     ///

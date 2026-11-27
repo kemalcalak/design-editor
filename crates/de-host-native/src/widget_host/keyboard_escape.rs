@@ -307,6 +307,11 @@ impl WidgetHostNative {
             self.mark_dirty();
             return true;
         }
+        // The chat's `@` popup (#398) closes before the menus around it.
+        if self.editor_state.dismiss_chat_mention_popup() {
+            self.mark_dirty();
+            return true;
+        }
         if self.editor_state.editor_ui.escape_chat_menus() {
             self.mark_dirty();
             return true;
