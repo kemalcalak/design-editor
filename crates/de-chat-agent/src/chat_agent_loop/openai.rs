@@ -4,6 +4,9 @@
 //! spine re-exports it so `chat_agent_loop::run_openai_agent_loop` still
 //! resolves.
 
+use super::openai_stream_usage::{
+    may_be_field_refusal, remember_refusal, set_stream_usage, wants_stream_usage,
+};
 use super::*;
 
 // ---------------------------------------------------------------------------
@@ -75,6 +78,9 @@ pub(super) async fn run_openai_agent_loop_inner(
     // BLOCKER_NUDGE_MAX_ROUNDS`'s doc comment): blockers and unfilled
     // screens are different failure modes with independent budgets.
     let mut blocker_rounds_used = 0usize;
+    // Ask for OpenAI's trailing `usage` chunk unless this endpoint already
+    // refused the field (see `openai_stream_usage`).
+    let mut stream_usage = wants_stream_usage(&cfg.url);
     // Tier 2d — zero-write corrective-round budget; `wrote` flips on the
     // first successful write-level tool call (see `ZERO_WRITE_MAX_ROUNDS`).
     let mut wrote = false;
@@ -148,17 +154,22 @@ pub(super) async fn run_openai_agent_loop_inner(
         // to post raw, so a provider rate limit killed the design run with
         // no retries and a raw JSON error (measured: glm-5.2, 429
         // AccountRateLimitExceeded, 2026-07-12).
+        set_stream_usage(&mut body, stream_usage);
         let client = crate::provider_dial::client_for(cfg.dial_policy, &cfg.url).await?;
         let (max_retries, min_gap) = crate::chat_builtin_http::default_backoff_knobs();
-        let resp = crate::chat_builtin_http::send_with_backoff(
-            "openai-compatible",
-            &cfg.url,
-            max_retries,
-            min_gap,
-            || client.post(&cfg.url).bearer_auth(&cfg.api_key).json(&body),
-        )
-        .await
-        .inspect_err(|_| {
+        let mut sent = post_once(&client, &cfg, &body, max_retries, min_gap).await;
+        if stream_usage && sent.as_ref().is_err_and(may_be_field_refusal) {
+            // A strict endpoint may refuse the `stream_options` field: retry
+            // once without it. The refused request still counts as one.
+            cfg.record_usage(de_ai::chat_usage::TokenUsage::default());
+            set_stream_usage(&mut body, false);
+            sent = post_once(&client, &cfg, &body, max_retries, min_gap).await;
+            if sent.is_ok() {
+                stream_usage = false;
+                remember_refusal(&cfg.url);
+            }
+        }
+        let resp = sent.inspect_err(|_| {
             // A refused request is still a request of this run (no usage).
             cfg.record_usage(de_ai::chat_usage::TokenUsage::default());
         })?;
@@ -368,4 +379,23 @@ pub(super) async fn run_openai_agent_loop_inner(
             }
         }
     }
+}
+
+/// One request through the shared throttle/backoff (sent twice when a
+/// strict endpoint refuses `stream_options`).
+async fn post_once(
+    client: &reqwest::Client,
+    cfg: &AgentLoopConfig,
+    body: &Value,
+    max_retries: u32,
+    min_gap: std::time::Duration,
+) -> Result<reqwest::Response, BuiltinHttpError> {
+    crate::chat_builtin_http::send_with_backoff(
+        "openai-compatible",
+        &cfg.url,
+        max_retries,
+        min_gap,
+        || client.post(&cfg.url).bearer_auth(&cfg.api_key).json(body),
+    )
+    .await
 }
