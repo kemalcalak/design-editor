@@ -14,11 +14,17 @@
 //! is the status, not the error body: `send_with_backoff` never reads a
 //! provider's body (it is untrusted and may echo credentials), and endpoints
 //! word the refusal differently — some do not name the field at all, so
-//! matching on the text would miss exactly the endpoints this exists for. A
-//! 400 with another cause costs one extra refused request and then reports
-//! the original error. A retry that succeeds marks the endpoint, so later
-//! requests (this run and later runs in this process) skip the field instead
-//! of paying the refused request again.
+//! matching on the text would miss exactly the endpoints this exists for.
+//!
+//! The retry is only offered until a request carrying the field has
+//! succeeded in the run: after that the endpoint has accepted it, so a later
+//! 400 (a context overflow, say) is reported at once without an extra
+//! request. When the retry also fails, the ORIGINAL refusal is reported, not
+//! the retry's error (a timeout or 429 there would hide the real cause). A
+//! retry that succeeds marks the endpoint + model for the process, so later
+//! requests (this run and later runs) skip the field instead of paying the
+//! refused request again. The key includes the model because a gateway may
+//! refuse the field for one upstream model and accept it for the others.
 
 use std::collections::HashSet;
 use std::sync::{Mutex, OnceLock};
@@ -27,25 +33,25 @@ use serde_json::{json, Value};
 
 use crate::chat_builtin_http::BuiltinHttpError;
 
-/// Endpoints that refused a request carrying `stream_options` and then
-/// accepted the same request without it.
-fn refusing_endpoints() -> &'static Mutex<HashSet<String>> {
-    static SET: OnceLock<Mutex<HashSet<String>>> = OnceLock::new();
+/// (url, model) pairs that refused a request carrying `stream_options` and
+/// then accepted the same request without it.
+fn refusing_endpoints() -> &'static Mutex<HashSet<(String, String)>> {
+    static SET: OnceLock<Mutex<HashSet<(String, String)>>> = OnceLock::new();
     SET.get_or_init(|| Mutex::new(HashSet::new()))
 }
 
-/// Whether requests to `url` should ask for the trailing usage chunk.
-pub(super) fn wants_stream_usage(url: &str) -> bool {
+/// Whether requests for `model` at `url` should ask for the usage chunk.
+pub(super) fn wants_stream_usage(url: &str, model: &str) -> bool {
     refusing_endpoints()
         .lock()
-        .map(|set| !set.contains(url))
+        .map(|set| !set.contains(&(url.to_string(), model.to_string())))
         .unwrap_or(true)
 }
 
-/// Remember that `url` only works without `stream_options`.
-pub(super) fn remember_refusal(url: &str) {
+/// Remember that `model` at `url` only works without `stream_options`.
+pub(super) fn remember_refusal(url: &str, model: &str) {
     if let Ok(mut set) = refusing_endpoints().lock() {
-        set.insert(url.to_string());
+        set.insert((url.to_string(), model.to_string()));
     }
 }
 
