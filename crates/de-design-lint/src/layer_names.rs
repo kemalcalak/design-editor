@@ -11,13 +11,17 @@ mod default_names;
 mod facts;
 mod instances;
 mod label_box;
+mod label_box_context;
+mod label_box_rows;
 mod lang;
 mod money;
+mod placeholder;
 mod reading;
 mod rules;
 mod tell_apart;
 mod text_roles;
 mod unique;
+mod verbs;
 mod walk;
 
 use std::collections::HashSet;
@@ -174,3 +178,7 @@ mod review_tests;
 #[cfg(test)]
 #[path = "layer_names_followup_tests.rs"]
 mod followup_tests;
+
+#[cfg(test)]
+#[path = "layer_names_context_tests.rs"]
+mod context_tests;

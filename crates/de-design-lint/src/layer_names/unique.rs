@@ -5,7 +5,8 @@
 //! every one differs (`Shape (Blue)`), else by where they sit among each
 //! other (`Shape (Left)`, see `tell_apart`). A lone one keeps the plain
 //! name when it is still free; past that, one keeps the plain name and the
-//! rest get no proposal. Nothing is ever numbered.
+//! rest get no proposal. Nothing is ever numbered. Identical slots for the
+//! same content (`Logo slot` in a logo wall) all keep the shared name.
 
 use std::collections::HashSet;
 
@@ -13,6 +14,7 @@ use de_i18n::Locale;
 use jian_ops_schema::node::PenNode;
 
 use super::facts::Facts;
+use super::placeholder::slot_thing;
 use super::rules::collapse_whitespace;
 use super::tell_apart::{fill_word, position_words};
 use super::text_roles::labels;
@@ -30,6 +32,9 @@ pub(crate) struct SiblingName<'a> {
     pub renamed: bool,
     /// The layer's name today.
     pub current: Option<String>,
+    /// One of a set of identical slots for the same content (`Logo slot`
+    /// ×4): they share the plain name, since nothing about them differs.
+    pub shared: bool,
 }
 
 impl SiblingName<'_> {
@@ -63,12 +68,13 @@ fn qualify(name: &str, detail: &str, locale: Locale) -> String {
 }
 
 /// `name` told apart by `node`'s own texts that it does not already say,
-/// in reading order, e.g. `Card (Starter)`.
+/// in reading order, e.g. `Card (Starter)`. A placeholder label (`Drop
+/// logo`) is what a slot's name came from, so it says nothing new.
 fn qualified(node: &PenNode, name: &str, locale: Locale, facts: &Facts) -> Vec<String> {
     let lower = name.to_lowercase();
     labels(node, facts)
         .into_iter()
-        .filter(|label| !lower.contains(&label.to_lowercase()))
+        .filter(|label| !lower.contains(&label.to_lowercase()) && slot_thing(label).is_none())
         .map(|label| qualify(name, &label, locale))
         .collect()
 }
@@ -139,6 +145,10 @@ pub(crate) fn make_distinct(
         let Some(proposed) = sibling.proposed.as_deref().filter(|_| sibling.renamed) else {
             continue;
         };
+        if sibling.shared {
+            taken.insert(key(proposed));
+            continue;
+        }
         let name_key = key(proposed);
         match groups.iter_mut().find(|(k, _)| *k == name_key) {
             Some((_, members)) => members.push(index),

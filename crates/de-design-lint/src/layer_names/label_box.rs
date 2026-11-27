@@ -64,7 +64,7 @@ pub(crate) enum LabelBox {
 }
 
 /// Whether a tap, double tap or long press is wired to `node`.
-fn is_tappable(node: &PenNode) -> bool {
+pub(super) fn is_tappable(node: &PenNode) -> bool {
     let events = match node {
         PenNode::Frame(n) => n.events.as_ref(),
         PenNode::Group(n) => n.events.as_ref(),
@@ -78,7 +78,7 @@ fn is_tappable(node: &PenNode) -> bool {
 
 /// Whether `node` holds an icon named for an action (`lucide:plus`,
 /// `arrow_forward`).
-fn shows_action_icon(node: &PenNode) -> bool {
+pub(super) fn shows_action_icon(node: &PenNode) -> bool {
     children(node).iter().any(|kid| {
         let PenNode::IconFont(icon) = kid else {
             return false;
@@ -109,7 +109,7 @@ fn padding_px(node: &PenNode) -> Option<(f64, f64)> {
 }
 
 /// The kind an authored `role` gives `node`, if any.
-fn authored_kind(node: &PenNode) -> Option<LabelBox> {
+pub(super) fn authored_kind(node: &PenNode) -> Option<LabelBox> {
     let role = base(node).role.as_deref()?.trim().to_ascii_lowercase();
     if BUTTON_ROLES.contains(&role.as_str()) {
         Some(LabelBox::Button)

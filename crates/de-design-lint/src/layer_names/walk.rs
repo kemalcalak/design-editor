@@ -33,11 +33,13 @@ struct Walk<'a> {
     out: Vec<Candidate>,
 }
 
-/// A run of siblings: their parent (`None` for a page's top-level layers),
-/// their depth below the page, the section they are named in, the roles
-/// of their unit's texts and whether they sit inside a target.
+/// A run of siblings: their parent (`None` for a page's top-level layers)
+/// and grandparent, their depth below the page, the section they are named
+/// in, the roles of their unit's texts and whether they sit inside a
+/// target.
 struct Siblings<'s, 'n> {
     parent: Option<&'n PenNode>,
+    grandparent: Option<&'n PenNode>,
     nodes: &'n [PenNode],
     depth: usize,
     section: Option<&'s str>,
@@ -49,6 +51,7 @@ impl Siblings<'_, '_> {
     fn place(&self, index: usize) -> Place<'_> {
         Place {
             parent: self.parent,
+            grandparent: self.grandparent,
             index,
             depth: self.depth,
         }
@@ -83,6 +86,11 @@ impl Walk<'_> {
                     .or_else(|| infer_role(node, run.place(index), &self.facts))
             })
             .collect();
+        // Slots for the same content (`Drop logo` ×4) are alike by design.
+        let shared_slot = |role: &Option<Role>| {
+            matches!(role, Some(Role::Slot(Some(_))))
+                && roles.iter().filter(|other| *other == role).count() > 1
+        };
         let mut names: Vec<SiblingName<'n>> = run
             .nodes
             .iter()
@@ -103,6 +111,7 @@ impl Walk<'_> {
                     proposed,
                     renamed: self.in_target(run, node),
                     current,
+                    shared: shared_slot(role),
                 }
             })
             .collect();
@@ -147,6 +156,7 @@ impl Walk<'_> {
                 .then(|| UnitRoles::of(node, run.depth, &self.facts));
             self.siblings(Siblings {
                 parent: Some(node),
+                grandparent: run.parent,
                 nodes: kids,
                 depth: run.depth + 1,
                 section: if names_section {
@@ -187,6 +197,7 @@ pub(super) fn candidates(
     };
     walk.siblings(Siblings {
         parent: None,
+        grandparent: None,
         nodes: page.roots(),
         depth: 0,
         section: None,

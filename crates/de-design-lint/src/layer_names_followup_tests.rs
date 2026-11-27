@@ -540,25 +540,18 @@ fn says_any(words: &[String], any: &[&str]) -> bool {
 #[test]
 fn template_names_follow_what_their_authors_called_them() {
     let en = |key| de_i18n::translate(Locale::EnUs, key);
-    // Labels as roomy as a small button: pills (`VOL.12 Tech Meetup`, `$50
-    // off at launch`, `Lunch break & networking`, `PRIMARY LOCKUP` at 2.3
-    // font sizes tall) and fixed 132 px stage chips around short names
-    // (`Main`, `Second`). Their geometry cannot tell them from one (#453).
+    // Pills as roomy around their label as a small button, which nothing
+    // around them tells from one either: `VOL.12 Tech Meetup` opposite the
+    // brand in a card header, `Lunch break & networking` alone in an agenda
+    // slot (#453).
     let roomy_badges = [
-        "brand-concept-sheet.de f25",
         "conference-agenda-card.de n105",
         "event-invitation-card.de n7",
-        "music-fest-poster-card.de n20",
-        "music-fest-poster-card.de n24",
-        "music-fest-poster-card.de n28",
-        "product-launch-card.de n94",
     ];
-    // A date filter as compact as a chip (`Last 7 Days` beside a calendar
-    // icon), wired to nothing (#453).
-    let compact_buttons = ["product-landing-light.de n1445"];
     let mut navigation = Vec::new();
     let (mut badges, mut placed) = (0, 0);
     let (mut misnamed_badges, mut misnamed_buttons) = (Vec::new(), Vec::new());
+    let (mut misnamed_places, mut cells, mut slots) = (Vec::new(), 0, 0);
     for (path, mut document) in scene_templates() {
         let file = path
             .file_name()
@@ -615,10 +608,15 @@ fn template_names_follow_what_their_authors_called_them() {
                 {
                     misnamed_badges.push(format!("{at}: {}", p.proposed));
                 }
+                // Table cells and placeholder slots hold content; nobody
+                // presses them.
+                if button && says_any(&words, &["cell", "slot"]) {
+                    misnamed_places.push(format!("{at}: {}", p.proposed));
+                }
+                cells += usize::from(p.proposed.starts_with(en("renameLayers.role.cell")));
+                slots += usize::from(p.proposed.to_lowercase().contains("slot"));
                 if p.proposed.starts_with(en("renameLayers.role.badge")) {
-                    if says_any(&words, &["button", "btn", "cta"])
-                        && !compact_buttons.contains(&at.as_str())
-                    {
+                    if says_any(&words, &["button", "btn", "cta"]) {
                         misnamed_buttons.push(format!("{at}: {}", p.proposed));
                     }
                     badges += 1;
@@ -645,6 +643,13 @@ fn template_names_follow_what_their_authors_called_them() {
         misnamed_buttons.is_empty(),
         "buttons named as badges: {misnamed_buttons:#?}"
     );
+    assert!(
+        misnamed_places.is_empty(),
+        "cells and slots named as buttons: {misnamed_places:#?}"
+    );
+    assert!(cells >= 29, "only {cells} table cells");
+    // Five sponsor slots and eight `Drop logo` slots, which share their name.
+    assert!(slots >= 13, "only {slots} slots");
     navigation.sort();
     assert_eq!(
         navigation,
