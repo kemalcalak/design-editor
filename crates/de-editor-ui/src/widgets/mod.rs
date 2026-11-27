@@ -425,6 +425,7 @@ pub mod design_md_markdown;
 pub mod design_md_panel;
 #[cfg(test)]
 mod design_md_panel_tests;
+mod design_md_wrap;
 pub mod editor_toast;
 pub mod editor_toast_flow;
 #[cfg(test)]
@@ -484,6 +485,7 @@ pub mod slides_panel_actions;
 pub mod slides_panel_flow;
 pub mod slideshow_toolbar;
 pub mod status_bar;
+mod text_input_measured;
 pub mod tooltip;
 pub mod update_modal;
 pub mod variables_panel;

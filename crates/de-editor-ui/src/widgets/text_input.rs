@@ -12,7 +12,7 @@ const DEFAULT_HEIGHT: f32 = 30.0;
 /// Face jian's `TextInputView` paints its text in (`FONT_FAMILY` in
 /// `jian_widgets::components::text_input`, private there). The caret and
 /// glyph geometry below must be measured in it, not in the chrome family.
-const TEXT_INPUT_FAMILY: &str = "Inter";
+pub(crate) const TEXT_INPUT_FAMILY: &str = "Inter";
 
 pub struct TextInputWidget {
     pub id: WidgetId,

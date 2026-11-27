@@ -4,8 +4,8 @@ use de_editor_core::prompt_center_catalog::PromptCategory;
 use de_editor_core::PromptCenterFocus;
 
 use super::{
-    delete_hover_token, estimated_text_width, filter_hover_token, save_category_hover_token,
-    PromptCenterCard, PromptCenterPanel, CHIP_H, CHIP_LABEL_SIZE, CLOSE_BTN, HEADER_H,
+    delete_hover_token, filter_hover_token, save_category_hover_token, PromptCenterCard,
+    PromptCenterPanel, CATEGORY_LABEL_SIZE, CHIP_H, CHIP_LABEL_SIZE, CLOSE_BTN, HEADER_H,
     PROMPT_CENTER_CANCEL_HOVER, PROMPT_CENTER_CLOSE_HOVER, PROMPT_CENTER_OPEN_SAVE_HOVER,
     PROMPT_CENTER_SAVE_HOVER, SEARCH_PAD_X, SEARCH_TEXT_SIZE, TITLE_SIZE,
 };
@@ -13,6 +13,8 @@ use crate::widgets::button::paint_button_feedback_wash;
 use crate::widgets::canvas_viewport_image::{
     has_cached_image_bytes, note_pending_decode, required_raster_edge, store_remote_image_bytes,
 };
+use crate::widgets::label_widths::LabelWidths;
+use crate::widgets::panel_controls::paint_fitted_label;
 use crate::widgets::prompt_center_previews::prompt_center_preview;
 use crate::widgets::property_panel_text_input::paint_text_input_view;
 use crate::widgets::{draw_icon, Icon, PaintCx};
@@ -25,6 +27,10 @@ const PANEL_RADIUS: f32 = 16.0;
 const CARD_RADIUS: f32 = 12.0;
 const CARD_TITLE_SIZE: f32 = 14.0;
 const META_SIZE: f32 = 11.0;
+/// Space either side of a chip's label inside the chip.
+const CHIP_LABEL_INSET: f32 = 7.0;
+/// Space either side of a save-form button's label.
+const BUTTON_LABEL_INSET: f32 = 6.0;
 
 impl PromptCenterPanel<'_> {
     /// Paint the complete non-modal panel.
@@ -80,14 +86,10 @@ impl PromptCenterPanel<'_> {
                 self.theme.muted_foreground,
                 1.4,
             );
-            let label = truncate_to_width(
+            paint_fitted_label(
+                cx,
                 self.t("promptCenter.saveCurrent"),
                 rect.size.x - 38.0,
-                CHIP_LABEL_SIZE,
-            );
-            self.paint_text(
-                cx,
-                &label,
                 Point2D::new(
                     rect.origin.x + 30.0,
                     jian_widgets::centered_text_baseline_y(rect, CHIP_LABEL_SIZE),
@@ -147,7 +149,10 @@ impl PromptCenterPanel<'_> {
     }
 
     fn paint_filter_chips(&self, cx: &mut PaintCx<'_>, panel: Rect) {
-        for (index, (rect, filter)) in self.filter_chip_rects(panel).into_iter().enumerate() {
+        // Measured here, so the hit-test's backend-less chips are these.
+        let chips =
+            self.filter_chip_rects_with(panel, &mut LabelWidths::measuring(&mut *cx.backend));
+        for (index, (rect, filter)) in chips.into_iter().enumerate() {
             let active = self.state.editor_ui.prompt_center.filter == filter;
             let (fill, foreground) = if active {
                 (self.theme.primary, self.theme.primary_foreground)
@@ -163,20 +168,12 @@ impl PromptCenterPanel<'_> {
                 self.state.editor_ui.prompt_center.hover == Some(filter_hover_token(index)),
                 self.is_pressed(filter_hover_token(index)),
             );
-            let label = truncate_to_width(
-                self.filter_label(filter),
-                rect.size.x - 14.0,
-                CHIP_LABEL_SIZE,
-            );
-            let label_w = estimated_text_width(&label, CHIP_LABEL_SIZE);
-            self.paint_text(
+            self.paint_centred_label(
                 cx,
-                &label,
-                Point2D::new(
-                    rect.origin.x + ((rect.size.x - label_w) / 2.0).max(5.0),
-                    jian_widgets::centered_text_baseline_y(rect, CHIP_LABEL_SIZE),
-                ),
+                rect,
+                self.filter_label(filter),
                 CHIP_LABEL_SIZE,
+                CHIP_LABEL_INSET,
                 foreground,
             );
         }
@@ -235,7 +232,9 @@ impl PromptCenterPanel<'_> {
             self.can_commit_save(),
         );
 
-        for (index, (rect, category)) in self.save_category_rects(panel).into_iter().enumerate() {
+        let chips =
+            self.save_category_rects_with(panel, &mut LabelWidths::measuring(&mut *cx.backend));
+        for (index, (rect, category)) in chips.into_iter().enumerate() {
             let active = self.state.editor_ui.prompt_center.save_category == category;
             let fill = if active {
                 self.theme.row_selected_primary
@@ -253,17 +252,12 @@ impl PromptCenterPanel<'_> {
                 self.state.editor_ui.prompt_center.hover == Some(save_category_hover_token(index)),
                 self.is_pressed(save_category_hover_token(index)),
             );
-            let label =
-                truncate_to_width(self.category_label(category), rect.size.x - 14.0, META_SIZE);
-            let label_w = estimated_text_width(&label, META_SIZE);
-            self.paint_text(
+            self.paint_centred_label(
                 cx,
-                &label,
-                Point2D::new(
-                    rect.origin.x + ((rect.size.x - label_w) / 2.0).max(5.0),
-                    jian_widgets::centered_text_baseline_y(rect, META_SIZE),
-                ),
-                META_SIZE,
+                rect,
+                self.category_label(category),
+                CATEGORY_LABEL_SIZE,
+                CHIP_LABEL_INSET,
                 if active {
                     self.theme.foreground
                 } else {
@@ -291,16 +285,12 @@ impl PromptCenterPanel<'_> {
         if enabled {
             paint_button_feedback_wash(cx.backend, &self.theme, rect, 6.0, hovered, pressed);
         }
-        let text = truncate_to_width(label, rect.size.x - 12.0, CHIP_LABEL_SIZE);
-        let width = estimated_text_width(&text, CHIP_LABEL_SIZE);
-        self.paint_text(
+        self.paint_centred_label(
             cx,
-            &text,
-            Point2D::new(
-                rect.origin.x + ((rect.size.x - width) / 2.0).max(5.0),
-                jian_widgets::centered_text_baseline_y(rect, CHIP_LABEL_SIZE),
-            ),
+            rect,
+            label,
             CHIP_LABEL_SIZE,
+            BUTTON_LABEL_INSET,
             if enabled {
                 self.theme.primary_foreground
             } else {
@@ -359,14 +349,10 @@ impl PromptCenterPanel<'_> {
         );
 
         let title_right_pad = 14.0;
-        let title = truncate_to_width(
+        paint_fitted_label(
+            cx,
             &card.title,
             rect.size.x - 14.0 - title_right_pad,
-            CARD_TITLE_SIZE,
-        );
-        self.paint_text(
-            cx,
-            &title,
             Point2D::new(
                 rect.origin.x + 14.0,
                 preview.origin.y + preview.size.y + 24.0,
@@ -384,9 +370,10 @@ impl PromptCenterPanel<'_> {
             }
         };
         if !metadata.is_empty() {
-            self.paint_text(
+            paint_fitted_label(
                 cx,
-                &truncate_to_width(&metadata, rect.size.x - 28.0, META_SIZE),
+                &metadata,
+                rect.size.x - 28.0,
                 Point2D::new(rect.origin.x + 14.0, rect.origin.y + rect.size.y - 14.0),
                 META_SIZE,
                 self.theme.muted_foreground.with_alpha(0.85),
@@ -493,6 +480,35 @@ impl PromptCenterPanel<'_> {
         );
     }
 
+    /// Paint `label` centred in `rect`, ellipsized to leave `inset` either
+    /// side, both measured in the face it is painted in.
+    fn paint_centred_label(
+        &self,
+        cx: &mut PaintCx<'_>,
+        rect: Rect,
+        label: &str,
+        size: f32,
+        inset: f32,
+        color: Color,
+    ) {
+        let (fitted, width) = {
+            let mut widths = LabelWidths::measuring(&mut *cx.backend);
+            let fitted = widths.fit_chrome(label, (rect.size.x - inset * 2.0).max(0.0), size);
+            let width = widths.chrome(&fitted, size);
+            (fitted, width)
+        };
+        self.paint_text(
+            cx,
+            &fitted,
+            Point2D::new(
+                rect.origin.x + ((rect.size.x - width) / 2.0).max(inset),
+                jian_widgets::centered_text_baseline_y(rect, size),
+            ),
+            size,
+            color,
+        );
+    }
+
     fn paint_text(
         &self,
         cx: &mut PaintCx<'_>,
@@ -510,23 +526,4 @@ impl PromptCenterPanel<'_> {
         );
         cx.backend.draw_text(&layout, position);
     }
-}
-
-fn truncate_to_width(text: &str, max_width: f32, size: f32) -> String {
-    if estimated_text_width(text, size) <= max_width {
-        return text.to_owned();
-    }
-    let ellipsis_width = estimated_text_width("…", size);
-    let mut width = 0.0;
-    let mut output = String::new();
-    for ch in text.chars() {
-        let advance = estimated_text_width(&ch.to_string(), size);
-        if width + advance + ellipsis_width > max_width {
-            break;
-        }
-        output.push(ch);
-        width += advance;
-    }
-    output.push('…');
-    output
 }
