@@ -247,6 +247,15 @@ pub fn property_focus_initial(focus: PropertyFocus, panel: &PropertyPanel) -> St
                 .map(format_panel_number)
                 .unwrap_or_else(|| "0".to_string())
         }
+        // The effective limit the field paints (absent = 4).
+        F::StrokeMiterLimit => format_panel_number(
+            panel
+                .snapshot
+                .stroke_style
+                .as_ref()
+                .map(|style| style.miter_limit)
+                .unwrap_or(de_editor_core::fills::DEFAULT_MITER_LIMIT),
+        ),
         F::GradientAngle => {
             let a = panel.snapshot.gradient_angle.unwrap_or(0.0);
             if a.fract() == 0.0 {

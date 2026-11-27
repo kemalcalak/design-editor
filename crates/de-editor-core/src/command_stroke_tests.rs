@@ -19,6 +19,10 @@ fn set_node_stroke_width_preserves_sided_edges() {
         panic!("rectangle");
     };
     r.container.stroke = Some(PenStroke {
+        stroke_start: None,
+        stroke_end: None,
+        miter_limit: None,
+        width_profile: None,
         thickness: StrokeThickness::Sided(SidedThickness {
             bottom: Some(1.0),
             ..Default::default()
@@ -58,6 +62,10 @@ fn commit_property_edit_writes_one_stroke_edge() {
         panic!("rectangle");
     };
     r.container.stroke = Some(PenStroke {
+        stroke_start: None,
+        stroke_end: None,
+        miter_limit: None,
+        width_profile: None,
         thickness: StrokeThickness::Uniform(1.0),
         align: None,
         join: None,
@@ -93,6 +101,10 @@ fn commit_property_edit_single_stroke_mode_writes_all_edges() {
         panic!("rectangle");
     };
     r.container.stroke = Some(PenStroke {
+        stroke_start: None,
+        stroke_end: None,
+        miter_limit: None,
+        width_profile: None,
         thickness: StrokeThickness::Uniform(1.0),
         align: None,
         join: None,

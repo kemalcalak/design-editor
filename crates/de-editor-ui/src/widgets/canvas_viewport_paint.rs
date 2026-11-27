@@ -77,7 +77,6 @@ pub(crate) use entry::{
 };
 pub use hits::PaintNodeHits;
 use hits::PaintNodeOptions;
-use path_points::doc_to_world_point;
 pub(crate) use path_points::world_path_points;
 #[cfg(test)]
 pub(crate) use path_points::{flatten_path, WorldPathPoints};
@@ -701,37 +700,15 @@ fn paint_node_body<'a>(
                 cx.backend
                     .fill_polygon(world.as_ref().unwrap().as_slice(), node.fill.unwrap());
             }
-            // Stroke: an explicit stroke always paints; with no
-            // stroke, only an UNfilled path strokes (so it stays
-            // visible) — a filled path must not draw an implicit
-            // outline.
-            let stroke = match node.stroke {
-                Some(s) => Some((s.color, s.width * zoom)),
-                None if !filled => Some((
-                    node.fill.unwrap_or(crate::Color::BLACK),
-                    (1.5_f32).max(zoom),
-                )),
-                None => None,
-            };
-            if let Some((color, width)) = stroke {
-                stroke_paint::with_stroke_paint_or(
-                    cx,
-                    node,
-                    world_rect,
-                    zoom,
-                    color,
-                    |cx, color| {
-                        for pair in points.windows(2) {
-                            cx.backend.stroke_line(
-                                doc_to_world_point(pair[0], viewport_origin, zoom),
-                                doc_to_world_point(pair[1], viewport_origin, zoom),
-                                color,
-                                width,
-                            );
-                        }
-                    },
-                );
-            }
+            stroke_paint::paint_polyline_path_stroke(
+                cx,
+                node,
+                world_rect,
+                zoom,
+                points,
+                viewport_origin,
+                filled,
+            );
         }
         NodeKind::Text => {
             // text_input / select degrade to a `text` node but carry a
