@@ -239,7 +239,7 @@ pub(crate) fn paint_composer_header(
     cx.backend.draw_text(
         &TextLayout::single_run(
             title,
-            "system-ui",
+            crate::widgets::text_metrics::CHROME_FONT_FAMILY,
             TAB_FONT_SIZE,
             theme.muted_foreground.to_jian(),
             Point2D::ZERO,

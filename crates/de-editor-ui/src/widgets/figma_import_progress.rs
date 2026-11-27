@@ -18,6 +18,8 @@ use de_editor_core::EditorState;
 
 const CARD_WIDTH: f32 = 360.0;
 const CARD_HEIGHT: f32 = 140.0;
+/// Side margin the headline and subtitle are fitted inside.
+const TEXT_INSET: f32 = 16.0;
 
 pub struct ImportProgressOverlay {
     pub id: WidgetId,
@@ -107,11 +109,17 @@ impl Widget for ImportProgressOverlay {
         }
 
         // Headline directly below the glyph.
-        let headline = parsing_title(self.locale, self.source);
-        let head_w = text_metrics::measure_chrome(cx.backend, headline, 14.0);
+        let text_w = (rect.size.x - TEXT_INSET * 2.0).max(0.0);
+        let headline = text_metrics::fit_chrome(
+            cx.backend,
+            parsing_title(self.locale, self.source),
+            text_w,
+            14.0,
+        );
+        let head_w = text_metrics::measure_chrome(cx.backend, &headline, 14.0);
         let head_layout = TextLayout::single_run(
-            headline,
-            "system-ui",
+            &headline,
+            text_metrics::CHROME_FONT_FAMILY,
             14.0,
             (self.theme.foreground).to_jian(),
             Point2D::new(0.0, 0.0),
@@ -151,11 +159,16 @@ impl Widget for ImportProgressOverlay {
         }
 
         // Subtitle below the dots.
-        let sub = parsing_subtitle(self.locale, self.source);
-        let sub_w = text_metrics::measure_chrome(cx.backend, sub, 11.0);
+        let sub = text_metrics::fit_chrome(
+            cx.backend,
+            parsing_subtitle(self.locale, self.source),
+            text_w,
+            11.0,
+        );
+        let sub_w = text_metrics::measure_chrome(cx.backend, &sub, 11.0);
         let sub_layout = TextLayout::single_run(
-            sub,
-            "system-ui",
+            &sub,
+            text_metrics::CHROME_FONT_FAMILY,
             11.0,
             (self.theme.muted_foreground).to_jian(),
             Point2D::new(0.0, 0.0),

@@ -45,14 +45,14 @@ impl Widget for PropertyRow {
         cx.backend.stroke_rect(rect, Color::BLACK, 1.0);
         let label = TextLayout::single_run(
             &self.label,
-            "system-ui",
+            crate::widgets::text_metrics::CHROME_FONT_FAMILY,
             13.0,
             jian_core::scene::Color::rgb(80, 80, 80),
             Point2D::new(0.0, 0.0),
         );
         let value = TextLayout::single_run(
             &self.value,
-            "system-ui",
+            crate::widgets::text_metrics::CHROME_FONT_FAMILY,
             13.0,
             jian_core::scene::Color::rgb(20, 20, 20),
             Point2D::new(0.0, 0.0),
