@@ -340,15 +340,13 @@ fn undo_history_memory() {
     // What the idle trim costs at this size (#456), on the live state: the
     // walk (UI thread, once per quiet spell) and the free of the dropped
     // steps (the desktop's relief worker) apart.
-    for (label, budget) in [
-        (
-            "default budget",
-            de_editor_core::history_budget::HISTORY_BYTE_BUDGET,
-        ),
-        ("1-byte budget", 1),
-    ] {
-        print_trim(&mut live, label, budget);
-    }
+    print_trim(
+        &mut live,
+        "default budget",
+        de_editor_core::history_budget::HISTORY_BYTE_BUDGET,
+    );
+    // Undo the whole history (100 steps, comparable with earlier runs),
+    // then redo it back before the 1-byte trim.
     let undo_started = Instant::now();
     let mut undone = 0;
     while live.undo() {
@@ -359,6 +357,8 @@ fn undo_history_memory() {
         undo_started.elapsed().as_secs_f64() * 1e3,
         mb(counting_alloc::live().saturating_sub(base) as f64)
     );
+    while live.redo() {}
+    print_trim(&mut live, "1-byte budget", 1);
 }
 
 /// Trim `live` to `budget` and print the walk and the free apart.
