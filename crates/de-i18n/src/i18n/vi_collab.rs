@@ -580,6 +580,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "stroke.endReversedTriangle" => "Tam giác ngược",
         "stroke.endCircle" => "Hình tròn",
         "stroke.endDiamond" => "Hình thoi",
+        "property.cornerSmoothing" => "Làm mịn",
         _ => return None,
     })
 }

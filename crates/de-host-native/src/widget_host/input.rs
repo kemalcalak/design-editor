@@ -666,6 +666,7 @@ impl WidgetHostNative {
         let point = Point2D::new(x, y);
         let property_drag_active = self.image_adjustment_drag.is_some()
             || self.effect_radius_drag.is_some()
+            || self.corner_smoothing_drag
             || self
                 .editor_state
                 .editor_ui

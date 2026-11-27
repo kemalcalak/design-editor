@@ -13,6 +13,8 @@ path = "src/lib.rs"
 [dependencies]
 jian-ops-schema = { path = "../../vendor/jian/crates/jian-ops-schema" }
 de-editor-core = { path = "../de-editor-core" }
+# Polygon / star vertices, the canvas's own geometry (#389).
+jian-scene = { path = "../../vendor/jian/crates/jian-scene" }
 # Canonical HTML escaping (dependency-free, wasm-clean).
 de-util = { path = "../de-util" }
 serde_json = { workspace = true }

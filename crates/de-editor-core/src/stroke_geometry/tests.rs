@@ -1,6 +1,6 @@
 use super::*;
 use crate::vector_edit::parse_path_data;
-use jian_ops_schema::style::StrokeThickness;
+use jian_ops_schema::style::{PenStroke, StrokeThickness};
 
 fn line() -> Vec<Subpath> {
     vec![Subpath::polyline(&[(0.0, 0.0), (100.0, 0.0)])]

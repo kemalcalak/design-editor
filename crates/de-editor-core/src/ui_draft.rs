@@ -38,6 +38,8 @@ pub enum PropertyFocus {
     CornerTR,
     CornerBL,
     CornerBR,
+    /// Corner smoothing as a percentage, `0..=100` (#389).
+    CornerSmoothing,
     /// Compact Effects-row strength input. Shadow targets `blur`;
     /// layer/background blur target `radius`.
     EffectRadius(usize),
@@ -263,6 +265,7 @@ impl PropertyFocus {
                 | PropertyFocus::StrokeBottomWidth
                 | PropertyFocus::StrokeLeftWidth
                 | PropertyFocus::StrokeMiterLimit
+                | PropertyFocus::CornerSmoothing
                 | PropertyFocus::GradientAngle
                 | PropertyFocus::GradientStopOffset(_)
                 | PropertyFocus::EllipseStart

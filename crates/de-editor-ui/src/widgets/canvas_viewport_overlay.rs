@@ -118,9 +118,24 @@ pub(crate) fn paint_node_fill(
     zoom: f32,
     fill: Option<crate::Color>,
 ) {
-    let r = node.corner_radius * zoom;
-    let use_round = r > 0.5;
-    let per_corner = scaled_non_uniform_corner_radii(node, zoom);
+    if node.shader.is_none() && node.gradient.is_none() && fill.is_none() {
+        return;
+    }
+    // Smoothed / rounded outlines (#389) clip a square fill.
+    super::canvas_viewport_corner_path::with_outline_clip(cx, node, world_rect, zoom, |cx| {
+        paint_box_fill(cx, node, world_rect, zoom, fill)
+    });
+}
+
+fn paint_box_fill(
+    cx: &mut PaintCx<'_>,
+    node: &SceneNode,
+    world_rect: Rect,
+    zoom: f32,
+    fill: Option<crate::Color>,
+) {
+    let (r, per_corner) = super::canvas_viewport_corner_path::box_fill_radii(node, zoom);
+    let use_round = r > 0.0;
     // A native SkSL shader fill wins over everything (gradient / solid)
     // when present. Gradients in turn win over solid `fill`. The scene
     // builder leaves the first stop's / fallback colour in `fill` for

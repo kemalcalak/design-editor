@@ -580,6 +580,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "stroke.endReversedTriangle" => "Segitiga terbalik",
         "stroke.endCircle" => "Lingkaran",
         "stroke.endDiamond" => "Belah ketupat",
+        "property.cornerSmoothing" => "Penghalusan",
         _ => return None,
     })
 }

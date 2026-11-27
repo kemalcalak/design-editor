@@ -200,6 +200,9 @@ impl Widget for PropertyPanel {
             &self.labels,
             self.snapshot.has_corner_radius,
             self.corner_expand_open,
+            self.snapshot
+                .corner_smoothing
+                .filter(|_| self.visible_sections().corner_smoothing),
             caps.size_options,
             x,
             y,

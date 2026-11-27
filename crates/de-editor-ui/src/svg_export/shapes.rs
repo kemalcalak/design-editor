@@ -2,7 +2,8 @@
 //! the layer attributes of the node it stands for (`node.rs`).
 
 use super::node::LayerAttrs;
-use super::{fill_stroke_attrs, normalize_rect, stroke_attrs, stroke_style_attrs, xml_escape};
+use super::outline::PathD;
+use super::{fill_stroke_attrs, normalize_rect, stroke_attrs, stroke_style_attrs};
 use crate::layout_scene::{SceneNode, SceneStrokeAlign};
 use crate::{Color, Rect};
 use std::fmt::Write as _;
@@ -55,6 +56,11 @@ pub(super) fn emit_polygon(out: &mut String, n: &SceneNode, attrs: &str) {
     if r.size.x == 0.0 || r.size.y == 0.0 {
         return;
     }
+    if let Some(d) = super::outline::node_outline(n) {
+        // Rounded corners (#389): the precomputed outline.
+        let _ = write!(out, r#"<path{attrs} d="{d}"{}/>"#, fill_stroke_attrs(n));
+        return;
+    }
     let points = crate::polygon_geometry::polygon_node_points(n, r);
     let mut point_attr = String::new();
     for (i, p) in points.iter().enumerate() {
@@ -96,8 +102,13 @@ pub(super) fn emit_line(out: &mut String, n: &SceneNode, attrs: &str) {
 }
 
 pub(super) fn emit_path(out: &mut String, n: &SceneNode, attrs: &LayerAttrs) {
-    let (d, fit) = if let Some(d) = &n.svg_path {
-        (d.clone(), svg_path_fit(d, n.bounds))
+    let outline = super::outline::node_outline(n);
+    let rounded = outline.is_some();
+    let (d, fit) = if let Some(d) = outline {
+        // Rounded vertices (#389): the outline, already in place.
+        (d, glam::Affine2::IDENTITY)
+    } else if let Some(d) = &n.svg_path {
+        (PathD::new(d), svg_path_fit(d, n.bounds))
     } else {
         if n.points.len() < 2 {
             return;
@@ -110,7 +121,7 @@ pub(super) fn emit_path(out: &mut String, n: &SceneNode, attrs: &LayerAttrs) {
         if n.path_closed {
             d.push_str(" Z");
         }
-        (d, glam::Affine2::IDENTITY)
+        (PathD::new(&d), glam::Affine2::IDENTITY)
     };
     let paint = if n.svg_path.is_none() && !n.path_closed && n.stroke.is_none() {
         let color = n.fill.unwrap_or(Color::BLACK);
@@ -118,7 +129,7 @@ pub(super) fn emit_path(out: &mut String, n: &SceneNode, attrs: &LayerAttrs) {
     } else {
         fill_stroke_attrs(n)
     };
-    let vector_effect = if n.svg_path.is_some() && n.stroke.is_some() {
+    let vector_effect = if n.svg_path.is_some() && n.stroke.is_some() && !rounded {
         r#" vector-effect="non-scaling-stroke""#
     } else {
         ""
@@ -128,7 +139,6 @@ pub(super) fn emit_path(out: &mut String, n: &SceneNode, attrs: &LayerAttrs) {
     } else {
         ""
     };
-    let d = xml_escape(&d);
     if let Some(geometry) = n.stroke_geometry.as_deref() {
         // End shapes (#389): the fill (if any) on the path, then the
         // stroke geometry in node-local coordinates.
@@ -221,11 +231,11 @@ pub fn write_stroke_geometry(
     };
     let line = stroke_attrs(stroke.color, stroke.width);
     if !geometry.stroke_d.is_empty() {
-        let style = crate::widgets::canvas_viewport_stroke_paint::centre_line_style(stroke.style);
+        let style = crate::stroke_centre_line::centre_line_style(stroke.style);
         let _ = write!(
             out,
             r#"<path d="{}"{place} fill="none"{line}{}/>"#,
-            xml_escape(&geometry.stroke_d),
+            PathD::new(&geometry.stroke_d),
             super::style_attrs(&style),
         );
     }
@@ -240,7 +250,7 @@ pub fn write_stroke_geometry(
         let _ = write!(
             out,
             r#"<path d="{}"{place}{fill}/>"#,
-            xml_escape(&geometry.fill_d),
+            PathD::new(&geometry.fill_d),
         );
     }
     if !geometry.arms_d.is_empty() {
@@ -252,7 +262,7 @@ pub fn write_stroke_geometry(
         let _ = write!(
             out,
             r#"<path d="{}"{place} fill="none"{line}{}/>"#,
-            xml_escape(&geometry.arms_d),
+            PathD::new(&geometry.arms_d),
             super::style_attrs(&style),
         );
     }

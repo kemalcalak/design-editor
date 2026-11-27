@@ -146,6 +146,9 @@ pub mod local_image;
 mod local_image_tests;
 #[cfg(test)]
 mod motion_write_tests;
+mod node_attr_corners;
+#[cfg(test)]
+mod node_attr_corners_tests;
 mod node_attr_stroke_style;
 pub mod node_attr_tools;
 #[cfg(test)]

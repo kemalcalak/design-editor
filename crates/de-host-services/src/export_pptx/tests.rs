@@ -375,8 +375,9 @@ fn a_vector_path_rasters_while_its_siblings_stay_editable() {
                {"type":"text","id":"t1","x":10,"y":10,"width":900,"height":60,
                 "content":"Still text","fontSize":24,
                 "fill":[{"type":"solid","color":"#000000"}]},
-               {"type":"polygon","id":"p1","x":600,"y":300,"width":200,"height":200,
-                "polygonCount":5,"fill":[{"type":"solid","color":"#3366ff"}]}
+               {"type":"path","id":"p1","x":600,"y":300,"width":200,"height":200,
+                "d":"M0 0 C 50 -80 150 80 200 0 L 100 200 Z",
+                "fill":[{"type":"solid","color":"#3366ff"}]}
              ]}
         ]}"##,
     );
@@ -386,7 +387,7 @@ fn a_vector_path_rasters_while_its_siblings_stay_editable() {
     assert_eq!(summary.raster_fallbacks, 1);
     let slide = part(&bytes, "ppt/slides/slide1.xml");
     assert!(slide.contains("<a:t>Still text</a:t>"), "{slide}");
-    assert!(slide.contains("<p:pic>"), "the polygon rastered: {slide}");
+    assert!(slide.contains("<p:pic>"), "the path rastered: {slide}");
 }
 
 #[test]
@@ -507,4 +508,27 @@ fn a_line_end_drawingml_cannot_spell_takes_the_raster_path() {
         unexpressible(&line, false),
         Some("reversed triangle line end")
     );
+}
+
+#[test]
+fn smoothed_boxes_and_rounded_stars_export_as_custom_geometry() {
+    let state = deck_state(
+        r##"{"version":"1.0.0","children":[
+            {"type":"frame","id":"f1","name":"cover","x":0,"y":0,"width":1920,"height":1080,
+             "fill":[{"type":"solid","color":"#ffffff"}],"children":[
+               {"type":"rectangle","id":"card","x":100,"y":100,"width":400,"height":300,
+                "cornerRadius":[24,24,0,48],"cornerSmoothing":0.6,
+                "fill":[{"type":"solid","color":"#336699"}]},
+               {"type":"polygon","id":"star","x":600,"y":100,"width":200,"height":200,
+                "polygonCount":5,"innerRadius":0.4,"cornerRadius":8,
+                "fill":[{"type":"solid","color":"#ffcc00"}]}
+             ]}
+        ]}"##,
+    );
+    let (bytes, summary) = export(&state);
+    assert_eq!(summary.raster_fallbacks, 0, "both stay native shapes");
+    let slide = part(&bytes, "ppt/slides/slide1.xml");
+    assert_eq!(slide.matches("<a:custGeom>").count(), 2, "{slide}");
+    assert!(slide.contains("<a:cubicBezTo>"), "{slide}");
+    assert!(!slide.contains("roundRect"), "{slide}");
 }

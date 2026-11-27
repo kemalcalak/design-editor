@@ -192,7 +192,10 @@ pub(super) fn rebuild_registry(
     register_tool!("reorder_selected", reorder_selected_snapshot());
     register_tool!("set_node_rotation", set_node_rotation_snapshot());
     register_tool!("set_node_text", set_node_text_snapshot());
-    register_tool!("set_node_corner_radius", set_node_corner_radius_snapshot());
+    register_tool!(
+        "set_node_corner_radius",
+        set_node_corner_radius_snapshot(doc)
+    );
     register_tool!("set_node_font_size", set_node_font_size_snapshot());
     register_tool!("set_node_font_weight", set_node_font_weight_snapshot());
     register_tool!("set_node_stroke_hex", set_node_stroke_hex_snapshot());
