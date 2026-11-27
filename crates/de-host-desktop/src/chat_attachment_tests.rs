@@ -8,6 +8,20 @@ fn temp_file(name: &str, bytes: &[u8]) -> PathBuf {
     path
 }
 
+/// A real `file://` URL for `path` on this platform: `file:///tmp/x` on
+/// Unix, `file:///C:/Users/x` on Windows (slashes forward, spaces encoded).
+fn file_url(path: &Path) -> String {
+    let path = path
+        .to_string_lossy()
+        .replace('\\', "/")
+        .replace(' ', "%20");
+    if path.starts_with('/') {
+        format!("file://{path}")
+    } else {
+        format!("file:///{path}")
+    }
+}
+
 fn load_now(host: &mut WidgetHostNative, path: &Path) -> bool {
     let tab = host.editor_state().chat.active().tab_id;
     stage_loaded(host, tab, &file_name(path), load_attachment(path))
@@ -135,7 +149,7 @@ fn a_batch_lands_in_the_tab_it_was_started_for() {
 fn a_pasted_file_url_is_recognised_and_a_plain_path_is_not() {
     let path = temp_file("pasted brief.md", b"x");
     let text = path.to_str().unwrap();
-    let url = format!("file://{}", text.replace(' ', "%20"));
+    let url = file_url(&path);
     assert_eq!(pasted_file_url(&url), Some(path.clone()));
     assert_eq!(pasted_file_url(&format!("  {url}\n")), Some(path.clone()));
     // A plain path stays text, and nothing is checked on disk.
@@ -170,7 +184,7 @@ fn pasting_copied_files_or_a_file_url_into_the_chat_attaches_them() {
         text: Some("copied.md".to_string()),
         ..ClipboardPayload::default()
     }));
-    let url = format!("file://{}", typed.to_string_lossy().replace(' ', "%20"));
+    let url = file_url(&typed);
     assert!(app.handle_paste_payload(ClipboardPayload {
         text: Some(url),
         ..ClipboardPayload::default()
