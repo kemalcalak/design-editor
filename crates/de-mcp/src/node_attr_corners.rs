@@ -1,9 +1,16 @@
 //! `set_node_corner_radius` (#389): one radius or four, plus Figma's
-//! corner smoothing, written as one `SetNodeCorners` step. The tool only
-//! parses; the command checks what the node can take before writing, so a
-//! rejected call leaves the document untouched.
+//! corner smoothing, written as one `SetNodeCorners` step. The tool checks
+//! the write against the node with the core's `check_corners` before it
+//! queues the command, so the agent reads why a kind refuses it (four
+//! radii on a polygon, smoothing on an ellipse, a text node) instead of a
+//! bare host rejection; the command checks again before writing.
 
 use std::collections::BTreeMap;
+
+use de_editor_core::command_node_attrs::corners::{check_corners, CornersError};
+use de_editor_core::walkers::find_node;
+use de_editor_core::EditorState;
+use jian_ops_schema::node::PenNode;
 
 use super::write_tools::parse_node_id;
 use super::{EditorCommand, McpTool, ToolErrorCode, ToolOutcome};
@@ -19,7 +26,10 @@ use super::{EditorCommand, McpTool, ToolErrorCode, ToolOutcome};
 ///   `0` clears it. Frames, groups, rectangles, polygons / stars and paths.
 ///
 /// At least one of the two is required.
-pub struct SetNodeCornerRadius;
+pub struct SetNodeCornerRadius {
+    /// The active page's nodes, as the command will find them.
+    page: Vec<PenNode>,
+}
 
 impl McpTool for SetNodeCornerRadius {
     fn name(&self) -> &str {
@@ -48,6 +58,10 @@ impl McpTool for SetNodeCornerRadius {
                     .into(),
             );
         }
+        let node = find_node(&self.page, &node_id);
+        if let Err(error) = check_corners(&node_id, node, radii, smoothing) {
+            return invalid(corners_refusal(&error));
+        }
         let mut out = BTreeMap::new();
         out.insert("wrote".into(), "true".into());
         ToolOutcome::OkWithCommand(
@@ -61,8 +75,15 @@ impl McpTool for SetNodeCornerRadius {
     }
 }
 
-pub fn set_node_corner_radius_snapshot() -> SetNodeCornerRadius {
-    SetNodeCornerRadius
+pub fn set_node_corner_radius_snapshot(state: &EditorState) -> SetNodeCornerRadius {
+    SetNodeCornerRadius {
+        page: state.active_children().to_vec(),
+    }
+}
+
+/// The refusal the agent reads: the core's typed reason.
+fn corners_refusal(error: &CornersError) -> String {
+    format!("set_node_corner_radius refused: {error}")
 }
 
 fn invalid(message: String) -> ToolOutcome {

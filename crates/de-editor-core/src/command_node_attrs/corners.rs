@@ -7,6 +7,8 @@ use crate::state::EditorState;
 use crate::walkers::{find_node, find_node_mut};
 use jian_ops_schema::node::{BooleanNode, CornerRadius, PenNode, ScriptNode};
 
+pub use super::corners_error::CornersError;
+
 /// What a node kind stores for its corners.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct CornerSupport {
@@ -35,6 +37,41 @@ pub fn corner_support(node: &PenNode) -> Option<CornerSupport> {
         PenNode::Ellipse(_) => support(false, false),
         _ => None,
     }
+}
+
+/// Check a `SetNodeCorners` write against `node` (what `node_id` names on
+/// the active page, if anything) before anything is written. `Ok` says
+/// whether the radii are one value for every corner.
+pub fn check_corners(
+    node_id: &NodeId,
+    node: Option<&PenNode>,
+    radii: Option<[f32; 4]>,
+    smoothing: Option<f32>,
+) -> Result<bool, CornersError> {
+    if radii.is_none() && smoothing.is_none() {
+        return Err(CornersError::NothingToWrite);
+    }
+    if radii.is_some_and(|r| r.iter().any(|v| !v.is_finite() || *v < 0.0)) {
+        return Err(CornersError::InvalidRadius);
+    }
+    if smoothing.is_some_and(|s| !s.is_finite() || !(0.0..=1.0).contains(&s)) {
+        return Err(CornersError::InvalidSmoothing);
+    }
+    let node = node
+        .filter(|_| node_id.is_real())
+        .ok_or_else(|| CornersError::NodeNotFound {
+            node_id: node_id.as_str().to_owned(),
+        })?;
+    let kind = node.type_tag();
+    let support = corner_support(node).ok_or(CornersError::NoCorners { kind })?;
+    let uniform = radii.is_none_or(|r| r.iter().all(|v| (*v - r[0]).abs() < f32::EPSILON));
+    if !uniform && !support.per_corner {
+        return Err(CornersError::PerCornerUnsupported { kind });
+    }
+    if smoothing.is_some() && !support.smoothing {
+        return Err(CornersError::SmoothingUnsupported { kind });
+    }
+    Ok(uniform)
 }
 
 /// The node's corner smoothing (`0..=1`, absent = `0`), or `None` for a
@@ -68,30 +105,15 @@ impl EditorState {
         radii: Option<[f32; 4]>,
         smoothing: Option<f32>,
     ) -> bool {
-        if !node_id.is_real() || (radii.is_none() && smoothing.is_none()) {
-            return false;
-        }
-        if radii.is_some_and(|r| r.iter().any(|v| !v.is_finite() || *v < 0.0)) {
-            return false;
-        }
-        if smoothing.is_some_and(|s| !s.is_finite() || !(0.0..=1.0).contains(&s)) {
-            return false;
-        }
-        let Some(support) = find_node(self.active_children(), node_id).and_then(corner_support)
-        else {
+        let node = find_node(self.active_children(), node_id);
+        let Ok(uniform) = check_corners(node_id, node, radii, smoothing) else {
             return false;
         };
-        let uniform = radii.map(|r| r.iter().all(|v| (*v - r[0]).abs() < f32::EPSILON));
-        if (uniform == Some(false) && !support.per_corner)
-            || (smoothing.is_some() && !support.smoothing)
-        {
-            return false;
-        }
         let Some(node) = find_node_mut(self.active_children_mut(), node_id) else {
             return false;
         };
         if let Some(r) = radii {
-            let radius = if uniform == Some(true) {
+            let radius = if uniform {
                 CornerRadius::Uniform(f64::from(r[0]))
             } else {
                 CornerRadius::PerCorner(r.map(f64::from))

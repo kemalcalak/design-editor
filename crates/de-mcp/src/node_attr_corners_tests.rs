@@ -18,10 +18,22 @@ fn args(pairs: &[(&str, &str)]) -> BTreeMap<String, String> {
 }
 
 fn state() -> EditorState {
+    let polygon: jian_ops_schema::node::PenNode = serde_json::from_value(serde_json::json!({
+        "type": "polygon", "id": "p", "x": 0, "y": 120, "width": 40, "height": 40,
+        "polygonCount": 3
+    }))
+    .expect("polygon");
     state_with(vec![
         rect("r", "box", 0.0, 0.0, 80.0, 60.0),
         text("t", "label", 0.0, 80.0, 80.0, 20.0, "Hi"),
+        polygon,
     ])
+}
+
+fn call_on(id: &str, pairs: &[(&str, &str)]) -> ToolOutcome {
+    let mut a = args(pairs);
+    a.insert("node_id".into(), id.into());
+    set_node_corner_radius_snapshot(&state()).call(&a)
 }
 
 fn node_json(s: &EditorState, id: &str) -> serde_json::Value {
@@ -31,7 +43,7 @@ fn node_json(s: &EditorState, id: &str) -> serde_json::Value {
 }
 
 fn command(pairs: &[(&str, &str)]) -> EditorCommand {
-    match set_node_corner_radius_snapshot().call(&args(pairs)) {
+    match set_node_corner_radius_snapshot(&state()).call(&args(pairs)) {
         ToolOutcome::OkWithCommand(_, command) => command,
         other => panic!("{pairs:?}: expected a command, got {other:?}"),
     }
@@ -75,7 +87,7 @@ fn smoothing_is_a_fraction_or_a_percentage() {
 
 #[test]
 fn the_tool_needs_a_radius_or_a_smoothing() {
-    match set_node_corner_radius_snapshot().call(&args(&[])) {
+    match set_node_corner_radius_snapshot(&state()).call(&args(&[])) {
         ToolOutcome::Err(code, _) => assert_eq!(code, ToolErrorCode::MissingArgument),
         other => panic!("expected MissingArgument, got {other:?}"),
     }
@@ -85,7 +97,7 @@ fn the_tool_needs_a_radius_or_a_smoothing() {
         &[("smoothing", "60")][..],
         &[("radius", "4"), ("smoothing", "2")][..],
     ] {
-        match set_node_corner_radius_snapshot().call(&args(pairs)) {
+        match set_node_corner_radius_snapshot(&state()).call(&args(pairs)) {
             ToolOutcome::Err(code, _) => assert_eq!(code, ToolErrorCode::InvalidArgument),
             other => panic!("{pairs:?}: expected InvalidArgument, got {other:?}"),
         }
@@ -115,17 +127,32 @@ fn per_corner_radii_and_smoothing_land_in_one_step() {
 }
 
 #[test]
-fn a_node_without_corners_is_refused_untouched() {
-    let mut s = state();
-    let before = node_json(&s, "t");
-    let command = match set_node_corner_radius_snapshot().call(&{
-        let mut a = args(&[("radius", "4")]);
-        a.insert("node_id".into(), "t".into());
-        a
-    }) {
-        ToolOutcome::OkWithCommand(_, command) => command,
-        other => panic!("expected a command, got {other:?}"),
+fn what_a_kind_cannot_take_is_refused_with_the_reason() {
+    let refusal = |id: &str, pairs: &[(&str, &str)]| match call_on(id, pairs) {
+        ToolOutcome::Err(ToolErrorCode::InvalidArgument, message) => message,
+        other => panic!("{id} {pairs:?}: expected a refusal, got {other:?}"),
     };
-    assert!(!s.apply(command));
-    assert_eq!(node_json(&s, "t"), before);
+    let text = refusal("t", &[("radius", "4")]);
+    assert!(text.contains("a text node has no corners"), "{text}");
+    let four = refusal("p", &[("radius", "[1, 2, 3, 4]")]);
+    assert!(
+        four.contains("a polygon node takes one radius for every corner"),
+        "{four}"
+    );
+    let missing = refusal("nope", &[("radius", "4")]);
+    assert!(missing.contains("\"nope\" was not found"), "{missing}");
+    // What the kind takes still passes.
+    assert!(matches!(
+        call_on("p", &[("radius", "6"), ("smoothing", "0.5")]),
+        ToolOutcome::OkWithCommand(..)
+    ));
+}
+
+#[test]
+fn a_stale_check_still_leaves_the_node_untouched() {
+    // The tool checked an older page; the command checks again.
+    let mut s = state_with(vec![text("r", "label", 0.0, 0.0, 80.0, 20.0, "Hi")]);
+    let before = node_json(&s, "r");
+    assert!(!s.apply(command(&[("radius", "4")])));
+    assert_eq!(node_json(&s, "r"), before);
 }

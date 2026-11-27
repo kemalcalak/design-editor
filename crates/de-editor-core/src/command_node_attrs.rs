@@ -23,6 +23,7 @@
 //! | `command_node_attrs/state_ops.rs`   | `impl EditorState` command methods   |
 
 pub mod corners;
+mod corners_error;
 mod slots;
 mod state_ops;
 mod widget_props;
