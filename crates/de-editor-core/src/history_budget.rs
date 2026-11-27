@@ -33,14 +33,14 @@ use std::sync::Arc;
 use jian_ops_schema::node::PenNode;
 
 use crate::history::EditorSnapshot;
-
-/// How often the file-backed MCP server trims: every this many writes.
-pub const TRIM_EVERY_WRITES: u64 = 10;
 use crate::memory_report::approx_node_bytes_fast;
 use crate::state::EditorState;
 
 /// Bytes the undo history may hold beyond one copy of the document.
 pub const HISTORY_BYTE_BUDGET: u64 = 512 * 1024 * 1024;
+
+/// How often the file-backed MCP server trims: every this many writes.
+pub const TRIM_EVERY_WRITES: u64 = 10;
 
 /// Undo steps always kept, however large.
 pub const HISTORY_MIN_STEPS: usize = 20;
