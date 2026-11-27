@@ -32,9 +32,13 @@ pub fn process_message_for_file_path_arg(
         create_empty_document(&target.path)?;
     }
     // Opening the target publishes its `imageThumbs` (its saves below need
-    // them), and the registry is process-wide: put the server document's
-    // back when this call ends, however it ends, so its paint and its next
-    // save keep their own thumbnails.
+    // them), and the registry is process-wide: put back the thumbnails of
+    // the server's own document (the open canvas, on the live desktop path)
+    // when this call ends, however it ends, so its paint and its next save
+    // keep them. Known limit: a thumbnail another thread stores during the
+    // call (the desktop decode worker, a document the user opens meanwhile)
+    // is replaced by this snapshot; a per-document registry in jian would
+    // close that.
     let _server_thumbs = RestoreThumbnails(jian_ops_schema::image_thumbs::capture_snapshot());
     let mut target_state = super::load_editor_state(&target.path)?;
     super::generate_tool::load_user_provider_settings(&mut target_state);
@@ -130,8 +134,8 @@ mod tests {
     use jian_ops_schema::image_thumbs;
 
     /// A call on another file opens it (its thumbnails are the active ones
-    /// while the call runs and saves) and then leaves the server document's
-    /// thumbnails in place (#458).
+    /// while the call runs and saves) and then leaves the thumbnails of the
+    /// server's own document in place (#458).
     #[test]
     fn a_call_on_another_file_keeps_the_server_documents_thumbnails() {
         let _guard = crate::test_support::lock_thumbnail_registry();
