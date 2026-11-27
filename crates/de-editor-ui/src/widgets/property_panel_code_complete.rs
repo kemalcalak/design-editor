@@ -3,6 +3,7 @@ use super::{action_hovered, draw_line, origin};
 use crate::theme::Theme;
 use crate::widgets::button::paint_button_feedback_wash;
 use crate::widgets::icons::{draw_icon, Icon};
+use crate::widgets::label_widths::LabelWidths;
 use crate::widgets::property_panel_inputs::{INPUT_RADIUS, PAD_X};
 use crate::widgets::PaintCx;
 use crate::{Color, Point2D, Rect, TextLayout};
@@ -24,7 +25,10 @@ const ACTION_CHIP_ICON_SIZE: f32 = 14.0;
 const ACTION_CHIP_PAD_X: f32 = 12.0;
 const ACTION_CHIP_TEXT_GAP: f32 = 8.0;
 const BODY_BOTTOM_PAD: f32 = 12.0;
+/// Size `draw_line` paints every action label at.
 const ACTION_LABEL_FONT_SIZE: f32 = 13.0;
+/// From a chip's left edge to its label: padding, icon, gap.
+const ACTION_CHIP_LEAD: f32 = ACTION_CHIP_PAD_X + ACTION_CHIP_ICON_SIZE + ACTION_CHIP_TEXT_GAP;
 
 #[derive(Clone, Copy)]
 pub(super) struct CompleteLayout {
@@ -54,13 +58,26 @@ pub(super) fn code_area_y(state: &CodegenState, y: f32, progress_row_h: f32) -> 
     y
 }
 
+/// The four action chips, sized from their labels as paint measured them
+/// (#451) — the hit-test's entry point.
 pub(super) fn action_chip_rects(x: f32, y: f32, w: f32, strings: CodePanelStrings) -> [Rect; 4] {
+    action_chip_rects_with(x, y, w, strings, &mut LabelWidths::cached())
+}
+
+/// [`action_chip_rects`] through `widths`: paint passes a measuring pass.
+fn action_chip_rects_with(
+    x: f32,
+    y: f32,
+    w: f32,
+    strings: CodePanelStrings,
+    widths: &mut LabelWidths<'_>,
+) -> [Rect; 4] {
     let usable = w - PAD_X * 2.0;
     let preferred = [
-        action_chip_width(strings.copy()),
-        action_chip_width(strings.save()),
-        action_chip_width(strings.bundle()),
-        action_chip_width(strings.regen()),
+        action_chip_width(widths, strings.copy()),
+        action_chip_width(widths, strings.save()),
+        action_chip_width(widths, strings.bundle()),
+        action_chip_width(widths, strings.regen()),
     ];
     let preferred_total =
         preferred.iter().sum::<f32>() + ACTION_CHIP_GAP * (preferred.len() - 1) as f32;
@@ -157,7 +174,14 @@ pub(super) fn paint_complete_body_in_panel(
         (Icon::Sparkles, strings.bundle(), CodegenHover::ExportBundle),
         (Icon::RefreshCw, strings.regen(), CodegenHover::Regenerate),
     ];
-    let rects = action_chip_rects(layout.x, y, layout.w, strings);
+    // Measured here, so the hit-test's backend-less chips are these.
+    let rects = action_chip_rects_with(
+        layout.x,
+        y,
+        layout.w,
+        strings,
+        &mut LabelWidths::measuring(&mut *cx.backend),
+    );
     for ((icon, label, hover), rect) in actions.iter().zip(rects) {
         paint_action_chip(
             cx,
@@ -708,18 +732,27 @@ fn paint_action_chip(
         theme.foreground,
         1.4,
     );
+    // A row too narrow for every label falls back to equal chips; a label
+    // that then outgrows its chip is ellipsized rather than painted past it.
+    let label_room = (rect.size.x - ACTION_CHIP_LEAD - ACTION_CHIP_PAD_X).max(0.0);
+    let label = LabelWidths::measuring(&mut *cx.backend).fit_chrome(
+        label,
+        label_room,
+        ACTION_LABEL_FONT_SIZE,
+    );
     draw_line(
         cx,
-        label,
+        &label,
         theme.foreground,
-        rect.origin.x + ACTION_CHIP_PAD_X + ACTION_CHIP_ICON_SIZE + ACTION_CHIP_TEXT_GAP,
+        rect.origin.x + ACTION_CHIP_LEAD,
         cy + 4.5,
     );
 }
 
-fn action_chip_width(label: &str) -> f32 {
-    let label_w = label.chars().count() as f32 * ACTION_LABEL_FONT_SIZE * 0.55;
-    ACTION_CHIP_PAD_X * 2.0 + ACTION_CHIP_ICON_SIZE + ACTION_CHIP_TEXT_GAP + label_w
+/// Natural width of an action chip: its icon and its label as painted
+/// (chrome face, [`ACTION_LABEL_FONT_SIZE`], read through `widths`), padded.
+fn action_chip_width(widths: &mut LabelWidths<'_>, label: &str) -> f32 {
+    ACTION_CHIP_LEAD + widths.chrome(label, ACTION_LABEL_FONT_SIZE) + ACTION_CHIP_PAD_X
 }
 
 #[cfg(test)]

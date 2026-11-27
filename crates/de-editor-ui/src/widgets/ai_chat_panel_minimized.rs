@@ -8,10 +8,10 @@
 //! sub-controls: the whole bar is one click target that expands the
 //! panel back to its normal form.
 
-use super::ai_chat_panel::{chat_neutral_feedback_color, footer_label_width, AIChatPlaceholder};
+use super::ai_chat_panel::{chat_neutral_feedback_color, AIChatPlaceholder};
 use crate::theme::Theme;
-use crate::widgets::ai_chat_panel_footer::fit_footer_label;
 use crate::widgets::icons::{draw_icon, Icon};
+use crate::widgets::label_widths::LabelWidths;
 use crate::widgets::text_metrics;
 use crate::widgets::PaintCx;
 use crate::{Color, Point2D, Rect, TextLayout};
@@ -63,7 +63,13 @@ pub(crate) struct MinimizedBarLayout {
     pub(crate) submit: Rect,
 }
 
-pub(crate) fn minimized_bar_layout(rect: Rect, model_name: &str) -> MinimizedBarLayout {
+/// Lay the bar out inside `rect`; the model column is sized from
+/// `model_name` as painted, read through `widths`.
+pub(crate) fn minimized_bar_layout(
+    rect: Rect,
+    model_name: &str,
+    widths: &mut LabelWidths<'_>,
+) -> MinimizedBarLayout {
     let center_y = rect.origin.y + rect.size.y / 2.0;
     let sparkle = Rect {
         origin: Point2D::new(
@@ -81,7 +87,8 @@ pub(crate) fn minimized_bar_layout(rect: Rect, model_name: &str) -> MinimizedBar
     };
     let text_left = sparkle.origin.x + sparkle.size.x + MINIMIZED_GAP;
     let model_right = submit.origin.x - MINIMIZED_GAP;
-    let model_w = footer_label_width(model_name, MINIMIZED_MODEL_FONT)
+    let model_w = widths
+        .chrome(model_name, MINIMIZED_MODEL_FONT)
         .min(MINIMIZED_MODEL_MAX_W)
         .min(((model_right - text_left) * MINIMIZED_MODEL_MAX_SHARE).max(0.0));
     let model = Rect {
@@ -150,7 +157,11 @@ pub(crate) fn paint_minimized_bar(
     let model_name: &str = selected_model
         .map(|entry| entry.display_name.as_str())
         .unwrap_or(widget.label_no_models.as_str());
-    let layout = minimized_bar_layout(rect, model_name);
+    let layout = minimized_bar_layout(
+        rect,
+        model_name,
+        &mut LabelWidths::measuring(&mut *cx.backend),
+    );
 
     draw_icon(
         cx.backend,
@@ -192,11 +203,10 @@ pub(crate) fn paint_minimized_bar(
     }
 
     if layout.model.size.x > 0.0 {
-        let fitted = fit_footer_label(
-            cx.backend,
+        let fitted = LabelWidths::measuring(&mut *cx.backend).fit_chrome(
             model_name,
-            MINIMIZED_MODEL_FONT,
             layout.model.size.x,
+            MINIMIZED_MODEL_FONT,
         );
         let text = TextLayout::single_run(
             &fitted,
@@ -260,7 +270,7 @@ mod tests {
 
     #[test]
     fn layout_parts_stay_inside_the_bar_and_do_not_overlap() {
-        let layout = minimized_bar_layout(bar(), "Claude Opus 5");
+        let layout = minimized_bar_layout(bar(), "Claude Opus 5", &mut LabelWidths::cached());
         let right = bar().origin.x + bar().size.x;
         assert!(layout.sparkle.origin.x >= 0.0);
         assert!(layout.submit.origin.x + layout.submit.size.x <= right);
@@ -271,7 +281,7 @@ mod tests {
 
     #[test]
     fn a_long_model_name_cannot_squeeze_out_the_placeholder() {
-        let layout = minimized_bar_layout(bar(), &"x".repeat(200));
+        let layout = minimized_bar_layout(bar(), &"x".repeat(200), &mut LabelWidths::cached());
         assert!(layout.model.size.x <= MINIMIZED_MODEL_MAX_W);
         assert!(
             layout.text.size.x > 0.0,
@@ -292,6 +302,7 @@ mod tests {
                 AI_CHAT_MINIMIZED_HEIGHT,
             ),
             "Some Very Long Model Name Indeed",
+            &mut LabelWidths::cached(),
         );
         assert!(layout.model.origin.x + layout.model.size.x <= layout.submit.origin.x);
         assert!(

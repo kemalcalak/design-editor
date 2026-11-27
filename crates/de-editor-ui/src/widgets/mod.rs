@@ -421,6 +421,7 @@ pub mod deck_boards;
 pub(crate) mod design_md_line_cache;
 pub mod design_md_markdown;
 pub mod design_md_panel;
+mod design_md_wrap;
 #[cfg(test)]
 mod design_md_panel_tests;
 pub mod editor_toast;

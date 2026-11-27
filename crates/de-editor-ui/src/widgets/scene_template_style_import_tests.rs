@@ -5,6 +5,16 @@ use crate::widgets::asset_center_style_cards::style_test_support::exclusive_user
 use crate::widgets::scene_template_panel::test_rects::MEDIUM as PANEL;
 use de_editor_core::{AssetCenterTab, EditorState};
 
+/// The paste box's lines as `(start, text)`, read through the kept (here:
+/// estimated) character widths the hit-test reads.
+fn wrap_document(text: &str, max_width: f32) -> Vec<(usize, String)> {
+    let mut widths = LabelWidths::cached();
+    let mut advance = |ch: char| char_advance(&mut widths, ch);
+    document_lines(text, max_width, &mut advance)
+        .map(|(start, end)| (start, text[start..end].to_string()))
+        .collect()
+}
+
 fn open_panel_state() -> EditorState {
     let mut state = EditorState::default();
     state.editor_ui.open_scene_template_center(0);
@@ -121,7 +131,7 @@ fn a_press_in_the_text_area_focuses_it() {
 #[test]
 fn wrapped_lines_report_their_offset_in_the_original_text() {
     let text = "alpha\nbeta\ngamma";
-    let lines = wrap_document(text, 10_000.0, 11.5);
+    let lines = wrap_document(text, 10_000.0);
     assert_eq!(
         lines,
         vec![
@@ -139,7 +149,7 @@ fn wrapped_lines_report_their_offset_in_the_original_text() {
 /// them would show the user a different document from the one they copied.
 #[test]
 fn blank_lines_survive_wrapping() {
-    let lines = wrap_document("a\n\nb", 10_000.0, 11.5);
+    let lines = wrap_document("a\n\nb", 10_000.0);
     assert_eq!(lines.len(), 3);
     assert_eq!(lines[1].1, "");
 }
@@ -147,7 +157,7 @@ fn blank_lines_survive_wrapping() {
 #[test]
 fn a_long_line_wraps_and_keeps_its_offsets_consistent() {
     let text = "x".repeat(400);
-    let lines = wrap_document(&text, 100.0, 11.5);
+    let lines = wrap_document(&text, 100.0);
     assert!(lines.len() > 1, "a 400-char line must break");
     let mut expected = 0_usize;
     for (start, line) in &lines {
@@ -160,7 +170,7 @@ fn a_long_line_wraps_and_keeps_its_offsets_consistent() {
 #[test]
 fn multibyte_text_wraps_on_character_boundaries() {
     let text = "温暖厨房的设计说明\n主色 #E07A5F";
-    let lines = wrap_document(text, 40.0, 11.5);
+    let lines = wrap_document(text, 40.0);
     for (start, line) in &lines {
         // Panics on a bad boundary, which is the assertion.
         assert_eq!(&text[*start..*start + line.len()], line);

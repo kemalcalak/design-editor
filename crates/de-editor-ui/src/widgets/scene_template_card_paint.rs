@@ -41,8 +41,9 @@ use crate::widgets::button::paint_button_feedback_wash;
 use crate::widgets::canvas_viewport_image::{
     has_cached_image_bytes, note_pending_decode, required_raster_edge, store_remote_image_bytes,
 };
+use crate::widgets::label_widths::{Fitted, LabelWidths};
 use crate::widgets::scene_template_previews::scene_template_preview;
-use crate::widgets::text_metrics::{fit_chrome, measure_chrome};
+use crate::widgets::text_metrics::{fit_chrome, measure_chrome, CHROME_FONT_FAMILY};
 use crate::widgets::PaintCx;
 use crate::{Color, ImageDrawMode, Point2D, Rect};
 
@@ -310,16 +311,17 @@ impl SceneTemplatePanel<'_> {
         let picture = Self::card_preview_rect(card);
         let (actions, _) = card_action_rects(card, self.card_offers_generate(template));
         let text_w = (picture.size.x - ACTION_INSET * 2.0).max(0.0);
-        let lines = wrap_to_width(
-            template.summary_for_locale(self.locale),
-            text_w,
-            SUMMARY_SIZE,
-            SUMMARY_LINES,
-        );
-        if lines.is_empty() || text_w <= 0.0 {
+        let summary = template.summary_for_locale(self.locale);
+        if summary.trim().is_empty() || text_w <= 0.0 {
             return;
         }
-        let text_h = lines.len() as f32 * SUMMARY_LINE_H;
+        let (lines, last) = summary_lines(
+            &mut LabelWidths::measuring(&mut *cx.backend),
+            summary,
+            text_w,
+        );
+        let shown = lines.len().min(SUMMARY_LINES);
+        let text_h = shown as f32 * SUMMARY_LINE_H;
         let scrim_top = (actions.origin.y - 10.0 - text_h - 10.0).max(picture.origin.y);
         cx.backend.save();
         cx.backend.clip_rect(picture);
@@ -333,10 +335,12 @@ impl SceneTemplatePanel<'_> {
             HOVER_SCRIM,
         );
         let mut baseline = scrim_top + 10.0 + SUMMARY_SIZE;
-        for line in lines {
+        let kept = lines.iter().take(shown).map(String::as_str);
+        let kept = kept.take(if last.is_some() { shown - 1 } else { shown });
+        for line in kept.chain(last.as_deref()) {
             self.paint_text(
                 cx,
-                &line,
+                line,
                 Point2D::new(picture.origin.x + ACTION_INSET, baseline),
                 SUMMARY_SIZE,
                 HOVER_SUMMARY_INK,
@@ -600,14 +604,10 @@ impl SceneTemplatePanel<'_> {
         let title_w = (right - meta_w - 10.0 - left).max(0.0);
         // The name is verbatim — the user's own word, deliberately not
         // translated — so it is truncated to the room the metadata leaves.
-        let title = super::scene_template_panel_paint::truncate_to_width(
+        self.paint_fitted(
+            cx,
             &template.name,
             title_w,
-            CARD_TITLE_SIZE,
-        );
-        self.paint_text(
-            cx,
-            &title,
             Point2D::new(left, baseline),
             CARD_TITLE_SIZE,
             self.theme.foreground,
@@ -648,40 +648,31 @@ fn parse_swatch(raw: &str) -> Option<Color> {
     Some(Color::rgba_u8(r, g, b, a as f32 / 255.0))
 }
 
-/// Greedy wrap to at most `max_lines`, ellipsising the last line when the
-/// text does not fit. Breaks per character, which is right for the CJK the
-/// summaries are written in and acceptable for the Latin ones at this size.
-fn wrap_to_width(text: &str, max_width: f32, size: f32, max_lines: usize) -> Vec<String> {
-    let mut lines = Vec::new();
-    let mut current = String::new();
-    let mut width = 0.0;
-    for character in text.chars() {
-        let advance =
-            super::prompt_center_panel::estimated_text_width(&character.to_string(), size);
-        if width + advance > max_width && !current.is_empty() {
-            lines.push(std::mem::take(&mut current));
-            width = 0.0;
-            if lines.len() == max_lines {
-                break;
-            }
-        }
-        current.push(character);
-        width += advance;
+/// The hover summary wrapped to `max_w` as painted (chrome face,
+/// [`SUMMARY_SIZE`]; Latin at spaces, CJK between characters), and — when it
+/// runs past [`SUMMARY_LINES`] — the last shown line: the rest of the text
+/// from there, ellipsized. Both are kept by `widths`, so a hover repaint
+/// neither wraps nor measures again.
+fn summary_lines<'t>(
+    widths: &mut LabelWidths<'_>,
+    text: &'t str,
+    max_w: f32,
+) -> (std::rc::Rc<[String]>, Option<Fitted<'t>>) {
+    let lines = widths.wrap(text, max_w, SUMMARY_SIZE, CHROME_FONT_FAMILY, 400);
+    if lines.len() <= SUMMARY_LINES {
+        return (lines, None);
     }
-    if lines.len() < max_lines && !current.is_empty() {
-        lines.push(current);
+    // Where the last shown line starts in `text`: the wrapped lines are its
+    // substrings in order, less the spaces dropped at each break.
+    let mut cursor = 0;
+    for line in lines.iter().take(SUMMARY_LINES - 1) {
+        cursor = text[cursor..]
+            .find(line.as_str())
+            .map_or(cursor, |at| cursor + at + line.len());
     }
-    // Anything past the cap is dropped, so the final line must show that.
-    if lines.len() == max_lines {
-        let consumed: usize = lines.iter().map(|line| line.chars().count()).sum();
-        if text.chars().count() > consumed {
-            let last = lines.pop().unwrap_or_default();
-            lines.push(super::scene_template_panel_paint::truncate_to_width(
-                &last, max_width, size,
-            ));
-        }
-    }
-    lines
+    let rest = text[cursor..].trim_start();
+    let last = widths.fit(rest, max_w, SUMMARY_SIZE, CHROME_FONT_FAMILY, 400);
+    (lines, Some(last))
 }
 
 #[cfg(test)]

@@ -18,7 +18,6 @@ use super::scene_template_panel::{
     TITLE_SIZE,
 };
 use crate::widgets::button::paint_button_feedback_wash;
-use crate::widgets::prompt_center_panel::estimated_text_width;
 use crate::widgets::property_panel_text_input::paint_text_input_view;
 use crate::widgets::{draw_icon, Icon, PaintCx};
 use crate::{Color, Point2D, Rect, TextLayout};
@@ -171,6 +170,10 @@ impl SceneTemplatePanel<'_> {
     /// replaces the document, and a control that quietly discards the canvas
     /// has to say so before it is pressed, not after.
     fn paint_generate_row(&self, cx: &mut PaintCx<'_>, panel: Rect) {
+        // The basis chip is measured before anything in the row is laid
+        // out: the topic field gives up the chip's width, and reads it from
+        // the same kept label width the backend-less hit-test does.
+        let chip = self.basis_chip_rect_with(panel, &mut LabelWidths::measuring(&mut *cx.backend));
         let Some(input) = self.generate_input_rect(panel) else {
             return;
         };
@@ -178,7 +181,9 @@ impl SceneTemplatePanel<'_> {
             .generate_button_rect(panel)
             .expect("the button rect exists whenever the input does");
 
-        self.paint_basis_chip(cx, panel);
+        if let Some(chip) = chip {
+            self.paint_basis_chip(cx, chip);
+        }
 
         self.paint_field_frame(cx, input, Icon::Sparkles);
         paint_text_input_view(
@@ -237,7 +242,10 @@ impl SceneTemplatePanel<'_> {
     }
 
     fn paint_filter_chips(&self, cx: &mut PaintCx<'_>, panel: Rect) {
-        for (index, (rect, filter)) in self.filter_chip_rects(panel).into_iter().enumerate() {
+        // Measured here, so the hit-test's backend-less chips are these.
+        let chips =
+            self.filter_chip_rects_with(panel, &mut LabelWidths::measuring(&mut *cx.backend));
+        for (index, (rect, filter)) in chips.into_iter().enumerate() {
             paint_panel_chip(
                 cx,
                 &self.theme,
@@ -315,9 +323,8 @@ impl SceneTemplatePanel<'_> {
     /// It reads as a chip rather than as a line of help text because it is
     /// removable, and the × has to look like the thing that removes it: the
     /// pin behind this chip steers every generation until it is cleared.
-    fn paint_basis_chip(&self, cx: &mut PaintCx<'_>, panel: Rect) {
-        let (Some(chip), Some(label)) = (self.basis_chip_rect(panel), self.basis_chip_label())
-        else {
+    fn paint_basis_chip(&self, cx: &mut PaintCx<'_>, chip: Rect) {
+        let Some(label) = self.basis_chip_label() else {
             return;
         };
         // Same surface + hairline a resting filter chip gets: it is a chip,
@@ -329,14 +336,12 @@ impl SceneTemplatePanel<'_> {
         cx.backend
             .stroke_round_rect(chip, radius, self.theme.border, 1.0);
 
-        let dismiss_w = self
-            .basis_chip_dismiss_rect(panel)
-            .map(|rect| rect.size.x)
-            .unwrap_or(0.0);
-        let text_w = (chip.size.x - BASIS_CHIP_PAD_X - dismiss_w).max(0.0);
-        self.paint_text(
+        let dismiss = Self::basis_chip_dismiss_in(chip);
+        let text_w = (chip.size.x - BASIS_CHIP_PAD_X - dismiss.size.x).max(0.0);
+        self.paint_fitted(
             cx,
-            &truncate_to_width(&label, text_w, BASIS_CHIP_LABEL_SIZE),
+            &label,
+            text_w,
             Point2D::new(
                 chip.origin.x + BASIS_CHIP_PAD_X,
                 jian_widgets::centered_text_baseline_y(chip, BASIS_CHIP_LABEL_SIZE),
@@ -345,9 +350,6 @@ impl SceneTemplatePanel<'_> {
             self.theme.foreground,
         );
 
-        let Some(dismiss) = self.basis_chip_dismiss_rect(panel) else {
-            return;
-        };
         paint_button_feedback_wash(
             cx.backend,
             &self.theme,
@@ -380,6 +382,22 @@ impl SceneTemplatePanel<'_> {
         }
     }
 
+    /// Paint `text` at `position` ellipsized to `max_w`, both measured in
+    /// the chrome face it is painted in; a repaint reads the kept fit.
+    pub(super) fn paint_fitted(
+        &self,
+        cx: &mut PaintCx<'_>,
+        text: &str,
+        max_w: f32,
+        position: Point2D,
+        size: f32,
+        color: Color,
+    ) {
+        let fitted =
+            LabelWidths::measuring(&mut *cx.backend).fit_chrome(text, max_w.max(0.0), size);
+        self.paint_text(cx, &fitted, position, size, color);
+    }
+
     pub(super) fn paint_text(
         &self,
         cx: &mut PaintCx<'_>,
@@ -397,23 +415,4 @@ impl SceneTemplatePanel<'_> {
         );
         cx.backend.draw_text(&layout, position);
     }
-}
-
-pub(super) fn truncate_to_width(text: &str, max_width: f32, size: f32) -> String {
-    if estimated_text_width(text, size) <= max_width {
-        return text.to_string();
-    }
-    let ellipsis_w = estimated_text_width("…", size);
-    let mut out = String::new();
-    let mut width = 0.0;
-    for character in text.chars() {
-        let advance = estimated_text_width(&character.to_string(), size);
-        if width + advance + ellipsis_w > max_width {
-            break;
-        }
-        out.push(character);
-        width += advance;
-    }
-    out.push('…');
-    out
 }

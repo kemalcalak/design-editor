@@ -33,6 +33,10 @@
 //! a wrap measures many prefixes once, and keeping each of them as a width
 //! would fill the width map with strings nothing reads again.
 //!
+//! An ellipsized label is kept the same way ([`LabelWidths::fit`]): a label
+//! that fits is handed back borrowed, one that does not is cut once and the
+//! cut form kept, so a repaint neither measures nor allocates for it.
+//!
 //! A run nothing has measured yet (a unit test without a backend, a press
 //! that lands before the first frame painted a new label) reads
 //! [`estimate_width`], a backend-free heuristic. It is the one place that
@@ -41,6 +45,7 @@
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::hash::{DefaultHasher, Hash, Hasher};
+use std::ops::Deref;
 use std::rc::Rc;
 
 use super::line_break::wrap_lines;
@@ -53,6 +58,9 @@ const GENERATION_CAP: usize = 4096;
 /// Wrapped texts one generation holds: a wrap is a whole paragraph, so far
 /// fewer are live at once than single runs.
 const WRAP_GENERATION_CAP: usize = 256;
+/// Ellipsized labels one generation holds: one per label that does not fit
+/// its box, so far fewer than whole widths.
+const FIT_GENERATION_CAP: usize = 1024;
 
 /// The regular weight, measured without a weight argument (as
 /// `text_metrics::measure_chrome` does).
@@ -101,6 +109,10 @@ thread_local! {
     /// entry here instead of one width entry per prefix in `CACHE`.
     static WRAPS: RefCell<Generations<Rc<[String]>>> =
         RefCell::new(Generations::new(WRAP_GENERATION_CAP));
+    /// Ellipsized labels, keyed like a wrap (`wrap_key`). Only the cut form
+    /// is kept, never the prefixes measured to find it.
+    static FITS: RefCell<Generations<Rc<str>>> =
+        RefCell::new(Generations::new(FIT_GENERATION_CAP));
 }
 
 fn wrap_key(text: &str, max_w: f32, size: f32, family: &str, weight: u16) -> u64 {
@@ -133,6 +145,47 @@ fn wrap_with(text: &str, max_w: f32, measure: &mut dyn FnMut(&str) -> f32) -> Ve
         .collect()
 }
 
+/// Cut `text` until it and a trailing `…` fit `max_w` as `measure` reports
+/// it (a bare `…` when not even one character does).
+fn ellipsize_with(text: &str, max_w: f32, measure: &mut dyn FnMut(&str) -> f32) -> Rc<str> {
+    let mut cut = String::with_capacity(text.len() + '…'.len_utf8());
+    let mut fitting = 0;
+    for (index, ch) in text.char_indices() {
+        cut.truncate(0);
+        cut.push_str(&text[..index + ch.len_utf8()]);
+        cut.push('…');
+        if measure(&cut) > max_w {
+            break;
+        }
+        fitting = index + ch.len_utf8();
+    }
+    cut.truncate(0);
+    cut.push_str(&text[..fitting]);
+    cut.push('…');
+    cut.into()
+}
+
+/// A label as it fits its box: borrowed whole, or the kept ellipsized form.
+/// Derefs to the text to paint.
+#[derive(Debug, Clone)]
+pub enum Fitted<'t> {
+    /// The whole label fits.
+    Whole(&'t str),
+    /// The label was cut and ends in `…`.
+    Cut(Rc<str>),
+}
+
+impl Deref for Fitted<'_> {
+    type Target = str;
+
+    fn deref(&self) -> &str {
+        match self {
+            Fitted::Whole(text) => text,
+            Fitted::Cut(text) => text,
+        }
+    }
+}
+
 /// What decides one run's painted width.
 fn key(text: &str, size: f32, family: &str, weight: u16) -> u64 {
     let mut hasher = DefaultHasher::new();
@@ -160,6 +213,13 @@ impl<'a> LabelWidths<'a> {
     /// Read the kept widths; measure nothing.
     pub fn cached() -> LabelWidths<'static> {
         LabelWidths { backend: None }
+    }
+
+    /// Whether this pass measures (paint) rather than reads (hit-test). A
+    /// caller that keeps a layout of its own built from these widths keeps
+    /// only a measured one, as [`wrap`](Self::wrap) does.
+    pub fn is_measuring(&self) -> bool {
+        self.backend.is_some()
     }
 
     /// Width of a regular run in the chrome family.
@@ -222,6 +282,48 @@ impl<'a> LabelWidths<'a> {
     }
 }
 
+impl LabelWidths<'_> {
+    /// `text` as it fits `max_w` painted in `family` at `weight`: whole
+    /// (borrowed) when it fits, else cut to end in `…`.
+    ///
+    /// The whole label's width is read like any run ([`styled`](Self::styled)),
+    /// so a label that fits costs one lookup and no allocation. A cut form is
+    /// found by measuring prefixes through the backend and kept whole
+    /// (`FITS`), so the next repaint reads it with one lookup; a cached pass
+    /// that misses cuts against the estimate and keeps nothing.
+    pub fn fit<'t>(
+        &mut self,
+        text: &'t str,
+        max_w: f32,
+        size: f32,
+        family: &str,
+        weight: u16,
+    ) -> Fitted<'t> {
+        if self.styled(text, size, family, weight) <= max_w {
+            return Fitted::Whole(text);
+        }
+        let key = wrap_key(text, max_w, size, family, weight);
+        if let Some(cut) = FITS.with(|fits| fits.borrow_mut().get(key)) {
+            return Fitted::Cut(cut);
+        }
+        let Some(backend) = self.backend.as_deref_mut() else {
+            return Fitted::Cut(ellipsize_with(text, max_w, &mut |s| {
+                estimate_width(s, size)
+            }));
+        };
+        let cut = ellipsize_with(text, max_w, &mut |s| {
+            measure_run(backend, s, size, family, weight)
+        });
+        FITS.with(|fits| fits.borrow_mut().insert(key, cut.clone()));
+        Fitted::Cut(cut)
+    }
+
+    /// [`fit`](Self::fit) for a regular run in the chrome family.
+    pub fn fit_chrome<'t>(&mut self, text: &'t str, max_w: f32, size: f32) -> Fitted<'t> {
+        self.fit(text, max_w, size, CHROME_FONT_FAMILY, REGULAR)
+    }
+}
+
 /// A backend-free width heuristic for `text` at `size` px: the
 /// [`LabelWidths::cached`] fallback for a run nothing has measured yet, and
 /// nothing else. It errs wide for Latin and is only roughly right for the
@@ -252,6 +354,7 @@ fn is_wide(c: char) -> bool {
 pub(crate) fn reset() {
     CACHE.with(|cache| *cache.borrow_mut() = Generations::new(GENERATION_CAP));
     WRAPS.with(|wraps| *wraps.borrow_mut() = Generations::new(WRAP_GENERATION_CAP));
+    FITS.with(|fits| *fits.borrow_mut() = Generations::new(FIT_GENERATION_CAP));
 }
 
 /// How many widths and wrapped texts the current generations hold.

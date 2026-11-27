@@ -10,6 +10,8 @@ use super::helpers::hex_to_color;
 use super::{DesignMdPanel, RenderLine, SectionLayout, BODY_INDENT, BTN, PAD, SECTION_HEADER_H};
 use crate::widgets::button::paint_button_feedback_wash;
 use crate::widgets::design_md_markdown::MdRun;
+use crate::widgets::design_md_wrap::{run_width, COLOR_SWATCH_W};
+use crate::widgets::label_widths::LabelWidths;
 use crate::widgets::text_metrics;
 use crate::widgets::{Icon, PaintCx};
 use crate::{Color, Point2D, Rect, TextLayout};
@@ -135,8 +137,11 @@ impl<'a> DesignMdPanel<'a> {
         size: f32,
         heading: bool,
     ) {
+        // Every run advances by the width the body wrapped it at
+        // (`design_md_wrap::run_width`), read from the kept widths.
         let mut cur = x;
         for run in runs {
+            let advance = run_width(&mut LabelWidths::measuring(&mut *cx.backend), run, size);
             match run {
                 MdRun::Plain(s) => {
                     let color = if heading {
@@ -145,24 +150,20 @@ impl<'a> DesignMdPanel<'a> {
                         self.theme.muted_foreground
                     };
                     self.text(cx, s, cur, baseline, size, color);
-                    cur += text_metrics::measure_chrome(cx.backend, s, size);
                 }
                 MdRun::Bold(s) => {
                     self.text(cx, s, cur, baseline, size, self.theme.foreground);
-                    cur += text_metrics::measure_chrome(cx.backend, s, size);
                 }
                 MdRun::Code(s) => {
-                    let w = text_metrics::measure_chrome(cx.backend, s, size);
                     cx.backend.fill_round_rect(
                         Rect {
                             origin: Point2D::new(cur - 2.0, baseline - 10.0),
-                            size: Point2D::new(w + 4.0, 14.0),
+                            size: Point2D::new(advance, 14.0),
                         },
                         3.0,
                         self.theme.muted,
                     );
                     self.text(cx, s, cur, baseline, size, self.theme.foreground);
-                    cur += w + 4.0;
                 }
                 MdRun::Color(hex) => {
                     let swatch = Rect {
@@ -172,10 +173,17 @@ impl<'a> DesignMdPanel<'a> {
                     cx.backend.fill_round_rect(swatch, 2.0, hex_to_color(hex));
                     cx.backend
                         .stroke_round_rect(swatch, 2.0, self.theme.border, 1.0);
-                    self.text(cx, hex, cur + 14.0, baseline, size, self.theme.foreground);
-                    cur += 14.0 + text_metrics::measure_chrome(cx.backend, hex, size);
+                    self.text(
+                        cx,
+                        hex,
+                        cur + COLOR_SWATCH_W,
+                        baseline,
+                        size,
+                        self.theme.foreground,
+                    );
                 }
             }
+            cur += advance;
         }
     }
 

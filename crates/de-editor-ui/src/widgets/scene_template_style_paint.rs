@@ -11,10 +11,11 @@ use super::asset_center_style_layout::STYLE_SECTION_HEADER_H;
 use super::icons::{draw_icon, Icon};
 use super::panel_control_metrics::{control_fill, CHIP_RADIUS};
 use super::scene_template_panel::{SceneTemplatePanel, STYLE_SWATCH_H};
-use super::scene_template_style_geometry::SCENE_TEMPLATE_IMPORT_HOVER;
+use super::scene_template_style_geometry::{
+    IMPORT_GLYPH, IMPORT_GLYPH_GAP, IMPORT_LABEL_SIZE, SCENE_TEMPLATE_IMPORT_HOVER,
+};
 use crate::widgets::button::paint_button_feedback_wash;
-use crate::widgets::prompt_center_panel::estimated_text_width;
-use crate::widgets::scene_template_panel_paint::truncate_to_width;
+use crate::widgets::label_widths::LabelWidths;
 use crate::widgets::PaintCx;
 use crate::{Point2D, Rect};
 
@@ -23,7 +24,6 @@ const NAME_SIZE: f32 = 13.5;
 const SUMMARY_SIZE: f32 = 11.0;
 const PIN_SIZE: f32 = 11.0;
 const SECTION_SIZE: f32 = 11.5;
-const IMPORT_LABEL_SIZE: f32 = 12.0;
 const INSET: f32 = 14.0;
 
 impl SceneTemplatePanel<'_> {
@@ -83,7 +83,10 @@ impl SceneTemplatePanel<'_> {
 
     /// The import button in the tab row.
     fn paint_style_import_button(&self, cx: &mut PaintCx<'_>, panel: Rect) {
-        let Some(rect) = self.style_import_button_rect(panel) else {
+        // Measured here, so the hit-test's backend-less button is this one.
+        let Some(rect) = self
+            .style_import_button_rect_with(panel, &mut LabelWidths::measuring(&mut *cx.backend))
+        else {
             return;
         };
         // A chip, painted the way every other chip in the panel is: the same
@@ -99,9 +102,10 @@ impl SceneTemplatePanel<'_> {
         cx.backend
             .stroke_round_rect(rect, CHIP_RADIUS, self.theme.border, 1.0);
         let label = self.style_import_label();
-        let label_w = estimated_text_width(label, IMPORT_LABEL_SIZE);
-        let glyph = 12.0;
-        let start = rect.origin.x + ((rect.size.x - label_w - glyph - 6.0) / 2.0).max(8.0);
+        let label_w = LabelWidths::measuring(&mut *cx.backend).chrome(label, IMPORT_LABEL_SIZE);
+        let glyph = IMPORT_GLYPH;
+        let start =
+            rect.origin.x + (rect.size.x - label_w - glyph - IMPORT_GLYPH_GAP).max(0.0) / 2.0;
         draw_icon(
             cx.backend,
             Icon::Plus,
@@ -114,7 +118,7 @@ impl SceneTemplatePanel<'_> {
             cx,
             label,
             Point2D::new(
-                start + glyph + 6.0,
+                start + glyph + IMPORT_GLYPH_GAP,
                 jian_widgets::centered_text_baseline_y(rect, IMPORT_LABEL_SIZE),
             ),
             IMPORT_LABEL_SIZE,
@@ -157,7 +161,7 @@ impl SceneTemplatePanel<'_> {
 
         let pin_label = self.t("assetCenter.style.pinned", "Pinned");
         let pin_w = if is_pinned {
-            estimated_text_width(pin_label, PIN_SIZE) + 8.0
+            LabelWidths::measuring(&mut *cx.backend).chrome(pin_label, PIN_SIZE) + 8.0
         } else {
             0.0
         };
@@ -169,9 +173,10 @@ impl SceneTemplatePanel<'_> {
         } else {
             pin_w
         };
-        self.paint_text(
+        self.paint_fitted(
             cx,
-            &truncate_to_width(&card.name, (text_w - corner_w).max(0.0), NAME_SIZE),
+            &card.name,
+            text_w - corner_w,
             Point2D::new(text_x, rect.origin.y + 28.0),
             NAME_SIZE,
             self.theme.foreground,
@@ -193,9 +198,10 @@ impl SceneTemplatePanel<'_> {
 
         self.paint_swatch_band(cx, Self::swatch_band_rect(rect), card);
 
-        self.paint_text(
+        self.paint_fitted(
             cx,
-            &truncate_to_width(&card.summary, text_w, SUMMARY_SIZE),
+            &card.summary,
+            text_w,
             Point2D::new(text_x, rect.origin.y + rect.size.y - 16.0),
             SUMMARY_SIZE,
             self.theme.muted_foreground,

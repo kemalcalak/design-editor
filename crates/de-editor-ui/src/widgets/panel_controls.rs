@@ -17,9 +17,11 @@ use crate::widgets::label_widths::LabelWidths;
 use crate::widgets::panel_control_metrics::{
     control_fill, mix, CHIP_LABEL_SIZE, CHIP_PAD_X, CHIP_RADIUS, SEGMENT_MIN_W, SEGMENT_TRACK_PAD,
 };
-use crate::widgets::text_metrics::{fit_chrome, measure_chrome};
 use crate::widgets::PaintCx;
 use crate::{Color, Point2D, Rect, TextLayout};
+
+/// Space either side of a chip's or button's label inside its box.
+const LABEL_INSET: f32 = 5.0;
 
 /// Track width for a segmented control of `count` segments each `segment_w`
 /// wide. Segments are seam to seam — the track's padding is the only gap.
@@ -64,6 +66,13 @@ pub(crate) fn segment_width_for(widths: &mut LabelWidths<'_>, labels: &[&str]) -
         .iter()
         .map(|label| widths.chrome(label, CHIP_LABEL_SIZE) + CHIP_PAD_X * 2.0)
         .fold(SEGMENT_MIN_W, f32::max)
+}
+
+/// Natural width of a [`paint_panel_chip`] holding `label`: the label as
+/// painted (chrome face, [`CHIP_LABEL_SIZE`]) read through `widths`, plus
+/// [`CHIP_PAD_X`] either side. Paint measures, the hit-test reads (#451).
+pub(crate) fn chip_width_for(widths: &mut LabelWidths<'_>, label: &str) -> f32 {
+    widths.chrome(label, CHIP_LABEL_SIZE) + CHIP_PAD_X * 2.0
 }
 
 /// One segment's pointer state, as the caller knows it.
@@ -216,10 +225,17 @@ fn paint_centered_label(cx: &mut PaintCx<'_>, rect: Rect, label: &str, color: Co
     paint_label(cx, rect, label, CHIP_LABEL_SIZE, color);
 }
 
+/// Paint `label` centred in `rect`, ellipsized when it does not fit. Both
+/// the fit and the width are read through [`LabelWidths`], so a repaint
+/// measures and allocates nothing.
 fn paint_label(cx: &mut PaintCx<'_>, rect: Rect, label: &str, size: f32, color: Color) {
-    let budget = (rect.size.x - 10.0).max(0.0);
-    let label = fit_chrome(cx.backend, label, budget, size);
-    let width = measure_chrome(cx.backend, &label, size);
+    let budget = (rect.size.x - LABEL_INSET * 2.0).max(0.0);
+    let (label, width) = {
+        let mut widths = LabelWidths::measuring(&mut *cx.backend);
+        let label = widths.fit_chrome(label, budget, size);
+        let width = widths.chrome(&label, size);
+        (label, width)
+    };
     let layout = TextLayout::single_run(
         &label,
         crate::widgets::text_metrics::CHROME_FONT_FAMILY,
@@ -230,7 +246,7 @@ fn paint_label(cx: &mut PaintCx<'_>, rect: Rect, label: &str, size: f32, color: 
     cx.backend.draw_text(
         &layout,
         Point2D::new(
-            rect.origin.x + ((rect.size.x - width) / 2.0).max(4.0),
+            rect.origin.x + ((rect.size.x - width) / 2.0).max(LABEL_INSET),
             jian_widgets::centered_text_baseline_y(rect, size),
         ),
     );

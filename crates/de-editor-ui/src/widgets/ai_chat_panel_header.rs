@@ -5,11 +5,12 @@
 //!
 //! [`header_layout`] is the single rect source paint and hit-test read.
 
-use super::ai_chat_panel::{footer_label_width, HEADER_HEIGHT, PAD};
+use super::ai_chat_panel::{HEADER_HEIGHT, PAD};
 use crate::theme::Theme;
 use crate::widgets::ai_chat_chrome::{chat_label, fit_label, label_baseline, outline_control};
 use crate::widgets::home_surface::HomePalette;
 use crate::widgets::icons::{draw_icon, Icon};
+use crate::widgets::label_widths::LabelWidths;
 use crate::widgets::PaintCx;
 use crate::{Point2D, Rect, TextLayout};
 use de_editor_core::ChatHeaderButton;
@@ -39,12 +40,18 @@ pub(crate) struct HeaderLayout {
 }
 
 /// Lay the session row out inside the panel `rect`. `new_label` is the
-/// localised "New", whose width sizes the button.
-pub(crate) fn header_layout(rect: Rect, pinned: bool, new_label: &str) -> HeaderLayout {
+/// localised "New", whose width — as painted, read through `widths` —
+/// sizes the button.
+pub(crate) fn header_layout(
+    rect: Rect,
+    pinned: bool,
+    new_label: &str,
+    widths: &mut LabelWidths<'_>,
+) -> HeaderLayout {
     let y = rect.origin.y + (HEADER_HEIGHT - SESSION_CONTROL_H) / 2.0;
     let left = rect.origin.x + SESSION_ROW_PAD_X;
     let right = rect.origin.x + rect.size.x - SESSION_ROW_PAD_X;
-    let new_w = 10.0 + 14.0 + 6.0 + footer_label_width(new_label, LABEL_FONT) + 12.0;
+    let new_w = 10.0 + 14.0 + 6.0 + widths.chrome(new_label, LABEL_FONT) + 12.0;
     let new_chat = Rect::xywh(right - new_w, y, new_w, SESSION_CONTROL_H);
     let mut select_right = new_chat.origin.x - CONTROL_GAP;
     let maximize = (!pinned).then(|| {
@@ -289,7 +296,7 @@ mod tests {
 
     #[test]
     fn pinned_row_is_select_then_new_with_no_maximize() {
-        let l = header_layout(rail(), true, "New");
+        let l = header_layout(rail(), true, "New", &mut LabelWidths::cached());
         assert!(l.maximize.is_none());
         assert_eq!(l.select.origin.x, SESSION_ROW_PAD_X);
         assert!(l.select.origin.x + l.select.size.x <= l.new_chat.origin.x - CONTROL_GAP + 0.01);
@@ -303,7 +310,7 @@ mod tests {
 
     #[test]
     fn floating_row_puts_maximize_between_select_and_new() {
-        let l = header_layout(rail(), false, "New");
+        let l = header_layout(rail(), false, "New", &mut LabelWidths::cached());
         let m = l.maximize.expect("floating chats can maximize");
         assert!(l.select.origin.x + l.select.size.x <= m.origin.x);
         assert!(m.origin.x + m.size.x <= l.new_chat.origin.x);
@@ -311,8 +318,13 @@ mod tests {
 
     #[test]
     fn a_longer_new_label_widens_the_button_and_narrows_the_select() {
-        let short = header_layout(rail(), true, "New");
-        let long = header_layout(rail(), true, "Nouvelle discussion");
+        let short = header_layout(rail(), true, "New", &mut LabelWidths::cached());
+        let long = header_layout(
+            rail(),
+            true,
+            "Nouvelle discussion",
+            &mut LabelWidths::cached(),
+        );
         assert!(long.new_chat.size.x > short.new_chat.size.x);
         assert!(long.select.size.x < short.select.size.x);
     }
@@ -323,6 +335,7 @@ mod tests {
             Rect::xywh(0.0, 0.0, 120.0, 400.0),
             false,
             "Nouvelle discussion",
+            &mut LabelWidths::cached(),
         );
         assert!(l.select.size.x >= 40.0);
     }
