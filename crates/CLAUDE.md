@@ -707,9 +707,12 @@ One modal, two modes. State and every transition live in `de-editor-core/src/com
   a flattened `hit_ring`) for a smoothed rect / frame / group, a rounded
   polygon or star and a path with a vertex radius; a path's stroke ends
   follow the rounded line. A rect with smoothing 0 or radius 0 gets none,
-  so the rounded-rect fast paths are unchanged. A live bounds patch never
-  touches a node with an outline (`canvas_scene_patch::box_shaped_scene_data`):
-  it rebuilds, like stroke ends and reversed lines.
+  so the rounded-rect fast paths are unchanged. The outline's bounds come
+  from its subpaths, never from parsing `d` back. A live bounds patch of a
+  smoothed box or rounded polygon rebuilds that node's outline alone from
+  the scene node's corner fields (`de_pen_loader::rebuild_box_corner_path`);
+  stroke ends and reversed lines still rebuild the scene
+  (`canvas_scene_patch::box_shaped_scene_data`), and paths never patch.
 - **Paint / hit-test**: fills draw inside a clip to the outline, strokes
   follow it (or its own centre line for inside / outside), `clipContent`,
   backdrop effects and image fills clip to it
@@ -724,8 +727,17 @@ One modal, two modes. State and every transition live in `de-editor-core/src/com
   rounded polygons and paths as their outline (`flex/shapes.rs`; CSS
   `border-radius` cannot smooth, so a smoothed box there keeps plain
   rounded corners). PNG / PDF use the canvas painter. Figma import keeps
-  `cornerSmoothing` natively and rounds vector networks with the same
-  geometry.
+  `cornerSmoothing` natively, imports a rounded star as a star polygon with
+  its `cornerRadius` / `cornerSmoothing` (`star_converter.rs`) and rounds
+  vector networks with the same geometry.
+- **de-figma depends on de-editor-core** (a normal dependency since #389,
+  before only a dev one), decided rather than moving the geometry out:
+  the import must round and range stars exactly like the editor, and the
+  shared code (`corner_geometry`, `vector_edit::Subpath`, `star_shape`)
+  already lives there with its tests. Both crates are wasm32-clean and
+  de-editor-core never depends on de-figma, so no cycle or platform code
+  comes with it. A separate geometry crate is worth it only if another
+  leaf crate that must not pull the editor core needs the same geometry.
 - **Editing**: `EditorCommand::SetNodeCorners { radii, smoothing }`
   (`command_node_attrs/corners.rs`) writes per-corner radii and smoothing
   in one step and refuses, untouched, what a kind cannot store
