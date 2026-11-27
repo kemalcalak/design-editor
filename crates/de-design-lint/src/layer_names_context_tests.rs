@@ -129,12 +129,59 @@ fn a_lone_row_rounded_boxes_and_a_keypad_are_no_table() {
     ));
     assert!(!names["c00"].starts_with("Cell"), "{names:?}");
 
-    // Rows whose boxes act (a verb, a tap) are rows of actions.
+    // A box that acts stays a button, and its neighbours stay cells.
     let names = names_of(table(
-        &[&["Edit", "Copy"], &["Share", "Export"]],
-        &[120.0, 120.0],
+        &[&["Export", "PDF", "PNG"], &["Share", "Link", "Embed"]],
+        &[120.0, 120.0, 120.0],
     ));
     assert!(is_button(&names["c00"]), "{names:?}");
+    assert!(names["c01"].starts_with("Cell"), "{names:?}");
+
+    // A calculator: some keys are a single character.
+    let names = names_of(table(
+        &[&["AC", "+/-", "%", "÷"], &["7", "8", "9", "×"]],
+        &[80.0, 80.0, 80.0, 80.0],
+    ));
+    assert!(!names["c00"].starts_with("Cell"), "{names:?}");
+}
+
+#[test]
+fn equal_fill_tiles_need_a_value_or_a_third_row_to_be_a_table() {
+    let fill = |id: String, label: &str| label_box(&id, json!("fill_container"), label, json!({}));
+    let grid = |rows: &[&[&str]]| {
+        column(
+            rows.iter()
+                .enumerate()
+                .map(|(r, labels)| {
+                    row(
+                        &format!("r{r}"),
+                        labels
+                            .iter()
+                            .enumerate()
+                            .map(|(c, label)| fill(format!("c{r}{c}"), label))
+                            .collect(),
+                    )
+                })
+                .collect(),
+        )
+    };
+    // A share sheet and a size picker: two rows of tiles, no values.
+    let share = names_of(grid(&[
+        &["Messages", "Notes", "Mail"],
+        &["Slack", "Teams", "Drive"],
+    ]));
+    assert!(!share["c00"].starts_with("Cell"), "{share:?}");
+    let sizes = names_of(grid(&[&["XS", "SM", "MD"], &["LG", "XL", "XXL"]]));
+    assert!(!sizes["c00"].starts_with("Cell"), "{sizes:?}");
+    // A value in a cell, or a third row, makes the grid a table.
+    let plans = names_of(grid(&[&["Plan", "Seats"], &["Team", "10"]]));
+    assert!(plans["c10"].starts_with("Cell"), "{plans:?}");
+    let specs = names_of(grid(&[
+        &["Spec", "Travel"],
+        &["Display", "Matte"],
+        &["Ports", "USB-C"],
+    ]));
+    assert!(specs["c10"].starts_with("Cell"), "{specs:?}");
 }
 
 // ---- Slots ----
@@ -153,18 +200,31 @@ fn a_placeholder_slot_is_named_for_what_it_holds() {
     assert_eq!(names["logo"], "Logo slot");
     let names = names_of(column(vec![slot("hero", "Your image here")]));
     assert_eq!(names["hero"], "Image slot");
-    // Siblings holding the same placeholder are not told apart by it.
+    // Identical slots share the plain name; none is dropped or qualified
+    // by the placeholder it shows.
     let names = names_of(row(
         "logos",
-        vec![slot("l1", "Drop logo"), slot("l2", "Drop logo")],
+        vec![
+            slot("l1", "Drop logo"),
+            slot("l2", "Drop logo"),
+            slot("l3", "Drop logo"),
+        ],
     ));
-    assert!(
-        names.values().all(|name| !name.contains("(Drop logo)")),
-        "{names:?}"
-    );
+    for id in ["l1", "l2", "l3"] {
+        assert_eq!(names[id], "Logo slot", "{names:?}");
+    }
 
-    // Other drops, verbs and labels without a kind of content are no slots.
-    for label in ["Drop shadow", "Drop down", "Place order", "Upload image"] {
+    // Other drops, verbs in any language and labels without a kind of
+    // content are no slots.
+    for label in [
+        "Drop shadow",
+        "Drop down",
+        "Place order",
+        "Upload image",
+        "Sube tu foto",
+        "Ändere dein Bild",
+        "点击这里查看图片",
+    ] {
         let names = names_of(column(vec![slot("b", label)]));
         assert!(is_button(&names["b"]), "{label}: {names:?}");
     }
@@ -195,17 +255,38 @@ fn wide(id: &str, label: &str, extra: Value) -> Value {
     label_box(id, json!("fill_container"), label, extra)
 }
 
-#[test]
-fn a_run_of_identical_wordmark_boxes_is_slots() {
-    let names = names_of(row(
+/// A heading text above a row of three wide boxes.
+fn headed_run(heading: &str, labels: [&str; 3]) -> HashMap<String, String> {
+    let mut kids = Vec::new();
+    if !heading.is_empty() {
+        kids.push(json!({"type": "text", "id": "heading", "name": "Text",
+                         "content": heading, "fontSize": 14}));
+    }
+    kids.push(row(
         "r",
         vec![
-            wide("a", "SOUNDX", json!({})),
-            wide("b", "VOLT", json!({})),
-            wide("c", "NORTH SHORE", json!({})),
+            wide("a", labels[0], json!({})),
+            wide("b", labels[1], json!({})),
+            wide("c", labels[2], json!({})),
         ],
     ));
+    names_of(column(kids))
+}
+
+#[test]
+fn a_run_of_identical_boxes_under_its_patrons_is_slots() {
+    let names = headed_run("SPECIAL THANKS", ["SOUNDX", "VOLT", "NORTH SHORE"]);
     assert_eq!(names["a"], "Slot (SOUNDX)");
+    let names = headed_run("Unsere Partner", ["SOUNDX", "VOLT", "MONO"]);
+    assert!(names["a"].starts_with("Slot"), "{names:?}");
+
+    // Tabs and footer links share the shape but nothing introduces patrons.
+    for labels in [["DAY", "WEEK", "MONTH"], ["PRIVACY", "TERMS", "CONTACT"]] {
+        let names = headed_run("", labels);
+        assert!(!names["a"].contains("Slot"), "{labels:?}: {names:?}");
+        let names = headed_run("Settings", labels);
+        assert!(!names["a"].contains("Slot"), "{labels:?}: {names:?}");
+    }
 }
 
 #[test]
@@ -322,7 +403,16 @@ fn pills_that_act_stay_buttons() {
     );
     let names = names_of(column(vec![tapped]));
     assert!(is_button(&names["deal"]), "{names:?}");
-    for label in ["GET TICKETS", "BUY NOW", "RSVP"] {
+    for label in [
+        "GET TICKETS",
+        "BUY NOW",
+        "RSVP",
+        "READ MORE",
+        "FREE TRIAL",
+        "PRE-ORDER NOW",
+        "JETZT KAUFEN",
+        "COMPRAR AHORA",
+    ] {
         let names = names_of(column(vec![tracked(pill("cta", label, json!({})))]));
         assert!(is_button(&names["cta"]), "{label}: {names:?}");
     }

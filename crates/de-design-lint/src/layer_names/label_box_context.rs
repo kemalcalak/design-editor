@@ -27,14 +27,15 @@ use crate::node_util::{
 
 use super::facts::Facts;
 use super::label_box::{authored_kind, is_tappable, shows_action_icon};
-use super::label_box_rows::{fills_across, is_row, label_of, verb_led};
+use super::label_box_rows::{fills_across, is_row, label_of, Column};
 use super::money::is_price;
-use super::placeholder::slot_thing;
+use super::placeholder::{names_patrons, slot_thing};
 use super::rules::{font_size, layout, text_content, Place, Role};
+use super::verbs::calls_to_action;
 
-/// A table holds words or figures somewhere; a grid of single characters
-/// is a keypad.
-const CELL_LABEL_MIN_CHARS: usize = 2;
+/// A table of this many rows with the same columns is a table whatever
+/// its cells hold.
+const TABLE_MIN_ROWS: usize = 3;
 /// Letter spacing of at least this many font sizes reads as tracked.
 const TRACKED_EM: f64 = 0.05;
 /// A tag in tracked capitals names something in two or more words
@@ -58,7 +59,7 @@ pub(crate) fn in_place(role: Role, node: &PenNode, place: Place<'_>, facts: &Fac
     let Some(text) = label_of(node).and_then(text_content) else {
         return role;
     };
-    if verb_led(&text) {
+    if calls_to_action(&text) {
         return role;
     }
     if is_table_cell(place, facts) {
@@ -70,7 +71,7 @@ pub(crate) fn in_place(role: Role, node: &PenNode, place: Place<'_>, facts: &Fac
         }
     }
     let row = place.parent.map(|row| facts.row(row));
-    if row.as_ref().is_some_and(|row| row.slots && !row.acts) {
+    if row.as_ref().is_some_and(|row| row.slots) && patron_run(place) {
         return Role::Slot(None);
     }
     // Another button or badge in the row makes this one part of a group.
@@ -82,23 +83,51 @@ pub(crate) fn in_place(role: Role, node: &PenNode, place: Place<'_>, facts: &Fac
     role
 }
 
-/// A box in a table row: its row's boxes are square, unstroked containers
-/// whose columns repeat in another row of the same table, none of them
-/// acts, and some label is longer than a key's.
+/// A box in a table row. Its row's boxes are square, unstroked containers
+/// whose columns repeat in another row of the same table, and none of the
+/// row's labels is a single character (a keypad, a calculator). Equal
+/// `fill` columns alone also make a grid of tiles (a share sheet, a size
+/// picker), so the table needs one more sign: a px column, three or more
+/// such rows, or a value in some cell (`1.62 kg`, `✓`). A box that acts
+/// (a verb, a tap) was kept a button before this, so it never cancels its
+/// neighbours.
 fn is_table_cell(place: Place<'_>, facts: &Facts) -> bool {
     let (Some(row), Some(table)) = (place.parent, place.grandparent) else {
         return false;
     };
-    let facts_of_row = facts.row(row);
-    let Some(columns) = facts_of_row.columns.as_ref() else {
+    let row_facts = facts.row(row);
+    let Some(columns) = row_facts.columns.as_ref() else {
         return false;
     };
-    !facts_of_row.acts
-        && facts_of_row.longest_label >= CELL_LABEL_MIN_CHARS
-        && facts
-            .table(table)
-            .get(columns)
-            .is_some_and(|rows| *rows >= 2)
+    if row_facts.keys {
+        return false;
+    }
+    let Some(run) = facts.table(table).get(columns).copied() else {
+        return false;
+    };
+    let px = columns.iter().any(|column| matches!(column, Column::Px(_)));
+    run.rows >= 2 && (px || run.rows >= TABLE_MIN_ROWS || run.values)
+}
+
+/// A run of slots: every label asks for content, or the text right before
+/// the row introduces patrons (`SPECIAL THANKS` above sponsor names).
+fn patron_run(place: Place<'_>) -> bool {
+    let Some(row) = place.parent else {
+        return false;
+    };
+    let placeholders = children(row)
+        .iter()
+        .filter_map(|kid| label_of(kid).and_then(text_content))
+        .all(|label| slot_thing(&label).is_some());
+    placeholders
+        || place.grandparent.is_some_and(|holder| {
+            let kids = children(holder);
+            kids.iter()
+                .position(|kid| std::ptr::eq(kid, row))
+                .and_then(|at| at.checked_sub(1))
+                .and_then(|before| text_content(&kids[before]))
+                .is_some_and(|heading| names_patrons(&heading))
+        })
 }
 
 /// A stroked box whose label sits at its start: a text field, which keeps

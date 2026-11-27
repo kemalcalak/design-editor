@@ -231,7 +231,12 @@ fn assert_distinct_siblings(label: &str, roots: &[PenNode], proposed: &HashMap<S
     fn check(label: &str, nodes: &[PenNode], proposed: &HashMap<String, String>) {
         let mut seen = HashSet::new();
         for node in nodes {
-            if let Some(name) = proposed.get(node_id(node)) {
+            // Identical slots for the same content share their name (#453).
+            let placeholder = children(node)
+                .iter()
+                .filter_map(text_content)
+                .any(|text| super::placeholder::slot_thing(&text).is_some());
+            if let Some(name) = proposed.get(node_id(node)).filter(|_| !placeholder) {
                 assert!(
                     seen.insert(name.to_lowercase()),
                     "{label}: two siblings proposed as {name:?}"

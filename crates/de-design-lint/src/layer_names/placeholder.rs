@@ -162,7 +162,7 @@ const MAX_UNSPACED_CHARS: usize = 16;
 
 /// Scripts written without spaces between words (Han, Kana, Hangul
 /// particles, Thai), where a word is found inside the run.
-fn unspaced(word: &str) -> bool {
+pub(super) fn unspaced(word: &str) -> bool {
     word.chars().any(|c| {
         matches!(c,
             '\u{3040}'..='\u{30FF}' // kana
@@ -173,7 +173,7 @@ fn unspaced(word: &str) -> bool {
 }
 
 /// The label's words, lowercased, split at anything but letters and digits.
-fn words(label: &str) -> Vec<String> {
+pub(super) fn spaced_words(label: &str) -> Vec<String> {
     label
         .to_lowercase()
         .split(|c: char| !c.is_alphanumeric() && !is_mark(c))
@@ -190,7 +190,7 @@ fn is_mark(c: char) -> bool {
 
 /// Whether `word` (one or more words) is in `label`: inside the run for an
 /// unspaced script, else as whole words.
-fn says(lower: &str, spaced: &str, word: &str) -> bool {
+pub(super) fn says(lower: &str, spaced: &str, word: &str) -> bool {
     if unspaced(word) {
         lower.contains(word)
     } else {
@@ -202,7 +202,7 @@ fn says(lower: &str, spaced: &str, word: &str) -> bool {
 /// (`Logo` for `Drop logo`), or `None` when the label is no placeholder.
 pub(crate) fn slot_thing(label: &str) -> Option<String> {
     let lower = label.to_lowercase();
-    let tokens = words(label);
+    let tokens = spaced_words(label);
     let long = if unspaced(&lower) {
         lower.chars().filter(|c| !c.is_whitespace()).count() > MAX_UNSPACED_CHARS
     } else {
@@ -219,6 +219,108 @@ pub(crate) fn slot_thing(label: &str) -> Option<String> {
     let mut chars = thing.chars();
     let first = chars.next()?;
     Some(first.to_uppercase().chain(chars).collect())
+}
+
+/// Words that introduce the people or brands a row of slots holds
+/// (`SPECIAL THANKS`, `Our sponsors`, `Trusted by`), in the 15 languages.
+const PATRONS: &[&str] = &[
+    // en
+    "sponsor",
+    "sponsors",
+    "sponsored",
+    "partner",
+    "partners",
+    "thanks",
+    "supported",
+    "backed",
+    "trusted",
+    "presented",
+    "clients",
+    "customers",
+    "featured",
+    "brands",
+    "investors", // de
+    "sponsoren",
+    "dank",
+    "unterstützt",
+    "präsentiert",
+    "kunden",
+    "marken", // fr
+    "partenaires",
+    "merci",
+    "soutenu",
+    "présenté",
+    "marques", // es
+    "patrocinadores",
+    "socios",
+    "gracias",
+    "apoyado",
+    "presentado",
+    "clientes",
+    "marcas",
+    "aliados", // pt
+    "parceiros",
+    "obrigado",
+    "apoio",
+    "apresentado", // ru
+    "спонсоры",
+    "партнёры",
+    "партнеры",
+    "спасибо",
+    "поддержке",
+    "клиенты",
+    "бренды", // hi
+    "प्रायोजक",
+    "साझेदार",
+    "धन्यवाद",
+    "ग्राहक", // tr
+    "sponsorlar",
+    "partnerler",
+    "ortakları",
+    "teşekkürler",
+    "destekleyenler",
+    "müşteriler",
+    "markalar", // vi
+    "đối tác",
+    "cảm ơn",
+    "khách hàng",
+    "thương hiệu", // id
+    "mitra",
+    "terima kasih",
+    "didukung",
+    "klien",
+    "merek", // zh-CN / zh-TW
+    "赞助",
+    "合作伙伴",
+    "鸣谢",
+    "感谢",
+    "客户",
+    "品牌",
+    "贊助",
+    "合作夥伴",
+    "感謝",
+    "客戶", // ja
+    "スポンサー",
+    "協賛",
+    "パートナー",
+    "取引先", // ko
+    "스폰서",
+    "후원",
+    "파트너",
+    "감사",
+    "고객사", // th
+    "ผู้สนับสนุน",
+    "พันธมิตร",
+    "ขอบคุณ",
+    "ลูกค้า",
+];
+
+/// Whether `heading` introduces patrons: the sponsors, partners or clients
+/// a row of slots below it holds.
+pub(crate) fn names_patrons(heading: &str) -> bool {
+    let lower = heading.to_lowercase();
+    let spaced = format!(" {} ", spaced_words(heading).join(" "));
+    PATRONS.iter().any(|word| says(&lower, &spaced, word))
 }
 
 #[cfg(test)]

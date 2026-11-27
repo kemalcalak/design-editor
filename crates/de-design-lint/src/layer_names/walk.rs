@@ -86,6 +86,11 @@ impl Walk<'_> {
                     .or_else(|| infer_role(node, run.place(index), &self.facts))
             })
             .collect();
+        // Slots for the same content (`Drop logo` ×4) are alike by design.
+        let shared_slot = |role: &Option<Role>| {
+            matches!(role, Some(Role::Slot(Some(_))))
+                && roles.iter().filter(|other| *other == role).count() > 1
+        };
         let mut names: Vec<SiblingName<'n>> = run
             .nodes
             .iter()
@@ -106,6 +111,7 @@ impl Walk<'_> {
                     proposed,
                     renamed: self.in_target(run, node),
                     current,
+                    shared: shared_slot(role),
                 }
             })
             .collect();

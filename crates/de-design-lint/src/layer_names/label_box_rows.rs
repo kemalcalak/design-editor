@@ -15,8 +15,8 @@ use crate::node_util::{
 
 use super::facts::Facts;
 use super::label_box::{authored_kind, is_tappable, shows_action_icon};
-use super::placeholder::slot_thing;
 use super::rules::{font_size, font_weight, layout, text_content};
+use super::verbs::calls_to_action;
 
 /// A run of identical boxes this long, filling a row, may be slots.
 const SLOT_RUN_MIN: usize = 3;
@@ -24,79 +24,6 @@ const SLOT_RUN_MIN: usize = 3;
 const SQUARE_RADIUS: f64 = 0.5;
 /// A box at most this thin is a rule between cells, not a cell.
 const RULE_MAX: f64 = 2.0;
-
-/// English verbs that open a pressed label (`Copy`, `Get tickets`, `Choose
-/// file`). A box whose label starts with one is an action, whatever its
-/// neighbours look like.
-const VERBS: &[&str] = &[
-    "accept",
-    "add",
-    "apply",
-    "attach",
-    "back",
-    "book",
-    "browse",
-    "buy",
-    "call",
-    "cancel",
-    "choose",
-    "close",
-    "confirm",
-    "connect",
-    "contact",
-    "continue",
-    "copy",
-    "create",
-    "decline",
-    "delete",
-    "discover",
-    "donate",
-    "download",
-    "edit",
-    "explore",
-    "export",
-    "follow",
-    "get",
-    "go",
-    "import",
-    "install",
-    "join",
-    "learn",
-    "log",
-    "login",
-    "next",
-    "open",
-    "order",
-    "pay",
-    "pick",
-    "play",
-    "previous",
-    "print",
-    "register",
-    "remove",
-    "reply",
-    "reserve",
-    "retry",
-    "rsvp",
-    "save",
-    "search",
-    "see",
-    "select",
-    "send",
-    "share",
-    "shop",
-    "show",
-    "sign",
-    "start",
-    "submit",
-    "subscribe",
-    "try",
-    "upgrade",
-    "upload",
-    "view",
-    "visit",
-    "watch",
-];
 
 /// How a cell is sized across, as a table column: a px width (by its bits)
 /// or `fill_container`.
@@ -106,8 +33,18 @@ pub(crate) enum Column {
     Fill,
 }
 
-/// How many rows of a table have each set of columns.
-pub(crate) type TableColumns = HashMap<Vec<Column>, usize>;
+/// The rows of a table that share one set of columns.
+#[derive(Default, Clone, Copy)]
+pub(crate) struct ColumnRun {
+    /// How many rows have these columns.
+    pub rows: usize,
+    /// Some cell of those rows holds a value (a number, a unit, a price, a
+    /// tick).
+    pub values: bool,
+}
+
+/// The rows of a table by their set of columns.
+pub(crate) type TableColumns = HashMap<Vec<Column>, ColumnRun>;
 
 /// What a row of boxes is.
 #[derive(Default)]
@@ -115,12 +52,13 @@ pub(crate) struct RowFacts {
     /// The row's columns when every box is a square, unstroked container
     /// sized in px or `fill_container`: the shape of a table row.
     pub columns: Option<Vec<Column>>,
-    /// The longest label among the row's boxes, in characters.
-    pub longest_label: usize,
-    /// Some box is wired to a tap, given a button role or shows an action
-    /// icon or a verb: the row is a group of actions.
-    pub acts: bool,
-    /// The row is a run of identical slot boxes (see [`slot_run`]).
+    /// Some box's label is a single character (`%`, `7`): a keypad or a
+    /// calculator, never a table.
+    pub keys: bool,
+    /// Some box's label holds a value (see [`is_value`]).
+    pub values: bool,
+    /// The row is a run of identical, iconless boxes none of which acts
+    /// (see [`slot_run`]): slots when what precedes the row says so.
     pub slots: bool,
     /// How many of the row's layers read as buttons or badges on their own.
     pub label_boxes: usize,
@@ -139,12 +77,12 @@ pub(crate) fn label_of(node: &PenNode) -> Option<&PenNode> {
     texts.next().is_none().then_some(label)
 }
 
-/// Whether a label opens with an English action verb (`Get tickets`).
-pub(crate) fn verb_led(label: &str) -> bool {
+/// A value a table cell holds: a number, a unit or a price (`1.62 kg`,
+/// `11 hrs`, `$9`), or a tick / cross mark.
+fn is_value(label: &str) -> bool {
     label
-        .split(|c: char| !c.is_alphanumeric())
-        .find(|word| !word.is_empty())
-        .is_some_and(|word| VERBS.contains(&word.to_lowercase().as_str()))
+        .chars()
+        .any(|c| c.is_ascii_digit() || matches!(c, '✓' | '✔' | '✗' | '✕' | '✘' | '—'))
 }
 
 fn is_square(node: &PenNode) -> bool {
@@ -190,14 +128,7 @@ fn acts(node: &PenNode) -> bool {
     is_tappable(node)
         || shows_action_icon(node)
         || authored_kind(node).is_some_and(|kind| kind == super::label_box::LabelBox::Button)
-        || label_text(node).is_some_and(|label| verb_led(&label))
-}
-
-/// A label set as a wordmark: capitals, at least three letters (`SOUNDX`,
-/// `NORTH SHORE`).
-fn wordmark(label: &str) -> bool {
-    label.chars().filter(|c| c.is_alphabetic()).count() >= 3
-        && !label.chars().any(char::is_lowercase)
+        || label_text(node).is_some_and(|label| calls_to_action(&label))
 }
 
 /// The look of a box and its label, which every slot of a run shares: a
@@ -216,8 +147,10 @@ fn same_look(a: &PenNode, b: &PenNode) -> bool {
 }
 
 /// A run of at least three identical boxes filling a row, none of them an
-/// action and none showing an icon (a social sign-in row shows logos), each
-/// holding content a slot holds: a placeholder or a wordmark (sponsor slots).
+/// action and none showing an icon (a social sign-in row shows logos).
+/// Tabs and footer links share that shape (`DAY | WEEK | MONTH`), so the
+/// run is only slots when its labels are placeholders or what precedes
+/// the row names its patrons (`label_box_context::patron_run`).
 fn slot_run(boxes: &[&PenNode]) -> bool {
     let Some(first) = boxes.first() else {
         return false;
@@ -229,8 +162,7 @@ fn slot_run(boxes: &[&PenNode]) -> bool {
                 && authored_kind(kid).is_none()
                 && children(kid).len() == 1
                 && same_look(kid, first)
-                && label_text(kid)
-                    .is_some_and(|label| wordmark(&label) || slot_thing(&label).is_some())
+                && label_text(kid).is_some()
         })
 }
 
@@ -243,6 +175,7 @@ pub(crate) fn row_facts(row: &PenNode, facts: &Facts) -> RowFacts {
         .iter()
         .filter(|kid| is_node_visible(kid) && !is_rule(kid))
         .collect();
+    let labels: Vec<String> = boxes.iter().filter_map(|kid| label_text(kid)).collect();
     let cells = boxes.len() >= 2
         && boxes.iter().all(|kid| {
             node_kind(kid).is_container()
@@ -254,13 +187,8 @@ pub(crate) fn row_facts(row: &PenNode, facts: &Facts) -> RowFacts {
         columns: cells
             .then(|| boxes.iter().map(|kid| column(kid)).collect())
             .flatten(),
-        longest_label: boxes
-            .iter()
-            .filter_map(|kid| label_text(kid))
-            .map(|label| label.chars().count())
-            .max()
-            .unwrap_or(0),
-        acts: boxes.iter().any(|kid| acts(kid)),
+        keys: labels.iter().any(|label| label.chars().count() < 2),
+        values: labels.iter().any(|label| is_value(label)),
         slots: slot_run(&boxes),
         label_boxes: children(row)
             .iter()
@@ -269,13 +197,16 @@ pub(crate) fn row_facts(row: &PenNode, facts: &Facts) -> RowFacts {
     }
 }
 
-/// How many rows of `table` have each set of columns.
+/// The rows of `table` by their set of columns.
 pub(crate) fn table_columns(table: &PenNode, facts: &Facts) -> TableColumns {
-    let mut counts = HashMap::new();
+    let mut runs: TableColumns = HashMap::new();
     for row in children(table) {
-        if let Some(columns) = facts.row(row).columns.clone() {
-            *counts.entry(columns).or_insert(0) += 1;
+        let row = facts.row(row);
+        if let Some(columns) = row.columns.clone() {
+            let run = runs.entry(columns).or_default();
+            run.rows += 1;
+            run.values |= row.values;
         }
     }
-    counts
+    runs
 }

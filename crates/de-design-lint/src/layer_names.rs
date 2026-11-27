@@ -21,6 +21,7 @@ mod rules;
 mod tell_apart;
 mod text_roles;
 mod unique;
+mod verbs;
 mod walk;
 
 use std::collections::HashSet;

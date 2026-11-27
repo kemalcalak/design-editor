@@ -5,7 +5,8 @@
 //! every one differs (`Shape (Blue)`), else by where they sit among each
 //! other (`Shape (Left)`, see `tell_apart`). A lone one keeps the plain
 //! name when it is still free; past that, one keeps the plain name and the
-//! rest get no proposal. Nothing is ever numbered.
+//! rest get no proposal. Nothing is ever numbered. Identical slots for the
+//! same content (`Logo slot` in a logo wall) all keep the shared name.
 
 use std::collections::HashSet;
 
@@ -31,6 +32,9 @@ pub(crate) struct SiblingName<'a> {
     pub renamed: bool,
     /// The layer's name today.
     pub current: Option<String>,
+    /// One of a set of identical slots for the same content (`Logo slot`
+    /// ×4): they share the plain name, since nothing about them differs.
+    pub shared: bool,
 }
 
 impl SiblingName<'_> {
@@ -141,6 +145,10 @@ pub(crate) fn make_distinct(
         let Some(proposed) = sibling.proposed.as_deref().filter(|_| sibling.renamed) else {
             continue;
         };
+        if sibling.shared {
+            taken.insert(key(proposed));
+            continue;
+        }
         let name_key = key(proposed);
         match groups.iter_mut().find(|(k, _)| *k == name_key) {
             Some((_, members)) => members.push(index),

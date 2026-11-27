@@ -648,7 +648,8 @@ fn template_names_follow_what_their_authors_called_them() {
         "cells and slots named as buttons: {misnamed_places:#?}"
     );
     assert!(cells >= 29, "only {cells} table cells");
-    assert!(slots >= 7, "only {slots} slots");
+    // Five sponsor slots and eight `Drop logo` slots, which share their name.
+    assert!(slots >= 13, "only {slots} slots");
     navigation.sort();
     assert_eq!(
         navigation,
