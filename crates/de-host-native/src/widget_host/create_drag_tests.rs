@@ -79,7 +79,11 @@ fn an_ellipse_with_shift_is_a_circle_and_a_frame_a_square() {
         host.set_modifier_shift(true);
         let id = begin(&mut host, tool, Point2D::new(100.0, 100.0));
         move_to(&mut host, Point2D::new(80.0, 150.0));
-        assert_eq!(scene_box(&mut host, &id), (50.0, 100.0, 50.0, 50.0), "{tool:?}");
+        assert_eq!(
+            scene_box(&mut host, &id),
+            (50.0, 100.0, 50.0, 50.0),
+            "{tool:?}"
+        );
     }
 }
 
