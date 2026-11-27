@@ -42,7 +42,7 @@ fn a_history_over_budget_drops_its_oldest_steps_down_to_the_minimum() {
     assert_eq!(state.history.past.len(), 30);
     // Every step copied the 200-row board; a 1-byte budget keeps the floor.
     let dropped = state.trim_history_to_budget(1, 5);
-    assert_eq!(dropped, 25);
+    assert_eq!(dropped.len(), 25, "the dropped steps come back to be freed");
     assert_eq!(state.history.past.len(), 5);
     // The kept steps still undo to the names they recorded.
     for step in (24..29).rev() {
@@ -61,10 +61,56 @@ fn a_history_within_budget_is_left_alone() {
     for step in 0..30 {
         rename(&mut state, "small", &format!("Step {step}"));
     }
-    assert_eq!(state.trim_history_to_budget(HISTORY_BYTE_BUDGET, 5), 0);
+    assert!(state
+        .trim_history_to_budget(HISTORY_BYTE_BUDGET, 5)
+        .is_empty());
     assert_eq!(state.history.past.len(), 30);
     // At or under the floor nothing is walked or dropped.
-    assert_eq!(state.trim_history_to_budget(0, 30), 0);
+    assert!(state.trim_history_to_budget(0, 30).is_empty());
+}
+
+/// The steps share every board they did not change, and the budget counts
+/// a shared board once: 30 renames of the small board hold one copy of the
+/// 200-row board (~0.6 MB) plus 30 small ones, well under 1 MB beyond the
+/// document, where counting the big board per step would be ~18 MB.
+#[test]
+fn a_board_every_step_shares_is_counted_once() {
+    let mut state = state(200);
+    let big = crate::memory_report::approx_node_bytes_fast(
+        &state.doc.pages.as_ref().expect("pages")[0].children[0],
+    );
+    assert!(
+        30 * big > 8 << 20,
+        "a naive per-step count would be over budget"
+    );
+    for step in 0..30 {
+        rename(&mut state, "small", &format!("Step {step}"));
+    }
+    assert!(
+        state.trim_history_to_budget(1 << 20, 5).is_empty(),
+        "shared, the history is under 1 MB beyond the document"
+    );
+    assert_eq!(state.history.past.len(), 30);
+    // The same budget does bite when every step copies the big board.
+    for step in 0..30 {
+        rename(&mut state, "r0", &format!("Copy {step}"));
+    }
+    assert!(!state.trim_history_to_budget(1 << 20, 5).is_empty());
+}
+
+#[test]
+fn a_write_host_trims_every_tenth_write() {
+    let mut state = state(200);
+    for step in 0..30 {
+        rename(&mut state, "r0", &format!("Step {step}"));
+    }
+    assert!(
+        state.trim_history_after_write(7).is_empty(),
+        "not a tenth write"
+    );
+    assert_eq!(state.history.past.len(), 30);
+    // The default budget is far above this small document.
+    assert!(state.trim_history_after_write(10).is_empty());
 }
 
 #[test]

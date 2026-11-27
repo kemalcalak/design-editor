@@ -162,6 +162,8 @@ mod large_doc_frame_tests;
 mod large_doc_memory_bench_tests;
 #[cfg(test)]
 mod layer_menu_width_tests;
+#[cfg(test)]
+mod memory_idle_tests;
 mod memory_report;
 mod missing_fonts_dispatch;
 mod mode_transition_host;

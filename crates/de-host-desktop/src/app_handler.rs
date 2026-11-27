@@ -27,10 +27,13 @@ use winit::window::{Window, WindowId};
 impl ApplicationHandler<DesktopEvent> for DesktopApp {
     fn new_events(&mut self, event_loop: &ActiveEventLoop, cause: StartCause) {
         self.refresh_host_clock();
-        // After a quiet spell, cut the undo history to its byte budget and
-        // hand freed pages back to the system (#456). Runs once per spell.
-        if self.host.run_idle_memory_trim().is_some() {
-            crate::heap_pressure::schedule_relief("idle memory trim");
+        // After a quiet spell, cut the undo history to its byte budget, free
+        // the dropped steps off this thread and hand freed pages back to the
+        // system (#456). Once per spell, never while an agent works.
+        if self.agent_work_running() {
+            self.host.note_memory_activity();
+        } else if let Some(report) = self.host.run_idle_memory_trim() {
+            crate::heap_pressure::release_then_relieve(report.released, "idle memory trim");
         }
         // The Settings memory row and the debug memory tool read what this
         // publishes; never measured from paint (#456).

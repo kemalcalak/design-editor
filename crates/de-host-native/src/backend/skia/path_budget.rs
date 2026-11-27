@@ -13,9 +13,23 @@ impl NativeBackend {
         )
     }
 
-    /// Drop the oldest rasters until the cache fits both `max_entries` and
-    /// `byte_budget`; the newest raster always stays, so the frame that just
-    /// made it can draw it.
+    /// A cache hit: `key` becomes the most recently used raster, so the
+    /// eviction below drops the least recently used first (at most 256
+    /// entries to scan).
+    pub(in crate::backend::skia) fn touch_svg_raster(&mut self, key: SvgRasterKey) {
+        let order = &mut self.svg_raster_cache_order;
+        if order.back() == Some(&key) {
+            return;
+        }
+        if let Some(at) = order.iter().position(|candidate| *candidate == key) {
+            order.remove(at);
+            order.push_back(key);
+        }
+    }
+
+    /// Drop the least recently used rasters until the cache fits both
+    /// `max_entries` and `byte_budget`; the newest raster always stays, so
+    /// the frame that just made it can draw it.
     pub(in crate::backend::skia) fn evict_svg_rasters_over(
         &mut self,
         max_entries: usize,
@@ -109,5 +123,23 @@ mod tests {
         }
         backend.evict_svg_rasters_over(3, usize::MAX);
         assert_eq!(backend.svg_raster_cache_usage().0, 3);
+    }
+
+    #[test]
+    fn a_hit_keeps_a_raster_ahead_of_newer_ones() {
+        let mut backend = NativeBackend::with_dpi(1.0);
+        for n in 0..3 {
+            backend.svg_raster_cache.insert(key(n), raster(1));
+            backend.svg_raster_cache_order.push_back(key(n));
+        }
+        // The oldest is drawn again, so the next oldest goes first.
+        backend.touch_svg_raster(key(0));
+        backend.evict_svg_rasters_over(2, usize::MAX);
+        assert!(backend.svg_raster_cache.contains_key(&key(0)), "used last");
+        assert!(
+            !backend.svg_raster_cache.contains_key(&key(1)),
+            "least recently used"
+        );
+        assert!(backend.svg_raster_cache.contains_key(&key(2)));
     }
 }

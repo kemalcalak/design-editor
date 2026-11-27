@@ -515,7 +515,7 @@ Measure before and after any change that touches document copies or caches; the 
 
 Run both on macOS locally and on Windows by hand (same commands; `process_memory` reads the working set and private commit there). `de_editor_core::memory_report` is the one report type: `CacheUsage { id, bytes, entries, budget, exact }` lines, filled by `WidgetHostNative::memory_report(&backend)` (undo history and chat estimates from core, layout scene, pan cache, slide thumbnails, text layouts, data-URL bytes, browser pages, and `NativeBackend::report_memory`: decoded rasters, thumbnails, SVG paths and rasters, shader textures, compiled shaders). It walks the history once per unique shared node, so build it on demand, never per frame. `de_editor_core::process_memory::current()` (re-exported as `de_host_services::process_memory`) reads RSS / footprint (macOS `proc_pid_rusage` phys footprint, Windows `K32GetProcessMemoryInfo` working set / private commit, Linux `/proc`); both benchmarks print it, so their tables compare.
 
-Budgets (every long-lived cache has one; a new cache needs one too, plus a line in the memory report):
+Budgets. Every cache in this table evicts at a bound; a new cache needs one too, plus a line in the memory report. Still without a byte budget (each reports its bytes): the compiled-shader cache, chat transcripts, the pan bitmap cache (screen-sized surfaces), text layouts and slide thumbnails.
 
 | Cache | Bound | Where |
 |---|---|---|
@@ -523,14 +523,14 @@ Budgets (every long-lived cache has one; a new cache needs one too, plus a line 
 | Encoded image bytes (data URLs) | 256 MB native / 96 MB wasm, 4,096 entries, LRU | `canvas_viewport_image` `DATA_URL_CACHE_BYTE_BUDGET` |
 | Blur-up thumbnails | 4 MB, 4,096 entries, LRU | `skia/image.rs` `THUMB_CACHE_BYTE_BUDGET` |
 | Parsed SVG paths | 64 MB of `d`, 65,536 entries | `skia/path.rs` |
-| Rasterized SVG paths | 128 MB, 256 entries, oldest first (the newest always stays) | `skia/path.rs` `SVG_RASTER_CACHE_BYTE_BUDGET`, `path_budget.rs` |
-| Undo history | 100 steps; after 30 s idle, cut to 512 MB beyond one copy of the document, never below 20 steps | `history::HISTORY_CAP`, `history_budget.rs`, `memory_idle.rs` |
+| Rasterized SVG paths | 128 MB, 256 entries, least recently used first (a hit refreshes; the newest always stays) | `skia/path.rs` `SVG_RASTER_CACHE_BYTE_BUDGET`, `path_budget.rs` |
+| Undo history | 100 steps; cut to 512 MB beyond one copy of the document, never below 20 steps: on the desktop after 30 s idle, in the file-backed `--mcp` server every 10th write (the web host is gone, #401) | `history::HISTORY_CAP`, `history_budget.rs`, `memory_idle.rs` |
 | Layout scene | the active page only (rebuilt on a page switch) | `scene_state.rs` |
 | Live MCP snapshot anchor | dropped 30 s after the last request | `mcp_live/snapshot_anchor.rs` |
 
 Where a person sees it (#456): Settings ▸ System's Memory row reads `de_editor_core::memory_reading`, one process-wide reading the desktop publishes from `new_events` (`de-host-desktop/src/memory_refresh.rs`), never from paint: the footprint and `WidgetHostNative::cache_report` (every line except the history, none of which walks the document) every 2 s while the row is on screen (its own `WaitUntil`), else at most every 15 s on wakes that happen anyway; the undo history's estimate on a worker thread from `history_docs` (`Arc` clones, `memory_report::history_usage_of`), at most every 10 s and only while the row is on screen. The debug MCP tool `debug_memory_report` (`de-mcp/src/debug_memory.rs`, `DESIGN_EDITOR_DEBUG_TOOLS=1`) returns the footprint, the history walked on the connection thread from its request snapshot, and the published cache lines (with budgets; null on a server without a canvas).
 
-Idle trim: `memory_idle::IdleTrim` notes activity on every `mark_dirty`; the desktop loop wakes once per quiet spell (`memory_idle_deadline_ms`, 30 s after the last change), runs `run_idle_memory_trim` in `new_events` and then asks the allocator to return free pages (`heap_pressure::schedule_relief`, macOS). Nothing here runs while a person edits, pans or undoes.
+Idle trim: `memory_idle::IdleTrim` notes activity on every `mark_dirty` and every pan or zoom tick (`note_viewport_gesture`, `note_viewport_zoom_gesture`), and the desktop notes it on every wake while a chat, a design run or a sub-agent works (`agent_work_running`). The loop wakes once per quiet spell (`memory_idle_deadline_ms`, 30 s after the last use) and runs `run_idle_memory_trim` in `new_events`: the walk runs there (21 ms on #412's document), the dropped steps go to the relief worker, which frees them and then asks the allocator to return free pages (`heap_pressure::release_then_relieve`; macOS `malloc_zone_pressure_relief`, Windows `HeapCompact`). The history estimate counts shared top-level nodes once by node count and leaves out the component library, the per-step skeleton (variables, themes) and large strings inside nodes (`history_budget.rs` lists them).
 
 Baseline (v0.6.3, Apple-silicon Mac): a `PenNode` is 2,792 bytes inline, so the document heap is ~550 MB; every live read call materializes the whole document (~100%), and tools that clone the state again reach 200–400% (`snapshot_layout` lays out every page: 6.8 s); the first history step and the first live call's anchor each hold a full copy.
 

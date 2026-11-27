@@ -210,6 +210,11 @@ fn apply_file_write(
     // No frame loop here: a script node the write made stale runs now,
     // so the saved file holds its children (#19).
     de_mcp::script_node::regenerate_stale_scripts(state);
+    // The undo history's byte budget (#456): no idle loop or UI thread
+    // here, so every tenth write trims and frees inline.
+    static WRITES: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(1);
+    let _ =
+        state.trim_history_after_write(WRITES.fetch_add(1, std::sync::atomic::Ordering::Relaxed));
     if let Err(e) = save_editor_state(state, path) {
         return FileWrite::SaveFailed(e);
     }

@@ -337,8 +337,9 @@ fn undo_history_memory() {
             );
         }
     }
-    // What the idle trim costs on the UI thread at this size (#456): a
-    // walk of the history and the document, run once per quiet spell.
+    // What the idle trim costs at this size (#456), on the live state: the
+    // walk (UI thread, once per quiet spell) and the free of the dropped
+    // steps (the desktop's relief worker) apart.
     for (label, budget) in [
         (
             "default budget",
@@ -346,16 +347,7 @@ fn undo_history_memory() {
         ),
         ("1-byte budget", 1),
     ] {
-        let mut trimmed = live.clone();
-        let base = counting_alloc::live();
-        let started = Instant::now();
-        let dropped = trimmed
-            .trim_history_to_budget(budget, de_editor_core::history_budget::HISTORY_MIN_STEPS);
-        println!(
-            "idle trim ({label}): {:.1} ms, dropped {dropped} steps, freed {:.0} MB",
-            started.elapsed().as_secs_f64() * 1e3,
-            mb(base.saturating_sub(counting_alloc::live()) as f64)
-        );
+        print_trim(&mut live, label, budget);
     }
     let undo_started = Instant::now();
     let mut undone = 0;
@@ -366,6 +358,65 @@ fn undo_history_memory() {
         "undo all {undone}: {:.1} ms; heap +{:.0} MB",
         undo_started.elapsed().as_secs_f64() * 1e3,
         mb(counting_alloc::live().saturating_sub(base) as f64)
+    );
+}
+
+/// Trim `live` to `budget` and print the walk and the free apart.
+fn print_trim(live: &mut EditorState, label: &str, budget: u64) {
+    let started = Instant::now();
+    let dropped =
+        live.trim_history_to_budget(budget, de_editor_core::history_budget::HISTORY_MIN_STEPS);
+    let walk = started.elapsed();
+    let steps = dropped.len();
+    let base = counting_alloc::live();
+    let freeing = Instant::now();
+    drop(dropped);
+    println!(
+        "idle trim ({label}): walk {:.1} ms (UI thread), dropped {steps} steps, free {:.1} ms (off the UI thread), freed {:.0} MB",
+        walk.as_secs_f64() * 1e3,
+        freeing.elapsed().as_secs_f64() * 1e3,
+        mb(base.saturating_sub(counting_alloc::live()) as f64)
+    );
+}
+
+/// The case the byte budget is for: every edit lands in one large board, so
+/// every undo step keeps its own copy of it (#412's boards, 1,000 rows:
+/// ~3,000 nodes, `DE_MEM_BIG_ROWS`).
+#[test]
+#[ignore = "measurement; run by hand with --release --nocapture --test-threads=1"]
+fn history_trim_large_board() {
+    let fixture = Fixture {
+        pages: 1,
+        boards: 1,
+        rows: large_doc::env_usize("DE_MEM_BIG_ROWS", 1_000),
+    };
+    let heap_start = counting_alloc::live();
+    let mut live = fixture.build_state();
+    let doc_heap = counting_alloc::live().saturating_sub(heap_start);
+    let steps = de_editor_core::history::HISTORY_CAP;
+    for i in 0..steps {
+        live.commit_history();
+        assert!(live.apply(de_editor_core::EditorCommand::SetNodeName {
+            node_id: de_editor_core::NodeId::new(fixture.row_id(0, 0, i % fixture.rows)),
+            name: format!("Row edited {i}"),
+        }));
+    }
+    println!(
+        "one board of {} nodes, document heap {:.0} MB; {} steps hold +{:.0} MB",
+        fixture.node_count(),
+        mb(doc_heap as f64),
+        live.history.past.len(),
+        mb(counting_alloc::live().saturating_sub(heap_start + doc_heap) as f64)
+    );
+    print_trim(
+        &mut live,
+        "default budget",
+        de_editor_core::history_budget::HISTORY_BYTE_BUDGET,
+    );
+    println!(
+        "after the trim: {} steps, +{:.0} MB over the document",
+        live.history.past.len(),
+        mb(counting_alloc::live().saturating_sub(heap_start + doc_heap) as f64)
     );
 }
 
