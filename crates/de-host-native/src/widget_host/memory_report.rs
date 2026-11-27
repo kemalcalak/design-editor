@@ -32,6 +32,22 @@ impl WidgetHostNative {
         report
     }
 
+    /// When the host should wake for the idle memory trim (#456): once per
+    /// quiet spell, [`de_editor_core::memory_idle::IDLE_TRIM_AFTER_MS`] after
+    /// the last change. Separate from `next_animation_deadline_ms`, which
+    /// means "something animates".
+    pub fn memory_idle_deadline_ms(&self) -> Option<u64> {
+        self.memory_idle.deadline_ms()
+    }
+
+    /// Run the idle memory trim when it is due: the undo history is cut to
+    /// its byte budget. `Some` when it ran, so the host can ask the
+    /// allocator to give freed pages back.
+    pub fn run_idle_memory_trim(&mut self) -> Option<de_editor_core::memory_idle::IdleTrimReport> {
+        self.memory_idle
+            .run_if_due(&mut self.editor_state, self.now_ms)
+    }
+
     /// The canvas's layout-resolved scene (the active page's render tree),
     /// estimated from its node count.
     fn layout_scene_usage(&self) -> CacheUsage {

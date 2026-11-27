@@ -150,7 +150,7 @@ impl NativeBackend {
             "svg_rasters",
             svg_raster_bytes as u64,
             svg_rasters as u64,
-            None,
+            Some(path::SVG_RASTER_CACHE_BYTE_BUDGET as u64),
         ));
         let texture_bytes: usize = self
             .frame_textures

@@ -515,6 +515,21 @@ Measure before and after any change that touches document copies or caches; the 
 
 Run both on macOS locally and on Windows by hand (same commands; `process_memory` reads the working set and private bytes there). `de_editor_core::memory_report` is the one report type: `CacheUsage { id, bytes, entries, budget, exact }` lines, filled by `WidgetHostNative::memory_report(&backend)` (undo history and chat estimates from core, layout scene, pan cache, slide thumbnails, text layouts, data-URL bytes, browser pages, and `NativeBackend::report_memory`: decoded rasters, thumbnails, SVG paths and rasters, shader textures, compiled shaders). It walks the history once per unique shared node, so build it on demand, never per frame. `de_host_services::process_memory::current()` reads RSS / footprint (macOS `proc_pid_rusage`, Windows `K32GetProcessMemoryInfo`, Linux `/proc`).
 
+Budgets (every long-lived cache has one; a new cache needs one too, plus a line in the memory report):
+
+| Cache | Bound | Where |
+|---|---|---|
+| Decoded image rasters | 384 MB, 4,096 entries, LRU | `NativeBackend` `IMAGE_CACHE_BYTE_BUDGET` |
+| Encoded image bytes (data URLs) | 256 MB native / 96 MB wasm, 4,096 entries, LRU | `canvas_viewport_image` `DATA_URL_CACHE_BYTE_BUDGET` |
+| Blur-up thumbnails | 4 MB, 4,096 entries, LRU | `skia/image.rs` `THUMB_CACHE_BYTE_BUDGET` |
+| Parsed SVG paths | 64 MB of `d`, 65,536 entries | `skia/path.rs` |
+| Rasterized SVG paths | 128 MB, 256 entries, oldest first (the newest always stays) | `skia/path.rs` `SVG_RASTER_CACHE_BYTE_BUDGET`, `path_budget.rs` |
+| Undo history | 100 steps; after 30 s idle, cut to 512 MB beyond one copy of the document, never below 20 steps | `history::HISTORY_CAP`, `history_budget.rs`, `memory_idle.rs` |
+| Layout scene | the active page only (rebuilt on a page switch) | `scene_state.rs` |
+| Live MCP snapshot anchor | dropped 30 s after the last request | `mcp_live/snapshot_anchor.rs` |
+
+Idle trim: `memory_idle::IdleTrim` notes activity on every `mark_dirty`; the desktop loop wakes once per quiet spell (`memory_idle_deadline_ms`, 30 s after the last change), runs `run_idle_memory_trim` in `new_events` and then asks the allocator to return free pages (`heap_pressure::schedule_relief`, macOS). Nothing here runs while a person edits, pans or undoes.
+
 Baseline (v0.6.3, Apple-silicon Mac): a `PenNode` is 2,792 bytes inline, so the document heap is ~550 MB; every live read call materializes the whole document (~100%), and tools that clone the state again reach 200–400% (`snapshot_layout` lays out every page: 6.8 s); the first history step and the first live call's anchor each hold a full copy.
 
 ## Shared host logic (the native↔web `widget_host` fork is single-sourced)

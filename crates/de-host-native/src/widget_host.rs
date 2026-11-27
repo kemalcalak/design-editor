@@ -500,6 +500,8 @@ pub struct WidgetHostNative {
     pub(in crate::widget_host) pan_cache: Option<canvas_pan_cache::CanvasPanCache>,
     /// Progressive gesture-end quality restore over `pan_cache`.
     pub(in crate::widget_host) pan_cache_restore: Option<canvas_pan_cache::PanCacheRestore>,
+    /// When the editor last changed, for the idle memory trim (#456).
+    pub(in crate::widget_host) memory_idle: de_editor_core::memory_idle::IdleTrim,
     /// Frames served by a pan-cache blit (test observability).
     pub(in crate::widget_host) pan_cache_blits: u64,
     /// In-place scroll refreshes performed (test observability).

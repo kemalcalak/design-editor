@@ -13,6 +13,9 @@ use std::hash::{Hash, Hasher};
 const SVG_PATH_CACHE_BYTE_BUDGET: usize = 64 * 1024 * 1024;
 const SVG_PATH_CACHE_MAX_ENTRIES: usize = 65536;
 const SVG_RASTER_CACHE_CAP: usize = 256;
+/// Raster bytes the SVG raster cache may hold (#456). A raster is at most
+/// `SVG_RASTER_MAX_PIXELS` (8 MB), so the count cap alone allowed ~2 GB.
+pub(super) const SVG_RASTER_CACHE_BYTE_BUDGET: usize = 128 * 1024 * 1024;
 const SVG_RASTER_COMPLEXITY_MIN: usize = 4096;
 const SVG_RASTER_MAX_PIXELS: i32 = 2_000_000;
 const SVG_RASTER_PAD: f32 = 2.0;
@@ -175,14 +178,7 @@ impl NativeBackend {
         };
         self.svg_raster_cache.insert(key, entry);
         self.svg_raster_cache_order.push_back(key);
-        while self.svg_raster_cache.len() > SVG_RASTER_CACHE_CAP {
-            match self.svg_raster_cache_order.pop_front() {
-                Some(oldest) => {
-                    self.svg_raster_cache.remove(&oldest);
-                }
-                None => break,
-            }
-        }
+        self.evict_svg_rasters_over(SVG_RASTER_CACHE_CAP, SVG_RASTER_CACHE_BYTE_BUDGET);
         self.svg_raster_cache.get(&key)
     }
 
@@ -765,28 +761,7 @@ fn color_key(c: Color) -> u32 {
     (ch(c.r) << 24) | (ch(c.g) << 16) | (ch(c.b) << 8) | ch(c.a)
 }
 
-impl NativeBackend {
-    /// Parsed SVG paths: `(entries, d-string bytes, byte budget)` (#456).
-    pub(super) fn svg_path_cache_usage(&self) -> (usize, usize, usize) {
-        (
-            self.svg_path_cache.len(),
-            self.svg_path_cache_bytes,
-            SVG_PATH_CACHE_BYTE_BUDGET,
-        )
-    }
-
-    /// Rasterized SVG paths: `(entries, raster bytes)` (#456).
-    pub(super) fn svg_raster_cache_usage(&self) -> (usize, usize) {
-        let bytes = self
-            .svg_raster_cache
-            .values()
-            .map(|entry| raster_bytes(&entry.image))
-            .sum();
-        (self.svg_raster_cache.len(), bytes)
-    }
-}
-
-/// Four bytes per pixel of a raster image.
-pub(super) fn raster_bytes(image: &skia_safe::Image) -> usize {
-    (image.width().max(0) as usize) * (image.height().max(0) as usize) * 4
-}
+// Cache sizes and the raster byte budget (#456), split out at the 800-line cap.
+#[path = "path_budget.rs"]
+mod budget;
+pub(super) use budget::raster_bytes;

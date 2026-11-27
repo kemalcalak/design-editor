@@ -70,6 +70,7 @@ impl WidgetHostNative {
             interaction_hot_until_ms: 0,
             pan_cache: None,
             pan_cache_restore: None,
+            memory_idle: Default::default(),
             pan_cache_blits: 0,
             pan_cache_scrolls: 0,
             pan_cache_builds: 0,

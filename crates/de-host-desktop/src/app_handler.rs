@@ -27,6 +27,11 @@ use winit::window::{Window, WindowId};
 impl ApplicationHandler<DesktopEvent> for DesktopApp {
     fn new_events(&mut self, event_loop: &ActiveEventLoop, cause: StartCause) {
         self.refresh_host_clock();
+        // After a quiet spell, cut the undo history to its byte budget and
+        // hand freed pages back to the system (#456). Runs once per spell.
+        if self.host.run_idle_memory_trim().is_some() {
+            crate::heap_pressure::schedule_relief("idle memory trim");
+        }
         // Live MCP requests must not wait for `RedrawRequested`. Window systems
         // may throttle redraws while a window is occluded or while a previous
         // paint is expensive, but CLI/MCP snapshot/apply acks should still be

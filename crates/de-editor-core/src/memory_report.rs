@@ -113,6 +113,17 @@ pub fn approx_node_bytes(node: &PenNode) -> u64 {
     inline + counter.0
 }
 
+/// Heap bytes a node holds beyond its inline size, on average (#412's
+/// document: 2,931 bytes per node with a 2,792-byte `PenNode`).
+const NODE_OUTLINE_BYTES: u64 = 160;
+
+/// [`approx_node_bytes`] from the node count alone: a walk with no
+/// serialization, for budgets checked on the UI thread. Leaves out large
+/// strings a node carries (long text, inline data).
+pub fn approx_node_bytes_fast(node: &PenNode) -> u64 {
+    subtree_nodes(node) * (std::mem::size_of::<PenNode>() as u64 + NODE_OUTLINE_BYTES)
+}
+
 fn subtree_nodes(node: &PenNode) -> u64 {
     1 + node
         .children()
