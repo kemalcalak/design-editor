@@ -187,3 +187,20 @@ pub fn color_target(t: de_editor_core::ColorTarget) -> de_editor_core::ui_draft:
         }
     }
 }
+
+/// Translate the widget-facade compositing target into the core one.
+pub fn compositing_picker_target(
+    target: crate::widgets::property_panel_action::CompositingTarget,
+) -> de_editor_core::CompositingPickerTarget {
+    match target {
+        crate::widgets::property_panel_action::CompositingTarget::NodeBlend => {
+            de_editor_core::CompositingPickerTarget::NodeBlend
+        }
+        crate::widgets::property_panel_action::CompositingTarget::NodeMask => {
+            de_editor_core::CompositingPickerTarget::NodeMask
+        }
+        crate::widgets::property_panel_action::CompositingTarget::FillBlend(index) => {
+            de_editor_core::CompositingPickerTarget::FillBlend(index)
+        }
+    }
+}

@@ -152,8 +152,8 @@ Mutators on `Document`:
 
 `Document.ui` carries chrome-level state including `theme_mode` (Dark/Light), `locale`, and `locale_picker_open`:
 
-- `theme_for(ui)` returns the active `Theme` — since #30 Home's v2 tokens mapped onto the shadcn slots (`home_surface_palette::chrome_theme`), so the editor, Settings and the chat share one palette. Widget builders read it instead of hardcoding `Theme::dark()`, so flipping the theme (File menu footer) reflows the entire chrome. The chrome font is Manrope (`text_metrics::CHROME_FONT_FAMILY`).
-- **Label-sized chrome is measured, not estimated (#435, #440).** A control whose box is sized from its label (chips, footer / modal buttons, segmented controls, wrapped modal copy, the layer menu) writes its layout once against `widgets::label_widths::LabelWidths` and runs it in two modes: paint uses `LabelWidths::measuring(backend)` (a run not measured yet is measured through `text_metrics` in the family and weight it is painted in, and kept), every backend-less hit-test / hover / tooltip path uses `LabelWidths::cached()`. Widths live in one thread-local map keyed on (text, size, family, weight), so the locale and label set are part of the key and a kept run is never shaped again (two generations of 4096, so a rollover keeps what the last frames used). Wrapped copy goes through `LabelWidths::wrap` (Latin at spaces, CJK and Thai between clusters), which keeps the finished lines in a second map keyed on (text, width, size, family, weight); its per-prefix measurements are not kept, so a long CJK paragraph is one entry and a hover reads it back without wrapping again. The entry points are `measured_*` / `*_with` twins of the backend-less ones: `host_canvas_geometry::measured_chrome_layout` (file pill + canvas actions), `WhatsNewModal` / `UpdateModal::measured_rect`, `HomeSurface::measured_layout` / `measured_mcp_popover`, the settings panes' `api_layout_with` / `acp_layout_with` / `cli_layout_with`, the System row button, `measure_copy_chips` (MCP tab), and the Asset Center's tab track (`panel_controls::segment_width_for`, `tab_track_rect_with`). The cache falls back to an estimate only for a run nothing has measured yet. Tests paint into `FamilyGapBackend` and check each label against the box the cached hit-test resolves (`label_fit_test_support`). Not yet on it, still sized from their own heuristics: the Prompt Center / Asset Center chips (`estimated_text_width`), the chat chips (`footer_label_width`) and the code-complete action chips (#451).
+- `theme_for(ui)` returns the active `Theme` — since #30 Home's v2 tokens mapped onto the shadcn slots (`home_surface_palette::chrome_theme`), so the editor, Settings and the chat share one palette. Widget builders read it instead of hardcoding `Theme::dark()`, so flipping the theme (File menu footer) reflows the entire chrome. The chrome font is Manrope (`text_metrics::CHROME_FONT_FAMILY`), and every chrome run is painted and measured in it (#441); a surface that deliberately paints another face (a jian `Button` / `Select` / `TextInputView` in "Inter", a hex or code readout) names it by a constant and measures in that constant. `tools/check-text-measure.sh` fails the build on family-blind measurement, a `"system-ui"` literal or a string-literal family in a widget paint run or measurement; `widgets/chrome_family_paint_tests/` paints each surface into `FamilyGapBackend::chrome_strict` (the chrome face and every other named face measure differently in Latin, Cyrillic and CJK, a heavier weight is wider, and every measurement is recorded with its family and weight) and checks run family and weight == measured family and weight and that labels stay in their boxes in all 15 locales.
+- **Label-sized chrome is measured, not estimated (#435, #440).** A control whose box is sized from its label (chips, footer / modal buttons, segmented controls, wrapped modal copy, the layer menu) writes its layout once against `widgets::label_widths::LabelWidths` and runs it in two modes: paint uses `LabelWidths::measuring(backend)` (a run not measured yet is measured through `text_metrics` in the family and weight it is painted in, and kept), every backend-less hit-test / hover / tooltip path uses `LabelWidths::cached()`. Widths live in one thread-local map keyed on (text, size, family, weight), so the locale and label set are part of the key and a kept run is never shaped again (two generations of 4096, so a rollover keeps what the last frames used). Wrapped copy goes through `LabelWidths::wrap` (Latin at spaces, CJK and Thai between clusters), which keeps the finished lines in a second map keyed on (text, width, size, family, weight); its per-prefix measurements are not kept, so a long CJK paragraph is one entry and a hover reads it back without wrapping again. The entry points are `measured_*` / `*_with` twins of the backend-less ones: `host_canvas_geometry::measured_chrome_layout` (file pill + canvas actions), `WhatsNewModal` / `UpdateModal::measured_rect`, `HomeSurface::measured_layout` / `measured_mcp_popover`, the settings panes' `api_layout_with` / `acp_layout_with` / `cli_layout_with`, the System row button, `measure_copy_chips` (MCP tab), and the Asset Center's tab track (`panel_controls::segment_width_for`, `tab_track_rect_with`). The cache falls back to an estimate only for a run nothing has measured yet. Tests paint into `FamilyGapBackend` and check each label against the box the cached hit-test resolves (`label_fit_test_support`). Label-sized action buttons (`chrome_buttons::fit_button_width`: choose file, Download, Dismiss, Rename layers Apply / Cancel, Replace all, the HTML-import diagnostics toggle) read `LabelWidths::cached()`, which their paint fills first with `measure_button_labels`. Since #451 the Prompt Center and Asset Center (filter / category / basis / import chips, labels, the paste box's wrap and caret), the chat's chip row, model chip, New button and minimized bar, the code-complete action chips and the slideshow counter are on it too (`*_with` twins: `filter_chip_rects_with`, `basis_chip_rect_with`, `chip_row_with`, `footer_layout_with`, `header_with`, `pill_rect_with`, …). `LabelWidths::fit` ellipsizes the same way: a label that fits comes back borrowed, a cut one is cut once and kept (`Fitted`), so a repaint neither measures nor allocates. A cut is found by binary search and kept per whole px of the box. The design.md body wraps at its painted widths (`design_md_wrap::wrap_md_runs`: words measured with `LabelWidths::unkept`, which keeps nothing, so a long brief never crowds chrome labels out of the cache; a word wider than the line broken by `LabelWidths::wrap`; code / colour runs kept whole with their chip / swatch widths; each run carries its advance, `PlacedRun`, so paint measures nothing), and `design_md_line_cache` keeps only a build a measuring pass made. The gallery panels' search / topic / save-title fields resolve press-to-caret and the IME caret from the widths their paint kept (`text_input_measured`, warmed by `paint_text_input_view`), and the Asset Center paste box wraps and places its caret per cluster (`line_break::clusters`). The slideshow counter is sized for its widest label (the total's digit count in the widest digit), so Next and Exit never move while stepping. jian's `Button` measures its label in its own "Inter" (kemalcalak/jian#31). Still on character estimates: the slides panel tabs (`slides_panel_tabs::estimated_text_width`), the Git branch pill (`BRANCH_CHAR_W`) and the component browser pills (`CHAR_W`).
 - `Document::t(key)` translates via `i18n::translate(self.ui.locale, key)`. Keys retain the retired TS app's dot.case convention (`common.untitled`, `pages.title`, `layers.title`, `ai.newChat`, `ai.tipSelectElements`, `layout.flexLayout`, `fill.title`, `stroke.title`, `effects.title`, `export.title`, `property.createComponent`, `topbar.agentsAndMcp`), but the Rust tables are now the canonical source.
 - 15 supported locales (matches TS dropdown order): EnUs / ZhCn / ZhTw / Ja / Ko / Fr / Es / De / Pt / Ru / Hi / Tr / Th / Vi / Id. Each carries a `display_name()` (English / 简体中文 / 繁體中文 / 日本語 / 한국어 / Français / Español / Deutsch / Português / Русский / हिन्दी / Türkçe / ไทย / Tiếng Việt / Bahasa Indonesia).
 - File ▸ Language (the menu's footer globe) opens a `LocalePicker` dropdown under the file pill. A clicked locale applies immediately. Clicking outside (or the Globe again) closes silently. The picker paints as the top-most overlay so it covers chat / status / canvas.
@@ -648,6 +648,145 @@ One modal, two modes. State and every transition live in `de-editor-core/src/com
   (`property_panel_path_ops.rs`); the layer menu adds Flatten and Outline
   stroke; the layer row shows a boolean group's op icon.
 
+## Stroke ends and miter limit (#389)
+
+- **Schema** (kemalcalak/jian#30): `PenStroke.strokeStart` / `strokeEnd`
+  (`StrokeEndCap`: none · round · square · line_arrow · triangle_arrow ·
+  reversed_triangle · circle · diamond; an unset end uses `cap`, an absent
+  cap on an open stroke is round) and `miterLimit` (absent = 4). They ride
+  through `StrokePayload` onto jian's render `StrokeStyle` (`start` / `end`
+  / `miter_limit`, `fills::StrokeShape::apply`); backends apply only the
+  miter limit (`backend/skia/stroke_style.rs`). `StrokeStyle` stays small
+  and `Copy` (a size test guards it): a `widthProfile` (boxed on the
+  schema stroke) is baked into geometry by the scene builder, never carried
+  on the render style; `StrokeWidthProfile::stops()` is the one place its
+  limits apply (width clamp 16, 32-stop resample). A path's vertex radius
+  is `vertexRadius`, not `cornerRadius`: older files carry a path
+  `cornerRadius` whose outline is already rounded, and it stays ignored.
+- **Lines keep their direction.** The scene keeps a line's box normalised
+  and `SceneNode::line_direction` (`SceneLineDirection`, from the signs of
+  `x2` / `y2`) beside it; `SceneNode::line_endpoints()` is the start and
+  end every consumer draws (canvas, SVG / HTML `<line>`, PPTX `flipH` /
+  `flipV`, path-ops outline, hit-test), so an up-right line is not its
+  box's top-left → bottom-right diagonal and `strokeStart` stays on the
+  start.
+- **Geometry** is built once per scene, never per frame:
+  `de_editor_core::stroke_geometry::stroke_end_geometry` turns a line's
+  segment or an open path's subpaths into SVG strings in node-local doc px
+  — the centre line trimmed under filled heads, the filled end shapes, the
+  line-arrow arms (`head_length(w) = 4 + 3w`, tip on the end point) — plus
+  a disc per marker for hit-testing (`SceneStrokeGeometry::head_hits`), and
+  the scene builder stores them on `SceneNode::stroke_geometry`
+  (`de-pen-loader/src/layout_scene/stroke_geometry.rs`; a `d` path is
+  fitted to its box like `fit_path_to_rect`). `CentreLine::Solid` strokes
+  the centre line with butt caps and draws every open end as a fill shape
+  (the inner ends of a multi-subpath stroke get the authored cap);
+  `CentreLine::Dashed` keeps the authored cap on every dash (dots are
+  zero-length dashes only a round cap draws, so a dotted line never goes
+  invisible) and shortens the head ends by half a width so no dash cap
+  pokes past them. Every filled shape winds the same way and fills
+  nonzero, so overlapping heads never cancel. `StrokeEnds::from_parts` is
+  `None` when no end is set or both equal the authored cap (the backends
+  draw it). Closed shapes have no ends. A live bounds patch never touches
+  a node with stroke ends or a reversed line (`canvas_scene_patch`): their
+  scene data is built from the box, so they rebuild.
+- **Paint / exports**: the canvas draws the geometry instead of the plain
+  stroke (`canvas_viewport_stroke_paint::paint_stroke_geometry`: centre line
+  in `centre_line_style`, `fill_svg_path_with_fill_rule` heads (nonzero),
+  mitred undashed arms; rich stroke paints mask it like any stroke), so PNG
+  / PDF match. SVG and the structured HTML export write the same three
+  paths (`svg_export::write_stroke_geometry`), as paths rather than
+  `<marker>`s because Figma's SVG import drops markers; SVG writes
+  `stroke-miterlimit` and SVG import reads it; the HTML export's inline
+  polygons and paths write `stroke-linejoin` / `stroke-miterlimit`. PPTX
+  writes the line's `cap`, join / `<a:miter lim>` and `<a:headEnd>` /
+  `<a:tailEnd>` (`export_pptx/line_style.rs`, `xml::line_element_open`;
+  closed shapes go through `line_element`, which drops the ends); a
+  reversed triangle or different caps on the two ends rasters the line
+  (`unexpressible`). Hit-testing (jian `layout_scene_hit.rs`) adds the head
+  discs to the line / path segment test.
+- **Panel**: Start / End rows (dropdowns on the shared Interactions popover,
+  `InteractionMenuTarget::StrokeEnd`, plus a swap button) on lines and open
+  paths, and a Miter field while the join is miter
+  (`property_panel_stroke_ends.rs`, `PropertyFocus::StrokeMiterLimit`). The
+  snapshot's open-path check keeps the answer for the last `d` it parsed.
+  The labels' fit is checked on the native backend's real metrics in all
+  15 locales (`cut_end_labels`, `widget_host/stroke_ends_width_tests.rs`).
+  MCP: `set_node_stroke_style` takes `stroke_start`, `stroke_end`
+  (`"auto"` / null unsets an end, so it falls back to `cap`),
+  `miter_limit`.
+
+## Corner smoothing, rounded vertices and drawing constraints (#389)
+
+- **Schema** (kemalcalak/jian#30): `cornerSmoothing` (`0..=1`, Figma's
+  corner smoothing; absent = 0) on frames, groups and rectangles
+  (`ContainerProps`), polygons / stars and paths; a polygon's
+  `cornerRadius` (one number) rounds every vertex, a path's `vertexRadius`
+  rounds its sharp vertices between straight segments.
+- **Geometry** (`de_editor_core::corner_geometry`, pure, tested): Figma's
+  squircle (the `figma-squircle` construction: the corner starts
+  `p = (1 + s)·t` from the vertex, a circular arc covers the middle
+  `(1 − s)` of the turn, cubics ease in from the edges), generalised to any
+  vertex angle; neighbouring corners share an edge largest first and a
+  corner over its share loses smoothing before radius
+  (`corner_geometry/budget.rs`). `rect_outline`, `polygon_outline`,
+  `round_corners`, `outline_path_data`.
+- **Scene**: the builder (`de-pen-loader/src/layout_scene/corner_path.rs`)
+  stores the outline once per scene on `SceneNode::corner_path`
+  (`SceneCornerPath`: `d`, bounds, the inside / outside stroke centre line,
+  a flattened `hit_ring`) for a smoothed rect / frame / group, a rounded
+  polygon or star and a path with a vertex radius; a path's stroke ends
+  follow the rounded line. A rect with smoothing 0 or radius 0 gets none,
+  so the rounded-rect fast paths are unchanged. The outline's bounds come
+  from its subpaths, never from parsing `d` back. A live bounds patch of a
+  smoothed box or rounded polygon rebuilds that node's outline alone from
+  the scene node's corner fields (`de_pen_loader::rebuild_box_corner_path`);
+  stroke ends and reversed lines still rebuild the scene
+  (`canvas_scene_patch::box_shaped_scene_data`), and paths never patch.
+- **Paint / hit-test**: fills draw inside a clip to the outline, strokes
+  follow it (or its own centre line for inside / outside), `clipContent`,
+  backdrop effects and image fills clip to it
+  (`canvas_viewport_corner_path.rs`); jian's hit-test reads `hit_ring`.
+- **Exports**: SVG writes the outline as a `<path>` and clips to it
+  (per-corner radii are exact there, so they no longer warn); the
+  structured HTML export clips a smoothed box's background layer and its
+  children with `clip-path: path()` and draws polygons and paths as their
+  outline; PPTX writes a `custGeom` (`export_pptx/cust_geom.rs`) for
+  smoothed boxes and every polygon and star; path ops (boolean, flatten,
+  outline stroke) read the same outline; the HTML / Tailwind codegen draws
+  rounded polygons and paths as their outline (`flex/shapes.rs`; CSS
+  `border-radius` cannot smooth, so a smoothed box there keeps plain
+  rounded corners). PNG / PDF use the canvas painter. Figma import keeps
+  `cornerSmoothing` natively, imports a rounded star as a star polygon with
+  its `cornerRadius` / `cornerSmoothing` (`star_converter.rs`) and rounds
+  vector networks with the same geometry.
+- **de-figma depends on de-editor-core** (a normal dependency since #389,
+  before only a dev one), decided rather than moving the geometry out:
+  the import must round and range stars exactly like the editor, and the
+  shared code (`corner_geometry`, `vector_edit::Subpath`, `star_shape`)
+  already lives there with its tests. Both crates are wasm32-clean and
+  de-editor-core never depends on de-figma, so no cycle or platform code
+  comes with it. A separate geometry crate is worth it only if another
+  leaf crate that must not pull the editor core needs the same geometry.
+- **Editing**: `EditorCommand::SetNodeCorners { radii, smoothing }`
+  (`command_node_attrs/corners.rs`) writes per-corner radii and smoothing
+  in one step and refuses, untouched, what a kind cannot store
+  (`corner_support`). The Position section's Smoothing row (slider +
+  percentage, under the radius row once a corner is rounded) is one undo
+  step per drag; paths get the radius field. MCP `set_node_corner_radius`
+  (`de-mcp/src/node_attr_corners.rs`) takes `radius` as one number or
+  `[tl, tr, br, bl]` (an array argument, listed in `structured_arg_allowed`)
+  and `smoothing` as a fraction `0..=1` or a percentage string `"60%"`;
+  a bare `60` is refused.
+- **Drawing** (`de_editor_core::draw_constraints`): Shift keeps a drawn
+  rect / ellipse / frame / polygon / star square and a line on 45° steps,
+  Alt / Option draws from the press point, both combine and apply mid-drag
+  (`set_modifier_shift` / `set_modifier_alt` redraw an in-flight create
+  drag and return whether to repaint). The host arm is
+  `widget_host/create_drag.rs`. A drawn line writes its start and its end
+  relative to it (`EditorState::set_selected_line`, `x2` / `y2` as the
+  loader reads them), so it keeps its direction.
+
 ## Canonical `.de` loader (v0.8.0+)
 
 The document extension is `.de`; `.op` and the old `.pen` alias no longer open. pen.dev `.pen` files are an import only: they open as an untitled document and are never written back.
@@ -659,7 +798,7 @@ The document extension is `.de`; `.op` and the old `.pen` alias no longer open. 
 3. **Text measurement via `jian_skia::SkiaMeasure`** — real skia paragraph shaper plugged in with `LayoutEngine::with_backend(Rc::new(SkiaMeasure::new()))`. Replaces the default `EstimateBackend` (~10% character-count heuristic) so `fit_content` text frames size against the same glyph advances `draw_text` paints with.
 4. **Version tolerance** — `persistence::load_canonical` retries with `version` rewritten to `"1.0"` when the canonical schema rejects on a legacy major (e.g. pencil-demo.op's `version: "2.8"`), so older TS files still load best-effort.
 
-**The two version fields (#408).** `version` is the Design Editor release that last wrote the file; `formatVersion` is the schema version (`jian_ops_schema::version`) and the one readers check. A new document is born with the release (`EditorState::new` / `starter`), and a document opened or imported through doc_io (`.de` / `.pen` / `.pptx`) or the desktop Figma and HTML imports is built with `EditorState::from_opened_document`, which re-stamps it (`de_editor_core::document_version::stamp_product_version`), so the next save through any writer (Cmd+S, the background snapshot save, MCP `save_document`, the file-backed MCP servers) records the release that saved it; opening does not mark the document edited. Exception: Save As of an unedited document copies the file's bytes and rewrites only `editorMeta` (`copy_clean_document_with_editor_meta_to_path`), so the copy keeps the old `version` until it is edited and saved. Files without `formatVersion` are the legacy schema, where older tools used `version` itself as the schema marker and the loader still falls back to it; a 1.x marker moves to `formatVersion` (`major.minor`, capped at the current schema) when stamped, so readers see the same schema version. This editor writes no `formatVersion`, so the rule relies on the product being 0.x; `document_version::tests::product_is_still_0x` fails at 1.0 so it gets revisited. Not stamped yet: the live MCP whole-document sync (`POST /api/mcp/document`).
+**The two version fields (#408).** `version` is the Design Editor release that last wrote the file; `formatVersion` is the schema version (`jian_ops_schema::version`) and the one readers check. A new document is born with the release (`EditorState::new` / `starter`), and a document opened or imported through doc_io (`.de` / `.pen` / `.pptx`) or the desktop Figma and HTML imports is built with `EditorState::from_opened_document`, which re-stamps it (`de_editor_core::document_version::stamp_product_version`), so the next save through any writer (Cmd+S, the background snapshot save, MCP `save_document`, the file-backed MCP servers) records the release that saved it; opening does not mark the document edited. The schema keys a parsed document's pending `imageThumbs` seed on its `version` buffer, so `from_opened_document` activates the thumbnails before it stamps; stamping first lost them for every file this release did not write, legacy schema and older releases alike (#458). A per-call MCP `filePath` on another file (`mcp_serve/file_path.rs`) restores the thumbnails of the server's own document (the open canvas on the live path) when the call ends; a thumbnail another thread stores during the call is lost to that restore. Exception: Save As of an unedited document copies the file's bytes and rewrites only `editorMeta` (`copy_clean_document_with_editor_meta_to_path`), so the copy keeps the old `version` until it is edited and saved. Files without `formatVersion` are the legacy schema, where older tools used `version` itself as the schema marker and the loader still falls back to it; a 1.x marker moves to `formatVersion` (`major.minor`, capped at the current schema) when stamped, so readers see the same schema version. This editor writes no `formatVersion`, so the rule relies on the product being 0.x; `document_version::tests::product_is_still_0x` fails at 1.0 so it gets revisited. Not stamped yet: the live MCP whole-document sync (`POST /api/mcp/document`).
 
 `pen_doc_path_bounds.rs` ports `pen-core/src/path-anchors.ts::getPathBoundsFromAnchors` — cubic Bezier derivative roots + extrema sweep — so authored paths with handles/curves scale into their `width` / `height` box the same way the canonical renderer paints.
 

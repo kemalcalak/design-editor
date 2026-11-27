@@ -235,7 +235,7 @@ impl Widget for ShapePicker {
             );
             let label = TextLayout::single_run(
                 &row.label,
-                "system-ui",
+                crate::widgets::text_metrics::CHROME_FONT_FAMILY,
                 13.0,
                 (if active {
                     self.theme.primary

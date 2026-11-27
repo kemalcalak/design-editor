@@ -29,6 +29,12 @@ pub fn node_geometry(node: &SceneNode) -> Option<Geometry> {
         return None;
     }
     let b = node.bounds;
+    if let Some((path, closed)) = corner_outline(node) {
+        return Some(Geometry {
+            path: apply_transform(path, node),
+            closed,
+        });
+    }
     let (path, closed) = match &node.kind {
         NodeKind::Frame | NodeKind::Rect => (rect_path(node, b)?, true),
         NodeKind::Ellipse => (ellipse_path(node, b)?, true),
@@ -67,6 +73,26 @@ pub fn union_all(paths: &[Path]) -> Option<Path> {
     let (first, rest) = paths.split_first()?;
     rest.iter()
         .try_fold(first.clone(), |acc, p| acc.op(p, PathOp::Union))
+}
+
+/// The scene's precomputed corner outline (#389) — smoothed rect
+/// corners, rounded polygons and stars, rounded path vertices — placed
+/// in doc space, with whether it encloses an area.
+fn corner_outline(node: &SceneNode) -> Option<(Path, bool)> {
+    let outline = node.corner_path.as_deref()?;
+    if !matches!(
+        node.kind,
+        NodeKind::Frame | NodeKind::Rect | NodeKind::Polygon | NodeKind::Path
+    ) {
+        return None;
+    }
+    let local = skia_safe::utils::parse_path::from_svg(&outline.d)?;
+    let mut path = local.with_offset((node.bounds.origin.x, node.bounds.origin.y));
+    if node.even_odd_fill {
+        path.set_fill_type(PathFillType::EvenOdd);
+    }
+    let closed = outline.d.contains('Z');
+    Some((path, closed))
 }
 
 fn sk_rect(b: Rect) -> SkRect {
@@ -222,14 +248,10 @@ fn line_path(node: &SceneNode) -> Option<Path> {
     if node.points.len() >= 2 {
         return polyline(&node.points, false);
     }
-    let b = node.bounds;
-    polyline(
-        &[
-            b.origin,
-            Point2D::new(b.origin.x + b.size.x, b.origin.y + b.size.y),
-        ],
-        false,
-    )
+    // Start to end as drawn: an up-right line is not its box's
+    // top-left → bottom-right diagonal (#389).
+    let (from, to) = node.line_endpoints();
+    polyline(&[from, to], false)
 }
 
 /// Scale + translate `path` so its tight bounds fill `rect`: the canvas

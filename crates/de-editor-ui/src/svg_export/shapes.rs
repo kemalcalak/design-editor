@@ -2,7 +2,8 @@
 //! the layer attributes of the node it stands for (`node.rs`).
 
 use super::node::LayerAttrs;
-use super::{fill_stroke_attrs, normalize_rect, stroke_attrs, stroke_style_attrs, xml_escape};
+use super::outline::PathD;
+use super::{fill_stroke_attrs, normalize_rect, stroke_attrs, stroke_style_attrs};
 use crate::layout_scene::{SceneNode, SceneStrokeAlign};
 use crate::{Color, Rect};
 use std::fmt::Write as _;
@@ -55,6 +56,11 @@ pub(super) fn emit_polygon(out: &mut String, n: &SceneNode, attrs: &str) {
     if r.size.x == 0.0 || r.size.y == 0.0 {
         return;
     }
+    if let Some(d) = super::outline::node_outline(n) {
+        // Rounded corners (#389): the precomputed outline.
+        let _ = write!(out, r#"<path{attrs} d="{d}"{}/>"#, fill_stroke_attrs(n));
+        return;
+    }
     let points = crate::polygon_geometry::polygon_node_points(n, r);
     let mut point_attr = String::new();
     for (i, p) in points.iter().enumerate() {
@@ -71,25 +77,38 @@ pub(super) fn emit_polygon(out: &mut String, n: &SceneNode, attrs: &str) {
 }
 
 pub(super) fn emit_line(out: &mut String, n: &SceneNode, attrs: &str) {
+    if let Some(geometry) = n.stroke_geometry.as_deref() {
+        let _ = write!(out, "<g{attrs}>");
+        write_stroke_geometry(out, n, geometry, &geometry_place(n));
+        out.push_str("</g>");
+        return;
+    }
     let (color, width) = match n.stroke {
         Some(s) => (s.color, s.width),
         None => (n.fill.unwrap_or(Color::BLACK), 1.5),
     };
-    let r = n.bounds;
-    let x2 = r.origin.x + r.size.x;
-    let y2 = r.origin.y + r.size.y;
+    // Start to end the way the line was drawn (#389), not always the
+    // box's top-left → bottom-right diagonal.
+    let (from, to) = n.line_endpoints();
     let _ = write!(
         out,
-        r#"<line{attrs} x1="{}" y1="{}" x2="{x2}" y2="{y2}"{}/>"#,
-        r.origin.x,
-        r.origin.y,
+        r#"<line{attrs} x1="{}" y1="{}" x2="{}" y2="{}"{}/>"#,
+        from.x,
+        from.y,
+        to.x,
+        to.y,
         stroke_attrs(color, width) + &stroke_style_attrs(n),
     );
 }
 
 pub(super) fn emit_path(out: &mut String, n: &SceneNode, attrs: &LayerAttrs) {
-    let (d, fit) = if let Some(d) = &n.svg_path {
-        (d.clone(), svg_path_fit(d, n.bounds))
+    let outline = super::outline::node_outline(n);
+    let rounded = outline.is_some();
+    let (d, fit) = if let Some(d) = outline {
+        // Rounded vertices (#389): the outline, already in place.
+        (d, glam::Affine2::IDENTITY)
+    } else if let Some(d) = &n.svg_path {
+        (PathD::new(d), svg_path_fit(d, n.bounds))
     } else {
         if n.points.len() < 2 {
             return;
@@ -102,7 +121,7 @@ pub(super) fn emit_path(out: &mut String, n: &SceneNode, attrs: &LayerAttrs) {
         if n.path_closed {
             d.push_str(" Z");
         }
-        (d, glam::Affine2::IDENTITY)
+        (PathD::new(&d), glam::Affine2::IDENTITY)
     };
     let paint = if n.svg_path.is_none() && !n.path_closed && n.stroke.is_none() {
         let color = n.fill.unwrap_or(Color::BLACK);
@@ -110,7 +129,7 @@ pub(super) fn emit_path(out: &mut String, n: &SceneNode, attrs: &LayerAttrs) {
     } else {
         fill_stroke_attrs(n)
     };
-    let vector_effect = if n.svg_path.is_some() && n.stroke.is_some() {
+    let vector_effect = if n.svg_path.is_some() && n.stroke.is_some() && !rounded {
         r#" vector-effect="non-scaling-stroke""#
     } else {
         ""
@@ -120,7 +139,22 @@ pub(super) fn emit_path(out: &mut String, n: &SceneNode, attrs: &LayerAttrs) {
     } else {
         ""
     };
-    let d = xml_escape(&d);
+    if let Some(geometry) = n.stroke_geometry.as_deref() {
+        // End shapes (#389): the fill (if any) on the path, then the
+        // stroke geometry in node-local coordinates.
+        let _ = write!(out, "<g{}>", attrs.attrs());
+        let fill = fill_attrs_only(n);
+        if !fill.is_empty() {
+            let _ = write!(
+                out,
+                r#"<path d="{d}" transform="{}"{fill_rule}{fill}/>"#,
+                super::transform::matrix_value(fit),
+            );
+        }
+        write_stroke_geometry(out, n, geometry, &geometry_place(n));
+        out.push_str("</g>");
+        return;
+    }
     if !attrs.filter.is_empty() && fit != glam::Affine2::IDENTITY {
         // A filter reads its region in the element's own user space; with
         // the fit on the same element that is the `d` string's space, not
@@ -165,4 +199,78 @@ fn svg_path_fit(d: &str, bounds: Rect) -> glam::Affine2 {
         0.0,
         glam::Vec2::new(tx, ty),
     )
+}
+
+/// The node's fill attributes when it paints one, else empty.
+fn fill_attrs_only(n: &SceneNode) -> String {
+    let fill = super::fill_attrs(n);
+    if fill == r#" fill="none""# {
+        String::new()
+    } else {
+        fill
+    }
+}
+
+/// A line's or open path's precomputed stroke geometry (#389): the centre
+/// line (styled like the canvas, `centre_line_style`), the filled end
+/// shapes (nonzero) and the line-arrow arms, as plain paths placed in the
+/// node box.
+/// Written as paths rather than markers so Figma's SVG import, which
+/// drops markers, keeps the arrowheads. `place` is the attribute text
+/// (e.g. a `transform`) that puts node-local coordinates where they go.
+/// Shared with the structured HTML export, which inlines the same SVG.
+pub fn write_stroke_geometry(
+    out: &mut String,
+    n: &SceneNode,
+    geometry: &crate::layout_scene::SceneStrokeGeometry,
+    place: &str,
+) {
+    use crate::layout_scene::{StrokeCap, StrokeJoin, StrokeStyle};
+    let Some(stroke) = n.stroke else {
+        return;
+    };
+    let line = stroke_attrs(stroke.color, stroke.width);
+    if !geometry.stroke_d.is_empty() {
+        let style = crate::stroke_centre_line::centre_line_style(stroke.style);
+        let _ = write!(
+            out,
+            r#"<path d="{}"{place} fill="none"{line}{}/>"#,
+            PathD::new(&geometry.stroke_d),
+            super::style_attrs(&style),
+        );
+    }
+    if !geometry.fill_d.is_empty() {
+        let mut fill = format!(
+            r#" fill="{}" fill-rule="nonzero""#,
+            super::color_to_rgb(stroke.color)
+        );
+        if stroke.color.a < 0.999 {
+            let _ = write!(fill, r#" fill-opacity="{}""#, stroke.color.a);
+        }
+        let _ = write!(
+            out,
+            r#"<path d="{}"{place}{fill}/>"#,
+            PathD::new(&geometry.fill_d),
+        );
+    }
+    if !geometry.arms_d.is_empty() {
+        let style = StrokeStyle {
+            cap: Some(StrokeCap::Butt),
+            join: Some(StrokeJoin::Miter),
+            ..StrokeStyle::default()
+        };
+        let _ = write!(
+            out,
+            r#"<path d="{}"{place} fill="none"{line}{}/>"#,
+            PathD::new(&geometry.arms_d),
+            super::style_attrs(&style),
+        );
+    }
+}
+
+/// ` transform="translate(x y)"`: node-local geometry into the node box
+/// (the layer attributes already carry rotation and flips).
+fn geometry_place(n: &SceneNode) -> String {
+    let origin = normalize_rect(n.bounds).origin;
+    format!(r#" transform="translate({} {})""#, origin.x, origin.y)
 }

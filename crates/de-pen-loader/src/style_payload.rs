@@ -39,10 +39,13 @@ pub(crate) fn base_payload(base: &PenNodeBase, kind: &str) -> NodePayload {
         rotation: (base.rotation.unwrap_or(0.0) as f32).to_radians(),
         flip_x: base.flip_x.unwrap_or(false),
         flip_y: base.flip_y.unwrap_or(false),
+        line_right_to_left: false,
+        line_bottom_to_top: false,
         opacity: base_opacity(base),
         blend_mode: base.blend_mode.clone(),
         corner_radius: 0.0,
         corner_radii: None,
+        corner_smoothing: 0.0,
         clip_content: false,
         arc_start_angle: None,
         arc_sweep_angle: None,
@@ -541,6 +544,10 @@ pub(crate) fn stroke_to_payload(s: Option<&PenStroke>) -> Option<StrokePayload> 
         dash_pattern: s.dash_pattern.clone(),
         dash_offset: s.dash_offset,
         fill_layers: rich_stroke_paint(s.fill.as_deref()),
+        stroke_start: s.stroke_start,
+        stroke_end: s.stroke_end,
+        miter_limit: s.miter_limit,
+        width_profile: s.width_profile.as_deref().cloned(),
     })
 }
 

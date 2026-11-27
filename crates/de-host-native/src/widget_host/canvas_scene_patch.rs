@@ -84,6 +84,34 @@ impl WidgetHostNative {
                     | jian_ops_schema::node::PenNode::Line(_)
                     | jian_ops_schema::node::PenNode::Frame(_)
             )
+            && !box_shaped_scene_data(node)
+    }
+}
+
+/// Whether the scene holds more for `node` than its box, built from the
+/// box at scene build time, so moving the box alone would leave it stale
+/// (#389): a line's stroke end geometry (arrowheads, the trimmed centre
+/// line) is node-local and fitted to the box, and a line drawn right to
+/// left or bottom to top keeps its direction beside the box. Ends that
+/// only repeat the cap build no geometry, so they patch. A smoothed rect /
+/// frame or a rounded polygon patches too: `patch_node_bounds` rebuilds
+/// its outline alone for the new box.
+fn box_shaped_scene_data(node: &jian_ops_schema::node::PenNode) -> bool {
+    use jian_ops_schema::node::PenNode;
+    match node {
+        PenNode::Line(line) => {
+            let ends = de_editor_core::fills::node_stroke_style(node).is_some_and(|style| {
+                de_editor_core::stroke_geometry::StrokeEnds::from_parts(
+                    style.stroke_start,
+                    style.stroke_end,
+                    style.cap.as_ref(),
+                )
+                .is_some()
+            });
+            let reversed = line.x2.is_some_and(|x| x < 0.0) || line.y2.is_some_and(|y| y < 0.0);
+            ends || reversed
+        }
+        _ => false,
     }
 }
 
@@ -104,6 +132,9 @@ fn patch_node_bounds(nodes: &mut [SceneNode], id: &str, bounds: Rect) -> bool {
             node.bounds = bounds;
             node.aggregate_bounds_cache =
                 SceneNode::compute_aggregate_bounds(bounds, &node.children);
+            // A smoothed box or rounded polygon's outline is built for its
+            // box: rebuild this node's alone (`None` for the rest).
+            node.corner_path = de_pen_loader::rebuild_box_corner_path(node);
             return true;
         }
         if patch_node_bounds(&mut node.children, id, bounds) {
@@ -138,3 +169,7 @@ fn patch_node_rotation(nodes: &mut [SceneNode], id: &str, rotation: f32) -> bool
     }
     false
 }
+
+#[cfg(test)]
+#[path = "canvas_scene_patch_tests.rs"]
+mod tests;

@@ -9,7 +9,7 @@
 //! so the order is stated once.
 
 use de_editor_ui::layout_scene::{
-    SceneFillType, SceneGradient, SceneGradientStop, SceneNode, SceneStroke,
+    SceneFillType, SceneGradient, SceneGradientStop, SceneNode, SceneStroke, StrokeStyle,
 };
 use de_editor_ui::{Color, Rect};
 use de_util::xml_escape::escape_xml;
@@ -21,6 +21,8 @@ use super::units::{color_element, degrees_60k, emu, emu_extent, pct_1000, rot_60
 pub enum Geom {
     Rect,
     Ellipse,
+    /// A polygon or star, as a custom geometry (#389).
+    Polygon,
 }
 
 /// `<p:nvSpPr>` — the identity block every shape opens with.
@@ -82,6 +84,11 @@ fn plain_xfrm(rect: Rect, attrs: &str) -> String {
 pub fn prst_geom(node: &SceneNode, geom: Geom, rect: Rect) -> String {
     match geom {
         Geom::Ellipse => "<a:prstGeom prst=\"ellipse\"><a:avLst/></a:prstGeom>".to_string(),
+        Geom::Polygon => super::cust_geom::polygon_geom(node, rect)
+            .unwrap_or_else(|| "<a:prstGeom prst=\"rect\"><a:avLst/></a:prstGeom>".to_string()),
+        // Smoothed corners (#389) and the per-corner radii they carry.
+        Geom::Rect if node.corner_path.is_some() => super::cust_geom::box_outline_geom(node, rect)
+            .unwrap_or_else(|| "<a:prstGeom prst=\"rect\"><a:avLst/></a:prstGeom>".to_string()),
         Geom::Rect => match corner_radius(node) {
             Some(radius) => {
                 let shorter = rect.size.x.min(rect.size.y).max(0.01);
@@ -217,14 +224,31 @@ fn stop_list(stops: &[SceneGradientStop], alpha: f32) -> String {
 /// from where the canvas puts it. At the 1–2 px strokes decks use, that
 /// is a sub-pixel difference on a projected slide, and the alternative —
 /// insetting the shape to compensate — would move the FILL edge too.
+///
+/// A closed shape has no ends: its stroke's start / end shapes (#389) are
+/// dropped here, so no `<a:headEnd>` / `<a:tailEnd>` lands on a box and
+/// the cap is the authored one. Lines go through [`line_element_open`].
 pub fn line_element(stroke: SceneStroke, alpha: f32) -> Option<String> {
+    let style = StrokeStyle {
+        start: None,
+        end: None,
+        ..stroke.style
+    };
+    line_element_open(SceneStroke { style, ..stroke }, alpha)
+}
+
+/// [`line_element`] for an open stroke (a line): its start / end shapes
+/// become `<a:headEnd>` / `<a:tailEnd>`.
+pub fn line_element_open(stroke: SceneStroke, alpha: f32) -> Option<String> {
     if stroke.width <= 0.0 || !stroke.width.is_finite() {
         return None;
     }
     Some(format!(
-        "<a:ln w=\"{}\" cap=\"flat\">{}<a:prstDash val=\"solid\"/></a:ln>",
+        "<a:ln w=\"{}\" cap=\"{}\">{}<a:prstDash val=\"solid\"/>{}</a:ln>",
         emu_extent(stroke.width),
-        solid_fill(stroke.color, alpha)
+        super::line_style::cap_attr(&stroke.style),
+        solid_fill(stroke.color, alpha),
+        super::line_style::ln_children(&stroke.style, stroke.width),
     ))
 }
 

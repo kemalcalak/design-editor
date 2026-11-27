@@ -54,6 +54,7 @@ fn visible_for(panel: &PropertyPanel) -> sections::VisibleSections {
         corner_radius: panel.snapshot.has_corner_radius,
         corner_per_corner: panel.snapshot.supports_per_corner,
         corner_expand: panel.corner_expand_open,
+        corner_smoothing: !panel.is_multi && panel.snapshot.corner_smoothing.is_some(),
         path_fill_rule: panel.snapshot.path_fill_rule,
         polygon_sides: panel.snapshot.polygon_sides.is_some(),
         star_inner: panel.snapshot.star_inner_percent.is_some(),
@@ -62,7 +63,9 @@ fn visible_for(panel: &PropertyPanel) -> sections::VisibleSections {
         stroke: caps.stroke,
         stroke_edit_mode: panel.stroke_edit_mode,
         stroke_mode_popover_open: panel.stroke_mode_popover_open,
-        stroke_style_rows: panel.snapshot.stroke.is_some(),
+        stroke_style_rows: crate::widgets::property_panel_stroke::StrokeStyleRows::of(
+            &panel.snapshot,
+        ),
         fill_menu: panel.fill_menu_open,
         export_open: panel.export_section_open,
         export_scale_row: panel.export_format.uses_scale(),

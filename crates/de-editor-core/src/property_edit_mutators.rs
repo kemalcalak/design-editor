@@ -6,6 +6,9 @@ use crate::ui_draft::PropertyFocus;
 use crate::walkers::find_node_mut;
 use jian_ops_schema::node::{PenNode, ScriptNode};
 
+#[path = "property_edit_stroke.rs"]
+mod stroke;
+
 fn stroke_side_for_focus(focus: PropertyFocus) -> Option<crate::StrokeSide> {
     match focus {
         PropertyFocus::StrokeTopWidth => Some(crate::StrokeSide::Top),
@@ -166,6 +169,14 @@ impl EditorState {
                 );
             }
             PropertyFocus::StrokeWidth => return self.cmd_set_node_stroke_width(&sel, value),
+            PropertyFocus::StrokeMiterLimit => return self.set_selected_stroke_miter_limit(value),
+            PropertyFocus::CornerSmoothing => {
+                if !value.is_finite() {
+                    return false;
+                }
+                let smoothing = Some((value / 100.0).clamp(0.0, 1.0));
+                return self.cmd_set_node_corners(&sel, None, smoothing);
+            }
             PropertyFocus::StrokeTopWidth
             | PropertyFocus::StrokeRightWidth
             | PropertyFocus::StrokeBottomWidth
@@ -338,6 +349,7 @@ impl EditorState {
             | PropertyFocus::CornerTR
             | PropertyFocus::CornerBL
             | PropertyFocus::CornerBR
+            | PropertyFocus::CornerSmoothing
             | PropertyFocus::EffectRadius(_)
             | PropertyFocus::MotionValue { .. }
             | PropertyFocus::MotionColor { .. }
@@ -350,7 +362,8 @@ impl EditorState {
             | PropertyFocus::ScaleFactor
             | PropertyFocus::ScaleWidth
             | PropertyFocus::ScaleHeight
-            | PropertyFocus::StrokeWidth => {
+            | PropertyFocus::StrokeWidth
+            | PropertyFocus::StrokeMiterLimit => {
                 unreachable!("handled before the node borrow (or refused for Scale fields)")
             }
             PropertyFocus::PolygonSides
@@ -683,33 +696,6 @@ impl EditorState {
         } else {
             crate::fills::set_primary_image_fill_mode(node, mode)
         };
-        if changed {
-            self.mark_document_changed();
-        }
-        changed
-    }
-
-    /// Set the anchor node's stroke alignment. A node without a stroke
-    /// is left alone (see `fills::set_stroke_align`).
-    pub fn set_selected_stroke_align(
-        &mut self,
-        align: jian_ops_schema::style::StrokeAlign,
-    ) -> bool {
-        let changed = self
-            .with_selected_node(|node| crate::fills::set_stroke_align(node, align))
-            .unwrap_or(false);
-        if changed {
-            self.mark_document_changed();
-        }
-        changed
-    }
-
-    /// Apply a cap / join / dash-preset click to the anchor node's
-    /// stroke. A node without a stroke is left alone.
-    pub fn set_selected_stroke_style(&mut self, edit: &crate::fills::StrokeStyleEdit) -> bool {
-        let changed = self
-            .with_selected_node(|node| crate::fills::apply_stroke_style_edit(node, edit))
-            .unwrap_or(false);
         if changed {
             self.mark_document_changed();
         }

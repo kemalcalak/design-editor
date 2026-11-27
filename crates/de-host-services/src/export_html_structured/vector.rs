@@ -92,21 +92,21 @@ pub fn emit_icon(out: &mut String, n: &SceneNode, rect: Rect) {
 
 /// Emit a Line node as an inline SVG segment.
 ///
-/// A line's `bounds` is a vector, not a box: the segment runs from the
-/// origin to `origin + size`, and either component may be zero or
-/// negative. The SVG box is therefore the normalised rect padded out by
-/// the stroke, which also keeps a perfectly horizontal line (zero
-/// height) from collapsing to an unrenderable zero-extent viewport.
+/// The segment runs from the line's start to its end
+/// (`SceneNode::line_endpoints`: the scene keeps a normalised box plus the
+/// direction it was drawn in, #389), so the start stays the start. The SVG
+/// box is the segment's normalised rect padded out by the stroke, which
+/// also keeps a perfectly horizontal line (zero height) from collapsing to
+/// an unrenderable zero-extent viewport.
 pub fn emit_line(out: &mut String, n: &SceneNode, origin: Point2D) {
+    if emit_stroke_geometry(out, n, origin) {
+        return;
+    }
     let (color, width) = match n.stroke {
         Some(s) => (s.color, s.width),
         None => (n.fill.unwrap_or(Color::BLACK), 1.5),
     };
-    let a = n.bounds.origin;
-    let b = Point2D::new(
-        n.bounds.origin.x + n.bounds.size.x,
-        n.bounds.origin.y + n.bounds.size.y,
-    );
+    let (a, b) = n.line_endpoints();
     let doc_box = padded_box(
         Rect {
             origin: Point2D::new(a.x.min(b.x), a.y.min(b.y)),
@@ -137,6 +137,12 @@ pub fn emit_polygon(out: &mut String, n: &SceneNode, origin: Point2D) {
     }
     let stroke_pad = n.stroke.map_or(0.0, |s| s.width * 0.5);
     open_svg(out, padded_box(rect, stroke_pad), origin);
+    if let Some(d) = placed_outline(n) {
+        // Rounded corners (#389): the precomputed outline.
+        let _ = write!(out, r#"<path d="{d}"{}/>"#, paint_attrs(n));
+        out.push_str("</svg>");
+        return;
+    }
     let mut points = String::new();
     for (i, p) in polygon_node_points(n, rect).iter().enumerate() {
         if i > 0 {
@@ -151,8 +157,33 @@ pub fn emit_polygon(out: &mut String, n: &SceneNode, origin: Point2D) {
 /// Emit a Path node — either an imported SVG `d` fitted into its box,
 /// or the pen tool's polyline through `points`.
 pub fn emit_path(out: &mut String, n: &SceneNode, origin: Point2D) {
+    if emit_stroke_geometry(out, n, origin) {
+        return;
+    }
     let rect = normalize(n.bounds);
     let stroke_pad = n.stroke.map_or(0.0, |s| s.width * 0.5);
+    if let Some(d) = placed_outline(n) {
+        // Rounded vertices (#389): the precomputed outline.
+        open_svg(out, padded_box(rect, stroke_pad), origin);
+        let filled = n.svg_path.is_some() || n.path_closed;
+        let attrs = if n.stroke.is_none() && !(filled && n.fill.is_some()) {
+            format!(
+                r#" fill="none" stroke="{}" stroke-width="1.5""#,
+                css::color(n.fill.unwrap_or(Color::BLACK))
+            )
+        } else {
+            // An open pen path paints no fill on the canvas.
+            paint_attrs_with_fill(n, filled)
+        };
+        let rule = if n.even_odd_fill {
+            r#" fill-rule="evenodd""#
+        } else {
+            ""
+        };
+        let _ = write!(out, r#"<path d="{d}"{rule}{attrs}/>"#);
+        out.push_str("</svg>");
+        return;
+    }
     let (d, transform) = match &n.svg_path {
         Some(authored) => (authored.clone(), fit_transform(authored, rect)),
         None => {
@@ -266,8 +297,13 @@ fn points_bounds(points: &[Point2D]) -> Rect {
 /// left off: SVG's initial `fill` is opaque black, so omitting the
 /// attribute would flood an unfilled shape solid.
 fn paint_attrs(n: &SceneNode) -> String {
+    paint_attrs_with_fill(n, true)
+}
+
+/// [`paint_attrs`], with the fill left out (`fill="none"`) unless `filled`.
+fn paint_attrs_with_fill(n: &SceneNode, filled: bool) -> String {
     let mut attrs = String::new();
-    match n.fill {
+    match n.fill.filter(|_| filled) {
         Some(fill) => {
             let _ = write!(attrs, r#" fill="{}""#, css::color(fill));
         }
@@ -280,6 +316,20 @@ fn paint_attrs(n: &SceneNode) -> String {
             css::color(stroke.color),
             css::num(stroke.width)
         );
+        // The authored join and miter limit (#389): a polygon or path
+        // corner bevels / rounds / mitres as on the canvas.
+        use de_editor_ui::layout_scene::StrokeJoin;
+        if let Some(join) = stroke.style.join {
+            let join = match join {
+                StrokeJoin::Miter => "miter",
+                StrokeJoin::Round => "round",
+                StrokeJoin::Bevel => "bevel",
+            };
+            let _ = write!(attrs, r#" stroke-linejoin="{join}""#);
+        }
+        if let Some(limit) = stroke.style.miter_limit {
+            let _ = write!(attrs, r#" stroke-miterlimit="{}""#, css::num(limit));
+        }
     }
     attrs
 }
@@ -315,6 +365,20 @@ fn fit_transform(d: &str, rect: Rect) -> String {
     )
 }
 
+/// The node's corner outline (#389) moved into absolute doc coordinates
+/// (the inline SVG's viewBox space), escaped; `None` without one.
+fn placed_outline(n: &SceneNode) -> Option<String> {
+    let outline = n.corner_path.as_deref()?;
+    let origin = normalize(n.bounds).origin;
+    Some(escape_xml(
+        &de_editor_core::corner_geometry::translate_path_data(
+            &outline.d,
+            f64::from(origin.x),
+            f64::from(origin.y),
+        ),
+    ))
+}
+
 fn normalize(r: Rect) -> Rect {
     de_editor_ui::scene_bounds::normalize_rect(r)
 }
@@ -322,3 +386,61 @@ fn normalize(r: Rect) -> Rect {
 #[cfg(test)]
 #[path = "vector_tests.rs"]
 mod tests;
+
+/// A line or open path with end shapes (#389): its precomputed stroke
+/// geometry as inline SVG, the same paths the SVG export writes, placed in
+/// the node box with the node's flips. Returns `false` when it has none.
+fn emit_stroke_geometry(out: &mut String, n: &SceneNode, origin: Point2D) -> bool {
+    let (Some(stroke), Some(geometry)) = (n.stroke, n.stroke_geometry.as_deref()) else {
+        return false;
+    };
+    let rect = normalize(n.bounds);
+    let reach =
+        stroke.width + de_editor_core::stroke_geometry::head_length(f64::from(stroke.width)) as f32;
+    open_svg(out, padded_box(rect, reach), origin);
+    let (sx, tx) = if n.flip_x {
+        (-1.0, rect.origin.x + rect.size.x)
+    } else {
+        (1.0, rect.origin.x)
+    };
+    let (sy, ty) = if n.flip_y {
+        (-1.0, rect.origin.y + rect.size.y)
+    } else {
+        (1.0, rect.origin.y)
+    };
+    let place = format!(
+        r#" transform="matrix({sx} 0 0 {sy} {} {})""#,
+        css::num(tx),
+        css::num(ty)
+    );
+    if let (Some(fill), Some(outline)) = (n.fill, n.corner_path.as_deref()) {
+        // Rounded vertices (#389): the fill follows the rounded outline,
+        // which is node-local like the geometry.
+        if n.svg_path.is_some() {
+            let _ = write!(
+                out,
+                r#"<path d="{}"{place} fill="{}"/>"#,
+                de_util::xml_escape::escape_xml(&outline.d),
+                css::color(fill)
+            );
+        }
+    } else if let (Some(fill), Some(d)) = (n.fill, n.svg_path.as_deref()) {
+        // An imported open path's fill under its stroke, as the canvas
+        // paints it (a pen path's open outline paints no fill).
+        let rule = if n.even_odd_fill {
+            r#" fill-rule="evenodd""#
+        } else {
+            ""
+        };
+        let _ = write!(
+            out,
+            r#"<path d="{}"{}{rule} fill="{}"/>"#,
+            de_util::xml_escape::escape_xml(d),
+            fit_transform(d, rect),
+            css::color(fill)
+        );
+    }
+    de_editor_ui::svg_export::write_stroke_geometry(out, n, geometry, &place);
+    out.push_str("</svg>");
+    true
+}

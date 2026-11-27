@@ -50,6 +50,7 @@ pub use de_editor_core::scene_vars;
 pub use jian_scene::{layout_scene, layout_scene_hit};
 pub mod scale_plan;
 pub mod scene_bounds;
+mod stroke_centre_line;
 pub mod svg_export;
 mod text_fill_stack;
 pub mod text_outline;

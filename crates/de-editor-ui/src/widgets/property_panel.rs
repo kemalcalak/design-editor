@@ -423,6 +423,7 @@ impl PropertyPanel {
             corner_radius: self.snapshot.has_corner_radius,
             corner_per_corner: self.snapshot.supports_per_corner,
             corner_expand: self.corner_expand_open,
+            corner_smoothing: !self.is_multi && self.snapshot.corner_smoothing.is_some(),
             path_fill_rule: self.snapshot.path_fill_rule,
             polygon_sides: self.snapshot.polygon_sides.is_some(),
             star_inner: self.snapshot.star_inner_percent.is_some(),
@@ -431,7 +432,9 @@ impl PropertyPanel {
             stroke: caps.stroke,
             stroke_edit_mode: self.stroke_edit_mode,
             stroke_mode_popover_open: self.stroke_mode_popover_open,
-            stroke_style_rows: self.snapshot.stroke.is_some(),
+            stroke_style_rows: crate::widgets::property_panel_stroke::StrokeStyleRows::of(
+                &self.snapshot,
+            ),
             fill_menu: self.fill_menu_open,
             export_open: self.export_section_open,
             export_scale_row: self.export_format.uses_scale(),

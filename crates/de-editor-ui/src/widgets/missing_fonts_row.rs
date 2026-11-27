@@ -3,9 +3,10 @@
 //! mismatch and action affordances cannot drift apart.
 
 use crate::theme::Theme;
+use crate::widgets::chrome_buttons::{fit_button_width, measure_button_labels};
 use crate::widgets::editor_state_ext::translate;
 use crate::widgets::PaintCx;
-use crate::{Point2D, Rect, TextLayout};
+use crate::{Point2D, Rect, RenderBackend, TextLayout};
 use de_editor_core::missing_fonts::{
     can_download, font_download_status, FontDownloadStatus, MissingFontEntry, MissingFontsHover,
 };
@@ -19,26 +20,24 @@ const FAMILY_FONT_SIZE: f32 = 13.0;
 const FAMILY_FONT_WEIGHT: u16 = 600;
 const FAMILY_LINE_HEIGHT: f32 = 16.0;
 
-/// Shared choose-file geometry used by the modal and Settings Fonts tab.
-/// Fit-content pill width: label width + 12px padding each side.
-pub(crate) fn fit_button_width(label: &str, font_size: f32) -> f32 {
-    // CJK glyphs are full-width (~1.0 x font size); a flat Latin
-    // factor undershoots them and clips the label.
-    let text: f32 = label
-        .chars()
-        .map(|c| {
-            if (c as u32) > 0x2E7F {
-                font_size
-            } else {
-                font_size * 0.55
-            }
-        })
-        .sum();
-    text + 24.0
+/// Label size of a row's choose-file and Download buttons.
+const ROW_BUTTON_FONT: f32 = 11.0;
+
+/// Measure every label a missing-font row's buttons can show (choose file
+/// and each Download slot state), so the row's rects are the painted ones.
+/// The surface painting the rows calls it once per paint, before its rows.
+pub(crate) fn measure_row_button_labels(backend: &mut dyn RenderBackend, ui: &EditorUiState) {
+    let mut labels = vec![translate(ui, "missingFonts.chooseFont")];
+    labels.extend(
+        DOWNLOAD_SLOT_STATES
+            .iter()
+            .map(|status| translate(ui, download_label(*status))),
+    );
+    measure_button_labels(backend, ROW_BUTTON_FONT, &labels);
 }
 
 pub(crate) fn row_button_rect(row: Rect, ui: &EditorUiState) -> Rect {
-    let width = fit_button_width(translate(ui, "missingFonts.chooseFont"), 11.0);
+    let width = fit_button_width(translate(ui, "missingFonts.chooseFont"), ROW_BUTTON_FONT);
     Rect {
         origin: Point2D::new(
             row.origin.x + row.size.x - width,
@@ -87,7 +86,7 @@ pub(crate) fn row_download_rect(
     }
     let width = DOWNLOAD_SLOT_STATES
         .iter()
-        .map(|status| fit_button_width(translate(ui, download_label(*status)), 11.0))
+        .map(|status| fit_button_width(translate(ui, download_label(*status)), ROW_BUTTON_FONT))
         .fold(0.0, f32::max);
     let choose = row_button_rect(row, ui);
     Some(Rect {
@@ -177,7 +176,7 @@ pub(crate) fn paint_text(
 ) {
     let layout = TextLayout::single_run(
         text,
-        "system-ui",
+        crate::widgets::text_metrics::CHROME_FONT_FAMILY,
         font_size,
         color.to_jian(),
         Point2D::new(0.0, 0.0),
@@ -210,12 +209,16 @@ pub(crate) fn paint_missing_font_row(
     }
     let text_rect = row_text_rect_before(row, download.unwrap_or(row_button_rect(row, ui)));
     let family_lines = family_label_lines(&entry.family, text_rect.size.x, |text| {
-        cx.backend
-            .measure_text_weighted(text, FAMILY_FONT_SIZE, FAMILY_FONT_WEIGHT)
+        crate::widgets::text_metrics::measure_chrome_weighted(
+            cx.backend,
+            text,
+            FAMILY_FONT_SIZE,
+            FAMILY_FONT_WEIGHT,
+        )
     });
     let usage = translate(ui, "missingFonts.usage").replace("{n}", &entry.run_count.to_string());
     let usage = crate::util::ellipsize_to_width(&usage, text_rect.size.x, |text| {
-        cx.backend.measure_text_weighted(text, 11.0, 400)
+        crate::widgets::text_metrics::measure_chrome(cx.backend, text, 11.0)
     });
     let status = font_download_status(ui, &entry.family).filter(|_| !entry.resolved);
     // A mismatch note (a wrong file was imported) outranks the download
@@ -234,7 +237,7 @@ pub(crate) fn paint_missing_font_row(
     };
     let note_line = note.map(|(note, color)| {
         let text = crate::util::ellipsize_to_width(note, text_rect.size.x, |text| {
-            cx.backend.measure_text_weighted(text, 11.0, 400)
+            crate::widgets::text_metrics::measure_chrome(cx.backend, text, 11.0)
         });
         (text, color)
     });

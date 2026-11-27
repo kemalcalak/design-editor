@@ -74,6 +74,7 @@ pub(super) fn visible_for(panel: &PropertyPanel) -> sections::VisibleSections {
         corner_radius: panel.snapshot.has_corner_radius,
         corner_per_corner: panel.snapshot.supports_per_corner,
         corner_expand: panel.corner_expand_open,
+        corner_smoothing: !panel.is_multi && panel.snapshot.corner_smoothing.is_some(),
         path_fill_rule: panel.snapshot.path_fill_rule,
         polygon_sides: panel.snapshot.polygon_sides.is_some(),
         star_inner: panel.snapshot.star_inner_percent.is_some(),
@@ -82,7 +83,9 @@ pub(super) fn visible_for(panel: &PropertyPanel) -> sections::VisibleSections {
         stroke: caps.stroke,
         stroke_edit_mode: panel.stroke_edit_mode,
         stroke_mode_popover_open: panel.stroke_mode_popover_open,
-        stroke_style_rows: panel.snapshot.stroke.is_some(),
+        stroke_style_rows: crate::widgets::property_panel_stroke::StrokeStyleRows::of(
+            &panel.snapshot,
+        ),
         fill_menu: panel.fill_menu_open,
         export_open: panel.export_section_open,
         export_scale_row: panel.export_format.uses_scale(),
@@ -208,4 +211,35 @@ pub(super) fn paint_and_count(panel: &PropertyPanel, rect: Rect) -> (usize, usiz
         panel.paint(&mut cx, rect);
     }
     (backend.text, backend.round_rects)
+}
+
+/// Width of `text` at 12 px, the estimate the Motion sweep uses (wider
+/// than the 11 px the rows paint at).
+pub(crate) fn chrome_width(text: &str) -> f32 {
+    text.chars()
+        .map(|c| {
+            let code = c as u32;
+            let combining = matches!(
+                code,
+                0x0300..=0x036F
+                    | 0x0E31
+                    | 0x0E34..=0x0E3A
+                    | 0x0E47..=0x0E4E
+                    | 0x0900..=0x0903
+                    | 0x093A..=0x094F
+                    | 0x0951..=0x0957
+                    | 0x0962..=0x0963
+            );
+            if combining {
+                0.0
+            } else if code < 0x0250 {
+                0.55
+            } else if code < 0x2000 {
+                0.62
+            } else {
+                1.0
+            }
+        })
+        .sum::<f32>()
+        * 12.0
 }

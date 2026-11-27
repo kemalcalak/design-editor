@@ -169,3 +169,29 @@ fn image_only_fills_need_no_textures() {
     );
     assert_eq!(backend.ops, [Op::Shader(Vec::new())]);
 }
+
+#[test]
+fn the_silhouette_key_follows_corner_smoothing_and_the_outline() {
+    use crate::layout_scene::SceneCornerPath;
+    let rect = Rect::xywh(0.0, 0.0, 20.0, 20.0);
+    let mut node = SceneNode::leaf("n", NodeKind::Rect);
+    node.corner_radius = 6.0;
+    let plain = silhouette_key(&node, rect);
+    node.corner_smoothing = 0.6;
+    let smoothed = silhouette_key(&node, rect);
+    assert_ne!(plain, smoothed);
+    let outline = |d: &str| {
+        Some(std::sync::Arc::new(SceneCornerPath {
+            d: d.into(),
+            bounds: rect,
+            stroke_d: String::new(),
+            stroke_bounds: Rect::ZERO,
+            hit_ring: Vec::new(),
+        }))
+    };
+    node.corner_path = outline("M 0 0 L 20 0 L 20 20 Z");
+    let first = silhouette_key(&node, rect);
+    node.corner_path = outline("M 0 0 L 20 0 L 20 19 Z");
+    assert_ne!(first, silhouette_key(&node, rect));
+    assert_ne!(first, smoothed);
+}

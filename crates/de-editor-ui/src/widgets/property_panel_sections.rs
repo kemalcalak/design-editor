@@ -76,6 +76,8 @@ pub struct PropertyLabels {
     pub nearest_variant: &'static str,
     pub position: &'static str,
     pub corner_per_corner: &'static str,
+    /// The corner smoothing row (#389).
+    pub corner_smoothing: &'static str,
     pub mixed: &'static str,
     pub flex_layout: &'static str,
     pub auto_layout: &'static str,
@@ -107,6 +109,13 @@ pub struct PropertyLabels {
     pub stroke_dash_solid: &'static str,
     pub stroke_dash_dashed: &'static str,
     pub stroke_dash_dotted: &'static str,
+    /// Start / End / Miter rows and the swap tooltip (#389); the end
+    /// names follow `property_panel_stroke_ends::END_CAPS`.
+    pub stroke_start: &'static str,
+    pub stroke_end: &'static str,
+    pub stroke_miter: &'static str,
+    pub stroke_swap_ends: &'static str,
+    pub stroke_end_names: [&'static str; 8],
     pub effects: &'static str,
     pub fill_rule_nonzero: &'static str,
     pub fill_rule_evenodd: &'static str,
@@ -158,6 +167,7 @@ impl PropertyLabels {
             nearest_variant: pick("variants.nearest", "No exact variant: nearest shown"),
             position: pick("size.position", "Position"),
             corner_per_corner: pick("property.cornerPerCorner", "Edit corners independently"),
+            corner_smoothing: pick("property.cornerSmoothing", "Smoothing"),
             mixed: pick("property.mixed", "Mixed"),
             flex_layout: pick("layout.flexLayout", "Flex Layout"),
             auto_layout: pick("property.autoLayout", "Auto layout"),
@@ -186,6 +196,12 @@ impl PropertyLabels {
             stroke_dash_solid: pick("stroke.dashSolid", "Solid"),
             stroke_dash_dashed: pick("stroke.dashDashed", "Dashed"),
             stroke_dash_dotted: pick("stroke.dashDotted", "Dotted"),
+            stroke_start: pick("stroke.start", "Start"),
+            stroke_end: pick("stroke.end", "End"),
+            stroke_miter: pick("stroke.miter", "Miter"),
+            stroke_swap_ends: pick("stroke.swapEnds", "Swap ends"),
+            stroke_end_names: crate::widgets::property_panel_stroke_ends::END_CAP_KEYS
+                .map(|(key, fallback)| pick(key, fallback)),
             effects: pick("effects.title", "Effects"),
             fill_rule_nonzero: pick("fill.ruleNonzero", "Nonzero"),
             fill_rule_evenodd: pick("fill.ruleEvenodd", "Even-odd"),
@@ -347,6 +363,7 @@ pub fn paint_position_section(
     labels: &PropertyLabels,
     show_radius: bool,
     corner_expanded: bool,
+    smoothing: Option<f32>,
     show_size: bool,
     x: f32,
     y: f32,
@@ -471,6 +488,18 @@ pub fn paint_position_section(
             width,
         );
         y += crate::widgets::property_panel_corner::CORNER_GRID_EXTRA_HEIGHT;
+    }
+    if let Some(smoothing) = smoothing.filter(|_| show_radius) {
+        use crate::widgets::property_panel_corner_smoothing as row;
+        row::paint(
+            cx,
+            theme,
+            labels.corner_smoothing,
+            smoothing,
+            edit,
+            row::row_rects(x, y, width),
+        );
+        y += row::SMOOTHING_ROW_HEIGHT;
     }
     y += 12.0;
     paint_section_divider(cx, theme, x, y, width);

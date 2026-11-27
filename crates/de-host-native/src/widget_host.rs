@@ -78,6 +78,9 @@ mod codegen_framework_tests;
 mod color_picker_press;
 mod command_palette_dispatch;
 mod component_browser_press;
+mod create_drag;
+#[cfg(test)]
+mod create_drag_tests;
 mod cursor_hint;
 mod cursor_move_chrome;
 mod cursor_move_ctx;
@@ -268,6 +271,8 @@ mod shortcuts;
 mod shortcuts_clipboard_marker_tests;
 mod slides_panel;
 mod slides_panel_thumbs;
+#[cfg(test)]
+mod stroke_ends_width_tests;
 mod text_edit_press;
 mod update_modal_host;
 mod vector_edit_keys;
@@ -400,6 +405,8 @@ pub struct WidgetHostNative {
     /// Active bitmap pan while the selected image fill is in crop edit mode.
     pub(in crate::widget_host) image_crop_drag: Option<image_crop_drag::ImageCropDragState>,
     pub(in crate::widget_host) effect_radius_drag: Option<usize>,
+    /// The Position section's corner smoothing slider is mid-drag (#389).
+    pub(in crate::widget_host) corner_smoothing_drag: bool,
     /// Active generated-code preview text selection drag.
     pub(in crate::widget_host) code_selection_drag: Option<CodeSelectionDragState>,
     /// Active chat input text selection drag.
@@ -734,6 +741,9 @@ pub(in crate::widget_host) struct RotateDragState {
 pub(in crate::widget_host) struct CreateDragState {
     pub(in crate::widget_host) start_doc_x: f32,
     pub(in crate::widget_host) start_doc_y: f32,
+    /// The last cursor point, so a Shift / Alt change mid-drag redraws
+    /// the shape without a pointer move (#389).
+    pub(in crate::widget_host) cursor_doc: Option<de_editor_ui::Point2D>,
 }
 
 /// Ellipse arc-handle drag — tracks which arc handle of which

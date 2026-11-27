@@ -222,6 +222,7 @@ pub(crate) fn prepare_command(cmd: &mut EditorCommand) -> Result<(), MotionWrite
         | C::SetNodeRotation { .. }
         | C::SetNodeText { .. }
         | C::SetNodeCornerRadius { .. }
+        | C::SetNodeCorners { .. }
         | C::SetNodeFontSize { .. }
         | C::SetNodeFontWeight { .. }
         | C::SetNodeStrokeHex { .. }

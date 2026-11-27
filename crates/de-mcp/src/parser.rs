@@ -558,6 +558,7 @@ pub fn structured_arg_allowed(tool: &str, key: &str) -> bool {
             | ("set_slide_transition", "nodeIds")
             | ("scale_nodes", "nodeIds")
             | ("rename_layers", "nodeIds")
+            | ("set_node_corner_radius", "radius")
             | ("rename_layers", "names")
             | ("convert_to_instances", "nodeIds")
             | ("export_nodes", "nodeIds")

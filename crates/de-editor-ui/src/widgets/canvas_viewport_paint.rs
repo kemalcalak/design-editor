@@ -22,6 +22,7 @@
 use crate::layout_scene::SceneNode;
 use crate::layout_scene::{Effect, NodeKind};
 use crate::polygon_geometry::polygon_node_points;
+use crate::widgets::canvas_viewport_corner_path as corner_path;
 use crate::widgets::canvas_viewport_fill_layers::{
     fill_layer_fallback_color, paint_clipped_fill_layers_with, paint_clipped_shape_rich_fill_layer,
     paint_fill_layers, paint_fill_layers_then_stroke,
@@ -77,7 +78,6 @@ pub(crate) use entry::{
 };
 pub use hits::PaintNodeHits;
 use hits::PaintNodeOptions;
-use path_points::doc_to_world_point;
 pub(crate) use path_points::world_path_points;
 #[cfg(test)]
 pub(crate) use path_points::{flatten_path, WorldPathPoints};
@@ -186,7 +186,7 @@ fn paint_node_body<'a>(
             let t = elapsed_ms as f32 / REVEAL_WIREFRAME_MS as f32;
             // Brighten in fast, hold; the pop right after replaces it.
             let ramp = (t * 3.0).clamp(0.3, 1.0);
-            let radius = node.corner_radius * zoom;
+            let radius = corner_path::box_corner_radius(node) * zoom;
             cx.backend
                 .fill_rect(world_rect, blue.with_alpha(0.08 * ramp));
             if radius > 0.5 {
@@ -615,6 +615,12 @@ fn paint_node_body<'a>(
                 paint_ellipse(cx, node, world_rect, zoom);
             }
         }
+        NodeKind::Polygon if node.corner_path.is_some() => {
+            // Rounded corners (#389): the precomputed outline.
+            if let Some(outline) = corner_path::corner_outline(node) {
+                corner_path::paint_outline_shape(cx, node, outline, world_rect, zoom, true);
+            }
+        }
         NodeKind::Polygon => {
             let pts = polygon_node_points(node, world_rect);
             let layered = paint_clipped_fill_layers_with(
@@ -646,8 +652,15 @@ fn paint_node_body<'a>(
         }
         NodeKind::Line => stroke_paint::paint_line_node_stroke(cx, node, world_rect, zoom),
         NodeKind::Path => {
-            if let Some(d) = node.svg_path.as_deref() {
-                paint_svg_path_node(cx, node, world_rect, zoom, d);
+            let outline = corner_path::corner_outline(node);
+            if outline.is_some() || node.svg_path.is_some() {
+                if let Some(outline) = outline {
+                    // Rounded vertices (#389): the precomputed outline.
+                    let filled = node.svg_path.is_some() || node.path_closed;
+                    corner_path::paint_outline_shape(cx, node, outline, world_rect, zoom, filled);
+                } else if let Some(d) = node.svg_path.as_deref() {
+                    paint_svg_path_node(cx, node, world_rect, zoom, d);
+                }
                 if blur_sigma.is_some() {
                     cx.backend.restore();
                 }
@@ -701,37 +714,15 @@ fn paint_node_body<'a>(
                 cx.backend
                     .fill_polygon(world.as_ref().unwrap().as_slice(), node.fill.unwrap());
             }
-            // Stroke: an explicit stroke always paints; with no
-            // stroke, only an UNfilled path strokes (so it stays
-            // visible) — a filled path must not draw an implicit
-            // outline.
-            let stroke = match node.stroke {
-                Some(s) => Some((s.color, s.width * zoom)),
-                None if !filled => Some((
-                    node.fill.unwrap_or(crate::Color::BLACK),
-                    (1.5_f32).max(zoom),
-                )),
-                None => None,
-            };
-            if let Some((color, width)) = stroke {
-                stroke_paint::with_stroke_paint_or(
-                    cx,
-                    node,
-                    world_rect,
-                    zoom,
-                    color,
-                    |cx, color| {
-                        for pair in points.windows(2) {
-                            cx.backend.stroke_line(
-                                doc_to_world_point(pair[0], viewport_origin, zoom),
-                                doc_to_world_point(pair[1], viewport_origin, zoom),
-                                color,
-                                width,
-                            );
-                        }
-                    },
-                );
-            }
+            stroke_paint::paint_polyline_path_stroke(
+                cx,
+                node,
+                world_rect,
+                zoom,
+                points,
+                viewport_origin,
+                filled,
+            );
         }
         NodeKind::Text => {
             // text_input / select degrade to a `text` node but carry a

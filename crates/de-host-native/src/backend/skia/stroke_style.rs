@@ -40,6 +40,12 @@ fn apply_style(paint: &mut skia_safe::Paint, style: &StrokeStyle) {
             StrokeJoin::Bevel => skia_safe::PaintJoin::Bevel,
         });
     }
+    if let Some(limit) = style
+        .miter_limit
+        .filter(|limit| limit.is_finite() && *limit >= 1.0)
+    {
+        paint.set_stroke_miter(limit);
+    }
     if let Some(dash) = style.dash {
         if let Some(effect) = skia_safe::PathEffect::dash(dash.lengths(), dash.offset()) {
             paint.set_path_effect(effect);
@@ -61,6 +67,9 @@ mod tests {
         assert!(paint.path_effect().is_none());
 
         let style = StrokeStyle {
+            miter_limit: None,
+            start: None,
+            end: None,
             cap: Some(StrokeCap::Square),
             join: Some(StrokeJoin::Bevel),
             dash: StrokeDash::new(&[4.0, 2.0], 0.0),
@@ -69,5 +78,27 @@ mod tests {
         assert_eq!(paint.stroke_cap(), skia_safe::PaintCap::Square);
         assert_eq!(paint.stroke_join(), skia_safe::PaintJoin::Bevel);
         assert!(paint.path_effect().is_some());
+    }
+
+    #[test]
+    fn a_set_miter_limit_reaches_the_paint_and_nonsense_is_ignored() {
+        let mut paint = skia_safe::Paint::default();
+        let default_miter = paint.stroke_miter();
+        apply_style(
+            &mut paint,
+            &StrokeStyle {
+                miter_limit: Some(0.5),
+                ..StrokeStyle::default()
+            },
+        );
+        assert_eq!(paint.stroke_miter(), default_miter);
+        apply_style(
+            &mut paint,
+            &StrokeStyle {
+                miter_limit: Some(10.0),
+                ..StrokeStyle::default()
+            },
+        );
+        assert_eq!(paint.stroke_miter(), 10.0);
     }
 }

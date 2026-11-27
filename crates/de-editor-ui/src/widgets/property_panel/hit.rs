@@ -239,6 +239,13 @@ impl PropertyPanel {
                         return Some(jumped);
                     }
                 }
+                if let PropertyPanelAction::SetCornerSmoothing(_) = &action {
+                    return Some(PropertyPanelAction::SetCornerSmoothing(
+                        crate::widgets::property_panel_corner_smoothing::slider_value(
+                            rect, point.x,
+                        ),
+                    ));
+                }
                 if let PropertyPanelAction::AdjustEffectParam { effect, field, .. } = &action {
                     return Some(PropertyPanelAction::AdjustEffectParam {
                         effect: *effect,
@@ -311,6 +318,41 @@ impl PropertyPanel {
             field,
             point.x,
         )
+    }
+
+    /// The corner smoothing value under `x` while its slider is being
+    /// dragged (#389); `None` when the row is not on show.
+    pub fn corner_smoothing_drag_action(
+        &self,
+        panel_rect: Rect,
+        x: f32,
+    ) -> Option<PropertyPanelAction> {
+        if self.is_multi {
+            return None;
+        }
+        sections::action_button_rects_with_fill_picker(
+            self.scrolled_rect(panel_rect),
+            self.visible_sections(),
+            &self.snapshot.effects,
+            &self.snapshot.fills,
+            &self.snapshot.interactions,
+            self.fill_type_picker.open,
+            self.fill_type_picker_index,
+            self.font_picker.open,
+            self.font_weight_picker_open,
+            self.export_scale_picker_open,
+            self.export_format_picker_open,
+            self.layout_align_popover_open,
+        )
+        .into_iter()
+        .find_map(|(action, rect)| match action {
+            PropertyPanelAction::SetCornerSmoothing(_) => {
+                Some(PropertyPanelAction::SetCornerSmoothing(
+                    crate::widgets::property_panel_corner_smoothing::slider_value(rect, x),
+                ))
+            }
+            _ => None,
+        })
     }
 
     pub fn effect_radius_drag_action(

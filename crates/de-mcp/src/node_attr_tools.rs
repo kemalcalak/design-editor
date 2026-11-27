@@ -78,43 +78,7 @@ pub fn set_node_text_snapshot() -> SetNodeText {
     SetNodeText
 }
 
-/// First-party `set_node_corner_radius` tool — write the corner radius
-/// (doc-px). Rejects negative values + nan/inf.
-pub struct SetNodeCornerRadius;
-
-impl McpTool for SetNodeCornerRadius {
-    fn name(&self) -> &str {
-        "set_node_corner_radius"
-    }
-    fn call(&self, args: &BTreeMap<String, String>) -> ToolOutcome {
-        let node_id = match parse_node_id(args, "node_id") {
-            Ok(v) => v,
-            Err(e) => return e,
-        };
-        let Some(raw_r) = args.get("radius") else {
-            return ToolOutcome::Err(
-                ToolErrorCode::MissingArgument,
-                "radius is required (non-negative f32 doc-px)".into(),
-            );
-        };
-        let radius: f32 = match raw_r.parse::<f32>() {
-            Ok(r) if r.is_finite() && r >= 0.0 => r,
-            _ => {
-                return ToolOutcome::Err(
-                    ToolErrorCode::InvalidArgument,
-                    format!("radius must be a non-negative finite f32, got {raw_r:?}"),
-                );
-            }
-        };
-        let mut out = BTreeMap::new();
-        out.insert("wrote".into(), "true".into());
-        ToolOutcome::OkWithCommand(out, EditorCommand::SetNodeCornerRadius { node_id, radius })
-    }
-}
-
-pub fn set_node_corner_radius_snapshot() -> SetNodeCornerRadius {
-    SetNodeCornerRadius
-}
+pub use super::node_attr_corners::{set_node_corner_radius_snapshot, SetNodeCornerRadius};
 
 /// First-party `set_node_font_size` tool — write `font_size` (doc-px)
 /// on a Text-kind node.
@@ -334,8 +298,9 @@ pub fn set_node_stroke_side_width_snapshot() -> SetNodeStrokeSideWidth {
     SetNodeStrokeSideWidth
 }
 
-/// First-party `set_node_stroke_style` tool (#89) — set cap / join /
-/// dash on a node's existing stroke. Every field is optional (at least
+/// First-party `set_node_stroke_style` tool (#89, #389) — set cap / join /
+/// dash, the per-end caps / arrowheads and the miter limit on a node's
+/// existing stroke. Every field is optional (at least
 /// one is required); omitted fields are left untouched.
 pub struct SetNodeStrokeStyle;
 
@@ -348,7 +313,7 @@ impl McpTool for SetNodeStrokeStyle {
             Ok(v) => v,
             Err(e) => return e,
         };
-        let style = match parse_stroke_style_args(args) {
+        let style = match super::node_attr_stroke_style::parse_stroke_style_args(args) {
             Ok(style) => style,
             Err(e) => return e,
         };
@@ -360,93 +325,6 @@ impl McpTool for SetNodeStrokeStyle {
 
 pub fn set_node_stroke_style_snapshot() -> SetNodeStrokeStyle {
     SetNodeStrokeStyle
-}
-
-fn invalid(message: String) -> ToolOutcome {
-    ToolOutcome::Err(ToolErrorCode::InvalidArgument, message)
-}
-
-// `ToolOutcome` is the shared MCP outcome type, as in `parse_opt_bool`.
-#[allow(clippy::result_large_err)]
-fn parse_stroke_style_args(
-    args: &BTreeMap<String, String>,
-) -> Result<de_editor_core::fills::StrokeStyleWrite, ToolOutcome> {
-    use jian_ops_schema::style::{StrokeCap, StrokeJoin};
-    let mut style = de_editor_core::fills::StrokeStyleWrite::default();
-    if let Some(raw) = args.get("cap") {
-        style.cap = Some(match raw.trim().to_ascii_lowercase().as_str() {
-            // `butt` is the SVG / CSS spelling of the schema's `none`.
-            "none" | "butt" => StrokeCap::None,
-            "round" => StrokeCap::Round,
-            "square" => StrokeCap::Square,
-            _ => {
-                return Err(invalid(format!(
-                    "cap must be one of none (butt) / round / square, got {raw:?}"
-                )))
-            }
-        });
-    }
-    if let Some(raw) = args.get("join") {
-        style.join = Some(match raw.trim().to_ascii_lowercase().as_str() {
-            "miter" => StrokeJoin::Miter,
-            "round" => StrokeJoin::Round,
-            "bevel" => StrokeJoin::Bevel,
-            _ => {
-                return Err(invalid(format!(
-                    "join must be one of miter / round / bevel, got {raw:?}"
-                )))
-            }
-        });
-    }
-    if let Some(raw) = args.get("dash_pattern") {
-        style.dash_pattern = Some(parse_dash_pattern(raw)?);
-    }
-    if let Some(raw) = args.get("dash_offset") {
-        match raw.trim().parse::<f32>() {
-            Ok(v) if v.is_finite() => style.dash_offset = Some(v),
-            _ => {
-                return Err(invalid(format!(
-                    "dash_offset must be a finite number, got {raw:?}"
-                )))
-            }
-        }
-    }
-    if style.is_empty() {
-        return Err(ToolOutcome::Err(
-            ToolErrorCode::MissingArgument,
-            "set at least one of cap / join / dash_pattern / dash_offset".into(),
-        ));
-    }
-    if !style.is_valid() {
-        return Err(invalid(
-            "dash_pattern lengths must be finite, non-negative and not all zero".into(),
-        ));
-    }
-    Ok(style)
-}
-
-/// `"4 2"`, `"4,2"` or `"[4, 2]"`; `""`, `"none"` or `"solid"` clears.
-#[allow(clippy::result_large_err)]
-fn parse_dash_pattern(raw: &str) -> Result<Vec<f32>, ToolOutcome> {
-    let trimmed = raw
-        .trim()
-        .trim_start_matches('[')
-        .trim_end_matches(']')
-        .trim();
-    if trimmed.is_empty() || matches!(trimmed.to_ascii_lowercase().as_str(), "none" | "solid") {
-        return Ok(Vec::new());
-    }
-    trimmed
-        .split(|c: char| c == ',' || c.is_whitespace())
-        .filter(|part| !part.is_empty())
-        .map(|part| {
-            part.parse::<f32>().map_err(|_| {
-                invalid(format!(
-                    "dash_pattern must be a list of numbers, got {raw:?}"
-                ))
-            })
-        })
-        .collect()
 }
 
 /// First-party `set_node_fill_hex` tool — set the fill color.

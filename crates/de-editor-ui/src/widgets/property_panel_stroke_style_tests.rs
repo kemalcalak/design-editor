@@ -9,7 +9,7 @@ use crate::widgets::property_panel_test_support::{state_from, visible_for};
 use crate::{Point2D, Rect};
 use de_editor_core::fills::{node_stroke_style, StrokeDashPreset, StrokeStyleEdit};
 use de_editor_core::{EditorState, NodeId};
-use jian_ops_schema::style::{StrokeCap, StrokeJoin};
+use jian_ops_schema::style::{StrokeCap, StrokeEndCap, StrokeJoin};
 
 fn panel_rect() -> Rect {
     Rect::xywh(0.0, 0.0, 280.0, 1400.0)
@@ -82,6 +82,7 @@ fn dispatch(state: &mut EditorState, action: &PropertyPanelAction) {
             resolved_sizing_fallback: None,
             image_adjustment_drag: &mut image_adjustment_drag,
             effect_radius_drag: &mut effect_radius_drag,
+            corner_smoothing_drag: &mut false,
         },
     );
 }
@@ -115,6 +116,10 @@ fn cap_join_and_dash_write_and_read_back() {
             cap: StrokeCap::None,
             join: StrokeJoin::Miter,
             dash: Some(StrokeDashPreset::Solid),
+            start: StrokeEndCap::None,
+            end: StrokeEndCap::None,
+            miter_limit: 4.0,
+            open: false,
         })
     );
     for edit in [
@@ -134,6 +139,10 @@ fn cap_join_and_dash_write_and_read_back() {
             cap: StrokeCap::Square,
             join: StrokeJoin::Bevel,
             dash: Some(StrokeDashPreset::Dashed),
+            start: StrokeEndCap::Square,
+            end: StrokeEndCap::Square,
+            miter_limit: 4.0,
+            open: false,
         })
     );
 }
