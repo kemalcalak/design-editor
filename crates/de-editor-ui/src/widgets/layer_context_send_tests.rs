@@ -54,7 +54,7 @@ fn the_row_opens_the_chat_on_the_note() {
         0,
     );
     assert_eq!(step, LayerContextStep::Done);
-    assert_eq!(s.chat.input.text(), "Tighten the spacing\n\n@Hero");
+    assert_eq!(s.chat.input.text(), "Tighten the spacing\n\n@Hero ");
     assert_eq!(s.chat.pending_mentions.len(), 1);
     assert!(s.chat.focused);
 }
