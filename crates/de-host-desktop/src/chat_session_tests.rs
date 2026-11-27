@@ -558,6 +558,7 @@ fn pump_executes_scripted_tool_call_against_live_state() {
                 args_json: args.into(),
                 ack: ack_tx,
                 hold: Default::default(),
+                id: 0,
             })
             .unwrap();
     });

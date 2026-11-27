@@ -172,6 +172,7 @@ impl DesktopApp {
                 return self.sync_home_mcp_client(None);
             };
             server.set_document_epoch(document_epoch);
+            server.set_now_ms(self.host.now_ms());
             server.set_document_path(self.current_path.as_deref());
             let outcome = server.pump(self.host.editor_state_mut());
             let pending_design_md = server.take_pending_design_md_request();

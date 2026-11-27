@@ -51,6 +51,9 @@ pub(super) struct LiveShared {
     /// writes (#392).
     document_path: Mutex<Option<PathBuf>>,
     next_request: AtomicU64,
+    /// "Ask before destructive agent actions", as the pump last saw it, so a
+    /// connection skips classifying and asking while it is off (#398).
+    asks_permission: AtomicBool,
 }
 
 impl Default for LiveShared {
@@ -62,6 +65,7 @@ impl Default for LiveShared {
             kit_catalog: Mutex::new(Arc::new(KitToolCatalog::builtin().clone())),
             document_path: Mutex::new(None),
             next_request: AtomicU64::new(0),
+            asks_permission: AtomicBool::new(false),
         }
     }
 }
@@ -181,6 +185,12 @@ impl LiveShared {
         Arc::clone(&lock_ignoring_poison(&self.kit_catalog))
     }
 
+    /// Whether destructive calls ask the user first (see
+    /// [`LiveUiSide::publish_permission_setting`]).
+    pub(super) fn asks_permission(&self) -> bool {
+        self.asks_permission.load(Ordering::Acquire)
+    }
+
     pub(super) fn document_path(&self) -> Option<PathBuf> {
         lock_ignoring_poison(&self.document_path).clone()
     }
@@ -214,6 +224,12 @@ impl LiveUiSide {
         let catalog = Arc::new(KitToolCatalog::of(kits));
         *lock_ignoring_poison(&self.shared.kit_catalog) = Arc::clone(&catalog);
         self.published_kits = catalog;
+    }
+
+    /// Publish the "ask before destructive agent actions" setting for the
+    /// connection threads.
+    pub(super) fn publish_permission_setting(&mut self, on: bool) {
+        self.shared.asks_permission.store(on, Ordering::Release);
     }
 
     /// Publish the file the open document is bound to; a no-op when it did

@@ -254,6 +254,11 @@ fn execute_tool_requests(
     }
     let mut changed = false;
     for req in requests {
+        // The worker's timeout passed before this call was held for the
+        // user: its agent was told it timed out, so it never runs (#398).
+        if req.abandoned() {
+            continue;
+        }
         // Intercept the reserved loop-finalize op (Track-1 Step 4): the
         // agentic design loop sends this at loop end so the host runs the
         // deterministic structural-quality backstop over the screens this run
@@ -415,28 +420,38 @@ fn execute_tool_requests(
         // deletes or overwrites waits for the user's Allow / Deny. Chat and
         // design-agent loops (and their sub-agents) all come through here.
         use de_editor_core::agent_permission::ToolGate;
-        let gate = state.gate_agent_tool_with(running_tab, &req.name, &req.args_json, || {
-            de_host_services::agent_permission_classify::classify_agent_tool(
-                &req.name,
-                &req.args_json,
-            )
-        });
+        let gate =
+            state.gate_agent_tool_with(running_tab, req.id, &req.name, &req.args_json, || {
+                de_host_services::agent_permission_classify::classify_agent_tool(
+                    &req.name,
+                    &req.args_json,
+                )
+            });
         match gate {
             ToolGate::Run => {}
             ToolGate::Asked | ToolGate::Wait => {
                 // The worker keeps waiting past its timeout while the user
-                // decides; dropping the session still ends that wait.
-                req.hold_for_user();
-                if gate == ToolGate::Asked && state.permission_prompt_hidden(running_tab) {
-                    state.editor_ui.show_toast(
-                        de_editor_core::agent_permission::WAITING_TOAST,
-                        Vec::new(),
-                        de_editor_core::editor_toast::EditorToastLevel::Info,
-                        now_ms,
-                    );
+                // decides; dropping the session still ends that wait. Lost
+                // the race to the worker's timeout: drop it unrun.
+                if !req.hold_for_user() {
+                    state.close_agent_permission(req.id);
+                    changed = true;
+                    continue;
+                }
+                if gate == ToolGate::Asked {
+                    if state.permission_prompt_hidden(running_tab) {
+                        state.editor_ui.show_toast(
+                            de_editor_core::agent_permission::WAITING_TOAST,
+                            Vec::new(),
+                            de_editor_core::editor_toast::EditorToastLevel::Info,
+                            now_ms,
+                        );
+                    }
+                    // Only a new prompt repaints; a waiting one changes
+                    // nothing on screen.
+                    changed = true;
                 }
                 session.defer_tool_request(req);
-                changed = true;
                 continue;
             }
             ToolGate::Declined => {

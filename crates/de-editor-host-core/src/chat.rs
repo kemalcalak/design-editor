@@ -1,7 +1,7 @@
 //! Shared chat turn worker and transcript folding logic.
 
 use std::collections::VecDeque;
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU64, AtomicU8, Ordering};
 use std::sync::mpsc::{self, Receiver, Sender, SyncSender, TryRecvError};
 use std::sync::{Arc, Mutex};
 use std::thread;
@@ -20,27 +20,55 @@ pub struct ChatToolRequest {
     pub name: String,
     pub args_json: String,
     pub ack: SyncSender<ChatToolResult>,
-    /// Raised by the host while the call waits for the user (#398's
-    /// permission prompt): the worker then waits past its usual timeout, so
-    /// a call never runs after its agent was told it timed out. Dropping the
-    /// request (stop, tab or document closed, quit) still ends the wait.
-    pub hold: Arc<AtomicBool>,
+    /// Who decides the call's fate past the worker's timeout (#398's
+    /// permission prompt): `WAITING` until either side moves. The host
+    /// moves it to `HELD` when it asks the user (the worker then waits
+    /// however long); the worker moves it to `GAVE_UP` when its timeout
+    /// passes first, and the host then never runs the call. Only one of the
+    /// two moves can win (compare-and-swap). Dropping a held request (stop,
+    /// tab or document closed, quit) reads as declined.
+    pub hold: Arc<AtomicU8>,
+    /// Unique per request, so a permission answer applies to this call only.
+    pub id: u64,
 }
 
+/// [`ChatToolRequest::hold`] states.
+const WAITING: u8 = 0;
+const HELD: u8 = 1;
+const GAVE_UP: u8 = 2;
+
+static NEXT_REQUEST_ID: AtomicU64 = AtomicU64::new(1);
+
 impl ChatToolRequest {
-    /// A request with its ack channel's sending half and a fresh hold flag.
+    /// A request with its ack channel's sending half, a fresh id and the
+    /// hold state at `WAITING`.
     pub fn new(name: &str, args_json: &str, ack: SyncSender<ChatToolResult>) -> Self {
         Self {
             name: name.to_string(),
             args_json: args_json.to_string(),
             ack,
-            hold: Arc::new(AtomicBool::new(false)),
+            hold: Arc::new(AtomicU8::new(WAITING)),
+            id: NEXT_REQUEST_ID.fetch_add(1, Ordering::Relaxed),
         }
     }
 
     /// Keep the worker waiting for this call's answer (the user is asked).
-    pub fn hold_for_user(&self) {
-        self.hold.store(true, Ordering::SeqCst);
+    /// False when the worker already gave up on it: the host must then drop
+    /// the call without running it.
+    pub fn hold_for_user(&self) -> bool {
+        match self
+            .hold
+            .compare_exchange(WAITING, HELD, Ordering::SeqCst, Ordering::SeqCst)
+        {
+            Ok(_) => true,
+            Err(state) => state == HELD,
+        }
+    }
+
+    /// Whether the worker stopped waiting (its timeout passed before the
+    /// host held or answered the call): such a call is never run.
+    pub fn abandoned(&self) -> bool {
+        self.hold.load(Ordering::SeqCst) == GAVE_UP
     }
 }
 
@@ -210,7 +238,7 @@ impl UiChatToolExecutor {
     fn forward(&self, name: &str, args_json: &str) -> ChatToolResult {
         let (ack_tx, ack_rx) = std::sync::mpsc::sync_channel::<ChatToolResult>(1);
         let req = ChatToolRequest::new(name, args_json, ack_tx);
-        let hold = Arc::clone(&req.hold);
+        let hold: Arc<AtomicU8> = Arc::clone(&req.hold);
         let sent = match self.tx.lock() {
             Ok(tx) => tx.send(req).is_ok(),
             Err(_) => false,
@@ -221,12 +249,25 @@ impl UiChatToolExecutor {
         loop {
             match ack_rx.recv_timeout(TOOL_ACK_TIMEOUT) {
                 Ok(result) => return result,
-                // The user is being asked: keep waiting, however long.
-                Err(mpsc::RecvTimeoutError::Timeout) if hold.load(Ordering::SeqCst) => continue,
-                Err(mpsc::RecvTimeoutError::Timeout) => return timeout_result(),
+                // Give up unless the host already holds the call for the
+                // user (then keep waiting, however long). The swap decides
+                // the race: a call given up on is never run by the host.
+                Err(mpsc::RecvTimeoutError::Timeout) => {
+                    match hold.compare_exchange(
+                        WAITING,
+                        GAVE_UP,
+                        Ordering::SeqCst,
+                        Ordering::SeqCst,
+                    ) {
+                        Ok(_) => return timeout_result(),
+                        Err(_) => continue,
+                    }
+                }
                 // The host dropped the call: a prompt left unanswered (stop,
                 // tab or document closed, quit) counts as declined.
-                Err(mpsc::RecvTimeoutError::Disconnected) if hold.load(Ordering::SeqCst) => {
+                Err(mpsc::RecvTimeoutError::Disconnected)
+                    if hold.load(Ordering::SeqCst) == HELD =>
+                {
                     return ChatToolResult {
                         content: de_editor_core::agent_permission::DECLINED_RESULT.to_string(),
                         is_error: true,

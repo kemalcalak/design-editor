@@ -657,6 +657,10 @@ impl ApplicationHandler<DesktopEvent> for DesktopApp {
     }
 
     fn exiting(&mut self, _event_loop: &ActiveEventLoop) {
+        // An agent call waiting on a permission prompt is declined, not left
+        // to a worker that outlives the window (#398).
+        self.host.editor_state_mut().decline_all_agent_permissions();
+        self.current_chat = None;
         // macOS Cmd+Q / Alt+F4 / WM-close can deliver `exiting` without
         // `CloseRequested`; flush MCP port draft before snapshotting so
         // a focused-but-uncommitted edit isn't silently dropped.

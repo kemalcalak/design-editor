@@ -255,6 +255,8 @@ impl EditorState {
         // Generation-run ownership is doc-scoped; clear on whole-doc replace.
         self.app_state_owner.clear();
         self.instance_write_virtual_anchor = None;
+        // An agent's question was about the document that just left.
+        self.decline_all_agent_permissions();
         drop_document_after_replace(old_doc);
     }
 
@@ -282,6 +284,7 @@ impl EditorState {
         // Generation-run ownership is doc-scoped; clear on whole-doc replace.
         self.app_state_owner.clear();
         self.instance_write_virtual_anchor = None;
+        self.decline_all_agent_permissions();
         self.sync_dirty_flag();
         drop_document_after_replace(old_doc);
     }

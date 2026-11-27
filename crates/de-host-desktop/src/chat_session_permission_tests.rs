@@ -40,6 +40,7 @@ fn request_delete(
             args_json: r#"{"nodeId":"hero"}"#.into(),
             ack: ack_tx,
             hold: Default::default(),
+            id: 0,
         })
         .unwrap();
     pump(host, current, None, None, (1200.0, 800.0));
@@ -109,19 +110,20 @@ fn a_design_loop_call_is_gated_held_and_announced_off_screen() {
     // The run's tab (0) is not the one on screen.
     host.editor_state_mut().chat.new_tab();
     let (ack_tx, ack_rx) = sync_channel(1);
-    let hold = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
+    let hold = std::sync::Arc::new(std::sync::atomic::AtomicU8::new(0));
     tool_tx
         .send(de_editor_host_core::chat::ChatToolRequest {
             name: "delete_node".into(),
             args_json: r#"{"nodeId":"hero"}"#.into(),
             ack: ack_tx,
             hold: std::sync::Arc::clone(&hold),
+            id: 0,
         })
         .unwrap();
     pump(&mut host, &mut current, Some(0), None, (1200.0, 800.0));
     assert!(ack_rx.try_recv().is_err(), "the design loop waits too");
     assert!(
-        hold.load(std::sync::atomic::Ordering::SeqCst),
+        hold.load(std::sync::atomic::Ordering::SeqCst) == 1,
         "the worker is told to keep waiting"
     );
     let toast = host.editor_state().editor_ui.editor_toast.clone().unwrap();
@@ -136,4 +138,44 @@ fn a_design_loop_call_is_gated_held_and_announced_off_screen() {
         ack_rx.try_recv(),
         Err(std::sync::mpsc::TryRecvError::Disconnected)
     ));
+}
+
+#[test]
+fn a_call_its_worker_gave_up_on_never_runs_even_after_allow() {
+    let mut host = host_with_frame();
+    let (_delta_tx, delta_rx) = channel::<de_ai::chat_provider::ChatDelta>();
+    let (tool_tx, tool_rx) = channel();
+    let mut current = Some(ChatSession::from_channels(delta_rx, Some(tool_rx)));
+    let (ack_tx, _ack_rx) = sync_channel(1);
+    let request = de_editor_host_core::chat::ChatToolRequest::new(
+        "delete_node",
+        r#"{"nodeId":"hero"}"#,
+        ack_tx,
+    );
+    // The worker's 60 s passed before the host got to the call.
+    request.hold.store(2, std::sync::atomic::Ordering::SeqCst);
+    tool_tx.send(request).unwrap();
+    pump(&mut host, &mut current, None, None, (1200.0, 800.0));
+    assert!(host.editor_state().chat.permission_prompt.is_none());
+    assert!(!host.editor_state_mut().answer_agent_permission(true));
+    pump(&mut host, &mut current, None, None, (1200.0, 800.0));
+    assert_eq!(
+        host.editor_state().active_children().len(),
+        1,
+        "the layer stays"
+    );
+}
+
+#[test]
+fn a_waiting_prompt_does_not_repaint_every_pump() {
+    let mut host = host_with_frame();
+    let (_delta_tx, delta_rx) = channel::<de_ai::chat_provider::ChatDelta>();
+    let (tool_tx, tool_rx) = channel();
+    let mut current = Some(ChatSession::from_channels(delta_rx, Some(tool_rx)));
+    let _ack = request_delete(&mut host, &mut current, &tool_tx);
+    assert!(host.editor_state().chat.permission_prompt.is_some());
+    assert!(
+        !pump(&mut host, &mut current, None, None, (1200.0, 800.0)),
+        "nothing changed while the user decides"
+    );
 }

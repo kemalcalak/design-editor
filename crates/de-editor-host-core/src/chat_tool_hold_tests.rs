@@ -43,3 +43,24 @@ fn a_held_call_still_gets_its_late_answer() {
         .unwrap();
     assert_eq!(worker.join().unwrap().content, "ran");
 }
+
+#[test]
+fn a_call_given_up_on_is_never_held_or_run() {
+    let (tx, _rx) = std::sync::mpsc::sync_channel(1);
+    let req = ChatToolRequest::new("delete_node", "{}", tx);
+    assert!(!req.abandoned());
+    // The worker's timeout won the race.
+    req.hold.store(GAVE_UP, Ordering::SeqCst);
+    assert!(req.abandoned());
+    assert!(!req.hold_for_user(), "too late to hold");
+}
+
+#[test]
+fn requests_get_their_own_ids() {
+    let (tx, _rx) = std::sync::mpsc::sync_channel(1);
+    let a = ChatToolRequest::new("x", "{}", tx.clone());
+    let b = ChatToolRequest::new("x", "{}", tx);
+    assert_ne!(a.id, b.id);
+    assert!(a.hold_for_user());
+    assert!(a.hold_for_user(), "holding twice is fine");
+}

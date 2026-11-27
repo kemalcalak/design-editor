@@ -108,6 +108,8 @@ pub struct McpLiveServer {
     follow_target: Option<McpFollowTarget>,
     /// Destructive calls waiting for the user's Allow / Deny (#398).
     pending_permissions: Vec<permission::PendingPermission>,
+    /// The host's clock for this pump ([`McpLiveServer::set_now_ms`]).
+    now_ms: u64,
 }
 
 /// A file a client wrote with `save_document`.
@@ -307,6 +309,7 @@ impl McpLiveServer {
             snapshot_anchor: Default::default(),
             pending_design_md: VecDeque::new(),
             pending_permissions: Vec::new(),
+            now_ms: 0,
             saved_documents: Vec::new(),
             host_document_epoch: 0,
             follow_target: None,
@@ -506,6 +509,12 @@ impl McpLiveServer {
     /// call, oldest first.
     pub fn take_saved_documents(&mut self) -> Vec<McpSavedDocument> {
         std::mem::take(&mut self.saved_documents)
+    }
+
+    /// Record the host's clock before [`Self::pump`] (its notices are timed
+    /// with it).
+    pub fn set_now_ms(&mut self, now_ms: u64) {
+        self.now_ms = now_ms;
     }
 
     /// Record the host's current document epoch before [`Self::pump`], so

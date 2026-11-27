@@ -2,17 +2,28 @@
 //!
 //! With Settings ▸ System ▸ "Ask before destructive agent actions" on (off
 //! by default, `AgentSettings::confirm_destructive_agent_actions`), a tool
-//! call that deletes a layer, page, component or variable, replaces a
-//! layer, deletes or replaces inside a `batch_design` program (a `script`
-//! one counts once the host expanded it, else it always asks) or writes a
-//! file waits for the user: the chat shows a prompt with Allow / Deny, and
-//! the agent gets the tool's result or "the user declined" once they
-//! answer. The in-app chat and design-agent loops and the live MCP server
-//! (CLI and ACP agents) all go through [`EditorState::gate_agent_tool`].
+//! call that deletes a layer (also the selection, or by cutting it), page,
+//! component or variable, replaces a layer or all variables, deletes or
+//! replaces inside a `batch_design` program, runs a script that may delete,
+//! replace or write files (`batch_design` scripts the host expands are
+//! counted; `execute` scripts are read for those calls), or writes a file
+//! (an output path, a save, or a write aimed at another `.de` through
+//! `filePath`) waits for the user: the chat shows a prompt with Allow /
+//! Deny, and the agent gets the tool's result or "the user declined" once
+//! they answer. The in-app chat and design-agent loops and the live MCP
+//! server (CLI and ACP agents) all go through
+//! [`EditorState::gate_agent_tool_with`].
+//!
+//! A prompt belongs to one call (its `call_id`) on one chat tab. Turning the
+//! setting off lets each waiting call run and closes its prompt. Replacing
+//! or opening the document declines every open prompt
+//! ([`EditorState::decline_all_agent_permissions`]), as does quitting;
+//! Stop, New chat and a new send drop the turn, whose held calls then read
+//! as declined (`ChatToolRequest::hold`).
 //!
 //! Classification and the prompt state are here (pure); the host holds the
-//! waiting request (`ChatSession::defer_tool_request`) and the chat panel
-//! paints the prompt.
+//! waiting request (`ChatSession::defer_tool_request`, or the MCP server's
+//! pending list) and the chat panel paints the prompt.
 
 use serde_json::Value;
 
@@ -32,11 +43,14 @@ pub enum DestructiveAction {
     DeleteInBatch {
         count: usize,
     },
-    /// A `batch_design` script the host could not expand into operations,
-    /// so what it deletes is not known before it runs.
+    /// A script (`batch_design` the host could not expand, or `execute`)
+    /// that may delete or replace layers or write files: what it does is
+    /// not known before it runs.
     ScriptedBatch,
     /// A save or export that writes to disk.
     WriteFile,
+    /// `set_variables` with `replace`: every variable not in the call goes.
+    ReplaceVariables,
 }
 
 impl DestructiveAction {
@@ -51,21 +65,69 @@ impl DestructiveAction {
             DestructiveAction::DeleteInBatch { .. } => "chat.permission.deleteInBatch",
             DestructiveAction::ScriptedBatch => "chat.permission.batchScript",
             DestructiveAction::WriteFile => "chat.permission.writeFile",
+            DestructiveAction::ReplaceVariables => "chat.permission.replaceVariables",
         }
     }
 }
 
-/// Tools that write files when the agent calls them.
-const FILE_WRITING_TOOLS: &[&str] = &[
-    "save_document",
-    "export_nodes",
-    "export_item",
-    "export_frames",
-    "export_deck",
-    "export_design_md",
-    "codegen_export",
-    "save_theme_preset",
+/// Tools that always write a file (the document, the theme presets).
+const SAVING_TOOLS: &[&str] = &["save_document", "save_theme_preset"];
+
+/// Arguments that name a file or folder a tool writes its output to
+/// (`export_frames` / `export_deck` / `export_html`); without one those
+/// tools answer inline and write nothing.
+const OUTPUT_PATH_ARGS: &[&str] = &["outputPath", "outputDir"];
+
+/// Name prefixes of tools that only read. A `filePath` on any other tool
+/// makes it write that `.de` file on disk (`mcp_serve::file_path`).
+const READ_ONLY_PREFIXES: &[&str] = &[
+    "get_",
+    "list_",
+    "read_",
+    "find_",
+    "search_",
+    "count_",
+    "snapshot_",
+    "batch_get",
+    "lint_",
+    "export_",
+    "codegen_",
+    "capture_",
+    "open_document",
 ];
+
+/// The `execute` script calls that delete, replace or write files
+/// (`de_mcp::script_execute_prelude`). Any mention asks, including one
+/// passed around as a value: what a script does is not known before it
+/// runs.
+const EXECUTE_DESTRUCTIVE_CALLS: &[&str] = &["Delete", "Replace", "Export", "SetVariables"];
+
+/// Whether `script` names one of [`EXECUTE_DESTRUCTIVE_CALLS`] as a whole
+/// identifier.
+fn execute_script_is_destructive(script: &str) -> bool {
+    EXECUTE_DESTRUCTIVE_CALLS.iter().any(|name| {
+        script.match_indices(name).any(|(at, _)| {
+            let ident = |c: char| c.is_alphanumeric() || c == '_' || c == '$';
+            let before = script[..at].chars().next_back();
+            let after = script[at + name.len()..].chars().next();
+            !before.is_some_and(|c| ident(c) || c == '.') && !after.is_some_and(ident)
+        })
+    })
+}
+
+fn arg_is_true(args: &Value, key: &str) -> bool {
+    match args.get(key) {
+        Some(Value::Bool(b)) => *b,
+        Some(Value::String(s)) => s.trim() == "true",
+        _ => false,
+    }
+}
+
+fn has_arg(args: &Value, key: &str) -> bool {
+    args.get(key)
+        .and_then(Value::as_str)
+        .is_some_and(|s| !s.trim().is_empty())
+}
 
 /// `D("…")` deletes and `R("…")` replacements in a `batch_design`
 /// operations string: a `D(` / `R(` that starts the text or follows
@@ -89,29 +151,42 @@ fn count_batch_deletes(operations: &str) -> usize {
 
 /// Whether the tool call `tool(args_json)` is destructive, and how.
 pub fn destructive_action(tool: &str, args_json: &str) -> Option<DestructiveAction> {
-    match tool {
-        "delete_node" => Some(DestructiveAction::DeleteLayer),
+    let args: Value = serde_json::from_str(args_json).unwrap_or(Value::Null);
+    let action = match tool {
+        "delete_node" | "delete_selected" | "cut_selected" => Some(DestructiveAction::DeleteLayer),
         "delete_page" | "remove_page" => Some(DestructiveAction::DeletePage),
         "delete_component" => Some(DestructiveAction::DeleteComponent),
         "delete_variable" => Some(DestructiveAction::DeleteVariable),
         "replace_node" => Some(DestructiveAction::ReplaceLayer),
-        "batch_design" => {
-            let args: Value = serde_json::from_str(args_json).ok()?;
-            // `nodes_json` only inserts; a script is unknown until it runs
-            // (hosts expand it first, see `classify_with_expanded_script`).
-            if args
-                .get("script")
-                .and_then(Value::as_str)
-                .is_some_and(|s| !s.trim().is_empty())
-            {
-                return Some(DestructiveAction::ScriptedBatch);
-            }
-            let count = count_batch_deletes(args.get("operations")?.as_str()?);
-            (count > 0).then_some(DestructiveAction::DeleteInBatch { count })
+        "set_variables" if arg_is_true(&args, "replace") => {
+            Some(DestructiveAction::ReplaceVariables)
         }
-        _ if FILE_WRITING_TOOLS.contains(&tool) => Some(DestructiveAction::WriteFile),
+        // `nodes_json` only inserts; a script is unknown until it runs
+        // (hosts expand it first, see `classify_with_expanded_script`).
+        "batch_design" if has_arg(&args, "script") => Some(DestructiveAction::ScriptedBatch),
+        "batch_design" => args
+            .get("operations")
+            .and_then(Value::as_str)
+            .map(count_batch_deletes)
+            .filter(|count| *count > 0)
+            .map(|count| DestructiveAction::DeleteInBatch { count }),
+        "execute" => args
+            .get("script")
+            .and_then(Value::as_str)
+            .filter(|script| execute_script_is_destructive(script))
+            .map(|_| DestructiveAction::ScriptedBatch),
         _ => None,
+    };
+    if action.is_some() {
+        return action;
     }
+    let writes_file = SAVING_TOOLS.contains(&tool)
+        || OUTPUT_PATH_ARGS.iter().any(|key| has_arg(&args, key))
+        || (has_arg(&args, "filePath")
+            && !READ_ONLY_PREFIXES
+                .iter()
+                .any(|prefix| tool.starts_with(prefix)));
+    writes_file.then_some(DestructiveAction::WriteFile)
 }
 
 /// [`destructive_action`] for a `batch_design` call whose `script` the host
@@ -143,6 +218,9 @@ pub fn classify_with_expanded_script(
 /// The question on screen, and the user's answer once given.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct PermissionPrompt {
+    /// The call it was asked for (the host's request id), so an answer
+    /// never approves another call, even an identical one.
+    pub call_id: u64,
     pub tool: String,
     /// The call's arguments, so the answer applies to this call only.
     pub args: String,
@@ -169,6 +247,7 @@ impl PermissionPrompt {
     /// user sees it (a layer's name rather than its id when it can).
     pub fn new(
         state: &EditorState,
+        call_id: u64,
         tool: &str,
         action: DestructiveAction,
         args_json: &str,
@@ -176,7 +255,7 @@ impl PermissionPrompt {
         let args: Value = serde_json::from_str(args_json).unwrap_or(Value::Null);
         let target = match &action {
             DestructiveAction::DeleteLayer | DestructiveAction::ReplaceLayer => {
-                first_str(&args, &["nodeId", "node_id", "id"]).map(|id| {
+                let layer = |id: &str| {
                     crate::find_layers::document_pages(state)
                         .iter()
                         .find_map(|(_, _, children)| {
@@ -185,7 +264,21 @@ impl PermissionPrompt {
                         .and_then(|node| node.base().name.clone())
                         .filter(|name| !name.trim().is_empty())
                         .unwrap_or_else(|| id.to_string())
-                })
+                };
+                match first_str(&args, &["nodeId", "node_id", "id"]) {
+                    Some(id) => Some(layer(id)),
+                    // `delete_selected` / `cut_selected`: the selection.
+                    None if !state.selection.is_empty() => {
+                        let name = layer(state.selection.anchor.as_str());
+                        let more = state.selection.len() - 1;
+                        Some(if more > 0 {
+                            format!("{name} (+{more})")
+                        } else {
+                            name
+                        })
+                    }
+                    None => None,
+                }
             }
             DestructiveAction::DeletePage => first_str(&args, &["pageId", "page_id", "id", "name"])
                 .map(|key| {
@@ -211,13 +304,17 @@ impl PermissionPrompt {
                 first_str(&args, &["name", "variable"]).map(str::to_string)
             }
             DestructiveAction::WriteFile => {
-                first_str(&args, &["filePath", "path", "outDir", "dir", "out"]).map(str::to_string)
+                first_str(&args, &["outputPath", "outputDir", "filePath", "path"])
+                    .map(str::to_string)
             }
-            DestructiveAction::DeleteInBatch { .. } | DestructiveAction::ScriptedBatch => None,
+            DestructiveAction::DeleteInBatch { .. }
+            | DestructiveAction::ScriptedBatch
+            | DestructiveAction::ReplaceVariables => None,
         }
         .unwrap_or_default();
         let locale = state.editor_ui.effective_locale();
         let mut prompt = Self {
+            call_id,
             tool: tool.to_string(),
             args: args_json.to_string(),
             action,
@@ -281,56 +378,59 @@ pub enum ToolGate {
 }
 
 impl EditorState {
-    /// Gate one agent tool call on the "ask before destructive agent
-    /// actions" setting. The prompt lives on the chat tab the turn runs in
-    /// (`running_tab`) and belongs to one call (tool + arguments): a call
-    /// arriving while another one's prompt is open waits its turn.
+    /// Gate one agent tool call (`call_id`: any id the caller keeps for this
+    /// call) on the "ask before destructive agent actions" setting, with the
+    /// core's own classification. See [`Self::gate_agent_tool_with`].
     pub fn gate_agent_tool(
         &mut self,
         running_tab: Option<usize>,
+        call_id: u64,
         tool: &str,
         args_json: &str,
     ) -> ToolGate {
-        self.gate_agent_tool_with(running_tab, tool, args_json, || {
+        self.gate_agent_tool_with(running_tab, call_id, tool, args_json, || {
             destructive_action(tool, args_json)
         })
     }
 
-    /// [`Self::gate_agent_tool`] with the host's own classification
-    /// (`classify` runs only while the setting is on and this call has no
-    /// prompt yet: a host may expand a `batch_design` script there).
+    /// Gate one agent tool call on the "ask before destructive agent
+    /// actions" setting. The prompt lives on the chat tab the turn runs in
+    /// (`running_tab`) and belongs to one call (`call_id` + tool +
+    /// arguments): a call arriving while another one's prompt is open waits
+    /// its turn, and an answer never approves another call. `classify` runs
+    /// only while the setting is on and this call has no prompt yet (a host
+    /// may expand a `batch_design` script there). With the setting off the
+    /// call runs, and its prompt, if one was open, closes.
     pub fn gate_agent_tool_with(
         &mut self,
         running_tab: Option<usize>,
+        call_id: u64,
         tool: &str,
         args_json: &str,
         classify: impl FnOnce() -> Option<DestructiveAction>,
     ) -> ToolGate {
-        if !self
+        let asking = self
             .editor_ui
             .agent_settings
-            .confirm_destructive_agent_actions
-        {
-            return ToolGate::Run;
-        }
+            .confirm_destructive_agent_actions;
         let tab = self.chat.run_tab_mut(running_tab);
-        if let Some(open) = tab
-            .permission_prompt
-            .as_ref()
-            .filter(|open| open.tool == tool && open.args == args_json)
-        {
-            // This call's own prompt: waiting, or answered.
-            return match open.decision {
-                None => ToolGate::Wait,
-                Some(allow) => {
-                    tab.permission_prompt = None;
-                    if allow {
-                        ToolGate::Run
-                    } else {
-                        ToolGate::Declined
-                    }
+        let own = |open: &PermissionPrompt| {
+            open.call_id == call_id && open.tool == tool && open.args == args_json
+        };
+        if tab.permission_prompt.as_ref().is_some_and(own) {
+            let open = tab.permission_prompt.take().expect("checked above");
+            return match (asking, open.decision) {
+                // Switched off while waiting: the call runs like any other.
+                (false, _) | (true, Some(true)) => ToolGate::Run,
+                (true, Some(false)) => ToolGate::Declined,
+                (true, None) => {
+                    tab.permission_prompt = Some(open);
+                    ToolGate::Wait
                 }
             };
+        }
+        if !asking {
+            return ToolGate::Run;
         }
         let Some(action) = classify() else {
             return ToolGate::Run;
@@ -344,7 +444,7 @@ impl EditorState {
             // Another call's prompt is open: this one waits its turn.
             return ToolGate::Wait;
         }
-        let prompt = PermissionPrompt::new(self, tool, action, args_json);
+        let prompt = PermissionPrompt::new(self, call_id, tool, action, args_json);
         self.chat.run_tab_mut(running_tab).permission_prompt = Some(prompt);
         ToolGate::Asked
     }
@@ -357,7 +457,7 @@ impl EditorState {
     }
 
     /// Answer the open prompt on chat tab `running_tab` as declined, if one
-    /// is waiting (the turn is ending: stop, tab or document closed, quit).
+    /// is waiting; the call reads [`ToolGate::Declined`] on its next gate.
     pub fn decline_agent_permission(&mut self, running_tab: Option<usize>) {
         if let Some(prompt) = self
             .chat
@@ -366,6 +466,29 @@ impl EditorState {
             .as_mut()
         {
             prompt.decision.get_or_insert(false);
+        }
+    }
+
+    /// Decline the open prompt on every chat tab (the document is replaced
+    /// or opened, or the app quits: what was asked about is gone).
+    pub fn decline_all_agent_permissions(&mut self) {
+        for index in 0..self.chat.tab_count() {
+            self.decline_agent_permission(Some(index));
+        }
+    }
+
+    /// Close the prompt asked for `call_id` on any tab, unanswered (the
+    /// caller gave up on it: an MCP client's wait ran out).
+    pub fn close_agent_permission(&mut self, call_id: u64) {
+        for index in 0..self.chat.tab_count() {
+            let tab = self.chat.run_tab_mut(Some(index));
+            if tab
+                .permission_prompt
+                .as_ref()
+                .is_some_and(|open| open.call_id == call_id)
+            {
+                tab.permission_prompt = None;
+            }
         }
     }
 

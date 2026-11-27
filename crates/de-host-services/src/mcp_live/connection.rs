@@ -297,10 +297,19 @@ pub(super) fn serve_stateful(
     // is bounded (`STATE_LOCK_WAIT`, then busy naming the holder), and a
     // poisoned lock (a panicked sibling connection) is tolerated.
     // #398: a destructive call asks the user first, before the lock, so a
-    // call waiting on an answer never blocks other clients.
-    if let Some((id, tool, args, action)) = super::permission::destructive_call(body) {
-        if !super::permission::request_permission(req_tx, wake_ui, tool, args, action) {
-            return Ok(super::permission::declined_response(&id));
+    // call waiting on an answer never blocks other clients. With the setting
+    // off nothing is classified or asked.
+    if shared.asks_permission() {
+        use super::permission::{
+            destructive_call, refused_response, request_permission, PermissionAnswer,
+            PERMISSION_DEADLINE,
+        };
+        if let Some((id, tool, args, action)) = destructive_call(body) {
+            let answer =
+                request_permission(req_tx, wake_ui, tool, args, action, PERMISSION_DEADLINE);
+            if answer != PermissionAnswer::Allowed {
+                return Ok(refused_response(&id, answer));
+            }
         }
     }
     let _guard = shared.lock_state(&request_label(body))?;

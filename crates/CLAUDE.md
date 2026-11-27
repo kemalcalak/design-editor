@@ -1225,26 +1225,36 @@ CLI side (`crates/de-cli/src/agent_*.rs`, dispatched in `main` before the generi
   actions" (`AgentSettings::confirm_destructive_agent_actions`, off by
   default, persisted as `confirm_destructive_agent_actions`). With it on,
   every agent tool call is gated by `EditorState::gate_agent_tool_with`
-  (`de-editor-core/src/agent_permission.rs`: `destructive_action` flags
-  delete_node / delete_page / remove_page / delete_component /
-  delete_variable / replace_node, `batch_design` operations with `D(...)` or
-  `R(...)` (a `script` is run to its operations first,
-  `de_host_services::agent_permission_classify`; one that does not expand
-  asks as `ScriptedBatch`; `nodes_json` only inserts), and the file-writing
-  save / export / codegen tools): the chat and design-agent loops and their
-  sub-agents in the desktop's `execute_tool_requests`, and agents on the
-  live MCP server (CLI / ACP) in `mcp_live/permission.rs`, where the
-  connection asks the UI thread before taking the state lock and the pump
-  settles the question. A flagged call gets a `PermissionPrompt` on its run
-  tab (the active one for MCP) and is deferred
-  (`ChatSession::defer_tool_request`) until the user answers in the band
-  above the input (`ai_chat_permission_prompt.rs`, the MCP notice's slot;
-  Allow / Deny sized through `LabelWidths`; the sentence is made once with
-  the prompt and the labels are the catalog's strings, so a frame allocates
-  nothing); Allow runs it, Deny answers `DECLINED_RESULT`. While held, the
-  worker waits past its 60 s tool timeout (`ChatToolRequest::hold`), and a
-  held call the host drops (stop, a closed tab or document, quit) reads as
-  declined, so a call never runs after its agent was told it timed out and
-  never hangs. A prompt opened on a tab that is not on screen, or with the
-  chat minimized, raises `chat.permission.waiting`. Stop, New chat and a new
-  send drop a waiting prompt.
+  (`de-editor-core/src/agent_permission.rs`). `destructive_action` flags
+  delete_node / delete_selected / cut_selected / delete_page / remove_page /
+  delete_component / delete_variable / replace_node, `set_variables` with
+  `replace`, `batch_design` operations with `D(...)` or `R(...)` (a `script`
+  is run to its operations first, `de_host_services::agent_permission_classify`;
+  one that does not expand asks; `nodes_json` only inserts), an `execute`
+  script naming `Delete` / `Replace` / `Export` / `SetVariables`, and file
+  writes: the saves (`save_document`, `save_theme_preset`), any
+  `outputPath` / `outputDir`, and a `filePath` on a tool that is not
+  read-only (it rewrites that `.de`); inline exports write nothing and do
+  not ask. Callers: the chat and design-agent loops and their sub-agents in
+  the desktop's `execute_tool_requests`, and agents on the live MCP server
+  (CLI / ACP) in `mcp_live/permission.rs`. A prompt belongs to one call id
+  on one chat tab, so an answer never approves another, identical call; an
+  MCP prompt opens on the tab on screen and stays there. The desktop holds a
+  flagged call (`ChatSession::defer_tool_request`) until the user answers
+  in the band above the input (`ai_chat_permission_prompt.rs`, the MCP
+  notice's slot; Allow / Deny sized through `LabelWidths`; the sentence is
+  made once with the prompt and the labels are the catalog's strings, so a
+  frame allocates nothing); Allow runs it, Deny answers `DECLINED_RESULT`.
+  `ChatToolRequest::hold` settles the worker's 60 s timeout against the
+  host: whichever moves first wins (compare-and-swap), so a held call waits
+  however long and a call its worker gave up on is never run; a held call
+  the host drops (Stop, New chat or a new send drop the turn; a closed tab;
+  quit) reads as declined. The MCP connection reads the setting from
+  `LiveShared` (nothing is classified or asked with it off), asks before
+  taking the state lock, and waits at most 50 s (`PERMISSION_DEADLINE`):
+  then it refuses the call, the pump closes the prompt, and a late Allow
+  runs nothing. Replacing or opening the document and quitting decline
+  every open prompt (`decline_all_agent_permissions`); switching the
+  setting off lets each waiting call run and closes its prompt. A prompt
+  opened on a tab that is not on screen, or with the chat minimized, raises
+  `chat.permission.waiting`; only a new prompt repaints.
