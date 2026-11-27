@@ -48,6 +48,7 @@ use crate::export::ExportError;
 use crate::export_html::board_name;
 
 mod fallback;
+mod line_style;
 mod media;
 mod motion;
 mod package;
@@ -63,6 +64,10 @@ use package::{MediaFile, SlidePart};
 #[cfg(test)]
 #[path = "export_pptx/tests.rs"]
 mod tests;
+
+#[cfg(test)]
+#[path = "export_pptx/stroke_ends_export_tests.rs"]
+mod stroke_ends_export_tests;
 
 /// What one export produced.
 ///
@@ -494,6 +499,14 @@ fn unexpressible(n: &SceneNode, is_board: bool) -> Option<&'static str> {
         // that a wrong curve is likelier than a right one; v1 rasters
         // and keeps the option open.
         NodeKind::Polygon => return Some("polygon geometry"),
+        NodeKind::Line => {
+            if let Some(reason) = n
+                .stroke
+                .and_then(|s| line_style::unsupported_line_ends(&s.style))
+            {
+                return Some(reason);
+            }
+        }
         NodeKind::Path => return Some("vector path"),
         NodeKind::Other(tag) if tag == "icon_font" => return Some("icon glyph"),
         NodeKind::Other(_) => return Some("unknown node kind"),

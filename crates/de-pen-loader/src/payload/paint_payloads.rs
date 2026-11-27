@@ -41,6 +41,16 @@ pub struct StrokePayload {
     /// front-to-back. Empty for a plain solid stroke, which `color` carries.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub fill_layers: Vec<jian_ops_schema::style::PenFill>,
+    /// Per-end caps / arrowheads, miter limit and width profile (#389),
+    /// passed through verbatim like `cap`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub stroke_start: Option<jian_ops_schema::style::StrokeEndCap>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub stroke_end: Option<jian_ops_schema::style::StrokeEndCap>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub miter_limit: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub width_profile: Option<jian_ops_schema::style::StrokeWidthProfile>,
 }
 
 fn is_zero_i8(v: &i8) -> bool {

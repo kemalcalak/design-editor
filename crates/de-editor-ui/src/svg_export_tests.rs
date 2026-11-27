@@ -206,6 +206,9 @@ fn stroke_style_exports_as_svg_attributes() {
         sides: None,
         align: SceneStrokeAlign::Center,
         style: StrokeStyle {
+            miter_limit: None,
+            start: None,
+            end: None,
             cap: Some(StrokeCap::Square),
             join: None,
             dash: StrokeDash::new(&[4.0, 2.0], 1.0),
