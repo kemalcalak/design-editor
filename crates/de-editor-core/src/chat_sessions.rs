@@ -27,6 +27,8 @@ pub struct ChatSessions {
     /// Project-folder files the `@` popup offers (#398) — shared by every
     /// tab; see [`crate::chat_mentions::ProjectFiles`].
     pub project_files: crate::chat_mentions::ProjectFiles,
+    /// User skills the `/` popup offers (#398).
+    pub skills: crate::chat_mentions::ChatSkills,
     /// A file is being dragged over the chat panel, where dropping it makes
     /// it an attachment (#398): the chat shows its drop indicator and the
     /// canvas drop overlay stands aside. Set by the host's drag probe.
@@ -39,6 +41,7 @@ impl Default for ChatSessions {
             tabs: vec![ChatState::default()],
             active: 0,
             project_files: Default::default(),
+            skills: Default::default(),
             file_drop_hover: false,
         }
     }

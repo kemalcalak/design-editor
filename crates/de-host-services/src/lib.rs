@@ -38,6 +38,7 @@ pub mod chat_mention_prefetch;
 pub mod chat_mention_scan;
 pub mod chat_provider_llm;
 pub mod chat_runtime;
+pub mod chat_skill_context;
 pub mod chat_spawn;
 pub mod chat_subprocess;
 mod chat_subprocess_antigravity_log;

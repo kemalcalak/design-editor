@@ -597,6 +597,15 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.attach.readFailed" => "{{name}} okunamadı",
         "chat.attach.full" => "Bir mesaja en fazla {{count}} dosya eklenebilir",
         "chat.attach.dropHint" => "Sohbete eklemek için bırakın",
+        "chat.skill.project" => "Proje",
+        "chat.skill.user" => "Kişisel",
+        "chat.skill.projectOverUser" => "Proje · kişiseli gizler",
+        "chat.skill.projectOverBuiltin" => "Proje · yerleşiği değiştirir",
+        "chat.skill.userOverBuiltin" => "Kişisel · yerleşiği değiştirir",
+        "chat.mention.skill" => "Beceri",
+        "chat.mention.noSkills" => "Henüz beceri yok: SKILL.md dosyalarını projenin .design-editor/skills klasörüne ya da Design Editor yapılandırma klasöründeki skills klasörüne ekleyin",
+        "chat.skill.overridesApplied" => "Bu projenin becerileri yerleşik becerilerin yerine geçiyor: {{names}}",
+        "chat.skill.cut" => "Seçilen beceriler bu mesaj için {{count}} karaktere kısaltıldı",
         _ => return None,
     })
 }

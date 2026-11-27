@@ -597,6 +597,15 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.attach.readFailed" => "{{name}} पढ़ी नहीं जा सकी",
         "chat.attach.full" => "एक संदेश में अधिकतम {{count}} फ़ाइलें हो सकती हैं",
         "chat.attach.dropHint" => "चैट में जोड़ने के लिए छोड़ें",
+        "chat.skill.project" => "प्रोजेक्ट",
+        "chat.skill.user" => "निजी",
+        "chat.skill.projectOverUser" => "प्रोजेक्ट · निजी को छिपाता है",
+        "chat.skill.projectOverBuiltin" => "प्रोजेक्ट · बिल्ट-इन की जगह",
+        "chat.skill.userOverBuiltin" => "निजी · बिल्ट-इन की जगह",
+        "chat.mention.skill" => "स्किल",
+        "chat.mention.noSkills" => "अभी कोई स्किल नहीं: प्रोजेक्ट के .design-editor/skills फ़ोल्डर में या Design Editor कॉन्फ़िग फ़ोल्डर के skills फ़ोल्डर में SKILL.md फ़ाइलें जोड़ें",
+        "chat.skill.overridesApplied" => "इस प्रोजेक्ट की स्किल बिल्ट-इन स्किल की जगह लेती हैं: {{names}}",
+        "chat.skill.cut" => "चुनी गई स्किल इस संदेश के लिए {{count}} अक्षरों तक काटी गईं",
         _ => return None,
     })
 }

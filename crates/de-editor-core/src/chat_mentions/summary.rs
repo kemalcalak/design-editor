@@ -228,7 +228,7 @@ pub fn summarize_document_mention(state: &EditorState, mention: &ChatMention) ->
             )
         }
         MentionKind::Variable => variable_summary(state, &mention.key)?,
-        MentionKind::File => return None,
+        MentionKind::File | MentionKind::Skill => return None,
     };
     Some(clip(&text, MAX_SUMMARY_CHARS))
 }
@@ -241,19 +241,23 @@ pub fn context_block(summaries: &[MentionSummary]) -> String {
         return String::new();
     }
     let mut out = String::from(
-        "\n\n---\nReferenced context (the user @-mentioned these; summaries, not full dumps — \
-         read more with your tools if needed):",
+        "\n\n---\nReferenced context (the user @-mentioned these, or picked skills with /; \
+         document items and files are summaries, not full dumps — read more with your tools if \
+         needed; a skill's text is instructions to follow for this turn):",
     );
     for summary in summaries {
         out.push_str(&format!(
-            "\n- @{} ({}): ",
-            summary.mention.label,
+            "\n- {} ({}): ",
+            summary.mention.token(),
             summary.mention.kind.wire_name()
         ));
         match summary.text.as_deref() {
             Some(text) => out.push_str(text),
             None if summary.mention.kind == MentionKind::File => {
                 out.push_str("could not be read from the project folder")
+            }
+            None if summary.mention.kind == MentionKind::Skill => {
+                out.push_str("is no longer installed")
             }
             None => out.push_str("no longer exists in the document"),
         }

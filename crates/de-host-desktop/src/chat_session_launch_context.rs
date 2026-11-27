@@ -20,7 +20,8 @@ use de_host_services::chat_mention_context::take_turn_mentions;
 ///   and images a text-only model cannot see become captions.
 pub(super) fn compose_turn_text(host: &mut WidgetHostNative, routing_text: &str) -> String {
     // Mentioned files were read on a worker when staged (`MentionFileReader`).
-    let mention_block = take_turn_mentions(host.editor_state_mut());
+    let now = host.now_ms();
+    let mention_block = take_turn_mentions(host.editor_state_mut(), now);
     let sees_images = host
         .editor_state()
         .chat

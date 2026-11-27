@@ -597,6 +597,15 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.attach.readFailed" => "無法讀取 {{name}}",
         "chat.attach.full" => "每則訊息最多附加 {{count}} 個檔案",
         "chat.attach.dropHint" => "放開以附加到聊天",
+        "chat.skill.project" => "專案",
+        "chat.skill.user" => "個人",
+        "chat.skill.projectOverUser" => "專案 · 覆蓋個人",
+        "chat.skill.projectOverBuiltin" => "專案 · 取代內建",
+        "chat.skill.userOverBuiltin" => "個人 · 取代內建",
+        "chat.mention.skill" => "技能",
+        "chat.mention.noSkills" => "尚無技能：將 SKILL.md 檔案加入專案的 .design-editor/skills 資料夾，或 Design Editor 設定資料夾中的 skills 資料夾",
+        "chat.skill.overridesApplied" => "此專案的技能取代了內建技能：{{names}}",
+        "chat.skill.cut" => "所選技能已在此訊息中截斷為 {{count}} 個字元",
         _ => return None,
     })
 }

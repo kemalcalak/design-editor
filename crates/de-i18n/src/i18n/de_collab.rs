@@ -597,6 +597,15 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.attach.readFailed" => "{{name}} konnte nicht gelesen werden",
         "chat.attach.full" => "Eine Nachricht kann bis zu {{count}} Dateien enthalten",
         "chat.attach.dropHint" => "Zum Anhängen an den Chat ablegen",
+        "chat.skill.project" => "Projekt",
+        "chat.skill.user" => "Persönlich",
+        "chat.skill.projectOverUser" => "Projekt · verdeckt persönlich",
+        "chat.skill.projectOverBuiltin" => "Projekt · ersetzt integriert",
+        "chat.skill.userOverBuiltin" => "Persönlich · ersetzt integriert",
+        "chat.mention.skill" => "Skill",
+        "chat.mention.noSkills" => "Noch keine Skills: SKILL.md-Dateien im Ordner .design-editor/skills des Projekts oder im Ordner skills des Design-Editor-Konfigurationsordners ablegen",
+        "chat.skill.overridesApplied" => "Die Skills dieses Projekts ersetzen integrierte Skills: {{names}}",
+        "chat.skill.cut" => "Die gewählten Skills wurden für diese Nachricht auf {{count}} Zeichen gekürzt",
         _ => return None,
     })
 }

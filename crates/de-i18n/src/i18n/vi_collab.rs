@@ -597,6 +597,15 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.attach.readFailed" => "Không đọc được {{name}}",
         "chat.attach.full" => "Mỗi tin nhắn đính kèm tối đa {{count}} tệp",
         "chat.attach.dropHint" => "Thả để đính kèm vào cuộc trò chuyện",
+        "chat.skill.project" => "Dự án",
+        "chat.skill.user" => "Cá nhân",
+        "chat.skill.projectOverUser" => "Dự án · che bản cá nhân",
+        "chat.skill.projectOverBuiltin" => "Dự án · thay bản tích hợp",
+        "chat.skill.userOverBuiltin" => "Cá nhân · thay bản tích hợp",
+        "chat.mention.skill" => "Kỹ năng",
+        "chat.mention.noSkills" => "Chưa có kỹ năng: thêm tệp SKILL.md vào thư mục .design-editor/skills của dự án hoặc thư mục skills trong thư mục cấu hình Design Editor",
+        "chat.skill.overridesApplied" => "Kỹ năng của dự án này thay thế kỹ năng tích hợp: {{names}}",
+        "chat.skill.cut" => "Các kỹ năng đã chọn bị cắt còn {{count}} ký tự cho tin nhắn này",
         _ => return None,
     })
 }

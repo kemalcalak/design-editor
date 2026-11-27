@@ -5,18 +5,22 @@
 //! hashes the draft (no allocation); the staged tokens are re-checked, and
 //! the popup re-ranked, only when they did.
 
-use super::{active_mention_query, mention_candidates, MentionPopup};
+use super::{
+    active_mention_query, mention_candidates, skill_candidates, MentionCandidate, MentionPopup,
+    SKILL_TRIGGER,
+};
 use crate::EditorState;
 
 impl EditorState {
     /// Bring the `@` popup and the staged mentions in line with the chat
     /// draft and caret. Returns true when either changed (repaint).
     ///
-    /// Opens the popup when the caret ends an `@query`, re-ranks it when
-    /// the query changed, closes it otherwise, and drops staged mentions
-    /// whose token the user deleted. Opening raises
-    /// `chat.project_files.rescan_requested` so the host refreshes the file
-    /// list and then calls [`EditorState::refresh_chat_mention_rows`].
+    /// Opens the popup when the caret ends an `@query` or `/query`, re-ranks
+    /// it when the query changed, closes it otherwise, and drops staged
+    /// mentions whose token the user deleted. Opening raises
+    /// `chat.project_files.rescan_requested` (`@`) or
+    /// `chat.skills.rescan_requested` (`/`) so the host reloads the list and
+    /// then calls [`EditorState::refresh_chat_mention_rows`].
     pub fn sync_chat_mentions(&mut self) -> bool {
         let mut changed = false;
         if !self.chat.pending_mentions.is_empty() {
@@ -36,11 +40,11 @@ impl EditorState {
         // the draft outlives the mutations below.
         let found = if usable {
             active_mention_query(self.chat.input.text(), self.chat.input.caret())
-                .map(|q| (q.start, q.start + 1, q.start + 1 + q.query.len()))
+                .map(|q| (q.start, q.trigger, q.start + 1, q.start + 1 + q.query.len()))
         } else {
             None
         };
-        let Some((start, query_from, query_to)) = found else {
+        let Some((start, trigger, query_from, query_to)) = found else {
             self.chat.mention_dismissed_at = None;
             if self.chat.mention_popup.take().is_some() {
                 changed = true;
@@ -56,25 +60,33 @@ impl EditorState {
         self.chat.mention_dismissed_at = None;
         let unchanged = {
             let query = &self.chat.input.text()[query_from..query_to];
-            self.chat
-                .mention_popup
-                .as_ref()
-                .is_some_and(|popup| popup.start == start && popup.query == query)
+            self.chat.mention_popup.as_ref().is_some_and(|popup| {
+                popup.start == start && popup.trigger == trigger && popup.query == query
+            })
         };
         if unchanged {
             return changed;
         }
         let query = self.chat.input.text()[query_from..query_to].to_string();
-        let opening = self.chat.mention_popup.is_none();
-        let rows = mention_candidates(self, &self.chat.project_files.files, &query);
+        let opening = self
+            .chat
+            .mention_popup
+            .as_ref()
+            .is_none_or(|popup| popup.trigger != trigger);
+        let rows = self.popup_rows(trigger, &query);
         self.chat.mention_popup = Some(MentionPopup {
             start,
+            trigger,
             query,
             rows,
             highlight: 0,
         });
         if opening {
-            self.chat.project_files.rescan_requested = true;
+            if trigger == SKILL_TRIGGER {
+                self.chat.skills.rescan_requested = true;
+            } else {
+                self.chat.project_files.rescan_requested = true;
+            }
         }
         true
     }
@@ -82,10 +94,15 @@ impl EditorState {
     /// Re-rank the open popup against the current file list (after the
     /// host rescanned the project folder). Keeps the highlight in range.
     pub fn refresh_chat_mention_rows(&mut self) -> bool {
-        let Some(query) = self.chat.mention_popup.as_ref().map(|p| p.query.clone()) else {
+        let Some((trigger, query)) = self
+            .chat
+            .mention_popup
+            .as_ref()
+            .map(|p| (p.trigger, p.query.clone()))
+        else {
             return false;
         };
-        let rows = mention_candidates(self, &self.chat.project_files.files, &query);
+        let rows = self.popup_rows(trigger, &query);
         let Some(popup) = self.chat.mention_popup.as_mut() else {
             return false;
         };
@@ -95,6 +112,16 @@ impl EditorState {
         popup.highlight = popup.highlight.min(rows.len().saturating_sub(1));
         popup.rows = rows;
         true
+    }
+
+    /// The rows for a `trigger` + `query`: skills for `/`, document items
+    /// and files for `@`.
+    fn popup_rows(&self, trigger: char, query: &str) -> Vec<MentionCandidate> {
+        if trigger == SKILL_TRIGGER {
+            skill_candidates(&self.chat.skills.skills, query)
+        } else {
+            mention_candidates(self, &self.chat.project_files.files, query)
+        }
     }
 
     /// Whether the `@` popup is open with at least one row — the state in

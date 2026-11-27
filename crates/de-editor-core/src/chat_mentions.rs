@@ -34,13 +34,14 @@ mod sync;
 #[cfg(test)]
 mod tests;
 
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
+use std::path::Path;
 use std::sync::Arc;
 
-pub use candidates::{mention_candidates, MAX_MENTION_ROWS};
+pub use candidates::{mention_candidates, skill_candidates, MAX_MENTION_ROWS};
 pub use identity::{live_mentions, mention_spans, retain_live, unique_label};
-pub use query::{active_mention_query, MentionQuery};
-pub use source::{ProjectFileList, ProjectFileSource};
+pub use query::{active_mention_query, MentionQuery, MENTION_TRIGGER, SKILL_TRIGGER};
+pub use source::{ProjectFileList, ProjectFileSource, SkillList, SkillListSource};
 pub use summary::{context_block, summarize_document_mention, MentionSummary};
 
 /// What a mention points at.
@@ -53,6 +54,9 @@ pub enum MentionKind {
     Variable,
     /// A file in the project folder (the open document's directory).
     File,
+    /// A user skill (`SKILL.md` in the project's `.design-editor/skills/`
+    /// or the user's skills folder), picked with `/`.
+    Skill,
 }
 
 impl MentionKind {
@@ -65,6 +69,7 @@ impl MentionKind {
             MentionKind::Component => "chat.mention.component",
             MentionKind::Variable => "chat.mention.variable",
             MentionKind::File => "chat.mention.file",
+            MentionKind::Skill => "chat.mention.skill",
         }
     }
 
@@ -77,6 +82,15 @@ impl MentionKind {
             MentionKind::Component => "component",
             MentionKind::Variable => "variable",
             MentionKind::File => "file",
+            MentionKind::Skill => "skill",
+        }
+    }
+
+    /// The character the draft writes before the label.
+    pub fn trigger(self) -> char {
+        match self {
+            MentionKind::Skill => SKILL_TRIGGER,
+            _ => MENTION_TRIGGER,
         }
     }
 }
@@ -94,9 +108,13 @@ pub struct ChatMention {
 }
 
 impl ChatMention {
-    /// The text this mention occupies in the draft, `@` included.
+    /// The text this mention occupies in the draft, trigger included
+    /// (`@Hero`, `/brand-voice`).
     pub fn token(&self) -> String {
-        format!("@{}", self.label)
+        let mut token = String::with_capacity(self.label.len() + 1);
+        token.push(self.kind.trigger());
+        token.push_str(&self.label);
+        token
     }
 }
 
@@ -106,19 +124,129 @@ impl ChatMention {
 pub struct MentionCandidate {
     pub mention: ChatMention,
     pub detail: String,
+    /// The i18n key of the row's tag when it is not the kind's own
+    /// (a skill's source: project / personal, and what it overrides).
+    pub tag_key: Option<&'static str>,
 }
 
 /// The open `@` popup for the active chat tab.
-#[derive(Debug, Clone, Default, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct MentionPopup {
-    /// Byte offset of the `@` in the draft.
+    /// Byte offset of the trigger in the draft.
     pub start: usize,
+    /// `@` (document items and files) or `/` (skills).
+    pub trigger: char,
     /// The text typed after the `@` (up to the caret).
     pub query: String,
     /// Ranked rows, at most [`MAX_MENTION_ROWS`].
     pub rows: Vec<MentionCandidate>,
     /// Keyboard / hover highlight into `rows`.
     pub highlight: usize,
+}
+
+/// Which skills folder a skill was listed from.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub enum SkillOrigin {
+    /// The project's `.design-editor/skills/`.
+    Project,
+    /// The user's own skills folder.
+    #[default]
+    User,
+}
+
+/// One user skill the `/` popup offers (its front matter, not its text).
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct SkillOption {
+    pub name: String,
+    pub description: String,
+    pub origin: SkillOrigin,
+    /// The file, absolute; the host reads the instructions from it when the
+    /// skill is used.
+    pub path: String,
+    /// The skills folder it was listed from (canonical); the read at use
+    /// checks the file is still inside it.
+    pub folder: String,
+    /// A project skill hiding the user's skill of the same name.
+    pub shadows_user: bool,
+    /// Replaces the built-in skill of the same name.
+    pub overrides_builtin: bool,
+}
+
+impl SkillOption {
+    /// The i18n key of the popup row's tag: where the skill comes from and
+    /// what it hides.
+    pub fn tag_key(&self) -> &'static str {
+        match (self.origin, self.shadows_user, self.overrides_builtin) {
+            (SkillOrigin::Project, true, _) => "chat.skill.projectOverUser",
+            (SkillOrigin::Project, false, true) => "chat.skill.projectOverBuiltin",
+            (SkillOrigin::Project, false, false) => "chat.skill.project",
+            (SkillOrigin::User, _, true) => "chat.skill.userOverBuiltin",
+            (SkillOrigin::User, _, false) => "chat.skill.user",
+        }
+    }
+}
+
+/// The user skills the `/` popup offers, listed by the host off the UI
+/// thread (project folder first, then the user's skills folder). Shared by
+/// every tab, on `ChatSessions`, like [`ProjectFiles`].
+#[derive(Debug, Clone, Default)]
+pub struct ChatSkills {
+    pub skills: Arc<[SkillOption]>,
+    /// Raised when a `/` popup opens, so the host lists the folders again.
+    pub rescan_requested: bool,
+    /// The project folder the list was last asked for. A change asks
+    /// again, so overrides of built-in skills follow the open document
+    /// without a `/` popup.
+    pub listed_for: SkillsListedFor,
+    /// Instructions of the staged skills, read by the host on a worker as
+    /// soon as a skill is staged (`None` while the read runs; a failed read
+    /// is `Some` of nothing), keyed by skill name, dropped after the turn
+    /// uses them and when a new listing lands.
+    pub instructions: HashMap<String, Option<Option<String>>>,
+    /// Project folders whose overrides of built-in skills the user was told
+    /// about (one notice per folder).
+    pub overrides_announced: HashSet<String>,
+}
+
+/// Which project folder the skill list was last asked for.
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub enum SkillsListedFor {
+    /// Not asked yet.
+    #[default]
+    Never,
+    /// Asked with no project folder (an unsaved document).
+    NoProject,
+    /// Asked for this project folder.
+    Project(String),
+}
+
+impl SkillsListedFor {
+    /// Whether the list was asked for `root` (no allocation).
+    pub fn is(&self, root: Option<&Path>) -> bool {
+        match (self, root) {
+            (Self::NoProject, None) => true,
+            (Self::Project(listed), Some(root)) => Path::new(listed) == root,
+            _ => false,
+        }
+    }
+
+    /// The value for `root`.
+    pub fn of(root: Option<&Path>) -> Self {
+        match root {
+            None => Self::NoProject,
+            Some(root) => Self::Project(root.to_string_lossy().into_owned()),
+        }
+    }
+}
+
+impl ChatSkills {
+    /// Whether a staged skill in `mentions` is still being read (the send
+    /// waits for it).
+    pub fn reading_any(&self, mentions: &[ChatMention]) -> bool {
+        mentions.iter().any(|m| {
+            m.kind == MentionKind::Skill && matches!(self.instructions.get(&m.key), Some(None))
+        })
+    }
 }
 
 /// Files the `@` popup offers, scanned by the host from the project folder.

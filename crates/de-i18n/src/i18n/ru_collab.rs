@@ -597,6 +597,15 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.attach.readFailed" => "Не удалось прочитать {{name}}",
         "chat.attach.full" => "К сообщению можно прикрепить до {{count}} файлов",
         "chat.attach.dropHint" => "Отпустите, чтобы прикрепить к чату",
+        "chat.skill.project" => "Проект",
+        "chat.skill.user" => "Личный",
+        "chat.skill.projectOverUser" => "Проект · скрывает личный",
+        "chat.skill.projectOverBuiltin" => "Проект · заменяет встроенный",
+        "chat.skill.userOverBuiltin" => "Личный · заменяет встроенный",
+        "chat.mention.skill" => "Навык",
+        "chat.mention.noSkills" => "Навыков пока нет: добавьте файлы SKILL.md в папку .design-editor/skills проекта или в папку skills в папке настроек Design Editor",
+        "chat.skill.overridesApplied" => "Навыки этого проекта заменяют встроенные: {{names}}",
+        "chat.skill.cut" => "Выбранные навыки обрезаны до {{count}} символов для этого сообщения",
         _ => return None,
     })
 }

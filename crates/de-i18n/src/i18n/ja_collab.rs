@@ -597,6 +597,15 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.attach.readFailed" => "{{name}} を読み込めませんでした",
         "chat.attach.full" => "1 件のメッセージに添付できるのは {{count}} ファイルまでです",
         "chat.attach.dropHint" => "ドロップしてチャットに添付",
+        "chat.skill.project" => "プロジェクト",
+        "chat.skill.user" => "個人",
+        "chat.skill.projectOverUser" => "プロジェクト · 個人を上書き",
+        "chat.skill.projectOverBuiltin" => "プロジェクト · 組み込みを置換",
+        "chat.skill.userOverBuiltin" => "個人 · 組み込みを置換",
+        "chat.mention.skill" => "スキル",
+        "chat.mention.noSkills" => "スキルはまだありません：プロジェクトの .design-editor/skills フォルダ、または Design Editor 設定フォルダ内の skills フォルダに SKILL.md を追加してください",
+        "chat.skill.overridesApplied" => "このプロジェクトのスキルが組み込みスキルを置き換えます：{{names}}",
+        "chat.skill.cut" => "選択したスキルはこのメッセージ用に {{count}} 文字に切り詰められました",
         _ => return None,
     })
 }

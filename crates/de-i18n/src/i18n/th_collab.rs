@@ -597,6 +597,15 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.attach.readFailed" => "อ่าน {{name}} ไม่ได้",
         "chat.attach.full" => "แนบไฟล์ได้สูงสุด {{count}} ไฟล์ต่อข้อความ",
         "chat.attach.dropHint" => "วางเพื่อแนบในแชต",
+        "chat.skill.project" => "โปรเจกต์",
+        "chat.skill.user" => "ส่วนตัว",
+        "chat.skill.projectOverUser" => "โปรเจกต์ · ซ่อนของส่วนตัว",
+        "chat.skill.projectOverBuiltin" => "โปรเจกต์ · แทนที่ในตัว",
+        "chat.skill.userOverBuiltin" => "ส่วนตัว · แทนที่ในตัว",
+        "chat.mention.skill" => "สกิล",
+        "chat.mention.noSkills" => "ยังไม่มีสกิล: เพิ่มไฟล์ SKILL.md ในโฟลเดอร์ .design-editor/skills ของโปรเจกต์ หรือโฟลเดอร์ skills ในโฟลเดอร์การตั้งค่าของ Design Editor",
+        "chat.skill.overridesApplied" => "สกิลของโปรเจกต์นี้แทนที่สกิลในตัว: {{names}}",
+        "chat.skill.cut" => "สกิลที่เลือกถูกตัดเหลือ {{count}} อักขระสำหรับข้อความนี้",
         _ => return None,
     })
 }
