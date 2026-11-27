@@ -1216,6 +1216,8 @@ CLI side (`crates/de-cli/src/agent_*.rs`, dispatched in `main` before the generi
   (`de-editor-core/src/annotation_agent.rs`): it opens the Agent tab (a
   fresh chat tab when the current one has a conversation or a running
   turn), writes the note's text as the draft and stages `@`-mentions of the
-  note and the top-level layers around it (`surrounding_layers`: within
-  24 px of the note, else the nearest within 600 px, never another
-  annotation, at most 3). Nothing is sent until the user presses Send.
+  top-level layers around it (`surrounding_layers`: within 24 px of the
+  note, else the nearest within 600 px, never another annotation, at most
+  3; a note inside a frame is placed in page coordinates first). The note
+  itself is staged only when it is blank, so its text reaches the model
+  once. Nothing is sent until the user presses Send.
