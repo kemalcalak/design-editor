@@ -66,7 +66,10 @@ fn send_opens_the_chat_with_the_note_and_its_layers_staged() {
     assert!(!state.is_annotation(&NodeId::new("hero")));
     assert!(state.send_annotation_to_agent(&NodeId::new("n1"), 0));
     // The note's text is in the draft once; the note is not staged again.
-    assert_eq!(state.chat.input.text(), "Make the headline calmer\n\n@Hero");
+    assert_eq!(
+        state.chat.input.text(),
+        "Make the headline calmer\n\n@Hero "
+    );
     let staged: Vec<(&str, MentionKind)> = state
         .chat
         .pending_mentions
@@ -123,4 +126,51 @@ fn a_note_inside_a_frame_is_placed_in_page_coordinates() {
         ids(surrounding_layers(page, find(&state, "inner"))),
         ["board"]
     );
+}
+
+#[test]
+fn the_draft_does_not_reopen_the_mention_popup() {
+    // #398 review: the draft ends with a space after its last token, so the
+    // `@` query at the caret is closed, as after a picked mention.
+    let mut state = state();
+    assert!(state.send_annotation_to_agent(&NodeId::new("n1"), 0));
+    let text = state.chat.input.text();
+    assert!(crate::chat_mentions::active_mention_query(text, text.len()).is_none());
+}
+
+#[test]
+fn layers_sharing_a_name_get_distinct_tokens() {
+    let doc = serde_json::json!({
+        "version": "1.0.0",
+        "children": [
+            {"type": "frame", "id": "a", "name": "Frame", "x": 0, "y": 0, "width": 200, "height": 200},
+            {"type": "frame", "id": "b", "name": "Frame", "x": 210, "y": 0, "width": 200, "height": 200},
+            {"type": "note", "id": "n", "x": 150, "y": 50, "width": 100, "height": 80,
+             "content": "Align these"}
+        ]
+    });
+    let mut state = EditorState::from_document(
+        jian_ops_schema::load_str(&doc.to_string())
+            .expect("fixture")
+            .value,
+    );
+    assert!(state.send_annotation_to_agent(&NodeId::new("n"), 0));
+    let labels: Vec<&str> = state
+        .chat
+        .pending_mentions
+        .iter()
+        .map(|m| m.label.as_str())
+        .collect();
+    assert_eq!(labels, ["Frame", "Frame#2"]);
+    assert!(state.chat.input.text().ends_with("@Frame @Frame#2 "));
+}
+
+#[test]
+fn an_unsent_draft_is_kept_in_its_own_tab() {
+    let mut state = state();
+    state.chat.input.set_text("my own question".to_string());
+    let tabs = state.chat.tabs().len();
+    assert!(state.send_annotation_to_agent(&NodeId::new("p1"), 0));
+    assert_eq!(state.chat.tabs().len(), tabs + 1);
+    assert_eq!(state.chat.input.text(), "Add a footer");
 }

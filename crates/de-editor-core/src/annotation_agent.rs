@@ -166,22 +166,37 @@ impl EditorState {
             Vec::new()
         };
         for node in surrounding_layers(self.active_children(), note) {
-            let mention = node_mention(node);
-            if !mentions.contains(&mention) {
-                mentions.push(mention);
+            let mut mention = node_mention(node);
+            if mentions
+                .iter()
+                .any(|m| (m.kind, &m.key) == (mention.kind, &mention.key))
+            {
+                continue;
             }
+            // Two layers sharing a name get `Name#2`, as a picked mention
+            // would, so every token names exactly one target.
+            mention.label = crate::chat_mentions::unique_label(&mention, &mentions);
+            mentions.push(mention);
         }
         // The conversation lives in the rail's Agent tab; a host without
         // it keeps the floating panel, which `expand` below opens.
         self.editor_ui.enter_chat_tab();
-        if !self.chat.messages.is_empty() || self.chat.has_streaming_turn() {
+        // A typed draft or staged attachment in the current tab is the
+        // user's own work: never overwrite it or send it with the note.
+        if !self.chat.messages.is_empty()
+            || self.chat.has_streaming_turn()
+            || !self.chat.input.text().trim().is_empty()
+            || !self.chat.pending_attachments.is_empty()
+        {
             self.chat.new_tab();
         }
         let tokens: Vec<String> = mentions.iter().map(ChatMention::token).collect();
+        // A trailing space after the last token, as a picked mention leaves,
+        // so the `@` popup does not open over the new draft.
         let draft = match (text.trim(), tokens.is_empty()) {
-            ("", _) => tokens.join(" "),
+            ("", _) => format!("{} ", tokens.join(" ")),
             (body, true) => body.to_string(),
-            (body, false) => format!("{body}\n\n{}", tokens.join(" ")),
+            (body, false) => format!("{body}\n\n{} ", tokens.join(" ")),
         };
         self.chat.input.set_text(draft);
         self.chat.pending_mentions = mentions;
