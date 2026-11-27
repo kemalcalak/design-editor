@@ -311,6 +311,13 @@ pub(crate) fn paint_svg_path_node(
             });
         }
     }
+    if let Some(geometry) = node.stroke_geometry.as_deref() {
+        // End shapes (#389): the geometry replaces the plain stroke.
+        crate::widgets::canvas_viewport_stroke_paint::paint_stroke_geometry(
+            cx, node, world_rect, zoom, geometry,
+        );
+        return;
+    }
     let width = node.stroke.map_or(0.0, |stroke| stroke.width * zoom);
     with_stroke_paint(cx, node, world_rect, zoom, |cx, color| {
         cx.backend

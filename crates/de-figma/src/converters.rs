@@ -724,6 +724,10 @@ fn build_icon_path_node(
     let mapped_stroke = map_figma_stroke(figma);
     let mut stroke = match style {
         IconStyle::Stroke => Some(mapped_stroke.unwrap_or_else(|| PenStroke {
+            stroke_start: None,
+            stroke_end: None,
+            miter_limit: None,
+            width_profile: None,
             thickness: StrokeThickness::Uniform(1.5),
             align: None,
             join: Some(StrokeJoin::Round),

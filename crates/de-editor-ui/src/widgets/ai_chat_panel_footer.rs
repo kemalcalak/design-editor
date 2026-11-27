@@ -12,8 +12,10 @@
 use super::ai_chat_panel::{
     AIChatPlaceholder, FooterLayout, COMPOSER_TEXT_INSET, INPUT_TOOLBAR_HEIGHT,
 };
-use crate::widgets::ai_chat_chrome::{chat_label, fit_label, label_baseline};
+use crate::widgets::ai_chat_chrome::{chat_label, label_baseline};
 use crate::widgets::icons::{draw_icon, Icon};
+use crate::widgets::label_widths::LabelWidths;
+use crate::widgets::text_metrics::CHROME_FONT_FAMILY;
 use crate::widgets::PaintCx;
 use crate::{Point2D, Rect, TextLayout};
 
@@ -36,12 +38,27 @@ const MODEL_FONT: f32 = 12.0;
 /// Widest the model chip grows before its label is ellipsized.
 const MODEL_CHIP_MAX_W: f32 = 200.0;
 const FOOTER_GAP: f32 = 6.0;
+/// Weight of the model chip's label, and of the add-provider link that
+/// stands in for it.
+const MODEL_LABEL_WEIGHT: u16 = 400;
+const ADD_PROVIDER_WEIGHT: u16 = 500;
 /// Inset of the row's ends from the card's edges.
 const ROW_INSET: f32 = 12.0 - COMPOSER_TEXT_INSET;
 
 impl<'a> AIChatPlaceholder<'a> {
-    /// The row's rects for the panel laid out at `rect`.
+    /// The row's rects for the panel laid out at `rect`; the model chip is
+    /// sized from its label as paint measured it (#451).
     pub(crate) fn footer_layout(&self, rect: Rect) -> FooterLayout {
+        self.footer_layout_with(rect, &mut LabelWidths::cached())
+    }
+
+    /// [`footer_layout`](Self::footer_layout) through `widths`: paint passes
+    /// a measuring pass, every hit-test the cached one.
+    pub(crate) fn footer_layout_with(
+        &self,
+        rect: Rect,
+        widths: &mut LabelWidths<'_>,
+    ) -> FooterLayout {
         let card = self.composer_card(rect);
         let cy = self.toolbar_top(rect) + INPUT_TOOLBAR_HEIGHT / 2.0 - 2.0;
         let left = card.origin.x + COMPOSER_TEXT_INSET + ROW_INSET;
@@ -53,14 +70,10 @@ impl<'a> AIChatPlaceholder<'a> {
             FOOTER_CIRCLE_D,
             FOOTER_CIRCLE_D,
         );
-        let label = if self.usable_agent {
-            self.model_chip_label.as_str()
-        } else {
-            self.label_no_models.as_str()
-        };
+        let (label, weight) = self.model_chip_text();
         let room =
             (send.origin.x - FOOTER_GAP - (plus.origin.x + plus.size.x + FOOTER_GAP)).max(0.0);
-        let want = super::ai_chat_panel::footer_label_width(label, MODEL_FONT) + 8.0 + 8.0 + 18.0;
+        let want = widths.chrome_weighted(label, MODEL_FONT, weight) + 8.0 + 8.0 + 18.0;
         let model_w = want.min(MODEL_CHIP_MAX_W).min(room);
         let model = Rect::xywh(
             send.origin.x - FOOTER_GAP - model_w,
@@ -77,15 +90,16 @@ impl<'a> AIChatPlaceholder<'a> {
     }
 }
 
-/// Ellipsize a chip label to `max_w`, measured through the backend in
-/// the family the run paints with (the minimized bar's model label).
-pub(crate) fn fit_footer_label(
-    backend: &mut dyn crate::RenderBackend,
-    label: &str,
-    size: f32,
-    max_w: f32,
-) -> String {
-    crate::widgets::text_metrics::fit_chrome(backend, label, max_w, size)
+impl AIChatPlaceholder<'_> {
+    /// The model chip's text and the weight it paints at: the model, or the
+    /// link to add a provider when none can answer.
+    fn model_chip_text(&self) -> (&str, u16) {
+        if self.usable_agent {
+            (self.model_chip_label.as_str(), MODEL_LABEL_WEIGHT)
+        } else {
+            (self.label_no_models.as_str(), ADD_PROVIDER_WEIGHT)
+        }
+    }
 }
 
 /// Returns the bounding rect of the Parallel Agents picker, opened from
@@ -126,7 +140,7 @@ pub(crate) fn paint_parallel_agents_picker(
     let title_y = picker.origin.y + 20.0; // baseline
     let title_label = TextLayout::single_run(
         "PARALLEL AGENTS",
-        "system-ui",
+        crate::widgets::text_metrics::CHROME_FONT_FAMILY,
         9.0,
         (theme.muted_foreground).to_jian(),
         Point2D::new(0.0, 0.0),
@@ -166,7 +180,7 @@ pub(crate) fn paint_parallel_agents_picker(
         let label_baseline = row_y + PARALLEL_AGENTS_ROW_H / 2.0 + 11.0 * 0.35;
         let text = TextLayout::single_run(
             &label,
-            "system-ui",
+            crate::widgets::text_metrics::CHROME_FONT_FAMILY,
             11.0,
             label_color.to_jian(),
             Point2D::new(0.0, 0.0),
@@ -230,18 +244,19 @@ pub(crate) fn paint_bottom_toolbar(
             if hovered {
                 cx.backend.fill_round_rect(chip, 6.0, p.subtle);
             }
-            let label = fit_label(
-                cx,
+            let label = LabelWidths::measuring(&mut *cx.backend).fit(
                 &widget.model_chip_label,
-                MODEL_FONT,
                 (chip.size.x - 8.0 - 22.0).max(0.0),
+                MODEL_FONT,
+                CHROME_FONT_FAMILY,
+                MODEL_LABEL_WEIGHT,
             );
             chat_label(
                 cx,
                 &label,
                 MODEL_FONT,
                 if hovered { p.text } else { p.text_2 },
-                400,
+                MODEL_LABEL_WEIGHT,
                 Point2D::new(chip.origin.x + 8.0, baseline),
             );
             draw_icon(
@@ -257,18 +272,19 @@ pub(crate) fn paint_bottom_toolbar(
             );
         } else {
             let hovered = active(ChatFooterButton::ModelPicker);
-            let label = fit_label(
-                cx,
+            let label = LabelWidths::measuring(&mut *cx.backend).fit(
                 &widget.label_no_models,
-                MODEL_FONT,
                 (chip.size.x - 8.0 - 22.0).max(0.0),
+                MODEL_FONT,
+                CHROME_FONT_FAMILY,
+                ADD_PROVIDER_WEIGHT,
             );
             chat_label(
                 cx,
                 &label,
                 MODEL_FONT,
                 if hovered { p.text } else { p.accent },
-                500,
+                ADD_PROVIDER_WEIGHT,
                 Point2D::new(chip.origin.x + 8.0, baseline),
             );
             draw_icon(

@@ -173,7 +173,7 @@ impl ImportMenu {
             let width = text_metrics::measure_chrome(cx.backend, shortcut, SHORTCUT_FONT_SIZE);
             let layout = TextLayout::single_run(
                 shortcut,
-                "system-ui",
+                text_metrics::CHROME_FONT_FAMILY,
                 SHORTCUT_FONT_SIZE,
                 self.theme.muted_foreground.to_jian(),
                 Point2D::ZERO,

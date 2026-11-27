@@ -28,6 +28,7 @@ pub const MIN_RAIL_WIDTH: f32 = 80.0;
 
 // Phase B primitives.
 pub(crate) mod button;
+pub(crate) mod chrome_buttons;
 pub mod prop_row;
 pub mod tree;
 
@@ -156,6 +157,9 @@ pub(crate) mod property_panel_segments;
 pub mod property_panel_shader_body;
 pub mod property_panel_snapshot;
 pub mod property_panel_stroke;
+pub mod property_panel_stroke_ends;
+#[cfg(test)]
+mod property_panel_stroke_ends_tests;
 pub(crate) mod property_panel_stroke_style;
 #[cfg(test)]
 mod property_panel_stroke_style_tests;
@@ -262,7 +266,7 @@ pub mod canvas_viewport_overlay;
 pub mod canvas_viewport_paint;
 #[cfg(test)]
 mod canvas_viewport_paint_pop_tests;
-mod canvas_viewport_stroke_paint;
+pub(crate) mod canvas_viewport_stroke_paint;
 mod canvas_viewport_text;
 mod canvas_viewport_text_fill;
 mod canvas_viewport_text_stroke;
@@ -419,6 +423,7 @@ pub mod design_md_markdown;
 pub mod design_md_panel;
 #[cfg(test)]
 mod design_md_panel_tests;
+mod design_md_wrap;
 pub mod editor_toast;
 pub mod editor_toast_flow;
 #[cfg(test)]
@@ -478,6 +483,7 @@ pub mod slides_panel_actions;
 pub mod slides_panel_flow;
 pub mod slideshow_toolbar;
 pub mod status_bar;
+mod text_input_measured;
 pub mod tooltip;
 pub mod update_modal;
 pub mod variables_panel;
@@ -490,6 +496,8 @@ pub mod window_strip;
 // Test-support: shared RenderBackend stubs (never ships in non-test builds).
 #[cfg(test)]
 mod agent_settings_width_tests;
+#[cfg(test)]
+mod chrome_family_paint_tests;
 #[cfg(test)]
 mod floating_chrome_width_tests;
 #[cfg(test)]

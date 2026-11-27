@@ -34,6 +34,11 @@ pub(crate) fn apply_paint_option_action(state: &mut EditorState, action: &Proper
             let _ = state.set_selected_stroke_align(align.clone());
         }
         A::SetStrokeStyle(edit) => {
+            use de_editor_core::fills::StrokeStyleEdit as E;
+            // A Start / End pick comes from the shared popover (#389).
+            if matches!(edit, E::Start(_) | E::End(_)) {
+                state.editor_ui.close_interaction_menu();
+            }
             let _ = state.set_selected_stroke_style(edit);
         }
         // Vector edit mode with points selected: the header buttons are

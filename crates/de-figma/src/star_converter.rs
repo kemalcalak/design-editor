@@ -58,6 +58,7 @@ pub(crate) fn convert_star(
         .and_then(clamp_star_inner_radius)
         .unwrap_or(STAR_DEFAULT_INNER_RADIUS);
     PenNode::Polygon(PolygonNode {
+        corner_smoothing: None,
         base: common_props(figma, id),
         polygon_count: points,
         width: Some(resolve_width(figma, parent_stack_mode, ctx)),

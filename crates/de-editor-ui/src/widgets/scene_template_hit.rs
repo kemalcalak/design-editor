@@ -19,6 +19,7 @@ use super::scene_template_style_geometry::SCENE_TEMPLATE_IMPORT_HOVER;
 use super::scene_template_style_import::{
     STYLE_IMPORT_CANCEL_HOVER, STYLE_IMPORT_CONFIRM_HOVER, STYLE_IMPORT_PICK_HOVER,
 };
+use crate::widgets::text_input_measured::measured_byte_offset_at as single_line_byte_offset_at;
 use crate::{Point2D, Rect};
 
 impl SceneTemplatePanel<'_> {
@@ -120,13 +121,10 @@ impl SceneTemplatePanel<'_> {
         }
         let search = Self::search_rect(panel);
         if search.contains(point) {
-            let caret = self.caret_at(
-                &self.state.editor_ui.scene_template_center.search,
-                search,
-                SEARCH_PAD_X,
-                SEARCH_TEXT_SIZE,
-                point,
-            );
+            let input = &self.state.editor_ui.scene_template_center.search;
+            let caret =
+                single_line_byte_offset_at(input, search, point, SEARCH_TEXT_SIZE, SEARCH_PAD_X)
+                    .unwrap_or(input.text().len());
             return Some(SceneTemplateHit::FocusSearch(caret));
         }
         for (rect, filter) in self.filter_chip_rects(panel) {
@@ -144,13 +142,15 @@ impl SceneTemplatePanel<'_> {
         }
         if let Some(input) = self.generate_input_rect(panel) {
             if input.contains(point) {
-                let caret = self.caret_at(
-                    &self.state.editor_ui.scene_template_center.generate,
+                let state = &self.state.editor_ui.scene_template_center.generate;
+                let caret = single_line_byte_offset_at(
+                    state,
                     input,
-                    GENERATE_INPUT_PAD_X,
-                    GENERATE_TEXT_SIZE,
                     point,
-                );
+                    GENERATE_TEXT_SIZE,
+                    GENERATE_INPUT_PAD_X,
+                )
+                .unwrap_or(state.text().len());
                 return Some(SceneTemplateHit::FocusGenerate(caret));
             }
         }

@@ -568,6 +568,18 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "clipboard.copiedPng" => "PNG के रूप में कॉपी किया गया",
         "clipboard.copiedSvg" => "SVG के रूप में कॉपी किया गया",
         "clipboard.copyFailed" => "चयन कॉपी नहीं हो सका",
+        "stroke.start" => "आरंभ",
+        "stroke.end" => "अंत",
+        "stroke.miter" => "माइटर",
+        "stroke.swapEnds" => "सिरे बदलें",
+        "stroke.endNone" => "कोई नहीं",
+        "stroke.endRound" => "गोल",
+        "stroke.endSquare" => "वर्गाकार",
+        "stroke.endLineArrow" => "रेखा तीर",
+        "stroke.endTriangleArrow" => "त्रिभुज तीर",
+        "stroke.endReversedTriangle" => "उल्टा त्रिभुज",
+        "stroke.endCircle" => "वृत्त",
+        "stroke.endDiamond" => "हीरा",
         _ => return None,
     })
 }
