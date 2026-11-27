@@ -106,12 +106,72 @@ impl ProcessTree {
     /// leader is reaped. Windows tree discovery requires the leader to still
     /// be alive, so this deliberately becomes a no-op there instead of
     /// risking `taskkill` against a reused numeric PID.
+    ///
+    /// On Unix an `EPERM` from the group is not a failure here. Darwin
+    /// answers `EPERM`, not `ESRCH`, when every member left in the group is a
+    /// zombie, which is the normal state for an instant after a member
+    /// exits; otherwise it means a member this process may not signal (e.g.
+    /// one owned by another user, or a sandbox-protected one). Neither leaves
+    /// anything this process can do, and reporting it as an error made the
+    /// shutdown paths throw away the leader's exit status they had already
+    /// read (#474).
     pub fn kill_after_leader_exit(self) -> io::Result<()> {
-        if self.can_signal_after_leader_exit() {
-            self.kill()
-        } else {
-            Ok(())
+        if !self.can_signal_after_leader_exit() {
+            return Ok(());
         }
+        match self.kill() {
+            #[cfg(unix)]
+            Err(error) if error.raw_os_error() == Some(libc::EPERM) => {
+                tracing::debug!(
+                    tree = ?self.target,
+                    "process-group sweep after leader exit got EPERM; nothing signalable is left"
+                );
+                Ok(())
+            }
+            result => result,
+        }
+    }
+
+    /// Whether anything this process can still signal is left in the tree
+    /// after its leader exited.
+    ///
+    /// `EPERM` reads as not alive: on Darwin a group holding only zombies
+    /// answers `EPERM`, and a member this process may not signal cannot be
+    /// cleaned up anyway. Reading it as alive (the old `is_alive`) made
+    /// `terminate_process_tree` poll a zombie-only group until its grace
+    /// deadline and then lose the leader's status to the forced kill (#474).
+    #[cfg(unix)]
+    pub(crate) fn is_alive_after_leader_exit(self) -> io::Result<bool> {
+        // SAFETY: signal 0 checks whether the captured target still exists
+        // without changing it.
+        let result = unsafe {
+            match self.target {
+                UnixTarget::Group(group) => libc::killpg(group, 0),
+                UnixTarget::Process(pid) => libc::kill(pid, 0),
+            }
+        };
+        if result == 0 {
+            return Ok(true);
+        }
+        let error = io::Error::last_os_error();
+        match error.raw_os_error() {
+            Some(libc::ESRCH) => Ok(false),
+            Some(libc::EPERM) => {
+                tracing::debug!(
+                    tree = ?self.target,
+                    "process-group probe after leader exit got EPERM; treating the group as gone"
+                );
+                Ok(false)
+            }
+            _ => Err(error),
+        }
+    }
+
+    #[cfg(not(unix))]
+    pub(crate) fn is_alive_after_leader_exit(self) -> io::Result<bool> {
+        // The std/tokio Child handle remains the source of truth off Unix.
+        // Windows tree traversal is performed by taskkill when signaling.
+        Ok(true)
     }
 
     #[cfg(unix)]
@@ -140,34 +200,6 @@ impl ProcessTree {
             io::ErrorKind::Unsupported,
             format!("process-tree signaling is unsupported for pid {}", self.pid),
         ))
-    }
-
-    #[cfg(unix)]
-    pub(crate) fn is_alive(self) -> io::Result<bool> {
-        // Signal 0 checks whether the captured target still exists without
-        // changing it. EPERM also means it exists but is not signalable.
-        let result = unsafe {
-            match self.target {
-                UnixTarget::Group(group) => libc::killpg(group, 0),
-                UnixTarget::Process(pid) => libc::kill(pid, 0),
-            }
-        };
-        if result == 0 {
-            return Ok(true);
-        }
-        let error = io::Error::last_os_error();
-        match error.raw_os_error() {
-            Some(libc::ESRCH) => Ok(false),
-            Some(libc::EPERM) => Ok(true),
-            _ => Err(error),
-        }
-    }
-
-    #[cfg(not(unix))]
-    pub(crate) fn is_alive(self) -> io::Result<bool> {
-        // The std/tokio Child handle remains the source of truth off Unix.
-        // Windows tree traversal is performed by taskkill when signaling.
-        Ok(true)
     }
 
     #[cfg(unix)]
@@ -368,7 +400,7 @@ pub fn terminate_process_tree(child: &mut Child, grace: Duration) -> io::Result<
                 graceful_tree_result?;
                 return Ok(status);
             }
-            if !tree.is_alive()? {
+            if !tree.is_alive_after_leader_exit()? {
                 return Ok(status);
             }
         }
@@ -380,8 +412,13 @@ pub fn terminate_process_tree(child: &mut Child, grace: Duration) -> io::Result<
 
     // Only a verified Unix process group is safe to signal after its leader
     // has been reaped. Other targets return above as soon as leader exit is
-    // observed, so this force signal cannot race pid reuse.
-    let tree_result = tree.kill();
+    // observed, so this force signal cannot race pid reuse. Once the leader
+    // has exited its status is already read, and the sweep must not lose it.
+    let tree_result = if leader_status.is_some() {
+        tree.kill_after_leader_exit()
+    } else {
+        tree.kill()
+    };
     let leader_result = if leader_status.is_none() {
         child.kill()
     } else {
@@ -414,8 +451,10 @@ pub async fn terminate_tokio_process_tree(
             let status = status?;
             if tree.covers_descendants() {
                 if tree.can_signal_after_leader_exit() {
-                    if tree.is_alive()? {
-                        tree.kill()?;
+                    // The leader's status is already read; sweeping what is
+                    // left of its group must not lose it.
+                    if tree.is_alive_after_leader_exit()? {
+                        tree.kill_after_leader_exit()?;
                     }
                 } else {
                     graceful_tree_result?;
