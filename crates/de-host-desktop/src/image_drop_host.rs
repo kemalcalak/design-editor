@@ -117,33 +117,42 @@ fn pixel_size(original_size: Option<[f32; 2]>) -> Option<(u32, u32)> {
 }
 
 impl DesktopApp {
-    /// Track the pointer while an image file hovers the window and highlight
-    /// the node it would fill.
+    /// Track the pointer while a file hovers the window: over the chat panel
+    /// it would become an attachment (#398), so the chat shows its drop
+    /// indicator and the canvas overlay steps aside; an image elsewhere
+    /// highlights the node it would fill.
     ///
     /// winit reports `HoveredFile` once, without a position, and the platform
     /// swallows cursor moves for the duration of the drag — so the position is
     /// polled from the window system instead (see [`crate::drag_cursor`]).
     /// Returns `true` when the highlight changed.
-    pub(crate) fn refresh_image_drop_hover(&mut self) -> bool {
-        if !self.hovered_image_drop {
+    pub(crate) fn refresh_file_drop_hover(&mut self) -> bool {
+        let Some(is_image) = self.hovered_file_drop else {
             return false;
-        }
+        };
         let Some(window) = self.window.as_ref() else {
             return false;
         };
         let point = crate::drag_cursor::window_cursor_position(window);
         self.drop_cursor = point;
+        let over_chat = point.is_some_and(|(x, y)| self.host.chat_panel_contains(x, y));
+        let chat_changed = self.host.editor_state().chat.file_drop_hover != over_chat;
+        self.host.editor_state_mut().chat.file_drop_hover = over_chat;
+        if over_chat || !is_image {
+            return self.host.set_file_drop_target(None) || chat_changed;
+        }
         let target = point.and_then(|(x, y)| {
             self.host
                 .image_drop_target_at(x, y, self.viewport_width, self.viewport_height)
         });
-        self.host.set_file_drop_target(target)
+        self.host.set_file_drop_target(target) || chat_changed
     }
 
     /// Clear every drag-hover trace. Called on drop and on drag-cancel so a
     /// stale ring can never outlive the gesture.
-    pub(crate) fn clear_image_drop_hover(&mut self) {
-        self.hovered_image_drop = false;
+    pub(crate) fn clear_file_drop_hover(&mut self) {
+        self.hovered_file_drop = None;
+        self.host.editor_state_mut().chat.file_drop_hover = false;
         self.drop_cursor = None;
         self.host.set_file_drop_target(None);
     }

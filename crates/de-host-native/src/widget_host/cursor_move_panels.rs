@@ -250,6 +250,14 @@ impl WidgetHostNative {
                 }
             }
         }
+        if self.corner_smoothing_drag {
+            if let Some(panel) = property_panel_probe.as_ref().and_then(Option::as_ref) {
+                if let Some(action) = panel.corner_smoothing_drag_action(property_rect, x) {
+                    self.apply_property_action(action);
+                    return Some(true);
+                }
+            }
+        }
         if let Some(effect) = self.effect_radius_drag {
             if let Some(panel) = property_panel_probe.as_ref().and_then(Option::as_ref) {
                 if let Some(action) = panel.effect_radius_drag_action(property_rect, effect, x) {

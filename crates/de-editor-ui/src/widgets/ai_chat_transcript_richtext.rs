@@ -231,9 +231,9 @@ pub(crate) fn paint_rich(cx: &mut PaintCx<'_>, theme: &Theme, lines: &[RichLine]
             // drifted off their words and the sentence read as fragments
             // (user report 2026-07-12). Wrapping stays estimate-based (it must
             // be backend-free and deterministic); only paint measures.
-            let measured = cx
-                .backend
-                .measure_text_weighted(&span.text, BODY_FONT, weight);
+            let measured = crate::widgets::text_metrics::measure_chrome_weighted(
+                cx.backend, &span.text, BODY_FONT, weight,
+            );
             let width = if measured > 0.0 {
                 measured
             } else {

@@ -112,7 +112,7 @@ impl ChatState {
         self.messages.push(user_msg);
         // Mentions whose `@Label` the user typed away no longer belong to
         // this turn; the rest stay staged for the host to resolve.
-        self.pending_mentions.retain(|m| m.is_in(&trimmed));
+        crate::chat_mentions::retain_live(&trimmed, &mut self.pending_mentions);
         self.mention_popup = None;
         self.mention_dismissed_at = None;
         // A new send replaces the turn whose call was waiting.

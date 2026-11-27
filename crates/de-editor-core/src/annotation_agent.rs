@@ -1,7 +1,7 @@
 //! "Send to agent" on a sticky note / context / prompt annotation (#398,
 //! annotations from #12): open the chat with the note's text as the draft
-//! and the note plus the layers around it staged as `@`-mentions, so the
-//! agent reads what the note is about without the user retyping it.
+//! and the layers around it staged as `@`-mentions, so the agent reads what
+//! the note is about without the user retyping it.
 //!
 //! The draft is not sent: the user reads it, edits it and presses Send.
 
@@ -40,6 +40,14 @@ impl Bounds {
         })
     }
 
+    fn shifted(self, (dx, dy): (f64, f64)) -> Self {
+        Self {
+            x: self.x + dx,
+            y: self.y + dy,
+            ..self
+        }
+    }
+
     fn grown(self, by: f64) -> Self {
         Self {
             x: self.x - by,
@@ -63,6 +71,21 @@ impl Bounds {
     }
 }
 
+/// The page-space offset of the layer holding node `id`: the sum of its
+/// ancestors' positions (zero for a top-level node), or `None` when `id` is
+/// not under `nodes`. Positions are parent-relative, so a note inside a
+/// frame is compared with the page's layers only after this shift.
+fn parent_offset(nodes: &[PenNode], id: &str) -> Option<(f64, f64)> {
+    nodes.iter().find_map(|node| {
+        if node.id_str() == id {
+            return Some((0.0, 0.0));
+        }
+        let (dx, dy) = parent_offset(node.children()?, id)?;
+        let base = node.base();
+        Some((dx + base.x.unwrap_or(0.0), dy + base.y.unwrap_or(0.0)))
+    })
+}
+
 fn label_of(node: &PenNode) -> String {
     node.base()
         .name
@@ -84,9 +107,11 @@ fn node_mention(node: &PenNode) -> ChatMention {
 /// The top-level layers of the active page around `note`: those reaching
 /// within [`SURROUNDING_MARGIN`] of it (in page order), else the nearest one
 /// within [`NEAREST_RADIUS`]; other annotations never count. At most
-/// [`MAX_SURROUNDING`].
+/// [`MAX_SURROUNDING`]. A note nested in a frame is placed in page
+/// coordinates first.
 pub fn surrounding_layers<'a>(page: &'a [PenNode], note: &PenNode) -> Vec<&'a PenNode> {
-    let Some(note_box) = Bounds::of(note) else {
+    let offset = parent_offset(page, note.id_str()).unwrap_or((0.0, 0.0));
+    let Some(note_box) = Bounds::of(note).map(|b| b.shifted(offset)) else {
         return Vec::new();
     };
     let candidates = page
@@ -121,9 +146,10 @@ impl EditorState {
 
     /// Open the chat on annotation `id`: a fresh tab when the current one
     /// already holds a conversation or a running turn, the note's text as
-    /// the draft, and the note plus its surrounding layers as staged
-    /// `@`-mentions. False when `id` is not an annotation on the active
-    /// page or the editor has no chat to open.
+    /// the draft, and its surrounding layers as staged `@`-mentions. The
+    /// note itself is staged only when it holds no text: its summary would
+    /// quote the text the draft already carries. False when `id` is not an
+    /// annotation on the active page or the editor has no chat to open.
     pub fn send_annotation_to_agent(&mut self, id: &NodeId, now_ms: u64) -> bool {
         let Some(note) = crate::walkers::find_node(self.active_children(), id) else {
             return false;
@@ -132,7 +158,13 @@ impl EditorState {
             return false;
         }
         let text = node_text_content(note).unwrap_or_default();
-        let mut mentions = vec![node_mention(note)];
+        // The text goes into the draft once; a mention of the note would
+        // quote it again in the context block.
+        let mut mentions = if text.trim().is_empty() {
+            vec![node_mention(note)]
+        } else {
+            Vec::new()
+        };
         for node in surrounding_layers(self.active_children(), note) {
             let mention = node_mention(node);
             if !mentions.contains(&mention) {
@@ -146,9 +178,10 @@ impl EditorState {
             self.chat.new_tab();
         }
         let tokens: Vec<String> = mentions.iter().map(ChatMention::token).collect();
-        let draft = match text.trim() {
-            "" => tokens.join(" "),
-            body => format!("{body}\n\n{}", tokens.join(" ")),
+        let draft = match (text.trim(), tokens.is_empty()) {
+            ("", _) => tokens.join(" "),
+            (body, true) => body.to_string(),
+            (body, false) => format!("{body}\n\n{}", tokens.join(" ")),
         };
         self.chat.input.set_text(draft);
         self.chat.pending_mentions = mentions;

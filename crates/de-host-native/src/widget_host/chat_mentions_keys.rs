@@ -6,46 +6,137 @@
 use std::path::Path;
 use std::sync::Arc;
 
-use de_editor_core::chat_mentions::SkillOption;
+use de_editor_core::chat_mentions::{
+    ProjectFileSource, SkillListSource, SkillOrigin, SkillsListedFor,
+};
+use de_editor_core::editor_toast::EditorToastLevel;
 
 use super::WidgetHostNative;
+
+/// The toast raised when a folder listing was cut short.
+pub const SCAN_LIMITED_TOAST: &str = "chat.mention.scanLimited";
+/// The notice raised once per project folder whose skills replace built-in
+/// skills.
+pub const OVERRIDES_TOAST: &str = "chat.skill.overridesApplied";
 
 impl WidgetHostNative {
     /// Bring the `@` popup in line with the chat draft, before painting.
     ///
     /// `project_root` is the open document's folder (`None` while unsaved);
     /// a change of folder drops the old file list. When an `@` popup has just
-    /// opened, `scan` lists the folder again (files come and go while the
-    /// editor is open); when a `/` popup has, `scan_skills` reloads the skill
-    /// folders. The rows are then re-ranked. Returns true when anything
-    /// visible changed.
+    /// opened, `files` is asked for the folder again (files come and go
+    /// while the editor is open); when a `/` popup has, or the project
+    /// folder changed, `skills` lists the skill folders again (so overrides
+    /// of built-in skills follow the open document). Both answer off the UI
+    /// thread; a listing that lands later re-ranks the rows. Returns true
+    /// when anything visible changed.
     pub fn sync_chat_mentions(
         &mut self,
         project_root: Option<&Path>,
-        scan: &dyn Fn(&Path) -> Vec<String>,
-        scan_skills: &dyn Fn(Option<&Path>) -> Vec<SkillOption>,
+        files: &mut dyn ProjectFileSource,
+        skills: &mut dyn SkillListSource,
     ) -> bool {
-        let root = project_root.map(|p| p.to_string_lossy().into_owned());
-        let files = &mut self.editor_state.chat.project_files;
-        if files.root != root {
-            files.root = root;
-            files.files = Arc::from(Vec::new());
+        let project = &mut self.editor_state.chat.project_files;
+        // Compared as paths, so a redraw with the folder unchanged allocates
+        // nothing.
+        if project.root.as_deref().map(Path::new) != project_root {
+            project.root = project_root.map(|p| p.to_string_lossy().into_owned());
+            project.files = Arc::from(Vec::new());
+            project.summaries.clear();
         }
         let mut changed = self.editor_state.sync_chat_mentions();
+        let mut landed = None;
         if std::mem::take(&mut self.editor_state.chat.project_files.rescan_requested) {
             if let Some(root) = project_root {
-                self.editor_state.chat.project_files.files = Arc::from(scan(root));
-                changed |= self.editor_state.refresh_chat_mention_rows();
+                landed = files.request(root);
             }
         }
-        if std::mem::take(&mut self.editor_state.chat.skills.rescan_requested) {
-            self.editor_state.chat.skills.skills = Arc::from(scan_skills(project_root));
-            changed |= self.editor_state.refresh_chat_mention_rows();
+        if let Some(list) = files.poll() {
+            landed = Some(list);
         }
+        if let Some(list) = landed.filter(|list| Some(list.root.as_path()) == project_root) {
+            self.editor_state.chat.project_files.files = list.files;
+            changed |= self.editor_state.refresh_chat_mention_rows();
+            if list.warn {
+                let now = self.now_ms;
+                self.editor_state.editor_ui.show_toast(
+                    SCAN_LIMITED_TOAST,
+                    Vec::new(),
+                    EditorToastLevel::Info,
+                    now,
+                );
+                changed = true;
+            }
+        }
+        changed |= self.sync_chat_skills(project_root, skills);
         if changed {
             self.mark_dirty();
         }
         changed
+    }
+
+    /// The skill half of [`Self::sync_chat_mentions`].
+    fn sync_chat_skills(
+        &mut self,
+        project_root: Option<&Path>,
+        skills: &mut dyn SkillListSource,
+    ) -> bool {
+        let chat_skills = &mut self.editor_state.chat.skills;
+        let moved = !chat_skills.listed_for.is(project_root);
+        let mut landed = None;
+        if std::mem::take(&mut chat_skills.rescan_requested) || moved {
+            chat_skills.listed_for = SkillsListedFor::of(project_root);
+            landed = skills.request(project_root);
+        }
+        if let Some(list) = skills.poll() {
+            landed = Some(list);
+        }
+        match landed.filter(|list| list.root.as_deref() == project_root) {
+            Some(list) => {
+                let chat_skills = &mut self.editor_state.chat.skills;
+                chat_skills.skills = list.skills;
+                // Staged skills are read again against the new listing.
+                chat_skills.instructions.clear();
+                self.announce_project_overrides(project_root);
+                self.editor_state.refresh_chat_mention_rows();
+                true
+            }
+            None => false,
+        }
+    }
+
+    /// The first time a project folder's skills replace built-in skills,
+    /// say which (once per folder): a project's `.design-editor/skills`
+    /// changes how the agent designs, so opening a repository never does
+    /// that silently.
+    fn announce_project_overrides(&mut self, project_root: Option<&Path>) {
+        let Some(root) = project_root else {
+            return;
+        };
+        let chat_skills = &mut self.editor_state.chat.skills;
+        let names: Vec<&str> = chat_skills
+            .skills
+            .iter()
+            .filter(|s| s.origin == SkillOrigin::Project && s.overrides_builtin)
+            .map(|s| s.name.as_str())
+            .collect();
+        if names.is_empty() {
+            return;
+        }
+        let names = names.join(", ");
+        if !chat_skills
+            .overrides_announced
+            .insert(root.to_string_lossy().into_owned())
+        {
+            return;
+        }
+        let now = self.now_ms;
+        self.editor_state.editor_ui.show_toast(
+            OVERRIDES_TOAST,
+            vec![("names".to_string(), names)],
+            EditorToastLevel::Info,
+            now,
+        );
     }
 
     /// Whether the `@` popup is open with rows — it then owns Up, Down,
@@ -84,6 +175,8 @@ impl WidgetHostNative {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use de_editor_core::chat_mentions::{ProjectFileList, SkillList, SkillOption};
+    use std::path::PathBuf;
 
     fn host_typing(text: &str) -> WidgetHostNative {
         let mut host = WidgetHostNative::new();
@@ -94,43 +187,162 @@ mod tests {
         host
     }
 
+    /// A source whose listing "lands" only when the test says so.
+    #[derive(Default)]
+    struct FakeSource {
+        requests: Vec<PathBuf>,
+        cached: Option<ProjectFileList>,
+        landing: Option<ProjectFileList>,
+    }
+
+    impl ProjectFileSource for FakeSource {
+        fn request(&mut self, root: &Path) -> Option<ProjectFileList> {
+            self.requests.push(root.to_path_buf());
+            self.cached.clone()
+        }
+        fn poll(&mut self) -> Option<ProjectFileList> {
+            self.landing.take()
+        }
+    }
+
+    /// A skill lister that answers only when the test says so.
+    #[derive(Default)]
+    struct FakeSkills {
+        requests: Vec<Option<PathBuf>>,
+        landing: Option<SkillList>,
+    }
+
+    impl SkillListSource for FakeSkills {
+        fn request(&mut self, root: Option<&Path>) -> Option<SkillList> {
+            self.requests.push(root.map(Path::to_path_buf));
+            None
+        }
+        fn poll(&mut self) -> Option<SkillList> {
+            self.landing.take()
+        }
+    }
+
+    fn list(root: &str, files: &[&str], warn: bool) -> ProjectFileList {
+        ProjectFileList {
+            root: PathBuf::from(root),
+            files: files.iter().map(|f| f.to_string()).collect(),
+            warn,
+        }
+    }
+
     #[test]
-    fn sync_scans_the_project_folder_when_the_popup_opens() {
+    fn opening_the_popup_asks_for_a_listing_and_a_late_one_reranks() {
         let mut host = host_typing("@bri");
         let root = Path::new("/project");
-        let scans = std::cell::Cell::new(0);
-        let scan = |dir: &Path| {
-            scans.set(scans.get() + 1);
-            assert_eq!(dir, Path::new("/project"));
-            vec!["brief.md".to_string(), "logo.svg".to_string()]
-        };
-        let no_skills = |_: Option<&Path>| Vec::new();
-        assert!(host.sync_chat_mentions(Some(root), &scan, &no_skills));
-        assert_eq!(scans.get(), 1);
+        let mut source = FakeSource::default();
+        let mut skills = FakeSkills::default();
+        assert!(host.sync_chat_mentions(Some(root), &mut source, &mut skills));
+        assert_eq!(source.requests, [PathBuf::from("/project")]);
+        // Nothing moved: no new request.
+        assert!(!host.sync_chat_mentions(Some(root), &mut source, &mut skills));
+        assert_eq!(source.requests.len(), 1);
+        // The background listing lands on a later frame.
+        source.landing = Some(list("/project", &["brief.md", "logo.svg"], false));
+        assert!(host.sync_chat_mentions(Some(root), &mut source, &mut skills));
         let popup = host.editor_state().chat.mention_popup.as_ref().unwrap();
         assert_eq!(popup.rows[0].mention.label, "brief.md");
-        // Nothing moved: no rescan, no repaint.
-        assert!(!host.sync_chat_mentions(Some(root), &scan, &no_skills));
-        assert_eq!(scans.get(), 1);
+        assert!(host.editor_state().editor_ui.editor_toast.is_none());
+        // A listing for a folder no longer open is ignored.
+        source.landing = Some(list("/elsewhere", &["x.md"], false));
+        host.sync_chat_mentions(Some(root), &mut source, &mut skills);
+        assert_eq!(
+            &*host.editor_state().chat.project_files.files,
+            ["brief.md".to_string(), "logo.svg".to_string()]
+        );
         // Another folder drops the old list.
-        host.sync_chat_mentions(None, &scan, &no_skills);
+        host.sync_chat_mentions(None, &mut source, &mut skills);
         assert!(host.editor_state().chat.project_files.files.is_empty());
     }
 
     #[test]
-    fn sync_loads_skills_when_a_slash_popup_opens() {
-        let mut host = host_typing("/to");
-        let no_files = |_: &Path| Vec::new();
-        let skills = |root: Option<&Path>| {
-            assert_eq!(root, Some(Path::new("/project")));
-            vec![SkillOption {
+    fn a_cut_listing_raises_the_notice() {
+        let mut host = host_typing("@");
+        let mut source = FakeSource {
+            cached: Some(list("/home/me", &["a.de"], true)),
+            ..Default::default()
+        };
+        host.sync_chat_mentions(
+            Some(Path::new("/home/me")),
+            &mut source,
+            &mut FakeSkills::default(),
+        );
+        let toast = host.editor_state().editor_ui.editor_toast.as_ref().unwrap();
+        assert_eq!(toast.i18n_key, SCAN_LIMITED_TOAST);
+    }
+
+    #[test]
+    fn skills_are_listed_per_project_and_when_a_slash_popup_opens() {
+        let mut host = host_typing("hello");
+        let mut files = FakeSource::default();
+        let mut skills = FakeSkills::default();
+        let project = Path::new("/project");
+        host.sync_chat_mentions(Some(project), &mut files, &mut skills);
+        assert_eq!(skills.requests, [Some(PathBuf::from("/project"))]);
+        // Same folder, no popup: nothing more.
+        host.sync_chat_mentions(Some(project), &mut files, &mut skills);
+        assert_eq!(skills.requests.len(), 1);
+        // A `/` popup lists again, and the late answer fills its rows.
+        let state = host.editor_state_mut();
+        state.chat.input.set_text("/to");
+        state.chat.input.set_caret(3, 0);
+        host.sync_chat_mentions(Some(project), &mut files, &mut skills);
+        assert_eq!(skills.requests.len(), 2);
+        skills.landing = Some(SkillList {
+            root: Some(PathBuf::from("/project")),
+            skills: vec![SkillOption {
                 name: "tone".into(),
                 description: "House tone".into(),
+                ..SkillOption::default()
             }]
-        };
-        assert!(host.sync_chat_mentions(Some(Path::new("/project")), &no_files, &skills));
+            .into(),
+        });
+        assert!(host.sync_chat_mentions(Some(project), &mut files, &mut skills));
         let popup = host.editor_state().chat.mention_popup.as_ref().unwrap();
         assert_eq!(popup.rows[0].mention.label, "tone");
+        // Another document folder lists again.
+        host.sync_chat_mentions(Some(Path::new("/other")), &mut files, &mut skills);
+        assert_eq!(skills.requests.last(), Some(&Some(PathBuf::from("/other"))));
+    }
+
+    #[test]
+    fn project_overrides_of_built_in_skills_are_announced_once_per_folder() {
+        let mut host = host_typing("hello");
+        let mut files = FakeSource::default();
+        let mut skills = FakeSkills::default();
+        let overriding = |root: &str| SkillList {
+            root: Some(PathBuf::from(root)),
+            skills: vec![SkillOption {
+                name: "layout".into(),
+                origin: SkillOrigin::Project,
+                overrides_builtin: true,
+                ..SkillOption::default()
+            }]
+            .into(),
+        };
+        let a = Path::new("/repo-a");
+        skills.landing = Some(overriding("/repo-a"));
+        host.sync_chat_mentions(Some(a), &mut files, &mut skills);
+        let toast = host.editor_state().editor_ui.editor_toast.clone().unwrap();
+        assert_eq!(toast.i18n_key, OVERRIDES_TOAST);
+        assert_eq!(
+            toast.args,
+            vec![("names".to_string(), "layout".to_string())]
+        );
+        host.editor_state_mut().editor_ui.editor_toast = None;
+        // The same folder listed again: no second notice.
+        skills.landing = Some(overriding("/repo-a"));
+        host.sync_chat_mentions(Some(a), &mut files, &mut skills);
+        assert!(host.editor_state().editor_ui.editor_toast.is_none());
+        // Another repository gets its own.
+        let b = Path::new("/repo-b");
+        skills.landing = Some(overriding("/repo-b"));
+        host.sync_chat_mentions(Some(b), &mut files, &mut skills);
+        assert!(host.editor_state().editor_ui.editor_toast.is_some());
     }
 
     #[test]

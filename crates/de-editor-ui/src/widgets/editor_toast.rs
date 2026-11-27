@@ -185,7 +185,7 @@ impl<'a> EditorToast<'a> {
         let baseline_y = jian_widgets::centered_text_baseline_y(rect, TOAST_FONT_SIZE);
         let text = TextLayout::single_run(
             &self.message(),
-            "system-ui",
+            crate::widgets::text_metrics::CHROME_FONT_FAMILY,
             TOAST_FONT_SIZE,
             theme.popover_foreground.to_jian(),
             Point2D::new(0.0, 0.0),

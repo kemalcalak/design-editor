@@ -65,11 +65,16 @@ thread_local! {
 }
 
 /// Resolve section `index`'s parsed + wrapped lines, memoized on
-/// `(content, limit)` by value. `build` runs only on a cache miss.
+/// `(content, limit)` by value. `build` runs only on a cache miss, and its
+/// result is kept only when `keep` — a pass that measured the body in its
+/// painted face (#451). A backend-less pass that misses (a hit-test before
+/// the first paint) wraps against estimated widths, which must not stand in
+/// for the painted lines afterwards.
 pub(super) fn resolve(
     index: u8,
     content: &str,
     limit: usize,
+    keep: bool,
     build: impl FnOnce() -> Vec<RenderLine>,
 ) -> Rc<Vec<RenderLine>> {
     let slot = index as usize;
@@ -89,6 +94,9 @@ pub(super) fn resolve(
     }
     let built = Rc::new(build());
     BUILD_COUNT.with(|c| c.set(c.get() + 1));
+    if !keep {
+        return built;
+    }
     CACHE.with(|cell| {
         cell.borrow_mut()[slot] = Some((
             SectionKey {
@@ -99,6 +107,13 @@ pub(super) fn resolve(
         ));
     });
     built
+}
+
+/// Empty every slot, so a test that paints into a backend with other font
+/// metrics wraps again instead of reading another backend's lines.
+#[cfg(test)]
+pub(crate) fn reset() {
+    CACHE.with(|cell| *cell.borrow_mut() = [None, None, None, None, None, None]);
 }
 
 /// Number of fresh parse + wrap builds performed so far on this

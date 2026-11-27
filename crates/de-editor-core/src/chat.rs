@@ -251,6 +251,10 @@ pub struct ChatState {
     /// Files staged for the next turn (images the user pasted / picked).
     /// Drained by the host into `ChatRequest::attachments`, then cleared.
     pub pending_attachments: Vec<ChatAttachment>,
+    /// Process-unique id of this tab, stable while tabs before it close, so
+    /// work started for a tab (a file read for its attachments) lands in
+    /// that tab and nowhere else ([`crate::ChatSessions::tab_by_id_mut`]).
+    pub tab_id: u64,
     /// Raised when the user clicks the attach button — the desktop
     /// host drains this each frame, opens a native file picker, and
     /// stages the chosen file via `add_attachment`. Mirrors the
@@ -296,6 +300,10 @@ pub struct ChatState {
     /// A destructive agent tool call waiting for the user's Allow / Deny
     /// (#398, `agent_permission`), or `None`.
     pub permission_prompt: Option<crate::agent_permission::PermissionPrompt>,
+    /// Fingerprint of the draft and staged-mention count the staged tokens
+    /// were last checked against, so the per-redraw sync skips the check
+    /// while neither moved.
+    pub mentions_checked_draft: Option<u64>,
 }
 
 /// Process-global allocator for [`ChatImage::id`]. A *global* counter
@@ -309,6 +317,9 @@ static NEXT_IMAGE_ID: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU6
 fn alloc_image_id() -> u64 {
     NEXT_IMAGE_ID.fetch_add(1, std::sync::atomic::Ordering::Relaxed)
 }
+
+/// Allocator for [`ChatState::tab_id`].
+static NEXT_TAB_ID: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(1);
 
 impl Default for ChatState {
     fn default() -> Self {
@@ -340,6 +351,7 @@ impl Default for ChatState {
             agent_team_size: 1,
             agents_running: (0, 0),
             pending_attachments: Vec::new(),
+            tab_id: NEXT_TAB_ID.fetch_add(1, std::sync::atomic::Ordering::Relaxed),
             pending_attachment_pick: false,
             pending_subtask_retry: None,
             input_scroll: 0.0,
@@ -348,6 +360,7 @@ impl Default for ChatState {
             mention_popup: None,
             mention_dismissed_at: None,
             permission_prompt: None,
+            mentions_checked_draft: None,
         }
     }
 }

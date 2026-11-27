@@ -29,6 +29,7 @@ use std::rc::Rc;
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
+use de_editor_core::shared_state::SharedState;
 use de_editor_core::EditorState;
 use rquickjs::context::EvalOptions;
 use rquickjs::{Context, Function, Runtime};
@@ -89,6 +90,15 @@ pub trait ScriptRenderer: Send + Sync {
         state: &EditorState,
         request: &ExportRequest,
     ) -> Result<ExportWritten, ScriptRenderError>;
+
+    /// Whether screenshots and exports run only for a script that writes
+    /// nothing. A live host answers a read from a narrowed snapshot (#456);
+    /// a script that turns out to write there is refused and runs again on
+    /// the whole document, so its narrowed run must not render or write
+    /// files: the full run does, once.
+    fn only_for_read_only_scripts(&self) -> bool {
+        false
+    }
 }
 
 /// What one `Export` call wrote.
@@ -107,14 +117,14 @@ pub struct ExportWritten {
 /// each copy is hundreds of MB). A registry is built per request and calls
 /// each tool once, so a second call on the same tool is refused.
 pub struct Execute {
-    state: Mutex<Option<EditorState>>,
+    state: Mutex<Option<SharedState>>,
     renderer: Option<Arc<dyn ScriptRenderer>>,
 }
 
 /// `execute` without rendering: `TakeScreenshot` / `Export` throw.
 pub fn execute_snapshot(state: &EditorState) -> Execute {
     Execute {
-        state: Mutex::new(Some(state.clone())),
+        state: Mutex::new(Some(SharedState::copied(state))),
         renderer: None,
     }
 }
@@ -124,8 +134,17 @@ pub fn execute_snapshot_with_renderer(
     state: &EditorState,
     renderer: Arc<dyn ScriptRenderer>,
 ) -> Execute {
+    execute_shared_with_renderer(SharedState::copied(state), renderer)
+}
+
+/// [`execute_snapshot_with_renderer`] over a state the caller already
+/// shares: a script that only reads copies nothing (#456).
+pub fn execute_shared_with_renderer(
+    state: SharedState,
+    renderer: Arc<dyn ScriptRenderer>,
+) -> Execute {
     Execute {
-        state: Mutex::new(Some(state.clone())),
+        state: Mutex::new(Some(state)),
         renderer: Some(renderer),
     }
 }
@@ -175,7 +194,7 @@ impl McpTool for Execute {
 
 /// Run `script` against `snapshot` and build the tool result.
 fn run(
-    snapshot: EditorState,
+    snapshot: SharedState,
     script: &str,
     page_id: Option<String>,
     renderer: Option<&dyn ScriptRenderer>,
@@ -305,6 +324,8 @@ fn finish(mut session: ExecSession, renderer: Option<&dyn ScriptRenderer>) -> To
     let mut images = Vec::new();
     let mut shots = Vec::new();
     let mut written = Vec::new();
+    let writes = !session.ctx.commands.is_empty();
+    let renderer = renderer.filter(|renderer| !(writes && renderer.only_for_read_only_scripts()));
     if let Some(renderer) = renderer {
         for shot in &session.shots {
             let label = shot.node_id.as_deref().unwrap_or("document");

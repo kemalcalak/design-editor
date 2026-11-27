@@ -19,6 +19,7 @@ mod icon;
 mod image;
 mod image_metadata;
 mod node;
+mod outline;
 #[path = "svg_export_rect.rs"]
 mod rect;
 mod shapes;
@@ -254,7 +255,16 @@ fn emit_node_defs(out: &mut String, n: &SceneNode, w: &mut Writer) {
             normalize_rect(n.bounds),
         );
     }
-    if clips_children(n) || box_clip(n) {
+    if let Some(d) = (clips_children(n) || box_clip(n))
+        .then(|| outline::node_outline(n))
+        .flatten()
+    {
+        // Smoothed corners (#389) clip to the outline.
+        let _ = write!(
+            out,
+            r#"<clipPath id="clip-{id}"><path d="{d}"/></clipPath>"#
+        );
+    } else if clips_children(n) || box_clip(n) {
         let r = normalize_rect(n.bounds);
         let _ = write!(
             out,
@@ -587,3 +597,7 @@ mod layer_tests;
 #[cfg(test)]
 #[path = "svg_export_stroke_ends_tests.rs"]
 mod stroke_ends_tests;
+
+#[cfg(test)]
+#[path = "svg_export_corner_tests.rs"]
+mod corner_tests;

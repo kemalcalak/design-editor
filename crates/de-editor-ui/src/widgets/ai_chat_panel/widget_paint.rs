@@ -65,7 +65,11 @@ impl<'a> Widget for AIChatPlaceholder<'a> {
                 );
             }
         } else {
-            let header = self.header(rect);
+            // Measured here, so the hit-test's backend-less header is this.
+            let header = self.header_with(
+                rect,
+                &mut crate::widgets::label_widths::LabelWidths::measuring(&mut *cx.backend),
+            );
             crate::widgets::ai_chat_panel_header::paint_session_header(
                 cx,
                 &self.palette,
@@ -209,7 +213,11 @@ impl<'a> Widget for AIChatPlaceholder<'a> {
             paint_attachment_row(cx, &self.theme, attach_rect, self.state);
         }
 
-        let footer = self.footer_layout(rect);
+        // Measured here, so the hit-test's backend-less footer is this one.
+        let footer = self.footer_layout_with(
+            rect,
+            &mut crate::widgets::label_widths::LabelWidths::measuring(&mut *cx.backend),
+        );
         let streaming = self.is_streaming();
         let send_active = can_use_model
             && (!self.state.input.text().trim().is_empty()

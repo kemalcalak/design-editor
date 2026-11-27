@@ -642,3 +642,43 @@ fn a_finished_turn_writes_its_reported_usage_and_cost_onto_the_reply() {
         "a provider that reported nothing writes nothing"
     );
 }
+
+#[test]
+fn the_design_agent_loop_gets_a_usage_meter_like_the_chat_loop() {
+    // #398 review: design-loop turns feed the same meter as chat turns, so
+    // a design run's tokens and cost land on its reply too.
+    use de_editor_core::{
+        AgentProvider, BuiltinAgentConfig, BuiltinAgentKind, BuiltinAgentPresetKey, ModelEntry,
+    };
+    let mut host = WidgetHostNative::new();
+    host.editor_state_mut()
+        .editor_ui
+        .agent_settings
+        .builtin_agents
+        .push(BuiltinAgentConfig {
+            id: "anthropic".into(),
+            preset: BuiltinAgentPresetKey::Custom,
+            display_name: "Anthropic".into(),
+            kind: BuiltinAgentKind::Anthropic,
+            api_key: "sk-test".into(),
+            models: vec!["claude-opus-5-5".into()],
+            base_url: "https://api.anthropic.com".into(),
+            enabled: true,
+        });
+    host.editor_state_mut().chat.available_models = vec![ModelEntry::builtin(
+        AgentProvider::ClaudeCode,
+        "anthropic",
+        "builtin:anthropic:claude-opus-5-5",
+        "Claude Opus 5.5",
+    )];
+    host.editor_state_mut().chat.selected_model = 0;
+    let (_, _, meter) = crate::chat_session::builtin_provider_with_design_tools(&host)
+        .expect("a ready built-in entry builds the design loop");
+    meter.record(de_ai::chat_usage::TokenUsage {
+        input_tokens: Some(1_000_000),
+        output_tokens: Some(0),
+        ..Default::default()
+    });
+    // First-party Anthropic: the design loop's meter is priced ($4 / M in).
+    assert!((meter.total_cost_usd().unwrap() - 4.0).abs() < 1e-9);
+}

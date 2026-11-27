@@ -375,7 +375,7 @@ pub fn apply_stroke_style_edit(node: &mut PenNode, edit: &StrokeStyleEdit) -> bo
 /// Swap what the two ends of the node's stroke draw. An unset end reads
 /// as the stroke's `cap`, so the swap is exact for every combination;
 /// returns `false` when there is no stroke or both ends already match.
-pub fn swap_stroke_ends(node: &mut PenNode) -> bool {
+pub(crate) fn swap_stroke_ends(node: &mut PenNode) -> bool {
     let Some(Some(stroke)) = node_stroke_mut(node) else {
         return false;
     };

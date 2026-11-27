@@ -10,6 +10,8 @@ use de_editor_core::chat::MAX_ATTACHMENT_BYTES;
 pub enum AttachmentLoadError {
     /// Not an image or text format the chat takes.
     Unsupported { path: String },
+    /// A folder or another non-regular file with an attachable name.
+    NotAFile { path: String },
     /// Over the per-file cap (`MAX_ATTACHMENT_BYTES`).
     TooLarge { path: String, bytes: u64 },
     /// Reading the file failed.
@@ -22,6 +24,7 @@ impl fmt::Display for AttachmentLoadError {
             AttachmentLoadError::Unsupported { path } => {
                 write!(f, "{path} is not an image or text file the chat can attach")
             }
+            AttachmentLoadError::NotAFile { path } => write!(f, "{path} is not a file"),
             AttachmentLoadError::TooLarge { path, bytes } => write!(
                 f,
                 "{path} is {bytes} bytes, over the {MAX_ATTACHMENT_BYTES}-byte attachment limit"

@@ -29,6 +29,7 @@ use super::scene_template_panel::{
 };
 use crate::theme::Theme;
 use crate::widgets::editor_state_ext::theme_for;
+use crate::widgets::label_widths::LabelWidths;
 use crate::{Point2D, Rect};
 
 /// Fraction of the viewport width the Prompt Center spans.
@@ -81,6 +82,12 @@ const HEADER_ACTION_H: f32 = 30.0;
 /// control at the same size.
 const SEARCH_H: f32 = 38.0;
 const CHIP_GAP: f32 = 8.0;
+/// Space either side of a chip's label in its natural width.
+const CHIP_LABEL_PAD_X: f32 = 13.0;
+/// Narrowest a chip is laid out at, however short its label.
+const CHIP_MIN_W: f32 = 48.0;
+/// Size the save form's category chips paint their labels at.
+pub(super) const CATEGORY_LABEL_SIZE: f32 = 11.0;
 /// Title, metadata line, and the breathing room around them under a card
 /// preview. Fixed while the preview above it flows, so a wider column buys
 /// picture rather than whitespace — the same split the Asset Center makes.
@@ -270,7 +277,7 @@ impl<'a> PromptCenterPanel<'a> {
         }
         if Self::search_rect(panel).contains(point) {
             let input = &self.state.editor_ui.prompt_center.search;
-            let offset = crate::widgets::text_input::single_line_byte_offset_at(
+            let offset = crate::widgets::text_input_measured::measured_byte_offset_at(
                 input,
                 Self::search_rect(panel),
                 point,
@@ -288,7 +295,7 @@ impl<'a> PromptCenterPanel<'a> {
         if self.state.editor_ui.prompt_center.save_open {
             if Self::save_title_rect(panel).contains(point) {
                 let input = &self.state.editor_ui.prompt_center.save_title;
-                let offset = crate::widgets::text_input::single_line_byte_offset_at(
+                let offset = crate::widgets::text_input_measured::measured_byte_offset_at(
                     input,
                     Self::save_title_rect(panel),
                     point,
@@ -446,7 +453,7 @@ impl<'a> PromptCenterPanel<'a> {
         let prompt_center = &self.state.editor_ui.prompt_center;
         match prompt_center.focus {
             de_editor_core::PromptCenterFocus::Search => {
-                crate::widgets::text_input::single_line_caret_rect(
+                crate::widgets::text_input_measured::measured_caret_rect(
                     &prompt_center.search,
                     Self::search_rect(panel),
                     SEARCH_TEXT_SIZE,
@@ -454,7 +461,7 @@ impl<'a> PromptCenterPanel<'a> {
                 )
             }
             de_editor_core::PromptCenterFocus::SaveTitle => {
-                crate::widgets::text_input::single_line_caret_rect(
+                crate::widgets::text_input_measured::measured_caret_rect(
                     &prompt_center.save_title,
                     Self::save_title_rect(panel),
                     SEARCH_TEXT_SIZE,
@@ -464,28 +471,57 @@ impl<'a> PromptCenterPanel<'a> {
         }
     }
 
+    /// The filter chips, sized from the labels paint measured (#451).
     pub fn filter_chip_rects(&self, panel: Rect) -> Vec<(Rect, PromptFilter)> {
+        self.filter_chip_rects_with(panel, &mut LabelWidths::cached())
+    }
+
+    /// [`filter_chip_rects`](Self::filter_chip_rects) through `widths`: paint
+    /// passes a measuring pass, every hit-test the cached one.
+    pub(super) fn filter_chip_rects_with(
+        &self,
+        panel: Rect,
+        widths: &mut LabelWidths<'_>,
+    ) -> Vec<(Rect, PromptFilter)> {
         let labels = FILTERS.map(|filter| self.filter_label(filter));
         let content = Self::content_rect(panel);
         chip_rects(
-            content.origin.x,
-            panel.origin.y + HEADER_H + SEARCH_ROW_H + (FILTER_ROW_H - CHIP_H) / 2.0,
-            content.size.x,
+            ChipRow {
+                x: content.origin.x,
+                y: panel.origin.y + HEADER_H + SEARCH_ROW_H + (FILTER_ROW_H - CHIP_H) / 2.0,
+                available_w: content.size.x,
+                label_size: CHIP_LABEL_SIZE,
+            },
             &labels,
+            widths,
         )
         .into_iter()
         .zip(FILTERS)
         .collect()
     }
 
+    /// The save form's category chips, sized from the labels paint measured.
     pub fn save_category_rects(&self, panel: Rect) -> Vec<(Rect, PromptCategory)> {
+        self.save_category_rects_with(panel, &mut LabelWidths::cached())
+    }
+
+    /// [`save_category_rects`](Self::save_category_rects) through `widths`.
+    pub(super) fn save_category_rects_with(
+        &self,
+        panel: Rect,
+        widths: &mut LabelWidths<'_>,
+    ) -> Vec<(Rect, PromptCategory)> {
         let labels = PromptCategory::ALL.map(|category| self.category_label(category));
         let content = Self::content_rect(panel);
         chip_rects(
-            content.origin.x,
-            Self::save_form_top(panel) + 42.0,
-            content.size.x,
+            ChipRow {
+                x: content.origin.x,
+                y: Self::save_form_top(panel) + 42.0,
+                available_w: content.size.x,
+                label_size: CATEGORY_LABEL_SIZE,
+            },
             &labels,
+            widths,
         )
         .into_iter()
         .zip(PromptCategory::ALL)
@@ -652,36 +688,43 @@ fn custom_matches(title: &str, body: &str, query: &str) -> bool {
         || body.to_lowercase().contains(&query)
 }
 
-/// Chip row layout. Widths come from the label, and the whole row scales down
+/// Where a chip row starts and how its labels are painted.
+struct ChipRow {
+    x: f32,
+    y: f32,
+    available_w: f32,
+    /// Size the chips paint their labels at, so they are sized at it.
+    label_size: f32,
+}
+
+/// Chip row layout. Widths come from the label as painted (chrome family,
+/// `row.label_size`, read through `widths`), and the whole row scales down
 /// only when it would otherwise run past `available_w` — which the gallery
-/// sizing makes rare, but a 15-locale chrome can still hit on a narrow window.
-fn chip_rects(x: f32, y: f32, available_w: f32, labels: &[&str]) -> Vec<Rect> {
+/// sizing makes rare, but a 15-locale chrome can still hit on a narrow
+/// window; paint then ellipsizes into the scaled chip.
+fn chip_rects(row: ChipRow, labels: &[&str], widths: &mut LabelWidths<'_>) -> Vec<Rect> {
     let natural: Vec<f32> = labels
         .iter()
-        .map(|label| (estimated_text_width(label, CHIP_LABEL_SIZE) + 26.0).max(48.0))
+        .map(|label| {
+            (widths.chrome(label, row.label_size) + CHIP_LABEL_PAD_X * 2.0).max(CHIP_MIN_W)
+        })
         .collect();
     let gaps = CHIP_GAP * labels.len().saturating_sub(1) as f32;
     let natural_total = natural.iter().sum::<f32>();
-    let scale = if natural_total + gaps > available_w && natural_total > 0.0 {
-        ((available_w - gaps) / natural_total).max(0.0)
+    let scale = if natural_total + gaps > row.available_w && natural_total > 0.0 {
+        ((row.available_w - gaps) / natural_total).max(0.0)
     } else {
         1.0
     };
-    let mut cursor = x;
+    let mut cursor = row.x;
     natural
         .into_iter()
         .map(|width| {
-            let rect = Rect::xywh(cursor, y, width * scale, CHIP_H);
+            let rect = Rect::xywh(cursor, row.y, width * scale, CHIP_H);
             cursor += rect.size.x + CHIP_GAP;
             rect
         })
         .collect()
-}
-
-pub(super) fn estimated_text_width(text: &str, size: f32) -> f32 {
-    text.chars()
-        .map(|ch| if ch.is_ascii() { size * 0.56 } else { size })
-        .sum()
 }
 
 pub(super) fn filter_hover_token(index: usize) -> usize {

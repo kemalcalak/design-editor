@@ -7,6 +7,7 @@
 use std::collections::BTreeMap;
 
 use de_editor_core::pen_node_ext::PenNodeExt;
+use de_editor_core::shared_state::SharedState;
 use de_editor_core::EditorState;
 use jian_ops_schema::node::PenNode;
 use jian_scene::layout_scene::{NodeKind, SceneNode, ScenePage};
@@ -26,12 +27,11 @@ type ToolCallError = (ToolErrorCode, String);
 /// node on the active page, optionally filtered by page / parent /
 /// depth for TS CLI compatibility.
 pub struct SnapshotLayout {
-    state: EditorState,
+    state: SharedState,
 }
 
 #[derive(Clone)]
 struct PageLayout {
-    id: String,
     records: Vec<LayoutRecord>,
 }
 
@@ -70,8 +70,8 @@ impl McpTool for SnapshotLayout {
         "snapshot_layout"
     }
     fn call(&self, args: &BTreeMap<String, String>) -> ToolOutcome {
-        let (pages, active_page_id) = page_layout_snapshots(&self.state);
-        let page = match page_layout(&pages, &active_page_id, args) {
+        // Only the page the call reads is laid out (#456).
+        let page = match page_layout(&self.state, args) {
             Ok(page) => page,
             Err((code, msg)) => return ToolOutcome::Err(code, msg),
         };
@@ -190,24 +190,66 @@ fn layout_entry_value(
 }
 
 pub fn snapshot_layout_snapshot(state: &EditorState) -> SnapshotLayout {
-    SnapshotLayout {
-        state: state.clone(),
+    snapshot_layout_shared(SharedState::copied(state))
+}
+
+/// [`snapshot_layout_snapshot`] over a state the caller already shares:
+/// no copy (#456).
+pub fn snapshot_layout_shared(state: SharedState) -> SnapshotLayout {
+    SnapshotLayout { state }
+}
+
+/// The page a read names (`pageId` / `page_id` / `page`, else the active
+/// one), by index. A document without pages has the one page `0`.
+fn target_page(
+    state: &EditorState,
+    args: &BTreeMap<String, String>,
+) -> Result<usize, ToolCallError> {
+    let id = arg_alias(args, &["pageId", "page_id", "page"]);
+    let found = match state.doc.pages.as_ref() {
+        Some(pages) if !pages.is_empty() => match id {
+            Some(id) => pages.iter().position(|page| page.id == id),
+            None => Some(state.ui.active_page_index.min(pages.len() - 1)),
+        },
+        _ => match id {
+            None | Some("0") => Some(0),
+            Some(_) => None,
+        },
+    };
+    found.ok_or_else(|| {
+        (
+            ToolErrorCode::ToolFailed,
+            format!("page not found: {}", id.unwrap_or("0")),
+        )
+    })
+}
+
+/// The authored roots of page `index` (the root children without pages).
+fn page_roots(state: &EditorState, index: usize) -> &[PenNode] {
+    match state.doc.pages.as_ref() {
+        Some(pages) if !pages.is_empty() => pages
+            .get(index)
+            .map(|page| page.children.as_slice())
+            .unwrap_or_default(),
+        _ => state.doc.children.as_slice(),
     }
 }
 
-fn page_layout<'a>(
-    pages: &'a [PageLayout],
-    active_page_id: &'a str,
+/// The layout records of the page a call reads, laying out that page only.
+fn page_layout(
+    state: &EditorState,
     args: &BTreeMap<String, String>,
-) -> Result<&'a PageLayout, ToolCallError> {
-    let id = arg_alias(args, &["pageId", "page_id", "page"]);
-    let target = id.unwrap_or(active_page_id);
-    pages.iter().find(|page| page.id == target).ok_or_else(|| {
-        (
-            ToolErrorCode::ToolFailed,
-            format!("page not found: {target}"),
-        )
-    })
+) -> Result<PageLayout, ToolCallError> {
+    let index = target_page(state, args)?;
+    let scene = de_pen_loader::editor_state_to_page_layout_scene(state, index);
+    let mut meta = BTreeMap::new();
+    collect_node_meta(page_roots(state, index), &mut meta);
+    let records = scene
+        .pages
+        .get(index)
+        .map(|scene_page| scene_layout_records(&scene_page.children, &meta, None))
+        .unwrap_or_default();
+    Ok(PageLayout { records })
 }
 
 // --- find_empty_space -----------------------------------------------
@@ -215,13 +257,11 @@ fn page_layout<'a>(
 /// First-party `find_empty_space` tool — find a padded position for a
 /// new rectangle relative to either the page content or one node.
 pub struct FindEmptySpace {
-    pages: Vec<PageSpace>,
-    active_page_id: String,
+    state: SharedState,
 }
 
 #[derive(Clone)]
 struct PageSpace {
-    id: String,
     roots: Vec<BoundsRecord>,
     all: Vec<BoundsRecord>,
 }
@@ -258,7 +298,8 @@ impl McpTool for FindEmptySpace {
                 "direction is required".into(),
             );
         };
-        let page = match self.page_space(args) {
+        // Only the page the call reads is laid out (#456).
+        let page = match page_space_for(&self.state, args) {
             Ok(page) => page,
             Err((code, msg)) => return ToolOutcome::Err(code, msg),
         };
@@ -287,100 +328,28 @@ impl McpTool for FindEmptySpace {
 }
 
 pub fn find_empty_space_snapshot(state: &EditorState) -> FindEmptySpace {
-    let (pages, active_page_id) = page_space_snapshots(state);
-    FindEmptySpace {
-        pages,
-        active_page_id,
-    }
+    find_empty_space_shared(SharedState::copied(state))
 }
 
-impl FindEmptySpace {
-    fn page_space(&self, args: &BTreeMap<String, String>) -> Result<&PageSpace, ToolCallError> {
-        let id = arg_alias(args, &["pageId", "page_id", "page"]);
-        let target = id.unwrap_or(self.active_page_id.as_str());
-        self.pages
-            .iter()
-            .find(|page| page.id == target)
-            .ok_or_else(|| {
-                (
-                    ToolErrorCode::ToolFailed,
-                    format!("page not found: {target}"),
-                )
-            })
-    }
+/// [`find_empty_space_snapshot`] over a state the caller already shares:
+/// no copy (#456).
+pub fn find_empty_space_shared(state: SharedState) -> FindEmptySpace {
+    FindEmptySpace { state }
 }
 
-fn page_layout_snapshots(state: &EditorState) -> (Vec<PageLayout>, String) {
-    let scene = de_pen_loader::editor_state_to_layout_scene(state);
-    match state.doc.pages.as_ref() {
-        Some(pages) if !pages.is_empty() => {
-            let active = state.ui.active_page_index.min(pages.len() - 1);
-            let out = pages
-                .iter()
-                .enumerate()
-                .map(|(idx, page)| {
-                    let mut meta = BTreeMap::new();
-                    collect_node_meta(&page.children, &mut meta);
-                    let records = scene
-                        .pages
-                        .get(idx)
-                        .map(|scene_page| scene_layout_records(&scene_page.children, &meta, None))
-                        .unwrap_or_default();
-                    PageLayout {
-                        id: page.id.clone(),
-                        records,
-                    }
-                })
-                .collect();
-            (out, pages[active].id.clone())
-        }
-        _ => {
-            let mut meta = BTreeMap::new();
-            collect_node_meta(&state.doc.children, &mut meta);
-            let records = scene
-                .pages
-                .first()
-                .map(|page| scene_layout_records(&page.children, &meta, None))
-                .unwrap_or_default();
-            (
-                vec![PageLayout {
-                    id: "0".into(),
-                    records,
-                }],
-                "0".into(),
-            )
-        }
-    }
-}
-
-fn page_space_snapshots(state: &EditorState) -> (Vec<PageSpace>, String) {
-    let scene = de_pen_loader::editor_state_to_layout_scene(state);
-    match state.doc.pages.as_ref() {
-        Some(pages) if !pages.is_empty() => {
-            let active = state.ui.active_page_index.min(pages.len() - 1);
-            let out = pages
-                .iter()
-                .enumerate()
-                .map(|(idx, page)| {
-                    let roots = scene
-                        .pages
-                        .get(idx)
-                        .map(|scene_page| scene_page.children.as_slice())
-                        .unwrap_or_default();
-                    page_space(&page.id, roots)
-                })
-                .collect();
-            (out, pages[active].id.clone())
-        }
-        _ => {
-            let roots = scene
-                .pages
-                .first()
-                .map(|page| page.children.as_slice())
-                .unwrap_or_default();
-            (vec![page_space("0", roots)], "0".into())
-        }
-    }
+/// The bounds of the page a call reads, laying out that page only.
+fn page_space_for(
+    state: &EditorState,
+    args: &BTreeMap<String, String>,
+) -> Result<PageSpace, ToolCallError> {
+    let index = target_page(state, args)?;
+    let scene = de_pen_loader::editor_state_to_page_layout_scene(state, index);
+    let roots = scene
+        .pages
+        .get(index)
+        .map(|page| page.children.as_slice())
+        .unwrap_or_default();
+    Ok(page_space(roots))
 }
 
 fn collect_node_meta(nodes: &[PenNode], out: &mut BTreeMap<String, NodeMeta>) {
@@ -522,7 +491,7 @@ pub(crate) fn subtree_layout_value(page: &ScenePage, root: &PenNode, max_depth: 
     Value::Array(layout_children_values(&selected, "", (0.0, 0.0)))
 }
 
-fn page_space(id: &str, roots: &[SceneNode]) -> PageSpace {
+fn page_space(roots: &[SceneNode]) -> PageSpace {
     fn walk(nodes: &[SceneNode], out: &mut Vec<BoundsRecord>) {
         for n in nodes {
             out.push(bounds_record(n));
@@ -533,7 +502,6 @@ fn page_space(id: &str, roots: &[SceneNode]) -> PageSpace {
     let mut all = Vec::new();
     walk(roots, &mut all);
     PageSpace {
-        id: id.to_string(),
         roots: root_bounds,
         all,
     }

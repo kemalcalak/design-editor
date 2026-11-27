@@ -361,6 +361,11 @@ impl EditorState {
             EditorCommand::SetNodeCornerRadius { node_id, radius } => {
                 self.cmd_set_node_corner_radius(&node_id, radius)
             }
+            EditorCommand::SetNodeCorners {
+                node_id,
+                radii,
+                smoothing,
+            } => self.cmd_set_node_corners(&node_id, radii, smoothing),
             EditorCommand::SetNodeFontSize { node_id, font_size } => {
                 self.cmd_set_node_font_size(&node_id, font_size)
             }

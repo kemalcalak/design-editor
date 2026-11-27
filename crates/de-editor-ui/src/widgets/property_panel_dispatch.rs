@@ -17,7 +17,6 @@
 
 use de_editor_core::{EditorState, NodeId};
 
-use crate::widgets::property_panel_action::CompositingTarget;
 use crate::widgets::property_panel_layout_ops as layout_ops;
 use crate::widgets::PropertyPanelAction;
 
@@ -27,7 +26,8 @@ use crate::widgets::PropertyPanelAction;
 // entry point.
 use crate::widgets::property_panel_dispatch_support::font_picker_family_at;
 pub use crate::widgets::property_panel_dispatch_support::{
-    apply_codegen_action, color_target, color_variable_name_at, focus_effect_param, CodegenFollowUp,
+    apply_codegen_action, color_target, color_variable_name_at, compositing_picker_target,
+    focus_effect_param, CodegenFollowUp,
 };
 
 /// Platform work the shared dispatcher cannot do itself.
@@ -78,6 +78,8 @@ pub struct PropertyActionContext<'a> {
     pub resolved_sizing_fallback: Option<f64>,
     pub image_adjustment_drag: &'a mut Option<de_editor_core::ImageAdjustmentField>,
     pub effect_radius_drag: &'a mut Option<usize>,
+    /// The corner smoothing slider is mid-drag (#389).
+    pub corner_smoothing_drag: &'a mut bool,
 }
 
 /// Does this action write the document through a lightweight core
@@ -100,19 +102,6 @@ pub fn updates_document(action: &PropertyPanelAction) -> bool {
             | PropertyPanelAction::RestoreCustomShader
             | PropertyPanelAction::EditMeshLattice(_)
     ) || crate::widgets::property_panel_dispatch_interactions::interaction_updates_document(action)
-}
-
-/// Translate the widget-facade compositing target into the core one.
-pub fn compositing_picker_target(
-    target: CompositingTarget,
-) -> de_editor_core::CompositingPickerTarget {
-    match target {
-        CompositingTarget::NodeBlend => de_editor_core::CompositingPickerTarget::NodeBlend,
-        CompositingTarget::NodeMask => de_editor_core::CompositingPickerTarget::NodeMask,
-        CompositingTarget::FillBlend(index) => {
-            de_editor_core::CompositingPickerTarget::FillBlend(index)
-        }
-    }
 }
 
 /// Instance / component lifecycle actions. They act on the REAL Ref
@@ -252,6 +241,13 @@ pub fn apply_property_action(
         }
         A::ToggleCornerExpand => {
             state.editor_ui.toggle_corner_expand();
+            Handled
+        }
+        A::SetCornerSmoothing(percent) => {
+            let drag = &mut *ctx.corner_smoothing_drag;
+            crate::widgets::property_panel_corner_smoothing::apply_slider_step(
+                state, drag, *percent,
+            );
             Handled
         }
         A::SetFillRule(rule) => {

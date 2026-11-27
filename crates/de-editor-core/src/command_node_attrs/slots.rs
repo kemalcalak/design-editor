@@ -9,7 +9,7 @@ use jian_ops_schema::style::{PenEffect, PenStroke, SidedThickness, StrokeThickne
 
 /// Write a literal corner radius onto whatever variant carries one.
 /// Frame / Group / Rectangle store `CornerRadius` on `container`;
-/// Ellipse / Polygon carry an `f64`. Other kinds accept the call as a
+/// Ellipse / Polygon / Path carry an `f64`. Other kinds accept the call as a
 /// silent no-op (parity with shell-core, where the radius was simply
 /// invisible on non-rounded kinds). True when a field was written.
 pub(super) fn write_corner_radius(node: &mut PenNode, radius: f64) -> bool {
@@ -41,6 +41,11 @@ pub(super) fn write_corner_radius(node: &mut PenNode, radius: f64) -> bool {
         }
         PenNode::Polygon(n) => {
             n.corner_radius = Some(radius);
+            true
+        }
+        // Rounded path vertices (#389).
+        PenNode::Path(n) => {
+            n.vertex_radius = Some(radius);
             true
         }
         // Other kinds have no corner-radius field; the write is a

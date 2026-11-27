@@ -3,7 +3,7 @@
 use crate::layout_scene::{SceneFillLayer, SceneGradient, SceneNode};
 use crate::widgets::canvas_viewport_image::paint_image_node;
 use crate::widgets::canvas_viewport_overlay::{
-    paint_gradient_rect, paint_node_stroke, paint_shader_rect, scaled_non_uniform_corner_radii,
+    paint_gradient_rect, paint_node_stroke, paint_shader_rect,
 };
 use crate::widgets::PaintCx;
 use crate::{ImageBlendMode, Rect};
@@ -33,9 +33,30 @@ pub(super) fn paint_fill_layers(
     world_rect: Rect,
     zoom: f32,
 ) -> bool {
-    paint_fill_layers_with(cx, node, world_rect, |cx, layer| {
+    let paint_layer = |cx: &mut PaintCx<'_>, layer: &SceneFillLayer| {
         paint_rect_fill_layer(cx, node, layer, world_rect, zoom);
-    })
+    };
+    match super::canvas_viewport_corner_path::corner_outline(node) {
+        // Smoothed / rounded outlines (#389) clip square layers.
+        Some(outline) => paint_clipped_fill_layers_with(
+            cx,
+            node,
+            world_rect,
+            |backend| {
+                backend.clip_svg_path_in_rect(
+                    &outline.d,
+                    super::canvas_viewport_corner_path::outline_rect(
+                        world_rect,
+                        outline.bounds,
+                        zoom,
+                    ),
+                    node.even_odd_fill,
+                )
+            },
+            paint_layer,
+        ),
+        None => paint_fill_layers_with(cx, node, world_rect, paint_layer),
+    }
 }
 
 /// Paint the complete front-to-back fill stack through a shape-specific
@@ -130,9 +151,7 @@ fn paint_rect_fill_layer(
     world_rect: Rect,
     zoom: f32,
 ) {
-    let radius = node.corner_radius * zoom;
-    let radius = if radius > 0.5 { radius } else { 0.0 };
-    let corner_radii = scaled_non_uniform_corner_radii(node, zoom);
+    let (radius, corner_radii) = super::canvas_viewport_corner_path::box_fill_radii(node, zoom);
 
     match layer {
         SceneFillLayer::Solid { color, .. } => {
@@ -182,8 +201,11 @@ pub(super) fn paint_image_fill_layer(
         return false;
     };
     let mut image = SceneNode::leaf(node.id.as_str(), node.kind.clone());
-    image.corner_radius = node.corner_radius;
-    image.corner_radii = node.corner_radii;
+    // Inside an outline clip (#389) the image paints square.
+    if node.corner_path.is_none() {
+        image.corner_radius = node.corner_radius;
+        image.corner_radii = node.corner_radii;
+    }
     image.image_src = Some(Arc::clone(src));
     image.image_src_id = *src_id;
     image.image_fit = *fit;

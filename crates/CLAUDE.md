@@ -152,8 +152,8 @@ Mutators on `Document`:
 
 `Document.ui` carries chrome-level state including `theme_mode` (Dark/Light), `locale`, and `locale_picker_open`:
 
-- `theme_for(ui)` returns the active `Theme` — since #30 Home's v2 tokens mapped onto the shadcn slots (`home_surface_palette::chrome_theme`), so the editor, Settings and the chat share one palette. Widget builders read it instead of hardcoding `Theme::dark()`, so flipping the theme (File menu footer) reflows the entire chrome. The chrome font is Manrope (`text_metrics::CHROME_FONT_FAMILY`).
-- **Label-sized chrome is measured, not estimated (#435, #440).** A control whose box is sized from its label (chips, footer / modal buttons, segmented controls, wrapped modal copy, the layer menu) writes its layout once against `widgets::label_widths::LabelWidths` and runs it in two modes: paint uses `LabelWidths::measuring(backend)` (a run not measured yet is measured through `text_metrics` in the family and weight it is painted in, and kept), every backend-less hit-test / hover / tooltip path uses `LabelWidths::cached()`. Widths live in one thread-local map keyed on (text, size, family, weight), so the locale and label set are part of the key and a kept run is never shaped again (two generations of 4096, so a rollover keeps what the last frames used). Wrapped copy goes through `LabelWidths::wrap` (Latin at spaces, CJK and Thai between clusters), which keeps the finished lines in a second map keyed on (text, width, size, family, weight); its per-prefix measurements are not kept, so a long CJK paragraph is one entry and a hover reads it back without wrapping again. The entry points are `measured_*` / `*_with` twins of the backend-less ones: `host_canvas_geometry::measured_chrome_layout` (file pill + canvas actions), `WhatsNewModal` / `UpdateModal::measured_rect`, `HomeSurface::measured_layout` / `measured_mcp_popover`, the settings panes' `api_layout_with` / `acp_layout_with` / `cli_layout_with`, the System row button, `measure_copy_chips` (MCP tab), and the Asset Center's tab track (`panel_controls::segment_width_for`, `tab_track_rect_with`). The cache falls back to an estimate only for a run nothing has measured yet. Tests paint into `FamilyGapBackend` and check each label against the box the cached hit-test resolves (`label_fit_test_support`). Not yet on it, still sized from their own heuristics: the Prompt Center / Asset Center chips (`estimated_text_width`), the chat chips (`footer_label_width`) and the code-complete action chips (#451).
+- `theme_for(ui)` returns the active `Theme` — since #30 Home's v2 tokens mapped onto the shadcn slots (`home_surface_palette::chrome_theme`), so the editor, Settings and the chat share one palette. Widget builders read it instead of hardcoding `Theme::dark()`, so flipping the theme (File menu footer) reflows the entire chrome. The chrome font is Manrope (`text_metrics::CHROME_FONT_FAMILY`), and every chrome run is painted and measured in it (#441); a surface that deliberately paints another face (a jian `Button` / `Select` / `TextInputView` in "Inter", a hex or code readout) names it by a constant and measures in that constant. `tools/check-text-measure.sh` fails the build on family-blind measurement, a `"system-ui"` literal or a string-literal family in a widget paint run or measurement; `widgets/chrome_family_paint_tests/` paints each surface into `FamilyGapBackend::chrome_strict` (the chrome face and every other named face measure differently in Latin, Cyrillic and CJK, a heavier weight is wider, and every measurement is recorded with its family and weight) and checks run family and weight == measured family and weight and that labels stay in their boxes in all 15 locales.
+- **Label-sized chrome is measured, not estimated (#435, #440).** A control whose box is sized from its label (chips, footer / modal buttons, segmented controls, wrapped modal copy, the layer menu) writes its layout once against `widgets::label_widths::LabelWidths` and runs it in two modes: paint uses `LabelWidths::measuring(backend)` (a run not measured yet is measured through `text_metrics` in the family and weight it is painted in, and kept), every backend-less hit-test / hover / tooltip path uses `LabelWidths::cached()`. Widths live in one thread-local map keyed on (text, size, family, weight), so the locale and label set are part of the key and a kept run is never shaped again (two generations of 4096, so a rollover keeps what the last frames used). Wrapped copy goes through `LabelWidths::wrap` (Latin at spaces, CJK and Thai between clusters), which keeps the finished lines in a second map keyed on (text, width, size, family, weight); its per-prefix measurements are not kept, so a long CJK paragraph is one entry and a hover reads it back without wrapping again. The entry points are `measured_*` / `*_with` twins of the backend-less ones: `host_canvas_geometry::measured_chrome_layout` (file pill + canvas actions), `WhatsNewModal` / `UpdateModal::measured_rect`, `HomeSurface::measured_layout` / `measured_mcp_popover`, the settings panes' `api_layout_with` / `acp_layout_with` / `cli_layout_with`, the System row button, `measure_copy_chips` (MCP tab), and the Asset Center's tab track (`panel_controls::segment_width_for`, `tab_track_rect_with`). The cache falls back to an estimate only for a run nothing has measured yet. Tests paint into `FamilyGapBackend` and check each label against the box the cached hit-test resolves (`label_fit_test_support`). Label-sized action buttons (`chrome_buttons::fit_button_width`: choose file, Download, Dismiss, Rename layers Apply / Cancel, Replace all, the HTML-import diagnostics toggle) read `LabelWidths::cached()`, which their paint fills first with `measure_button_labels`. Since #451 the Prompt Center and Asset Center (filter / category / basis / import chips, labels, the paste box's wrap and caret), the chat's chip row, model chip, New button and minimized bar, the code-complete action chips and the slideshow counter are on it too (`*_with` twins: `filter_chip_rects_with`, `basis_chip_rect_with`, `chip_row_with`, `footer_layout_with`, `header_with`, `pill_rect_with`, …). `LabelWidths::fit` ellipsizes the same way: a label that fits comes back borrowed, a cut one is cut once and kept (`Fitted`), so a repaint neither measures nor allocates. A cut is found by binary search and kept per whole px of the box. The design.md body wraps at its painted widths (`design_md_wrap::wrap_md_runs`: words measured with `LabelWidths::unkept`, which keeps nothing, so a long brief never crowds chrome labels out of the cache; a word wider than the line broken by `LabelWidths::wrap`; code / colour runs kept whole with their chip / swatch widths; each run carries its advance, `PlacedRun`, so paint measures nothing), and `design_md_line_cache` keeps only a build a measuring pass made. The gallery panels' search / topic / save-title fields resolve press-to-caret and the IME caret from the widths their paint kept (`text_input_measured`, warmed by `paint_text_input_view`), and the Asset Center paste box wraps and places its caret per cluster (`line_break::clusters`). The slideshow counter is sized for its widest label (the total's digit count in the widest digit), so Next and Exit never move while stepping. jian's `Button` measures its label in its own "Inter" (kemalcalak/jian#31). Still on character estimates: the slides panel tabs (`slides_panel_tabs::estimated_text_width`), the Git branch pill (`BRANCH_CHAR_W`) and the component browser pills (`CHAR_W`).
 - `Document::t(key)` translates via `i18n::translate(self.ui.locale, key)`. Keys retain the retired TS app's dot.case convention (`common.untitled`, `pages.title`, `layers.title`, `ai.newChat`, `ai.tipSelectElements`, `layout.flexLayout`, `fill.title`, `stroke.title`, `effects.title`, `export.title`, `property.createComponent`, `topbar.agentsAndMcp`), but the Rust tables are now the canonical source.
 - 15 supported locales (matches TS dropdown order): EnUs / ZhCn / ZhTw / Ja / Ko / Fr / Es / De / Pt / Ru / Hi / Tr / Th / Vi / Id. Each carries a `display_name()` (English / 简体中文 / 繁體中文 / 日本語 / 한국어 / Français / Español / Deutsch / Português / Русский / हिन्दी / Türkçe / ไทย / Tiếng Việt / Bahasa Indonesia).
 - File ▸ Language (the menu's footer globe) opens a `LocalePicker` dropdown under the file pill. A clicked locale applies immediately. Clicking outside (or the Globe again) closes silently. The picker paints as the top-most overlay so it covers chat / status / canvas.
@@ -506,6 +506,17 @@ Layer-panel drag now supports **cross-parent reparenting**: a drag whose drop-ta
 - **Cursor-move coalescing** — `apply_cursor_move` cached as `pending_cursor_move`, drained on `RedrawRequested` AND right before `apply_press` / `apply_release` / `apply_right_press` (so the final drag-end frame isn't dropped). Without the press-time drain a fast drag-release could fire press before the queued cursor-move and the release saw stale hover state.
 - **Font cache prewarm** (`de-host-native/src/backend/skia.rs`) — `NativeBackend::new` walks `PREWARM_CJK_CODEPOINTS` (~50 chars covering every CJK glyph used in the chrome + settings modal) through `FontMgr::match_family_style_character` at startup. Without this the first cross-tab paint stutters because each unseen CJK char triggers a synchronous system font scan.
 
+### Memory on large documents (#456)
+
+Measure before and after any change that touches document copies or caches; the owner rule is less memory with **no** slower frame, MCP call, page switch or generation. Two hand-run benchmarks on #412's document (14 pages × 100 boards × 46 rows ≈ 197k nodes, plus a component page and image fills; `DE_MEM_PAGES` / `DE_MEM_BOARDS` / `DE_MEM_ROWS` resize it):
+
+- **Live MCP calls** — `cargo test --release -p de-host-services --test large_document_memory -- --ignored --nocapture --test-threads=1`. A counting global allocator (`tests/support/counting_alloc.rs`) gives exact heap bytes on every OS: per read tool the median latency and the heap a call adds at its peak (as % of the editor's own document heap), then a write; `undo_history_memory` follows history bytes and edit / undo time over 120 edits.
+- **Editor session** — `cargo test --release -p de-host-native --features gl-host --lib large_doc_session -- --ignored --nocapture --test-threads=1`. Pan, pinch-zoom, nudge, undo frame times (median / p95), every page switch and the return, the process footprint, and the biggest caches; `DE_MEM_BENCH_SECS=3600` repeats the pass for an hour to show bounded memory.
+
+Run both on macOS locally and on Windows by hand (same commands; `process_memory` reads the working set and private commit there). `de_editor_core::memory_report` is the one report type: `CacheUsage { id, bytes, entries, budget, exact }` lines, filled by `WidgetHostNative::memory_report(&backend)` (undo history and chat estimates from core, layout scene, pan cache, slide thumbnails, text layouts, data-URL bytes, browser pages, and `NativeBackend::report_memory`: decoded rasters, thumbnails, SVG paths and rasters, shader textures, compiled shaders). It walks the history once per unique shared node, so build it on demand, never per frame. `de_editor_core::process_memory::current()` (re-exported as `de_host_services::process_memory`) reads RSS / footprint (macOS `proc_pid_rusage` phys footprint, Windows `K32GetProcessMemoryInfo` working set / private commit, Linux `/proc`); both benchmarks print it, so their tables compare.
+
+Baseline (v0.6.3, Apple-silicon Mac): a `PenNode` is 2,792 bytes inline, so the document heap is ~550 MB; every live read call materializes the whole document (~100%), and tools that clone the state again reach 200–400% (`snapshot_layout` lays out every page: 6.8 s); the first history step and the first live call's anchor each hold a full copy.
+
 ## Shared host logic (the native↔web `widget_host` fork is single-sourced)
 
 The web twin is gone (#401); the shared flows below stay where they are and the native `widget_host` remains a thin arm over them.
@@ -569,6 +580,8 @@ Outside the widget hosts the same rule applies: settings payload serde lives in 
 `de-editor-core/src/editor_ui_state.rs` is a spine over seven siblings (`chrome`, `defaults`, `git_panel`, `groups`, `methods`, `pickers`, `tests`), with re-exports keeping every import path stable. Three measured field clusters became substructs in `editor_ui_state/groups.rs` — `PreviewState`, `SizeToggleState`, `DesignMdPanelState` (192 → 176 flat fields). Larger clusters were rejected on workspace touch-count, so don't group further without measuring.
 
 `request_snapshot::narrowed_snapshot(&mut EditorState)` is the sanctioned way to hand editor state to a worker thread. The MCP request path, the chat-launch path, and the desktop design pump's per-apply-ack all use it: it drops `chat` / `codegen` / `theme_presets`, which grow with session length and are read by no consumer on the worker side. A full `EditorState::clone()` on a request path is a bug.
+
+Live MCP reads share instead of copy (#456). (1) **The request state is shared with the tools**: `process_message_with_write_applier` wraps it in `de_editor_core::shared_state::SharedState` (an `Arc` that copies on the first write, `DerefMut` → `Arc::make_mut`; taken through the `TakenState` guard, which puts it back on drop, so a panicking tool never leaves the caller's state hollow), and the tools that used to clone it (`snapshot_layout`, `find_empty_space`, `read_nodes`, `batch_get`, `find_nodes`, `execute`, `batch_design`, through their `*_shared` constructors; `ProgramCtx::from_shared` simulates on it) hold that handle, so a read copies nothing beyond the request's own state and a write copies at most once. The `*_snapshot(&EditorState)` constructors stay for the in-app agent and tests. (2) **A read names its pages**: `de_mcp::snapshot_pages::for_call` is an allowlist (`NoNodes`: history depth, viewport, variables, themes; `Page(pageId | active)`: `snapshot_layout`, `read_nodes`, `batch_get`, `find_empty_space`, `get_screenshot`, and `execute` when the script names no write call); everything else is `All`. The pump (`mcp_live/snapshot_anchor.rs`, an idle timeout around core's `request_snapshot_pages::PageAnchor`, which the benchmark drives too) captures only those pages plus every page an instance may resolve against (`request_snapshot_pages::PageNeeds`: pages holding a master or the target of any `ref`, a `ref` in `descendants` or a string in `props`; recomputed once per document revision, and only for a one-page read: a `NoNodes` read never walks the document) through `request_snapshot::shared_snapshot_pages`; the other pages keep their metadata and carry no nodes, and the anchor keeps the pages it already had (`SharedDoc::merged_pages`). The connection answers from that partial state with an applier that refuses writes (`connection::serve_narrowed_read` → `mcp_serve::process_narrowed_read`); a call that writes anyway is run again on the whole document, so no write is ever computed against a partial one, and an `execute` script that writes renders and exports nothing in the refused run (`ScriptRenderer::only_for_read_only_scripts`), so its screenshots and files come once, from the full run. `mcp_live_pages_tests.rs` requires every narrowed call shape to answer byte-identically to the whole document (also through an anchored capture), every allowlisted tool to have a call shape there, and the page needs to follow an edit made through the pump. (3) `snapshot_layout` / `find_empty_space` lay out only the page they read (`de_pen_loader::editor_state_to_page_layout_scene`). A new read tool that only looks at one page belongs in the allowlist, with a call shape in that test.
 
 ## Command palette and find layers (#395)
 
@@ -686,6 +699,77 @@ One modal, two modes. State and every transition live in `de-editor-core/src/com
   (`"auto"` / null unsets an end, so it falls back to `cap`),
   `miter_limit`.
 
+## Corner smoothing, rounded vertices and drawing constraints (#389)
+
+- **Schema** (kemalcalak/jian#30): `cornerSmoothing` (`0..=1`, Figma's
+  corner smoothing; absent = 0) on frames, groups and rectangles
+  (`ContainerProps`), polygons / stars and paths; a polygon's
+  `cornerRadius` (one number) rounds every vertex, a path's `vertexRadius`
+  rounds its sharp vertices between straight segments.
+- **Geometry** (`de_editor_core::corner_geometry`, pure, tested): Figma's
+  squircle (the `figma-squircle` construction: the corner starts
+  `p = (1 + s)·t` from the vertex, a circular arc covers the middle
+  `(1 − s)` of the turn, cubics ease in from the edges), generalised to any
+  vertex angle; neighbouring corners share an edge largest first and a
+  corner over its share loses smoothing before radius
+  (`corner_geometry/budget.rs`). `rect_outline`, `polygon_outline`,
+  `round_corners`, `outline_path_data`.
+- **Scene**: the builder (`de-pen-loader/src/layout_scene/corner_path.rs`)
+  stores the outline once per scene on `SceneNode::corner_path`
+  (`SceneCornerPath`: `d`, bounds, the inside / outside stroke centre line,
+  a flattened `hit_ring`) for a smoothed rect / frame / group, a rounded
+  polygon or star and a path with a vertex radius; a path's stroke ends
+  follow the rounded line. A rect with smoothing 0 or radius 0 gets none,
+  so the rounded-rect fast paths are unchanged. The outline's bounds come
+  from its subpaths, never from parsing `d` back. A live bounds patch of a
+  smoothed box or rounded polygon rebuilds that node's outline alone from
+  the scene node's corner fields (`de_pen_loader::rebuild_box_corner_path`);
+  stroke ends and reversed lines still rebuild the scene
+  (`canvas_scene_patch::box_shaped_scene_data`), and paths never patch.
+- **Paint / hit-test**: fills draw inside a clip to the outline, strokes
+  follow it (or its own centre line for inside / outside), `clipContent`,
+  backdrop effects and image fills clip to it
+  (`canvas_viewport_corner_path.rs`); jian's hit-test reads `hit_ring`.
+- **Exports**: SVG writes the outline as a `<path>` and clips to it
+  (per-corner radii are exact there, so they no longer warn); the
+  structured HTML export clips a smoothed box's background layer and its
+  children with `clip-path: path()` and draws polygons and paths as their
+  outline; PPTX writes a `custGeom` (`export_pptx/cust_geom.rs`) for
+  smoothed boxes and every polygon and star; path ops (boolean, flatten,
+  outline stroke) read the same outline; the HTML / Tailwind codegen draws
+  rounded polygons and paths as their outline (`flex/shapes.rs`; CSS
+  `border-radius` cannot smooth, so a smoothed box there keeps plain
+  rounded corners). PNG / PDF use the canvas painter. Figma import keeps
+  `cornerSmoothing` natively, imports a rounded star as a star polygon with
+  its `cornerRadius` / `cornerSmoothing` (`star_converter.rs`) and rounds
+  vector networks with the same geometry.
+- **de-figma depends on de-editor-core** (a normal dependency since #389,
+  before only a dev one), decided rather than moving the geometry out:
+  the import must round and range stars exactly like the editor, and the
+  shared code (`corner_geometry`, `vector_edit::Subpath`, `star_shape`)
+  already lives there with its tests. Both crates are wasm32-clean and
+  de-editor-core never depends on de-figma, so no cycle or platform code
+  comes with it. A separate geometry crate is worth it only if another
+  leaf crate that must not pull the editor core needs the same geometry.
+- **Editing**: `EditorCommand::SetNodeCorners { radii, smoothing }`
+  (`command_node_attrs/corners.rs`) writes per-corner radii and smoothing
+  in one step and refuses, untouched, what a kind cannot store
+  (`corner_support`). The Position section's Smoothing row (slider +
+  percentage, under the radius row once a corner is rounded) is one undo
+  step per drag; paths get the radius field. MCP `set_node_corner_radius`
+  (`de-mcp/src/node_attr_corners.rs`) takes `radius` as one number or
+  `[tl, tr, br, bl]` (an array argument, listed in `structured_arg_allowed`)
+  and `smoothing` as a fraction `0..=1` or a percentage string `"60%"`;
+  a bare `60` is refused.
+- **Drawing** (`de_editor_core::draw_constraints`): Shift keeps a drawn
+  rect / ellipse / frame / polygon / star square and a line on 45° steps,
+  Alt / Option draws from the press point, both combine and apply mid-drag
+  (`set_modifier_shift` / `set_modifier_alt` redraw an in-flight create
+  drag and return whether to repaint). The host arm is
+  `widget_host/create_drag.rs`. A drawn line writes its start and its end
+  relative to it (`EditorState::set_selected_line`, `x2` / `y2` as the
+  loader reads them), so it keeps its direction.
+
 ## Canonical `.de` loader (v0.8.0+)
 
 The document extension is `.de`; `.op` and the old `.pen` alias no longer open. pen.dev `.pen` files are an import only: they open as an untitled document and are never written back.
@@ -697,7 +781,7 @@ The document extension is `.de`; `.op` and the old `.pen` alias no longer open. 
 3. **Text measurement via `jian_skia::SkiaMeasure`** — real skia paragraph shaper plugged in with `LayoutEngine::with_backend(Rc::new(SkiaMeasure::new()))`. Replaces the default `EstimateBackend` (~10% character-count heuristic) so `fit_content` text frames size against the same glyph advances `draw_text` paints with.
 4. **Version tolerance** — `persistence::load_canonical` retries with `version` rewritten to `"1.0"` when the canonical schema rejects on a legacy major (e.g. pencil-demo.op's `version: "2.8"`), so older TS files still load best-effort.
 
-**The two version fields (#408).** `version` is the Design Editor release that last wrote the file; `formatVersion` is the schema version (`jian_ops_schema::version`) and the one readers check. A new document is born with the release (`EditorState::new` / `starter`), and a document opened or imported through doc_io (`.de` / `.pen` / `.pptx`) or the desktop Figma and HTML imports is built with `EditorState::from_opened_document`, which re-stamps it (`de_editor_core::document_version::stamp_product_version`), so the next save through any writer (Cmd+S, the background snapshot save, MCP `save_document`, the file-backed MCP servers) records the release that saved it; opening does not mark the document edited. Exception: Save As of an unedited document copies the file's bytes and rewrites only `editorMeta` (`copy_clean_document_with_editor_meta_to_path`), so the copy keeps the old `version` until it is edited and saved. Files without `formatVersion` are the legacy schema, where older tools used `version` itself as the schema marker and the loader still falls back to it; a 1.x marker moves to `formatVersion` (`major.minor`, capped at the current schema) when stamped, so readers see the same schema version. This editor writes no `formatVersion`, so the rule relies on the product being 0.x; `document_version::tests::product_is_still_0x` fails at 1.0 so it gets revisited. Not stamped yet: the live MCP whole-document sync (`POST /api/mcp/document`).
+**The two version fields (#408).** `version` is the Design Editor release that last wrote the file; `formatVersion` is the schema version (`jian_ops_schema::version`) and the one readers check. A new document is born with the release (`EditorState::new` / `starter`), and a document opened or imported through doc_io (`.de` / `.pen` / `.pptx`) or the desktop Figma and HTML imports is built with `EditorState::from_opened_document`, which re-stamps it (`de_editor_core::document_version::stamp_product_version`), so the next save through any writer (Cmd+S, the background snapshot save, MCP `save_document`, the file-backed MCP servers) records the release that saved it; opening does not mark the document edited. The schema keys a parsed document's pending `imageThumbs` seed on its `version` buffer, so `from_opened_document` activates the thumbnails before it stamps; stamping first lost them for every file this release did not write, legacy schema and older releases alike (#458). A per-call MCP `filePath` on another file (`mcp_serve/file_path.rs`) restores the thumbnails of the server's own document (the open canvas on the live path) when the call ends; a thumbnail another thread stores during the call is lost to that restore. Exception: Save As of an unedited document copies the file's bytes and rewrites only `editorMeta` (`copy_clean_document_with_editor_meta_to_path`), so the copy keeps the old `version` until it is edited and saved. Files without `formatVersion` are the legacy schema, where older tools used `version` itself as the schema marker and the loader still falls back to it; a 1.x marker moves to `formatVersion` (`major.minor`, capped at the current schema) when stamped, so readers see the same schema version. This editor writes no `formatVersion`, so the rule relies on the product being 0.x; `document_version::tests::product_is_still_0x` fails at 1.0 so it gets revisited. Not stamped yet: the live MCP whole-document sync (`POST /api/mcp/document`).
 
 `pen_doc_path_bounds.rs` ports `pen-core/src/path-anchors.ts::getPathBoundsFromAnchors` — cubic Bezier derivative roots + extrema sweep — so authored paths with handles/curves scale into their `width` / `height` box the same way the canonical renderer paints.
 
@@ -1011,30 +1095,61 @@ CLI side (`crates/de-cli/src/agent_*.rs`, dispatched in `main` before the generi
   folder. State and transitions are core (`de-editor-core/src/chat_mentions/`):
   `ChatState::{pending_mentions, mention_popup, mention_dismissed_at}`, the
   shared file list on `ChatSessions::project_files`. The host calls
-  `WidgetHostNative::sync_chat_mentions` once per redraw (no allocation
-  unless the `@query` moved); opening the popup rescans the folder with
-  `de_host_services::chat_mention_context::scan_project_files` (bounded:
-  2000 files, 4 levels, hidden / dependency / build folders skipped).
+  `WidgetHostNative::sync_chat_mentions` once per redraw (it hashes the
+  draft and allocates only when the draft, the staged mentions or the
+  `@query` moved); opening the popup asks its
+  `ProjectFileSource` for the folder. The desktop's
+  `de_host_services::chat_mention_scan::ProjectFileScanner` answers from a
+  10 s cache and lists on a worker thread (never the UI thread; bounded:
+  2000 files, 400 folders, 4 levels, hidden / dependency / build folders and
+  symlinks skipped). A document saved in the home folder (or above it) is
+  listed one level deep, and a cut listing raises `chat.mention.scanLimited`
+  once per folder.
 - Up / Down / Tab / Enter belong to the popup while it has rows; Escape
   dismisses it until the caret leaves that `@` token. A pick writes
-  `@Label ` and stages a `ChatMention`; deleting the token unstages it.
-- At launch (`chat_session_launch.rs`) the staged mentions resolve to compact
-  summaries (`chat_mentions::summary` for document items, capped at 1200
-  chars; `chat_mention_context::summarize_project_file` for files: an
-  80-line / 4000-char excerpt, binaries described, paths outside the folder
-  refused) and are appended to the provider-bound text as a "Referenced
-  context" block. The keyword gates (`classify_intent`, direct-modify,
-  append detection, scenario stamp) read `routing_text` — what the user
-  typed — so a mentioned layer's name cannot steer routing.
+  `@Label ` and stages a `ChatMention` keyed by id (a page by its page id,
+  not its index). Matching is by identity (`chat_mentions::identity`): a
+  second target with a staged name is written `@Name#2`, a token only counts
+  whole (end of text, whitespace or punctuation in any script after it:
+  letters and digits, `#`, `-`, `_` and `/` continue it) and longer tokens
+  claim their span first, so `@Hero` never matches inside `@Hero card`.
+  Deleting a token unstages exactly that mention.
+- At launch (`chat_session_launch.rs`, `take_turn_mentions`) the staged
+  mentions resolve to compact summaries (`chat_mentions::summary` for
+  document items, capped at 1200 chars;
+  `chat_mention_context::summarize_project_file` for files: an 80-line /
+  4000-char excerpt, binaries described, paths outside the folder refused)
+  and are appended to the provider-bound text as a "Referenced context"
+  block. A file is read on a worker as soon as it is staged
+  (`chat_mention_prefetch::MentionFileReader` into
+  `ProjectFiles::summaries`); a send waits while a read runs, so the UI
+  thread never reads a mentioned file. The keyword gates (`classify_intent`, direct-modify,
+  append detection, scenario stamp, the CLI route's intent classifier and
+  `build_modify_plan`'s target pick) read `routing_text` — what the user
+  typed — so a mentioned layer's name cannot steer routing. The modify
+  plan's message gets the context block appended once, after the plan.
 - The footer's context button (right of "+") opens `ai_chat_context_panel`:
   document, selection, mentions and attachments (`chat_context::chat_context_rows`,
   built only while the panel is open), each staged item with a ✕.
 - Attachments: the "+" menu's Attach row opens a picker for images and
-  text files, a file dropped on the chat panel is staged instead of imported
-  (`chat_attachment::stage_attachment_file`; refusals are Warn toasts:
-  `chat.attach.unsupported` / `tooLarge` / `readFailed` / `full`), and a
-  pasted image is staged as before. Reading and the size / type rules are
-  `de_host_services::chat_attachment_load`. At launch
+  text files, a file dropped on the chat panel is staged instead of imported,
+  and a paste stages copied files (the clipboard's file list wins over its
+  text and icon image), a pasted image, or a pasted `file://` URL to an
+  attachable file (`file:///C:/…` on Windows); a plain pasted path stays
+  text and is never looked up on the UI thread. Files are queued
+  (desktop `chat_attachment::AttachmentLoads::queue`, only as many as fit
+  under `MAX_ATTACHMENTS` minus staged and in-flight, the rest refused with
+  one `full` toast), read as one batch per drop or paste on one worker in
+  the given order, and staged on the tab they were started for
+  (`ChatState::tab_id`, `ChatSessions::tab_by_id_mut`); refusals are Warn toasts
+  (`chat.attach.unsupported` / `tooLarge {{size}}` / `readFailed` / `full
+  {{count}}`, limits passed as placeholders). While a file is dragged over
+  the chat, `ChatSessions::file_drop_hover` swaps the canvas drop overlay
+  for the chat's own indicator (`file_drop_overlay::paint_chat_drop_indicator`).
+  Reading, the `is_file` check and the size rule are
+  `de_host_services::chat_attachment_load`, whose `ATTACHMENT_TYPES` is the
+  one extension → MIME table (picker filters and
+  `chat_attachment::media_type_for_path` read it). At launch
   (`chat_session_launch_context::compose_turn_text`, which also resolves the
   mentions) `chat_attachment_prepare::prepare_turn_attachments` keeps raster
   images as attachments when the model sees images (`model_sees_images`: CLI
@@ -1047,15 +1162,35 @@ CLI side (`crates/de-cli/src/agent_*.rs`, dispatched in `main` before the generi
   the built-in format's `phase` / `trigger` optional, no `phase` reads as
   `generation`) from `<document folder>/.design-editor/skills/` then
   `<config dir>/skills/` (`de_host_services::chat_skill_context`): project
-  beats user, both shadow a built-in skill of the same name; a broken file is
-  a typed `UserSkillError` next to the skills that loaded (logged; listing it
-  in Settings is #338). `/` at the draft start or after whitespace opens the
-  same popup with the skills (`MentionKind::Skill`, `SKILL_TRIGGER`; a path
-  such as `docs/brief` never triggers it, `@docs/brief` stays a file
-  mention); opening reloads the folders (`ChatSessions::skills`), so a new
-  skill needs no restart. A picked `/skill` puts its description and
-  instructions (cut at 12 000 chars) into the turn's context block. Skills
-  do not join the built-in routing yet; that is #338.
+  beats user (`shadows_user`); a symlink that resolves outside its folder is
+  refused (`OutsideFolder`); a broken file is a typed `UserSkillError` next
+  to the skills that loaded (logged; listing it in Settings is #338; past
+  200 files a folder reports `TooManySkills`). Listing reads front matter
+  only (`load_user_skills`); the instructions are read at use
+  (`read_skill_body`, which checks again that the file is inside its
+  folder, at most 64 KiB without reading past it, valid and still the
+  listed name). `/` at the draft start or after whitespace opens the same
+  popup with the skills (`MentionKind::Skill`, `SKILL_TRIGGER`; a path such
+  as `docs/brief` never triggers it, `@docs/brief` stays a file mention);
+  an empty list names both folders. Listing runs on a worker
+  (`ChatSkillScanner`, core seam `SkillListSource`, 2 s cache; tests build
+  it with `with_folders`) when a `/` popup opens or the project folder
+  changes (`ChatSkills::listed_for`, a `SkillsListedFor`), so a new skill
+  needs no restart; each row's tag says where it comes from and what it
+  hides (`SkillOption::tag_key`, `chat.skill.*`). A skill named like a
+  built-in skill replaces it in routing: the scanner installs it through
+  `de_ai_skills::loader::set_skill_overrides` on the UI side, only for the
+  listing of the folder last asked for (a late listing for a folder left
+  behind is dropped), and `resolve_skills` swaps it in for the built-in (in
+  the phases it declares, else the built-in's). Project skills that replace
+  built-in skills apply (a deliberate choice: a project may set its own
+  design rules), but the first listing of each project folder that has any
+  raises one notice naming them (`chat.skill.overridesApplied`), so opening
+  an untrusted repository never changes the agent silently. A staged
+  `/skill` is read on a worker (`chat_mention_prefetch`, into
+  `ChatSkills::instructions`; the send waits for it); its description and
+  instructions (cut at 12 000 chars, all picked skills together at 24 000,
+  with a `chat.skill.cut` notice) go into the turn's context block.
 - Tokens and cost: `TokenUsage` also keeps cache reads / writes (Anthropic
   `cache_read_input_tokens` / `cache_creation_input_tokens` incl. the 1 h
   part, OpenAI `prompt_tokens_details.cached_tokens`), still folded into
@@ -1067,8 +1202,9 @@ CLI side (`crates/de-cli/src/agent_*.rs`, dispatched in `main` before the generi
   cache-read price is not priced either. A `UsageMeter::with_price` prices
   each request as it records it (so a per-request tier such as Haiku 5.5's
   long prompts is right) and its total cost is `None` once any request could
-  not be priced. The built-in chat route builds that meter
-  (`builtin_provider_with_tools`), `ChatSession::with_usage_meter` keeps it,
+  not be priced. The built-in chat route and the design-agent loop build
+  that meter (`turn_usage_meter`, through `builtin_provider_with_tools` /
+  `builtin_provider_with_design_tools`), `ChatSession::with_usage_meter` keeps it,
   and `pump` writes `ChatSession::usage()` onto the reply as
   `ChatMessage::usage` (`TurnUsage`, cost in nano-USD so the message stays
   `Eq`) when the turn ends. The context panel shows the last reply and the
@@ -1080,9 +1216,11 @@ CLI side (`crates/de-cli/src/agent_*.rs`, dispatched in `main` before the generi
   (`de-editor-core/src/annotation_agent.rs`): it opens the Agent tab (a
   fresh chat tab when the current one has a conversation or a running
   turn), writes the note's text as the draft and stages `@`-mentions of the
-  note and the top-level layers around it (`surrounding_layers`: within
-  24 px of the note, else the nearest within 600 px, never another
-  annotation, at most 3). Nothing is sent until the user presses Send.
+  top-level layers around it (`surrounding_layers`: within 24 px of the
+  note, else the nearest within 600 px, never another annotation, at most
+  3; a note inside a frame is placed in page coordinates first). The note
+  itself is staged only when it is blank, so its text reaches the model
+  once. Nothing is sent until the user presses Send.
 - Permission prompts: Settings ▸ System ▸ "Ask before destructive agent
   actions" (`AgentSettings::confirm_destructive_agent_actions`, off by
   default, persisted as `confirm_destructive_agent_actions`). With it on,

@@ -93,7 +93,7 @@ pub fn paint_file_drop_overlay(
     // Label below the icon, horizontally centred.
     let label = TextLayout::single_run(
         label_text,
-        "system-ui",
+        text_metrics::CHROME_FONT_FAMILY,
         14.0,
         (theme.foreground).to_jian(),
         Point2D::new(0.0, 0.0),
@@ -101,5 +101,67 @@ pub fn paint_file_drop_overlay(
     backend.draw_text(
         &label,
         Point2D::new(cx - label_w / 2.0, card.origin.y + 80.0),
+    );
+}
+
+/// The chat panel's drop indicator (#398): while a file is dragged over the
+/// chat, where releasing it makes it an attachment, the chat (`chat_rect`)
+/// gets the accent wash and ring with a one-line hint, and the canvas
+/// overlay is not painted.
+pub fn paint_chat_drop_indicator(
+    backend: &mut dyn RenderBackend,
+    theme: &Theme,
+    locale: de_editor_core::Locale,
+    chat_rect: Rect,
+) {
+    let p = theme.primary;
+    backend.fill_round_rect(
+        chat_rect,
+        14.0,
+        Color {
+            r: p.r,
+            g: p.g,
+            b: p.b,
+            a: 0.14,
+        },
+    );
+    backend.stroke_round_rect(chat_rect, 14.0, theme.primary, 2.5);
+    let text = de_i18n::translate(locale, "chat.attach.dropHint");
+    let size = 13.0;
+    let text_w = text_metrics::measure_chrome(backend, text, size);
+    let icon = 18.0;
+    let gap = 8.0;
+    let pill_w = (text_w + icon + gap + 28.0).min(chat_rect.size.x - 16.0);
+    let pill_h = 34.0;
+    let cx = chat_rect.origin.x + chat_rect.size.x / 2.0;
+    let cy = chat_rect.origin.y + chat_rect.size.y / 2.0;
+    let pill = Rect {
+        origin: Point2D::new(cx - pill_w / 2.0, cy - pill_h / 2.0),
+        size: Point2D::new(pill_w, pill_h),
+    };
+    backend.fill_round_rect(pill, pill_h / 2.0, theme.popover);
+    backend.stroke_round_rect(pill, pill_h / 2.0, theme.border, 1.0);
+    let left = pill.origin.x + 14.0;
+    draw_icon(
+        backend,
+        Icon::Paperclip,
+        Point2D::new(left, cy - icon / 2.0),
+        icon,
+        theme.primary,
+        2.0,
+    );
+    let label = TextLayout::single_run(
+        text,
+        text_metrics::CHROME_FONT_FAMILY,
+        size,
+        theme.foreground.to_jian(),
+        Point2D::new(0.0, 0.0),
+    );
+    backend.draw_text(
+        &label,
+        Point2D::new(
+            left + icon + gap,
+            jian_widgets::centered_text_baseline_y(pill, size),
+        ),
     );
 }

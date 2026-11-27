@@ -65,24 +65,23 @@ fn send_opens_the_chat_with_the_note_and_its_layers_staged() {
     assert!(state.is_annotation(&NodeId::new("n1")));
     assert!(!state.is_annotation(&NodeId::new("hero")));
     assert!(state.send_annotation_to_agent(&NodeId::new("n1"), 0));
-    assert_eq!(
-        state.chat.input.text(),
-        "Make the headline calmer\n\n@Review @Hero"
-    );
+    // The note's text is in the draft once; the note is not staged again.
+    assert_eq!(state.chat.input.text(), "Make the headline calmer\n\n@Hero");
     let staged: Vec<(&str, MentionKind)> = state
         .chat
         .pending_mentions
         .iter()
         .map(|m| (m.key.as_str(), m.kind))
         .collect();
-    assert_eq!(
-        staged,
-        [("n1", MentionKind::Node), ("hero", MentionKind::Node)]
-    );
+    assert_eq!(staged, [("hero", MentionKind::Node)]);
     assert!(state.chat.focused);
     // Every staged mention's token is in the draft, so the sync keeps them.
     state.sync_chat_mentions();
-    assert_eq!(state.chat.pending_mentions.len(), 2);
+    assert_eq!(state.chat.pending_mentions.len(), 1);
+    // A blank note has no text to repeat, so it is staged itself.
+    assert!(state.send_annotation_to_agent(&NodeId::new("n2"), 0));
+    assert!(state.chat.input.text().starts_with("@note"));
+    assert_eq!(state.chat.pending_mentions[0].key, "n2");
 }
 
 #[test]
@@ -93,8 +92,35 @@ fn a_busy_chat_gets_a_fresh_tab_and_non_annotations_are_refused() {
     assert!(state.send_annotation_to_agent(&NodeId::new("p1"), 0));
     assert_eq!(state.chat.tabs().len(), tabs + 1);
     assert!(state.chat.messages.is_empty());
-    // An unnamed prompt is mentioned by its kind.
-    assert_eq!(state.chat.input.text(), "Add a footer\n\n@prompt");
+    // Nothing around the prompt: only its text.
+    assert_eq!(state.chat.input.text(), "Add a footer");
     assert!(!state.send_annotation_to_agent(&NodeId::new("hero"), 0));
     assert!(!state.send_annotation_to_agent(&NodeId::new("missing"), 0));
+}
+
+#[test]
+fn a_note_inside_a_frame_is_placed_in_page_coordinates() {
+    let doc = serde_json::json!({
+        "version": "1.0.0",
+        "children": [
+            {"type": "frame", "id": "board", "name": "Board", "x": 1000, "y": 1000,
+             "width": 800, "height": 600, "children": [
+                {"type": "note", "id": "inner", "x": 10, "y": 10, "width": 100, "height": 80,
+                 "content": "Tighten the spacing"}
+             ]},
+            {"type": "frame", "id": "origin", "name": "Origin", "x": 0, "y": 0, "width": 200, "height": 200}
+        ]
+    });
+    let state = EditorState::from_document(
+        jian_ops_schema::load_str(&doc.to_string())
+            .expect("fixture")
+            .value,
+    );
+    let page = state.active_children();
+    // Parent-relative (10, 10) would sit on Origin; in page space the note
+    // is at (1010, 1010), on its own board.
+    assert_eq!(
+        ids(surrounding_layers(page, find(&state, "inner"))),
+        ["board"]
+    );
 }

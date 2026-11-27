@@ -34,6 +34,8 @@ pub mod chat_http_server;
 pub mod chat_intent;
 pub mod chat_mention_context;
 mod chat_mention_context_error;
+pub mod chat_mention_prefetch;
+pub mod chat_mention_scan;
 pub mod chat_provider_llm;
 pub mod chat_runtime;
 pub mod chat_skill_context;
@@ -109,6 +111,9 @@ pub mod model_catalog_refresh;
 pub mod model_discovery;
 mod model_probe;
 pub mod pre_validator;
+/// Moved to `de-editor-core` so the native host's benchmarks read it too
+/// (#456); re-exported to keep this path.
+pub use de_editor_core::process_memory;
 mod provider_dial;
 pub mod provider_probe;
 pub mod provider_probe_host;

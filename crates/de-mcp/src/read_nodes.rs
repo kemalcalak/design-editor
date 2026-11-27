@@ -6,6 +6,7 @@ use std::borrow::Cow;
 use std::collections::BTreeMap;
 
 use de_editor_core::instance_path::{expand_instances_with_paths, INSTANCE_PATH_SEPARATOR};
+use de_editor_core::shared_state::SharedState;
 use de_editor_core::variables_resolve::resolve_roots_for_canvas;
 use de_editor_core::walkers::find_node;
 use de_editor_core::{EditorState, NodeId};
@@ -18,11 +19,10 @@ use super::{McpTool, ToolErrorCode, ToolOutcome};
 pub(crate) type ToolCallError = (ToolErrorCode, String);
 
 pub struct ReadNodes {
-    /// The whole document: `resolveInstances` looks components up on any
-    /// page, and `resolveVariables` reads its variable table.
-    doc: PenDocument,
-    active_page_index: usize,
-    active_theme: BTreeMap<String, String>,
+    /// The request's state, shared (#456): `resolveInstances` looks
+    /// components up on any page, and `resolveVariables` reads its variable
+    /// table.
+    state: SharedState,
 }
 
 #[derive(Clone)]
@@ -63,7 +63,7 @@ impl McpTool for ReadNodes {
     }
 
     fn call(&self, args: &BTreeMap<String, String>) -> ToolOutcome {
-        match self.view().read(args) {
+        match read_nodes_on(&self.state, args) {
             Ok(json) => ToolOutcome::OkJson(json.to_string()),
             Err((code, msg)) => ToolOutcome::Err(code, msg),
         }
@@ -92,22 +92,14 @@ struct ReadView<'a> {
     active_theme: &'a BTreeMap<String, String>,
 }
 
-impl ReadNodes {
-    fn view(&self) -> ReadView<'_> {
-        ReadView {
-            doc: &self.doc,
-            active_page_index: self.active_page_index,
-            active_theme: &self.active_theme,
-        }
-    }
+pub fn read_nodes_snapshot(state: &EditorState) -> ReadNodes {
+    read_nodes_shared(SharedState::copied(state))
 }
 
-pub fn read_nodes_snapshot(state: &EditorState) -> ReadNodes {
-    ReadNodes {
-        doc: state.doc.clone(),
-        active_page_index: state.ui.active_page_index,
-        active_theme: state.ui.variables.active_theme.clone(),
-    }
+/// [`read_nodes_snapshot`] over a state the caller already shares: no
+/// copy (#456).
+pub fn read_nodes_shared(state: SharedState) -> ReadNodes {
+    ReadNodes { state }
 }
 
 impl ReadView<'_> {

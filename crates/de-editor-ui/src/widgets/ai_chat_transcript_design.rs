@@ -6,6 +6,9 @@ use de_editor_core::PenNodeExt;
 use jian_ops_schema::node::PenNode;
 use std::collections::BTreeMap;
 
+/// Face of the code preview lines in a design block (painted, never measured).
+const CODE_FONT_FAMILY: &str = "monospace";
+
 pub(crate) const DESIGN_BLOCK_H: f32 = 32.0;
 const DESIGN_ICON_LEFT: f32 = 12.0;
 const DESIGN_ICON_BG: f32 = 16.0;
@@ -601,7 +604,7 @@ pub(crate) fn paint_design_block(
     ));
     let layout = TextLayout::single_run(
         &block.label,
-        "system-ui",
+        crate::widgets::text_metrics::CHROME_FONT_FAMILY,
         11.0,
         (color).to_jian(),
         Point2D::new(0.0, 0.0),
@@ -653,7 +656,7 @@ pub(crate) fn paint_design_block(
         for line in &block.code_lines {
             let layout = TextLayout::single_run(
                 line,
-                "monospace",
+                CODE_FONT_FAMILY,
                 9.0,
                 (theme.muted_foreground).to_jian(),
                 Point2D::new(0.0, 0.0),
@@ -674,12 +677,17 @@ pub(crate) fn paint_design_block(
         cx.backend.stroke_round_rect(apply, 6.0, apply_border, 1.0);
         let layout = TextLayout::single_run(
             "Apply to Canvas",
-            "system-ui",
+            crate::widgets::text_metrics::CHROME_FONT_FAMILY,
             10.0,
             (theme.muted_foreground).to_jian(),
             Point2D::new(0.0, 0.0),
         );
-        let text_x = apply.origin.x + (apply.size.x - 84.0).max(0.0) / 2.0;
+        let text_x = crate::widgets::text_metrics::centered_text_x(
+            cx.backend,
+            "Apply to Canvas",
+            10.0,
+            apply,
+        );
         cx.backend
             .draw_text(&layout, Point2D::new(text_x, apply.origin.y + 20.0));
     }

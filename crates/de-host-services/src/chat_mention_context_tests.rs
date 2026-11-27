@@ -23,37 +23,6 @@ fn file(kind_key: &str) -> ChatMention {
 }
 
 #[test]
-fn scan_lists_visible_files_and_skips_hidden_and_build_folders() {
-    let root = temp_project("scan");
-    fs::create_dir_all(root.join("docs/deep")).unwrap();
-    fs::create_dir_all(root.join(".git")).unwrap();
-    fs::create_dir_all(root.join("node_modules/x")).unwrap();
-    fs::write(root.join("brief.md"), "hi").unwrap();
-    fs::write(root.join("docs/deep/spec.txt"), "spec").unwrap();
-    fs::write(root.join(".env"), "SECRET=1").unwrap();
-    fs::write(root.join(".git/HEAD"), "ref").unwrap();
-    fs::write(root.join("node_modules/x/index.js"), "").unwrap();
-    assert_eq!(
-        scan_project_files(&root),
-        vec!["brief.md".to_string(), "docs/deep/spec.txt".to_string()]
-    );
-    fs::remove_dir_all(&root).ok();
-}
-
-#[test]
-fn scan_stops_at_the_depth_limit() {
-    let root = temp_project("depth");
-    let mut deep = root.clone();
-    for level in 0..=MAX_SCAN_DEPTH {
-        deep = deep.join(format!("d{level}"));
-    }
-    fs::create_dir_all(&deep).unwrap();
-    fs::write(deep.join("too-deep.txt"), "x").unwrap();
-    assert!(scan_project_files(&root).is_empty());
-    fs::remove_dir_all(&root).ok();
-}
-
-#[test]
 fn text_files_are_quoted_and_cut() {
     let root = temp_project("text");
     fs::write(root.join("notes.md"), "line one\nline two").unwrap();
@@ -146,17 +115,14 @@ fn a_picked_skill_brings_its_instructions() {
     )
     .unwrap();
     let set = crate::chat_skill_context::load_chat_skills(&[(SkillSource::Project, dir.clone())]);
+    let mut state = EditorState::default();
+    state.chat.skills.skills = crate::chat_skill_context::skill_options(&set).into();
     let skill = |name: &str| ChatMention {
         kind: MentionKind::Skill,
         key: name.into(),
         label: name.into(),
     };
-    let summaries = resolve_mentions_with(
-        &EditorState::default(),
-        &[skill("tone"), skill("gone")],
-        None,
-        Some(&set),
-    );
+    let summaries = resolve_mentions(&state, &[skill("tone"), skill("gone")], None);
     assert_eq!(
         summaries[0].text.as_deref(),
         Some("House tone\nWrite calmly.")
@@ -165,4 +131,46 @@ fn a_picked_skill_brings_its_instructions() {
     let block = de_editor_core::chat_mentions::context_block(&summaries);
     assert!(block.contains("- /tone (skill): House tone\nWrite calmly."));
     fs::remove_dir_all(&dir).ok();
+}
+
+#[test]
+fn taking_the_turn_mentions_uses_and_drops_the_prefetched_summaries() {
+    let mut state = EditorState::default();
+    state.chat.project_files.root = Some("/no/such/folder".into());
+    state.chat.pending_mentions = vec![file("brief.md")];
+    state
+        .chat
+        .project_files
+        .summaries
+        .insert("brief.md".into(), Some("text file, 4 bytes: calm".into()));
+    let block = take_turn_mentions(&mut state, 0);
+    assert!(
+        block.contains("- @brief.md (file): text file, 4 bytes: calm"),
+        "{block}"
+    );
+    assert!(state.chat.pending_mentions.is_empty());
+    assert!(state.chat.project_files.summaries.is_empty());
+}
+
+#[test]
+fn the_picked_skills_share_one_budget_and_a_cut_is_announced() {
+    let skill = |name: &str| ChatMention {
+        kind: MentionKind::Skill,
+        key: name.into(),
+        label: name.into(),
+    };
+    let mut state = EditorState::default();
+    state.chat.pending_mentions = vec![skill("a"), skill("b"), skill("c")];
+    let big = "x".repeat(MAX_TURN_SKILL_CHARS - 10);
+    let instructions = &mut state.chat.skills.instructions;
+    instructions.insert("a".into(), Some(Some(big.clone())));
+    instructions.insert("b".into(), Some(Some("y".repeat(100))));
+    instructions.insert("c".into(), Some(Some("z".repeat(100))));
+    let block = take_turn_mentions(&mut state, 7);
+    assert!(block.contains(&big));
+    assert!(block.contains("[…cut at the turn's skill limit]"));
+    assert!(block.contains("[left out: the turn's skill limit was reached]"));
+    let toast = state.editor_ui.editor_toast.clone().unwrap();
+    assert_eq!(toast.i18n_key, SKILLS_CUT_TOAST);
+    assert!(state.chat.skills.instructions.is_empty());
 }

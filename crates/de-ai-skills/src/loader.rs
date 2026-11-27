@@ -5,7 +5,7 @@
 //! The `style-guides/` subtree is excluded here — those files are not
 //! phase skills; they are loaded separately by [`crate::style_guide`].
 
-use std::sync::OnceLock;
+use std::sync::{OnceLock, PoisonError, RwLock};
 
 use include_dir::Dir;
 
@@ -67,6 +67,24 @@ pub fn get_skills_by_phase(phase: Phase) -> Vec<&'static SkillEntry> {
         .iter()
         .filter(|e| e.meta.phase.contains(&phase))
         .collect()
+}
+
+/// User skills that replace the built-in skill of the same name (#398).
+static OVERRIDES: RwLock<Vec<SkillEntry>> = RwLock::new(Vec::new());
+
+/// Install the user / project skills that replace built-in skills of the
+/// same name in [`crate::resolve::resolve_skills`]. The host calls it each
+/// time it lists the skill folders, so the set follows the open project.
+pub fn set_skill_overrides(entries: Vec<SkillEntry>) {
+    *OVERRIDES.write().unwrap_or_else(PoisonError::into_inner) = entries;
+}
+
+/// The installed overrides (see [`set_skill_overrides`]).
+pub fn skill_overrides() -> Vec<SkillEntry> {
+    OVERRIDES
+        .read()
+        .unwrap_or_else(PoisonError::into_inner)
+        .clone()
 }
 
 /// Look up a single skill by its frontmatter `name`.
