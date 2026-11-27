@@ -229,7 +229,7 @@ pub(crate) fn launch_sub_agents(
     for (spec, identity) in specs.into_iter().zip(identities) {
         // A fresh provider + tool channel per sub; skip if no ready
         // builtin model is configured (same gate as the parent loop).
-        let Some((provider, tool_rx)) = builtin_provider_with_design_tools(host) else {
+        let Some((provider, tool_rx, _meter)) = builtin_provider_with_design_tools(host) else {
             continue;
         };
 

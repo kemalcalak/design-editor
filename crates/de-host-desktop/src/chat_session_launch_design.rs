@@ -5,18 +5,17 @@
 //!
 //! See `chat_session_launch.rs` for routing context.
 
-use std::sync::mpsc::Receiver;
 use std::sync::Arc;
 
 use de_ai::chat_history::{trim_chat_history, DEFAULT_MAX_CHARS, DEFAULT_MAX_MESSAGES};
-use de_ai::chat_provider::{ChatProvider, ChatRequest, ThinkingMode};
+use de_ai::chat_provider::{ChatRequest, ThinkingMode};
 use de_editor_host_core::chat::ChatSession;
 use de_editor_host_core::design::DesignSession;
 use de_host_native::WidgetHostNative;
 use de_host_services::chat_builtin_http::{
     ConfiguredBuiltinProvider, DESIGN_LOOP_MAX_OUTPUT_TOKENS,
 };
-use de_host_services::chat_canvas_tools::{chat_tool_channel, ChatToolRequest};
+use de_host_services::chat_canvas_tools::chat_tool_channel;
 use de_host_services::chat_system_prompt::chat_history_from_transcript;
 use de_host_services::design_agent_tools::{
     design_tool_defs, root_seed_prompt_is_continuation, root_seed_prompt_is_mobile,
@@ -199,18 +198,24 @@ pub(super) fn stamp_design_turn_scenario(state: &mut de_editor_core::EditorState
 /// build its provider with the design toolset + a fresh UI tool channel.
 /// Returns `None` when no builtin is configured or ready — caller falls
 /// through to the orchestrator path.
+///
+/// The third value is the turn's usage meter (#398): every request of the
+/// design loop records its provider-reported tokens there, like the chat
+/// loop (`builtin_provider_with_tools`).
 pub(crate) fn builtin_provider_with_design_tools(
     host: &WidgetHostNative,
-) -> Option<(Box<dyn ChatProvider>, Receiver<ChatToolRequest>)> {
+) -> Option<super::providers::BuiltinToolTurn> {
     let state = host.editor_state();
     let entry = state.chat.selected_model_entry()?;
     let config = selected_builtin_agent_config(state, entry)?;
-    let provider = ConfiguredBuiltinProvider::from_builtin_agent(&config)?;
+    let meter = super::providers::turn_usage_meter(entry, &config);
+    let provider = ConfiguredBuiltinProvider::from_builtin_agent(&config)?
+        .with_usage_meter(Arc::clone(&meter));
     let (executor, tool_rx) = chat_tool_channel();
     let provider = provider
         .with_canvas_tools(design_tool_defs(), Arc::new(executor))
         .with_loop_finalize();
-    Some((Box::new(provider), tool_rx))
+    Some((Box::new(provider), tool_rx, meter))
 }
 
 /// Effective thinking mode for a design turn (design-agent loop and
@@ -264,7 +269,7 @@ pub(super) fn launch_design_loop_turn(
     if !design_agent_loop_enabled(host.editor_state(), &user_text) {
         return false;
     }
-    let Some((provider, tool_rx)) = builtin_provider_with_design_tools(host) else {
+    let Some((provider, tool_rx, usage_meter)) = builtin_provider_with_design_tools(host) else {
         return false;
     };
     // Finalize-lifecycle invariant (0718-1-k3-1 postmortem) — see
@@ -337,7 +342,9 @@ pub(super) fn launch_design_loop_turn(
     // the roots this run creates (#116).
     let run_baseline = de_editor_core::write_scope::WriteBaseline::capture(host.editor_state());
     *current_chat = Some(
-        ChatSession::start_with_tools(provider, req, Some(tool_rx)).into_design_loop(run_baseline),
+        ChatSession::start_with_tools(provider, req, Some(tool_rx))
+            .with_usage_meter(usage_meter)
+            .into_design_loop(run_baseline),
     );
     // Signal one agent running so the chat header shows "1/1 designing…"
     // and the canvas indicator pump registers frame glows.

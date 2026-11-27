@@ -1118,8 +1118,9 @@ CLI side (`crates/de-cli/src/agent_*.rs`, dispatched in `main` before the generi
   cache-read price is not priced either. A `UsageMeter::with_price` prices
   each request as it records it (so a per-request tier such as Haiku 5.5's
   long prompts is right) and its total cost is `None` once any request could
-  not be priced. The built-in chat route builds that meter
-  (`builtin_provider_with_tools`), `ChatSession::with_usage_meter` keeps it,
+  not be priced. The built-in chat route and the design-agent loop build
+  that meter (`turn_usage_meter`, through `builtin_provider_with_tools` /
+  `builtin_provider_with_design_tools`), `ChatSession::with_usage_meter` keeps it,
   and `pump` writes `ChatSession::usage()` onto the reply as
   `ChatMessage::usage` (`TurnUsage`, cost in nano-USD so the message stays
   `Eq`) when the turn ends. The context panel shows the last reply and the

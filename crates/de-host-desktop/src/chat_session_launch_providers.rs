@@ -107,6 +107,22 @@ pub(crate) type BuiltinToolTurn = (
     Arc<de_ai::chat_usage::UsageMeter>,
 );
 
+/// A fresh usage meter for one built-in turn: priced when `entry`'s model
+/// is served by Anthropic's own API (`de_ai::model_pricing`), tokens only
+/// otherwise. Shared by the chat loop and the design-agent loop.
+pub(crate) fn turn_usage_meter(
+    entry: &ModelEntry,
+    config: &BuiltinAgentConfig,
+) -> Arc<de_ai::chat_usage::UsageMeter> {
+    let price = entry
+        .builtin_model_id()
+        .and_then(|model| de_ai::model_pricing::first_party_price(&config.base_url, model));
+    Arc::new(match price {
+        Some(price) => de_ai::chat_usage::UsageMeter::with_price(price),
+        None => de_ai::chat_usage::UsageMeter::new(),
+    })
+}
+
 /// When the selected chat model is a ready builtin (API-key) entry,
 /// build its provider with the canvas tool set + a fresh UI tool
 /// channel — the GAP #32 tool-executing path. `None` falls through to
@@ -119,13 +135,7 @@ pub(crate) fn builtin_provider_with_tools(host: &WidgetHostNative) -> Option<Bui
     let state = host.editor_state();
     let entry = state.chat.selected_model_entry()?;
     let config = selected_builtin_agent_config(state, entry)?;
-    let price = entry
-        .builtin_model_id()
-        .and_then(|model| de_ai::model_pricing::first_party_price(&config.base_url, model));
-    let meter = Arc::new(match price {
-        Some(price) => de_ai::chat_usage::UsageMeter::with_price(price),
-        None => de_ai::chat_usage::UsageMeter::new(),
-    });
+    let meter = turn_usage_meter(entry, &config);
     let provider = ConfiguredBuiltinProvider::from_builtin_agent(&config)?
         .with_usage_meter(Arc::clone(&meter));
     let (executor, tool_rx) = chat_tool_channel();
