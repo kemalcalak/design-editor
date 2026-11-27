@@ -44,6 +44,7 @@ fn silhouette_key(node: &SceneNode, world_rect: Rect) -> String {
         world_rect.size.x,
         world_rect.size.y,
         node.corner_radius,
+        node.corner_smoothing,
         node.rotation,
         node.arc_start_angle.unwrap_or(-1.0),
         node.arc_sweep_angle.unwrap_or(-1.0),
@@ -69,6 +70,10 @@ fn silhouette_key(node: &SceneNode, world_rect: Rect) -> String {
         node.even_odd_fill,
         node.polygon_sides,
         &node.svg_path,
+        // A smoothed or rounded outline (#389) is the silhouette itself.
+        node.corner_path
+            .as_deref()
+            .map(|outline| outline.d.as_str()),
         &node.text,
         &node.font_family,
         node.font_size.to_bits(),

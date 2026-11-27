@@ -1,4 +1,7 @@
-use crate::{editor_state_to_active_page_layout_scene, editor_state_to_layout_scene};
+use crate::{
+    editor_state_to_active_page_layout_scene, editor_state_to_layout_scene,
+    editor_state_to_page_layout_scene,
+};
 use de_editor_core::{EditorState, NodeId, PenNodeExt};
 use jian_ops_schema::variable::{VariableKind, VariableScalar};
 
@@ -187,5 +190,13 @@ fn active_page_matches_full_builder_with_refs_variables_and_both_layout_modes() 
         assert_eq!(active.pages[0].name, full.pages[0].name);
         assert!(active.pages[0].children.is_empty());
         assert_eq!(active.pages[1], full.pages[1]);
+        // A named page lays out like the full builder too, whichever page
+        // is active (#456): the library page from the screen page.
+        for page in 0..2 {
+            let named = editor_state_to_page_layout_scene(&state, page);
+            assert_eq!(named.active_page_index, page);
+            assert_eq!(named.pages[page], full.pages[page], "page {page}");
+            assert!(named.pages[1 - page].children.is_empty());
+        }
     }
 }

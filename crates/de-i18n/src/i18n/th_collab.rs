@@ -591,6 +591,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.context.document" => "เอกสาร",
         "chat.context.selection" => "ส่วนที่เลือก",
         "chat.context.attachment" => "ไฟล์แนบ",
+        "property.cornerSmoothing" => "ความโค้งมน",
         "chat.attach.unsupported" => "แนบ {{name}} ไม่ได้: รองรับเฉพาะรูปภาพและไฟล์ข้อความ",
         "chat.attach.tooLarge" => "{{name}} ใหญ่เกินขีดจำกัดไฟล์แนบ {{size}} MB",
         "chat.attach.readFailed" => "อ่าน {{name}} ไม่ได้",

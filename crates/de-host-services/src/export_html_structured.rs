@@ -65,6 +65,9 @@ mod video;
 pub use css::num as css_num;
 
 #[cfg(test)]
+#[path = "export_html_structured/corner_tests.rs"]
+mod corner_tests;
+#[cfg(test)]
 #[path = "export_html_structured/tests.rs"]
 mod tests;
 #[cfg(test)]

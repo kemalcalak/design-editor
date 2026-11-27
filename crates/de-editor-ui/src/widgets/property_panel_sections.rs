@@ -76,6 +76,8 @@ pub struct PropertyLabels {
     pub nearest_variant: &'static str,
     pub position: &'static str,
     pub corner_per_corner: &'static str,
+    /// The corner smoothing row (#389).
+    pub corner_smoothing: &'static str,
     pub mixed: &'static str,
     pub flex_layout: &'static str,
     pub auto_layout: &'static str,
@@ -165,6 +167,7 @@ impl PropertyLabels {
             nearest_variant: pick("variants.nearest", "No exact variant: nearest shown"),
             position: pick("size.position", "Position"),
             corner_per_corner: pick("property.cornerPerCorner", "Edit corners independently"),
+            corner_smoothing: pick("property.cornerSmoothing", "Smoothing"),
             mixed: pick("property.mixed", "Mixed"),
             flex_layout: pick("layout.flexLayout", "Flex Layout"),
             auto_layout: pick("property.autoLayout", "Auto layout"),
@@ -360,6 +363,7 @@ pub fn paint_position_section(
     labels: &PropertyLabels,
     show_radius: bool,
     corner_expanded: bool,
+    smoothing: Option<f32>,
     show_size: bool,
     x: f32,
     y: f32,
@@ -484,6 +488,18 @@ pub fn paint_position_section(
             width,
         );
         y += crate::widgets::property_panel_corner::CORNER_GRID_EXTRA_HEIGHT;
+    }
+    if let Some(smoothing) = smoothing.filter(|_| show_radius) {
+        use crate::widgets::property_panel_corner_smoothing as row;
+        row::paint(
+            cx,
+            theme,
+            labels.corner_smoothing,
+            smoothing,
+            edit,
+            row::row_rects(x, y, width),
+        );
+        y += row::SMOOTHING_ROW_HEIGHT;
     }
     y += 12.0;
     paint_section_divider(cx, theme, x, y, width);

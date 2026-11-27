@@ -591,6 +591,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.context.document" => "Belge",
         "chat.context.selection" => "Seçim",
         "chat.context.attachment" => "Ek",
+        "property.cornerSmoothing" => "Yumuşatma",
         "chat.attach.unsupported" => "{{name}} eklenemiyor: yalnızca görseller ve metin dosyaları",
         "chat.attach.tooLarge" => "{{name}} {{size}} MB ek sınırını aşıyor",
         "chat.attach.readFailed" => "{{name}} okunamadı",

@@ -159,6 +159,7 @@ fn consecutive_create_frames_keep_layout_scene_in_sync() {
     host.create_drag = Some(CreateDragState {
         start_doc_x: start.x,
         start_doc_y: start.y,
+        cursor_doc: None,
     });
     let (canvas_x, canvas_y) =
         de_editor_ui::widgets::host_canvas_geometry::canvas_origin(host.editor_state());

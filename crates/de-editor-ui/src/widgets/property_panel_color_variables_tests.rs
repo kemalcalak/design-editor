@@ -489,6 +489,7 @@ fn dispatch(state: &mut EditorState, action: &PropertyPanelAction) {
             resolved_sizing_fallback: None,
             image_adjustment_drag: &mut image_adjustment_drag,
             effect_radius_drag: &mut effect_radius_drag,
+            corner_smoothing_drag: &mut false,
         },
     );
 }

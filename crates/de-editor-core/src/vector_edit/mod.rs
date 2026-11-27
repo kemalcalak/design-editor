@@ -51,7 +51,7 @@ pub use geometry::{
 pub use parse::parse_path_data;
 pub use simplify::{anchor_count, simplify_subpaths};
 pub use snap::{constrain_45, snap_point, snap_to_pixel_grid, SnapGuide, SnapResult};
-pub use source::{node_subpaths, subpaths_bounds};
+pub use source::{fit_subpaths_to_box, node_subpaths, subpaths_bounds};
 pub use write::subpaths_to_path_data;
 pub(crate) use write::write_subpaths;
 

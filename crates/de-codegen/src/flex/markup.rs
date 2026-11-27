@@ -250,12 +250,12 @@ impl Walker<'_> {
                 }
             }
             PenNode::Path(p) => {
-                if let Some((view_box, inner)) = path_svg(node, p) {
+                if let Some((view_box, inner)) = path_svg(node, p, size) {
                     svg(&mut el, view_box, inner);
                 }
             }
             PenNode::Polygon(p) => {
-                let (view_box, inner) = polygon_svg(node, p);
+                let (view_box, inner) = polygon_svg(node, p, size);
                 svg(&mut el, view_box, inner);
             }
             PenNode::Line(l) => {

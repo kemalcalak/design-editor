@@ -56,7 +56,8 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use de_editor_core::command_node::remap_subtree_ids_mapping;
-use de_editor_core::{EditorState, NodeId, PenNodeExt};
+use de_editor_core::shared_state::SharedState;
+use de_editor_core::{NodeId, PenNodeExt};
 use jian_ops_schema::node::PenNode;
 use serde_json::{json, Value};
 
@@ -88,7 +89,7 @@ pub(crate) type Result<T> = std::result::Result<T, ProgramError>;
 /// return the TS `handleBatchDesign` envelope:
 /// `{ results, nodeCount, postProcessed?, errors? }`.
 pub(crate) fn run_batch_design_program(
-    snapshot: &EditorState,
+    snapshot: SharedState,
     operations: &str,
     args: &BTreeMap<String, String>,
 ) -> ToolOutcome {
@@ -101,7 +102,7 @@ pub(crate) fn run_batch_design_program(
         .map(|raw| matches!(raw.trim(), "true" | "1"))
         .unwrap_or(false);
     let lines = split_operations(operations);
-    let mut ctx = ProgramCtx::new(snapshot, page_id);
+    let mut ctx = ProgramCtx::from_shared(snapshot, page_id);
     ctx.post_process = post_process;
     ctx.explicitly_sized_append_lines = explicitly_sized_append_lines(&lines);
     // Only roots that were empty BEFORE this program began are starter
@@ -212,7 +213,8 @@ fn is_replaceable_starter_root(node: &PenNode) -> bool {
 }
 
 pub(crate) struct ProgramCtx {
-    pub(crate) sim: EditorState,
+    /// Shared with the request until the first write copies it (#456).
+    pub(crate) sim: SharedState,
     pub(crate) page_id: Option<String>,
     /// binding name → final (host-assigned) node id.
     pub(crate) bindings: BTreeMap<String, String>,
@@ -245,25 +247,25 @@ pub(crate) struct ProgramCtx {
 }
 
 impl ProgramCtx {
-    /// A context simulating on a clone of `snapshot`, its active page pinned
-    /// to `page_id` so sim READS (path lookups, node counts) see the same
-    /// children every emitted command targets via its `page_id` field. An
-    /// unknown page id is left to per-command apply rejection (consistent
-    /// per-line errors).
-    pub(crate) fn new(snapshot: &EditorState, page_id: Option<String>) -> Self {
-        Self::from_owned(snapshot.clone(), page_id)
-    }
-
-    /// [`Self::new`] on a state the caller hands over: `execute` moves its
-    /// snapshot in rather than paying for one more document copy (#350).
-    pub(crate) fn from_owned(mut sim: EditorState, page_id: Option<String>) -> Self {
+    /// A context simulating on `sim`, its active page pinned to `page_id` so
+    /// sim READS (path lookups, node counts) see the same children every
+    /// emitted command targets via its `page_id` field. An unknown page id
+    /// is left to per-command apply rejection (consistent per-line errors).
+    ///
+    /// `sim` is shared with the request: `execute` and `batch_design`
+    /// simulate on the request's own state, which is copied only at the
+    /// first write, or when the call targets another page than the active
+    /// one (#350, #456).
+    pub(crate) fn from_shared(mut sim: SharedState, page_id: Option<String>) -> Self {
         if let Some(index) = page_id
             .as_deref()
             .and_then(|raw| resolve_page_index(&sim, raw))
         {
-            let _ = sim.apply(EditorCommand::SetActivePage {
-                index: index as u32,
-            });
+            if index != sim.ui.active_page_index {
+                let _ = sim.apply(EditorCommand::SetActivePage {
+                    index: index as u32,
+                });
+            }
         }
         Self {
             sim,

@@ -36,7 +36,7 @@ pub fn editor_state_to_active_page_layout_scene_with_names(
     state: &de_editor_core::EditorState,
 ) -> (LayoutScene, SceneLayerNames) {
     let mut names = SceneLayerNames::new();
-    let scene = active_page_layout_scene(state, None, Some(&mut names));
+    let scene = active_page_layout_scene(state, None, None, Some(&mut names));
     (scene, names)
 }
 
@@ -107,7 +107,18 @@ fn layout_scene(
 pub fn editor_state_to_active_page_layout_scene(
     state: &de_editor_core::EditorState,
 ) -> LayoutScene {
-    active_page_layout_scene(state, None, None)
+    active_page_layout_scene(state, None, None, None)
+}
+
+/// [`editor_state_to_active_page_layout_scene`] for page `page_index`
+/// instead of the active one (clamped like the active index): a read that
+/// names one page lays out that page, not the document (#456). The scene's
+/// `active_page_index` is the page laid out.
+pub fn editor_state_to_page_layout_scene(
+    state: &de_editor_core::EditorState,
+    page_index: usize,
+) -> LayoutScene {
+    active_page_layout_scene(state, Some(page_index), None, None)
 }
 
 /// [`editor_state_to_active_page_layout_scene`] with only the page root
@@ -119,11 +130,12 @@ pub fn editor_state_to_active_page_root_layout_scene(
     state: &de_editor_core::EditorState,
     root_id: &str,
 ) -> LayoutScene {
-    active_page_layout_scene(state, Some(root_id), None)
+    active_page_layout_scene(state, None, Some(root_id), None)
 }
 
 fn active_page_layout_scene(
     state: &de_editor_core::EditorState,
+    page: Option<usize>,
     only_root: Option<&str>,
     names: Option<&mut SceneLayerNames>,
 ) -> LayoutScene {
@@ -135,9 +147,8 @@ fn active_page_layout_scene(
         if doc_pages.is_empty() {
             return LayoutScene::default();
         }
-        let active_page_index = state
-            .ui
-            .active_page_index
+        let active_page_index = page
+            .unwrap_or(state.ui.active_page_index)
             .min(doc_pages.len().saturating_sub(1));
         let pages = doc_pages
             .iter()
