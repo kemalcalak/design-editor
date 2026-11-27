@@ -606,6 +606,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.mention.noSkills" => "No skills yet: add SKILL.md files to the project's .design-editor/skills folder or to the skills folder in the Design Editor config folder",
         "chat.skill.overridesApplied" => "This project's skills replace built-in skills: {{names}}",
         "chat.skill.cut" => "The picked skills were cut to {{count}} characters for this message",
+        "chat.context.lastReply" => "Last reply",
+        "chat.context.chatTotal" => "This chat",
+        "chat.usage.tokens" => "{{input}} in · {{output}} out",
         _ => return None,
     })
 }

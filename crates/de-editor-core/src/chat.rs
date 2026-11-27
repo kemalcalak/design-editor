@@ -29,7 +29,7 @@ mod session;
 #[cfg(test)]
 mod tests;
 
-pub use message::{ChatImage, ChatMessage, ChatRole, ChatToolCall};
+pub use message::{ChatImage, ChatMessage, ChatRole, ChatToolCall, TurnUsage};
 pub use models::{AgentProvider, ModelEntry};
 
 /// Re-export of the chat-request knobs from `de-ai` so callers of

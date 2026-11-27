@@ -252,7 +252,7 @@ fn launch_if_pending_inner(
     // Builtin (API-key) providers run the tool-executing agent loop
     // (GAP #32): canvas tool defs ride the request and the UI thread
     // executes each call via the session's tool channel.
-    if let Some((provider, tool_rx)) = builtin_provider_with_tools(host) {
+    if let Some((provider, tool_rx, usage_meter)) = builtin_provider_with_tools(host) {
         let system_prompt = build_agent_system_prompt(host.editor_state());
         // This builtin agent loop carries the full canvas toolset (`batch_design`
         // included), so a design request runs *here* for an API-key model like
@@ -278,7 +278,10 @@ fn launch_if_pending_inner(
             model: None,
         };
         super::finalize_design_session_if_needed(host, current_chat, "teardown-backstop");
-        *current_chat = Some(ChatSession::start_with_tools(provider, req, Some(tool_rx)));
+        *current_chat = Some(
+            ChatSession::start_with_tools(provider, req, Some(tool_rx))
+                .with_usage_meter(usage_meter),
+        );
         return true;
     }
     let Some(provider) = chat_provider_for_selected_model(host) else {
@@ -696,6 +699,10 @@ pub fn drain_stop_request(
     if let Some(session) = current_design.as_ref() {
         session.abort();
         crate::design_session::stop_design_transcript(host, running_tab);
+    }
+    // The requests that finished before Stop were billed: keep their usage.
+    if let Some(session) = current_chat.as_ref() {
+        super::write_turn_usage(host, session, running_tab, None);
     }
     *current_chat = None;
     *current_design = None;

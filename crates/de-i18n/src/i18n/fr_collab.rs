@@ -606,6 +606,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.mention.noSkills" => "Aucune compétence : ajoutez des fichiers SKILL.md au dossier .design-editor/skills du projet ou au dossier skills du dossier de configuration de Design Editor",
         "chat.skill.overridesApplied" => "Les compétences de ce projet remplacent des compétences intégrées : {{names}}",
         "chat.skill.cut" => "Les compétences choisies ont été coupées à {{count}} caractères pour ce message",
+        "chat.context.lastReply" => "Dernière réponse",
+        "chat.context.chatTotal" => "Cette conversation",
+        "chat.usage.tokens" => "{{input}} en entrée · {{output}} en sortie",
         _ => return None,
     })
 }

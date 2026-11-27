@@ -608,6 +608,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.mention.noSkills" => "아직 스킬이 없습니다: 프로젝트의 .design-editor/skills 폴더나 Design Editor 설정 폴더의 skills 폴더에 SKILL.md 파일을 추가하세요",
         "chat.skill.overridesApplied" => "이 프로젝트의 스킬이 기본 제공 스킬을 대체합니다: {{names}}",
         "chat.skill.cut" => "선택한 스킬이 이 메시지에서 {{count}}자로 잘렸습니다",
+        "chat.context.lastReply" => "마지막 답변",
+        "chat.context.chatTotal" => "이 대화",
+        "chat.usage.tokens" => "입력 {{input}} · 출력 {{output}}",
         _ => return None,
     })
 }

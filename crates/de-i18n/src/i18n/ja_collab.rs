@@ -606,6 +606,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.mention.noSkills" => "スキルはまだありません：プロジェクトの .design-editor/skills フォルダ、または Design Editor 設定フォルダ内の skills フォルダに SKILL.md を追加してください",
         "chat.skill.overridesApplied" => "このプロジェクトのスキルが組み込みスキルを置き換えます：{{names}}",
         "chat.skill.cut" => "選択したスキルはこのメッセージ用に {{count}} 文字に切り詰められました",
+        "chat.context.lastReply" => "直前の返信",
+        "chat.context.chatTotal" => "このチャット",
+        "chat.usage.tokens" => "入力 {{input}} · 出力 {{output}}",
         _ => return None,
     })
 }

@@ -606,6 +606,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.mention.noSkills" => "Belum ada skill: tambahkan file SKILL.md ke folder .design-editor/skills proyek atau ke folder skills di folder konfigurasi Design Editor",
         "chat.skill.overridesApplied" => "Skill proyek ini menggantikan skill bawaan: {{names}}",
         "chat.skill.cut" => "Skill yang dipilih dipotong menjadi {{count}} karakter untuk pesan ini",
+        "chat.context.lastReply" => "Balasan terakhir",
+        "chat.context.chatTotal" => "Chat ini",
+        "chat.usage.tokens" => "{{input}} masuk · {{output}} keluar",
         _ => return None,
     })
 }

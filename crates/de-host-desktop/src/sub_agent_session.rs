@@ -229,7 +229,7 @@ pub(crate) fn launch_sub_agents(
     for (spec, identity) in specs.into_iter().zip(identities) {
         // A fresh provider + tool channel per sub; skip if no ready
         // builtin model is configured (same gate as the parent loop).
-        let Some((provider, tool_rx)) = builtin_provider_with_design_tools(host) else {
+        let Some((provider, tool_rx, meter)) = builtin_provider_with_design_tools(host) else {
             continue;
         };
 
@@ -249,8 +249,10 @@ pub(crate) fn launch_sub_agents(
             attachments: vec![],
             model: None,
         };
+        // The sub's own meter: its usage lands on the sub's reply (#398).
         let session = ChatSession::start_with_tools(provider, req, Some(tool_rx))
-            .with_run_baseline(run_baseline.clone());
+            .with_run_baseline(run_baseline.clone())
+            .with_usage_meter(meter);
 
         subs.push(SubAgentSession {
             session: Some(session),

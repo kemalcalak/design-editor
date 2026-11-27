@@ -606,6 +606,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.mention.noSkills" => "Henüz beceri yok: SKILL.md dosyalarını projenin .design-editor/skills klasörüne ya da Design Editor yapılandırma klasöründeki skills klasörüne ekleyin",
         "chat.skill.overridesApplied" => "Bu projenin becerileri yerleşik becerilerin yerine geçiyor: {{names}}",
         "chat.skill.cut" => "Seçilen beceriler bu mesaj için {{count}} karaktere kısaltıldı",
+        "chat.context.lastReply" => "Son yanıt",
+        "chat.context.chatTotal" => "Bu sohbet",
+        "chat.usage.tokens" => "{{input}} girdi · {{output}} çıktı",
         _ => return None,
     })
 }

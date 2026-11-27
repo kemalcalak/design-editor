@@ -606,6 +606,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.mention.noSkills" => "尚無技能：將 SKILL.md 檔案加入專案的 .design-editor/skills 資料夾，或 Design Editor 設定資料夾中的 skills 資料夾",
         "chat.skill.overridesApplied" => "此專案的技能取代了內建技能：{{names}}",
         "chat.skill.cut" => "所選技能已在此訊息中截斷為 {{count}} 個字元",
+        "chat.context.lastReply" => "上一則回覆",
+        "chat.context.chatTotal" => "這次對話",
+        "chat.usage.tokens" => "輸入 {{input}} · 輸出 {{output}}",
         _ => return None,
     })
 }

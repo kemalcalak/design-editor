@@ -44,6 +44,7 @@ pub mod chat_mentions;
 mod chat_model_mutators;
 pub mod chat_sessions;
 mod chat_title;
+pub mod chat_usage_label;
 pub mod clipboard;
 pub mod codegen;
 pub mod color_picker;

@@ -606,6 +606,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.mention.noSkills" => "Навыков пока нет: добавьте файлы SKILL.md в папку .design-editor/skills проекта или в папку skills в папке настроек Design Editor",
         "chat.skill.overridesApplied" => "Навыки этого проекта заменяют встроенные: {{names}}",
         "chat.skill.cut" => "Выбранные навыки обрезаны до {{count}} символов для этого сообщения",
+        "chat.context.lastReply" => "Последний ответ",
+        "chat.context.chatTotal" => "Этот чат",
+        "chat.usage.tokens" => "вход {{input}} · выход {{output}}",
         _ => return None,
     })
 }

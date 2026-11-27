@@ -606,6 +606,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.mention.noSkills" => "ยังไม่มีสกิล: เพิ่มไฟล์ SKILL.md ในโฟลเดอร์ .design-editor/skills ของโปรเจกต์ หรือโฟลเดอร์ skills ในโฟลเดอร์การตั้งค่าของ Design Editor",
         "chat.skill.overridesApplied" => "สกิลของโปรเจกต์นี้แทนที่สกิลในตัว: {{names}}",
         "chat.skill.cut" => "สกิลที่เลือกถูกตัดเหลือ {{count}} อักขระสำหรับข้อความนี้",
+        "chat.context.lastReply" => "คำตอบล่าสุด",
+        "chat.context.chatTotal" => "แชตนี้",
+        "chat.usage.tokens" => "อินพุต {{input}} · เอาต์พุต {{output}}",
         _ => return None,
     })
 }

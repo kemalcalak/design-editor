@@ -606,6 +606,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.mention.noSkills" => "Chưa có kỹ năng: thêm tệp SKILL.md vào thư mục .design-editor/skills của dự án hoặc thư mục skills trong thư mục cấu hình Design Editor",
         "chat.skill.overridesApplied" => "Kỹ năng của dự án này thay thế kỹ năng tích hợp: {{names}}",
         "chat.skill.cut" => "Các kỹ năng đã chọn bị cắt còn {{count}} ký tự cho tin nhắn này",
+        "chat.context.lastReply" => "Phản hồi gần nhất",
+        "chat.context.chatTotal" => "Cuộc trò chuyện này",
+        "chat.usage.tokens" => "{{input}} đầu vào · {{output}} đầu ra",
         _ => return None,
     })
 }

@@ -606,6 +606,9 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.mention.noSkills" => "अभी कोई स्किल नहीं: प्रोजेक्ट के .design-editor/skills फ़ोल्डर में या Design Editor कॉन्फ़िग फ़ोल्डर के skills फ़ोल्डर में SKILL.md फ़ाइलें जोड़ें",
         "chat.skill.overridesApplied" => "इस प्रोजेक्ट की स्किल बिल्ट-इन स्किल की जगह लेती हैं: {{names}}",
         "chat.skill.cut" => "चुनी गई स्किल इस संदेश के लिए {{count}} अक्षरों तक काटी गईं",
+        "chat.context.lastReply" => "पिछला जवाब",
+        "chat.context.chatTotal" => "यह चैट",
+        "chat.usage.tokens" => "इनपुट {{input}} · आउटपुट {{output}}",
         _ => return None,
     })
 }
