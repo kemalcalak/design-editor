@@ -174,6 +174,7 @@ pub mod pencil_fit;
 pub mod pixel_grid;
 pub mod preview_screen_set;
 pub mod preview_slideshow;
+pub mod process_memory;
 pub mod prompt_center_catalog;
 pub mod prompt_center_keyboard;
 pub mod property_edit_mutators;

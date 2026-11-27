@@ -391,12 +391,11 @@ fn serve_narrowed_read(
     }
     let (mut state, _) = request_snapshot_pages(req_tx, wake_ui, shared, pages)?;
     let mut wrote = false;
-    let response =
-        crate::mcp_serve::process_message_with_write_applier(&mut state, body, |_, _, _| {
-            wrote = true;
-            false
-        })?
-        .unwrap_or_default();
+    let response = crate::mcp_serve::process_narrowed_read(&mut state, body, |_, _, _| {
+        wrote = true;
+        false
+    })?
+    .unwrap_or_default();
     Ok((!wrote).then_some(response))
 }
 

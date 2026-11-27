@@ -13,7 +13,6 @@ use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
-use de_editor_core::history_snapshot::SharedDoc;
 use de_editor_core::pen_node_ext::PenNodeExt;
 use de_editor_core::request_snapshot::SharedRequestSnapshot;
 use de_editor_core::{EditorCommand, EditorState};

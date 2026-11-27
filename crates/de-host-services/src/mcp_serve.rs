@@ -15,7 +15,7 @@ use std::path::{Path, PathBuf};
 use std::time::Instant;
 
 use crate::import_html_url::import_html_url_snapshot;
-use de_editor_core::shared_state::SharedState;
+use de_editor_core::shared_state::{SharedState, TakenState};
 use de_editor_core::{EditorCommand, EditorState};
 use de_mcp::import_html_tool::import_html_snapshot;
 use de_mcp::import_pen_dev_tool::import_pen_dev_snapshot;
@@ -230,19 +230,9 @@ fn mcp_response_succeeded(response: &str) -> bool {
         != Some(true)
 }
 
-/// One MCP write as the host should apply it.
-pub struct McpWrite<'a> {
-    /// The command to apply: the tool's own, or its root-placed form (#37).
-    pub command: &'a EditorCommand,
-    /// The tool's own command when `command` is the placed form. Placement
-    /// names the new roots by the ids the insert will mint on the state it
-    /// was computed against, so a host whose document may have moved on
-    /// since (the live UI thread) applies this instead when the revision
-    /// differs: an unplaced insert, never a move of somebody else's node.
-    pub unplaced: Option<&'a EditorCommand>,
-    /// `document_revision()` of the state placement was computed against.
-    pub revision: u64,
-}
+// Split out at the 800-line cap; the path stays `mcp_serve::McpWrite`.
+mod mcp_write;
+pub use mcp_write::McpWrite;
 
 /// [`process_message_with_write_applier`] for hosts that apply against the
 /// same state the call was dispatched on, so the placed command is always
@@ -263,6 +253,34 @@ where
 pub fn process_message_with_write_applier<F>(
     state: &mut EditorState,
     line: &str,
+    apply: F,
+) -> Result<Option<String>, McpServeError>
+where
+    F: FnMut(&str, &mut EditorState, &McpWrite) -> bool,
+{
+    dispatch_message(state, line, false, apply)
+}
+
+/// [`process_message_with_write_applier`] for a read a live host answers
+/// from a narrowed snapshot (#456). The host refuses any write the call
+/// makes and runs it again on the whole document, so `execute` renders and
+/// exports here only when its script writes nothing: the full run does it
+/// otherwise, once.
+pub(crate) fn process_narrowed_read<F>(
+    state: &mut EditorState,
+    line: &str,
+    apply: F,
+) -> Result<Option<String>, McpServeError>
+where
+    F: FnMut(&str, &mut EditorState, &McpWrite) -> bool,
+{
+    dispatch_message(state, line, true, apply)
+}
+
+fn dispatch_message<F>(
+    state: &mut EditorState,
+    line: &str,
+    narrowed_read: bool,
     mut apply: F,
 ) -> Result<Option<String>, McpServeError>
 where
@@ -303,9 +321,16 @@ where
         .map(String::as_str);
     // The tools share the request's state instead of each copying it
     // (#456): a read costs no copy, and a write copies at most once, the
-    // first time the applier changes a state a tool still holds.
-    let mut shared = SharedState::take_from(state);
-    let registry = rebuild_registry(&shared, requested_tool.as_deref(), save_target);
+    // first time the applier changes a state a tool still holds. The guard
+    // puts the state back when it drops, also while a panicking tool
+    // unwinds, so `state` is never left hollow.
+    let mut shared = TakenState::new(state);
+    let registry = rebuild_registry(
+        &shared,
+        requested_tool.as_deref(),
+        save_target,
+        narrowed_read,
+    );
     let response = process_tool_message_with_registry(&registry, line, |tool_name, cmd| {
         // New page roots land in free canvas space, in front (#37). Placing
         // here, before the host applier runs, gives every transport the
@@ -321,8 +346,9 @@ where
         };
         apply(tool_name, &mut shared, &write)
     });
+    // The registry's handles go first, so the state moves back uncopied.
     drop(registry);
-    shared.restore_into(state);
+    drop(shared);
     let response = response?;
     if requested_tool.as_deref() == Some("save_document") {
         preview_hook::after_save_document(response.as_deref());

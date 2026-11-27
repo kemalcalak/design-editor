@@ -185,21 +185,7 @@ fn a_narrowed_call_that_writes_is_refused_and_run_on_the_whole_document() {
         de_mcp::snapshot_pages::for_request(&line),
         de_mcp::snapshot_pages::SnapshotPages::All
     );
-    let done = Arc::new(AtomicBool::new(false));
-    let client_done = Arc::clone(&done);
-    let client = thread::spawn(move || {
-        let wake_ui: UiWake = Arc::new(|| {});
-        let shared = LiveShared::default();
-        let reply = connection::serve_stateful(&line, &req_tx, &shared, &wake_ui);
-        client_done.store(true, Ordering::Release);
-        reply
-    });
-    let deadline = Instant::now() + Duration::from_secs(20);
-    while !done.load(Ordering::Acquire) && Instant::now() < deadline {
-        server.pump(&mut live);
-        thread::sleep(Duration::from_millis(1));
-    }
-    let reply = client.join().expect("client").expect("reply");
+    let reply = serve_through_pump(&mut server, &req_tx, &mut live, line);
     assert!(!reply.contains("\"isError\":true"), "{reply}");
     let pages = live.doc.pages.as_ref().expect("pages");
     let root = pages[1]
@@ -216,4 +202,118 @@ fn a_narrowed_call_that_writes_is_refused_and_run_on_the_whole_document() {
     // Nothing else on the page was lost to a partial snapshot.
     assert_eq!(pages.len(), 6);
     assert!(pages.iter().all(|page| !page.children.is_empty()));
+}
+
+/// Run `line` through a live connection while the test pumps the UI side.
+fn serve_through_pump(
+    server: &mut McpLiveServer,
+    req_tx: &Sender<UiRequest>,
+    live: &mut EditorState,
+    line: String,
+) -> String {
+    let req_tx = req_tx.clone();
+    let done = Arc::new(AtomicBool::new(false));
+    let client_done = Arc::clone(&done);
+    let client = thread::spawn(move || {
+        let wake_ui: UiWake = Arc::new(|| {});
+        let shared = LiveShared::default();
+        let reply = connection::serve_stateful(&line, &req_tx, &shared, &wake_ui);
+        client_done.store(true, Ordering::Release);
+        reply
+    });
+    let deadline = Instant::now() + Duration::from_secs(20);
+    while !done.load(Ordering::Acquire) && Instant::now() < deadline {
+        server.pump(live);
+        thread::sleep(Duration::from_millis(1));
+    }
+    client.join().expect("client").expect("reply")
+}
+
+#[test]
+fn every_narrowed_tool_has_a_call_here() {
+    let calls = narrowed_calls();
+    let tools = de_mcp::snapshot_pages::NO_NODE_TOOLS
+        .iter()
+        .chain(de_mcp::snapshot_pages::PAGE_TOOLS)
+        .chain(&["get_screenshot", "execute"]);
+    for tool in tools {
+        let named = format!(r#""name":"{tool}""#);
+        assert!(
+            calls.iter().any(|line| line.contains(&named)),
+            "{tool} is narrowed, so narrowed_calls must answer it both ways"
+        );
+    }
+}
+
+#[test]
+fn anchored_narrowed_captures_answer_like_the_whole_document() {
+    use de_editor_core::request_snapshot_pages::{PageAnchor, SnapshotPages};
+    let mut live = state();
+    let mut anchor = PageAnchor::default();
+    // An agent's first call is usually a whole-document one.
+    let _ = anchor.capture(&mut live, &SnapshotPages::All);
+    for (index, line) in narrowed_calls().iter().enumerate() {
+        let pages = de_mcp::snapshot_pages::for_request(line);
+        let whole = answer(&mut narrowed_snapshot(&mut live), line);
+        let narrowed = answer(&mut anchor.capture(&mut live, &pages).into_state(), line);
+        assert_eq!(narrowed, whole, "{line}");
+        // A whole-document capture between narrowed ones still gets every
+        // page, though the anchor holds pages narrowed captures left out.
+        if index % 3 == 2 {
+            let full = anchor.capture(&mut live, &SnapshotPages::All).into_state();
+            assert_eq!(full.doc, narrowed_snapshot(&mut live).doc, "{line}");
+        }
+    }
+}
+
+#[test]
+fn page_needs_follow_an_edit_made_through_the_pump() {
+    let (req_tx, req_rx) = mpsc::channel();
+    let (stop_tx, _stop_rx) = mpsc::channel();
+    let mut server = fresh_mcp_server(req_rx, stop_tx);
+    let mut live = state();
+    // A narrowed read computes the needs: "other" holds no master and no
+    // ref target yet, so a screen read leaves it out.
+    let first = serve_through_pump(
+        &mut server,
+        &req_tx,
+        &mut live,
+        call(1, "read_nodes", r#"{"nodeIds":["s-card"],"depth":1}"#),
+    );
+    assert!(!first.contains("\"isError\":true"), "{first}");
+    let current = |server: &McpLiveServer, live: &EditorState| {
+        server.snapshot_anchor.page_anchor().needs_are_current(live)
+    };
+    assert!(current(&server, &live));
+
+    // An edit through the pump makes "other" a ref target.
+    let wrote = serve_through_pump(
+        &mut server,
+        &req_tx,
+        &mut live,
+        call(
+            2,
+            "update_node",
+            r#"{"nodeId":"s-card","data":{"ref":"o-root"}}"#,
+        ),
+    );
+    assert!(!wrote.contains("\"isError\":true"), "{wrote}");
+    assert!(!current(&server, &live), "the edit made the needs stale");
+
+    // The next narrowed read walks again and keeps "other", so the
+    // instance resolves exactly as on the whole document.
+    let line = call(
+        3,
+        "read_nodes",
+        r#"{"nodeIds":["s-card"],"resolveInstances":true,"depth":-1}"#,
+    );
+    assert_ne!(
+        de_mcp::snapshot_pages::for_request(&line),
+        de_mcp::snapshot_pages::SnapshotPages::All
+    );
+    let narrowed = serve_through_pump(&mut server, &req_tx, &mut live, line.clone());
+    assert!(current(&server, &live), "walked again for the read");
+    let whole = answer(&mut narrowed_snapshot(&mut live), &line);
+    assert_eq!(narrowed, whole);
+    assert!(narrowed.contains("Other page"), "{narrowed}");
 }

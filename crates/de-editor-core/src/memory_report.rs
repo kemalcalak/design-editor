@@ -104,6 +104,10 @@ impl MemoryReport {
 /// plus the bytes of its serialized form, which tracks the strings, vectors
 /// and maps hanging off it. Calibrated against a counting allocator in
 /// `de-host-services/tests/large_document_memory.rs`.
+///
+/// It serializes the whole subtree, so on a large document it costs
+/// seconds: call it on demand (a report, a debug tool), never on the
+/// paint path or per frame.
 pub fn approx_node_bytes(node: &PenNode) -> u64 {
     let inline = subtree_nodes(node) * std::mem::size_of::<PenNode>() as u64;
     let mut counter = ByteCounter(0);
@@ -148,6 +152,11 @@ impl Write for ByteCounter {
 /// Snapshots and estimated bytes the undo / redo history holds beyond the
 /// live document: each shared top-level node is counted once, however many
 /// snapshots point at it, plus every snapshot's own variable-ref maps.
+///
+/// Cost: every unique node is serialized ([`approx_node_bytes`]), so on a
+/// large document (#412's ~197k nodes) one call takes seconds. Build it on
+/// demand only (Settings' memory line, a debug tool), off the paint path
+/// and never per frame.
 pub fn history_usage(state: &EditorState) -> CacheUsage {
     let mut seen: HashSet<*const PenNode> = HashSet::new();
     let mut bytes = 0u64;

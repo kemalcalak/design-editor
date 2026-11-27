@@ -138,3 +138,41 @@ fn a_merged_anchor_keeps_left_out_pages_and_takes_captured_ones() {
     }
     assert_eq!(merged.materialize(), state.doc, "merging loses nothing");
 }
+
+#[test]
+fn a_document_level_read_never_walks_for_page_needs() {
+    let mut state = state();
+    let mut anchor = PageAnchor::default();
+    let partial = anchor
+        .capture(&mut state, &SnapshotPages::NoNodes)
+        .into_state();
+    assert!(!anchor.has_needs(), "no page needs for a NoNodes read");
+    let pages = partial.doc.pages.as_deref().expect("pages");
+    assert!(pages.iter().all(|page| page.children.is_empty()));
+    assert_eq!(
+        pages.len(),
+        state.doc.pages.as_deref().expect("pages").len()
+    );
+
+    // A one-page read computes them, once per document revision.
+    let _ = anchor.capture(&mut state, &SnapshotPages::Page(None));
+    assert!(anchor.needs_are_current(&state));
+    assert!(state.apply(crate::EditorCommand::SetNodeName {
+        node_id: crate::NodeId::new("card"),
+        name: "Renamed".into(),
+    }));
+    assert!(
+        !anchor.needs_are_current(&state),
+        "an edit makes them stale"
+    );
+    let _ = anchor.capture(&mut state, &SnapshotPages::NoNodes);
+    assert!(
+        !anchor.needs_are_current(&state),
+        "still not walked for NoNodes"
+    );
+    let _ = anchor.capture(&mut state, &SnapshotPages::Page(None));
+    assert!(
+        anchor.needs_are_current(&state),
+        "walked again for a page read"
+    );
+}
