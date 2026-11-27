@@ -585,6 +585,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.mention.component" => "Componente",
         "chat.mention.variable" => "Variable",
         "chat.mention.file" => "Archivo",
+        "chat.mention.scanLimited" => "Solo se ofrece parte de esta carpeta para las menciones @: es muy grande o es tu carpeta personal. Guarda el documento en una carpeta de proyecto para listarla entera.",
         "chat.mention.noMatches" => "Sin coincidencias",
         "chat.context.title" => "En contexto",
         "chat.context.document" => "Documento",

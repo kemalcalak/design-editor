@@ -18,11 +18,17 @@
 //! - this spine — the types and re-exports
 //! - [`query`] — finding the `@query` the caret sits in
 //! - [`candidates`] — ranking the popup rows
+//! - [`identity`] — which token in the draft is which staged mention
+//! - [`source`] — the host seam that lists the project folder
 //! - [`summary`] — compact summaries of document mentions + the context block
 //! - `sync` — `impl EditorState`: popup sync, pick, highlight, removal
 
 pub mod candidates;
+pub mod identity;
+#[cfg(test)]
+mod identity_tests;
 pub mod query;
+pub mod source;
 pub mod summary;
 mod sync;
 #[cfg(test)]
@@ -31,7 +37,9 @@ mod tests;
 use std::sync::Arc;
 
 pub use candidates::{mention_candidates, MAX_MENTION_ROWS};
+pub use identity::{live_mentions, mention_spans, retain_live, unique_label};
 pub use query::{active_mention_query, MentionQuery};
+pub use source::{ProjectFileList, ProjectFileSource};
 pub use summary::{context_block, summarize_document_mention, MentionSummary};
 
 /// What a mention points at.
@@ -76,7 +84,7 @@ impl MentionKind {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ChatMention {
     pub kind: MentionKind,
-    /// Stable key: a page index (decimal), a node / component id, a
+    /// Stable key: a page id, a node / component id, a
     /// variable name, or a project-relative file path.
     pub key: String,
     /// What the draft shows after the `@` (the layer / page / component /
@@ -88,14 +96,6 @@ impl ChatMention {
     /// The text this mention occupies in the draft, `@` included.
     pub fn token(&self) -> String {
         format!("@{}", self.label)
-    }
-
-    /// Whether `text` still carries this mention's token.
-    pub fn is_in(&self, text: &str) -> bool {
-        let mut token = String::with_capacity(self.label.len() + 1);
-        token.push('@');
-        token.push_str(&self.label);
-        text.contains(&token)
     }
 }
 

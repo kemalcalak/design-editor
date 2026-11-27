@@ -585,6 +585,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.mention.component" => "Компонент",
         "chat.mention.variable" => "Переменная",
         "chat.mention.file" => "Файл",
+        "chat.mention.scanLimited" => "Для @-упоминаний доступна только часть этой папки: она очень большая или это ваша домашняя папка. Сохраните документ в папке проекта, чтобы увидеть всё.",
         "chat.mention.noMatches" => "Нет совпадений",
         "chat.context.title" => "В контексте",
         "chat.context.document" => "Документ",

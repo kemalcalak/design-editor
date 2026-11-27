@@ -23,37 +23,6 @@ fn file(kind_key: &str) -> ChatMention {
 }
 
 #[test]
-fn scan_lists_visible_files_and_skips_hidden_and_build_folders() {
-    let root = temp_project("scan");
-    fs::create_dir_all(root.join("docs/deep")).unwrap();
-    fs::create_dir_all(root.join(".git")).unwrap();
-    fs::create_dir_all(root.join("node_modules/x")).unwrap();
-    fs::write(root.join("brief.md"), "hi").unwrap();
-    fs::write(root.join("docs/deep/spec.txt"), "spec").unwrap();
-    fs::write(root.join(".env"), "SECRET=1").unwrap();
-    fs::write(root.join(".git/HEAD"), "ref").unwrap();
-    fs::write(root.join("node_modules/x/index.js"), "").unwrap();
-    assert_eq!(
-        scan_project_files(&root),
-        vec!["brief.md".to_string(), "docs/deep/spec.txt".to_string()]
-    );
-    fs::remove_dir_all(&root).ok();
-}
-
-#[test]
-fn scan_stops_at_the_depth_limit() {
-    let root = temp_project("depth");
-    let mut deep = root.clone();
-    for level in 0..=MAX_SCAN_DEPTH {
-        deep = deep.join(format!("d{level}"));
-    }
-    fs::create_dir_all(&deep).unwrap();
-    fs::write(deep.join("too-deep.txt"), "x").unwrap();
-    assert!(scan_project_files(&root).is_empty());
-    fs::remove_dir_all(&root).ok();
-}
-
-#[test]
 fn text_files_are_quoted_and_cut() {
     let root = temp_project("text");
     fs::write(root.join("notes.md"), "line one\nline two").unwrap();

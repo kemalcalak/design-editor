@@ -585,6 +585,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.mention.component" => "คอมโพเนนต์",
         "chat.mention.variable" => "ตัวแปร",
         "chat.mention.file" => "ไฟล์",
+        "chat.mention.scanLimited" => "แสดงเพียงบางส่วนของโฟลเดอร์นี้สำหรับการกล่าวถึง @: โฟลเดอร์มีขนาดใหญ่มากหรือเป็นโฟลเดอร์หลักของคุณ บันทึกเอกสารไว้ในโฟลเดอร์โปรเจกต์เพื่อแสดงทั้งหมด",
         "chat.mention.noMatches" => "ไม่พบรายการที่ตรงกัน",
         "chat.context.title" => "ในบริบท",
         "chat.context.document" => "เอกสาร",

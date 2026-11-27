@@ -585,6 +585,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.mention.component" => "Thành phần",
         "chat.mention.variable" => "Biến",
         "chat.mention.file" => "Tệp",
+        "chat.mention.scanLimited" => "Chỉ một phần thư mục này được hiển thị cho @ nhắc đến: thư mục rất lớn hoặc là thư mục chính của bạn. Hãy lưu tài liệu vào một thư mục dự án để liệt kê toàn bộ.",
         "chat.mention.noMatches" => "Không có kết quả",
         "chat.context.title" => "Trong ngữ cảnh",
         "chat.context.document" => "Tài liệu",

@@ -6,32 +6,55 @@
 use std::path::Path;
 use std::sync::Arc;
 
+use de_editor_core::chat_mentions::ProjectFileSource;
+use de_editor_core::editor_toast::EditorToastLevel;
+
 use super::WidgetHostNative;
+
+/// The toast raised when a folder listing was cut short.
+pub const SCAN_LIMITED_TOAST: &str = "chat.mention.scanLimited";
 
 impl WidgetHostNative {
     /// Bring the `@` popup in line with the chat draft, before painting.
     ///
     /// `project_root` is the open document's folder (`None` while unsaved);
     /// a change of folder drops the old file list. When the popup has just
-    /// opened, `scan` lists the folder again (files come and go while the
-    /// editor is open) and the rows are re-ranked against it. Returns true
-    /// when anything visible changed.
+    /// opened, `files` is asked for the folder again (files come and go
+    /// while the editor is open); a listing that lands later re-ranks the
+    /// rows. Returns true when anything visible changed.
     pub fn sync_chat_mentions(
         &mut self,
         project_root: Option<&Path>,
-        scan: &dyn Fn(&Path) -> Vec<String>,
+        files: &mut dyn ProjectFileSource,
     ) -> bool {
         let root = project_root.map(|p| p.to_string_lossy().into_owned());
-        let files = &mut self.editor_state.chat.project_files;
-        if files.root != root {
-            files.root = root;
-            files.files = Arc::from(Vec::new());
+        let project = &mut self.editor_state.chat.project_files;
+        if project.root != root {
+            project.root = root;
+            project.files = Arc::from(Vec::new());
         }
         let mut changed = self.editor_state.sync_chat_mentions();
+        let mut landed = None;
         if std::mem::take(&mut self.editor_state.chat.project_files.rescan_requested) {
             if let Some(root) = project_root {
-                self.editor_state.chat.project_files.files = Arc::from(scan(root));
-                changed |= self.editor_state.refresh_chat_mention_rows();
+                landed = files.request(root);
+            }
+        }
+        if let Some(list) = files.poll() {
+            landed = Some(list);
+        }
+        if let Some(list) = landed.filter(|list| Some(list.root.as_path()) == project_root) {
+            self.editor_state.chat.project_files.files = list.files;
+            changed |= self.editor_state.refresh_chat_mention_rows();
+            if list.warn {
+                let now = self.now_ms;
+                self.editor_state.editor_ui.show_toast(
+                    SCAN_LIMITED_TOAST,
+                    Vec::new(),
+                    EditorToastLevel::Info,
+                    now,
+                );
+                changed = true;
             }
         }
         if changed {
@@ -76,6 +99,8 @@ impl WidgetHostNative {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use de_editor_core::chat_mentions::ProjectFileList;
+    use std::path::PathBuf;
 
     fn host_typing(text: &str) -> WidgetHostNative {
         let mut host = WidgetHostNative::new();
@@ -86,26 +111,70 @@ mod tests {
         host
     }
 
+    /// A source whose listing "lands" only when the test says so.
+    #[derive(Default)]
+    struct FakeSource {
+        requests: Vec<PathBuf>,
+        cached: Option<ProjectFileList>,
+        landing: Option<ProjectFileList>,
+    }
+
+    impl ProjectFileSource for FakeSource {
+        fn request(&mut self, root: &Path) -> Option<ProjectFileList> {
+            self.requests.push(root.to_path_buf());
+            self.cached.clone()
+        }
+        fn poll(&mut self) -> Option<ProjectFileList> {
+            self.landing.take()
+        }
+    }
+
+    fn list(root: &str, files: &[&str], warn: bool) -> ProjectFileList {
+        ProjectFileList {
+            root: PathBuf::from(root),
+            files: files.iter().map(|f| f.to_string()).collect(),
+            warn,
+        }
+    }
+
     #[test]
-    fn sync_scans_the_project_folder_when_the_popup_opens() {
+    fn opening_the_popup_asks_for_a_listing_and_a_late_one_reranks() {
         let mut host = host_typing("@bri");
         let root = Path::new("/project");
-        let scans = std::cell::Cell::new(0);
-        let scan = |dir: &Path| {
-            scans.set(scans.get() + 1);
-            assert_eq!(dir, Path::new("/project"));
-            vec!["brief.md".to_string(), "logo.svg".to_string()]
-        };
-        assert!(host.sync_chat_mentions(Some(root), &scan));
-        assert_eq!(scans.get(), 1);
+        let mut source = FakeSource::default();
+        assert!(host.sync_chat_mentions(Some(root), &mut source));
+        assert_eq!(source.requests, [PathBuf::from("/project")]);
+        // Nothing moved: no new request.
+        assert!(!host.sync_chat_mentions(Some(root), &mut source));
+        assert_eq!(source.requests.len(), 1);
+        // The background listing lands on a later frame.
+        source.landing = Some(list("/project", &["brief.md", "logo.svg"], false));
+        assert!(host.sync_chat_mentions(Some(root), &mut source));
         let popup = host.editor_state().chat.mention_popup.as_ref().unwrap();
         assert_eq!(popup.rows[0].mention.label, "brief.md");
-        // Nothing moved: no rescan, no repaint.
-        assert!(!host.sync_chat_mentions(Some(root), &scan));
-        assert_eq!(scans.get(), 1);
+        assert!(host.editor_state().editor_ui.editor_toast.is_none());
+        // A listing for a folder no longer open is ignored.
+        source.landing = Some(list("/elsewhere", &["x.md"], false));
+        host.sync_chat_mentions(Some(root), &mut source);
+        assert_eq!(
+            &*host.editor_state().chat.project_files.files,
+            ["brief.md".to_string(), "logo.svg".to_string()]
+        );
         // Another folder drops the old list.
-        host.sync_chat_mentions(None, &scan);
+        host.sync_chat_mentions(None, &mut source);
         assert!(host.editor_state().chat.project_files.files.is_empty());
+    }
+
+    #[test]
+    fn a_cut_listing_raises_the_notice() {
+        let mut host = host_typing("@");
+        let mut source = FakeSource {
+            cached: Some(list("/home/me", &["a.de"], true)),
+            ..Default::default()
+        };
+        host.sync_chat_mentions(Some(Path::new("/home/me")), &mut source);
+        let toast = host.editor_state().editor_ui.editor_toast.as_ref().unwrap();
+        assert_eq!(toast.i18n_key, SCAN_LIMITED_TOAST);
     }
 
     #[test]

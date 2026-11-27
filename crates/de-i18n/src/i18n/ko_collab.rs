@@ -587,6 +587,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.mention.component" => "컴포넌트",
         "chat.mention.variable" => "변수",
         "chat.mention.file" => "파일",
+        "chat.mention.scanLimited" => "@ 멘션에는 이 폴더의 일부만 표시됩니다. 폴더가 매우 크거나 홈 폴더입니다. 전체를 나열하려면 문서를 프로젝트 폴더에 저장하세요.",
         "chat.mention.noMatches" => "일치 항목 없음",
         "chat.context.title" => "컨텍스트",
         "chat.context.document" => "문서",

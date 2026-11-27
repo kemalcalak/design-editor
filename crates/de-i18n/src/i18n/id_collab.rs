@@ -585,6 +585,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.mention.component" => "Komponen",
         "chat.mention.variable" => "Variabel",
         "chat.mention.file" => "File",
+        "chat.mention.scanLimited" => "Hanya sebagian folder ini yang ditawarkan untuk sebutan @: folder ini sangat besar atau merupakan folder home Anda. Simpan dokumen di folder proyek untuk mencantumkan semuanya.",
         "chat.mention.noMatches" => "Tidak ada hasil",
         "chat.context.title" => "Dalam konteks",
         "chat.context.document" => "Dokumen",

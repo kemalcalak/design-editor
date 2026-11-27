@@ -585,6 +585,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.mention.component" => "कंपोनेंट",
         "chat.mention.variable" => "वेरिएबल",
         "chat.mention.file" => "फ़ाइल",
+        "chat.mention.scanLimited" => "@ उल्लेखों के लिए इस फ़ोल्डर का केवल एक हिस्सा दिखाया गया है: यह बहुत बड़ा है या आपका होम फ़ोल्डर है। पूरी सूची के लिए दस्तावेज़ को किसी प्रोजेक्ट फ़ोल्डर में सहेजें।",
         "chat.mention.noMatches" => "कोई मिलान नहीं",
         "chat.context.title" => "संदर्भ में",
         "chat.context.document" => "दस्तावेज़",
