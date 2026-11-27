@@ -114,6 +114,8 @@ impl WidgetHostNative {
     /// `self.editor_state`.
     pub(in crate::widget_host) fn mark_dirty(&mut self) {
         self.editor_state_dirty = true;
+        // Activity postpones the idle memory trim (#456).
+        self.memory_idle.note_activity(self.now_ms);
         // A mutated document / UI invalidates the pan bitmap cache —
         // a blitted frame must never show stale content.
         self.drop_pan_cache();
@@ -146,6 +148,7 @@ impl WidgetHostNative {
     /// next paint re-derives the snapshot.
     pub fn mark_editor_state_dirty(&mut self) {
         self.editor_state_dirty = true;
+        self.memory_idle.note_activity(self.now_ms);
     }
 
     /// The current document epoch — bumped on every whole-document
