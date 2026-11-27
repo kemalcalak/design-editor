@@ -156,6 +156,6 @@ mod tests {
     #[cfg(not(any(target_os = "macos", windows)))]
     #[test]
     fn unsupported_platforms_are_a_noop() {
-        assert_eq!(platform_pressure_relief(), 0);
+        assert_eq!(platform_pressure_relief(false), 0);
     }
 }
