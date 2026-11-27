@@ -80,8 +80,7 @@ mod tests {
         let _gate = super::super::debug_tools::debug_gate_override::Guard::forcing(true);
         let mut state = EditorState::new();
         state.commit_history();
-        let ToolOutcome::OkJson(json) =
-            debug_memory_report_snapshot(&state).call(&BTreeMap::new())
+        let ToolOutcome::OkJson(json) = debug_memory_report_snapshot(&state).call(&BTreeMap::new())
         else {
             panic!("expected a JSON report");
         };
@@ -95,6 +94,9 @@ mod tests {
     fn disabled_without_the_debug_flag() {
         let _gate = super::super::debug_tools::debug_gate_override::Guard::forcing(false);
         let outcome = debug_memory_report_snapshot(&EditorState::new()).call(&BTreeMap::new());
-        assert!(matches!(outcome, ToolOutcome::Err(ToolErrorCode::ToolFailed, _)));
+        assert!(matches!(
+            outcome,
+            ToolOutcome::Err(ToolErrorCode::ToolFailed, _)
+        ));
     }
 }

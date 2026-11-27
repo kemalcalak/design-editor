@@ -36,7 +36,11 @@ pub(crate) struct MemoryRefresh {
 impl MemoryRefresh {
     /// Publish what is due. `true` when the row on screen changed, so the
     /// caller repaints.
-    pub(crate) fn tick(&mut self, host: &WidgetHostNative, backend: Option<&NativeBackend>) -> bool {
+    pub(crate) fn tick(
+        &mut self,
+        host: &WidgetHostNative,
+        backend: Option<&NativeBackend>,
+    ) -> bool {
         let visible = host.settings_system_tab_open();
         let mut changed = self.drain_history_job() && visible;
         let period = if visible {
@@ -55,7 +59,9 @@ impl MemoryRefresh {
                 changed |= visible;
             }
         }
-        let history_due = self.last_history.is_none_or(|at| at.elapsed() >= HISTORY_PERIOD);
+        let history_due = self
+            .last_history
+            .is_none_or(|at| at.elapsed() >= HISTORY_PERIOD);
         if visible && history_due && self.history_job.is_none() {
             self.start_history_job(host);
         }

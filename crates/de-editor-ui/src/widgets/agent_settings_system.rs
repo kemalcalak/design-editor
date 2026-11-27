@@ -750,8 +750,10 @@ mod memory_row_tests {
 
     #[test]
     fn the_memory_row_reads_the_published_figures() {
-        let mut ui = EditorUiState::default();
-        ui.locale = de_editor_core::Locale::EnUs;
+        let mut ui = EditorUiState {
+            locale: de_editor_core::Locale::EnUs,
+            ..Default::default()
+        };
         assert_eq!(memory_line(&ui, &MemoryReading::default()), "Measuring…");
         let mut caches = MemoryReport::default();
         caches.push(CacheUsage::exact("decoded_images", 20 << 20, 3, None));
