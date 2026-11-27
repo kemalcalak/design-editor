@@ -33,11 +33,13 @@ struct Walk<'a> {
     out: Vec<Candidate>,
 }
 
-/// A run of siblings: their parent (`None` for a page's top-level layers),
+/// A run of siblings: their parent (`None` for a page's top-level layers)
+/// and its parent,
 /// their depth below the page, the section they are named in, the roles
 /// of their unit's texts and whether they sit inside a target.
 struct Siblings<'s, 'n> {
     parent: Option<&'n PenNode>,
+    grandparent: Option<&'n PenNode>,
     nodes: &'n [PenNode],
     depth: usize,
     section: Option<&'s str>,
@@ -49,6 +51,7 @@ impl Siblings<'_, '_> {
     fn place(&self, index: usize) -> Place<'_> {
         Place {
             parent: self.parent,
+            grandparent: self.grandparent,
             index,
             depth: self.depth,
         }
@@ -147,6 +150,7 @@ impl Walk<'_> {
                 .then(|| UnitRoles::of(node, run.depth, &self.facts));
             self.siblings(Siblings {
                 parent: Some(node),
+                grandparent: run.parent,
                 nodes: kids,
                 depth: run.depth + 1,
                 section: if names_section {
@@ -187,6 +191,7 @@ pub(super) fn candidates(
     };
     walk.siblings(Siblings {
         parent: None,
+        grandparent: None,
         nodes: page.roots(),
         depth: 0,
         section: None,

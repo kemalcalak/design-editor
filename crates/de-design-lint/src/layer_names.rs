@@ -11,6 +11,7 @@ mod default_names;
 mod facts;
 mod instances;
 mod label_box;
+mod label_box_context;
 mod lang;
 mod money;
 mod reading;
@@ -174,3 +175,7 @@ mod review_tests;
 #[cfg(test)]
 #[path = "layer_names_followup_tests.rs"]
 mod followup_tests;
+
+#[cfg(test)]
+#[path = "layer_names_context_tests.rs"]
+mod context_tests;

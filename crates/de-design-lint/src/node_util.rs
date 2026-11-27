@@ -166,7 +166,7 @@ pub fn numeric_height(node: &PenNode) -> Option<f64> {
     numeric_sizing(height_sizing(node))
 }
 
-fn width_sizing(node: &PenNode) -> Option<&SizingBehavior> {
+pub(crate) fn width_sizing(node: &PenNode) -> Option<&SizingBehavior> {
     match node {
         PenNode::Frame(n) => n.container.width.as_ref(),
         PenNode::Group(n)

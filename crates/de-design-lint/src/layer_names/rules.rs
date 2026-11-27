@@ -15,6 +15,7 @@ use crate::node_util::{
 
 use super::facts::Facts;
 use super::label_box::{label_box_kind, LabelBox};
+use super::label_box_context;
 use super::text_roles::{self, holds_price, screen_heading};
 
 /// How a container of repeated cards is named: as pricing cards when at
@@ -45,6 +46,11 @@ pub(crate) enum Role {
     SecondaryButton,
     /// A small label that is not pressed: a tag, chip, pill or marker.
     Badge,
+    /// One box of a table row.
+    Cell,
+    /// A box that holds a place for content (`Drop logo`, a sponsor slot),
+    /// named for what it holds when its label says so.
+    Slot(Option<String>),
     Title,
     /// A second heading under the title.
     Subtitle,
@@ -129,6 +135,9 @@ impl Role {
             Role::PrimaryButton => word("renameLayers.role.primaryButton"),
             Role::SecondaryButton => word("renameLayers.role.secondaryButton"),
             Role::Badge => word("renameLayers.role.badge"),
+            Role::Cell => word("renameLayers.role.cell"),
+            Role::Slot(Some(thing)) => named("renameLayers.role.slotNamed", thing),
+            Role::Slot(None) => word("renameLayers.role.slot"),
             Role::Title => word("renameLayers.role.title"),
             Role::Subtitle => word("renameLayers.role.subtitle"),
             Role::Price => word("renameLayers.role.price"),
@@ -160,11 +169,13 @@ impl Role {
     }
 }
 
-/// Where a layer sits: its parent, its index among its siblings and how
-/// deep below the page it is (0 = a top-level layer of the page).
+/// Where a layer sits: its parent and grandparent, its index among its
+/// siblings and how deep below the page it is (0 = a top-level layer of
+/// the page).
 #[derive(Clone, Copy)]
 pub(crate) struct Place<'a> {
     pub parent: Option<&'a PenNode>,
+    pub grandparent: Option<&'a PenNode>,
     pub index: usize,
     pub depth: usize,
 }
@@ -218,7 +229,7 @@ pub(crate) fn layout(node: &PenNode) -> Option<&LayoutMode> {
     }
 }
 
-fn has_visible_fill(node: &PenNode) -> bool {
+pub(crate) fn has_visible_fill(node: &PenNode) -> bool {
     node_fills(node).is_some_and(|fills| !fills.is_empty())
 }
 
@@ -402,7 +413,9 @@ fn preceding_heading(place: Place<'_>) -> Option<String> {
 
 fn container_role(node: &PenNode, place: Place<'_>, facts: &Facts) -> Role {
     if let Some(role) = button_role(node) {
-        return role;
+        // Read again with its neighbours: a table cell, a slot or a pill
+        // looks like a button on its own.
+        return label_box_context::in_place(role, node, place);
     }
     if let Some(role) = cards_role(node, place, facts) {
         return role;
