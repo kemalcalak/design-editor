@@ -39,12 +39,40 @@ pub fn corner_support(node: &PenNode) -> Option<CornerSupport> {
     }
 }
 
+/// The two facts about a node a corner write is checked against: its kind
+/// tag and what it stores for its corners. `Copy`, so a caller that checks
+/// later (the MCP tool) keeps these per node instead of a copy of the page.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct CornerTarget {
+    pub kind: &'static str,
+    pub support: Option<CornerSupport>,
+}
+
+impl CornerTarget {
+    pub fn of(node: &PenNode) -> Self {
+        Self {
+            kind: node.type_tag(),
+            support: corner_support(node),
+        }
+    }
+}
+
 /// Check a `SetNodeCorners` write against `node` (what `node_id` names on
 /// the active page, if anything) before anything is written. `Ok` says
 /// whether the radii are one value for every corner.
 pub fn check_corners(
     node_id: &NodeId,
     node: Option<&PenNode>,
+    radii: Option<[f32; 4]>,
+    smoothing: Option<f32>,
+) -> Result<bool, CornersError> {
+    check_corner_target(node_id, node.map(CornerTarget::of), radii, smoothing)
+}
+
+/// [`check_corners`] against a node's [`CornerTarget`].
+pub fn check_corner_target(
+    node_id: &NodeId,
+    target: Option<CornerTarget>,
     radii: Option<[f32; 4]>,
     smoothing: Option<f32>,
 ) -> Result<bool, CornersError> {
@@ -57,13 +85,14 @@ pub fn check_corners(
     if smoothing.is_some_and(|s| !s.is_finite() || !(0.0..=1.0).contains(&s)) {
         return Err(CornersError::InvalidSmoothing);
     }
-    let node = node
-        .filter(|_| node_id.is_real())
-        .ok_or_else(|| CornersError::NodeNotFound {
-            node_id: node_id.as_str().to_owned(),
-        })?;
-    let kind = node.type_tag();
-    let support = corner_support(node).ok_or(CornersError::NoCorners { kind })?;
+    let target =
+        target
+            .filter(|_| node_id.is_real())
+            .ok_or_else(|| CornersError::NodeNotFound {
+                node_id: node_id.as_str().to_owned(),
+            })?;
+    let kind = target.kind;
+    let support = target.support.ok_or(CornersError::NoCorners { kind })?;
     let uniform = radii.is_none_or(|r| r.iter().all(|v| (*v - r[0]).abs() < f32::EPSILON));
     if !uniform && !support.per_corner {
         return Err(CornersError::PerCornerUnsupported { kind });

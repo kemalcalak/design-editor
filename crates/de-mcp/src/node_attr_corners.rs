@@ -7,9 +7,10 @@
 
 use std::collections::BTreeMap;
 
-use de_editor_core::command_node_attrs::corners::{check_corners, CornersError};
-use de_editor_core::walkers::find_node;
-use de_editor_core::EditorState;
+use de_editor_core::command_node_attrs::corners::{
+    check_corner_target, CornerTarget, CornersError,
+};
+use de_editor_core::{EditorState, PenNodeExt};
 use jian_ops_schema::node::PenNode;
 
 use super::write_tools::parse_node_id;
@@ -27,8 +28,11 @@ use super::{EditorCommand, McpTool, ToolErrorCode, ToolOutcome};
 ///
 /// At least one of the two is required.
 pub struct SetNodeCornerRadius {
-    /// The active page's nodes, as the command will find them.
-    page: Vec<PenNode>,
+    /// What the check needs of each node on the active page (its kind and
+    /// corner fields), by id: built in one walk per registry instead of a
+    /// deep copy of the page, since the registry is rebuilt for every call
+    /// and `tools/list`.
+    targets: BTreeMap<String, CornerTarget>,
 }
 
 impl McpTool for SetNodeCornerRadius {
@@ -58,8 +62,8 @@ impl McpTool for SetNodeCornerRadius {
                     .into(),
             );
         }
-        let node = find_node(&self.page, &node_id);
-        if let Err(error) = check_corners(&node_id, node, radii, smoothing) {
+        let target = self.targets.get(node_id.as_str()).copied();
+        if let Err(error) = check_corner_target(&node_id, target, radii, smoothing) {
             return invalid(corners_refusal(&error));
         }
         let mut out = BTreeMap::new();
@@ -76,8 +80,20 @@ impl McpTool for SetNodeCornerRadius {
 }
 
 pub fn set_node_corner_radius_snapshot(state: &EditorState) -> SetNodeCornerRadius {
-    SetNodeCornerRadius {
-        page: state.active_children().to_vec(),
+    let mut targets = BTreeMap::new();
+    collect_targets(state.active_children(), &mut targets);
+    SetNodeCornerRadius { targets }
+}
+
+/// Every node under `nodes` by id, the first in depth-first order winning
+/// like `walkers::find_node`, which the command resolves through.
+fn collect_targets(nodes: &[PenNode], out: &mut BTreeMap<String, CornerTarget>) {
+    for node in nodes {
+        out.entry(node.id_str().to_owned())
+            .or_insert_with(|| CornerTarget::of(node));
+        if let Some(children) = node.children() {
+            collect_targets(children, out);
+        }
     }
 }
 

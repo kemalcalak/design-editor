@@ -207,11 +207,13 @@ fn rounded_polygon_svg(
 /// A path with a `vertexRadius` (#389) as `(viewBox, d)` in node px: like
 /// the canvas, the geometry is fitted to the node's box first and then
 /// rounded, so a stretched path keeps the radius it shows in the editor.
-/// `None` without a radius, a size or parseable geometry.
+/// A path without a fixed size (`fill_container` / hug) keeps its own
+/// bounds as the box. `None` without a radius or parseable geometry.
 fn rounded_path(p: &PathNode, size: Option<(f64, f64)>) -> Option<(String, String)> {
-    use de_editor_core::vector_edit::{fit_subpaths_to_box, parse_path_data, Subpath};
+    use de_editor_core::vector_edit::{
+        fit_subpaths_to_box, parse_path_data, subpaths_bounds, Subpath,
+    };
     let radius = p.vertex_radius.filter(|r| r.is_finite() && *r > 0.0)?;
-    let (w, h) = size.filter(|(w, h)| *w > 0.0 && *h > 0.0)?;
     // `d` first, then the anchors, as the scene builder reads them.
     let mut subs = match p.d.as_deref().filter(|d| !d.trim().is_empty()) {
         Some(d) => parse_path_data(d)?,
@@ -220,6 +222,16 @@ fn rounded_path(p: &PathNode, size: Option<(f64, f64)>) -> Option<(String, Strin
             closed: p.closed.unwrap_or(false),
         }],
     };
+    let own = || {
+        let (_, _, bw, bh) = subpaths_bounds(&subs);
+        (bw, bh)
+    };
+    let (w, h) = size
+        .filter(|(w, h)| *w > 0.0 && *h > 0.0)
+        .unwrap_or_else(own);
+    if !(w.is_finite() && h.is_finite() && w > 0.0 && h > 0.0) {
+        return None;
+    }
     fit_subpaths_to_box(&mut subs, w, h);
     let smoothing = p.corner_smoothing.unwrap_or(0.0);
     for sub in &mut subs {
@@ -269,5 +281,19 @@ mod tests {
         let a = [anchor(0.0, 0.0), anchor(10.0, 0.0), anchor(10.0, 10.0)];
         assert_eq!(anchors_d(&a, true), "M0 0 L10 0 L10 10 L0 0 Z");
         assert_eq!(anchors_d(&a, false), "M0 0 L10 0 L10 10");
+    }
+
+    #[test]
+    fn a_path_without_a_fixed_size_still_rounds_in_its_own_bounds() {
+        let path: PathNode = serde_json::from_value(serde_json::json!({
+            "id": "p", "d": "M10 10 L110 10 L110 60", "vertexRadius": 8
+        }))
+        .unwrap();
+        let (view_box, d) = rounded_path(&path, None).expect("rounded outline");
+        assert_eq!(view_box, "0 0 100 50");
+        // The sharp vertex became a curve.
+        assert!(d.contains('C') || d.contains('A'), "{d}");
+        let sized = rounded_path(&path, Some((200.0, 100.0))).expect("sized");
+        assert_eq!(sized.0, "0 0 200 100");
     }
 }

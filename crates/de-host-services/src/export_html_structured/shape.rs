@@ -78,7 +78,8 @@ pub fn open(out: &mut String, n: &SceneNode, rect: Rect, ellipse: bool) {
         write_background(&mut layer, n, rect);
         css::decl(&mut layer, "clip-path", clip);
         let _ = write!(out, r#"<div class="n" style="{layer}"></div>"#);
-        if n.clip_content {
+        // The same predicate `close` reads, so the two never drift.
+        if clip_wrapper(n, ellipse) {
             // The wrapper sits on the box's own origin, so children keep
             // the coordinates they resolve against the box.
             let mut wrapper = String::new();
