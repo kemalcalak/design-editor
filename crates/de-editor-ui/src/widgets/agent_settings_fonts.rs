@@ -136,12 +136,13 @@ pub(crate) fn downloaded_remove_rect(content: Rect, ui: &EditorUiState, row: usi
     remove_rect_in(downloaded_row_rect(content, ui, row), ui)
 }
 
+/// Label size of the Delete buttons on downloaded / imported rows.
+const REMOVE_FONT: f32 = 11.0;
+
 fn remove_rect_in(row: Rect, ui: &EditorUiState) -> Rect {
-    let font_size = 11.0;
     let height = REMOVE_HEIGHT;
     let width =
-        (super::missing_fonts_panel::fit_button_width(translate(ui, "common.delete"), font_size)
-            + 0.0)
+        super::chrome_buttons::fit_button_width(translate(ui, "common.delete"), REMOVE_FONT)
             .max(height);
     Rect::xywh(
         row.origin.x + row.size.x - width,
@@ -331,6 +332,12 @@ pub(super) fn paint_fonts_tab(
     ui: &EditorUiState,
     content: Rect,
 ) {
+    super::chrome_buttons::measure_button_labels(
+        cx.backend,
+        REMOVE_FONT,
+        &[translate(ui, "common.delete")],
+    );
+    super::missing_fonts_row::measure_row_button_labels(cx.backend, ui);
     paint_section_title(
         cx,
         theme,
@@ -427,8 +434,12 @@ fn paint_family_rows(
         let family_font = 13.0;
         let family_w = (remove.origin.x - row_rect.origin.x - 16.0).max(1.0);
         let family = crate::util::ellipsize_to_width(family, family_w, |text| {
-            cx.backend
-                .measure_text_family_styled(text, family_font, "system-ui", 500, false)
+            crate::widgets::text_metrics::measure_chrome_weighted(
+                cx.backend,
+                text,
+                family_font,
+                500,
+            )
         });
         cx.backend.save();
         cx.backend.clip_rect(Rect::xywh(

@@ -1,4 +1,5 @@
 use de_editor_core::{EditorState, NodeId};
+use de_editor_ui::widgets::text_metrics::CHROME_FONT_FAMILY;
 use de_editor_ui::widgets::{LayerPanel, LayerPanelHit, PaintCx, Widget};
 use de_editor_ui::{Color, Point2D, Rect, RenderBackend, TextLayout};
 
@@ -267,14 +268,14 @@ fn assert_longest_measured_ellipsis(
         .next()
         .expect("ellipsized label omits at least one Unicode scalar");
 
-    let rendered_w = backend.measure_text_family(rendered, ROW_FONT, "system-ui");
+    let rendered_w = backend.measure_text_family(rendered, ROW_FONT, CHROME_FONT_FAMILY);
     assert!(
         rendered_w <= available_w + f32::EPSILON,
         "rendered candidate {rendered:?} width {rendered_w} exceeds budget {available_w}"
     );
 
     let next_candidate = format!("{prefix}{next_scalar}…");
-    let next_w = backend.measure_text_family(&next_candidate, ROW_FONT, "system-ui");
+    let next_w = backend.measure_text_family(&next_candidate, ROW_FONT, CHROME_FONT_FAMILY);
     assert!(
         next_w > available_w,
         "rendered candidate is not maximal: next candidate {next_candidate:?} width {next_w} \
@@ -356,7 +357,7 @@ fn hovered_row_reserves_the_action_gutter_without_moving_its_label() {
 
     let mut hovered = hovered;
     let measured_label_right = hovered_label.origin.x
-        + hovered.measure_text_family(&hovered_label.content, ROW_FONT, "system-ui");
+        + hovered.measure_text_family(&hovered_label.content, ROW_FONT, CHROME_FONT_FAMILY);
     let clip_right = rect_right(hovered_clip);
     let backing_left = backing.origin.x;
     assert_longest_measured_ellipsis(
@@ -366,7 +367,7 @@ fn hovered_row_reserves_the_action_gutter_without_moving_its_label() {
         backing_left - hovered_label.origin.x,
     );
     let normal_right = normal_label.origin.x
-        + normal.measure_text_family(&normal_label.content, ROW_FONT, "system-ui");
+        + normal.measure_text_family(&normal_label.content, ROW_FONT, CHROME_FONT_FAMILY);
     assert!(normal_right <= trailing_right + f32::EPSILON);
     assert!(
         close(clip_right, backing_left)
@@ -433,7 +434,7 @@ fn drag_ghost_clips_at_the_trailing_edge() {
         "ghost icon must paint inside the canonical content clip"
     );
     let measured_label_right = ghost_label.origin.x
-        + backend.measure_text_family(&ghost_label.content, ROW_FONT, "system-ui");
+        + backend.measure_text_family(&ghost_label.content, ROW_FONT, CHROME_FONT_FAMILY);
     let clip_right = rect_right(ghost_clip);
     assert!(
         close(clip_right, trailing_edge)

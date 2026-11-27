@@ -15,8 +15,11 @@ use std::rc::Rc;
 
 use crate::theme::Theme;
 use crate::widgets::button::paint_ghost_button_feedback;
-use crate::widgets::design_md_markdown::{parse_blocks, parse_inline, wrap_runs, MdBlock, MdRun};
+use crate::widgets::design_md_markdown::{parse_blocks, parse_inline, MdBlock};
+use crate::widgets::design_md_wrap::{place_runs, wrap_md_runs, PlacedRun};
 use crate::widgets::editor_state_ext::theme_for;
+use crate::widgets::label_widths::LabelWidths;
+use crate::widgets::text_metrics::{self, CHROME_FONT_FAMILY};
 use crate::widgets::{Icon, PaintCx};
 use crate::{Point2D, Rect};
 use de_editor_core::{ButtonPressTarget, DesignMdButton, DesignMdSpec, EditorState, Locale};
@@ -24,7 +27,6 @@ use de_editor_core::{ButtonPressTarget, DesignMdButton, DesignMdSpec, EditorStat
 mod helpers;
 #[cfg(test)]
 pub(crate) use helpers::layout_call_count;
-use helpers::truncate;
 
 /// Panel width in logical px.
 pub const DESIGN_MD_PANEL_W: f32 = 480.0;
@@ -42,8 +44,12 @@ const HEADING_H: f32 = 18.0;
 const COLOR_ROW_H: f32 = 24.0;
 const FOOTER_H: f32 = 22.0;
 const BLOCK_GAP: f32 = 5.0;
-const CHAR_W: f32 = 6.0;
 const BODY_INDENT: f32 = 12.0;
+/// Width body lines wrap to: the panel less its padding and the body
+/// indent, measured in the face the lines are painted in (#451).
+const BODY_W: f32 = DESIGN_MD_PANEL_W - PAD * 2.0 - BODY_INDENT;
+/// Size body and bullet lines are painted at.
+const BODY_SIZE: f32 = 11.0;
 
 /// The 6 design-md sections, in display order. The index doubles as
 /// the `EditorUiState.design_md_panel.expanded` bitmask position.
@@ -93,11 +99,11 @@ pub struct DesignMdPanel<'a> {
 #[derive(Clone)]
 pub(super) enum RenderLine {
     /// A markdown heading — font size + pre-split inline runs.
-    Heading(f32, Vec<MdRun>),
+    Heading(f32, Vec<PlacedRun>),
     /// A paragraph / bullet continuation line.
-    Body(Vec<MdRun>),
+    Body(Vec<PlacedRun>),
     /// A bullet's first line (gets a `•` marker).
-    Bullet(Vec<MdRun>),
+    Bullet(Vec<PlacedRun>),
     /// A colour-palette row — index into `color_palette`.
     Color(usize),
     /// Vertical spacing between blocks.
@@ -272,12 +278,12 @@ impl<'a> DesignMdPanel<'a> {
     }
 
     /// Render section `index`'s body into positioned lines. The
-    /// expensive part (`parse_blocks` + `parse_inline` + `wrap_runs`)
+    /// expensive part (`parse_blocks` + `parse_inline` + `wrap_md_runs`)
     /// is memoized cross-frame in `design_md_line_cache`, keyed on the
     /// section's raw content by value — see that module's docs. Returns
     /// the cache's shared `Rc` directly (a hit is a refcount bump, not a
     /// deep clone of every `RenderLine`).
-    fn section_lines(&self, index: u8) -> Rc<Vec<RenderLine>> {
+    fn section_lines(&self, index: u8, widths: &mut LabelWidths<'_>) -> Rc<Vec<RenderLine>> {
         // The colour section is a swatch list, not markdown — cheap
         // enough (just an index range) that it needs no cache.
         if index == 1 {
@@ -290,8 +296,8 @@ impl<'a> DesignMdPanel<'a> {
         let Some((content, limit)) = self.section_content(index) else {
             return Rc::new(Vec::new());
         };
-        let budget = ((DESIGN_MD_PANEL_W - PAD * 2.0 - BODY_INDENT) / CHAR_W) as usize;
-        super::design_md_line_cache::resolve(index, content, limit, || {
+        let keep = widths.is_measuring();
+        super::design_md_line_cache::resolve(index, content, limit, keep, || {
             let mut lines = Vec::new();
             for (bi, block) in parse_blocks(content, limit).into_iter().enumerate() {
                 if bi > 0 {
@@ -300,15 +306,16 @@ impl<'a> DesignMdPanel<'a> {
                 match block {
                     MdBlock::Heading { level, text } => {
                         let size = if level <= 3 { 12.0 } else { 11.5 };
-                        lines.push(RenderLine::Heading(size, parse_inline(&text)));
+                        let runs = place_runs(widths, parse_inline(&text), size);
+                        lines.push(RenderLine::Heading(size, runs));
                     }
                     MdBlock::Paragraph(text) => {
-                        for wl in wrap_runs(&parse_inline(&text), budget) {
+                        for wl in wrap_md_runs(&parse_inline(&text), BODY_W, BODY_SIZE, widths) {
                             lines.push(RenderLine::Body(wl));
                         }
                     }
                     MdBlock::Bullet(text) => {
-                        let wrapped = wrap_runs(&parse_inline(&text), budget.saturating_sub(2));
+                        let wrapped = wrap_md_runs(&parse_inline(&text), BODY_W, BODY_SIZE, widths);
                         for (i, wl) in wrapped.into_iter().enumerate() {
                             if i == 0 {
                                 lines.push(RenderLine::Bullet(wl));
@@ -328,6 +335,13 @@ impl<'a> DesignMdPanel<'a> {
     /// call this at most once per pass and thread the result into their
     /// other helpers, instead of the pre-fix up-to-3 independent calls.
     fn layout(&self, panel: Rect) -> Vec<SectionLayout> {
+        self.layout_with(panel, &mut LabelWidths::cached())
+    }
+
+    /// [`layout`](Self::layout) through `widths`: paint passes a measuring
+    /// pass (the body wraps at its painted widths and is kept), hit-test and
+    /// the scroll clamp read the kept lines.
+    fn layout_with(&self, panel: Rect, widths: &mut LabelWidths<'_>) -> Vec<SectionLayout> {
         #[cfg(test)]
         helpers::tick_layout_call();
         let left = panel.origin.x + PAD;
@@ -350,7 +364,7 @@ impl<'a> DesignMdPanel<'a> {
             y += SECTION_HEADER_H;
             let body_top = y;
             let lines = if expanded {
-                self.section_lines(index)
+                self.section_lines(index, widths)
             } else {
                 Rc::new(Vec::new())
             };
@@ -525,22 +539,36 @@ impl<'a> DesignMdPanel<'a> {
         let cy = rect.origin.y + rect.size.y / 2.0;
         let heading = self.t("designMd.empty");
         let hint = self.t("designMd.emptyHint");
+        // Centred on the widths they are painted at, not a per-character
+        // guess (#451); the hint wraps where a locale spells it wider than
+        // the panel, each line centred on its own width.
+        let (heading_w, hint_lines) = {
+            let mut widths = LabelWidths::measuring(&mut *cx.backend);
+            let lines = widths.wrap(hint, rect.size.x - PAD * 2.0, 11.0, CHROME_FONT_FAMILY, 400);
+            for line in lines.iter() {
+                widths.chrome(line, 11.0);
+            }
+            (widths.chrome(heading, 13.0), lines)
+        };
         self.text(
             cx,
             heading,
-            cx_mid - heading.chars().count() as f32 * 3.5,
+            cx_mid - heading_w / 2.0,
             cy - 6.0,
             13.0,
             self.theme.foreground,
         );
-        self.text(
-            cx,
-            hint,
-            cx_mid - hint.chars().count() as f32 * 3.0,
-            cy + 14.0,
-            11.0,
-            self.theme.muted_foreground,
-        );
+        for (index, line) in hint_lines.iter().enumerate() {
+            let line_w = LabelWidths::cached().chrome(line, 11.0);
+            self.text(
+                cx,
+                line,
+                cx_mid - line_w / 2.0,
+                cy + 14.0 + index as f32 * 14.0,
+                11.0,
+                self.theme.muted_foreground,
+            );
+        }
         for (_, button, mut icon, button_rect) in Self::empty_action_buttons(rect) {
             if button == DesignMdButton::AutoGenerate && self.generating {
                 icon = Icon::Loader;
@@ -565,12 +593,13 @@ impl<'a> DesignMdPanel<'a> {
     /// scroll clamp, the section walk, and the footer remove-link rect.
     fn paint_content(&self, cx: &mut PaintCx<'_>, rect: Rect) {
         let left = rect.origin.x + PAD;
-        let sections = self.layout(rect);
+        let sections = self.layout_with(rect, &mut LabelWidths::measuring(&mut *cx.backend));
         let scroll = self.effective_scroll(rect, &sections);
         if let Some(name) = self.spec.and_then(|s| s.project_name.as_deref()) {
+            let name = text_metrics::fit_chrome(cx.backend, name, rect.size.x - PAD * 2.0, 13.0);
             self.text(
                 cx,
-                &truncate(name, 56),
+                &name,
                 left,
                 rect.origin.y + HEADER_H + SECTION_GAP + 12.0 - scroll,
                 13.0,

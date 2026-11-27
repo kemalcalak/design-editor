@@ -193,7 +193,12 @@ fn a_very_long_name_is_clamped_to_the_input_block() {
         origin: Point2D::new(0.0, 0.0),
         size: Point2D::new(200.0, 100.0),
     };
-    let natural = chip_width(&receipt.name, receipt.swatches.len(), receipt.clearable);
+    let natural = chip_width(
+        &mut crate::widgets::label_widths::LabelWidths::cached(),
+        &receipt.name,
+        receipt.swatches.len(),
+        receipt.clearable,
+    );
     let chip = crate::widgets::ai_chat_chip_row::chip_row_layout(Some(natural), None, input_rect)
         .style
         .expect("a chip");

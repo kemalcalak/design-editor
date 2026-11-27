@@ -93,7 +93,7 @@ pub fn paint_file_drop_overlay(
     // Label below the icon, horizontally centred.
     let label = TextLayout::single_run(
         label_text,
-        "system-ui",
+        text_metrics::CHROME_FONT_FAMILY,
         14.0,
         (theme.foreground).to_jian(),
         Point2D::new(0.0, 0.0),

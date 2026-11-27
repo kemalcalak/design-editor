@@ -12,12 +12,20 @@ use crate::widgets::ai_chat_panel_footer::{
 use crate::widgets::ai_chat_panel_header::{header_layout, HeaderLayout};
 use crate::widgets::ai_chat_plus_menu::{plus_menu_rect, plus_menu_row_at, plus_menu_row_hit};
 use crate::widgets::ai_chat_session_menu::{session_menu_hit, session_menu_rect};
+use crate::widgets::label_widths::LabelWidths;
 use crate::{Point2D, Rect};
 
 impl<'a> AIChatPlaceholder<'a> {
-    /// The session row's controls for the panel laid out at `rect`.
+    /// The session row's controls for the panel laid out at `rect`, sized
+    /// from the labels paint measured.
     pub(crate) fn header(&self, rect: Rect) -> HeaderLayout {
-        header_layout(rect, self.column_pinned, &self.label_new)
+        self.header_with(rect, &mut LabelWidths::cached())
+    }
+
+    /// [`header`](Self::header) through `widths`: paint passes a measuring
+    /// pass, every hit-test the cached one.
+    pub(crate) fn header_with(&self, rect: Rect, widths: &mut LabelWidths<'_>) -> HeaderLayout {
+        header_layout(rect, self.column_pinned, &self.label_new, widths)
     }
 
     /// The open session list, or `None` when it is closed.

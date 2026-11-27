@@ -10,8 +10,8 @@ use de_editor_core::AssetCenterTab;
 use super::asset_center_style_cards::{user_card_count, StyleGuideCard};
 use super::asset_center_style_layout::{style_grid_layout, StyleGridLayout, StyleGridMetrics};
 use super::panel_control_metrics::CHIP_H;
-use super::prompt_center_panel::estimated_text_width;
-use super::scene_template_panel::{SceneTemplatePanel, CHIP_LABEL_SIZE, HEADER_H, TAB_ROW_H};
+use super::scene_template_panel::{SceneTemplatePanel, HEADER_H, TAB_ROW_H};
+use crate::widgets::label_widths::LabelWidths;
 use crate::{Point2D, Rect};
 
 /// Hover token for the import button.
@@ -23,6 +23,14 @@ pub(super) const SCENE_TEMPLATE_IMPORT_HOVER: usize = usize::MAX - 128;
 /// and the card it sits on are different targets, and sharing a token would
 /// make hovering the ✕ light the whole card as if it were about to be pinned.
 const STYLE_DELETE_HOVER_BASE: usize = usize::MAX - 4096;
+
+/// Size the import button paints its label at.
+pub(super) const IMPORT_LABEL_SIZE: f32 = 12.0;
+/// The import button's `+` glyph, and the gap between it and the label.
+pub(super) const IMPORT_GLYPH: f32 = 12.0;
+pub(super) const IMPORT_GLYPH_GAP: f32 = 6.0;
+/// Space either side of the import button's glyph-and-label group.
+const IMPORT_PAD_X: f32 = 8.0;
 
 /// Side of the square delete button on an imported card.
 pub(super) const STYLE_DELETE_BTN: f32 = 22.0;
@@ -39,6 +47,16 @@ impl SceneTemplatePanel<'_> {
     /// row is already there, its right half is empty, and adding a band would
     /// push the grid down on every tab to serve a control only one tab has.
     pub fn style_import_button_rect(&self, panel: Rect) -> Option<Rect> {
+        self.style_import_button_rect_with(panel, &mut LabelWidths::cached())
+    }
+
+    /// [`style_import_button_rect`](Self::style_import_button_rect) through
+    /// `widths`: sized from the label as paint measured it (#451).
+    pub(super) fn style_import_button_rect_with(
+        &self,
+        panel: Rect,
+        widths: &mut LabelWidths<'_>,
+    ) -> Option<Rect> {
         if self.tab() != AssetCenterTab::Styles {
             return None;
         }
@@ -46,7 +64,10 @@ impl SceneTemplatePanel<'_> {
         // the grid runs to the panel edge, and an action pinned out there
         // would sit a screen's width from the tab row it belongs to.
         let content = Self::control_rect(panel);
-        let width = estimated_text_width(self.style_import_label(), CHIP_LABEL_SIZE) + 34.0;
+        let width = IMPORT_PAD_X * 2.0
+            + IMPORT_GLYPH
+            + IMPORT_GLYPH_GAP
+            + widths.chrome(self.style_import_label(), IMPORT_LABEL_SIZE);
         Some(Rect::xywh(
             content.origin.x + content.size.x - width,
             panel.origin.y + HEADER_H + (TAB_ROW_H - CHIP_H) / 2.0,
