@@ -28,6 +28,10 @@ fn style_ops_state() -> de_editor_core::EditorState {
     if let PenNode::Rectangle(r) = &mut bg {
         r.container.fill = Some(vec![solid_fill("#ffffff")]);
         r.container.stroke = Some(PenStroke {
+            stroke_start: None,
+            stroke_end: None,
+            miter_limit: None,
+            width_profile: None,
             thickness: StrokeThickness::Uniform(2.0),
             align: None,
             join: None,

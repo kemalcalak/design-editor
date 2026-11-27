@@ -61,6 +61,9 @@ fn stroked(id: &str, kind: NodeKind, width: f32, dash: Option<&[f32]>) -> SceneN
         sides: None,
         align: SceneStrokeAlign::Center,
         style: StrokeStyle {
+            miter_limit: None,
+            start: None,
+            end: None,
             cap: dash.map(|_| StrokeCap::Butt),
             join: None,
             dash: dash.and_then(|pattern| StrokeDash::new(pattern, 0.0)),

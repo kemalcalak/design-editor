@@ -188,6 +188,10 @@ fn node_stroke_width_reads_max_sided_edge() {
         panic!("rectangle");
     };
     r.container.stroke = Some(PenStroke {
+        stroke_start: None,
+        stroke_end: None,
+        miter_limit: None,
+        width_profile: None,
         thickness: StrokeThickness::Sided(SidedThickness {
             bottom: Some(3.0),
             ..Default::default()

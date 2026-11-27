@@ -148,6 +148,10 @@ pub fn set_primary_stroke_hex(node: &mut PenNode, hex: &str) -> bool {
         return false;
     };
     let stroke = slot.get_or_insert_with(|| PenStroke {
+        stroke_start: None,
+        stroke_end: None,
+        miter_limit: None,
+        width_profile: None,
         thickness: StrokeThickness::Uniform(1.0),
         align: None,
         join: None,
