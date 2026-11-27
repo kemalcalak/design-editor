@@ -6,9 +6,11 @@
 //!
 //! - `resident`: pages in physical memory right now (RSS / working set).
 //! - `footprint`: what the OS charges the process for — macOS
-//!   `phys_footprint` (Activity Monitor's "Memory"), Windows private bytes
-//!   (Task Manager's "Memory"), Linux RSS. Memory the allocator still holds
-//!   but the OS has compressed or swapped counts here and not in `resident`.
+//!   `phys_footprint` (Activity Monitor's "Memory"), Windows private
+//!   commit (`PagefileUsage`, Task Manager's "Commit size" column; its
+//!   "Memory" column is the private working set, which this does not
+//!   read), Linux RSS. Memory the allocator still holds but the OS has
+//!   compressed or swapped counts here and not in `resident`.
 //!
 //! Both are `None` where the platform call fails or is not wired (wasm).
 
@@ -110,6 +112,8 @@ mod platform {
         }
         ProcessMemory {
             resident: Some(counters.working_set_size as u64),
+            // Private commit: Task Manager's "Commit size", not its
+            // "Memory" column (see the module docs).
             footprint: Some(counters.pagefile_usage as u64),
         }
     }

@@ -112,14 +112,12 @@ fn stats(mut ms: Vec<f64>) -> (f64, f64) {
     (at(0.5), at(0.95))
 }
 
+/// The OS footprint (macOS phys footprint, Windows private commit, Linux
+/// RSS), read like the MCP benchmark so the two tables compare (#456).
 fn footprint_mb() -> f64 {
-    use sysinfo::{Pid, ProcessRefreshKind, System};
-    let mut system = System::new();
-    let pid = Pid::from_u32(std::process::id());
-    system.refresh_process_specifics(pid, ProcessRefreshKind::new().with_memory());
-    system
-        .process(pid)
-        .map_or(0.0, |process| process.memory() as f64 / (1024.0 * 1024.0))
+    de_editor_core::process_memory::current()
+        .headline()
+        .map_or(0.0, |bytes| bytes as f64 / (1024.0 * 1024.0))
 }
 
 /// One script pass; returns the phase timings in ms.
@@ -214,7 +212,7 @@ fn large_doc_session_benchmark() {
     let boards = env_usize("DE_MEM_BOARDS", 100);
     let rows = env_usize("DE_MEM_ROWS", 46);
     let seconds = env_usize("DE_MEM_BENCH_SECS", 0);
-    let rss_start = footprint_mb();
+    let footprint_start = footprint_mb();
     let started = Instant::now();
     let mut host = session_host(pages, boards, rows);
     let mut painter = Painter {
@@ -225,7 +223,7 @@ fn large_doc_session_benchmark() {
     let load_ms = started.elapsed().as_secs_f64() * 1e3;
     let first = painter.paint(&mut host);
     println!(
-        "BENCH session: {pages}×{boards}×{rows} ({} nodes), load {load_ms:.0} ms, first paint {first:.0} ms, RSS {rss_start:.0} → {:.0} MB",
+        "BENCH session: {pages}×{boards}×{rows} ({} nodes), load {load_ms:.0} ms, first paint {first:.0} ms, footprint {footprint_start:.0} → {:.0} MB",
         pages * boards * (2 + rows * 3),
         footprint_mb()
     );
@@ -242,7 +240,7 @@ fn large_doc_session_benchmark() {
         let (undo, undo95) = stats(pass.undo);
         let (switch, switch95) = stats(pass.page_switch);
         println!(
-            "BENCH pass {pass_no} at {:.0} s: pan {pan:.2}/{pan95:.2} ms, zoom {zoom:.2}/{zoom95:.2} ms, edit {edit:.2}/{edit95:.2} ms, undo {undo:.2}/{undo95:.2} ms, page switch {switch:.0}/{switch95:.0} ms, return {:.0} ms (median/p95); RSS {:.0} MB",
+            "BENCH pass {pass_no} at {:.0} s: pan {pan:.2}/{pan95:.2} ms, zoom {zoom:.2}/{zoom95:.2} ms, edit {edit:.2}/{edit95:.2} ms, undo {undo:.2}/{undo95:.2} ms, page switch {switch:.0}/{switch95:.0} ms, return {:.0} ms (median/p95); footprint {:.0} MB",
             started.elapsed().as_secs_f64(),
             pass.page_return,
             footprint_mb()
