@@ -8,10 +8,13 @@ use super::*;
 
 /// `save_target` is the requested call's `filePath`, which a
 /// `save_document` snapshot needs to write its library links relative to.
+/// `narrowed_read`: the call runs on a narrowed live snapshot (#456), so
+/// `execute` renders and exports only when its script writes nothing.
 pub(super) fn rebuild_registry(
-    doc: &EditorState,
+    doc: &SharedState,
     requested_tool: Option<&str>,
     save_target: Option<&str>,
+    narrowed_read: bool,
 ) -> ToolRegistry {
     let mut r = ToolRegistry::default();
 
@@ -53,7 +56,7 @@ pub(super) fn rebuild_registry(
         de_mcp::repair_duplicate_ids_snapshot(doc)
     );
     register_tool!("rename_layers", de_mcp::rename_layers_snapshot(doc));
-    register_tool!("find_nodes", de_mcp::find_nodes_snapshot(doc));
+    register_tool!("find_nodes", de_mcp::find_nodes_shared(doc.clone()));
     register_tool!("save_theme_preset", save_theme_preset_snapshot(doc));
     register_tool!("load_theme_preset", load_theme_preset_snapshot());
     register_tool!("list_theme_presets", list_theme_presets_snapshot());
@@ -99,9 +102,12 @@ pub(super) fn rebuild_registry(
     register_tool!("add_library", add_library_snapshot(doc));
     register_tool!("remove_library", remove_library_snapshot(doc));
     register_tool!("get_component", get_component_snapshot(doc));
-    register_tool!("execute", execute_snapshot(doc));
-    register_tool!("batch_get", batch_get_snapshot(doc));
-    register_tool!("read_nodes", read_nodes_snapshot(doc));
+    register_tool!(
+        "execute",
+        execute_tool::execute_shared(doc.clone(), narrowed_read)
+    );
+    register_tool!("batch_get", de_mcp::batch_get_shared(doc.clone()));
+    register_tool!("read_nodes", de_mcp::read_nodes_shared(doc.clone()));
     register_tool!("codegen_export", codegen_export_snapshot(doc));
     // pen.dev's name for the HTML export (#392); listed with the aliases.
     register_tool!("export_html", de_mcp::export_html_snapshot(doc));
@@ -117,8 +123,14 @@ pub(super) fn rebuild_registry(
         "replace_all_matching_properties",
         replace_all_matching_properties_snapshot(doc)
     );
-    register_tool!("snapshot_layout", snapshot_layout_snapshot(doc));
-    register_tool!("find_empty_space", find_empty_space_snapshot(doc));
+    register_tool!(
+        "snapshot_layout",
+        de_mcp::snapshot_layout_shared(doc.clone())
+    );
+    register_tool!(
+        "find_empty_space",
+        de_mcp::find_empty_space_shared(doc.clone())
+    );
     register_tool!("get_canvas_bounds", get_canvas_bounds_snapshot(doc));
     register_tool!("find_node_by_name", find_node_by_name_snapshot(doc));
     register_tool!("get_node_parent", get_node_parent_snapshot(doc));
@@ -227,7 +239,7 @@ pub(super) fn rebuild_registry(
     register_tool!("replace_node", replace_node_snapshot());
     register_tool!(
         "batch_design",
-        batch_design_snapshot(doc).with_overlap_warnings()
+        de_mcp::batch_design_shared(doc.clone()).with_overlap_warnings()
     );
     register_tool!("get_design_prompt", get_design_prompt_snapshot(doc));
     register_tool!("design_skeleton", design_skeleton_snapshot());

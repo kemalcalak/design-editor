@@ -10,11 +10,12 @@
 //! system allocator hands pages back. The process footprint
 //! (`de_host_services::process_memory`) is printed next to it.
 //!
-//! Each call goes the way a live MCP call goes: the UI side shares the
-//! document (`request_snapshot::shared_snapshot`, anchored on the previous
-//! capture like the pump), the connection side materializes its state
-//! (`SharedRequestSnapshot::into_state`) and dispatches the tool
-//! (`mcp_serve::process_message_with_write_applier`).
+//! Each call goes the way a live MCP call goes: the UI side shares what the
+//! call reads (`de_mcp::snapshot_pages` → `request_snapshot_pages::PageAnchor`,
+//! anchored on the previous capture: the type the pump's `SnapshotAnchor`
+//! wraps), the connection side
+//! materializes its state (`SharedRequestSnapshot::into_state`) and
+//! dispatches the tool (`mcp_serve::process_message_with_write_applier`).
 //!
 //! The fixture follows #412 (14 pages × 100 boards × 46 rows, ~195k nodes)
 //! plus what a real file has: a component page whose master every board
@@ -23,8 +24,7 @@
 
 mod support;
 
-use de_editor_core::history_snapshot::SharedDoc;
-use de_editor_core::request_snapshot::shared_snapshot;
+use de_editor_core::request_snapshot_pages::{PageAnchor, PageNeeds};
 use de_editor_core::EditorState;
 use std::time::{Duration, Instant};
 use support::counting_alloc::{self, Counting};
@@ -118,18 +118,15 @@ struct Sample {
 }
 
 /// One live call: UI-side capture, connection-side copy, dispatch. A write
-/// is applied to the live state too, as the UI thread would.
-fn live_call(
-    live: &mut EditorState,
-    anchor: &mut Option<SharedDoc>,
-    id: usize,
-    call: &Call,
-) -> Sample {
+/// is applied to the live state too, as the UI thread would. The capture
+/// is core's `PageAnchor`, the same type the live pump's `SnapshotAnchor`
+/// wraps (it only adds the idle timeout and the abandoned-request check).
+fn live_call(live: &mut EditorState, anchor: &mut PageAnchor, id: usize, call: &Call) -> Sample {
     let line = request_line(id, call);
     let before = counting_alloc::reset_peak();
     let started = Instant::now();
-    let snapshot = shared_snapshot(live, anchor.as_ref());
-    *anchor = Some(snapshot.shared_doc().clone());
+    let pages = de_mcp::snapshot_pages::for_request(&line);
+    let snapshot = anchor.capture(live, &pages);
     let mut state = snapshot.into_state();
     let response = de_host_services::mcp_serve::process_message_with_write_applier(
         &mut state,
@@ -184,7 +181,18 @@ fn live_mcp_call_memory_and_latency() {
         footprint_mb()
     );
 
-    let mut anchor: Option<SharedDoc> = None;
+    // What every call adds before its tool runs: the request state moved
+    // into a shared handle and back (`SharedState::take_from`).
+    let started = Instant::now();
+    for _ in 0..100 {
+        de_editor_core::shared_state::SharedState::take_from(&mut live).restore_into(&mut live);
+    }
+    println!(
+        "shared handle take + restore: {:.1} µs",
+        started.elapsed().as_secs_f64() * 1e6 / 100.0
+    );
+
+    let mut anchor = PageAnchor::default();
     // The first capture has no anchor and no history to share with: a
     // whole-document read, so every run starts from the same warm process.
     let first = live_call(
@@ -255,6 +263,34 @@ fn live_mcp_call_memory_and_latency() {
             100.0 * median(peaks) / doc_heap.max(1) as f64
         );
     }
+    // A read right after a write: the document revision moved, so a
+    // one-page read walks the document once for its page needs
+    // (`PageNeeds::of`) before it captures. Document-level reads
+    // (`get_history_depth`, `get_variables`) never walk it.
+    let mut times = Vec::new();
+    let mut needs_ms = Vec::new();
+    let read = Call {
+        tool: "snapshot_layout",
+        args: r#"{"maxDepth":1}"#.into(),
+    };
+    for i in 0..calls_per_tool {
+        let write = live_call(&mut live, &mut anchor, id, &write_call(&fixture, i + 1000));
+        id += 1;
+        assert!(write.ok, "the write applies");
+        let started = Instant::now();
+        let _ = PageNeeds::of(&live);
+        needs_ms.push(started.elapsed().as_secs_f64() * 1e3);
+        let sample = live_call(&mut live, &mut anchor, id, &read);
+        id += 1;
+        assert!(sample.ok, "the read answers");
+        times.push(sample.took.as_secs_f64() * 1e3);
+    }
+    println!(
+        "{:<34} {:>9.1}   (page needs walk {:.1} ms of it)",
+        "snapshot_layout after a write",
+        median(times),
+        median(needs_ms)
+    );
     println!(
         "editor heap at the end {:.0} MB (history {} steps); process {}",
         mb(counting_alloc::live().saturating_sub(heap_start) as f64),

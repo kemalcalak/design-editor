@@ -71,11 +71,26 @@ impl SharedDoc {
     /// adjacent history state (see [`crate::state::EditorState::snapshot_for_history_with_anchor`]);
     /// `None` produces all-fresh `Arc`s.
     pub fn capture(doc: &PenDocument, anchor: Option<&SharedDoc>) -> SharedDoc {
+        Self::capture_kept(doc, anchor, None)
+    }
+
+    /// [`capture`](Self::capture) of the pages `keep` marks only (`None`:
+    /// every page); the others keep their metadata in the skeleton and
+    /// carry no nodes.
+    fn capture_kept(
+        doc: &PenDocument,
+        anchor: Option<&SharedDoc>,
+        keep: Option<&[bool]>,
+    ) -> SharedDoc {
         let root_children =
             share_children(&doc.children, anchor.map(|a| a.root_children.as_slice()));
         let mut page_children = Vec::new();
         if let Some(pages) = doc.pages.as_ref() {
             for (i, page) in pages.iter().enumerate() {
+                if !page_kept(keep, i) {
+                    page_children.push(Vec::new());
+                    continue;
+                }
                 let prev = anchor
                     .and_then(|a| a.page_children.get(i))
                     .map(|v| v.as_slice());
@@ -100,6 +115,27 @@ impl SharedDoc {
     /// same `SharedDoc` with the same reuse decisions. Without an anchor, or on a
     /// single core / wasm, it is `capture`.
     pub fn capture_parallel(doc: &PenDocument, anchor: Option<&SharedDoc>) -> SharedDoc {
+        Self::capture_parallel_kept(doc, anchor, None)
+    }
+
+    /// [`capture_parallel`](Self::capture_parallel) of the pages whose
+    /// `keep` entry is `true` (#456): a request that reads one page shares
+    /// that page and leaves the others out, so neither the compare pass on
+    /// the UI thread nor the consumer's copy walks them. An index past
+    /// `keep` is left out too. The single-page root list is always kept.
+    pub fn capture_parallel_pages(
+        doc: &PenDocument,
+        anchor: Option<&SharedDoc>,
+        keep: &[bool],
+    ) -> SharedDoc {
+        Self::capture_parallel_kept(doc, anchor, Some(keep))
+    }
+
+    fn capture_parallel_kept(
+        doc: &PenDocument,
+        anchor: Option<&SharedDoc>,
+        keep: Option<&[bool]>,
+    ) -> SharedDoc {
         #[cfg(not(target_arch = "wasm32"))]
         if let Some(anchor) = anchor {
             let workers = std::thread::available_parallelism().map_or(1, |n| n.get());
@@ -112,10 +148,10 @@ impl SharedDoc {
                     .map(|p| p.children.len())
                     .sum::<usize>();
             if workers > 1 && roots > 1 {
-                return capture_on_workers(doc, anchor, workers.min(MAX_CAPTURE_WORKERS));
+                return capture_on_workers(doc, anchor, workers.min(MAX_CAPTURE_WORKERS), keep);
             }
         }
-        Self::capture(doc, anchor)
+        Self::capture_kept(doc, anchor, keep)
     }
 
     /// Rebuild an owned [`PenDocument`] — deep-clones every shared node
@@ -134,6 +170,32 @@ impl SharedDoc {
             }
         }
         doc
+    }
+
+    /// `self` with the pages `keep` marks taken from `newer` (and `newer`'s
+    /// skeleton and root list): the anchor a partial capture leaves behind
+    /// (#456), so the next capture of any page still finds what it can
+    /// share. Pages `self` has that `newer` left out keep `self`'s nodes;
+    /// reuse is always gated by deep equality, so an older entry only costs
+    /// a compare.
+    pub fn merged_pages(&self, newer: &SharedDoc, keep: &[bool]) -> SharedDoc {
+        let page_children = newer
+            .page_children
+            .iter()
+            .enumerate()
+            .map(|(index, nodes)| {
+                if page_kept(Some(keep), index) {
+                    nodes.clone()
+                } else {
+                    self.page_children.get(index).cloned().unwrap_or_default()
+                }
+            })
+            .collect();
+        SharedDoc {
+            skeleton: newer.skeleton.clone(),
+            root_children: newer.root_children.clone(),
+            page_children,
+        }
     }
 
     /// The document with every node-children vector emptied.
@@ -302,6 +364,11 @@ impl Serialize for SharedPage<'_> {
     }
 }
 
+/// Whether page `index` is captured under `keep` (`None`: every page).
+fn page_kept(keep: Option<&[bool]>, index: usize) -> bool {
+    keep.is_none_or(|keep| keep.get(index).copied().unwrap_or(false))
+}
+
 /// Component prototypes stored in a snapshot, shared by `Arc`.
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct SharedComponents {
@@ -398,6 +465,7 @@ pub(crate) fn capture_on_workers(
     doc: &PenDocument,
     anchor: &SharedDoc,
     workers: usize,
+    keep: Option<&[bool]>,
 ) -> SharedDoc {
     use std::sync::atomic::{AtomicUsize, Ordering};
     use std::sync::OnceLock;
@@ -406,6 +474,10 @@ pub(crate) fn capture_on_workers(
     let mut lists: Vec<(&[PenNode], &[Arc<PenNode>])> =
         vec![(doc.children.as_slice(), anchor.root_children.as_slice())];
     for (i, page) in doc.pages.iter().flatten().enumerate() {
+        if !page_kept(keep, i) {
+            lists.push((&[], &[]));
+            continue;
+        }
         let prev = anchor.page_children.get(i).map_or(&[][..], Vec::as_slice);
         lists.push((page.children.as_slice(), prev));
     }

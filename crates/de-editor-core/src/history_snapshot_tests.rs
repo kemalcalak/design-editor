@@ -561,7 +561,7 @@ fn parallel_capture_shares_exactly_what_capture_shares() {
         edit_doc(&mut doc, next_rand(&mut seed));
         let serial = SharedDoc::capture(&doc, Some(&anchor));
         // The worker path itself, so a single-core runner still tests it.
-        let parallel = crate::history_snapshot::capture_on_workers(&doc, &anchor, 4);
+        let parallel = crate::history_snapshot::capture_on_workers(&doc, &anchor, 4, None);
         assert_eq!(parallel, serial);
         assert_eq!(parallel.materialize(), doc);
         // Same reuse decisions: a slot reuses an anchor `Arc` in one

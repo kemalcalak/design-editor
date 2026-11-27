@@ -11,8 +11,9 @@
 use std::collections::{BTreeMap, HashMap};
 use std::rc::Rc;
 
+use de_editor_core::shared_state::SharedState;
 use de_editor_core::walkers::find_parent_and_index;
-use de_editor_core::{EditorState, NodeId, PenNodeExt};
+use de_editor_core::{NodeId, PenNodeExt};
 use jian_ops_schema::variable::{VariableDefinition, VariableValue};
 use serde_json::{json, Value};
 
@@ -48,13 +49,13 @@ type LayoutCache = HashMap<LayoutScope, Rc<LayoutIndex>>;
 
 /// A screenshot to render once the script has succeeded.
 pub(crate) struct PendingShot {
-    pub(crate) state: Rc<EditorState>,
+    pub(crate) state: SharedState,
     /// `None` = the whole active page (`"document"`).
     pub(crate) node_id: Option<String>,
 }
 
 pub(crate) struct PendingExport {
-    pub(crate) state: Rc<EditorState>,
+    pub(crate) state: SharedState,
     pub(crate) request: ExportRequest,
 }
 
@@ -79,14 +80,15 @@ pub(crate) struct ExecSession {
     /// Layouts of the sim at one document revision, dropped after writes.
     layout: Option<(u64, LayoutCache)>,
     /// A copy of the sim shared by screenshots taken with no write between.
-    frozen: Option<(u64, Rc<EditorState>)>,
+    frozen: Option<(u64, SharedState)>,
 }
 
 impl ExecSession {
-    /// A session simulating on `snapshot` itself (moved in, not copied).
-    pub(crate) fn new(snapshot: EditorState, page_id: Option<String>, can_render: bool) -> Self {
+    /// A session simulating on `snapshot` itself (shared, copied on the
+    /// first write).
+    pub(crate) fn new(snapshot: SharedState, page_id: Option<String>, can_render: bool) -> Self {
         Self {
-            ctx: ProgramCtx::from_owned(snapshot, page_id),
+            ctx: ProgramCtx::from_shared(snapshot, page_id),
             seq: 0,
             writes: 0,
             failed_write: None,
@@ -514,15 +516,16 @@ impl ExecSession {
         self.printed.push(line.to_string());
     }
 
-    /// A shared copy of the sim as it is now (for deferred rendering).
-    fn frozen_state(&mut self) -> Rc<EditorState> {
+    /// The sim as it is now, shared (for deferred rendering): a later write
+    /// copies the sim, not this.
+    fn frozen_state(&mut self) -> SharedState {
         let revision = self.ctx.sim.document_revision();
         if let Some((at, state)) = &self.frozen {
             if *at == revision {
                 return state.clone();
             }
         }
-        let state = Rc::new(self.ctx.sim.clone());
+        let state = self.ctx.sim.clone();
         self.frozen = Some((revision, state.clone()));
         state
     }
