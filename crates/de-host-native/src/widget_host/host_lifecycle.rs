@@ -177,17 +177,23 @@ impl WidgetHostNative {
 
     /// Push the host's current shift-key state. Runners call this
     /// on every modifier-change event so `apply_press` can branch
-    /// on shift+click semantics.
-    pub fn set_modifier_shift(&mut self, held: bool) {
+    /// on shift+click semantics. Returns whether that needs a repaint:
+    /// a shape being drawn squares up or lets go at once (#389).
+    pub fn set_modifier_shift(&mut self, held: bool) -> bool {
+        let changed = self.shift_held != held;
         self.shift_held = held;
+        changed && self.refresh_create_drag()
     }
 
     /// Alt / Option also shows every hotspot in Preview (#371) and, with
     /// a selection, the hover measurements (#399); returns whether that
     /// needs a repaint.
     pub fn set_modifier_alt(&mut self, held: bool) -> bool {
+        let alt_changed = self.alt_held != held;
         self.alt_held = held;
-        let mut changed = self
+        // A shape being drawn grows from its centre or its corner (#389).
+        let mut changed = alt_changed && self.refresh_create_drag();
+        changed |= self
             .preview
             .as_mut()
             .is_some_and(|preview| preview.set_show_hotspots(held));

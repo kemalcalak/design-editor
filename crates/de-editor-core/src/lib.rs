@@ -79,6 +79,7 @@ pub mod document_images;
 pub mod document_install;
 pub mod document_version;
 pub mod drag_mutators;
+pub mod draw_constraints;
 pub mod editor_toast;
 pub mod grid_geometry;
 pub mod home_mcp_setup;

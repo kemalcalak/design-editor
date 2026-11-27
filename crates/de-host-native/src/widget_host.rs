@@ -78,6 +78,9 @@ mod codegen_framework_tests;
 mod color_picker_press;
 mod command_palette_dispatch;
 mod component_browser_press;
+mod create_drag;
+#[cfg(test)]
+mod create_drag_tests;
 mod cursor_hint;
 mod cursor_move_chrome;
 mod cursor_move_ctx;
@@ -733,6 +736,9 @@ pub(in crate::widget_host) struct RotateDragState {
 pub(in crate::widget_host) struct CreateDragState {
     pub(in crate::widget_host) start_doc_x: f32,
     pub(in crate::widget_host) start_doc_y: f32,
+    /// The last cursor point, so a Shift / Alt change mid-drag redraws
+    /// the shape without a pointer move (#389).
+    pub(in crate::widget_host) cursor_doc: Option<de_editor_ui::Point2D>,
 }
 
 /// Ellipse arc-handle drag — tracks which arc handle of which
