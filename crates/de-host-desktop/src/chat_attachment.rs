@@ -201,9 +201,10 @@ fn file_url_path(text: &str, windows: bool) -> Option<PathBuf> {
             decoded.remove(0);
         }
     }
+    // Rooted by construction (`rest` starts with `/`); the host's own path
+    // rules must not decide it, or a Unix-style URL is refused on Windows.
     let path = PathBuf::from(decoded);
-    let absolute = path.is_absolute() || windows;
-    (absolute && is_attachable(&path)).then_some(path)
+    is_attachable(&path).then_some(path)
 }
 
 fn percent_decode(text: &str) -> Option<String> {
