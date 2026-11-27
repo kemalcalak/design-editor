@@ -115,6 +115,7 @@ pub fn pen_document_to_layout_scene_with_geometry_mode(
                     .iter()
                     .map(|n| node_payload_to_scene(n, &var_table, 1.0))
                     .collect(),
+                image_thumbs: Default::default(),
             })
             .collect(),
         active_page_index: active_page_index.min(payload.pages.len().saturating_sub(1)),
@@ -160,6 +161,7 @@ pub fn pen_document_to_layout_scene_for_preview(
                     .iter()
                     .map(|n| node_payload_to_scene(n, &var_table, 1.0))
                     .collect(),
+                image_thumbs: Default::default(),
             })
             .collect(),
         active_page_index: active_page_index.min(payload.pages.len().saturating_sub(1)),

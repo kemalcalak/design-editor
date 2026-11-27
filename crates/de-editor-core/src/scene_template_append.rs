@@ -355,10 +355,10 @@ impl EditorState {
         for (name, definition) in variables {
             table.entry(name).or_insert(definition);
         }
+        // Into this document's own table (#469): a template adopted on an
+        // MCP call for another file must not reach the canvas document.
         for (paint_id, jpeg_bytes) in image_thumbnails {
-            if jian_ops_schema::image_thumbs::thumb_for(paint_id).is_none() {
-                jian_ops_schema::image_thumbs::store_thumb(paint_id, jpeg_bytes);
-            }
+            self.image_thumbs.store_if_absent(paint_id, jpeg_bytes);
         }
 
         self.history_push_past(snapshot);

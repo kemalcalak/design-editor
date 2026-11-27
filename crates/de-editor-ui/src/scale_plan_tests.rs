@@ -27,6 +27,7 @@ fn fixture() -> (EditorState, LayoutScene) {
             id: "p1".into(),
             name: "Page 1".into(),
             children: vec![frame, rect],
+            image_thumbs: Default::default(),
         }],
         active_page_index: 0,
     };

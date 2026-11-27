@@ -245,7 +245,11 @@ fn convert_prepared(
     if cancellation.is_cancelled() {
         return Err(FigmaImportError::Cancelled);
     }
-    bind_import_thumbnails(&state.doc, &mut pending_thumbs.borrow_mut());
+    bind_import_thumbnails(
+        &state.doc,
+        &state.image_thumbs,
+        &mut pending_thumbs.borrow_mut(),
+    );
     state.editor_ui.preserve_authored_geometry = true;
     Ok(PreparedImport {
         state,

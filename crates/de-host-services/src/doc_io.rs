@@ -80,8 +80,11 @@ pub use load_report::{DocumentLoadReport, LoadedEditorState};
 /// Editor metadata is embedded under the top-level `editorMeta` extension so
 /// the active page and Preserve-import geometry mode survive the round-trip
 /// without a separate sidecar.
+///
+/// The thumbnails written are `state`'s own (#469), whatever document the
+/// editor shows meanwhile.
 pub fn save_to_path(state: &EditorState, path: &std::path::Path) -> Result<(), DocIoError> {
-    let thumbnails = jian_ops_schema::image_thumbs::capture_snapshot();
+    let thumbnails = state.image_thumbs.snapshot();
     save_document_with_thumbnails_to_path(
         &state.doc,
         de_pen_loader::EditorMeta::for_document(state, path),
@@ -99,7 +102,7 @@ pub fn save_single_file_to_path(
     path: &std::path::Path,
 ) -> Result<(), DocIoError> {
     pen_dev::refuse_overwrite(path)?;
-    let thumbnails = jian_ops_schema::image_thumbs::capture_snapshot();
+    let thumbnails = state.image_thumbs.snapshot();
     let mut source = Vec::new();
     canonical_save::write_serializable_document_with_thumbnails(
         &mut source,
@@ -108,30 +111,6 @@ pub fn save_single_file_to_path(
         &thumbnails,
     )?;
     write_document_bytes(&source, path)
-}
-
-/// Save a borrowed canonical document without first cloning it. Synchronous
-/// callers use this path; background desktop jobs should capture a
-/// [`CanonicalSaveSnapshot`] on the UI thread and call
-/// [`save_snapshot_to_path`] in their worker instead.
-pub fn save_document_to_path(
-    document: &jian_ops_schema::PenDocument,
-    active_page_index: usize,
-    path: &std::path::Path,
-) -> Result<(), DocIoError> {
-    let thumbnails = jian_ops_schema::image_thumbs::capture_snapshot();
-    // This document-only compatibility entry point predates the authored-
-    // geometry latch. Without an EditorState there is no truthful value to
-    // capture, so every other metadata field retains its legacy default.
-    save_document_with_thumbnails_to_path(
-        document,
-        de_pen_loader::EditorMeta {
-            active_page_index,
-            ..de_pen_loader::EditorMeta::default()
-        },
-        &thumbnails,
-        path,
-    )
 }
 
 /// Save a self-contained snapshot captured for a background job.

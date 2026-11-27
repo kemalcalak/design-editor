@@ -251,3 +251,16 @@ pub fn chat_usage(state: &EditorState) -> CacheUsage {
 #[cfg(test)]
 #[path = "memory_report_tests.rs"]
 mod tests;
+
+/// The document's encoded blur-up thumbnails (#469): at most 4 KiB each,
+/// owned by the document and dropped with it. Exact encoded bytes; one lock,
+/// no document walk, so the UI-thread cache report may build it.
+pub fn image_thumbs_usage(state: &EditorState) -> CacheUsage {
+    let (entries, bytes) = state.image_thumbs.usage();
+    CacheUsage::exact(
+        "image_thumbnails_encoded",
+        bytes as u64,
+        entries as u64,
+        None,
+    )
+}

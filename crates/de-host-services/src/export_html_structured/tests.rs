@@ -34,6 +34,7 @@ fn page_with(board: SceneNode) -> ScenePage {
         id: "p1".into(),
         name: "Page 1".into(),
         children: vec![board],
+        image_thumbs: Default::default(),
     }
 }
 

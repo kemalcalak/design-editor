@@ -514,6 +514,7 @@ mod tests {
             id: "p".into(),
             name: "P".into(),
             children: vec![root],
+            image_thumbs: Default::default(),
         }
     }
 
@@ -599,6 +600,7 @@ mod tests {
             id: "p".into(),
             name: "P".into(),
             children: vec![root],
+            image_thumbs: Default::default(),
         };
         let mut faded_page = steady_page.clone();
 

@@ -28,6 +28,7 @@ fn single_selected_canvas_paint_reuses_paint_traversal_lookup() {
             id: "p".into(),
             name: "p".into(),
             children: vec![node],
+            image_thumbs: Default::default(),
         }],
         active_page_index: 0,
     };
@@ -82,6 +83,7 @@ fn pen_preview_canvas_paint_reuses_paint_traversal_lookup() {
             id: "p".into(),
             name: "p".into(),
             children: vec![node],
+            image_thumbs: Default::default(),
         }],
         active_page_index: 0,
     };
@@ -135,6 +137,7 @@ fn frame_label_paint_matches_roots_linearly() {
             id: "p".into(),
             name: "p".into(),
             children: roots,
+            image_thumbs: Default::default(),
         }],
         active_page_index: 0,
     };
@@ -175,6 +178,7 @@ fn multi_selection_overlay_finds_nodes_linearly() {
             id: "p".into(),
             name: "p".into(),
             children: roots,
+            image_thumbs: Default::default(),
         }],
         active_page_index: 0,
     };
@@ -217,6 +221,7 @@ fn hover_outline_does_not_deep_search_after_scene_paint() {
             id: "p".into(),
             name: "p".into(),
             children: vec![node],
+            image_thumbs: Default::default(),
         }],
         active_page_index: 0,
     };

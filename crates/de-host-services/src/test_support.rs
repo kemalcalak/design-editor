@@ -59,10 +59,3 @@ pub(crate) fn write_executable_stub(path: &std::path::Path, body: &str) {
         path.display()
     );
 }
-
-/// Serializes this crate's tests that publish or read the process-wide
-/// `jian_ops_schema::image_thumbs` registry (every document open does).
-pub(crate) fn lock_thumbnail_registry() -> std::sync::MutexGuard<'static, ()> {
-    static LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
-    LOCK.lock().unwrap_or_else(|poisoned| poisoned.into_inner())
-}

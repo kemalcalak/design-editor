@@ -138,6 +138,11 @@ pub struct EditorState {
     /// last run went (#19). Runtime only; a document replace moves the
     /// generation, which forces a fresh scan.
     pub script_regen: crate::script_regen::ScriptRegenState,
+    /// This document's blur-up image thumbnails (#469): seeded by its load,
+    /// written by its saves and decode workers, never shared with another
+    /// document. Clones share the table (one document); the host makes it
+    /// the paint-active table (`image_thumbs::set_active`).
+    pub image_thumbs: jian_ops_schema::image_thumbs::ImageThumbs,
 }
 
 impl EditorState {
@@ -148,7 +153,8 @@ impl EditorState {
     /// Select tool, the identity viewport and page 0 active.
     pub fn from_document(doc: jian_ops_schema::PenDocument) -> Self {
         let components = ComponentLibrary::from_document(&doc);
-        jian_ops_schema::image_thumbs::activate_for_document(&doc);
+        let image_thumbs =
+            jian_ops_schema::image_thumbs::ImageThumbs::take_for_document(&doc).unwrap_or_default();
         Self {
             doc,
             selection: SelectionState::empty(),
@@ -172,6 +178,7 @@ impl EditorState {
             app_state_owner: std::collections::BTreeMap::new(),
             instance_write_virtual_anchor: None,
             script_regen: Default::default(),
+            image_thumbs,
         }
     }
 
@@ -203,6 +210,7 @@ impl EditorState {
             app_state_owner: std::collections::BTreeMap::new(),
             instance_write_virtual_anchor: None,
             script_regen: Default::default(),
+            image_thumbs: Default::default(),
         }
     }
 
@@ -239,8 +247,8 @@ impl EditorState {
     /// cleared via [`EditorUiState::clear_document_derived`].
     pub fn replace_document(&mut self, doc: jian_ops_schema::PenDocument) {
         self.components = ComponentLibrary::from_document(&doc);
+        self.adopt_thumbnails_of(&doc, false);
         let old_doc = std::mem::replace(&mut self.doc, doc);
-        jian_ops_schema::image_thumbs::activate_for_document(&self.doc);
         self.selection = SelectionState::empty();
         self.history = History::new();
         self.revision = 0;
@@ -273,8 +281,8 @@ impl EditorState {
     pub fn replace_document_with_undo(&mut self, doc: jian_ops_schema::PenDocument) {
         let snap = self.snapshot_for_history();
         self.components = ComponentLibrary::from_document(&doc);
+        self.adopt_thumbnails_of(&doc, true);
         let old_doc = std::mem::replace(&mut self.doc, doc);
-        jian_ops_schema::image_thumbs::activate_for_document(&self.doc);
         self.selection = SelectionState::empty();
         self.history_push_past(snap);
         self.document_generation = self.document_generation.saturating_add(1);
@@ -287,6 +295,24 @@ impl EditorState {
         self.decline_all_agent_permissions();
         self.sync_dirty_flag();
         drop_document_after_replace(old_doc);
+    }
+
+    /// A replacement parsed with an `imageThumbs` table brings its own
+    /// table (a fresh one, so request snapshots still sharing the old table
+    /// keep it); one parsed without keeps the current table, whose entries
+    /// still describe the same image sources. When the replacement can be
+    /// undone (`keep_current`), the fresh table also keeps the current
+    /// entries: an undo brings the old document back without its table, and
+    /// its next save must still write its thumbnails (saves only write the
+    /// entries the saved document references).
+    fn adopt_thumbnails_of(&mut self, doc: &jian_ops_schema::PenDocument, keep_current: bool) {
+        if let Some(thumbs) = jian_ops_schema::image_thumbs::ImageThumbs::take_for_document(doc) {
+            self.image_thumbs = if keep_current {
+                self.image_thumbs.merged_with(&thumbs)
+            } else {
+                thumbs
+            };
+        }
     }
 
     /// Revision of the live document-content state.
@@ -424,15 +450,9 @@ fn empty_document() -> jian_ops_schema::PenDocument {
     }
 }
 
-/// Serializes this crate's tests that publish or read the process-wide
-/// `image_thumbs` registry.
 #[cfg(test)]
-pub(crate) fn lock_thumbnail_registry() -> std::sync::MutexGuard<'static, ()> {
-    static THUMB_TEST_LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
-    THUMB_TEST_LOCK
-        .lock()
-        .unwrap_or_else(|poisoned| poisoned.into_inner())
-}
+#[path = "state_thumbs_tests.rs"]
+mod thumbs_tests;
 
 #[cfg(test)]
 mod tests {
@@ -463,61 +483,6 @@ mod tests {
         // Transient editor state always starts fresh.
         assert!(s.selection.is_empty());
         assert_eq!(s.tool, Tool::Select);
-    }
-
-    #[test]
-    fn document_transitions_activate_present_thumbnail_seeds_only() {
-        let _guard = lock_thumbnail_registry();
-        let old_id = 9_100_001;
-        let from_id = 9_100_002;
-        let replace_id = 9_100_003;
-        let undo_id = 9_100_004;
-        jian_ops_schema::image_thumbs::clear_registry();
-        jian_ops_schema::image_thumbs::store_thumb(old_id, vec![1, 2, 3]);
-
-        let loaded = jian_ops_schema::load_str(&format!(
-            r#"{{"version":"0.8.0","imageThumbs":{{"{from_id}":"/9j/2Q=="}},"children":[]}}"#
-        ))
-        .expect("document with pending thumbnail seed");
-        assert!(jian_ops_schema::image_thumbs::thumb_for(from_id).is_none());
-        assert!(jian_ops_schema::image_thumbs::thumb_for(old_id).is_some());
-
-        let mut state = EditorState::from_document(loaded.value);
-        assert!(jian_ops_schema::image_thumbs::thumb_for(old_id).is_none());
-        assert!(jian_ops_schema::image_thumbs::thumb_for(from_id).is_some());
-
-        let replacement = jian_ops_schema::load_str(&format!(
-            r#"{{"version":"0.8.0","imageThumbs":{{"{replace_id}":"/9j/2Q=="}},"children":[]}}"#
-        ))
-        .expect("plain replacement seed");
-        state.replace_document(replacement.value);
-        assert!(jian_ops_schema::image_thumbs::thumb_for(from_id).is_none());
-        assert!(jian_ops_schema::image_thumbs::thumb_for(replace_id).is_some());
-
-        let undoable = jian_ops_schema::load_str(&format!(
-            r#"{{"version":"0.8.0","imageThumbs":{{"{undo_id}":"/9j/2Q=="}},"children":[]}}"#
-        ))
-        .expect("undoable replacement seed");
-        state.replace_document_with_undo(undoable.value);
-        assert!(jian_ops_schema::image_thumbs::thumb_for(replace_id).is_none());
-        assert!(jian_ops_schema::image_thumbs::thumb_for(undo_id).is_some());
-    }
-
-    #[test]
-    fn absent_temporary_documents_do_not_clear_active_thumbnails() {
-        let _guard = lock_thumbnail_registry();
-        let active_id = 9_100_005;
-        jian_ops_schema::image_thumbs::clear_registry();
-        jian_ops_schema::image_thumbs::store_thumb(active_id, vec![1, 2, 3]);
-
-        let parsed = jian_ops_schema::load_str(r#"{"version":"0.8.0","children":[]}"#)
-            .expect("temporary inline document");
-        assert!(jian_ops_schema::image_thumbs::thumb_for(active_id).is_some());
-        let _temporary_state = EditorState::from_document(parsed.value);
-        assert!(
-            jian_ops_schema::image_thumbs::thumb_for(active_id).is_some(),
-            "an absent seed is a strict no-op even at a state transition"
-        );
     }
 
     #[test]

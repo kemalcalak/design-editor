@@ -193,6 +193,7 @@ impl PreviewSession {
                 id: String::new(),
                 name: String::new(),
                 children: self.overlay_scene_nodes(viewport, now_ms),
+                image_thumbs: Default::default(),
             },
         ))
     }
@@ -215,6 +216,7 @@ fn translated(node: &SceneNode, dx: f32, dy: f32) -> SceneNode {
             id: String::new(),
             name: String::new(),
             children: vec![node.clone()],
+            image_thumbs: Default::default(),
         }],
         active_page_index: 0,
     };

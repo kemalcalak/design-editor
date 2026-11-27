@@ -34,6 +34,7 @@ fn svg(n: SceneNode) -> String {
             id: "p1".into(),
             name: "Page 1".into(),
             children: vec![n],
+            image_thumbs: Default::default(),
         }],
         active_page_index: 0,
     };

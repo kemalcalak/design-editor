@@ -28,6 +28,8 @@ pub struct CapturePreview {
     active_theme: BTreeMap<String, String>,
     active_page_index: usize,
     preserve_authored_geometry: bool,
+    /// The document's thumbnail table: the capture paints with it (#469).
+    image_thumbs: jian_ops_schema::image_thumbs::ImageThumbs,
 }
 
 impl McpTool for CapturePreview {
@@ -124,7 +126,9 @@ impl CapturePreview {
             })?,
         };
         let bytes = crate::export::with_capture_time_ms(clock_ms as f64, || {
-            render_node_on_page_raster_bytes(page, &node_id, RasterFormat::Png, 1.0)
+            jian_ops_schema::image_thumbs::with_thread_table(&self.image_thumbs, || {
+                render_node_on_page_raster_bytes(page, &node_id, RasterFormat::Png, 1.0)
+            })
         })
         .map_err(|error| (ToolErrorCode::ToolFailed, error.to_string()))?;
         let image_base64 = base64::engine::general_purpose::STANDARD.encode(&bytes);
@@ -222,6 +226,7 @@ pub fn capture_preview_snapshot(state: &EditorState) -> CapturePreview {
         active_theme: state.ui.variables.active_theme.clone(),
         active_page_index: state.ui.active_page_index,
         preserve_authored_geometry: state.editor_ui.preserve_authored_geometry,
+        image_thumbs: state.image_thumbs.clone(),
     }
 }
 

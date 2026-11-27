@@ -109,7 +109,10 @@ fn render_page_png(page: &ScenePage) -> Result<Vec<u8>, HomePreviewError> {
         RasterFormat::Png,
         scale,
         0.0,
-        |canvas| paint_nodes(canvas, &page.children),
+        |canvas| {
+            page.image_thumbs
+                .scope(|| paint_nodes(canvas, &page.children))
+        },
     )?)
 }
 

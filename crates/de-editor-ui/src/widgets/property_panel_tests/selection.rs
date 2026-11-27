@@ -56,6 +56,7 @@ fn scene_aware_panel_reports_resolved_fill_and_hug_dimensions() {
             id: "p1".into(),
             name: "Page 1".into(),
             children: vec![resolved],
+            image_thumbs: Default::default(),
         }],
         active_page_index: 0,
     };
@@ -87,6 +88,7 @@ fn scene_aware_panel_keeps_unbounded_group_aggregate_dimensions() {
             id: "p1".into(),
             name: "Page 1".into(),
             children: vec![group],
+            image_thumbs: Default::default(),
         }],
         active_page_index: 0,
     };

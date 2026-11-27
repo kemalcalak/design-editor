@@ -45,6 +45,7 @@ fn scene() -> LayoutScene {
                 board("slide-2", 2100.0),
                 board("slide-3", 4200.0),
             ],
+            image_thumbs: Default::default(),
         }],
         active_page_index: 0,
     }
@@ -502,6 +503,7 @@ fn long_deck(count: usize) -> (String, LayoutScene) {
                 id: "page-1".into(),
                 name: "Page 1".into(),
                 children,
+                image_thumbs: Default::default(),
             }],
             active_page_index: 0,
         },

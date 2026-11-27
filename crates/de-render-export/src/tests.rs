@@ -85,6 +85,7 @@ fn two_page_scene() -> LayoutScene {
                     20.0,
                     Color::BLACK,
                 )],
+                image_thumbs: Default::default(),
             },
             ScenePage {
                 id: "page-two".into(),
@@ -97,6 +98,7 @@ fn two_page_scene() -> LayoutScene {
                     30.0,
                     Color::BLACK,
                 )],
+                image_thumbs: Default::default(),
             },
         ],
         active_page_index: 0,

@@ -59,8 +59,12 @@ fn decode_base64_data_url(src: &str) -> Option<Vec<u8>> {
     B64.decode(payload).ok()
 }
 
+/// Store the import's thumbnails into `thumbs`, the imported document's own
+/// table (#469): the import runs in the background while the user may be
+/// editing another document.
 pub(super) fn bind_import_thumbnails(
     document: &jian_ops_schema::document::PenDocument,
+    thumbs: &jian_ops_schema::image_thumbs::ImageThumbs,
     pending: &mut PendingImportThumbs,
 ) {
     use jian_ops_schema::node::image_src::paint_image_id;
@@ -75,7 +79,7 @@ pub(super) fn bind_import_thumbnails(
             return;
         };
         if let Some(thumbnail) = pending.thumbnail_for(&bytes) {
-            jian_ops_schema::image_thumbs::store_thumb(paint_id, thumbnail);
+            thumbs.store(paint_id, thumbnail);
         }
     });
 }
@@ -323,15 +327,18 @@ mod tests {
         let mut pending = PendingImportThumbs::default();
         pending.record(b"SAME", thumbnail.clone());
 
-        bind_import_thumbnails(&document, &mut pending);
+        let thumbs = jian_ops_schema::image_thumbs::ImageThumbs::new();
+        bind_import_thumbnails(&document, &thumbs, &mut pending);
 
         assert_eq!(
-            &*jian_ops_schema::image_thumbs::thumb_for(paint_image_id(png_src))
+            &*thumbs
+                .get(paint_image_id(png_src))
                 .expect("PNG source thumbnail"),
             thumbnail
         );
         assert_eq!(
-            &*jian_ops_schema::image_thumbs::thumb_for(paint_image_id(jpeg_src))
+            &*thumbs
+                .get(paint_image_id(jpeg_src))
                 .expect("JPEG source thumbnail"),
             thumbnail
         );

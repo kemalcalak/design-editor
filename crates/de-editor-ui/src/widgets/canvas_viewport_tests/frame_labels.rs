@@ -54,6 +54,7 @@ fn frame_label_paint_uses_top_level_scene_nodes() {
             id: "p".into(),
             name: "p".into(),
             children: roots,
+            image_thumbs: Default::default(),
         }],
         active_page_index: 0,
     };

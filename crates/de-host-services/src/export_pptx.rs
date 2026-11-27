@@ -99,6 +99,13 @@ pub fn export_deck_pptx(state: &EditorState, target: &Path) -> Result<DeckPptxEx
 
 /// The package bytes plus the summary, without touching the filesystem.
 pub fn build_deck_pptx(state: &EditorState) -> Result<(Vec<u8>, DeckPptxExport), ExportError> {
+    // Raster fallbacks paint with the document's own thumbnails (#469).
+    jian_ops_schema::image_thumbs::with_thread_table(&state.image_thumbs, || {
+        build_deck_pptx_in_scope(state)
+    })
+}
+
+fn build_deck_pptx_in_scope(state: &EditorState) -> Result<(Vec<u8>, DeckPptxExport), ExportError> {
     let scene = de_pen_loader::editor_state_to_active_page_layout_scene(state);
     let page = scene.active_page().ok_or(ExportError::NoActivePage)?;
 

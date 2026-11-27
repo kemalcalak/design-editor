@@ -30,7 +30,6 @@ mod agent_tasks;
 #[cfg(feature = "agent")]
 mod agent_tasks_error;
 #[cfg(feature = "agent")]
-mod agent_thumbs;
 mod app_control_cli;
 mod cli_conversion;
 mod cli_error;

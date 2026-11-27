@@ -17,6 +17,7 @@ fn markup_of(board: SceneNode) -> SlideMarkup {
         id: "p1".into(),
         name: "Page 1".into(),
         children: vec![board],
+        image_thumbs: Default::default(),
     };
     board_slide_markup(&page, "board", "Slide".into()).expect("board emits")
 }

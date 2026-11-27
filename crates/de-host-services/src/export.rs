@@ -22,6 +22,7 @@ pub mod test_support {
                 id: "p1".into(),
                 name: "Page 1".into(),
                 children,
+                image_thumbs: Default::default(),
             }],
             active_page_index: 0,
         }

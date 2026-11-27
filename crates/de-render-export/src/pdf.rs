@@ -50,7 +50,10 @@ pub fn render_page_pdf_bytes(page: &ScenePage) -> Result<Vec<u8>, ExportError> {
     let bounds = crate::page_bounds(page).ok_or_else(|| ExportError::PageEmpty {
         page_id: page.id.clone(),
     })?;
-    render_pdf_item(bounds, |canvas| crate::paint_nodes(canvas, &page.children))
+    render_pdf_item(bounds, |canvas| {
+        page.image_thumbs
+            .scope(|| crate::paint_nodes(canvas, &page.children))
+    })
 }
 
 /// Render one node from its resolved containing page as a single PDF page.
@@ -76,7 +79,9 @@ pub fn render_node_on_page_pdf_bytes(
         .ok_or_else(|| ExportError::NodePaintsNothing {
             node_id: node_id.to_string(),
         })?;
-    render_pdf_item(bounds, |canvas| crate::paint_node(canvas, node))
+    render_pdf_item(bounds, |canvas| {
+        page.image_thumbs.scope(|| crate::paint_node(canvas, node))
+    })
 }
 
 /// In-memory PDF variant: render each requested node as one PDF page
@@ -130,7 +135,7 @@ pub fn render_nodes_pdf_bytes(
             // Position the node's content with PDF_MARGIN inset from the page
             // edges, the same translation strategy as the multi-page exporter.
             canvas.translate((PDF_MARGIN - bounds.origin.x, PDF_MARGIN - bounds.origin.y));
-            crate::paint_node(canvas, node);
+            page.image_thumbs.scope(|| crate::paint_node(canvas, node));
             pdf = on_page.end_page();
         }
         pdf.close();
@@ -167,7 +172,8 @@ pub fn render_pdf_bytes(scene: &LayoutScene) -> Result<Vec<u8>, ExportError> {
             let mut on_page = pdf.begin_page(skia_safe::Size::new(page_w, page_h), None);
             let canvas = on_page.canvas();
             canvas.translate((PDF_MARGIN - bounds.origin.x, PDF_MARGIN - bounds.origin.y));
-            crate::paint_nodes(canvas, &page.children);
+            page.image_thumbs
+                .scope(|| crate::paint_nodes(canvas, &page.children));
             pdf = on_page.end_page();
         }
         pdf.close();
@@ -278,7 +284,7 @@ pub fn render_deck_pdf_boards_bytes(
                 pdf.begin_page(skia_safe::Size::new(bounds.size.x, bounds.size.y), None);
             let canvas = on_page.canvas();
             canvas.translate((-bounds.origin.x, -bounds.origin.y));
-            crate::paint_node(canvas, node);
+            page.image_thumbs.scope(|| crate::paint_node(canvas, node));
             pdf = on_page.end_page();
         }
         pdf.close();
@@ -308,6 +314,7 @@ mod tests {
                         20.0,
                         Color::BLACK,
                     )],
+                    image_thumbs: Default::default(),
                 },
                 ScenePage {
                     id: "page-two".into(),
@@ -320,6 +327,7 @@ mod tests {
                         30.0,
                         Color::BLACK,
                     )],
+                    image_thumbs: Default::default(),
                 },
             ],
             active_page_index: 0,
@@ -369,11 +377,13 @@ mod tests {
                             a: 1.0,
                         },
                     )],
+                    image_thumbs: Default::default(),
                 },
                 ScenePage {
                     id: "p2".into(),
                     name: "Page 2".into(),
                     children: vec![ellipse],
+                    image_thumbs: Default::default(),
                 },
             ],
             active_page_index: 0,
@@ -401,11 +411,13 @@ mod tests {
                     id: "p1".into(),
                     name: "P1".into(),
                     children: Vec::new(),
+                    image_thumbs: Default::default(),
                 },
                 ScenePage {
                     id: "p2".into(),
                     name: "P2".into(),
                     children: Vec::new(),
+                    image_thumbs: Default::default(),
                 },
             ],
             active_page_index: 0,

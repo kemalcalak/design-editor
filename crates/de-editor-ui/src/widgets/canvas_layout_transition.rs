@@ -179,6 +179,7 @@ mod tests {
                 id: "p".into(),
                 name: "Page".into(),
                 children: vec![node],
+                image_thumbs: Default::default(),
             }],
             active_page_index: 0,
         }
@@ -195,6 +196,7 @@ mod tests {
                 id: "p".into(),
                 name: "Page".into(),
                 children: vec![group],
+                image_thumbs: Default::default(),
             }],
             active_page_index: 0,
         }

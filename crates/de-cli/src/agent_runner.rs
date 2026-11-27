@@ -14,7 +14,7 @@ use std::time::{Duration, Instant};
 
 use de_ai::chat_provider::ChatDelta;
 use de_ai::chat_usage::{TokenUsage, UsageMeter};
-use de_editor_core::EditorState;
+use de_editor_core::{EditorState, Locale};
 use de_host_services::design_agent_run::{
     run_design_agent, DesignAgentRun, DesignAgentRunError, DesignAgentRunReport, RunControl,
 };
@@ -27,7 +27,6 @@ use crate::agent_progress::Progress;
 use crate::agent_provider::ResolvedProvider;
 pub(crate) use crate::agent_runner_error::TaskError;
 use crate::agent_task::{file_stem, TaskSpec};
-use crate::agent_thumbs::{load_with_thumbs, save_with_thumbs, TaskThumbs};
 
 /// A task with the provider it runs on (resolved before anything starts).
 pub(crate) struct PlannedTask {
@@ -186,7 +185,7 @@ fn run_steps(
     result: &mut TaskResult,
 ) -> Result<(), TaskError> {
     let spec = &task.spec;
-    let (mut state, thumbs) = load(spec)?;
+    let mut state = load(spec)?;
     let run = DesignAgentRun {
         brief: spec.prompt.clone(),
         timeout: spec.timeout,
@@ -209,7 +208,7 @@ fn run_steps(
     if cancel.load(Ordering::Acquire) {
         return Err(TaskError::CancelledBeforeSave);
     }
-    save(&mut state, &spec.output, &thumbs)?;
+    save(&mut state, &spec.output)?;
     result.saved = true;
     let stem = file_stem(&spec.output);
     for (position, format) in spec.exports.iter().enumerate() {
@@ -229,17 +228,21 @@ fn run_steps(
     }
 }
 
-fn load(spec: &TaskSpec) -> Result<(EditorState, TaskThumbs), TaskError> {
+/// Each task's document owns its blur-up thumbnails (#469), so parallel
+/// tasks load and save without trading them and need no shared lock.
+fn load(spec: &TaskSpec) -> Result<EditorState, TaskError> {
     match &spec.input {
-        None => Ok((EditorState::new(), TaskThumbs::default())),
-        Some(path) => load_with_thumbs(path).map_err(|source| TaskError::Load {
-            path: path.display().to_string(),
-            source,
-        }),
+        None => Ok(EditorState::new()),
+        Some(path) => doc_io::load_editor_state_with_report(path, Locale::EnUs)
+            .map(|loaded| loaded.state)
+            .map_err(|source| TaskError::Load {
+                path: path.display().to_string(),
+                source,
+            }),
     }
 }
 
-fn save(state: &mut EditorState, output: &Path, thumbs: &TaskThumbs) -> Result<(), TaskError> {
+fn save(state: &mut EditorState, output: &Path) -> Result<(), TaskError> {
     if let Some(parent) = output.parent().filter(|p| !p.as_os_str().is_empty()) {
         std::fs::create_dir_all(parent).map_err(|error| TaskError::CreateDir {
             path: parent.display().to_string(),
@@ -247,7 +250,7 @@ fn save(state: &mut EditorState, output: &Path, thumbs: &TaskThumbs) -> Result<(
         })?;
     }
     doc_io::set_file_name_display(state, Some(output));
-    save_with_thumbs(state, output, thumbs).map_err(|source| TaskError::Save {
+    doc_io::save_to_path(state, output).map_err(|source| TaskError::Save {
         path: output.display().to_string(),
         source,
     })

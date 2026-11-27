@@ -102,6 +102,7 @@ fn paint_draws_labels_badges_and_red_for_broken_links() {
             node("dead", 10.0, 80.0, 80.0, 40.0),
             node("pricing", 600.0, 0.0, 400.0, 800.0),
         ],
+        image_thumbs: Default::default(),
     };
     let viewport = de_editor_core::Viewport {
         pan_x: 0.0,
@@ -201,6 +202,7 @@ fn overlay_links_draw_dashed_or_badge_a_frame_elsewhere() {
             node("open", 10.0, 10.0, 80.0, 40.0),
             node("menu", 600.0, 0.0, 200.0, 300.0),
         ],
+        image_thumbs: Default::default(),
     };
     let viewport = de_editor_core::Viewport {
         pan_x: 0.0,

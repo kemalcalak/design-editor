@@ -218,6 +218,7 @@ fn path_editor_overlay_on_child_applies_ancestor_rotation() {
             id: "p".into(),
             name: "p".into(),
             children: vec![frame],
+            image_thumbs: Default::default(),
         }],
         active_page_index: 0,
     };
@@ -260,6 +261,7 @@ fn arc_handles_on_child_apply_ancestor_rotation() {
             id: "p".into(),
             name: "p".into(),
             children: vec![frame],
+            image_thumbs: Default::default(),
         }],
         active_page_index: 0,
     };
@@ -298,6 +300,7 @@ fn flipped_node_applies_scale_transform() {
             id: "p".into(),
             name: "p".into(),
             children: vec![node],
+            image_thumbs: Default::default(),
         }],
         active_page_index: 0,
     };

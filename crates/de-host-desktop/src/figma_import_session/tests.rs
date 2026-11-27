@@ -98,7 +98,7 @@ fn paint_and_pump_decode_frame(
         let mut frame = de_host_native::NativeFrameBackend::new(backend, surface.canvas());
         host.paint(&mut frame, WIDTH, HEIGHT);
     }
-    image_decodes.pump(backend);
+    image_decodes.pump(backend, &host.editor_state().image_thumbs);
 }
 
 fn write_surface_png(surface: &mut skia_safe::Surface, path: &Path) {
@@ -265,15 +265,13 @@ fn deferred_thumbnail_binding_uses_the_final_source_string() {
     let mut pending = PendingImportThumbs::default();
     pending.record(final_bytes, jpeg.clone());
 
-    bind_import_thumbnails(&doc, &mut pending);
+    let thumbs = jian_ops_schema::image_thumbs::ImageThumbs::new();
+    bind_import_thumbnails(&doc, &thumbs, &mut pending);
 
     let final_id = paint_image_id(&final_src);
-    assert_eq!(
-        &*jian_ops_schema::image_thumbs::thumb_for(final_id).expect("final id is bound"),
-        jpeg
-    );
+    assert_eq!(&*thumbs.get(final_id).expect("final id is bound"), jpeg);
     assert!(
-        jian_ops_schema::image_thumbs::thumb_for(paint_image_id(&provisional_src)).is_none(),
+        !thumbs.contains(paint_image_id(&provisional_src)),
         "the callback's provisional source is never persisted"
     );
 }
@@ -727,8 +725,8 @@ fn fig_import_bench() {
         .expect("decimal thumbnail id");
     let thumb_table_bytes = compact_json_size(&probe.image_thumbs);
 
-    jian_ops_schema::image_thumbs::clear_registry();
-    assert!(jian_ops_schema::image_thumbs::thumb_for(first_thumb_id).is_none());
+    state.image_thumbs = jian_ops_schema::image_thumbs::ImageThumbs::new();
+    assert!(!state.image_thumbs.contains(first_thumb_id));
     let baseline = no_thumbs_path(&output);
     de_host_services::doc_io::save_to_path(&state, &baseline)
         .expect("no-thumbnail baseline save succeeds");
@@ -743,9 +741,8 @@ fn fig_import_bench() {
     let thumbnail_delta = saved_bytes as i128 - baseline_bytes as i128;
     drop(state);
 
-    // The running desktop host exists before a document is opened. Build
-    // it before reload so its empty default document cannot clear the
-    // thumbnail table that the production load path is about to seed.
+    // The running desktop host exists before a document is opened; its
+    // empty default document has a table of its own (#469).
     let host = WidgetHostNative::new();
     let reload_started = std::time::Instant::now();
     let reloaded =
@@ -753,8 +750,8 @@ fn fig_import_bench() {
             .expect("production reopen succeeds");
     let reload_elapsed = reload_started.elapsed();
     assert!(
-        jian_ops_schema::image_thumbs::thumb_for(first_thumb_id).is_some(),
-        "reopen seeds the persisted thumbnail registry"
+        reloaded.image_thumbs.contains(first_thumb_id),
+        "reopen seeds the persisted thumbnail table"
     );
     eprintln!(
         "fig_import_bench: page_index={page_index}, parse+downscale={:.1}s, \

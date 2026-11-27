@@ -31,15 +31,9 @@ pub fn process_message_for_file_path_arg(
     {
         create_empty_document(&target.path)?;
     }
-    // Opening the target publishes its `imageThumbs` (its saves below need
-    // them), and the registry is process-wide: put back the thumbnails of
-    // the server's own document (the open canvas, on the live desktop path)
-    // when this call ends, however it ends, so its paint and its next save
-    // keep them. Known limit: a thumbnail another thread stores during the
-    // call (the desktop decode worker, a document the user opens meanwhile)
-    // is replaced by this snapshot; a per-document registry in jian would
-    // close that.
-    let _server_thumbs = RestoreThumbnails(jian_ops_schema::image_thumbs::capture_snapshot());
+    // The target's `imageThumbs` load into its own state's table and its
+    // saves below write from there (#469); the server's document (the open
+    // canvas, on the live desktop path) keeps its table untouched.
     let mut target_state = super::load_editor_state(&target.path)?;
     super::generate_tool::load_user_provider_settings(&mut target_state);
     super::generate_tool::land_generations_and_save(&mut target_state, &target.path);
@@ -71,15 +65,6 @@ pub fn process_message_for_file_path_arg(
 /// document's own path is not another file).
 pub fn targets_another_file(current_path: Option<&Path>, line: &str) -> bool {
     !matches!(target_file_call(line, current_path), Ok(None))
-}
-
-/// Restores a captured thumbnail registry when dropped.
-struct RestoreThumbnails(jian_ops_schema::image_thumbs::ImageThumbSnapshot);
-
-impl Drop for RestoreThumbnails {
-    fn drop(&mut self) {
-        jian_ops_schema::image_thumbs::restore_snapshot(std::mem::take(&mut self.0));
-    }
 }
 
 fn target_file_call(
@@ -140,12 +125,12 @@ mod tests {
     use super::process_message_for_file_path_arg;
     use jian_ops_schema::image_thumbs;
 
-    /// A call on another file opens it (its thumbnails are the active ones
-    /// while the call runs and saves) and then leaves the thumbnails of the
-    /// server's own document in place (#458).
+    /// A call on another file loads that file's thumbnails into its own
+    /// table and never touches the server document's (#458, #469): not
+    /// even a thumbnail another thread stores into it while the call runs
+    /// is lost, which the old capture / restore guard did.
     #[test]
     fn a_call_on_another_file_keeps_the_server_documents_thumbnails() {
-        let _guard = crate::test_support::lock_thumbnail_registry();
         let dir = std::env::temp_dir().join(format!(
             "de-file-path-thumbs-{}-{}",
             std::process::id(),
@@ -157,8 +142,9 @@ mod tests {
         std::fs::create_dir_all(&dir).expect("temp dir");
         let server_id = 9_458_101;
         let other_id = 9_458_102;
-        image_thumbs::clear_registry();
-        image_thumbs::store_thumb(server_id, vec![0xff, 0xd8, 0x01, 0xff, 0xd9]);
+        let during_id = 9_458_103;
+        let server_thumbs = image_thumbs::ImageThumbs::new();
+        server_thumbs.store(server_id, vec![0xff, 0xd8, 0x01, 0xff, 0xd9]);
         let other = dir.join("other.de");
         std::fs::write(
             &other,
@@ -175,13 +161,29 @@ mod tests {
         })
         .to_string();
 
+        let writer_thumbs = server_thumbs.clone();
+        let writer = std::thread::spawn(move || {
+            for _ in 0..200 {
+                writer_thumbs.store(during_id, vec![0xff, 0xd8, 0x02, 0xff, 0xd9]);
+                std::thread::yield_now();
+            }
+        });
         let response = process_message_for_file_path_arg(Some(&dir.join("server.de")), &line)
             .expect("dispatch")
             .expect("handled as a call on the other file");
+        writer.join().expect("concurrent writer");
 
         assert!(!response.contains(r#""isError":true"#), "{response}");
-        assert!(image_thumbs::thumb_for(server_id).is_some());
-        assert!(image_thumbs::thumb_for(other_id).is_none());
+        assert!(server_thumbs.contains(server_id));
+        assert!(
+            server_thumbs.contains(during_id),
+            "a concurrent store survives"
+        );
+        assert!(!server_thumbs.contains(other_id));
+        assert!(
+            image_thumbs::thumb_for(other_id).is_none(),
+            "the other file never reaches the paint-active table"
+        );
         let _ = std::fs::remove_dir_all(dir);
     }
 }
