@@ -506,6 +506,17 @@ Layer-panel drag now supports **cross-parent reparenting**: a drag whose drop-ta
 - **Cursor-move coalescing** — `apply_cursor_move` cached as `pending_cursor_move`, drained on `RedrawRequested` AND right before `apply_press` / `apply_release` / `apply_right_press` (so the final drag-end frame isn't dropped). Without the press-time drain a fast drag-release could fire press before the queued cursor-move and the release saw stale hover state.
 - **Font cache prewarm** (`de-host-native/src/backend/skia.rs`) — `NativeBackend::new` walks `PREWARM_CJK_CODEPOINTS` (~50 chars covering every CJK glyph used in the chrome + settings modal) through `FontMgr::match_family_style_character` at startup. Without this the first cross-tab paint stutters because each unseen CJK char triggers a synchronous system font scan.
 
+### Memory on large documents (#456)
+
+Measure before and after any change that touches document copies or caches; the owner rule is less memory with **no** slower frame, MCP call, page switch or generation. Two hand-run benchmarks on #412's document (14 pages × 100 boards × 46 rows ≈ 197k nodes, plus a component page and image fills; `DE_MEM_PAGES` / `DE_MEM_BOARDS` / `DE_MEM_ROWS` resize it):
+
+- **Live MCP calls** — `cargo test --release -p de-host-services --test large_document_memory -- --ignored --nocapture --test-threads=1`. A counting global allocator (`tests/support/counting_alloc.rs`) gives exact heap bytes on every OS: per read tool the median latency and the heap a call adds at its peak (as % of the editor's own document heap), then a write; `undo_history_memory` follows history bytes and edit / undo time over 120 edits.
+- **Editor session** — `cargo test --release -p de-host-native --features gl-host --lib large_doc_session -- --ignored --nocapture --test-threads=1`. Pan, pinch-zoom, nudge, undo frame times (median / p95), every page switch and the return, the process footprint, and the biggest caches; `DE_MEM_BENCH_SECS=3600` repeats the pass for an hour to show bounded memory.
+
+Run both on macOS locally and on Windows by hand (same commands; `process_memory` reads the working set and private commit there). `de_editor_core::memory_report` is the one report type: `CacheUsage { id, bytes, entries, budget, exact }` lines, filled by `WidgetHostNative::memory_report(&backend)` (undo history and chat estimates from core, layout scene, pan cache, slide thumbnails, text layouts, data-URL bytes, browser pages, and `NativeBackend::report_memory`: decoded rasters, thumbnails, SVG paths and rasters, shader textures, compiled shaders). It walks the history once per unique shared node, so build it on demand, never per frame. `de_editor_core::process_memory::current()` (re-exported as `de_host_services::process_memory`) reads RSS / footprint (macOS `proc_pid_rusage` phys footprint, Windows `K32GetProcessMemoryInfo` working set / private commit, Linux `/proc`); both benchmarks print it, so their tables compare.
+
+Baseline (v0.6.3, Apple-silicon Mac): a `PenNode` is 2,792 bytes inline, so the document heap is ~550 MB; every live read call materializes the whole document (~100%), and tools that clone the state again reach 200–400% (`snapshot_layout` lays out every page: 6.8 s); the first history step and the first live call's anchor each hold a full copy.
+
 ## Shared host logic (the native↔web `widget_host` fork is single-sourced)
 
 The web twin is gone (#401); the shared flows below stay where they are and the native `widget_host` remains a thin arm over them.
@@ -685,6 +696,77 @@ One modal, two modes. State and every transition live in `de-editor-core/src/com
   MCP: `set_node_stroke_style` takes `stroke_start`, `stroke_end`
   (`"auto"` / null unsets an end, so it falls back to `cap`),
   `miter_limit`.
+
+## Corner smoothing, rounded vertices and drawing constraints (#389)
+
+- **Schema** (kemalcalak/jian#30): `cornerSmoothing` (`0..=1`, Figma's
+  corner smoothing; absent = 0) on frames, groups and rectangles
+  (`ContainerProps`), polygons / stars and paths; a polygon's
+  `cornerRadius` (one number) rounds every vertex, a path's `vertexRadius`
+  rounds its sharp vertices between straight segments.
+- **Geometry** (`de_editor_core::corner_geometry`, pure, tested): Figma's
+  squircle (the `figma-squircle` construction: the corner starts
+  `p = (1 + s)·t` from the vertex, a circular arc covers the middle
+  `(1 − s)` of the turn, cubics ease in from the edges), generalised to any
+  vertex angle; neighbouring corners share an edge largest first and a
+  corner over its share loses smoothing before radius
+  (`corner_geometry/budget.rs`). `rect_outline`, `polygon_outline`,
+  `round_corners`, `outline_path_data`.
+- **Scene**: the builder (`de-pen-loader/src/layout_scene/corner_path.rs`)
+  stores the outline once per scene on `SceneNode::corner_path`
+  (`SceneCornerPath`: `d`, bounds, the inside / outside stroke centre line,
+  a flattened `hit_ring`) for a smoothed rect / frame / group, a rounded
+  polygon or star and a path with a vertex radius; a path's stroke ends
+  follow the rounded line. A rect with smoothing 0 or radius 0 gets none,
+  so the rounded-rect fast paths are unchanged. The outline's bounds come
+  from its subpaths, never from parsing `d` back. A live bounds patch of a
+  smoothed box or rounded polygon rebuilds that node's outline alone from
+  the scene node's corner fields (`de_pen_loader::rebuild_box_corner_path`);
+  stroke ends and reversed lines still rebuild the scene
+  (`canvas_scene_patch::box_shaped_scene_data`), and paths never patch.
+- **Paint / hit-test**: fills draw inside a clip to the outline, strokes
+  follow it (or its own centre line for inside / outside), `clipContent`,
+  backdrop effects and image fills clip to it
+  (`canvas_viewport_corner_path.rs`); jian's hit-test reads `hit_ring`.
+- **Exports**: SVG writes the outline as a `<path>` and clips to it
+  (per-corner radii are exact there, so they no longer warn); the
+  structured HTML export clips a smoothed box's background layer and its
+  children with `clip-path: path()` and draws polygons and paths as their
+  outline; PPTX writes a `custGeom` (`export_pptx/cust_geom.rs`) for
+  smoothed boxes and every polygon and star; path ops (boolean, flatten,
+  outline stroke) read the same outline; the HTML / Tailwind codegen draws
+  rounded polygons and paths as their outline (`flex/shapes.rs`; CSS
+  `border-radius` cannot smooth, so a smoothed box there keeps plain
+  rounded corners). PNG / PDF use the canvas painter. Figma import keeps
+  `cornerSmoothing` natively, imports a rounded star as a star polygon with
+  its `cornerRadius` / `cornerSmoothing` (`star_converter.rs`) and rounds
+  vector networks with the same geometry.
+- **de-figma depends on de-editor-core** (a normal dependency since #389,
+  before only a dev one), decided rather than moving the geometry out:
+  the import must round and range stars exactly like the editor, and the
+  shared code (`corner_geometry`, `vector_edit::Subpath`, `star_shape`)
+  already lives there with its tests. Both crates are wasm32-clean and
+  de-editor-core never depends on de-figma, so no cycle or platform code
+  comes with it. A separate geometry crate is worth it only if another
+  leaf crate that must not pull the editor core needs the same geometry.
+- **Editing**: `EditorCommand::SetNodeCorners { radii, smoothing }`
+  (`command_node_attrs/corners.rs`) writes per-corner radii and smoothing
+  in one step and refuses, untouched, what a kind cannot store
+  (`corner_support`). The Position section's Smoothing row (slider +
+  percentage, under the radius row once a corner is rounded) is one undo
+  step per drag; paths get the radius field. MCP `set_node_corner_radius`
+  (`de-mcp/src/node_attr_corners.rs`) takes `radius` as one number or
+  `[tl, tr, br, bl]` (an array argument, listed in `structured_arg_allowed`)
+  and `smoothing` as a fraction `0..=1` or a percentage string `"60%"`;
+  a bare `60` is refused.
+- **Drawing** (`de_editor_core::draw_constraints`): Shift keeps a drawn
+  rect / ellipse / frame / polygon / star square and a line on 45° steps,
+  Alt / Option draws from the press point, both combine and apply mid-drag
+  (`set_modifier_shift` / `set_modifier_alt` redraw an in-flight create
+  drag and return whether to repaint). The host arm is
+  `widget_host/create_drag.rs`. A drawn line writes its start and its end
+  relative to it (`EditorState::set_selected_line`, `x2` / `y2` as the
+  loader reads them), so it keeps its direction.
 
 ## Canonical `.de` loader (v0.8.0+)
 

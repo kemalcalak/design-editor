@@ -198,6 +198,9 @@ impl WidgetHostNative {
         if self.effect_radius_drag.take().is_some() {
             return true;
         }
+        if std::mem::take(&mut self.corner_smoothing_drag) {
+            return true;
+        }
         if self.end_shader_uniform_drag() {
             return true;
         }
@@ -385,6 +388,9 @@ impl WidgetHostNative {
             return true;
         }
         if self.effect_radius_drag.take().is_some() {
+            return true;
+        }
+        if std::mem::take(&mut self.corner_smoothing_drag) {
             return true;
         }
         if self.end_shader_uniform_drag() {

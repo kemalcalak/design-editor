@@ -591,6 +591,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.context.document" => "Documento",
         "chat.context.selection" => "Seleção",
         "chat.context.attachment" => "Anexo",
+        "property.cornerSmoothing" => "Suavização",
         _ => return None,
     })
 }

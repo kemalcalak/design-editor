@@ -249,6 +249,13 @@ pub(super) fn push_clip_content(
         return false;
     }
     cx.backend.save();
+    if let Some(outline) = crate::widgets::canvas_viewport_corner_path::corner_outline(node) {
+        // Smoothed corners (#389) clip children to the outline.
+        crate::widgets::canvas_viewport_corner_path::clip_to_outline(
+            cx, node, outline, world_rect, zoom,
+        );
+        return true;
+    }
     // TS flattener: `cr = Math.min(crRaw, nodeH / 2)`.
     let radius = node.corner_radius.min(node.bounds.size.y / 2.0).max(0.0) * zoom;
     let per_corner = scaled_non_uniform_corner_radii(node, zoom).map(|radii| {

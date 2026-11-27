@@ -341,8 +341,10 @@ fn report_node_limits(n: &SceneNode, w: &mut Writer) {
             );
         }
     }
-    if n.corner_radii
-        .is_some_and(|radii| radii.iter().any(|r| *r != radii[0]))
+    // A corner outline (#389) carries every radius exactly.
+    if n.corner_path.is_none()
+        && n.corner_radii
+            .is_some_and(|radii| radii.iter().any(|r| *r != radii[0]))
     {
         w.warn(n, "per-corner radii are exported as one radius");
     }

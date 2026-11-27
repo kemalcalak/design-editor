@@ -1334,6 +1334,7 @@ dependencies = [
  "de-editor-core",
  "de-util",
  "jian-ops-schema",
+ "jian-scene",
  "serde",
  "serde_json",
  "zip",

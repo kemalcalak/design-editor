@@ -593,6 +593,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.context.document" => "문서",
         "chat.context.selection" => "선택",
         "chat.context.attachment" => "첨부",
+        "property.cornerSmoothing" => "스무딩",
         _ => return None,
     })
 }

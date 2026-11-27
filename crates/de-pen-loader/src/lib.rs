@@ -108,7 +108,7 @@ pub use editor_scene::{
 };
 pub use layout_scene::{
     blend_mode_to_scene, pen_document_to_layout_scene, pen_document_to_layout_scene_for_preview,
-    pen_document_to_layout_scene_with_geometry_mode,
+    pen_document_to_layout_scene_with_geometry_mode, rebuild_box_corner_path,
 };
 /// Skips the layout-scene rebuild when the document / active theme / active page
 /// are unchanged — the hosts hold one and drive `refresh_layout_scene` through it.
