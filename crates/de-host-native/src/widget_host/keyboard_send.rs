@@ -37,6 +37,11 @@ impl WidgetHostNative {
         if self.palette_activate(false) {
             return true;
         }
+        // The chat's `@` popup (#398): Enter picks the highlighted row
+        // instead of sending.
+        if self.apply_chat_mention_pick() {
+            return true;
+        }
         // Rename-layers preview (#383): Enter commits the edited name, or
         // applies the renames as one undo step.
         if de_editor_core::rename_layers::rename_layers_enter(&mut self.editor_state).is_some() {

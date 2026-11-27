@@ -29,6 +29,8 @@ pub enum ChatFooterButton {
     /// The "+" button — opens the menu holding attach, the style library,
     /// the thinking mode and the parallel-agents count.
     PlusMenu,
+    /// The context button right of "+" (#398) — opens the context panel.
+    Context,
     /// "model · provider" chip — opens the model picker.
     ModelPicker,
     /// Send button in its normal idle state.

@@ -66,6 +66,7 @@ pub fn chat_button_press_target(hit: &AIChatHit) -> Option<ButtonPressTarget> {
     }
     let footer = match hit {
         AIChatHit::TogglePlusMenu => ChatFooterButton::PlusMenu,
+        AIChatHit::ToggleContextPanel => ChatFooterButton::Context,
         AIChatHit::ToggleModelPicker => ChatFooterButton::ModelPicker,
         AIChatHit::Send => ChatFooterButton::Send,
         AIChatHit::Stop => ChatFooterButton::Stop,
@@ -293,6 +294,18 @@ pub fn apply_chat_hit(state: &mut EditorState, hit: AIChatHit, now_ms: u64) -> C
         }
         AIChatHit::RemoveAttachment(idx) => {
             state.chat.remove_attachment(idx);
+            ChatClickStep::Dirty
+        }
+        AIChatHit::PickMention(row) => {
+            state.pick_chat_mention(Some(row), now_ms);
+            ChatClickStep::Dirty
+        }
+        AIChatHit::RemoveMention(idx) => {
+            state.remove_chat_mention(idx, now_ms);
+            ChatClickStep::Dirty
+        }
+        AIChatHit::ToggleContextPanel => {
+            state.editor_ui.toggle_chat_context_panel();
             ChatClickStep::Dirty
         }
         AIChatHit::ClearSelection => {
