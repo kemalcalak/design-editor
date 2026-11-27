@@ -729,7 +729,7 @@ pub(super) fn paint_text(
 ) {
     let layout = crate::TextLayout::single_run(
         text,
-        "system-ui",
+        text_metrics::CHROME_FONT_FAMILY,
         size,
         (color).to_jian(),
         Point2D::new(0.0, 0.0),

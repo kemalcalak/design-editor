@@ -390,7 +390,7 @@ impl SceneTemplatePanel<'_> {
     ) {
         let layout = TextLayout::single_run(
             text,
-            "system-ui",
+            crate::widgets::text_metrics::CHROME_FONT_FAMILY,
             size,
             color.to_jian(),
             Point2D::new(0.0, 0.0),

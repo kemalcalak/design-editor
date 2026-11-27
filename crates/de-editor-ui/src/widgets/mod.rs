@@ -28,6 +28,7 @@ pub const MIN_RAIL_WIDTH: f32 = 80.0;
 
 // Phase B primitives.
 pub(crate) mod button;
+pub(crate) mod chrome_buttons;
 pub mod prop_row;
 pub mod tree;
 
@@ -493,6 +494,8 @@ pub mod window_strip;
 // Test-support: shared RenderBackend stubs (never ships in non-test builds).
 #[cfg(test)]
 mod agent_settings_width_tests;
+#[cfg(test)]
+mod chrome_family_paint_tests;
 #[cfg(test)]
 mod floating_chrome_width_tests;
 #[cfg(test)]

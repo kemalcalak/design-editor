@@ -80,7 +80,7 @@ impl Widget for TreeWidget {
             }
             let text = TextLayout::single_run(
                 &item.label,
-                "system-ui",
+                crate::widgets::text_metrics::CHROME_FONT_FAMILY,
                 13.0,
                 jian_core::scene::Color::rgb(0, 0, 0),
                 Point2D::new(0.0, 0.0),

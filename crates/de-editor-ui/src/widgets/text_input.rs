@@ -9,6 +9,10 @@ use jian_widgets::Tokens;
 
 const DEFAULT_WIDTH: f32 = 160.0;
 const DEFAULT_HEIGHT: f32 = 30.0;
+/// Face jian's `TextInputView` paints its text in (`FONT_FAMILY` in
+/// `jian_widgets::components::text_input`, private there). The caret and
+/// glyph geometry below must be measured in it, not in the chrome family.
+const TEXT_INPUT_FAMILY: &str = "Inter";
 
 pub struct TextInputWidget {
     pub id: WidgetId,
@@ -110,9 +114,10 @@ impl SingleLinePaintGeometry {
                 let cursor = jian_core::text_input::prev_char_boundary(&value.text, value.cursor);
                 (value.text.clone(), cursor)
             });
-        let mut caret_px = backend.measure_text_family(&state.text()[..caret], font_size, "Inter");
+        let mut caret_px =
+            backend.measure_text_family(&state.text()[..caret], font_size, TEXT_INPUT_FAMILY);
         if let Some((text, cursor)) = composition.as_ref() {
-            caret_px += backend.measure_text_family(&text[..*cursor], font_size, "Inter");
+            caret_px += backend.measure_text_family(&text[..*cursor], font_size, TEXT_INPUT_FAMILY);
         }
         let visible_w = (rect.size.x - pad_x * 2.0).max(0.0);
         let shift = (caret_px - visible_w).max(0.0);
@@ -121,7 +126,8 @@ impl SingleLinePaintGeometry {
         let mut glyph_midpoints = Vec::with_capacity(state.text().chars().count());
         for (byte, ch) in state.text().char_indices() {
             let mut buf = [0; 4];
-            let width = backend.measure_text_family(ch.encode_utf8(&mut buf), font_size, "Inter");
+            let width =
+                backend.measure_text_family(ch.encode_utf8(&mut buf), font_size, TEXT_INPUT_FAMILY);
             glyph_midpoints.push((byte, base_x + x + width / 2.0));
             x += width;
         }

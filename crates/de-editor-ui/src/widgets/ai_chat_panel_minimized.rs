@@ -177,7 +177,7 @@ pub(crate) fn paint_minimized_bar(
         });
         let text = TextLayout::single_run(
             &fitted,
-            "system-ui",
+            text_metrics::CHROME_FONT_FAMILY,
             MINIMIZED_TEXT_FONT,
             (label_color).to_jian(),
             Point2D::new(0.0, 0.0),
@@ -200,7 +200,7 @@ pub(crate) fn paint_minimized_bar(
         );
         let text = TextLayout::single_run(
             &fitted,
-            "system-ui",
+            text_metrics::CHROME_FONT_FAMILY,
             MINIMIZED_MODEL_FONT,
             (theme.muted_foreground)
                 .with_alpha(theme.muted_foreground.a * MINIMIZED_MODEL_ALPHA)

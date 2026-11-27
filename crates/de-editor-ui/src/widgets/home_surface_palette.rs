@@ -6,8 +6,8 @@ use crate::theme::Theme;
 use crate::Color;
 use de_editor_core::ThemeMode;
 
-/// UI face for every Home label (bundled on desktop).
-pub(crate) const SANS: &str = "Manrope";
+/// UI face for every Home label: the chrome face, named once (#441).
+pub(crate) const SANS: &str = crate::widgets::text_metrics::CHROME_FONT_FAMILY;
 /// Mono face for the MCP endpoint, snippets and file folders.
 pub(crate) const MONO: &str = "JetBrains Mono";
 

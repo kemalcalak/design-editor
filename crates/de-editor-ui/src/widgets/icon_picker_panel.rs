@@ -4,6 +4,7 @@ use crate::theme::Theme;
 use crate::widgets::button::paint_button_feedback_wash;
 use crate::widgets::editor_state_ext::theme_for;
 use crate::widgets::icon_catalog::{search_icons, IconCatalogEntry, IconRenderStyle};
+use crate::widgets::text_metrics::{self, CHROME_FONT_FAMILY};
 use crate::widgets::{
     draw_icon, draw_icon_catalog_entry, draw_icon_data, Icon, IconPathData, PaintCx,
 };
@@ -21,7 +22,6 @@ const CLOSE_BTN: f32 = 24.0;
 const ROW_H: f32 = 34.0;
 const ICON_SIZE: f32 = 17.0;
 const ROW_PAD_X: f32 = 10.0;
-const CHAR_W: f32 = 6.0;
 const LOCAL_LIMIT: usize = 120;
 pub const ICONIFY_LOAD_MORE_LIMIT: usize = 48;
 
@@ -297,7 +297,7 @@ impl<'a> IconPickerPanel<'a> {
     fn paint_header(&self, cx: &mut PaintCx<'_>, panel: Rect) {
         let title = TextLayout::single_run(
             self.t("icon.title"),
-            "system-ui",
+            CHROME_FONT_FAMILY,
             13.0,
             (self.theme.foreground).to_jian(),
             Point2D::new(0.0, 0.0),
@@ -368,7 +368,7 @@ impl<'a> IconPickerPanel<'a> {
         let key = "icon.noIconsFound";
         let empty = TextLayout::single_run(
             self.t(key),
-            "system-ui",
+            CHROME_FONT_FAMILY,
             12.0,
             (self.theme.muted_foreground).to_jian(),
             Point2D::new(0.0, 0.0),
@@ -416,13 +416,15 @@ impl<'a> IconPickerPanel<'a> {
                 1.5,
             ),
         }
-        let label = truncate(
+        let label = text_metrics::fit_chrome(
+            cx.backend,
             &format!("{}:{}", item.collection(), item.name()),
-            ((row.size.x - 54.0) / CHAR_W) as usize,
+            (row.size.x - 54.0).max(0.0),
+            12.0,
         );
         let text = TextLayout::single_run(
             &label,
-            "system-ui",
+            CHROME_FONT_FAMILY,
             12.0,
             (self.theme.foreground).to_jian(),
             Point2D::new(0.0, 0.0),
@@ -452,7 +454,7 @@ impl<'a> IconPickerPanel<'a> {
         };
         let text = TextLayout::single_run(
             label,
-            "system-ui",
+            CHROME_FONT_FAMILY,
             12.0,
             (self.theme.foreground).to_jian(),
             Point2D::new(0.0, 0.0),
@@ -470,15 +472,6 @@ fn remote_style(style: &str) -> IconRenderStyle {
     } else {
         IconRenderStyle::Fill
     }
-}
-
-fn truncate(text: &str, max_chars: usize) -> String {
-    if text.chars().count() <= max_chars {
-        return text.to_string();
-    }
-    let mut out: String = text.chars().take(max_chars.saturating_sub(1)).collect();
-    out.push_str("...");
-    out
 }
 
 #[cfg(test)]

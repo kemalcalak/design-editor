@@ -14,7 +14,7 @@ use de_editor_core::{
     HomeFamily, WorkspaceHit, WorkspacePhase, WorkspaceView, WORKSPACE_TOOLBAR_H,
 };
 
-const SANS: &str = "system-ui";
+const SANS: &str = crate::widgets::text_metrics::CHROME_FONT_FAMILY;
 
 fn text(cx: &mut PaintCx<'_>, content: &str, origin: Point2D, size: f32, color: Color) {
     let layout = crate::TextLayout::single_run(content, SANS, size, color.to_jian(), Point2D::ZERO);

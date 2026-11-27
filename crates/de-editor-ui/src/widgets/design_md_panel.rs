@@ -17,6 +17,7 @@ use crate::theme::Theme;
 use crate::widgets::button::paint_ghost_button_feedback;
 use crate::widgets::design_md_markdown::{parse_blocks, parse_inline, wrap_runs, MdBlock, MdRun};
 use crate::widgets::editor_state_ext::theme_for;
+use crate::widgets::text_metrics;
 use crate::widgets::{Icon, PaintCx};
 use crate::{Point2D, Rect};
 use de_editor_core::{ButtonPressTarget, DesignMdButton, DesignMdSpec, EditorState, Locale};
@@ -24,7 +25,6 @@ use de_editor_core::{ButtonPressTarget, DesignMdButton, DesignMdSpec, EditorStat
 mod helpers;
 #[cfg(test)]
 pub(crate) use helpers::layout_call_count;
-use helpers::truncate;
 
 /// Panel width in logical px.
 pub const DESIGN_MD_PANEL_W: f32 = 480.0;
@@ -568,9 +568,10 @@ impl<'a> DesignMdPanel<'a> {
         let sections = self.layout(rect);
         let scroll = self.effective_scroll(rect, &sections);
         if let Some(name) = self.spec.and_then(|s| s.project_name.as_deref()) {
+            let name = text_metrics::fit_chrome(cx.backend, name, rect.size.x - PAD * 2.0, 13.0);
             self.text(
                 cx,
-                &truncate(name, 56),
+                &name,
                 left,
                 rect.origin.y + HEADER_H + SECTION_GAP + 12.0 - scroll,
                 13.0,

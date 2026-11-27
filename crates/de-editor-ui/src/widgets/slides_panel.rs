@@ -625,7 +625,7 @@ impl SlidesPanel<'_> {
         cx.backend.draw_text(
             &TextLayout::single_run(
                 &number,
-                "system-ui",
+                text_metrics::CHROME_FONT_FAMILY,
                 CHIP_FONT,
                 fade(CHIP_INK, alpha).to_jian(),
                 Point2D::ZERO,
