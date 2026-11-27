@@ -24,6 +24,38 @@ const SECTION_TRAILING_GAP: f32 = 12.0;
 const RADIO_SIZE: f32 = 14.0;
 const RADIO_GUTTER: f32 = 26.0;
 
+/// Which style rows the Stroke section shows under the alignment row.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub struct StrokeStyleRows {
+    /// Cap / Join / Dash (#89): only once the node has a stroke, since
+    /// they style an existing stroke and nothing else.
+    pub styled: bool,
+    /// Start / End (#389): a stroked line or a path with an open subpath.
+    pub ends: bool,
+    /// The Miter field (#389): while the effective join is Miter.
+    pub miter: bool,
+}
+
+impl StrokeStyleRows {
+    /// Cap / Join / Dash only.
+    pub const STYLED: Self = Self {
+        styled: true,
+        ends: false,
+        miter: false,
+    };
+
+    /// The rows `snapshot`'s stroke shows. Paint, the action walker and
+    /// every height helper read this one answer.
+    pub fn of(snapshot: &NodeSnapshot) -> Self {
+        let style = snapshot.stroke.as_ref().and(snapshot.stroke_style.as_ref());
+        Self {
+            styled: snapshot.stroke.is_some(),
+            ends: style.is_some_and(|s| s.open),
+            miter: style.is_some_and(|s| s.join == jian_ops_schema::style::StrokeJoin::Miter),
+        }
+    }
+}
+
 struct StrokeSideGridRefs<'a, 'b> {
     theme: &'a Theme,
     snapshot: &'a NodeSnapshot,
@@ -47,17 +79,17 @@ pub(crate) fn stroke_style_top(row_y: f32, mode: PaddingEditMode) -> f32 {
     row_y + INPUT_HEIGHT + side_grid_height(mode)
 }
 
-pub(crate) fn stroke_section_body_height(mode: PaddingEditMode, styled: bool) -> f32 {
+pub(crate) fn stroke_section_body_height(mode: PaddingEditMode, rows: StrokeStyleRows) -> f32 {
     INPUT_HEIGHT
         + side_grid_height(mode)
-        + crate::widgets::property_panel_stroke_style::stroke_style_rows_height(styled)
+        + crate::widgets::property_panel_stroke_style::stroke_style_rows_height(rows)
         + SECTION_TRAILING_GAP
 }
 
 /// The whole Stroke section — header, row(s) and trailing gap.
-pub(crate) fn stroke_section_height(mode: PaddingEditMode, styled: bool) -> f32 {
+pub(crate) fn stroke_section_height(mode: PaddingEditMode, rows: StrokeStyleRows) -> f32 {
     crate::widgets::property_panel_inputs::SECTION_HEADER_HEIGHT
-        + stroke_section_body_height(mode, styled)
+        + stroke_section_body_height(mode, rows)
         + SECTION_GAP
 }
 
@@ -125,7 +157,7 @@ pub(crate) fn push_stroke_action_rects(
     width: f32,
     mode: PaddingEditMode,
     popover_open: bool,
-    styled: bool,
+    style_rows: StrokeStyleRows,
 ) {
     let (gear, _box, rows) = stroke_mode_popover_layout(x0, y, width);
     out.push((PropertyPanelAction::ToggleStrokeModePopover, gear));
@@ -134,7 +166,7 @@ pub(crate) fn push_stroke_action_rects(
         x0,
         stroke_style_top(y + SECTION_HEADER_HEIGHT, mode),
         width,
-        styled,
+        style_rows,
     );
     if popover_open {
         for (i, rect) in rows.into_iter().enumerate() {
@@ -231,11 +263,14 @@ pub fn paint_stroke_section(
         theme,
         labels,
         snapshot,
-        x,
-        stroke_style_top(y, mode),
-        width,
+        edit,
+        crate::widgets::property_panel_stroke_style::StyleRowsAt {
+            x,
+            top: stroke_style_top(y, mode),
+            width,
+        },
     );
-    y += stroke_section_body_height(mode, snapshot.stroke.is_some());
+    y += stroke_section_body_height(mode, StrokeStyleRows::of(snapshot));
     paint_section_divider(cx, theme, x, y, width);
     y + SECTION_GAP
 }

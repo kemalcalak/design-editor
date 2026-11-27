@@ -490,12 +490,21 @@ impl Widget for PropertyPanel {
                         true,
                         self.action_pressed == Some(i),
                     );
-                    if matches!(action, PropertyPanelAction::ToggleCornerExpand) {
+                    let tooltip = match action {
+                        PropertyPanelAction::ToggleCornerExpand => {
+                            Some(self.labels.corner_per_corner)
+                        }
+                        PropertyPanelAction::SetStrokeStyle(
+                            de_editor_core::fills::StrokeStyleEdit::SwapEnds,
+                        ) => Some(self.labels.stroke_swap_ends),
+                        _ => None,
+                    };
+                    if let Some(label) = tooltip {
                         crate::widgets::property_panel_corner::paint_tooltip(
                             cx,
                             &self.theme,
                             *r,
-                            self.labels.corner_per_corner,
+                            label,
                         );
                     }
                 }

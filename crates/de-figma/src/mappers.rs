@@ -368,6 +368,10 @@ pub fn map_figma_stroke(node: &FigValue) -> Option<PenStroke> {
         });
 
     Some(PenStroke {
+        stroke_start: None,
+        stroke_end: None,
+        miter_limit: None,
+        width_profile: None,
         thickness,
         align: map_stroke_align(node.get_str("strokeAlign")),
         join: map_stroke_join(node.get_str("strokeJoin")),
