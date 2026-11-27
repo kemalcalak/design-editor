@@ -218,7 +218,7 @@ impl LineStreamChild {
                         if tree.can_signal_after_leader_exit() {
                             // The leader's status is already read; sweeping
                             // what is left of its group must not lose it.
-                            if tree.is_alive()? {
+                            if tree.is_alive_after_leader_exit()? {
                                 tree.kill_after_leader_exit()?;
                             }
                         } else if let Some(tree_result) = pre_wait_tree_result {

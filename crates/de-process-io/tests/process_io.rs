@@ -1,7 +1,7 @@
 #![cfg(unix)]
 
 use std::io::{BufRead, BufReader, Read};
-use std::os::unix::process::CommandExt;
+use std::os::unix::process::{CommandExt, ExitStatusExt};
 use std::process::{Command, Stdio};
 use std::time::Duration;
 
@@ -247,29 +247,87 @@ fn post_exit_cleanup_of_a_group_holding_only_a_zombie_is_not_an_error() {
     // after it had read the leader's exit status, so the chat bridge
     // reported "exited with status ?" (#474). Waiting with WNOWAIT keeps the
     // exited leader unreaped, which holds the group in exactly that state
-    // with no timing involved.
+    // with no timing involved. On Linux a zombie-only group answers 0, not
+    // EPERM, so there this passes either way: it proves the fix on macOS.
+    //
+    // The leader blocks on stdin so the group is captured while it is alive.
     let mut child = Command::new("sh")
-        .args(["-c", "exit 3"])
+        .args(["-c", "read _; exit 3"])
         .process_group(0)
+        .stdin(Stdio::piped())
         .spawn()
         .expect("spawn group leader");
     let tree = ProcessTree::from_child(&child).expect("capture process group");
-    let pid = libc::pid_t::try_from(child.id()).expect("pid fits pid_t");
-    // SAFETY: `info` is a valid out-pointer and `pid` is our own child.
-    let waited = unsafe {
-        let mut info: libc::siginfo_t = std::mem::zeroed();
-        libc::waitid(
-            libc::P_PID,
-            pid as libc::id_t,
-            &mut info,
-            libc::WEXITED | libc::WNOWAIT,
-        )
-    };
-    assert_eq!(waited, 0, "waitid: {}", std::io::Error::last_os_error());
+    drop(child.stdin.take());
+    wait_without_reaping(child.id());
 
     tree.kill_after_leader_exit()
         .expect("a group left with only a zombie has nothing to clean up");
     assert_eq!(child.wait().expect("reap leader").code(), Some(3));
+}
+
+/// Block until `pid` (our own child) has exited, but leave it unreaped, so it
+/// stays a zombie for as long as the test needs one.
+fn wait_without_reaping(pid: u32) {
+    let pid = libc::id_t::try_from(pid).expect("pid fits id_t");
+    // SAFETY: `info` is a valid out-pointer and `pid` is this test's child.
+    let waited = unsafe {
+        let mut info: libc::siginfo_t = std::mem::zeroed();
+        libc::waitid(libc::P_PID, pid, &mut info, libc::WEXITED | libc::WNOWAIT)
+    };
+    assert_eq!(waited, 0, "waitid: {}", std::io::Error::last_os_error());
+}
+
+/// Put an exited, unreaped child of this test into `leader`'s process group.
+/// Once the shutdown under test reaps the leader, that zombie is all the
+/// group holds: the state Darwin answers with EPERM. On Linux the group
+/// answers 0 instead, so the tests using this prove the fix on macOS.
+fn park_zombie_in_group(leader: u32) -> std::process::Child {
+    let group = libc::pid_t::try_from(leader).expect("pid fits pid_t");
+    let zombie = Command::new("sh")
+        .args(["-c", "exit 0"])
+        .process_group(group)
+        .spawn()
+        .expect("spawn group member");
+    wait_without_reaping(zombie.id());
+    zombie
+}
+
+#[test]
+fn terminate_process_tree_keeps_the_status_when_only_a_zombie_is_left() {
+    // `terminate_process_tree` read EPERM as "still alive", polled until the
+    // grace deadline, then lost the leader's status to the forced kill's
+    // EPERM (#474).
+    let mut child = Command::new("sleep")
+        .arg("30")
+        .process_group(0)
+        .spawn()
+        .expect("spawn group leader");
+    let mut zombie = park_zombie_in_group(child.id());
+
+    let status = terminate_process_tree(&mut child, Duration::from_secs(1))
+        .expect("the leader's status survives a zombie-only group");
+    assert_eq!(status.signal(), Some(libc::SIGTERM));
+    assert!(zombie.wait().expect("reap parked member").success());
+}
+
+#[tokio::test]
+async fn terminate_tokio_process_tree_keeps_the_status_when_only_a_zombie_is_left() {
+    // Same race on the async path: the post-exit sweep's EPERM used to
+    // replace the leader's status with an error (#474).
+    let mut child = TokioCommand::new("sleep")
+        .arg("30")
+        .process_group(0)
+        .spawn()
+        .expect("spawn group leader");
+    let leader = child.id().expect("live leader pid");
+    let mut zombie = park_zombie_in_group(leader);
+
+    let status = terminate_tokio_process_tree(&mut child, Duration::from_secs(1))
+        .await
+        .expect("the leader's status survives a zombie-only group");
+    assert_eq!(status.signal(), Some(libc::SIGTERM));
+    assert!(zombie.wait().expect("reap parked member").success());
 }
 
 #[tokio::test]
