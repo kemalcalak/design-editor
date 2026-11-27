@@ -1011,8 +1011,9 @@ CLI side (`crates/de-cli/src/agent_*.rs`, dispatched in `main` before the generi
   folder. State and transitions are core (`de-editor-core/src/chat_mentions/`):
   `ChatState::{pending_mentions, mention_popup, mention_dismissed_at}`, the
   shared file list on `ChatSessions::project_files`. The host calls
-  `WidgetHostNative::sync_chat_mentions` once per redraw (no allocation
-  unless the `@query` moved); opening the popup asks its
+  `WidgetHostNative::sync_chat_mentions` once per redraw (it hashes the
+  draft and allocates only when the draft, the staged mentions or the
+  `@query` moved); opening the popup asks its
   `ProjectFileSource` for the folder. The desktop's
   `de_host_services::chat_mention_scan::ProjectFileScanner` answers from a
   10 s cache and lists on a worker thread (never the UI thread; bounded:
@@ -1025,15 +1026,20 @@ CLI side (`crates/de-cli/src/agent_*.rs`, dispatched in `main` before the generi
   `@Label ` and stages a `ChatMention` keyed by id (a page by its page id,
   not its index). Matching is by identity (`chat_mentions::identity`): a
   second target with a staged name is written `@Name#2`, a token only counts
-  whole (end of text, whitespace or punctuation after it) and longer tokens
+  whole (end of text, whitespace or punctuation in any script after it:
+  letters and digits, `#`, `-`, `_` and `/` continue it) and longer tokens
   claim their span first, so `@Hero` never matches inside `@Hero card`.
   Deleting a token unstages exactly that mention.
-- At launch (`chat_session_launch.rs`) the staged mentions resolve to compact
-  summaries (`chat_mentions::summary` for document items, capped at 1200
-  chars; `chat_mention_context::summarize_project_file` for files: an
-  80-line / 4000-char excerpt, binaries described, paths outside the folder
-  refused) and are appended to the provider-bound text as a "Referenced
-  context" block. The keyword gates (`classify_intent`, direct-modify,
+- At launch (`chat_session_launch.rs`, `take_turn_mentions`) the staged
+  mentions resolve to compact summaries (`chat_mentions::summary` for
+  document items, capped at 1200 chars;
+  `chat_mention_context::summarize_project_file` for files: an 80-line /
+  4000-char excerpt, binaries described, paths outside the folder refused)
+  and are appended to the provider-bound text as a "Referenced context"
+  block. A file is read on a worker as soon as it is staged
+  (`chat_mention_prefetch::MentionFileReader` into
+  `ProjectFiles::summaries`); a send waits while a read runs, so the UI
+  thread never reads a mentioned file. The keyword gates (`classify_intent`, direct-modify,
   append detection, scenario stamp, the CLI route's intent classifier and
   `build_modify_plan`'s target pick) read `routing_text` — what the user
   typed — so a mentioned layer's name cannot steer routing. The modify

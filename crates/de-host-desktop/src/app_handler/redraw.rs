@@ -57,6 +57,10 @@ impl DesktopApp {
         {
             self.redraw_dirty = true;
         }
+        // Files staged as mentions are read on a worker before the send.
+        if self.mention_reads.sync(self.host.editor_state_mut()) {
+            self.redraw_dirty = true;
+        }
         if (self.ctx.is_none() || self.backend.is_none())
             && !self.try_init_render_context(event_loop)
         {

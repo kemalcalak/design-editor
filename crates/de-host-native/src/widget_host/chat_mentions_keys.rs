@@ -32,6 +32,7 @@ impl WidgetHostNative {
         if project.root != root {
             project.root = root;
             project.files = Arc::from(Vec::new());
+            project.summaries.clear();
         }
         let mut changed = self.editor_state.sync_chat_mentions();
         let mut landed = None;

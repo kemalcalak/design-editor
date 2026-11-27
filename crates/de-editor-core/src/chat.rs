@@ -293,6 +293,10 @@ pub struct ChatState {
     /// Byte offset of an `@` whose popup the user dismissed with Escape;
     /// the sync leaves it closed until the caret leaves that token.
     pub mention_dismissed_at: Option<usize>,
+    /// Fingerprint of the draft and staged-mention count the staged tokens
+    /// were last checked against, so the per-redraw sync skips the check
+    /// while neither moved.
+    pub mentions_checked_draft: Option<u64>,
 }
 
 /// Process-global allocator for [`ChatImage::id`]. A *global* counter
@@ -344,6 +348,7 @@ impl Default for ChatState {
             pending_mentions: Vec::new(),
             mention_popup: None,
             mention_dismissed_at: None,
+            mentions_checked_draft: None,
         }
     }
 }

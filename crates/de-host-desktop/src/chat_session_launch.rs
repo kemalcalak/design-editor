@@ -102,6 +102,12 @@ fn launch_if_pending_inner(
     current_chat: &mut Option<ChatSession>,
     current_design: &mut Option<DesignSession>,
 ) -> bool {
+    // A file staged as a mention (#398) is read on a worker; the send waits
+    // for it rather than reading the disk here (`MentionFileReader`).
+    let chat = &host.editor_state().chat;
+    if chat.pending_send.is_some() && chat.project_files.reading_any(&chat.pending_mentions) {
+        return false;
+    }
     let Some(user_text) = host.editor_state_mut().chat.pending_send.take() else {
         return false;
     };
@@ -115,22 +121,9 @@ fn launch_if_pending_inner(
     // `@`-mentions (#398) resolve to compact summaries appended to what the
     // provider reads. The keyword gates below route on `routing_text` alone,
     // so a mentioned layer called "New page" cannot steer the turn.
-    let mentions = std::mem::take(&mut host.editor_state_mut().chat.pending_mentions);
-    let project_root = host
-        .editor_state()
-        .chat
-        .project_files
-        .root
-        .clone()
-        .map(std::path::PathBuf::from);
-    let effective_user_text = format!(
-        "{routing_text}{}",
-        de_host_services::chat_mention_context::mention_context_for_turn(
-            host.editor_state(),
-            &mentions,
-            project_root.as_deref(),
-        )
-    );
+    let mentions =
+        de_host_services::chat_mention_context::take_turn_mentions(host.editor_state_mut());
+    let effective_user_text = format!("{routing_text}{mentions}");
     // TS parity (ai-chat-handlers.ts:560-679): builtin / ACP entries
     // take their own early-return paths; ONLY external CLI providers
     // run the standard-mode classify → modify/new/chat pipeline.

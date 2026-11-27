@@ -104,3 +104,22 @@ fn turn_context_resolves_documents_and_files_in_order() {
     assert!(unsaved.contains("unreadable — the document is not saved"));
     fs::remove_dir_all(&root).ok();
 }
+
+#[test]
+fn taking_the_turn_mentions_uses_and_drops_the_prefetched_summaries() {
+    let mut state = EditorState::default();
+    state.chat.project_files.root = Some("/no/such/folder".into());
+    state.chat.pending_mentions = vec![file("brief.md")];
+    state
+        .chat
+        .project_files
+        .summaries
+        .insert("brief.md".into(), Some("text file, 4 bytes: calm".into()));
+    let block = take_turn_mentions(&mut state);
+    assert!(
+        block.contains("- @brief.md (file): text file, 4 bytes: calm"),
+        "{block}"
+    );
+    assert!(state.chat.pending_mentions.is_empty());
+    assert!(state.chat.project_files.summaries.is_empty());
+}

@@ -127,3 +127,28 @@ fn a_cut_listing_warns_once_per_folder() {
     assert!(!wait_for(&mut scanner).warn);
     fs::remove_dir_all(&root).ok();
 }
+
+fn cut_project(tag: &str) -> PathBuf {
+    let root = temp_project(tag);
+    let mut deep = root.clone();
+    for level in 0..=MAX_SCAN_DEPTH {
+        deep = deep.join(format!("d{level}"));
+    }
+    fs::create_dir_all(&deep).unwrap();
+    root
+}
+
+#[test]
+fn switching_back_to_a_warned_folder_does_not_warn_again() {
+    let a = cut_project("warn-a");
+    let b = cut_project("warn-b");
+    let mut scanner = ProjectFileScanner::new();
+    scanner.request(&a);
+    assert!(wait_for(&mut scanner).warn);
+    scanner.request(&b);
+    assert!(wait_for(&mut scanner).warn);
+    scanner.request(&a);
+    assert!(!wait_for(&mut scanner).warn, "A → B → A warns once for A");
+    fs::remove_dir_all(&a).ok();
+    fs::remove_dir_all(&b).ok();
+}
