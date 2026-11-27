@@ -3,9 +3,12 @@
 //! With Settings ▸ System ▸ "Ask before destructive agent actions" on (off
 //! by default, `AgentSettings::confirm_destructive_agent_actions`), a tool
 //! call that deletes a layer, page, component or variable, replaces a
-//! layer, deletes inside a `batch_design` program or writes a file waits for
-//! the user: the chat shows a prompt with Allow / Deny, and the agent gets
-//! the tool's result or "the user declined" once they answer.
+//! layer, deletes or replaces inside a `batch_design` program (a `script`
+//! one counts once the host expanded it, else it always asks) or writes a
+//! file waits for the user: the chat shows a prompt with Allow / Deny, and
+//! the agent gets the tool's result or "the user declined" once they
+//! answer. The in-app chat and design-agent loops and the live MCP server
+//! (CLI and ACP agents) all go through [`EditorState::gate_agent_tool`].
 //!
 //! Classification and the prompt state are here (pure); the host holds the
 //! waiting request (`ChatSession::defer_tool_request`) and the chat panel
@@ -24,10 +27,14 @@ pub enum DestructiveAction {
     DeleteComponent,
     DeleteVariable,
     ReplaceLayer,
-    /// `batch_design` operations with `count` `D(...)` deletes.
+    /// `batch_design` operations with `count` `D(...)` deletes and
+    /// `R(...)` replacements.
     DeleteInBatch {
         count: usize,
     },
+    /// A `batch_design` script the host could not expand into operations,
+    /// so what it deletes is not known before it runs.
+    ScriptedBatch,
     /// A save or export that writes to disk.
     WriteFile,
 }
@@ -42,6 +49,7 @@ impl DestructiveAction {
             DestructiveAction::DeleteVariable => "chat.permission.deleteVariable",
             DestructiveAction::ReplaceLayer => "chat.permission.replaceLayer",
             DestructiveAction::DeleteInBatch { .. } => "chat.permission.deleteInBatch",
+            DestructiveAction::ScriptedBatch => "chat.permission.batchScript",
             DestructiveAction::WriteFile => "chat.permission.writeFile",
         }
     }
@@ -59,18 +67,24 @@ const FILE_WRITING_TOOLS: &[&str] = &[
     "save_theme_preset",
 ];
 
-/// `D("…")` operations in a `batch_design` operations string: a `D(` that
-/// starts the text or follows whitespace, `;` or `=`.
+/// `D("…")` deletes and `R("…")` replacements in a `batch_design`
+/// operations string: a `D(` / `R(` that starts the text or follows
+/// whitespace, `;` or `=`.
 fn count_batch_deletes(operations: &str) -> usize {
-    operations
-        .match_indices("D(")
-        .filter(|(at, _)| {
-            operations[..*at]
-                .chars()
-                .next_back()
-                .is_none_or(|c| c.is_whitespace() || c == ';' || c == '=')
+    ["D(", "R("]
+        .iter()
+        .map(|op| {
+            operations
+                .match_indices(op)
+                .filter(|(at, _)| {
+                    operations[..*at]
+                        .chars()
+                        .next_back()
+                        .is_none_or(|c| c.is_whitespace() || c == ';' || c == '=')
+                })
+                .count()
         })
-        .count()
+        .sum()
 }
 
 /// Whether the tool call `tool(args_json)` is destructive, and how.
@@ -83,11 +97,46 @@ pub fn destructive_action(tool: &str, args_json: &str) -> Option<DestructiveActi
         "replace_node" => Some(DestructiveAction::ReplaceLayer),
         "batch_design" => {
             let args: Value = serde_json::from_str(args_json).ok()?;
+            // `nodes_json` only inserts; a script is unknown until it runs
+            // (hosts expand it first, see `classify_with_expanded_script`).
+            if args
+                .get("script")
+                .and_then(Value::as_str)
+                .is_some_and(|s| !s.trim().is_empty())
+            {
+                return Some(DestructiveAction::ScriptedBatch);
+            }
             let count = count_batch_deletes(args.get("operations")?.as_str()?);
             (count > 0).then_some(DestructiveAction::DeleteInBatch { count })
         }
         _ if FILE_WRITING_TOOLS.contains(&tool) => Some(DestructiveAction::WriteFile),
         _ => None,
+    }
+}
+
+/// [`destructive_action`] for a `batch_design` call whose `script` the host
+/// expanded into `operations` (`expand` returns `None` when it cannot):
+/// the expanded program is counted like any other.
+pub fn classify_with_expanded_script(
+    tool: &str,
+    args_json: &str,
+    expand: impl FnOnce(&str) -> Option<String>,
+) -> Option<DestructiveAction> {
+    let action = destructive_action(tool, args_json)?;
+    if action != DestructiveAction::ScriptedBatch {
+        return Some(action);
+    }
+    let script = serde_json::from_str::<Value>(args_json)
+        .ok()?
+        .get("script")?
+        .as_str()?
+        .to_string();
+    match expand(&script) {
+        Some(operations) => {
+            let count = count_batch_deletes(&operations);
+            (count > 0).then_some(DestructiveAction::DeleteInBatch { count })
+        }
+        None => Some(DestructiveAction::ScriptedBatch),
     }
 }
 
@@ -103,6 +152,10 @@ pub struct PermissionPrompt {
     pub target: String,
     /// `None` while waiting; `Some(true)` allow, `Some(false)` deny.
     pub decision: Option<bool>,
+    /// The sentence in `locale`, made once so painting the prompt allocates
+    /// nothing ([`PermissionPrompt::sentence_in`]).
+    pub sentence: String,
+    pub locale: de_i18n::Locale,
 }
 
 fn first_str<'a>(args: &'a Value, keys: &[&str]) -> Option<&'a str> {
@@ -160,15 +213,30 @@ impl PermissionPrompt {
             DestructiveAction::WriteFile => {
                 first_str(&args, &["filePath", "path", "outDir", "dir", "out"]).map(str::to_string)
             }
-            DestructiveAction::DeleteInBatch { .. } => None,
+            DestructiveAction::DeleteInBatch { .. } | DestructiveAction::ScriptedBatch => None,
         }
         .unwrap_or_default();
-        Self {
+        let locale = state.editor_ui.effective_locale();
+        let mut prompt = Self {
             tool: tool.to_string(),
             args: args_json.to_string(),
             action,
             target,
             decision: None,
+            sentence: String::new(),
+            locale,
+        };
+        prompt.sentence = prompt.sentence(locale);
+        prompt
+    }
+
+    /// The sentence for painting in `locale`: the one made with the prompt,
+    /// or (after a language switch) made again.
+    pub fn sentence_in(&self, locale: de_i18n::Locale) -> std::borrow::Cow<'_, str> {
+        if locale == self.locale {
+            std::borrow::Cow::Borrowed(self.sentence.as_str())
+        } else {
+            std::borrow::Cow::Owned(self.sentence(locale))
         }
     }
 
@@ -194,11 +262,18 @@ impl PermissionPrompt {
 /// The tool result an agent gets when the user says no.
 pub const DECLINED_RESULT: &str = r#"{"success":false,"error":"The user declined this action. Do not retry it; ask the user or continue without it."}"#;
 
+/// The toast raised when a prompt opens where the user cannot see it (on
+/// another chat tab, or with the chat minimized).
+pub const WAITING_TOAST: &str = "chat.permission.waiting";
+
 /// What the host does with one agent tool call.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ToolGate {
     /// Run it now.
     Run,
+    /// Hold it: this call's prompt just opened (the host may need to point
+    /// the user at it, see [`EditorState::permission_prompt_hidden`]).
+    Asked,
     /// Hold it: a prompt is waiting for the user.
     Wait,
     /// The user said no: answer with [`DECLINED_RESULT`].
@@ -230,7 +305,7 @@ impl EditorState {
         let tab = self.chat.run_tab_mut(running_tab);
         let Some(open) = tab.permission_prompt.as_ref() else {
             tab.permission_prompt = Some(prompt);
-            return ToolGate::Wait;
+            return ToolGate::Asked;
         };
         if open.tool != tool || open.args != args_json {
             return ToolGate::Wait;
@@ -245,6 +320,21 @@ impl EditorState {
                     ToolGate::Declined
                 }
             }
+        }
+    }
+
+    /// Whether the prompt on chat tab `running_tab` is out of the user's
+    /// sight: on another tab than the one shown, or the chat minimized.
+    pub fn permission_prompt_hidden(&self, running_tab: Option<usize>) -> bool {
+        let tab = running_tab.unwrap_or(self.chat.active_index());
+        tab != self.chat.active_index() || self.chat.is_minimized()
+    }
+
+    /// Answer the open prompt on chat tab `running_tab` as declined, if one
+    /// is waiting (the turn is ending: stop, tab or document closed, quit).
+    pub fn decline_agent_permission(&mut self, running_tab: Option<usize>) {
+        if let Some(prompt) = self.chat.run_tab_mut(running_tab).permission_prompt.as_mut() {
+            prompt.decision.get_or_insert(false);
         }
     }
 

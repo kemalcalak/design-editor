@@ -179,7 +179,7 @@ pub struct AIChatPlaceholder<'a> {
     pub(crate) mcp_notice: Option<String>,
     /// A destructive agent call waiting for Allow / Deny (#398); takes the
     /// notice band's place while it shows.
-    pub(crate) permission: Option<crate::widgets::ai_chat_permission_prompt::PermissionView>,
+    pub(crate) permission: Option<crate::widgets::ai_chat_permission_prompt::PermissionView<'a>>,
     /// Opaque, stable per-panel-INSTANCE id used to scope the thread-local
     /// transcript cache. A host allocates ONE id (`Self::next_owner`) for its
     /// persistent widget-host state and stamps every constructed panel with it

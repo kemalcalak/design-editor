@@ -20,17 +20,19 @@ const FONT_SIZE: f32 = 11.0;
 const BUTTON_FONT: f32 = 11.5;
 const RADIUS: f32 = 6.0;
 
-/// What the prompt shows for one frame.
+/// What the prompt shows for one frame. Borrowed: the sentence is made once
+/// with the prompt (`PermissionPrompt::sentence_in`) and the button labels
+/// are the catalog's own strings, so building it per frame allocates nothing.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub(crate) struct PermissionView {
-    pub(crate) sentence: String,
-    pub(crate) allow: String,
-    pub(crate) deny: String,
+pub(crate) struct PermissionView<'a> {
+    pub(crate) sentence: std::borrow::Cow<'a, str>,
+    pub(crate) allow: &'static str,
+    pub(crate) deny: &'static str,
 }
 
 /// The prompt for the active chat tab, or `None` when no call is waiting
 /// (an answered prompt is gone from view until the host consumes it).
-pub(crate) fn permission_view(state: &de_editor_core::EditorState) -> Option<PermissionView> {
+pub(crate) fn permission_view(state: &de_editor_core::EditorState) -> Option<PermissionView<'_>> {
     let prompt = state
         .chat
         .permission_prompt
@@ -38,9 +40,9 @@ pub(crate) fn permission_view(state: &de_editor_core::EditorState) -> Option<Per
         .filter(|prompt| prompt.decision.is_none())?;
     let locale = state.editor_ui.effective_locale();
     Some(PermissionView {
-        sentence: prompt.sentence(locale),
-        allow: de_i18n::translate(locale, "chat.permission.allow").to_string(),
-        deny: de_i18n::translate(locale, "chat.permission.deny").to_string(),
+        sentence: prompt.sentence_in(locale),
+        allow: de_i18n::translate(locale, "chat.permission.allow"),
+        deny: de_i18n::translate(locale, "chat.permission.deny"),
     })
 }
 
@@ -56,14 +58,14 @@ pub(crate) struct PermissionLayout {
 
 pub(crate) fn permission_layout_with(
     row: Rect,
-    view: &PermissionView,
+    view: &PermissionView<'_>,
     widths: &mut LabelWidths<'_>,
 ) -> PermissionLayout {
     let button = |label: &str, widths: &mut LabelWidths<'_>| {
         widths.chrome(label, BUTTON_FONT) + BUTTON_PAD_X * 2.0
     };
-    let allow_w = button(&view.allow, widths);
-    let deny_w = button(&view.deny, widths);
+    let allow_w = button(view.allow, widths);
+    let deny_w = button(view.deny, widths);
     let y = row.origin.y + (row.size.y - BUTTON_H) / 2.0;
     let right = row.origin.x + row.size.x - PAD_X;
     let allow = Rect::xywh(right - allow_w, y, allow_w, BUTTON_H);
@@ -76,7 +78,7 @@ pub(crate) fn permission_layout_with(
 }
 
 /// `Some(true)` on Allow, `Some(false)` on Deny, `None` elsewhere.
-pub(crate) fn permission_hit(row: Rect, view: &PermissionView, point: Point2D) -> Option<bool> {
+pub(crate) fn permission_hit(row: Rect, view: &PermissionView<'_>, point: Point2D) -> Option<bool> {
     let layout = permission_layout_with(row, view, &mut LabelWidths::cached());
     if layout.allow.contains(point) {
         Some(true)
@@ -107,7 +109,7 @@ pub(crate) fn paint_permission_prompt(
     cx: &mut PaintCx<'_>,
     row: Rect,
     theme: Theme,
-    view: &PermissionView,
+    view: &PermissionView<'_>,
 ) {
     if row.size.x <= 0.0 || row.size.y <= 0.0 {
         return;
@@ -119,15 +121,21 @@ pub(crate) fn paint_permission_prompt(
         .stroke_round_rect(row, RADIUS, theme.accent.with_alpha(0.45), 1.0);
     let text_x = row.origin.x + PAD_X;
     let room = (layout.text_right - text_x).max(0.0);
-    let sentence = text_metrics::fit_chrome(cx.backend, &view.sentence, room, FONT_SIZE);
+    let sentence = LabelWidths::measuring(&mut *cx.backend).fit(
+        &view.sentence,
+        room,
+        FONT_SIZE,
+        text_metrics::CHROME_FONT_FAMILY,
+        400,
+    );
     label(cx, &sentence, FONT_SIZE, theme.foreground, text_x, row);
 
     cx.backend
         .stroke_round_rect(layout.deny, RADIUS, theme.border, 1.0);
-    let deny_x = text_metrics::centered_text_x(cx.backend, &view.deny, BUTTON_FONT, layout.deny);
+    let deny_x = text_metrics::centered_text_x(cx.backend, view.deny, BUTTON_FONT, layout.deny);
     label(
         cx,
-        &view.deny,
+        view.deny,
         BUTTON_FONT,
         theme.foreground,
         deny_x,
@@ -136,10 +144,11 @@ pub(crate) fn paint_permission_prompt(
 
     cx.backend
         .fill_round_rect(layout.allow, RADIUS, theme.accent);
-    let allow_x = text_metrics::centered_text_x(cx.backend, &view.allow, BUTTON_FONT, layout.allow);
+    let allow_x =
+        text_metrics::centered_text_x(cx.backend, view.allow, BUTTON_FONT, layout.allow);
     label(
         cx,
-        &view.allow,
+        view.allow,
         BUTTON_FONT,
         theme.accent_foreground,
         allow_x,
@@ -152,11 +161,11 @@ mod tests {
     use super::*;
     use crate::widgets::test_family_gap_backend::FamilyGapBackend;
 
-    fn view() -> PermissionView {
+    fn view() -> PermissionView<'static> {
         PermissionView {
             sentence: "Let the agent delete layer “Hero”?".into(),
-            allow: "Allow".into(),
-            deny: "Deny".into(),
+            allow: "Allow",
+            deny: "Deny",
         }
     }
 

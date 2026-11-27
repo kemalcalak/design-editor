@@ -20,6 +20,28 @@ pub struct ChatToolRequest {
     pub name: String,
     pub args_json: String,
     pub ack: SyncSender<ChatToolResult>,
+    /// Raised by the host while the call waits for the user (#398's
+    /// permission prompt): the worker then waits past its usual timeout, so
+    /// a call never runs after its agent was told it timed out. Dropping the
+    /// request (stop, tab or document closed, quit) still ends the wait.
+    pub hold: Arc<AtomicBool>,
+}
+
+impl ChatToolRequest {
+    /// A request with its ack channel's sending half and a fresh hold flag.
+    pub fn new(name: &str, args_json: &str, ack: SyncSender<ChatToolResult>) -> Self {
+        Self {
+            name: name.to_string(),
+            args_json: args_json.to_string(),
+            ack,
+            hold: Arc::new(AtomicBool::new(false)),
+        }
+    }
+
+    /// Keep the worker waiting for this call's answer (the user is asked).
+    pub fn hold_for_user(&self) {
+        self.hold.store(true, Ordering::SeqCst);
+    }
 }
 
 /// Worker-side [`ChatToolExecutor`] that forwards calls over a channel and
@@ -187,11 +209,8 @@ impl UiChatToolExecutor {
     /// Send one request over the tool channel and block until the host acks.
     fn forward(&self, name: &str, args_json: &str) -> ChatToolResult {
         let (ack_tx, ack_rx) = std::sync::mpsc::sync_channel::<ChatToolResult>(1);
-        let req = ChatToolRequest {
-            name: name.to_string(),
-            args_json: args_json.to_string(),
-            ack: ack_tx,
-        };
+        let req = ChatToolRequest::new(name, args_json, ack_tx);
+        let hold = Arc::clone(&req.hold);
         let sent = match self.tx.lock() {
             Ok(tx) => tx.send(req).is_ok(),
             Err(_) => false,
@@ -199,12 +218,29 @@ impl UiChatToolExecutor {
         if !sent {
             return aborted_result();
         }
-        match ack_rx.recv_timeout(std::time::Duration::from_secs(60)) {
-            Ok(result) => result,
-            Err(_) => timeout_result(),
+        loop {
+            match ack_rx.recv_timeout(TOOL_ACK_TIMEOUT) {
+                Ok(result) => return result,
+                // The user is being asked: keep waiting, however long.
+                Err(mpsc::RecvTimeoutError::Timeout) if hold.load(Ordering::SeqCst) => continue,
+                Err(mpsc::RecvTimeoutError::Timeout) => return timeout_result(),
+                // The host dropped the call: a prompt left unanswered (stop,
+                // tab or document closed, quit) counts as declined.
+                Err(mpsc::RecvTimeoutError::Disconnected) if hold.load(Ordering::SeqCst) => {
+                    return ChatToolResult {
+                        content: de_editor_core::agent_permission::DECLINED_RESULT.to_string(),
+                        is_error: true,
+                    };
+                }
+                Err(mpsc::RecvTimeoutError::Disconnected) => return aborted_result(),
+            }
         }
     }
 }
+
+/// How long a worker waits for the host to run a tool call that is not
+/// waiting on the user.
+const TOOL_ACK_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(60);
 
 fn timeout_result() -> ChatToolResult {
     ChatToolResult {

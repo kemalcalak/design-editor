@@ -49,6 +49,19 @@ fn destructive_calls_are_recognised() {
         destructive_action("batch_design", &ops("U(\"aD(\",{})")),
         None
     );
+    // A replacement is destructive too.
+    assert_eq!(
+        destructive_action("batch_design", &ops("R(\"a\",{\"type\":\"text\"})\nD(\"b\")")),
+        Some(A::DeleteInBatch { count: 2 })
+    );
+    // A script is unknown until expanded; inserts through nodes_json never ask.
+    let script = serde_json::json!({ "script": "ops.D('a')" }).to_string();
+    assert_eq!(
+        destructive_action("batch_design", &script),
+        Some(A::ScriptedBatch)
+    );
+    let nodes = serde_json::json!({ "nodes_json": "[{\"kind\":\"rect\"}]" }).to_string();
+    assert_eq!(destructive_action("batch_design", &nodes), None);
     assert_eq!(destructive_action("batch_design", "{}"), None);
     for safe in ["insert_node", "update_node", "batch_get", "move_node"] {
         assert_eq!(destructive_action(safe, "{}"), None, "{safe}");
@@ -115,7 +128,7 @@ fn gate_waits_for_the_answer_then_runs_or_declines() {
     );
     assert_eq!(
         state.gate_agent_tool(None, "delete_node", args),
-        ToolGate::Wait
+        ToolGate::Asked
     );
     assert!(state.chat.permission_prompt.is_some());
     // Still waiting on the next pump; another call queues behind it.
@@ -137,7 +150,7 @@ fn gate_waits_for_the_answer_then_runs_or_declines() {
 
     assert_eq!(
         state.gate_agent_tool(None, "remove_page", "{}"),
-        ToolGate::Wait
+        ToolGate::Asked
     );
     state.answer_agent_permission(false);
     assert_eq!(
@@ -167,4 +180,63 @@ fn declined_result_tells_the_agent_not_to_retry() {
     let value: serde_json::Value = serde_json::from_str(DECLINED_RESULT).unwrap();
     assert_eq!(value["success"], false);
     assert!(value["error"].as_str().unwrap().contains("declined"));
+}
+
+#[test]
+fn an_expanded_script_is_counted_like_operations() {
+    let script = serde_json::json!({ "script": "anything" }).to_string();
+    assert_eq!(
+        classify_with_expanded_script("batch_design", &script, |_| Some(
+            "x=I(\"root\",{})\nD(\"old\")".into()
+        )),
+        Some(DestructiveAction::DeleteInBatch { count: 1 })
+    );
+    assert_eq!(
+        classify_with_expanded_script("batch_design", &script, |_| Some("I(\"root\",{})".into())),
+        None,
+        "a script that only inserts runs at once"
+    );
+    assert_eq!(
+        classify_with_expanded_script("batch_design", &script, |_| None),
+        Some(DestructiveAction::ScriptedBatch)
+    );
+    assert_eq!(
+        classify_with_expanded_script("delete_node", "{}", |_| None),
+        Some(DestructiveAction::DeleteLayer)
+    );
+}
+
+#[test]
+fn the_sentence_is_made_once_per_prompt() {
+    let state = multi_page_state();
+    let prompt = PermissionPrompt::new(
+        &state,
+        "delete_node",
+        DestructiveAction::DeleteLayer,
+        r#"{"nodeId":"cta"}"#,
+    );
+    let locale = state.editor_ui.effective_locale();
+    assert!(matches!(
+        prompt.sentence_in(locale),
+        std::borrow::Cow::Borrowed(_)
+    ));
+    let other = if locale == Locale::Ja { Locale::EnUs } else { Locale::Ja };
+    assert!(matches!(
+        prompt.sentence_in(other),
+        std::borrow::Cow::Owned(_)
+    ));
+}
+
+#[test]
+fn a_hidden_prompt_is_noticed_and_an_ending_turn_declines_it() {
+    let mut state = asking();
+    assert!(!state.permission_prompt_hidden(None));
+    state.chat.new_tab();
+    assert!(state.permission_prompt_hidden(Some(0)), "on another tab");
+    state.gate_agent_tool(Some(0), "delete_node", "{}");
+    state.decline_agent_permission(Some(0));
+    assert_eq!(
+        state.gate_agent_tool(Some(0), "delete_node", "{}"),
+        ToolGate::Declined
+    );
 }
