@@ -9,8 +9,9 @@ use crate::widgets::agent_settings_rows::{row_height, tab_intro_height, RowLines
 
 /// Row order and shape on the System tab: Appearance (one line),
 /// Auto-update (two), Experimental (two), Pencil cursor (one), Pencil
-/// smoothing (one).
-const SYSTEM_ROWS: [RowLines; 7] = [
+/// smoothing (one), Live pages (two), Ask before destructive agent actions
+/// (two, #398), Memory (two, #456).
+const SYSTEM_ROWS: [RowLines; 8] = [
     RowLines::One,
     RowLines::Two,
     RowLines::Two,
@@ -18,6 +19,8 @@ const SYSTEM_ROWS: [RowLines; 7] = [
     RowLines::One,
     RowLines::Two,
     // Ask before destructive agent actions (#398).
+    RowLines::Two,
+    // Memory (#456).
     RowLines::Two,
 ];
 
@@ -92,7 +95,7 @@ fn system_tab_reserves_space_for_update_status() {
             + FOOTNOTE_H
             + CONTENT_TAIL_PAD,
         "System tab = heading + Appearance/Auto-update/Experimental/Pencil-cursor/\
-         Pencil-smoothing/Live-pages/Confirm-agent-actions rows + version footnote + bottom pad"
+         Pencil-smoothing/Live-pages/Confirm-agent-actions/Memory rows + version footnote + bottom pad"
     );
 }
 

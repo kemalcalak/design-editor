@@ -283,6 +283,7 @@ impl DesktopApp {
             git_pull_doc_baseline: None,
             git_status_job: None,
             git_diff_job: None,
+            memory_refresh: Default::default(),
             git_clone_job: None,
             git_clone_origin: None,
             last_git_refresh: Instant::now(),

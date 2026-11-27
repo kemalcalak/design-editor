@@ -25,6 +25,9 @@ pub const NO_NODE_TOOLS: &[&str] = &[
     "get_variables",
     "list_variables",
     "get_active_theme",
+    // Reads the history and process memory only (#456); answering from a
+    // narrowed snapshot also keeps its own copy out of the footprint.
+    "debug_memory_report",
 ];
 
 /// Read-only tools that read one page: `pageId` (`page_id`, `page`), else

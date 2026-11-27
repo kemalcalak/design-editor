@@ -45,7 +45,7 @@ pub fn debug_tools_enabled() -> bool {
     // Tests force the gate via a thread-local override instead of mutating
     // process-global env — `setenv` races any concurrent `getenv` (e.g.
     // `temp_dir()` reading `TMPDIR`) in parallel tests, which is UB.
-    #[cfg(test)]
+    #[cfg(any(test, feature = "test-support"))]
     if let Some(forced) = debug_gate_override::get() {
         return forced;
     }
@@ -54,29 +54,29 @@ pub fn debug_tools_enabled() -> bool {
 
 /// Test-only thread-local override for [`debug_tools_enabled`]. The debug
 /// tool `call()`s run on the test thread, so a thread-local is visible.
-#[cfg(test)]
-pub(crate) mod debug_gate_override {
+#[cfg(any(test, feature = "test-support"))]
+pub mod debug_gate_override {
     use std::cell::Cell;
 
     thread_local! {
         static GATE: Cell<Option<bool>> = const { Cell::new(None) };
     }
 
-    pub(crate) fn get() -> Option<bool> {
+    pub fn get() -> Option<bool> {
         GATE.with(|gate| gate.get())
     }
 
-    pub(crate) fn set(value: Option<bool>) {
+    pub fn set(value: Option<bool>) {
         GATE.with(|gate| gate.set(value));
     }
 
     /// RAII guard that forces the gate and resets it on drop, so a
     /// panicking test can't leak the forced value into another test on
     /// the same thread.
-    pub(crate) struct Guard;
+    pub struct Guard;
 
     impl Guard {
-        pub(crate) fn forcing(value: bool) -> Self {
+        pub fn forcing(value: bool) -> Self {
             set(Some(value));
             Guard
         }

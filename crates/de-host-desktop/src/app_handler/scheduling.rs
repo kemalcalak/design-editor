@@ -156,6 +156,14 @@ impl DesktopApp {
             // A visible Home rescans its Recent files for outside changes.
             let period = crate::home_previews::RESCAN.as_millis() as u64;
             event_loop.set_control_flow(ControlFlow::WaitUntil(self.periodic_wake_instant(period)));
+        } else if let Some(at) = self.memory_refresh.wake(
+            Instant::now(),
+            &self.host,
+            self.backend.is_some(),
+            self.surface_hidden(),
+        ) {
+            // Settings ▸ System shows the memory row: refresh it (#456).
+            event_loop.set_control_flow(ControlFlow::WaitUntil(at));
         } else if let Some(deadline_ms) = self.host.memory_idle_deadline_ms() {
             // One wake per quiet spell for the idle memory trim (#456).
             let deadline = self.clock_start + Duration::from_millis(deadline_ms);

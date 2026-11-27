@@ -115,6 +115,8 @@ skia-safe = { version = "0.97.0", default-features = false, features = [
 ] }
 
 [dev-dependencies]
+# The debug-tool gate for tests that drive a debug tool through the live path.
+de-mcp = { path = "../de-mcp", features = ["script", "test-support"] }
 
 # Process-liveness probes in the subprocess / startup tests (`libc::kill`).
 [target.'cfg(unix)'.dev-dependencies]

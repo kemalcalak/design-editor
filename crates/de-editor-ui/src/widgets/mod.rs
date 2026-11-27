@@ -369,6 +369,7 @@ mod agent_settings_switch;
 #[cfg(test)]
 mod agent_settings_switch_style_tests;
 pub mod agent_settings_system;
+mod agent_settings_system_memory;
 pub(crate) mod ai_chat_chip_row;
 pub(crate) mod ai_chat_chrome;
 pub(crate) mod ai_chat_context_panel;
