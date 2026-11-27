@@ -612,6 +612,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.context.lastReply" => "上一条回复",
         "chat.context.chatTotal" => "本次对话",
         "chat.usage.tokens" => "输入 {{input}} · 输出 {{output}}",
+        "layerMenu.sendToAgent" => "发送给智能体",
         _ => return None,
     })
 }

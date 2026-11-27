@@ -75,6 +75,9 @@ pub enum LayerContextAction {
     DetachInstance,
     ToggleLock,
     ToggleVisibility,
+    /// Open the chat on a sticky note / context / prompt annotation with
+    /// its text and the layers around it (#398). Shown only on annotations.
+    SendToAgent,
     // Page-row actions
     RenamePage,
     DuplicatePage,
@@ -97,6 +100,12 @@ struct Row {
 }
 
 const LAYER_ROWS: &[Row] = &[
+    Row {
+        icon: Icon::Send,
+        action: LayerContextAction::SendToAgent,
+        label_key: "layerMenu.sendToAgent",
+        destructive: false,
+    },
     Row {
         icon: Icon::Pencil,
         action: LayerContextAction::RenameLayer,
@@ -264,6 +273,7 @@ impl LayerContextMenu {
                     LayerContextAction::CreateComponentFromSimilar => {
                         !state.similar_layer_ids(target).is_empty()
                     }
+                    LayerContextAction::SendToAgent => state.is_annotation(target),
                     _ => true,
                 })
                 .collect(),
@@ -486,3 +496,7 @@ mod similar_tests;
 #[cfg(test)]
 #[path = "layer_context_menu_width_tests.rs"]
 mod width_tests;
+
+#[cfg(test)]
+#[path = "layer_context_send_tests.rs"]
+mod layer_context_send_tests;

@@ -46,6 +46,10 @@ pub fn apply_layer_context_action(
             let _ = state.duplicate_selected(next_node_id, 10.0);
             LayerContextStep::Done
         }
+        (A::SendToAgent, T::Layer(id)) => {
+            state.send_annotation_to_agent(&id, now_ms);
+            LayerContextStep::Done
+        }
         (A::CopyAsPng | A::CopyAsSvg, T::Layer(id)) => {
             // Copy the multi-selection when the row is part of it, like
             // Duplicate; the desktop renders and writes the clipboard.

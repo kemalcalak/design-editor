@@ -612,6 +612,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.context.lastReply" => "Phản hồi gần nhất",
         "chat.context.chatTotal" => "Cuộc trò chuyện này",
         "chat.usage.tokens" => "{{input}} đầu vào · {{output}} đầu ra",
+        "layerMenu.sendToAgent" => "Gửi cho tác tử",
         _ => return None,
     })
 }

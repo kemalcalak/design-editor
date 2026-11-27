@@ -612,6 +612,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.context.lastReply" => "上一則回覆",
         "chat.context.chatTotal" => "這次對話",
         "chat.usage.tokens" => "輸入 {{input}} · 輸出 {{output}}",
+        "layerMenu.sendToAgent" => "傳送給代理",
         _ => return None,
     })
 }

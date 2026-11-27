@@ -1103,7 +1103,7 @@ real CLI agents, not a stub:
 
 CLI side (`crates/de-cli/src/agent_*.rs`, dispatched in `main` before the generic parser): `agent_args` (own argv parser, `-p`), `agent_tasks` (YAML / JSON tasks file via `serde-saphyr`, `deny_unknown_fields`, task > flags > file `defaults`; `check_plan` refuses duplicate `out`s and overlapping export folders by `agent_paths::path_key`: absolute, `..` resolved, Windows `\\?\` prefix dropped, NFC on macOS, case-folded on macOS / Windows; lexical, so symlinks, UNC vs mapped drives and case-insensitive Linux disks are documented misses), `agent_task` (shared checks: portable task names, the engine's 32 KiB prompt limit, export folder `<root>/<task name>`), `agent_provider` (saved providers through the read-only `settings_io::read_builtin_agents`, or an unsaved one from `DE_AGENT_API_KEY` etc.; keys never on argv or in output), `agent_runner` (load → engine → `state.apply` → atomic save → `headless_export::export_document`; typed `TaskError` in `agent_runner_error.rs`; statuses ok / failed / cancelled / interrupted; `--parallel N` worker threads, at most 16, sharing the builtin HTTP pacer in `de-chat-agent/src/backoff.rs`), `agent_thumbs` (the `image_thumbs` registry is process-wide and replaced by each load: every task takes `capture_snapshot()` right after its load, whatever form the file kept the thumbnails in (inline base64 or `<name>.assets/` paths), and `restore_snapshot`s it right before its save; load + snapshot and restore + save hold one lock, so no other task's load lands in between), `agent_report` (`--json`, report `version` 1), `agent_progress` (stderr). Exit 0 / 1 (a task failed) / 2 (usage, tasks file or provider setup, nothing ran) / 130 (Ctrl+C via `signal-hook` cut a task short; `--out` untouched unless it was already saved). Provider errors never print a value that may be a secret (`agent_provider_error.rs`: base URL, the `--api-key-env` value (only its length), serde's quoted settings values), and `--list-providers --json` shows base URLs without user info, query or fragment (`redact_url`). All of it sits behind de-cli's default `agent` feature, which links `de-host-services` (skia raster, no GL; the release `de` grows from ~10 to ~62 MiB). Releases build it (the release script compiles de-cli together with `de-host-desktop`, so `pinned-skia-binaries` unifies); `--no-default-features` gives a slim `de` whose `de agent` prints that it is not in this build and exits 2. CI lints that slim build (`cargo clippy -p de-cli --no-default-features`), and `tests/agent_cli.rs` is `cfg(feature = "agent")`. Integration tests (`crates/de-cli/tests/agent_cli.rs`) run the binary against a loopback Anthropic-wire fake provider (`tests/agent_cli/fake_provider.rs`: `<<frame:Name>>`, `<<fail>>`, `<<hang>>` prompt markers). User docs: `docs/guide/cli.md#headless-design-agent`.
 
-## Chat context: `@`-mentions, attachments, `/` skills, usage and the context panel (#398)
+## Chat context: `@`-mentions, attachments, `/` skills, usage, notes and the context panel (#398)
 
 - Typing `@` (at the draft start or after whitespace, so an email address
   never triggers it) opens a popup above the composer card ranked by the
@@ -1229,3 +1229,14 @@ CLI side (`crates/de-cli/src/agent_*.rs`, dispatched in `main` before the generi
   `Eq`) when the turn ends. The context panel shows the last reply and the
   chat's total (`chat_usage_label`: "12.4k in · 830 out · $0.041", tokens
   only without a price). CLI agents report no usage into the chat yet (#463).
+- Send to agent: the layer menu's first row on a note / context / prompt
+  annotation (`LayerContextAction::SendToAgent`, offered only when
+  `EditorState::is_annotation`) runs `send_annotation_to_agent`
+  (`de-editor-core/src/annotation_agent.rs`): it opens the Agent tab (a
+  fresh chat tab when the current one has a conversation or a running
+  turn), writes the note's text as the draft and stages `@`-mentions of the
+  top-level layers around it (`surrounding_layers`: within 24 px of the
+  note, else the nearest within 600 px, never another annotation, at most
+  3; a note inside a frame is placed in page coordinates first). The note
+  itself is staged only when it is blank, so its text reaches the model
+  once. Nothing is sent until the user presses Send.

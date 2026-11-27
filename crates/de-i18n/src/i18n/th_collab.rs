@@ -612,6 +612,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.context.lastReply" => "คำตอบล่าสุด",
         "chat.context.chatTotal" => "แชตนี้",
         "chat.usage.tokens" => "อินพุต {{input}} · เอาต์พุต {{output}}",
+        "layerMenu.sendToAgent" => "ส่งให้เอเจนต์",
         _ => return None,
     })
 }

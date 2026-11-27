@@ -614,6 +614,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.context.lastReply" => "마지막 답변",
         "chat.context.chatTotal" => "이 대화",
         "chat.usage.tokens" => "입력 {{input}} · 출력 {{output}}",
+        "layerMenu.sendToAgent" => "에이전트에게 보내기",
         _ => return None,
     })
 }
