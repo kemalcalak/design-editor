@@ -415,7 +415,7 @@ fn container_role(node: &PenNode, place: Place<'_>, facts: &Facts) -> Role {
     if let Some(role) = button_role(node) {
         // Read again with its neighbours: a table cell, a slot or a pill
         // looks like a button on its own.
-        return label_box_context::in_place(role, node, place);
+        return label_box_context::in_place(role, node, place, facts);
     }
     if let Some(role) = cards_role(node, place, facts) {
         return role;

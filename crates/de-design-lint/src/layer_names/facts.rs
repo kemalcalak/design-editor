@@ -6,11 +6,13 @@
 
 use std::cell::RefCell;
 use std::collections::HashMap;
+use std::rc::Rc;
 
 use jian_ops_schema::node::PenNode;
 
 use crate::node_util::{children, is_node_visible, node_kind};
 
+use super::label_box_rows::{row_facts, table_columns, RowFacts, TableColumns};
 use super::rules::{button_role, is_card_shaped, text_content};
 use super::text_roles::{header_band_of, heading_of};
 
@@ -29,6 +31,8 @@ pub(crate) struct Facts {
     has_text: RefCell<HashMap<Key, bool>>,
     heading: RefCell<HashMap<Key, Option<String>>>,
     header_band: RefCell<HashMap<Key, bool>>,
+    row: RefCell<HashMap<Key, Rc<RowFacts>>>,
+    table: RefCell<HashMap<Key, Rc<TableColumns>>>,
 }
 
 fn remember<V: Clone>(
@@ -88,6 +92,17 @@ impl Facts {
     /// [`header_band_of`]).
     pub(crate) fn header_band(&self, screen: &PenNode) -> bool {
         remember(&self.header_band, screen, || header_band_of(screen, self))
+    }
+
+    /// What the row `row` of label boxes is (see [`row_facts`]).
+    pub(crate) fn row(&self, row: &PenNode) -> Rc<RowFacts> {
+        remember(&self.row, row, || Rc::new(row_facts(row, self)))
+    }
+
+    /// How many rows of `table` share each set of columns (see
+    /// [`table_columns`]).
+    pub(crate) fn table(&self, table: &PenNode) -> Rc<TableColumns> {
+        remember(&self.table, table, || Rc::new(table_columns(table, self)))
     }
 
     /// The heading `node` is named after (see [`heading_of`]).

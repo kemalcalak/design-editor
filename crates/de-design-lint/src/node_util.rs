@@ -468,7 +468,7 @@ pub fn node_fills(node: &PenNode) -> Option<&Vec<PenFill>> {
 
 /// Borrow a node's `stroke` across the kinds that carry one. Container
 /// kinds carry it via `ContainerProps`; `Image` does not.
-fn stroke(node: &PenNode) -> Option<&jian_ops_schema::style::PenStroke> {
+pub(crate) fn stroke(node: &PenNode) -> Option<&jian_ops_schema::style::PenStroke> {
     match node {
         PenNode::Frame(n) | PenNode::Script(ScriptNode { frame: n, .. }) => {
             n.container.stroke.as_ref()

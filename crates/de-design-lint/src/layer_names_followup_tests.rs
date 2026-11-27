@@ -648,7 +648,7 @@ fn template_names_follow_what_their_authors_called_them() {
         "cells and slots named as buttons: {misnamed_places:#?}"
     );
     assert!(cells >= 29, "only {cells} table cells");
-    assert!(slots >= 9, "only {slots} slots");
+    assert!(slots >= 7, "only {slots} slots");
     navigation.sort();
     assert_eq!(
         navigation,

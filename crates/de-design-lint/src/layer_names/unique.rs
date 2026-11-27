@@ -13,6 +13,7 @@ use de_i18n::Locale;
 use jian_ops_schema::node::PenNode;
 
 use super::facts::Facts;
+use super::placeholder::slot_thing;
 use super::rules::collapse_whitespace;
 use super::tell_apart::{fill_word, position_words};
 use super::text_roles::labels;
@@ -63,12 +64,13 @@ fn qualify(name: &str, detail: &str, locale: Locale) -> String {
 }
 
 /// `name` told apart by `node`'s own texts that it does not already say,
-/// in reading order, e.g. `Card (Starter)`.
+/// in reading order, e.g. `Card (Starter)`. A placeholder label (`Drop
+/// logo`) is what a slot's name came from, so it says nothing new.
 fn qualified(node: &PenNode, name: &str, locale: Locale, facts: &Facts) -> Vec<String> {
     let lower = name.to_lowercase();
     labels(node, facts)
         .into_iter()
-        .filter(|label| !lower.contains(&label.to_lowercase()))
+        .filter(|label| !lower.contains(&label.to_lowercase()) && slot_thing(label).is_none())
         .map(|label| qualify(name, &label, locale))
         .collect()
 }

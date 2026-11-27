@@ -34,9 +34,9 @@ struct Walk<'a> {
 }
 
 /// A run of siblings: their parent (`None` for a page's top-level layers)
-/// and its parent,
-/// their depth below the page, the section they are named in, the roles
-/// of their unit's texts and whether they sit inside a target.
+/// and grandparent, their depth below the page, the section they are named
+/// in, the roles of their unit's texts and whether they sit inside a
+/// target.
 struct Siblings<'s, 'n> {
     parent: Option<&'n PenNode>,
     grandparent: Option<&'n PenNode>,
