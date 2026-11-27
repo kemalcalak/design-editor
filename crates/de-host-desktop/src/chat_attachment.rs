@@ -19,52 +19,113 @@ use de_host_services::chat_attachment_load::{
 };
 
 type Loaded = (String, Result<ChatAttachment, AttachmentLoadError>);
+/// One batch of reads: the chat tab it was started for and its files' results
+/// in the order they were given.
+type Batch = (u64, Vec<Loaded>);
 
 /// Files being read for the chat. Reading is disk I/O of up to
 /// [`MAX_ATTACHMENT_BYTES`] per file, so it runs on a worker thread and the
-/// result is staged when [`AttachmentLoads::drain`] collects it.
+/// results are staged when [`AttachmentLoads::drain`] collects them.
+///
+/// Files are queued first ([`AttachmentLoads::queue`]) and read as one batch
+/// per drop or paste on one worker, in the order given. Only as many files as
+/// the chat has room for ([`MAX_ATTACHMENTS`] minus what is staged and what is
+/// already being read) are queued; the rest are refused with one toast. Each
+/// batch remembers the tab it was started for and lands there.
 pub struct AttachmentLoads {
-    tx: Sender<Loaded>,
-    rx: Receiver<Loaded>,
+    tx: Sender<Batch>,
+    rx: Receiver<Batch>,
+    /// Files being read on workers.
     pending: usize,
+    /// Files queued for the next batch, and the tab they are for.
+    queued: Vec<PathBuf>,
+    queued_tab: u64,
+    /// Files refused for want of room since the last drain: how many, and
+    /// the first one's name (for the toast).
+    refused: usize,
+    refused_name: Option<String>,
 }
 
 impl Default for AttachmentLoads {
     fn default() -> Self {
         let (tx, rx) = mpsc::channel();
-        Self { tx, rx, pending: 0 }
+        Self {
+            tx,
+            rx,
+            pending: 0,
+            queued: Vec::new(),
+            queued_tab: 0,
+            refused: 0,
+            refused_name: None,
+        }
     }
 }
 
 impl AttachmentLoads {
-    /// Whether a read is still running (the host keeps waking to collect
-    /// it).
+    /// Whether a read is queued or running, or a refusal waits for its toast
+    /// (the host keeps waking to collect it).
     pub fn is_pending(&self) -> bool {
-        self.pending > 0
+        self.pending > 0 || !self.queued.is_empty() || self.refused > 0
     }
 
-    /// Read `path` on a worker thread.
-    pub fn start(&mut self, path: PathBuf) {
+    /// Queue `path` for the active chat tab, or refuse it when the tab has no
+    /// room left. Nothing touches the disk here.
+    pub fn queue(&mut self, host: &WidgetHostNative, path: PathBuf) {
+        let chat = host.editor_state().chat.active();
+        if chat.tab_id != self.queued_tab {
+            self.flush();
+            self.queued_tab = chat.tab_id;
+        }
+        let taken = chat.pending_attachments.len() + self.pending + self.queued.len();
+        if taken >= MAX_ATTACHMENTS {
+            self.refused += 1;
+            self.refused_name.get_or_insert_with(|| file_name(&path));
+            return;
+        }
+        self.queued.push(path);
+    }
+
+    /// Start reading the queued files: one worker for the whole batch.
+    pub fn flush(&mut self) {
+        if self.queued.is_empty() {
+            return;
+        }
+        let paths = std::mem::take(&mut self.queued);
+        let count = paths.len();
+        let tab = self.queued_tab;
         let tx = self.tx.clone();
-        let name = file_name(&path);
         let spawned = thread::Builder::new()
             .name("de-chat-attach".into())
             .spawn(move || {
-                let _ = tx.send((name, load_attachment(&path)));
+                let loaded = paths
+                    .iter()
+                    .map(|path| (file_name(path), load_attachment(path)))
+                    .collect();
+                let _ = tx.send((tab, loaded));
             });
         match spawned {
-            Ok(_) => self.pending += 1,
+            Ok(_) => self.pending += count,
             Err(err) => eprintln!("design-editor: spawn attachment read failed: {err}"),
         }
     }
 
-    /// Stage every finished read on the active chat (or raise its toast).
-    /// Returns true when the chat changed.
+    /// Start the queued batch, raise the "full" toast for refused files and
+    /// stage every finished batch on the tab it was started for (or raise
+    /// its toasts). Returns true when the chat changed.
     pub fn drain(&mut self, host: &mut WidgetHostNative) -> bool {
+        self.flush();
         let mut changed = false;
-        while let Ok((name, loaded)) = self.rx.try_recv() {
-            self.pending = self.pending.saturating_sub(1);
-            changed |= stage_loaded(host, &name, loaded);
+        if self.refused > 0 {
+            let name = self.refused_name.take().unwrap_or_default();
+            self.refused = 0;
+            show_full_toast(host, &name);
+            changed = true;
+        }
+        while let Ok((tab, batch)) = self.rx.try_recv() {
+            self.pending = self.pending.saturating_sub(batch.len());
+            for (name, loaded) in batch {
+                changed |= stage_loaded(host, tab, &name, loaded);
+            }
         }
         changed
     }
@@ -77,9 +138,23 @@ fn file_name(path: &Path) -> String {
         .to_string()
 }
 
+fn show_full_toast(host: &mut WidgetHostNative, name: &str) {
+    let now = host.now_ms();
+    let args = vec![
+        ("name".to_string(), name.to_string()),
+        ("count".to_string(), MAX_ATTACHMENTS.to_string()),
+    ];
+    host.editor_state_mut().editor_ui.show_toast(
+        "chat.attach.full",
+        args,
+        EditorToastLevel::Warn,
+        now,
+    );
+}
+
 /// Drain `chat.pending_attachment_pick` (raised by the "+" menu's Attach
-/// row): open a native picker for images and text files and start reading
-/// the chosen file. Returns true when the picker ran.
+/// row): open a native picker for images and text files and queue the
+/// chosen file. Returns true when the picker ran.
 pub fn drain_attachment_pick(host: &mut WidgetHostNative, loads: &mut AttachmentLoads) -> bool {
     if !std::mem::take(&mut host.editor_state_mut().chat.pending_attachment_pick) {
         return false;
@@ -93,23 +168,42 @@ pub fn drain_attachment_pick(host: &mut WidgetHostNative, loads: &mut Attachment
         .add_filter("Text", &text)
         .pick_file()
     {
-        loads.start(path);
+        loads.queue(host, path);
     }
     true
 }
 
-/// A pasted text that names one attachable file on disk (a copied path, or
-/// a `file://` URL a Linux file manager puts on the clipboard as text).
-pub fn pasted_file_path(text: &str) -> Option<PathBuf> {
+/// A pasted text that is one `file://` URL naming an attachable file (what a
+/// Linux file manager puts on the clipboard as text). A plain pasted path
+/// stays text: it is typed, never looked up on disk here. Whether the file
+/// exists is the worker's read to find out.
+pub fn pasted_file_url(text: &str) -> Option<PathBuf> {
+    file_url_path(text, cfg!(windows))
+}
+
+/// [`pasted_file_url`] for a given platform: on Windows `file:///C:/x.md`
+/// is `C:/x.md`.
+fn file_url_path(text: &str, windows: bool) -> Option<PathBuf> {
     let line = text.trim();
-    if line.is_empty() || line.contains('\n') {
+    if line.contains('\n') {
         return None;
     }
-    let path = match line.strip_prefix("file://") {
-        Some(rest) => PathBuf::from(percent_decode(rest)?),
-        None => PathBuf::from(line),
-    };
-    (path.is_absolute() && is_attachable(&path) && path.is_file()).then_some(path)
+    let rest = line.strip_prefix("file://")?;
+    // `file://localhost/x` names the same file as `file:///x`.
+    let rest = rest.strip_prefix("localhost").unwrap_or(rest);
+    if !rest.starts_with('/') {
+        return None;
+    }
+    let mut decoded = percent_decode(rest)?;
+    if windows {
+        let b = decoded.as_bytes();
+        if b.len() >= 3 && b[0] == b'/' && b[1].is_ascii_alphabetic() && b[2] == b':' {
+            decoded.remove(0);
+        }
+    }
+    let path = PathBuf::from(decoded);
+    let absolute = path.is_absolute() || windows;
+    (absolute && is_attachable(&path)).then_some(path)
 }
 
 fn percent_decode(text: &str) -> Option<String> {
@@ -129,12 +223,16 @@ fn percent_decode(text: &str) -> Option<String> {
     String::from_utf8(out).ok()
 }
 
-/// Stage a finished read as an attachment of the active chat, or raise a
-/// toast naming why not (unsupported type, not a file, over the size cap,
-/// unreadable, or the per-message count reached). Returns true when the
+/// Stage a finished read as an attachment of chat tab `tab` (by
+/// [`ChatState::tab_id`]; dropped silently when that tab was closed), or
+/// raise a toast naming why not (unsupported type, not a file, over the size
+/// cap, unreadable, or the per-message count reached). Returns true when the
 /// chat changed.
+///
+/// [`ChatState::tab_id`]: de_editor_core::ChatState::tab_id
 pub fn stage_loaded(
     host: &mut WidgetHostNative,
+    tab: u64,
     name: &str,
     loaded: Result<ChatAttachment, AttachmentLoadError>,
 ) -> bool {
@@ -142,8 +240,11 @@ pub fn stage_loaded(
     let mut args = vec![("name".to_string(), name.to_string())];
     let key = match loaded {
         Ok(attachment) => {
-            if host.editor_state_mut().chat.add_attachment(attachment) {
-                host.editor_state_mut().chat.focused = true;
+            let Some(chat) = host.editor_state_mut().chat.tab_by_id_mut(tab) else {
+                return false;
+            };
+            if chat.add_attachment(attachment) {
+                chat.focused = true;
                 return true;
             }
             args.push(("count".to_string(), MAX_ATTACHMENTS.to_string()));

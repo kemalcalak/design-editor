@@ -1050,10 +1050,14 @@ CLI side (`crates/de-cli/src/agent_*.rs`, dispatched in `main` before the generi
 - Attachments: the "+" menu's Attach row opens a picker for images and
   text files, a file dropped on the chat panel is staged instead of imported,
   and a paste stages copied files (the clipboard's file list wins over its
-  text and icon image), a pasted image, or a pasted absolute path /
-  `file://` URL to an attachable file. Files are read on worker threads
-  (desktop `chat_attachment::AttachmentLoads`, drained per redraw) and
-  staged on the active chat; refusals are Warn toasts
+  text and icon image), a pasted image, or a pasted `file://` URL to an
+  attachable file (`file:///C:/…` on Windows); a plain pasted path stays
+  text and is never looked up on the UI thread. Files are queued
+  (desktop `chat_attachment::AttachmentLoads::queue`, only as many as fit
+  under `MAX_ATTACHMENTS` minus staged and in-flight, the rest refused with
+  one `full` toast), read as one batch per drop or paste on one worker in
+  the given order, and staged on the tab they were started for
+  (`ChatState::tab_id`, `ChatSessions::tab_by_id_mut`); refusals are Warn toasts
   (`chat.attach.unsupported` / `tooLarge {{size}}` / `readFailed` / `full
   {{count}}`, limits passed as placeholders). While a file is dragged over
   the chat, `ChatSessions::file_drop_hover` swaps the canvas drop overlay
