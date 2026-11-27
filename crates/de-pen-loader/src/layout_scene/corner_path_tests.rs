@@ -101,7 +101,7 @@ fn rounded_polygons_and_stars_get_an_outline_even_without_smoothing() {
 #[test]
 fn paths_round_their_sharp_vertices_and_their_ends_follow() {
     let n = payload(
-        r##"{"type":"path","id":"n","d":"M0 0 L100 0 L100 50","width":100,"height":50,"cornerRadius":10,"stroke":{"thickness":2,"strokeEnd":"triangle_arrow","fill":[{"type":"solid","color":"#000000"}]}}"##,
+        r##"{"type":"path","id":"n","d":"M0 0 L100 0 L100 50","width":100,"height":50,"vertexRadius":10,"stroke":{"thickness":2,"strokeEnd":"triangle_arrow","fill":[{"type":"solid","color":"#000000"}]}}"##,
         [0.0, 0.0, 100.0, 50.0],
     );
     let outline = scene_corner_path(&n).expect("outline");
@@ -111,8 +111,15 @@ fn paths_round_their_sharp_vertices_and_their_ends_follow() {
     assert!(ends.stroke_d.contains(" C "), "{}", ends.stroke_d);
     // A path with no straight vertex has nothing to round.
     let curve = payload(
-        r#"{"type":"path","id":"n","d":"M0 0 C 50 -40 50 90 100 50","width":100,"height":50,"cornerRadius":10}"#,
+        r#"{"type":"path","id":"n","d":"M0 0 C 50 -40 50 90 100 50","width":100,"height":50,"vertexRadius":10}"#,
         [0.0, 0.0, 100.0, 50.0],
     );
     assert!(scene_corner_path(&curve).is_none());
+    // An older file's path `cornerRadius` (its outline already rounded)
+    // stays ignored.
+    let legacy = payload(
+        r#"{"type":"path","id":"n","d":"M0 0 L100 0 L100 50","width":100,"height":50,"cornerRadius":10}"#,
+        [0.0, 0.0, 100.0, 50.0],
+    );
+    assert!(scene_corner_path(&legacy).is_none());
 }

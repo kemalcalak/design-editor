@@ -90,7 +90,7 @@ fn the_row_shows_for_kinds_that_store_smoothing() {
         r#"{"type":"rectangle","id":"n","width":10,"height":10,"cornerRadius":2}"#,
         r#"{"type":"frame","id":"n","width":10,"height":10,"cornerRadius":[0,0,3,0]}"#,
         r#"{"type":"polygon","id":"n","width":10,"height":10,"polygonCount":5,"cornerRadius":2}"#,
-        r#"{"type":"path","id":"n","width":10,"height":10,"d":"M0 0 L10 0 L10 10","cornerRadius":2}"#,
+        r#"{"type":"path","id":"n","width":10,"height":10,"d":"M0 0 L10 0 L10 10","vertexRadius":2}"#,
     ] {
         let p = panel(&state(node));
         assert!(visible_for(&p).corner_smoothing, "{node}");
