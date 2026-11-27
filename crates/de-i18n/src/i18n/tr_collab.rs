@@ -593,7 +593,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.context.attachment" => "Ek",
         "property.cornerSmoothing" => "Yumuşatma",
         "settings.system.memory" => "Bellek",
-        "settings.system.memoryUsage" => "{used} kullanımda · düzenleyici önbellekleri {caches} · geri alma geçmişi {history}",
+        "settings.system.memoryUsage" => "Geri alma geçmişi {history} · düzenleyici önbellekleri {caches} · {used} kullanımda",
         "settings.system.memoryMeasuring" => "Ölçülüyor…",
         _ => return None,
     })

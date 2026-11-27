@@ -593,7 +593,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.context.attachment" => "附件",
         "property.cornerSmoothing" => "平滑",
         "settings.system.memory" => "記憶體",
-        "settings.system.memoryUsage" => "已使用 {used} · 編輯器快取 {caches} · 復原記錄 {history}",
+        "settings.system.memoryUsage" => "復原記錄 {history} · 編輯器快取 {caches} · 已使用 {used}",
         "settings.system.memoryMeasuring" => "正在測量…",
         _ => return None,
     })

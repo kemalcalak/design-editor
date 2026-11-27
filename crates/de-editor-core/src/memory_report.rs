@@ -158,14 +158,19 @@ impl Write for ByteCounter {
 /// demand only (Settings' memory line, a debug tool), off the paint path
 /// and never per frame.
 pub fn history_usage(state: &EditorState) -> CacheUsage {
-    history_usage_of(&history_docs(state))
+    history_usage_of(&history_nodes(state))
 }
 
-/// What [`history_usage_of`] reads from each undo / redo snapshot: its
-/// shared document and how many variable-ref entries it keeps. Cheap to
-/// take on the UI thread (one `Arc` per top-level node), so the walk can
-/// run on a worker (#456).
-pub fn history_docs(state: &EditorState) -> Vec<(SharedDoc, usize)> {
+/// One undo / redo step as [`history_usage_of`] reads it: the `Arc`s of
+/// its top-level nodes (root and every page) and how many variable-ref
+/// entries it keeps.
+pub type HistoryStep = (Vec<Arc<PenNode>>, usize);
+
+/// What [`history_usage_of`] reads, taken on the UI thread so the walk can
+/// run on a worker (#456): one `Arc` clone per top-level node of each step
+/// and nothing else (the step's skeleton, variables and themes, is not
+/// copied).
+pub fn history_nodes(state: &EditorState) -> Vec<HistoryStep> {
     state
         .history
         .past
@@ -173,40 +178,36 @@ pub fn history_docs(state: &EditorState) -> Vec<(SharedDoc, usize)> {
         .chain(state.history.future.iter())
         .map(|snapshot| {
             let refs = snapshot.fill_refs.len() + snapshot.stroke_refs.len();
-            (snapshot.doc.clone(), refs)
+            (top_level_nodes(&snapshot.doc), refs)
         })
         .collect()
 }
 
-/// [`history_usage`] over what [`history_docs`] took; seconds on a large
-/// document, so run it off the UI thread.
-pub fn history_usage_of(docs: &[(SharedDoc, usize)]) -> CacheUsage {
-    let mut seen: HashSet<*const PenNode> = HashSet::new();
-    let mut bytes = 0u64;
-    for (doc, refs) in docs {
-        bytes += shared_doc_new_bytes(doc, &mut seen);
-        // Key (NodeId) + value (String) + table slot, per entry.
-        bytes += *refs as u64 * 96;
+fn top_level_nodes(doc: &SharedDoc) -> Vec<Arc<PenNode>> {
+    let mut nodes = doc.root_children().to_vec();
+    let mut page = 0;
+    while let Some(children) = doc.page_children(page) {
+        nodes.extend(children.iter().cloned());
+        page += 1;
     }
-    CacheUsage::estimate("undo_history", bytes, docs.len() as u64, None)
+    nodes
 }
 
-fn shared_doc_new_bytes(doc: &SharedDoc, seen: &mut HashSet<*const PenNode>) -> u64 {
-    let mut bytes = 0;
-    let mut page = 0;
-    let mut visit = |nodes: &[Arc<PenNode>]| {
+/// [`history_usage`] over what [`history_nodes`] took; seconds on a large
+/// document, so run it off the UI thread.
+pub fn history_usage_of(steps: &[HistoryStep]) -> CacheUsage {
+    let mut seen: HashSet<*const PenNode> = HashSet::new();
+    let mut bytes = 0u64;
+    for (nodes, refs) in steps {
         for node in nodes {
             if seen.insert(Arc::as_ptr(node)) {
                 bytes += approx_node_bytes(node);
             }
         }
-    };
-    visit(doc.root_children());
-    while let Some(nodes) = doc.page_children(page) {
-        visit(nodes);
-        page += 1;
+        // Key (NodeId) + value (String) + table slot, per entry.
+        bytes += *refs as u64 * 96;
     }
-    bytes
+    CacheUsage::estimate("undo_history", bytes, steps.len() as u64, None)
 }
 
 /// Messages and their text across every chat tab.

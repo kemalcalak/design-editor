@@ -593,7 +593,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.context.attachment" => "ไฟล์แนบ",
         "property.cornerSmoothing" => "ความโค้งมน",
         "settings.system.memory" => "หน่วยความจำ",
-        "settings.system.memoryUsage" => "ใช้อยู่ {used} · แคชของเอดิเตอร์ {caches} · ประวัติการเลิกทำ {history}",
+        "settings.system.memoryUsage" => "ประวัติการเลิกทำ {history} · แคชของเอดิเตอร์ {caches} · ใช้อยู่ {used}",
         "settings.system.memoryMeasuring" => "กำลังวัด…",
         _ => return None,
     })

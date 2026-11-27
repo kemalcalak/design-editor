@@ -593,7 +593,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.context.attachment" => "Tệp đính kèm",
         "property.cornerSmoothing" => "Làm mịn",
         "settings.system.memory" => "Bộ nhớ",
-        "settings.system.memoryUsage" => "Đang dùng {used} · bộ nhớ đệm trình chỉnh sửa {caches} · lịch sử hoàn tác {history}",
+        "settings.system.memoryUsage" => "Lịch sử hoàn tác {history} · bộ nhớ đệm trình chỉnh sửa {caches} · đang dùng {used}",
         "settings.system.memoryMeasuring" => "Đang đo…",
         _ => return None,
     })

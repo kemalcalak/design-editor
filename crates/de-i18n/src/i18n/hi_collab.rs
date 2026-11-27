@@ -593,7 +593,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.context.attachment" => "अटैचमेंट",
         "property.cornerSmoothing" => "चिकनाई",
         "settings.system.memory" => "मेमोरी",
-        "settings.system.memoryUsage" => "{used} उपयोग में · एडिटर कैश {caches} · पूर्ववत इतिहास {history}",
+        "settings.system.memoryUsage" => "पूर्ववत इतिहास {history} · एडिटर कैश {caches} · {used} उपयोग में",
         "settings.system.memoryMeasuring" => "माप रहे हैं…",
         _ => return None,
     })

@@ -6,13 +6,8 @@
 use super::*;
 use de_editor_core::pen_node_ext::PenNodeExt;
 
-/// Every debug tool, listed only behind the debug gate.
-const DEBUG_TOOL_NAMES: [&str; 4] = [
-    "debug_validation_report",
-    "debug_logs_tail",
-    "debug_screenshot",
-    "debug_memory_report",
-];
+mod debug_catalog;
+use debug_catalog::DEBUG_TOOL_NAMES;
 
 #[test]
 fn tools_list_response_includes_all_registered_tools() {

@@ -593,7 +593,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.context.attachment" => "添付",
         "property.cornerSmoothing" => "スムージング",
         "settings.system.memory" => "メモリ",
-        "settings.system.memoryUsage" => "使用中 {used} · エディタのキャッシュ {caches} · 取り消し履歴 {history}",
+        "settings.system.memoryUsage" => "取り消し履歴 {history} · エディタのキャッシュ {caches} · 使用中 {used}",
         "settings.system.memoryMeasuring" => "測定中…",
         _ => return None,
     })

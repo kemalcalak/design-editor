@@ -593,7 +593,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.context.attachment" => "Pièce jointe",
         "property.cornerSmoothing" => "Lissage",
         "settings.system.memory" => "Mémoire",
-        "settings.system.memoryUsage" => "{used} utilisés · caches de l’éditeur {caches} · historique d’annulation {history}",
+        "settings.system.memoryUsage" => "Historique d’annulation {history} · caches de l’éditeur {caches} · {used} utilisés",
         "settings.system.memoryMeasuring" => "Mesure en cours…",
         _ => return None,
     })

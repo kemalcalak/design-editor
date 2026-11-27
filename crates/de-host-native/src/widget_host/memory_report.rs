@@ -22,7 +22,7 @@ impl WidgetHostNative {
     /// [`Self::memory_report`] without the undo history: no line here
     /// walks the document, so a timer on the UI thread may build it
     /// (Settings ▸ System, #456). The history is estimated off the thread
-    /// from [`Self::history_docs`].
+    /// from [`Self::history_nodes`].
     pub fn cache_report(&self, backend: &NativeBackend) -> MemoryReport {
         let mut report = MemoryReport::default();
         report.push(memory_report::chat_usage(&self.editor_state));
@@ -42,10 +42,16 @@ impl WidgetHostNative {
         report
     }
 
-    /// The undo history's shared documents, for a worker to estimate
-    /// (`memory_report::history_usage_of`); one `Arc` per top-level node.
-    pub fn history_docs(&self) -> Vec<(de_editor_core::history_snapshot::SharedDoc, usize)> {
-        memory_report::history_docs(&self.editor_state)
+    /// The undo history's top-level nodes, for a worker to estimate
+    /// (`memory_report::history_usage_of`); one `Arc` clone per node.
+    pub fn history_nodes(&self) -> Vec<memory_report::HistoryStep> {
+        memory_report::history_nodes(&self.editor_state)
+    }
+
+    /// Which document the host shows (`document_generation`): a new one
+    /// makes the published history estimate stale.
+    pub fn document_generation(&self) -> u64 {
+        self.editor_state.document_generation()
     }
 
     /// Whether Settings ▸ System, which shows the memory row, is on screen.

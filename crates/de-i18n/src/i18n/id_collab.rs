@@ -593,7 +593,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.context.attachment" => "Lampiran",
         "property.cornerSmoothing" => "Penghalusan",
         "settings.system.memory" => "Memori",
-        "settings.system.memoryUsage" => "{used} terpakai · cache editor {caches} · riwayat urungkan {history}",
+        "settings.system.memoryUsage" => "Riwayat urungkan {history} · cache editor {caches} · {used} terpakai",
         "settings.system.memoryMeasuring" => "Mengukur…",
         _ => return None,
     })

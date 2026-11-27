@@ -235,7 +235,11 @@ fn every_narrowed_tool_has_a_call_here() {
     let tools = de_mcp::snapshot_pages::NO_NODE_TOOLS
         .iter()
         .chain(de_mcp::snapshot_pages::PAGE_TOOLS)
-        .chain(&["get_screenshot", "execute"]);
+        .chain(&["get_screenshot", "execute"])
+        // Its reply reads the process's memory, so no two answers are
+        // byte-identical; `debug_memory_report_through_the_live_path`
+        // covers it instead.
+        .filter(|tool| !NONDETERMINISTIC_READS.contains(tool));
     for tool in tools {
         let named = format!(r#""name":"{tool}""#);
         assert!(
@@ -316,4 +320,47 @@ fn page_needs_follow_an_edit_made_through_the_pump() {
     let whole = answer(&mut narrowed_snapshot(&mut live), &line);
     assert_eq!(narrowed, whole);
     assert!(narrowed.contains("Other page"), "{narrowed}");
+}
+
+/// Narrowed reads whose replies differ from call to call.
+const NONDETERMINISTIC_READS: &[&str] = &["debug_memory_report"];
+
+/// `debug_memory_report` goes the live way (#456): a document-level read,
+/// answered from a snapshot without page nodes, with the undo history and
+/// the process footprint.
+#[cfg(feature = "mcp-debug-tools")]
+#[test]
+fn debug_memory_report_through_the_live_path() {
+    let (req_tx, req_rx) = mpsc::channel();
+    let (stop_tx, _stop_rx) = mpsc::channel();
+    let mut server = fresh_mcp_server(req_rx, stop_tx);
+    let mut live = state();
+    live.commit_history();
+    let line = call(1, "debug_memory_report", "{}");
+    assert_eq!(
+        de_mcp::snapshot_pages::for_request(&line),
+        de_mcp::snapshot_pages::SnapshotPages::NoNodes
+    );
+    let done = Arc::new(AtomicBool::new(false));
+    let client_done = Arc::clone(&done);
+    let client = thread::spawn(move || {
+        // The connection thread registers and runs the tool.
+        let _gate = de_mcp::debug_tools::debug_gate_override::Guard::forcing(true);
+        let wake_ui: UiWake = Arc::new(|| {});
+        let reply = connection::serve_stateful(&line, &req_tx, &LiveShared::default(), &wake_ui);
+        client_done.store(true, Ordering::Release);
+        reply
+    });
+    let deadline = Instant::now() + Duration::from_secs(20);
+    while !done.load(Ordering::Acquire) && Instant::now() < deadline {
+        server.pump(&mut live);
+        thread::sleep(Duration::from_millis(1));
+    }
+    let reply = client.join().expect("client").expect("reply");
+    assert!(!reply.contains("\"isError\":true"), "{reply}");
+    assert!(reply.contains("undoHistory"), "{reply}");
+    assert!(reply.contains("footprintBytes"), "{reply}");
+    // The live state was not copied or changed by the read.
+    assert_eq!(live.history.past.len(), 1);
+    assert!(!server.snapshot_anchor.page_anchor().has_needs());
 }

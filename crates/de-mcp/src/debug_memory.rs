@@ -13,7 +13,6 @@
 
 use std::collections::BTreeMap;
 
-use de_editor_core::history_snapshot::SharedDoc;
 use de_editor_core::memory_reading;
 use de_editor_core::memory_report;
 use de_editor_core::process_memory;
@@ -24,13 +23,13 @@ use super::debug_tools::debug_tools_enabled;
 use super::{McpTool, ToolErrorCode, ToolOutcome};
 
 pub struct DebugMemoryReport {
-    /// The request snapshot's undo / redo documents (`Arc` clones).
-    history: Vec<(SharedDoc, usize)>,
+    /// The request snapshot's undo / redo steps (`Arc` clones).
+    history: Vec<memory_report::HistoryStep>,
 }
 
 pub fn debug_memory_report_snapshot(state: &EditorState) -> DebugMemoryReport {
     DebugMemoryReport {
-        history: memory_report::history_docs(state),
+        history: memory_report::history_nodes(state),
     }
 }
 
@@ -87,7 +86,14 @@ mod tests {
         let value: serde_json::Value = serde_json::from_str(&json).expect("json");
         assert_eq!(value["undoHistory"]["entries"], 1, "{json}");
         assert!(value["process"].is_object(), "{json}");
-        assert!(value.get("hostCaches").is_some(), "{json}");
+        // Nothing in this process published a host reading: no canvas.
+        assert!(value["hostCaches"].is_null(), "{json}");
+        assert!(
+            value["note"]
+                .as_str()
+                .is_some_and(|n| n.contains("no canvas")),
+            "{json}"
+        );
     }
 
     #[test]

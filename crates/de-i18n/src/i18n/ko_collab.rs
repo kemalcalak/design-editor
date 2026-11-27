@@ -595,7 +595,7 @@ pub fn lookup(key: &str) -> Option<&'static str> {
         "chat.context.attachment" => "첨부",
         "property.cornerSmoothing" => "스무딩",
         "settings.system.memory" => "메모리",
-        "settings.system.memoryUsage" => "사용 중 {used} · 편집기 캐시 {caches} · 실행 취소 기록 {history}",
+        "settings.system.memoryUsage" => "실행 취소 기록 {history} · 편집기 캐시 {caches} · 사용 중 {used}",
         "settings.system.memoryMeasuring" => "측정 중…",
         _ => return None,
     })

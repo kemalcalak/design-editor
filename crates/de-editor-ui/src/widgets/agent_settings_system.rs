@@ -422,7 +422,9 @@ pub(super) fn paint_system_tab(
                     ui.browser_live.live_pages(),
                 );
             }
-            SystemRow::Memory => paint_memory_row(cx, theme, ui, rect),
+            SystemRow::Memory => {
+                super::agent_settings_system_memory::paint_memory_row(cx, theme, ui, rect)
+            }
         }
         if index != last {
             paint_row_hairline(cx, theme, rect);
@@ -450,36 +452,6 @@ pub(super) fn paint_system_tab(
             body_top(content) + rows_block_height(&kinds) + FOOTNOTE_GAP,
             &footnote,
         );
-    }
-}
-
-/// Memory (#456): what the process holds, the editor's caches and the
-/// undo history, from the reading the host publishes on a timer
-/// (`de_editor_core::memory_reading`); paint only formats it.
-fn paint_memory_row(cx: &mut PaintCx<'_>, theme: &Theme, ui: &EditorUiState, row: Rect) {
-    let line = memory_line(ui, &de_editor_core::memory_reading::latest());
-    paint_row_label(
-        cx,
-        theme,
-        row,
-        t_settings(ui, "settings.system.memory"),
-        Some(&line),
-        16.0,
-    );
-}
-
-/// The memory row's description: the localized line with its figures, or
-/// "Measuring…" before the host published anything.
-pub(super) fn memory_line(
-    ui: &EditorUiState,
-    reading: &de_editor_core::memory_reading::MemoryReading,
-) -> String {
-    match de_editor_core::memory_reading::row_figures(reading) {
-        Some((used, caches, history)) => t_settings(ui, "settings.system.memoryUsage")
-            .replace("{used}", &used)
-            .replace("{caches}", &caches)
-            .replace("{history}", history.as_deref().unwrap_or("…")),
-        None => t_settings(ui, "settings.system.memoryMeasuring").to_string(),
     }
 }
 
@@ -738,43 +710,5 @@ fn status_view(theme: &Theme, status: &UpdateStatus) -> (Color, &'static str, &'
             "settings.system.errorStatus",
             "settings.system.errorDescription",
         ),
-    }
-}
-
-#[cfg(test)]
-mod memory_row_tests {
-    use super::*;
-    use de_editor_core::memory_reading::MemoryReading;
-    use de_editor_core::memory_report::{CacheUsage, MemoryReport};
-    use de_editor_core::process_memory::ProcessMemory;
-
-    #[test]
-    fn the_memory_row_reads_the_published_figures() {
-        let mut ui = EditorUiState {
-            locale: de_editor_core::Locale::EnUs,
-            ..Default::default()
-        };
-        assert_eq!(memory_line(&ui, &MemoryReading::default()), "Measuring…");
-        let mut caches = MemoryReport::default();
-        caches.push(CacheUsage::exact("decoded_images", 20 << 20, 3, None));
-        let mut reading = MemoryReading {
-            process: ProcessMemory {
-                resident: Some(900 << 20),
-                footprint: Some(1 << 30),
-            },
-            caches,
-            history: None,
-            measured: true,
-        };
-        assert_eq!(
-            memory_line(&ui, &reading),
-            "1.0 GB in use · editor caches 20 MB · undo history …"
-        );
-        reading.history = Some(CacheUsage::estimate("undo_history", 550 << 20, 20, None));
-        ui.locale = de_editor_core::Locale::Tr;
-        assert_eq!(
-            memory_line(&ui, &reading),
-            "1.0 GB kullanımda · düzenleyici önbellekleri 20 MB · geri alma geçmişi 550 MB"
-        );
     }
 }
